@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { TrustAwarePlugin, exampleTrustAwarePlugin } from '../TrustAwarePlugin';
 import type { IAgentRuntime, Action, Provider, Evaluator, UUID, Plugin } from '@elizaos/core';
 import { createMockRuntime } from '../../__tests__/test-utils';
@@ -39,16 +39,16 @@ class TestTrustAwarePlugin extends TrustAwarePlugin {
     {
       name: 'TEST_ACTION',
       description: 'Test action',
-      validate: vi.fn().mockResolvedValue(true),
-      handler: vi.fn().mockResolvedValue({ values: {}, data: {}, text: 'Done' }),
+      validate: mock().mockResolvedValue(true),
+      handler: mock().mockResolvedValue({ values: {}, data: {}, text: 'Done' }),
       similes: [],
       examples: [],
     },
     {
       name: 'HIGH_RISK_ACTION',
       description: 'High risk action',
-      validate: vi.fn().mockResolvedValue(true),
-      handler: vi.fn().mockResolvedValue({ values: {}, data: {}, text: 'Done' }),
+      validate: mock().mockResolvedValue(true),
+      handler: mock().mockResolvedValue({ values: {}, data: {}, text: 'Done' }),
       similes: [],
       examples: [],
     },
@@ -58,7 +58,7 @@ class TestTrustAwarePlugin extends TrustAwarePlugin {
     {
       name: 'test-provider',
       description: 'Test provider',
-      get: vi.fn().mockResolvedValue({ values: {}, data: {}, text: 'Provider data' }),
+      get: mock().mockResolvedValue({ values: {}, data: {}, text: 'Provider data' }),
     },
   ];
 
@@ -66,8 +66,8 @@ class TestTrustAwarePlugin extends TrustAwarePlugin {
     {
       name: 'test-evaluator',
       description: 'Test evaluator',
-      validate: vi.fn().mockResolvedValue(true),
-      handler: vi.fn().mockResolvedValue(true),
+      validate: mock().mockResolvedValue(true),
+      handler: mock().mockResolvedValue(true),
       similes: [],
       examples: [],
     },
@@ -97,11 +97,11 @@ describe('TrustAwarePlugin', () => {
   let testPlugin: TestTrustAwarePlugin;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     // Create mock trust service
     mockTrustService = {
-      getTrustScore: vi.fn().mockResolvedValue({
+      getTrustScore: mock().mockResolvedValue({
         overall: 75,
         dimensions: {
           reliability: 80,
@@ -119,7 +119,7 @@ describe('TrustAwarePlugin', () => {
 
     // Create mock runtime with trust service
     mockRuntime = createMockRuntime({
-      getService: vi.fn((name: string) => {
+      getService: mock((name: string) => {
         if (name === 'trust') {
           return {
             trustService: mockTrustService,
@@ -156,7 +156,7 @@ describe('TrustAwarePlugin', () => {
     });
 
     it('should handle missing trust service gracefully', async () => {
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
+      mockRuntime.getService = mock().mockReturnValue(null);
 
       // Should not throw
       await expect(testPlugin.init({}, mockRuntime)).resolves.toBeUndefined();
@@ -175,7 +175,7 @@ describe('TrustAwarePlugin', () => {
     });
 
     it('should return 0 when trust service is not available', async () => {
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
+      mockRuntime.getService = mock().mockReturnValue(null);
       await testPlugin.init({}, mockRuntime);
 
       const entityId = 'user-123' as UUID;
@@ -187,7 +187,7 @@ describe('TrustAwarePlugin', () => {
 
   describe('isTrusted', () => {
     it('should return true for trusted users (>= 80 trust)', async () => {
-      mockTrustService.getTrustScore = vi.fn().mockResolvedValue({
+      mockTrustService.getTrustScore = mock().mockResolvedValue({
         overall: 85,
         dimensions: {},
         confidence: 0.9,
@@ -259,7 +259,7 @@ describe('TrustAwarePlugin', () => {
     });
 
     it('should deny access when trust is insufficient', async () => {
-      mockTrustService.getTrustScore = vi.fn().mockResolvedValue({
+      mockTrustService.getTrustScore = mock().mockResolvedValue({
         overall: 10,
         dimensions: {},
         confidence: 0.3,
@@ -298,7 +298,7 @@ describe('TrustAwarePlugin', () => {
       const action = exampleTrustAwarePlugin.actions![0];
 
       // Mock checkPermission to return allowed
-      const mockCheckPermission = vi.fn().mockResolvedValue({
+      const mockCheckPermission = mock().mockResolvedValue({
         allowed: true,
         method: 'trust-based',
         reason: 'Sufficient trust',
@@ -330,7 +330,7 @@ describe('TrustAwarePlugin', () => {
       const action = exampleTrustAwarePlugin.actions![0];
 
       // Mock checkPermission to return denied
-      const mockCheckPermission = vi.fn().mockResolvedValue({
+      const mockCheckPermission = mock().mockResolvedValue({
         allowed: false,
         method: 'denied',
         reason: 'Insufficient trust',

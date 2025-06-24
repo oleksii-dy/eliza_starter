@@ -63,16 +63,29 @@ export function expandTildePath(filepath: string): string {
 }
 
 export function resolvePgliteDir(dir?: string, fallbackDir?: string): string {
-  const envPath = resolveEnvFile();
-  if (existsSync(envPath)) {
-    dotenv.config({ path: envPath });
+  // For E2E tests, don't reload environment to avoid restoring PostgreSQL URLs
+  if (process.env.FORCE_PGLITE !== 'true') {
+    const envPath = resolveEnvFile();
+    if (existsSync(envPath)) {
+      dotenv.config({ path: envPath });
+    }
   }
 
-  const base =
-    dir ??
-    process.env.PGLITE_DATA_DIR ??
-    fallbackDir ??
-    path.join(process.cwd(), '.eliza', '.elizadb');
+  // Use centralized path management for database directory
+  let base: string;
+  if (dir) {
+    base = dir;
+  } else if (process.env.PGLITE_DATA_DIR) {
+    base = process.env.PGLITE_DATA_DIR;
+  } else {
+    try {
+      const { getDatabasePath } = require('@elizaos/core/utils/path-manager');
+      base = getDatabasePath();
+    } catch {
+      // Fallback to original behavior if path-manager is not available
+      base = fallbackDir ?? path.join(process.cwd(), '.eliza', '.elizadb');
+    }
+  }
 
   // Automatically migrate legacy path (<cwd>/.elizadb) to new location (<cwd>/.eliza/.elizadb)
   const resolved = expandTildePath(base);
@@ -178,7 +191,12 @@ export class AgentServer {
       // Initialize database adapter
       logger.info('[INIT] Initializing database adapter...');
 
-      const postgresUrl = process.env.POSTGRES_URL || options?.postgresUrl;
+      // For E2E tests, force PGLite usage by ignoring PostgreSQL URLs
+      let postgresUrl = process.env.POSTGRES_URL || options?.postgresUrl;
+      if (process.env.FORCE_PGLITE === 'true') {
+        logger.info('[INIT] FORCE_PGLITE detected, ignoring PostgreSQL URL for testing');
+        postgresUrl = undefined;
+      }
       const dataDir = agentDataDir;
 
       this.database = (await createDatabaseAdapter(
@@ -234,7 +252,7 @@ export class AgentServer {
       try {
         servers = await (this.database as any).getMessageServers();
         logger.debug(`[AgentServer] Found ${servers.length} existing servers`);
-      } catch (error) {
+      } catch (_error) {
         logger.warn(
           'Message servers table not yet created during initialization, returning empty array'
         );
@@ -623,7 +641,7 @@ export class AgentServer {
           next();
         },
         apiRouter,
-        (err: any, req: Request, res: Response) => {
+        (err: any, req: Request, res: Response, _next: express.NextFunction) => {
           logger.error(`API error: ${req.method} ${req.path}`, err);
           res.status(500).json({
             success: false,
@@ -712,7 +730,7 @@ export class AgentServer {
         try {
           // No need to ensure default server here anymore
           logger.debug('[AgentServer] Default server already exists from initialization');
-        } catch (error) {
+        } catch (_error) {
           logger.warn(
             '[AgentServer] Could not ensure default server, it will be created when tables are ready'
           );
@@ -755,7 +773,7 @@ export class AgentServer {
             );
           }
         } catch (dbError) {
-          logger.error(`[AgentServer] ✗ Failed to persist agent to database:`, dbError);
+          logger.error('[AgentServer] ✗ Failed to persist agent to database:', dbError);
           // Don't throw - agent can still function in memory
         }
       } else {
@@ -772,7 +790,7 @@ export class AgentServer {
             `[AgentServer] Automatically registered MessageBusConnector for agent ${runtime.character.name}`
           );
         } else {
-          logger.error(`[AgentServer] CRITICAL: MessageBusConnector plugin definition not found.`);
+          logger.error('[AgentServer] CRITICAL: MessageBusConnector plugin definition not found.');
         }
       } catch (e) {
         logger.error(
@@ -897,7 +915,7 @@ export class AgentServer {
           logger.success(
             `REST API bound to ${host}:${port}. If running locally, access it at http://localhost:${port}.`
           );
-          console.log(`\x1b[36m📚 Learn more at \x1b[1mhttps://eliza.how\x1b[22m\x1b[0m`);
+          console.log('\x1b[36m📚 Learn more at \x1b[1mhttps://eliza.how\x1b[22m\x1b[0m');
         })
         .on('error', (error: any) => {
           // Provide helpful error messages for common issues
@@ -1065,6 +1083,10 @@ export class AgentServer {
     return (this.database as any).addChannelParticipants(channelId, userIds);
   }
 
+  async addAgentToChannel(channelId: UUID, agentId: UUID): Promise<void> {
+    return (this.database as any).addChannelParticipants(channelId, [agentId]);
+  }
+
   async getChannelsForServer(serverId: UUID): Promise<MessageChannel[]> {
     return (this.database as any).getChannelsForServer(serverId);
   }
@@ -1151,7 +1173,7 @@ export class AgentServer {
   async removeParticipantFromChannel(): Promise<void> {
     // Since we don't have a direct method for this, we'll need to handle it at the channel level
     logger.warn(
-      `[AgentServer] Remove participant operation not directly supported in database adapter`
+      '[AgentServer] Remove participant operation not directly supported in database adapter'
     );
   }
 

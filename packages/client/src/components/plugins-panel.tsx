@@ -37,7 +37,7 @@ interface PluginsPanelProps {
     removePlugin?: (index: number) => void;
     setPlugins?: (plugins: string[]) => void;
     updateField?: <T>(path: string, value: T) => void;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   initialPlugins?: string[];
 }
@@ -77,14 +77,18 @@ export default function PluginsPanel({
 
   // Ensure we always have arrays and normalize plugin names
   const safeCharacterPlugins = useMemo(() => {
-    if (!Array.isArray(characterValue?.plugins)) return [];
+    if (!Array.isArray(characterValue?.plugins)) {
+      return [];
+    }
     return characterValue.plugins;
   }, [characterValue?.plugins]);
 
   // Get plugin names from available plugins
   const pluginNames = useMemo(() => {
     const defaultPlugins = ['@elizaos/plugin-sql', '@elizaos/plugin-local-ai'];
-    if (!plugins) return defaultPlugins;
+    if (!plugins) {
+      return defaultPlugins;
+    }
     return [
       ...defaultPlugins,
       ...(Array.isArray(plugins) ? plugins : Object.keys(plugins)).filter(
@@ -96,10 +100,14 @@ export default function PluginsPanel({
   // Check if the selected voice model requires specific plugins
   const voiceModelPluginInfo = useMemo(() => {
     const voiceModelValue = characterValue?.settings?.voice?.model;
-    if (!voiceModelValue) return null;
+    if (!voiceModelValue) {
+      return null;
+    }
 
     const voiceModel = getVoiceModelByValue(voiceModelValue);
-    if (!voiceModel) return null;
+    if (!voiceModel) {
+      return null;
+    }
 
     // Get required plugin from configuration
     const requiredPlugin = providerPluginMap[voiceModel.provider];
@@ -119,8 +127,12 @@ export default function PluginsPanel({
   // }, [safeCharacterPlugins]);
 
   const hasChanged = useMemo(() => {
-    if (!initialPlugins) return false;
-    if (initialPlugins.length !== safeCharacterPlugins.length) return true;
+    if (!initialPlugins) {
+      return false;
+    }
+    if (initialPlugins.length !== safeCharacterPlugins.length) {
+      return true;
+    }
     return !initialPlugins?.every((plugin) => safeCharacterPlugins.includes(plugin));
   }, [safeCharacterPlugins, initialPlugins]);
 
@@ -131,7 +143,9 @@ export default function PluginsPanel({
   }, [pluginNames, safeCharacterPlugins, searchQuery]);
 
   const handlePluginAdd = (plugin: string) => {
-    if (safeCharacterPlugins.includes(plugin)) return;
+    if (safeCharacterPlugins.includes(plugin)) {
+      return;
+    }
 
     if (setCharacterValue.addPlugin) {
       setCharacterValue.addPlugin(plugin);
@@ -236,7 +250,7 @@ export default function PluginsPanel({
                       }
                     })()}
                   </p>
-                  {/* 
+                  {/*
                     Commented out for now — this warning doesn't make sense when using ElevenLabs voice model with OpenAI plugin.
                   */}
                   {/* {enabledVoicePlugins.length > 1 && (
@@ -255,7 +269,9 @@ export default function PluginsPanel({
                       .sort((a, b) => {
                         const aIsEssential = Object.keys(ESSENTIAL_PLUGINS).includes(a);
                         const bIsEssential = Object.keys(ESSENTIAL_PLUGINS).includes(b);
-                        if (aIsEssential === bIsEssential) return 0;
+                        if (aIsEssential === bIsEssential) {
+                          return 0;
+                        }
                         return aIsEssential ? -1 : 1;
                       })
                       .map((plugin) => {
@@ -320,7 +336,7 @@ export default function PluginsPanel({
                   </div>
                 </div>
               )}
-              
+
               {safeCharacterPlugins.length > 0 && (
                 <div className="space-y-2">
                   <Button
@@ -332,7 +348,7 @@ export default function PluginsPanel({
                   </Button>
                 </div>
               )}
-              
+
               <div className="space-y-2">
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
@@ -384,7 +400,7 @@ export default function PluginsPanel({
           )}
         </div>
       </div>
-      
+
       {/* Plugin Components Configuration Dialog */}
       <PluginComponentsPanel
         agentId={characterValue?.id || ''}

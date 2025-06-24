@@ -11,7 +11,7 @@ import {
 import { PluginManagerService } from '../services/pluginManagerService.ts';
 import {
   PluginManagerServiceType,
-  PluginStatus,
+  PluginStatusValues,
   type PluginConfigurationRequest,
 } from '../types.ts';
 
@@ -20,7 +20,7 @@ export const startPluginConfigurationAction: Action = {
   similes: ['CONFIGURE_PLUGIN', 'SETUP_PLUGIN'],
   description: 'Start the configuration process for a plugin that requires setup',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
@@ -88,7 +88,7 @@ export const startPluginConfigurationAction: Action = {
 
       // Check if plugin needs configuration
       if (
-        pluginState.status !== PluginStatus.NEEDS_CONFIGURATION &&
+        pluginState.status !== PluginStatusValues.NEEDS_CONFIGURATION &&
         (!pluginState.missingEnvVars || pluginState.missingEnvVars.length === 0)
       ) {
         const message = `Plugin ${pluginName} doesn't need configuration. Status: ${pluginState.status}`;
@@ -113,7 +113,7 @@ export const startPluginConfigurationAction: Action = {
 
       // Update plugin status
       pluginManager.updatePluginState(pluginState.id, {
-        status: PluginStatus.CONFIGURATION_IN_PROGRESS,
+        status: PluginStatusValues.CONFIGURATION_IN_PROGRESS,
       });
 
       // Emit configuration started event
@@ -138,11 +138,11 @@ export const startPluginConfigurationAction: Action = {
           configRequest,
         },
       };
-    } catch (error) {
+    } catch (_error) {
       logger.error('[startPluginConfiguration] Error starting configuration:', error);
 
       const errorMessage = `Error starting plugin configuration: ${
-        error instanceof Error ? error.message : String(error)
+        _error instanceof Error ? _error.message : String(_error)
       }`;
 
       if (callback) {
@@ -154,7 +154,7 @@ export const startPluginConfigurationAction: Action = {
 
       return {
         text: errorMessage,
-        data: { error: String(error) },
+        data: { error: String(_error) },
       };
     }
   },

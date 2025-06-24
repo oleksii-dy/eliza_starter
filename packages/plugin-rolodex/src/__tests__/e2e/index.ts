@@ -13,7 +13,7 @@ export const rolodexE2ETestSuites: TestSuite[] = [
   // Real LLM-powered tests
   realEntityExtractionTests,
   realRelationshipInferenceTests,
-  
+
   // Integration tests
   rolodexIntegrationTestsInstance,
   entityGraphTests,
@@ -28,7 +28,7 @@ export class RolodexComprehensiveTestSuite implements TestSuite {
     // Real LLM tests first
     ...realEntityExtractionTests.tests,
     ...realRelationshipInferenceTests.tests,
-    
+
     // Integration tests
     ...rolodexIntegrationTestsInstance.tests,
     // Entity graph tests

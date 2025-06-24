@@ -34,7 +34,7 @@ const colors = CI ? {
 
 function log(message, color = 'reset', prefix = '') {
   const timestamp = new Date().toISOString();
-  const formattedMessage = CI 
+  const formattedMessage = CI
     ? `[${timestamp}] ${prefix}${message}`
     : `${colors[color]}${prefix}${message}${colors.reset}`;
   console.log(formattedMessage);
@@ -61,18 +61,18 @@ function ensureDirectories() {
 function waitForServer(port, retries = MAX_RETRIES) {
   return new Promise((resolve, reject) => {
     let attempts = 0;
-    
+
     const check = () => {
       attempts++;
-      
+
       const options = {
         hostname: 'localhost',
-        port: port,
+        port,
         path: '/api/todos',
         method: 'GET',
         timeout: 5000
       };
-      
+
       const req = http.request(options, (res) => {
         let data = '';
         res.on('data', chunk => data += chunk);
@@ -87,21 +87,21 @@ function waitForServer(port, retries = MAX_RETRIES) {
           }
         });
       });
-      
+
       req.on('error', (err) => {
         logVerbose(`   Connection error: ${err.message}`, 'yellow');
         retry();
       });
-      
+
       req.on('timeout', () => {
         req.destroy();
         logVerbose('   Request timeout', 'yellow');
         retry();
       });
-      
+
       req.end();
     };
-    
+
     const retry = () => {
       if (attempts >= retries) {
         reject(new Error(`Server failed to start after ${retries} attempts`));
@@ -115,7 +115,7 @@ function waitForServer(port, retries = MAX_RETRIES) {
         setTimeout(check, RETRY_DELAY);
       }
     };
-    
+
     check();
   });
 }
@@ -139,14 +139,14 @@ async function runTests() {
   let serverProcess = null;
   let exitCode = 0;
   const startTime = Date.now();
-  
+
   try {
     ensureDirectories();
-    
+
     // Start the dev server with proper process group
     log('🚀 Starting Eliza server...', 'blue');
     const serverEnv = { ...process.env, PORT: SERVER_PORT };
-    
+
     serverProcess = spawn('npm', ['run', 'dev'], {
       stdio: 'pipe',
       shell: true,
@@ -154,7 +154,7 @@ async function runTests() {
       env: serverEnv,
       detached: process.platform !== 'win32' // Create process group on Unix
     });
-    
+
     // Capture server output
     let serverOutput = '';
     serverProcess.stdout.on('data', (data) => {
@@ -164,7 +164,7 @@ async function runTests() {
         process.stdout.write(`${colors.magenta}[Server]${colors.reset} ${text}`);
       }
     });
-    
+
     serverProcess.stderr.on('data', (data) => {
       const text = data.toString();
       serverOutput += text;
@@ -172,38 +172,38 @@ async function runTests() {
         process.stderr.write(`${colors.red}[Server Error]${colors.reset} ${text}`);
       }
     });
-    
+
     // Handle server crash
     serverProcess.on('error', (err) => {
       throw new Error(`Failed to start server: ${err.message}`);
     });
-    
+
     serverProcess.on('exit', (code, signal) => {
       if (code !== null && code !== 0) {
         logVerbose(`Server exited with code ${code}`, 'red');
       }
     });
-    
+
     // Wait for server to be ready
     await waitForServer(SERVER_PORT);
-    
+
     // Run Cypress tests
     log('\n🧪 Running Cypress tests...', 'blue');
     const cypressArgs = CYPRESS_HEADED ? ['run', 'cypress:run'] : ['run', 'cypress:run', '--', '--headless'];
-    
+
     const cypressEnv = {
       ...process.env,
       CYPRESS_baseUrl: `http://localhost:${SERVER_PORT}`,
       FORCE_COLOR: '1'
     };
-    
+
     const cypressProcess = spawn('npm', cypressArgs, {
       stdio: 'inherit',
       shell: true,
       cwd: process.cwd(),
       env: cypressEnv
     });
-    
+
     // Wait for Cypress to complete
     await new Promise((resolve, reject) => {
       cypressProcess.on('close', (code) => {
@@ -215,16 +215,16 @@ async function runTests() {
           reject(new Error(`Cypress exited with code ${code}`));
         }
       });
-      
+
       cypressProcess.on('error', (err) => {
         reject(new Error(`Cypress failed to start: ${err.message}`));
       });
     });
-    
+
   } catch (error) {
     log(`\n❌ Test failed: ${error.message}`, 'red');
     exitCode = 1;
-    
+
     // In CI, save server output for debugging
     if (CI && serverOutput) {
       const logFile = 'cypress/server-output.log';
@@ -234,11 +234,11 @@ async function runTests() {
   } finally {
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     log(`\n⏱️  Total duration: ${duration}s`, 'cyan');
-    
+
     // Clean up server process
     if (serverProcess && !serverProcess.killed) {
       log('\n🛑 Shutting down server...', 'yellow');
-      
+
       try {
         // Kill the process group
         if (process.platform !== 'win32') {
@@ -246,21 +246,21 @@ async function runTests() {
         } else {
           serverProcess.kill('SIGTERM');
         }
-        
+
         // Force kill after 5 seconds
         setTimeout(() => {
           if (!serverProcess.killed) {
             killProcessTree(serverProcess.pid);
           }
         }, 5000);
-        
+
         // Wait a bit for cleanup
         await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (e) {
         logVerbose(`Error during cleanup: ${e.message}`, 'yellow');
       }
     }
-    
+
     process.exit(exitCode);
   }
 }
@@ -269,9 +269,9 @@ async function runTests() {
 let isCleaningUp = false;
 
 function cleanup(signal) {
-  if (isCleaningUp) return;
+  if (isCleaningUp) {return;}
   isCleaningUp = true;
-  
+
   log(`\n\n⚠️  Received ${signal}, cleaning up...`, 'yellow');
   process.exit(1);
 }
@@ -296,7 +296,7 @@ process.on('unhandledRejection', (reason, promise) => {
 // Run the tests
 log('🎯 Todo Plugin E2E Test Suite', 'blue');
 log('================================', 'blue');
-log(`📋 Configuration:`, 'cyan');
+log('📋 Configuration:', 'cyan');
 log(`   Server Port: ${SERVER_PORT}`, 'cyan');
 log(`   Max Retries: ${MAX_RETRIES}`, 'cyan');
 log(`   Retry Delay: ${RETRY_DELAY}ms`, 'cyan');
@@ -304,4 +304,4 @@ log(`   Headed Mode: ${CYPRESS_HEADED}`, 'cyan');
 log(`   CI Mode: ${CI}`, 'cyan');
 log(`   Verbose: ${VERBOSE}\n`, 'cyan');
 
-runTests(); 
+runTests();

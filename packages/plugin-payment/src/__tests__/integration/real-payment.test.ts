@@ -1,5 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { createTestRuntime, cleanupTestRuntime, createTestMemory, createTestUserId } from '../helpers/test-runtime';
+import { describe, it, expect, beforeAll, afterAll, mock } from 'bun:test';
+import {
+  createTestRuntime,
+  cleanupTestRuntime,
+  createTestMemory,
+  createTestUserId,
+} from '../helpers/test-runtime';
 import { paymentPlugin } from '../../index';
 import { PaymentService } from '../../services/PaymentService';
 import { PaymentMethod, PaymentStatus } from '../../types';
@@ -19,7 +24,7 @@ describe('Real Payment Integration', () => {
         PAYMENT_AUTO_APPROVAL_ENABLED: 'true',
         PAYMENT_AUTO_APPROVAL_THRESHOLD: '100',
         PAYMENT_REQUIRE_CONFIRMATION: 'true',
-      }
+      },
     });
 
     // Get payment service
@@ -35,25 +40,26 @@ describe('Real Payment Integration', () => {
   describe('Wallet Management', () => {
     it('should create and persist wallets', async () => {
       const userId = createTestUserId();
-      
+
       // Get user balance (should create wallet)
       const balances = await paymentService.getUserBalance(userId, runtime);
-      
+
       // Should have created wallets for supported methods
       expect(balances.size).toBeGreaterThan(0);
-      
+
       // Check database persistence
       const dbService = runtime.getService('database') as any;
       const db = dbService?.getDatabase();
       expect(db).toBeDefined();
-      
-      const wallets = await db.select()
+
+      const wallets = await db
+        .select()
         .from(userWallets)
         .where(eq(userWallets.userId, userId))
         .limit(10);
-      
+
       expect(wallets.length).toBeGreaterThan(0);
-      
+
       // Verify wallet structure
       const wallet = wallets[0];
       expect(wallet.address).toBeDefined();
@@ -63,21 +69,22 @@ describe('Real Payment Integration', () => {
 
     it('should encrypt wallet private keys', async () => {
       const userId = createTestUserId();
-      
+
       // Force wallet creation
       await paymentService.getUserBalance(userId, runtime);
-      
+
       // Get wallet from database
       const dbService = runtime.getService('database') as any;
       const db = dbService?.getDatabase();
-      const wallets = await db.select()
+      const wallets = await db
+        .select()
         .from(userWallets)
         .where(eq(userWallets.userId, userId))
         .limit(1);
-      
+
       expect(wallets.length).toBe(1);
       const wallet = wallets[0];
-      
+
       // Private key should be encrypted (not plain text)
       expect(wallet.encryptedPrivateKey).toBeDefined();
       // Should be base64 encoded encrypted data
@@ -101,20 +108,21 @@ describe('Real Payment Integration', () => {
       };
 
       const result = await paymentService.processPayment(paymentRequest, runtime);
-      
+
       // Should be pending due to amount
       expect(result.status).toBe(PaymentStatus.PENDING);
       expect(result.metadata?.pendingReason).toBeDefined();
-      
+
       // Check database for payment request
       const dbService = runtime.getService('database') as any;
       const db = dbService?.getDatabase();
-      
-      const requests = await db.select()
+
+      const requests = await db
+        .select()
         .from(paymentRequests)
         .where(eq(paymentRequests.userId, userId))
         .limit(1);
-      
+
       expect(requests.length).toBe(1);
       if (requests.length > 0) {
         expect(requests[0].requiresConfirmation).toBe(true);
@@ -123,10 +131,10 @@ describe('Real Payment Integration', () => {
 
     it('should auto-approve small payments', async () => {
       const userId = createTestUserId();
-      
+
       // First create wallet
       await paymentService.getUserBalance(userId, runtime);
-      
+
       const paymentRequest = {
         id: createTestUserId(),
         userId,
@@ -139,7 +147,7 @@ describe('Real Payment Integration', () => {
       };
 
       const result = await paymentService.processPayment(paymentRequest, runtime);
-      
+
       // Should fail due to insufficient funds, but not be pending
       expect(result.status).toBe(PaymentStatus.FAILED);
       expect(result.error).toContain('Insufficient');
@@ -149,13 +157,13 @@ describe('Real Payment Integration', () => {
   describe('Payment Confirmation', () => {
     it('should generate unique verification codes', async () => {
       const userId = createTestUserId();
-      
+
       // Update settings to require confirmation
       await paymentService.updateSettings({
         requireConfirmation: true,
         autoApprovalThreshold: 0,
       });
-      
+
       const paymentRequest = {
         id: createTestUserId(),
         userId,
@@ -169,27 +177,28 @@ describe('Real Payment Integration', () => {
       };
 
       const result = await paymentService.processPayment(paymentRequest, runtime);
-      
+
       expect(result.status).toBe(PaymentStatus.PENDING);
-      
+
       // Get payment request from database
       const dbService = runtime.getService('database') as any;
       const db = dbService?.getDatabase();
-      const requests = await db.select()
+      const requests = await db
+        .select()
         .from(paymentRequests)
         .where(eq(paymentRequests.userId, userId))
         .limit(1);
-      
+
       expect(requests.length).toBe(1);
       const request = requests[0];
-      
+
       // Should have verification code
       if (request) {
         expect(request.metadata?.verificationCode).toBeDefined();
         expect(request.metadata.verificationCode).toMatch(/^\d{6}$/);
         expect(request.metadata.verificationCode).not.toBe('123456'); // Not hardcoded
       }
-      
+
       // Reset settings
       await paymentService.updateSettings({
         requireConfirmation: false,
@@ -201,16 +210,16 @@ describe('Real Payment Integration', () => {
   describe('Daily Spending Limits', () => {
     it('should track and enforce daily spending', async () => {
       const userId = createTestUserId();
-      
+
       // Set low daily limit and reload settings
       runtime.setSetting('PAYMENT_MAX_DAILY_SPEND', '50');
       await paymentService.updateSettings({
-        maxDailySpend: 50
+        maxDailySpend: 50,
       });
-      
+
       // Create wallet first
       await paymentService.getUserBalance(userId, runtime);
-      
+
       const paymentRequest = {
         id: createTestUserId(),
         userId,
@@ -223,14 +232,14 @@ describe('Real Payment Integration', () => {
       };
 
       const result = await paymentService.processPayment(paymentRequest, runtime);
-      
+
       expect(result.status).toBe(PaymentStatus.FAILED);
       expect(result.error).toContain('Daily spending limit');
-      
+
       // Reset limit
       runtime.setSetting('PAYMENT_MAX_DAILY_SPEND', '1000');
       await paymentService.updateSettings({
-        maxDailySpend: 1000
+        maxDailySpend: 1000,
       });
     });
   });
@@ -248,15 +257,15 @@ describe('Real Payment Integration', () => {
       expect(isValid).toBe(true);
 
       // Execute action
-      const callback = vi.fn();
+      const callback = mock();
       await researchAction.handler(runtime, memory, undefined, {}, callback);
 
       expect(callback).toHaveBeenCalled();
       const response = callback.mock.calls[0][0];
-      
+
       // Should mention payment requirement
       const text = response.text?.toLowerCase() || '';
       expect(text).toMatch(/payment|fund|wallet|usdc/);
     });
   });
-}); 
+});

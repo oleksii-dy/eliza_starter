@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, mock, beforeEach } from 'bun:test';
 import { githubPlugin } from '../index';
 import { createMockRuntime, MockRuntime } from './test-utils';
 import { HandlerCallback, IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
@@ -19,7 +19,7 @@ describe('Action Chaining: GitHub Plugin', () => {
     // Create mock GitHub service with all necessary methods
     mockGitHubService = {
       capabilityDescription: 'GitHub integration service',
-      searchRepositories: vi.fn().mockResolvedValue({
+      searchRepositories: mock().mockResolvedValue({
         total_count: 100,
         items: [
           {
@@ -44,7 +44,7 @@ describe('Action Chaining: GitHub Plugin', () => {
           },
         ],
       }),
-      searchIssues: vi.fn().mockResolvedValue({
+      searchIssues: mock().mockResolvedValue({
         total_count: 50,
         items: [
           {
@@ -67,7 +67,7 @@ describe('Action Chaining: GitHub Plugin', () => {
           },
         ],
       }),
-      getRepository: vi.fn().mockResolvedValue({
+      getRepository: mock().mockResolvedValue({
         id: 1,
         name: 'awesome-project',
         full_name: 'user/awesome-project',
@@ -81,7 +81,7 @@ describe('Action Chaining: GitHub Plugin', () => {
         topics: ['typescript', 'awesome'],
         license: { name: 'MIT' },
       }),
-      listIssues: vi.fn().mockResolvedValue([
+      listIssues: mock().mockResolvedValue([
         {
           id: 101,
           number: 1,
@@ -101,7 +101,7 @@ describe('Action Chaining: GitHub Plugin', () => {
           user: { login: 'reporter2' },
         },
       ]),
-      createIssue: vi.fn().mockResolvedValue({
+      createIssue: mock().mockResolvedValue({
         id: 103,
         number: 3,
         title: 'New issue from chain',
@@ -114,7 +114,7 @@ describe('Action Chaining: GitHub Plugin', () => {
         comments: 0,
         body: 'Created after checking rate limit and searching',
       }),
-      listPullRequests: vi.fn().mockResolvedValue([
+      listPullRequests: mock().mockResolvedValue([
         {
           id: 201,
           number: 10,
@@ -126,7 +126,7 @@ describe('Action Chaining: GitHub Plugin', () => {
           head: { ref: 'fix-bug' },
         },
       ]),
-      createPullRequest: vi.fn().mockResolvedValue({
+      createPullRequest: mock().mockResolvedValue({
         id: 202,
         number: 11,
         title: 'Feature: Add chaining support',
@@ -134,12 +134,12 @@ describe('Action Chaining: GitHub Plugin', () => {
         html_url: 'https://github.com/user/awesome-project/pull/11',
         created_at: new Date().toISOString(),
       }),
-      getRateLimit: vi.fn().mockResolvedValue({
+      getRateLimit: mock().mockResolvedValue({
         limit: 5000,
         remaining: 4500,
         reset: Date.now() / 1000 + 3600,
       }),
-      getActivityLog: vi.fn().mockReturnValue([
+      getActivityLog: mock().mockReturnValue([
         {
           timestamp: Date.now(),
           action: 'searchRepositories',
@@ -151,7 +151,7 @@ describe('Action Chaining: GitHub Plugin', () => {
 
     // Create mock runtime with the service
     mockRuntime = createMockRuntime({
-      getService: vi.fn().mockImplementation((serviceType) => {
+      getService: mock().mockImplementation((serviceType) => {
         if (serviceType === 'github') {
           return mockGitHubService;
         }

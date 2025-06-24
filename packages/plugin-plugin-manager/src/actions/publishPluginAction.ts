@@ -7,10 +7,9 @@ import {
   type State,
   elizaLogger,
 } from '@elizaos/core';
-import * as fs from 'fs/promises';
-import * as path from 'node:path';
+
 import { PluginManagerService } from '../services/pluginManagerService.ts';
-import { PluginManagerServiceType, PluginStatus } from '../types.ts';
+import { PluginManagerServiceType, PluginStatusValues } from '../types.ts';
 
 export const publishPluginAction: Action = {
   name: 'PUBLISH_PLUGIN',
@@ -45,7 +44,7 @@ export const publishPluginAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory): Promise<boolean> => {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
@@ -107,7 +106,7 @@ export const publishPluginAction: Action = {
       }
 
       // Check if plugin is loaded and ready
-      if (pluginState.status !== PluginStatus.LOADED) {
+      if (pluginState.status !== PluginStatusValues.LOADED) {
         const message = `Plugin ${pluginName} must be loaded before publishing. Current status: ${pluginState.status}`;
         if (callback) {
           await callback({
@@ -138,11 +137,11 @@ export const publishPluginAction: Action = {
         text: responseText,
         data: result,
       };
-    } catch (error) {
+    } catch (_error) {
       const errorMessage = `Error in publish plugin action: ${
-        error instanceof Error ? error.message : String(error)
+        _error instanceof Error ? _error.message : String(_error)
       }`;
-      elizaLogger.error('[publishPluginAction]', error);
+      elizaLogger.error('[publishPluginAction]', _error);
 
       if (callback) {
         await callback({
@@ -153,84 +152,8 @@ export const publishPluginAction: Action = {
 
       return {
         text: errorMessage,
-        data: { error: String(error) },
+        data: { error: String(_error) },
       };
     }
   },
 };
-
-function extractPluginInfo(text: string): string | null {
-  // Look for file paths
-  const pathMatch = text.match(/[./][\w/-]+/);
-  if (pathMatch) {
-    return pathMatch[0];
-  }
-
-  // Look for plugin names
-  const patterns = [/@elizaos\/plugin-[\w-]+/g, /plugin-[\w-]+/g];
-
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) {
-      return match[0];
-    }
-  }
-
-  // Try to extract from natural language
-  const words = text.toLowerCase().split(/\s+/);
-  const publishIndex = words.findIndex((w) => w === 'publish');
-
-  if (publishIndex !== -1) {
-    // Look for plugin indicator
-    for (let i = publishIndex + 1; i < words.length; i++) {
-      if (words[i] === 'plugin' && i - 1 >= 0 && words[i - 1] !== 'the') {
-        // Get the word before "plugin"
-        return `plugin-${words[i - 1]}`;
-      } else if (words[i].includes('plugin')) {
-        return words[i];
-      }
-    }
-  }
-
-  return null;
-}
-
-async function resolvePluginPath(pluginInfo: string): Promise<string | null> {
-  // Check if it's already a path
-  if (pluginInfo.includes('/') || pluginInfo.includes('.')) {
-    const absolutePath = path.resolve(pluginInfo);
-    try {
-      const stat = await fs.stat(absolutePath);
-      if (stat.isDirectory()) {
-        // Check for package.json
-        await fs.access(path.join(absolutePath, 'package.json'));
-        return absolutePath;
-      }
-    } catch {
-      // Not a valid directory
-    }
-  }
-
-  // Check common locations
-  const possiblePaths = [
-    path.join(process.cwd(), pluginInfo),
-    path.join(process.cwd(), 'packages', pluginInfo),
-    path.join(process.cwd(), 'cloned-plugins', pluginInfo),
-    path.join(process.cwd(), '..', pluginInfo),
-  ];
-
-  for (const possiblePath of possiblePaths) {
-    try {
-      const stat = await fs.stat(possiblePath);
-      if (stat.isDirectory()) {
-        // Check for package.json
-        await fs.access(path.join(possiblePath, 'package.json'));
-        return possiblePath;
-      }
-    } catch {
-      // Continue checking
-    }
-  }
-
-  return null;
-}

@@ -216,14 +216,14 @@ export class CrossmintAdapter implements IWalletAdapter {
 
       // Get the chain for this payment method
       const chain = this.getChainForMethod(method);
-      
+
       // Get portfolio/balances through the universal wallet service
       const balances = await this.walletService.getBalances(address);
-      
+
       // Find the balance for the requested token
       const tokenSymbol = this.getTokenSymbol(method);
-      const balance = balances.find((b: UniversalTokenBalance) => 
-        b.symbol === tokenSymbol && 
+      const balance = balances.find((b: UniversalTokenBalance) =>
+        b.symbol === tokenSymbol &&
         b.chain === chain
       );
 
@@ -237,28 +237,28 @@ export class CrossmintAdapter implements IWalletAdapter {
           const balanceStr = whole + paddedFraction;
           return BigInt(balanceStr);
         } catch (parseError) {
-          logger.error('[CrossmintAdapter] Error parsing balance', { 
-            balance: balance.balance, 
-            error: parseError 
+          logger.error('[CrossmintAdapter] Error parsing balance', {
+            balance: balance.balance,
+            error: parseError
           });
           return BigInt(0);
         }
       }
 
-      logger.warn('[CrossmintAdapter] Balance not found', { 
-        address, 
-        method, 
-        chain, 
-        tokenSymbol 
+      logger.warn('[CrossmintAdapter] Balance not found', {
+        address,
+        method,
+        chain,
+        tokenSymbol
       });
       return BigInt(0);
     } catch (error) {
       logger.error('[CrossmintAdapter] Error getting balance', { error, address, method });
-      
+
       if (error instanceof CrossmintAdapterError) {
         throw error;
       }
-      
+
       throw new CrossmintAdapterError(
         'Failed to get balance',
         'BALANCE_ERROR',
@@ -272,7 +272,7 @@ export class CrossmintAdapter implements IWalletAdapter {
     toAddress: string,
     amount: bigint,
     method: PaymentMethod,
-    privateKey?: string
+    _privateKey?: string
   ): Promise<TransactionResult> {
     this.ensureInitialized();
 
@@ -299,8 +299,8 @@ export class CrossmintAdapter implements IWalletAdapter {
         from: fromAddress,
         to: toAddress,
         amount: amount.toString(),
-        chain: chain,
-        tokenAddress: tokenAddress,
+        chain,
+        tokenAddress,
       });
 
       // Validate result
@@ -315,18 +315,18 @@ export class CrossmintAdapter implements IWalletAdapter {
         blockNumber: result.blockNumber,
       };
     } catch (error) {
-      logger.error('[CrossmintAdapter] Error sending transaction', { 
-        error, 
+      logger.error('[CrossmintAdapter] Error sending transaction', {
+        error,
         method,
         fromAddress,
         toAddress,
         amount: amount.toString()
       });
-      
+
       if (error instanceof CrossmintAdapterError) {
         throw error;
       }
-      
+
       throw new CrossmintAdapterError(
         'Failed to send transaction',
         'TRANSACTION_ERROR',
@@ -364,7 +364,7 @@ export class CrossmintAdapter implements IWalletAdapter {
       };
     } catch (error) {
       logger.error('[CrossmintAdapter] Error getting transaction', { error, hash });
-      
+
       // Don't throw for transaction lookups - return processing status
       return {
         hash,
@@ -398,9 +398,9 @@ export class CrossmintAdapter implements IWalletAdapter {
         throw new CrossmintAdapterError('Wallet address not returned', 'WALLET_CREATION_FAILED');
       }
 
-      logger.info('[CrossmintAdapter] Created MPC wallet', { 
+      logger.info('[CrossmintAdapter] Created MPC wallet', {
         address: wallet.address,
-        type: wallet.type 
+        type: wallet.type
       });
 
       return {
@@ -409,11 +409,11 @@ export class CrossmintAdapter implements IWalletAdapter {
       };
     } catch (error) {
       logger.error('[CrossmintAdapter] Error creating wallet', { error });
-      
+
       if (error instanceof CrossmintAdapterError) {
         throw error;
       }
-      
+
       throw new CrossmintAdapterError(
         'Failed to create wallet',
         'WALLET_CREATION_ERROR',
@@ -435,13 +435,13 @@ export class CrossmintAdapter implements IWalletAdapter {
       if (address.startsWith('0x')) {
         return false;
       }
-      
+
       // Solana addresses should be 44 characters (32 bytes base58 encoded)
       // Some addresses might be 43 characters due to leading zero compression
       if (address.length !== 43 && address.length !== 44) {
         return false;
       }
-      
+
       try {
         // Basic Solana address validation (32 bytes base58)
         const decoded = this.base58Decode(address);
@@ -457,7 +457,7 @@ export class CrossmintAdapter implements IWalletAdapter {
       if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
         return false;
       }
-      
+
       // TODO: Add checksum validation for EVM addresses
       return true;
     } catch {
@@ -514,7 +514,7 @@ export class CrossmintAdapter implements IWalletAdapter {
   private getTokenAddress(method: PaymentMethod): string | undefined {
     // Get network-specific token addresses
     const network = this.runtime.getSetting('CROSSMINT_ENVIRONMENT') || 'production';
-    
+
     if (network === 'production') {
       // Mainnet USDC addresses
       const tokenMap: Record<PaymentMethod, string | undefined> = {
@@ -574,8 +574,8 @@ export class CrossmintAdapter implements IWalletAdapter {
 
     // Convert base58 string to a large integer
     let num = BigInt(0);
-    let base = BigInt(58);
-    
+    const base = BigInt(58);
+
     for (let i = 0; i < str.length; i++) {
       const char = str[i];
       if (!(char in ALPHABET_MAP)) {
@@ -598,4 +598,4 @@ export class CrossmintAdapter implements IWalletAdapter {
 
     return new Uint8Array(bytes);
   }
-} 
+}

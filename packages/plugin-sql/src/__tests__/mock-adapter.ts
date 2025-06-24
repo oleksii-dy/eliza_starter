@@ -1,11 +1,11 @@
-import type { 
+import type {
   Agent,
-  Cache, 
+  Cache,
   Component,
   Entity,
   IDatabaseAdapter,
   Memory,
-  Relationship, 
+  Relationship,
   Room,
   Task,
   UUID,
@@ -82,7 +82,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
   }
 
   async searchEntitiesByName(name: string): Promise<Entity[]> {
-    return Array.from(this.entities.values()).filter(e => 
+    return Array.from(this.entities.values()).filter(e =>
       e.names.some(n => n.toLowerCase().includes(name.toLowerCase()))
     );
   }
@@ -120,7 +120,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     const memories = Array.from(this.memories.values())
       .filter(m => m.roomId === params.roomId)
       .slice(0, params.count || 100);
-    return params.unique ? memories.filter((m, i, arr) => 
+    return params.unique ? memories.filter((m, i, arr) =>
       arr.findIndex(other => other.content.text === m.content.text) === i
     ) : memories;
   }
@@ -183,7 +183,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     tags?: string[];
   }): Promise<Relationship[]> {
     return Array.from(this.relationships.values()).filter(rel => {
-      const matchesEntity = rel.sourceEntityId === params.entityId || 
+      const matchesEntity = rel.sourceEntityId === params.entityId ||
                            rel.targetEntityId === params.entityId;
       const matchesTags = !params.tags || params.tags.some(tag => rel.tags.includes(tag));
       return matchesEntity && matchesTags;
@@ -209,7 +209,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
   }
 
   async getRooms(worldId?: UUID): Promise<Room[]> {
-    return Array.from(this.rooms.values()).filter(r => 
+    return Array.from(this.rooms.values()).filter(r =>
       !worldId || r.worldId === worldId
     );
   }

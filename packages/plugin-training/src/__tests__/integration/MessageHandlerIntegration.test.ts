@@ -13,7 +13,7 @@
  * - Error handling with authentic runtime behavior
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { AgentRuntime, elizaLogger, ModelType } from '@elizaos/core';
 import type { Character, IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 import { MessageHandlerIntegration } from '../../integration/MessageHandlerIntegration.js';

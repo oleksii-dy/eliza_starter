@@ -1,5 +1,6 @@
 import {
   type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type UUID,
@@ -11,14 +12,14 @@ import type { TrustProfile } from '../types/trust';
 
 export const evaluateTrustAction: Action = {
   name: 'EVALUATE_TRUST',
-  description: 'Evaluates the trust score and profile for a specified entity',
+  description: 'Evaluates the trust score and profile for a specified entity. Returns detailed trust metrics including dimensions, trends, and confidence levels. Can be chained with RECORD_TRUST_INTERACTION to log trust-affecting behaviors or REQUEST_ELEVATION to check permission eligibility.',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
     const trustEngine = runtime.getService('trust-engine');
     return !!trustEngine;
   },
 
-  handler: async (runtime: IAgentRuntime, message: Memory) => {
+  handler: async (runtime: IAgentRuntime, message: Memory): Promise<ActionResult> => {
     const trustEngine = runtime.getService('trust-engine') as any;
 
     if (!trustEngine) {
@@ -48,7 +49,7 @@ export const evaluateTrustAction: Action = {
           targetEntityId = entity.id;
         }
       }
-      
+
       // If no entity service or entity not found, try database query
       if (!targetEntityId && runtime.getEntitiesForRoom) {
         const entities = await runtime.getEntitiesForRoom(message.roomId);
@@ -61,12 +62,20 @@ export const evaluateTrustAction: Action = {
           }
         }
       }
-      
+
       // If still not found, return helpful error
       if (!targetEntityId) {
         return {
           text: `Could not find entity with name "${requestData.entityName}". Please check the name or provide an entity ID instead.`,
-          error: true,
+          data: {
+            actionName: 'EVALUATE_TRUST',
+            error: 'Entity not found',
+            searchedName: requestData.entityName,
+          },
+          values: {
+            success: false,
+            entityFound: false,
+          },
         };
       }
     } else {
@@ -113,7 +122,18 @@ Trust Dimensions:
 ${dimensionText}
 
 Last Updated: ${new Date(trustProfile.lastCalculated).toLocaleString()}`,
-          data: trustProfile,
+          data: {
+            actionName: 'EVALUATE_TRUST',
+            entityId: targetEntityId,
+            trustProfile,
+            detailed: true,
+          },
+          values: {
+            success: true,
+            trustScore: trustProfile.overallTrust,
+            confidence: trustProfile.confidence,
+            interactionCount: trustProfile.interactionCount,
+          },
         };
       } else {
         const trustLevel =
@@ -130,6 +150,14 @@ Last Updated: ${new Date(trustProfile.lastCalculated).toLocaleString()}`,
         return {
           text: `Trust Level: ${trustLevel} (${trustProfile.overallTrust}/100) based on ${trustProfile.interactionCount} interactions`,
           data: {
+            actionName: 'EVALUATE_TRUST',
+            entityId: targetEntityId,
+            trustScore: trustProfile.overallTrust,
+            trustLevel,
+            confidence: trustProfile.confidence,
+          },
+          values: {
+            success: true,
             trustScore: trustProfile.overallTrust,
             trustLevel,
             confidence: trustProfile.confidence,
@@ -140,35 +168,76 @@ Last Updated: ${new Date(trustProfile.lastCalculated).toLocaleString()}`,
       logger.error('[EvaluateTrust] Error evaluating trust:', error);
       return {
         text: 'Failed to evaluate trust. Please try again.',
-        error: true,
+        data: {
+          actionName: 'EVALUATE_TRUST',
+          error: error instanceof Error ? error.message : String(error),
+        },
+        values: {
+          success: false,
+        },
       };
     }
   },
 
   examples: [
+    // Multi-action: Evaluate trust then record interaction
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
-          text: 'What is my trust score?',
+          text: 'Check Alice\'s trust score and record that she helped with the project',
         },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
-          text: 'Trust Level: Good (65/100) based on 42 interactions',
+          text: "I'll evaluate Alice's trust profile and then record her helpful contribution.",
+          thought: 'User wants trust evaluation followed by interaction recording',
+          actions: ['EVALUATE_TRUST', 'RECORD_TRUST_INTERACTION'],
+        },
+      },
+    ],
+    // Multi-action: Evaluate trust then request elevation
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'What is my trust score and can I get admin permissions?',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll check your trust score and then process your elevation request.",
+          thought: 'User wants trust evaluation followed by permission request',
+          actions: ['EVALUATE_TRUST', 'REQUEST_ELEVATION'],
         },
       },
     ],
     [
       {
-        name: 'User',
+        name: '{{user}}',
+        content: {
+          text: 'What is my trust score?',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'Trust Level: Good (65/100) based on 42 interactions',
+          actions: ['EVALUATE_TRUST'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
         content: {
           text: 'Show detailed trust profile for Alice',
         },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: `Trust Profile for Alice:
 
@@ -185,10 +254,11 @@ Trust Dimensions:
 - transparency: 70/100
 
 Last Updated: 12/20/2024, 3:45:00 PM`,
+          actions: ['EVALUATE_TRUST'],
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 
   similes: [
     'check trust score',

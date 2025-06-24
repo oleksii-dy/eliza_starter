@@ -1,5 +1,6 @@
 import {
   type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
@@ -176,7 +177,9 @@ class WebBrowser {
   private isInitialized = false;
 
   async initialize(): Promise<void> {
-    if (this.isInitialized) return;
+    if (this.isInitialized) {
+      return;
+    }
 
     try {
       this.browser = await puppeteer.launch({
@@ -271,7 +274,7 @@ class WebBrowser {
 
         // Limit content length to prevent overwhelming the context
         if (content.length > 5000) {
-          content = content.substring(0, 5000) + '...';
+          content = `${content.substring(0, 5000)}...`;
         }
 
         // Get links
@@ -394,7 +397,8 @@ async function getBrowserInstance(): Promise<WebBrowser> {
 export const browseWebAction: Action = {
   name: 'BROWSE_WEB',
   similes: ['SEARCH_WEB', 'VISIT_WEBSITE', 'READ_WEBPAGE', 'EXTRACT_INFO'],
-  description: 'Actually browses web pages and extracts information',
+  description:
+    'Browses web pages and extracts information. Can be chained with file operations to save research findings or with analysis actions to process web content',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
@@ -449,8 +453,19 @@ export const browseWebAction: Action = {
     state?: State,
     options?: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
-    if (!callback) return;
+  ): Promise<ActionResult> => {
+    if (!callback) {
+      return {
+        data: {
+          actionName: 'BROWSE_WEB',
+          error: 'No callback provided',
+        },
+        values: {
+          success: false,
+          error: 'No callback provided',
+        },
+      };
+    }
 
     // Security: Input sanitization and validation
     const text = sanitizeInput(message.content.text || '');
@@ -464,7 +479,18 @@ export const browseWebAction: Action = {
         actions: ['BROWSE_WEB_RATE_LIMITED'],
         source: message.content.source,
       });
-      return;
+      return {
+        data: {
+          actionName: 'BROWSE_WEB',
+          rateLimited: true,
+          error: 'Rate limit exceeded',
+        },
+        values: {
+          success: false,
+          rateLimited: true,
+          error: 'Rate limit exceeded',
+        },
+      };
     }
 
     const browser = await getBrowserInstance();
@@ -492,8 +518,8 @@ export const browseWebAction: Action = {
           browseResults = [result];
           searchTerm = `Direct visit to ${new URL(targetUrl).hostname}`;
         } catch (error) {
-          logger.error(`Failed to browse URL:`, { error: sanitizeError(error) });
-          throw new Error(`Failed to access the requested URL: Network or security restriction`);
+          logger.error('Failed to browse URL:', { error: sanitizeError(error) });
+          throw new Error('Failed to access the requested URL: Network or security restriction');
         }
       } else {
         // Extract search terms
@@ -519,8 +545,8 @@ export const browseWebAction: Action = {
             throw new Error('No search results found');
           }
         } catch (error) {
-          logger.error(`Failed to search:`, { error: sanitizeError(error) });
-          throw new Error(`Failed to search: Network or security restriction`);
+          logger.error('Failed to search:', { error: sanitizeError(error) });
+          throw new Error('Failed to search: Network or security restriction');
         }
       }
 
@@ -588,7 +614,7 @@ ${result.metadata.description ? `Description: ${sanitizeForLogging(result.metada
 
       // Provide the actual results (sanitized)
       const thought = targetUrl
-        ? `I browsed a website and extracted the content.`
+        ? 'I browsed a website and extracted the content.'
         : `I searched the web for "${sanitizeForLogging(searchTerm)}" and found ${browseResults.length} relevant results.`;
 
       const responseText = targetUrl
@@ -616,16 +642,44 @@ This information has been saved to my knowledge base for future reference.`;
           method: targetUrl ? 'direct_browse' : 'search',
         },
       });
+
+      return {
+        data: {
+          actionName: 'BROWSE_WEB',
+          searchTerm,
+          targetUrl,
+          results: browseResults,
+          resultsCount: browseResults.length,
+          method: targetUrl ? 'direct_browse' : 'search',
+        },
+        values: {
+          success: true,
+          browseMethod: targetUrl ? 'direct' : 'search',
+          resultsFound: browseResults.length,
+          urls: browseResults.map((r) => r.url),
+        },
+      };
     } catch (error) {
       logger.error('Error in browseWeb handler:', { error: sanitizeError(error) });
       await callback({
-        text: `I encountered an error while browsing. This may be due to network issues, website blocking, or the site being temporarily unavailable.`,
+        text: 'I encountered an error while browsing. This may be due to network issues, website blocking, or the site being temporarily unavailable.',
         actions: ['BROWSE_WEB_ERROR'],
         source: message.content.source,
         data: {
           error: 'Network or security restriction',
         },
       });
+
+      return {
+        data: {
+          actionName: 'BROWSE_WEB',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
     }
   },
 
@@ -642,6 +696,36 @@ This information has been saved to my knowledge base for future reference.`;
         content: {
           text: 'I browsed the web and found the following:\n\n[Actual search results would appear here]\n\nThis information has been saved to my knowledge base for future reference.',
           actions: ['BROWSE_WEB'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Search for information about React hooks and save the findings to a file',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll search for information about React hooks and save the research findings to a file for you.",
+          actions: ['BROWSE_WEB', 'FILE_OPERATION'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Browse the project documentation and analyze the architecture',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll browse the project documentation website and then analyze the architecture details I find.",
+          actions: ['BROWSE_WEB', 'ANALYZE_DATA'],
         },
       },
     ],

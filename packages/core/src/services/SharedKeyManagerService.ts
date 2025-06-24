@@ -29,8 +29,7 @@ export class SharedKeyManagerService extends Service {
       this.encryptionKey = crypto.randomBytes(32);
       elizaLogger.warn(
         'Generated new encryption key for SharedKeyManager. ' +
-          'Save this to SHARED_KEY_ENCRYPTION_KEY: ' +
-          this.encryptionKey.toString('hex')
+          `Save this to SHARED_KEY_ENCRYPTION_KEY: ${this.encryptionKey.toString('hex')}`
       );
     }
   }

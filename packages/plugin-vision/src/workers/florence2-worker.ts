@@ -60,31 +60,31 @@ class Florence2Worker {
 
   async run(): Promise<void> {
     await this.initialize();
-    
+
     logger.info('[Florence2Worker] Starting analysis loop...');
-    
+
     while (this.isRunning) {
       try {
         // Check for new frame
         const currentFrameId = Atomics.load(this.atomicState, this.FRAME_ID_INDEX);
-        
+
         if (currentFrameId > this.lastFrameId) {
           await this.processFrame();
           this.lastFrameId = currentFrameId;
           this.frameCount++;
-          
+
           // Report FPS
           const now = Date.now();
           if (now - this.lastFPSReport >= 1000) {
             const fps = this.frameCount / ((now - this.lastFPSReport) / 1000);
             logger.info(`[Florence2Worker] Analysis FPS: ${fps.toFixed(2)}`);
-            
+
             parentPort?.postMessage({
               type: 'fps',
               fps,
               frameCount: this.frameCount,
             });
-            
+
             this.frameCount = 0;
             this.lastFPSReport = now;
           }
@@ -111,21 +111,21 @@ class Florence2Worker {
 
     // Calculate tiles
     const tiles = this.calculateTiles(metadata.width, metadata.height);
-    
+
     // Process priority tiles first
-    const tilesToProcess = this.config.priorityTiles 
+    const tilesToProcess = this.config.priorityTiles
       ? this.config.priorityTiles.map(i => tiles[i]).filter(Boolean)
       : tiles;
 
     // Process tiles
     for (let i = 0; i < tilesToProcess.length; i++) {
       const tile = tilesToProcess[i];
-      if (!tile) continue;
+      if (!tile) {continue;}
 
       try {
         // Extract tile data from shared buffer
         const tileBuffer = await this.extractTileFromSharedBuffer(tile, metadata);
-        
+
         // Analyze with Florence-2
         const result = await this.florence2.analyzeTile({
           ...tile,
@@ -153,14 +153,14 @@ class Florence2Worker {
   private calculateTiles(width: number, height: number): ScreenTile[] {
     const tileSize = this.config.tileSize;
     const tiles: ScreenTile[] = [];
-    
+
     for (let row = 0; row < Math.ceil(height / tileSize); row++) {
       for (let col = 0; col < Math.ceil(width / tileSize); col++) {
         const x = col * tileSize;
         const y = row * tileSize;
         const tileWidth = Math.min(tileSize, width - x);
         const tileHeight = Math.min(tileSize, height - y);
-        
+
         tiles.push({
           id: `tile-${row}-${col}`,
           row,
@@ -172,7 +172,7 @@ class Florence2Worker {
         });
       }
     }
-    
+
     return tiles;
   }
 
@@ -180,22 +180,22 @@ class Florence2Worker {
     // Calculate byte positions for the tile
     const bytesPerPixel = 4; // RGBA
     const rowStride = metadata.width * bytesPerPixel;
-    
+
     // Create buffer for tile data
     const tileData = Buffer.allocUnsafe(tile.width * tile.height * bytesPerPixel);
-    
+
     // Copy tile data row by row
     for (let row = 0; row < tile.height; row++) {
       const sourceY = tile.y + row;
       const sourceOffset = this.DATA_OFFSET + (sourceY * rowStride) + (tile.x * bytesPerPixel);
       const destOffset = row * tile.width * bytesPerPixel;
-      
+
       // Copy one row of tile data
       for (let i = 0; i < tile.width * bytesPerPixel; i++) {
         tileData[destOffset + i] = this.dataView.getUint8(sourceOffset + i);
       }
     }
-    
+
     // Convert raw RGBA to PNG for Florence-2
     const pngBuffer = await sharp(tileData, {
       raw: {
@@ -204,7 +204,7 @@ class Florence2Worker {
         channels: 4,
       },
     }).png().toBuffer();
-    
+
     return pngBuffer;
   }
 
@@ -216,23 +216,23 @@ class Florence2Worker {
       timestamp: Date.now(),
       ...result,
     });
-    
+
     const resultBytes = Buffer.from(resultJson, 'utf-8');
-    
+
     // Calculate tile index from ID
     const match = tileId.match(/tile-(\d+)-(\d+)/);
-    if (!match) return;
-    
-    const row = parseInt(match[1]);
-    const col = parseInt(match[2]);
+    if (!match) {return;}
+
+    const row = parseInt(match[1], 10);
+    const col = parseInt(match[2], 10);
     const tileIndex = row * 10 + col; // Assuming max 10 columns
-    
+
     // Write to results buffer
     const offset = this.RESULTS_HEADER_SIZE + (tileIndex * this.MAX_RESULT_SIZE);
-    
+
     // Write length
     this.resultsView.setUint32(offset, resultBytes.length, true);
-    
+
     // Write data
     for (let i = 0; i < Math.min(resultBytes.length, this.MAX_RESULT_SIZE - 4); i++) {
       this.resultsView.setUint8(offset + 4 + i, resultBytes[i]);
@@ -252,7 +252,7 @@ class Florence2Worker {
 if (parentPort) {
   const { config, sharedBuffer, resultsBuffer } = workerData;
   const worker = new Florence2Worker(config, sharedBuffer, resultsBuffer);
-  
+
   // Handle messages from main thread
   parentPort.on('message', (msg) => {
     if (msg.type === 'stop') {
@@ -262,11 +262,11 @@ if (parentPort) {
       });
     }
   });
-  
+
   // Run the worker
   worker.run().catch((error) => {
     logger.error('[Florence2Worker] Fatal error:', error);
     parentPort?.postMessage({ type: 'error', error: error.message });
     process.exit(1);
   });
-} 
+}

@@ -15,12 +15,12 @@
  * - Error recovery and resilience testing
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'bun:test';
 import { AgentRuntime, elizaLogger } from '@elizaos/core';
 import type { Character, IAgentRuntime, Memory, UUID } from '@elizaos/core';
 import { trainingPlugin } from '../../index';
-import { TrainingService } from '../../services/training-service';
-import { TogetherReasoningService } from '../../services/TogetherReasoningService';
+import { type TrainingService } from '../../services/training-service';
+import { type TogetherReasoningService } from '../../services/TogetherReasoningService';
 import { TrainingDatabaseManager } from '../../database/TrainingDatabaseManager';
 import { TrainingRecordingManager } from '../../filesystem/TrainingRecordingManager';
 import fs from 'fs/promises';

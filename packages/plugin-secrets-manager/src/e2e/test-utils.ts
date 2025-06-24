@@ -1,17 +1,5 @@
-import {
-  type IAgentRuntime,
-  type Entity,
-  type Room,
-  type Content,
-  type Memory,
-  createUniqueUuid,
-  EventType,
-  asUUID,
-  ChannelType,
-  type World,
-} from '@elizaos/core';
-import { v4 as uuid } from 'uuid';
 import { strict as assert } from 'node:assert';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Sets up a standard scenario environment for an E2E test.
@@ -29,7 +17,7 @@ export async function setupScenario(
 
   // 1. Create a test user entity first, so we can assign ownership
   const user: Entity = {
-    id: asUUID(uuid()),
+    id: as(uuid()),
     names: ['Test User'],
     agentId: runtime.agentId,
     metadata: { type: 'user' },
@@ -38,8 +26,8 @@ export async function setupScenario(
   assert(user.id, 'Created user must have an id');
 
   // 2. Create a World and assign the user as the owner.
-  const world: World = {
-    id: asUUID(uuid()),
+  const _world: World = {
+    id: as(uuid()),
     agentId: runtime.agentId,
     name: 'E2E Test World',
     serverId: 'e2e-test-server',
@@ -53,7 +41,7 @@ export async function setupScenario(
 
   // 3. Create a test room associated with the world
   const room: Room = {
-    id: asUUID(uuid()),
+    id: as(uuid()),
     name: 'Test DM Room',
     type: ChannelType.DM,
     source: 'e2e-test',
@@ -105,7 +93,7 @@ export function sendMessageAndWaitForResponse(
 
     // The callback function that the message handler will invoke with the agent's final response.
     // We use this callback to resolve our promise.
-    const callback = (responseContent: Content) => {
+    const _callback = (responseContent: Content) => {
       resolve(responseContent);
     };
 

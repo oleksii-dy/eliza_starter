@@ -120,7 +120,7 @@ const e2eTests: TestCase[] = [
         testsInitialized = true;
       }
       const trustEngine = runtime.getService<TrustServiceWrapper>('trust-engine');
-      if (!trustEngine) throw new Error('TrustEngine service not found');
+      if (!trustEngine) {throw new Error('TrustEngine service not found');}
 
       const newUserId = crypto.randomUUID() as UUID;
       const roomId = crypto.randomUUID() as UUID;
@@ -201,7 +201,7 @@ const e2eTests: TestCase[] = [
     name: 'Multi-account manipulation detection',
     async fn(runtime: IAgentRuntime) {
       const securityService = runtime.getService<SecurityModuleServiceWrapper>('security-module');
-      if (!securityService) throw new Error('SecurityModule not found');
+      if (!securityService) {throw new Error('SecurityModule not found');}
 
       const mainAccount = crypto.randomUUID() as UUID;
       const altAccount1 = crypto.randomUUID() as UUID;
@@ -265,7 +265,7 @@ const e2eTests: TestCase[] = [
     name: 'Trust recovery after violation',
     async fn(runtime: IAgentRuntime) {
       const trustEngine = runtime.getService<TrustServiceWrapper>('trust-engine');
-      if (!trustEngine) throw new Error('TrustEngine service not found');
+      if (!trustEngine) {throw new Error('TrustEngine service not found');}
 
       const userId = crypto.randomUUID() as UUID;
       const roomId = crypto.randomUUID() as UUID;
@@ -337,7 +337,7 @@ const e2eTests: TestCase[] = [
     name: 'Credential theft prevention',
     async fn(runtime: IAgentRuntime) {
       const securityService = runtime.getService<SecurityModuleServiceWrapper>('security-module');
-      if (!securityService) throw new Error('SecurityModule not found');
+      if (!securityService) {throw new Error('SecurityModule not found');}
 
       const scammerId = crypto.randomUUID() as UUID;
 
@@ -373,7 +373,7 @@ const e2eTests: TestCase[] = [
     async fn(runtime: IAgentRuntime) {
       const trustEngine = runtime.getService<TrustServiceWrapper>('trust-engine');
       const permissionSystem = runtime.getService<any>('contextual-permissions');
-      if (!trustEngine || !permissionSystem) throw new Error('Required services not found');
+      if (!trustEngine || !permissionSystem) {throw new Error('Required services not found');}
 
       const helpfulUserId = crypto.randomUUID() as UUID;
       const roomId = crypto.randomUUID() as UUID;
@@ -421,7 +421,7 @@ const e2eTests: TestCase[] = [
     name: 'Multi-account manipulation detection',
     async fn(runtime: IAgentRuntime) {
       const securityService = runtime.getService<SecurityModuleServiceWrapper>('security-module');
-      if (!securityService) throw new Error('SecurityModule not found');
+      if (!securityService) {throw new Error('SecurityModule not found');}
 
       const mainAccount = crypto.randomUUID() as UUID;
       const altAccount1 = crypto.randomUUID() as UUID;
@@ -486,7 +486,7 @@ const e2eTests: TestCase[] = [
     async fn(runtime: IAgentRuntime) {
       const trustEngine = runtime.getService<TrustServiceWrapper>('trust-engine');
       const securityService = runtime.getService<any>('security-module');
-      if (!trustEngine || !securityService) throw new Error('Required services not found');
+      if (!trustEngine || !securityService) {throw new Error('Required services not found');}
 
       const gamingUserId = crypto.randomUUID() as UUID;
       const roomId = crypto.randomUUID() as UUID;
@@ -535,7 +535,7 @@ const e2eTests: TestCase[] = [
     async fn(runtime: IAgentRuntime) {
       const trustEngine = runtime.getService<TrustServiceWrapper>('trust-engine');
       const securityService = runtime.getService<any>('security-module');
-      if (!trustEngine || !securityService) throw new Error('Required services not found');
+      if (!trustEngine || !securityService) {throw new Error('Required services not found');}
 
       const whistleblowerId = crypto.randomUUID() as UUID;
       const abuserId = crypto.randomUUID() as UUID;
@@ -588,7 +588,7 @@ const e2eTests: TestCase[] = [
     name: 'Role hierarchy conflict resolution',
     async fn(runtime: IAgentRuntime) {
       const permissionSystem = runtime.getService<any>('contextual-permissions');
-      if (!permissionSystem) throw new Error('PermissionSystem not found');
+      if (!permissionSystem) {throw new Error('PermissionSystem not found');}
 
       const userId = crypto.randomUUID() as UUID;
       const roomId = crypto.randomUUID() as UUID;
@@ -623,7 +623,7 @@ const e2eTests: TestCase[] = [
     async fn(runtime: IAgentRuntime) {
       const trustEngine = runtime.getService<TrustServiceWrapper>('trust-engine');
       const permissionSystem = runtime.getService<any>('contextual-permissions');
-      if (!trustEngine || !permissionSystem) throw new Error('Required services not found');
+      if (!trustEngine || !permissionSystem) {throw new Error('Required services not found');}
 
       const highTrustUserId = crypto.randomUUID() as UUID;
       const lowTrustUserId = crypto.randomUUID() as UUID;
@@ -681,7 +681,7 @@ const e2eTests: TestCase[] = [
     name: 'Impersonation detection',
     async fn(runtime: IAgentRuntime) {
       const securityService = runtime.getService<any>('security-module');
-      if (!securityService) throw new Error('SecurityModule not found');
+      if (!securityService) {throw new Error('SecurityModule not found');}
 
       const existingUsers = ['RealVIP', 'AdminUser', 'ModeratorBob'];
 
@@ -712,7 +712,7 @@ const e2eTests: TestCase[] = [
     name: 'Phishing campaign detection',
     async fn(runtime: IAgentRuntime) {
       const securityService = runtime.getService<any>('security-module');
-      if (!securityService) throw new Error('SecurityModule not found');
+      if (!securityService) {throw new Error('SecurityModule not found');}
 
       const phisherId = crypto.randomUUID() as UUID;
       const messages: any[] = [
@@ -763,7 +763,7 @@ const e2eTests: TestCase[] = [
     async fn(runtime: IAgentRuntime) {
       const trustService = runtime.getService<TrustServiceWrapper>('trust-engine');
       const permissionService = runtime.getService<any>('contextual-permissions');
-      if (!trustService || !permissionService) throw new Error('Services not found');
+      if (!trustService || !permissionService) {throw new Error('Services not found');}
 
       const ownerUserId = crypto.randomUUID() as UUID;
       const emergencyUserId = crypto.randomUUID() as UUID;
@@ -857,7 +857,7 @@ const e2eTests: TestCase[] = [
     name: 'Cross-platform identity correlation',
     async fn(runtime: IAgentRuntime) {
       const trustService = runtime.getService<TrustServiceWrapper>('trust-engine');
-      if (!trustService) throw new Error('TrustEngine not found');
+      if (!trustService) {throw new Error('TrustEngine not found');}
 
       const discordUserId = crypto.randomUUID() as UUID;
       const githubUserId = crypto.randomUUID() as UUID;

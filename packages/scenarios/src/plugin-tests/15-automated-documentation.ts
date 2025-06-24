@@ -1,4 +1,4 @@
-import type { Scenario } from "../types.js"
+import type { Scenario } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const automateddocumentationScenario: Scenario = {
@@ -7,7 +7,7 @@ export const automateddocumentationScenario: Scenario = {
   description: 'Generate project documentation from code analysis',
   category: 'integration',
   tags: ['github', 'knowledge', 'planning', 'todo', 'complex-workflow'],
-  
+
   actors: [
     {
       id: uuidv4() as any,
@@ -24,31 +24,32 @@ export const automateddocumentationScenario: Scenario = {
           {
             type: 'message',
             content: 'Analyze our codebase and identify all public APIs that need documentation.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 8000,
-      },
+          },
           {
             type: 'message',
-            content: 'Create a documentation plan with sections for getting started, API reference, and examples.',
-      },
+            content:
+              'Create a documentation plan with sections for getting started, API reference, and examples.',
+          },
           {
             type: 'wait',
             waitTime: 10000,
-      },
+          },
           {
             type: 'message',
             content: 'Generate the documentation and store it in the knowledge base.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 12000,
-      },
+          },
           {
             type: 'message',
             content: 'Create todos for any manual documentation tasks that require human input.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 14000,
@@ -68,7 +69,7 @@ export const automateddocumentationScenario: Scenario = {
       plugins: ['github', 'knowledge', 'planning', 'todo'],
     },
   },
-  
+
   execution: {
     maxDuration: 300000,
     maxSteps: 25,
@@ -80,7 +81,7 @@ export const automateddocumentationScenario: Scenario = {
       },
     ],
   },
-  
+
   verification: {
     rules: [
       {
@@ -88,7 +89,8 @@ export const automateddocumentationScenario: Scenario = {
         type: 'llm',
         description: 'All required plugins were utilized',
         config: {
-          criteria: 'The agent successfully used github, knowledge, planning, todo plugins to complete the workflow',
+          criteria:
+            'The agent successfully used github, knowledge, planning, todo plugins to complete the workflow',
         },
         weight: 3,
       },
@@ -109,7 +111,7 @@ export const automateddocumentationScenario: Scenario = {
           criteria: 'Multiple actions from different plugins were chained together effectively',
         },
         weight: 3,
-      }
+      },
     ],
     expectedOutcomes: [
       {
@@ -134,7 +136,7 @@ export const automateddocumentationScenario: Scenario = {
       ],
     },
   },
-  
+
   benchmarks: {
     maxDuration: 300000,
     maxSteps: 25,

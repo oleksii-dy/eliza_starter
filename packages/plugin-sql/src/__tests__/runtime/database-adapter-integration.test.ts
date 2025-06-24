@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'bun:test';
-import { 
-  AgentRuntime, 
+import {
+  AgentRuntime,
   createUniqueUuid,
-  type UUID, 
-  type Agent, 
-  type Memory, 
+  type UUID,
+  type Agent,
+  type Memory,
   type Component,
   type Entity,
   type Relationship,
@@ -44,7 +44,7 @@ describe('Database Adapter Real Runtime Integration', () => {
         bio: 'A test agent created through real runtime',
         system: 'You are a test agent for validating real database operations',
         plugins: ['@elizaos/plugin-sql'],
-        settings: { 
+        settings: {
           testMode: true,
           runtimeIntegration: 'enabled'
         },
@@ -67,7 +67,7 @@ describe('Database Adapter Real Runtime Integration', () => {
 
     it('should handle agent creation failure with duplicate names', async () => {
       const agentName = `Duplicate Test Agent ${Date.now()}`;
-      
+
       const agent1: Agent = {
         id: uuidv4() as UUID,
         name: agentName,
@@ -103,7 +103,7 @@ describe('Database Adapter Real Runtime Integration', () => {
       // Verify only first agent exists
       const retrieved1 = await runtime.getAgent(agent1.id);
       const retrieved2 = await runtime.getAgent(agent2.id);
-      
+
       expect(retrieved1).toBeDefined();
       expect(retrieved2).toBeNull();
     });
@@ -224,9 +224,9 @@ describe('Database Adapter Real Runtime Integration', () => {
       });
 
       expect(searchResults.length).toBeGreaterThan(0);
-      
+
       // Results should include weather-related memories
-      const weatherMemories = searchResults.filter(m => 
+      const weatherMemories = searchResults.filter(m =>
         m.content.text?.includes('sunny') || m.content.text?.includes('weather')
       );
       expect(weatherMemories.length).toBeGreaterThan(0);
@@ -396,10 +396,10 @@ describe('Database Adapter Real Runtime Integration', () => {
       });
 
       expect(relationships.length).toBeGreaterThan(0);
-      const foundRel = relationships.find(r => 
+      const foundRel = relationships.find(r =>
         r.sourceEntityId === entity1Id && r.targetEntityId === entity2Id
       );
-      
+
       expect(foundRel).toBeDefined();
       expect(foundRel?.tags).toEqual(relationship.tags);
       expect(foundRel?.metadata.strength).toBe(0.8);
@@ -410,7 +410,7 @@ describe('Database Adapter Real Runtime Integration', () => {
   describe('Error Handling and Edge Cases', () => {
     it('should handle database constraint violations gracefully', async () => {
       const duplicateId = uuidv4() as UUID;
-      
+
       const agent1: Agent = {
         id: duplicateId,
         name: 'Original Agent',
@@ -479,7 +479,7 @@ describe('Database Adapter Real Runtime Integration', () => {
           id: uuidv4() as UUID,
           names: [`Bulk Entity ${i}`],
           agentId: testAgentId,
-          metadata: { 
+          metadata: {
             index: i,
             batchTest: true,
             createdInBulk: Date.now()
@@ -527,7 +527,7 @@ describe('Database Adapter Real Runtime Integration', () => {
       const results = await Promise.all(promises);
       results.forEach(result => expect(result).toBe(true));
 
-      // Verify no corruption occurred by checking all results completed successfully  
+      // Verify no corruption occurred by checking all results completed successfully
       // Since the entities aren't associated with a specific room, use a simpler verification
       expect(results.length).toBe(concurrentOps);
       results.forEach(result => expect(result).toBe(true));

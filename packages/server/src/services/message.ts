@@ -33,6 +33,7 @@ export class MessageBusService extends Service {
   static serviceType = 'message-bus-service';
   capabilityDescription = 'Manages connection and message synchronization with the message server.';
 
+  protected runtime: IAgentRuntime;
   private boundHandleIncomingMessage: (message: MessageServiceMessage) => Promise<void>;
   private boundHandleServerAgentUpdate: (data: any) => Promise<void>;
   private boundHandleMessageDeleted: (data: any) => Promise<void>;
@@ -41,6 +42,7 @@ export class MessageBusService extends Service {
 
   constructor(runtime: IAgentRuntime) {
     super(runtime);
+    this.runtime = runtime;
     this.boundHandleIncomingMessage = this.handleIncomingMessage.bind(this);
     this.boundHandleServerAgentUpdate = this.handleServerAgentUpdate.bind(this);
     this.boundHandleMessageDeleted = this.handleMessageDeleted.bind(this);
@@ -697,7 +699,9 @@ export class MessageBusService extends Service {
   }
 
   private async notifyMessageComplete(channelId?: UUID, serverId?: UUID) {
-    if (!channelId || !serverId) return;
+    if (!channelId || !serverId) {
+      return;
+    }
 
     try {
       const completeUrl = new URL('/api/messaging/complete', this.getCentralMessageServerUrl());
@@ -786,7 +790,7 @@ export class MessageBusService extends Service {
       url.hash = '';
 
       return url.toString().replace(/\/$/, ''); // Remove trailing slash
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         `[MessageBusService] Invalid URL format in CENTRAL_MESSAGE_SERVER_URL: ${baseUrl}`
       );

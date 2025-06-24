@@ -1,6 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { elizaLogger as logger, type IAgentRuntime, type UUID } from '@elizaos/core';
-// @ts-ignore - EnhancedSecretManager export issue
 import { EnhancedSecretManager, type SecretContext } from '@elizaos/plugin-secrets-manager';
 import fs from 'fs-extra';
 import path from 'path';
@@ -45,7 +44,7 @@ export const ClaudeModel = {
   OPUS_4: 'claude-opus-4-20250514',
 } as const;
 
-export type ClaudeModel = (typeof ClaudeModel)[keyof typeof ClaudeModel];
+export type ClaudeModelType = (typeof ClaudeModel)[keyof typeof ClaudeModel];
 
 /**
  * The main orchestration manager for the autocoder plugin.
@@ -55,7 +54,7 @@ export class OrchestrationManager {
   private runtime: IAgentRuntime;
   private projects: Map<string, PluginProject> = new Map();
   private anthropic: Anthropic | null = null;
-  private selectedModel: ClaudeModel = ClaudeModel.OPUS_4;
+  private selectedModel: ClaudeModelType = ClaudeModel.OPUS_4;
   private serviceDiscovery: ServiceDiscoveryManager | null = null;
   private dependencyManager: DependencyManager | null = null;
   private componentCreation: ComponentCreationManager | null = null;
@@ -294,12 +293,24 @@ export class OrchestrationManager {
   ): 'api_key' | 'private_key' | 'public_key' | 'url' | 'credential' | 'config' | 'secret' {
     const lowerKey = key.toLowerCase();
 
-    if (lowerKey.includes('api_key') || lowerKey.includes('api-key')) return 'api_key';
-    if (lowerKey.includes('private_key')) return 'private_key';
-    if (lowerKey.includes('public_key')) return 'public_key';
-    if (lowerKey.includes('token')) return 'credential';
-    if (lowerKey.includes('url') || lowerKey.includes('endpoint')) return 'url';
-    if (lowerKey.includes('secret')) return 'secret';
+    if (lowerKey.includes('api_key') || lowerKey.includes('api-key')) {
+      return 'api_key';
+    }
+    if (lowerKey.includes('private_key')) {
+      return 'private_key';
+    }
+    if (lowerKey.includes('public_key')) {
+      return 'public_key';
+    }
+    if (lowerKey.includes('token')) {
+      return 'credential';
+    }
+    if (lowerKey.includes('url') || lowerKey.includes('endpoint')) {
+      return 'url';
+    }
+    if (lowerKey.includes('secret')) {
+      return 'secret';
+    }
 
     return 'config';
   }
@@ -329,15 +340,9 @@ export class OrchestrationManager {
    * Check if a plugin is compatible with the search terms
    */
   private isPluginCompatible(plugin: any, searchTerms: string[]): boolean {
-    const pluginText = (
-      plugin.name +
-      ' ' +
-      (plugin.description || '') +
-      ' ' +
-      (plugin.packageJson?.description || '') +
-      ' ' +
-      (plugin.packageJson?.keywords || []).join(' ')
-    ).toLowerCase();
+    const pluginText = `${plugin.name} ${plugin.description || ''} ${
+      plugin.packageJson?.description || ''
+    } ${(plugin.packageJson?.keywords || []).join(' ')}`.toLowerCase();
 
     return searchTerms.some((term) => pluginText.includes(term.toLowerCase()));
   }
@@ -384,7 +389,7 @@ export class OrchestrationManager {
       metadata: {
         projectId: project.id,
         projectName: name,
-        userId: userId,
+        userId,
         actionName: 'createPluginProject',
       },
       data: {
@@ -450,7 +455,7 @@ export class OrchestrationManager {
       metadata: {
         projectId: project.id,
         projectName: project.name,
-        userId: userId,
+        userId,
         actionName: 'updatePluginProject',
       },
       data: {
@@ -520,7 +525,9 @@ export class OrchestrationManager {
 
   private async startCreationWorkflow(projectId: string): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) return;
+    if (!project) {
+      return;
+    }
 
     this.logToProject(projectId, '🚀 Starting 18-step plugin creation workflow...');
 
@@ -573,7 +580,9 @@ export class OrchestrationManager {
 
   private async startUpdateWorkflow(projectId: string): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) return;
+    if (!project) {
+      return;
+    }
 
     this.logToProject(projectId, '🚀 Starting 13-step plugin update workflow...');
 
@@ -660,7 +669,9 @@ export class OrchestrationManager {
    */
   private async executeUpdateCriticalReviewPhase(projectId: string): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) return;
+    if (!project) {
+      return;
+    }
 
     await this.updateProjectStatus(projectId, 'self_critique');
     this.logToProject(projectId, '🔥 Starting UPDATE CRITICAL REVIEW phase...');
@@ -857,7 +868,9 @@ Write a DEVASTATING review that demands PERFECTION. Start with:
 
   private async executeResearchPhase(projectId: string): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) return;
+    if (!project) {
+      return;
+    }
 
     await this.updateProjectStatus(projectId, 'researching');
     this.logToProject(projectId, `Starting research for "${project.name}"...`);
@@ -969,7 +982,9 @@ Write a DEVASTATING review that demands PERFECTION. Start with:
     researchData: ResearchProject
   ): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) return;
+    if (!project) {
+      return;
+    }
 
     try {
       const knowledgeService = this.getKnowledgeService();
@@ -1013,7 +1028,9 @@ Write a DEVASTATING review that demands PERFECTION. Start with:
 
   private async discoverExistingServices(projectId: string): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project || !this.serviceDiscovery) return;
+    if (!project || !this.serviceDiscovery) {
+      return;
+    }
 
     try {
       this.logToProject(projectId, 'Discovering existing services and plugins...');
@@ -1187,7 +1204,9 @@ Write a DEVASTATING review that demands PERFECTION. Start with:
 
   private async executeMVPPlanningPhase(projectId: string): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) return;
+    if (!project) {
+      return;
+    }
 
     await this.updateProjectStatus(projectId, 'mvp_planning');
     this.logToProject(projectId, 'Starting MVP planning phase...');
@@ -1274,7 +1293,7 @@ Please provide a structured MVP plan with:
         },
         data: {
           planLength: mvpPlan.length,
-          plan: mvpPlan.substring(0, 500) + '...', // First 500 chars for preview
+          plan: `${mvpPlan.substring(0, 500)}...`, // First 500 chars for preview
         },
       });
 
@@ -1318,7 +1337,9 @@ Please provide a structured MVP plan with:
 
   private async executeMVPDevelopmentPhase(projectId: string): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) return;
+    if (!project) {
+      return;
+    }
 
     await this.updateProjectStatus(projectId, 'mvp_development');
     this.logToProject(projectId, 'Starting MVP development loop...');
@@ -1342,7 +1363,9 @@ Please provide a structured MVP plan with:
    */
   private async executeFullPlanningPhase(projectId: string): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) return;
+    if (!project) {
+      return;
+    }
 
     await this.updateProjectStatus(projectId, 'full_planning');
     this.logToProject(projectId, 'Planning full implementation...');
@@ -1402,7 +1425,9 @@ Provide a detailed implementation plan with specific files and components to add
    */
   private async executeFullDevelopmentPhase(projectId: string): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) return;
+    if (!project) {
+      return;
+    }
 
     await this.updateProjectStatus(projectId, 'full_development');
     this.logToProject(projectId, 'Starting full development loop...');
@@ -1423,7 +1448,9 @@ Provide a detailed implementation plan with specific files and components to add
    */
   private async executeCriticalReviewPhase(projectId: string): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) return;
+    if (!project) {
+      return;
+    }
 
     await this.updateProjectStatus(projectId, 'self_critique');
     this.logToProject(projectId, '🔥 Starting CRITICAL REVIEW phase with stern critique...');
@@ -1628,7 +1655,7 @@ Be specific about what files to modify and what code to add.`;
         const quickFixSuccess = await this.runQuickBuildFixLoop(project, stage, 5);
 
         // Run all checks (steps 5-8 for MVP, 11-14 for full)
-        this.logToProject(project.id, `🔍 Running comprehensive verification checks...`);
+        this.logToProject(project.id, '🔍 Running comprehensive verification checks...');
         const results = await this.runAllChecks(project);
 
         // Log individual check results with step numbers
@@ -1708,7 +1735,9 @@ Be specific about what files to modify and what code to add.`;
   }
 
   private async setupPluginWorkspace(project: PluginProject): Promise<void> {
-    if (!project.localPath) throw new Error('Project localPath is not set.');
+    if (!project.localPath) {
+      throw new Error('Project localPath is not set.');
+    }
     await fs.ensureDir(project.localPath);
 
     const templatePath = path.resolve(__dirname, '../resources/templates/plugin-starter');
@@ -1737,7 +1766,9 @@ Be specific about what files to modify and what code to add.`;
   }
 
   private getDataDir(): string {
-    return this.runtime.getSetting('PLUGIN_DATA_DIR') || path.join(process.cwd(), '.eliza-data');
+    // Use centralized path management for plugin data
+    const { getPluginDataPath } = require('@elizaos/core/utils/path-manager');
+    return getPluginDataPath('autocoder');
   }
 
   /**
@@ -1745,7 +1776,9 @@ Be specific about what files to modify and what code to add.`;
    */
   public async installRequiredPlugins(projectId: string, pluginNames: string[]): Promise<string[]> {
     const project = this.projects.get(projectId);
-    if (!project) return [];
+    if (!project) {
+      return [];
+    }
 
     const pluginManager = this.runtime.getService('PLUGIN_MANAGER') as PluginManagerService;
     if (!pluginManager) {
@@ -1980,7 +2013,7 @@ Be specific about what files to modify and what code to add.`;
 
       // Execute Claude Code session
       for await (const message of query({
-        prompt: prompt + '\n\n' + systemPrompt,
+        prompt: `${prompt}\n\n${systemPrompt}`,
         abortController: new AbortController(),
         options,
       })) {
@@ -2071,7 +2104,7 @@ Be specific about what files to modify and what code to add.`;
       let examplesText = '';
       for (const [serviceName, examples] of context.serviceUsageExamples) {
         examplesText += `\n### ${serviceName} Usage Examples:\n`;
-        examplesText += examples.map((ex) => '```typescript\n' + ex + '\n```').join('\n');
+        examplesText += examples.map((ex) => `\`\`\`typescript\n${ex}\n\`\`\``).join('\n');
       }
 
       dependencySection = `
@@ -2097,7 +2130,7 @@ ${context.warnings.map((w: string) => `- ⚠️ ${w}`).join('\n') || '- No warni
 
     let errorFixSection = '';
     if (errorAnalysis.size > 0) {
-      errorFixSection = '\n\nSPECIFIC ERRORS TO FIX:\n' + '-'.repeat(20) + '\n';
+      errorFixSection = `\n\nSPECIFIC ERRORS TO FIX:\n${'-'.repeat(20)}\n`;
       for (const analysis of errorAnalysis.values()) {
         errorFixSection += `File: ${analysis.file || 'N/A'}:${analysis.line || 'N/A'}\nError: ${analysis.message}\nSuggestion: ${analysis.suggestion}\n\n`;
       }
@@ -2535,9 +2568,15 @@ File: src/actions/myAction.ts
    */
   private mapStageToPhase(stageName: string): 'tsc' | 'eslint' | 'build' | 'test' {
     const lower = stageName.toLowerCase();
-    if (lower.includes('typescript') || lower.includes('syntax')) return 'tsc';
-    if (lower.includes('eslint') || lower.includes('lint')) return 'eslint';
-    if (lower.includes('test')) return 'test';
+    if (lower.includes('typescript') || lower.includes('syntax')) {
+      return 'tsc';
+    }
+    if (lower.includes('eslint') || lower.includes('lint')) {
+      return 'eslint';
+    }
+    if (lower.includes('test')) {
+      return 'test';
+    }
     return 'build'; // Default fallback
   }
 
@@ -2660,7 +2699,9 @@ File: src/actions/myAction.ts
   }
 
   private async updateErrorAnalysis(project: PluginProject, result: CheckResult): Promise<void> {
-    if (!result.errors || result.errors.length === 0) return;
+    if (!result.errors || result.errors.length === 0) {
+      return;
+    }
 
     for (const error of result.errors) {
       const analysis = await this.parseErrorMessage(result.phase, error);
@@ -2730,11 +2771,15 @@ File: src/actions/myAction.ts
   public async getProject(projectId: string): Promise<PluginProject | null> {
     // Check active projects first
     const active = this.projects.get(projectId);
-    if (active) return active;
+    if (active) {
+      return active;
+    }
 
     // Check lifecycle manager cache
     const cached = this.lifecycleManager.getActiveProject(projectId);
-    if (cached) return cached;
+    if (cached) {
+      return cached;
+    }
 
     // Try to load from archive
     return await this.lifecycleManager.getCompletedProject(projectId);
@@ -2968,7 +3013,7 @@ ${typeImports.join('\n')}
     // Build error fixing section
     let errorFixSection = '';
     if (errorAnalysis.size > 0) {
-      errorFixSection = '\n\n**CRITICAL ERRORS TO FIX:**\n' + '-'.repeat(40) + '\n';
+      errorFixSection = `\n\n**CRITICAL ERRORS TO FIX:**\n${'-'.repeat(40)}\n`;
       for (const analysis of errorAnalysis.values()) {
         errorFixSection += `File: ${analysis.file || 'N/A'}:${analysis.line || 'N/A'}\n`;
         errorFixSection += `Error: ${analysis.message}\n`;
@@ -3202,7 +3247,9 @@ Your goal is to create a fully functional, production-ready ElizaOS plugin.`;
     stage: 'mvp' | 'full',
     errorAnalysis: Map<string, ErrorAnalysis>
   ): Promise<void> {
-    if (!project.localPath) return;
+    if (!project.localPath) {
+      return;
+    }
 
     const { query } = await import('@anthropic-ai/claude-code');
 

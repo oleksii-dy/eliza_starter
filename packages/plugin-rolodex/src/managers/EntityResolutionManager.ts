@@ -337,7 +337,7 @@ export class EntityResolutionManager {
       );
       return entityId;
     } catch (error) {
-      logger.error(`[EntityResolutionManager] Error creating entity:`, error);
+      logger.error('[EntityResolutionManager] Error creating entity:', error);
       throw error;
     }
   }
@@ -401,7 +401,7 @@ export class EntityResolutionManager {
       const mergedNames = [...primaryEntity.names];
 
       for (const candidate of candidateEntities) {
-        if (!candidate) continue;
+        if (!candidate) {continue;}
 
         // Merge names
         for (const name of candidate.names) {
@@ -483,7 +483,7 @@ export class EntityResolutionManager {
       );
       return true;
     } catch (error) {
-      logger.error(`[EntityResolutionManager] Error executing merge:`, error);
+      logger.error('[EntityResolutionManager] Error executing merge:', error);
       return false;
     }
   }
@@ -578,7 +578,7 @@ export class EntityResolutionManager {
 
       return candidates;
     } catch (error) {
-      logger.error(`[EntityResolutionManager] Error finding candidates:`, error);
+      logger.error('[EntityResolutionManager] Error finding candidates:', error);
       return [];
     }
   }
@@ -625,7 +625,7 @@ export class EntityResolutionManager {
         crossPlatformIndicators,
       };
     } catch (error) {
-      logger.error(`[EntityResolutionManager] Error scoring candidate:`, error);
+      logger.error('[EntityResolutionManager] Error scoring candidate:', error);
       return { ...candidate, confidence: 0 };
     }
   }
@@ -687,7 +687,7 @@ export class EntityResolutionManager {
         factors.push({
           type: 'contextual_hint',
           confidence: contextScore,
-          evidence: `Contextual evidence from conversation`,
+          evidence: 'Contextual evidence from conversation',
           weight: this.resolutionConfig.matchWeights.contextual_hint,
         });
       }
@@ -744,7 +744,7 @@ export class EntityResolutionManager {
           identifier: identityObj.handle || identityObj.userId || '',
           verified: identityObj.verified || false,
           confidence: identityObj.confidence || 0.5,
-          linkingEvidence: [`Identity stored in entity metadata`],
+          linkingEvidence: ['Identity stored in entity metadata'],
           lastSeen: new Date(identityObj.lastSeen || Date.now()),
         });
       }
@@ -799,7 +799,7 @@ export class EntityResolutionManager {
     // If multiple high-confidence candidates, flag for manual review
     if (highConfidence.length > 1) {
       logger.warn(
-        `[EntityResolutionManager] Multiple high-confidence candidates detected, flagging for review`
+        '[EntityResolutionManager] Multiple high-confidence candidates detected, flagging for review'
       );
 
       // Add risk factors to all high-confidence candidates
@@ -1002,7 +1002,7 @@ Respond with only the numeric score (e.g., "0.65")`;
 
       // Find entities with similar names or characteristics
       for (const otherEntity of allEntities) {
-        if (otherEntity.id === entity.id) continue; // Skip self
+        if (otherEntity.id === entity.id) {continue;} // Skip self
 
         // Check for name similarities
         const nameSimilarity = await this.calculateNameSimilarity(
@@ -1366,7 +1366,7 @@ Respond with only the numeric score (e.g., "0.65")`;
       // Merge platform identities from candidate graphs
       for (const candidateId of candidateIds) {
         const candidateGraph = this.identityGraphs.get(candidateId);
-        if (!candidateGraph) continue;
+        if (!candidateGraph) {continue;}
 
         // Merge platform identities
         for (const [platform, identity] of candidateGraph.platformIdentities) {

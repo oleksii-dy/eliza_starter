@@ -24,21 +24,21 @@ export async function createTestPGLiteInstance(options: PGliteOptions): Promise<
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`[TEST] Creating PGLite instance (attempt ${attempt}/${maxRetries})`);
-      
+
       // Force garbage collection before creation
       if (global.gc) {
         global.gc();
       }
-      
+
       // Add delay between attempts
       if (attempt > 1) {
         await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
       }
-      
+
       const instance = new PGlite(options);
       await instance.waitReady;
-      
-      console.log(`[TEST] PGLite instance created successfully`);
+
+      console.log('[TEST] PGLite instance created successfully');
       return instance;
     } catch (error) {
       lastError = error as Error;

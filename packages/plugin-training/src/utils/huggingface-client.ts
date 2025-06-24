@@ -1,10 +1,5 @@
-import {
-  type IAgentRuntime,
-  elizaLogger,
-} from '@elizaos/core';
-import {
-  type TrainingConfig,
-} from '../types.js';
+import { type IAgentRuntime, elizaLogger } from '@elizaos/core';
+import { type TrainingConfig } from '../types.js';
 import {
   whoAmI,
   createRepo,
@@ -35,19 +30,21 @@ export class HuggingFaceClient {
     elizaLogger.info('Initializing Hugging Face Client');
 
     this.token = this.runtime.getSetting('HUGGING_FACE_TOKEN') as string;
-    
+
     if (!this.token) {
-      elizaLogger.warn('HUGGING_FACE_TOKEN not configured - Hugging Face features will be disabled');
+      elizaLogger.warn(
+        'HUGGING_FACE_TOKEN not configured - Hugging Face features will be disabled'
+      );
       return;
     }
 
     try {
       // Initialize HuggingFace credentials
       this.credentials = { accessToken: this.token };
-      
+
       // Test authentication
       await this.testAuthentication();
-      
+
       elizaLogger.info('Hugging Face Client initialized successfully');
     } catch (error) {
       elizaLogger.error('Error initializing Hugging Face Client:', error);
@@ -63,9 +60,13 @@ export class HuggingFaceClient {
     try {
       // Try to get user info to test authentication
       const userInfo = await whoAmI({ credentials: this.credentials });
-      elizaLogger.info(`Authenticated as Hugging Face user: ${userInfo.name || userInfo.id || 'Unknown'}`);
+      elizaLogger.info(
+        `Authenticated as Hugging Face user: ${userInfo.name || userInfo.id || 'Unknown'}`
+      );
     } catch (error) {
-      elizaLogger.warn(`HuggingFace authentication test failed: ${error instanceof Error ? error.message : String(error)}`);
+      elizaLogger.warn(
+        `HuggingFace authentication test failed: ${error instanceof Error ? error.message : String(error)}`
+      );
       // Don't throw here - allow initialization to proceed as the token might still be valid for other operations
     }
   }
@@ -86,7 +87,7 @@ export class HuggingFaceClient {
 
     try {
       const { organization, datasetName, private: isPrivate, license } = config.huggingFaceConfig;
-      
+
       // Create repository name
       const repoId = organization ? `${organization}/${datasetName}` : datasetName;
 
@@ -104,7 +105,7 @@ export class HuggingFaceClient {
 
       const datasetUrl = `https://huggingface.co/datasets/${repoId}`;
       elizaLogger.info(`Dataset uploaded successfully: ${datasetUrl}`);
-      
+
       return datasetUrl;
     } catch (error) {
       elizaLogger.error('Error uploading dataset to Hugging Face:', error);
@@ -119,22 +120,22 @@ export class HuggingFaceClient {
   ): Promise<void> {
     try {
       // Check if repository exists
-      await checkRepoAccess({ 
+      await checkRepoAccess({
         repo: { type: repoType, name: repoId },
-        credentials: this.credentials!
+        credentials: this.credentials!,
       });
       elizaLogger.info(`Repository ${repoId} already exists`);
     } catch (error) {
       if ((error as any)?.statusCode === 404) {
         // Repository doesn't exist, create it
         elizaLogger.info(`Creating repository: ${repoId}`);
-        
+
         await createRepo({
           repo: { type: repoType, name: repoId },
           private: isPrivate,
-          credentials: this.credentials!
+          credentials: this.credentials!,
         });
-        
+
         elizaLogger.info(`Repository created: ${repoId}`);
       } else {
         throw error;
@@ -146,16 +147,16 @@ export class HuggingFaceClient {
     elizaLogger.info(`Uploading files from ${datasetPath}`);
 
     const files = await fs.readdir(datasetPath);
-    
+
     for (const filename of files) {
       const filePath = path.join(datasetPath, filename);
       const fileStat = await fs.stat(filePath);
-      
+
       if (fileStat.isFile()) {
         elizaLogger.info(`Uploading file: ${filename}`);
-        
+
         const fileContent = await fs.readFile(filePath);
-        
+
         await uploadFile({
           repo: { type: 'dataset', name: repoId },
           file: {
@@ -163,9 +164,9 @@ export class HuggingFaceClient {
             content: new Blob([fileContent]),
           },
           commitTitle: `Upload ${filename}`,
-          credentials: this.credentials!
+          credentials: this.credentials!,
         });
-        
+
         elizaLogger.info(`File uploaded: ${filename}`);
       }
     }
@@ -189,15 +190,16 @@ export class HuggingFaceClient {
     }
 
     const readme = this.generateReadme(config, metadata);
-    
+
     await uploadFile({
       repo: { type: 'dataset', name: repoId },
       file: {
         path: 'README.md',
+        // eslint-disable-next-line no-undef
         content: new Blob([new TextEncoder().encode(readme)]),
       },
       commitTitle: 'Add README',
-      credentials: this.credentials!
+      credentials: this.credentials!,
     });
 
     elizaLogger.info('README uploaded');
@@ -205,7 +207,7 @@ export class HuggingFaceClient {
 
   private generateReadme(config: TrainingConfig, metadata: any): string {
     const stats = metadata.statistics || {};
-    
+
     return `---
 license: ${config.huggingFaceConfig?.license || 'apache-2.0'}
 language:
@@ -343,18 +345,28 @@ For questions or issues with this dataset, please contact the ElizaOS team.
   }
 
   private getSizeCategory(count: number): string {
-    if (count < 1000) return 'n<1K';
-    if (count < 10000) return '1K<n<10K';
-    if (count < 100000) return '10K<n<100K';
-    if (count < 1000000) return '100K<n<1M';
+    if (count < 1000) {
+      return 'n<1K';
+    }
+    if (count < 10000) {
+      return '1K<n<10K';
+    }
+    if (count < 100000) {
+      return '10K<n<100K';
+    }
+    if (count < 1000000) {
+      return '100K<n<1M';
+    }
     return 'n>1M';
   }
 
   private formatDistribution(distribution: Record<string, number> | undefined): string {
-    if (!distribution) return 'N/A';
-    
+    if (!distribution) {
+      return 'N/A';
+    }
+
     return Object.entries(distribution)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .map(([key, value]) => `- **${key}**: ${value}`)
       .join('\\n');
   }
@@ -375,11 +387,7 @@ For questions or issues with this dataset, please contact the ElizaOS team.
           { name: 'scores', dtype: 'string' },
           { name: 'metadata', dtype: 'string' },
         ],
-        splits: [
-          { name: 'train' },
-          { name: 'validation' },
-          { name: 'test' },
-        ],
+        splits: [{ name: 'train' }, { name: 'validation' }, { name: 'test' }],
         download_size: await this.calculateDatasetSize(datasetPath),
         dataset_size: await this.calculateDatasetSize(datasetPath),
       },
@@ -394,10 +402,11 @@ For questions or issues with this dataset, please contact the ElizaOS team.
       repo: { type: 'dataset', name: repoId },
       file: {
         path: 'dataset_info.json',
+        // eslint-disable-next-line no-undef
         content: new Blob([new TextEncoder().encode(JSON.stringify(datasetCard, null, 2))]),
       },
       commitTitle: 'Add dataset card',
-      credentials: this.credentials!
+      credentials: this.credentials!,
     });
 
     elizaLogger.info('Dataset card uploaded');
@@ -405,14 +414,14 @@ For questions or issues with this dataset, please contact the ElizaOS team.
 
   private async calculateDatasetSize(datasetPath: string): Promise<number> {
     let totalSize = 0;
-    
+
     try {
       const files = await fs.readdir(datasetPath);
-      
+
       for (const filename of files) {
         const filePath = path.join(datasetPath, filename);
         const fileStat = await fs.stat(filePath);
-        
+
         if (fileStat.isFile()) {
           totalSize += fileStat.size;
         }
@@ -420,7 +429,7 @@ For questions or issues with this dataset, please contact the ElizaOS team.
     } catch (error) {
       elizaLogger.warn('Error calculating dataset size:', error);
     }
-    
+
     return totalSize;
   }
 
@@ -439,28 +448,28 @@ For questions or issues with this dataset, please contact the ElizaOS team.
       await fs.mkdir(targetPath, { recursive: true });
 
       // List all files in the dataset
-      const filesGenerator = listFiles({ 
+      const filesGenerator = listFiles({
         repo: { type: 'dataset', name: datasetName },
-        credentials: this.credentials
+        credentials: this.credentials,
       });
 
       // Download all files
       for await (const file of filesGenerator) {
         if (file.type === 'file') {
           elizaLogger.info(`Downloading file: ${file.path}`);
-          
+
           const fileContent = await downloadFile({
             repo: { type: 'dataset', name: datasetName },
             path: file.path,
-            credentials: this.credentials
+            credentials: this.credentials,
           });
 
           const targetFilePath = path.join(targetPath, file.path);
-          
+
           // Create directory if it doesn't exist
           const targetDir = path.dirname(targetFilePath);
           await fs.mkdir(targetDir, { recursive: true });
-          
+
           // Convert blob to buffer and write
           const buffer = Buffer.from(await fileContent!.arrayBuffer());
           await fs.writeFile(targetFilePath, buffer);
@@ -486,7 +495,7 @@ For questions or issues with this dataset, please contact the ElizaOS team.
     try {
       const datasets = await listDatasets({
         search: organization ? { owner: organization } : undefined,
-        credentials: this.credentials
+        credentials: this.credentials,
       });
 
       // Convert async generator to array
@@ -504,20 +513,17 @@ For questions or issues with this dataset, please contact the ElizaOS team.
   /**
    * Create model repository for fine-tuned models
    */
-  async createModelRepository(
-    modelName: string,
-    isPrivate: boolean = false
-  ): Promise<string> {
+  async createModelRepository(modelName: string, isPrivate: boolean = false): Promise<string> {
     if (!this.credentials) {
       throw new Error('Hugging Face credentials not initialized');
     }
 
     try {
       await this.createRepositoryIfNotExists(modelName, isPrivate, 'model');
-      
+
       const modelUrl = `https://huggingface.co/${modelName}`;
       elizaLogger.info(`Model repository created: ${modelUrl}`);
-      
+
       return modelUrl;
     } catch (error) {
       elizaLogger.error('Error creating model repository:', error);
@@ -541,7 +547,7 @@ For questions or issues with this dataset, please contact the ElizaOS team.
 
     try {
       const { organization, modelName, private: isPrivate } = config.huggingFaceConfig;
-      
+
       // Create repository name
       const repoId = organization ? `${organization}/${modelName}` : modelName;
 
@@ -556,7 +562,7 @@ For questions or issues with this dataset, please contact the ElizaOS team.
 
       const modelUrl = `https://huggingface.co/${repoId}`;
       elizaLogger.info(`Model uploaded successfully: ${modelUrl}`);
-      
+
       return modelUrl;
     } catch (error) {
       elizaLogger.error('Error uploading model to Hugging Face:', error);
@@ -568,16 +574,16 @@ For questions or issues with this dataset, please contact the ElizaOS team.
     elizaLogger.info(`Uploading model files from ${modelPath}`);
 
     const files = await fs.readdir(modelPath);
-    
+
     for (const filename of files) {
       const filePath = path.join(modelPath, filename);
       const fileStat = await fs.stat(filePath);
-      
+
       if (fileStat.isFile()) {
         elizaLogger.info(`Uploading model file: ${filename}`);
-        
+
         const fileContent = await fs.readFile(filePath);
-        
+
         await uploadFile({
           repo: { type: 'model', name: repoId },
           file: {
@@ -585,9 +591,9 @@ For questions or issues with this dataset, please contact the ElizaOS team.
             content: new Blob([fileContent]),
           },
           commitTitle: `Upload ${filename}`,
-          credentials: this.credentials!
+          credentials: this.credentials!,
         });
-        
+
         elizaLogger.info(`Model file uploaded: ${filename}`);
       }
     }
@@ -601,15 +607,16 @@ For questions or issues with this dataset, please contact the ElizaOS team.
     elizaLogger.info('Creating and uploading model card');
 
     const modelCard = this.generateModelCard(config);
-    
+
     await uploadFile({
       repo: { type: 'model', name: repoId },
       file: {
         path: 'README.md',
+        // eslint-disable-next-line no-undef
         content: new Blob([new TextEncoder().encode(modelCard)]),
       },
       commitTitle: 'Add model card',
-      credentials: this.credentials!
+      credentials: this.credentials!,
     });
 
     elizaLogger.info('Model card uploaded');
@@ -700,7 +707,7 @@ For questions or issues with this model, please contact the ElizaOS team.
     try {
       const models = await listModels({
         search: organization ? { owner: organization } : undefined,
-        credentials: this.credentials
+        credentials: this.credentials,
       });
 
       // Convert async generator to array
@@ -721,5 +728,5 @@ For questions or issues with this model, please contact the ElizaOS team.
   createReadmeContent = (config: TrainingConfig, stats: any): string => {
     const metadataWithStats = { statistics: stats };
     return this.generateReadme(config, metadataWithStats);
-  }
+  };
 }

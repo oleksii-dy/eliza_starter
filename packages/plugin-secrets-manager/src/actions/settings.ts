@@ -53,9 +53,9 @@ Do not including any thinking or internal reflection in the "text" field.
  * {{providers}}
  *
  * # Update Information:
- * - Updated Settings: {{updateMessages}}
+ * - Updated WorldSettings: {{updateMessages}}
  * - Next Required Setting: {{nextSetting.name}}
- * - Remaining Required Settings: {{remainingRequired}}
+ * - Remaining Required WorldSettings: {{remainingRequired}}
  *
  * # Instructions:
  * 1. Acknowledge the successful update of settings
@@ -72,9 +72,9 @@ const successTemplate = `# Task: Generate a response for successful setting upda
 {{providers}}
 
 # Update Information:
-- Updated Settings: {{updateMessages}}
+- Updated WorldSettings: {{updateMessages}}
 - Next Required Setting: {{nextSetting.name}}
-- Remaining Required Settings: {{remainingRequired}}
+- Remaining Required WorldSettings: {{remainingRequired}}
 
 # Instructions:
 1. Acknowledge the successful update of settings
@@ -100,14 +100,14 @@ const failureTemplate = `# Task: Generate a response for failed setting updates
 # About {{agentName}}:
 {{bio}}
 
-# Current Settings Status:
+# Current WorldSettings Status:
 {{settingsStatus}}
 
 # Next Required Setting:
 - Name: {{nextSetting.name}}
 - Description: {{nextSetting.description}}
 - Required: Yes
-- Remaining Required Settings: {{remainingRequired}}
+- Remaining Required WorldSettings: {{remainingRequired}}
 
 # Recent Conversation:
 {{recentMessages}}
@@ -163,7 +163,7 @@ ${messageCompletionFooter}`;
  * About {{agentName}}:
  * {{bio}}
  *
- * Settings Status:
+ * WorldSettings Status:
  * {{settingsStatus}}
  *
  * Recent Conversation:
@@ -185,7 +185,7 @@ const completionTemplate = `# Task: Generate a response for settings completion
 # About {{agentName}}:
 {{bio}}
 
-# Settings Status:
+# WorldSettings Status:
 {{settingsStatus}}
 
 # Recent Conversation:
@@ -204,16 +204,16 @@ Include the actions array ["ONBOARDING_COMPLETE"] in your response.
 ${messageCompletionFooter}`;
 
 /**
- * Generates an extraction template with formatting details.
- *
- * @param {WorldSettings} worldSettings - The settings to generate a template for.
+ * Formats the extraction template for settings.
+ * @param {string} settingsContext - The available settings context.
+ * @param {string} content - The user's message content.
  * @returns {string} The formatted extraction template.
  */
-const extractionTemplate = `# Task: Extract Setting Changes from User Input
+const _extractionTemplate = `# Task: Extract Setting Changes from User Input
 
 I need to extract settings that the user wants to change based on their message.
 
-Available Settings:
+Available WorldSettings:
 {{settingsContext}}
 
 User message: {{content}}
@@ -229,7 +229,7 @@ Example response:
 ]
 \`\`\`
 
-IMPORTANT: Only include settings from the Available Settings list above. Ignore any other potential settings.`;
+IMPORTANT: Only include settings from the Available WorldSettings list above. Ignore any other potential settings.`;
 
 /**
  * Gets settings state from world metadata
@@ -246,7 +246,7 @@ export async function getWorldSettings(
 ): Promise<WorldSettings | null> {
   try {
     const worldId = createUniqueUuid(runtime, serverId);
-    const world = await runtime.getWorld(worldId);
+    const _world = await runtime.getWorld(worldId);
 
     if (!world || !world.metadata?.settings) {
       return null;
@@ -269,7 +269,7 @@ export async function updateWorldSettings(
 ): Promise<boolean> {
   try {
     const worldId = createUniqueUuid(runtime, serverId);
-    const world = await runtime.getWorld(worldId);
+    const _world = await runtime.getWorld(worldId);
 
     if (!world) {
       logger.error(`No world found for server ${serverId}`);
@@ -324,7 +324,9 @@ function categorizeSettings(worldSettings: WorldSettings): {
 
   for (const [key, setting] of Object.entries(worldSettings) as [string, Setting][]) {
     // Skip internal settings
-    if (key.startsWith('_')) continue;
+    if (key.startsWith('_')) {
+      continue;
+    }
 
     if (setting.value !== null) {
       configured.push([key, setting]);
@@ -454,7 +456,9 @@ async function processSettingUpdates(
     // Process all updates
     for (const update of updates) {
       const setting = updatedState[update.key];
-      if (!setting) continue;
+      if (!setting) {
+        continue;
+      }
 
       // Check dependencies if they exist
       if (setting.dependsOn?.length) {
@@ -533,14 +537,14 @@ async function handleOnboardingComplete(
 
     const responseContent = parseJSONObjectFromText(response) as Content;
 
-    await callback({
+    await void callback({
       text: responseContent.text,
       actions: ['ONBOARDING_COMPLETE'],
       source: 'discord',
     });
   } catch (error) {
     logger.error(`Error handling settings completion: ${error}`);
-    await callback({
+    await void callback({
       text: 'Great! All required settings have been configured. Your server is now fully set up and ready to use.',
       actions: ['ONBOARDING_COMPLETE'],
       source: 'discord',
@@ -588,15 +592,15 @@ async function generateSuccessResponse(
 
     const responseContent = parseJSONObjectFromText(response) as Content;
 
-    await callback({
+    await void callback({
       text: responseContent.text,
       actions: ['SETTING_UPDATED'],
       source: 'discord',
     });
   } catch (error) {
     logger.error(`Error generating success response: ${error}`);
-    await callback({
-      text: 'Settings updated successfully. Please continue with the remaining configuration.',
+    await void callback({
+      text: 'WorldSettings updated successfully. Please continue with the remaining configuration.',
       actions: ['SETTING_UPDATED'],
       source: 'discord',
     });
@@ -641,14 +645,14 @@ async function generateFailureResponse(
 
     const responseContent = parseJSONObjectFromText(response) as Content;
 
-    await callback({
+    await void callback({
       text: responseContent.text,
       actions: ['SETTING_UPDATE_FAILED'],
       source: 'discord',
     });
   } catch (error) {
     logger.error(`Error generating failure response: ${error}`);
-    await callback({
+    await void callback({
       text: "I couldn't understand your settings update. Please try again with a clearer format.",
       actions: ['SETTING_UPDATE_FAILED'],
       source: 'discord',
@@ -676,14 +680,14 @@ async function generateErrorResponse(
 
     const responseContent = parseJSONObjectFromText(response) as Content;
 
-    await callback({
+    await void callback({
       text: responseContent.text,
       actions: ['SETTING_UPDATE_ERROR'],
       source: 'discord',
     });
   } catch (error) {
     logger.error(`Error generating error response: ${error}`);
-    await callback({
+    await void callback({
       text: "I'm sorry, but I encountered an error while processing your request. Please try again or contact support if the issue persists.",
       actions: ['SETTING_UPDATE_ERROR'],
       source: 'discord',
@@ -701,7 +705,7 @@ export const updateSettingsAction: Action = {
   description:
     'Saves a configuration setting during the onboarding process, or update an existing setting. Use this when you are onboarding with a world owner or admin.',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
+  validate: async (_runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     try {
       if (message.content.channelType !== ChannelType.DM) {
         logger.debug(`Skipping settings in non-DM channel (type: ${message.content.channelType})`);
@@ -715,7 +719,7 @@ export const updateSettingsAction: Action = {
         return false;
       }
 
-      const world = worlds.find((world) => world.metadata?.settings);
+      const _world = worlds.find((world) => world.metadata?.settings);
 
       // Check if there's an active settings state in world metadata
       const worldSettings = world?.metadata?.settings;
@@ -810,8 +814,8 @@ export const updateSettingsAction: Action = {
         logger.info(`Successfully updated settings: ${updateResults.messages.join(', ')}`);
 
         // Get updated settings state
-        const updatedWorldSettings = await getWorldSettings(runtime, serverId);
-        if (!updatedWorldSettings) {
+        const updatedSettings = await getWorldSettings(runtime, serverId);
+        if (!updatedSettings) {
           logger.error('Failed to retrieve updated settings state');
           await generateErrorResponse(runtime, state, callback);
           return {
@@ -822,7 +826,7 @@ export const updateSettingsAction: Action = {
 
         await generateSuccessResponse(
           runtime,
-          updatedWorldSettings,
+          updatedSettings,
           state,
           updateResults.messages,
           callback

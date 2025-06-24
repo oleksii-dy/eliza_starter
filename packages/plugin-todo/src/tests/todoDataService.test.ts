@@ -1,5 +1,5 @@
 import type { IAgentRuntime, UUID } from '@elizaos/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { todosTable, todoTagsTable } from '../schema.ts';
 import { createTodoDataService, TodoDataService } from '../services/todoDataService.ts';
 
@@ -11,18 +11,18 @@ describe('TodoDataService', () => {
 
   beforeEach(() => {
     mockThenable = {
-      from: vi.fn(),
-      where: vi.fn(),
-      orderBy: vi.fn(),
-      limit: vi.fn(),
-      returning: vi.fn(),
-      values: vi.fn(),
-      set: vi.fn(),
-      then: vi.fn(),
-      execute: vi.fn(),
-      findFirst: vi.fn(),
-      all: vi.fn(),
-      $dynamic: vi.fn(),
+      from: mock(),
+      where: mock(),
+      orderBy: mock(),
+      limit: mock(),
+      returning: mock(),
+      values: mock(),
+      set: mock(),
+      then: mock(),
+      execute: mock(),
+      findFirst: mock(),
+      all: mock(),
+      $dynamic: mock(),
     };
 
     mockThenable.from.mockReturnThis();
@@ -37,11 +37,11 @@ describe('TodoDataService', () => {
     mockThenable.$dynamic.mockReturnThis();
 
     mockDb = {
-      insert: vi.fn().mockReturnValue(mockThenable),
-      select: vi.fn().mockReturnValue(mockThenable),
-      update: vi.fn().mockReturnValue(mockThenable),
-      delete: vi.fn().mockReturnValue(mockThenable),
-      execute: vi.fn(),
+      insert: mock().mockReturnValue(mockThenable),
+      select: mock().mockReturnValue(mockThenable),
+      update: mock().mockReturnValue(mockThenable),
+      delete: mock().mockReturnValue(mockThenable),
+      execute: mock(),
     };
 
     mockRuntime = {
@@ -53,7 +53,7 @@ describe('TodoDataService', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   describe('createTodo', () => {
@@ -128,12 +128,12 @@ describe('TodoDataService', () => {
 
       // First mock: getTodos query
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(mockTodos));
-      
+
       // Mock for each todo's tags query (2 todos = 2 tag queries)
-      mockThenable.then.mockImplementationOnce((resolve: any) => 
+      mockThenable.then.mockImplementationOnce((resolve: any) =>
         resolve([{ tag: 'TODO' }, { tag: 'urgent' }])
       );
-      mockThenable.then.mockImplementationOnce((resolve: any) => 
+      mockThenable.then.mockImplementationOnce((resolve: any) =>
         resolve([{ tag: 'TODO' }, { tag: 'daily' }])
       );
 
@@ -212,7 +212,7 @@ describe('TodoDataService', () => {
     });
 
     it('should handle update failure', async () => {
-      mockThenable.then.mockImplementationOnce((resolve: any, reject: any) => 
+      mockThenable.then.mockImplementationOnce((resolve: any, reject: any) =>
         reject(new Error('Update failed'))
       );
 

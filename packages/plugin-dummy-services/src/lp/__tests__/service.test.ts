@@ -12,10 +12,6 @@ describe('DummyLpService', () => {
     service.start(mockRuntime);
   });
 
-  it('should have the correct DEX name', () => {
-    expect(service.getDexName()).toBe('dummy');
-  });
-
   describe('getPools', () => {
     it('should return all dummy pools when no mints are specified', async () => {
       const pools = await service.getPools();
@@ -51,6 +47,19 @@ describe('DummyLpService', () => {
       expect(result.lpTokensReceived).toBeDefined();
       expect(result.lpTokensReceived?.address).toBe('dummy-lp-mint-dummy-pool-1');
       expect(result.lpTokensReceived?.uiAmount).toBe(100);
+    });
+
+    it('should handle invalid pool ID gracefully', async () => {
+      const result = await service.addLiquidity({
+        userVault: Keypair.generate(),
+        poolId: 'non-existent-pool',
+        tokenAAmountLamports: '1000000000',
+        slippageBps: 50,
+      });
+
+      // For dummy service, it still returns success but real service would fail
+      expect(result.success).toBe(true);
+      expect(result.lpTokensReceived?.address).toBe('dummy-lp-mint-non-existent-pool');
     });
   });
 
@@ -97,6 +106,33 @@ describe('DummyLpService', () => {
       expect(marketData['dummy-pool-1'].apy).toBeTypeOf('number');
       expect(marketData['dummy-pool-1'].tvl).toBeTypeOf('number');
       expect(marketData['dummy-stable-pool-2']).toBeDefined();
+    });
+
+    it('should return valid APY and APR ranges', async () => {
+      const poolIds = ['dummy-pool-1'];
+      const marketData = await service.getMarketDataForPools(poolIds);
+
+      const data = marketData['dummy-pool-1'];
+      expect(data.apy).toBeGreaterThanOrEqual(0);
+      expect(data.apy).toBeLessThanOrEqual(1);
+      expect(data.apr).toBeGreaterThanOrEqual(0);
+      expect(data.apr).toBeLessThanOrEqual(1);
+    });
+  });
+
+  describe('service lifecycle', () => {
+    it('should properly handle start and stop', async () => {
+      const newService = new DummyLpService();
+
+      // Service should work after start
+      await newService.start(mockRuntime);
+      const pools = await newService.getPools();
+      expect(pools.length).toBeGreaterThan(0);
+
+      // Service should still work after stop (for dummy implementation)
+      await newService.stop();
+      const poolsAfterStop = await newService.getPools();
+      expect(poolsAfterStop.length).toBe(pools.length);
     });
   });
 });

@@ -4,7 +4,7 @@
  * Uses mock database adapter to focus on plugin configuration functionality
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { AgentRuntime } from '../../runtime';
 import { Service } from '../../types/service';
 import type {

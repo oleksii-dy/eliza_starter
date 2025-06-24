@@ -285,7 +285,9 @@ No additional text.`;
   }
 
   private auditLog(event: any): void {
-    if (!this.config.auditLogging) return;
+    if (!this.config.auditLogging) {
+      return;
+    }
 
     // In production, this would write to secure audit log
     logger.info('AUDIT:', JSON.stringify(event));

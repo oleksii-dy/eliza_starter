@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { ScenarioRunner } from '../../src/scenario-runner/index.js';
 import type { Scenario } from '../../src/scenario-runner/types.js';
 import type { UUID } from '@elizaos/core';
@@ -11,15 +11,15 @@ describe('Scenario Developer Utilities', () => {
   let runner: ScenarioRunner;
 
   beforeEach(() => {
-    const mockServer = { stop: vi.fn() };
+    const mockServer = { stop: mock() };
     const mockRuntime = {
       agentId: 'test-agent' as UUID,
       character: { name: 'Test Agent' },
       logger: {
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        debug: vi.fn(),
+        info: mock(),
+        warn: mock(),
+        error: mock(),
+        debug: mock(),
       },
     };
     runner = new ScenarioRunner(mockServer as any, mockRuntime as any);
@@ -58,15 +58,36 @@ describe('Scenario Developer Utilities', () => {
 
     it('should help identify missing required fields', () => {
       const missingFields = [
-        { field: 'id', scenario: { name: 'Test', description: 'Test', actors: [], setup: {}, execution: {}, verification: { rules: [] } } },
-        { field: 'actor', scenario: { id: 'test', name: 'Test', description: 'Test', actors: [], setup: {}, execution: {}, verification: { rules: [] } } },
+        {
+          field: 'id',
+          scenario: {
+            name: 'Test',
+            description: 'Test',
+            actors: [],
+            setup: {},
+            execution: {},
+            verification: { rules: [] },
+          },
+        },
+        {
+          field: 'actor',
+          scenario: {
+            id: 'test',
+            name: 'Test',
+            description: 'Test',
+            actors: [],
+            setup: {},
+            execution: {},
+            verification: { rules: [] },
+          },
+        },
       ];
 
       missingFields.forEach(({ field, scenario }) => {
         try {
           runner.validateScenario(scenario as Scenario);
           fail(`Expected validation to fail for missing ${field}`);
-        } catch (error) {
+        } catch (error: any) {
           expect(error.message).toMatch(new RegExp(field, 'i'));
         }
       });
@@ -78,22 +99,24 @@ describe('Scenario Developer Utilities', () => {
       const scenarios = [
         {
           name: 'No subject actor',
-          actors: [{ id: 'a1' as UUID, name: 'A1', role: 'assistant', script: { steps: [] } }],
+          actors: [
+            { id: 'a1' as UUID, name: 'A1', role: 'assistant' as const, script: { steps: [] } },
+          ],
           shouldFail: true,
         },
         {
           name: 'Multiple subject actors',
           actors: [
-            { id: 'a1' as UUID, name: 'A1', role: 'subject', script: { steps: [] } },
-            { id: 'a2' as UUID, name: 'A2', role: 'subject', script: { steps: [] } },
+            { id: 'a1' as UUID, name: 'A1', role: 'subject' as const, script: { steps: [] } },
+            { id: 'a2' as UUID, name: 'A2', role: 'subject' as const, script: { steps: [] } },
           ],
           shouldFail: true,
         },
         {
           name: 'Valid single subject',
           actors: [
-            { id: 'a1' as UUID, name: 'A1', role: 'subject', script: { steps: [] } },
-            { id: 'a2' as UUID, name: 'A2', role: 'assistant', script: { steps: [] } },
+            { id: 'a1' as UUID, name: 'A1', role: 'subject' as const, script: { steps: [] } },
+            { id: 'a2' as UUID, name: 'A2', role: 'assistant' as const, script: { steps: [] } },
           ],
           shouldFail: false,
         },
@@ -125,11 +148,11 @@ describe('Scenario Developer Utilities', () => {
     it('should efficiently chunk large arrays', () => {
       const largeArray = Array.from({ length: 1000 }, (_, i) => i);
       const startTime = Date.now();
-      
+
       const chunks = runner.chunkArray(largeArray, 50);
-      
+
       const endTime = Date.now();
-      
+
       expect(chunks).toHaveLength(20); // 1000 / 50
       expect(chunks[0]).toHaveLength(50);
       expect(chunks[19]).toHaveLength(50);
@@ -147,15 +170,39 @@ describe('Scenario Developer Utilities', () => {
     it('should provide specific error messages for each validation failure', () => {
       const testCases = [
         {
-          scenario: { id: '', name: 'Test', description: 'Test', actors: [{ id: 'a' as UUID, name: 'A', role: 'subject', script: { steps: [] } }], setup: {}, execution: {}, verification: { rules: [{ id: 'r', type: 'llm', description: 'R', config: {} }] } },
+          scenario: {
+            id: '',
+            name: 'Test',
+            description: 'Test',
+            actors: [{ id: 'a' as UUID, name: 'A', role: 'subject', script: { steps: [] } }],
+            setup: {},
+            execution: {},
+            verification: { rules: [{ id: 'r', type: 'llm', description: 'R', config: {} }] },
+          },
           expectedKeywords: ['ID'],
         },
         {
-          scenario: { id: 'test', name: '', description: 'Test', actors: [{ id: 'a' as UUID, name: 'A', role: 'subject', script: { steps: [] } }], setup: {}, execution: {}, verification: { rules: [{ id: 'r', type: 'llm', description: 'R', config: {} }] } },
+          scenario: {
+            id: 'test',
+            name: '',
+            description: 'Test',
+            actors: [{ id: 'a' as UUID, name: 'A', role: 'subject', script: { steps: [] } }],
+            setup: {},
+            execution: {},
+            verification: { rules: [{ id: 'r', type: 'llm', description: 'R', config: {} }] },
+          },
           expectedKeywords: ['name'],
         },
         {
-          scenario: { id: 'test', name: 'Test', description: 'Test', actors: [], setup: {}, execution: {}, verification: { rules: [{ id: 'r', type: 'llm', description: 'R', config: {} }] } },
+          scenario: {
+            id: 'test',
+            name: 'Test',
+            description: 'Test',
+            actors: [],
+            setup: {},
+            execution: {},
+            verification: { rules: [{ id: 'r', type: 'llm', description: 'R', config: {} }] },
+          },
           expectedKeywords: ['actor'],
         },
       ];
@@ -164,9 +211,9 @@ describe('Scenario Developer Utilities', () => {
         try {
           runner.validateScenario(scenario as Scenario);
           fail('Expected validation to throw an error');
-        } catch (error) {
+        } catch (error: any) {
           const message = error.message.toLowerCase();
-          expectedKeywords.forEach(keyword => {
+          expectedKeywords.forEach((keyword) => {
             expect(message).toContain(keyword.toLowerCase());
           });
         }
@@ -186,11 +233,11 @@ describe('Scenario Developer Utilities', () => {
         verification: { rules: [] },
       };
 
-      let errorMessages: string[] = [];
-      
+      const errorMessages: string[] = [];
+
       try {
         runner.validateScenario(invalidScenario as Scenario);
-      } catch (error) {
+      } catch (error: any) {
         errorMessages.push(error.message);
       }
 
@@ -209,13 +256,23 @@ describe('Scenario Developer Utilities', () => {
             description: 'Test basic chat functionality',
             actors: [
               { id: 'agent' as UUID, name: 'Agent', role: 'subject', script: { steps: [] } },
-              { id: 'user' as UUID, name: 'User', role: 'assistant', script: { steps: [{ type: 'message', content: 'Hello' }] } },
+              {
+                id: 'user' as UUID,
+                name: 'User',
+                role: 'assistant',
+                script: { steps: [{ type: 'message', content: 'Hello' }] },
+              },
             ],
             setup: { roomType: 'dm' },
             execution: { maxDuration: 30000 },
             verification: {
               rules: [
-                { id: 'response', type: 'llm', description: 'Agent responds to greeting', config: {} },
+                {
+                  id: 'response',
+                  type: 'llm',
+                  description: 'Agent responds to greeting',
+                  config: {},
+                },
               ],
             },
           },
@@ -228,13 +285,18 @@ describe('Scenario Developer Utilities', () => {
             description: 'Test complex workflow',
             actors: [
               { id: 'agent' as UUID, name: 'Agent', role: 'subject', script: { steps: [] } },
-              { id: 'user' as UUID, name: 'User', role: 'assistant', script: { 
-                steps: [
-                  { type: 'message', content: 'Step 1' },
-                  { type: 'wait', waitTime: 1000 },
-                  { type: 'message', content: 'Step 2' },
-                ]
-              } },
+              {
+                id: 'user' as UUID,
+                name: 'User',
+                role: 'assistant',
+                script: {
+                  steps: [
+                    { type: 'message', content: 'Step 1' },
+                    { type: 'wait', waitTime: 1000 },
+                    { type: 'message', content: 'Step 2' },
+                  ],
+                },
+              },
             ],
             setup: { roomType: 'group' },
             execution: { maxDuration: 60000, maxSteps: 10 },
@@ -249,7 +311,10 @@ describe('Scenario Developer Utilities', () => {
       ];
 
       commonPatterns.forEach(({ name, template }) => {
-        expect(() => runner.validateScenario(template as Scenario), `Pattern "${name}" should be valid`).not.toThrow();
+        expect(
+          () => runner.validateScenario(template as Scenario),
+          `Pattern "${name}" should be valid`
+        ).not.toThrow();
       });
     });
   });

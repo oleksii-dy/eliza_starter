@@ -712,7 +712,7 @@ describe('Agent Integration Tests', () => {
           await adapter.createWorld({
             id: worldId,
             name: 'Test World',
-            agentId: agentId,
+            agentId,
             serverId: uuidv4() as UUID,
           });
 
@@ -722,9 +722,9 @@ describe('Agent Integration Tests', () => {
             {
               id: roomId,
               name: 'Test Room',
-              agentId: agentId,
+              agentId,
               serverId: uuidv4() as UUID,
-              worldId: worldId,
+              worldId,
               channelId: uuidv4() as UUID,
               type: 'PUBLIC' as any,
               source: 'test',
@@ -736,7 +736,7 @@ describe('Agent Integration Tests', () => {
           await adapter.createEntities([
             {
               id: entityId,
-              agentId: agentId,
+              agentId,
               names: ['Test Entity'],
               metadata: { type: 'test' },
             },
@@ -746,9 +746,9 @@ describe('Agent Integration Tests', () => {
           const memoryId = await adapter.createMemory(
             {
               id: uuidv4() as UUID,
-              agentId: agentId,
-              entityId: entityId,
-              roomId: roomId,
+              agentId,
+              entityId,
+              roomId,
               content: { text: 'Test memory' },
               createdAt: Date.now(),
             },

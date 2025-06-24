@@ -1,5 +1,0 @@
-{
-  "name": "MultiPluginTest",
-  "description": "Test character for multiple plugins with schemas",
-  "plugins": ["@elizaos/plugin-sql", "@elizaos/plugin-todo", "@elizaos/plugin-trust", "bootstrap"]
-}

@@ -4,7 +4,6 @@ import type {
   ScenarioCharacter,
 } from '../types/scenario';
 import type { IAgentRuntime } from '../types/runtime';
-import type { Plugin } from '../types/plugin';
 import { PluginEnvironmentValidator } from './plugin-environment-validator';
 
 /**

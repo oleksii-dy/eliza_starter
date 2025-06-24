@@ -5,7 +5,6 @@
  */
 
 import { logger } from '@elizaos/core';
-import type { IAgentRuntime } from '@elizaos/core';
 import { ProductionCostTracker } from './production-cost-tracker.js';
 
 export interface BenchmarkScore {
@@ -297,7 +296,7 @@ export class BenchmarkScoringSystem {
   private async calculateCategoryScores(
     benchmarkType: string,
     rawResults: any,
-    weights: ScoringWeights
+    _weights: ScoringWeights
   ): Promise<CategoryScores> {
     const scores: CategoryScores = {
       technical: 0,
@@ -539,7 +538,7 @@ export class BenchmarkScoringSystem {
     benchmarkId: string,
     rawResults: any
   ): Promise<EconomicMetrics> {
-    const totalCost = await this.costTracker.getBenchmarkSpend(benchmarkId);
+    const totalCost = (await (this.costTracker as any).getBenchmarkSpend?.(benchmarkId)) || 0;
     const valueGenerated = rawResults.valueGenerated || 0;
 
     return {
@@ -849,7 +848,9 @@ export class BenchmarkScoringSystem {
 
   // Helper methods for scoring calculations
   private calculateTaskCompletionRate(rawResults: any): number {
-    if (!rawResults.taskResults) return 0;
+    if (!rawResults.taskResults) {
+      return 0;
+    }
     const completed = rawResults.taskResults.filter((t: any) => t.success).length;
     return completed / rawResults.taskResults.length;
   }
@@ -861,7 +862,9 @@ export class BenchmarkScoringSystem {
   }
 
   private calculateTimeEfficiency(rawResults: any): number {
-    if (!rawResults.duration || !rawResults.expectedDuration) return 0.5;
+    if (!rawResults.duration || !rawResults.expectedDuration) {
+      return 0.5;
+    }
     return Math.min(rawResults.expectedDuration / rawResults.duration, 2);
   }
 
@@ -903,7 +906,7 @@ export class BenchmarkScoringSystem {
   }
 
   // Risk assessment methods
-  private identifyRiskFactors(rawResults: any, benchmarkType: string): RiskFactor[] {
+  private identifyRiskFactors(rawResults: any, _benchmarkType: string): RiskFactor[] {
     const factors: RiskFactor[] = [];
 
     // Common risk factors
@@ -931,7 +934,9 @@ export class BenchmarkScoringSystem {
   }
 
   private calculateOverallRisk(riskFactors: RiskFactor[]): number {
-    if (riskFactors.length === 0) return 0.1; // Minimum risk
+    if (riskFactors.length === 0) {
+      return 0.1;
+    } // Minimum risk
 
     const totalRisk = riskFactors.reduce((sum, factor) => {
       const severityWeight = { low: 0.25, medium: 0.5, high: 0.75, critical: 1.0 };
@@ -1045,7 +1050,9 @@ export class BenchmarkScoringSystem {
 
   private calculateImprovementRate(benchmarkType: string, agentId: string): number {
     const scores = this.getPreviousScoresForAgent(benchmarkType, agentId);
-    if (scores.length < 2) return 0;
+    if (scores.length < 2) {
+      return 0;
+    }
 
     const latest = scores[0].overallScore;
     const previous = scores[1].overallScore;
@@ -1057,10 +1064,14 @@ export class BenchmarkScoringSystem {
       .map((s) => s.overallScore)
       .sort((a, b) => a - b);
 
-    if (allScores.length === 0) return 50;
+    if (allScores.length === 0) {
+      return 50;
+    }
 
     const index = allScores.findIndex((s) => s >= score);
-    if (index === -1) return 100;
+    if (index === -1) {
+      return 100;
+    }
 
     return (index / allScores.length) * 100;
   }
@@ -1070,7 +1081,9 @@ export class BenchmarkScoringSystem {
       (s) => s.overallScore
     );
 
-    if (scores.length < 2) return 1.0;
+    if (scores.length < 2) {
+      return 1.0;
+    }
 
     const mean = scores.reduce((sum, s) => sum + s, 0) / scores.length;
     const variance = scores.reduce((sum, s) => sum + Math.pow(s - mean, 2), 0) / scores.length;
@@ -1108,7 +1121,7 @@ export class BenchmarkScoringSystem {
 
   private async generateVerificationInfo(
     benchmarkId: string,
-    rawResults: any
+    _rawResults: any
   ): Promise<VerificationInfo> {
     return {
       verified: true,

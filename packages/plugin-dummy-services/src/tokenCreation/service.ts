@@ -4,7 +4,6 @@ import {
   logger,
   type TokenData,
   type TransactionResult,
-  asUUID,
 } from '@elizaos/core';
 import { v4 as uuid } from 'uuid';
 

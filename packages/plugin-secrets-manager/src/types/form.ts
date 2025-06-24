@@ -207,7 +207,9 @@ export const FormFieldPresets: Record<string, Partial<FormField>> = {
         validator: (value: string) => {
           // Basic Luhn algorithm check
           const digits = value.replace(/\D/g, '');
-          if (digits.length < 13 || digits.length > 19) return false;
+          if (digits.length < 13 || digits.length > 19) {
+            return false;
+          }
 
           let sum = 0;
           let isEven = false;
@@ -215,7 +217,9 @@ export const FormFieldPresets: Record<string, Partial<FormField>> = {
             let digit = parseInt(digits[i], 10);
             if (isEven) {
               digit *= 2;
-              if (digit > 9) digit -= 9;
+              if (digit > 9) {
+                digit -= 9;
+              }
             }
             sum += digit;
             isEven = !isEven;

@@ -56,7 +56,7 @@ export function TabsTrigger({
   disabled = false,
 }: TabsTriggerProps) {
   const context = useContext(TabsContext);
-  if (!context) throw new Error('TabsTrigger must be used within Tabs');
+  if (!context) {throw new Error('TabsTrigger must be used within Tabs');}
 
   const isActive = context.value === value;
 
@@ -81,11 +81,11 @@ interface TabsContentProps {
 
 export function TabsContent({ children, value, className = '' }: TabsContentProps) {
   const context = useContext(TabsContext);
-  if (!context) throw new Error('TabsContent must be used within Tabs');
+  if (!context) {throw new Error('TabsContent must be used within Tabs');}
 
   const isActive = context.value === value;
 
-  if (!isActive) return null;
+  if (!isActive) {return null;}
 
   return (
     <div

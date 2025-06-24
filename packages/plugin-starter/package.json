@@ -1,7 +1,7 @@
 {
   "name": "@elizaos/plugin-starter",
   "description": "${PLUGINDESCRIPTION}",
-  "version": "1.0.6",
+  "version": "1.0.12",
   "type": "module",
   "private": true,
   "main": "dist/index.js",
@@ -59,17 +59,18 @@
     "prettier": "3.5.3",
     "tailwindcss-animate": "^1.0.7",
     "tsup": "8.5.0",
-    "typescript": "5.8.2"
+    "typescript": "5.8.3"
   },
   "scripts": {
     "start": "elizaos start",
     "dev": "elizaos dev",
     "build": "tsc --noEmit && vite build && tsup",
-    "lint": "prettier --write ./src",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix && prettier --write .",
+    "lint:check": "eslint . --ext .js,.jsx,.ts,.tsx && prettier --check .",
     "test": "elizaos test",
     "publish": "elizaos publish",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src"
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "publishConfig": {
     "access": "public"

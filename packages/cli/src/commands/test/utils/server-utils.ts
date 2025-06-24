@@ -164,7 +164,7 @@ export async function stopTestServer(serverProcess: ChildProcess): Promise<void>
       if (serverProcess.pid) {
         try {
           process.kill(-serverProcess.pid, 'SIGTERM');
-        } catch (error) {
+        } catch {
           // If process group kill fails, fall back to killing just the process
           serverProcess.kill('SIGTERM');
         }

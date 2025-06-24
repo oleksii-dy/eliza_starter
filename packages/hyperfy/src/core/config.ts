@@ -43,23 +43,23 @@ class ConfigurationManager {
 
     return {
       // Asset configuration - no more hardcoded localhost!
-      assetsUrl: ENV.HYPERFY_ASSETS_URL || 
+      assetsUrl: ENV.HYPERFY_ASSETS_URL ||
                  (isProduction ? 'https://assets.hyperfy.io/' : 'https://test-assets.hyperfy.io/'),
       assetsDir: ENV.HYPERFY_ASSETS_DIR || (isTest ? './world/assets' : null),
-      
+
       // Environment flags
       isProduction,
       isDevelopment,
       isTest,
-      
+
       // Network configuration
       networkRate: parseFloat(ENV.HYPERFY_NETWORK_RATE || '8'),
       maxDeltaTime: parseFloat(ENV.HYPERFY_MAX_DELTA_TIME || String(1/30)),
       fixedDeltaTime: parseFloat(ENV.HYPERFY_FIXED_DELTA_TIME || String(1/60)),
-      
+
       // Logging configuration
       logLevel: (ENV.HYPERFY_LOG_LEVEL || (isProduction ? 'warn' : 'info')) as any,
-      
+
       // Physics configuration
       physics: {
         enabled: ENV.HYPERFY_PHYSICS_ENABLED === 'true',
@@ -99,4 +99,4 @@ class ConfigurationManager {
 }
 
 // Export singleton instance
-export const Config = ConfigurationManager.getInstance(); 
+export const Config = ConfigurationManager.getInstance();

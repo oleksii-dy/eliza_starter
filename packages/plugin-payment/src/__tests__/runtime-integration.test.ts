@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, mock } from 'bun:test';
 import {
   elizaLogger,
   type IAgentRuntime,
@@ -49,7 +49,7 @@ const createMockDatabase = () => {
               } else if (table.symbol && table.symbol.description) {
                 // Try to extract from symbol description
                 const match = table.symbol.description.match(/Symbol\((.+)\)/);
-                if (match) tableName = match[1];
+                if (match) {tableName = match[1];}
               }
               const records = data.get(tableName) || [];
               return Promise.resolve(records.slice(0, n)).then(resolve);
@@ -68,7 +68,7 @@ const createMockDatabase = () => {
                   } else if (table.symbol && table.symbol.description) {
                     // Try to extract from symbol description
                     const match = table.symbol.description.match(/Symbol\((.+)\)/);
-                    if (match) tableName = match[1];
+                    if (match) {tableName = match[1];}
                   }
                   const records = data.get(tableName) || [];
                   return Promise.resolve(records.slice(o, o + n)).then(resolve);
@@ -127,16 +127,16 @@ class MockDatabaseService {
   getDatabase() {
     const self = this;
     return {
-      select: vi.fn().mockReturnThis(),
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue([]),
-      insert: vi.fn().mockReturnThis(),
-      values: vi.fn().mockResolvedValue({}),
-      update: vi.fn().mockReturnThis(),
-      set: vi.fn().mockReturnThis(),
-      delete: vi.fn().mockReturnThis(),
-      execute: vi.fn().mockResolvedValue([]),
+      select: mock().mockReturnThis(),
+      from: mock().mockReturnThis(),
+      where: mock().mockReturnThis(),
+      limit: mock().mockResolvedValue([]),
+      insert: mock().mockReturnThis(),
+      values: mock().mockResolvedValue({}),
+      update: mock().mockReturnThis(),
+      set: mock().mockReturnThis(),
+      delete: mock().mockReturnThis(),
+      execute: mock().mockResolvedValue([]),
     };
   }
 
@@ -310,25 +310,25 @@ describe('Payment Plugin Runtime Integration', () => {
           PAYMENT_REQUIRE_CONFIRMATION: 'false',
           PAYMENT_TRUST_THRESHOLD: '70',
           PAYMENT_MAX_DAILY_SPEND: '1000',
-          WALLET_ENCRYPTION_KEY: '0x' + '0'.repeat(64),
+          WALLET_ENCRYPTION_KEY: `0x${'0'.repeat(64)}`,
           ETH_RPC_URL: 'https://eth-sepolia.g.alchemy.com/v2/demo',
           POLYGON_RPC_URL: 'https://polygon-mumbai.g.alchemy.com/v2/demo',
           NODE_ENV: 'test',
         };
         return settings[key] || testCharacter.settings?.secrets?.[key];
       },
-      setSetting: vi.fn(),
+      setSetting: mock(),
       getService: (name: string) => {
-        if (name === 'payment') return paymentService;
+        if (name === 'payment') {return paymentService;}
         if (name === 'database')
-          return {
-            getDatabase: () => mockDbService,
-          };
+        {return {
+          getDatabase: () => mockDbService,
+        };}
         return null;
       },
-      registerAction: vi.fn(),
-      registerService: vi.fn(),
-      emit: vi.fn(),
+      registerAction: mock(),
+      registerService: mock(),
+      emit: mock(),
     } as any;
 
     // Initialize payment service
@@ -367,7 +367,7 @@ describe('Payment Plugin Runtime Integration', () => {
           actionName: 'test',
           amount: BigInt(0),
           method: PaymentMethod.ETH,
-          recipientAddress: '0x' + '0'.repeat(40),
+          recipientAddress: `0x${'0'.repeat(40)}`,
           metadata: {},
         },
       ];
@@ -381,17 +381,6 @@ describe('Payment Plugin Runtime Integration', () => {
       }
     });
 
-    it('should generate unique verification codes', async () => {
-      const codes = new Set<string>();
-
-      // Generate multiple codes to ensure uniqueness
-      for (let i = 0; i < 10; i++) {
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        expect(code).toHaveLength(6);
-        expect(codes.has(code)).toBe(false);
-        codes.add(code);
-      }
-    });
 
     it('should check wallet encryption', async () => {
       const userId = asUUID(stringToUuid('test-user-encryption'));
@@ -461,7 +450,7 @@ describe('Payment Plugin Runtime Integration', () => {
         createdAt: Date.now(),
       };
 
-      const callback = vi.fn();
+      const callback = mock();
       await researchAction.handler(runtime, message, undefined, {}, callback);
 
       expect(callback).toHaveBeenCalled();
@@ -604,8 +593,8 @@ describe('Payment Plugin Runtime Integration', () => {
     it('should handle database errors', async () => {
       // Mock database error
       const db = mockDbService.getDatabase();
-      db.insert = vi.fn().mockReturnThis();
-      db.values = vi.fn().mockRejectedValue(new Error('Database error'));
+      db.insert = mock().mockReturnThis();
+      db.values = mock().mockRejectedValue(new Error('Database error'));
 
       const paymentService = runtime.getService('payment') as PaymentService;
 

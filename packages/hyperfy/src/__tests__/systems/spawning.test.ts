@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
 import { createTestWorld } from '../test-world-factory';
 import { SpawningSystem } from '../../rpg/systems/SpawningSystem';
 import { NPCSystem } from '../../rpg/systems/NPCSystem';
@@ -12,52 +13,52 @@ describe('SpawningSystem', () => {
   let spawningSystem: SpawningSystem;
   let npcSystem: NPCSystem;
   let player: RPGEntity;
-  
+
   beforeEach(async () => {
     const testWorld = await createTestWorld();
     world = testWorld as any;
-    
+
     // Ensure world.events exists
     if (!world.events) {
       world.events = testWorld.events;
     }
-    
+
     // Ensure world.entities exists with proper structure
     if (!world.entities) {
       world.entities = {
         items: new Map(),
-        get: function(id: string) { return this.items.get(id); },
-        set: function(id: string, entity: any) { this.items.set(id, entity); }
+        get(id: string) { return this.items.get(id); },
+        set(id: string, entity: any) { this.items.set(id, entity); }
       } as any;
     } else if (!world.entities.items) {
       world.entities.items = new Map();
     }
-    
+
     spawningSystem = new SpawningSystem(world);
     npcSystem = new NPCSystem(world);
-    
+
     // Add systems to world
     world.systems = [spawningSystem, npcSystem];
     (world as any).getSystem = (name: string) => {
-      if (name === 'NPCSystem') return npcSystem;
-      if (name === 'SpawningSystem') return spawningSystem;
+      if (name === 'NPCSystem') {return npcSystem;}
+      if (name === 'SpawningSystem') {return spawningSystem;}
       return null;
     };
-    
+
     // Initialize systems
     await npcSystem.init({});
     await spawningSystem.init({});
-    
+
     // Create player
     player = new RPGEntity(world, 'player', {
       id: 'player-1',
       name: 'Test Player',
       position: { x: 0, y: 0, z: 0 }
     });
-    
+
     // Add to world
     world.entities.items.set(player.id, player as any);
-    
+
     // Mock getEntitiesInRange
     (world as any).getEntitiesInRange = (position: any, range: number) => {
       const entities: RPGEntity[] = [];
@@ -73,13 +74,13 @@ describe('SpawningSystem', () => {
       }
       return entities;
     };
-    
+
     // Mock removeEntity
     (world as any).removeEntity = (entity: RPGEntity) => {
       world.entities.items.delete(entity.id);
     };
   });
-  
+
   describe('Spawner Registration', () => {
     it('should register spawners', () => {
       const spawnerId = spawningSystem.registerSpawner({
@@ -93,11 +94,11 @@ describe('SpawningSystem', () => {
       });
 
       expect(spawnerId).toMatch(/^spawner_/);
-      
+
       // Verify spawner is registered
       const spawners = (spawningSystem as any).spawners;
       expect(spawners.has(spawnerId)).toBe(true);
-      
+
       const spawner = spawners.get(spawnerId);
       expect(spawner.type).toBe(SpawnerType.NPC);
       expect(spawner.position).toEqual({ x: 10, y: 0, z: 10 });
@@ -120,7 +121,7 @@ describe('SpawningSystem', () => {
 
     it('should add spawner to spatial index', () => {
       const spatialIndex = (spawningSystem as any).spatialIndex;
-      const addSpy = vi.spyOn(spatialIndex, 'add');
+      const addSpy = spyOn(spatialIndex, 'add');
 
       spawningSystem.registerSpawner({
         type: SpawnerType.NPC,
@@ -185,7 +186,7 @@ describe('SpawningSystem', () => {
       spawner.activeEntities.add('entity1');
       spawner.activeEntities.add('entity2');
 
-      const despawnSpy = vi.spyOn(spawningSystem as any, 'despawnEntity');
+      const despawnSpy = spyOn(spawningSystem as any, 'despawnEntity');
 
       spawningSystem.unregisterSpawner(spawnerId);
 
@@ -195,7 +196,7 @@ describe('SpawningSystem', () => {
 
     it('should remove from spatial index', () => {
       const spatialIndex = (spawningSystem as any).spatialIndex;
-      const removeSpy = vi.spyOn(spatialIndex, 'remove');
+      const removeSpy = spyOn(spatialIndex, 'remove');
 
       const spawnerId = spawningSystem.registerSpawner({
         type: SpawnerType.NPC,
@@ -221,7 +222,7 @@ describe('SpawningSystem', () => {
         ],
         maxEntities: 3
       });
-      
+
       spawner = (spawningSystem as any).spawners.get(spawnerId);
     });
 
@@ -234,7 +235,7 @@ describe('SpawningSystem', () => {
     });
 
     it('should emit spawn event', () => {
-      const spawnSpy = vi.fn();
+      const spawnSpy = mock();
       world.events.on('entity:spawned', spawnSpy);
 
       spawningSystem.spawnEntity(spawner);
@@ -258,8 +259,8 @@ describe('SpawningSystem', () => {
     });
 
     it('should select spawn definition based on weights', () => {
-      const randomSpy = vi.spyOn(Math, 'random');
-      
+      const randomSpy = spyOn(Math, 'random');
+
       // Test weight distribution
       randomSpy.mockReturnValue(0.3); // Should select first definition (60% weight)
       const def1 = (spawningSystem as any).selectSpawnDefinition(spawner.entityDefinitions);
@@ -269,14 +270,14 @@ describe('SpawningSystem', () => {
       const def2 = (spawningSystem as any).selectSpawnDefinition(spawner.entityDefinitions);
       expect(def2.entityId).toBe(2);
 
-      randomSpy.mockRestore();
+      randomSpy.mockReset();
     });
 
     it('should use spawn area for positioning', () => {
       const customArea = new CircularSpawnArea({ x: 0, y: 0, z: 0 }, 10, 2);
       spawner.spawnArea = customArea;
 
-      const getPosSpy = vi.spyOn(customArea, 'getRandomPosition');
+      const getPosSpy = spyOn(customArea, 'getRandomPosition');
 
       spawningSystem.spawnEntity(spawner);
 
@@ -289,7 +290,7 @@ describe('SpawningSystem', () => {
 
     beforeEach(async () => {
       await spawningSystem.init({});
-      
+
       const spawnerId = spawningSystem.registerSpawner({
         type: SpawnerType.NPC,
         position: { x: 50, y: 0, z: 50 },
@@ -299,7 +300,7 @@ describe('SpawningSystem', () => {
         activationRange: 30,
         deactivationRange: 50
       });
-      
+
       spawner = (spawningSystem as any).spawners.get(spawnerId);
     });
 
@@ -307,22 +308,22 @@ describe('SpawningSystem', () => {
       // Mock player in range
       const mockPlayer: PlayerEntity = {
         id: 'player1',
-        data: { 
-          type: 'player', 
+        data: {
+          type: 'player',
           id: 'player1',
           position: { x: 40, y: 0, z: 50 } // 10 units away
         },
-        getComponent: vi.fn()
+        getComponent: mock()
       } as any;
 
-      vi.spyOn(spawningSystem, 'getActivePlayersInRange').mockReturnValue([mockPlayer]);
+      spyOn(spawningSystem, 'getActivePlayersInRange').mockReturnValue([mockPlayer]);
 
       const isActive = (spawningSystem as any).checkActivation(spawner);
       expect(isActive).toBe(true);
     });
 
     it('should not activate when players are out of range', () => {
-      vi.spyOn(spawningSystem, 'getActivePlayersInRange').mockReturnValue([]);
+      spyOn(spawningSystem, 'getActivePlayersInRange').mockReturnValue([]);
 
       const isActive = (spawningSystem as any).checkActivation(spawner);
       expect(isActive).toBe(false);
@@ -334,15 +335,15 @@ describe('SpawningSystem', () => {
       // Player just outside activation range but within deactivation range
       const mockPlayer: PlayerEntity = {
         id: 'player1',
-        data: { 
+        data: {
           type: 'player',
-          id: 'player1', 
+          id: 'player1',
           position: { x: 90, y: 0, z: 50 } // 40 units away
         },
-        getComponent: vi.fn()
+        getComponent: mock()
       } as any;
 
-      const getPlayersSpy = vi.spyOn(spawningSystem, 'getActivePlayersInRange');
+      const getPlayersSpy = spyOn(spawningSystem, 'getActivePlayersInRange');
       getPlayersSpy.mockReturnValueOnce([]); // No players in activation range
       getPlayersSpy.mockReturnValueOnce([mockPlayer]); // Player in deactivation range
 
@@ -355,16 +356,16 @@ describe('SpawningSystem', () => {
 
       const mockPlayer: PlayerEntity = {
         id: 'player1',
-        data: { 
+        data: {
           type: 'player',
           id: 'player1',
           position: { x: 40, y: 0, z: 50 }
         },
-        getComponent: vi.fn()
+        getComponent: mock()
       } as any;
 
-      vi.spyOn(spawningSystem, 'getActivePlayersInRange').mockReturnValue([mockPlayer]);
-      vi.spyOn(spawningSystem as any, 'hasLineOfSight').mockReturnValue(false);
+      spyOn(spawningSystem, 'getActivePlayersInRange').mockReturnValue([mockPlayer]);
+      spyOn(spawningSystem as any, 'hasLineOfSight').mockReturnValue(false);
 
       const isActive = (spawningSystem as any).checkActivation(spawner);
       expect(isActive).toBe(false);
@@ -388,10 +389,10 @@ describe('SpawningSystem', () => {
 
       const spawner = (spawningSystem as any).spawners.get(spawnerId);
       spawner.activeEntities.add('npc1');
-      
+
       (spawningSystem as any).activeSpawns.set('npc1', spawnerId);
 
-      const scheduleSpy = vi.spyOn(spawningSystem as any, 'scheduleRespawn');
+      const scheduleSpy = spyOn(spawningSystem as any, 'scheduleRespawn');
 
       world.events.emit('entity:death', { entityId: 'npc1' });
 
@@ -402,7 +403,7 @@ describe('SpawningSystem', () => {
     it('should process spawn queue', () => {
       const now = Date.now();
       const spawnQueue = (spawningSystem as any).spawnQueue;
-      
+
       spawnQueue.push({
         spawnerId: 'spawner1',
         scheduledTime: now - 1000, // Past due
@@ -415,7 +416,7 @@ describe('SpawningSystem', () => {
         priority: 1
       });
 
-      const executeSpy = vi.spyOn(spawningSystem as any, 'executeSpawnTask');
+      const executeSpy = spyOn(spawningSystem as any, 'executeSpawnTask');
 
       (spawningSystem as any).processSpawnQueue(now);
 
@@ -446,7 +447,7 @@ describe('SpawningSystem', () => {
   describe('Spawn Conditions', () => {
     it('should check spawn conditions', () => {
       const conditionChecker = (spawningSystem as any).conditionChecker;
-      const checkSpy = vi.spyOn(conditionChecker, 'checkConditions').mockReturnValue(false);
+      const checkSpy = spyOn(conditionChecker, 'checkConditions').mockReturnValue(false);
 
       const spawner = {
         id: 'test_spawner',
@@ -465,8 +466,8 @@ describe('SpawningSystem', () => {
     });
 
     it('should handle custom conditions', () => {
-      const customCondition = vi.fn().mockReturnValue(true);
-      
+      const customCondition = mock().mockReturnValue(true);
+
       const spawnerId = spawningSystem.registerSpawner({
         type: SpawnerType.NPC,
         position: { x: 0, y: 0, z: 0 },
@@ -489,8 +490,8 @@ describe('SpawningSystem', () => {
     });
 
     it('should throttle updates', () => {
-      const updateSpy = vi.spyOn(spawningSystem as any, 'updateSpawner');
-      
+      const updateSpy = spyOn(spawningSystem as any, 'updateSpawner');
+
       // Register a spawner
       spawningSystem.registerSpawner({
         type: SpawnerType.NPC,
@@ -517,10 +518,10 @@ describe('SpawningSystem', () => {
       activeSpawns.set('entity2', 'spawner1');
 
       // Mock entity lookup
-      vi.spyOn(spawningSystem as any, 'getEntity')
+      spyOn(spawningSystem as any, 'getEntity')
         .mockImplementation((...args: unknown[]) => {
           const id = args[0];
-          if (id === 'entity1') return { id, data: { type: 'npc' } };
+          if (id === 'entity1') {return { id, data: { type: 'npc' } };}
           return undefined; // entity2 is destroyed
         });
 
@@ -541,7 +542,7 @@ describe('SpawningSystem', () => {
   describe('Different Entity Types', () => {
     it('should create NPCs', () => {
       const npcSystem = (world as any).getSystem('NPCSystem');
-      
+
       const spawnerId = spawningSystem.registerSpawner({
         type: SpawnerType.NPC,
         position: { x: 0, y: 0, z: 0 },
@@ -561,7 +562,7 @@ describe('SpawningSystem', () => {
     });
 
     it('should handle unsupported entity types', () => {
-      const consoleSpy = vi.spyOn(console, 'log');
+      const consoleSpy = spyOn(console, 'log');
 
       // Resource spawner
       const resourceId = spawningSystem.registerSpawner({
@@ -580,14 +581,14 @@ describe('SpawningSystem', () => {
         '[SpawningSystem] Resource spawning not yet implemented'
       );
 
-      consoleSpy.mockRestore();
+      consoleSpy.mockReset();
     });
   });
 
   describe('Spatial Queries', () => {
     it('should find entities near position', () => {
       // Mock world method
-      (world as any).getEntitiesInRange = vi.fn().mockReturnValue([
+      (world as any).getEntitiesInRange = mock().mockReturnValue([
         { id: 'entity1', data: { type: 'npc' } },
         { id: 'entity2', data: { type: 'player' } }
       ]);
@@ -612,9 +613,9 @@ describe('SpawningSystem', () => {
 
     it('should get ground height', () => {
       const height = (spawningSystem as any).getGroundHeight({ x: 0, y: 10, z: 0 });
-      
+
       // Default implementation returns 0
       expect(height).toBe(0);
     });
   });
-}); 
+});

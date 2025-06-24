@@ -72,7 +72,7 @@ describe('Dashboard E2E Tests', () => {
       // Mobile menu might be hidden
       cy.get('nav, [role="navigation"]').then(($nav) => {
         if ($nav.is(':visible')) {
-          expect($nav).to.be.visible;
+          expect($nav).to.be.visible();
         } else {
           // Look for mobile menu button
           cy.get('[aria-label*="menu"], button[class*="menu"]').should('be.visible');

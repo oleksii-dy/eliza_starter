@@ -22,7 +22,7 @@ export const entitiesProvider: Provider = {
         const entities = await runtime.getEntitiesForRoom(roomId);
 
         for (const entity of entities) {
-          if (!entity.id || seenIds.has(entity.id)) continue;
+          if (!entity.id || seenIds.has(entity.id)) {continue;}
           seenIds.add(entity.id);
 
           // Get entity profile
@@ -83,9 +83,9 @@ export const entitiesProvider: Provider = {
             lines.push(`  ${profile.summary}`);
           }
           if (daysAgo === 0) {
-            lines.push(`  Updated today`);
+            lines.push('  Updated today');
           } else if (daysAgo === 1) {
-            lines.push(`  Updated yesterday`);
+            lines.push('  Updated yesterday');
           } else {
             lines.push(`  Updated ${daysAgo} days ago`);
           }

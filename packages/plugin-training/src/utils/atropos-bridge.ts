@@ -1,14 +1,11 @@
-import {
-  type IAgentRuntime,
-  elizaLogger,
-} from '@elizaos/core';
+import { type IAgentRuntime, elizaLogger } from '@elizaos/core';
 import {
   type TrainingJob,
   type TrainingConfig,
   type BridgeMessage,
   type AtroposEnvironment,
 } from '../types.js';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, type ChildProcess } from 'child_process';
 import WebSocket from 'ws';
 import path from 'path';
 import fs from 'fs/promises';
@@ -26,7 +23,7 @@ export class AtroposBridge {
 
   constructor(private runtime: IAgentRuntime) {
     const config = getTrainingConfig(runtime);
-    this.bridgePort = parseInt((config as any).getSetting('ATROPOS_BRIDGE_PORT', '8765'));
+    this.bridgePort = parseInt((config as any).getSetting('ATROPOS_BRIDGE_PORT', '8765'), 10);
   }
 
   async initialize(): Promise<void> {
@@ -74,7 +71,7 @@ export class AtroposBridge {
 
     try {
       await fs.mkdir(scriptDir, { recursive: true });
-      
+
       const bridgeScript = `#!/usr/bin/env python3
 """
 TypeScript-Python Bridge Server for Atropos Integration
@@ -305,10 +302,10 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 `;
-      
+
       await fs.writeFile(scriptPath, bridgeScript);
       await fs.chmod(scriptPath, '755');
-      
+
       elizaLogger.info(`Created Python bridge script at ${scriptPath}`);
     } catch (error) {
       elizaLogger.error('Error creating Python bridge script:', error);
@@ -319,11 +316,14 @@ if __name__ == "__main__":
   private async startBridgeServer(): Promise<void> {
     elizaLogger.info('Starting Python bridge server');
 
-    const scriptPath = path.join(process.cwd(), 'packages/plugin-training/atropos/bridge_server.py');
-    
+    const scriptPath = path.join(
+      process.cwd(),
+      'packages/plugin-training/atropos/bridge_server.py'
+    );
+
     this.pythonProcess = spawn('python3', [scriptPath], {
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, PYTHONUNBUFFERED: '1' }
+      env: { ...process.env, PYTHONUNBUFFERED: '1' },
     });
 
     this.pythonProcess.stdout?.on('data', (data) => {
@@ -340,7 +340,7 @@ if __name__ == "__main__":
     });
 
     // Wait for server to start
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
   }
 
   private async connectWebSocket(): Promise<void> {
@@ -385,7 +385,9 @@ if __name__ == "__main__":
     }
   }
 
-  private async sendBridgeMessage(message: Omit<BridgeMessage, 'timestamp' | 'source'>): Promise<BridgeMessage> {
+  private async sendBridgeMessage(
+    message: Omit<BridgeMessage, 'timestamp' | 'source'>
+  ): Promise<BridgeMessage> {
     if (!this.websocket) {
       throw new Error('WebSocket not connected');
     }
@@ -458,10 +460,14 @@ if __name__ == "__main__":
     });
 
     const status = message.payload;
-    
+
     return {
-      status: status.status === 'running' ? 'running' : 
-             status.status === 'completed' ? 'completed' : 'failed',
+      status:
+        status.status === 'running'
+          ? 'running'
+          : status.status === 'completed'
+            ? 'completed'
+            : 'failed',
       progress: status.progress,
       metrics: status.metrics,
     };

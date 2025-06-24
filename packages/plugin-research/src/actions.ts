@@ -6,7 +6,7 @@ import {
   State,
   HandlerCallback,
   ModelType,
-  elizaLogger,
+  logger,
 } from '@elizaos/core';
 import { ResearchService } from './service';
 import {
@@ -47,7 +47,7 @@ Respond with just the domain name.`;
 
     return ResearchDomain.GENERAL;
   } catch (error) {
-    elizaLogger.error('Error extracting domain:', error);
+    logger.error('Error extracting domain:', error);
     // Default to GENERAL if model call fails
     return ResearchDomain.GENERAL;
   }
@@ -77,15 +77,15 @@ Respond with just the task type.`;
       .toLowerCase()
       .trim();
 
-    if (taskText.includes('comparative')) return TaskType.COMPARATIVE;
-    if (taskText.includes('analytical')) return TaskType.ANALYTICAL;
-    if (taskText.includes('synthetic')) return TaskType.SYNTHETIC;
-    if (taskText.includes('evaluative')) return TaskType.EVALUATIVE;
-    if (taskText.includes('predictive')) return TaskType.PREDICTIVE;
+    if (taskText.includes('comparative')) {return TaskType.COMPARATIVE;}
+    if (taskText.includes('analytical')) {return TaskType.ANALYTICAL;}
+    if (taskText.includes('synthetic')) {return TaskType.SYNTHETIC;}
+    if (taskText.includes('evaluative')) {return TaskType.EVALUATIVE;}
+    if (taskText.includes('predictive')) {return TaskType.PREDICTIVE;}
 
     return TaskType.EXPLORATORY;
   } catch (error) {
-    elizaLogger.error('Error extracting task type:', error);
+    logger.error('Error extracting task type:', error);
     // Default to EXPLORATORY if model call fails
     return TaskType.EXPLORATORY;
   }
@@ -115,13 +115,13 @@ Respond with just the depth level.`;
       .toLowerCase()
       .trim();
 
-    if (depthText.includes('surface')) return ResearchDepth.SURFACE;
-    if (depthText.includes('deep')) return ResearchDepth.DEEP;
-    if (depthText.includes('phd')) return ResearchDepth.PHD_LEVEL;
+    if (depthText.includes('surface')) {return ResearchDepth.SURFACE;}
+    if (depthText.includes('deep')) {return ResearchDepth.DEEP;}
+    if (depthText.includes('phd')) {return ResearchDepth.PHD_LEVEL;}
 
     return ResearchDepth.MODERATE;
   } catch (error) {
-    elizaLogger.error('Error extracting depth:', error);
+    logger.error('Error extracting depth:', error);
     // Default to MODERATE if model call fails
     return ResearchDepth.MODERATE;
   }
@@ -160,7 +160,7 @@ export const startResearchAction: Action = {
       extractDepth(runtime, query),
     ]);
 
-    elizaLogger.info(`Starting research: domain=${domain}, type=${taskType}, depth=${depth}`);
+    logger.info(`Starting research: domain=${domain}, type=${taskType}, depth=${depth}`);
 
     try {
       const project = await researchService.createResearchProject(query, {
@@ -210,7 +210,7 @@ The research will follow DeepResearch Bench standards for quality. I'll notify y
         },
       };
     } catch (error) {
-      elizaLogger.error('Failed to start research:', error);
+      logger.error('Failed to start research:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -285,7 +285,7 @@ export const checkResearchStatusAction: Action = {
 
       if (projectIdMatch) {
         const project = await researchService.getProject(projectIdMatch[1]);
-        if (project) projects = [project];
+        if (project) {projects = [project];}
       } else {
         // Get all active projects
         projects = await researchService.getActiveProjects();
@@ -303,7 +303,7 @@ export const checkResearchStatusAction: Action = {
           metadata: { status: 'no_projects' },
         };
 
-        if (callback) await callback(response);
+        if (callback) {await callback(response);}
 
         return {
           success: true,
@@ -336,7 +336,7 @@ export const checkResearchStatusAction: Action = {
         metadata: { projects },
       };
 
-      if (callback) await callback(response);
+      if (callback) {await callback(response);}
 
       // Determine next actions based on project states
       const hasActive = projects.some((p) => p.status === ResearchStatus.ACTIVE);
@@ -361,7 +361,7 @@ export const checkResearchStatusAction: Action = {
         },
       };
     } catch (error) {
-      elizaLogger.error('Failed to check research status:', error);
+      logger.error('Failed to check research status:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -399,7 +399,7 @@ export const refineResearchQueryAction: Action = {
 
   async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
-    if (!researchService) return false;
+    if (!researchService) {return false;}
 
     const activeProjects = await researchService.getActiveProjects();
     return activeProjects.length > 0;
@@ -479,7 +479,7 @@ The research will now explore these refined aspects while maintaining the origin
         metadata: { project, refinement },
       };
 
-      if (callback) await callback(responseText);
+      if (callback) {await callback(responseText);}
 
       return {
         success: true,
@@ -491,7 +491,7 @@ The research will now explore these refined aspects while maintaining the origin
         },
       };
     } catch (error) {
-      elizaLogger.error('Failed to refine research query:', error);
+      logger.error('Failed to refine research query:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -529,7 +529,7 @@ export const getResearchReportAction: Action = {
 
   async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
-    if (!researchService) return false;
+    if (!researchService) {return false;}
 
     const projects = await researchService.getAllProjects();
     return projects.some((p: ResearchProject) => p.status === ResearchStatus.COMPLETED);
@@ -582,7 +582,7 @@ export const getResearchReportAction: Action = {
         const race = project.report.evaluationMetrics.raceScore;
         const fact = project.report.evaluationMetrics.factScore;
 
-        reportText += `## Quality Metrics\n`;
+        reportText += '## Quality Metrics\n';
         reportText += `**RACE Score:** ${(race.overall * 100).toFixed(1)}%\n`;
         reportText += `**FACT Score:** ${(fact.citationAccuracy * 100).toFixed(1)}% accuracy\n\n`;
       }
@@ -614,7 +614,7 @@ export const getResearchReportAction: Action = {
         metadata: { project, report: project.report },
       };
 
-      if (callback) await callback(response);
+      if (callback) {await callback(response);}
 
       return {
         success: true,
@@ -627,7 +627,7 @@ export const getResearchReportAction: Action = {
         },
       };
     } catch (error) {
-      elizaLogger.error('Failed to get research report:', error);
+      logger.error('Failed to get research report:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -665,7 +665,7 @@ export const evaluateResearchAction: Action = {
 
   async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
-    if (!researchService) return false;
+    if (!researchService) {return false;}
 
     const projects = await researchService.getAllProjects();
     return projects.some((p: ResearchProject) => p.status === ResearchStatus.COMPLETED && p.report);
@@ -713,7 +713,7 @@ export const evaluateResearchAction: Action = {
             metadata: { evaluation },
           };
 
-          if (callback) await callback(response);
+          if (callback) {await callback(response);}
 
           return {
             success: true,
@@ -732,7 +732,7 @@ export const evaluateResearchAction: Action = {
       }
 
       const project = evaluableProjects[0];
-      elizaLogger.info(`Starting evaluation for project ${project.id}`);
+      logger.info(`Starting evaluation for project ${project.id}`);
 
       // Run evaluation
       const evaluation = await researchService.evaluateProject(project.id);
@@ -758,7 +758,7 @@ ${evaluation.recommendations.map((r: string, i: number) => `${i + 1}. ${r}`).joi
         metadata: { project, evaluation },
       };
 
-      if (callback) await callback(response);
+      if (callback) {await callback(response);}
 
       return {
         success: true,
@@ -770,7 +770,7 @@ ${evaluation.recommendations.map((r: string, i: number) => `${i + 1}. ${r}`).joi
         },
       };
     } catch (error) {
-      elizaLogger.error('Failed to evaluate research:', error);
+      logger.error('Failed to evaluate research:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -808,7 +808,7 @@ export const exportResearchAction: Action = {
 
   async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
-    if (!researchService) return false;
+    if (!researchService) {return false;}
 
     const projects = await researchService.getAllProjects();
     return projects.some((p: ResearchProject) => p.status === ResearchStatus.COMPLETED && p.report);
@@ -875,7 +875,7 @@ export const exportResearchAction: Action = {
         },
       };
 
-      if (callback) await callback(response);
+      if (callback) {await callback(response);}
 
       return {
         success: true,
@@ -888,7 +888,7 @@ export const exportResearchAction: Action = {
         },
       };
     } catch (error) {
-      elizaLogger.error('Failed to export research:', error);
+      logger.error('Failed to export research:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -926,7 +926,7 @@ export const compareResearchAction: Action = {
 
   async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
-    if (!researchService) return false;
+    if (!researchService) {return false;}
 
     const projects = await researchService.getAllProjects();
     const completedProjects = projects.filter((p: ResearchProject) => p.status === ResearchStatus.COMPLETED);
@@ -977,11 +977,11 @@ ${comparison.differences.map((d: string, i: number) => `${i + 1}. ${d}`).join('\
 
 ## Unique Insights:
 ${Object.entries(comparison.uniqueInsights)
-  .map(([id, insights]) => {
-    const project = projectsToCompare.find((p: ResearchProject) => p.id === id);
-    return `\n**${project?.query}:**\n${(insights as string[]).map((insight, i) => `- ${insight}`).join('\n')}`;
-  })
-  .join('\n')}
+    .map(([id, insights]) => {
+      const project = projectsToCompare.find((p: ResearchProject) => p.id === id);
+      return `\n**${project?.query}:**\n${(insights as string[]).map((insight, i) => `- ${insight}`).join('\n')}`;
+    })
+    .join('\n')}
 
 ## Quality Comparison:
 ${comparison.qualityComparison.map((q: any) => `- ${q.metric}: ${q.comparison}`).join('\n')}
@@ -991,7 +991,7 @@ ${comparison.recommendation}`,
         metadata: { comparison, projects: projectsToCompare },
       };
 
-      if (callback) await callback(response);
+      if (callback) {await callback(response);}
 
       return {
         success: true,
@@ -1003,7 +1003,7 @@ ${comparison.recommendation}`,
         },
       };
     } catch (error) {
-      elizaLogger.error('Failed to compare research:', error);
+      logger.error('Failed to compare research:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -1041,7 +1041,7 @@ export const pauseResearchAction: Action = {
 
   async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
-    if (!researchService) return false;
+    if (!researchService) {return false;}
 
     const activeProjects = await researchService.getActiveProjects();
     return activeProjects.length > 0;
@@ -1084,7 +1084,7 @@ You can resume this research at any time.`,
         metadata: { project },
       };
 
-      if (callback) await callback(response);
+      if (callback) {await callback(response);}
 
       return {
         success: true,
@@ -1093,7 +1093,7 @@ You can resume this research at any time.`,
         metadata: { projectId: project.id },
       };
     } catch (error) {
-      elizaLogger.error('Failed to pause research:', error);
+      logger.error('Failed to pause research:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -1131,7 +1131,7 @@ export const resumeResearchAction: Action = {
 
   async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
-    if (!researchService) return false;
+    if (!researchService) {return false;}
 
     const allProjects = await researchService.getAllProjects();
     return allProjects.some((p: ResearchProject) => p.status === ResearchStatus.PAUSED);
@@ -1176,7 +1176,7 @@ The research will continue from where it left off.`,
         metadata: { project },
       };
 
-      if (callback) await callback(response);
+      if (callback) {await callback(response);}
 
       return {
         success: true,
@@ -1185,7 +1185,7 @@ The research will continue from where it left off.`,
         metadata: { projectId: project.id },
       };
     } catch (error) {
-      elizaLogger.error('Failed to resume research:', error);
+      logger.error('Failed to resume research:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -1223,11 +1223,11 @@ export const cancelResearchAction: Action = {
 
   async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
-    if (!researchService) return false;
+    if (!researchService) {return false;}
 
     const allProjects = await researchService.getAllProjects();
-    return allProjects.some((p: ResearchProject) => 
-      p.status === ResearchStatus.ACTIVE || 
+    return allProjects.some((p: ResearchProject) =>
+      p.status === ResearchStatus.ACTIVE ||
       p.status === ResearchStatus.PAUSED ||
       p.status === ResearchStatus.PENDING
     );
@@ -1253,7 +1253,7 @@ export const cancelResearchAction: Action = {
       if (projectIdMatch) {
         const projectId = projectIdMatch[1];
         projectToCancel = await researchService.getProject(projectId);
-        
+
         if (!projectToCancel) {
           return {
             success: false,
@@ -1265,8 +1265,8 @@ export const cancelResearchAction: Action = {
       } else {
         // Get all cancellable projects
         const allProjects = await researchService.getAllProjects();
-        const cancellableProjects = allProjects.filter((p: ResearchProject) => 
-          p.status === ResearchStatus.ACTIVE || 
+        const cancellableProjects = allProjects.filter((p: ResearchProject) =>
+          p.status === ResearchStatus.ACTIVE ||
           p.status === ResearchStatus.PAUSED ||
           p.status === ResearchStatus.PENDING
         );
@@ -1288,7 +1288,7 @@ export const cancelResearchAction: Action = {
       projectToCancel.status = ResearchStatus.FAILED;
       projectToCancel.error = 'Cancelled by user';
       projectToCancel.updatedAt = Date.now();
-      
+
       // Stop active research if running
       await researchService.pauseResearch(projectToCancel.id);
 
@@ -1304,19 +1304,19 @@ The project has been permanently cancelled and cannot be resumed.`,
         metadata: { project: projectToCancel },
       };
 
-      if (callback) await callback(response);
+      if (callback) {await callback(response);}
 
       return {
         success: true,
         data: projectToCancel,
         nextActions: ['start_research', 'check_research_status'],
-        metadata: { 
+        metadata: {
           projectId: projectToCancel.id,
-          cancelledFrom: projectToCancel.status 
+          cancelledFrom: projectToCancel.status
         },
       };
     } catch (error) {
-      elizaLogger.error('Failed to cancel research:', error);
+      logger.error('Failed to cancel research:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),

@@ -4,7 +4,8 @@ import {
   type IAgentRuntime,
   logger,
   type Memory,
-  type Plugin
+  type Plugin,
+  type HandlerCallback
 } from '@elizaos/core';
 import { TrustService } from '../services/TrustService';
 import type { UUID } from '@elizaos/core';
@@ -106,7 +107,7 @@ export class TrustMiddleware {
         message: Memory,
         state?: any,
         options?: any,
-        callback?: Function
+        callback?: HandlerCallback
       ): Promise<ActionResult> => {
         const startTime = Date.now();
         const isElevated = requiresElevatedTrust(action.name);
@@ -247,7 +248,7 @@ export class TrustMiddleware {
       const required = getTrustRequirement(actionName);
       return trustScore.overall >= required;
     } catch (error) {
-      logger.error(`[TrustMiddleware] Error checking action permission:`, error);
+      logger.error('[TrustMiddleware] Error checking action permission:', error);
       return false;
     }
   }

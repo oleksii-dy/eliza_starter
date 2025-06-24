@@ -2,14 +2,14 @@ import { execSync } from 'child_process';
 import { mkdir, mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { afterEach, describe, expect, it, beforeAll } from 'vitest';
+import { afterEach, describe, expect, it, beforeAll  } from 'bun:test';
 import { TEST_TIMEOUTS } from '../test-timeouts';
 import {
   killProcessOnPort,
   safeChangeDirectory,
   TestProcessManager,
   waitForServerReady,
-  } from './test-utils';
+} from './test-utils';
 import { existsSync } from 'fs';
 
 describe('ElizaOS Start Commands', () => {
@@ -39,17 +39,17 @@ describe('ElizaOS Start Commands', () => {
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
     cliPath = join(scriptDir, '../dist/index.js');
-    
+
     // Check if CLI is built, if not build it
     if (!existsSync(cliPath)) {
       console.log('CLI not built, building now...');
       const cliPackageDir = join(scriptDir, '..');
-      execSync('bun run build', { 
+      execSync('bun run build', {
         cwd: cliPackageDir,
         stdio: 'inherit'
       });
     }
-    
+
     elizaosCmd = `bun "${cliPath}"`;
 
     // Make PORT + model envs explicit.

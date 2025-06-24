@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll  } from 'bun:test';
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { mkdtemp, rm, writeFile } from 'fs/promises';
@@ -72,7 +72,7 @@ describe('ElizaOS Update Commands', () => {
       join(projectPath, 'package.json'),
       JSON.stringify(
         {
-          name: name,
+          name,
           version: '1.0.0',
           type: 'module',
           dependencies: {

@@ -22,7 +22,11 @@ export class SafetyMonitor {
     private jointLimits: JointLimits,
     private safetyConfig: SafetyConfig = {}
   ) {
-    logger.info('[SafetyMonitor] Initialized with limits for', Object.keys(jointLimits).length, 'joints');
+    logger.info(
+      '[SafetyMonitor] Initialized with limits for',
+      Object.keys(jointLimits).length,
+      'joints'
+    );
   }
 
   /**
@@ -40,7 +44,7 @@ export class SafetyMonitor {
 
     // Clamp position to limits
     const safePosition = Math.max(limits.min, Math.min(limits.max, position));
-    
+
     if (safePosition !== position) {
       logger.warn(
         `[SafetyMonitor] Joint ${jointName} position clamped from ${position.toFixed(3)} to ${safePosition.toFixed(3)} rad`
@@ -69,17 +73,17 @@ export class SafetyMonitor {
     }
 
     const requiredVelocity = Math.abs(targetPosition - currentPosition) / timestep;
-    
+
     if (requiredVelocity > this.safetyConfig.maxVelocity) {
       // Calculate safe target position based on max velocity
       const maxDelta = this.safetyConfig.maxVelocity * timestep;
       const direction = Math.sign(targetPosition - currentPosition);
       const safeTarget = currentPosition + direction * maxDelta;
-      
+
       logger.warn(
         `[SafetyMonitor] Joint ${jointName} velocity limited: ${requiredVelocity.toFixed(2)} rad/s > ${this.safetyConfig.maxVelocity} rad/s`
       );
-      
+
       return this.checkJointLimit(jointName, safeTarget);
     }
 
@@ -105,17 +109,17 @@ export class SafetyMonitor {
     }
 
     const requiredAcceleration = Math.abs(targetVelocity - currentVelocity) / timestep;
-    
+
     if (requiredAcceleration > this.safetyConfig.maxAcceleration) {
       // Calculate safe target velocity based on max acceleration
       const maxDelta = this.safetyConfig.maxAcceleration * timestep;
       const direction = Math.sign(targetVelocity - currentVelocity);
       const safeVelocity = currentVelocity + direction * maxDelta;
-      
+
       logger.warn(
         `[SafetyMonitor] Joint ${jointName} acceleration limited: ${requiredAcceleration.toFixed(2)} rad/s² > ${this.safetyConfig.maxAcceleration} rad/s²`
       );
-      
+
       return safeVelocity;
     }
 
@@ -131,29 +135,31 @@ export class SafetyMonitor {
   updateJointTracking(jointName: string, position: number, timestamp: number): void {
     const lastTime = this.lastUpdateTime.get(jointName);
     const lastPos = this.lastPositions.get(jointName);
-    
+
     if (lastTime && lastPos !== undefined) {
       const dt = (timestamp - lastTime) / 1000; // Convert to seconds
       if (dt > 0) {
         const velocity = (position - lastPos) / dt;
-        
+
         const lastVel = this.lastVelocities.get(jointName);
         if (lastVel !== undefined) {
           const acceleration = (velocity - lastVel) / dt;
-          
+
           // Check for excessive acceleration
-          if (this.safetyConfig.maxAcceleration && 
-              Math.abs(acceleration) > this.safetyConfig.maxAcceleration * 1.5) {
+          if (
+            this.safetyConfig.maxAcceleration &&
+            Math.abs(acceleration) > this.safetyConfig.maxAcceleration * 1.5
+          ) {
             logger.error(
               `[SafetyMonitor] WARNING: Joint ${jointName} acceleration ${acceleration.toFixed(2)} rad/s² exceeds safety threshold!`
             );
           }
         }
-        
+
         this.lastVelocities.set(jointName, velocity);
       }
     }
-    
+
     this.lastPositions.set(jointName, position);
     this.lastUpdateTime.set(jointName, timestamp);
   }
@@ -163,9 +169,11 @@ export class SafetyMonitor {
    * @param jointStates Current joint states
    * @returns true if all joints are safe, false otherwise
    */
-  checkOverallSafety(jointStates: Array<{ name: string; position: number; velocity?: number }>): boolean {
+  checkOverallSafety(
+    jointStates: Array<{ name: string; position: number; velocity?: number }>
+  ): boolean {
     let allSafe = true;
-    
+
     for (const joint of jointStates) {
       // Check position limits
       const limits = this.jointLimits[joint.name];
@@ -177,7 +185,7 @@ export class SafetyMonitor {
           allSafe = false;
         }
       }
-      
+
       // Check velocity limits
       if (joint.velocity !== undefined && this.safetyConfig.maxVelocity) {
         if (Math.abs(joint.velocity) > this.safetyConfig.maxVelocity) {
@@ -188,7 +196,7 @@ export class SafetyMonitor {
         }
       }
     }
-    
+
     return allSafe;
   }
 
@@ -209,11 +217,11 @@ export class SafetyMonitor {
     jointsTracked: number;
     violationsDetected: boolean;
     config: SafetyConfig;
-  } {
+    } {
     return {
       jointsTracked: this.lastPositions.size,
       violationsDetected: false, // TODO: Track violations
       config: this.safetyConfig,
     };
   }
-} 
+}

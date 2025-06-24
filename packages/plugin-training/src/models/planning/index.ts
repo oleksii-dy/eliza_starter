@@ -1,10 +1,10 @@
 /**
  * Planning Model - REALM-style planning scenarios for strategic reasoning
- * 
+ *
  * This model trains on complex planning scenarios that require multi-step reasoning,
  * goal decomposition, and strategic thinking. Uses the largest available model
  * (Qwen R1 distill) for maximum reasoning capability.
- * 
+ *
  * Key features:
  * - REALM-style planning scenario generation
  * - Multi-domain expertise (software, business, AI research, project management)
@@ -12,29 +12,29 @@
  * - Comprehensive benchmarking and evaluation
  * - Integration with plugin-planning for realistic scenarios
  * - Strategic thinking with risk assessment and contingency planning
- * 
+ *
  * Model Target: Qwen/QwQ-32B-Preview (R1 distillation)
  */
 
-export { 
-  PlanningScenarioGenerator, 
-  type PlanningScenario, 
-  type PlanningTrainingExample 
+export {
+  PlanningScenarioGenerator,
+  type PlanningScenario,
+  type PlanningTrainingExample,
 } from './PlanningScenarioGenerator';
 
 export { PlanningModelTrainer } from './PlanningModelTrainer';
 
-export { 
-  PlanningBenchmarks, 
-  type BenchmarkScenario, 
-  type BenchmarkResult 
+export {
+  PlanningBenchmarks,
+  type BenchmarkScenario,
+  type BenchmarkResult,
 } from './PlanningBenchmarks';
 
 // Export configuration
 export const PLANNING_MODEL_CONFIG = {
   TARGET_MODEL: 'Qwen/QwQ-32B-Preview', // R1 distillation for thinking
   MODEL_SIZE: '32B+',
-  
+
   SCENARIO_GENERATION: {
     domains: ['software_development', 'business_strategy', 'ai_research', 'project_management'],
     complexity_levels: ['simple', 'medium', 'complex', 'expert'],
@@ -43,12 +43,12 @@ export const PLANNING_MODEL_CONFIG = {
   },
 
   TRAINING_FORMAT: 'instruction_following_with_thinking',
-  
+
   COMPLEXITY_DISTRIBUTION: {
-    simple: 0.2,    // 20% - Basic planning tasks
-    medium: 0.4,    // 40% - Standard planning scenarios
-    complex: 0.3,   // 30% - Advanced multi-step planning
-    expert: 0.1,    // 10% - Highly complex strategic planning
+    simple: 0.2, // 20% - Basic planning tasks
+    medium: 0.4, // 40% - Standard planning scenarios
+    complex: 0.3, // 30% - Advanced multi-step planning
+    expert: 0.1, // 10% - Highly complex strategic planning
   },
 
   SCENARIO_CHARACTERISTICS: {
@@ -77,7 +77,7 @@ export const PLANNING_DEPLOYMENT_CONFIG = {
   training_format: 'instruction_following_with_thinking',
   max_tokens: 4096,
   temperature: 0.3, // Lower temperature for more consistent planning
-  
+
   system_prompt_template: `You are an expert strategic planner with deep expertise in multi-step reasoning and complex problem solving.
 
 When presented with planning scenarios, you must:
@@ -119,7 +119,7 @@ export const PLANNING_DATA_CONFIG = {
     sub_examples_per_scenario: 3, // Focused sub-problems
     total_examples_per_scenario: 7,
   },
-  
+
   quality_filters: {
     min_step_count: 3,
     max_step_count: 30,
@@ -129,13 +129,13 @@ export const PLANNING_DATA_CONFIG = {
     require_contingencies: true,
     min_confidence: 0.6,
   },
-  
+
   benchmark_integration: {
     plugin_planning_required: false, // Optional enhancement
     real_world_scenarios: true,
     evaluation_metrics: [
       'completeness',
-      'feasibility', 
+      'feasibility',
       'risk_awareness',
       'resource_efficiency',
       'timeline_realism',
@@ -182,7 +182,11 @@ export const PLANNING_UTILS = {
    */
   calculateDifficulty: (complexity: string, constraintCount: number, stepCount: number): number => {
     const complexityWeight = { simple: 1, medium: 2, complex: 3, expert: 4 };
-    return (complexityWeight[complexity as keyof typeof complexityWeight] || 2) * 10 + constraintCount + stepCount;
+    return (
+      (complexityWeight[complexity as keyof typeof complexityWeight] || 2) * 10 +
+      constraintCount +
+      stepCount
+    );
   },
 
   /**

@@ -1,5 +1,5 @@
 import { SearchResult } from '../types';
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { SearchProvider } from './rate-limiter';
 import crypto from 'crypto';
 
@@ -22,7 +22,7 @@ class SimpleLRUCache<K, V> {
 
   get(key: K): V | undefined {
     const item = this.cache.get(key);
-    if (!item) return undefined;
+    if (!item) {return undefined;}
 
     // Check if expired
     if (Date.now() - item.timestamp > this.ttl) {
@@ -88,11 +88,11 @@ export class CachedSearchProvider implements SearchProvider {
     // Check cache first
     const cached = this.cache.get(cacheKey);
     if (cached) {
-      elizaLogger.info(`[Cache] Hit for query: ${query}`);
+      logger.info(`[Cache] Hit for query: ${query}`);
       return cached;
     }
 
-    elizaLogger.info(`[Cache] Miss for query: ${query}`);
+    logger.info(`[Cache] Miss for query: ${query}`);
 
     // Fetch from underlying provider
     const results = await this.provider.search(query, maxResults);

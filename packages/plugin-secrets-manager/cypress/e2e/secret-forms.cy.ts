@@ -418,7 +418,7 @@ describe('Secret Forms E2E Tests', () => {
 
         // Check no alerts are triggered
         cy.on('window:alert', (txt) => {
-          throw new Error('XSS alert was triggered: ' + txt);
+          throw new Error(`XSS alert was triggered: ${txt}`);
         });
       });
     });

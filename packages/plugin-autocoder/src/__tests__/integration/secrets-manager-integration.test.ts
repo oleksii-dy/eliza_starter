@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import type { UUID } from '@elizaos/core';
 import { OrchestrationManager } from '../../managers/orchestration-manager';
 import { PluginCreationService } from '../../services/plugin-creation-service';
-// @ts-ignore - EnhancedSecretManager export issue
 import EnhancedSecretManager from '@elizaos/plugin-secrets-manager';
 
 describe('Secrets Manager Integration', () => {
@@ -12,15 +11,15 @@ describe('Secrets Manager Integration', () => {
   beforeEach(() => {
     // Mock secrets manager
     mockSecretsManager = {
-      get: vi.fn(),
-      set: vi.fn(),
+      get: mock(),
+      set: mock(),
     };
 
     // Mock runtime with secrets manager
     mockRuntime = {
       agentId: 'test-agent',
-      getSetting: vi.fn(),
-      getService: vi.fn((serviceName: string) => {
+      getSetting: mock(),
+      getService: mock((serviceName: string) => {
         if (serviceName === 'SECRETS') {
           return mockSecretsManager;
         }

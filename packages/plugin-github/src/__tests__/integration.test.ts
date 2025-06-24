@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterAll, beforeAll } from 'vitest';
+import { describe, expect, it, mock, beforeEach, afterAll, beforeAll } from 'bun:test';
 import { githubPlugin, GitHubService } from '../index';
 import { createMockRuntime, setupLoggerSpies, MockRuntime } from './test-utils';
 import { HandlerCallback, IAgentRuntime, Memory, State, UUID, logger } from '@elizaos/core';
@@ -18,7 +18,7 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  vi.restoreAllMocks();
+  mock.restore();
 });
 
 describe('Integration: GitHub Repository Action with GitHubService', () => {
@@ -30,7 +30,7 @@ describe('Integration: GitHub Repository Action with GitHubService', () => {
     const mockService = {
       capabilityDescription:
         'Comprehensive GitHub integration with repository management, issue tracking, and PR workflows',
-      getRepository: vi.fn().mockResolvedValue({
+      getRepository: mock().mockResolvedValue({
         id: 1,
         name: 'Hello-World',
         full_name: 'octocat/Hello-World',
@@ -50,11 +50,11 @@ describe('Integration: GitHub Repository Action with GitHubService', () => {
           avatar_url: 'https://github.com/images/error/octocat_happy.gif',
         },
       }),
-      stop: vi.fn().mockResolvedValue(undefined),
+      stop: mock().mockResolvedValue(undefined),
     };
 
     // Create a mock runtime with a spied getService method
-    getServiceSpy = vi.fn().mockImplementation((serviceType) => {
+    getServiceSpy = mock().mockImplementation((serviceType) => {
       if (serviceType === 'github') {
         return mockService;
       }
@@ -93,7 +93,7 @@ describe('Integration: GitHub Repository Action with GitHubService', () => {
     };
 
     // Create a mock callback to capture the response
-    const callbackFn = vi.fn();
+    const callbackFn = mock();
 
     // Execute the action
     await getRepoAction?.handler(
@@ -125,7 +125,7 @@ describe('Integration: Plugin initialization and service registration', () => {
     const mockRuntime = createMockRuntime();
 
     // Create and install a spy on registerService
-    const registerServiceSpy = vi.fn();
+    const registerServiceSpy = mock();
     mockRuntime.registerService = registerServiceSpy;
 
     // Run a minimal simulation of the plugin initialization process
@@ -141,10 +141,10 @@ describe('Integration: Plugin initialization and service registration', () => {
         const GitHubServiceClass = githubPlugin.services[0];
 
         // Mock the service start to avoid actual GitHub API calls
-        const mockServiceStart = vi.spyOn(GitHubServiceClass, 'start').mockResolvedValue({
+        const mockServiceStart = mock.spyOn(GitHubServiceClass, 'start').mockResolvedValue({
           capabilityDescription:
             'Comprehensive GitHub integration with repository management, issue tracking, and PR workflows',
-          stop: vi.fn(),
+          stop: mock(),
         } as any);
 
         const serviceInstance = await GitHubServiceClass.start(

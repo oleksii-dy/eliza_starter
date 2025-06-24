@@ -114,7 +114,7 @@ export class CommunicationBridge extends Service {
   }
 
   private setupWebSocketHandlers(): void {
-    if (!this.wss) return;
+    if (!this.wss) {return;}
 
     this.wss.on('connection', (ws: WebSocket, request) => {
       elizaLogger.info('New agent connection attempt');
@@ -313,7 +313,7 @@ export class CommunicationBridge extends Service {
     for (const [agentId, agent] of this.connectedAgents) {
       if (agent.role === role && agent.authenticated) {
         const success = await this.sendToAgent(agentId, message);
-        if (success) sent++;
+        if (success) {sent++;}
       }
     }
 
@@ -326,7 +326,7 @@ export class CommunicationBridge extends Service {
     for (const [agentId, agent] of this.connectedAgents) {
       if (agent.taskId === taskId && agent.authenticated) {
         const success = await this.sendToAgent(agentId, message);
-        if (success) sent++;
+        if (success) {sent++;}
       }
     }
 

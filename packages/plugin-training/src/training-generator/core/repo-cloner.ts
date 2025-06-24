@@ -6,7 +6,7 @@
  * Features real git operations with authentication, error handling, and progress tracking.
  */
 
-import { simpleGit, SimpleGit, CleanOptions } from 'simple-git';
+import { simpleGit, type SimpleGit, CleanOptions } from 'simple-git';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import type { IAgentRuntime } from '@elizaos/core';
@@ -120,7 +120,7 @@ export class RepositoryCloner {
           ...options,
         });
 
-        elizaLogger.info(`Successfully cloned ElizaOS repository`, {
+        elizaLogger.info('Successfully cloned ElizaOS repository', {
           path: repoInfo.localPath,
           commit: repoInfo.commit,
           fileCount: repoInfo.fileCount,
@@ -200,7 +200,7 @@ export class RepositoryCloner {
           error: errorMessage,
         });
 
-        elizaLogger.warn(`Failed to clone plugin repository`, {
+        elizaLogger.warn('Failed to clone plugin repository', {
           url: repoUrl,
           error: errorMessage,
         });
@@ -210,18 +210,18 @@ export class RepositoryCloner {
     }
 
     // Summary
-    elizaLogger.info(`\n📊 Plugin Repository Clone Summary:`);
+    elizaLogger.info('\n📊 Plugin Repository Clone Summary:');
     elizaLogger.info(`✅ Successfully cloned: ${clonedPlugins.length}`);
     elizaLogger.info(`❌ Failed: ${failures.length}`);
 
     if (failures.length > 0) {
-      elizaLogger.info(`\n❌ Failed repositories:`);
+      elizaLogger.info('\n❌ Failed repositories:');
       failures.forEach((failure) => {
         elizaLogger.info(`   - ${failure.url}: ${failure.error}`);
       });
     }
 
-    elizaLogger.info(`Plugin repository cloning completed`, {
+    elizaLogger.info('Plugin repository cloning completed', {
       successful: clonedPlugins.length,
       failed: failures.length,
       totalFiles: clonedPlugins.reduce((sum, repo) => sum + (repo.fileCount || 0), 0),
@@ -264,7 +264,7 @@ export class RepositoryCloner {
     // Prepare clone URL with authentication if available
     const cloneUrl = this.prepareCloneUrl(repoUrl);
 
-    let lastError: Error | null = null;
+    const lastError: Error | null = null;
 
     // Use error handler with retry logic for clone operation
     const result = await ErrorHandler.handleError(
@@ -273,7 +273,7 @@ export class RepositoryCloner {
       { repoName, repoUrl, targetDir, type },
       async () => {
         elizaLogger.info(`📥 Cloning ${repoName}...`);
-        elizaLogger.debug(`Cloning repository`, {
+        elizaLogger.debug('Cloning repository', {
           url: repoUrl,
           targetDir,
           depth,
@@ -298,20 +298,23 @@ export class RepositoryCloner {
           ]);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          
+
           // Categorize git errors properly
-          if (errorMessage.includes('Authentication failed') || errorMessage.includes('access denied')) {
+          if (
+            errorMessage.includes('Authentication failed') ||
+            errorMessage.includes('access denied')
+          ) {
             throw new AuthenticationError('Git', `Repository access denied: ${repoUrl}`);
           }
-          
+
           if (errorMessage.includes('not found') || errorMessage.includes('does not exist')) {
             throw new ResourceError('repository', 'clone', `Repository not found: ${repoUrl}`);
           }
-          
+
           if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
             throw new NetworkError(`Git clone failed: ${errorMessage}`, repoUrl);
           }
-          
+
           // Generic git error
           throw new ResourceError('git', 'clone', errorMessage, { repoUrl, targetDir });
         }
@@ -319,30 +322,16 @@ export class RepositoryCloner {
         // Get repository information with error handling
         const repoGit = simpleGit(targetDir);
         const [log, status] = await Promise.all([
-          safely(
-            () => repoGit.log({ maxCount: 1 }),
-            'get_git_log',
-            { targetDir }
-          ),
-          safely(
-            () => repoGit.status(),
-            'get_git_status',
-            { targetDir }
-          ),
+          safely(() => repoGit.log({ maxCount: 1 }), 'get_git_log', { targetDir }),
+          safely(() => repoGit.status(), 'get_git_status', { targetDir }),
         ]);
 
         // Count files in repository with error handling
         const [fileCount, size] = await Promise.all([
-          safely(
-            () => this.countFiles(targetDir),
-            'count_repository_files',
-            { targetDir }
-          ) || 0,
-          safely(
-            () => this.calculateDirectorySize(targetDir),
-            'calculate_repository_size',
-            { targetDir }
-          ) || 0,
+          safely(() => this.countFiles(targetDir), 'count_repository_files', { targetDir }) || 0,
+          safely(() => this.calculateDirectorySize(targetDir), 'calculate_repository_size', {
+            targetDir,
+          }) || 0,
         ]);
 
         const repoInfo: RepositoryInfo = {
@@ -359,7 +348,7 @@ export class RepositoryCloner {
 
         this.clonedRepos.set(repoName, repoInfo);
 
-        elizaLogger.info(`Successfully cloned repository`, {
+        elizaLogger.info('Successfully cloned repository', {
           name: repoName,
           commit: repoInfo.commit,
           fileCount: repoInfo.fileCount,
@@ -369,11 +358,11 @@ export class RepositoryCloner {
         return repoInfo;
       }
     );
-    
+
     if (!result) {
       throw new Error(`Failed to clone repository: ${repoName}`);
     }
-    
+
     return result;
   }
 
@@ -427,6 +416,7 @@ export class RepositoryCloner {
           authenticated: !!this.githubToken,
         });
 
+        // eslint-disable-next-line no-constant-condition
         while (true) {
           const url = `${this.config.getAPIConfig().github.apiUrl}/orgs/${org}/repos?per_page=${perPage}&page=${page}&sort=updated&direction=desc`;
 
@@ -438,10 +428,13 @@ export class RepositoryCloner {
           if (response.status === 403) {
             const rateLimitReset = response.headers.get('x-ratelimit-reset');
             if (rateLimitReset) {
-              const resetTime = new Date(parseInt(rateLimitReset) * 1000);
+              const resetTime = new Date(parseInt(rateLimitReset, 10) * 1000);
               throw new RateLimitError('GitHub API', resetTime.getTime());
             }
-            throw new AuthenticationError('GitHub', 'API access forbidden - check token permissions');
+            throw new AuthenticationError(
+              'GitHub',
+              'API access forbidden - check token permissions'
+            );
           }
 
           if (response.status === 401) {
@@ -658,7 +651,9 @@ export class RepositoryCloner {
         const entries = await fs.readdir(currentPath, { withFileTypes: true });
 
         for (const entry of entries) {
-          if (entry.name === '.git') continue; // Skip .git directory
+          if (entry.name === '.git') {
+            continue;
+          } // Skip .git directory
 
           const fullPath = path.join(currentPath, entry.name);
 
@@ -689,7 +684,9 @@ export class RepositoryCloner {
         const entries = await fs.readdir(currentPath, { withFileTypes: true });
 
         for (const entry of entries) {
-          if (entry.name === '.git') continue; // Skip .git directory
+          if (entry.name === '.git') {
+            continue;
+          } // Skip .git directory
 
           const fullPath = path.join(currentPath, entry.name);
 

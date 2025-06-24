@@ -1,4 +1,4 @@
-import { ChannelType, type UUID } from '@elizaos/core';
+import { ChannelType } from '@elizaos/core';
 
 export interface Room {
   id: string;

@@ -1,7 +1,10 @@
 import type { IAgentRuntime, UUID, Content } from '@elizaos/core';
 
+// Re-export UUID so it can be imported from this file
+export type { UUID } from '@elizaos/core';
+
 export interface ScenarioActor {
-  id: UUID;
+  id: UUID | string;
   name: string;
   role: 'subject' | 'observer' | 'assistant' | 'adversary';
   personality?: {
@@ -15,6 +18,7 @@ export interface ScenarioActor {
   runtime?: IAgentRuntime;
   bio?: string;
   system?: string;
+  systemPrompt?: string;
   plugins?: string[];
 }
 
@@ -40,6 +44,7 @@ export interface ScriptStep {
   description?: string;
   timeout?: number;
   critical?: boolean;
+  timing?: any;
 }
 
 export interface ScriptTrigger {
@@ -60,6 +65,7 @@ export interface ScenarioSetup {
   context?: string;
   initialMessages?: Message[];
   environment?: Record<string, any>;
+  initialContext?: string;
 }
 
 export interface ScenarioExecution {
@@ -67,6 +73,7 @@ export interface ScenarioExecution {
   maxSteps?: number;
   timeout?: number;
   stopConditions?: StopCondition[];
+  strategy?: any;
 }
 
 export interface StopCondition {
@@ -79,6 +86,7 @@ export interface ScenarioVerification {
   rules: VerificationRule[];
   expectedOutcomes?: ExpectedOutcome[];
   groundTruth?: GroundTruth;
+  strategy?: any;
 }
 
 export interface VerificationRule {
@@ -127,6 +135,9 @@ export interface BenchmarkCriteria {
   customMetrics?: Array<{
     name: string;
     threshold?: number;
+    target?: any;
+    pluginProjectsCreated?: any;
+    [key: string]: any;
   }>;
 }
 
@@ -316,9 +327,9 @@ export interface ScenarioExecutionResult {
 }
 
 export interface TranscriptMessage {
-  id: UUID;
+  id: UUID | string;
   timestamp: number;
-  actorId: UUID;
+  actorId: UUID | string;
   actorName: string;
   content: Content;
   messageType: 'incoming' | 'outgoing';

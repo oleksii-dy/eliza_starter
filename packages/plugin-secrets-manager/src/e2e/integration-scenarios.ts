@@ -1,26 +1,9 @@
 // Integration scenarios file
 
-import {
-  type IAgentRuntime,
-  type Memory,
-  type UUID,
-  type Entity,
-  type Room,
-  type World,
-  type Action,
-  type State,
-  Role,
-  type TestSuite,
-  type TestCase,
-  asUUID,
-  ChannelType,
-  createUniqueUuid,
-  type Content,
-} from '@elizaos/core';
-import { EnhancedSecretManager } from '../enhanced-service';
-import { EnvManagerService } from '../service';
-import { setupScenario, sendMessageAndWaitForResponse } from './test-utils';
 import { v4 as uuid } from 'uuid';
+import { EnhancedSecretManager } from '../enhanced-service';
+import { EnvManager } from '../service';
+import { setupScenario, sendMessageAndWaitForResponse } from './test-utils';
 
 // Helper to create a mock plugin with API key requirements
 const createMockPlugin = (name: string, requiredKeys: Record<string, any>) => {
@@ -54,11 +37,13 @@ const createApiAction = (
         },
       ],
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
-      const envService = runtime.getService<EnvManagerService>('ENV_MANAGER');
-      if (!envService) return false;
+    validate: async (_runtime: IAgentRuntime, message: Memory) => {
+      const env = runtime.get<EnvManager>('ENV_MANAGER');
+      if (!env) {
+        return false;
+      }
 
-      const keyValue = envService.getEnvVar(requiredKey);
+      const keyValue = env.getEnvVar(requiredKey);
       return !!keyValue;
     },
     handler: async (
@@ -68,23 +53,23 @@ const createApiAction = (
       options?: any,
       callback?: any
     ) => {
-      const envService = runtime.getService<EnvManagerService>('ENV_MANAGER');
-      const secretService = runtime.getService<EnhancedSecretManager>('SECRETS');
+      const env = runtime.get<EnvManager>('ENV_MANAGER');
+      const secret = runtime.get<EnhancedSecretManager>('SECRETS');
 
-      if (!envService || !secretService) {
+      if (!env || !secret) {
         console.log('⚠️ Required services not available, skipping action');
         if (callback) {
-          await callback({
+          await void callback({
             text: 'Sorry, I cannot execute this action at the moment. Required services are not available.',
           });
         }
-        return { text: 'Services not available' };
+        return { text: 's not available' };
       }
 
-      const keyValue = envService.getEnvVar(requiredKey);
+      const keyValue = env.getEnvVar(requiredKey);
       if (!keyValue) {
         if (callback) {
-          await callback({
+          await void callback({
             text: `Cannot execute ${actionName}: Missing ${requiredKey}. Please provide the API key first.`,
             actions: ['REQUEST_SECRET_FORM'],
           });
@@ -98,7 +83,7 @@ const createApiAction = (
       );
 
       if (callback) {
-        await callback({
+        await void callback({
           text: successMessage,
           data: {
             action: actionName,
@@ -119,15 +104,15 @@ const createApiAction = (
 const integrationScenarios: TestCase[] = [
   {
     name: 'Admin provides OpenAI API key for AI text generation',
-    fn: async (runtime: IAgentRuntime) => {
-      const secretService = runtime.getService<EnhancedSecretManager>('SECRETS');
-      const envService = runtime.getService<EnvManagerService>('ENV_MANAGER');
+    fn: async (_runtime: IAgentRuntime) => {
+      const secret = runtime.get<EnhancedSecretManager>('SECRETS');
+      const env = runtime.get<EnvManager>('ENV_MANAGER');
 
-      if (!secretService) {
+      if (!secret) {
         console.log('⚠️ SECRETS service not available, skipping test');
         return;
       }
-      if (!envService) {
+      if (!env) {
         console.log('⚠️ ENV_MANAGER service not available, skipping test');
         return;
       }
@@ -140,7 +125,7 @@ const integrationScenarios: TestCase[] = [
         ...world.metadata,
         roles: { [adminUser.id!]: Role.ADMIN },
       };
-      await runtime.ensureWorldExists(world);
+      await runtime.ensureExists(world);
 
       // Register a mock AI plugin that requires OpenAI API key
       const mockAIPlugin = createMockPlugin('ai-text-generator', {
@@ -164,10 +149,10 @@ const integrationScenarios: TestCase[] = [
       runtime.actions.push(generateTextAction);
 
       // Scan for plugin requirements
-      await envService.scanPluginRequirements();
+      await env.scanPluginRequirements();
 
       // Verify the requirement was detected
-      const requirements = await envService.getEnvVarsForPlugin('ai-text-generator');
+      const requirements = await env.getEnvVarsForPlugin('ai-text-generator');
       if (!requirements || !requirements.OPENAI_API_KEY) {
         throw new Error('Plugin requirements were not detected');
       }
@@ -193,8 +178,8 @@ const integrationScenarios: TestCase[] = [
           agentId: runtime.agentId,
         };
 
-        await secretService.set('OPENAI_API_KEY', apiKey, worldContext);
-        await envService.updateEnvVar('ai-text-generator', 'OPENAI_API_KEY', {
+        await secret.set('OPENAI_API_KEY', apiKey, worldContext);
+        await env.updateEnvVar('ai-text-generator', 'OPENAI_API_KEY', {
           value: apiKey,
           status: 'valid',
           validatedAt: Date.now(),
@@ -203,7 +188,7 @@ const integrationScenarios: TestCase[] = [
 
       // User requests AI text generation
       const regularUser: Entity = {
-        id: asUUID(uuid()),
+        id: as(uuid()),
         names: ['Regular User'],
         agentId: runtime.agentId,
       };
@@ -223,7 +208,7 @@ const integrationScenarios: TestCase[] = [
       }
 
       // Verify the API key was used
-      const usedKey = envService.getEnvVar('OPENAI_API_KEY');
+      const usedKey = env.getEnvVar('OPENAI_API_KEY');
       if (!usedKey || !usedKey.startsWith('sk-proj-')) {
         throw new Error('API key was not properly set or retrieved');
       }
@@ -236,15 +221,15 @@ const integrationScenarios: TestCase[] = [
 
   {
     name: 'Multi-plugin scenario: Trading bot with multiple API keys',
-    fn: async (runtime: IAgentRuntime) => {
-      const secretService = runtime.getService<EnhancedSecretManager>('SECRETS');
-      const envService = runtime.getService<EnvManagerService>('ENV_MANAGER');
+    fn: async (_runtime: IAgentRuntime) => {
+      const secret = runtime.get<EnhancedSecretManager>('SECRETS');
+      const env = runtime.get<EnvManager>('ENV_MANAGER');
 
-      if (!secretService) {
+      if (!secret) {
         console.log('⚠️ SECRETS service not available, skipping test');
         return;
       }
-      if (!envService) {
+      if (!env) {
         console.log('⚠️ ENV_MANAGER service not available, skipping test');
         return;
       }
@@ -256,7 +241,7 @@ const integrationScenarios: TestCase[] = [
         ...world.metadata,
         roles: { [adminUser.id!]: Role.ADMIN },
       };
-      await runtime.ensureWorldExists(world);
+      await runtime.ensureExists(world);
 
       // Register mock trading plugins
       const exchangePlugin = createMockPlugin('crypto-exchange', {
@@ -298,7 +283,7 @@ const integrationScenarios: TestCase[] = [
       runtime.actions.push(tradeAction, analyzeAction);
 
       // Scan requirements
-      await envService.scanPluginRequirements();
+      await env.scanPluginRequirements();
 
       // Admin provides multiple keys in sequence
       const worldContext = {
@@ -309,23 +294,23 @@ const integrationScenarios: TestCase[] = [
       };
 
       // Set Binance keys
-      await secretService.set('BINANCE_API_KEY', 'binance-key-abc123', worldContext);
-      await envService.updateEnvVar('crypto-exchange', 'BINANCE_API_KEY', {
+      await secret.set('BINANCE_API_KEY', 'binance-key-abc123', worldContext);
+      await env.updateEnvVar('crypto-exchange', 'BINANCE_API_KEY', {
         value: 'binance-key-abc123',
         status: 'valid',
         validatedAt: Date.now(),
       });
 
-      await secretService.set('BINANCE_SECRET_KEY', 'binance-secret-xyz789', worldContext);
-      await envService.updateEnvVar('crypto-exchange', 'BINANCE_SECRET_KEY', {
+      await secret.set('BINANCE_SECRET_KEY', 'binance-secret-xyz789', worldContext);
+      await env.updateEnvVar('crypto-exchange', 'BINANCE_SECRET_KEY', {
         value: 'binance-secret-xyz789',
         status: 'valid',
         validatedAt: Date.now(),
       });
 
       // Set CoinGecko key
-      await secretService.set('COINGECKO_API_KEY', 'cg-key-def456', worldContext);
-      await envService.updateEnvVar('market-analytics', 'COINGECKO_API_KEY', {
+      await secret.set('COINGECKO_API_KEY', 'cg-key-def456', worldContext);
+      await env.updateEnvVar('market-analytics', 'COINGECKO_API_KEY', {
         value: 'cg-key-def456',
         status: 'valid',
         validatedAt: Date.now(),
@@ -333,7 +318,7 @@ const integrationScenarios: TestCase[] = [
 
       // Create a trader user
       const traderUser: Entity = {
-        id: asUUID(uuid()),
+        id: as(uuid()),
         names: ['Crypto Trader'],
         agentId: runtime.agentId,
       };
@@ -365,9 +350,9 @@ const integrationScenarios: TestCase[] = [
       }
 
       // Verify all keys are properly set
-      const binanceKey = envService.getEnvVar('BINANCE_API_KEY');
-      const binanceSecret = envService.getEnvVar('BINANCE_SECRET_KEY');
-      const coingeckoKey = envService.getEnvVar('COINGECKO_API_KEY');
+      const binanceKey = env.getEnvVar('BINANCE_API_KEY');
+      const binanceSecret = env.getEnvVar('BINANCE_SECRET_KEY');
+      const coingeckoKey = env.getEnvVar('COINGECKO_API_KEY');
 
       if (!binanceKey || !binanceSecret || !coingeckoKey) {
         throw new Error('Not all API keys were properly configured');
@@ -381,15 +366,15 @@ const integrationScenarios: TestCase[] = [
 
   {
     name: 'User-level API key with validation and permission checking',
-    fn: async (runtime: IAgentRuntime) => {
-      const secretService = runtime.getService<EnhancedSecretManager>('SECRETS');
-      const envService = runtime.getService<EnvManagerService>('ENV_MANAGER');
+    fn: async (_runtime: IAgentRuntime) => {
+      const secret = runtime.get<EnhancedSecretManager>('SECRETS');
+      const env = runtime.get<EnvManager>('ENV_MANAGER');
 
-      if (!secretService) {
+      if (!secret) {
         console.log('⚠️ SECRETS service not available, skipping test');
         return;
       }
-      if (!envService) {
+      if (!env) {
         console.log('⚠️ ENV_MANAGER service not available, skipping test');
         return;
       }
@@ -416,7 +401,7 @@ const integrationScenarios: TestCase[] = [
       );
       runtime.actions.push(weatherAction);
 
-      await envService.scanPluginRequirements();
+      await env.scanPluginRequirements();
 
       // Alice provides her personal weather API key
       const aliceContext = {
@@ -427,20 +412,17 @@ const integrationScenarios: TestCase[] = [
       };
 
       // First attempt with invalid key format
-      const invalidResult = await secretService.set(
-        'WEATHER_API_KEY',
-        'invalid-key',
-        aliceContext,
-        { validationMethod: 'regex' }
-      );
+      const invalidResult = await secret.set('WEATHER_API_KEY', 'invalid-key', aliceContext, {
+        validationMethod: 'regex',
+      });
 
       if (invalidResult === true) {
         throw new Error('Invalid key should have been rejected');
       }
 
       // Second attempt with valid key
-      await secretService.set('WEATHER_API_KEY', 'weather-abc123def4', aliceContext);
-      await envService.updateEnvVar('weather-service', 'WEATHER_API_KEY', {
+      await secret.set('WEATHER_API_KEY', 'weather-abc123def4', aliceContext);
+      await env.updateEnvVar('weather-service', 'WEATHER_API_KEY', {
         value: 'weather-abc123def4',
         status: 'valid',
         validatedAt: Date.now(),
@@ -460,7 +442,7 @@ const integrationScenarios: TestCase[] = [
 
       // Create another user Bob
       const userBob: Entity = {
-        id: asUUID(uuid()),
+        id: as(uuid()),
         names: ['Bob'],
         agentId: runtime.agentId,
       };
@@ -476,7 +458,7 @@ const integrationScenarios: TestCase[] = [
       };
 
       // Bob shouldn't be able to access Alice's key
-      const bobAccess = await secretService.get('WEATHER_API_KEY', bobContext);
+      const bobAccess = await secret.get('WEATHER_API_KEY', bobContext);
       if (bobAccess !== null) {
         throw new Error("Bob should not have access to Alice's API key");
       }
@@ -487,15 +469,15 @@ const integrationScenarios: TestCase[] = [
 
   {
     name: 'Workflow scenario: Auto-setup multiple services with admin approval',
-    fn: async (runtime: IAgentRuntime) => {
-      const secretService = runtime.getService<EnhancedSecretManager>('SECRETS');
-      const envService = runtime.getService<EnvManagerService>('ENV_MANAGER');
+    fn: async (_runtime: IAgentRuntime) => {
+      const secret = runtime.get<EnhancedSecretManager>('SECRETS');
+      const env = runtime.get<EnvManager>('ENV_MANAGER');
 
-      if (!secretService) {
+      if (!secret) {
         console.log('⚠️ SECRETS service not available, skipping test');
         return;
       }
-      if (!envService) {
+      if (!env) {
         console.log('⚠️ ENV_MANAGER service not available, skipping test');
         return;
       }
@@ -507,7 +489,7 @@ const integrationScenarios: TestCase[] = [
         ...world.metadata,
         roles: { [adminUser.id!]: Role.ADMIN },
       };
-      await runtime.ensureWorldExists(world);
+      await runtime.ensureExists(world);
 
       // Register multiple plugins simulating a complete app setup
       const plugins = [
@@ -560,14 +542,14 @@ const integrationScenarios: TestCase[] = [
       ];
 
       plugins.forEach((p) => runtime.plugins.push(p as any));
-      await envService.scanPluginRequirements();
+      await env.scanPluginRequirements();
 
       // Get all missing vars
-      const missingVars = await envService.getMissingEnvVars();
+      const missingVars = await env.getMissingEnvVars();
       console.log(`Found ${missingVars.length} missing environment variables`);
 
       // Auto-generate what we can
-      const generatableVars = await envService.getGeneratableEnvVars();
+      const generatableVars = await env.getGeneratableEnvVars();
       for (const { plugin, varName, config } of generatableVars) {
         let value: string;
 
@@ -580,7 +562,7 @@ const integrationScenarios: TestCase[] = [
           continue;
         }
 
-        await envService.updateEnvVar(plugin, varName, {
+        await env.updateEnvVar(plugin, varName, {
           value,
           status: 'valid',
           validatedAt: Date.now(),
@@ -592,7 +574,7 @@ const integrationScenarios: TestCase[] = [
           requesterId: runtime.agentId,
           agentId: runtime.agentId,
         };
-        await secretService.set(varName, value, worldContext);
+        await secret.set(varName, value, worldContext);
       }
 
       // Admin provides the remaining required values
@@ -604,37 +586,33 @@ const integrationScenarios: TestCase[] = [
       };
 
       // Set database URL
-      await secretService.set(
-        'DATABASE_URL',
-        'postgresql://user:pass@localhost:5432/myapp',
-        adminContext
-      );
-      await envService.updateEnvVar('database-service', 'DATABASE_URL', {
+      await secret.set('DATABASE_URL', 'postgresql://user:pass@localhost:5432/myapp', adminContext);
+      await env.updateEnvVar('database-service', 'DATABASE_URL', {
         value: 'postgresql://user:pass@localhost:5432/myapp',
         status: 'valid',
         validatedAt: Date.now(),
       });
 
       // Set email config
-      await secretService.set('SMTP_HOST', 'smtp.gmail.com', adminContext);
-      await secretService.set('SMTP_USER', 'myapp@gmail.com', adminContext);
-      await secretService.set('SMTP_PASS', 'app-specific-password', adminContext);
+      await secret.set('SMTP_HOST', 'smtp.gmail.com', adminContext);
+      await secret.set('SMTP_USER', 'myapp@gmail.com', adminContext);
+      await secret.set('SMTP_PASS', 'app-specific-password', adminContext);
 
-      await envService.updateEnvVar('email-service', 'SMTP_HOST', {
+      await env.updateEnvVar('email-service', 'SMTP_HOST', {
         value: 'smtp.gmail.com',
         status: 'valid',
       });
-      await envService.updateEnvVar('email-service', 'SMTP_USER', {
+      await env.updateEnvVar('email-service', 'SMTP_USER', {
         value: 'myapp@gmail.com',
         status: 'valid',
       });
-      await envService.updateEnvVar('email-service', 'SMTP_PASS', {
+      await env.updateEnvVar('email-service', 'SMTP_PASS', {
         value: 'app-specific-password',
         status: 'valid',
       });
 
       // Verify all services are configured
-      const stillMissing = await envService.getMissingEnvVars();
+      const stillMissing = await env.getMissingEnvVars();
       if (stillMissing.length > 0) {
         throw new Error(`Still have ${stillMissing.length} missing variables`);
       }
@@ -643,18 +621,14 @@ const integrationScenarios: TestCase[] = [
       const dbAction: Action = {
         name: 'CHECK_DATABASE',
         description: 'Check database connection',
-        validate: async (runtime) => {
-          const url = runtime
-            .getService<EnvManagerService>('ENV_MANAGER')
-            ?.getEnvVar('DATABASE_URL');
+        validate: async (_runtime) => {
+          const url = runtime.get<EnvManager>('ENV_MANAGER')?.getEnvVar('DATABASE_URL');
           return !!url;
         },
-        handler: async (runtime, message, state, options, callback) => {
-          const url = runtime
-            .getService<EnvManagerService>('ENV_MANAGER')
-            ?.getEnvVar('DATABASE_URL');
+        handler: async (_runtime, message, state, options, callback) => {
+          const url = runtime.get<EnvManager>('ENV_MANAGER')?.getEnvVar('DATABASE_URL');
           if (callback) {
-            await callback({
+            await void callback({
               text: `Database connected successfully to ${url?.split('@')[1]}`,
               data: { status: 'connected' },
             });
@@ -667,7 +641,7 @@ const integrationScenarios: TestCase[] = [
       runtime.actions.push(dbAction);
 
       // Test the complete setup
-      const testResponse = await sendMessageAndWaitForResponse(
+      const _testResponse = await sendMessageAndWaitForResponse(
         runtime,
         room,
         adminUser,
@@ -675,7 +649,7 @@ const integrationScenarios: TestCase[] = [
       );
 
       // Verify JWT secret was generated
-      const jwtSecret = envService.getEnvVar('JWT_SECRET');
+      const jwtSecret = env.getEnvVar('JWT_SECRET');
       if (!jwtSecret || jwtSecret.length < 32) {
         throw new Error('JWT secret was not properly generated');
       }
@@ -688,15 +662,15 @@ const integrationScenarios: TestCase[] = [
 
   {
     name: 'Error recovery: Agent guides user through fixing invalid API keys',
-    fn: async (runtime: IAgentRuntime) => {
-      const secretService = runtime.getService<EnhancedSecretManager>('SECRETS');
-      const envService = runtime.getService<EnvManagerService>('ENV_MANAGER');
+    fn: async (_runtime: IAgentRuntime) => {
+      const secret = runtime.get<EnhancedSecretManager>('SECRETS');
+      const env = runtime.get<EnvManager>('ENV_MANAGER');
 
-      if (!secretService) {
+      if (!secret) {
         console.log('⚠️ SECRETS service not available, skipping test');
         return;
       }
-      if (!envService) {
+      if (!env) {
         console.log('⚠️ ENV_MANAGER service not available, skipping test');
         return;
       }
@@ -719,27 +693,27 @@ const integrationScenarios: TestCase[] = [
       const apiAction: Action = {
         name: 'CALL_EXTERNAL_API',
         description: 'Call external API service',
-        validate: async (runtime) => {
-          const key = runtime.getService<EnvManagerService>('ENV_MANAGER')?.getEnvVar('API_KEY');
+        validate: async (_runtime) => {
+          const key = runtime.get<EnvManager>('ENV_MANAGER')?.getEnvVar('API_KEY');
           return !!key;
         },
-        handler: async (runtime, message, state, options, callback) => {
-          const envService = runtime.getService<EnvManagerService>('ENV_MANAGER');
-          const key = envService?.getEnvVar('API_KEY');
+        handler: async (_runtime, message, state, options, callback) => {
+          const env = runtime.get<EnvManager>('ENV_MANAGER');
+          const key = env?.getEnvVar('API_KEY');
 
           const currentAttempts = (options as any)?.attempts || 0;
 
           // Simulate API key validation
           if (!key || !key.startsWith('valid-')) {
             // Mark as invalid
-            await envService?.updateEnvVar('external-api', 'API_KEY', {
+            await env?.updateEnvVar('external-api', 'API_KEY', {
               status: 'invalid',
               lastError: 'API key validation failed: Invalid format or expired',
               attempts: currentAttempts + 1,
             });
 
             if (callback) {
-              await callback({
+              await void callback({
                 text: 'The API key appears to be invalid. Please provide a valid API key that starts with "valid-"',
                 actions: ['REQUEST_SECRET_FORM'],
                 data: {
@@ -752,13 +726,13 @@ const integrationScenarios: TestCase[] = [
           }
 
           // Success case
-          await envService?.updateEnvVar('external-api', 'API_KEY', {
+          await env?.updateEnvVar('external-api', 'API_KEY', {
             status: 'valid',
             validatedAt: Date.now(),
           });
 
           if (callback) {
-            await callback({
+            await void callback({
               text: 'API call successful! The external service is now connected.',
               data: { status: 'success' },
             });
@@ -769,7 +743,7 @@ const integrationScenarios: TestCase[] = [
       };
 
       runtime.actions.push(apiAction);
-      await envService.scanPluginRequirements();
+      await env.scanPluginRequirements();
 
       // User provides invalid key first
       const userContext = {
@@ -779,8 +753,8 @@ const integrationScenarios: TestCase[] = [
         agentId: runtime.agentId,
       };
 
-      await secretService.set('API_KEY', 'invalid-key-123', userContext);
-      await envService.updateEnvVar('external-api', 'API_KEY', {
+      await secret.set('API_KEY', 'invalid-key-123', userContext);
+      await env.updateEnvVar('external-api', 'API_KEY', {
         value: 'invalid-key-123',
         status: 'validating',
       });
@@ -798,8 +772,8 @@ const integrationScenarios: TestCase[] = [
       }
 
       // User provides valid key
-      await secretService.set('API_KEY', 'valid-production-key', userContext);
-      await envService.updateEnvVar('external-api', 'API_KEY', {
+      await secret.set('API_KEY', 'valid-production-key', userContext);
+      await env.updateEnvVar('external-api', 'API_KEY', {
         value: 'valid-production-key',
         status: 'validating',
       });
@@ -817,7 +791,7 @@ const integrationScenarios: TestCase[] = [
       }
 
       // Check that the key is marked as valid
-      const finalStatus = await envService.getEnvVarsForPlugin('external-api');
+      const finalStatus = await env.getEnvVarsForPlugin('external-api');
       if (!finalStatus?.API_KEY || finalStatus.API_KEY.status !== 'valid') {
         throw new Error('API key should be marked as valid after successful use');
       }

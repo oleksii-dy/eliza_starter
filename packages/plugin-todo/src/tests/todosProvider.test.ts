@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { todosProvider } from '../providers/todos';
 import type { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 

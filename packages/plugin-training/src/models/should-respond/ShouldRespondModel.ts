@@ -219,7 +219,7 @@ export class ShouldRespondModel {
 
     return {
       message: message.content.text || '',
-      context: context,
+      context,
       channel_type: state.data?.roomType || 'unknown',
       mentions_agent: message.content.text?.includes('@') || false,
       message_length: (message.content.text || '').length,

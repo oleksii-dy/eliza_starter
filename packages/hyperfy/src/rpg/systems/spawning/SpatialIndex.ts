@@ -6,12 +6,12 @@ import type { Vector3 } from '../../types';
 export class SpatialIndex<T extends { position: Vector3 }> {
   private grid: Map<string, Set<T>>;
   private cellSize: number;
-  
+
   constructor(cellSize: number = 50) {
     this.grid = new Map();
     this.cellSize = cellSize;
   }
-  
+
   /**
    * Add item to spatial index
    */
@@ -22,7 +22,7 @@ export class SpatialIndex<T extends { position: Vector3 }> {
     }
     this.grid.get(key)!.add(item);
   }
-  
+
   /**
    * Remove item from spatial index
    */
@@ -36,21 +36,21 @@ export class SpatialIndex<T extends { position: Vector3 }> {
       }
     }
   }
-  
+
   /**
    * Get all items within range of position
    */
   getInRange(position: Vector3, range: number): T[] {
     const results: T[] = [];
     const cellRange = Math.ceil(range / this.cellSize);
-    
+
     const centerCell = this.getCellCoords(position);
-    
+
     for (let dx = -cellRange; dx <= cellRange; dx++) {
       for (let dz = -cellRange; dz <= cellRange; dz++) {
         const cellKey = `${centerCell.x + dx},${centerCell.z + dz}`;
         const cell = this.grid.get(cellKey);
-        
+
         if (cell) {
           for (const item of cell) {
             const distance = this.distance(position, item.position);
@@ -61,17 +61,17 @@ export class SpatialIndex<T extends { position: Vector3 }> {
         }
       }
     }
-    
+
     return results;
   }
-  
+
   /**
    * Clear all items
    */
   clear(): void {
     this.grid.clear();
   }
-  
+
   /**
    * Get total item count
    */
@@ -82,7 +82,7 @@ export class SpatialIndex<T extends { position: Vector3 }> {
     }
     return count;
   }
-  
+
   /**
    * Get grid key for position
    */
@@ -90,7 +90,7 @@ export class SpatialIndex<T extends { position: Vector3 }> {
     const cell = this.getCellCoords(position);
     return `${cell.x},${cell.z}`;
   }
-  
+
   /**
    * Get cell coordinates for position
    */
@@ -100,7 +100,7 @@ export class SpatialIndex<T extends { position: Vector3 }> {
       z: Math.floor(position.z / this.cellSize)
     };
   }
-  
+
   /**
    * Calculate distance between two positions
    */
@@ -110,4 +110,4 @@ export class SpatialIndex<T extends { position: Vector3 }> {
     const dz = a.z - b.z;
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
-} 
+}

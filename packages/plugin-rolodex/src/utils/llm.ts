@@ -333,7 +333,7 @@ ${fields.join(',\n')}
     // Simulate streaming by emitting tokens
     const words = response.split(' ');
     for (const word of words) {
-      onToken(word + ' ');
+      onToken(`${word} `);
       await this.delay(50); // Simulate streaming delay
     }
 

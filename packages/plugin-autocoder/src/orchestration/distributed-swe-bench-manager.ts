@@ -270,7 +270,7 @@ export class DistributedSWEBenchManager {
           type: 'swe_bench_evaluation',
           data: {
             instance: task.instance,
-            patch: patch,
+            patch,
             config: {
               timeout: 300000,
               saveArtifacts: true,
@@ -566,13 +566,13 @@ Generate a unified diff patch that fixes this issue.`;
 ${
   results.by_language
     ? Object.entries(results.by_language as Record<string, any>)
-        .map(
-          ([lang, stats]: [string, any]) =>
-            `- **${lang}**: ${stats.successful}/${stats.total} (${
-              stats.total > 0 ? ((stats.successful / stats.total) * 100).toFixed(2) : 0
-            }%)`
-        )
-        .join('\n')
+      .map(
+        ([lang, stats]: [string, any]) =>
+          `- **${lang}**: ${stats.successful}/${stats.total} (${
+            stats.total > 0 ? ((stats.successful / stats.total) * 100).toFixed(2) : 0
+          }%)`
+      )
+      .join('\n')
     : 'No language breakdown available'
 }
 

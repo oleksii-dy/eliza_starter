@@ -8,10 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { AVATAR_IMAGE_MAX_SIZE, FIELD_REQUIREMENT_TYPE, FIELD_REQUIREMENTS } from '@/constants';
 import { useToast } from '@/hooks/use-toast';
 import { exportCharacterAsJson } from '@/lib/export-utils';
-import { compressImage } from '@/lib/utils';
+import { compressImage, cn } from '@/lib/utils';
 import type { Agent } from '@elizaos/core';
-import type React from 'react';
-import {
+import React, {
   type FormEvent,
   type ReactNode,
   useState,
@@ -29,11 +28,19 @@ import {
 } from '@/components/ui/select';
 import { getAllVoiceModels, getVoiceModelByValue, providerPluginMap } from '../config/voice-models';
 import { useElevenLabsVoices } from '@/hooks/use-elevenlabs-voices';
-import { Trash, Loader2, RotateCcw, Download, Upload, Save, StopCircle } from 'lucide-react';
+import {
+  Trash,
+  Loader2,
+  RotateCcw,
+  Download,
+  Upload,
+  Save,
+  StopCircle,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { agentTemplates, getTemplateById } from '@/config/agent-templates';
-import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { SplitButton } from '@/components/ui/split-button';
 
 export type InputField = {
@@ -80,9 +87,9 @@ export type CharacterFormProps = {
     updateField: <T>(path: string, value: T) => void;
     addArrayItem?: <T>(path: string, item: T) => void;
     removeArrayItem?: (path: string, index: number) => void;
-    updateSetting?: (path: string, value: any) => void;
+    updateSetting?: (path: string, value: unknown) => void;
     importAgent?: (value: Agent) => void;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 };
 
@@ -93,7 +100,9 @@ const useContainerWidth = (threshold: number = 768) => {
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
@@ -142,7 +151,9 @@ export default function CharacterForm({
   // Check if tabs need scroll buttons
   const checkScrollButtons = useCallback(() => {
     const container = tabsContainerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     const { scrollLeft, scrollWidth, clientWidth } = container;
     setShowLeftScroll(scrollLeft > 0);
@@ -151,7 +162,9 @@ export default function CharacterForm({
 
   useEffect(() => {
     const container = tabsContainerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     checkScrollButtons();
     container.addEventListener('scroll', checkScrollButtons);
@@ -165,7 +178,9 @@ export default function CharacterForm({
 
   const scrollTabs = (direction: 'left' | 'right') => {
     const container = tabsContainerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     const scrollAmount = container.clientWidth * 0.8;
     container.scrollBy({
@@ -441,7 +456,7 @@ export default function CharacterForm({
                 {field.title}
                 {field.name in FIELD_REQUIREMENTS &&
                   (FIELD_REQUIREMENTS as Record<string, FIELD_REQUIREMENT_TYPE>)[field.name] ===
-                  FIELD_REQUIREMENT_TYPE.REQUIRED && <p className="text-red-500">*</p>}
+                    FIELD_REQUIREMENT_TYPE.REQUIRED && <p className="text-red-500">*</p>}
               </Label>
             </TooltipTrigger>
             {field.tooltip && (
@@ -468,7 +483,7 @@ export default function CharacterForm({
           id={field.name}
           name={field.name}
           type="checkbox"
-          checked={(characterValue as Record<string, any>)[field.name] === 'true'}
+          checked={(characterValue as Record<string, unknown>)[field.name] === 'true'}
           onChange={handleChange}
         />
       ) : field.fieldType === 'select' ? (
@@ -516,7 +531,7 @@ export default function CharacterForm({
                 {field.title}
                 {field.path in FIELD_REQUIREMENTS &&
                   (FIELD_REQUIREMENTS as Record<string, FIELD_REQUIREMENT_TYPE>)[field.path] ===
-                  FIELD_REQUIREMENT_TYPE.REQUIRED && <p className="text-red-500">*</p>}
+                    FIELD_REQUIREMENT_TYPE.REQUIRED && <p className="text-red-500">*</p>}
               </Label>
             </TooltipTrigger>
             {field.tooltip && (
@@ -541,7 +556,9 @@ export default function CharacterForm({
 
   const handleImportJSON = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     try {
       const text = await file.text();
@@ -551,15 +568,19 @@ export default function CharacterForm({
       const missingFields = (
         Object.keys(FIELD_REQUIREMENTS) as Array<keyof typeof FIELD_REQUIREMENTS>
       ).filter((field) => {
-        if (FIELD_REQUIREMENTS[field] !== FIELD_REQUIREMENT_TYPE.REQUIRED) return false;
+        if (FIELD_REQUIREMENTS[field] !== FIELD_REQUIREMENT_TYPE.REQUIRED) {
+          return false;
+        }
 
         // Handle nested fields like style.all
         const parts = field.split('.');
-        let current: any = json;
+        let current: Record<string, unknown> = json;
 
         for (const part of parts) {
           current = current?.[part];
-          if (current === undefined) return true; // field missing
+          if (current === undefined) {
+            return true;
+          } // field missing
         }
 
         return false;
@@ -658,7 +679,7 @@ export default function CharacterForm({
     ...customComponents.map((component) => ({
       value: `custom-${component.name}`,
       label: component.name,
-      shortLabel: (component as any).shortLabel || component.name.split(' ')[0], // Use first word
+      shortLabel: (component as { shortLabel?: string }).shortLabel || component.name.split(' ')[0], // Use first word
     })),
   ];
 

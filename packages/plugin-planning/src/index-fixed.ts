@@ -1,5 +1,5 @@
 // Fixed imports using specific paths to avoid workspace issues
-import type { 
+import type {
   Plugin,
   Action,
   Provider,
@@ -13,10 +13,10 @@ export const messageClassifierProvider: Provider = {
 
   get: async (runtime, message, state) => {
     const text = message.content.text || '';
-    
+
     // Simple classification logic
     let classification = 'SIMPLE';
-    
+
     if (text.includes('plan') || text.includes('strategy') || text.includes('coordinate')) {
       classification = 'STRATEGIC';
     } else if (text.includes('research') || text.includes('analyze') || text.includes('investigate')) {
@@ -167,7 +167,7 @@ export const createPlanAction: Action = {
 // Simple planning service stub
 class SimplePlanningService extends Service {
   static serviceName = 'planning';
-  
+
   capabilityDescription = 'Provides planning and execution capabilities';
 
   static async start(runtime: any): Promise<SimplePlanningService> {
@@ -189,7 +189,7 @@ export const planningPlugin: Plugin = {
   actions: [analyzeInputAction, processAnalysisAction, executeFinalAction, createPlanAction],
 
   services: [SimplePlanningService],
-  
+
   evaluators: [],
 };
 

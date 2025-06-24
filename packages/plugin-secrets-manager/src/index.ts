@@ -1,20 +1,20 @@
 import type { Plugin } from '@elizaos/core';
 import { generateEnvVarAction } from './actions/generateEnvVar';
 import { manageSecretAction } from './actions/manageSecret';
+import { requestSecretFormAction } from './actions/requestSecretForm';
+import { runWorkflowAction } from './actions/runWorkflow';
 import { setEnvVarAction } from './actions/setEnvVar';
+import { updateSettingsAction } from './actions/settings';
+import { e2eTestSuites } from './e2e';
 import { EnhancedSecretManager } from './enhanced-service';
 import { envStatusProvider } from './providers/envStatus';
 import { secretsInfoProvider } from './providers/secretsInfo';
+import { settingsProvider } from './providers/settings';
 import { uxGuidanceProvider } from './providers/uxGuidanceProvider';
 import { ActionChainService } from './services/action-chain-service';
 import { SecretFormService } from './services/secret-form-service';
 // TEMPORARILY DISABLED: Depends on removed services
 // import { requestSecretFormAction } from './actions/requestSecretForm';
-import { requestSecretFormAction } from './actions/requestSecretForm';
-import { runWorkflowAction } from './actions/runWorkflow';
-import { updateSettingsAction } from './actions/settings';
-import { e2eTestSuites } from './e2e';
-import { settingsProvider } from './providers/settings';
 
 /**
  * Secrets and Environment Variable Management Plugin
@@ -51,7 +51,7 @@ export const envPlugin: Plugin = {
 
   tests: e2eTestSuites,
 
-  init: async (config, runtime) => {
+  init: async (_config, runtime) => {
     // Initialize the enhanced secret manager service
     // The service will automatically scan for required environment variables,
     // load them from character secrets into runtime settings,
@@ -94,7 +94,6 @@ export { validateEnvVar, validationStrategies } from './validation';
 
 // Export services for direct access if needed
 export { EnhancedSecretManager } from './enhanced-service';
-export { EnvManagerService } from './service';
 
 // Export migration utilities
 export { runMigration, SecretMigrationHelper } from './migration';

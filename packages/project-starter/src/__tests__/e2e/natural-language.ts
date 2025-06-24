@@ -1,4 +1,4 @@
-import { type TestSuite } from '@elizaos/core';
+import { type TestSuite, logger } from '@elizaos/core';
 
 /**
  * Natural Language E2E Test Suite
@@ -22,6 +22,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
   tests = [
     {
       name: 'Agent responds to hello world',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fn: async (runtime: any) => {
         /**
          * This test verifies that the agent can respond appropriately
@@ -35,9 +36,9 @@ export class NaturalLanguageTestSuite implements TestSuite {
           // Create a message saying "hello world"
           const helloMessage = {
             id: `msg-${Date.now()}`,
-            userId: userId,
+            userId,
             agentId: runtime.agentId,
-            roomId: roomId,
+            roomId,
             content: {
               text: 'hello world',
               type: 'text',
@@ -45,7 +46,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
             createdAt: Date.now(),
           };
 
-          console.log('Sending hello world message to agent...');
+          logger.info('Sending hello world message to agent...');
 
           // Process the message through the runtime
           // This will trigger the agent to generate a response
@@ -60,7 +61,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
             limit: 10,
           });
 
-          console.log(`Retrieved ${messages.length} messages from conversation`);
+          logger.info(`Retrieved ${messages.length} messages from conversation`);
 
           // Verify we have at least 2 messages (user + agent)
           if (messages.length < 2) {
@@ -69,6 +70,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
 
           // Find the agent's response
           const agentResponse = messages.find(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (m: any) =>
               m.userId === runtime.agentId && m.roomId === roomId && m.id !== helloMessage.id
           );
@@ -77,7 +79,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
             throw new Error('Agent did not respond to hello world message');
           }
 
-          console.log('Agent response:', agentResponse.content.text);
+          logger.info('Agent response:', agentResponse.content.text);
 
           // Verify the response contains a greeting
           const responseText = agentResponse.content.text.toLowerCase();
@@ -87,12 +89,12 @@ export class NaturalLanguageTestSuite implements TestSuite {
 
           if (!containsGreeting) {
             throw new Error(
-              `Agent response did not contain a greeting. ` +
+              'Agent response did not contain a greeting. ' +
                 `Response was: "${agentResponse.content.text}"`
             );
           }
 
-          console.log('✓ Agent successfully responded to hello world');
+          logger.info('✓ Agent successfully responded to hello world');
         } catch (error) {
           throw new Error(`Hello world test failed: ${(error as Error).message}`);
         }
@@ -101,6 +103,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
 
     {
       name: 'Agent responds to casual greeting',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fn: async (runtime: any) => {
         /**
          * Test various casual greetings to ensure the agent
@@ -115,9 +118,9 @@ export class NaturalLanguageTestSuite implements TestSuite {
 
             const message = {
               id: `msg-${Date.now()}-${Math.random()}`,
-              userId: userId,
+              userId,
               agentId: runtime.agentId,
-              roomId: roomId,
+              roomId,
               content: {
                 text: greeting,
                 type: 'text',
@@ -125,7 +128,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
               createdAt: Date.now(),
             };
 
-            console.log(`Testing greeting: "${greeting}"`);
+            logger.info(`Testing greeting: "${greeting}"`);
 
             await runtime.processMessage(message);
             await new Promise((resolve) => setTimeout(resolve, 500));
@@ -136,6 +139,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
             });
 
             const agentResponse = messages.find(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (m: any) => m.userId === runtime.agentId && m.id !== message.id
             );
 
@@ -148,7 +152,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
               throw new Error(`Agent gave empty response to: "${greeting}"`);
             }
 
-            console.log(`✓ Agent responded to: "${greeting}"`);
+            logger.info(`✓ Agent responded to: "${greeting}"`);
           }
         } catch (error) {
           throw new Error(`Casual greeting test failed: ${(error as Error).message}`);
@@ -158,6 +162,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
 
     {
       name: 'Agent maintains conversation context',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fn: async (runtime: any) => {
         /**
          * Test that the agent remembers context from previous messages
@@ -170,9 +175,9 @@ export class NaturalLanguageTestSuite implements TestSuite {
           // First message - introduce a topic
           const firstMessage = {
             id: `msg-1-${Date.now()}`,
-            userId: userId,
+            userId,
             agentId: runtime.agentId,
-            roomId: roomId,
+            roomId,
             content: {
               text: "My favorite color is blue. What's yours?",
               type: 'text',
@@ -180,16 +185,16 @@ export class NaturalLanguageTestSuite implements TestSuite {
             createdAt: Date.now(),
           };
 
-          console.log('Sending first message about favorite color...');
+          logger.info('Sending first message about favorite color...');
           await runtime.processMessage(firstMessage);
           await new Promise((resolve) => setTimeout(resolve, 1000));
 
           // Second message - reference the topic
           const secondMessage = {
             id: `msg-2-${Date.now()}`,
-            userId: userId,
+            userId,
             agentId: runtime.agentId,
-            roomId: roomId,
+            roomId,
             content: {
               text: 'Why did you choose that color?',
               type: 'text',
@@ -197,7 +202,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
             createdAt: Date.now() + 1000,
           };
 
-          console.log('Sending follow-up question...');
+          logger.info('Sending follow-up question...');
           await runtime.processMessage(secondMessage);
           await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -213,6 +218,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
           }
 
           // Find the agent's second response
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const agentResponses = messages.filter((m: any) => m.userId === runtime.agentId);
           if (agentResponses.length < 2) {
             throw new Error('Agent did not respond to both messages');
@@ -227,13 +233,13 @@ export class NaturalLanguageTestSuite implements TestSuite {
           const hasContext = contextWords.some((word) => responseText.includes(word));
 
           if (!hasContext) {
-            console.warn(
+            logger.warn(
               'Agent response may not show context awareness. ' +
                 `Response: "${secondResponse.content.text}"`
             );
           }
 
-          console.log('✓ Agent maintained conversation context');
+          logger.info('✓ Agent maintained conversation context');
         } catch (error) {
           throw new Error(`Context test failed: ${(error as Error).message}`);
         }

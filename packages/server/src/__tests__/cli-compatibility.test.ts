@@ -5,19 +5,19 @@
  * with the CLI package usage patterns.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock } from 'bun:test';
 
 // Mock core dependencies
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
+mock.module('@elizaos/core', async () => {
+  const actual = await import('@elizaos/core');
   return {
     ...actual,
     logger: {
-      warn: vi.fn(),
-      info: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
-      success: vi.fn(),
+      warn: mock(),
+      info: mock(),
+      error: mock(),
+      debug: mock(),
+      success: mock(),
     },
     validateUuid: (id: string) => {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -28,7 +28,7 @@ vi.mock('@elizaos/core', async () => {
       async initialize() {}
       async cleanup() {}
     },
-    createUniqueUuid: vi.fn(() => '123e4567-e89b-12d3-a456-426614174000'),
+    createUniqueUuid: mock(() => '123e4567-e89b-12d3-a456-426614174000'),
     ChannelType: {
       DIRECT: 'direct',
       GROUP: 'group',
@@ -62,32 +62,32 @@ vi.mock('@elizaos/core', async () => {
 });
 
 // Mock plugin-sql
-vi.mock('@elizaos/plugin-sql', () => ({
-  createDatabaseAdapter: vi.fn(() => ({
+mock.module('@elizaos/plugin-sql', () => ({
+  createDatabaseAdapter: mock(() => ({
     // Core database methods
-    init: vi.fn().mockResolvedValue(undefined),
-    close: vi.fn().mockResolvedValue(undefined),
-    getDatabase: vi.fn(() => ({
-      execute: vi.fn().mockResolvedValue([]),
+    init: mock().mockResolvedValue(undefined),
+    close: mock().mockResolvedValue(undefined),
+    getDatabase: mock(() => ({
+      execute: mock().mockResolvedValue([]),
     })),
-    db: { execute: vi.fn().mockResolvedValue([]) },
-    isReady: vi.fn().mockResolvedValue(true),
-    runMigrations: vi.fn().mockResolvedValue(undefined),
+    db: { execute: mock().mockResolvedValue([]) },
+    isReady: mock().mockResolvedValue(true),
+    runMigrations: mock().mockResolvedValue(undefined),
 
     // Agent management
-    getAgents: vi.fn().mockResolvedValue([]),
-    getAgent: vi.fn().mockResolvedValue({
+    getAgents: mock().mockResolvedValue([]),
+    getAgent: mock().mockResolvedValue({
       id: '00000000-0000-0000-0000-000000000000',
       name: 'MigrationAgent',
       createdAt: new Date(),
       updatedAt: new Date(),
     }),
-    createAgent: vi.fn().mockResolvedValue(true),
-    updateAgent: vi.fn().mockResolvedValue(true),
-    deleteAgent: vi.fn().mockResolvedValue(true),
+    createAgent: mock().mockResolvedValue(true),
+    updateAgent: mock().mockResolvedValue(true),
+    deleteAgent: mock().mockResolvedValue(true),
 
     // Entity management
-    getEntityById: vi.fn((id) => {
+    getEntityById: mock((id) => {
       // Return a mock entity for the migration agent
       if (id === '00000000-0000-0000-0000-000000000000') {
         return Promise.resolve({
@@ -99,33 +99,34 @@ vi.mock('@elizaos/plugin-sql', () => ({
       }
       return Promise.resolve(null);
     }),
-    getEntitiesByIds: vi.fn().mockResolvedValue([]),
-    getEntitiesForRoom: vi.fn().mockResolvedValue([]),
-    createEntity: vi.fn().mockResolvedValue('test-entity-id'),
-    createEntities: vi.fn().mockResolvedValue(true),
-    updateEntity: vi.fn().mockResolvedValue(undefined),
+    getEntitiesByIds: mock().mockResolvedValue([]),
+    getEntitiesForRoom: mock().mockResolvedValue([]),
+    createEntity: mock().mockResolvedValue('test-entity-id'),
+    createEntities: mock().mockResolvedValue(true),
+    updateEntity: mock().mockResolvedValue(undefined),
 
     // Message server management
-    getMessageServers: vi.fn(() =>
+    getMessageServers: mock(() =>
       Promise.resolve([{ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' }])
     ),
-    createMessageServer: vi
-      .fn()
-      .mockResolvedValue({ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' }),
-    addAgentToServer: vi.fn().mockResolvedValue(undefined),
-    getChannelsForServer: vi.fn().mockResolvedValue([]),
-    createChannel: vi.fn().mockResolvedValue({ id: '123e4567-e89b-12d3-a456-426614174000' }),
-    getAgentsForServer: vi.fn().mockResolvedValue([]),
+    createMessageServer: mock().mockResolvedValue({
+      id: '00000000-0000-0000-0000-000000000000',
+      name: 'Default Server',
+    }),
+    addAgentToServer: mock().mockResolvedValue(undefined),
+    getChannelsForServer: mock().mockResolvedValue([]),
+    createChannel: mock().mockResolvedValue({ id: '123e4567-e89b-12d3-a456-426614174000' }),
+    getAgentsForServer: mock().mockResolvedValue([]),
 
     // Add other methods as needed by tests
-    getMemories: vi.fn().mockResolvedValue([]),
-    createMemory: vi.fn().mockResolvedValue('test-memory-id'),
-    searchMemories: vi.fn().mockResolvedValue([]),
+    getMemories: mock().mockResolvedValue([]),
+    createMemory: mock().mockResolvedValue('test-memory-id'),
+    searchMemories: mock().mockResolvedValue([]),
   })),
-  DatabaseMigrationService: vi.fn(() => ({
-    initializeWithDatabase: vi.fn().mockResolvedValue(undefined),
-    discoverAndRegisterPluginSchemas: vi.fn(),
-    runAllPluginMigrations: vi.fn().mockResolvedValue(undefined),
+  DatabaseMigrationService: mock(() => ({
+    initializeWithDatabase: mock().mockResolvedValue(undefined),
+    discoverAndRegisterPluginSchemas: mock(),
+    runAllPluginMigrations: mock().mockResolvedValue(undefined),
   })),
   plugin: {
     name: '@elizaos/plugin-sql',
@@ -138,51 +139,31 @@ vi.mock('@elizaos/plugin-sql', () => ({
 }));
 
 // Mock filesystem
-vi.mock('node:fs', () => ({
+mock.module('node:fs', () => ({
   default: {
-    mkdirSync: vi.fn(),
-    existsSync: vi.fn(() => true),
-    readFileSync: vi.fn(() => '{}'),
-    writeFileSync: vi.fn(),
+    mkdirSync: mock(),
+    existsSync: mock(() => true),
+    readFileSync: mock(() => '{}'),
+    writeFileSync: mock(),
   },
-  mkdirSync: vi.fn(),
-  existsSync: vi.fn(() => true),
-  readFileSync: vi.fn(() => '{}'),
-  writeFileSync: vi.fn(),
+  mkdirSync: mock(),
+  existsSync: mock(() => true),
+  readFileSync: mock(() => '{}'),
+  writeFileSync: mock(),
 }));
 
 describe('CLI Compatibility Tests', () => {
   describe('AgentServer API Compatibility', () => {
-    it('should export AgentServer class with expected interface', async () => {
-      const { AgentServer } = await import('../');
-
-      expect(AgentServer).toBeDefined();
-      expect(typeof AgentServer).toBe('function');
-
-      const server = new AgentServer();
-
-      // Check required methods that CLI uses
-      expect(typeof server.initialize).toBe('function');
-      expect(typeof server.start).toBe('function');
-      expect(typeof server.stop).toBe('function');
-      expect(typeof server.registerAgent).toBe('function');
-      expect(typeof server.unregisterAgent).toBe('function');
-      expect(typeof server.registerMiddleware).toBe('function');
-
-      // Check properties that CLI assigns
-      expect(server.hasOwnProperty('isInitialized')).toBe(true);
-    });
-
     it('should allow CLI to extend server with custom methods', async () => {
       const { AgentServer } = await import('../');
 
       const server = new AgentServer();
 
       // Simulate CLI's pattern of extending the server
-      const mockStartAgent = vi.fn();
-      const mockStopAgent = vi.fn();
-      const mockLoadCharacterTryPath = vi.fn();
-      const mockJsonToCharacter = vi.fn();
+      const mockStartAgent = mock();
+      const mockStopAgent = mock();
+      const mockLoadCharacterTryPath = mock();
+      const mockJsonToCharacter = mock();
 
       (server as any).startAgent = mockStartAgent;
       (server as any).stopAgent = mockStopAgent;
@@ -195,88 +176,22 @@ describe('CLI Compatibility Tests', () => {
       expect((server as any).loadCharacterTryPath).toBe(mockLoadCharacterTryPath);
       expect((server as any).jsonToCharacter).toBe(mockJsonToCharacter);
     });
-  });
 
-  describe('Loader Function Exports', () => {
-    it('should export loadCharacterTryPath function', async () => {
-      const { loadCharacterTryPath } = await import('../');
+    it('should maintain required method signatures for CLI usage', async () => {
+      const { AgentServer } = await import('../');
 
-      expect(loadCharacterTryPath).toBeDefined();
-      expect(typeof loadCharacterTryPath).toBe('function');
-    });
+      const server = new AgentServer();
 
-    it('should export jsonToCharacter function', async () => {
-      const { jsonToCharacter } = await import('../');
+      // Test that required methods exist and have correct signatures
+      expect(typeof server.initialize).toBe('function');
+      expect(typeof server.start).toBe('function');
+      expect(typeof server.stop).toBe('function');
+      expect(typeof server.registerAgent).toBe('function');
+      expect(typeof server.unregisterAgent).toBe('function');
+      expect(typeof server.registerMiddleware).toBe('function');
 
-      expect(jsonToCharacter).toBeDefined();
-      expect(typeof jsonToCharacter).toBe('function');
-    });
-
-    it('should export other loader utilities', async () => {
-      const {
-        tryLoadFile,
-        loadCharactersFromUrl,
-        loadCharacter,
-        hasValidRemoteUrls,
-        loadCharacters,
-      } = await import('../');
-
-      expect(tryLoadFile).toBeDefined();
-      expect(loadCharactersFromUrl).toBeDefined();
-      expect(loadCharacter).toBeDefined();
-      expect(hasValidRemoteUrls).toBeDefined();
-      expect(loadCharacters).toBeDefined();
-    });
-  });
-
-  describe('Utility Function Exports', () => {
-    it('should export expandTildePath function', async () => {
-      const { expandTildePath } = await import('../');
-
-      expect(expandTildePath).toBeDefined();
-      expect(typeof expandTildePath).toBe('function');
-    });
-
-    it('should export resolvePgliteDir function', async () => {
-      const { resolvePgliteDir } = await import('../');
-
-      expect(resolvePgliteDir).toBeDefined();
-      expect(typeof resolvePgliteDir).toBe('function');
-    });
-  });
-
-  describe('Type Exports', () => {
-    it('should export ServerOptions interface', async () => {
-      const module = await import('../');
-
-      // TypeScript interfaces don't exist at runtime, but we can check
-      // that the module exports what we expect by testing usage patterns
-      const server = new module.AgentServer();
-
-      // Test that we can call initialize with ServerOptions-compatible object
-      const options = {
-        dataDir: './test-data',
-        middlewares: [],
-        postgresUrl: 'postgresql://test:test@localhost:5432/test',
-      };
-
-      // This should not throw a type error (tested at compile time)
-      expect(() => server.initialize(options)).not.toThrow();
-    });
-
-    it('should export ServerMiddleware type compatibility', async () => {
-      const module = await import('../');
-
-      // Test that middleware function signature is compatible
-      const testMiddleware = (_req: any, _res: any, next: any) => {
-        next();
-      };
-
-      const server = new module.AgentServer();
-      await server.initialize();
-
-      // This should work with CLI's usage pattern
-      expect(() => server.registerMiddleware(testMiddleware)).not.toThrow();
+      // Test that properties exist
+      expect(Object.prototype.hasOwnProperty.call(server, 'isInitialized')).toBe(true);
     });
   });
 
@@ -295,8 +210,8 @@ describe('CLI Compatibility Tests', () => {
       await server.initialize(initOptions);
 
       expect(server.isInitialized).toBe(true);
-      expect(server.app).toBeDefined();
-      expect(server.database).toBeDefined();
+      expect(server.app).toBeTruthy();
+      expect(server.database).toBeTruthy();
     });
 
     it('should support CLI server startup pattern', async () => {
@@ -307,11 +222,15 @@ describe('CLI Compatibility Tests', () => {
 
       // Mock HTTP server for testing
       const mockServer = {
-        listen: vi.fn((_port, callback) => {
-          if (callback) callback();
+        listen: mock((_port, callback) => {
+          if (callback) {
+            callback();
+          }
         }),
-        close: vi.fn((callback) => {
-          if (callback) callback();
+        close: mock((callback) => {
+          if (callback) {
+            callback();
+          }
         }),
       };
 
@@ -331,24 +250,39 @@ describe('CLI Compatibility Tests', () => {
       const mockRuntime = {
         agentId: '123e4567-e89b-12d3-a456-426614174000' as any,
         character: { name: 'TestAgent' },
-        registerPlugin: vi.fn().mockResolvedValue(undefined),
+        registerPlugin: mock().mockResolvedValue(undefined),
         plugins: [],
-        registerProvider: vi.fn(),
-        registerAction: vi.fn(),
+        registerProvider: mock(),
+        registerAction: mock(),
       } as any;
 
       // Mock database methods that registration uses
       server.database = {
         ...server.database,
-        getMessageServers: vi.fn().mockResolvedValue([]),
-        addAgentToServer: vi.fn().mockResolvedValue(undefined),
-        db: { execute: vi.fn().mockResolvedValue([]) },
+        getMessageServers: mock().mockResolvedValue([]),
+        addAgentToServer: mock().mockResolvedValue(undefined),
+        db: { execute: mock().mockResolvedValue([]) },
       } as any;
 
       // Test CLI's agent registration pattern
       await server.registerAgent(mockRuntime);
 
       expect(server['agents'].has(mockRuntime.agentId)).toBe(true);
+    });
+
+    it('should support middleware registration with CLI patterns', async () => {
+      const { AgentServer } = await import('../');
+
+      // Test that middleware function signature is compatible
+      const testMiddleware = (_req: any, _res: any, next: any) => {
+        next();
+      };
+
+      const server = new AgentServer();
+      await server.initialize();
+
+      // This should work with CLI's usage pattern
+      expect(() => server.registerMiddleware(testMiddleware)).not.toThrow();
     });
   });
 
@@ -375,6 +309,58 @@ describe('CLI Compatibility Tests', () => {
       // Test CLI error handling for invalid ports
       expect(() => server.start(null as any)).toThrow('Invalid port number');
       expect(() => server.start('invalid' as any)).toThrow('Invalid port number');
+    });
+  });
+
+  describe('Path Utility Functions', () => {
+    it('should handle path expansion correctly', async () => {
+      const { expandTildePath } = await import('../');
+
+      // Test actual functionality
+      expect(expandTildePath('~/test')).toMatch(/test$/);
+      expect(expandTildePath('/absolute/path')).toBe('/absolute/path');
+      expect(expandTildePath('relative/path')).toBe('relative/path');
+      expect(expandTildePath('')).toBe('');
+    });
+
+    it('should resolve PGLite directory correctly', async () => {
+      const { resolvePgliteDir } = await import('../');
+
+      // Test with custom directory
+      expect(resolvePgliteDir('/custom/dir')).toBe('/custom/dir');
+
+      // Test with environment variable
+      process.env.PGLITE_DATA_DIR = '/env/dir';
+      expect(resolvePgliteDir()).toBe('/env/dir');
+      delete process.env.PGLITE_DATA_DIR;
+
+      // Test with fallback
+      expect(resolvePgliteDir(undefined, '/fallback/dir')).toBe('/fallback/dir');
+    });
+  });
+
+  describe('Character Loading Functions', () => {
+    it('should transform character data with environment secrets', async () => {
+      const { jsonToCharacter } = await import('../');
+
+      const character = {
+        name: 'Test Character',
+        id: 'test-char',
+      };
+
+      process.env['CHARACTER.TEST-CHAR.API_KEY'] = 'secret-key';
+      process.env['CHARACTER.TEST-CHAR.ENDPOINT'] = 'https://api.example.com';
+
+      const result = await jsonToCharacter(character);
+
+      expect(result.secrets).toEqual({
+        API_KEY: 'secret-key',
+        ENDPOINT: 'https://api.example.com',
+      });
+
+      // Cleanup
+      delete process.env['CHARACTER.TEST-CHAR.API_KEY'];
+      delete process.env['CHARACTER.TEST-CHAR.ENDPOINT'];
     });
   });
 });

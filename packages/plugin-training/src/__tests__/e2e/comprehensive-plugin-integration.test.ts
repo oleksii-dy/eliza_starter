@@ -14,7 +14,7 @@
  * - File system operations
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { AgentRuntime, elizaLogger } from '@elizaos/core';
 import type { Character, IAgentRuntime, Memory, UUID } from '@elizaos/core';
 import { trainingPlugin } from '../../index';

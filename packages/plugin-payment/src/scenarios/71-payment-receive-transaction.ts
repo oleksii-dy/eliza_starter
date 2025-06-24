@@ -41,21 +41,21 @@ const paymentReceiveTransactionScenario: Scenario = {
   ],
   actions: ['GET_WALLET_ADDRESS', 'CHECK_TRANSACTION', 'CHECK_BALANCE'],
   evaluator: (response: string) => {
-    const hasWalletInfo = 
+    const hasWalletInfo =
       response.toLowerCase().includes('wallet') ||
       response.toLowerCase().includes('address') ||
       response.toLowerCase().includes('balance');
-    
-    const hasTransactionInfo = 
+
+    const hasTransactionInfo =
       response.toLowerCase().includes('transaction') ||
       response.toLowerCase().includes('received') ||
       response.toLowerCase().includes('incoming');
-    
+
     const hasAmount = /\d+(\.\d+)?\s*(ETH|USDC|SOL|MATIC)/i.test(response);
-    
+
     return hasWalletInfo || hasTransactionInfo || hasAmount;
   },
   tags: ['payment', 'receive', 'wallet', 'balance', 'transaction'],
 };
 
-export default paymentReceiveTransactionScenario; 
+export default paymentReceiveTransactionScenario;

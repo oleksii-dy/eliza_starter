@@ -1,4 +1,4 @@
-import type { Scenario } from "../types.js"
+import type { Scenario } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const pluginDevelopmentWorkflowScenario: Scenario = {
@@ -29,9 +29,9 @@ Your workflow should be:
 Always explain your decision-making process and provide clear status updates.`,
       plugins: [
         '@elizaos/plugin-plugin-manager',
-        '@elizaos/plugin-autocoder', 
+        '@elizaos/plugin-autocoder',
         '@elizaos/plugin-secrets-manager',
-        '@elizaos/plugin-ngrok'
+        '@elizaos/plugin-ngrok',
       ],
       script: { steps: [] },
     },
@@ -43,7 +43,8 @@ Always explain your decision-making process and provide clear status updates.`,
         steps: [
           {
             type: 'message',
-            content: 'I need a plugin that can fetch weather data from OpenWeatherMap API and provide current conditions for any city. Can you help me create this?',
+            content:
+              'I need a plugin that can fetch weather data from OpenWeatherMap API and provide current conditions for any city. Can you help me create this?',
           },
           {
             type: 'wait',
@@ -51,7 +52,8 @@ Always explain your decision-making process and provide clear status updates.`,
           },
           {
             type: 'message',
-            content: 'Great! I have an OpenWeatherMap API key: "test-api-key-12345". How do I provide this securely?',
+            content:
+              'Great! I have an OpenWeatherMap API key: "test-api-key-12345". How do I provide this securely?',
           },
           {
             type: 'wait',
@@ -59,7 +61,8 @@ Always explain your decision-making process and provide clear status updates.`,
           },
           {
             type: 'message',
-            content: 'Perfect! Now please proceed with creating the weather plugin. Make sure it includes proper error handling and testing.',
+            content:
+              'Perfect! Now please proceed with creating the weather plugin. Make sure it includes proper error handling and testing.',
           },
           {
             type: 'wait',
@@ -67,7 +70,8 @@ Always explain your decision-making process and provide clear status updates.`,
           },
           {
             type: 'message',
-            content: 'Can you show me the status of the plugin development? I want to make sure everything is working correctly.',
+            content:
+              'Can you show me the status of the plugin development? I want to make sure everything is working correctly.',
           },
           {
             type: 'wait',
@@ -75,7 +79,8 @@ Always explain your decision-making process and provide clear status updates.`,
           },
           {
             type: 'message',
-            content: 'Excellent! Once the plugin is complete and tested, please publish it to the plugin registry.',
+            content:
+              'Excellent! Once the plugin is complete and tested, please publish it to the plugin registry.',
           },
           {
             type: 'wait',
@@ -83,7 +88,8 @@ Always explain your decision-making process and provide clear status updates.`,
           },
           {
             type: 'message',
-            content: 'Finally, can you search the registry to confirm our new weather plugin is available for others to use?',
+            content:
+              'Finally, can you search the registry to confirm our new weather plugin is available for others to use?',
           },
         ],
         personality: 'methodical, quality-focused, security-conscious',
@@ -104,9 +110,9 @@ Always explain your decision-making process and provide clear status updates.`,
     environment: {
       plugins: [
         '@elizaos/plugin-plugin-manager',
-        '@elizaos/plugin-autocoder', 
+        '@elizaos/plugin-autocoder',
         '@elizaos/plugin-secrets-manager',
-        '@elizaos/plugin-ngrok'
+        '@elizaos/plugin-ngrok',
       ],
       apiMocking: true,
       testMode: true,
@@ -133,7 +139,8 @@ Always explain your decision-making process and provide clear status updates.`,
         description: 'Plugin discovery search was performed',
         config: {
           expectedValue: 'SEARCH_PLUGINS',
-          criteria: 'Agent should search existing plugins before creating new ones to avoid duplication',
+          criteria:
+            'Agent should search existing plugins before creating new ones to avoid duplication',
         },
         weight: 4,
       },
@@ -142,7 +149,8 @@ Always explain your decision-making process and provide clear status updates.`,
         type: 'llm' as const,
         description: 'Plugin recommendation analysis',
         config: {
-          criteria: 'Agent should analyze search results and recommend whether to extend existing plugin or create new one',
+          criteria:
+            'Agent should analyze search results and recommend whether to extend existing plugin or create new one',
         },
         weight: 3,
       },
@@ -152,7 +160,8 @@ Always explain your decision-making process and provide clear status updates.`,
         description: 'Secure secret collection',
         config: {
           expectedValue: 'requestSecretForm',
-          criteria: 'Agent should use secrets manager to securely collect the OpenWeatherMap API key',
+          criteria:
+            'Agent should use secrets manager to securely collect the OpenWeatherMap API key',
         },
         weight: 4,
       },
@@ -209,7 +218,8 @@ Always explain your decision-making process and provide clear status updates.`,
         type: 'llm' as const,
         description: 'Complete workflow integration',
         config: {
-          criteria: 'All three services (plugin manager, autocoder, secrets manager) should work together seamlessly',
+          criteria:
+            'All three services (plugin manager, autocoder, secrets manager) should work together seamlessly',
         },
         weight: 5,
       },
@@ -223,13 +233,15 @@ Always explain your decision-making process and provide clear status updates.`,
           type: 'llm' as const,
           description: 'End-to-end workflow completed successfully',
           config: {
-            criteria: 'Plugin was discovered, created, tested, and published through integrated services',
+            criteria:
+              'Plugin was discovered, created, tested, and published through integrated services',
           },
         },
       },
     ],
     groundTruth: {
-      expectedBehavior: 'Seamless integration between plugin discovery, creation, secret management, and publishing',
+      expectedBehavior:
+        'Seamless integration between plugin discovery, creation, secret management, and publishing',
       successCriteria: [
         'Searched existing plugins before creation',
         'Securely collected API credentials',
@@ -246,7 +258,7 @@ Always explain your decision-making process and provide clear status updates.`,
     maxDuration: 300000,
     maxSteps: 35,
     maxTokens: 15000,
-    targetAccuracy: 0.90,
+    targetAccuracy: 0.9,
     customMetrics: [
       { name: 'plugin_discovery_accuracy' },
       { name: 'secret_collection_security' },

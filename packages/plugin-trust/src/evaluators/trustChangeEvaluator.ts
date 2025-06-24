@@ -42,7 +42,7 @@ export const trustChangeEvaluator: Evaluator = {
             timestamp: Date.now(),
             impact: 10,
             details: {
-              description: `Positive behavior detected via LLM analysis`,
+              description: 'Positive behavior detected via LLM analysis',
               messageId: message.id,
               roomId: message.roomId,
               autoDetected: true,
@@ -59,7 +59,7 @@ export const trustChangeEvaluator: Evaluator = {
           });
 
           return {
-            text: `Noted positive behavior (+10 trust)`,
+            text: 'Noted positive behavior (+10 trust)',
             data: { impact: 10, positive: true, llmAnalysis: true },
           };
         } else if (analysis.riskScore > 0.7) {
@@ -72,7 +72,7 @@ export const trustChangeEvaluator: Evaluator = {
             timestamp: Date.now(),
             impact,
             details: {
-              description: `Suspicious behavior detected via LLM analysis`,
+              description: 'Suspicious behavior detected via LLM analysis',
               messageId: message.id,
               roomId: message.roomId,
               autoDetected: true,
@@ -224,7 +224,7 @@ export const trustChangeEvaluator: Evaluator = {
             roomId: message.roomId,
           },
         });
-        
+
         logger.warn('[TrustChangeEvaluator] High message frequency detected:', {
           entityId,
           messageCount: recentMessages.length,

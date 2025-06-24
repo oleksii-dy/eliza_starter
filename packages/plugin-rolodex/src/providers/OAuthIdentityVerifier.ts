@@ -68,7 +68,7 @@ export class OAuthIdentityVerifier {
             isVerified: false,
             confidence: 0,
             reason: 'OAuth verification requires authorization code and state',
-            metadata: { 
+            metadata: {
               hint: 'Use createOAuthChallenge to start OAuth flow',
               availableProviders: oauthService.getAvailableProviders(),
             },
@@ -92,8 +92,8 @@ export class OAuthIdentityVerifier {
           isVerified: false,
           confidence: 0,
           reason: 'OAuth user ID does not match expected user',
-          metadata: { 
-            expected: expectedUserId, 
+          metadata: {
+            expected: expectedUserId,
             actual: userProfile.id,
             platform,
           },
@@ -223,7 +223,7 @@ export class OAuthIdentityVerifier {
       for (const result of searchResults) {
         const entity = result.entity;
         const platformData = entity.platforms?.[platform];
-        
+
         if (platformData?.verified && (
           platformData.id === platformId ||
           platformData.userId === platformId ||
@@ -299,7 +299,7 @@ export class OAuthIdentityVerifier {
     try {
       // Find other entities with the same verified platform identity
       const duplicateEntities = await this.findEntitiesByOAuthIdentity(platform, userProfile.id);
-      
+
       // Remove current entity from duplicates
       const otherEntities = duplicateEntities.filter(id => id !== entityId);
 

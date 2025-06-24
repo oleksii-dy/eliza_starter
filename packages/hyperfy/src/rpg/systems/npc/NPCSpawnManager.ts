@@ -26,32 +26,32 @@ export class NPCSpawnManager {
   private npcSystem: NPCSystem;
   private spawnPoints: Map<string, SpawnPoint> = new Map();
   private respawnQueue: RespawnTask[] = [];
-  
+
   constructor(world: World, npcSystem: NPCSystem) {
     this.world = world;
     this.npcSystem = npcSystem;
     this.registerDefaultSpawnPoints();
   }
-  
+
   /**
    * Update spawn points and respawn queue
    */
   update(delta: number): void {
     const now = Date.now();
-    
+
     // Process respawn queue
     const tasksToProcess = this.respawnQueue.filter(task => now >= task.scheduledTime);
     for (const task of tasksToProcess) {
       this.processRespawn(task);
     }
-    
+
     // Remove processed tasks
     this.respawnQueue = this.respawnQueue.filter(task => now < task.scheduledTime);
-    
+
     // Check spawn points
     for (const [id, spawnPoint] of this.spawnPoints) {
-      if (!spawnPoint.active) continue;
-      
+      if (!spawnPoint.active) {continue;}
+
       // Check if we need to spawn more NPCs
       if (spawnPoint.currentCount < spawnPoint.maxCount) {
         // Check if enough time has passed
@@ -61,7 +61,7 @@ export class NPCSpawnManager {
       }
     }
   }
-  
+
   /**
    * Register a spawn point
    */
@@ -84,15 +84,15 @@ export class NPCSpawnManager {
       currentCount: 0,
       lastSpawnTime: 0
     };
-    
+
     this.spawnPoints.set(config.id, spawnPoint);
-    
+
     // Initial spawn
     for (let i = 0; i < spawnPoint.maxCount; i++) {
       this.spawnAtPoint(spawnPoint);
     }
   }
-  
+
   /**
    * Schedule a respawn
    */
@@ -103,16 +103,16 @@ export class NPCSpawnManager {
       respawnTime,
       scheduledTime: Date.now() + respawnTime
     };
-    
+
     this.respawnQueue.push(task);
-    
+
     // Update spawn point count
     const spawnPoint = this.spawnPoints.get(spawnerId);
     if (spawnPoint) {
       spawnPoint.currentCount = Math.max(0, spawnPoint.currentCount - 1);
     }
   }
-  
+
   /**
    * Activate/deactivate spawn point
    */
@@ -122,14 +122,14 @@ export class NPCSpawnManager {
       spawnPoint.active = active;
     }
   }
-  
+
   /**
    * Get all spawn points
    */
   getSpawnPoints(): SpawnPoint[] {
     return Array.from(this.spawnPoints.values());
   }
-  
+
   /**
    * Spawn NPC at spawn point
    */
@@ -137,20 +137,20 @@ export class NPCSpawnManager {
     // Calculate random position within radius
     const angle = Math.random() * Math.PI * 2;
     const distance = Math.random() * spawnPoint.radius;
-    
+
     const position: Vector3 = {
       x: spawnPoint.position.x + Math.cos(angle) * distance,
       y: spawnPoint.position.y,
       z: spawnPoint.position.z + Math.sin(angle) * distance
     };
-    
+
     // Spawn NPC
     const npc = this.npcSystem.spawnNPC(spawnPoint.npcId, position, spawnPoint.id);
-    
+
     if (npc) {
       spawnPoint.currentCount++;
       spawnPoint.lastSpawnTime = Date.now();
-      
+
       // Emit spawn event
       this.world.events.emit('spawn:npc', {
         spawnerId: spawnPoint.id,
@@ -159,18 +159,18 @@ export class NPCSpawnManager {
       });
     }
   }
-  
+
   /**
    * Process respawn task
    */
   private processRespawn(task: RespawnTask): void {
     const spawnPoint = this.spawnPoints.get(task.spawnerId);
-    if (!spawnPoint || !spawnPoint.active) return;
-    
+    if (!spawnPoint || !spawnPoint.active) {return;}
+
     // Spawn the NPC
     this.spawnAtPoint(spawnPoint);
   }
-  
+
   /**
    * Register default spawn points
    */
@@ -184,7 +184,7 @@ export class NPCSpawnManager {
       respawnTime: 30000, // 30 seconds
       radius: 10
     });
-    
+
     this.registerSpawnPoint({
       id: 'goblin_spawn_2',
       position: { x: 150, y: 0, z: 120 },
@@ -193,7 +193,7 @@ export class NPCSpawnManager {
       respawnTime: 30000,
       radius: 8
     });
-    
+
     // Guard posts
     this.registerSpawnPoint({
       id: 'guard_post_1',
@@ -203,7 +203,7 @@ export class NPCSpawnManager {
       respawnTime: 60000, // 1 minute
       radius: 2
     });
-    
+
     this.registerSpawnPoint({
       id: 'guard_post_2',
       position: { x: 0, y: 0, z: -50 },
@@ -212,7 +212,7 @@ export class NPCSpawnManager {
       respawnTime: 60000,
       radius: 2
     });
-    
+
     // Shopkeeper spawn (doesn't respawn)
     this.registerSpawnPoint({
       id: 'shop_spawn',
@@ -222,7 +222,7 @@ export class NPCSpawnManager {
       respawnTime: 300000, // 5 minutes
       radius: 0
     });
-    
+
     // Quest giver spawn
     this.registerSpawnPoint({
       id: 'quest_giver_spawn',
@@ -233,4 +233,4 @@ export class NPCSpawnManager {
       radius: 0
     });
   }
-} 
+}

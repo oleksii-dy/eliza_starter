@@ -2,7 +2,7 @@ import { logger, type IAgentRuntime, type Project, type ProjectAgent } from '@el
 import { character } from './characters/default.ts';
 
 const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
-  logger.info('Initializing character');
+  logger.info('Initializing character for runtime:', runtime.agentId);
   logger.info('Name: ', character.name);
 };
 

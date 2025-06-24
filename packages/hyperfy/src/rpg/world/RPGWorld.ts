@@ -30,7 +30,7 @@ export async function initializeRPGWorld(world: World): Promise<void> {
 
   // Register NPCs
   console.log('[RPGWorld] Registering NPCs...');
-  
+
   // Tutorial NPCs
   (npcSystem as any).registerNPCDefinition({
     id: 3308,
@@ -42,9 +42,9 @@ export async function initializeRPGWorld(world: World): Promise<void> {
     dialogue: {
       text: "Welcome to the world of RuneScape! I'm here to help you get started.",
       options: [
-        { text: "What should I do first?", nextId: 1 },
-        { text: "How do I fight?", nextId: 2 },
-        { text: "Goodbye.", action: 'close' }
+        { text: 'What should I do first?', nextId: 1 },
+        { text: 'How do I fight?', nextId: 2 },
+        { text: 'Goodbye.', action: 'close' }
       ]
     }
   });
@@ -200,7 +200,7 @@ export async function initializeRPGWorld(world: World): Promise<void> {
 
   // Create spawn areas
   console.log('[RPGWorld] Creating spawn areas...');
-  
+
   // Tutorial Island spawns
   (spawningSystem as any).createSpawnArea({
     id: 'tutorial_rats',
@@ -250,7 +250,7 @@ export async function initializeRPGWorld(world: World): Promise<void> {
 
   // Spawn static NPCs (shopkeepers, bankers, etc.)
   console.log('[RPGWorld] Spawning static NPCs...');
-  
+
   // Lumbridge NPCs
   (npcSystem as any).spawnNPC(520, { x: lumbridge.x - 5, y: 0, z: lumbridge.z + 5 }); // General store
   (npcSystem as any).spawnNPC(395, { x: lumbridge.x + 10, y: 0, z: lumbridge.z }); // Banker
@@ -372,7 +372,7 @@ export const RPGWorldDefinition = {
   name: 'RuneScape RPG',
   description: 'A full RuneScape-style RPG experience',
   spawn: { x: 3222, y: 0, z: 3218 }, // Lumbridge
-  
+
   // Environment settings
   environment: {
     skybox: 'day',
@@ -406,4 +406,4 @@ export const RPGWorldDefinition = {
     { itemId: 558, quantity: 30 }, // Mind runes
     { itemId: 995, quantity: 25 }  // 25 coins
   ]
-}; 
+};

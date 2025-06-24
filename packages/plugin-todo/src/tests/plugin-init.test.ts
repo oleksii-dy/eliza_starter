@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { TodoPlugin } from '../index';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 
@@ -47,7 +47,6 @@ describe('TodoPlugin Initialization', () => {
   it('should have test dependencies', () => {
     expect(TodoPlugin.testDependencies).toContain('@elizaos/plugin-sql');
   });
-
 
 
   it('should have schema with correct tables', () => {

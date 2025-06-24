@@ -1,5 +1,5 @@
 import { type IAgentRuntime, type Memory, type State, UUID } from '@elizaos/core';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach, afterEach  } from 'bun:test';
 
 /**
  * Hyperfy Plugin E2E Test Suite

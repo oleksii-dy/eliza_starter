@@ -57,7 +57,7 @@ export const apiTokenScenariosTests: TestCase[] = [
       // Override getSetting to return expired token
       const originalGetSetting = runtime.getSetting;
       runtime.getSetting = (key: string) => {
-        if (key === 'GITHUB_TOKEN') return expiredToken;
+        if (key === 'GITHUB_TOKEN') {return expiredToken;}
         return originalGetSetting.call(runtime, key);
       };
 
@@ -94,7 +94,7 @@ export const apiTokenScenariosTests: TestCase[] = [
 
       const originalGetSetting = runtime.getSetting;
       runtime.getSetting = (key: string) => {
-        if (key === 'GITHUB_TOKEN') return currentToken;
+        if (key === 'GITHUB_TOKEN') {return currentToken;}
         return originalGetSetting.call(runtime, key);
       };
 
@@ -159,7 +159,7 @@ export const apiTokenScenariosTests: TestCase[] = [
           // This would use the NPM token for private registry access
           const searchResults = await pluginManager.searchPlugins('@myorg/private-plugin');
           console.log('[APIToken] NPM private registry access successful');
-        } catch (error) {
+        } catch (_error) {
           console.log('[APIToken] NPM private registry access failed (expected for demo)');
         }
       }
@@ -181,7 +181,7 @@ export const apiTokenScenariosTests: TestCase[] = [
 
       const originalGetSetting = runtime.getSetting;
       runtime.getSetting = (key: string) => {
-        if (key === 'GITHUB_TOKEN') return sensitiveToken;
+        if (key === 'GITHUB_TOKEN') {return sensitiveToken;}
         return originalGetSetting.call(runtime, key);
       };
 
@@ -192,10 +192,10 @@ export const apiTokenScenariosTests: TestCase[] = [
           '/tmp/test-secure'
         );
 
-        // Verify token is not in error message
+        // Verify token is not in _error message
         assert(
           !result.error?.includes(sensitiveToken),
-          'Token should not be exposed in error messages'
+          'Token should not be exposed in _error messages'
         );
         assert(!result.error?.includes('supersecret'), 'Token parts should not be exposed');
 

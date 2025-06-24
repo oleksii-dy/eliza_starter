@@ -1,10 +1,11 @@
-import type { IAgentRuntime, Memory, Provider, State } from "@elizaos/core";
-import type { McpService } from "./service";
-import { MCP_SERVICE_NAME } from "./types";
+import type { IAgentRuntime, Memory, Provider, State } from '@elizaos/core';
+import type { McpService } from './service';
+import { MCP_SERVICE_NAME } from './types';
 
 export const provider: Provider = {
-  name: "MCP",
-  description: "Available MCP servers, tools, and resources when agent needs to interact with external MCP-compatible services and APIs",
+  name: 'MCP',
+  description:
+    'Available MCP servers, tools, and resources when agent needs to interact with external MCP-compatible services and APIs',
 
   get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
     const mcpService = runtime.getService(MCP_SERVICE_NAME) as McpService;
@@ -12,7 +13,7 @@ export const provider: Provider = {
       return {
         values: { mcp: {} },
         data: { mcp: {} },
-        text: "No MCP servers are available.",
+        text: 'No MCP servers are available.',
       };
     }
 

@@ -1,14 +1,16 @@
 {
   "name": "@elizaos/core",
-  "version": "1.1.0",
+  "version": "1.0.12",
   "description": "",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bun": "./src/index.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
+      "bun": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -25,23 +27,29 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup && tsc --project tsconfig.build.json --emitDeclarationOnly",
+    "build": "bun run typecheck && tsup",
     "watch": "tsc --watch",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
     "dev": "tsup --watch",
     "build:docs": "cd docs && bun run build",
-    "test": "elizaos test",
-    "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
+    "test:watch": "bun test --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "lint:check": "eslint src && prettier --check ./src",
     "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src",
-    "lint": "prettier --write ./src"
+    "format:check": "prettier --check ./src"
   },
   "author": "ElizaOS",
   "license": "MIT",
   "devDependencies": {
+    "@types/bun": "^1.2.17",
     "@types/node": "^24.0.3",
     "@types/uuid": "10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
+    "eslint": "^9.22.0",
     "prettier": "3.5.3",
     "tsup": "8.5.0",
     "typescript": "5.8.3"
@@ -62,7 +70,6 @@
     "stream-browserify": "^3.0.0",
     "unique-names-generator": "4.7.1",
     "uuid": "11.0.3",
-    "vitest": "^3.1.4",
     "zod": "3.23.8"
   },
   "publishConfig": {

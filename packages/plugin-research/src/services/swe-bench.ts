@@ -1,4 +1,4 @@
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { ResearchService } from '../service';
 import { ResearchConfig, ResearchDepth, TaskType, ResearchStatus } from '../types';
 import * as fs from 'fs/promises';
@@ -43,14 +43,14 @@ export class SWEBenchService {
     try {
       const data = await fs.readFile(filePath, 'utf-8');
       const tasks = JSON.parse(data) as SWEBenchTask[];
-      
+
       for (const task of tasks) {
         this.tasks.set(task.id, task);
       }
-      
-      elizaLogger.info(`[SWEBench] Loaded ${tasks.length} tasks`);
+
+      logger.info(`[SWEBench] Loaded ${tasks.length} tasks`);
     } catch (error) {
-      elizaLogger.warn('[SWEBench] No tasks file found, using default tasks');
+      logger.warn('[SWEBench] No tasks file found, using default tasks');
       // Load some default TypeScript-focused tasks
       this.loadDefaultTasks();
     }
@@ -62,26 +62,26 @@ export class SWEBenchService {
   async executeTask(taskId: string): Promise<SWEBenchResult> {
     const startTime = Date.now();
     const task = this.tasks.get(taskId);
-    
+
     if (!task) {
       throw new Error(`Task ${taskId} not found`);
     }
 
-    elizaLogger.info(`[SWEBench] Executing task: ${taskId}`);
+    logger.info(`[SWEBench] Executing task: ${taskId}`);
 
     try {
       // Step 1: Research the problem
       const research = await this.researchForTask(task);
-      
+
       // Step 2: Generate implementation approach (optional)
       let implementation: string | undefined;
       if (task.category !== 'documentation') {
         implementation = await this.generateImplementation(task, research);
       }
-      
+
       // Step 3: Test if possible (simplified for now)
       const testPassed = task.testCommand ? await this.runTests(task) : undefined;
-      
+
       const result: SWEBenchResult = {
         taskId,
         research,
@@ -90,12 +90,12 @@ export class SWEBenchService {
         duration: Date.now() - startTime,
         tokenUsage: 0 // TODO: Track actual usage
       };
-      
+
       this.results.set(taskId, result);
       return result;
-      
+
     } catch (error) {
-      elizaLogger.error(`[SWEBench] Task ${taskId} failed:`, error);
+      logger.error(`[SWEBench] Task ${taskId} failed:`, error);
       throw error;
     }
   }
@@ -106,7 +106,7 @@ export class SWEBenchService {
   private async researchForTask(task: SWEBenchTask): Promise<any> {
     // Build a research query based on the task
     const query = this.buildResearchQuery(task);
-    
+
     // Configure research based on task difficulty
     const config: Partial<ResearchConfig> = {
       researchDepth: this.getDepthForDifficulty(task.difficulty),
@@ -116,7 +116,7 @@ export class SWEBenchService {
 
     // Start research project
     const project = await this.researchService.createResearchProject(query, config);
-    
+
     // Wait for completion
     const projectId = project.id;
     let currentProject = project;
@@ -127,7 +127,7 @@ export class SWEBenchService {
         currentProject = updated;
       }
     } while (currentProject.status === ResearchStatus.ACTIVE);
-    
+
     // Return the final project
     return currentProject;
   }
@@ -142,7 +142,7 @@ export class SWEBenchService {
       task.files.length > 0 ? `Related files: ${task.files.join(', ')}` : '',
       `Expected: ${task.expectedBehavior}`
     ].filter(Boolean);
-    
+
     return parts.join('. ');
   }
 
@@ -240,7 +240,7 @@ export class SWEBenchService {
         difficulty: 'easy'
       }
     ];
-    
+
     for (const task of defaultTasks) {
       this.tasks.set(task.id, task);
     }
@@ -269,12 +269,12 @@ export class SWEBenchService {
     passRate: number;
     avgDuration: number;
     avgTokenUsage: number;
-  } {
+    } {
     const results = Array.from(this.results.values());
     const passed = results.filter(r => r.testPassed === true).length;
     const totalDuration = results.reduce((sum, r) => sum + r.duration, 0);
     const totalTokens = results.reduce((sum, r) => sum + r.tokenUsage, 0);
-    
+
     return {
       totalTasks: this.tasks.size,
       completedTasks: results.length,

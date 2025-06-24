@@ -110,134 +110,144 @@ export interface TokenAccountInfo {
 
 // Action Result Types for proper action chaining
 export interface SolanaActionResult {
-    success: boolean;
-    data?: {
-        transactionId?: string;
-        amount?: string;
-        tokenAddress?: string;
-        recipient?: string;
-        sender?: string;
-        error?: string;
-        [key: string]: any;
-    };
-    message: string;
+  success: boolean;
+  data?: {
+    transactionId?: string;
+    amount?: string;
+    tokenAddress?: string;
+    recipient?: string;
+    sender?: string;
+    error?: string;
+    [key: string]: any;
+  };
+  message: string;
 }
 
 // Token Balance Interface
 export interface TokenBalance {
-    address: string;
-    symbol: string;
-    name: string;
-    decimals: number;
-    balance: string;
-    uiAmount: number;
-    priceUsd?: string;
-    valueUsd?: string;
-    logoURI?: string;
+  address: string;
+  symbol: string;
+  name: string;
+  decimals: number;
+  balance: string;
+  uiAmount: number;
+  priceUsd?: string;
+  valueUsd?: string;
+  logoURI?: string;
 }
 
 export interface SwapTransactionRequest {
-    inputToken: string;
-    outputToken: string;
-    amount: number;
-    slippageBps?: number;
-    walletPublicKey: string;
+  inputToken: string;
+  outputToken: string;
+  amount: number;
+  slippageBps?: number;
+  walletPublicKey: string;
 }
 
 export interface TransactionResponse {
-    transactionId: string;
-    status: 'pending' | 'confirmed' | 'failed';
-    message: string;
-    timestamp: number;
-    details?: any;
+  transactionId: string;
+  status: 'pending' | 'confirmed' | 'failed';
+  message: string;
+  timestamp: number;
+  details?: any;
 }
 
 export interface TransferTransactionRequest {
-    tokenAddress: string;
-    recipientAddress: string;
-    amount: number;
-    walletPublicKey: string;
+  tokenAddress: string;
+  recipientAddress: string;
+  amount: number;
+  walletPublicKey: string;
 }
 
 // Custodial Wallet Types
 export enum EntityType {
-    USER = 'user',
-    ROOM = 'room', 
-    WORLD = 'world',
-    AGENT = 'agent',
-    POOL = 'pool',
-    CONTRACT = 'contract'
+  USER = 'user',
+  ROOM = 'room',
+  WORLD = 'world',
+  AGENT = 'agent',
+  POOL = 'pool',
+  CONTRACT = 'contract',
 }
 
 export interface WalletEntity {
-    id: string;
-    type: EntityType;
-    publicKey: string;
-    encryptedPrivateKey: string;
-    owner: string;
-    delegates: string[];
-    metadata: {
-        name?: string;
-        description?: string;
-        tags?: string[];
-        permissions?: string[];
-        createdAt: string;
-        updatedAt: string;
-        version: number;
-    };
-    status: 'active' | 'suspended' | 'archived';
-    restrictions?: {
-        maxTransactionAmount?: number;
-        allowedTokens?: string[];
-        dailyLimit?: number;
-        requireApproval?: boolean;
-    };
+  id: string;
+  type: EntityType;
+  publicKey: string;
+  encryptedPrivateKey: string;
+  owner: string;
+  delegates: string[];
+  metadata: {
+    name?: string;
+    description?: string;
+    tags?: string[];
+    permissions?: string[];
+    createdAt: string;
+    updatedAt: string;
+    version: number;
+  };
+  status: 'active' | 'suspended' | 'archived';
+  restrictions?: {
+    maxTransactionAmount?: number;
+    allowedTokens?: string[];
+    dailyLimit?: number;
+    requireApproval?: boolean;
+  };
 }
 
 export interface WalletPermission {
-    entityId: string;
-    userId: string;
-    permissions: ('read' | 'transfer' | 'trade' | 'admin')[];
-    grantedAt: string;
-    grantedBy: string;
-    expiresAt?: string;
+  entityId: string;
+  userId: string;
+  permissions: ('read' | 'transfer' | 'trade' | 'admin')[];
+  grantedAt: string;
+  grantedBy: string;
+  expiresAt?: string;
 }
 
 export interface ICustodialWalletService {
-    createWallet(entityId: string, entityType: EntityType, owner: string, metadata?: any): Promise<WalletEntity>;
-    getWallet(entityId: string): Promise<WalletEntity | null>;
-    getWalletsByOwner(owner: string): Promise<WalletEntity[]>;
-    getKeypair(entityId: string, requesterId: string): Promise<any>;
-    getPublicKey(entityId: string): Promise<any>;
-    transferOwnership(entityId: string, currentOwner: string, newOwner: string): Promise<void>;
-    grantPermission(entityId: string, userId: string, permissions: string[], grantedBy: string): Promise<void>;
-    revokePermission(entityId: string, userId: string, revokedBy: string): Promise<void>;
-    hasPermission(entityId: string, userId: string, permission: string): Promise<boolean>;
-    suspendWallet(entityId: string, suspendedBy: string, reason?: string): Promise<void>;
-    reactivateWallet(entityId: string, reactivatedBy: string): Promise<void>;
-    deleteWallet(entityId: string, deletedBy: string): Promise<void>;
-    getBalance(entityId: string): Promise<number>;
-    listWallets(userId: string): Promise<WalletEntity[]>;
+  createWallet(
+    entityId: string,
+    entityType: EntityType,
+    owner: string,
+    metadata?: any
+  ): Promise<WalletEntity>;
+  getWallet(entityId: string): Promise<WalletEntity | null>;
+  getWalletsByOwner(owner: string): Promise<WalletEntity[]>;
+  getKeypair(entityId: string, requesterId: string): Promise<any>;
+  getPublicKey(entityId: string): Promise<any>;
+  transferOwnership(entityId: string, currentOwner: string, newOwner: string): Promise<void>;
+  grantPermission(
+    entityId: string,
+    userId: string,
+    permissions: string[],
+    grantedBy: string
+  ): Promise<void>;
+  revokePermission(entityId: string, userId: string, revokedBy: string): Promise<void>;
+  hasPermission(entityId: string, userId: string, permission: string): Promise<boolean>;
+  suspendWallet(entityId: string, suspendedBy: string, reason?: string): Promise<void>;
+  reactivateWallet(entityId: string, reactivatedBy: string): Promise<void>;
+  deleteWallet(entityId: string, deletedBy: string): Promise<void>;
+  getBalance(entityId: string): Promise<number>;
+  listWallets(userId: string): Promise<WalletEntity[]>;
 }
 
 // Pool/DeFi related types
 export interface PoolInfo {
-    id: string;
-    name: string;
-    tokenA: {
-        mint: string;
-        symbol: string;
-        decimals: number;
-    };
-    tokenB: {
-        mint: string;
-        symbol: string;
-        decimals: number;
-    };
-    liquidity: number;
-    apr?: number;
-    tvl?: number;
-    fee?: number;
-    protocol: string;
-    dex?: string;
+  id: string;
+  name: string;
+  tokenA: {
+    mint: string;
+    symbol: string;
+    decimals: number;
+  };
+  tokenB: {
+    mint: string;
+    symbol: string;
+    decimals: number;
+  };
+  liquidity: number;
+  apr?: number;
+  tvl?: number;
+  fee?: number;
+  protocol: string;
+  dex?: string;
 }

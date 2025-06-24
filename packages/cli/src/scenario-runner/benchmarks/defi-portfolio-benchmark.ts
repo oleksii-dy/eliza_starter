@@ -5,9 +5,9 @@
  */
 
 import { logger } from '@elizaos/core';
-import type { IAgentRuntime, UUID } from '@elizaos/core';
+import type { IAgentRuntime } from '@elizaos/core';
 import { ProductionCostTracker } from '../production-cost-tracker.js';
-import { RealWorldTaskExecutor, type RealWorldTask } from '../real-world-task-executor.js';
+import { RealWorldTaskExecutor } from '../real-world-task-executor.js';
 import { LiveMessageBus } from '../live-message-bus.js';
 
 export interface DeFiPortfolioBenchmark {
@@ -336,7 +336,7 @@ export class DeFiPortfolioBenchmarkRunner {
         startTime,
         endTime: Date.now(),
         duration: Date.now() - startTime,
-        totalCost: await this.costTracker.getBenchmarkSpend(benchmarkId),
+        totalCost: (await (this.costTracker as any).getBenchmarkSpend?.(benchmarkId)) || 0,
         finalScore: this.calculateFinalScore(performanceMetrics, taskResults),
         ranking: 0, // Will be set by benchmark system
         portfolioValue: {
@@ -507,7 +507,7 @@ export class DeFiPortfolioBenchmarkRunner {
    * Initialize a portfolio for the benchmark
    */
   private async initializePortfolio(
-    agentId: string,
+    _agentId: string,
     benchmarkId: string,
     initialBalance: number
   ): Promise<DeFiPortfolioState> {
@@ -632,7 +632,9 @@ export class DeFiPortfolioBenchmarkRunner {
     result: any
   ): Promise<void> {
     const portfolio = this.activePortfolios.get(benchmarkId);
-    if (!portfolio) return;
+    if (!portfolio) {
+      return;
+    }
 
     // Simulate portfolio updates based on task type and result
     // In real implementation, this would integrate with actual DeFi protocols
@@ -702,7 +704,7 @@ export class DeFiPortfolioBenchmarkRunner {
    * Calculate performance metrics comparison
    */
   private calculatePerformanceMetrics(
-    initial: DeFiPortfolioState,
+    _initial: DeFiPortfolioState,
     final: DeFiPortfolioState
   ): PerformanceMetrics {
     return final.performanceMetrics;

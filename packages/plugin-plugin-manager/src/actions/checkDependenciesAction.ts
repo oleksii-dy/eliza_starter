@@ -42,7 +42,7 @@ export const checkDependenciesAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory): Promise<boolean> => {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
@@ -106,15 +106,15 @@ export const checkDependenciesAction: Action = {
       });
 
       // Build response
-      let responseText = `# Dependency Analysis Report\n\n`;
+      let responseText = '# Dependency Analysis Report\n\n';
       responseText += `**Plugins analyzed:** ${pluginNames.length}\n`;
       responseText += `**Total dependencies:** ${resolution.graph.size}\n\n`;
 
       if (resolution.success) {
-        responseText += `✅ **All dependencies resolved successfully!**\n\n`;
+        responseText += '✅ **All dependencies resolved successfully!**\n\n';
 
         if (resolution.minimalSet) {
-          responseText += `## Minimal Plugin Set\n`;
+          responseText += '## Minimal Plugin Set\n';
           responseText += `The following ${resolution.minimalSet.length} plugins are actually needed:\n`;
           resolution.minimalSet.forEach((p) => {
             responseText += `- ${p}\n`;
@@ -122,24 +122,24 @@ export const checkDependenciesAction: Action = {
 
           const unnecessary = pluginNames.filter((p) => !resolution.minimalSet!.includes(p));
           if (unnecessary.length > 0) {
-            responseText += `\n**Potentially unnecessary plugins:**\n`;
+            responseText += '\n**Potentially unnecessary plugins:**\n';
             unnecessary.forEach((p) => {
               responseText += `- ${p} (no other plugins depend on it)\n`;
             });
           }
         }
 
-        responseText += `\n## Installation Order\n`;
-        responseText += `If reinstalling, use this order:\n`;
+        responseText += '\n## Installation Order\n';
+        responseText += 'If reinstalling, use this order:\n';
         resolution.installOrder.forEach((p, i) => {
           responseText += `${i + 1}. ${p}\n`;
         });
       } else {
-        responseText += `⚠️ **Dependency conflicts detected!**\n\n`;
+        responseText += '⚠️ **Dependency conflicts detected!**\n\n';
 
         resolution.conflicts.forEach((conflict) => {
           responseText += `## Conflict: ${conflict.pluginName}\n`;
-          responseText += `Requested by:\n`;
+          responseText += 'Requested by:\n';
           conflict.requestedBy.forEach((req) => {
             responseText += `- ${req.plugin} requires ${req.constraint}\n`;
           });
@@ -171,10 +171,10 @@ export const checkDependenciesAction: Action = {
           minimalSet: resolution.minimalSet,
         },
       };
-    } catch (error) {
+    } catch (_error) {
       elizaLogger.error('[checkDependenciesAction] Error checking dependencies:', error);
 
-      const errorMessage = `Error checking dependencies: ${error instanceof Error ? error.message : String(error)}`;
+      const errorMessage = `Error checking dependencies: ${_error instanceof Error ? _error.message : String(_error)}`;
 
       if (callback) {
         await callback({

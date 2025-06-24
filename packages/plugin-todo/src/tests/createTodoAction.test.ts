@@ -1,5 +1,5 @@
 import type { HandlerCallback, IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { createTodoAction } from '../actions/createTodo';
 
 describe('createTodoAction', () => {

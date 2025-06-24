@@ -41,20 +41,20 @@ const paymentSendRealMoneyScenario: Scenario = {
   ],
   actions: ['SEND_PAYMENT'],
   evaluator: (response: string) => {
-    const hasPaymentIntent = 
+    const hasPaymentIntent =
       response.toLowerCase().includes('send') ||
       response.toLowerCase().includes('transfer') ||
       response.toLowerCase().includes('processing');
-    
+
     const mentionsAmount = /\d+(\.\d+)?\s*(ETH|USDC|SOL|MATIC)/i.test(response);
-    const hasAddress = 
+    const hasAddress =
       /0x[a-fA-F0-9]{40}/.test(response) || // Ethereum address
       /[1-9A-HJ-NP-Za-km-z]{32,44}/.test(response) || // Solana address
       /\w+\.eth/.test(response); // ENS name
-    
+
     return hasPaymentIntent && (mentionsAmount || hasAddress);
   },
   tags: ['payment', 'crypto', 'transfer', 'blockchain'],
 };
 
-export default paymentSendRealMoneyScenario; 
+export default paymentSendRealMoneyScenario;

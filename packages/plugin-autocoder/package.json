@@ -67,17 +67,17 @@
     "dotenv": "16.4.5",
     "prettier": "3.5.3",
     "tsup": "8.4.0",
-    "typescript": "5.8.2",
-    "vitest": "3.1.4"
+    "typescript": "5.8.3"
   },
   "scripts": {
     "start": "bun run elizaos start",
     "dev": "bun run elizaos dev",
     "build": "bun run tsup",
-    "lint": "bun run prettier --write ./src",
+    "lint": "eslint 'src/**/*.{js,ts,tsx}'",
+    "lint:fix": "eslint 'src/**/*.{js,ts,tsx}' --fix",
     "test": "elizaos test",
-    "test:watch": "bun run vitest",
-    "test:coverage": "bun run vitest run --coverage",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
     "test:e2e": "bun run elizaos test",
     "publish": "bun run elizaos publish",
     "format": "bun run prettier --write ./src",

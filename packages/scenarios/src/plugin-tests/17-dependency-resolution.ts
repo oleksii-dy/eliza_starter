@@ -1,4 +1,4 @@
-import type { Scenario } from "../types.js"
+import type { Scenario } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const dependencyresolutionScenario: Scenario = {
@@ -7,7 +7,7 @@ export const dependencyresolutionScenario: Scenario = {
   description: 'Resolve complex plugin dependency chains',
   category: 'integration',
   tags: ['plugin-manager', 'planning', 'todo', 'secrets-manager', 'complex-workflow'],
-  
+
   actors: [
     {
       id: uuidv4() as any,
@@ -23,32 +23,33 @@ export const dependencyresolutionScenario: Scenario = {
         steps: [
           {
             type: 'message',
-            content: 'I need to install a new analytics plugin that requires database, auth, and messaging plugins.',
-      },
+            content:
+              'I need to install a new analytics plugin that requires database, auth, and messaging plugins.',
+          },
           {
             type: 'wait',
             waitTime: 8000,
-      },
+          },
           {
             type: 'message',
             content: 'Check all dependency versions and identify any conflicts.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 10000,
-      },
+          },
           {
             type: 'message',
             content: 'Create a plan to resolve the dependencies in the correct order.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 12000,
-      },
+          },
           {
             type: 'message',
             content: 'Install the plugins and verify all integrations work correctly.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 14000,
@@ -68,7 +69,7 @@ export const dependencyresolutionScenario: Scenario = {
       plugins: ['plugin-manager', 'planning', 'todo', 'secrets-manager'],
     },
   },
-  
+
   execution: {
     maxDuration: 300000,
     maxSteps: 25,
@@ -80,7 +81,7 @@ export const dependencyresolutionScenario: Scenario = {
       },
     ],
   },
-  
+
   verification: {
     rules: [
       {
@@ -88,7 +89,8 @@ export const dependencyresolutionScenario: Scenario = {
         type: 'llm',
         description: 'All required plugins were utilized',
         config: {
-          criteria: 'The agent successfully used plugin-manager, planning, todo, secrets-manager plugins to complete the workflow',
+          criteria:
+            'The agent successfully used plugin-manager, planning, todo, secrets-manager plugins to complete the workflow',
         },
         weight: 3,
       },
@@ -109,7 +111,7 @@ export const dependencyresolutionScenario: Scenario = {
           criteria: 'Multiple actions from different plugins were chained together effectively',
         },
         weight: 3,
-      }
+      },
     ],
     expectedOutcomes: [
       {
@@ -134,7 +136,7 @@ export const dependencyresolutionScenario: Scenario = {
       ],
     },
   },
-  
+
   benchmarks: {
     maxDuration: 300000,
     maxSteps: 25,

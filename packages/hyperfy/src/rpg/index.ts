@@ -1,6 +1,6 @@
 /**
  * Hyperfy RPG Plugin
- * 
+ *
  * A complete RPG system for Hyperfy with RuneScape-style mechanics
  */
 
@@ -37,7 +37,7 @@ export const HyperfyRPGPlugin = {
   name: 'hyperfy-rpg',
   version: '0.3.0',
   description: 'RuneScape-style RPG mechanics for Hyperfy with death/respawn, PvP, and player homes',
-  
+
   systems: [
     { name: 'combat', System: () => import('./systems/CombatSystem').then(m => m.CombatSystem) },
     { name: 'inventory', System: () => import('./systems/InventorySystem').then(m => m.InventorySystem) },
@@ -57,21 +57,21 @@ export const HyperfyRPGPlugin = {
     { name: 'pvp', System: () => import('./systems/PvPSystem').then(m => m.PvPSystem) },
     { name: 'playerHomes', System: () => import('./systems/PlayerHomesSystem').then(m => m.PlayerHomesSystem) },
   ],
-  
+
   // Plugin initialization
   async init(world: any) {
     console.log('[HyperfyRPG] Initializing RPG plugin...');
-    
+
     // Register all systems
     for (const systemDef of this.systems) {
       const SystemClass = await systemDef.System();
       world.register(systemDef.name, SystemClass);
       console.log(`[HyperfyRPG] Registered ${systemDef.name} system`);
     }
-    
+
     console.log('[HyperfyRPG] RPG plugin initialized successfully!');
   }
 };
 
 // Default export
-export default HyperfyRPGPlugin; 
+export default HyperfyRPGPlugin;

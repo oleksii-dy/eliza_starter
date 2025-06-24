@@ -1,5 +1,5 @@
 import { type IAgentRuntime, type Plugin, type UUID } from '@elizaos/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { PluginManagerService } from '../../services/pluginManagerService.ts';
 
 describe('Event Handler Management (Consolidated)', () => {
@@ -11,12 +11,12 @@ describe('Event Handler Management (Consolidated)', () => {
       agentId: 'test-agent-id' as UUID,
       plugins: [],
       events: new Map(),
-      registerEvent: vi.fn((event: string, handler: Function) => {
+      registerEvent: mock((event: string, handler: Function) => {
         const handlers = mockRuntime.events.get(event) || [];
         handlers.push(handler as any);
         mockRuntime.events.set(event, handlers);
       }),
-      unregisterEvent: vi.fn((event: string, handler: Function) => {
+      unregisterEvent: mock((event: string, handler: Function) => {
         const handlers = mockRuntime.events.get(event);
         if (handlers) {
           const filtered = handlers.filter((h: any) => h !== handler);
@@ -27,7 +27,7 @@ describe('Event Handler Management (Consolidated)', () => {
           }
         }
       }),
-      emitEvent: vi.fn(async (event: string, data: any) => {
+      emitEvent: mock(async (event: string, data: any) => {
         // Mock event emission
         return Promise.resolve();
       }),
@@ -36,18 +36,18 @@ describe('Event Handler Management (Consolidated)', () => {
       providers: [],
       evaluators: [],
       services: new Map(),
-      getService: vi.fn(() => null), // Mock getService to return null
+      getService: mock(() => null), // Mock getService to return null
     } as any;
 
     pluginManager = new PluginManagerService(mockRuntime);
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   it('should track and unregister event handlers correctly', async () => {
-    const mockEventHandler = vi.fn();
+    const mockEventHandler = mock();
     const testPlugin: Plugin = {
       name: 'test-plugin',
       description: 'Test plugin for event handler management',

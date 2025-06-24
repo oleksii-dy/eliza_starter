@@ -95,12 +95,12 @@ export const followUpsProvider: Provider = {
           for (const entity of entities.slice(0, 5)) {
             // Limit entities per room
             if (!entity.id || entity.id === runtime.agentId || checkedEntities.has(entity.id))
-              continue;
+            {continue;}
             checkedEntities.add(entity.id);
 
             // Check if there's already a follow-up scheduled
             const hasFollowUp = allFollowUps.some((f) => f.entityId === entity.id);
-            if (hasFollowUp) continue;
+            if (hasFollowUp) {continue;}
 
             // Get relationships to check last interaction
             const relationships = await runtime.getRelationships({ entityId: entity.id });
@@ -134,7 +134,7 @@ export const followUpsProvider: Provider = {
       }
 
       if (suggestedEntities.length > 0) {
-        textSummary += `\nSuggested follow-ups:\n`;
+        textSummary += '\nSuggested follow-ups:\n';
         suggestedEntities.slice(0, 3).forEach((s) => {
           textSummary += `- ${s.entityName} (${s.daysSinceLastContact} days since last contact)\n`;
         });

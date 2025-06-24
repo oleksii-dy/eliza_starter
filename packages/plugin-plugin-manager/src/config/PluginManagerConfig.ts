@@ -92,7 +92,7 @@ export class ConfigurationManager {
       this.startWatcher();
 
       elizaLogger.info('[ConfigurationManager] Initialized with custom configuration');
-    } catch (error) {
+    } catch (_error) {
       elizaLogger.warn('[ConfigurationManager] Using default configuration', error);
     }
   }
@@ -104,8 +104,8 @@ export class ConfigurationManager {
 
       // Validate and merge with defaults
       this.config = PluginManagerConfigSchema.parse(rawConfig);
-    } catch (error) {
-      if ((error as any).code !== 'ENOENT') {
+    } catch (_error) {
+      if ((_error as any).code !== 'ENOENT') {
         throw error;
       }
     }
@@ -165,14 +165,14 @@ export class ConfigurationManager {
     try {
       PluginManagerConfigSchema.parse(config);
       return { valid: true };
-    } catch (error) {
-      if (error instanceof z.ZodError) {
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
         return {
           valid: false,
-          errors: error.errors.map((e) => `${e.path.join('.')}: ${e.message}`),
+          errors: _error.errors.map((e) => `${e.path.join('.')}: ${e.message}`),
         };
       }
-      return { valid: false, errors: [String(error)] };
+      return { valid: false, errors: [String(_error)] };
     }
   }
 
@@ -193,7 +193,7 @@ export class ConfigurationManager {
           this.config = PluginManagerConfigSchema.parse(newConfig);
           elizaLogger.info('[ConfigurationManager] Configuration reloaded from file');
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore errors - file might not exist
       }
     }, 30000);

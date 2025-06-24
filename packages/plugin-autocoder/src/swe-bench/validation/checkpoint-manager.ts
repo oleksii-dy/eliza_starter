@@ -365,16 +365,16 @@ export class CheckpointManager {
 
     const report = [
       `# Validation Report for Session: ${sessionId}`,
-      ``,
-      `## Session Overview`,
+      '',
+      '## Session Overview',
       `- Instance ID: ${reportSession.instanceId}`,
       `- Start Time: ${this.formatTimestamp(reportSession.startTime)}`,
       `- End Time: ${this.formatTimestamp(reportSession.endTime)}`,
       `- Status: ${reportSession.status}`,
       `- Final Score: ${reportSession.finalScore}`,
       `- Final Passed: ${reportSession.finalPassed}`,
-      ``,
-      `## Summary Metrics`,
+      '',
+      '## Summary Metrics',
       `- Total Checkpoints: ${reportSession.summary.totalCheckpoints}`,
       `- Passed Checkpoints: ${reportSession.summary.passedCheckpoints}`,
       `- Failed Checkpoints: ${reportSession.summary.failedCheckpoints}`,
@@ -382,8 +382,8 @@ export class CheckpointManager {
       `- Average Confidence: ${reportSession.summary.averageConfidence.toFixed(2)}`,
       `- Total Execution Time: ${reportSession.summary.totalExecutionTime}ms`,
       `- Improvement Trend: ${reportSession.summary.improvementTrend}`,
-      ``,
-      `## Checkpoint Details`,
+      '',
+      '## Checkpoint Details',
     ];
 
     // Add detailed checkpoint information
@@ -417,7 +417,7 @@ export class CheckpointManager {
 
     // Add recommendations
     if (reportSession.summary?.recommendations?.length > 0) {
-      report.push(`## Recommendations`);
+      report.push('## Recommendations');
       for (const recommendation of reportSession.summary.recommendations) {
         report.push(`- ${recommendation}`);
       }
@@ -610,7 +610,7 @@ export class CheckpointManager {
     checkpoint: ValidationCheckpoint
   ): Promise<void> {
     const session = this.activeSessions.get(sessionId);
-    if (!session) return;
+    if (!session) {return;}
 
     // Update summary metrics
     session.summary.totalCheckpoints = session.checkpoints.length;
@@ -637,7 +637,7 @@ export class CheckpointManager {
    * Calculate final score for the entire session
    */
   private calculateFinalScore(checkpoints: ValidationCheckpoint[]): number {
-    if (checkpoints.length === 0) return 0;
+    if (checkpoints.length === 0) {return 0;}
 
     // Use weighted average with more weight on recent checkpoints
     let totalWeight = 0;
@@ -656,7 +656,7 @@ export class CheckpointManager {
    * Determine if final session passed
    */
   private determineFinalPassed(checkpoints: ValidationCheckpoint[], finalScore: number): boolean {
-    if (checkpoints.length === 0) return false;
+    if (checkpoints.length === 0) {return false;}
 
     // Check if minimum score requirement is met
     if (
@@ -668,7 +668,7 @@ export class CheckpointManager {
 
     // Check if at least one checkpoint passed
     const anyPassed = checkpoints.some((c) => c.passed);
-    if (!anyPassed) return false;
+    if (!anyPassed) {return false;}
 
     // Check if the latest checkpoint passed (most important)
     const latestCheckpoint = checkpoints[checkpoints.length - 1];
@@ -733,7 +733,7 @@ export class CheckpointManager {
    * Calculate trend from score sequence
    */
   private calculateTrend(scores: number[]): 'increasing' | 'decreasing' | 'stable' | 'volatile' {
-    if (scores.length < 2) return 'stable';
+    if (scores.length < 2) {return 'stable';}
 
     const differences: number[] = [];
     for (let i = 1; i < scores.length; i++) {
@@ -745,9 +745,9 @@ export class CheckpointManager {
       differences.reduce((sum, diff) => sum + Math.pow(diff - avgDifference, 2), 0) /
       differences.length;
 
-    if (variance > 100) return 'volatile'; // High variance indicates volatility
-    if (avgDifference > 5) return 'increasing';
-    if (avgDifference < -5) return 'decreasing';
+    if (variance > 100) {return 'volatile';} // High variance indicates volatility
+    if (avgDifference > 5) {return 'increasing';}
+    if (avgDifference < -5) {return 'decreasing';}
     return 'stable';
   }
 

@@ -117,8 +117,12 @@ export const GoalsPluginE2ETestSuite: TestSuite = {
         logger.info('✓ Uncompleted goals updated correctly after completion');
 
         // Clean up
-        if (goal1Id) await dataService.deleteGoal(goal1Id);
-        if (goal2Id) await dataService.deleteGoal(goal2Id);
+        if (goal1Id) {
+          await dataService.deleteGoal(goal1Id);
+        }
+        if (goal2Id) {
+          await dataService.deleteGoal(goal2Id);
+        }
         logger.info('✅ Uncompleted goals retrieval successful');
       },
     },
@@ -170,8 +174,12 @@ export const GoalsPluginE2ETestSuite: TestSuite = {
         logger.info('✓ Tag filtering working correctly');
 
         // Clean up
-        if (workGoalId) await dataService.deleteGoal(workGoalId);
-        if (personalGoalId) await dataService.deleteGoal(personalGoalId);
+        if (workGoalId) {
+          await dataService.deleteGoal(workGoalId);
+        }
+        if (personalGoalId) {
+          await dataService.deleteGoal(personalGoalId);
+        }
         logger.info('✅ Goal tag filtering successful');
       },
     },

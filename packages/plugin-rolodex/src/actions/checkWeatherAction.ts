@@ -14,14 +14,14 @@ export const checkWeatherAction: Action = {
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const text = message.content.text?.toLowerCase() || '';
-    
+
     // Check for weather-related keywords
     const weatherKeywords = ['weather', 'temperature', 'forecast', 'climate', 'rain', 'sunny', 'cloudy'];
     const hasWeatherKeyword = weatherKeywords.some(kw => text.includes(kw));
-    
+
     // Check if we have the weather API key
     const hasApiKey = !!runtime.getSetting('WEATHER_API_KEY');
-    
+
     return hasWeatherKeyword && hasApiKey;
   },
 
@@ -34,12 +34,12 @@ export const checkWeatherAction: Action = {
   ) => {
     try {
       const apiKey = runtime.getSetting('WEATHER_API_KEY');
-      
+
       if (!apiKey) {
         if (callback) {
           await callback({
             text: "I don't have access to the weather API. Please ask an admin to provide the WEATHER_API_KEY.",
-            thought: "Missing WEATHER_API_KEY",
+            thought: 'Missing WEATHER_API_KEY',
           });
         }
         return;
@@ -52,7 +52,7 @@ export const checkWeatherAction: Action = {
 
       // Simulate API call with the key
       logger.info(`[checkWeatherAction] Checking weather for ${location} with API key: ${apiKey.substring(0, 5)}...`);
-      
+
       // Simulate weather data (in real implementation, this would call actual API)
       const weatherData = {
         location,
@@ -84,11 +84,11 @@ export const checkWeatherAction: Action = {
 
     } catch (error) {
       logger.error('[checkWeatherAction] Error checking weather:', error);
-      
+
       if (callback) {
         await callback({
-          text: "I encountered an error while checking the weather. Please try again.",
-          thought: "Error in checkWeatherAction handler",
+          text: 'I encountered an error while checking the weather. Please try again.',
+          thought: 'Error in checkWeatherAction handler',
         });
       }
     }
@@ -124,4 +124,4 @@ export const checkWeatherAction: Action = {
       },
     ],
   ],
-}; 
+};

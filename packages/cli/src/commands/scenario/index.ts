@@ -64,7 +64,7 @@ scenarioCommand
           verbose: options.verbose,
           benchmark: options.benchmark,
           parallel: options.parallel,
-          maxConcurrency: parseInt(options.maxConcurrency) || 1,
+          maxConcurrency: parseInt(options.maxConcurrency, 10) || 1,
         };
 
         logger.info('Running plugin scenarios...');
@@ -106,7 +106,11 @@ scenarioCommand
         try {
           // Dynamically import scenarios from the scenarios package
           const scenariosModule = await import('@elizaos/scenarios');
-          const { allScenarios, getScenariosByCategory, getScenarioById } = scenariosModule;
+          // @ts-expect-error - scenarios module may not be available
+          const { allScenarios, getScenarioById } = scenariosModule || {
+            allScenarios: [],
+            getScenarioById: () => null,
+          };
 
           let scenariosToRun = allScenarios || [];
 
@@ -370,7 +374,7 @@ scenarioCommand
       );
 
       // Display validation results
-      console.log(`\n🔍 Validation Results`);
+      console.log('\n🔍 Validation Results');
       console.log('═'.repeat(50));
 
       let totalValid = 0;
@@ -400,7 +404,7 @@ scenarioCommand
 
       // Environment validation details
       if (validationResults.environmentValidations.size > 0) {
-        console.log(`\n🔧 Environment Issues`);
+        console.log('\n🔧 Environment Issues');
         console.log('─'.repeat(30));
 
         for (const [pluginName, validations] of validationResults.environmentValidations) {
@@ -419,7 +423,7 @@ scenarioCommand
       }
 
       // Summary
-      console.log(`\n📊 Validation Summary`);
+      console.log('\n📊 Validation Summary');
       console.log('═'.repeat(50));
       console.log(`Total scenarios: ${allScenarios.length}`);
       console.log(`✅ Valid: ${totalValid}`);
@@ -427,7 +431,7 @@ scenarioCommand
       console.log(`⚠️  Skipped: ${totalSkipped}`);
 
       if (validationResults.warnings.length > 0) {
-        console.log(`\n⚠️  Warnings:`);
+        console.log('\n⚠️  Warnings:');
         for (const warning of validationResults.warnings) {
           console.log(`   ${warning}`);
         }
@@ -458,7 +462,7 @@ scenarioCommand
   .action(async (options) => {
     try {
       logger.info('🚀 Running consolidated scenario tests...');
-      
+
       const runner = new ConsolidatedScenarioTestRunner();
       const testOptions = {
         filter: options.filter,
@@ -472,12 +476,12 @@ scenarioCommand
       };
 
       const results = await runner.runAllScenarios(testOptions);
-      
+
       // Exit with appropriate code
       if (results.failed > 0) {
         process.exit(1);
       }
-      
+
     } catch (error) {
       logger.error('Failed to run consolidated scenarios:', error);
       process.exit(1);
@@ -501,9 +505,15 @@ function displayResults(results: any[], options: any): void {
     const metrics = result.metrics || {};
 
     // Accumulate totals for summary
-    if (result.duration) totalDuration += result.duration;
-    if (metrics.messageCount) totalMessages += metrics.messageCount;
-    if (metrics.tokenUsage?.total) totalTokens += metrics.tokenUsage.total;
+    if (result.duration) {
+      totalDuration += result.duration;
+    }
+    if (metrics.messageCount) {
+      totalMessages += metrics.messageCount;
+    }
+    if (metrics.tokenUsage?.total) {
+      totalTokens += metrics.tokenUsage.total;
+    }
 
     console.log(`\n${status} ${result.name}`);
     console.log(
@@ -564,7 +574,7 @@ function displayResults(results: any[], options: any): void {
   }
 
   // Enhanced summary with benchmarks
-  console.log('\n' + '═'.repeat(60));
+  console.log(`\n${'═'.repeat(60)}`);
   console.log('📈 SUMMARY REPORT');
   console.log('─'.repeat(30));
   console.log(

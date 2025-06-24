@@ -1,25 +1,35 @@
-import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import {
+  describe,
+  expect,
+  it,
+  mock,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  spyOn,
+} from 'bun:test';
 import { StagehandService, BrowserSession } from '../index';
 import { logger } from '@elizaos/core';
 import { Stagehand } from '@browserbasehq/stagehand';
 
 // Mock the Stagehand module
-vi.mock('@browserbasehq/stagehand', () => {
+mock.module('@browserbasehq/stagehand', () => {
   return {
-    Stagehand: vi.fn().mockImplementation(() => {
+    Stagehand: mock().mockImplementation(() => {
       const mockPage = {
-        goto: vi.fn().mockResolvedValue(undefined),
-        goBack: vi.fn().mockResolvedValue(undefined),
-        goForward: vi.fn().mockResolvedValue(undefined),
-        reload: vi.fn().mockResolvedValue(undefined),
-        waitForLoadState: vi.fn().mockResolvedValue(undefined),
-        title: vi.fn().mockResolvedValue('Test Page Title'),
-        url: vi.fn().mockReturnValue('https://example.com'),
+        goto: mock().mockResolvedValue(undefined),
+        goBack: mock().mockResolvedValue(undefined),
+        goForward: mock().mockResolvedValue(undefined),
+        reload: mock().mockResolvedValue(undefined),
+        waitForLoadState: mock().mockResolvedValue(undefined),
+        title: mock().mockResolvedValue('Test Page Title'),
+        url: mock().mockReturnValue('https://example.com'),
       };
 
       return {
-        init: vi.fn().mockResolvedValue(undefined),
-        close: vi.fn().mockResolvedValue(undefined),
+        init: mock().mockResolvedValue(undefined),
+        close: mock().mockResolvedValue(undefined),
         page: mockPage,
       };
     }),
@@ -28,14 +38,14 @@ vi.mock('@browserbasehq/stagehand', () => {
 
 // Mock logger
 beforeAll(() => {
-  vi.spyOn(logger, 'info').mockImplementation(() => {});
-  vi.spyOn(logger, 'error').mockImplementation(() => {});
-  vi.spyOn(logger, 'debug').mockImplementation(() => {});
-  vi.spyOn(logger, 'warn').mockImplementation(() => {});
+  spyOn(logger, 'info').mockImplementation(() => {});
+  spyOn(logger, 'error').mockImplementation(() => {});
+  spyOn(logger, 'debug').mockImplementation(() => {});
+  spyOn(logger, 'warn').mockImplementation(() => {});
 });
 
 afterAll(() => {
-  vi.restoreAllMocks();
+  mock.restore();
 });
 
 describe('BrowserSession', () => {
@@ -85,11 +95,11 @@ describe('StagehandService', () => {
 
   beforeEach(() => {
     // Reset mocks
-    vi.clearAllMocks();
+    mock.restore();
 
     // Create mock runtime
     mockRuntime = {
-      getService: vi.fn(),
+      getService: mock(),
       character: {
         name: 'Test Agent',
       },

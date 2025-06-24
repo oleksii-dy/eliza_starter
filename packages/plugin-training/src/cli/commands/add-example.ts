@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import { type Command } from 'commander';
 import { elizaLogger } from '@elizaos/core';
 import { DatasetBuilder } from '../../lib/dataset-builder.js';
 
@@ -10,7 +10,11 @@ export function addExampleCommand(program: Command) {
     .option('-s, --response <text>', 'Assistant response')
     .option('-t, --thinking <text>', 'Thinking process (optional)')
     .option('-q, --quality <number>', 'Quality score (0-1)', '0.8')
-    .option('-d, --data-dir <path>', 'Data directory', process.env.TRAINING_DATA_DIR || './training-data')
+    .option(
+      '-d, --data-dir <path>',
+      'Data directory',
+      process.env.TRAINING_DATA_DIR || './training-data'
+    )
     .action(async (options) => {
       try {
         if (!options.request || !options.response) {
@@ -35,13 +39,16 @@ export function addExampleCommand(program: Command) {
         });
 
         elizaLogger.info(`✅ Added training example: ${id}`);
-        
+
         const stats = builder.getStats();
         elizaLogger.info(`📊 Total examples: ${stats.totalExamples}`);
         elizaLogger.info(`📊 Average quality: ${stats.averageQuality.toFixed(2)}`);
         elizaLogger.info(`📊 Estimated tokens: ${stats.tokenCount.toLocaleString()}`);
       } catch (error) {
-        elizaLogger.error('❌ Error adding example:', error instanceof Error ? error.message : String(error));
+        elizaLogger.error(
+          '❌ Error adding example:',
+          error instanceof Error ? error.message : String(error)
+        );
         process.exit(1);
       }
     });

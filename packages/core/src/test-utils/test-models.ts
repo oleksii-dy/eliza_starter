@@ -1,11 +1,4 @@
-import type {
-  IAgentRuntime,
-  ModelType,
-  TextGenerationParams,
-  TextEmbeddingParams,
-  ModelParamsMap,
-  ModelResultMap,
-} from '../types';
+import type { IAgentRuntime, TextGenerationParams, TextEmbeddingParams } from '../types';
 import { logger } from '../logger';
 
 /**
@@ -20,7 +13,7 @@ export class TestModelProvider {
 
   constructor(
     defaultResponse: string = 'I understand and will help with that.',
-    options: {
+    _options: {
       enableContextMemory?: boolean;
       maxContextHistory?: number;
     } = {}
@@ -175,7 +168,9 @@ export class TestModelProvider {
       this.addToHistory(prompt, intelligentResponse);
       return intelligentResponse;
     } catch (error) {
-      logger.warn(`Error in test model provider: ${error instanceof Error ? error.message : String(error)}`);
+      logger.warn(
+        `Error in test model provider: ${error instanceof Error ? error.message : String(error)}`
+      );
       return this.defaultResponse;
     }
   }

@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, mock  } from 'bun:test';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { EntityGraph } from '../ui/entity-graph';
@@ -22,7 +22,7 @@ describe('EntityGraph', () => {
         metadata: {},
       },
       {
-        id: stringToUuid('entity-2'), 
+        id: stringToUuid('entity-2'),
         agentId: stringToUuid('agent-1'),
         names: ['Bob'],
         metadata: {},
@@ -41,7 +41,7 @@ describe('EntityGraph', () => {
     ];
 
     const { getByTestId } = render(
-      <EntityGraph 
+      <EntityGraph
         entities={mockEntities}
         relationships={mockRelationships}
       />

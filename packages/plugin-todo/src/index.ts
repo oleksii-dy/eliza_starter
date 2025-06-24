@@ -1,5 +1,4 @@
 import type { Plugin } from '@elizaos/core';
-import { type IAgentRuntime, logger } from '@elizaos/core';
 
 import { routes } from './apis.js';
 
@@ -19,6 +18,8 @@ import { TodoIntegrationBridge } from './services/integrationBridge.js';
 
 // Import schema
 import { todoSchema } from './schema.js';
+
+// Import table schemas for registration
 
 // Import tests
 import { TodoPluginE2ETestSuite } from './tests.js';
@@ -45,41 +46,6 @@ export const TodoPlugin: Plugin = {
   routes,
   schema: todoSchema,
   tests: [TodoPluginE2ETestSuite],
-
-  async init(config: Record<string, string>, runtime: IAgentRuntime): Promise<void> {
-    try {
-      // Database migrations are handled by the SQL plugin
-      if (runtime.db) {
-        logger.info('Database available, TodoPlugin ready for operation');
-
-        // Create todo tables using direct SQL for now
-        // In the future, the SQL plugin will handle this automatically from the schema property
-        try {
-          const { createTodoTables } = await import('./migrations');
-          await createTodoTables(runtime.db);
-          logger.info('Todo plugin tables initialized');
-        } catch (error) {
-          logger.error('Error creating todo plugin tables:', error);
-          // Don't throw - continue with limited functionality
-        }
-      } else {
-        logger.warn('No database instance available, operations will be limited');
-      }
-
-      // Check for rolodex plugin availability
-      const messageDeliveryService = runtime.getService('MESSAGE_DELIVERY' as any);
-      if (messageDeliveryService) {
-        logger.info('Rolodex message delivery service available - external notifications enabled');
-      } else {
-        logger.warn('Rolodex not available - only in-app notifications will work');
-      }
-
-      logger.info('TodoPlugin initialized with reminder and integration capabilities');
-    } catch (error) {
-      logger.error('Error initializing TodoPlugin:', error);
-      throw error;
-    }
-  },
 };
 
 export default TodoPlugin;

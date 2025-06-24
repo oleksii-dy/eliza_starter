@@ -30,15 +30,15 @@ export class TrustActionsE2ETests implements TestSuite {
         let responseReceived = false;
         const callback = async (content: any) => {
           responseReceived = true;
-          
+
           if (!content.text) {
             throw new Error('No text in response');
           }
-          
+
           if (!content.text.includes('trust')) {
             throw new Error('Response does not mention trust');
           }
-          
+
           console.log('✅ Trust evaluation response:', content.text);
           return [];
         };
@@ -87,11 +87,11 @@ export class TrustActionsE2ETests implements TestSuite {
         let responseReceived = false;
         const callback = async (content: any) => {
           responseReceived = true;
-          
+
           if (!content.text) {
             throw new Error('No text in response');
           }
-          
+
           console.log('✅ Trust interaction recorded:', content.text);
           return [];
         };
@@ -137,16 +137,16 @@ export class TrustActionsE2ETests implements TestSuite {
         let responseReceived = false;
         const callback = async (content: any) => {
           responseReceived = true;
-          
+
           if (!content.text) {
             throw new Error('No text in response');
           }
-          
+
           // Should either grant or deny based on trust
           if (!content.text.includes('permission') && !content.text.includes('trust')) {
             throw new Error('Response does not mention permissions or trust');
           }
-          
+
           console.log('✅ Elevation request handled:', content.text);
           return [];
         };
@@ -169,7 +169,7 @@ export class TrustActionsE2ETests implements TestSuite {
 
         // Create low-trust entity
         const lowTrustEntity = `low-trust-${Date.now()}` as UUID;
-        
+
         // Create message from low-trust entity
         const message: Memory = {
           id: `msg-${Date.now()}` as UUID,
@@ -196,4 +196,4 @@ export class TrustActionsE2ETests implements TestSuite {
   ];
 }
 
-export const trustActionsE2ETests = new TrustActionsE2ETests(); 
+export const trustActionsE2ETests = new TrustActionsE2ETests();

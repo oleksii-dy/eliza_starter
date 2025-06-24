@@ -1,4 +1,5 @@
-import { System } from '../hyperfy/core/systems/System';
+import { System } from '@elizaos/hyperfy';
+import type { HyperfyWorld } from '../types/hyperfy.js';
 import { spawn } from 'node:child_process';
 
 export interface LiveKitInitOptions {
@@ -97,7 +98,9 @@ export class AgentLiveKit extends System {
 
       ff.stderr.on('data', () => {}); // ignore logs
       ff.on('close', (code) => {
-        if (code !== 0) return reject(new Error(`ffmpeg failed (code ${code})`));
+        if (code !== 0) {
+          return reject(new Error(`ffmpeg failed (code ${code})`));
+        }
         const samples = new Int16Array(raw.buffer, raw.byteOffset, raw.byteLength / 2);
         resolve(samples);
       });
@@ -109,8 +112,12 @@ export class AgentLiveKit extends System {
 
   private detectAudioFormat(buffer: Buffer): 'mp3' | 'wav' | 'pcm' {
     const header = buffer.slice(0, 4).toString('ascii');
-    if (header === 'RIFF') return 'wav';
-    if (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) return 'mp3';
+    if (header === 'RIFF') {
+      return 'wav';
+    }
+    if (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) {
+      return 'mp3';
+    }
     return 'pcm';
   }
 }

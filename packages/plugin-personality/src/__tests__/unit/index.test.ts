@@ -35,7 +35,7 @@ describe('Self Modification Plugin', () => {
 
   it('should contain MODIFY_CHARACTER action', () => {
     const modifyAction = selfModificationPlugin.actions?.find(
-      action => action.name === 'MODIFY_CHARACTER'
+      (action) => action.name === 'MODIFY_CHARACTER'
     );
     expect(modifyAction).toBeDefined();
     expect(modifyAction?.description).toBeDefined();
@@ -45,7 +45,7 @@ describe('Self Modification Plugin', () => {
 
   it('should contain RESTORE_CHARACTER action', () => {
     const restoreAction = selfModificationPlugin.actions?.find(
-      action => action.name === 'RESTORE_CHARACTER'
+      (action) => action.name === 'RESTORE_CHARACTER'
     );
     expect(restoreAction).toBeDefined();
     expect(restoreAction?.description).toBeDefined();
@@ -55,7 +55,7 @@ describe('Self Modification Plugin', () => {
 
   it('should contain CHARACTER_EVOLUTION evaluator', () => {
     const evaluator = selfModificationPlugin.evaluators?.find(
-      evaluatorItem => evaluatorItem.name === 'CHARACTER_EVOLUTION'
+      (evaluatorItem) => evaluatorItem.name === 'CHARACTER_EVOLUTION'
     );
     expect(evaluator).toBeDefined();
     expect(evaluator?.description).toBeDefined();
@@ -65,7 +65,7 @@ describe('Self Modification Plugin', () => {
 
   it('should contain CHARACTER_EVOLUTION provider', () => {
     const provider = selfModificationPlugin.providers?.find(
-      prov => prov.name === 'CHARACTER_EVOLUTION'
+      (prov) => prov.name === 'CHARACTER_EVOLUTION'
     );
     expect(provider).toBeDefined();
     expect(provider?.description).toBeDefined();
@@ -74,7 +74,10 @@ describe('Self Modification Plugin', () => {
 
   it('should contain character-file-manager service', () => {
     const service = selfModificationPlugin.services?.find(
-      svc => svc === CharacterFileManager || svc.serviceName === 'character-file-manager' || svc.name === 'character-file-manager'
+      (svc) =>
+        svc === CharacterFileManager ||
+        svc.serviceName === 'character-file-manager' ||
+        svc.name === 'character-file-manager'
     );
     expect(service).toBeDefined();
   });
@@ -83,4 +86,4 @@ describe('Self Modification Plugin', () => {
     expect(selfModificationPlugin.name).toBe('@elizaos/plugin-personality');
     expect(selfModificationPlugin.description).toContain('self-modification');
   });
-}); 
+});

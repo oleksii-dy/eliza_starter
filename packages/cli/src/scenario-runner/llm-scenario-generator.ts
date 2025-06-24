@@ -384,7 +384,7 @@ Make the scenario realistic, challenging, and thoroughly test the capabilities d
               rule.config!.category = value;
               break;
             case 'weight':
-              rule.weight = parseInt(value) || 1;
+              rule.weight = parseInt(value, 10) || 1;
               break;
           }
         }

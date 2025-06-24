@@ -13,36 +13,36 @@ const rootDir = path.join(__dirname, '..');
 
 async function build() {
   console.log('Building Vision Plugin...\n');
-  
+
   try {
     // Clean dist directory
     console.log('1. Cleaning dist directory...');
     const distPath = path.join(rootDir, 'dist');
     await fs.rm(distPath, { recursive: true, force: true });
     await fs.mkdir(distPath, { recursive: true });
-    
+
     // Compile TypeScript
     console.log('2. Compiling TypeScript...');
     const { stdout, stderr } = await execAsync('npx tsc --project tsconfig.build.json', {
       cwd: rootDir
     });
-    
+
     if (stderr) {
       console.error('TypeScript compilation warnings:', stderr);
     }
-    
+
     // Copy non-TS files
     console.log('3. Copying assets...');
     const modelsPath = path.join(rootDir, 'models');
     const distModelsPath = path.join(distPath, 'models');
-    
+
     try {
       await fs.cp(modelsPath, distModelsPath, { recursive: true });
       console.log('   ✓ Copied models directory');
     } catch (err) {
       console.log('   ℹ Models directory not found, skipping');
     }
-    
+
     // Create package.json for dist
     console.log('4. Creating dist package.json...');
     const pkgJson = JSON.parse(await fs.readFile(path.join(rootDir, 'package.json'), 'utf-8'));
@@ -59,10 +59,10 @@ async function build() {
       path.join(distPath, 'package.json'),
       JSON.stringify(distPkgJson, null, 2)
     );
-    
+
     console.log('\n✅ Build complete!');
     console.log(`   Output: ${distPath}`);
-    
+
   } catch (error) {
     console.error('\n❌ Build failed:', error.message);
     process.exit(1);
@@ -70,4 +70,4 @@ async function build() {
 }
 
 // Run build
-build().catch(console.error); 
+build().catch(console.error);

@@ -178,28 +178,28 @@ export interface ExtractionConfig {
   // Repository settings
   repoPath: string;
   outputDir: string;
-  
+
   // Conversation filtering
   minMessages: number;
   maxGapHours: number;
   minConversationLength: number;
-  
+
   // User filtering
   minUserMessages: number;
   topUserCount: number;
   excludeBots: boolean;
   excludeSystemMessages: boolean;
-  
+
   // Content filtering
   minContentLength: number;
   maxContentLength: number;
   excludeUrls: boolean;
   excludeAttachmentOnly: boolean;
-  
+
   // Quality settings
   minQualityScore: number;
   requireMultipleSpeakers: boolean;
-  
+
   // Privacy settings
   anonymizeUsers: boolean;
   excludeSensitiveChannels: string[];
@@ -210,18 +210,18 @@ export interface GenerationConfig {
   examplesPerUser: number;
   contextWindow: number;
   maxExamples: number;
-  
+
   // Template settings
   includeSystemPrompt: boolean;
   personalityInSystem: boolean;
   includeChannelContext: boolean;
   includeTimeContext: boolean;
-  
+
   // Quality control
   minQualityScore: number;
   balanceUserExamples: boolean;
   diversifyContexts: boolean;
-  
+
   // Output settings
   outputFormat: 'jsonl' | 'json';
   splitRatio: [number, number, number]; // train, validation, test

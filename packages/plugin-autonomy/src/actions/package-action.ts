@@ -1,5 +1,6 @@
 import {
   type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
@@ -11,7 +12,7 @@ import {
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as path from 'node:path';
 
 const execAsync = promisify(exec);
 
@@ -22,7 +23,8 @@ const execAsync = promisify(exec);
 export const packageManagementAction: Action = {
   name: 'PACKAGE_MANAGEMENT',
   similes: ['NPM_INSTALL', 'BUN_ADD', 'PACKAGE_UPDATE', 'INSTALL_DEPS'],
-  description: 'Manages npm/bun packages - install, update, add, remove',
+  description:
+    'Manages npm/bun packages - install, update, add, remove. Can be chained with build commands to verify installation or with analysis actions to examine package dependencies',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
@@ -42,8 +44,19 @@ export const packageManagementAction: Action = {
     state?: State,
     options?: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
-    if (!callback) return;
+  ): Promise<ActionResult> => {
+    if (!callback) {
+      return {
+        data: {
+          actionName: 'PACKAGE_MANAGEMENT',
+          error: 'No callback provided',
+        },
+        values: {
+          success: false,
+          error: 'No callback provided',
+        },
+      };
+    }
 
     try {
       const text = message.content.text || '';
@@ -256,6 +269,24 @@ ${output.trim()}
           success: true,
         },
       });
+
+      return {
+        data: {
+          actionName: 'PACKAGE_MANAGEMENT',
+          operation,
+          packageManager,
+          packages,
+          command,
+          output,
+          executedAt: new Date().toISOString(),
+        },
+        values: {
+          success: true,
+          packageOperation: operation,
+          manager: packageManager,
+          packageCount: packages.length,
+        },
+      };
     } catch (error) {
       logger.error('Error in packageManagement handler:', error);
       await callback({
@@ -263,6 +294,17 @@ ${output.trim()}
         actions: ['PACKAGE_MANAGEMENT_ERROR'],
         source: message.content.source,
       });
+
+      return {
+        data: {
+          actionName: 'PACKAGE_MANAGEMENT',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
     }
   },
 
@@ -279,6 +321,36 @@ ${output.trim()}
         content: {
           text: 'Package operation completed using npm:\n\nCommand: `npm install express cors`\n\nOutput:\n```\nadded 64 packages in 2.3s\n```',
           actions: ['PACKAGE_MANAGEMENT'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Install dependencies and then run the build command',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll install all the project dependencies first and then run the build command to ensure everything compiles correctly.",
+          actions: ['PACKAGE_MANAGEMENT', 'EXECUTE_COMMAND'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Update all packages and analyze the dependency tree',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll update all packages to their latest versions and then analyze the dependency tree to check for any conflicts.",
+          actions: ['PACKAGE_MANAGEMENT', 'ANALYZE_DATA'],
         },
       },
     ],

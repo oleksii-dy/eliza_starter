@@ -41,21 +41,21 @@ const paymentRequestScenario: Scenario = {
   ],
   actions: ['CREATE_PAYMENT_REQUEST'],
   evaluator: (response: string) => {
-    const hasRequestIntent = 
+    const hasRequestIntent =
       response.toLowerCase().includes('request') ||
       response.toLowerCase().includes('invoice') ||
       response.toLowerCase().includes('split');
-    
-    const hasPaymentInfo = 
+
+    const hasPaymentInfo =
       response.toLowerCase().includes('payment') ||
       response.toLowerCase().includes('approval') ||
       response.toLowerCase().includes('notification');
-    
+
     const hasAmount = /\d+(\.\d+)?\s*(ETH|USDC|SOL|MATIC)/i.test(response);
-    
+
     return hasRequestIntent && hasPaymentInfo && hasAmount;
   },
   tags: ['payment', 'request', 'invoice', 'split', 'bill'],
 };
 
-export default paymentRequestScenario; 
+export default paymentRequestScenario;

@@ -12,7 +12,7 @@ export { secretsManagementScenario } from './secrets-management';
 // Export as array for easy iteration
 export const rolodexScenarios = [
   'entity-introduction',
-  'relationship-building', 
+  'relationship-building',
   'trust-evolution',
   'complex-network',
   'follow-up-management',
@@ -57,4 +57,4 @@ export const scenarioMetadata = {
     agents: 1,
     duration: 30000,
   },
-}; 
+};

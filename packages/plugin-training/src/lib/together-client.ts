@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
-import { TogetherAIConfig, TogetherAIJob } from '../simple-types.js';
+import { type TogetherAIConfig, type TogetherAIJob } from '../simple-types.js';
 import type { UsageMetrics } from '../interfaces/CustomReasoningService.js';
 import { elizaLogger } from '@elizaos/core';
 
@@ -76,7 +76,7 @@ export class TogetherAIClient {
       const response = await fetch(`${this.baseUrl}/files`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           ...formData.getHeaders(),
         },
         body: formData,
@@ -88,15 +88,17 @@ export class TogetherAIClient {
           status: response.status,
           statusText: response.statusText,
           headers: Object.fromEntries(response.headers.entries()),
-          body: errorText
+          body: errorText,
         });
         throw new Error(`Upload failed: ${response.status} ${errorText}`);
       }
 
-      const result = await response.json() as any;
+      const result = (await response.json()) as any;
       return result.id;
     } catch (error) {
-      throw new Error(`Failed to upload dataset: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to upload dataset: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -117,7 +119,7 @@ export class TogetherAIClient {
       const response = await fetch(`${this.baseUrl}/fine-tunes`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(jobConfig),
@@ -128,8 +130,8 @@ export class TogetherAIClient {
         throw new Error(`Fine-tuning failed: ${response.status} ${errorText}`);
       }
 
-      const result = await response.json() as any;
-      
+      const result = (await response.json()) as any;
+
       return {
         id: result.id,
         status: result.status,
@@ -138,7 +140,9 @@ export class TogetherAIClient {
         createdAt: new Date(result.created_at * 1000),
       };
     } catch (error) {
-      throw new Error(`Failed to start fine-tuning: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to start fine-tuning: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -150,7 +154,7 @@ export class TogetherAIClient {
       const response = await fetch(`${this.baseUrl}/fine-tunes/${jobId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
       });
@@ -160,8 +164,8 @@ export class TogetherAIClient {
         throw new Error(`Status check failed: ${response.status} ${errorText}`);
       }
 
-      const result = await response.json() as any;
-      
+      const result = (await response.json()) as any;
+
       return {
         id: result.id,
         status: result.status,
@@ -172,7 +176,9 @@ export class TogetherAIClient {
         error: result.error,
       };
     } catch (error) {
-      throw new Error(`Failed to get job status: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get job status: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -184,12 +190,12 @@ export class TogetherAIClient {
       const response = await fetch(`${this.baseUrl}/completions`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           model: modelName,
-          prompt: prompt,
+          prompt,
           max_tokens: maxTokens,
           temperature: 0.7,
         }),
@@ -200,10 +206,12 @@ export class TogetherAIClient {
         throw new Error(`Inference failed: ${response.status} ${errorText}`);
       }
 
-      const result = await response.json() as any;
+      const result = (await response.json()) as any;
       return result.choices[0].text;
     } catch (error) {
-      throw new Error(`Failed to test inference: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to test inference: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -215,7 +223,7 @@ export class TogetherAIClient {
       const response = await fetch(`${this.baseUrl}/models`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
       });
@@ -225,22 +233,24 @@ export class TogetherAIClient {
         throw new Error(`Failed to get models: ${response.status} ${errorText}`);
       }
 
-      const result = await response.json() as any;
-      
+      const result = (await response.json()) as any;
+
       // Handle different response formats
       const models = result.data || result || [];
-      
+
       if (!Array.isArray(models)) {
         elizaLogger.warn('API response format unexpected:', result);
         return [];
       }
-      
+
       return models
         .filter((model: any) => model?.fine_tuning_available !== false)
         .map((model: any) => model?.id || model?.name || String(model))
         .filter(Boolean);
     } catch (error) {
-      throw new Error(`Failed to get models: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get models: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -251,7 +261,7 @@ export class TogetherAIClient {
     const response = await fetch(`${this.baseUrl}/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -270,7 +280,7 @@ export class TogetherAIClient {
       throw new Error(`Together.ai API error (${response.status}): ${errorText}`);
     }
 
-    const result = await response.json() as TogetherAIResponse;
+    const result = (await response.json()) as TogetherAIResponse;
     return result;
   }
 
@@ -281,7 +291,7 @@ export class TogetherAIClient {
     const response = await fetch(`${this.baseUrl}/models/${encodeURIComponent(modelName)}/deploy`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
     });
@@ -291,7 +301,7 @@ export class TogetherAIClient {
       throw new Error(`Failed to deploy model ${modelName}: ${errorText}`);
     }
 
-    return await response.json() as ModelDeployment;
+    return (await response.json()) as ModelDeployment;
   }
 
   /**
@@ -301,7 +311,7 @@ export class TogetherAIClient {
     const response = await fetch(`${this.baseUrl}/deployments/${deploymentId}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
       },
     });
 
@@ -317,7 +327,7 @@ export class TogetherAIClient {
   async getDeployment(deploymentId: string): Promise<ModelDeployment> {
     const response = await fetch(`${this.baseUrl}/deployments/${deploymentId}`, {
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
       },
     });
 
@@ -326,7 +336,7 @@ export class TogetherAIClient {
       throw new Error(`Failed to get deployment ${deploymentId}: ${errorText}`);
     }
 
-    return await response.json() as ModelDeployment;
+    return (await response.json()) as ModelDeployment;
   }
 
   /**
@@ -335,7 +345,7 @@ export class TogetherAIClient {
   async listDeployments(): Promise<ModelDeployment[]> {
     const response = await fetch(`${this.baseUrl}/deployments`, {
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
       },
     });
 
@@ -344,7 +354,7 @@ export class TogetherAIClient {
       throw new Error(`Failed to list deployments: ${errorText}`);
     }
 
-    const result = await response.json() as any;
+    const result = (await response.json()) as any;
     return result.data || [];
   }
 
@@ -355,22 +365,28 @@ export class TogetherAIClient {
     // Note: This might need to be adjusted based on Together.ai's actual usage API
     const response = await fetch(`${this.baseUrl}/deployments/${deploymentId}/usage`, {
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
       },
     });
 
     if (!response.ok) {
       // If usage endpoint doesn't exist, try alternative endpoints or fail gracefully
       if (response.status === 404) {
-        throw new Error(`Usage metrics endpoint not found for deployment ${deploymentId}. This feature may not be available for this model.`);
+        throw new Error(
+          `Usage metrics endpoint not found for deployment ${deploymentId}. This feature may not be available for this model.`
+        );
       } else if (response.status === 403) {
-        throw new Error(`Access denied to usage metrics for deployment ${deploymentId}. Check API key permissions.`);
+        throw new Error(
+          `Access denied to usage metrics for deployment ${deploymentId}. Check API key permissions.`
+        );
       } else {
-        throw new Error(`Failed to fetch usage metrics for deployment ${deploymentId}: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch usage metrics for deployment ${deploymentId}: ${response.status} ${response.statusText}`
+        );
       }
     }
 
-    const result = await response.json() as any;
+    const result = (await response.json()) as any;
     return {
       deploymentId,
       hoursActive: result.hours_active || 1,
@@ -388,7 +404,7 @@ export class TogetherAIClient {
     try {
       const response = await fetch(`${this.baseUrl}/models`, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
         },
       });
       return response.ok;
@@ -402,7 +418,7 @@ export class TogetherAIClient {
    */
   async testModel(modelName: string): Promise<{ available: boolean; responseTimeMs: number }> {
     const startTime = Date.now();
-    
+
     try {
       await this.complete({
         model: modelName,
@@ -410,7 +426,7 @@ export class TogetherAIClient {
         max_tokens: 1,
         temperature: 0,
       });
-      
+
       const responseTimeMs = Date.now() - startTime;
       return { available: true, responseTimeMs };
     } catch (error) {

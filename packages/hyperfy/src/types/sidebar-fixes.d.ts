@@ -30,4 +30,4 @@ declare module './Fields' {
     value: any;
     onChange: (value: string) => void;
   }
-} 
+}

@@ -29,11 +29,11 @@ export async function cloneRepository(
     // Special handling for likely branch errors
     if (error instanceof Error && error.message.includes('exit code 128')) {
       console.error(`\n[X] Branch '${branch}' doesn't exist in the ElizaOS repository.`);
-      console.error(`Please specify a valid branch name. Common branches include:`);
-      console.error(`  • main - The main branch`);
-      console.error(`  • develop - The development branch (default)`);
+      console.error('Please specify a valid branch name. Common branches include:');
+      console.error('  • main - The main branch');
+      console.error('  • develop - The development branch (default)');
       console.error(
-        `\nFor a complete list of branches, visit: https://github.com/elizaOS/eliza/branches`
+        '\nFor a complete list of branches, visit: https://github.com/elizaOS/eliza/branches'
       );
       throw new Error(`Branch '${branch}' not found`);
     }
@@ -77,6 +77,4 @@ export async function cloneMonorepo(cloneInfo: CloneInfo): Promise<void> {
 
   // Clone the repository
   await cloneRepository(repo, branch, destinationDir);
-
-  return;
 }

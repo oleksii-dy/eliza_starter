@@ -57,7 +57,7 @@ export interface TestGenerationOptions {
   includeFuzzTests: boolean;
   includeAccessibilityTests: boolean;
   includeSecurityTests: boolean;
-  testFramework: 'jest' | 'mocha' | 'vitest';
+  testFramework: 'jest' | 'mocha' | 'bun:test';
   assertionLibrary: 'jest' | 'chai' | 'node:assert';
   mockingLibrary?: 'jest' | 'sinon' | 'testdouble';
 }

@@ -149,13 +149,13 @@ The plugin includes comprehensive error handling:
 
 ```bash
 # Build the plugin
-npm run build
+bun run build
 
 # Run tests
-npm test
+bun test
 
 # Type checking
-npm run type-check
+bun run type-check
 ```
 
 ## API Reference

@@ -34,17 +34,17 @@ const paymentInsufficientFundsScenario: Scenario = {
 
   // Add evaluator function for test compatibility
   evaluator: (response: string) => {
-    const hasInsufficientFunds = 
+    const hasInsufficientFunds =
       response.toLowerCase().includes('insufficient') ||
       response.toLowerCase().includes('not enough') ||
       response.toLowerCase().includes('need more') ||
       response.toLowerCase().includes('balance');
-    
-    const hasAmount = 
+
+    const hasAmount =
       response.toLowerCase().includes('usdc') ||
       response.toLowerCase().includes('funds') ||
       /\d+/.test(response);
-    
+
     return hasInsufficientFunds || hasAmount;
   },
 

@@ -8,7 +8,9 @@ export class OCRService {
   private useFallback = false;
 
   async initialize(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {
+      return;
+    }
 
     try {
       logger.info('[OCR] Initializing OCR service...');
@@ -30,7 +32,7 @@ export class OCRService {
     }
   }
 
-  async extractText(imageBuffer: Buffer): Promise<OCRResult> {
+  async extractText(_imageBuffer: Buffer): Promise<OCRResult> {
     if (!this.initialized) {
       await this.initialize();
     }
@@ -38,7 +40,7 @@ export class OCRService {
     // Use real OCR if available
     if (this.realOCR && !this.useFallback) {
       try {
-        return await this.realOCR.extractText(imageBuffer);
+        return await this.realOCR.extractText(_imageBuffer);
       } catch (error) {
         logger.error('[OCR] Real OCR failed, falling back:', error);
         this.useFallback = true;
@@ -46,7 +48,7 @@ export class OCRService {
     }
 
     // Fallback implementation
-    return this.fallbackOCR(imageBuffer);
+    return this.fallbackOCR(_imageBuffer);
   }
 
   async extractFromTile(tile: ScreenTile): Promise<OCRResult> {
@@ -61,11 +63,11 @@ export class OCRService {
     return this.extractText(tile.data);
   }
 
-  async extractFromImage(imageBuffer: Buffer): Promise<OCRResult> {
-    return this.extractText(imageBuffer);
+  async extractFromImage(_imageBuffer: Buffer): Promise<OCRResult> {
+    return this.extractText(_imageBuffer);
   }
 
-  private async fallbackOCR(imageBuffer: Buffer): Promise<OCRResult> {
+  private async fallbackOCR(_imageBuffer: Buffer): Promise<OCRResult> {
     // Fallback implementation for when Tesseract is not available
     logger.debug('[OCR] Using fallback OCR implementation');
 
@@ -104,14 +106,14 @@ export class OCRService {
     };
   }
 
-  async extractStructuredData(imageBuffer: Buffer): Promise<{
+  async extractStructuredData(_imageBuffer: Buffer): Promise<{
     tables?: Array<{ rows: string[][]; bbox: BoundingBox }>;
     forms?: Array<{ label: string; value: string; bbox: BoundingBox }>;
     lists?: Array<{ items: string[]; bbox: BoundingBox }>;
   }> {
     if (this.realOCR && !this.useFallback) {
       try {
-        return await this.realOCR.extractStructuredData(imageBuffer);
+        return await this.realOCR.extractStructuredData(_imageBuffer);
       } catch (error) {
         logger.error('[OCR] Structured data extraction failed:', error);
       }

@@ -1,179 +1,233 @@
-import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { buildProject } from '../../../src/utils/build-project';
-import { logger } from '@elizaos/core';
-import * as fs from 'node:fs';
 
-// Mock dependencies
+// Mock dependencies with proper typing
+const mockLogger = {
+  info: mock(),
+  success: mock(),
+  error: mock(),
+  warn: mock(),
+  debug: mock(),
+};
+
+const mockExeca = mock();
+const mockRunBunCommand = mock();
+const mockExistsSync = mock();
+const mockReadFileSync = mock();
+const mockRm = mock();
+const mockDetectDirectoryType = mock();
+
+// Set up module mocks
 mock.module('@elizaos/core', () => ({
-  logger: {
-    info: mock(() => {}),
-    success: mock(() => {}),
-    error: mock(() => {}),
-    warn: mock(() => {}),
-    debug: mock(() => {}),
-  },
+  logger: mockLogger,
 }));
 
 mock.module('execa', () => ({
-  execa: mock(() => {}),
+  execa: mockExeca,
 }));
 
 mock.module('../../../src/utils/run-bun', () => ({
-  runBunCommand: mock(() => {}),
+  runBunCommand: mockRunBunCommand,
 }));
 
 mock.module('node:fs', () => ({
-  existsSync: mock(() => true),
-  readFileSync: mock(() => '{}'),
+  existsSync: mockExistsSync,
+  readFileSync: mockReadFileSync,
   promises: {
-    rm: mock(() => {}),
+    rm: mockRm,
   },
 }));
 
 mock.module('../../../src/utils/directory-detection', () => ({
-  detectDirectoryType: mock(() => ({ monorepoRoot: null })),
+  detectDirectoryType: mockDetectDirectoryType,
 }));
 
 // Import mocked modules
-import { runBunCommand } from '../../../src/utils/run-bun';
 
 describe('buildProject', () => {
+  const testProjectPath = '/test/project';
+  const testPluginPath = '/test/plugin';
+
   beforeEach(() => {
-    // Mock process.env to not be in test mode
-    delete process.env.ELIZA_TEST_MODE;
-  });
+    // Clear all mocks
+    mockLogger.info.mockReset();
+    mockLogger.success.mockReset();
+    mockLogger.error.mockReset();
+    mockLogger.warn.mockReset();
+    mockLogger.debug.mockReset();
+    mockExeca.mockReset();
+    mockRunBunCommand.mockReset();
+    mockExistsSync.mockReset();
+    mockReadFileSync.mockReset();
+    mockRm.mockReset();
+    mockDetectDirectoryType.mockReset();
 
-  it('should build project with bun when build script exists', async () => {
-    const mockExistsSync = fs.existsSync as any;
-    const mockReadFileSync = fs.readFileSync as any;
-    const mockRunBunCommand = runBunCommand as any;
-    
+    // Set up default successful mocks
     mockExistsSync.mockReturnValue(true);
-    mockReadFileSync.mockReturnValue(
-      JSON.stringify({
-        scripts: { build: 'tsc' },
-      })
-    );
-    mockRunBunCommand.mockResolvedValue(undefined);
-
-    await buildProject('/test/project');
-
-    expect(logger.info).toHaveBeenCalledWith('Building project in /test/project...');
-    expect(runBunCommand).toHaveBeenCalledWith(['run', 'build'], '/test/project');
-    expect(logger.info).toHaveBeenCalledWith('Build completed successfully');
-  });
-
-  it('should build plugin with bun when isPlugin is true', async () => {
-    const mockExistsSync = fs.existsSync as any;
-    const mockReadFileSync = fs.readFileSync as any;
-    const mockRunBunCommand = runBunCommand as any;
-    
-    mockExistsSync.mockReturnValue(true);
-    mockReadFileSync.mockReturnValue(
-      JSON.stringify({
-        scripts: { build: 'tsc' },
-      })
-    );
-    mockRunBunCommand.mockResolvedValue(undefined);
-
-    await buildProject('/test/plugin', true);
-
-    expect(logger.info).toHaveBeenCalledWith('Building plugin in /test/plugin...');
-    expect(runBunCommand).toHaveBeenCalledWith(['run', 'build'], '/test/plugin');
-    expect(logger.info).toHaveBeenCalledWith('Build completed successfully');
-  });
-
-  it('should skip build when no build script exists', async () => {
-    const mockExistsSync = fs.existsSync as any;
-    const mockReadFileSync = fs.readFileSync as any;
-    
-    mockExistsSync.mockImplementation((path: any) => {
-      const pathStr = path.toString();
-      if (pathStr === '/test/project') return true; // Project directory exists
-      if (pathStr.endsWith('package.json')) return true;
-      if (pathStr.endsWith('tsconfig.json')) return false;
-      if (pathStr.endsWith('dist')) return false;
-      return false;
+    mockDetectDirectoryType.mockReturnValue({
+      type: 'elizaos-project',
+      hasPackageJson: true,
+      hasElizaOSDependencies: true,
+      elizaPackageCount: 1,
     });
     mockReadFileSync.mockReturnValue(
       JSON.stringify({
-        scripts: {},
+        name: 'test-project',
+        scripts: {
+          build: 'bun run build',
+        },
+      })
+    );
+    mockRunBunCommand.mockResolvedValue(undefined);
+    mockRm.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    // Clean up any environment state
+  });
+
+  it('should log correct messages and call runBunCommand for project build', async () => {
+    await buildProject(testProjectPath);
+
+    // Verify logger calls
+    expect(mockLogger.info).toHaveBeenCalledWith(`Building project in ${testProjectPath}...`);
+    expect(mockLogger.info).toHaveBeenCalledWith('Build completed successfully');
+
+    // Verify runBunCommand was called with correct parameters
+    expect(mockRunBunCommand).toHaveBeenCalledWith(['run', 'build'], testProjectPath);
+  });
+
+  it('should log correct messages and call runBunCommand for plugin build', async () => {
+    await buildProject(testPluginPath, true);
+
+    // Verify plugin-specific logging
+    expect(mockLogger.info).toHaveBeenCalledWith(`Building plugin in ${testPluginPath}...`);
+    expect(mockLogger.info).toHaveBeenCalledWith('Build completed successfully');
+
+    // Verify runBunCommand was called for plugin
+    expect(mockRunBunCommand).toHaveBeenCalledWith(['run', 'build'], testPluginPath);
+  });
+
+  it('should clean dist directory before building', async () => {
+    // Mock dist directory exists
+    mockExistsSync.mockImplementation((path: string) => {
+      return String(path).includes('dist') || !String(path).includes('tsconfig.json');
+    });
+
+    await buildProject(testProjectPath);
+
+    // Verify dist cleanup was attempted
+    expect(mockRm).toHaveBeenCalledWith(expect.stringContaining('dist'), {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  it('should fallback to tsc when no build script exists', async () => {
+    // Mock package.json without build script
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        name: 'test-project',
+        // No scripts
       })
     );
 
-    await expect(buildProject('/test/project')).rejects.toThrow(
-      'Could not determine how to build the project'
-    );
+    // Mock tsconfig.json exists
+    mockExistsSync.mockImplementation((path: string) => {
+      const pathStr = String(path);
+      if (pathStr.includes('tsconfig.json')) {return true;}
+      return !pathStr.includes('dist');
+    });
 
-    expect(logger.warn).toHaveBeenCalledWith(
-      'No build script found in /test/project/package.json. Attempting common build commands.'
+    mockExeca.mockResolvedValue({ exitCode: 0 });
+
+    await buildProject(testProjectPath);
+
+    // Verify fallback to tsc
+    expect(mockExeca).toHaveBeenCalledWith(
+      'bunx',
+      ['tsc', '--build'],
+      expect.objectContaining({
+        cwd: testProjectPath,
+        stdio: 'inherit',
+      })
     );
   });
 
-  it('should handle build errors', async () => {
-    const mockError = new Error('Build failed');
-    const mockExistsSync = fs.existsSync as any;
-    const mockReadFileSync = fs.readFileSync as any;
-    const mockRunBunCommand = runBunCommand as any;
-    
-    mockExistsSync.mockReturnValue(true);
-    mockReadFileSync.mockReturnValue(
-      JSON.stringify({
-        scripts: { build: 'tsc' },
-      })
-    );
-    mockRunBunCommand.mockRejectedValue(mockError);
+  it('should throw error when directory does not exist', async () => {
+    mockExistsSync.mockReturnValue(false);
 
-    await expect(buildProject('/test/project')).rejects.toThrow(
+    await expect(buildProject(testProjectPath)).rejects.toThrow(
+      `Project directory ${testProjectPath} does not exist.`
+    );
+  });
+
+  it('should throw error when package.json does not exist', async () => {
+    mockDetectDirectoryType.mockReturnValue({
+      type: 'elizaos-project',
+      hasPackageJson: false,
+      hasElizaOSDependencies: true,
+      elizaPackageCount: 1,
+    });
+
+    await expect(buildProject(testProjectPath)).rejects.toThrow(
+      `Project directory ${testProjectPath} does not have package.json.`
+    );
+  });
+
+  it('should handle build errors and log them correctly', async () => {
+    const buildError = new Error('Build failed');
+    mockRunBunCommand.mockRejectedValue(buildError);
+
+    await expect(buildProject(testProjectPath)).rejects.toThrow(
       'Failed to build using bun: Error: Build failed'
     );
 
-    expect(logger.error).toHaveBeenCalledWith(
+    // Verify error logging
+    expect(mockLogger.error).toHaveBeenCalledWith(
       'Failed to build project: Error: Failed to build using bun: Error: Build failed'
     );
   });
 
-  it('should handle non-zero exit code', async () => {
-    const mockError = new Error('Command failed with exit code 1');
-    const mockExistsSync = fs.existsSync as any;
-    const mockReadFileSync = fs.readFileSync as any;
-    const mockRunBunCommand = runBunCommand as any;
-    
-    mockExistsSync.mockReturnValue(true);
+  it('should throw error when no build method can be determined', async () => {
+    // Mock package.json without build script
     mockReadFileSync.mockReturnValue(
       JSON.stringify({
-        scripts: { build: 'tsc' },
+        name: 'test-project',
       })
     );
-    mockRunBunCommand.mockRejectedValue(mockError);
 
-    await expect(buildProject('/test/project')).rejects.toThrow(
-      'Failed to build using bun: Error: Command failed with exit code 1'
+    // Mock no tsconfig.json
+    mockExistsSync.mockImplementation((path: string) => {
+      const pathStr = String(path);
+      return !pathStr.includes('tsconfig.json') && !pathStr.includes('dist');
+    });
+
+    await expect(buildProject(testProjectPath)).rejects.toThrow(
+      'Could not determine how to build the project'
     );
   });
 
-  it('should set NODE_ENV to production', async () => {
-    // This test is not applicable as the buildProject function doesn't set NODE_ENV anymore
-    // Skipping this test
-    expect(true).toBe(true);
-  });
-
-  it('should pass projectPath correctly', async () => {
-    const mockExistsSync = fs.existsSync as any;
-    const mockReadFileSync = fs.readFileSync as any;
-    const mockRunBunCommand = runBunCommand as any;
-    
-    mockExistsSync.mockReturnValue(true);
+  it('should warn when no build script is found', async () => {
+    // Mock package.json without build script
     mockReadFileSync.mockReturnValue(
       JSON.stringify({
-        scripts: { build: 'tsc' },
+        name: 'test-project',
       })
     );
-    mockRunBunCommand.mockResolvedValue(undefined);
 
-    const testPath = '/custom/project/path';
-    await buildProject(testPath);
+    // Mock tsconfig.json exists for fallback
+    mockExistsSync.mockImplementation((path: string) => {
+      const pathStr = String(path);
+      if (pathStr.includes('tsconfig.json')) {return true;}
+      return !pathStr.includes('dist');
+    });
 
-    expect(runBunCommand).toHaveBeenCalledWith(['run', 'build'], testPath);
+    mockExeca.mockResolvedValue({ exitCode: 0 });
+
+    await buildProject(testProjectPath);
+
+    // Verify warning was logged
+    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No build script found'));
   });
 });

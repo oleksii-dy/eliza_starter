@@ -446,10 +446,10 @@ export class ResultParser {
       },
     });
 
-    // Vitest parser
-    this.frameworkParsers.set('vitest', {
-      name: 'vitest',
-      jsonFormat: 'vitest',
+    // Bun test parser
+    this.frameworkParsers.set('bun:test', {
+      name: 'bun:test',
+      jsonFormat: 'bun:test',
       textPatterns: [/✓\s+(\d+)\s+passed/i, /✗\s+(\d+)\s+failed/i, /Test Files\s+(\d+)\s+passed/i],
       metadataExtractors: [
         (data) => ({
@@ -591,7 +591,7 @@ export class ResultParser {
           }
           break;
 
-        case 'vitest':
+        case 'bun:test':
           results.total = jsonData.numTotalTests || jsonData.testResults?.length || 0;
           results.passed = jsonData.numPassedTests || 0;
           results.failed = jsonData.numFailedTests || 0;
@@ -768,7 +768,7 @@ export class ResultParser {
         /\d+\)\s+(.+?)\n\s+(.+?)\n\s+(at .+?)$/gm,
         /Error:\s+(.+?)\n([\s\S]*?)(?=\n\s*\d+\)|$)/g,
       ],
-      vitest: [/❯ (.+?)\n(.+?)\n([\s\S]*?)(?=❯|$)/g, /FAIL (.+?)\n(.+?)\n([\s\S]*?)(?=\n\s*❯|$)/g],
+      'bun:test': [/❯ (.+?)\n(.+?)\n([\s\S]*?)(?=❯|$)/g, /FAIL (.+?)\n(.+?)\n([\s\S]*?)(?=\n\s*❯|$)/g],
       karma: [/(\w+) (.+?) FAILED\n(.+?)\n([\s\S]*?)(?=\n\w+|$)/g],
       tape: [/not ok \d+ (.+?)\n\s+(.+?)\n\s+(at .+?)$/gm],
       jasmine: [/(\d+)\)\s+(.+?)\n\s+Message:\n\s+(.+?)\n\s+Stack:\n([\s\S]*?)(?=\n\s*\d+\)|$)/g],
@@ -860,10 +860,10 @@ export class ResultParser {
     }
 
     // Data completeness check
-    if (results.total > 0) confidence += 20;
-    if (results.passed >= 0) confidence += 5;
-    if (results.failed >= 0) confidence += 5;
-    if (results.failures && results.failures.length > 0) confidence += 10;
+    if (results.total > 0) {confidence += 20;}
+    if (results.passed >= 0) {confidence += 5;}
+    if (results.failed >= 0) {confidence += 5;}
+    if (results.failures && results.failures.length > 0) {confidence += 10;}
 
     // Data consistency check
     const calculatedTotal = results.passed + results.failed + results.skipped;
@@ -892,12 +892,12 @@ export class ResultParser {
     let confidence = 0;
 
     // Base confidence for finding matches
-    if (matchFound) confidence += 50;
+    if (matchFound) {confidence += 50;}
 
     // Output quality assessment
-    if (output.length > 100) confidence += 10;
-    if (output.includes('passed') || output.includes('failed')) confidence += 15;
-    if (output.includes('Test') || output.includes('test')) confidence += 10;
+    if (output.length > 100) {confidence += 10;}
+    if (output.includes('passed') || output.includes('failed')) {confidence += 15;}
+    if (output.includes('Test') || output.includes('test')) {confidence += 10;}
 
     // Data consistency
     const total = results.passed + results.failed + results.skipped;
@@ -906,8 +906,8 @@ export class ResultParser {
     }
 
     // Reduce confidence for poor quality indicators
-    if (output.length < 50) confidence -= 20;
-    if (!output.includes('test') && !output.includes('Test')) confidence -= 15;
+    if (output.length < 50) {confidence -= 20;}
+    if (!output.includes('test') && !output.includes('Test')) {confidence -= 15;}
 
     return Math.min(100, Math.max(0, confidence)) / 100;
   }
@@ -919,7 +919,7 @@ export class ResultParser {
     const frameworkIndicators = {
       jest: ['jest', 'Tests:', 'Test Suites:', '● ', 'PASS ', 'FAIL '],
       mocha: ['mocha', '✓', '✗', 'passing', 'failing'],
-      vitest: ['vitest', '❯', 'Test Files', 'RERUN', 'BENCH'],
+      'bun:test': ['bun test', '❯', 'Test Files', 'RERUN', 'BENCH'],
       karma: ['karma', 'Executed', 'Chrome', 'Firefox', 'PhantomJS'],
       tape: ['TAP', 'ok ', 'not ok', '# pass', '# fail'],
       jasmine: ['jasmine', 'Specs:', 'expectations'],
@@ -948,7 +948,7 @@ export class ResultParser {
   private extractJsonFromText(output: string): any | null {
     // Look for JSON blocks in output
     const jsonMatches = output.match(/\{[\s\S]*\}/g);
-    if (!jsonMatches) return null;
+    if (!jsonMatches) {return null;}
 
     for (const match of jsonMatches) {
       try {
@@ -969,7 +969,7 @@ export class ResultParser {
    * Check if object looks like test results
    */
   private looksLikeTestResults(obj: any): boolean {
-    if (!obj || typeof obj !== 'object') return false;
+    if (!obj || typeof obj !== 'object') {return false;}
 
     const testProps = ['tests', 'passed', 'failed', 'total', 'numTotal', 'stats', 'testResults'];
     return testProps.some((prop) => prop in obj);
@@ -1121,8 +1121,8 @@ export class ResultParser {
    * Calculate overall validation score
    */
   private calculateValidationScore(results: TestResults): number {
-    if (results.noTestsFound) return 0;
-    if (results.total === 0) return 10;
+    if (results.noTestsFound) {return 0;}
+    if (results.total === 0) {return 10;}
 
     const passRate = results.total > 0 ? results.passed / results.total : 0;
     let score = 60 + passRate * 30;
@@ -1130,7 +1130,7 @@ export class ResultParser {
     // Bonus for having detailed failure information
     if (results.failures && results.failures.length > 0) {
       const hasStackTraces = results.failures.some((f) => f.stack_trace);
-      if (hasStackTraces) score += 5;
+      if (hasStackTraces) {score += 5;}
     }
 
     return Math.min(95, Math.max(0, score));
@@ -1145,7 +1145,7 @@ export class ResultParser {
     executionReliable?: boolean;
     parsingSuccessful?: boolean;
     validationScore?: number;
-  } {
+    } {
     return {
       total: 0,
       passed: 0,
@@ -1223,7 +1223,7 @@ export class ResultParser {
     );
 
     if (diagnostics.errors.length > 0) {
-      elizaLogger.warn(`[RESULT-PARSER] Parsing errors encountered:`, diagnostics.errors);
+      elizaLogger.warn('[RESULT-PARSER] Parsing errors encountered:', diagnostics.errors);
     }
 
     return result;

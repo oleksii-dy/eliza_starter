@@ -288,7 +288,7 @@ describe('emoji-handler', () => {
       initializeEmojiSupport();
 
       // The initial call from module load might have been made
-      const callCount = logger.debug.mock.calls.length;
+      const callCount = (logger.debug as any).mock.calls.length;
       expect(callCount).toBeLessThanOrEqual(1);
     });
   });

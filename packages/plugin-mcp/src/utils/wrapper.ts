@@ -1,4 +1,4 @@
-import { parseJSON } from "./json";
+import { parseJSON } from './json';
 
 import {
   type HandlerCallback,
@@ -7,8 +7,8 @@ import {
   type State,
   logger,
   ModelType,
-} from "@elizaos/core";
-import { DEFAULT_MAX_RETRIES, type ValidationResult } from "../types";
+} from '@elizaos/core';
+import { DEFAULT_MAX_RETRIES, type ValidationResult } from '../types';
 
 export type Input = string | object;
 
@@ -57,7 +57,7 @@ export async function withModelRetry<T>({
     logger.info(`[WITH-MODEL-RETRY] Raw selection input:\n${input}`);
 
     // If it's a first retry, input is a string, so we need to parse it
-    const parsedJson = typeof input === "string" ? parseJSON<string>(input) : input;
+    const parsedJson = typeof input === 'string' ? parseJSON<string>(input) : input;
     logger.debug(
       `[WITH-MODEL-RETRY] Parsed selection input:\n${JSON.stringify(parsedJson, null, 2)}`
     );
@@ -70,7 +70,7 @@ export async function withModelRetry<T>({
 
     return validationResult.data as T;
   } catch (parseError) {
-    const errorMessage = parseError instanceof Error ? parseError.message : "Unknown parsing error";
+    const errorMessage = parseError instanceof Error ? parseError.message : 'Unknown parsing error';
 
     logger.error(`[WITH-MODEL-RETRY] Failed to parse response: ${errorMessage}`);
 
@@ -81,7 +81,7 @@ export async function withModelRetry<T>({
         input,
         errorMessage,
         state,
-        message.content.text || ""
+        message.content.text || ''
       );
 
       const retrySelection: object = await runtime.useModel(ModelType.OBJECT_LARGE, {
@@ -105,8 +105,8 @@ export async function withModelRetry<T>({
       await callback({
         text: failureMsg,
         thought:
-          "Failed to parse response after multiple retries. Requesting clarification from user.",
-        actions: ["REPLY"],
+          'Failed to parse response after multiple retries. Requesting clarification from user.',
+        actions: ['REPLY'],
       });
     }
     return null;
@@ -120,8 +120,13 @@ export async function withModelRetry<T>({
  */
 function getMaxRetries(runtime: IAgentRuntime): number {
   try {
-    const settings = runtime.getSetting("mcp");
-    if (settings && typeof settings === 'object' && "maxRetries" in settings && (settings as any).maxRetries !== undefined) {
+    const settings = runtime.getSetting('mcp');
+    if (
+      settings &&
+      typeof settings === 'object' &&
+      'maxRetries' in settings &&
+      (settings as any).maxRetries !== undefined
+    ) {
       const configValue = Number((settings as any).maxRetries);
       if (!Number.isNaN(configValue) && configValue >= 0) {
         logger.debug(`[WITH-MODEL-RETRY] Using configured selection retries: ${configValue}`);
@@ -130,7 +135,7 @@ function getMaxRetries(runtime: IAgentRuntime): number {
     }
   } catch (error) {
     logger.debug(
-      "[WITH-MODEL-RETRY] Error reading selection retries config:",
+      '[WITH-MODEL-RETRY] Error reading selection retries config:',
       error instanceof Error ? error.message : String(error)
     );
   }

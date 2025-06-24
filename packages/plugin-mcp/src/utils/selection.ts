@@ -6,15 +6,15 @@ import {
   type State,
   composePromptFromState,
   logger,
-} from "@elizaos/core";
-import { withModelRetry } from "./wrapper";
-import type { McpProvider, McpProviderData } from "../types";
-import type { ToolSelectionName, ToolSelectionArgument } from "./schemas";
+} from '@elizaos/core';
+import { withModelRetry } from './wrapper';
+import type { McpProvider, McpProviderData } from '../types';
+import type { ToolSelectionName, ToolSelectionArgument } from './schemas';
 import {
   toolSelectionArgumentTemplate,
   toolSelectionNameTemplate,
-} from "../templates/toolSelectionTemplate";
-import { validateToolSelectionArgument, validateToolSelectionName } from "./validation";
+} from '../templates/toolSelectionTemplate';
+import { validateToolSelectionArgument, validateToolSelectionName } from './validation';
 
 export interface CreateToolSelectionOptions {
   runtime: IAgentRuntime;
@@ -90,7 +90,7 @@ export async function createToolSelectionArgument({
 }: CreateToolSelectionOptions): Promise<ToolSelectionArgument | null> {
   if (!toolSelectionName) {
     logger.warn(
-      "[SELECTION] Tool selection name is not provided. Cannot create tool selection argument."
+      '[SELECTION] Tool selection name is not provided. Cannot create tool selection argument.'
     );
     return null;
   }
@@ -137,24 +137,26 @@ function createToolSelectionFeedbackPrompt(
   state: State,
   userMessage: string
 ): string {
-  let toolsDescription = "";
+  let toolsDescription = '';
 
   for (const [serverName, server] of Object.entries(state.values.mcp || {}) as [
     string,
     McpProviderData[string],
   ][]) {
-    if (server.status !== "connected") continue;
+    if (server.status !== 'connected') {
+      continue;
+    }
 
     for (const [toolName, tool] of Object.entries(server.tools || {})) {
       toolsDescription += `Tool: ${toolName} (Server: ${serverName})\n`;
-      toolsDescription += `Description: ${tool.description || "No description available"}\n\n`;
+      toolsDescription += `Description: ${tool.description || 'No description available'}\n\n`;
     }
   }
 
   const feedbackPrompt = createFeedbackPrompt(
     originalResponse,
     errorMessage,
-    "tool",
+    'tool',
     toolsDescription,
     userMessage
   );

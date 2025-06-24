@@ -1,4 +1,14 @@
-import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import {
+  describe,
+  expect,
+  it,
+  mock,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  spyOn,
+} from 'bun:test';
 import { stagehandPlugin, StagehandService, BrowserSession } from '../index';
 import {
   createMockRuntime,
@@ -10,22 +20,22 @@ import { HandlerCallback, Memory, State, UUID, logger } from '@elizaos/core';
 import { Stagehand } from '@browserbasehq/stagehand';
 
 // Mock the Stagehand module
-vi.mock('@browserbasehq/stagehand', () => {
+mock.module('@browserbasehq/stagehand', () => {
   return {
-    Stagehand: vi.fn().mockImplementation(() => {
+    Stagehand: mock().mockImplementation(() => {
       const mockPage = {
-        goto: vi.fn().mockResolvedValue(undefined),
-        goBack: vi.fn().mockResolvedValue(undefined),
-        goForward: vi.fn().mockResolvedValue(undefined),
-        reload: vi.fn().mockResolvedValue(undefined),
-        waitForLoadState: vi.fn().mockResolvedValue(undefined),
-        title: vi.fn().mockResolvedValue('Test Page Title'),
-        url: vi.fn().mockReturnValue('https://example.com'),
+        goto: mock().mockResolvedValue(undefined),
+        goBack: mock().mockResolvedValue(undefined),
+        goForward: mock().mockResolvedValue(undefined),
+        reload: mock().mockResolvedValue(undefined),
+        waitForLoadState: mock().mockResolvedValue(undefined),
+        title: mock().mockResolvedValue('Test Page Title'),
+        url: mock().mockReturnValue('https://example.com'),
       };
 
       return {
-        init: vi.fn().mockResolvedValue(undefined),
-        close: vi.fn().mockResolvedValue(undefined),
+        init: mock().mockResolvedValue(undefined),
+        close: mock().mockResolvedValue(undefined),
         page: mockPage,
       };
     }),
@@ -38,7 +48,7 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  vi.restoreAllMocks();
+  mock.restore();
 });
 
 // Helper to get action by name
@@ -54,7 +64,7 @@ describe('BROWSER_NAVIGATE action', () => {
   let mockCallback: HandlerCallback;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     // Create mock service and session
     mockRuntime = createMockRuntime();
@@ -65,8 +75,8 @@ describe('BROWSER_NAVIGATE action', () => {
     mockSession = new BrowserSession('test-session', mockStagehand as any);
 
     // Mock service methods
-    vi.spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
-    vi.spyOn(mockService, 'createSession').mockResolvedValue(mockSession);
+    spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
+    spyOn(mockService, 'createSession').mockResolvedValue(mockSession);
 
     // Set up runtime to return our mock service
     mockRuntime.getService.mockReturnValue(mockService);
@@ -75,7 +85,7 @@ describe('BROWSER_NAVIGATE action', () => {
     navigateAction = getAction('BROWSER_NAVIGATE');
 
     // Create mock callback
-    mockCallback = vi.fn().mockResolvedValue([]);
+    mockCallback = mock().mockResolvedValue([]);
   });
 
   describe('validate', () => {
@@ -145,7 +155,7 @@ describe('BROWSER_NAVIGATE action', () => {
     });
 
     it('should create session if none exists', async () => {
-      mockService.getCurrentSession = vi.fn().mockResolvedValue(undefined);
+      mockService.getCurrentSession = mock().mockResolvedValue(undefined);
 
       const message = createMockMemory({
         content: { text: 'Go to https://google.com' },
@@ -254,7 +264,7 @@ describe('BROWSER_BACK action', () => {
   let mockCallback: HandlerCallback;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     mockRuntime = createMockRuntime();
     mockService = new StagehandService(mockRuntime);
@@ -262,11 +272,11 @@ describe('BROWSER_BACK action', () => {
     const mockStagehand = new Stagehand({ env: 'LOCAL' } as any);
     mockSession = new BrowserSession('test-session', mockStagehand as any);
 
-    vi.spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
+    spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
     mockRuntime.getService.mockReturnValue(mockService);
 
     backAction = getAction('BROWSER_BACK');
-    mockCallback = vi.fn().mockResolvedValue([]);
+    mockCallback = mock().mockResolvedValue([]);
   });
 
   describe('validate', () => {
@@ -277,7 +287,7 @@ describe('BROWSER_BACK action', () => {
     });
 
     it('should not validate when no session exists', async () => {
-      mockService.getCurrentSession = vi.fn().mockResolvedValue(undefined);
+      mockService.getCurrentSession = mock().mockResolvedValue(undefined);
 
       const message = createMockMemory();
       const isValid = await backAction.validate(mockRuntime, message as Memory, {} as State);
@@ -321,7 +331,7 @@ describe('BROWSER_BACK action', () => {
     });
 
     it('should handle error when no session', async () => {
-      mockService.getCurrentSession = vi.fn().mockResolvedValue(undefined);
+      mockService.getCurrentSession = mock().mockResolvedValue(undefined);
 
       const message = createMockMemory();
 
@@ -349,7 +359,7 @@ describe('BROWSER_FORWARD action', () => {
   let mockCallback: HandlerCallback;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     mockRuntime = createMockRuntime();
     mockService = new StagehandService(mockRuntime);
@@ -357,11 +367,11 @@ describe('BROWSER_FORWARD action', () => {
     const mockStagehand = new Stagehand({ env: 'LOCAL' } as any);
     mockSession = new BrowserSession('test-session', mockStagehand as any);
 
-    vi.spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
+    spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
     mockRuntime.getService.mockReturnValue(mockService);
 
     forwardAction = getAction('BROWSER_FORWARD');
-    mockCallback = vi.fn().mockResolvedValue([]);
+    mockCallback = mock().mockResolvedValue([]);
   });
 
   describe('validate', () => {
@@ -372,7 +382,7 @@ describe('BROWSER_FORWARD action', () => {
     });
 
     it('should not validate when no session exists', async () => {
-      mockService.getCurrentSession = vi.fn().mockResolvedValue(undefined);
+      mockService.getCurrentSession = mock().mockResolvedValue(undefined);
 
       const message = createMockMemory();
       const isValid = await forwardAction.validate(mockRuntime, message as Memory, {} as State);
@@ -406,7 +416,7 @@ describe('BROWSER_FORWARD action', () => {
     });
 
     it('should throw error when no session', async () => {
-      mockService.getCurrentSession = vi.fn().mockResolvedValue(undefined);
+      mockService.getCurrentSession = mock().mockResolvedValue(undefined);
 
       const message = createMockMemory();
 
@@ -417,7 +427,7 @@ describe('BROWSER_FORWARD action', () => {
 
     it('should handle and rethrow page errors', async () => {
       const testError = new Error('Page navigation failed');
-      mockSession.page.goForward = vi.fn().mockRejectedValue(testError);
+      mockSession.page.goForward = mock().mockRejectedValue(testError);
 
       const message = createMockMemory();
 
@@ -438,7 +448,7 @@ describe('BROWSER_REFRESH action', () => {
   let mockCallback: HandlerCallback;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     mockRuntime = createMockRuntime();
     mockService = new StagehandService(mockRuntime);
@@ -446,11 +456,11 @@ describe('BROWSER_REFRESH action', () => {
     const mockStagehand = new Stagehand({ env: 'LOCAL' } as any);
     mockSession = new BrowserSession('test-session', mockStagehand as any);
 
-    vi.spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
+    spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
     mockRuntime.getService.mockReturnValue(mockService);
 
     refreshAction = getAction('BROWSER_REFRESH');
-    mockCallback = vi.fn().mockResolvedValue([]);
+    mockCallback = mock().mockResolvedValue([]);
   });
 
   describe('validate', () => {
@@ -461,7 +471,7 @@ describe('BROWSER_REFRESH action', () => {
     });
 
     it('should not validate when no session exists', async () => {
-      mockService.getCurrentSession = vi.fn().mockResolvedValue(undefined);
+      mockService.getCurrentSession = mock().mockResolvedValue(undefined);
 
       const message = createMockMemory();
       const isValid = await refreshAction.validate(mockRuntime, message as Memory, {} as State);
@@ -495,7 +505,7 @@ describe('BROWSER_REFRESH action', () => {
     });
 
     it('should throw error when no session', async () => {
-      mockService.getCurrentSession = vi.fn().mockResolvedValue(undefined);
+      mockService.getCurrentSession = mock().mockResolvedValue(undefined);
 
       const message = createMockMemory();
 

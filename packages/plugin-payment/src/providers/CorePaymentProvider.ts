@@ -2,7 +2,6 @@ import {
   type IAgentRuntime,
   type UUID,
   logger,
-  stringToUuid,
   asUUID,
   type IPaymentProvider,
   type PaymentRequest,
@@ -18,12 +17,9 @@ import { PaymentService } from '../services/PaymentService';
 import { PriceOracleService } from '../services/PriceOracleService';
 import {
   type PaymentRequest as PluginPaymentRequest,
-  type PaymentResult,
-  type PaymentTransaction as PluginPaymentTransaction,
   type PaymentSettings,
   PaymentStatus,
   PaymentMethod as PluginPaymentMethod,
-  type PaymentHistory,
 } from '../types';
 
 /**
@@ -164,7 +160,7 @@ export class CorePaymentProvider implements IPaymentProvider {
       return profile;
     } catch (error) {
       logger.error('[CorePaymentProvider] Error getting payment profile:', error);
-      
+
       // Return basic profile on error
       return {
         entityId,
@@ -278,7 +274,7 @@ export class CorePaymentProvider implements IPaymentProvider {
       }
 
       // Transaction history risk
-      const successRate = (profile as any).transactionHistory?.totalTransactions > 0 
+      const successRate = (profile as any).transactionHistory?.totalTransactions > 0
         ? (profile as any).transactionHistory.successfulTransactions / (profile as any).transactionHistory.totalTransactions
         : 0;
 
@@ -286,7 +282,7 @@ export class CorePaymentProvider implements IPaymentProvider {
         riskScore += 0.2;
         reasonCodes.push('LOW_SUCCESS_RATE');
       }
-      
+
       if ((profile as any).transactionHistory?.totalTransactions < 5) {
         riskScore += 0.1;
         reasonCodes.push('NEW_USER');
@@ -299,7 +295,7 @@ export class CorePaymentProvider implements IPaymentProvider {
         reasonCodes.push('EXCEEDS_DAILY_LIMIT');
       }
 
-      // Method-specific risk  
+      // Method-specific risk
       if (method.includes('crypto') && amountNum > 1000) {
         riskScore += 0.1;
         reasonCodes.push('HIGH_VALUE_CRYPTO');
@@ -340,7 +336,7 @@ export class CorePaymentProvider implements IPaymentProvider {
       } as any;
     } catch (error) {
       logger.error('[CorePaymentProvider] Error assessing payment risk:', error);
-      
+
       // Return high risk on error
       return {
         level: 'high',
@@ -364,10 +360,10 @@ export class CorePaymentProvider implements IPaymentProvider {
     method: PaymentMethod
   ): Promise<boolean> {
     try {
-      logger.debug('[CorePaymentProvider] Checking if entity can make payment:', { 
-        entityId, 
-        amount, 
-        method 
+      logger.debug('[CorePaymentProvider] Checking if entity can make payment:', {
+        entityId,
+        amount,
+        method
       });
 
       const pluginMethod = this.convertPaymentMethod(method);
@@ -393,7 +389,7 @@ export class CorePaymentProvider implements IPaymentProvider {
       logger.debug('[CorePaymentProvider] Getting user balance:', { entityId, method });
 
       const balances = await this.paymentService.getUserBalance(entityId, this.runtime);
-      
+
       const pluginMethod = this.convertPaymentMethod(method);
       const balance = balances.get(pluginMethod) || BigInt(0);
       return balance.toString();
@@ -410,8 +406,8 @@ export class CorePaymentProvider implements IPaymentProvider {
     request: PaymentRequest
   ): Promise<PaymentConfirmation> {
     try {
-      logger.debug('[CorePaymentProvider] Creating payment confirmation:', { 
-        requestId: request.id 
+      logger.debug('[CorePaymentProvider] Creating payment confirmation:', {
+        requestId: request.id
       });
 
       const confirmationId = asUUID(`confirmation-${request.id}-${Date.now()}`);
@@ -436,9 +432,9 @@ export class CorePaymentProvider implements IPaymentProvider {
     settings: Partial<CorePaymentSettings>
   ): Promise<void> {
     try {
-      logger.info('[CorePaymentProvider] Updating payment settings:', { 
-        entityId, 
-        settings 
+      logger.info('[CorePaymentProvider] Updating payment settings:', {
+        entityId,
+        settings
       });
 
       // Map to plugin settings format
@@ -467,23 +463,23 @@ export class CorePaymentProvider implements IPaymentProvider {
     period: string
   ): Promise<PaymentAnalytics> {
     try {
-      logger.debug('[CorePaymentProvider] Getting payment analytics:', { 
-        entityId, 
-        period 
+      logger.debug('[CorePaymentProvider] Getting payment analytics:', {
+        entityId,
+        period
       });
 
       // Parse period string (e.g., "7d", "30d", "1y")
       const now = new Date();
       const start = new Date();
-      
+
       if (period.endsWith('d')) {
-        const days = parseInt(period.slice(0, -1));
+        const days = parseInt(period.slice(0, -1), 10);
         start.setDate(now.getDate() - days);
       } else if (period.endsWith('m')) {
-        const months = parseInt(period.slice(0, -1));
+        const months = parseInt(period.slice(0, -1), 10);
         start.setMonth(now.getMonth() - months);
       } else if (period.endsWith('y')) {
-        const years = parseInt(period.slice(0, -1));
+        const years = parseInt(period.slice(0, -1), 10);
         start.setFullYear(now.getFullYear() - years);
       } else {
         // Default to 30 days
@@ -491,16 +487,16 @@ export class CorePaymentProvider implements IPaymentProvider {
       }
 
       const history = await this.paymentService.getPaymentHistory(
-        entityId, 
-        1000, 
-        0, 
+        entityId,
+        1000,
+        0,
         this.runtime
       );
 
       // Filter by period
       const startTime = start.getTime();
       const endTime = now.getTime();
-      const periodTransactions = history.filter(tx => 
+      const periodTransactions = history.filter(tx =>
         tx.timestamp >= startTime && tx.timestamp <= endTime
       );
 
@@ -510,14 +506,14 @@ export class CorePaymentProvider implements IPaymentProvider {
         tx => tx.status === PaymentStatus.COMPLETED
       );
       const totalVolume = completedTransactions.reduce(
-        (sum, tx) => sum + Number(tx.amount), 
+        (sum, tx) => sum + Number(tx.amount),
         0
       );
-      const successRate = totalTransactions > 0 
-        ? completedTransactions.length / totalTransactions 
+      const successRate = totalTransactions > 0
+        ? completedTransactions.length / totalTransactions
         : 0;
-      const averageAmount = completedTransactions.length > 0 
-        ? totalVolume / completedTransactions.length 
+      const averageAmount = completedTransactions.length > 0
+        ? totalVolume / completedTransactions.length
         : 0;
 
       // Calculate top methods
@@ -558,7 +554,7 @@ export class CorePaymentProvider implements IPaymentProvider {
       } as any;
     } catch (error) {
       logger.error('[CorePaymentProvider] Error getting payment analytics:', error);
-      
+
       // Return empty analytics on error
       return {
         totalTransactions: 0,
@@ -609,7 +605,7 @@ export class CorePaymentProvider implements IPaymentProvider {
 
   private getPreferredMethods(balances: Map<PluginPaymentMethod, bigint>): PaymentMethod[] {
     const preferred: PaymentMethod[] = [];
-    
+
     // Prioritize based on balance availability
     for (const [method, balance] of balances) {
       if (balance > BigInt(0)) {
@@ -617,25 +613,25 @@ export class CorePaymentProvider implements IPaymentProvider {
         preferred.push(coreMethod);
       }
     }
-    
+
     // Add defaults if none available
     if (preferred.length === 0) {
       preferred.push('usdc_eth' as any, 'eth' as any, 'sol' as any);
     }
-    
+
     return preferred.slice(0, 3); // Top 3
   }
 
   private getVerifiedMethods(balances: Map<PluginPaymentMethod, bigint>): PaymentMethod[] {
     const verified: PaymentMethod[] = [];
-    
+
     for (const [method, balance] of balances) {
       if (balance > BigInt(0)) {
         const coreMethod = this.convertPluginMethodToCore(method);
         verified.push(coreMethod);
       }
     }
-    
+
     return verified;
   }
 
@@ -658,12 +654,12 @@ export class CorePaymentProvider implements IPaymentProvider {
 
   private formatBalancesForProfile(balances: Map<PluginPaymentMethod, bigint>): Record<string, string> {
     const formatted: Record<string, string> = {};
-    
+
     for (const [method, balance] of balances) {
       const coreMethod = this.convertPluginMethodToCore(method);
       formatted[coreMethod] = balance.toString();
     }
-    
+
     return formatted;
   }
 
@@ -692,19 +688,19 @@ export class CorePaymentProvider implements IPaymentProvider {
     let riskScore = 0;
 
     // Trust-based risk
-    if (trustScore < 0.3) riskScore += 0.4;
-    else if (trustScore < 0.6) riskScore += 0.2;
+    if (trustScore < 0.3) {riskScore += 0.4;}
+    else if (trustScore < 0.6) {riskScore += 0.2;}
 
     // Volume-based risk
-    if (totalVolume > 100000) riskScore += 0.1;
-    else if (totalVolume < 100) riskScore += 0.2;
+    if (totalVolume > 100000) {riskScore += 0.1;}
+    else if (totalVolume < 100) {riskScore += 0.2;}
 
     // Success rate risk
-    if (successRate < 0.8) riskScore += 0.3;
-    else if (successRate < 0.9) riskScore += 0.1;
+    if (successRate < 0.8) {riskScore += 0.3;}
+    else if (successRate < 0.9) {riskScore += 0.1;}
 
-    if (riskScore >= 0.6) return 'high';
-    if (riskScore >= 0.3) return 'medium';
+    if (riskScore >= 0.6) {return 'high';}
+    if (riskScore >= 0.3) {return 'medium';}
     return 'low';
   }
 
@@ -732,7 +728,7 @@ export class CorePaymentProvider implements IPaymentProvider {
         const profile = await identityManager.getIdentityProfile(entityId);
         if (profile && (profile as any).platformIdentities) {
           const balances: Record<string, string> = {};
-          
+
           // Extract wallet addresses from platform identities
           Object.entries((profile as any).platformIdentities).forEach(([platform, identity]: [string, any]) => {
             if (identity.metadata?.walletAddress) {

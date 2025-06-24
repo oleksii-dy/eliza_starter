@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { createService, defineService } from '../services';
 import { Service, ServiceType } from '../types';
 import type { IAgentRuntime } from '../types';
@@ -50,7 +50,7 @@ describe('service builder', () => {
 
   it('should call custom stop function when provided', async () => {
     // This test covers lines 65-68 - custom stopFn execution
-    const stopFn = vi.fn().mockResolvedValue(undefined);
+    const stopFn = mock().mockResolvedValue(undefined);
 
     const Builder = createService('WITH_STOP')
       .withDescription('Service with custom stop')
@@ -141,16 +141,16 @@ describe('AgentRuntime v2 service methods', () => {
 
   beforeEach(() => {
     const mockAdapter = {
-      init: vi.fn().mockResolvedValue(undefined),
-      runMigrations: vi.fn().mockResolvedValue(undefined),
-      ensureAgentExists: vi.fn().mockResolvedValue({ id: 'agent-123' }),
-      getEntityById: vi.fn().mockResolvedValue(null),
-      createEntity: vi.fn().mockResolvedValue(true),
-      getRoom: vi.fn().mockResolvedValue(null),
-      createRoom: vi.fn().mockResolvedValue('room-123'),
-      getParticipantsForRoom: vi.fn().mockResolvedValue([]),
-      addParticipant: vi.fn().mockResolvedValue(true),
-      ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
+      init: mock().mockResolvedValue(undefined),
+      runMigrations: mock().mockResolvedValue(undefined),
+      ensureAgentExists: mock().mockResolvedValue({ id: 'agent-123' }),
+      getEntityById: mock().mockResolvedValue(null),
+      createEntity: mock().mockResolvedValue(true),
+      getRoom: mock().mockResolvedValue(null),
+      createRoom: mock().mockResolvedValue('room-123'),
+      getParticipantsForRoom: mock().mockResolvedValue([]),
+      addParticipant: mock().mockResolvedValue(true),
+      ensureEmbeddingDimension: mock().mockResolvedValue(undefined),
     } as any;
 
     runtime = new AgentRuntime({

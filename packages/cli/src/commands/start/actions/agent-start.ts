@@ -6,7 +6,7 @@ import {
   type Character,
   type IAgentRuntime,
   type Plugin,
-  type IDatabaseAdapter,
+  // type IDatabaseAdapter,
 } from '@elizaos/core';
 import { AgentServer } from '@elizaos/server';
 import { AgentStartOptions } from '../types';

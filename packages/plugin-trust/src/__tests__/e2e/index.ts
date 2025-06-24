@@ -10,4 +10,4 @@ export const testSuites = [
   trustIntegrationE2ETests
 ];
 
-export default testSuites; 
+export default testSuites;

@@ -1,5 +1,5 @@
-import { type IAgentRuntime, type UUID, logger, Service, ServiceType, asUUID } from '@elizaos/core';
-import { and, eq, isNull, asc, inArray, type SQL } from 'drizzle-orm';
+import { type IAgentRuntime, type UUID, logger, Service, asUUID } from '@elizaos/core';
+import { and, eq, asc, inArray, type SQL } from 'drizzle-orm';
 import { goalsTable, goalTagsTable } from '../schema.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -45,7 +45,9 @@ export class GoalDataService {
   }): Promise<UUID | null> {
     try {
       const db = this.runtime.db;
-      if (!db) throw new Error('Database not available');
+      if (!db) {
+        throw new Error('Database not available');
+      }
 
       // Create the goal
       const goalId = asUUID(uuidv4());
@@ -57,18 +59,17 @@ export class GoalDataService {
         name: params.name,
         metadata: params.metadata || {},
       };
-      
+
       // Only include description if it's provided
       if (params.description !== undefined) {
         values.description = params.description;
       }
-      
-      const [goal] = await db
-        .insert(goalsTable)
-        .values(values)
-        .returning();
 
-      if (!goal) return null;
+      const [goal] = await db.insert(goalsTable).values(values).returning();
+
+      if (!goal) {
+        return null;
+      }
 
       // Add tags if provided
       if (params.tags && params.tags.length > 0) {
@@ -99,7 +100,9 @@ export class GoalDataService {
   }): Promise<GoalData[]> {
     try {
       const db = this.runtime.db;
-      if (!db) throw new Error('Database not available');
+      if (!db) {
+        throw new Error('Database not available');
+      }
 
       const conditions: SQL[] = [];
       if (filters?.ownerType) {
@@ -120,7 +123,9 @@ export class GoalDataService {
 
       // Get tags for all goals
       const goalIds = goals.map((goal) => goal.id);
-      if (goalIds.length === 0) return [];
+      if (goalIds.length === 0) {
+        return [];
+      }
 
       const tags = await db
         .select()
@@ -134,7 +139,9 @@ export class GoalDataService {
       // Group tags by goal
       const tagsByGoal = tags.reduce(
         (acc, tag) => {
-          if (!acc[tag.goalId]) acc[tag.goalId] = [];
+          if (!acc[tag.goalId]) {
+            acc[tag.goalId] = [];
+          }
           acc[tag.goalId].push(tag.tag);
           return acc;
         },
@@ -169,11 +176,15 @@ export class GoalDataService {
   async getGoal(goalId: UUID): Promise<GoalData | null> {
     try {
       const db = this.runtime.db;
-      if (!db) throw new Error('Database not available');
+      if (!db) {
+        throw new Error('Database not available');
+      }
 
       const [goal] = await db.select().from(goalsTable).where(eq(goalsTable.id, goalId));
 
-      if (!goal) return null;
+      if (!goal) {
+        return null;
+      }
 
       // Get tags
       const tags = await db.select().from(goalTagsTable).where(eq(goalTagsTable.goalId, goalId));
@@ -207,18 +218,30 @@ export class GoalDataService {
   ): Promise<boolean> {
     try {
       const db = this.runtime.db;
-      if (!db) throw new Error('Database not available');
+      if (!db) {
+        throw new Error('Database not available');
+      }
 
       // Update goal fields
       const fieldsToUpdate: any = {
         updatedAt: new Date(),
       };
 
-      if (updates.name !== undefined) fieldsToUpdate.name = updates.name;
-      if (updates.description !== undefined) fieldsToUpdate.description = updates.description;
-      if (updates.isCompleted !== undefined) fieldsToUpdate.isCompleted = updates.isCompleted;
-      if (updates.completedAt !== undefined) fieldsToUpdate.completedAt = updates.completedAt;
-      if (updates.metadata !== undefined) fieldsToUpdate.metadata = updates.metadata;
+      if (updates.name !== undefined) {
+        fieldsToUpdate.name = updates.name;
+      }
+      if (updates.description !== undefined) {
+        fieldsToUpdate.description = updates.description;
+      }
+      if (updates.isCompleted !== undefined) {
+        fieldsToUpdate.isCompleted = updates.isCompleted;
+      }
+      if (updates.completedAt !== undefined) {
+        fieldsToUpdate.completedAt = updates.completedAt;
+      }
+      if (updates.metadata !== undefined) {
+        fieldsToUpdate.metadata = updates.metadata;
+      }
 
       await db.update(goalsTable).set(fieldsToUpdate).where(eq(goalsTable.id, goalId));
 
@@ -252,7 +275,9 @@ export class GoalDataService {
   async deleteGoal(goalId: UUID): Promise<boolean> {
     try {
       const db = this.runtime.db;
-      if (!db) throw new Error('Database not available');
+      if (!db) {
+        throw new Error('Database not available');
+      }
 
       await db.delete(goalsTable).where(eq(goalsTable.id, goalId));
       return true;

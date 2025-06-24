@@ -262,14 +262,14 @@ export class Physics extends System implements IPhysics {
   private setupScene(): void {
     const contactPoints = new PHYSX.PxArray_PxContactPairPoint(64);
     const simulationEventCallback = new PHYSX.PxSimulationEventCallbackImpl();
-    
+
     // Contact callback
     simulationEventCallback.onContact = (pairHeader: any, pairs: any, count: number) => {
       pairHeader = PHYSX.wrapPointer(pairHeader, PHYSX.PxContactPairHeader);
       const handle0 = this.handles.get(pairHeader.get_actors(0)?.ptr);
       const handle1 = this.handles.get(pairHeader.get_actors(1)?.ptr);
-      if (!handle0 || !handle1) return;
-      
+      if (!handle0 || !handle1) {return;}
+
       for (let i = 0; i < count; i++) {
         const pair = PHYSX.NativeArrayHelpers.prototype.getContactPairAt(pairs, i);
         if (pair.events.isSet(PHYSX.PxPairFlagEnum.eNOTIFY_TOUCH_FOUND)) {
@@ -335,8 +335,8 @@ export class Physics extends System implements IPhysics {
         }
         const triggerHandle = this.handles.get(pair.triggerShape.getActor().ptr);
         const otherHandle = this.handles.get(pair.otherShape.getActor().ptr);
-        if (!triggerHandle || !otherHandle) continue;
-        
+        if (!triggerHandle || !otherHandle) {continue;}
+
         if (pair.status === PHYSX.PxPairFlagEnum.eNOTIFY_TOUCH_FOUND) {
           if (!otherHandle.triggeredHandles.has(triggerHandle)) {
             if (triggerHandle.onTriggerEnter) {
@@ -397,7 +397,7 @@ export class Physics extends System implements IPhysics {
     this.controllerManager = PHYSX.PxTopLevelFunctions.prototype.CreateControllerManager(this.scene);
     this.controllerFilters = new PHYSX.PxControllerFilters();
     this.controllerFilters.mFilterData = new PHYSX.PxFilterData(Layers.player!.group, Layers.player!.mask, 0, 0);
-    
+
     const filterCallback = new PHYSX.PxQueryFilterCallbackImpl();
     filterCallback.simplePreFilter = (filterDataPtr: any, shapePtr: any, actor: any) => {
       const filterData = PHYSX.wrapPointer(filterDataPtr, PHYSX.PxFilterData);
@@ -409,7 +409,7 @@ export class Physics extends System implements IPhysics {
       return PHYSX.PxQueryHitType.eNONE;
     };
     this.controllerFilters.mFilterCallback = filterCallback;
-    
+
     const cctFilterCallback = new PHYSX.PxControllerFilterCallbackImpl();
     cctFilterCallback.filter = (aPtr: any, bPtr: any) => {
       return true; // For now ALL CCTs collide
@@ -439,7 +439,7 @@ export class Physics extends System implements IPhysics {
     handle.actor = actor;
     handle.contactedHandles = new Set();
     handle.triggeredHandles = new Set();
-    
+
     if (handle.onInterpolate) {
       handle.interpolation = {
         prev: {
@@ -463,17 +463,17 @@ export class Physics extends System implements IPhysics {
       handle.interpolation.curr.position.copy(pose.p);
       handle.interpolation.curr.quaternion.copy(pose.q);
     }
-    
+
     this.handles.set(actor.ptr, handle);
     if (!handle.controller) {
       this.scene.addActor(actor);
     }
-    
+
     return {
       move: (matrix: any) => {
         if (this.ignoreSetGlobalPose) {
           const isDynamic = !actor.getRigidBodyFlags?.().isSet(PHYSX.PxRigidBodyFlagEnum.eKINEMATIC);
-          if (isDynamic) return;
+          if (isDynamic) {return;}
           return;
         }
         // Use the extension method if available, otherwise fall back to manual conversion
@@ -555,7 +555,7 @@ export class Physics extends System implements IPhysics {
     this.scene.fetchResults(true);
     this.processContactCallbacks();
     this.processTriggerCallbacks();
-    
+
     const activeActors = PHYSX.SupportFunctions.prototype.PxScene_getActiveActors(this.scene);
     const size = activeActors.size();
     for (let i = 0; i < size; i++) {
@@ -565,7 +565,7 @@ export class Physics extends System implements IPhysics {
         continue;
       }
       const lerp = handle.interpolation;
-      if (!lerp) continue;
+      if (!lerp) {continue;}
       lerp.prev.position.copy(lerp.next.position);
       lerp.prev.quaternion.copy(lerp.next.quaternion);
       const pose = handle.actor.getGlobalPose();
@@ -578,7 +578,7 @@ export class Physics extends System implements IPhysics {
   override preUpdate(alpha: number): void {
     for (const handle of this.active) {
       const lerp = handle.interpolation;
-      if (!lerp) continue;
+      if (!lerp) {continue;}
       if (lerp.skip) {
         lerp.skip = false;
         continue;
@@ -600,7 +600,7 @@ export class Physics extends System implements IPhysics {
     direction = direction.toPxVec3(this._pv2);
     this.queryFilterData.data.word0 = layerMask;
     this.queryFilterData.data.word1 = 0;
-    
+
     const didHit = this.scene.raycast(
       origin,
       direction,
@@ -609,7 +609,7 @@ export class Physics extends System implements IPhysics {
       PHYSX.PxHitFlagEnum.eNORMAL,
       this.queryFilterData
     );
-    
+
     if (didHit) {
       const numHits = this.raycastResult.getNbAnyHits();
       let hit: any = null;
@@ -631,8 +631,8 @@ export class Physics extends System implements IPhysics {
   // Interface-compliant raycast method
   raycast(origin: Vector3, direction: Vector3, maxDistance?: number): import('../../types/index.js').RaycastHit | null {
     const hit = this._raycast(origin, direction, maxDistance || Infinity);
-    if (!hit) return null;
-    
+    if (!hit) {return null;}
+
     // Convert internal RaycastHit to interface-compliant RaycastHit
     return {
       point: hit.point,
@@ -653,7 +653,7 @@ export class Physics extends System implements IPhysics {
     direction = direction.toPxVec3(this._pv2);
     this.queryFilterData.data.word0 = layerMask;
     this.queryFilterData.data.word1 = 0;
-    
+
     const didHit = this.scene.sweep(
       geometry,
       this.sweepPose,
@@ -663,7 +663,7 @@ export class Physics extends System implements IPhysics {
       PHYSX.PxHitFlagEnum.eDEFAULT,
       this.queryFilterData
     );
-    
+
     if (didHit) {
       const numHits = this.sweepResult.getNbAnyHits();
       let hit: any = null;
@@ -688,10 +688,10 @@ export class Physics extends System implements IPhysics {
     const geometry = getSphereGeometry(radius);
     this.queryFilterData.data.word0 = layerMask;
     this.queryFilterData.data.word1 = 0;
-    
+
     const didHit = this.scene.overlap(geometry, this.overlapPose, this.overlapResult, this.queryFilterData);
-    if (!didHit) return [];
-    
+    if (!didHit) {return [];}
+
     overlapHits.length = 0;
     const numHits = this.overlapResult.getNbAnyHits();
     for (let n = 0; n < numHits; n++) {

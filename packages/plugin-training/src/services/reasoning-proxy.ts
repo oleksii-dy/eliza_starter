@@ -1,6 +1,6 @@
 /**
  * Reasoning Proxy Service - Auto-Coder Integration
- * 
+ *
  * Proxies auto-coder requests to Together.ai trained models when reasoning
  * service is enabled. Falls back to runtime's existing model when disabled or unavailable.
  */
@@ -25,8 +25,9 @@ export class ReasoningProxyService extends Service {
   public config: any;
   private isHealthy: boolean = false;
   private requestCount: number = 0;
-  
-  capabilityDescription = 'Proxies auto-coder requests to fine-tuned reasoning models on Together.ai';
+
+  capabilityDescription =
+    'Proxies auto-coder requests to fine-tuned reasoning models on Together.ai';
 
   constructor(runtime: IAgentRuntime) {
     super(runtime);
@@ -77,13 +78,18 @@ export class ReasoningProxyService extends Service {
    */
   private loadConfig(): ReasoningProxyConfig {
     return {
-      togetherApiKey: this.runtime?.getSetting('TOGETHER_API_KEY') as string || '',
+      togetherApiKey: (this.runtime?.getSetting('TOGETHER_API_KEY') as string) || '',
       fineTunedModel: this.runtime?.getSetting('ELIZAOS_FINETUNED_MODEL') as string,
-      fallbackModel: this.runtime?.getSetting('FALLBACK_MODEL') as string || 'gemini-pro',
+      fallbackModel: (this.runtime?.getSetting('FALLBACK_MODEL') as string) || 'gemini-pro',
       enabled: this.runtime?.getSetting('REASONING_PROXY_ENABLED') !== 'false',
-      temperature: parseFloat(this.runtime?.getSetting('REASONING_TEMPERATURE') as string || '0.1'),
-      maxTokens: parseInt(this.runtime?.getSetting('REASONING_MAX_TOKENS') as string || '4000'),
-      timeout: parseInt(this.runtime?.getSetting('REASONING_TIMEOUT') as string || '30000')
+      temperature: parseFloat(
+        (this.runtime?.getSetting('REASONING_TEMPERATURE') as string) || '0.1'
+      ),
+      maxTokens: parseInt(
+        (this.runtime?.getSetting('REASONING_MAX_TOKENS') as string) || '4000',
+        10
+      ),
+      timeout: parseInt((this.runtime?.getSetting('REASONING_TIMEOUT') as string) || '30000', 10),
     };
   }
 
@@ -93,9 +99,9 @@ export class ReasoningProxyService extends Service {
   private async testConnection(): Promise<void> {
     const response = await fetch('https://api.together.xyz/v1/models', {
       headers: {
-        'Authorization': `Bearer ${this.config.togetherApiKey}`,
+        Authorization: `Bearer ${this.config.togetherApiKey}`,
       },
-      signal: AbortSignal.timeout(5000)
+      signal: AbortSignal.timeout(5000),
     });
 
     if (!response.ok) {
@@ -106,13 +112,16 @@ export class ReasoningProxyService extends Service {
   /**
    * Process reasoning request with auto-coder integration
    */
-  async processReasoningRequest(prompt: string, options: {
-    type: 'code_generation' | 'code_analysis' | 'reasoning' | 'general';
-    context?: string;
-    files?: Array<{ path: string; content: string }>;
-    language?: string;
-    framework?: string;
-  }): Promise<{
+  async processReasoningRequest(
+    prompt: string,
+    options: {
+      type: 'code_generation' | 'code_analysis' | 'reasoning' | 'general';
+      context?: string;
+      files?: Array<{ path: string; content: string }>;
+      language?: string;
+      framework?: string;
+    }
+  ): Promise<{
     content: string;
     model: string;
     tokensUsed: number;
@@ -128,14 +137,14 @@ export class ReasoningProxyService extends Service {
       try {
         elizaLogger.info(`🧠 Using Together.ai reasoning model for ${options.type}`);
         const result = await this.callTogetherAI(prompt, options);
-        
+
         return {
           ...result,
           processingTime: Date.now() - startTime,
-          source: 'together'
+          source: 'together',
         };
       } catch (error) {
-        elizaLogger.warn(`⚠️  Together.ai request failed, falling back:`, error);
+        elizaLogger.warn('⚠️  Together.ai request failed, falling back:', error);
         // Fall through to fallback
       }
     }
@@ -143,11 +152,11 @@ export class ReasoningProxyService extends Service {
     // Use fallback model (Gemini)
     elizaLogger.info(`🔄 Using fallback model for ${options.type}`);
     const result = await this.callFallbackModel(prompt, options);
-    
+
     return {
       ...result,
       processingTime: Date.now() - startTime,
-      source: 'fallback'
+      source: 'fallback',
     };
   }
 
@@ -166,39 +175,43 @@ export class ReasoningProxyService extends Service {
   /**
    * Call Together.ai API with fine-tuned model
    */
-  private async callTogetherAI(prompt: string, options: any): Promise<{
+  private async callTogetherAI(
+    prompt: string,
+    options: any
+  ): Promise<{
     content: string;
     model: string;
     tokensUsed: number;
   }> {
     const model = this.config.fineTunedModel || 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo';
-    
+
     // Format prompt for ElizaOS training
     const formattedPrompt = this.formatPromptForElizaOS(prompt, options);
 
     const response = await fetch('https://api.together.xyz/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.config.togetherApiKey}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${this.config.togetherApiKey}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: model,
+        model,
         messages: [
           {
             role: 'system',
-            content: 'You are an expert ElizaOS developer. Create high-quality code following ElizaOS patterns and conventions. Always include detailed thinking processes and comprehensive implementations.'
+            content:
+              'You are an expert ElizaOS developer. Create high-quality code following ElizaOS patterns and conventions. Always include detailed thinking processes and comprehensive implementations.',
           },
           {
             role: 'user',
-            content: formattedPrompt
-          }
+            content: formattedPrompt,
+          },
         ],
         temperature: this.config.temperature,
         max_tokens: this.config.maxTokens,
-        stream: false
+        stream: false,
       }),
-      signal: AbortSignal.timeout(this.config.timeout)
+      signal: AbortSignal.timeout(this.config.timeout),
     });
 
     if (!response.ok) {
@@ -207,11 +220,11 @@ export class ReasoningProxyService extends Service {
     }
 
     const data = await response.json();
-    
+
     return {
       content: data.choices[0].message.content,
-      model: model,
-      tokensUsed: data.usage?.total_tokens || 0
+      model,
+      tokensUsed: data.usage?.total_tokens || 0,
     };
   }
 
@@ -244,9 +257,11 @@ export class ReasoningProxyService extends Service {
 
     // Add ElizaOS-specific instructions
     if (options.type === 'code_generation') {
-      formattedPrompt += '\n\nCreate the requested code with proper ElizaOS patterns and conventions.';
+      formattedPrompt +=
+        '\n\nCreate the requested code with proper ElizaOS patterns and conventions.';
     } else if (options.type === 'code_analysis') {
-      formattedPrompt += '\n\nAnalyze the code with focus on ElizaOS architecture and best practices.';
+      formattedPrompt +=
+        '\n\nAnalyze the code with focus on ElizaOS architecture and best practices.';
     }
 
     return formattedPrompt;
@@ -255,7 +270,10 @@ export class ReasoningProxyService extends Service {
   /**
    * Call fallback model (Gemini)
    */
-  private async callFallbackModel(prompt: string, options: any): Promise<{
+  private async callFallbackModel(
+    prompt: string,
+    options: any
+  ): Promise<{
     content: string;
     model: string;
     tokensUsed: number;
@@ -263,15 +281,15 @@ export class ReasoningProxyService extends Service {
     try {
       // Use the runtime's existing model capabilities
       const modelType = this.determineFallbackModelType(options.type);
-      
+
       // Format prompt for fallback model
       const formattedPrompt = this.formatPromptForFallback(prompt, options);
-      
+
       // Call through runtime's model system
       const response = await this.runtime.useModel(modelType, {
         prompt: formattedPrompt,
         temperature: this.config.temperature,
-        max_tokens: this.config.maxTokens
+        max_tokens: this.config.maxTokens,
       });
 
       // Handle different response formats from useModel
@@ -288,16 +306,17 @@ export class ReasoningProxyService extends Service {
       return {
         content,
         model: this.config.fallbackModel,
-        tokensUsed: this.estimateTokens(content) // Estimate since fallback may not provide usage
+        tokensUsed: this.estimateTokens(content), // Estimate since fallback may not provide usage
       };
     } catch (error) {
       elizaLogger.error('Fallback model call failed:', error);
-      
+
       // Final fallback - return helpful error message
       return {
-        content: `I apologize, but I'm unable to process your request right now due to service limitations. Please try again later.`,
+        content:
+          "I apologize, but I'm unable to process your request right now due to service limitations. Please try again later.",
         model: 'error_fallback',
-        tokensUsed: 0
+        tokensUsed: 0,
       };
     }
   }
@@ -333,7 +352,8 @@ export class ReasoningProxyService extends Service {
     // Add file context if provided (but limit size for fallback)
     if (options.files && options.files.length > 0) {
       formattedPrompt += '\n\nRelated Files:\n';
-      options.files.slice(0, 3).forEach((file: any) => { // Limit to 3 files for fallback
+      options.files.slice(0, 3).forEach((file: any) => {
+        // Limit to 3 files for fallback
         formattedPrompt += `- ${file.path}: ${file.content.substring(0, 100)}...\n`;
       });
     }
@@ -350,7 +370,8 @@ export class ReasoningProxyService extends Service {
     if (options.type === 'code_generation') {
       formattedPrompt += '\n\nCreate clean, well-structured code with proper TypeScript patterns.';
     } else if (options.type === 'code_analysis') {
-      formattedPrompt += '\n\nAnalyze the code and provide insights on structure, patterns, and potential improvements.';
+      formattedPrompt +=
+        '\n\nAnalyze the code and provide insights on structure, patterns, and potential improvements.';
     }
 
     return formattedPrompt;
@@ -375,8 +396,8 @@ export class ReasoningProxyService extends Service {
     try {
       const response = await fetch('https://api.together.xyz/v1/fine-tuning/jobs', {
         headers: {
-          'Authorization': `Bearer ${this.config.togetherApiKey}`
-        }
+          Authorization: `Bearer ${this.config.togetherApiKey}`,
+        },
       });
 
       if (!response.ok) {
@@ -398,7 +419,7 @@ export class ReasoningProxyService extends Service {
    */
   updateConfig(newConfig: Partial<ReasoningProxyConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    
+
     // Reinitialize if enabled status changed
     if (newConfig.enabled !== undefined) {
       this.initialize();
@@ -420,7 +441,7 @@ export class ReasoningProxyService extends Service {
       healthy: this.isHealthy,
       model: this.config.fineTunedModel || 'None configured',
       fallbackModel: this.config.fallbackModel,
-      requestCount: 0 // Would track this in real implementation
+      requestCount: 0, // Would track this in real implementation
     };
   }
 
@@ -449,33 +470,34 @@ export async function proxyClaudeCodeRequest(
     operation: 'generate' | 'analyze' | 'refactor' | 'debug';
   }
 ): Promise<string> {
-  
   const reasoningType = mapOperationToReasoningType(request.operation);
-  
+
   const result = await service.processReasoningRequest(request.prompt, {
     type: reasoningType,
     context: request.context,
-    files: request.files
+    files: request.files,
   });
-  
+
   return result.content;
 }
 
 /**
  * Map auto-coder operations to reasoning types
  */
-function mapOperationToReasoningType(operation: string): 'code_generation' | 'code_analysis' | 'reasoning' | 'general' {
+function mapOperationToReasoningType(
+  operation: string
+): 'code_generation' | 'code_analysis' | 'reasoning' | 'general' {
   const mappings: Record<string, any> = {
-    'generate': 'code_generation',
-    'create': 'code_generation',
-    'write': 'code_generation',
-    'analyze': 'code_analysis',
-    'review': 'code_analysis',
-    'debug': 'code_analysis',
-    'refactor': 'reasoning',
-    'optimize': 'reasoning'
+    generate: 'code_generation',
+    create: 'code_generation',
+    write: 'code_generation',
+    analyze: 'code_analysis',
+    review: 'code_analysis',
+    debug: 'code_analysis',
+    refactor: 'reasoning',
+    optimize: 'reasoning',
   };
-  
+
   return mappings[operation] || 'reasoning';
 }
 

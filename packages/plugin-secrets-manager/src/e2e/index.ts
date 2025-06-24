@@ -1,9 +1,9 @@
 import type { TestSuite } from '@elizaos/core';
-import { envScenariosSuite } from './env-scenarios';
 import { envPersistenceSuite } from './env-persistence';
-import { secretFormsSuite } from './secret-forms';
-import { secretsScenariosSuite } from './scenarios.e2e';
+import { envScenariosSuite } from './env-scenarios';
 import { integrationScenariosSuite } from './integration-scenarios';
+import { secretsScenariosSuite } from './scenarios.e2e';
+import { secretFormsSuite } from './secret-forms';
 
 // Export all e2e test suites
 export const e2eTestSuites: TestSuite[] = [
@@ -11,7 +11,7 @@ export const e2eTestSuites: TestSuite[] = [
   envPersistenceSuite,
   secretFormsSuite,
   secretsScenariosSuite,
-  integrationScenariosSuite
+  integrationScenariosSuite,
 ];
 
-export default e2eTestSuites; 
+export default e2eTestSuites;

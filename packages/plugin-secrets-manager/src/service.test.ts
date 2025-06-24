@@ -1,15 +1,21 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { type IAgentRuntime } from '@elizaos/core';
+import {
+  type IAgentRuntime,
+  Character,
+  Plugin as _Plugin,
+  World,
+  Service,
+  UUID,
+} from '@elizaos/core';
+import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test';
+import { canGenerateEnvVar as _canGenerateEnvVar } from './generation';
 import { EnvManagerService } from './service';
-import { Character, Plugin, World, Service, UUID } from '@elizaos/core';
-import { canGenerateEnvVar } from './generation';
 
 // Create a simple logger mock
-const mockLogger = {
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
-  debug: vi.fn(),
+const _mockLogger = {
+  info: mock(),
+  warn: mock(),
+  error: mock(),
+  debug: mock(),
 };
 
 // Create a mock runtime that matches the actual IAgentRuntime interface
@@ -29,124 +35,127 @@ const createMockRuntime = (): IAgentRuntime => {
     providers: [],
     actions: [],
     evaluators: [],
-    plugins: [] as Plugin[]
+    plugins: [] as Plugin[],
     services,
     events: new Map(),
-    fetch: vi.fn(),
+    fetch: mock(),
     routes: [],
 
     // Methods from IAgentRuntime
-    registerPlugin: vi.fn(),
-    initialize: vi.fn(),
-    getConnection: vi.fn(),
-    getService: vi.fn((name: string) => services.get(name)),
-    getAllServices: vi.fn(),
-    registerService: vi.fn((service: Service) => {
-      services.set((service.constructor as any).serviceType || service.constructor.name, service);
+    registerPlugin: mock(),
+    initialize: mock(),
+    getConnection: mock(),
+    getService: mock((name: string) => services.get(name)),
+    getAllServices: mock(),
+    registerService: mock((service: Service) => {
+      services.set(
+        (void service.constructor as any).serviceType || void service.constructor.name,
+        service
+      );
     }),
-    registerDatabaseAdapter: vi.fn(),
-    setSetting: vi.fn((key: string, value: any) => {
+    registerDatabaseAdapter: mock(),
+    setSetting: mock((key: string, value: any) => {
       settings.set(key, value);
     }),
-    getSetting: vi.fn((key: string) => settings.get(key)),
-    getConversationLength: vi.fn(),
-    processActions: vi.fn(),
-    evaluate: vi.fn(),
-    registerProvider: vi.fn(),
-    registerAction: vi.fn(),
-    registerEvaluator: vi.fn(),
-    ensureConnection: vi.fn(),
-    ensureParticipantInRoom: vi.fn(),
-    ensureWorldExists: vi.fn(),
-    ensureRoomExists: vi.fn(),
-    composeState: vi.fn(),
-    useModel: vi.fn(),
-    registerModel: vi.fn(),
-    getModel: vi.fn(),
-    registerEvent: vi.fn(),
-    getEvent: vi.fn(),
-    emitEvent: vi.fn(),
-    registerTaskWorker: vi.fn(),
-    getTaskWorker: vi.fn(),
-    stop: vi.fn(),
-    addEmbeddingToMemory: vi.fn(),
-    getEntityById: vi.fn(),
-    getRoom: vi.fn(),
-    createEntity: vi.fn(),
-    createRoom: vi.fn(),
-    addParticipant: vi.fn(),
-    getRooms: vi.fn(),
-    registerSendHandler: vi.fn(),
-    sendMessageToTarget: vi.fn(),
+    getSetting: mock((key: string) => settings.get(key)),
+    getConversationLength: mock(),
+    processActions: mock(),
+    evaluate: mock(),
+    registerProvider: mock(),
+    registerAction: mock(),
+    registerEvaluator: mock(),
+    ensureConnection: mock(),
+    ensureParticipantInRoom: mock(),
+    ensureWorldExists: mock(),
+    ensureRoomExists: mock(),
+    composeState: mock(),
+    useModel: mock(),
+    registerModel: mock(),
+    getModel: mock(),
+    registerEvent: mock(),
+    getEvent: mock(),
+    emitEvent: mock(),
+    registerTaskWorker: mock(),
+    getTaskWorker: mock(),
+    stop: mock(),
+    addEmbeddingToMemory: mock(),
+    getEntityById: mock(),
+    getRoom: mock(),
+    createEntity: mock(),
+    createRoom: mock(),
+    addParticipant: mock(),
+    getRooms: mock(),
+    registerSend: mock(),
+    sendMessageToTarget: mock(),
 
     // Methods from IDatabaseAdapter (inherited by IAgentRuntime)
     db: {},
-    init: vi.fn(),
-    close: vi.fn(),
-    getAgent: vi.fn(),
-    getAgents: vi.fn(),
-    createAgent: vi.fn(),
-    updateAgent: vi.fn(),
-    deleteAgent: vi.fn(),
-    ensureAgentExists: vi.fn(),
-    ensureEmbeddingDimension: vi.fn(),
-    getEntitiesByIds: vi.fn(),
-    getEntitiesForRoom: vi.fn(),
-    createEntities: vi.fn(),
-    updateEntity: vi.fn(),
-    getComponent: vi.fn(),
-    getComponents: vi.fn(),
-    createComponent: vi.fn(),
-    updateComponent: vi.fn(),
-    deleteComponent: vi.fn(),
-    getMemories: vi.fn(),
-    getMemoryById: vi.fn(),
-    getMemoriesByIds: vi.fn(),
-    getMemoriesByRoomIds: vi.fn(),
-    getMemoriesByServerId: vi.fn(),
-    getCachedEmbeddings: vi.fn(),
-    log: vi.fn(),
-    getLogs: vi.fn(),
-    deleteLog: vi.fn(),
-    searchMemories: vi.fn(),
-    createMemory: vi.fn(),
-    updateMemory: vi.fn(),
-    deleteMemory: vi.fn(),
-    deleteAllMemories: vi.fn(),
-    countMemories: vi.fn(),
-    createWorld: vi.fn(),
-    getWorld: vi.fn(),
-    removeWorld: vi.fn(),
-    getAllWorlds: vi.fn(),
-    updateWorld: vi.fn(),
-    getRoomsByIds: vi.fn(),
-    createRooms: vi.fn(),
-    deleteRoom: vi.fn(),
-    deleteRoomsByWorldId: vi.fn(),
-    updateRoom: vi.fn(),
-    getRoomsForParticipant: vi.fn(),
-    getRoomsForParticipants: vi.fn(),
-    getRoomsByWorld: vi.fn(),
-    removeParticipant: vi.fn(),
-    getParticipantsForEntity: vi.fn(),
-    getParticipantsForRoom: vi.fn(),
-    addParticipantsRoom: vi.fn(),
-    getParticipantUserState: vi.fn(),
-    setParticipantUserState: vi.fn(),
-    createRelationship: vi.fn(),
-    updateRelationship: vi.fn(),
-    getRelationship: vi.fn(),
-    getRelationships: vi.fn(),
-    getCache: vi.fn(),
-    setCache: vi.fn(),
-    deleteCache: vi.fn(),
-    createTask: vi.fn(),
-    getTasks: vi.fn(),
-    getTask: vi.fn(),
-    getTasksByName: vi.fn(),
-    updateTask: vi.fn(),
-    deleteTask: vi.fn(),
-    getMemoriesByWorldId: vi.fn(),
+    init: mock(),
+    close: mock(),
+    getAgent: mock(),
+    getAgents: mock(),
+    createAgent: mock(),
+    updateAgent: mock(),
+    deleteAgent: mock(),
+    ensureAgentExists: mock(),
+    ensureEmbeddingDimension: mock(),
+    getEntitiesByIds: mock(),
+    getEntitiesForRoom: mock(),
+    createEntities: mock(),
+    updateEntity: mock(),
+    getComponent: mock(),
+    getComponents: mock(),
+    createComponent: mock(),
+    updateComponent: mock(),
+    deleteComponent: mock(),
+    getMemories: mock(),
+    getMemoryById: mock(),
+    getMemoriesByIds: mock(),
+    getMemoriesByRoomIds: mock(),
+    getMemoriesByServerId: mock(),
+    getCachedEmbeddings: mock(),
+    log: mock(),
+    getLogs: mock(),
+    deleteLog: mock(),
+    searchMemories: mock(),
+    createMemory: mock(),
+    updateMemory: mock(),
+    deleteMemory: mock(),
+    deleteAllMemories: mock(),
+    countMemories: mock(),
+    createWorld: mock(),
+    getWorld: mock(),
+    removeWorld: mock(),
+    getAllWorlds: mock(),
+    updateWorld: mock(),
+    getRoomsByIds: mock(),
+    createRooms: mock(),
+    deleteRoom: mock(),
+    deleteRoomsByWorldId: mock(),
+    updateRoom: mock(),
+    getRoomsForParticipant: mock(),
+    getRoomsForParticipants: mock(),
+    getRoomsByWorld: mock(),
+    removeParticipant: mock(),
+    getParticipantsForEntity: mock(),
+    getParticipantsForRoom: mock(),
+    addParticipantsRoom: mock(),
+    getParticipantUserState: mock(),
+    setParticipantUserState: mock(),
+    createRelationship: mock(),
+    updateRelationship: mock(),
+    getRelationship: mock(),
+    getRelationships: mock(),
+    getCache: mock(),
+    setCache: mock(),
+    deleteCache: mock(),
+    createTask: mock(),
+    getTasks: mock(),
+    getTask: mock(),
+    getTasksByName: mock(),
+    updateTask: mock(),
+    deleteTask: mock(),
+    getMemoriesByWorldId: mock(),
   } as unknown as IAgentRuntime;
 
   return mockRuntime;
@@ -157,7 +166,7 @@ describe('EnvManagerService', () => {
   let mockRuntime: IAgentRuntime;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
     envService = new EnvManagerService(mockRuntime);
   });
@@ -168,8 +177,8 @@ describe('EnvManagerService', () => {
 
   describe('initialize', () => {
     it('should load env vars from secrets and scan plugin requirements', async () => {
-      const loadSpy = vi.spyOn(envService as any, 'loadEnvVarsFromSecrets');
-      const scanSpy = vi.spyOn(envService, 'scanPluginRequirements');
+      const loadSpy = spyOn(envService as any, 'loadEnvVarsFromSecrets');
+      const scanSpy = spyOn(envService, 'scanPluginRequirements');
       await envService.initialize();
       expect(loadSpy).toHaveBeenCalled();
       expect(scanSpy).toHaveBeenCalled();
@@ -182,9 +191,9 @@ describe('EnvManagerService', () => {
         secrets: { CHARACTER_API_KEY: 'test-key' },
       };
 
-      const scanCharacterSecretsSpy = vi.spyOn(envService as any, 'scanCharacterSecrets');
-      const scanLoadedPluginsSpy = vi.spyOn(envService as any, 'scanLoadedPlugins');
-      const saveEnvVarsToSecretsSpy = vi.spyOn(envService as any, 'saveEnvVarsToSecrets');
+      const scanCharacterSecretsSpy = spyOn(envService as any, 'scanCharacterSecrets');
+      const scanLoadedPluginsSpy = spyOn(envService as any, 'scanLoadedPlugins');
+      const saveEnvVarsToSecretsSpy = spyOn(envService as any, 'saveEnvVarsToSecrets');
 
       await envService.scanPluginRequirements();
 
@@ -289,7 +298,7 @@ describe('EnvManagerService', () => {
     });
 
     it('should save to character secrets', async () => {
-      const saveSecretsSpy = vi.spyOn(envService as any, 'saveEnvVarsToSecrets');
+      const saveSecretsSpy = spyOn(envService as any, 'saveEnvVarsToSecrets');
 
       await envService.updateEnvVar('test-plugin', 'TEST_VAR', {
         value: 'test-value',
@@ -448,7 +457,7 @@ describe('EnvManagerService', () => {
 
   describe('stop', () => {
     it('should save env vars to secrets when stopping', async () => {
-      const saveSecretsSpy = vi.spyOn(envService as any, 'saveEnvVarsToSecrets');
+      const saveSecretsSpy = spyOn(envService as any, 'saveEnvVarsToSecrets');
 
       await envService.stop();
 
@@ -756,7 +765,7 @@ describe('EnvManagerService Additional Coverage', () => {
   let mockRuntime: IAgentRuntime;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     mockRuntime = {
       character: {
@@ -765,9 +774,9 @@ describe('EnvManagerService Additional Coverage', () => {
           secrets: {},
         },
       },
-      getSetting: vi.fn(),
-      setSetting: vi.fn(),
-      getService: vi.fn(),
+      getSetting: mock(),
+      setSetting: mock(),
+      getService: mock(),
       plugins: [],
     } as any;
   });

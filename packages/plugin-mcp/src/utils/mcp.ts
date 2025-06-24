@@ -1,11 +1,11 @@
-import type { IAgentRuntime, Memory } from "@elizaos/core";
+import type { IAgentRuntime, Memory } from '@elizaos/core';
 import type {
   McpProvider,
   McpProviderData,
   McpResourceInfo,
   McpServer,
   McpToolInfo,
-} from "../types";
+} from '../types';
 
 export async function createMcpMemory(
   runtime: IAgentRuntime,
@@ -29,18 +29,18 @@ export async function createMcpMemory(
     },
   });
 
-  await runtime.createMemory(memory, type === "resource" ? "resources" : "tools", true);
+  await runtime.createMemory(memory, type === 'resource' ? 'resources' : 'tools', true);
 }
 
 export function buildMcpProviderData(servers: McpServer[]): McpProvider {
   const mcpData: McpProviderData = {};
-  let textContent = "";
+  let textContent = '';
 
   if (servers.length === 0) {
     return {
       values: { mcp: {} },
       data: { mcp: {} },
-      text: "No MCP servers are currently connected.",
+      text: 'No MCP servers are currently connected.',
     };
   }
 
@@ -54,34 +54,34 @@ export function buildMcpProviderData(servers: McpServer[]): McpProvider {
     textContent += `## Server: ${server.name} (${server.status})\n\n`;
 
     if (server.tools && server.tools.length > 0) {
-      textContent += "### Tools:\n\n";
+      textContent += '### Tools:\n\n';
 
       for (const tool of server.tools) {
         mcpData[server.name].tools[tool.name] = {
-          description: tool.description || "No description available",
+          description: tool.description || 'No description available',
           inputSchema: tool.inputSchema || {},
         };
 
-        textContent += `- **${tool.name}**: ${tool.description || "No description available"}\n`;
+        textContent += `- **${tool.name}**: ${tool.description || 'No description available'}\n`;
       }
-      textContent += "\n";
+      textContent += '\n';
     }
 
     if (server.resources && server.resources.length > 0) {
-      textContent += "### Resources:\n\n";
+      textContent += '### Resources:\n\n';
 
       for (const resource of server.resources) {
         mcpData[server.name].resources[resource.uri] = {
           name: resource.name,
-          description: resource.description || "No description available",
+          description: resource.description || 'No description available',
           mimeType: resource.mimeType,
         };
 
         textContent += `- **${resource.name}** (${resource.uri}): ${
-          resource.description || "No description available"
+          resource.description || 'No description available'
         }\n`;
       }
-      textContent += "\n";
+      textContent += '\n';
     }
   }
 

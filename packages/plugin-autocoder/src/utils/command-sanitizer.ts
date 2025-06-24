@@ -74,7 +74,7 @@ export function sanitizeCommandArgs(args: string[]): SanitizationResult {
  * Validates that a command is in the allowed list
  */
 export function isAllowedCommand(command: string): boolean {
-  const allowedCommands = ['npm', 'npx', 'bun', 'bunx', 'git', 'tsc', 'eslint', 'vitest', 'node'];
+  const allowedCommands = ['npm', 'npx', 'bun', 'bunx', 'git', 'tsc', 'eslint', 'node'];
 
   // Extract base command (handle paths like /usr/bin/npm)
   const baseCommand = command.split('/').pop() || command;
@@ -140,7 +140,7 @@ export function createSafeCommand(
  */
 export function escapeShellArg(arg: string): string {
   // If empty, return empty quotes
-  if (!arg) return "''";
+  if (!arg) {return "''";}
 
   // If it's a simple alphanumeric string, no escaping needed
   if (/^[a-zA-Z0-9_\-./]+$/.test(arg)) {
@@ -148,5 +148,5 @@ export function escapeShellArg(arg: string): string {
   }
 
   // Otherwise, escape single quotes and wrap in single quotes
-  return "'" + arg.replace(/'/g, "'\\''") + "'";
+  return `'${arg.replace(/'/g, "'\\''")}'`;
 }

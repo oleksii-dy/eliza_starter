@@ -36,45 +36,48 @@ export default function AgentRoute() {
 
   const agentFromHook: Agent | undefined = agentDataResponse?.data
     ? ({
-      ...(agentDataResponse.data as AgentWithStatus),
-      status:
-        agentDataResponse.data.status === 'active'
-          ? CoreAgentStatusEnum.ACTIVE
-          : agentDataResponse.data.status === 'inactive'
-            ? CoreAgentStatusEnum.INACTIVE
-            : CoreAgentStatusEnum.INACTIVE,
-      username: agentDataResponse.data.username || agentDataResponse.data.name || 'Unknown',
-      bio: agentDataResponse.data.bio || '',
-      messageExamples: agentDataResponse.data.messageExamples || [],
-      postExamples: agentDataResponse.data.postExamples || [],
-      topics: agentDataResponse.data.topics || [],
-      knowledge: agentDataResponse.data.knowledge || [],
-      plugins: agentDataResponse.data.plugins || [],
-      settings: agentDataResponse.data.settings || {},
-      secrets: (agentDataResponse.data as any).secrets || {},
-      style: agentDataResponse.data.style || {},
-      enabled:
-        typeof agentDataResponse.data.enabled === 'boolean'
-          ? agentDataResponse.data.enabled
-          : true,
-      createdAt:
-        typeof agentDataResponse.data.createdAt === 'number'
-          ? agentDataResponse.data.createdAt
-          : Date.now(),
-      updatedAt:
-        typeof agentDataResponse.data.updatedAt === 'number'
-          ? agentDataResponse.data.updatedAt
-          : Date.now(),
-    } as Agent)
+        ...(agentDataResponse.data as AgentWithStatus),
+        status:
+          agentDataResponse.data.status === 'active'
+            ? CoreAgentStatusEnum.ACTIVE
+            : agentDataResponse.data.status === 'inactive'
+              ? CoreAgentStatusEnum.INACTIVE
+              : CoreAgentStatusEnum.INACTIVE,
+        username: agentDataResponse.data.username || agentDataResponse.data.name || 'Unknown',
+        bio: agentDataResponse.data.bio || '',
+        messageExamples: agentDataResponse.data.messageExamples || [],
+        postExamples: agentDataResponse.data.postExamples || [],
+        topics: agentDataResponse.data.topics || [],
+        knowledge: agentDataResponse.data.knowledge || [],
+        plugins: agentDataResponse.data.plugins || [],
+        settings: agentDataResponse.data.settings || {},
+        secrets: (agentDataResponse.data as { secrets?: Record<string, unknown> }).secrets || {},
+        style: agentDataResponse.data.style || {},
+        enabled:
+          typeof agentDataResponse.data.enabled === 'boolean'
+            ? agentDataResponse.data.enabled
+            : true,
+        createdAt:
+          typeof agentDataResponse.data.createdAt === 'number'
+            ? agentDataResponse.data.createdAt
+            : Date.now(),
+        updatedAt:
+          typeof agentDataResponse.data.updatedAt === 'number'
+            ? agentDataResponse.data.updatedAt
+            : Date.now(),
+      } as Agent)
     : undefined;
 
-  if (!agentId) return <div className="p-4">Agent ID not provided.</div>;
-  if (isLoadingAgent || !agentFromHook)
+  if (!agentId) {
+    return <div className="p-4">Agent ID not provided.</div>;
+  }
+  if (isLoadingAgent || !agentFromHook) {
     return (
       <div className="p-4 flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
+  }
 
   const isActive = agentFromHook.status === CoreAgentStatusEnum.ACTIVE;
   const isStarting = isAgentStarting(agentFromHook.id);

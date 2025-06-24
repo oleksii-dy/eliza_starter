@@ -11,7 +11,7 @@ export class SecretMigrationHelper {
 
   constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
-    this.secretsManager = runtime.getService('SECRETS') as EnhancedSecretManager;
+    this.secretsManager = runtime.get('SECRETS') as EnhancedSecretManager;
 
     if (!this.secretsManager) {
       throw new Error('Secrets manager service not available');
@@ -54,7 +54,9 @@ export class SecretMigrationHelper {
   async getSettingCompat(key: string, defaultValue?: string): Promise<string | null> {
     // First try the old way
     const oldValue = this.runtime.getSetting(key);
-    if (oldValue) return oldValue;
+    if (oldValue) {
+      return oldValue;
+    }
 
     // Then try global secrets
     const globalContext: SecretContext = {
@@ -111,7 +113,7 @@ export class SecretMigrationHelper {
         try {
           const config: Partial<SecretConfig> = {
             type: 'config',
-            description: `Migrated from character settings`,
+            description: 'Migrated from character settings',
             encrypted: false,
           };
 
@@ -133,13 +135,15 @@ export class SecretMigrationHelper {
    */
   installCompatibilityLayer(): void {
     const originalGetSetting = this.runtime.getSetting.bind(this.runtime);
-    const helper = this;
+    const _helper = this;
 
     // Override getSetting to check secrets as well
     this.runtime.getSetting = function (key: string): string | null {
       // First try the original method
       const value = originalGetSetting(key);
-      if (value) return value;
+      if (value) {
+        return value;
+      }
 
       // Then try global secrets (synchronous approximation)
       // Note: This is not ideal but maintains backward compatibility
@@ -179,8 +183,8 @@ export class SecretMigrationHelper {
  */
 
 // Export helper function for easy migration
-export async function runMigration(runtime: IAgentRuntime): Promise<void> {
-  const helper = new SecretMigrationHelper(runtime);
+export async function runMigration(_runtime: IAgentRuntime): Promise<void> {
+  const _helper = new SecretMigrationHelper(_runtime);
 
   // Run all migrations
   await helper.migrateCharacterSettings();

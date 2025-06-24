@@ -61,31 +61,31 @@ class OCRWorker {
 
   async run(): Promise<void> {
     await this.initialize();
-    
+
     logger.info('[OCRWorker] Starting OCR loop...');
-    
+
     while (this.isRunning) {
       try {
         // Check for new frame
         const currentFrameId = Atomics.load(this.atomicState, this.FRAME_ID_INDEX);
-        
+
         if (currentFrameId > this.lastFrameId) {
           await this.processFrame();
           this.lastFrameId = currentFrameId;
           this.frameCount++;
-          
+
           // Report FPS
           const now = Date.now();
           if (now - this.lastFPSReport >= 1000) {
             const fps = this.frameCount / ((now - this.lastFPSReport) / 1000);
             logger.info(`[OCRWorker] OCR FPS: ${fps.toFixed(2)}`);
-            
+
             parentPort?.postMessage({
               type: 'fps',
               fps,
               frameCount: this.frameCount,
             });
-            
+
             this.frameCount = 0;
             this.lastFPSReport = now;
           }
@@ -118,7 +118,7 @@ class OCRWorker {
         const screenBuffer = await this.extractFullScreenBuffer(metadata);
         const ocrResult = await this.ocrService.extractText(screenBuffer);
         results.push(ocrResult);
-        
+
         logger.debug(`[OCRWorker] Full screen OCR: ${ocrResult.fullText.length} chars`);
       } catch (error) {
         logger.error('[OCRWorker] Full screen OCR failed:', error);
@@ -132,7 +132,7 @@ class OCRWorker {
           const regionBuffer = await this.extractRegionBuffer(region, metadata);
           const ocrResult = await this.ocrService.extractText(regionBuffer);
           results.push(ocrResult);
-          
+
           logger.debug(`[OCRWorker] Region OCR (${region.x},${region.y}): ${ocrResult.fullText.length} chars`);
         } catch (error) {
           logger.error('[OCRWorker] Region OCR failed:', error);
@@ -146,7 +146,7 @@ class OCRWorker {
     // Notify main thread
     const totalText = results.map(r => r.fullText).join('\n');
     const totalBlocks = results.reduce((sum, r) => sum + r.blocks.length, 0);
-    
+
     parentPort?.postMessage({
       type: 'ocr_complete',
       frameId: metadata.frameId,
@@ -161,15 +161,15 @@ class OCRWorker {
     const bytesPerPixel = 4; // RGBA
     const totalPixels = metadata.width * metadata.height;
     const totalBytes = totalPixels * bytesPerPixel;
-    
+
     // Create buffer for full screen
     const screenData = Buffer.allocUnsafe(totalBytes);
-    
+
     // Copy all data
     for (let i = 0; i < totalBytes; i++) {
       screenData[i] = this.dataView.getUint8(this.DATA_OFFSET + i);
     }
-    
+
     // Convert to PNG for OCR
     const pngBuffer = await sharp(screenData, {
       raw: {
@@ -178,7 +178,7 @@ class OCRWorker {
         channels: 4,
       },
     }).png().toBuffer();
-    
+
     return pngBuffer;
   }
 
@@ -188,27 +188,27 @@ class OCRWorker {
   ): Promise<Buffer> {
     const bytesPerPixel = 4; // RGBA
     const rowStride = metadata.width * bytesPerPixel;
-    
+
     // Clamp region to screen bounds
     const x = Math.max(0, Math.min(region.x, metadata.width - 1));
     const y = Math.max(0, Math.min(region.y, metadata.height - 1));
     const width = Math.min(region.width, metadata.width - x);
     const height = Math.min(region.height, metadata.height - y);
-    
+
     // Create buffer for region
     const regionData = Buffer.allocUnsafe(width * height * bytesPerPixel);
-    
+
     // Copy region data row by row
     for (let row = 0; row < height; row++) {
       const sourceY = y + row;
       const sourceOffset = this.DATA_OFFSET + (sourceY * rowStride) + (x * bytesPerPixel);
       const destOffset = row * width * bytesPerPixel;
-      
+
       for (let i = 0; i < width * bytesPerPixel; i++) {
         regionData[destOffset + i] = this.dataView.getUint8(sourceOffset + i);
       }
     }
-    
+
     // Convert to PNG for OCR
     const pngBuffer = await sharp(regionData, {
       raw: {
@@ -217,7 +217,7 @@ class OCRWorker {
         channels: 4,
       },
     }).png().toBuffer();
-    
+
     return pngBuffer;
   }
 
@@ -230,22 +230,22 @@ class OCRWorker {
       blocks: results.flatMap(r => r.blocks),
       regions: results.length,
     };
-    
+
     const resultJson = JSON.stringify(combinedResult);
     const resultBytes = Buffer.from(resultJson, 'utf-8');
-    
+
     // Write to results buffer
     const offset = this.RESULTS_HEADER_SIZE;
-    
+
     // Write length
     this.resultsView.setUint32(offset, resultBytes.length, true);
-    
+
     // Write frame ID
     this.resultsView.setUint32(offset + 4, frameId, true);
-    
+
     // Write timestamp
     this.resultsView.setFloat64(offset + 8, Date.now(), true);
-    
+
     // Write text data
     const dataOffset = offset + 16;
     for (let i = 0; i < Math.min(resultBytes.length, this.MAX_TEXT_LENGTH); i++) {
@@ -270,7 +270,7 @@ class OCRWorker {
 if (parentPort) {
   const { config, sharedBuffer, resultsBuffer } = workerData;
   const worker = new OCRWorker(config, sharedBuffer, resultsBuffer);
-  
+
   // Handle messages from main thread
   parentPort.on('message', (msg) => {
     if (msg.type === 'stop') {
@@ -282,11 +282,11 @@ if (parentPort) {
       worker.updateTextRegions(msg.regions);
     }
   });
-  
+
   // Run the worker
   worker.run().catch((error) => {
     logger.error('[OCRWorker] Fatal error:', error);
     parentPort?.postMessage({ type: 'error', error: error.message });
     process.exit(1);
   });
-} 
+}

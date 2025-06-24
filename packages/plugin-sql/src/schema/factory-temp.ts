@@ -15,7 +15,7 @@ export function getSchemaFactory() {
 
 export function createLazyTableProxy<T extends object>(createTableFn: () => T): T {
   let cachedTable: T | null = null;
-  
+
   return new Proxy({} as any, {
     get(target, prop, receiver) {
       if (!cachedTable) {

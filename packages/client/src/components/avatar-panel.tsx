@@ -10,7 +10,7 @@ interface AvatarPanelProps {
     updateAvatar?: (avatarUrl: string) => void;
     updateSetting?: <T>(path: string, value: T) => void;
     updateField?: <T>(path: string, value: T) => void;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -23,7 +23,7 @@ export default function AvatarPanel({ characterValue, setCharacterValue }: Avata
   useEffect(() => {
     setAvatar(characterValue?.settings?.avatar || null);
     setHasChanged(false);
-  }, [characterValue.id]);
+  }, [characterValue.id, characterValue?.settings?.avatar]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

@@ -1,4 +1,4 @@
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { SearchResult } from '../types';
 
 // Simple built-in rate limiter implementation
@@ -16,7 +16,7 @@ class RateLimiter {
     this.maxTokens = config.tokensPerInterval;
     this.tokens = config.tokensPerInterval;
     this.lastRefill = Date.now();
-    
+
     // Convert interval to milliseconds
     const intervalMs = {
       second: 1000,
@@ -24,7 +24,7 @@ class RateLimiter {
       hour: 3600000,
       day: 86400000
     };
-    
+
     this.refillRate = intervalMs[config.interval] / config.tokensPerInterval;
   }
 
@@ -32,7 +32,7 @@ class RateLimiter {
     const now = Date.now();
     const timePassed = now - this.lastRefill;
     const tokensToAdd = Math.floor(timePassed / this.refillRate);
-    
+
     if (tokensToAdd > 0) {
       this.tokens = Math.min(this.maxTokens, this.tokens + tokensToAdd);
       this.lastRefill = now;
@@ -41,12 +41,12 @@ class RateLimiter {
 
   async tryRemoveTokens(count: number): Promise<boolean> {
     this.refillTokens();
-    
+
     if (this.tokens >= count) {
       this.tokens -= count;
       return true;
     }
-    
+
     return false;
   }
 
@@ -92,10 +92,10 @@ export class RateLimitedProvider implements SearchProvider {
   async search(query: string, maxResults?: number): Promise<any[]> {
     const hasTokens = await this.limiter.tryRemoveTokens(1);
     if (!hasTokens) {
-      elizaLogger.warn(`[${this.name}] Rate limit reached, waiting...`);
+      logger.warn(`[${this.name}] Rate limit reached, waiting...`);
       await this.limiter.removeTokens(1);
     }
-    
+
     return this.provider.search(query, maxResults);
   }
 }
@@ -156,13 +156,13 @@ export class AdaptiveRateLimiter extends RateLimitedProvider {
       if (error.message?.includes('rate limit') || error.message?.includes('429')) {
         this.errorCount++;
         this.lastRateLimitError = Date.now();
-        
+
         // Exponential backoff based on error count
         const backoffMs = Math.min(60000, 1000 * Math.pow(2, this.errorCount));
-        elizaLogger.warn(`[AdaptiveRateLimiter] Backing off for ${backoffMs}ms after ${this.errorCount} rate limit errors`);
-        
+        logger.warn(`[AdaptiveRateLimiter] Backing off for ${backoffMs}ms after ${this.errorCount} rate limit errors`);
+
         await new Promise(resolve => setTimeout(resolve, backoffMs));
-        
+
         // Retry once after backoff
         return super.search(query, maxResults);
       }
@@ -178,4 +178,4 @@ export class AdaptiveRateLimiter extends RateLimitedProvider {
       timeSinceLastError: this.lastRateLimitError ? Date.now() - this.lastRateLimitError : null,
     };
   }
-} 
+}

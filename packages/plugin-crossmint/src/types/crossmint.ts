@@ -1,4 +1,4 @@
-import { UUID } from '@elizaos/core';
+// UUID type is not used in this file
 
 // CrossMint API Configuration
 export interface CrossMintConfig {

@@ -1,4 +1,4 @@
-import type { Scenario } from "../types.js"
+import type { Scenario } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const bugtriageScenario: Scenario = {
@@ -7,7 +7,7 @@ export const bugtriageScenario: Scenario = {
   description: 'Automatically triage and prioritize GitHub issues',
   category: 'integration',
   tags: ['github', 'planning', 'todo', 'research', 'complex-workflow'],
-  
+
   actors: [
     {
       id: uuidv4() as any,
@@ -23,32 +23,33 @@ export const bugtriageScenario: Scenario = {
         steps: [
           {
             type: 'message',
-            content: 'Review all open issues in our repository and categorize them by type and severity.',
-      },
+            content:
+              'Review all open issues in our repository and categorize them by type and severity.',
+          },
           {
             type: 'wait',
             waitTime: 8000,
-      },
+          },
           {
             type: 'message',
             content: 'Research similar issues in related projects for potential solutions.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 10000,
-      },
+          },
           {
             type: 'message',
             content: 'Create a prioritization plan based on impact and effort.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 12000,
-      },
+          },
           {
             type: 'message',
             content: 'Generate todos for the development team with assigned priorities.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 14000,
@@ -68,7 +69,7 @@ export const bugtriageScenario: Scenario = {
       plugins: ['github', 'planning', 'todo', 'research'],
     },
   },
-  
+
   execution: {
     maxDuration: 300000,
     maxSteps: 25,
@@ -80,7 +81,7 @@ export const bugtriageScenario: Scenario = {
       },
     ],
   },
-  
+
   verification: {
     rules: [
       {
@@ -88,7 +89,8 @@ export const bugtriageScenario: Scenario = {
         type: 'llm',
         description: 'All required plugins were utilized',
         config: {
-          criteria: 'The agent successfully used github, planning, todo, research plugins to complete the workflow',
+          criteria:
+            'The agent successfully used github, planning, todo, research plugins to complete the workflow',
         },
         weight: 3,
       },
@@ -109,7 +111,7 @@ export const bugtriageScenario: Scenario = {
           criteria: 'Multiple actions from different plugins were chained together effectively',
         },
         weight: 3,
-      }
+      },
     ],
     expectedOutcomes: [
       {
@@ -134,7 +136,7 @@ export const bugtriageScenario: Scenario = {
       ],
     },
   },
-  
+
   benchmarks: {
     maxDuration: 300000,
     maxSteps: 25,

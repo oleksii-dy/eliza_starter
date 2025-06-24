@@ -1,6 +1,6 @@
 /**
  * Comprehensive Training Plugin - Complete Training Data Generation and Model Training
- * 
+ *
  * This plugin provides the full training pipeline from data generation to model deployment:
  * - Repository cloning and code analysis
  * - Training scenario generation with thinking processes
@@ -20,15 +20,16 @@ import { configureAutoCoderAction } from './actions/configure-autocoder';
 
 export const comprehensiveTrainingPlugin: Plugin = {
   name: '@elizaos/plugin-training-comprehensive',
-  description: 'Complete training pipeline: data generation, model training, and auto-coder integration',
-  
+  description:
+    'Complete training pipeline: data generation, model training, and auto-coder integration',
+
   services: [ReasoningProxyService as any],
-  
+
   actions: [
     generateTrainingDataAction,
     trainModelAction,
     checkTrainingStatusAction,
-    configureAutoCoderAction
+    configureAutoCoderAction,
   ],
 
   async init(config: Record<string, string>, runtime: IAgentRuntime): Promise<void> {
@@ -37,8 +38,8 @@ export const comprehensiveTrainingPlugin: Plugin = {
 
     // Check core requirements
     const coreRequirements = ['OPENAI_API_KEY'];
-    const missingCore = coreRequirements.filter(req => !runtime.getSetting(req));
-    
+    const missingCore = coreRequirements.filter((req) => !runtime.getSetting(req));
+
     if (missingCore.length > 0) {
       elizaLogger.error(`❌ Missing core requirements: ${missingCore.join(', ')}`);
       elizaLogger.error('   Training data generation requires OpenAI API access');
@@ -68,7 +69,7 @@ export const comprehensiveTrainingPlugin: Plugin = {
     // Initialize services
     elizaLogger.info('');
     elizaLogger.info('🔧 Initializing services...');
-    
+
     const reasoningService = runtime.getService('reasoning');
     if (reasoningService) {
       elizaLogger.info('✅ Reasoning service ready');
@@ -79,7 +80,7 @@ export const comprehensiveTrainingPlugin: Plugin = {
     const proxyService = runtime.getService('reasoning_proxy');
     if (proxyService) {
       elizaLogger.info('✅ Reasoning proxy service ready');
-      
+
       const status = (proxyService as any).getStatus?.();
       if (status?.enabled && status?.healthy) {
         elizaLogger.info('🚀 Auto-coder integration active');
@@ -131,7 +132,7 @@ export const comprehensiveTrainingPlugin: Plugin = {
 
     elizaLogger.info('');
     elizaLogger.info('🎉 Comprehensive Training Plugin initialized successfully!');
-    
+
     // Log current model status if available
     if (togetherApiKey && proxyService) {
       try {
@@ -145,7 +146,7 @@ export const comprehensiveTrainingPlugin: Plugin = {
         // Silently ignore - this is just informational
       }
     }
-  }
+  },
 };
 
 export default comprehensiveTrainingPlugin;
@@ -167,18 +168,13 @@ export { PluginProcessor } from './training-generator/plugins/plugin-processor';
 export { DatasetBuilder } from './training-generator/output/dataset-builder';
 
 // Export types
-export type { 
+export type {
   TrainingScenario,
   TrainingGenerationConfig,
   GenerationProgress,
-  GenerationResult
+  GenerationResult,
 } from './training-generator/training-orchestrator';
 
-export type {
-  ExtractedFile,
-  ExtractionResult
-} from './training-generator/core/file-extractor';
+export type { ExtractedFile, ExtractionResult } from './training-generator/core/file-extractor';
 
-export type {
-  ReasoningProxyConfig
-} from './services/reasoning-proxy';
+export type { ReasoningProxyConfig } from './services/reasoning-proxy';

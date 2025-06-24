@@ -174,7 +174,7 @@ export async function processAttachments(
                 `[Message Handling] Generated description: ${processedAttachment.description?.substring(0, 100)}...`
               );
             } else {
-              logger.warn(`[Message Handling] Failed to parse XML response for image description`);
+              logger.warn('[Message Handling] Failed to parse XML response for image description');
             }
           } else if (response && typeof response === 'object' && 'description' in response) {
             // Handle object responses for backwards compatibility
@@ -186,10 +186,10 @@ export async function processAttachments(
               `[Message Handling] Generated description: ${processedAttachment.description?.substring(0, 100)}...`
             );
           } else {
-            logger.warn(`[Message Handling] Unexpected response format for image description`);
+            logger.warn('[Message Handling] Unexpected response format for image description');
           }
         } catch (error) {
-          logger.error(`[Message Handling] Error generating image description:`, error);
+          logger.error('[Message Handling] Error generating image description:', error);
           // Continue processing without description
         }
       }
@@ -214,10 +214,14 @@ export function shouldBypassShouldRespond(
   room?: Room,
   source?: string
 ): boolean {
-  if (!room) return false;
+  if (!room) {
+    return false;
+  }
 
   function normalizeEnvList(value: unknown): string[] {
-    if (!value || typeof value !== 'string') return [];
+    if (!value || typeof value !== 'string') {
+      return [];
+    }
 
     const cleaned = value.trim().replace(/^\[|\]$/g, '');
     return cleaned
@@ -442,7 +446,7 @@ const messageReceivedHandler = async ({
           const maxRetries = 3;
 
           while (retries < maxRetries && (!responseContent?.thought || !responseContent?.actions)) {
-            let response = await runtime.useModel(ModelType.TEXT_LARGE, {
+            const response = await runtime.useModel(ModelType.TEXT_LARGE, {
               prompt,
             });
 
@@ -533,7 +537,7 @@ const messageReceivedHandler = async ({
             await callback(responseContent);
           } else {
             // Check if planning service is available for enhanced planning
-            const planningService = runtime.getService<IPlanningService>('planning');
+            const planningService = runtime.getService('planning') as unknown as IPlanningService;
 
             if (planningService && responseContent) {
               try {
@@ -825,14 +829,14 @@ const postGeneratedHandler = async ({
     type: ChannelType.FEED,
     channelId: `${userId}-home`,
     serverId: userId,
-    worldId: worldId,
+    worldId,
   });
 
   const message = {
     id: createUniqueUuid(runtime, `tweet-${Date.now()}`) as UUID,
     entityId: runtime.agentId,
     agentId: runtime.agentId,
-    roomId: roomId,
+    roomId,
     content: {},
     metadata: {
       entityName: runtime.character.name,

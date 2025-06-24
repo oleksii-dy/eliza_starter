@@ -35,18 +35,18 @@ const paymentMultiAgentScenario: Scenario = {
 
   // Add evaluator function for test compatibility
   evaluator: (response: string) => {
-    const hasAgentMention = 
+    const hasAgentMention =
       response.toLowerCase().includes('agent') ||
       response.toLowerCase().includes('ai') ||
       response.toLowerCase().includes('collaborate') ||
       response.toLowerCase().includes('coordinate');
-    
-    const hasPaymentMention = 
+
+    const hasPaymentMention =
       response.toLowerCase().includes('payment') ||
       response.toLowerCase().includes('transfer') ||
       response.toLowerCase().includes('distribute') ||
       response.toLowerCase().includes('usdc');
-    
+
     return hasAgentMention && hasPaymentMention;
   },
 

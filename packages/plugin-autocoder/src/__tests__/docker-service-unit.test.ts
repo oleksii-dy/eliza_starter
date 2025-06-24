@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { DockerService } from '../services/DockerService.ts';
 import type { ContainerCreateRequest } from '../types/container.ts';
 
@@ -14,7 +14,7 @@ describe('DockerService - Real Docker Unit Tests', () => {
     // Mock minimal runtime for settings
     (dockerService as any).runtime = {
       getSetting: (key: string) => {
-        if (key === 'DOCKER_HOST') return process.env.DOCKER_HOST || undefined;
+        if (key === 'DOCKER_HOST') {return process.env.DOCKER_HOST || undefined;}
         return undefined;
       },
     };
@@ -179,7 +179,7 @@ describe('DockerService - Real Docker Unit Tests', () => {
       expect(ourNetwork).toBeDefined();
       expect(ourNetwork.Name).toBe(networkName);
 
-      console.log(`✅ Verified network exists in list`);
+      console.log('✅ Verified network exists in list');
 
       // Remove network
       await dockerService.removeNetwork(networkId);
@@ -276,7 +276,7 @@ describe('DockerService - Real Docker Unit Tests', () => {
 
       // Start container
       await dockerService.startContainer(containerId);
-      console.log(`✅ Started container`);
+      console.log('✅ Started container');
 
       // Check running status
       const runningStatus = await dockerService.getContainerStatus(containerId);
@@ -329,7 +329,7 @@ describe('DockerService - Real Docker Unit Tests', () => {
 
       // Stop container
       await dockerService.stopContainer(containerId, 10);
-      console.log(`✅ Stopped container`);
+      console.log('✅ Stopped container');
 
       // Check stopped status
       const stoppedStatus = await dockerService.getContainerStatus(containerId);
@@ -340,7 +340,7 @@ describe('DockerService - Real Docker Unit Tests', () => {
       await dockerService.removeContainer(containerId, true);
       createdContainers = createdContainers.filter((id) => id !== containerId);
 
-      console.log(`✅ Removed container`);
+      console.log('✅ Removed container');
 
       console.log('🎉 Complete container lifecycle test passed!');
     } catch (error) {

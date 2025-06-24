@@ -148,13 +148,13 @@ export class TodoDataService {
 
       // Apply filters
       const conditions: any[] = [];
-      if (filters?.agentId) conditions.push(eq(todosTable.agentId, filters.agentId));
-      if (filters?.worldId) conditions.push(eq(todosTable.worldId, filters.worldId));
-      if (filters?.roomId) conditions.push(eq(todosTable.roomId, filters.roomId));
-      if (filters?.entityId) conditions.push(eq(todosTable.entityId, filters.entityId));
-      if (filters?.type) conditions.push(eq(todosTable.type, filters.type));
+      if (filters?.agentId) {conditions.push(eq(todosTable.agentId, filters.agentId));}
+      if (filters?.worldId) {conditions.push(eq(todosTable.worldId, filters.worldId));}
+      if (filters?.roomId) {conditions.push(eq(todosTable.roomId, filters.roomId));}
+      if (filters?.entityId) {conditions.push(eq(todosTable.entityId, filters.entityId));}
+      if (filters?.type) {conditions.push(eq(todosTable.type, filters.type));}
       if (filters?.isCompleted !== undefined)
-        conditions.push(eq(todosTable.isCompleted, filters.isCompleted));
+      {conditions.push(eq(todosTable.isCompleted, filters.isCompleted));}
 
       if (conditions.length > 0) {
         query = query.where(and(...conditions));
@@ -223,7 +223,7 @@ export class TodoDataService {
         updatedAt: new Date(),
       };
 
-      const result = await db
+      await db
         .update(todosTable)
         .set(updateData)
         .where(eq(todosTable.id, todoId));
@@ -324,10 +324,10 @@ export class TodoDataService {
         not(isNull(todosTable.dueDate)),
       ];
 
-      if (filters?.agentId) conditions.push(eq(todosTable.agentId, filters.agentId));
-      if (filters?.worldId) conditions.push(eq(todosTable.worldId, filters.worldId));
-      if (filters?.roomId) conditions.push(eq(todosTable.roomId, filters.roomId));
-      if (filters?.entityId) conditions.push(eq(todosTable.entityId, filters.entityId));
+      if (filters?.agentId) {conditions.push(eq(todosTable.agentId, filters.agentId));}
+      if (filters?.worldId) {conditions.push(eq(todosTable.worldId, filters.worldId));}
+      if (filters?.roomId) {conditions.push(eq(todosTable.roomId, filters.roomId));}
+      if (filters?.entityId) {conditions.push(eq(todosTable.entityId, filters.entityId));}
 
       const todos = await db
         .select()
@@ -375,13 +375,13 @@ export class TodoDataService {
 
       const conditions: any[] = [eq(todosTable.type, 'daily'), eq(todosTable.isCompleted, true)];
 
-      if (filters?.agentId) conditions.push(eq(todosTable.agentId, filters.agentId));
-      if (filters?.worldId) conditions.push(eq(todosTable.worldId, filters.worldId));
-      if (filters?.roomId) conditions.push(eq(todosTable.roomId, filters.roomId));
-      if (filters?.entityId) conditions.push(eq(todosTable.entityId, filters.entityId));
+      if (filters?.agentId) {conditions.push(eq(todosTable.agentId, filters.agentId));}
+      if (filters?.worldId) {conditions.push(eq(todosTable.worldId, filters.worldId));}
+      if (filters?.roomId) {conditions.push(eq(todosTable.roomId, filters.roomId));}
+      if (filters?.entityId) {conditions.push(eq(todosTable.entityId, filters.entityId));}
 
       // Reset daily todos
-      const result = await db
+      await db
         .update(todosTable)
         .set({
           isCompleted: false,

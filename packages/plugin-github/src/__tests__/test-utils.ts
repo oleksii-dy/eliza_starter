@@ -6,7 +6,7 @@
  * while leveraging the more comprehensive centralized system.
  */
 
-import { vi } from 'vitest';
+import { mock } from 'bun:test';
 import {
   Content,
   IAgentRuntime,
@@ -47,20 +47,21 @@ function baseMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime 
     routes: [],
 
     // Core methods
-    getSetting: vi.fn().mockReturnValue('test-value'),
-    useModel: vi.fn().mockResolvedValue('mock response'),
-    composeState: vi.fn().mockResolvedValue({
+    getSetting: mock().mockReturnValue('test-value'),
+    useModel: mock().mockResolvedValue('mock response'),
+    composeState: mock().mockResolvedValue({
       values: {},
       data: {},
       text: '',
     }),
 
     // Database methods
-    getMemories: vi.fn().mockResolvedValue([]),
-    createMemory: vi.fn().mockResolvedValue('test-memory-id' as UUID),
+    getMemories: mock().mockResolvedValue([]),
+    createMemory: mock().mockResolvedValue('test-memory-id' as UUID),
 
     // Service methods
-    getService: vi.fn().mockReturnValue(null),
+    getService: mock().mockReturnValue(null),
+    registerService: mock(),
 
     // Apply overrides
     ...overrides,
@@ -97,7 +98,7 @@ function baseMockState(overrides: MockStateOverrides = {}): State {
  * GitHub-specific runtime overrides with sensible defaults for GitHub testing
  */
 const GITHUB_RUNTIME_DEFAULTS: Partial<IAgentRuntime> = {
-  getSetting: vi.fn((key: string) => {
+  getSetting: mock((key: string) => {
     // Provide GitHub-specific fallback values
     const githubSettings: Record<string, string> = {
       GITHUB_TOKEN: 'ghp_test123456789012345678901234567890',
@@ -108,7 +109,7 @@ const GITHUB_RUNTIME_DEFAULTS: Partial<IAgentRuntime> = {
     return githubSettings[key] || null;
   }),
 
-  useModel: vi.fn().mockImplementation((modelType, params) => {
+  useModel: mock().mockImplementation((modelType, params) => {
     if (modelType === ModelType.TEXT_SMALL) {
       return Promise.resolve('Never gonna give you up, never gonna let you down');
     } else if (modelType === ModelType.TEXT_LARGE) {
@@ -199,7 +200,7 @@ export function setupTest(
   } = {}
 ) {
   // Create mock callback function
-  const callbackFn = vi.fn();
+  const callbackFn = mock();
 
   // Create a message
   const mockMessage = createMockMemory(overrides.messageOverrides || {});
@@ -235,11 +236,11 @@ export interface MockRuntime {
     [key: string]: any;
   };
   services: Map<string, Service>;
-  getService: ReturnType<typeof vi.fn>;
-  registerService: ReturnType<typeof vi.fn>;
-  getSetting: ReturnType<typeof vi.fn>;
-  useModel: ReturnType<typeof vi.fn>;
-  init: ReturnType<typeof vi.fn>;
+  getService: ReturnType<typeof mock>;
+  registerService: ReturnType<typeof mock>;
+  getSetting: ReturnType<typeof mock>;
+  useModel: ReturnType<typeof mock>;
+  init: ReturnType<typeof mock>;
   [key: string]: any;
 }
 
@@ -249,11 +250,11 @@ export interface MockRuntime {
  * @returns A function to restore the original logger methods
  */
 export function setupLoggerSpies() {
-  vi.spyOn(logger, 'info').mockImplementation(() => {});
-  vi.spyOn(logger, 'error').mockImplementation(() => {});
-  vi.spyOn(logger, 'warn').mockImplementation(() => {});
-  vi.spyOn(logger, 'debug').mockImplementation(() => {});
+  mock.spyOn(logger, 'info').mockImplementation(() => {});
+  mock.spyOn(logger, 'error').mockImplementation(() => {});
+  mock.spyOn(logger, 'warn').mockImplementation(() => {});
+  mock.spyOn(logger, 'debug').mockImplementation(() => {});
 
   // allow tests to restore originals
-  return () => vi.restoreAllMocks();
+  return () => mock.restore();
 }

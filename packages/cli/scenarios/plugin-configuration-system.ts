@@ -427,7 +427,7 @@ const performanceEvaluator: Evaluator = {
       }
 
       return {
-        text: `Performance evaluation completed`,
+        text: 'Performance evaluation completed',
         values: { performanceMetrics: metrics },
         data: { fullMetrics: metrics }
       } as ActionResult;
@@ -547,14 +547,14 @@ export async function testPluginConfigurationSystem(runtime: IAgentRuntime): Pro
   const dbService = runtime.getService('database-service') as DatabaseService;
   const authService = runtime.getService('auth-service') as AuthService;
 
-  if (!dbService) throw new Error('DatabaseService not found');
-  if (!authService) throw new Error('AuthService not found');
+  if (!dbService) {throw new Error('DatabaseService not found');}
+  if (!authService) {throw new Error('AuthService not found');}
 
   const dbStats = dbService.getConnectionStats();
   const authStats = authService.getStats();
 
-  if (!dbStats.isStarted) throw new Error('DatabaseService not started');
-  if (!authStats.isStarted) throw new Error('AuthService not started');
+  if (!dbStats.isStarted) {throw new Error('DatabaseService not started');}
+  if (!authStats.isStarted) {throw new Error('AuthService not started');}
 
   console.log('✅ Test 1 passed: Services started correctly');
 
@@ -562,7 +562,7 @@ export async function testPluginConfigurationSystem(runtime: IAgentRuntime): Pro
   console.log('🔍 Test 2: Test action execution with service dependencies');
 
   const queryAction = runtime.actions.find((a) => a.name === 'QUERY_DATABASE');
-  if (!queryAction) throw new Error('QUERY_DATABASE action not found');
+  if (!queryAction) {throw new Error('QUERY_DATABASE action not found');}
 
   const testMessage = {
     id: asUUID('12345678-1234-1234-1234-123456789012'),
@@ -574,13 +574,13 @@ export async function testPluginConfigurationSystem(runtime: IAgentRuntime): Pro
   };
 
   const isValid = await queryAction.validate(runtime, testMessage);
-  if (!isValid) throw new Error('Action validation failed');
+  if (!isValid) {throw new Error('Action validation failed');}
 
   const result = await queryAction.handler(runtime, testMessage);
   if (typeof result === 'boolean') {
-    if (!result) throw new Error('Action execution failed');
+    if (!result) {throw new Error('Action execution failed');}
   } else if (result && typeof result === 'object' && 'text' in result) {
-    if (!result.text) throw new Error('Action execution failed');
+    if (!result.text) {throw new Error('Action execution failed');}
   } else {
     throw new Error('Action execution failed - unexpected result type');
   }
@@ -591,12 +591,12 @@ export async function testPluginConfigurationSystem(runtime: IAgentRuntime): Pro
   console.log('🔍 Test 3: Test provider with service dependencies');
 
   const statsProvider = runtime.providers.find((p) => p.name === 'SYSTEM_STATS');
-  if (!statsProvider) throw new Error('SYSTEM_STATS provider not found');
+  if (!statsProvider) {throw new Error('SYSTEM_STATS provider not found');}
 
   const mockState = { values: {}, data: {}, text: '' };
   const providerResult = await statsProvider.get(runtime, testMessage, mockState);
-  if (!providerResult || !providerResult.text) throw new Error('Provider execution failed');
-  if (!providerResult.values?.systemStats) throw new Error('Provider did not return system stats');
+  if (!providerResult || !providerResult.text) {throw new Error('Provider execution failed');}
+  if (!providerResult.values?.systemStats) {throw new Error('Provider did not return system stats');}
 
   console.log('✅ Test 3 passed: Provider executed successfully with service dependencies');
 
@@ -613,12 +613,12 @@ export async function testPluginConfigurationSystem(runtime: IAgentRuntime): Pro
   // Verify service was stopped
   const dbServiceAfterDisable = runtime.getService('database-service');
   if (dbServiceAfterDisable)
-    throw new Error('DatabaseService should be disabled but is still running');
+  {throw new Error('DatabaseService should be disabled but is still running');}
 
   // Verify dependent action now fails validation
   const validationAfterDisable = await queryAction.validate(runtime, testMessage);
   if (validationAfterDisable)
-    throw new Error('Action should fail validation when service is disabled');
+  {throw new Error('Action should fail validation when service is disabled');}
 
   // Re-enable database service
   await runtime.configurePlugin('plugin-with-env-vars', {
@@ -630,16 +630,16 @@ export async function testPluginConfigurationSystem(runtime: IAgentRuntime): Pro
   // Verify service was restarted
   const dbServiceAfterEnable = runtime.getService('database-service') as DatabaseService;
   if (!dbServiceAfterEnable)
-    throw new Error('DatabaseService should be enabled but is not running');
+  {throw new Error('DatabaseService should be enabled but is not running');}
 
   const dbStatsAfterEnable = dbServiceAfterEnable.getConnectionStats();
   if (!dbStatsAfterEnable.isStarted)
-    throw new Error('DatabaseService should be started after re-enabling');
+  {throw new Error('DatabaseService should be started after re-enabling');}
 
   // Verify dependent action now passes validation
   const validationAfterEnable = await queryAction.validate(runtime, testMessage);
   if (!validationAfterEnable)
-    throw new Error('Action should pass validation when service is re-enabled');
+  {throw new Error('Action should pass validation when service is re-enabled');}
 
   console.log('✅ Test 4 passed: Service hot-swap functionality works correctly');
 
@@ -652,25 +652,25 @@ export async function testPluginConfigurationSystem(runtime: IAgentRuntime): Pro
   const initialEvaluators = runtime.evaluators.map((e) => e.name);
 
   if (!initialActions.includes('QUERY_DATABASE'))
-    throw new Error('QUERY_DATABASE action not initially registered');
+  {throw new Error('QUERY_DATABASE action not initially registered');}
   if (!initialProviders.includes('SYSTEM_STATS'))
-    throw new Error('SYSTEM_STATS provider not initially registered');
+  {throw new Error('SYSTEM_STATS provider not initially registered');}
   if (!initialEvaluators.includes('PERFORMANCE_EVALUATOR'))
-    throw new Error('PERFORMANCE_EVALUATOR evaluator not initially registered');
+  {throw new Error('PERFORMANCE_EVALUATOR evaluator not initially registered');}
 
   // Disable action
   await runtime.disableComponent('plugin-with-env-vars', 'QUERY_DATABASE', 'action');
 
   const actionsAfterDisable = runtime.actions.map((a) => a.name);
   if (actionsAfterDisable.includes('QUERY_DATABASE'))
-    throw new Error('QUERY_DATABASE action should be unregistered');
+  {throw new Error('QUERY_DATABASE action should be unregistered');}
 
   // Re-enable action
   await runtime.enableComponent('plugin-with-env-vars', 'QUERY_DATABASE', 'action', queryAction);
 
   const actionsAfterEnable = runtime.actions.map((a) => a.name);
   if (!actionsAfterEnable.includes('QUERY_DATABASE'))
-    throw new Error('QUERY_DATABASE action should be re-registered');
+  {throw new Error('QUERY_DATABASE action should be re-registered');}
 
   console.log('✅ Test 5 passed: Component registration/deregistration works correctly');
 

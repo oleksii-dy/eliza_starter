@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll  } from 'bun:test';
 import { execSync } from 'child_process';
 import { mkdtemp, rm, writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
@@ -20,17 +20,17 @@ describe('ElizaOS Publish Commands', () => {
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
     const cliPath = join(scriptDir, '../dist/index.js');
-    
+
     // Check if CLI is built, if not build it
     if (!existsSync(cliPath)) {
       console.log('CLI not built, building now...');
       const cliPackageDir = join(scriptDir, '..');
-      execSync('bun run build', { 
+      execSync('bun run build', {
         cwd: cliPackageDir,
         stdio: 'inherit'
       });
     }
-    
+
     elizaosCmd = `bun "${cliPath}"`;
 
     // Store original PATH
@@ -40,7 +40,7 @@ describe('ElizaOS Publish Commands', () => {
   beforeEach(async () => {
     // Create temporary directory for each test
     testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-publish-'));
-    
+
     // Change to temp directory
     process.chdir(testTmpDir);
 
@@ -359,7 +359,7 @@ esac`;
   afterEach(async () => {
     // Restore original working directory
     safeChangeDirectory(originalCwd);
-    
+
     // Restore original PATH
     process.env.PATH = originalPath;
 

@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach  } from 'bun:test';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { EntityListView } from '../ui/entity-list-view';
@@ -86,10 +86,10 @@ describe('EntityListView', () => {
     }
   ];
 
-  const mockOnEntityClick = vi.fn();
+  const mockOnEntityClick = mock();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   it('renders entity list with all entities', () => {

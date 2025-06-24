@@ -128,7 +128,7 @@ async function main() {
         console.log('  - Description:', scene.description);
         console.log('  - Objects:', scene.objects.length);
         console.log('  - People:', scene.people.length);
-        console.log('  - Change:', scene.changePercentage?.toFixed(1) + '%');
+        console.log('  - Change:', `${scene.changePercentage?.toFixed(1)}%`);
       }
 
       // Get screen capture
@@ -151,7 +151,7 @@ async function main() {
       if (scene && scene.sceneChanged) {
         console.log(
           `[${new Date().toLocaleTimeString()}] Scene changed:`,
-          scene.description.substring(0, 100) + '...'
+          `${scene.description.substring(0, 100)}...`
         );
       }
     }, 1000);

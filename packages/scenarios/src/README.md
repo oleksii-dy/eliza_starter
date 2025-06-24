@@ -41,13 +41,13 @@ export const myScenario: Scenario = {
   id: 'unique-id',
   name: 'Scenario Name',
   description: 'What this scenario tests',
-  
+
   actors: [
     {
       id: 'agent',
       name: 'Test Agent',
       role: 'subject', // The agent being tested
-      systemPrompt: 'You are a helpful assistant'
+      systemPrompt: 'You are a helpful assistant',
     },
     {
       id: 'user',
@@ -58,13 +58,13 @@ export const myScenario: Scenario = {
           {
             type: 'message',
             content: 'Hello!',
-            timing: 1000
-          }
-        ]
-      }
-    }
+            timing: 1000,
+          },
+        ],
+      },
+    },
   ],
-  
+
   verification: {
     rules: [
       {
@@ -73,11 +73,11 @@ export const myScenario: Scenario = {
         description: 'Agent responds to greeting',
         config: {
           pattern: 'hello|hi|hey',
-          mustInclude: true
-        }
-      }
-    ]
-  }
+          mustInclude: true,
+        },
+      },
+    ],
+  },
 };
 ```
 
@@ -92,11 +92,13 @@ export const myScenario: Scenario = {
 ## Scenario Structure
 
 ### Actors
+
 - **subject**: The agent being tested
 - **tester**: An agent that evaluates the subject
 - **participant**: Additional actors in the scenario
 
 ### Script Steps
+
 - **message**: Send a text message
 - **wait**: Pause for a duration
 - **action**: Execute an agent action
@@ -104,6 +106,7 @@ export const myScenario: Scenario = {
 - **react**: Respond to specific triggers
 
 ### Verification Rules
+
 - **pattern**: Check for text patterns
 - **llm**: Use LLM to evaluate responses
 - **custom**: Custom verification function
@@ -111,6 +114,7 @@ export const myScenario: Scenario = {
 - **sentiment**: Analyze emotional tone
 
 ### Metrics
+
 - Response latency
 - Token usage
 - Step completion times

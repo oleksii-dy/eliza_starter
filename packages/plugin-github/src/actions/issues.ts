@@ -1,5 +1,7 @@
 import {
   type Action,
+  type ActionExample,
+  type ActionResult,
   type Content,
   type HandlerCallback,
   type IAgentRuntime,
@@ -13,7 +15,8 @@ import { GitHubService, type GitHubIssue, type CreateIssueOptions } from '../ind
 export const getIssueAction: Action = {
   name: 'GET_GITHUB_ISSUE',
   similes: ['CHECK_ISSUE', 'FETCH_ISSUE', 'ISSUE_INFO', 'INSPECT_ISSUE'],
-  description: 'Retrieves information about a specific GitHub issue',
+  description:
+    'Retrieves information about a specific GitHub issue and enables chaining with actions like listing pull requests, creating related issues, or analyzing issue patterns',
 
   validate: async (
     runtime: IAgentRuntime,
@@ -30,7 +33,7 @@ export const getIssueAction: Action = {
     state: State | undefined,
     options: { owner?: string; repo?: string; issue_number?: number } = {},
     callback?: HandlerCallback
-  ) => {
+  ): Promise<any> => {
     try {
       const githubService = runtime.getService<GitHubService>('github');
       if (!githubService) {
@@ -55,7 +58,7 @@ export const getIssueAction: Action = {
         ownerRepoMatch?.[2] ||
         state?.github?.lastRepository?.name;
       const issue_number =
-        options.issue_number || parseInt(issueMatch?.[3] || issueNumMatch?.[1] || '0');
+        options.issue_number || parseInt(issueMatch?.[3] || issueNumMatch?.[1] || '0', 10);
 
       if (!owner || !repo || !issue_number) {
         throw new Error(
@@ -100,11 +103,15 @@ URL: ${issue.html_url}`,
       return {
         text: responseContent.text,
         values: {
+          success: true,
           issue,
           repository: `${owner}/${repo}`,
           issueNumber: issue_number,
+          issueUrl: issue.html_url,
+          issueState: issue.state,
         },
         data: {
+          actionName: 'GET_GITHUB_ISSUE',
           issue,
           github: {
             ...state?.github,
@@ -128,20 +135,30 @@ URL: ${issue.html_url}`,
         await callback(errorContent);
       }
 
-      return errorContent;
+      return {
+        text: errorContent.text,
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        data: {
+          actionName: 'GET_GITHUB_ISSUE',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
 
   examples: [
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'Get information about issue #42 in elizaOS/eliza',
         },
       },
       {
-        name: 'Assistant',
+        name: '{{agent}}',
         content: {
           text: 'Issue #42: Bug in authentication flow\nRepository: elizaOS/eliza\nState: open\nAuthor: @contributor\nCreated: 3/15/2024\nUpdated: 3/20/2024\nComments: 5\nLabels: bug, authentication\nAssignees: @maintainer\n\nDescription:\nThe authentication flow is failing when using GitHub tokens...\n\nURL: https://github.com/elizaOS/eliza/issues/42',
           actions: ['GET_GITHUB_ISSUE'],
@@ -150,27 +167,28 @@ URL: ${issue.html_url}`,
     ],
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'Check issue #123 in facebook/react and see if there are any related pull requests',
         },
       },
       {
-        name: 'Assistant',
+        name: '{{agent}}',
         content: {
-          text: 'Issue #123: Performance regression in v18.2\nRepository: facebook/react\nState: open\nAuthor: @developer\nCreated: 3/10/2024\nUpdated: 3/21/2024\nComments: 12\nLabels: bug, performance, regression\nAssignees: @react-team\n\nDescription:\nNoticed significant performance drop when upgrading from v18.1 to v18.2...\n\nURL: https://github.com/facebook/react/issues/123\n\nNow let me search for related pull requests addressing this performance issue...',
+          text: "I'll check the details of issue #123 in facebook/react and then search for related pull requests.",
           actions: ['GET_GITHUB_ISSUE', 'SEARCH_GITHUB_PULL_REQUESTS'],
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 };
 
 // List Issues Action
 export const listIssuesAction: Action = {
   name: 'LIST_GITHUB_ISSUES',
   similes: ['LIST_ISSUES', 'SHOW_ISSUES', 'GET_ISSUES'],
-  description: 'Lists GitHub issues for a repository',
+  description:
+    'Lists GitHub issues for a repository with filtering options, enabling workflows like issue triage, bulk operations, or pattern analysis across issues',
 
   validate: async (
     runtime: IAgentRuntime,
@@ -193,7 +211,7 @@ export const listIssuesAction: Action = {
       limit?: number;
     } = {},
     callback?: HandlerCallback
-  ) => {
+  ): Promise<any> => {
     try {
       const githubService = runtime.getService<GitHubService>('github');
       if (!githubService) {
@@ -335,7 +353,8 @@ export const listIssuesAction: Action = {
 export const createIssueAction: Action = {
   name: 'CREATE_GITHUB_ISSUE',
   similes: ['NEW_ISSUE', 'SUBMIT_ISSUE', 'REPORT_ISSUE', 'FILE_ISSUE'],
-  description: 'Creates a new GitHub issue',
+  description:
+    'Creates a new GitHub issue and enables chaining with actions like creating branches, assigning users, or linking to pull requests',
 
   validate: async (
     runtime: IAgentRuntime,
@@ -352,7 +371,7 @@ export const createIssueAction: Action = {
     state: State | undefined,
     options: any = {},
     callback?: HandlerCallback
-  ) => {
+  ): Promise<any> => {
     try {
       const githubService = runtime.getService<GitHubService>('github');
       if (!githubService) {
@@ -417,10 +436,10 @@ State: ${issue.state}
 Author: @${issue.user?.login || 'unknown'}
 Created: ${new Date(issue.created_at).toLocaleDateString()}
 Labels: ${
-          issue.labels
-            ?.map((label: any) => (typeof label === 'string' ? label : label.name || ''))
-            .join(', ') || 'None'
-        }
+  issue.labels
+    ?.map((label: any) => (typeof label === 'string' ? label : label.name || ''))
+    .join(', ') || 'None'
+}
 
 ${issue.body || 'No description provided'}
 
@@ -509,7 +528,8 @@ URL: ${issue.html_url}`,
 export const searchIssuesAction: Action = {
   name: 'SEARCH_GITHUB_ISSUES',
   similes: ['FIND_ISSUES', 'SEARCH_BUGS', 'ISSUE_SEARCH'],
-  description: 'Searches for GitHub issues across repositories',
+  description:
+    'Searches for GitHub issues across repositories using advanced queries, enabling cross-project analysis, pattern detection, and bulk issue management workflows',
 
   validate: async (
     runtime: IAgentRuntime,
@@ -530,7 +550,7 @@ export const searchIssuesAction: Action = {
       limit?: number;
     } = {},
     callback?: HandlerCallback
-  ) => {
+  ): Promise<any> => {
     try {
       const githubService = runtime.getService<GitHubService>('github');
       if (!githubService) {

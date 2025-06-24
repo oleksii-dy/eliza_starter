@@ -1,5 +1,5 @@
 // Test utilities for plugin-autocoder
-import { vi } from 'vitest';
+import { mock  } from 'bun:test';
 import type { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 
 /**
@@ -20,7 +20,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     },
 
     // Autocoder-specific settings
-    getSetting: vi.fn((key: string) => {
+    getSetting: mock((key: string) => {
       const settings: Record<string, string> = {
         DOCKER_HOST: 'unix:///var/run/docker.sock',
         COMMUNICATION_BRIDGE_PORT: '9000',
@@ -32,50 +32,50 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     }),
 
     // Autocoder-specific services
-    getService: vi.fn((name: string) => {
+    getService: mock((name: string) => {
       const services: Record<string, any> = {
         docker: {
-          ping: vi.fn().mockResolvedValue(true),
-          createContainer: vi.fn().mockResolvedValue('container-id'),
-          startContainer: vi.fn().mockResolvedValue(undefined),
-          stopContainer: vi.fn().mockResolvedValue(undefined),
-          removeContainer: vi.fn().mockResolvedValue(undefined),
-          getContainerStatus: vi.fn().mockResolvedValue({
+          ping: mock().mockResolvedValue(true),
+          createContainer: mock().mockResolvedValue('container-id'),
+          startContainer: mock().mockResolvedValue(undefined),
+          stopContainer: mock().mockResolvedValue(undefined),
+          removeContainer: mock().mockResolvedValue(undefined),
+          getContainerStatus: mock().mockResolvedValue({
             id: 'container-id',
             state: 'running',
             health: 'healthy',
           }),
         },
         'container-orchestrator': {
-          spawnSubAgent: vi.fn().mockResolvedValue('container-id'),
-          terminateSubAgent: vi.fn().mockResolvedValue(undefined),
-          getTaskContainers: vi.fn().mockResolvedValue([]),
+          spawnSubAgent: mock().mockResolvedValue('container-id'),
+          terminateSubAgent: mock().mockResolvedValue(undefined),
+          getTaskContainers: mock().mockResolvedValue([]),
         },
         'communication-bridge': {
-          sendToAgent: vi.fn().mockResolvedValue(true),
-          broadcastToTask: vi.fn().mockResolvedValue(1),
-          isAgentConnected: vi.fn().mockReturnValue(true),
+          sendToAgent: mock().mockResolvedValue(true),
+          broadcastToTask: mock().mockResolvedValue(1),
+          isAgentConnected: mock().mockReturnValue(true),
         },
         'task-manager': {
-          createTask: vi.fn().mockResolvedValue('task-id'),
-          getTask: vi.fn().mockResolvedValue({
+          createTask: mock().mockResolvedValue('task-id'),
+          getTask: mock().mockResolvedValue({
             id: 'task-id',
             title: 'Test Task',
             status: 'pending',
           }),
-          listTasks: vi.fn().mockResolvedValue([]),
+          listTasks: mock().mockResolvedValue([]),
         },
         'secure-environment': {
-          createTaskEnvironment: vi.fn().mockResolvedValue({}),
-          provisionAgentCredentials: vi.fn().mockResolvedValue({}),
-          getAgentEnvironment: vi.fn().mockResolvedValue({}),
+          createTaskEnvironment: mock().mockResolvedValue({}),
+          provisionAgentCredentials: mock().mockResolvedValue({}),
+          getAgentEnvironment: mock().mockResolvedValue({}),
         },
         'secrets-manager': {
-          getSecret: vi.fn().mockResolvedValue('secret-value'),
-          validateSecret: vi.fn().mockResolvedValue(true),
+          getSecret: mock().mockResolvedValue('secret-value'),
+          validateSecret: mock().mockResolvedValue(true),
         },
         'trust-engine': {
-          getTrustLevel: vi.fn().mockResolvedValue(75),
+          getTrustLevel: mock().mockResolvedValue(75),
         },
         ...overrides.services,
       };
@@ -84,15 +84,15 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
 
     // Add other required runtime methods
     logger: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      debug: mock(),
     },
-    useModel: vi.fn().mockResolvedValue('mock model response'),
-    createMemory: vi.fn().mockResolvedValue('memory-id' as UUID),
-    getMemories: vi.fn().mockResolvedValue([]),
-    composeState: vi.fn().mockResolvedValue({
+    useModel: mock().mockResolvedValue('mock model response'),
+    createMemory: mock().mockResolvedValue('memory-id' as UUID),
+    getMemories: mock().mockResolvedValue([]),
+    composeState: mock().mockResolvedValue({
       values: {},
       data: {},
       text: '',

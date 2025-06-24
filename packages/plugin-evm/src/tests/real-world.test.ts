@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, mock } from 'bun:test';
 import { transferAction } from '../actions/transfer';
 import { swapAction } from '../actions/swap';
 import { bridgeAction } from '../actions/bridge';
@@ -63,11 +63,10 @@ describe('Real-World EVM Plugin Testing', () => {
     } else {
       // Generate a test user wallet
       userAccount = privateKeyToAccount(
-        ('0x' +
-          Array(64)
-            .fill('0')
-            .map(() => Math.floor(Math.random() * 16).toString(16))
-            .join('')) as `0x${string}`
+        `0x${Array(64)
+          .fill('0')
+          .map(() => Math.floor(Math.random() * 16).toString(16))
+          .join('')}` as `0x${string}`
       );
       userAddress = userAccount.address;
     }
@@ -87,7 +86,7 @@ describe('Real-World EVM Plugin Testing', () => {
   });
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    // No need for mock.restore() in Bun
   });
 
   afterEach(async () => {
@@ -296,7 +295,7 @@ describe('Real-World EVM Plugin Testing', () => {
       }
 
       // Execute real transfer
-      const transferCallback = vi.fn();
+      const transferCallback = mock();
       const mockMessage: Memory = {
         id: 'real-transfer-test',
         agentId: mockRuntime.agentId,
@@ -384,7 +383,7 @@ describe('Real-World EVM Plugin Testing', () => {
     it('should execute real ERC20 token transfers', async () => {
       console.log('🧪 Testing real ERC20 transfers...');
 
-      const transferCallback = vi.fn();
+      const transferCallback = mock();
       const mockMessage: Memory = {
         id: 'real-erc20-transfer-test',
         agentId: mockRuntime.agentId,
@@ -444,7 +443,7 @@ describe('Real-World EVM Plugin Testing', () => {
         return;
       }
 
-      const swapCallback = vi.fn();
+      const swapCallback = mock();
       const mockMessage: Memory = {
         id: 'real-swap-test',
         agentId: mockRuntime.agentId,
@@ -494,7 +493,7 @@ describe('Real-World EVM Plugin Testing', () => {
     it('should test slippage escalation in real market conditions', async () => {
       console.log('🧪 Testing slippage escalation...');
 
-      const swapCallback = vi.fn();
+      const swapCallback = mock();
 
       // Mock LLM response with low slippage
       mockRuntime.useModel.mockResolvedValueOnce(`
@@ -553,7 +552,7 @@ describe('Real-World EVM Plugin Testing', () => {
         return;
       }
 
-      const bridgeCallback = vi.fn();
+      const bridgeCallback = mock();
       const mockMessage: Memory = {
         id: 'real-bridge-test',
         agentId: mockRuntime.agentId,
@@ -595,7 +594,7 @@ describe('Real-World EVM Plugin Testing', () => {
       if (result) {
         const callbackData = bridgeCallback.mock.calls[0][0];
         if (callbackData.content.success) {
-          console.log(`✅ Real bridge initiated! Monitoring progress...`);
+          console.log('✅ Real bridge initiated! Monitoring progress...');
 
           // Monitor bridge progress (would be implemented in real scenario)
           await new Promise((resolve) => setTimeout(resolve, 10000));
@@ -609,7 +608,7 @@ describe('Real-World EVM Plugin Testing', () => {
     it('should test bridge route optimization', async () => {
       console.log('🧪 Testing bridge route optimization...');
 
-      const bridgeCallback = vi.fn();
+      const bridgeCallback = mock();
 
       // Test multiple potential routes
       const routes = [
@@ -661,7 +660,7 @@ describe('Real-World EVM Plugin Testing', () => {
       console.log('🧪 Testing real governance interactions...');
 
       // Test with known governance contract (if available on testnet)
-      const voteCallback = vi.fn();
+      const voteCallback = mock();
 
       // Mock voting on a test proposal
       mockRuntime.useModel.mockResolvedValueOnce(`
@@ -703,7 +702,7 @@ describe('Real-World EVM Plugin Testing', () => {
     it('should test proposal creation workflow', async () => {
       console.log('🧪 Testing proposal creation...');
 
-      const proposeCallback = vi.fn();
+      const proposeCallback = mock();
 
       // Mock proposal creation
       mockRuntime.useModel.mockResolvedValueOnce(`
@@ -755,7 +754,7 @@ describe('Real-World EVM Plugin Testing', () => {
 
       // Step 1: Transfer to prepare for swap
       console.log('📝 Step 1: Transfer preparation...');
-      const transferCallback = vi.fn();
+      const transferCallback = mock();
       (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <fromChain>sepolia</fromChain>
@@ -803,7 +802,7 @@ describe('Real-World EVM Plugin Testing', () => {
 
         // Step 2: Swap ETH for USDC
         console.log('📝 Step 2: Token swap...');
-        const swapCallback = vi.fn();
+        const swapCallback = mock();
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
             <inputToken>ETH</inputToken>
@@ -864,7 +863,7 @@ describe('Real-World EVM Plugin Testing', () => {
 
       // Step 1: Initial swap on source chain
       console.log('📝 Step 1: Source chain swap...');
-      const swapCallback1 = vi.fn();
+      const swapCallback1 = mock();
       mockRuntime.useModel.mockResolvedValueOnce(`
         <response>
           <inputToken>ETH</inputToken>
@@ -903,7 +902,7 @@ describe('Real-World EVM Plugin Testing', () => {
 
         // Step 2: Bridge to target chain
         console.log('📝 Step 2: Cross-chain bridge...');
-        const bridgeCallback = vi.fn();
+        const bridgeCallback = mock();
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
             <sourceChain>sepolia</sourceChain>
@@ -956,7 +955,7 @@ describe('Real-World EVM Plugin Testing', () => {
       console.log('🧪 Testing network congestion handling...');
 
       // Simulate high gas conditions
-      const transferCallback = vi.fn();
+      const transferCallback = mock();
       (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <fromChain>sepolia</fromChain>
@@ -1005,7 +1004,7 @@ describe('Real-World EVM Plugin Testing', () => {
     it('should handle real token approval failures', async () => {
       console.log('🧪 Testing token approval failures...');
 
-      const swapCallback = vi.fn();
+      const swapCallback = mock();
       mockRuntime.useModel.mockResolvedValueOnce(`
         <response>
           <inputToken>UNKNOWN_TOKEN</inputToken>
@@ -1044,7 +1043,7 @@ describe('Real-World EVM Plugin Testing', () => {
     it('should handle real bridge route failures', async () => {
       console.log('🧪 Testing bridge route failures...');
 
-      const bridgeCallback = vi.fn();
+      const bridgeCallback = mock();
       mockRuntime.useModel.mockResolvedValueOnce(`
         <response>
           <sourceChain>sepolia</sourceChain>
@@ -1084,8 +1083,8 @@ describe('Real-World EVM Plugin Testing', () => {
     it('should handle concurrent real operations', async () => {
       console.log('🧪 Testing concurrent real operations...');
 
-      const callback1 = vi.fn();
-      const callback2 = vi.fn();
+      const callback1 = mock();
+      const callback2 = mock();
 
       const operations = [
         transferAction.handler(
@@ -1136,7 +1135,7 @@ describe('Real-World EVM Plugin Testing', () => {
           `<response><fromChain>sepolia</fromChain><amount>0.001</amount><toAddress>${userAddress}</toAddress><token>null</token></response>`
         )
         .mockResolvedValueOnce(
-          `<response><inputToken>ETH</inputToken><outputToken>USDC</outputToken><amount>0.001</amount><slippage>1</slippage><chain>sepolia</chain></response>`
+          '<response><inputToken>ETH</inputToken><outputToken>USDC</outputToken><amount>0.001</amount><slippage>1</slippage><chain>sepolia</chain></response>'
         );
 
       const startTime = Date.now();
@@ -1212,7 +1211,7 @@ describe('Real-World EVM Plugin Testing', () => {
       };
 
       // Execute operations and track
-      const transferCallback = vi.fn();
+      const transferCallback = mock();
       (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <fromChain>sepolia</fromChain>
@@ -1243,7 +1242,9 @@ describe('Real-World EVM Plugin Testing', () => {
         transferCallback
       );
 
-      if (transferResult) metrics.transfers++;
+      if (transferResult) {
+        metrics.transfers++;
+      }
 
       console.log(`📈 Operation metrics: ${JSON.stringify(metrics)}`);
       expect(metrics.transfers).toBeGreaterThanOrEqual(0);

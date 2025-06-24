@@ -34,7 +34,7 @@ export class Blueprints extends System {
 
   modify(data: Partial<Blueprint> & { id: string }): void {
     const blueprint = this.items.get(data.id);
-    if (!blueprint) return;
+    if (!blueprint) {return;}
 
     const modified: Blueprint = {
       ...blueprint,
@@ -42,7 +42,7 @@ export class Blueprints extends System {
     } as Blueprint;
 
     const changed = !isEqual(blueprint, modified);
-    if (!changed) return;
+    if (!changed) {return;}
 
     this.items.set(blueprint.id, modified);
 
@@ -76,4 +76,4 @@ export class Blueprints extends System {
   override destroy(): void {
     this.items.clear();
   }
-} 
+}

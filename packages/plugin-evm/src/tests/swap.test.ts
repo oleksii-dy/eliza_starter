@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import type { Account, Chain } from 'viem';
 import { parseUnits, formatUnits } from 'viem';
@@ -21,30 +21,30 @@ const SEPOLIA_TOKENS = {
 
 // Mock the ICacheManager
 const mockCacheManager = {
-  get: vi.fn().mockResolvedValue(null),
-  set: vi.fn(),
+  get: mock().mockResolvedValue(null),
+  set: mock(),
 };
 
 describe('Swap Action', () => {
   let wp: WalletProvider;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    mock.restore();
     mockCacheManager.get.mockResolvedValue(null);
 
     const pk = TEST_PRIVATE_KEY as `0x${string}`;
-    
+
     // Initialize with Sepolia and Base Sepolia for testing
     const customChains = {
       sepolia: testnetChains.sepolia,
       baseSepolia: testnetChains.baseSepolia,
     };
-    
+
     wp = new WalletProvider(pk, mockCacheManager as any, customChains);
   });
 
   afterEach(() => {
-    // Remove vi.clearAllTimers() as it's not needed in Bun test runner
+    mock.restore();
   });
 
   describe('Constructor', () => {
@@ -102,7 +102,7 @@ describe('Swap Action', () => {
     it('should handle invalid slippage values', async () => {
       // Test that swap works without explicitly setting slippage (handled internally)
       const balance = await wp.getWalletBalanceForChain('sepolia');
-      
+
       if (balance && parseFloat(balance) < 0.001) {
         // Test insufficient balance scenario
         await expect(
@@ -164,7 +164,7 @@ describe('Swap Action', () => {
         }
       } else {
         console.warn('Skipping swap test - insufficient balance');
-        
+
         // Test the error case instead
         await expect(
           swapAction.swap({
@@ -213,7 +213,7 @@ describe('Swap Action', () => {
       const fundedWp = new WalletProvider(
         FUNDED_TEST_WALLET as `0x${string}`,
         mockCacheManager as any,
-                  { sepolia: testnetChains.sepolia }
+        { sepolia: testnetChains.sepolia }
       );
       const fundedSwapAction = new SwapAction(fundedWp);
 
@@ -261,7 +261,7 @@ describe('Swap Action', () => {
 
     it('should handle high slippage scenarios', async () => {
       const balance = await wp.getWalletBalanceForChain('sepolia');
-      
+
       if (balance && parseFloat(balance) > 0.001) {
         // Test with normal swap parameters - slippage is handled internally
         try {
@@ -271,7 +271,7 @@ describe('Swap Action', () => {
             toToken: SEPOLIA_TOKENS.WETH,
             amount: '0.001',
           });
-          
+
           expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
           console.log('Swap succeeded despite potential slippage');
         } catch (error) {
@@ -287,8 +287,8 @@ describe('Swap Action', () => {
     it('should accept reasonable slippage values', () => {
       // Test internal slippage handling - this is more of a validation test
       const validAmounts = ['0.001', '0.01', '0.1', '1.0'];
-      
-      validAmounts.forEach(amount => {
+
+      validAmounts.forEach((amount) => {
         expect(parseFloat(amount)).toBeGreaterThan(0);
         expect(parseFloat(amount)).toBeLessThan(1000); // Reasonable upper bound
       });
@@ -322,7 +322,7 @@ describe('Swap Action', () => {
 const prepareChains = () => {
   const customChains: Record<string, Chain> = {};
   const chainNames = ['sepolia', 'baseSepolia'];
-  
+
   chainNames.forEach((chain) => {
     try {
       customChains[chain] = WalletProvider.genChainFromName(chain as any);

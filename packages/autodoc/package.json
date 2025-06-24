@@ -1,18 +1,20 @@
 {
   "type": "module",
   "name": "@elizaos/autodoc",
-  "version": "1.0.6",
+  "version": "1.0.12",
   "private": true,
   "description": "",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup",
+    "build": "bun run typecheck && tsup",
     "autodoc:dev": "tsup --watch",
     "autodoc": "node dist/index.js",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "lint": "prettier --write ./src",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "lint:check": "eslint src && prettier --check ./src",
+    "typecheck": "tsc --noEmit",
     "test": "echo \"No tests configured for @elizaos/autodoc\"",
     "format": "prettier --write ./src",
     "format:check": "prettier --check ./src"
@@ -33,14 +35,17 @@
     "ts-node": "10.9.2",
     "tslib": "2.8.1",
     "tsup": "8.5.0",
-    "typescript": "5.8.2"
+    "typescript": "5.8.3"
   },
   "devDependencies": {
-    "tsup": "8.5.0",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
+    "eslint": "^9.22.0",
     "prettier": "3.5.3",
     "ts-node": "10.9.2",
     "tslib": "2.8.1",
-    "typescript": "5.8.2"
+    "tsup": "8.5.0",
+    "typescript": "5.8.3"
   },
   "gitHead": "dc32785668d1663c0e7fb81909b4b9961db6e6de"
 }

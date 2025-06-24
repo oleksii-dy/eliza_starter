@@ -149,7 +149,7 @@ export class RealX402Service extends Service {
     } else if (error.request) {
       throw new X402Error('Network error: No response received', 'NETWORK_ERROR');
     } else {
-      throw new X402Error('Request setup error: ' + error.message, 'REQUEST_ERROR');
+      throw new X402Error(`Request setup error: ${error.message}`, 'REQUEST_ERROR');
     }
   }
 
@@ -247,8 +247,8 @@ export class RealX402Service extends Service {
     try {
       const response = await this.facilitatorClient.get<{ schemes: string[] }>('/supported');
       return response.data.schemes || ['coinbase', 'ethereum', 'solana'];
-    } catch (error) {
-      logger.warn('Error getting supported schemes, using defaults:', error);
+    } catch (_error) {
+      logger.warn('Error getting supported schemes, using defaults');
       return ['coinbase', 'ethereum', 'solana'];
     }
   }
@@ -268,7 +268,7 @@ export class RealX402Service extends Service {
   parsePaymentHeader(headerValue: string): X402PaymentHeader {
     try {
       return JSON.parse(headerValue) as X402PaymentHeader;
-    } catch (error) {
+    } catch (_error) {
       throw new X402Error('Invalid X-PAYMENT header format');
     }
   }
@@ -282,7 +282,7 @@ export class RealX402Service extends Service {
       });
 
       return response.status === 402 && !!response.headers['x-payment-required'];
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -309,12 +309,12 @@ export class RealX402Service extends Service {
       // If payment required and auto-payment enabled
       if (response.status === 402 && autoPayment && walletAddress) {
         const paymentRequired = response.data as X402PaymentRequired;
-        
+
         logger.info(`X.402 payment required: ${paymentRequired.amount} ${paymentRequired.currency}`);
-        
+
         // Process payment
         const payment = await this.processPayment(paymentRequired, walletAddress);
-        
+
         // Retry request with payment header
         const paymentHeader = this.createPaymentHeader({
           paymentId: payment.paymentId,
@@ -344,11 +344,11 @@ export class RealX402Service extends Service {
   // Service Lifecycle
   static async start(runtime: IAgentRuntime): Promise<RealX402Service> {
     const facilitatorUrl = runtime.getSetting('X402_FACILITATOR_URL') || 'https://x402.coinbase.com';
-    
+
     logger.info('Starting Real X.402 service...');
-    
+
     const service = new RealX402Service(runtime, facilitatorUrl);
-    
+
     // Test facilitator connectivity
     try {
       await service.getSupportedSchemes();

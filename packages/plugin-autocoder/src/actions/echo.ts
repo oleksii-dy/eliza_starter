@@ -1,4 +1,4 @@
-import type { Action, Content, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
+import type { Action, ActionExample, ActionResult, Content, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { logger } from '@elizaos/core';
 
 /**
@@ -17,7 +17,7 @@ export interface EchoConfig {
 export const echoAction: Action = {
   name: 'ECHO_MESSAGE',
   similes: ['ECHO', 'REPEAT', 'SAY_BACK'],
-  description: "Echoes back the user's input with optional formatting",
+  description: "Echoes back the user's input with optional formatting. Returns formatted text and configuration data for action chaining.",
 
   /**
    * Validates if the action should be triggered
@@ -55,7 +55,7 @@ export const echoAction: Action = {
     options?: any,
     callback?: HandlerCallback,
     responses?: Memory[]
-  ): Promise<boolean> => {
+  ): Promise<ActionResult> => {
     try {
       logger.info('Executing ECHO_MESSAGE action');
 
@@ -115,7 +115,7 @@ export const echoAction: Action = {
             metadata: {
               isEcho: true,
               originalText: textToEcho,
-              config: config,
+              config,
             },
           },
         },
@@ -128,10 +128,38 @@ export const echoAction: Action = {
       }
 
       logger.info(`Echo action completed successfully. Echoed: "${formattedText}"`);
-      return true;
+      
+      return {
+        text: formattedText,
+        values: {
+          success: true,
+          originalText: textToEcho,
+          formatted: true,
+          configApplied: config,
+        },
+        data: {
+          actionName: 'ECHO_MESSAGE',
+          originalMessage: originalText,
+          formattedText,
+          config,
+          timestamp: config.addTimestamp ? new Date().toISOString() : undefined,
+        },
+      };
     } catch (error) {
       logger.error('Error in echo action handler:', error);
-      throw error;
+      return {
+        text: 'Error processing echo request',
+        values: {
+          success: false,
+          error: true,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        },
+        data: {
+          actionName: 'ECHO_MESSAGE',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          errorType: 'handler_error',
+        },
+      };
     }
   },
 
@@ -150,6 +178,7 @@ export const echoAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Hello World!',
+          thought: 'The user wants me to echo their message back to them.',
           actions: ['ECHO_MESSAGE'],
         },
       },
@@ -158,14 +187,15 @@ export const echoAction: Action = {
       {
         name: '{{user}}',
         content: {
-          text: 'please repeat what I just said',
+          text: 'please repeat what I just said and then log it',
         },
       },
       {
         name: '{{agent}}',
         content: {
           text: 'what I just said',
-          actions: ['ECHO_MESSAGE'],
+          thought: 'User wants me to echo their message and also log the action for later reference.',
+          actions: ['ECHO_MESSAGE', 'LOG_ACTION'],
         },
       },
     ],
@@ -173,16 +203,17 @@ export const echoAction: Action = {
       {
         name: '{{user}}',
         content: {
-          text: 'echo: testing the echo function',
+          text: 'echo this message and then create a reminder about it',
         },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'testing the echo function',
-          actions: ['ECHO_MESSAGE'],
+          text: 'this message',
+          thought: 'User wants me to echo the message first, then create a reminder based on it.',
+          actions: ['ECHO_MESSAGE', 'CREATE_REMINDER'],
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 };

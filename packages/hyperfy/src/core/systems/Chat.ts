@@ -42,12 +42,12 @@ export class Chat extends System {
     if (this.msgs.length > CHAT_MAX_MESSAGES) {
       this.msgs.shift();
     }
-    
+
     // notify listeners
     Array.from(this.chatListeners).forEach(callback => {
       callback(this.msgs);
     });
-    
+
     // trigger player chat animation if applicable
     if (msg.fromId) {
       const player = this.world.entities.players?.get(msg.fromId);
@@ -55,11 +55,11 @@ export class Chat extends System {
         (player as any).chat(msg.body);
       }
     }
-    
+
     // emit chat event
     const readOnly = Object.freeze({ ...msg });
     this.world.events.emit('chat', readOnly);
-    
+
     // maybe broadcast
     if (broadcast) {
       const network = (this.world as any).network;
@@ -71,28 +71,28 @@ export class Chat extends System {
 
   command(text: string): void {
     const network = (this.world as any).network;
-    if (!network || network.isServer) return;
-    
+    if (!network || network.isServer) {return;}
+
     const playerId = network.id;
     const args = text
       .slice(1)
       .split(' ')
       .map(str => str.trim())
       .filter(str => !!str);
-      
+
     const isAdminCommand = args[0] === 'admin';
-    
+
     if (args[0] === 'stats') {
       const prefs = (this.world as any).prefs;
       if (prefs?.setStats) {
         prefs.setStats(!prefs.stats);
       }
     }
-    
+
     if (!isAdminCommand) {
       this.world.events.emit('command', { playerId, args });
     }
-    
+
     if (network.send) {
       network.send('command', args);
     }
@@ -100,12 +100,12 @@ export class Chat extends System {
 
   clear(broadcast?: boolean): void {
     this.msgs = [];
-    
+
     // notify listeners
     Array.from(this.chatListeners).forEach(callback => {
       callback(this.msgs);
     });
-    
+
     if (broadcast) {
       const network = (this.world as any).network;
       if (network?.send) {
@@ -117,21 +117,21 @@ export class Chat extends System {
   send(text: string): ExtendedChatMessage | undefined {
     // only available as a client
     const network = (this.world as any).network;
-    if (!network || !network.isClient) return;
-    
+    if (!network || !network.isClient) {return;}
+
     const player = (this.world.entities as any).player;
-    if (!player) return;
-    
+    if (!player) {return;}
+
     const data: ExtendedChatMessage = {
       id: uuid(),
       from: player.data?.name || 'Unknown',
       fromId: player.data?.id,
       body: text,
-      text: text, // for interface compatibility
+      text, // for interface compatibility
       timestamp: Date.now(),
       createdAt: moment().toISOString(),
     };
-    
+
     this.add(data, true);
     return data;
   }
@@ -142,7 +142,7 @@ export class Chat extends System {
 
   deserialize(msgs: ExtendedChatMessage[]): void {
     this.msgs = msgs;
-    
+
     // notify listeners
     Array.from(this.chatListeners).forEach(callback => {
       callback(msgs);
@@ -152,7 +152,7 @@ export class Chat extends System {
   subscribe(callback: ChatListener): () => void {
     this.chatListeners.add(callback);
     callback(this.msgs);
-    
+
     return () => {
       this.chatListeners.delete(callback);
     };
@@ -162,4 +162,4 @@ export class Chat extends System {
     this.msgs = [];
     this.chatListeners.clear();
   }
-} 
+}

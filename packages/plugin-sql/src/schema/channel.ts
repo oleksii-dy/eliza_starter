@@ -6,7 +6,7 @@ import { getSchemaFactory, createLazyTableProxy } from './factory';
  * ensuring the database type is set before schema creation.
  * Foreign key references are removed to avoid circular dependencies.
  * The database constraints will be enforced at the application level.
- 
+
  */
 function createChannelTable() {
   const factory = getSchemaFactory();
@@ -28,6 +28,6 @@ function createChannelTable() {
 /**
  * Represents a channel table in the database.
  * Uses lazy initialization to ensure proper database type configuration.
- 
+
  */
 export const channelTable = createLazyTableProxy(createChannelTable);

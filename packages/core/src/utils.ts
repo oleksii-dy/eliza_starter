@@ -31,7 +31,9 @@ function upgradeDoubleToTriple(tpl: string) {
     /(?<!{){{(?![{#\/!>])([\s\S]*?)}}/g,
     (_match: string, inner: string) => {
       // keep the block keyword {{else}} unchanged
-      if (inner.trim() === 'else') return `{{${inner}}}`;
+      if (inner.trim() === 'else') {
+        return `{{${inner}}}`;
+      }
       return `{{{${inner}}}}`;
     }
   );
@@ -268,8 +270,8 @@ export const formatMessages = ({
       const attachmentString =
         attachments && attachments.length > 0
           ? ` (Attachments: ${attachments
-              .map((media) => `[${media.id} - ${media.title} (${media.url})]`)
-              .join(', ')})`
+            .map((media) => `[${media.id} - ${media.title} (${media.url})]`)
+            .join(', ')})`
           : null;
 
       const messageTime = new Date(message.createdAt ?? Date.now());
@@ -290,8 +292,8 @@ export const formatMessages = ({
       const actionString =
         messageActions && messageActions.length > 0
           ? `${
-              textString ? '' : timestampString
-            } (${formattedName}'s actions: ${messageActions.join(', ')})`
+            textString ? '' : timestampString
+          } (${formattedName}'s actions: ${messageActions.join(', ')})`
           : null;
 
       // for each thought, action, text or attachment, add a new line, with text first, then thought, then action, then attachment
@@ -341,11 +343,13 @@ const jsonBlockPattern = /```json\n([\s\S]*?)\n```/;
  * @returns An object with key-value pairs extracted from the XML, or null if parsing fails.
  */
 export function parseKeyValueXml(text: string): Record<string, any> | null {
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
 
   // First, try to find a specific <response> block (the one we actually want)
   // Use a more permissive regex to handle cases where there might be multiple XML blocks
-  let xmlBlockMatch = text.match(/<response>([\s\S]*?)<\/response>/);
+  const xmlBlockMatch = text.match(/<response>([\s\S]*?)<\/response>/);
   let xmlContent: string;
 
   if (xmlBlockMatch) {
@@ -356,7 +360,7 @@ export function parseKeyValueXml(text: string): Record<string, any> | null {
     const fallbackMatch = text.match(/<(\w+)>([\s\S]*?)<\/\1>/);
     if (!fallbackMatch) {
       logger.warn('Could not find XML block in text');
-      logger.debug('Text content:', text.substring(0, 200) + '...');
+      logger.debug('Text content:', `${text.substring(0, 200)}...`);
       return null;
     }
     xmlContent = fallbackMatch[2];
@@ -399,7 +403,7 @@ export function parseKeyValueXml(text: string): Record<string, any> | null {
   // Return null if no key-value pairs were found
   if (Object.keys(result).length === 0) {
     logger.warn('No key-value pairs extracted from XML content');
-    logger.debug('XML content was:', xmlContent.substring(0, 200) + '...');
+    logger.debug('XML content was:', `${xmlContent.substring(0, 200)}...`);
     return null;
   }
 
@@ -538,12 +542,18 @@ export async function splitChunks(content: string, chunkSize = 512, bleed = 20):
  * Trims the provided text prompt to a specified token limit using a tokenizer model and type.
  */
 export async function trimTokens(prompt: string, maxTokens: number, runtime: IAgentRuntime) {
-  if (!prompt) throw new Error('Trim tokens received a null prompt');
+  if (!prompt) {
+    throw new Error('Trim tokens received a null prompt');
+  }
 
   // if prompt is less than of maxtokens / 5, skip
-  if (prompt.length < maxTokens / 5) return prompt;
+  if (prompt.length < maxTokens / 5) {
+    return prompt;
+  }
 
-  if (maxTokens <= 0) throw new Error('maxTokens must be positive');
+  if (maxTokens <= 0) {
+    throw new Error('maxTokens must be positive');
+  }
 
   const tokens = await runtime.useModel(ModelType.TEXT_TOKENIZER_ENCODE, {
     prompt,
@@ -586,7 +596,9 @@ export function safeReplacer() {
  * @returns {boolean} - Returns `true` for affirmative inputs, `false` for negative or unrecognized inputs
  */
 export function parseBooleanFromText(value: string | undefined | null): boolean {
-  if (!value) return false;
+  if (!value) {
+    return false;
+  }
 
   const affirmative = ['YES', 'Y', 'TRUE', 'T', '1', 'ON', 'ENABLE'];
   const negative = ['NO', 'N', 'FALSE', 'F', '0', 'OFF', 'DISABLE'];

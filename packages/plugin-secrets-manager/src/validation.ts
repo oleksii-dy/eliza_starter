@@ -6,7 +6,7 @@ import type { ValidationResult } from './types';
  */
 export const validationStrategies = {
   api_key: {
-    openai: async (key: string): Promise<ValidationResult> => {
+    openai: async (_key: string): Promise<ValidationResult> => {
       try {
         const response = await fetch('https://api.openai.com/v1/models', {
           headers: {
@@ -37,7 +37,7 @@ export const validationStrategies = {
       }
     },
 
-    groq: async (key: string): Promise<ValidationResult> => {
+    groq: async (_key: string): Promise<ValidationResult> => {
       try {
         const response = await fetch('https://api.groq.com/openai/v1/models', {
           headers: {
@@ -66,7 +66,7 @@ export const validationStrategies = {
       }
     },
 
-    anthropic: async (key: string): Promise<ValidationResult> => {
+    anthropic: async (_key: string): Promise<ValidationResult> => {
       try {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
@@ -105,7 +105,7 @@ export const validationStrategies = {
   },
 
   private_key: {
-    rsa: async (key: string): Promise<ValidationResult> => {
+    rsa: async (_key: string): Promise<ValidationResult> => {
       try {
         const crypto = await import('crypto');
 
@@ -146,7 +146,7 @@ export const validationStrategies = {
       }
     },
 
-    ed25519: async (key: string): Promise<ValidationResult> => {
+    ed25519: async (_key: string): Promise<ValidationResult> => {
       try {
         const crypto = await import('crypto');
 
@@ -167,7 +167,7 @@ export const validationStrategies = {
 
         // Verify with public key
         const publicKey = crypto.createPublicKey(keyObject);
-        const isValid = crypto.verify(null, Buffer.from(testData), publicKey, signature);
+        const _isValid = crypto.verify(null, Buffer.from(testData), publicKey, signature);
 
         if (isValid) {
           return {
@@ -293,7 +293,9 @@ export async function validateEnvVar(
     }
 
     // Default validation - just check if value exists
-    elizaLogger.warn(`No specific validation strategy found for ${varName}, using basic validation`);
+    elizaLogger.warn(
+      `No specific validation strategy found for ${varName}, using basic validation`
+    );
     return {
       isValid: true,
       details: 'Basic validation passed - value is present',

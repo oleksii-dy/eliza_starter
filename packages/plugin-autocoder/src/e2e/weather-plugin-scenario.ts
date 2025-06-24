@@ -36,7 +36,7 @@ export class WeatherPluginScenarioTestSuite implements TestSuite {
         );
 
         logger.info(
-          `Agent: I'll create a weather plugin for you. Let me start by researching weather APIs and best practices.`
+          'Agent: I\'ll create a weather plugin for you. Let me start by researching weather APIs and best practices.'
         );
         logger.info(`Project created: ${project.id}`);
 
@@ -103,7 +103,7 @@ export class WeatherPluginScenarioTestSuite implements TestSuite {
 
         // Check progress after MVP phase
         currentProject = await orchestrationService.getProject(project.id);
-        if (!currentProject) return;
+        if (!currentProject) {return;}
 
         logger.info('');
         logger.info("Agent: I've completed the MVP! The plugin now has:");
@@ -147,7 +147,7 @@ export class WeatherPluginScenarioTestSuite implements TestSuite {
         }
 
         currentProject = await orchestrationService.getProject(project.id);
-        if (!currentProject) return;
+        if (!currentProject) {return;}
 
         // Check if we need publishing secrets
         if (currentProject.status === 'awaiting-secrets') {

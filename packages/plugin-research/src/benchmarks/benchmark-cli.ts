@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { BenchmarkRunner } from './benchmark-runner';
 import { STANDARD_BENCHMARKS, getBenchmarkByName, getAllBenchmarkNames } from './standard-benchmarks';
 import { ResearchService } from '../service';
@@ -19,7 +19,7 @@ class CLIRuntime {
   private loadEnvironmentVariables() {
     const envVars = [
       'TAVILY_API_KEY',
-      'SERPER_API_KEY', 
+      'SERPER_API_KEY',
       'EXA_API_KEY',
       'SERPAPI_API_KEY',
       'FIRECRAWL_API_KEY',
@@ -51,7 +51,7 @@ class CLIRuntime {
       // Could integrate with OpenAI here
       throw new Error('CLI mode: Please implement AI model integration for full benchmark functionality');
     }
-    
+
     throw new Error('CLI mode: No AI model available. Set OPENAI_API_KEY or ANTHROPIC_API_KEY');
   }
 
@@ -68,20 +68,20 @@ class CLIRuntime {
 
 async function main() {
   const args = process.argv.slice(2);
-  
+
   if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
     printHelp();
     process.exit(0);
   }
 
   const command = args[0];
-  
+
   try {
     switch (command) {
       case 'list':
         listBenchmarks();
         break;
-        
+
       case 'run':
         if (args.length < 2) {
           console.error('Error: Please specify a benchmark name');
@@ -91,11 +91,11 @@ async function main() {
         }
         await runBenchmark(args[1], args.slice(2));
         break;
-        
+
       case 'results':
         await showResults(args.slice(1));
         break;
-        
+
       default:
         console.error(`Unknown command: ${command}`);
         printHelp();
@@ -147,7 +147,7 @@ Configuration:
 
 function listBenchmarks() {
   console.log('Available Benchmarks:\n');
-  
+
   Object.entries(STANDARD_BENCHMARKS).forEach(([name, config]) => {
     console.log(`📊 ${config.name}`);
     console.log(`   ID: ${name}`);
@@ -160,7 +160,7 @@ function listBenchmarks() {
 
 async function runBenchmark(benchmarkName: string, additionalArgs: string[]) {
   const config = getBenchmarkByName(benchmarkName);
-  
+
   if (!config) {
     console.error(`Benchmark '${benchmarkName}' not found`);
     console.error('Available benchmarks:', getAllBenchmarkNames().join(', '));
@@ -192,26 +192,26 @@ async function runBenchmark(benchmarkName: string, additionalArgs: string[]) {
   // Run benchmark
   console.log('⏳ Running benchmark...\n');
   const startTime = Date.now();
-  
+
   try {
     const result = await runner.runBenchmark(config);
-    
+
     const duration = Date.now() - startTime;
-    
+
     console.log('\n🎉 Benchmark completed successfully!');
     console.log(`⏱️  Total duration: ${(duration / 1000).toFixed(1)}s`);
     console.log(`✅ Success rate: ${((result.summary.successfulQueries / result.summary.totalQueries) * 100).toFixed(1)}%`);
     console.log(`📊 Quality grade: ${result.summary.qualityGrade}`);
     console.log(`📁 Results saved to: ${config.outputDir}`);
-    
+
     if (result.summary.averageRaceScore) {
       console.log(`🎯 Average RACE score: ${(result.summary.averageRaceScore * 100).toFixed(1)}%`);
     }
-    
+
     if (result.summary.averageFactScore) {
       console.log(`📚 Average FACT score: ${(result.summary.averageFactScore * 100).toFixed(1)}%`);
     }
-    
+
   } catch (error) {
     console.error('\n❌ Benchmark failed:', error);
     process.exit(1);
@@ -220,18 +220,18 @@ async function runBenchmark(benchmarkName: string, additionalArgs: string[]) {
 
 async function showResults(args: string[]) {
   const outputDir = '/Users/shawwalters/eliza-self/packages/docs/benchmarks';
-  
+
   try {
     const files = await fs.readdir(outputDir);
     const reportFiles = files.filter(f => f.endsWith('_report.md'));
-    
+
     if (reportFiles.length === 0) {
       console.log('No benchmark results found');
       return;
     }
 
     const latest = args.includes('--latest');
-    
+
     if (latest) {
       // Show the latest report
       const latestReport = reportFiles.sort().reverse()[0];
@@ -240,21 +240,21 @@ async function showResults(args: string[]) {
     } else {
       // List all reports
       console.log('Available benchmark reports:\n');
-      
+
       reportFiles.sort().reverse().forEach(file => {
         const parts = file.replace('_report.md', '').split('_');
         const runId = parts.pop();
         const benchmarkId = parts.join('_');
-        
+
         console.log(`📊 ${benchmarkId}`);
         console.log(`   Run ID: ${runId}`);
         console.log(`   File: ${file}`);
         console.log('');
       });
-      
+
       console.log('Use --latest to view the most recent report');
     }
-    
+
   } catch (error) {
     console.error('Failed to read results:', error);
   }
@@ -263,21 +263,21 @@ async function showResults(args: string[]) {
 async function validateEnvironment() {
   const required = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY'];
   const searchProviders = ['TAVILY_API_KEY', 'SERPER_API_KEY', 'EXA_API_KEY', 'SERPAPI_API_KEY'];
-  
+
   // Check for at least one AI model key
   const hasAIKey = required.some(key => process.env[key]);
   if (!hasAIKey) {
     console.warn('⚠️  Warning: No AI model API key found');
     console.warn('   Set OPENAI_API_KEY or ANTHROPIC_API_KEY for full functionality');
   }
-  
+
   // Check for at least one search provider
   const hasSearchKey = searchProviders.some(key => process.env[key]);
   if (!hasSearchKey) {
     console.warn('⚠️  Warning: No search provider API key found');
     console.warn('   Set at least one of: TAVILY_API_KEY, SERPER_API_KEY, EXA_API_KEY, SERPAPI_API_KEY');
   }
-  
+
   if (!hasAIKey || !hasSearchKey) {
     console.warn('   Some benchmark features may be limited\n');
   }

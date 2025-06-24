@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { ResearchService } from './src/service';
-import { elizaLogger, IAgentRuntime, ModelType, Service } from '@elizaos/core';
+import { logger, IAgentRuntime, ModelType, Service } from '@elizaos/core';
 import { ResearchDepth } from './src/types';
 
 // Create minimal runtime
@@ -19,7 +19,7 @@ const createRuntime = (researchService?: ResearchService): IAgentRuntime => {
       return process.env[key] || '';
     },
 
-    getService: function <T extends Service>(name: string): T | null {
+    getService <T extends Service>(name: string): T | null {
       if (name === 'research' && researchService) {
         return researchService as any as T;
       }
@@ -27,7 +27,7 @@ const createRuntime = (researchService?: ResearchService): IAgentRuntime => {
     },
 
     useModel: async (modelType: string, params: any) => {
-      console.log(`\n[DEBUG] Model call:`, {
+      console.log('\n[DEBUG] Model call:', {
         modelType,
         promptLength: params.messages?.[0]?.content?.length || params.text?.length || 0,
         temperature: params.temperature,
@@ -74,7 +74,7 @@ const createRuntime = (researchService?: ResearchService): IAgentRuntime => {
     evaluators: [],
     plugins: [],
 
-    logger: elizaLogger,
+    logger: logger,
   } as any;
 
   return runtime;
@@ -87,7 +87,7 @@ async function debugResearchFlow() {
   console.log('=== Query 1: Japan Elderly Population ===');
   const runtime1 = createRuntime();
   const service1 = await ResearchService.start(runtime1);
-  runtime1.getService = function <T extends Service>(name: string): T | null {
+  runtime1.getService = function <T extends Service> (name: string): T | null {
     if (name === 'research') {
       return service1 as any as T;
     }
@@ -123,7 +123,7 @@ async function debugResearchFlow() {
   console.log('=== Query 2: Investment Philosophies (Fresh Service) ===');
   const runtime2 = createRuntime();
   const service2 = await ResearchService.start(runtime2);
-  runtime2.getService = function <T extends Service>(name: string): T | null {
+  runtime2.getService = function <T extends Service> (name: string): T | null {
     if (name === 'research') {
       return service2 as any as T;
     }

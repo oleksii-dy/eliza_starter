@@ -17,10 +17,10 @@ export const crossmintPaymentsProvider: Provider = {
   dynamic: true, // Only when explicitly requested
   position: 15,
 
-  get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
+  get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
     try {
       const crossmintService = runtime.getService<CrossMintService>('crossmint');
-      
+
       if (!crossmintService) {
         return {
           text: '',
@@ -35,7 +35,7 @@ export const crossmintPaymentsProvider: Provider = {
       const supportedNetworks = crossmintService.getSupportedNetworks();
 
       const paymentsList = recentPayments
-        .map(payment => 
+        .map(payment =>
           `- ${payment.id}: ${payment.amount} ${payment.currency} (${payment.status}) on ${payment.network}`
         )
         .join('\n');
@@ -86,7 +86,7 @@ Available Actions:
       };
     } catch (error) {
       logger.error('Error in CrossMint payments provider:', error);
-      
+
       return {
         text: '[CROSSMINT X.402 PAYMENTS]\nPayment information temporarily unavailable\n[/CROSSMINT X.402 PAYMENTS]',
         values: {

@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
+import { EnhancedSecretManager } from './enhanced-service';
 import { envPlugin } from './index';
-import { EnvManagerService } from './service';
 
 describe('index', () => {
   describe('envPlugin', () => {
@@ -10,7 +10,7 @@ describe('index', () => {
       expect(envPlugin.description).toContain('Secret and environment variable management');
     });
 
-    it('should include EnvManagerService in services', () => {
+    it('should include EnhancedSecretManager in services', () => {
       expect(envPlugin.services).toBeDefined();
       expect(envPlugin.services?.length).toBeGreaterThan(0);
     });
@@ -42,7 +42,7 @@ describe('index', () => {
     it('should export types', () => {
       // Test that types are exported by importing them dynamically
       import('./index').then((module) => {
-        expect(module.EnvManagerService).toBe(EnvManagerService);
+        expect(module.EnhancedSecretManager).toBe(EnhancedSecretManager);
       });
     });
   });

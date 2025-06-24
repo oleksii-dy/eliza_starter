@@ -20,8 +20,12 @@ import {
  * Formats a setting value for display, respecting privacy flags
  */
 const formatSettingValue = (setting: Setting, isOnboarding: boolean): string => {
-  if (setting.value === null) return 'Not set';
-  if (setting.secret && !isOnboarding) return '****************';
+  if (setting.value === null) {
+    return 'Not set';
+  }
+  if (setting.secret && !isOnboarding) {
+    return '****************';
+  }
   return String(setting.value);
 };
 
@@ -38,7 +42,9 @@ function generateStatusMessage(
     // Format settings for display
     const formattedSettings = Object.entries(worldSettings)
       .map(([key, setting]) => {
-        if (typeof setting !== 'object' || !setting.name) return null;
+        if (typeof setting !== 'object' || !setting.name) {
+          return null;
+        }
 
         const description = setting.description || '';
         const usageDescription = setting.usageDescription || '';

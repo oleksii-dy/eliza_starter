@@ -5,7 +5,7 @@ import { type IAgentRuntime, type UUID, stringToUuid, type Memory, ChannelType }
  */
 export async function createTestWorld(runtime: IAgentRuntime): Promise<UUID> {
   const worldId = stringToUuid(`test-world-${Date.now()}`);
-  
+
   try {
     // Check if world already exists
     const existingWorld = await runtime.getWorld(worldId);
@@ -36,7 +36,7 @@ export async function createTestWorld(runtime: IAgentRuntime): Promise<UUID> {
  */
 export async function createTestRoom(runtime: IAgentRuntime, worldId: UUID): Promise<UUID> {
   const roomId = stringToUuid(`test-room-${Date.now()}`);
-  
+
   await runtime.createRoom({
     id: roomId,
     name: `Test Room ${Date.now()}`,
@@ -85,14 +85,14 @@ export async function waitForCondition(
   interval: number = 100
 ): Promise<void> {
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < timeout) {
     if (await condition()) {
       return;
     }
     await new Promise(resolve => setTimeout(resolve, interval));
   }
-  
+
   throw new Error(`Condition not met within ${timeout}ms`);
 }
 
@@ -114,7 +114,7 @@ export function mockLLMResponse(type: 'entity' | 'relationship' | 'trust') {
           },
         }],
       };
-    
+
     case 'relationship':
       return {
         relationships: [{
@@ -124,7 +124,7 @@ export function mockLLMResponse(type: 'entity' | 'relationship' | 'trust') {
           evidence: 'They work together on test projects',
         }],
       };
-    
+
     case 'trust':
       return {
         trustDelta: 0.1,
@@ -133,4 +133,4 @@ export function mockLLMResponse(type: 'entity' | 'relationship' | 'trust') {
         riskLevel: 'low',
       };
   }
-} 
+}

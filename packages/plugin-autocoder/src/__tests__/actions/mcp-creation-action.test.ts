@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { createMCPAction } from '../../actions/mcp-creation-action';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
 // Mock the MCP creation service
-const mockCreateMCPProject = vi.fn();
-vi.mock('../../services/mcp-creation-service', () => ({
-  MCPCreationService: vi.fn().mockImplementation(() => ({
+const mockCreateMCPProject = mock();
+mock.module('../../services/mcp-creation-service', () => ({
+  MCPCreationService: mock().mockImplementation(() => ({
     createMCPProject: mockCreateMCPProject,
   })),
 }));
@@ -19,7 +19,7 @@ describe('createMCPAction', () => {
   let mockSecretsManager: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     // Reset the mock
     mockCreateMCPProject.mockReset();
@@ -41,12 +41,16 @@ describe('createMCPAction', () => {
     mockRuntime = {
       agentId: 'test-agent',
       character: { name: 'Test Agent' },
-      getService: vi.fn().mockImplementation((name) => {
-        if (name === 'orchestration') return mockOrchestrationService;
-        if (name === 'secrets-manager') return mockSecretsManager;
+      getService: mock().mockImplementation((name) => {
+        if (name === 'orchestration') {
+          return mockOrchestrationService;
+        }
+        if (name === 'secrets-manager') {
+          return mockSecretsManager;
+        }
         return null;
       }),
-      composeState: vi.fn().mockResolvedValue({
+      composeState: mock().mockResolvedValue({
         values: {},
         data: {},
         text: 'test state',
@@ -74,7 +78,7 @@ describe('createMCPAction', () => {
     } as State;
 
     // Create mock callback
-    mockCallback = vi.fn();
+    mockCallback = mock();
   });
 
   describe('validate', () => {
@@ -84,8 +88,10 @@ describe('createMCPAction', () => {
     });
 
     it('should return false when orchestration service is not available', async () => {
-      mockRuntime.getService = vi.fn().mockImplementation((name) => {
-        if (name === 'secrets-manager') return mockSecretsManager;
+      mockRuntime.getService = mock().mockImplementation((name) => {
+        if (name === 'secrets-manager') {
+          return mockSecretsManager;
+        }
         return null;
       });
 
@@ -94,8 +100,10 @@ describe('createMCPAction', () => {
     });
 
     it('should return false when secrets manager is not available', async () => {
-      mockRuntime.getService = vi.fn().mockImplementation((name) => {
-        if (name === 'orchestration') return mockOrchestrationService;
+      mockRuntime.getService = mock().mockImplementation((name) => {
+        if (name === 'orchestration') {
+          return mockOrchestrationService;
+        }
         return null;
       });
 
@@ -114,7 +122,7 @@ describe('createMCPAction', () => {
   describe('handler', () => {
     it('should create a basic MCP project successfully', async () => {
       mockMessage.content.text = 'Create an MCP server called weather-service';
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
 
       await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
@@ -142,7 +150,7 @@ describe('createMCPAction', () => {
 
     it('should extract tools from message', async () => {
       mockMessage.content.text = 'Create an MCP server for weather and file operations';
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
 
       await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
@@ -158,7 +166,7 @@ describe('createMCPAction', () => {
     });
 
     it('should extract resources from message', async () => {
-      mockMessage.content.text = `Create an MCP server with config and data resources`;
+      mockMessage.content.text = 'Create an MCP server with config and data resources';
 
       await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
@@ -173,7 +181,8 @@ describe('createMCPAction', () => {
     });
 
     it('should handle complex requirements', async () => {
-      mockMessage.content.text = `Create an MCP server called api-service with weather, web scraping, and database query tools`;
+      mockMessage.content.text =
+        'Create an MCP server called api-service with weather, web scraping, and database query tools';
 
       await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
@@ -208,7 +217,7 @@ describe('createMCPAction', () => {
     });
 
     it('should handle missing services', async () => {
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
+      mockRuntime.getService = mock().mockReturnValue(null);
 
       await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 

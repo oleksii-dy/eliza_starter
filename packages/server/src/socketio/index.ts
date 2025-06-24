@@ -26,7 +26,7 @@ export class SocketIORouter {
   }
 
   setupListeners(io: SocketIOServer) {
-    logger.info(`[SocketIO] Setting up Socket.IO event listeners`);
+    logger.info('[SocketIO] Setting up Socket.IO event listeners');
     const messageTypes = Object.keys(SOCKET_MESSAGE_TYPE).map(
       (key) => `${key}: ${SOCKET_MESSAGE_TYPE[key as keyof typeof SOCKET_MESSAGE_TYPE]}`
     );
@@ -53,7 +53,7 @@ export class SocketIORouter {
       logger.info(
         `[SocketIO] SEND_MESSAGE event received directly: ${JSON.stringify({
           senderId: payload.senderId,
-          channelId: channelId,
+          channelId,
           messagePreview,
         })}`
       );
@@ -125,12 +125,12 @@ export class SocketIORouter {
     const { agentId, entityId, serverId, metadata } = payload;
 
     logger.debug(
-      `[SocketIO] handleChannelJoining called with payload:`,
+      '[SocketIO] handleChannelJoining called with payload:',
       JSON.stringify(payload, null, 2)
     );
 
     if (!channelId) {
-      this.sendErrorResponse(socket, `channelId is required for joining.`);
+      this.sendErrorResponse(socket, 'channelId is required for joining.');
       return;
     }
 
@@ -172,7 +172,7 @@ export class SocketIORouter {
 
         logger.info(`[SocketIO] ENTITY_JOINED event emitted successfully for ${entityId}`);
       } else {
-        logger.warn(`[SocketIO] No runtime available to emit ENTITY_JOINED event`);
+        logger.warn('[SocketIO] No runtime available to emit ENTITY_JOINED event');
       }
     } else {
       logger.debug(
@@ -210,7 +210,7 @@ export class SocketIORouter {
     if (!validateUuid(channelId) || !isValidServerId || !validateUuid(senderId) || !message) {
       this.sendErrorResponse(
         socket,
-        `For SEND_MESSAGE: channelId, serverId (server_id), senderId (author_id), and message are required.`
+        'For SEND_MESSAGE: channelId, serverId (server_id), senderId (author_id), and message are required.'
       );
       return;
     }
@@ -220,7 +220,7 @@ export class SocketIORouter {
       const isDmForWorldSetup = metadata?.isDm || metadata?.channelType === ChannelType.DM;
       if (isDmForWorldSetup && senderId) {
         logger.info(
-          `[SocketIO] Detected DM channel during message submission, emitting ENTITY_JOINED for proper world setup`
+          '[SocketIO] Detected DM channel during message submission, emitting ENTITY_JOINED for proper world setup'
         );
 
         const runtime = Array.from(this.agents.values())[0];
@@ -307,7 +307,7 @@ export class SocketIORouter {
           );
 
           // For DM channels, we need to determine the participants
-          let participants = [senderId as UUID];
+          const participants = [senderId as UUID];
           if (isDmChannel) {
             // Try to extract the other participant from metadata or payload
             const otherParticipant =
@@ -366,15 +366,15 @@ export class SocketIORouter {
       // Immediately broadcast the message to all clients in the channel
       const messageBroadcast = {
         id: createdRootMessage.id,
-        senderId: senderId,
+        senderId,
         senderName: senderName || 'User',
         text: message,
-        channelId: channelId,
+        channelId,
         roomId: channelId, // Keep for backward compatibility
-        serverId: serverId, // Use serverId at message server layer
+        serverId, // Use serverId at message server layer
         createdAt: new Date(createdRootMessage.createdAt).getTime(),
         source: source || 'socketio_client',
-        attachments: attachments,
+        attachments,
       };
 
       // Broadcast to everyone in the channel except the sender
@@ -446,7 +446,9 @@ export class SocketIORouter {
   }
 
   public broadcastLog(io: SocketIOServer, logEntry: any) {
-    if (this.logStreamConnections.size === 0) return;
+    if (this.logStreamConnections.size === 0) {
+      return;
+    }
     const logData = { type: 'log_entry', payload: logEntry };
     this.logStreamConnections.forEach((filters, socketId) => {
       const socket = io.sockets.sockets.get(socketId);

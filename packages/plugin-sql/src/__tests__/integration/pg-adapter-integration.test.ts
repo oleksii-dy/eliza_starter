@@ -167,7 +167,6 @@ describe('PostgreSQL Adapter Direct Integration Tests', () => {
       it('should handle query errors gracefully', async () => {
         const db = adapter.getDatabase();
 
-        // The execute method returns a promise, so we need to handle it properly
         try {
           await db.execute(sql`SELECT * FROM non_existent_table`);
           // If we get here, the test should fail

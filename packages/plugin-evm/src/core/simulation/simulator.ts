@@ -25,12 +25,12 @@ export interface SimulatorOptions {
 export class TransactionSimulator {
   constructor(
     private runtime: IAgentRuntime,
-    private chainService: ChainConfigService
+    private chainService: ChainConfigService,
   ) {}
 
   async simulate(
     tx: TransactionRequest,
-    options: SimulatorOptions = {}
+    options: SimulatorOptions = {},
   ): Promise<SimulationResult> {
     try {
       const chainId = tx.chainId || 1;
@@ -63,7 +63,7 @@ export class TransactionSimulator {
 
   private async simulateWithTenderly(
     tx: TransactionRequest,
-    options: SimulatorOptions
+    options: SimulatorOptions,
   ): Promise<SimulationResult> {
     const apiKey = this.runtime.getSetting('TENDERLY_API_KEY');
     const projectSlug = this.runtime.getSetting('TENDERLY_PROJECT_SLUG') || 'default';
@@ -91,7 +91,7 @@ export class TransactionSimulator {
           gas_price: tx.gasPrice?.toString(),
           block_number: options.forkBlock,
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -129,7 +129,7 @@ export class TransactionSimulator {
   private async simulateWithDebugTrace(
     client: PublicClient,
     tx: TransactionRequest,
-    options: SimulatorOptions
+    options: SimulatorOptions,
   ): Promise<SimulationResult> {
     // Prepare transaction for tracing
     const traceTx = {
@@ -201,7 +201,7 @@ export class TransactionSimulator {
 
   private async simulateWithEthCall(
     client: PublicClient,
-    tx: TransactionRequest
+    tx: TransactionRequest,
   ): Promise<SimulationResult> {
     try {
       // Estimate gas first
@@ -320,7 +320,7 @@ export class TransactionSimulator {
       simulation.logs?.some(
         (log: any) =>
           log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef' &&
-          BigInt(log.data || 0) === 0n
+          BigInt(log.data || 0) === 0n,
       )
     ) {
       warnings.push('Zero-value token transfer detected');
@@ -362,7 +362,7 @@ export class TransactionSimulator {
 
   async simulateBatch(
     transactions: TransactionRequest[],
-    options: SimulatorOptions = {}
+    options: SimulatorOptions = {},
   ): Promise<SimulationResult[]> {
     // Simulate transactions in sequence to account for state changes
     const results: SimulationResult[] = [];
@@ -398,7 +398,7 @@ export class TransactionSimulator {
 
   async checkContractSafety(
     contractAddress: Address,
-    chainId: number
+    chainId: number,
   ): Promise<{
     isVerified: boolean;
     hasProxy: boolean;
@@ -478,7 +478,7 @@ export class TransactionSimulator {
 // Export factory function
 export function createTransactionSimulator(
   runtime: IAgentRuntime,
-  chainService: ChainConfigService
+  chainService: ChainConfigService,
 ): TransactionSimulator {
   return new TransactionSimulator(runtime, chainService);
 }

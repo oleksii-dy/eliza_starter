@@ -61,7 +61,7 @@ export class RepositoryManager {
           await new Promise((resolve) => setTimeout(resolve, 100));
           await fs.access(repoPath);
           elizaLogger.info(
-            `[REPO-MANAGER] Git clone completed despite null exit code (Bun timing issue)`
+            '[REPO-MANAGER] Git clone completed despite null exit code (Bun timing issue)'
           );
         } catch {
           const stderr = await new Response(cloneResult.stderr).text();
@@ -84,7 +84,7 @@ export class RepositoryManager {
 
       if (checkoutResult.exitCode === null) {
         elizaLogger.info(
-          `[REPO-MANAGER] Git checkout completed despite null exit code (Bun timing issue)`
+          '[REPO-MANAGER] Git checkout completed despite null exit code (Bun timing issue)'
         );
       }
 
@@ -106,7 +106,7 @@ export class RepositoryManager {
 
       if (branchResult.exitCode === null) {
         elizaLogger.info(
-          `[REPO-MANAGER] Git branch creation completed despite null exit code (Bun timing issue)`
+          '[REPO-MANAGER] Git branch creation completed despite null exit code (Bun timing issue)'
         );
       }
 
@@ -118,7 +118,7 @@ export class RepositoryManager {
       elizaLogger.info(`[REPO-MANAGER] Repository ready at ${repoPath}`);
       return repoPath;
     } catch (error) {
-      elizaLogger.error(`[REPO-MANAGER] Failed to clone repository:`, error);
+      elizaLogger.error('[REPO-MANAGER] Failed to clone repository:', error);
       throw error;
     }
   }
@@ -217,26 +217,26 @@ export class RepositoryManager {
       let outputCommand = '';
       switch (testFramework) {
         case 'jest':
-          testCommand = `npm test -- --json --outputFile=test-results.json --passWithNoTests`;
+          testCommand = 'npm test -- --json --outputFile=test-results.json --passWithNoTests';
           break;
         case 'mocha':
-          testCommand = `npm test -- --reporter json`;
+          testCommand = 'npm test -- --reporter json';
           outputCommand = ' > test-results.json 2>&1';
           break;
-        case 'vitest':
-          testCommand = `npm test -- --reporter=json --outputFile=test-results.json`;
+        case 'bun:test':
+          testCommand = 'bun test --reporter=json --outputFile=test-results.json';
           break;
         case 'karma':
-          testCommand = `npm test -- --single-run --reporters json`;
+          testCommand = 'npm test -- --single-run --reporters json';
           outputCommand = ' > test-results.json 2>&1';
           break;
         case 'tape':
-          testCommand = `npm test`;
+          testCommand = 'npm test';
           outputCommand = ' > test-results.json 2>&1';
           break;
         default:
           // For unknown frameworks, try to run with safe defaults
-          testCommand = `npm test`;
+          testCommand = 'npm test';
       }
 
       elizaLogger.info(`[REPO-MANAGER] Running test command: ${testCommand}${outputCommand}`);
@@ -286,7 +286,7 @@ export class RepositoryManager {
       const duration = Date.now() - startTime;
 
       // Parse test results
-      let results: TestResults = {
+      const results: TestResults = {
         total: 0,
         passed: 0,
         failed: 0,
@@ -348,22 +348,22 @@ export class RepositoryManager {
         );
 
         // Fallback to parsing stdout/stderr
-        const combinedOutput = stdout + '\n' + stderr;
+        const combinedOutput = `${stdout}\n${stderr}`;
 
         // Try various patterns for different test frameworks
         let passMatch = combinedOutput.match(/(\d+)\s+passing/i);
         let failMatch = combinedOutput.match(/(\d+)\s+failing/i);
 
         // Alternative patterns
-        if (!passMatch) passMatch = combinedOutput.match(/(\d+)\s+pass/i);
-        if (!failMatch) failMatch = combinedOutput.match(/(\d+)\s+fail/i);
+        if (!passMatch) {passMatch = combinedOutput.match(/(\d+)\s+pass/i);}
+        if (!failMatch) {failMatch = combinedOutput.match(/(\d+)\s+fail/i);}
 
         // Jest patterns
-        if (!passMatch) passMatch = combinedOutput.match(/Tests:\s+(\d+)\s+passed/i);
-        if (!failMatch) failMatch = combinedOutput.match(/Tests:\s+(\d+)\s+failed/i);
+        if (!passMatch) {passMatch = combinedOutput.match(/Tests:\s+(\d+)\s+passed/i);}
+        if (!failMatch) {failMatch = combinedOutput.match(/Tests:\s+(\d+)\s+failed/i);}
 
-        if (passMatch) results.passed = parseInt(passMatch[1]);
-        if (failMatch) results.failed = parseInt(failMatch[1]);
+        if (passMatch) {results.passed = parseInt(passMatch[1]);}
+        if (failMatch) {results.failed = parseInt(failMatch[1]);}
         results.total = results.passed + results.failed;
 
         // If no results found, assume success if no errors in stderr
@@ -526,7 +526,7 @@ export class RepositoryManager {
 
         if (addResult.exitCode === null) {
           elizaLogger.info(
-            `[REPO-MANAGER] Git add completed despite null exit code (Bun timing issue)`
+            '[REPO-MANAGER] Git add completed despite null exit code (Bun timing issue)'
           );
         }
       } catch (error) {
@@ -561,7 +561,7 @@ export class RepositoryManager {
 
         if (resetResult.exitCode === null) {
           elizaLogger.info(
-            `[REPO-MANAGER] Git reset completed despite null exit code (Bun timing issue)`
+            '[REPO-MANAGER] Git reset completed despite null exit code (Bun timing issue)'
           );
         }
       } catch (error) {
@@ -709,7 +709,7 @@ export class RepositoryManager {
             aggressiveError
           );
           elizaLogger.warn(
-            `[REPO-MANAGER] Repository directory may remain on disk, manual cleanup may be required`
+            '[REPO-MANAGER] Repository directory may remain on disk, manual cleanup may be required'
           );
         }
       }
@@ -847,22 +847,22 @@ export class RepositoryManager {
       };
 
       // Check dependencies first
-      if (deps.jest || deps['@types/jest']) return 'jest';
-      if (deps.vitest) return 'vitest';
-      if (deps.mocha || deps['@types/mocha'] || deps.chai) return 'mocha';
-      if (deps.karma || deps['karma-jasmine'] || deps['karma-chrome-launcher']) return 'karma';
-      if (deps.tape || deps['tape-catch']) return 'tape';
-      if (deps['@testing-library/react']) return 'jest'; // React usually uses Jest
-      if (deps.jasmine || deps['@types/jasmine']) return 'jasmine';
+      if (deps.jest || deps['@types/jest']) {return 'jest';}
+      if (deps['bun']) {return 'bun:test';}
+      if (deps.mocha || deps['@types/mocha'] || deps.chai) {return 'mocha';}
+      if (deps.karma || deps['karma-jasmine'] || deps['karma-chrome-launcher']) {return 'karma';}
+      if (deps.tape || deps['tape-catch']) {return 'tape';}
+      if (deps['@testing-library/react']) {return 'jest';} // React usually uses Jest
+      if (deps.jasmine || deps['@types/jasmine']) {return 'jasmine';}
 
       // Check test script command
       const testScript = packageJson.scripts?.test || '';
-      if (testScript.includes('jest')) return 'jest';
-      if (testScript.includes('vitest')) return 'vitest';
-      if (testScript.includes('mocha')) return 'mocha';
-      if (testScript.includes('karma')) return 'karma';
-      if (testScript.includes('tape')) return 'tape';
-      if (testScript.includes('jasmine')) return 'jasmine';
+      if (testScript.includes('jest')) {return 'jest';}
+      if (testScript.includes('bun test')) {return 'bun:test';}
+      if (testScript.includes('mocha')) {return 'mocha';}
+      if (testScript.includes('karma')) {return 'karma';}
+      if (testScript.includes('tape')) {return 'tape';}
+      if (testScript.includes('jasmine')) {return 'jasmine';}
 
       // Check for specific patterns common in older projects
       if (testScript.includes('grunt test') || testScript.includes('gulp test')) {

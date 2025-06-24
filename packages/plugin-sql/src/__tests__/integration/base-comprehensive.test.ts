@@ -147,7 +147,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         {
           id: uuidv4() as UUID,
           agentId: testAgentId,
-          entityId: entityId,
+          entityId,
           roomId: testRoomId,
           content: { text: 'Related memory' } as Content,
           createdAt: Date.now(),
@@ -166,7 +166,7 @@ describe('Base Adapter Comprehensive Tests', () => {
       // Verify related memory is NOT deleted (memories are preserved when entity is deleted)
       const memories = await adapter.getMemories({
         agentId: testAgentId,
-        entityId: entityId,
+        entityId,
         tableName: 'memories',
       });
       expect(memories).toHaveLength(1); // Memory should still exist
@@ -262,7 +262,7 @@ describe('Base Adapter Comprehensive Tests', () => {
           id: uuidv4() as UUID,
           agentId: testAgentId,
           entityId: testEntityId,
-          roomId: roomId,
+          roomId,
           content: { text: `Memory for room ${i}` } as Content,
           createdAt: Date.now(),
           metadata: { type: 'test', roomIndex: i },
@@ -301,7 +301,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         type: 'relationship',
         worldId: testWorldId,
         entityId: testEntityId,
-        sourceEntityId: sourceEntityId,
+        sourceEntityId,
         agentId: testAgentId,
         roomId: testRoomId,
         data: {
@@ -447,7 +447,7 @@ describe('Base Adapter Comprehensive Tests', () => {
       // Store embedding in cache - log requires specific format
       await adapter.log({
         body: {
-          content: content,
+          content,
           embedding: Array.from(embedding),
         },
         entityId: testEntityId,
@@ -530,7 +530,7 @@ describe('Base Adapter Comprehensive Tests', () => {
     it('should handle malformed UUIDs safely', async () => {
       // Test various invalid UUID formats
       const invalidUUIDs = ['invalid-uuid', '', '123'];
-      
+
       for (const invalidUUID of invalidUUIDs) {
         try {
           // This should either reject gracefully or handle the invalid UUID

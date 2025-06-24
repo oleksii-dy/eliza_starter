@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import { CodeHealingManager } from '../managers/code-healing-manager';
 import { AutoCodeService } from '../services/autocode-service.js';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
@@ -23,15 +23,17 @@ describe('Error Fixing Verification Tests', () => {
 
     mockRuntime = {
       agentId: uuidv4() as UUID,
-      getSetting: vi.fn().mockImplementation((key: string) => {
-        if (key === 'ANTHROPIC_API_KEY') return 'test-key';
+      getSetting: mock().mockImplementation((key: string) => {
+        if (key === 'ANTHROPIC_API_KEY') {
+          return 'test-key';
+        }
         return null;
       }),
       logger: {
-        info: vi.fn(),
-        error: vi.fn(),
-        warn: vi.fn(),
-        debug: vi.fn(),
+        info: mock(),
+        error: mock(),
+        warn: mock(),
+        debug: mock(),
       },
     } as any;
 

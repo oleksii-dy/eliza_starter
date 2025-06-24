@@ -4,7 +4,7 @@
  */
 
 import { ResearchService } from '../service';
-import { elizaLogger, IAgentRuntime } from '@elizaos/core';
+import { logger, IAgentRuntime } from '@elizaos/core';
 import { ResearchConfig, ResearchStatus } from '../types';
 import { Character } from '@elizaos/core';
 
@@ -27,7 +27,7 @@ const createTestRuntime = (): IAgentRuntime => {
     getSetting: (key: string) => {
       // Return actual environment variables
       const value = process.env[key];
-      elizaLogger.debug(`[Runtime] getSetting(${key}) = ${value ? '<REDACTED>' : 'null'}`);
+      logger.debug(`[Runtime] getSetting(${key}) = ${value ? '<REDACTED>' : 'null'}`);
       return value || null;
     },
     getService: (name: string) => {
@@ -75,7 +75,7 @@ const createTestRuntime = (): IAgentRuntime => {
     },
     useModel: async (modelType: any, params: any) => {
       // Log model calls to see what's happening
-      elizaLogger.info('[Debug] Model called with:', {
+      logger.info('[Debug] Model called with:', {
         modelType,
         query: params?.messages?.[params.messages.length - 1]?.content,
       });
@@ -88,7 +88,7 @@ const createTestRuntime = (): IAgentRuntime => {
 };
 
 async function debugResearch() {
-  elizaLogger.info('=== Starting Research Debug ===');
+  logger.info('=== Starting Research Debug ===');
 
   const runtime = createTestRuntime();
   const service = new ResearchService(runtime);
@@ -96,7 +96,7 @@ async function debugResearch() {
   const testQuery =
     'Compare the environmental and economic impacts of different renewable energy storage technologies for grid-scale deployment';
 
-  elizaLogger.info(`Original Query: "${testQuery}"`);
+  logger.info(`Original Query: "${testQuery}"`);
 
   try {
     // Create a research project
@@ -106,7 +106,7 @@ async function debugResearch() {
       evaluationEnabled: false,
     });
 
-    elizaLogger.info('Project created:', {
+    logger.info('Project created:', {
       id: project.id,
       query: project.query,
       status: project.status,
@@ -130,7 +130,7 @@ async function debugResearch() {
     const updatedProject = await service.getProject(project.id);
 
     if (updatedProject) {
-      elizaLogger.info('Project after 2 seconds:', {
+      logger.info('Project after 2 seconds:', {
         status: updatedProject.status,
         phase: updatedProject.phase,
         sources: updatedProject.sources.length,
@@ -139,7 +139,7 @@ async function debugResearch() {
 
       // Log the first few sources if any
       if (updatedProject.sources.length > 0) {
-        elizaLogger.info(
+        logger.info(
           'First few sources found:',
           updatedProject.sources.slice(0, 3).map((s) => ({
             title: s.title,
@@ -152,10 +152,10 @@ async function debugResearch() {
     // Stop the service
     await service.stop();
   } catch (error) {
-    elizaLogger.error('Debug failed:', error);
+    logger.error('Debug failed:', error);
   }
 
-  elizaLogger.info('=== Debug Complete ===');
+  logger.info('=== Debug Complete ===');
 }
 
 // Run the debug

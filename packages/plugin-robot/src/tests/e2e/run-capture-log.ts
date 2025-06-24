@@ -25,11 +25,15 @@ async function runCaptureLogTest() {
     // Check if Phase 2 features are enabled
     const enableObjectDetection = process.env.ENABLE_OBJECT_DETECTION === 'true';
     const enablePoseDetection = process.env.ENABLE_POSE_DETECTION === 'true';
-    
+
     if (enableObjectDetection || enablePoseDetection) {
       logger.info('🚀 Phase 2 Features Enabled:');
-      if (enableObjectDetection) logger.info('   ✅ Object Detection (COCO-SSD)');
-      if (enablePoseDetection) logger.info('   ✅ Pose Detection (PoseNet)');
+      if (enableObjectDetection) {
+        logger.info('   ✅ Object Detection (COCO-SSD)');
+      }
+      if (enablePoseDetection) {
+        logger.info('   ✅ Pose Detection (PoseNet)');
+      }
     } else {
       logger.info('ℹ️  Using Phase 1 motion-based detection');
       logger.info('   Set ENABLE_OBJECT_DETECTION=true or ENABLE_POSE_DETECTION=true for Phase 2');
@@ -45,7 +49,7 @@ async function runCaptureLogTest() {
         id: agentId,
         name: 'Vision Test Agent',
         bio: ['An agent designed to test vision capabilities'],
-        system: 'You have visual perception capabilities. Describe what you see accurately.',,
+        system: 'You have visual perception capabilities. Describe what you see accurately.',
         plugins: ['vision'],
         settings: {
           VISION_PIXEL_CHANGE_THRESHOLD: '25', // Lower threshold for more sensitive detection
@@ -74,7 +78,9 @@ async function runCaptureLogTest() {
         return settings[key] || process.env[key] || null;
       },
       getService: (name: string) => {
-        if (name === 'VISION') return visionService;
+        if (name === 'VISION') {
+          return visionService;
+        }
         return null;
       },
       useModel: async (type: string, params: any) => {
@@ -86,7 +92,7 @@ async function runCaptureLogTest() {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                  Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
                 },
                 body: JSON.stringify({
                   model: 'gpt-4o-mini',
@@ -125,8 +131,9 @@ async function runCaptureLogTest() {
             }
           } else {
             // Mock response
-            return { 
-              description: 'Mock: I see a scene with various objects and details. The lighting appears normal and there are some items visible in the frame.' 
+            return {
+              description:
+                'Mock: I see a scene with various objects and details. The lighting appears normal and there are some items visible in the frame.',
             };
           }
         } else if (type === ModelType.TEXT_LARGE) {
@@ -137,7 +144,7 @@ async function runCaptureLogTest() {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                  Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
                 },
                 body: JSON.stringify({
                   model: 'gpt-4o-mini',
@@ -178,7 +185,7 @@ async function runCaptureLogTest() {
         }
         return 'Test response';
       },
-      logger: logger,
+      logger,
     } as any;
 
     // Start vision service
@@ -190,17 +197,17 @@ async function runCaptureLogTest() {
     // Run the capture log test
     const test = VisionCaptureLogTestSuite.tests[0];
     logger.info(`\n🧪 Running test: ${test.name}\n`);
-    
+
     await test.fn(runtime);
-    
+
     logger.info('\n✨ Vision capture log test completed!');
     logger.info('📁 Check the logs/ directory for captured data');
-    
+
     // Cleanup
     if (visionService) {
       await visionService.stop();
     }
-    
+
     process.exit(0);
   } catch (error) {
     logger.error('❌ Test failed:', error);
@@ -209,4 +216,4 @@ async function runCaptureLogTest() {
 }
 
 // Run the test
-runCaptureLogTest(); 
+runCaptureLogTest();

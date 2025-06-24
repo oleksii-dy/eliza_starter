@@ -2,7 +2,6 @@ import { type IAgentRuntime, elizaLogger as logger } from '@elizaos/core';
 import { PublicKey } from '@solana/web3.js';
 import { Buffer } from 'node:buffer';
 import { IWalletAdapter, PaymentMethod, PaymentStatus, TransactionResult } from '../types';
-// @ts-ignore - Plugin types not available at compile time
 import { CustodialWalletService } from '@elizaos/plugin-solana';
 
 /**
@@ -48,7 +47,7 @@ export class SolanaWalletAdapter implements IWalletAdapter {
 
     try {
       // Validate address
-      const pubkey = new PublicKey(address);
+      new PublicKey(address);
 
       if (method === PaymentMethod.SOL) {
         // Get SOL balance - the service returns balance in SOL
@@ -74,7 +73,7 @@ export class SolanaWalletAdapter implements IWalletAdapter {
     toAddress: string,
     amount: bigint,
     method: PaymentMethod,
-    privateKey?: string
+    _privateKey?: string
   ): Promise<TransactionResult> {
     if (!this.walletService) {
       throw new Error('Solana wallet service not available');
@@ -82,8 +81,8 @@ export class SolanaWalletAdapter implements IWalletAdapter {
 
     try {
       // Validate addresses
-      const fromPubkey = new PublicKey(fromAddress);
-      const toPubkey = new PublicKey(toAddress);
+      new PublicKey(fromAddress);
+      new PublicKey(toAddress);
 
       // Find the wallet entity for the fromAddress
       const wallets = await this.walletService.listWallets(this.runtime.agentId);
@@ -99,7 +98,7 @@ export class SolanaWalletAdapter implements IWalletAdapter {
         // Execute transaction through custodial service
         const result = await (this.walletService as any).executeTransaction({
           walletId: sourceWallet.id,
-          toAddress: toAddress,
+          toAddress,
           amountWei: amount, // In lamports
           initiatedBy: this.runtime.agentId,
           purpose: 'payment',
@@ -113,7 +112,7 @@ export class SolanaWalletAdapter implements IWalletAdapter {
 
         const result = await (this.walletService as any).executeTransaction({
           walletId: sourceWallet.id,
-          toAddress: toAddress,
+          toAddress,
           amountWei: amount,
           tokenAddress: usdcMint,
           initiatedBy: this.runtime.agentId,

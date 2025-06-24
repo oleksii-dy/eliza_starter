@@ -109,18 +109,19 @@ export const StarterPluginTestSuite: TestSuite = {
             `Expected character name to be "Eliza" but got "${runtime.character.name}"`
           );
         }
-        
+
         // Debug: Check if getService exists
         if (!runtime.getService) {
           throw new Error('Runtime does not have getService method');
         }
-        
+
         // Verify the plugin is loaded properly
         // First try the expected service name patterns
-        let service = runtime.getService('starter') || 
-                      runtime.getService('_StarterService') || 
-                      runtime.getService('StarterService');
-        
+        let service =
+          runtime.getService('starter') ||
+          runtime.getService('_StarterService') ||
+          runtime.getService('StarterService');
+
         // If not found, try to get all services and find it
         if (!service && runtime.getAllServices) {
           const allServices = runtime.getAllServices();
@@ -132,10 +133,14 @@ export const StarterPluginTestSuite: TestSuite = {
             }
           }
         }
-        
+
         if (!service) {
-          const serviceList = runtime.getAllServices ? Object.keys(runtime.getAllServices() || {}) : [];
-          throw new Error(`Starter service not found. Available services: ${serviceList.join(', ') || 'none'}`);
+          const serviceList = runtime.getAllServices
+            ? Object.keys(runtime.getAllServices() || {})
+            : [];
+          throw new Error(
+            `Starter service not found. Available services: ${serviceList.join(', ') || 'none'}`
+          );
         }
       },
     },
@@ -286,12 +291,13 @@ export const StarterPluginTestSuite: TestSuite = {
         if (!runtime.getService) {
           throw new Error('Runtime does not have getService method');
         }
-        
+
         // Get the service from the runtime
-        let service = runtime.getService('starter') || 
-                      runtime.getService('_StarterService') || 
-                      runtime.getService('StarterService');
-        
+        let service =
+          runtime.getService('starter') ||
+          runtime.getService('_StarterService') ||
+          runtime.getService('StarterService');
+
         // If not found, try to get all services and find it
         if (!service && runtime.getAllServices) {
           const allServices = runtime.getAllServices();
@@ -303,10 +309,14 @@ export const StarterPluginTestSuite: TestSuite = {
             }
           }
         }
-        
+
         if (!service) {
-          const serviceList = runtime.getAllServices ? Object.keys(runtime.getAllServices() || {}) : [];
-          throw new Error(`Starter service not found. Available services: ${serviceList.join(', ') || 'none'}`);
+          const serviceList = runtime.getAllServices
+            ? Object.keys(runtime.getAllServices() || {})
+            : [];
+          throw new Error(
+            `Starter service not found. Available services: ${serviceList.join(', ') || 'none'}`
+          );
         }
 
         // Check service capability description

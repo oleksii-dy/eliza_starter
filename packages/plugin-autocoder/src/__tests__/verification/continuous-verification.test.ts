@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { ContinuousVerificationManager } from '../../verification/continuous-verification-manager';
 import type { Code, VerificationContext } from '../../verification/types';
 

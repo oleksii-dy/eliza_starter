@@ -17,16 +17,16 @@ export * from './schema';
 export const researchPlugin: Plugin = {
   name: '@elizaos/plugin-research',
   description: 'PhD-level deep research across 22 domains with RACE/FACT evaluation',
-  
+
   services: [ResearchService],
   actions: researchActions,
   providers: researchProviders,
   schema: researchSchema,
-  
+
   tests: [
     deepResearchBenchSimplifiedTests
   ],
-  
+
   init: async (config: Record<string, string>, runtime: any) => {
     // Ensure API keys from environment are available
     const apiKeys = [
@@ -38,7 +38,7 @@ export const researchPlugin: Plugin = {
       'FIRECRAWL_API_KEY',
       'SEMANTIC_SCHOLAR_API_KEY'
     ];
-    
+
     // Copy environment variables to runtime settings if not already set
     for (const key of apiKeys) {
       if (process.env[key] && !runtime.getSetting(key)) {
@@ -48,7 +48,7 @@ export const researchPlugin: Plugin = {
         }
       }
     }
-    
+
     console.log('Research plugin initialized with API key configuration');
   }
 };

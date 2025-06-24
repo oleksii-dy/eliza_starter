@@ -1,5 +1,7 @@
 import {
   type Action,
+  type ActionExample,
+  type ActionResult,
   type Content,
   type HandlerCallback,
   type IAgentRuntime,
@@ -14,7 +16,7 @@ import { CreateRepositoryOptions, GitHubRepository } from '../types';
 export const getRepositoryAction: Action = {
   name: 'GET_GITHUB_REPOSITORY',
   similes: ['CHECK_REPO', 'FETCH_REPOSITORY', 'REPO_INFO', 'INSPECT_REPO'],
-  description: 'Retrieves information about a GitHub repository',
+  description: 'Retrieves information about a GitHub repository including stats, language, and metadata. Can be chained with LIST_GITHUB_ISSUES or LIST_GITHUB_PULL_REQUESTS to explore repository content',
 
   validate: async (
     runtime: IAgentRuntime,
@@ -77,15 +79,20 @@ URL: ${repository.html_url}`,
         await callback(responseContent);
       }
 
-      // Return result for chaining
+      // Return ActionResult for chaining
       return {
         text: responseContent.text,
         values: {
+          success: true,
           repository,
           owner,
           repo,
+          repositoryUrl: repository.html_url,
+          stars: repository.stargazers_count,
+          language: repository.language,
         },
         data: {
+          actionName: 'GET_GITHUB_REPOSITORY',
           repository,
           github: {
             ...state?.github,
@@ -109,20 +116,30 @@ URL: ${repository.html_url}`,
         await callback(errorContent);
       }
 
-      return errorContent;
+      return {
+        text: errorContent.text,
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        data: {
+          actionName: 'GET_GITHUB_REPOSITORY',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
 
   examples: [
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'Get information about elizaOS/eliza repository',
         },
       },
       {
-        name: 'Assistant',
+        name: '{{agent}}',
         content: {
           text: 'Repository: elizaOS/eliza\nDescription: Eliza is a simple, fast, and lightweight AI agent framework\nLanguage: TypeScript\nStars: 1234\nForks: 567\nOpen Issues: 42\nPrivate: No\nCreated: 1/15/2024\nLast Updated: 3/20/2024\nURL: https://github.com/elizaOS/eliza',
           actions: ['GET_GITHUB_REPOSITORY'],
@@ -131,27 +148,27 @@ URL: ${repository.html_url}`,
     ],
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'Check the nodejs/node repository and then list its open issues',
         },
       },
       {
-        name: 'Assistant',
+        name: '{{agent}}',
         content: {
-          text: "First, let me get information about the nodejs/node repository...\n\nRepository: nodejs/node\nDescription: Node.js JavaScript runtime\nLanguage: JavaScript\nStars: 98765\nForks: 26543\nOpen Issues: 1532\nPrivate: No\nCreated: 5/27/2014\nLast Updated: 3/21/2024\nURL: https://github.com/nodejs/node\n\nNow I'll list the open issues for this repository...",
+          text: "I'll get information about the nodejs/node repository and then list its open issues.",
           actions: ['GET_GITHUB_REPOSITORY', 'LIST_GITHUB_ISSUES'],
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 };
 
 // List Repositories Action
 export const listRepositoriesAction: Action = {
   name: 'LIST_GITHUB_REPOSITORIES',
   similes: ['LIST_REPOS', 'MY_REPOSITORIES', 'SHOW_REPOS'],
-  description: 'Lists GitHub repositories for the authenticated user',
+  description: 'Lists GitHub repositories for the authenticated user with stats and metadata. Can be chained with GET_GITHUB_REPOSITORY to inspect specific repositories or CREATE_GITHUB_REPOSITORY to add new ones',
 
   validate: async (
     runtime: IAgentRuntime,
@@ -205,14 +222,17 @@ export const listRepositoriesAction: Action = {
         await callback(responseContent);
       }
 
-      // Return result for chaining
+      // Return ActionResult for chaining
       return {
         text: responseContent.text,
         values: {
+          success: true,
           repositories,
           repositoryCount: repositories.length,
+          repositoryNames: repositories.map((repo: any) => repo.full_name),
         },
         data: {
+          actionName: 'LIST_GITHUB_REPOSITORIES',
           repositories,
           github: {
             ...state?.github,
@@ -242,20 +262,30 @@ export const listRepositoriesAction: Action = {
         await callback(errorContent);
       }
 
-      return errorContent;
+      return {
+        text: errorContent.text,
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        data: {
+          actionName: 'LIST_GITHUB_REPOSITORIES',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
 
   examples: [
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'Show me my repositories',
         },
       },
       {
-        name: 'Assistant',
+        name: '{{agent}}',
         content: {
           text: 'Your repositories (3 shown):\n• user/awesome-project (JavaScript) - ⭐ 25\n• user/my-plugin (TypeScript) - ⭐ 8\n• user/test-repo (Python) - ⭐ 2',
           actions: ['LIST_GITHUB_REPOSITORIES'],
@@ -264,27 +294,27 @@ export const listRepositoriesAction: Action = {
     ],
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'List my most recent repositories and check which ones have open pull requests',
         },
       },
       {
-        name: 'Assistant',
+        name: '{{agent}}',
         content: {
-          text: "Your repositories (5 shown):\n• user/active-project (TypeScript) - ⭐ 45\n• user/new-feature (JavaScript) - ⭐ 12\n• user/api-client (Python) - ⭐ 8\n• user/docs-site (Markdown) - ⭐ 3\n• user/test-app (Go) - ⭐ 1\n\nNow I'll check for open pull requests in each repository...",
+          text: "I'll list your most recent repositories and then check for open pull requests in each.",
           actions: ['LIST_GITHUB_REPOSITORIES', 'LIST_GITHUB_PULL_REQUESTS'],
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 };
 
 // Create Repository Action
 export const createRepositoryAction: Action = {
   name: 'CREATE_GITHUB_REPOSITORY',
   similes: ['NEW_REPO', 'MAKE_REPOSITORY', 'CREATE_REPO'],
-  description: 'Creates a new GitHub repository',
+  description: 'Creates a new GitHub repository with optional description and privacy settings. Can be chained with CREATE_GITHUB_ISSUE to add initial issues or LIST_GITHUB_REPOSITORIES to view all repositories',
 
   validate: async (
     runtime: IAgentRuntime,
@@ -367,15 +397,18 @@ Clone URL: ${repository.clone_url}`,
         await callback(responseContent);
       }
 
-      // Return result for chaining
+      // Return ActionResult for chaining
       return {
         text: responseContent.text,
         values: {
+          success: true,
           repository,
           repositoryUrl: repository.html_url,
           cloneUrl: repository.clone_url,
+          repositoryName: repository.full_name,
         },
         data: {
+          actionName: 'CREATE_GITHUB_REPOSITORY',
           repository,
           github: {
             ...state?.github,
@@ -400,20 +433,30 @@ Clone URL: ${repository.clone_url}`,
         await callback(errorContent);
       }
 
-      return errorContent;
+      return {
+        text: errorContent.text,
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        data: {
+          actionName: 'CREATE_GITHUB_REPOSITORY',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
 
   examples: [
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'Create a new repository called my-awesome-project with description: "A really cool project" and make it public',
         },
       },
       {
-        name: 'Assistant',
+        name: '{{agent}}',
         content: {
           text: 'Successfully created repository: user/my-awesome-project\nDescription: A really cool project\nPrivate: No\nURL: https://github.com/user/my-awesome-project\nClone URL: https://github.com/user/my-awesome-project.git',
           actions: ['CREATE_GITHUB_REPOSITORY'],
@@ -422,27 +465,27 @@ Clone URL: ${repository.clone_url}`,
     ],
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'Create a private repository called "secret-project" and then create an initial issue for setting up the README',
         },
       },
       {
-        name: 'Assistant',
+        name: '{{agent}}',
         content: {
-          text: "Successfully created repository: user/secret-project\nDescription: No description\nPrivate: Yes\nURL: https://github.com/user/secret-project\nClone URL: https://github.com/user/secret-project.git\n\nNow I'll create an initial issue for setting up the README...",
+          text: "I'll create a private repository called 'secret-project' and then set up an initial issue for the README.",
           actions: ['CREATE_GITHUB_REPOSITORY', 'CREATE_GITHUB_ISSUE'],
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 };
 
 // Search Repositories Action
 export const searchRepositoriesAction: Action = {
   name: 'SEARCH_GITHUB_REPOSITORIES',
   similes: ['FIND_REPOS', 'SEARCH_REPOS', 'REPO_SEARCH'],
-  description: 'Searches for GitHub repositories based on query',
+  description: 'Searches for GitHub repositories based on query with sorting and filtering options. Can be chained with GET_GITHUB_REPOSITORY to inspect specific results or GET_GITHUB_ACTIVITY to check repository activity',
 
   validate: async (
     runtime: IAgentRuntime,
@@ -509,15 +552,18 @@ export const searchRepositoriesAction: Action = {
         await callback(responseContent);
       }
 
-      // Return result for chaining
+      // Return ActionResult for chaining
       return {
         text: responseContent.text,
         values: {
+          success: true,
           repositories: searchResult.items,
           query,
           totalCount: searchResult.total_count,
+          repositoryNames: searchResult.items.map((repo: any) => repo.full_name),
         },
         data: {
+          actionName: 'SEARCH_GITHUB_REPOSITORIES',
           repositories: searchResult.items,
           github: {
             ...state?.github,
@@ -548,20 +594,30 @@ export const searchRepositoriesAction: Action = {
         await callback(errorContent);
       }
 
-      return errorContent;
+      return {
+        text: errorContent.text,
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        data: {
+          actionName: 'SEARCH_GITHUB_REPOSITORIES',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
 
   examples: [
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'Search for repositories about machine learning',
         },
       },
       {
-        name: 'Assistant',
+        name: '{{agent}}',
         content: {
           text: 'Found 50000 repositories for "machine learning" (showing 10):\n• tensorflow/tensorflow (C++) - ⭐ 185000\n  An Open Source Machine Learning Framework for Everyone\n• scikit-learn/scikit-learn (Python) - ⭐ 59000\n  Machine learning library for Python',
           actions: ['SEARCH_GITHUB_REPOSITORIES'],
@@ -570,18 +626,18 @@ export const searchRepositoriesAction: Action = {
     ],
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'Find repositories about React hooks and check the most popular one for recent activity',
         },
       },
       {
-        name: 'Assistant',
+        name: '{{agent}}',
         content: {
-          text: 'Found 15000 repositories for "React hooks" (showing 10):\n• rehooks/awesome-react-hooks (JavaScript) - ⭐ 9500\n  A collection of awesome React Hooks\n• streamich/react-use (TypeScript) - ⭐ 38000\n  React Hooks — 👍\n• alibaba/hooks (TypeScript) - ⭐ 12000\n  A high-quality & reliable React Hooks library\n\nLet me check the most popular one (streamich/react-use) for recent activity...',
+          text: "I'll search for React hooks repositories and then check the most popular one for recent activity.",
           actions: ['SEARCH_GITHUB_REPOSITORIES', 'GET_GITHUB_ACTIVITY'],
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 };

@@ -78,7 +78,7 @@ export class AudioCaptureService {
         return { available: true, tool: 'ffmpeg' };
       }
       return { available: false, tool: 'none', message: 'Unsupported platform' };
-    } catch (error) {
+    } catch (_error) {
       // Tool not found
       const toolName = platform === 'darwin' ? 'sox' : platform === 'linux' ? 'arecord' : 'ffmpeg';
       const installCmd =
@@ -162,7 +162,7 @@ export class AudioCaptureService {
     try {
       if (platform === 'darwin') {
         // macOS: Use sox
-        const device = this.config.device || 'default';
+        const _device = this.config.device || 'default';
         await execAsync(
           `sox -d -r ${this.config.sampleRate} -c ${this.config.channels} -b 16 "${outputPath}" trim 0 ${duration}`
         );
@@ -189,7 +189,7 @@ export class AudioCaptureService {
 
   private async createAudioMemory(transcription: string): Promise<void> {
     try {
-      const memory = {
+      const _memory = {
         content: {
           text: `[Audio Transcription] ${transcription}`,
           type: 'audio_transcription',
@@ -258,7 +258,7 @@ export class AudioCaptureService {
               }
             }
           }
-        } catch (error) {
+        } catch (_error) {
           // ffmpeg returns non-zero exit code when listing devices
           // but we can still parse the output
         }

@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
 import { MovementSystem } from '../../rpg/systems/MovementSystem';
 import { createTestWorld } from '../test-world-factory';
 import type { World, Entity, Component } from '../../types';
@@ -18,7 +19,7 @@ describe('MovementSystem', () => {
       id: 'player_1',
       name: 'Test Player',
       type: 'player',
-      world: world,
+      world,
       node: null as any,
       components: new Map(),
       position: { x: 0, y: 0, z: 0 },
@@ -26,10 +27,10 @@ describe('MovementSystem', () => {
       scale: { x: 1, y: 1, z: 1 },
       velocity: { x: 0, y: 0, z: 0 },
       isPlayer: true,
-      
-      addComponent: vi.fn(),
-      removeComponent: vi.fn(),
-      getComponent: vi.fn((type: string): any => {
+
+      addComponent: mock(),
+      removeComponent: mock(),
+      getComponent: mock((type: string): any => {
         if (type === 'movement') {
           return {
             type: 'movement',
@@ -51,13 +52,13 @@ describe('MovementSystem', () => {
         }
         return null;
       }),
-      hasComponent: vi.fn(),
-      applyForce: vi.fn(),
-      applyImpulse: vi.fn(),
-      setVelocity: vi.fn(),
-      getVelocity: vi.fn(),
-      serialize: vi.fn(),
-      destroy: vi.fn()
+      hasComponent: mock(),
+      applyForce: mock(),
+      applyImpulse: mock(),
+      setVelocity: mock(),
+      getVelocity: mock(),
+      serialize: mock(),
+      destroy: mock()
     };
 
     (world.entities as any).items.set(mockPlayer.id, mockPlayer);
@@ -66,7 +67,7 @@ describe('MovementSystem', () => {
   describe('Basic Movement', () => {
     it('should handle player move command', () => {
       const targetPosition = { x: 10, y: 0, z: 10 };
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
 
       world.events.emit('player:move', {
         playerId: mockPlayer.id,
@@ -83,7 +84,7 @@ describe('MovementSystem', () => {
 
     it('should calculate path to target', () => {
       const targetPosition = { x: 5, y: 0, z: 5 };
-      
+
       movementSystem.moveEntity(mockPlayer.id, targetPosition);
 
       // Movement component should be updated
@@ -94,7 +95,7 @@ describe('MovementSystem', () => {
 
     it('should stop movement on command', () => {
       const targetPosition = { x: 10, y: 0, z: 10 };
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
 
       // Start movement
       movementSystem.moveEntity(mockPlayer.id, targetPosition);
@@ -110,7 +111,7 @@ describe('MovementSystem', () => {
 
   describe('Running and Energy', () => {
     it('should toggle run mode', () => {
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
 
       world.events.emit('player:toggleRun', { playerId: mockPlayer.id });
 
@@ -178,35 +179,35 @@ describe('MovementSystem', () => {
     });
 
     it('should handle blocked paths', () => {
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
 
       // Create blocking entity
       const obstacle: Entity = {
         id: 'obstacle_1',
         name: 'Obstacle',
         type: 'obstacle',
-        world: world,
+        world,
         node: null as any,
         components: new Map(),
         position: { x: 5, y: 0, z: 0 },
         rotation: { x: 0, y: 0, z: 0, w: 1 },
         scale: { x: 1, y: 1, z: 1 },
         isPlayer: false,
-        addComponent: vi.fn(),
-        removeComponent: vi.fn(),
-        getComponent: vi.fn((type: string): any => {
+        addComponent: mock(),
+        removeComponent: mock(),
+        getComponent: mock((type: string): any => {
           if (type === 'collider') {
             return { type: 'collider', entity: obstacle, data: { blocking: true } };
           }
           return null;
         }),
-        hasComponent: vi.fn(),
-        applyForce: vi.fn(),
-        applyImpulse: vi.fn(),
-        setVelocity: vi.fn(),
-        getVelocity: vi.fn(),
-        serialize: vi.fn(),
-        destroy: vi.fn()
+        hasComponent: mock(),
+        applyForce: mock(),
+        applyImpulse: mock(),
+        setVelocity: mock(),
+        getVelocity: mock(),
+        serialize: mock(),
+        destroy: mock()
       };
 
       (world.entities as any).items.set(obstacle.id, obstacle);
@@ -220,10 +221,10 @@ describe('MovementSystem', () => {
     });
 
     it('should emit blocked event when no path available', () => {
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
 
       // Mock isWalkable to always return false
-      const isWalkableSpy = vi.spyOn(movementSystem as any, 'isWalkable');
+      const isWalkableSpy = spyOn(movementSystem as any, 'isWalkable');
       isWalkableSpy.mockReturnValue(false);
 
       movementSystem.moveEntity(mockPlayer.id, { x: 10, y: 0, z: 10 });
@@ -252,7 +253,7 @@ describe('MovementSystem', () => {
     });
 
     it('should emit position updates during movement', () => {
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
 
       movementSystem.moveEntity(mockPlayer.id, { x: 10, y: 0, z: 10 });
       movementSystem.update(0.1);
@@ -266,7 +267,7 @@ describe('MovementSystem', () => {
 
     it('should update facing direction during movement', () => {
       const movement = mockPlayer.getComponent('movement') as MovementComponent;
-      
+
       movementSystem.moveEntity(mockPlayer.id, { x: 10, y: 0, z: 10 });
       movementSystem.update(0.1);
 
@@ -278,7 +279,7 @@ describe('MovementSystem', () => {
     });
 
     it('should emit reached destination event', () => {
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
       const targetPosition = { x: 1, y: 0, z: 0 }; // Close target
 
       movementSystem.moveEntity(mockPlayer.id, targetPosition);
@@ -297,7 +298,7 @@ describe('MovementSystem', () => {
   describe('Teleportation', () => {
     it('should teleport entity to position', () => {
       const teleportPosition = { x: 100, y: 0, z: 100 };
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
 
       movementSystem.teleportEntity(mockPlayer.id, teleportPosition);
 
@@ -327,7 +328,7 @@ describe('MovementSystem', () => {
   describe('Collision Detection', () => {
     it('should check world bounds', () => {
       const outOfBoundsPosition = { x: 2000, y: 0, z: 2000 };
-      
+
       // Try to move out of bounds
       movementSystem.moveEntity(mockPlayer.id, outOfBoundsPosition);
 
@@ -338,7 +339,7 @@ describe('MovementSystem', () => {
 
     it('should recalculate path on collision', () => {
       const targetPosition = { x: 10, y: 0, z: 10 };
-      
+
       // Start movement
       movementSystem.moveEntity(mockPlayer.id, targetPosition);
 
@@ -347,28 +348,28 @@ describe('MovementSystem', () => {
         id: 'obstacle_2',
         name: 'Obstacle 2',
         type: 'obstacle',
-        world: world,
+        world,
         node: null as any,
         components: new Map(),
         position: { x: 5, y: 0, z: 5 },
         rotation: { x: 0, y: 0, z: 0, w: 1 },
         scale: { x: 1, y: 1, z: 1 },
         isPlayer: false,
-        addComponent: vi.fn(),
-        removeComponent: vi.fn(),
-        getComponent: vi.fn((type: string): any => {
+        addComponent: mock(),
+        removeComponent: mock(),
+        getComponent: mock((type: string): any => {
           if (type === 'collider') {
             return { type: 'collider', entity: obstacle, data: { blocking: true } };
           }
           return null;
         }),
-        hasComponent: vi.fn(),
-        applyForce: vi.fn(),
-        applyImpulse: vi.fn(),
-        setVelocity: vi.fn(),
-        getVelocity: vi.fn(),
-        serialize: vi.fn(),
-        destroy: vi.fn()
+        hasComponent: mock(),
+        applyForce: mock(),
+        applyImpulse: mock(),
+        setVelocity: mock(),
+        getVelocity: mock(),
+        serialize: mock(),
+        destroy: mock()
       };
 
       (world.entities as any).items.set(obstacle.id, obstacle);
@@ -386,9 +387,9 @@ describe('MovementSystem', () => {
     it('should smooth generated paths', () => {
       // This is tested internally by the pathfinding algorithm
       // The smoothPath method reduces unnecessary waypoints
-      
+
       movementSystem.moveEntity(mockPlayer.id, { x: 10, y: 0, z: 10 });
-      
+
       // Path should be created and smoothed
       const movement = mockPlayer.getComponent('movement') as MovementComponent;
       expect(movement.isMoving).toBe(true);
@@ -402,27 +403,27 @@ describe('MovementSystem', () => {
         id: 'player_2',
         name: 'Player 2',
         type: 'player',
-        world: world,
+        world,
         node: null as any,
         components: new Map(),
         position: { x: 20, y: 0, z: 20 },
         rotation: { x: 0, y: 0, z: 0, w: 1 },
         scale: { x: 1, y: 1, z: 1 },
         isPlayer: true,
-        addComponent: vi.fn(),
-        removeComponent: vi.fn(),
-        getComponent: vi.fn((): any => null), // Will be set below
-        hasComponent: vi.fn(),
-        applyForce: vi.fn(),
-        applyImpulse: vi.fn(),
-        setVelocity: vi.fn(),
-        getVelocity: vi.fn(),
-        serialize: vi.fn(),
-        destroy: vi.fn()
+        addComponent: mock(),
+        removeComponent: mock(),
+        getComponent: mock((): any => null), // Will be set below
+        hasComponent: mock(),
+        applyForce: mock(),
+        applyImpulse: mock(),
+        setVelocity: mock(),
+        getVelocity: mock(),
+        serialize: mock(),
+        destroy: mock()
       };
 
       // Now set the getComponent function with proper reference
-      player2.getComponent = vi.fn((): any => ({
+      player2.getComponent = mock((): any => ({
         type: 'movement',
         entity: player2,
         data: {},
@@ -468,18 +469,18 @@ describe('MovementSystem', () => {
 
     it('should handle zero distance movement', () => {
       const currentPosition = { ...mockPlayer.position };
-      
+
       movementSystem.moveEntity(mockPlayer.id, currentPosition);
 
       // Should reach destination immediately
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
       movementSystem.update(0.1);
 
       expect(emitSpy).toHaveBeenCalledWith('entity:reachedDestination', expect.any(Object));
     });
 
     it('should handle missing movement component', () => {
-      mockPlayer.getComponent = vi.fn(() => null);
+      mockPlayer.getComponent = mock(() => null);
 
       // Should not crash
       expect(() => {
@@ -492,11 +493,11 @@ describe('MovementSystem', () => {
       const extMovement = movement as any;
       extMovement.canMove = false;
 
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
       movementSystem.moveEntity(mockPlayer.id, { x: 10, y: 0, z: 10 });
 
       // Should not start movement
       expect(emitSpy).not.toHaveBeenCalledWith('player:moveStarted', expect.any(Object));
     });
   });
-}); 
+});

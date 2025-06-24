@@ -74,7 +74,9 @@ export function useFileUpload({ agentId, channelId, chatType }: UseFileUploadPro
           new Map(combined.map((f) => [`${f.file.name}-${f.file.size}`, f])).values()
         );
       });
-      if (e.target) e.target.value = '';
+      if (e.target) {
+        e.target.value = '';
+      }
     },
     [selectedFiles]
   );
@@ -119,7 +121,9 @@ export function useFileUpload({ agentId, channelId, chatType }: UseFileUploadPro
       failed: Array<{ file: UploadingFile; error: string }>;
       blobUrls: string[];
     }> => {
-      if (!files.length) return { uploaded: [], failed: [], blobUrls: [] };
+      if (!files.length) {
+        return { uploaded: [], failed: [], blobUrls: [] };
+      }
 
       const uploadPromises = files.map(async (fileData) => {
         try {
@@ -176,7 +180,9 @@ export function useFileUpload({ agentId, channelId, chatType }: UseFileUploadPro
 
       // Collect blob URLs for cleanup
       files.forEach((f) => {
-        if (f.blobUrl) blobUrls.push(f.blobUrl);
+        if (f.blobUrl) {
+          blobUrls.push(f.blobUrl);
+        }
       });
 
       return { uploaded, failed, blobUrls };

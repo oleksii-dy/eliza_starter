@@ -20,21 +20,21 @@ export class MovementSystem extends System {
   private static readonly PATHFINDING_GRID_SIZE = 0.5;
   private static readonly MAX_PATH_LENGTH = 100;
   private static readonly COLLISION_CHECK_RADIUS = 0.5;
-  
+
   private movingEntities: Map<string, {
     path: Vector3[];
     currentIndex: number;
     targetPosition: Vector3;
     isRunning: boolean;
   }> = new Map();
-  
+
   private spatialIndex: SpatialIndex | null = null;
 
   constructor(world: World) {
     super(world);
     this.setupEventListeners();
   }
-  
+
   override async init(_options: any): Promise<void> {
     // Get spatial index system
     this.spatialIndex = (this.world as any).spatialIndex;
@@ -59,7 +59,7 @@ export class MovementSystem extends System {
       }
 
       const movement = entity.getComponent<MovementComponent>('movement');
-      if (!movement) continue;
+      if (!movement) {continue;}
 
       // Update run energy
       if (moveData.isRunning && movement.runEnergy > 0) {
@@ -80,10 +80,10 @@ export class MovementSystem extends System {
   private handlePlayerMove(data: { playerId: string; targetPosition: Vector3 }): void {
     const { playerId, targetPosition } = data;
     const player = this.world.entities.get(playerId);
-    if (!player) return;
+    if (!player) {return;}
 
     const movement = player.getComponent<MovementComponent>('movement');
-    if (!movement || !movement.canMove) return;
+    if (!movement || !movement.canMove) {return;}
 
     // Calculate path using optimized pathfinding
     const path = this.findPathOptimized(player.position, targetPosition);
@@ -116,13 +116,13 @@ export class MovementSystem extends System {
   private handleToggleRun(data: { playerId: string }): void {
     const { playerId } = data;
     const player = this.world.entities.get(playerId);
-    if (!player) return;
+    if (!player) {return;}
 
     const movement = player.getComponent<MovementComponent>('movement');
-    if (!movement) return;
+    if (!movement) {return;}
 
     movement.isRunning = !movement.isRunning;
-    
+
     // Update current movement if active
     const moveData = this.movingEntities.get(playerId);
     if (moveData && movement.runEnergy > 0) {
@@ -142,7 +142,7 @@ export class MovementSystem extends System {
 
   private moveAlongPath(entity: Entity, moveData: any, deltaTime: number): void {
     const movement = entity.getComponent<MovementComponent>('movement');
-    if (!movement) return;
+    if (!movement) {return;}
 
     const speed = moveData.isRunning ? MovementSystem.RUN_SPEED : MovementSystem.WALK_SPEED;
     const moveDistance = speed * deltaTime;
@@ -173,14 +173,14 @@ export class MovementSystem extends System {
           y: entity.position.y + direction.y * remainingDistance,
           z: entity.position.z + direction.z * remainingDistance
         };
-        
+
         // Check collision at new position using spatial index
         if (this.checkCollisionOptimized(newPosition, entity.id)) {
           // Collision detected, stop movement and recalculate path
           this.recalculatePath(entity.id);
           break;
         }
-        
+
         entity.position = newPosition;
         remainingDistance = 0;
       }
@@ -192,7 +192,7 @@ export class MovementSystem extends System {
     }
 
     // Update spatial index if position changed
-    if (this.spatialIndex && 
+    if (this.spatialIndex &&
         (Math.abs(entity.position.x - oldPosition.x) > 0.1 ||
          Math.abs(entity.position.z - oldPosition.z) > 0.1)) {
       this.spatialIndex.markDirty(entity as any);
@@ -217,7 +217,7 @@ export class MovementSystem extends System {
     if (this.hasLineOfSightOptimized(start, end)) {
       return [end];
     }
-    
+
     // Fallback to A* pathfinding
     return this.findPath(start, end);
   }
@@ -227,36 +227,36 @@ export class MovementSystem extends System {
     if (!this.spatialIndex) {
       return this.checkCollision(position);
     }
-    
+
     // Use spatial index to efficiently find nearby entities
     const nearbyEntities = this.spatialIndex.query({
       position: new ThreeVector3(position.x, position.y, position.z),
       radius: MovementSystem.COLLISION_CHECK_RADIUS,
       filter: (entity) => {
         // Exclude self and non-blocking entities
-        if (entity.id === excludeEntityId) return false;
-        
+        if (entity.id === excludeEntityId) {return false;}
+
         const collider = entity.getComponent('collider');
         return collider && (collider as any).blocking;
       }
     });
-    
+
     // Check collision with nearby entities
     for (const entity of nearbyEntities) {
       const entityPos = entity.position || { x: 0, y: 0, z: 0 };
       const distance = this.getDistance(position, entityPos);
-      
+
       if (distance < MovementSystem.COLLISION_CHECK_RADIUS) {
         return true;
       }
     }
-    
+
     // Check terrain collision
     const terrain = (this.world as any).terrain;
     if (terrain && !terrain.isWalkable(position.x, position.z)) {
       return true;
     }
-    
+
     // Check world bounds
     return !this.isInBounds(position);
   }
@@ -266,11 +266,11 @@ export class MovementSystem extends System {
     if (!this.spatialIndex) {
       return this.hasLineOfSight(start, end);
     }
-    
+
     const direction = this.getDirection(start, end);
     const distance = this.getDistance(start, end);
     const steps = Math.ceil(distance / MovementSystem.PATHFINDING_GRID_SIZE);
-    
+
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
       const point = {
@@ -278,12 +278,12 @@ export class MovementSystem extends System {
         y: start.y + (end.y - start.y) * t,
         z: start.z + (end.z - start.z) * t
       };
-      
+
       if (this.checkCollisionOptimized(point)) {
         return false;
       }
     }
-    
+
     return true;
   }
 
@@ -292,7 +292,7 @@ export class MovementSystem extends System {
     // A* pathfinding implementation (existing code)
     const openSet: PathNode[] = [];
     const closedSet: Set<string> = new Set();
-    
+
     const startNode: PathNode = {
       position: this.snapToGrid(start),
       g: 0,
@@ -300,14 +300,14 @@ export class MovementSystem extends System {
       f: 0
     };
     startNode.f = startNode.g + startNode.h;
-    
+
     openSet.push(startNode);
 
     while (openSet.length > 0) {
       // Get node with lowest f score
       openSet.sort((a, b) => a.f - b.f);
       const current = openSet.shift()!;
-      
+
       const nodeKey = this.getNodeKey(current.position);
       closedSet.add(nodeKey);
 
@@ -325,17 +325,17 @@ export class MovementSystem extends System {
       const neighbors = this.getNeighbors(current.position);
       for (const neighborPos of neighbors) {
         const neighborKey = this.getNodeKey(neighborPos);
-        if (closedSet.has(neighborKey)) continue;
+        if (closedSet.has(neighborKey)) {continue;}
 
         // Check if walkable using optimized collision detection
-        if (this.checkCollisionOptimized(neighborPos)) continue;
+        if (this.checkCollisionOptimized(neighborPos)) {continue;}
 
         const g = current.g + this.getDistance(current.position, neighborPos);
         const h = this.getDistance(neighborPos, end);
         const f = g + h;
 
         // Check if neighbor is in open set
-        const existingNode = openSet.find(n => 
+        const existingNode = openSet.find(n =>
           this.getNodeKey(n.position) === neighborKey
         );
 
@@ -368,16 +368,16 @@ export class MovementSystem extends System {
     activeMovements: number;
     spatialIndexAvailable: boolean;
     averagePathLength: number;
-  } {
+    } {
     let totalPathLength = 0;
     for (const moveData of this.movingEntities.values()) {
       totalPathLength += moveData.path.length;
     }
-    
+
     return {
       activeMovements: this.movingEntities.size,
       spatialIndexAvailable: this.spatialIndex !== null,
-      averagePathLength: this.movingEntities.size > 0 ? 
+      averagePathLength: this.movingEntities.size > 0 ?
         totalPathLength / this.movingEntities.size : 0
     };
   }
@@ -419,12 +419,12 @@ export class MovementSystem extends System {
     if (physics) {
       const rayStart = { x: position.x, y: position.y + 1, z: position.z };
       const rayEnd = { x: position.x, y: position.y - 0.1, z: position.z };
-      
+
       const hit = physics.raycast(rayStart, rayEnd, {
         filterFlags: 'STATIC_BODIES',
         maxDistance: 1.1
       });
-      
+
       if (hit) {
         const hitEntity = (this.world as any).entities?.get(hit.entityId);
         if (hitEntity) {
@@ -435,15 +435,15 @@ export class MovementSystem extends System {
         }
       }
     }
-    
+
     const tileX = Math.floor(position.x);
     const tileZ = Math.floor(position.z);
     const collisionMap = (this.world as any).collisionMap;
-    
+
     if (collisionMap && collisionMap[tileZ] && collisionMap[tileZ][tileX]) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -472,14 +472,14 @@ export class MovementSystem extends System {
   }
 
   private smoothPath(path: Vector3[]): Vector3[] {
-    if (path.length <= 2) return path;
+    if (path.length <= 2) {return path;}
 
     const smoothed: Vector3[] = [path[0]];
     let current = 0;
 
     while (current < path.length - 1) {
       let farthest = current + 1;
-      
+
       for (let i = current + 2; i < path.length; i++) {
         if (this.hasLineOfSightOptimized(path[current], path[i])) {
           farthest = i;
@@ -519,7 +519,7 @@ export class MovementSystem extends System {
 
   private onReachedDestination(entityId: string): void {
     const entity = this.world.entities.get(entityId);
-    if (!entity) return;
+    if (!entity) {return;}
 
     const movement = entity.getComponent<MovementComponent>('movement');
     if (movement) {
@@ -537,7 +537,7 @@ export class MovementSystem extends System {
 
   private stopMovement(entityId: string): void {
     const entity = this.world.entities.get(entityId);
-    if (!entity) return;
+    if (!entity) {return;}
 
     const movement = entity.getComponent<MovementComponent>('movement');
     if (movement) {
@@ -556,10 +556,10 @@ export class MovementSystem extends System {
 
   private recalculatePath(entityId: string): void {
     const moveData = this.movingEntities.get(entityId);
-    if (!moveData) return;
+    if (!moveData) {return;}
 
     const entity = this.world.entities.get(entityId);
-    if (!entity) return;
+    if (!entity) {return;}
 
     const newPath = this.findPathOptimized(entity.position, moveData.targetPosition);
     if (newPath.length > 0) {
@@ -622,13 +622,13 @@ export class MovementSystem extends System {
 
   public setRunning(entityId: string, isRunning: boolean): void {
     const entity = this.world.entities.get(entityId);
-    if (!entity) return;
+    if (!entity) {return;}
 
     const movement = entity.getComponent<MovementComponent>('movement');
-    if (!movement) return;
+    if (!movement) {return;}
 
     movement.isRunning = isRunning;
-    
+
     const moveData = this.movingEntities.get(entityId);
     if (moveData && movement.runEnergy > 0) {
       moveData.isRunning = isRunning;
@@ -637,7 +637,7 @@ export class MovementSystem extends System {
 
   public teleportEntity(entityId: string, position: Vector3): void {
     const entity = this.world.entities.get(entityId);
-    if (!entity) return;
+    if (!entity) {return;}
 
     const oldPosition = { ...entity.position };
     entity.position = { ...position };
@@ -656,4 +656,4 @@ export class MovementSystem extends System {
       toPosition: position
     });
   }
-} 
+}

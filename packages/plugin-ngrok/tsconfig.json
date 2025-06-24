@@ -13,7 +13,7 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vite/client", "vitest/globals"]
+    "types": ["vite/client", "bun-types"]
   },
   "include": ["src", "vite.config.ts", "tailwind.config.js", "postcss.config.js"],
   "exclude": ["node_modules", "dist", "coverage"]

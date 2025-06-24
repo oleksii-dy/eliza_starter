@@ -21,7 +21,7 @@ export const entityGraphTests: TestSuite = {
 
         for (const name of entityNames) {
           const entityId = stringToUuid(`entity-${name}-${Date.now()}`);
-          
+
           // Create entity first
           await runtime.createEntity({
             id: entityId,
@@ -36,7 +36,7 @@ export const entityGraphTests: TestSuite = {
             `${name} is a developer working on collaborative projects`,
             { updateExisting: true }
           );
-          
+
           entities.push(entityId);
         }
 
@@ -86,7 +86,7 @@ export const entityGraphTests: TestSuite = {
         // Community 1: Tech enthusiasts
         for (let i = 0; i < 4; i++) {
           const entityId = stringToUuid(`tech-${i}-${Date.now()}`);
-          
+
           await runtime.createEntity({
             id: entityId,
             names: [`Tech Enthusiast ${i}`],
@@ -99,14 +99,14 @@ export const entityGraphTests: TestSuite = {
             `Tech enthusiast ${i} interested in AI and blockchain technologies`,
             { updateExisting: true }
           );
-          
+
           community1.push(entityId);
         }
 
         // Community 2: Music lovers
         for (let i = 0; i < 4; i++) {
           const entityId = stringToUuid(`music-${i}-${Date.now()}`);
-          
+
           await runtime.createEntity({
             id: entityId,
             names: [`Music Lover ${i}`],
@@ -119,7 +119,7 @@ export const entityGraphTests: TestSuite = {
             `Music lover ${i} passionate about jazz and classical music`,
             { updateExisting: true }
           );
-          
+
           community2.push(entityId);
         }
 

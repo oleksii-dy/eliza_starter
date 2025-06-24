@@ -1,6 +1,9 @@
 import type { TestCase, TestSuite, IAgentRuntime } from '@elizaos/core';
 import { validateEnvVar, validationStrategies } from '../validation';
-import { createTestRuntime, cleanupTestRuntime } from './test-runtime';
+import {
+  createTestRuntime as _createTestRuntime,
+  cleanupTestRuntime as _cleanupTestRuntime,
+} from './test-runtime';
 
 /**
  * Runtime-based tests for validation functions

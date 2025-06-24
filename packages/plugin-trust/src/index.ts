@@ -97,17 +97,17 @@ export class TrustServiceWrapper extends Service {
 
   // Delegate all public methods to the wrapped service
   getTrustScore(entityId: UUID, evaluatorId?: UUID) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.getTrustScore(entityId as UUID, evaluatorId as UUID);
   }
 
   updateTrust(entityId: UUID, type: any, impact: number, metadata?: Record<string, any>) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.updateTrust(entityId as UUID, type, impact, metadata);
   }
 
   checkPermission(entityId: UUID, action: string, resource: string, context?: any) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.checkPermission(
       entityId as UUID,
       action as UUID,
@@ -117,69 +117,69 @@ export class TrustServiceWrapper extends Service {
   }
 
   detectThreats(content: string, entityId: UUID, context?: any) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.detectThreats(content as UUID, entityId as UUID, context);
   }
 
   assessThreatLevel(entityId: UUID, context?: any) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.assessThreatLevel(entityId as UUID, context);
   }
 
   getTrustHistory(entityId: UUID, days?: number) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.getTrustHistory(entityId as UUID, days);
   }
 
   evaluateTrustRequirements(entityId: UUID, requirements: TrustRequirements, context?: any) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.evaluateTrustRequirements(entityId as UUID, requirements, context);
   }
 
   recordMemory(message: any) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.recordMemory(message);
   }
 
   recordAction(entityId: UUID, action: string, result: 'success' | 'failure', metadata?: any) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.recordAction(entityId as UUID, action as UUID, result, metadata);
   }
 
   getTrustRecommendations(entityId: UUID) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.getTrustRecommendations(entityId as UUID);
   }
 
   meetsTrustThreshold(entityId: UUID, threshold: number) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.meetsTrustThreshold(entityId as UUID, threshold);
   }
 
   updateTrustSemantic(entityId: UUID, interaction: string, context?: any) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.updateTrustSemantic(entityId as UUID, interaction as UUID, context);
   }
 
   detectThreatsLLM(content: string, entityId: UUID, context?: any) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.detectThreatsLLM(content as UUID, entityId as UUID, context);
   }
 
   recordEvidence(entityId: UUID, description: string, context?: any) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.recordEvidence(entityId as UUID, description as UUID, context);
   }
 
   // Expose trustEngine for tests that need direct access
   get trustEngine() {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return (this.trustService as any).trustEngine;
   }
 
   // Add calculateTrust method for tests
   async calculateTrust(entityId: UUID, context: any) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustEngine.calculateTrust(entityId, context);
   }
 }
@@ -197,11 +197,11 @@ export class SecurityModuleServiceWrapper extends Service {
     if (!trustService) {
       throw new Error('Trust service must be initialized before security module');
     }
-    
+
     wrapper.securityModule = new SecurityModule();
     wrapper.trustEngine = (trustService as any).trustEngine;
     await wrapper.securityModule.initialize(runtime, wrapper.trustEngine);
-    
+
     return wrapper;
   }
 
@@ -213,17 +213,17 @@ export class SecurityModuleServiceWrapper extends Service {
 
   // Delegate public methods
   async detectPromptInjection(content: string, context?: any) {
-    if (!this.securityModule) throw new Error('Security module not initialized');
+    if (!this.securityModule) {throw new Error('Security module not initialized');}
     return this.securityModule.detectPromptInjection(content, context);
   }
 
   async detectSocialEngineering(content: string, context?: any) {
-    if (!this.securityModule) throw new Error('Security module not initialized');
+    if (!this.securityModule) {throw new Error('Security module not initialized');}
     return this.securityModule.detectSocialEngineering(content, context);
   }
 
   async assessThreatLevel(entityId: UUID, context?: any) {
-    if (!this.securityModule) throw new Error('Security module not initialized');
+    if (!this.securityModule) {throw new Error('Security module not initialized');}
     // Convert to SecurityContext format
     const securityContext = {
       entityId,
@@ -233,27 +233,27 @@ export class SecurityModuleServiceWrapper extends Service {
   }
 
   async analyzeContent(content: string, entityId: UUID, context?: any) {
-    if (!this.securityModule) throw new Error('Security module not initialized');
+    if (!this.securityModule) {throw new Error('Security module not initialized');}
     return this.securityModule.analyzeContent(content, entityId, context);
   }
 
   async detectMultiAccountPattern(entityIds: UUID[]) {
-    if (!this.securityModule) throw new Error('Security module not initialized');
+    if (!this.securityModule) {throw new Error('Security module not initialized');}
     return this.securityModule.detectMultiAccountPattern(entityIds);
   }
 
   async detectPhishing(messages: any[], entityId: UUID) {
-    if (!this.securityModule) throw new Error('Security module not initialized');
+    if (!this.securityModule) {throw new Error('Security module not initialized');}
     return this.securityModule.detectPhishing(messages, entityId);
   }
 
   async storeMemory(memory: any) {
-    if (!this.securityModule) throw new Error('Security module not initialized');
+    if (!this.securityModule) {throw new Error('Security module not initialized');}
     return this.securityModule.storeMemory(memory);
   }
 
   async storeAction(action: any) {
-    if (!this.securityModule) throw new Error('Security module not initialized');
+    if (!this.securityModule) {throw new Error('Security module not initialized');}
     return this.securityModule.storeAction(action);
   }
 }
@@ -270,13 +270,13 @@ export class PermissionManagerServiceWrapper extends Service {
     if (!trustService) {
       throw new Error('Trust service must be initialized before permission manager');
     }
-    
+
     const trustEngine = (trustService as any).trustEngine;
     const securityManager = (trustService as any).securityManager;
-    
+
     wrapper.permissionManager = new PermissionManager();
     await wrapper.permissionManager.initialize(runtime, trustEngine, securityManager);
-    
+
     return wrapper;
   }
 
@@ -288,17 +288,17 @@ export class PermissionManagerServiceWrapper extends Service {
 
   // Delegate public methods
   async checkAccess(request: any) {
-    if (!this.permissionManager) throw new Error('Permission manager not initialized');
+    if (!this.permissionManager) {throw new Error('Permission manager not initialized');}
     return this.permissionManager.checkAccess(request);
   }
 
   async checkPermission(params: any) {
-    if (!this.permissionManager) throw new Error('Permission manager not initialized');
+    if (!this.permissionManager) {throw new Error('Permission manager not initialized');}
     return this.permissionManager.checkAccess(params);
   }
 
   async hasRole(entityId: UUID, role: any) {
-    if (!this.permissionManager) throw new Error('Permission manager not initialized');
+    if (!this.permissionManager) {throw new Error('Permission manager not initialized');}
     // Simple role check implementation
     // Note: In a real implementation, this would check against the actual role system
     // For now, we'll return false to indicate the method exists but roles aren't implemented
@@ -331,12 +331,12 @@ export class TrustEngineServiceWrapper extends Service {
   }
 
   async calculateTrust(entityId: UUID, context: any) {
-    if (!this.trustService) throw new Error('Trust service not initialized');
+    if (!this.trustService) {throw new Error('Trust service not initialized');}
     return this.trustService.calculateTrust(entityId, context);
   }
 
   async recordInteraction(interaction: any) {
-    if (!this.trustEngine) throw new Error('Trust engine not initialized');
+    if (!this.trustEngine) {throw new Error('Trust engine not initialized');}
     return this.trustEngine.recordInteraction(interaction);
   }
 }
@@ -376,7 +376,7 @@ const trustPlugin: Plugin = {
   },
 
   services: [
-    TrustDatabaseServiceWrapper, 
+    TrustDatabaseServiceWrapper,
     TrustServiceWrapper,
     TrustEngineServiceWrapper,
     SecurityModuleServiceWrapper,

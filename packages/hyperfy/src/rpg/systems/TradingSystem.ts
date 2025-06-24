@@ -27,12 +27,12 @@ export interface TradeSession {
 export class TradingSystem extends System {
   private tradeSessions: Map<string, TradeSession> = new Map();
   private playerTrades: Map<string, string> = new Map(); // playerId -> sessionId
-  
+
   // Configuration
   private readonly TRADE_TIMEOUT = 300000; // 5 minutes
   private readonly TRADE_SLOTS = 28; // Same as inventory
   private readonly MIN_TRADE_DISTANCE = 10; // tiles
-  
+
   constructor(world: World) {
     super(world);
   }
@@ -44,34 +44,34 @@ export class TradingSystem extends System {
     // Check if players exist
     const requester = this.world.entities.get(requesterId);
     const target = this.world.entities.get(targetId);
-    
+
     if (!requester || !target) {
-      this.sendTradeMessage(requesterId, "Player not found.");
+      this.sendTradeMessage(requesterId, 'Player not found.');
       return false;
     }
 
     // Check if already in trade
     if (this.playerTrades.has(requesterId)) {
-      this.sendTradeMessage(requesterId, "You are already in a trade.");
+      this.sendTradeMessage(requesterId, 'You are already in a trade.');
       return false;
     }
 
     if (this.playerTrades.has(targetId)) {
-      this.sendTradeMessage(requesterId, "That player is busy.");
+      this.sendTradeMessage(requesterId, 'That player is busy.');
       return false;
     }
 
     // Check distance
     const distance = this.getDistance(requester, target);
     if (distance > this.MIN_TRADE_DISTANCE) {
-      this.sendTradeMessage(requesterId, "You are too far away to trade.");
+      this.sendTradeMessage(requesterId, 'You are too far away to trade.');
       return false;
     }
 
     // Check if target is ironman
     const targetType = (target as any).accountType;
     if (targetType === 'ironman' || targetType === 'hardcore_ironman') {
-      this.sendTradeMessage(requesterId, "That player is an Iron Man and cannot trade.");
+      this.sendTradeMessage(requesterId, 'That player is an Iron Man and cannot trade.');
       return false;
     }
 
@@ -83,7 +83,7 @@ export class TradingSystem extends System {
     });
 
     this.sendTradeMessage(targetId, `${(requester as any).displayName || 'Player'} wishes to trade with you.`);
-    
+
     return true;
   }
 
@@ -138,36 +138,36 @@ export class TradingSystem extends System {
    */
   public offerItem(playerId: string, inventorySlot: number, quantity?: number): boolean {
     const sessionId = this.playerTrades.get(playerId);
-    if (!sessionId) return false;
+    if (!sessionId) {return false;}
 
     const session = this.tradeSessions.get(sessionId);
-    if (!session || session.status !== 'first_screen') return false;
+    if (!session || session.status !== 'first_screen') {return false;}
 
     // Get player's inventory
     const player = this.world.entities.get(playerId);
     const inventory = player?.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return false;
+    if (!inventory) {return false;}
 
     const item = inventory.items[inventorySlot];
-    if (!item) return false;
+    if (!item) {return false;}
 
     // Get offer
     const offer = session.player1Id === playerId ? session.offer1 : session.offer2;
-    
+
     // Find empty slot in trade
     const emptySlot = offer.items.findIndex(item => item === null);
     if (emptySlot === -1) {
-      this.sendTradeMessage(playerId, "Your trade offer is full.");
+      this.sendTradeMessage(playerId, 'Your trade offer is full.');
       return false;
     }
 
     // Calculate quantity
     const offerQuantity = Math.min(quantity || item.quantity, item.quantity);
-    
+
     // Check if item is tradeable
     const itemDef = this.getItemDefinition(item.itemId);
     if (!itemDef || !itemDef.tradeable) {
-      this.sendTradeMessage(playerId, "This item cannot be traded.");
+      this.sendTradeMessage(playerId, 'This item cannot be traded.');
       return false;
     }
 
@@ -184,7 +184,7 @@ export class TradingSystem extends System {
 
     // Notify both players
     this.notifyTradeUpdate(session);
-    
+
     return true;
   }
 
@@ -193,14 +193,14 @@ export class TradingSystem extends System {
    */
   public removeOfferItem(playerId: string, tradeSlot: number): boolean {
     const sessionId = this.playerTrades.get(playerId);
-    if (!sessionId) return false;
+    if (!sessionId) {return false;}
 
     const session = this.tradeSessions.get(sessionId);
-    if (!session || session.status !== 'first_screen') return false;
+    if (!session || session.status !== 'first_screen') {return false;}
 
     const offer = session.player1Id === playerId ? session.offer1 : session.offer2;
-    
-    if (!offer.items[tradeSlot]) return false;
+
+    if (!offer.items[tradeSlot]) {return false;}
 
     // Remove item
     offer.items[tradeSlot] = null;
@@ -212,7 +212,7 @@ export class TradingSystem extends System {
 
     // Notify both players
     this.notifyTradeUpdate(session);
-    
+
     return true;
   }
 
@@ -221,10 +221,10 @@ export class TradingSystem extends System {
    */
   public acceptTrade(playerId: string): boolean {
     const sessionId = this.playerTrades.get(playerId);
-    if (!sessionId) return false;
+    if (!sessionId) {return false;}
 
     const session = this.tradeSessions.get(sessionId);
-    if (!session) return false;
+    if (!session) {return false;}
 
     if (session.status === 'first_screen') {
       // Accept first screen
@@ -264,10 +264,10 @@ export class TradingSystem extends System {
    */
   public cancelTrade(playerId: string): boolean {
     const sessionId = this.playerTrades.get(playerId);
-    if (!sessionId) return false;
+    if (!sessionId) {return false;}
 
     const session = this.tradeSessions.get(sessionId);
-    if (!session) return false;
+    if (!session) {return false;}
 
     // Clean up
     this.playerTrades.delete(session.player1Id);
@@ -280,8 +280,8 @@ export class TradingSystem extends System {
       cancelledBy: playerId
     });
 
-    this.sendTradeMessage(session.player1Id, "Trade cancelled.");
-    this.sendTradeMessage(session.player2Id, "Trade cancelled.");
+    this.sendTradeMessage(session.player1Id, 'Trade cancelled.');
+    this.sendTradeMessage(session.player2Id, 'Trade cancelled.');
 
     return true;
   }
@@ -299,18 +299,18 @@ export class TradingSystem extends System {
     }
 
     // Verify both players have space
-    if (!this.verifyTradeSpace(player1, session.offer2) || 
+    if (!this.verifyTradeSpace(player1, session.offer2) ||
         !this.verifyTradeSpace(player2, session.offer1)) {
-      this.sendTradeMessage(session.player1Id, "Not enough inventory space.");
-      this.sendTradeMessage(session.player2Id, "Not enough inventory space.");
+      this.sendTradeMessage(session.player1Id, 'Not enough inventory space.');
+      this.sendTradeMessage(session.player2Id, 'Not enough inventory space.');
       return false;
     }
 
     // Verify both players have the items
-    if (!this.verifyTradeItems(player1, session.offer1) || 
+    if (!this.verifyTradeItems(player1, session.offer1) ||
         !this.verifyTradeItems(player2, session.offer2)) {
-      this.sendTradeMessage(session.player1Id, "Trade items no longer available.");
-      this.sendTradeMessage(session.player2Id, "Trade items no longer available.");
+      this.sendTradeMessage(session.player1Id, 'Trade items no longer available.');
+      this.sendTradeMessage(session.player2Id, 'Trade items no longer available.');
       this.cancelTrade(session.player1Id);
       return false;
     }
@@ -330,8 +330,8 @@ export class TradingSystem extends System {
       player2Id: session.player2Id
     });
 
-    this.sendTradeMessage(session.player1Id, "Trade successful.");
-    this.sendTradeMessage(session.player2Id, "Trade successful.");
+    this.sendTradeMessage(session.player1Id, 'Trade successful.');
+    this.sendTradeMessage(session.player2Id, 'Trade successful.');
 
     return true;
   }
@@ -341,25 +341,25 @@ export class TradingSystem extends System {
    */
   private verifyTradeSpace(player: RPGEntity, incomingOffer: TradeOffer): boolean {
     const inventory = player.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return false;
+    if (!inventory) {return false;}
 
     // Count empty slots
-    let emptySlots = inventory.items.filter(item => item === null).length;
-    
+    const emptySlots = inventory.items.filter(item => item === null).length;
+
     // Count incoming non-stackable items
     let requiredSlots = 0;
     for (const item of incomingOffer.items) {
-      if (!item) continue;
-      
+      if (!item) {continue;}
+
       const itemDef = this.getItemDefinition(item.itemId);
-      if (!itemDef) continue;
+      if (!itemDef) {continue;}
 
       if (!itemDef.stackable) {
         requiredSlots++;
       } else {
         // Check if we already have this stackable
         const existing = inventory.items.find(i => i?.itemId === item.itemId);
-        if (!existing) requiredSlots++;
+        if (!existing) {requiredSlots++;}
       }
     }
 
@@ -371,11 +371,11 @@ export class TradingSystem extends System {
    */
   private verifyTradeItems(player: RPGEntity, offer: TradeOffer): boolean {
     const inventory = player.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return false;
+    if (!inventory) {return false;}
 
     // Check each offered item
     for (const offeredItem of offer.items) {
-      if (!offeredItem) continue;
+      if (!offeredItem) {continue;}
 
       let found = 0;
       for (const invItem of inventory.items) {
@@ -397,18 +397,18 @@ export class TradingSystem extends System {
    */
   private exchangeItems(player1: RPGEntity, player2: RPGEntity, offer1: TradeOffer, offer2: TradeOffer): void {
     const inventorySystem = this.world.getSystem<any>('inventory');
-    if (!inventorySystem) return;
+    if (!inventorySystem) {return;}
 
     // Remove items from player1 and give to player2
     for (const item of offer1.items) {
-      if (!item) continue;
+      if (!item) {continue;}
       inventorySystem.removeItem(player1.id, item.itemId, item.quantity);
       inventorySystem.addItem(player2.id, item.itemId, item.quantity);
     }
 
     // Remove items from player2 and give to player1
     for (const item of offer2.items) {
-      if (!item) continue;
+      if (!item) {continue;}
       inventorySystem.removeItem(player2.id, item.itemId, item.quantity);
       inventorySystem.addItem(player1.id, item.itemId, item.quantity);
     }
@@ -419,7 +419,7 @@ export class TradingSystem extends System {
    */
   public update(delta: number): void {
     const now = Date.now();
-    
+
     for (const [sessionId, session] of this.tradeSessions) {
       if (now - session.lastUpdate > this.TRADE_TIMEOUT) {
         this.cancelTrade(session.player1Id);
@@ -433,17 +433,17 @@ export class TradingSystem extends System {
   private getDistance(entity1: RPGEntity, entity2: RPGEntity): number {
     const pos1 = entity1.position;
     const pos2 = entity2.position;
-    
+
     const dx = pos1.x - pos2.x;
     const dz = pos1.z - pos2.z;
-    
+
     return Math.sqrt(dx * dx + dz * dz);
   }
 
   private getItemDefinition(itemId: number): any {
     const inventorySystem = this.world.getSystem<any>('inventory');
-    if (!inventorySystem) return null;
-    
+    if (!inventorySystem) {return null;}
+
     return inventorySystem.itemRegistry?.getItem(itemId);
   }
 
@@ -469,8 +469,8 @@ export class TradingSystem extends System {
    */
   public getTradeSession(playerId: string): TradeSession | null {
     const sessionId = this.playerTrades.get(playerId);
-    if (!sessionId) return null;
-    
+    if (!sessionId) {return null;}
+
     return this.tradeSessions.get(sessionId) || null;
   }
 
@@ -480,4 +480,4 @@ export class TradingSystem extends System {
   public isTrading(playerId: string): boolean {
     return this.playerTrades.has(playerId);
   }
-} 
+}

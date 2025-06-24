@@ -1,6 +1,6 @@
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import type { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import type { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import type { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
+import type { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import type {
   EmbeddedResource,
   ImageContent,
@@ -8,9 +8,9 @@ import type {
   ResourceTemplate,
   TextContent,
   Tool,
-} from "@modelcontextprotocol/sdk/types.js";
+} from '@modelcontextprotocol/sdk/types.js';
 
-export const MCP_SERVICE_NAME = "mcp";
+export const MCP_SERVICE_NAME = 'mcp';
 export const DEFAULT_MCP_TIMEOUT_SECONDS = 60000;
 export const MIN_MCP_TIMEOUT_SECONDS = 1;
 export const DEFAULT_MAX_RETRIES = 2;
@@ -23,7 +23,7 @@ export interface PingConfig {
 }
 
 export interface ConnectionState {
-  status: "connecting" | "connected" | "disconnected" | "failed";
+  status: 'connecting' | 'connected' | 'disconnected' | 'failed';
   pingInterval?: NodeJS.Timer;
   reconnectTimeout?: NodeJS.Timer;
   reconnectAttempts: number;
@@ -33,7 +33,7 @@ export interface ConnectionState {
 }
 
 export type StdioMcpServerConfig = {
-  type: "stdio";
+  type: 'stdio';
   command?: string;
   args?: string[];
   env?: Record<string, string>;
@@ -42,7 +42,7 @@ export type StdioMcpServerConfig = {
 };
 
 export type HttpMcpServerConfig = {
-  type: "http" | "streamable-http" | "sse"; // Support modern and legacy naming
+  type: 'http' | 'streamable-http' | 'sse'; // Support modern and legacy naming
   url: string;
   timeout?: number;
 };
@@ -54,7 +54,7 @@ export type McpSettings = {
   maxRetries?: number;
 };
 
-export type McpServerStatus = "connecting" | "connected" | "disconnected";
+export type McpServerStatus = 'connecting' | 'connected' | 'disconnected';
 
 export interface McpServer {
   name: string;
@@ -124,50 +124,50 @@ export interface McpProviderData {
 }
 
 export const ToolSelectionSchema = {
-  type: "object",
-  required: ["serverName", "toolName", "arguments"],
+  type: 'object',
+  required: ['serverName', 'toolName', 'arguments'],
   properties: {
     serverName: {
-      type: "string",
+      type: 'string',
       minLength: 1,
-      errorMessage: "serverName must not be empty",
+      errorMessage: 'serverName must not be empty',
     },
     toolName: {
-      type: "string",
+      type: 'string',
       minLength: 1,
-      errorMessage: "toolName must not be empty",
+      errorMessage: 'toolName must not be empty',
     },
     arguments: {
-      type: "object",
+      type: 'object',
     },
     reasoning: {
-      type: "string",
+      type: 'string',
     },
     noToolAvailable: {
-      type: "boolean",
+      type: 'boolean',
     },
   },
 };
 
 export const ResourceSelectionSchema = {
-  type: "object",
-  required: ["serverName", "uri"],
+  type: 'object',
+  required: ['serverName', 'uri'],
   properties: {
     serverName: {
-      type: "string",
+      type: 'string',
       minLength: 1,
-      errorMessage: "serverName must not be empty",
+      errorMessage: 'serverName must not be empty',
     },
     uri: {
-      type: "string",
+      type: 'string',
       minLength: 1,
-      errorMessage: "uri must not be empty",
+      errorMessage: 'uri must not be empty',
     },
     reasoning: {
-      type: "string",
+      type: 'string',
     },
     noResourceAvailable: {
-      type: "boolean",
+      type: 'boolean',
     },
   },
 };

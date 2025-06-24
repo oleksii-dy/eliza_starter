@@ -14,14 +14,14 @@ export const getNewsAction: Action = {
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const text = message.content.text?.toLowerCase() || '';
-    
+
     // Check for news-related keywords
     const newsKeywords = ['news', 'headlines', 'latest', 'breaking', 'article', 'story'];
     const hasNewsKeyword = newsKeywords.some(kw => text.includes(kw));
-    
+
     // Check if we have the news API key
     const hasApiKey = !!runtime.getSetting('NEWS_API_KEY');
-    
+
     return hasNewsKeyword && hasApiKey;
   },
 
@@ -34,12 +34,12 @@ export const getNewsAction: Action = {
   ) => {
     try {
       const apiKey = runtime.getSetting('NEWS_API_KEY');
-      
+
       if (!apiKey) {
         if (callback) {
           await callback({
             text: "I don't have access to the news API. Please ask an admin to provide the NEWS_API_KEY.",
-            thought: "Missing NEWS_API_KEY",
+            thought: 'Missing NEWS_API_KEY',
           });
         }
         return;
@@ -48,16 +48,16 @@ export const getNewsAction: Action = {
       // Extract topic from message
       const text = message.content.text || '';
       let topic = 'general';
-      
-      if (text.includes('tech')) topic = 'technology';
-      else if (text.includes('sport')) topic = 'sports';
-      else if (text.includes('business')) topic = 'business';
-      else if (text.includes('health')) topic = 'health';
-      else if (text.includes('science')) topic = 'science';
+
+      if (text.includes('tech')) {topic = 'technology';}
+      else if (text.includes('sport')) {topic = 'sports';}
+      else if (text.includes('business')) {topic = 'business';}
+      else if (text.includes('health')) {topic = 'health';}
+      else if (text.includes('science')) {topic = 'science';}
 
       // Simulate API call with the key
       logger.info(`[getNewsAction] Fetching ${topic} news with API key: ${apiKey.substring(0, 5)}...`);
-      
+
       // Simulate news data (in real implementation, this would call actual API)
       const headlines = [
         {
@@ -102,11 +102,11 @@ export const getNewsAction: Action = {
 
     } catch (error) {
       logger.error('[getNewsAction] Error getting news:', error);
-      
+
       if (callback) {
         await callback({
-          text: "I encountered an error while fetching news. Please try again.",
-          thought: "Error in getNewsAction handler",
+          text: 'I encountered an error while fetching news. Please try again.',
+          thought: 'Error in getNewsAction handler',
         });
       }
     }
@@ -142,4 +142,4 @@ export const getNewsAction: Action = {
       },
     ],
   ],
-}; 
+};

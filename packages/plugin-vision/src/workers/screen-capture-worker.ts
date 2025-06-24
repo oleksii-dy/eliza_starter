@@ -55,7 +55,7 @@ class ScreenCaptureWorker {
   async initialize(): Promise<void> {
     // Get display information
     this.displays = await this.getDisplays();
-    
+
     if (this.displays.length === 0) {
       throw new Error('No displays found');
     }
@@ -73,18 +73,18 @@ class ScreenCaptureWorker {
 
   private async getDisplays(): Promise<DisplayInfo[]> {
     const platform = process.platform;
-    
+
     try {
       if (platform === 'darwin') {
         // macOS: Use system_profiler
         const { stdout } = await execAsync('system_profiler SPDisplaysDataType -json');
         const data = JSON.parse(stdout);
         const displays: DisplayInfo[] = [];
-        
+
         if (data.SPDisplaysDataType && data.SPDisplaysDataType[0]) {
           const gpuInfo = data.SPDisplaysDataType[0];
           const items = gpuInfo._items || [];
-          
+
           items.forEach((item: any, index: number) => {
             const resolution = item.native_resolution;
             if (resolution) {
@@ -93,8 +93,8 @@ class ScreenCaptureWorker {
                 displays.push({
                   id: `display-${index}`,
                   name: item._name || `Display ${index + 1}`,
-                  width: parseInt(match[1]),
-                  height: parseInt(match[2]),
+                  width: parseInt(match[1], 10),
+                  height: parseInt(match[2], 10),
                   x: 0,
                   y: 0,
                   isPrimary: index === 0,
@@ -103,15 +103,14 @@ class ScreenCaptureWorker {
             }
           });
         }
-        
+
         return displays;
       } else if (platform === 'linux') {
         // Linux: Use xrandr
         const { stdout } = await execAsync('xrandr --query');
         const displays: DisplayInfo[] = [];
         const lines = stdout.split('\n');
-        let displayIndex = 0;
-        
+
         for (const line of lines) {
           if (line.includes(' connected')) {
             const match = line.match(/^(\S+) connected (?:primary )?(\d+)x(\d+)\+(\d+)\+(\d+)/);
@@ -119,29 +118,28 @@ class ScreenCaptureWorker {
               displays.push({
                 id: match[1],
                 name: match[1],
-                width: parseInt(match[2]),
-                height: parseInt(match[3]),
-                x: parseInt(match[4]),
-                y: parseInt(match[5]),
+                width: parseInt(match[2], 10),
+                height: parseInt(match[3], 10),
+                x: parseInt(match[4], 10),
+                y: parseInt(match[5], 10),
                 isPrimary: line.includes('primary'),
               });
-              displayIndex++;
             }
           }
         }
-        
+
         return displays;
       } else if (platform === 'win32') {
         // Windows: Use wmic
         const { stdout } = await execAsync('wmic path Win32_DesktopMonitor get DeviceID,ScreenWidth,ScreenHeight /format:csv');
         const displays: DisplayInfo[] = [];
         const lines = stdout.trim().split('\n').slice(2); // Skip headers
-        
+
         lines.forEach((line, index) => {
           const parts = line.split(',');
           if (parts.length >= 4) {
-            const width = parseInt(parts[2]);
-            const height = parseInt(parts[3]);
+            const width = parseInt(parts[2], 10);
+            const height = parseInt(parts[3], 10);
             if (!isNaN(width) && !isNaN(height)) {
               displays.push({
                 id: parts[1],
@@ -155,8 +153,8 @@ class ScreenCaptureWorker {
             }
           }
         });
-        
-        return displays.length > 0 ? displays : [{ 
+
+        return displays.length > 0 ? displays : [{
           id: 'primary',
           name: 'Primary Display',
           width: 1920,
@@ -169,7 +167,7 @@ class ScreenCaptureWorker {
     } catch (error) {
       logger.error('[ScreenCaptureWorker] Failed to get display info:', error);
     }
-    
+
     // Fallback
     return [{
       id: 'default',
@@ -184,38 +182,38 @@ class ScreenCaptureWorker {
 
   async run(): Promise<void> {
     await this.initialize();
-    
+
     logger.info('[ScreenCaptureWorker] Starting capture loop...');
-    
+
     while (this.isRunning) {
       const startTime = Date.now();
-      
+
       try {
         await this.captureFrame();
         this.frameCount++;
-        
+
         // Report FPS every second
         const now = Date.now();
         if (now - this.lastFPSReport >= 1000) {
           const fps = this.frameCount / ((now - this.lastFPSReport) / 1000);
           logger.info(`[ScreenCaptureWorker] FPS: ${fps.toFixed(2)}, Display: ${this.currentDisplayIndex}`);
-          
+
           parentPort?.postMessage({
             type: 'fps',
             fps,
             frameCount: this.frameCount,
             displayIndex: this.currentDisplayIndex,
           });
-          
+
           this.frameCount = 0;
           this.lastFPSReport = now;
         }
-        
+
         // Cycle through displays if configured
         if (this.config.captureAllDisplays && this.displays.length > 1) {
           this.currentDisplayIndex = (this.currentDisplayIndex + 1) % this.displays.length;
         }
-        
+
         // Target FPS limiting
         if (this.config.targetFPS) {
           const frameTime = 1000 / this.config.targetFPS;
@@ -234,52 +232,52 @@ class ScreenCaptureWorker {
   private async captureFrame(): Promise<void> {
     const display = this.displays[this.currentDisplayIndex];
     const tempFile = path.join(process.cwd(), `temp_screen_${Date.now()}_${this.currentDisplayIndex}.png`);
-    
+
     try {
       // Capture the screen
       await this.captureScreenToFile(tempFile, display);
-      
+
       // Load and process the image
       const imageBuffer = await fs.readFile(tempFile);
       const image = sharp(imageBuffer);
       const metadata = await image.metadata();
-      
+
       const width = metadata.width || display.width;
       const height = metadata.height || display.height;
-      
+
       // Convert to raw RGBA for shared buffer
       const rawData = await image
         .ensureAlpha()
         .raw()
         .toBuffer();
-      
+
       // Wait for write lock
       while (Atomics.compareExchange(this.atomicState, this.WRITE_LOCK_INDEX, 0, 1) !== 0) {
         // Spin wait - in practice this should be very brief
       }
-      
+
       try {
         // Write metadata
         Atomics.store(this.atomicState, this.WIDTH_INDEX, width);
         Atomics.store(this.atomicState, this.HEIGHT_INDEX, height);
         Atomics.store(this.atomicState, this.DISPLAY_INDEX, this.currentDisplayIndex);
         Atomics.store(this.atomicState, this.TIMESTAMP_INDEX, Date.now());
-        
+
         // Write image data
         const maxDataSize = this.sharedBuffer.byteLength - this.DATA_OFFSET;
         const dataSize = Math.min(rawData.length, maxDataSize);
-        
+
         for (let i = 0; i < dataSize; i++) {
           this.dataView.setUint8(this.DATA_OFFSET + i, rawData[i]);
         }
-        
+
         // Update frame ID (signals new frame available)
         Atomics.add(this.atomicState, this.FRAME_ID_INDEX, 1);
       } finally {
         // Release write lock
         Atomics.store(this.atomicState, this.WRITE_LOCK_INDEX, 0);
       }
-      
+
       // Clean up temp file
       await fs.unlink(tempFile).catch(() => {});
     } catch (error) {
@@ -291,7 +289,7 @@ class ScreenCaptureWorker {
 
   private async captureScreenToFile(outputPath: string, display: DisplayInfo): Promise<void> {
     const platform = process.platform;
-    
+
     try {
       if (platform === 'darwin') {
         // macOS: Use screencapture with display index
@@ -336,18 +334,18 @@ class ScreenCaptureWorker {
 if (parentPort) {
   const { config, sharedBuffer } = workerData;
   const worker = new ScreenCaptureWorker(config, sharedBuffer);
-  
+
   // Handle messages from main thread
   parentPort.on('message', (msg) => {
     if (msg.type === 'stop') {
       worker.stop();
     }
   });
-  
+
   // Run the worker
   worker.run().catch((error) => {
     logger.error('[ScreenCaptureWorker] Fatal error:', error);
     parentPort?.postMessage({ type: 'error', error: error.message });
     process.exit(1);
   });
-} 
+}

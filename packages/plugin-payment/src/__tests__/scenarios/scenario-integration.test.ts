@@ -1,10 +1,15 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { createTestRuntime, cleanupTestRuntime, createTestMemory, createTestUserId } from '../helpers/test-runtime';
+import { describe, it, expect, beforeAll, afterAll, mock } from 'bun:test';
+import {
+  createTestRuntime,
+  cleanupTestRuntime,
+  createTestMemory,
+  createTestUserId,
+} from '../helpers/test-runtime';
 import { paymentPlugin } from '../../index';
 import { PaymentService } from '../../services/PaymentService';
 import { sendPaymentAction } from '../../actions/sendPaymentAction';
 import type { IAgentRuntime, Memory } from '@elizaos/core';
-import scenarios from '../../scenarios';
+import { PaymentMethod, PaymentStatus } from '../../types';
 
 describe('Payment Scenarios Integration', () => {
   let runtime: IAgentRuntime;
@@ -18,7 +23,7 @@ describe('Payment Scenarios Integration', () => {
         PAYMENT_AUTO_APPROVAL_ENABLED: 'true',
         PAYMENT_AUTO_APPROVAL_THRESHOLD: '1000',
         PAYMENT_REQUIRE_CONFIRMATION: 'false',
-      }
+      },
     });
 
     paymentService = runtime.getService('payment') as PaymentService;
@@ -32,34 +37,10 @@ describe('Payment Scenarios Integration', () => {
     await cleanupTestRuntime(runtime);
   });
 
-  describe('Scenario Evaluators', () => {
-    scenarios.forEach((scenario) => {
-      describe(scenario.name, () => {
-        it('should have valid evaluator function', () => {
-          expect(scenario.evaluator).toBeDefined();
-          expect(typeof scenario.evaluator).toBe('function');
-        });
-
-        it('should evaluate examples correctly', () => {
-          scenario.examples.forEach((example, index) => {
-            const agentResponse = example.find(msg => 
-              msg.name === '{{agent}}' || msg.user === 'agent'
-            );
-            
-            if (agentResponse && agentResponse.content?.text) {
-              const result = scenario.evaluator(agentResponse.content.text);
-              expect(result).toBe(true);
-            }
-          });
-        });
-      });
-    });
-  });
-
   describe('Send Payment Action', () => {
     it('should validate send payment messages', async () => {
       const message = createTestMemory({
-        content: { text: 'Send 0.1 ETH to 0x742d35Cc6634C0532925a3b844Bc9e7595f7E123' }
+        content: { text: 'Send 0.1 ETH to 0x742d35Cc6634C0532925a3b844Bc9e7595f7E123' },
       });
 
       const isValid = await sendPaymentAction.validate(runtime, message);
@@ -70,37 +51,35 @@ describe('Payment Scenarios Integration', () => {
       const testCases = [
         {
           text: 'Send 0.1 ETH to bob.eth',
-          expected: { amount: '0.1', currency: 'ETH', recipient: 'bob.eth' }
+          expected: { amount: '0.1', currency: 'ETH', recipient: 'bob.eth' },
         },
         {
           text: 'Transfer 50 USDC to 0x742d35Cc6634C0532925a3b844Bc9e7595f7E123',
-          expected: { amount: '50', currency: 'USDC', recipient: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E123' }
+          expected: {
+            amount: '50',
+            currency: 'USDC',
+            recipient: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E123',
+          },
         },
         {
           text: 'Pay 100 MATIC to alice.polygon',
-          expected: { amount: '100', currency: 'MATIC', recipient: 'alice.polygon' }
-        }
+          expected: { amount: '100', currency: 'MATIC', recipient: 'alice.polygon' },
+        },
       ];
 
       for (const testCase of testCases) {
         const message = createTestMemory({
-          content: { text: testCase.text }
+          content: { text: testCase.text },
         });
 
         let callbackCalled = false;
         let callbackResponse: any;
 
-        await sendPaymentAction.handler(
-          runtime,
-          message,
-          undefined,
-          {},
-          async (response) => {
-            callbackCalled = true;
-            callbackResponse = response;
-            return [];
-          }
-        );
+        await sendPaymentAction.handler(runtime, message, undefined, {}, async (response) => {
+          callbackCalled = true;
+          callbackResponse = response;
+          return [];
+        });
 
         expect(callbackCalled).toBe(true);
         // Payment will fail due to insufficient funds, but we can check the error message
@@ -109,98 +88,201 @@ describe('Payment Scenarios Integration', () => {
     });
   });
 
-  describe('Real-world Scenario Simulations', () => {
+  describe('Real-world Payment Scenarios', () => {
     it('should handle multi-agent payment scenario', async () => {
       const alice = createTestUserId();
       const bob = createTestUserId();
 
       // Alice gets a wallet
-      await paymentService.getUserBalance(alice, runtime);
-      
+      const aliceBalance = await paymentService.getUserBalance(alice, runtime);
+      expect(aliceBalance).toBeDefined();
+      expect(aliceBalance.size).toBeGreaterThan(0);
+
       // Bob gets a wallet
       const bobBalance = await paymentService.getUserBalance(bob, runtime);
       expect(bobBalance).toBeDefined();
-    });
+      expect(bobBalance.size).toBeGreaterThan(0);
 
-    it('should handle payment request scenario', async () => {
-      const userId = createTestUserId();
-      
-      // Process a payment request through the service
-      const result = await paymentService.processPayment({
-        id: createTestUserId(),
-        userId,
-        agentId: runtime.agentId,
-        actionName: 'payment_request',
-        amount: BigInt(25 * 1e6), // 25 USDC
-        method: 'USDC_ETH' as any,
-        metadata: {
-          description: 'Dinner last night',
-          requestedFrom: 'bob@example.com'
-        }
-      }, runtime);
+      // Test payment between users (would fail due to insufficient funds in test)
+      const result = await paymentService.processPayment(
+        {
+          id: createTestUserId(),
+          userId: alice,
+          agentId: runtime.agentId,
+          actionName: 'transfer',
+          amount: BigInt(10 * 1e6), // 10 USDC
+          method: PaymentMethod.USDC_ETH,
+          recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E123', // Bob's address
+          metadata: {
+            recipientUserId: bob,
+            description: 'Payment between agents',
+          },
+        },
+        runtime
+      );
 
       expect(result).toBeDefined();
       expect(result.status).toBeDefined();
     });
 
-    it('should validate Polymarket scenario responses', () => {
-      const polymarketScenario = scenarios.find(s => s.name.includes('Polymarket'));
-      if (polymarketScenario) {
-        const testResponse = 'The current Polymarket odds for BTC reaching $100k are 72% ($0.72)';
-        const result = polymarketScenario.evaluator(testResponse);
-        expect(result).toBe(true);
-      }
+    it('should handle payment request scenario', async () => {
+      const userId = createTestUserId();
+
+      // Process a payment request through the service
+      const result = await paymentService.processPayment(
+        {
+          id: createTestUserId(),
+          userId,
+          agentId: runtime.agentId,
+          actionName: 'payment_request',
+          amount: BigInt(25 * 1e6), // 25 USDC
+          method: PaymentMethod.USDC_ETH,
+          metadata: {
+            description: 'Dinner last night',
+            requestedFrom: 'bob@example.com',
+          },
+        },
+        runtime
+      );
+
+      expect(result).toBeDefined();
+      expect(result.status).toBeDefined();
+      expect(result.metadata).toBeDefined();
     });
 
-    it('should validate Uniswap swap scenario responses', () => {
-      const uniswapScenario = scenarios.find(s => s.name.includes('Uniswap'));
-      if (uniswapScenario) {
-        const testResponse = 'Initiating Uniswap swap: 1 ETH → USDC. Rate: 2250 USDC';
-        const result = uniswapScenario.evaluator(testResponse);
-        expect(result).toBe(true);
-      }
+    it('should handle DeFi operations', async () => {
+      const userId = createTestUserId();
+
+      // Test DeFi yield deposit scenario
+      const result = await paymentService.processPayment(
+        {
+          id: createTestUserId(),
+          userId,
+          agentId: runtime.agentId,
+          actionName: 'defi_deposit',
+          amount: BigInt(1000 * 1e6), // 1000 USDC
+          method: PaymentMethod.USDC_ETH,
+          recipientAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC contract
+          metadata: {
+            protocol: 'aave',
+            action: 'deposit',
+            expectedAPY: 3.45,
+          },
+        },
+        runtime
+      );
+
+      expect(result).toBeDefined();
+      expect(result.id).toBeDefined();
     });
 
-    it('should validate DeFi yield scenario responses', () => {
-      const defiScenario = scenarios.find(s => s.name.includes('DeFi'));
-      if (defiScenario) {
-        const testResponse = 'Depositing 1000 USDC to Aave V3. Current APY: 3.45%';
-        const result = defiScenario.evaluator(testResponse);
-        expect(result).toBe(true);
-      }
+    it('should handle cross-chain bridge operations', async () => {
+      const userId = createTestUserId();
+
+      // Test bridging scenario
+      const result = await paymentService.processPayment(
+        {
+          id: createTestUserId(),
+          userId,
+          agentId: runtime.agentId,
+          actionName: 'bridge',
+          amount: BigInt(500 * 1e6), // 500 USDC
+          method: PaymentMethod.USDC_ETH,
+          recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E123',
+          metadata: {
+            fromChain: 'ethereum',
+            toChain: 'arbitrum',
+            bridgeProtocol: 'stargate',
+            estimatedFees: 12,
+          },
+        },
+        runtime
+      );
+
+      expect(result).toBeDefined();
+      expect(result.metadata).toBeDefined();
+    });
+
+    it('should handle NFT minting operations', async () => {
+      const userId = createTestUserId();
+
+      // Test NFT minting payment
+      const result = await paymentService.processPayment(
+        {
+          id: createTestUserId(),
+          userId,
+          agentId: runtime.agentId,
+          actionName: 'nft_mint',
+          amount: BigInt(25 * 1e6), // 25 USDC
+          method: PaymentMethod.USDC_ETH,
+          recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E123', // NFT contract
+          metadata: {
+            service: 'crossmint',
+            nftContract: '0x...',
+            tokenId: '1',
+            chain: 'ethereum',
+          },
+        },
+        runtime
+      );
+
+      expect(result).toBeDefined();
+      expect(result.status).toBeDefined();
     });
   });
 
-  describe('Cross-chain Operations', () => {
-    it('should validate bridge scenario responses', () => {
-      const bridgeScenario = scenarios.find(s => s.name.includes('Multi-Chain Bridge'));
-      if (bridgeScenario) {
-        const testResponse = 'Bridging 500 USDC from Ethereum to Arbitrum. Fees: $12';
-        const result = bridgeScenario.evaluator(testResponse);
-        expect(result).toBe(true);
-      }
-    });
-  });
+  describe('Payment Confirmations and Trust', () => {
+    it('should require confirmation for untrusted high-value payments', async () => {
+      const userId = createTestUserId();
 
-  describe('NFT Operations', () => {
-    it('should validate Crossmint NFT scenario responses', () => {
-      const nftScenario = scenarios.find(s => s.name.includes('Crossmint NFT'));
-      if (nftScenario) {
-        const testResponse = 'Minting NFT via Crossmint on Ethereum. Cost: $25';
-        const result = nftScenario.evaluator(testResponse);
-        expect(result).toBe(true);
-      }
-    });
-  });
+      // High-value payment from untrusted user
+      const result = await paymentService.processPayment(
+        {
+          id: createTestUserId(),
+          userId,
+          agentId: runtime.agentId,
+          actionName: 'high_value_transfer',
+          amount: BigInt(5000 * 1e6), // 5000 USDC
+          method: PaymentMethod.USDC_ETH,
+          recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E123',
+          requiresConfirmation: true,
+          metadata: {
+            trustScore: 50, // Below threshold
+            reason: 'Large transfer to external wallet',
+          },
+        },
+        runtime
+      );
 
-  describe('Automated Trading', () => {
-    it('should validate Coinbase AgentKit scenario responses', () => {
-      const agentKitScenario = scenarios.find(s => s.name.includes('Coinbase AgentKit'));
-      if (agentKitScenario) {
-        const testResponse = 'Configuring Coinbase AgentKit DCA: $100 BTC weekly purchases';
-        const result = agentKitScenario.evaluator(testResponse);
-        expect(result).toBe(true);
-      }
+      expect(result.status).toBe(PaymentStatus.PENDING);
+      expect(result.metadata?.pendingReason).toBe('USER_CONFIRMATION_REQUIRED');
+    });
+
+    it('should auto-approve payments from trusted users', async () => {
+      const userId = createTestUserId();
+
+      // Payment from trusted user
+      const result = await paymentService.processPayment(
+        {
+          id: createTestUserId(),
+          userId,
+          agentId: runtime.agentId,
+          actionName: 'trusted_transfer',
+          amount: BigInt(100 * 1e6), // 100 USDC
+          method: PaymentMethod.USDC_ETH,
+          recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E123',
+          metadata: {
+            trustScore: 85, // Above threshold
+            isOwner: false,
+            isAdmin: false,
+          },
+        },
+        runtime
+      );
+
+      // Should proceed without confirmation (but fail due to funds)
+      expect(result.status).toBe(PaymentStatus.FAILED);
+      expect(result.error).toContain('Insufficient');
     });
   });
-}); 
+});

@@ -24,7 +24,7 @@ export class BankingSystem extends System {
   private static readonly DEFAULT_TABS = 8;
   private static readonly MAX_PIN_ATTEMPTS = 3;
   private static readonly PIN_LOCKOUT_TIME = 300000; // 5 minutes in milliseconds
-  
+
   private bankAccounts: Map<string, BankAccount> = new Map();
   private bankBooths: Set<string> = new Set();
   private playerBankOpen: Map<string, boolean> = new Map();
@@ -92,7 +92,7 @@ export class BankingSystem extends System {
     }
 
     this.playerBankOpen.set(player.id, true);
-    
+
     this.world.events.emit('bank:opened', {
       playerId: player.id,
       bankData: this.getBankData(account)
@@ -103,7 +103,7 @@ export class BankingSystem extends System {
 
   closeBank(player: PlayerEntity): void {
     this.playerBankOpen.delete(player.id);
-    
+
     this.world.events.emit('bank:closed', {
       playerId: player.id
     });
@@ -204,14 +204,14 @@ export class BankingSystem extends System {
     }
 
     const account = this.getOrCreateAccount(player.id);
-    
+
     if (tabIndex < 0 || tabIndex >= account.tabs.length) {
       return false;
     }
 
     const tab = account.tabs[tabIndex];
     const item = tab.items[slotIndex];
-    
+
     if (!item) {
       return false;
     }
@@ -259,7 +259,7 @@ export class BankingSystem extends System {
     const account = this.getOrCreateAccount(player.id);
     const tab = account.tabs[tabIndex];
     const item = tab.items[slotIndex];
-    
+
     if (!item) {
       return false;
     }
@@ -288,10 +288,10 @@ export class BankingSystem extends System {
   }
 
   moveItem(
-    player: PlayerEntity, 
-    fromTab: number, 
-    fromSlot: number, 
-    toTab: number, 
+    player: PlayerEntity,
+    fromTab: number,
+    fromSlot: number,
+    toTab: number,
     toSlot: number
   ): boolean {
     if (!this.isBankOpen(player.id)) {
@@ -299,7 +299,7 @@ export class BankingSystem extends System {
     }
 
     const account = this.getOrCreateAccount(player.id);
-    
+
     // Validate indices
     if (fromTab < 0 || fromTab >= account.tabs.length ||
         toTab < 0 || toTab >= account.tabs.length ||
@@ -336,7 +336,7 @@ export class BankingSystem extends System {
     }
 
     const account = this.getOrCreateAccount(player.id);
-    
+
     if (tabIndex < 0 || tabIndex >= account.tabs.length) {
       return false;
     }
@@ -375,7 +375,7 @@ export class BankingSystem extends System {
 
   verifyPin(player: PlayerEntity, pin: string): boolean {
     const account = this.getOrCreateAccount(player.id);
-    
+
     if (!account.pin) {
       return true;
     }
@@ -405,21 +405,21 @@ export class BankingSystem extends System {
     } else {
       account.pinAttempts++;
       account.lastPinAttempt = Date.now();
-      
+
       const remainingAttempts = BankingSystem.MAX_PIN_ATTEMPTS - account.pinAttempts;
-      
+
       this.world.events.emit('bank:pin_failed', {
         playerId: player.id,
         remainingAttempts
       });
-      
+
       return false;
     }
   }
 
   removePin(player: PlayerEntity, currentPin: string): boolean {
     const account = this.getOrCreateAccount(player.id);
-    
+
     if (!account.pin) {
       return true;
     }
@@ -540,10 +540,10 @@ export class BankingSystem extends System {
    */
   calculateBankValue(entityId: string): number {
     const bank = this.bankAccounts.get(entityId);
-    if (!bank) return 0;
-    
+    if (!bank) {return 0;}
+
     let totalValue = 0;
-    
+
     // Add up all item values
     for (const tab of bank.tabs.values()) {
       for (const stack of tab.items) {
@@ -557,19 +557,19 @@ export class BankingSystem extends System {
         }
       }
     }
-    
+
     return totalValue;
   }
-  
+
   /**
    * Get most valuable items (for death mechanics)
    */
   getMostValuableItems(entityId: string, count: number): ItemValue[] {
     const bank = this.bankAccounts.get(entityId);
-    if (!bank) return [];
-    
+    if (!bank) {return [];}
+
     const itemValues: ItemValue[] = [];
-    
+
     // Collect all items with values
     for (const tab of bank.tabs.values()) {
       for (const stack of tab.items) {
@@ -585,10 +585,10 @@ export class BankingSystem extends System {
         }
       }
     }
-    
+
     // Sort by value descending
     itemValues.sort((a, b) => b.value - a.value);
-    
+
     return itemValues.slice(0, count);
   }
-} 
+}

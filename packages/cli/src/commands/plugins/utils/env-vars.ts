@@ -52,7 +52,7 @@ export const readEnvFile = (cwd: string): string => {
   const envPath = path.join(cwd, '.env');
   try {
     return readFileSync(envPath, 'utf-8');
-  } catch (error) {
+  } catch {
     // File doesn't exist, return empty string
     return '';
   }

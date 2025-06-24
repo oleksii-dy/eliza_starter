@@ -198,7 +198,7 @@ export const pluginModifierPlugin: Plugin = {
             text: `Successfully cloned ${targetPlugin.name} to ${clonePath}. Ready for enhancement!`,
             data: {
               pluginName: targetPlugin.name,
-              clonePath: clonePath,
+              clonePath,
               nextSteps: [
                 'Analyze plugin structure',
                 'Generate enhancement code',
@@ -207,9 +207,9 @@ export const pluginModifierPlugin: Plugin = {
               ],
             },
           };
-        } catch (error) {
+        } catch (_error) {
           return {
-            text: `Error enhancing plugin: ${error instanceof Error ? error.message : String(error)}`,
+            text: `Error enhancing plugin: ${_error instanceof Error ? _error.message : String(_error)}`,
           };
         }
       },
@@ -225,7 +225,7 @@ export const integrationPatterns = {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
-    if (!pluginManager) return false;
+    if (!pluginManager) {return false;}
 
     const capabilities = await pluginManager.analyzeCurrentCapabilities();
     return capabilities.core.some((c) => c.includes(capability));
@@ -236,7 +236,7 @@ export const integrationPatterns = {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
-    if (!pluginManager) return false;
+    if (!pluginManager) {return false;}
 
     const plugins = pluginManager.getAllPlugins();
     const exists = plugins.some((p) => p.name === pluginName && p.status === 'loaded');
@@ -262,7 +262,7 @@ export const integrationPatterns = {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
-    if (!pluginManager) return [];
+    if (!pluginManager) {return [];}
 
     const recommendations = await pluginManager.recommendPlugins({
       recentActions: [],

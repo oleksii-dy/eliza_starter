@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
 import { LootSystem } from '../../rpg/systems/LootSystem';
 import { RPGEntity } from '../../rpg/entities/RPGEntity';
 import { MockWorld } from '../test-world-factory';
-import type { 
+import type {
   LootTable,
   LootEntry,
   ItemDrop,
@@ -121,40 +122,40 @@ describe('LootSystem', () => {
   beforeEach(async () => {
     world = new MockWorld();
     lootSystem = new LootSystem(world as any);
-    
+
     // Initialize the system
     await lootSystem.init({});
-    
+
     // Register loot tables
     (lootSystem as any).registerLootTable(goblinLootTable);
     (lootSystem as any).registerLootTable(dragonLootTable);
     (lootSystem as any).registerRareDropTable(rareDropTable);
-    
+
     // Create NPCs
     goblin = new RPGEntity(world as any, 'npc', {
       id: 'goblin-1',
       name: 'Goblin',
       position: { x: 10, y: 0, z: 10 }
     });
-    
+
     dragon = new RPGEntity(world as any, 'npc', {
       id: 'dragon-1',
       name: 'Green Dragon',
       position: { x: 50, y: 0, z: 50 }
     });
-    
+
     // Create player
     player = new RPGEntity(world as any, 'player', {
       id: 'player-1',
       name: 'Test Player',
       position: { x: 0, y: 0, z: 0 }
     });
-    
+
     // Add entities to world
     world.entities.items.set(goblin.data.id, goblin);
     world.entities.items.set(dragon.data.id, dragon);
     world.entities.items.set(player.data.id, player);
-    
+
     // Add NPC components
     const goblinNPC: NPCComponent = {
       type: 'npc',
@@ -186,7 +187,7 @@ describe('LootSystem', () => {
       currentTarget: null,
       lastInteraction: 0
     };
-    
+
     const dragonNPC: NPCComponent = {
       type: 'npc',
       entity: dragon as any,
@@ -217,10 +218,10 @@ describe('LootSystem', () => {
       currentTarget: null,
       lastInteraction: 0
     };
-    
+
     goblin.addComponent('npc', goblinNPC);
     dragon.addComponent('npc', dragonNPC);
-    
+
     // Add stats components
     const goblinStats: StatsComponent = {
       type: 'stats',
@@ -252,7 +253,7 @@ describe('LootSystem', () => {
       combatLevel: 2,
       totalLevel: 7
     };
-    
+
     goblin.addComponent('stats', goblinStats);
   });
 
@@ -267,7 +268,7 @@ describe('LootSystem', () => {
   describe('drop generation', () => {
     it('should always include guaranteed drops', () => {
       const drops = lootSystem.generateDrops(goblin.data.id);
-      
+
       // Should always have bones
       const bones = drops.find(drop => drop.itemId === 526);
       expect(bones).toBeDefined();
@@ -276,52 +277,52 @@ describe('LootSystem', () => {
 
     it('should generate random drops from common table', () => {
       // Mock random to ensure we get drops
-      const randomSpy = vi.spyOn(Math, 'random');
+      const randomSpy = spyOn(Math, 'random');
       randomSpy.mockReturnValueOnce(0.5); // For drop roll
       randomSpy.mockReturnValueOnce(0.1); // For item selection (coins)
       randomSpy.mockReturnValueOnce(0.5); // For quantity
-      
+
       const drops = lootSystem.generateDrops(goblin.data.id);
-      
+
       // Should have bones + at least one other drop
       expect(drops.length).toBeGreaterThanOrEqual(2);
-      
+
       // Check for coins
       const coins = drops.find(drop => drop.itemId === 995);
       if (coins) {
         expect(coins.quantity).toBeGreaterThanOrEqual(1);
         expect(coins.quantity).toBeLessThanOrEqual(5);
       }
-      
-      randomSpy.mockRestore();
+
+      randomSpy.mockReset();
     });
 
     it('should respect max drops limit', () => {
       // Mock random to always generate drops
-      const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.1);
-      
+      const randomSpy = spyOn(Math, 'random').mockReturnValue(0.1);
+
       const drops = lootSystem.generateDrops(goblin.data.id);
-      
+
       // Should not exceed max drops (3) + always drops (1)
       expect(drops.length).toBeLessThanOrEqual(4);
-      
-      randomSpy.mockRestore();
+
+      randomSpy.mockReset();
     });
 
     it('should handle rare drop table access', () => {
       // Mock random to trigger rare drop table
-      const randomSpy = vi.spyOn(Math, 'random');
+      const randomSpy = spyOn(Math, 'random');
       randomSpy.mockReturnValueOnce(0.005); // 0.5% - should trigger rare table for goblin
       randomSpy.mockReturnValueOnce(0.1);   // Select from rare table
-      
+
       const drops = lootSystem.generateDrops(goblin.data.id);
-      
+
       // Should have a drop from rare table
       const rareDropIds = [985, 987, 1623, 1621, 1619, 1617, 1631, 2577];
       const hasRareDrop = drops.some(drop => rareDropIds.includes(drop.itemId));
       expect(hasRareDrop).toBe(true);
-      
-      randomSpy.mockRestore();
+
+      randomSpy.mockReset();
     });
 
     it('should handle NPCs without loot tables', () => {
@@ -331,15 +332,15 @@ describe('LootSystem', () => {
         name: 'No Loot NPC',
         position: { x: 0, y: 0, z: 0 }
       });
-      
+
       npc.addComponent('npc', {
         type: 'npc',
         npcId: 999,
         name: 'No Loot NPC'
       } as NPCComponent);
-      
+
       world.entities.items.set(npc.data.id, npc);
-      
+
       const drops = lootSystem.generateDrops(npc.data.id);
       expect(drops).toEqual([]);
     });
@@ -347,18 +348,18 @@ describe('LootSystem', () => {
 
   describe('drop spawning', () => {
     it('should create item drop entities on death', () => {
-      const eventSpy = vi.spyOn(world.events, 'emit');
-      
+      const eventSpy = spyOn(world.events, 'emit');
+
       // Kill goblin
       world.events.emit('entity:death', {
         entityId: goblin.data.id,
         killerId: player.data.id
       });
-      
+
       // Should emit drop creation events
       const dropEvents = eventSpy.mock.calls.filter(call => call[0] === 'loot:dropped');
       expect(dropEvents.length).toBeGreaterThan(0);
-      
+
       // Check drop has correct properties
       const dropEvent = dropEvents[0]?.[1];
       if (dropEvent) {
@@ -370,18 +371,18 @@ describe('LootSystem', () => {
     });
 
     it('should randomize drop positions', () => {
-      const eventSpy = vi.spyOn(world.events, 'emit');
-      
+      const eventSpy = spyOn(world.events, 'emit');
+
       // Mock random for multiple drops with different values for positions
-      const randomSpy = vi.spyOn(Math, 'random');
-      
+      const randomSpy = spyOn(Math, 'random');
+
       // Dragon has 2 always drops + potentially more
       // Mock values for drop generation
       randomSpy.mockReturnValueOnce(0.1);  // For rare table check
       randomSpy.mockReturnValueOnce(0.1);  // For first common drop
       randomSpy.mockReturnValueOnce(0.1);  // For item selection
       randomSpy.mockReturnValueOnce(0.5);  // For quantity
-      
+
       // Mock values for position randomization
       randomSpy.mockReturnValueOnce(0.2);  // First drop x position
       randomSpy.mockReturnValueOnce(0.3);  // First drop z position
@@ -389,37 +390,37 @@ describe('LootSystem', () => {
       randomSpy.mockReturnValueOnce(0.8);  // Second drop z position
       randomSpy.mockReturnValueOnce(0.4);  // Third drop x position
       randomSpy.mockReturnValueOnce(0.6);  // Third drop z position
-      
+
       // Kill dragon (multiple drops)
       world.events.emit('entity:death', {
         entityId: dragon.data.id,
         killerId: player.data.id
       });
-      
+
       // Get all drop positions
       const dropEvents = eventSpy.mock.calls.filter(call => call[0] === 'loot:dropped');
       const positions = dropEvents.map(event => (event[1] as any).position);
-      
+
       // Positions should be slightly different
       if (positions.length > 1) {
-        const allSame = positions.every(pos => 
+        const allSame = positions.every(pos =>
           pos.x === positions[0].x && pos.z === positions[0].z
         );
         expect(allSame).toBe(false);
       }
-      
-      randomSpy.mockRestore();
+
+      randomSpy.mockReset();
     });
 
     it('should set ownership timer for drops', () => {
-      const eventSpy = vi.spyOn(world.events, 'emit');
-      
+      const eventSpy = spyOn(world.events, 'emit');
+
       // Kill goblin
       world.events.emit('entity:death', {
         entityId: goblin.data.id,
         killerId: player.data.id
       });
-      
+
       // Check ownership timer
       const dropEvent = eventSpy.mock.calls.find(call => call[0] === 'loot:dropped')?.[1];
       if (dropEvent) {
@@ -438,24 +439,24 @@ describe('LootSystem', () => {
 
     it('should handle quantity ranges', () => {
       // Mock random for quantity
-      const randomSpy = vi.spyOn(Math, 'random');
+      const randomSpy = spyOn(Math, 'random');
       randomSpy.mockReturnValueOnce(0.5); // For drop roll
       randomSpy.mockReturnValueOnce(0.1); // For item selection (coins)
       randomSpy.mockReturnValueOnce(0.0); // Min quantity
-      
+
       const drops1 = lootSystem.generateDrops(goblin.data.id);
       const coins1 = drops1.find(drop => drop.itemId === 995);
       expect(coins1?.quantity).toBe(1); // Min
-      
+
       randomSpy.mockReturnValueOnce(0.5); // For drop roll
       randomSpy.mockReturnValueOnce(0.1); // For item selection (coins)
       randomSpy.mockReturnValueOnce(1.0); // Max quantity
-      
+
       const drops2 = lootSystem.generateDrops(goblin.data.id);
       const coins2 = drops2.find(drop => drop.itemId === 995);
       expect(coins2?.quantity).toBe(5); // Max
-      
-      randomSpy.mockRestore();
+
+      randomSpy.mockReset();
     });
 
     it('should handle noted drops', () => {
@@ -466,17 +467,17 @@ describe('LootSystem', () => {
           { itemId: 995, quantity: { min: 100, max: 200 }, weight: 50, noted: true }
         ]
       };
-      
+
       (lootSystem as any).registerLootTable(notedTable);
-      
+
       // Mock to get the noted drop
-      const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.1);
-      
+      const randomSpy = spyOn(Math, 'random').mockReturnValue(0.1);
+
       const drops = lootSystem.generateDrops(goblin.data.id);
       const notedDrop = drops.find(drop => drop.itemId === 995);
       expect(notedDrop?.noted).toBe(true);
-      
-      randomSpy.mockRestore();
+
+      randomSpy.mockReset();
     });
   });
 
@@ -486,7 +487,7 @@ describe('LootSystem', () => {
         { itemId: 995, quantity: 100 },  // 100 coins
         { itemId: 1203, quantity: 1 }    // Iron dagger (value depends on item registry)
       ];
-      
+
       const value = (lootSystem as any).calculateDropValue(drops);
       expect(value).toBeGreaterThanOrEqual(100); // At least the coin value
     });
@@ -507,23 +508,23 @@ describe('LootSystem', () => {
         rareTableAccess: 0,
         maxDrops: 0
       };
-      
+
       (lootSystem as any).registerLootTable(emptyTable);
-      
+
       // Create NPC with empty table
       const npc = new RPGEntity(world as any, 'npc', {
         id: 'empty-npc',
         name: 'Empty NPC',
         position: { x: 0, y: 0, z: 0 }
       });
-      
+
       npc.addComponent('npc', {
         type: 'npc',
         lootTable: 'empty_table'
       } as NPCComponent);
-      
+
       world.entities.items.set(npc.data.id, npc);
-      
+
       const drops = lootSystem.generateDrops(npc.data.id);
       expect(drops).toEqual([]);
     });
@@ -534,14 +535,14 @@ describe('LootSystem', () => {
     });
 
     it('should handle NPCs dying without killers', () => {
-      const eventSpy = vi.spyOn(world.events, 'emit');
-      
+      const eventSpy = spyOn(world.events, 'emit');
+
       // Kill goblin without killer (environmental death)
       world.events.emit('entity:death', {
         entityId: goblin.data.id,
         killerId: null
       });
-      
+
       // Should still drop items but without owner
       const dropEvent = eventSpy.mock.calls.find(call => call[0] === 'loot:dropped')?.[1];
       if (dropEvent) {
@@ -550,4 +551,4 @@ describe('LootSystem', () => {
       }
     });
   });
-}); 
+});

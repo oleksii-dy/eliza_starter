@@ -26,6 +26,7 @@ bun run build
 ### Basic Usage
 
 1. **Extract training data:**
+
 ```bash
 # Extract conversations from the last 30 days
 bun run extract-data --days 30 --quality 0.7
@@ -35,6 +36,7 @@ bun run extract-data --days 30 --quality 0.7
 ```
 
 2. **Start RLAIF training:**
+
 ```bash
 # Start training with default configuration
 bun run train --model deepseek-coder --judge gpt-4
@@ -44,6 +46,7 @@ bun run train --model deepseek-coder --judge gpt-4
 ```
 
 3. **Monitor training:**
+
 ```bash
 # Monitor specific training job
 bun run monitor --job-id training-1234567890
@@ -249,6 +252,7 @@ The plugin provides three main actions for natural language interaction:
 Extract and prepare training data from conversations.
 
 **Examples:**
+
 - "extract training data from the last 30 days"
 - "prepare dataset for RLAIF training with high-quality conversations only"
 - "create training set from autocoder plugin conversations"
@@ -258,6 +262,7 @@ Extract and prepare training data from conversations.
 Start RLAIF training with Atropos.
 
 **Examples:**
+
 - "start RLAIF training with the extracted dataset"
 - "launch training on Google Cloud with 1000 steps and batch size 8"
 - "begin fine-tuning with DeepSeek model using GPT-4 as judge"
@@ -267,6 +272,7 @@ Start RLAIF training with Atropos.
 Monitor training progress and metrics.
 
 **Examples:**
+
 - "monitor training job training-1234567890"
 - "how is the training going?"
 - "check training status and show me the loss curves"
@@ -355,11 +361,7 @@ import { trainingPlugin } from '@elizaos/plugin-training';
 // 1. Configure the agent with training plugin
 const agent = {
   character: myCharacter,
-  plugins: [
-    '@elizaos/plugin-sql',
-    '@elizaos/plugin-openai',
-    trainingPlugin,
-  ],
+  plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', trainingPlugin],
 };
 
 // 2. Extract training data
@@ -431,6 +433,7 @@ const config: TrainingConfig = {
 ### Common Issues
 
 **Atropos Bridge Connection Failed**
+
 ```bash
 # Check if Python bridge is running
 python3 atropos/bridge_server.py
@@ -440,6 +443,7 @@ curl -v ws://localhost:8765
 ```
 
 **Training Job Not Starting**
+
 ```bash
 # Verify Atropos API is healthy
 curl http://localhost:8000/health
@@ -449,6 +453,7 @@ elizaos env list
 ```
 
 **Dataset Quality Issues**
+
 ```bash
 # Check extraction statistics
 bun run extract-data --days 7 --quality 0.9
@@ -458,6 +463,7 @@ head -5 training-data/train.jsonl
 ```
 
 **Cloud Deployment Failures**
+
 ```bash
 # Verify cloud credentials
 gcloud auth list        # GCP

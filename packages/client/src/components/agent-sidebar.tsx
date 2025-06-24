@@ -21,7 +21,7 @@ type TabValue = FixedTabValue | string;
 
 export function AgentSidebar({ agentId, agentName, channelId }: AgentSidebarProps) {
   const { currentTab: detailsTab, setTab: setDetailsTab } = useAgentTabState(agentId);
-  const { data: panelsResponse, isLoading: isLoadingPanels } = useAgentPanels(agentId!, {
+  const { data: panelsResponse, isLoading: isLoadingPanels } = useAgentPanels(agentId as string, {
     enabled: !!agentId,
   });
 

@@ -99,7 +99,7 @@ export class CharacterConfigurationSource implements ConfigurationSource {
   /**
    * Character configuration source is read-only, cannot update
    */
-  async updatePluginConfig(pluginName: string, config: PluginConfiguration): Promise<void> {
+  async updatePluginConfig(pluginName: string, _config: PluginConfiguration): Promise<void> {
     this.logger.warn(
       `Cannot update plugin configuration for "${pluginName}" - character configuration source is read-only`
     );
@@ -111,7 +111,7 @@ export class CharacterConfigurationSource implements ConfigurationSource {
   /**
    * Character configuration source is read-only, cannot save
    */
-  async save(config: Record<string, PluginConfiguration>): Promise<void> {
+  async save(_config: Record<string, PluginConfiguration>): Promise<void> {
     this.logger.warn(
       'Cannot save plugin configurations - character configuration source is read-only'
     );

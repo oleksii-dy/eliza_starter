@@ -208,7 +208,7 @@ async function runIndividualBenchmark() {
         analysisResults.push(enhancedResult);
 
         // Log result
-        console.log(`\n📊 RESULT SUMMARY:`);
+        console.log('\n📊 RESULT SUMMARY:');
         console.log(`   Status: ${instanceResult.resolved ? '✅ RESOLVED' : '❌ FAILED'}`);
         console.log(`   Tests: ${instanceResult.tests_passed ? '✅ PASSED' : '❌ FAILED'}`);
         console.log(
@@ -223,7 +223,7 @@ async function runIndividualBenchmark() {
         }
 
         if (failureAnalysis) {
-          console.log(`\n🔍 FAILURE ANALYSIS:`);
+          console.log('\n🔍 FAILURE ANALYSIS:');
           console.log(`   Error type: ${failureAnalysis.error_type}`);
           console.log(`   Root cause: ${failureAnalysis.root_cause}`);
           console.log(`   Research quality: ${failureAnalysis.research_quality}`);
@@ -479,7 +479,7 @@ async function performDetailedFailureAnalysis(
     console.log(`  ${i + 1}. ${issue}`);
   });
 
-  console.log(`\nFormatting Analysis:`);
+  console.log('\nFormatting Analysis:');
   console.log(`  Unicode Issues: ${failureAnalysis.unicode_issues ? '❌ YES' : '✅ NO'}`);
   console.log(`  Newline Issues: ${failureAnalysis.newline_issues ? '❌ YES' : '✅ NO'}`);
   console.log(`  Formatting Issues: ${failureAnalysis.formatting_issues ? '❌ YES' : '✅ NO'}`);
@@ -493,7 +493,7 @@ async function performDetailedFailureAnalysis(
   });
 
   if (patchDetails?.patch) {
-    console.log(`\nPatch Preview (first 500 chars):`);
+    console.log('\nPatch Preview (first 500 chars):');
     console.log(`${'─'.repeat(50)}`);
     console.log(patchDetails.patch.substring(0, 500));
     if (patchDetails.patch.length > 500) {
@@ -534,10 +534,10 @@ async function createComprehensiveAnalysis(results: IndividualAnalysis[]) {
       });
 
       // Count specific issue types
-      if (analysis.unicode_issues) unicodeIssuesCount++;
-      if (analysis.newline_issues) newlineIssuesCount++;
-      if (analysis.formatting_issues) formattingIssuesCount++;
-      if (analysis.logical_errors) logicalErrorsCount++;
+      if (analysis.unicode_issues) {unicodeIssuesCount++;}
+      if (analysis.newline_issues) {newlineIssuesCount++;}
+      if (analysis.formatting_issues) {formattingIssuesCount++;}
+      if (analysis.logical_errors) {logicalErrorsCount++;}
 
       // Count research quality
       researchQuality[analysis.research_quality]++;
@@ -568,7 +568,7 @@ async function createComprehensiveAnalysis(results: IndividualAnalysis[]) {
       total_instances: totalInstances,
       resolved_instances: resolvedInstances,
       failed_instances: failedInstances.length,
-      resolution_rate: ((resolvedInstances / totalInstances) * 100).toFixed(1) + '%',
+      resolution_rate: `${((resolvedInstances / totalInstances) * 100).toFixed(1)}%`,
     },
     failure_analysis: {
       common_failure_types: topFailureTypes,
@@ -577,19 +577,19 @@ async function createComprehensiveAnalysis(results: IndividualAnalysis[]) {
       issue_statistics: {
         unicode_issues: {
           count: unicodeIssuesCount,
-          percentage: ((unicodeIssuesCount / failedInstances.length) * 100).toFixed(1) + '%',
+          percentage: `${((unicodeIssuesCount / failedInstances.length) * 100).toFixed(1)}%`,
         },
         newline_issues: {
           count: newlineIssuesCount,
-          percentage: ((newlineIssuesCount / failedInstances.length) * 100).toFixed(1) + '%',
+          percentage: `${((newlineIssuesCount / failedInstances.length) * 100).toFixed(1)}%`,
         },
         formatting_issues: {
           count: formattingIssuesCount,
-          percentage: ((formattingIssuesCount / failedInstances.length) * 100).toFixed(1) + '%',
+          percentage: `${((formattingIssuesCount / failedInstances.length) * 100).toFixed(1)}%`,
         },
         logical_errors: {
           count: logicalErrorsCount,
-          percentage: ((logicalErrorsCount / failedInstances.length) * 100).toFixed(1) + '%',
+          percentage: `${((logicalErrorsCount / failedInstances.length) * 100).toFixed(1)}%`,
         },
       },
       research_quality_distribution: researchQuality,
@@ -611,32 +611,32 @@ async function createDetailedMarkdownReport(
   results: IndividualAnalysis[],
   analysis: any
 ): Promise<string> {
-  let markdown = `# SWE-bench Individual Instance Analysis Report\n\n`;
+  let markdown = '# SWE-bench Individual Instance Analysis Report\n\n';
   markdown += `**Generated**: ${new Date().toISOString()}\n`;
-  markdown += `**Anti-Cheating Measures**: ✅ Enabled (Claude Code SDK disabled, research filtering)\n\n`;
+  markdown += '**Anti-Cheating Measures**: ✅ Enabled (Claude Code SDK disabled, research filtering)\n\n';
 
-  markdown += `## Executive Summary\n\n`;
+  markdown += '## Executive Summary\n\n';
   markdown += `- **Total Instances**: ${analysis.summary.total_instances}\n`;
   markdown += `- **Resolution Rate**: ${analysis.summary.resolution_rate}\n`;
   markdown += `- **Failed Instances**: ${analysis.summary.failed_instances}\n\n`;
 
-  markdown += `## Failure Analysis\n\n`;
-  markdown += `### Most Common Failure Types\n\n`;
+  markdown += '## Failure Analysis\n\n';
+  markdown += '### Most Common Failure Types\n\n';
   analysis.failure_analysis.common_failure_types.forEach((failure: any, i: number) => {
     markdown += `${i + 1}. **${failure.type}**: ${failure.count} instances (${failure.percentage}%)\n`;
   });
 
-  markdown += `\n### Technical Issue Distribution\n\n`;
-  markdown += `| Issue Type | Count | Percentage |\n`;
-  markdown += `|------------|-------|------------|\n`;
+  markdown += '\n### Technical Issue Distribution\n\n';
+  markdown += '| Issue Type | Count | Percentage |\n';
+  markdown += '|------------|-------|------------|\n';
   markdown += `| Unicode Issues | ${analysis.failure_analysis.issue_statistics.unicode_issues.count} | ${analysis.failure_analysis.issue_statistics.unicode_issues.percentage} |\n`;
   markdown += `| Newline Issues | ${analysis.failure_analysis.issue_statistics.newline_issues.count} | ${analysis.failure_analysis.issue_statistics.newline_issues.percentage} |\n`;
   markdown += `| Formatting Issues | ${analysis.failure_analysis.issue_statistics.formatting_issues.count} | ${analysis.failure_analysis.issue_statistics.formatting_issues.percentage} |\n`;
   markdown += `| Logical Errors | ${analysis.failure_analysis.issue_statistics.logical_errors.count} | ${analysis.failure_analysis.issue_statistics.logical_errors.percentage} |\n`;
 
-  markdown += `\n### Research Quality Assessment\n\n`;
-  markdown += `| Quality Level | Count | Notes |\n`;
-  markdown += `|---------------|-------|-------|\n`;
+  markdown += '\n### Research Quality Assessment\n\n';
+  markdown += '| Quality Level | Count | Notes |\n';
+  markdown += '|---------------|-------|-------|\n';
   Object.entries(analysis.failure_analysis.research_quality_distribution).forEach(
     ([quality, count]) => {
       const note =
@@ -649,14 +649,14 @@ async function createDetailedMarkdownReport(
     }
   );
 
-  markdown += `\n### Top Root Causes\n\n`;
+  markdown += '\n### Top Root Causes\n\n';
   analysis.failure_analysis.common_root_causes.slice(0, 5).forEach((cause: any, i: number) => {
     markdown += `${i + 1}. ${cause.cause} (${cause.count} instances)\n`;
   });
 
-  markdown += `\n## Detailed Instance Results\n\n`;
-  markdown += `| Instance | Status | Error Type | Root Cause | Efficiency |\n`;
-  markdown += `|----------|--------|------------|------------|------------|\n`;
+  markdown += '\n## Detailed Instance Results\n\n';
+  markdown += '| Instance | Status | Error Type | Root Cause | Efficiency |\n';
+  markdown += '|----------|--------|------------|------------|------------|\n';
 
   results.forEach((result) => {
     const status = result.resolved ? '✅' : '❌';
@@ -669,8 +669,8 @@ async function createDetailedMarkdownReport(
     markdown += `| ${result.instance_id} | ${status} | ${errorType} | ${rootCause.substring(0, 50)}... | ${efficiency} |\n`;
   });
 
-  markdown += `\n## Key Recommendations\n\n`;
-  markdown += `Based on the failure analysis, here are the top recommendations to improve our SWE-bench performance:\n\n`;
+  markdown += '\n## Key Recommendations\n\n';
+  markdown += 'Based on the failure analysis, here are the top recommendations to improve our SWE-bench performance:\n\n';
 
   // Generate recommendations based on most common issues
   const topRecommendations = new Map<string, number>();
@@ -687,10 +687,10 @@ async function createDetailedMarkdownReport(
       markdown += `${i + 1}. **${rec}** (affects ${count} instances)\n`;
     });
 
-  markdown += `\n## Anti-Cheating Verification\n\n`;
-  markdown += `✅ **Claude Code SDK Disabled**: Prevents access to external code generation tools\n`;
-  markdown += `✅ **Research Filtering**: Monitors for SWE-bench specific references in research\n`;
-  markdown += `✅ **Enhanced Generator Only**: Uses custom prompts without benchmark-specific knowledge\n\n`;
+  markdown += '\n## Anti-Cheating Verification\n\n';
+  markdown += '✅ **Claude Code SDK Disabled**: Prevents access to external code generation tools\n';
+  markdown += '✅ **Research Filtering**: Monitors for SWE-bench specific references in research\n';
+  markdown += '✅ **Enhanced Generator Only**: Uses custom prompts without benchmark-specific knowledge\n\n';
 
   return markdown;
 }

@@ -1,10 +1,11 @@
-import { CSM } from '../hyperfy/core/libs/csm/CSM.js';
+import { CSM } from '@elizaos/hyperfy';
 import { isNumber, isString } from 'lodash-es';
-import { System } from '../hyperfy/core/systems/System.js';
+import { System } from '@elizaos/hyperfy';
 import { logger } from '@elizaos/core';
 import * as THREE from 'three';
 import { PuppeteerManager } from '../managers/puppeteer-manager.js';
 import { resolveUrl } from '../utils.js';
+import type { HyperfyWorld } from '../types/hyperfy.js';
 
 interface SkyHandle {
   node: any;
@@ -23,7 +24,8 @@ interface EnvironmentConfig {
   model?: string;
 }
 
-export class AgentEnvironment extends System {
+export class EnvironmentSystem extends System {
+  declare world: any;
   model: any = null;
   skys: SkyHandle[] = [];
   sky: THREE.Mesh | null = null;
@@ -38,7 +40,8 @@ export class AgentEnvironment extends System {
     super(world);
   }
 
-  async start() {
+  start() {
+    this.setSkyboxToBlack();
     this.base = {
       model: 'assets/base-environment.glb',
       bg: 'assets/day2-2k.jpg',
@@ -53,16 +56,146 @@ export class AgentEnvironment extends System {
     this.buildCSM();
     this.updateSky();
 
-    this.world.settings.on('change', this.onSettingsChange);
+    if (this.world.settings?.on) {
+      this.world.settings.on('change', this.onSettingsChange);
+    }
     // this.world.prefs.on('change', this.onPrefsChange)
     // this.world.graphics.on('resize', this.onViewportResize)
+  }
+
+  private setSkyboxToBlack() {
+    if (this.world.stage) {
+      this.world.stage.environment = null;
+      this.world.stage.background = new THREE.Color(0x000000);
+      logger.info('[Environment] Skybox set to black.');
+    }
+  }
+
+  /**
+   * Load a skybox from a URL or use the default based on index
+   * @param skyboxUrlOrIndex - URL string or index number for default skyboxes (0-5)
+   */
+  async loadSkybox(skyboxUrlOrIndex?: string | number) {
+    try {
+      if (skyboxUrlOrIndex === undefined || skyboxUrlOrIndex === null) {
+        // Load default skybox
+        logger.info('[Environment] Loading default black skybox');
+        this.setSkyboxToBlack();
+        return;
+      }
+
+      if (typeof skyboxUrlOrIndex === 'number') {
+        // Load indexed skybox
+        const index = skyboxUrlOrIndex;
+        if (index >= 0 && index <= 5) {
+          await this.loadIndexedSkybox(index);
+        } else {
+          logger.warn(`[Environment] Invalid skybox index: ${index}. Must be 0-5.`);
+          this.setSkyboxToBlack();
+        }
+      } else {
+        // Load from URL
+        await this.loadSkyboxFromUrl(skyboxUrlOrIndex);
+      }
+    } catch (error) {
+      logger.error('[Environment] Error loading skybox:', error);
+      this.setSkyboxToBlack();
+    }
+  }
+
+  private async loadIndexedSkybox(index: number) {
+    const skyboxConfigs = [
+      { url: 'bridge2.jpeg' },
+      { url: 'bluecloud.jpg' },
+      { url: 'clearsky.jpg' },
+      { url: 'computer_history_museum.jpg' },
+      { url: 'grimmnight.jpg' },
+      { url: 'milkyway.jpg' },
+    ];
+
+    const config = skyboxConfigs[index];
+    if (!config) {
+      logger.warn(`[Environment] No skybox config found for index ${index}`);
+      this.setSkyboxToBlack();
+      return;
+    }
+
+    const loader = this.world.loader;
+    if (!loader) {
+      logger.error('[Environment] World loader not available');
+      this.setSkyboxToBlack();
+      return;
+    }
+
+    // Type narrowing for the config
+    const urlConfig = config as { url: string };
+    const url = `${this.world.assetsUrl}/skybox/${urlConfig.url}`;
+
+    try {
+      const texture = await loader.load(url);
+      if (texture) {
+        this.applyTexture(texture);
+      } else {
+        logger.warn('[Environment] Failed to load texture');
+        this.setSkyboxToBlack();
+      }
+    } catch (error) {
+      logger.error('[Environment] Error loading indexed skybox:', error);
+      this.setSkyboxToBlack();
+    }
+  }
+
+  private async loadSkyboxFromUrl(url: string) {
+    const loader = this.world.loader;
+    if (!loader) {
+      logger.error('[Environment] World loader not available');
+      this.setSkyboxToBlack();
+      return;
+    }
+
+    try {
+      const texture = await loader.load(url);
+      if (texture) {
+        this.applyTexture(texture);
+      } else {
+        logger.warn('[Environment] Failed to load texture from URL');
+        this.setSkyboxToBlack();
+      }
+    } catch (error) {
+      logger.error('[Environment] Error loading skybox from URL:', error);
+      this.setSkyboxToBlack();
+    }
+  }
+
+  private applyTexture(texture: any) {
+    if (!texture || !this.world.stage) {
+      logger.warn('[Environment] Cannot apply texture - texture or stage not available');
+      this.setSkyboxToBlack();
+      return;
+    }
+
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    this.world.stage.environment = texture;
+    this.world.stage.background = texture;
+    logger.info('[Environment] Skybox texture applied successfully');
+  }
+
+  /**
+   * Reset the skybox to black
+   */
+  resetSkybox() {
+    this.setSkyboxToBlack();
   }
 
   async updateModel() {
     const url = this.world.settings.model?.url || this.base.model;
     let glb = this.world.loader.get('model', url);
-    if (!glb) glb = await this.world.loader.load('model', url);
-    if (this.model) this.model.deactivate();
+    if (!glb) {
+      glb = await this.world.loader.load('model', url);
+    }
+    if (this.model) {
+      this.model.deactivate();
+    }
     this.model = glb.toNodes();
     this.model.activate({ world: this.world, label: 'base' });
   }
@@ -72,7 +205,9 @@ export class AgentEnvironment extends System {
       node,
       destroy: () => {
         const idx = this.skys.indexOf(handle);
-        if (idx === -1) return;
+        if (idx === -1) {
+          return;
+        }
         this.skys.splice(idx, 1);
         this.updateSky();
       },
@@ -128,7 +263,9 @@ export class AgentEnvironment extends System {
     if (hdrUrl) {
       await puppeteerManager.loadEnvironmentHDR(hdrUrl);
     }
-    if (n !== this.skyN) return;
+    if (n !== this.skyN) {
+      return;
+    }
 
     this.csm.lightDirection = sunDirection;
 
@@ -161,7 +298,9 @@ export class AgentEnvironment extends System {
   }
 
   lateUpdate(delta: number) {
-    if (!this.sky) return;
+    if (!this.sky) {
+      return;
+    }
     this.sky.position.x = this.world.rig.position.x;
     this.sky.position.z = this.world.rig.position.z;
     this.sky.matrixWorld.setPosition(this.sky.position);

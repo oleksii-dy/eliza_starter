@@ -1,4 +1,4 @@
-import { type Plugin, type IAgentRuntime, elizaLogger } from '@elizaos/core';
+import { type Plugin } from '@elizaos/core';
 import { NgrokService } from './services/NgrokService';
 import { startTunnelAction } from './actions/start-tunnel';
 import { stopTunnelAction } from './actions/stop-tunnel';

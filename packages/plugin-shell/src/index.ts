@@ -18,7 +18,7 @@ export const shellPlugin: Plugin = {
   providers: [shellProvider],
   services: [ShellService],
   tests: [shellBasicE2ETests, shellStatefulE2ETests, shellAdvancedE2ETests, shellSecurityE2ETests],
-  init: async (config, runtime) => {
+  init: async (_config, _runtime) => {
     // You could add specific initialization logic here if needed
     // For example, checking for required system dependencies for the shell
     // or setting up initial CWD based on config.

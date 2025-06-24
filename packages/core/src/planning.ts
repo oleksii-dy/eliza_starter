@@ -2,19 +2,15 @@ import { v4 } from 'uuid';
 import type {
   ActionPlan,
   ActionStep,
-  PlanState,
   WorkingMemory,
   ActionResult,
   ActionContext,
   PlanExecutionResult,
   PlanningContext,
-  Constraint,
 } from './types/planning';
 import type { Memory, State, UUID } from './types';
 import type { IAgentRuntime } from './types/runtime';
-import { composePromptFromState, parseKeyValueXml } from './utils';
-import { ModelType } from './types/model';
-import logger from './logger';
+import { composePromptFromState } from './utils';
 
 /**
  * Implementation of WorkingMemory for maintaining state across actions
@@ -113,7 +109,9 @@ export class PlanExecutionContext {
         onabort: null,
         reason: undefined,
         throwIfAborted: () => {
-          if (this.aborted) throw new Error('Aborted');
+          if (this.aborted) {
+            throw new Error('Aborted');
+          }
         },
       } as unknown as AbortSignal,
       updateMemory: (key: string, value: any) => {
@@ -293,9 +291,9 @@ export function parsePlan(response: string): ActionPlan {
       dependencies,
       expectedOutcome: expectedOutcomeMatch
         ? {
-            success: true,
-            data: { outcome: expectedOutcomeMatch[1].trim() },
-          }
+          success: true,
+          data: { outcome: expectedOutcomeMatch[1].trim() },
+        }
         : undefined,
     });
   }
@@ -393,7 +391,9 @@ function hasCircularDependencies(plan: ActionPlan): boolean {
     if (step?.dependencies) {
       for (const dep of step.dependencies) {
         if (!visited.has(dep)) {
-          if (hasCycle(dep)) return true;
+          if (hasCycle(dep)) {
+            return true;
+          }
         } else if (recursionStack.has(dep)) {
           return true;
         }
@@ -406,7 +406,9 @@ function hasCircularDependencies(plan: ActionPlan): boolean {
 
   for (const step of plan.steps) {
     if (!visited.has(step.id)) {
-      if (hasCycle(step.id)) return true;
+      if (hasCycle(step.id)) {
+        return true;
+      }
     }
   }
 
@@ -492,7 +494,7 @@ export function getExecutionOrder(plan: ActionPlan): UUID[][] {
 
   // For parallel and DAG execution, group by dependency levels
   const levels: UUID[][] = [];
-  const processed = new Set<UUID>();
+  const _processed = new Set<UUID>();
 
   function getLevel(stepId: UUID): number {
     const step = plan.steps.find((s) => s.id === stepId);

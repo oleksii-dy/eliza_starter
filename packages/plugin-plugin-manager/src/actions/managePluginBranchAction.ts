@@ -224,10 +224,10 @@ export const managePluginBranchAction: Action = {
           ...result,
         },
       };
-    } catch (error) {
+    } catch (_error) {
       elizaLogger.error('[managePluginBranchAction] Error managing branches:', error);
 
-      const errorMessage = `Error managing branches: ${error instanceof Error ? error.message : String(error)}`;
+      const errorMessage = `Error managing branches: ${_error instanceof Error ? _error.message : String(_error)}`;
 
       if (callback) {
         await callback({

@@ -1,4 +1,4 @@
-import type { Plugin, ITunnelService } from '@elizaos/core';
+import type { Plugin } from '@elizaos/core';
 import { type Action, type IAgentRuntime, type Provider, logger, ModelType } from '@elizaos/core';
 import { GitHubService } from './services/github';
 import { githubConfigSchema, githubConfigSchemaFlexible, type GitHubConfig } from './types';
@@ -66,8 +66,8 @@ Respond with JSON:
     });
 
     return WebhookEventAnalysisSchema.parse(JSON.parse(response));
-  } catch (error) {
-    logger.warn('Failed to analyze webhook mention:', error);
+  } catch (_error) {
+    logger.warn('Failed to analyze webhook mention:', _error);
     return {
       isAgentMentioned: false,
       confidence: 0,
@@ -201,7 +201,7 @@ function verifyWebhookSignature(
   }
 
   const hmac = crypto.createHmac('sha256', secret);
-  const digest = 'sha256=' + hmac.update(JSON.stringify(payload)).digest('hex');
+  const digest = `sha256=${hmac.update(JSON.stringify(payload)).digest('hex')}`;
 
   // Use timingSafeEqual to prevent timing attacks
   if (signature.length !== digest.length) {
@@ -461,7 +461,7 @@ export const githubPlugin: Plugin = {
       if (runtime && !isTestEnv) {
         setTimeout(async () => {
           try {
-            const tunnelService = runtime.getService<ITunnelService>('tunnel');
+            const tunnelService = runtime.getService('tunnel') as any;
             if (tunnelService && tunnelService.isActive()) {
               const tunnelUrl = await tunnelService.getUrl();
               if (tunnelUrl) {
@@ -486,7 +486,6 @@ export const githubPlugin: Plugin = {
       }
 
       // Ensure we return void
-      return;
     } catch (error) {
       logger.error('GitHub plugin configuration validation failed:', error);
 
@@ -560,7 +559,7 @@ export const githubPlugin: Plugin = {
             });
           }
 
-          const limit = parseInt(req.query.limit as string) || 50;
+          const limit = parseInt(req.query.limit as string, 10) || 50;
           const activityLog = githubService.getActivityLog(limit);
 
           const stats = {

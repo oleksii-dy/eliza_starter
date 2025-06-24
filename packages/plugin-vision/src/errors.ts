@@ -5,7 +5,7 @@ export class VisionError extends Error {
   public readonly code: string;
   public readonly context?: Record<string, any>;
   public readonly recoverable: boolean;
-  
+
   constructor(
     message: string,
     code: string,
@@ -17,7 +17,7 @@ export class VisionError extends Error {
     this.code = code;
     this.recoverable = recoverable;
     this.context = context;
-    
+
     // Ensure proper prototype chain
     Object.setPrototypeOf(this, VisionError.prototype);
   }
@@ -62,7 +62,7 @@ export class ConfigurationError extends VisionError {
 export class APIError extends VisionError {
   public readonly statusCode?: number;
   public readonly endpoint?: string;
-  
+
   constructor(
     message: string,
     statusCode?: number,
@@ -86,11 +86,11 @@ export class ErrorRecoveryManager {
   private strategies: Map<string, RecoveryStrategy> = new Map();
   private errorCounts: Map<string, number> = new Map();
   private readonly maxRetries = 3;
-  
+
   constructor() {
     this.registerDefaultStrategies();
   }
-  
+
   private registerDefaultStrategies(): void {
     // Camera recovery strategy
     this.registerStrategy('CAMERA_ERROR', {
@@ -105,7 +105,7 @@ export class ErrorRecoveryManager {
         logger.info('[ErrorRecovery] Camera recovery attempt complete');
       },
     });
-    
+
     // API recovery strategy
     this.registerStrategy('API_ERROR', {
       canRecover: (error) => {
@@ -125,7 +125,7 @@ export class ErrorRecoveryManager {
         await new Promise(resolve => setTimeout(resolve, delay));
       },
     });
-    
+
     // Screen capture recovery
     this.registerStrategy('SCREEN_CAPTURE_ERROR', {
       canRecover: () => true,
@@ -136,36 +136,36 @@ export class ErrorRecoveryManager {
       },
     });
   }
-  
+
   registerStrategy(errorCode: string, strategy: RecoveryStrategy): void {
     this.strategies.set(errorCode, strategy);
   }
-  
+
   async handleError(error: VisionError): Promise<boolean> {
     logger.error(`[ErrorRecovery] Handling ${error.name}:`, error.message, error.context);
-    
+
     // Track error occurrences
     const errorKey = error.code + (error.context?.endpoint || '');
     const currentCount = this.errorCounts.get(errorKey) || 0;
     this.errorCounts.set(errorKey, currentCount + 1);
-    
+
     // Check if we can recover
     if (!error.recoverable) {
       logger.error('[ErrorRecovery] Error is not recoverable');
       return false;
     }
-    
+
     const strategy = this.strategies.get(error.code);
     if (!strategy) {
       logger.warn('[ErrorRecovery] No recovery strategy for error code:', error.code);
       return false;
     }
-    
+
     if (!strategy.canRecover(error)) {
       logger.error('[ErrorRecovery] Recovery strategy cannot handle this error');
       return false;
     }
-    
+
     try {
       await strategy.recover(error);
       logger.info('[ErrorRecovery] Recovery successful');
@@ -175,11 +175,11 @@ export class ErrorRecoveryManager {
       return false;
     }
   }
-  
+
   resetErrorCount(errorCode: string): void {
     this.errorCounts.delete(errorCode);
   }
-  
+
   resetAllCounts(): void {
     this.errorCounts.clear();
   }
@@ -190,13 +190,13 @@ export class CircuitBreaker {
   private failures = 0;
   private lastFailureTime = 0;
   private state: 'closed' | 'open' | 'half-open' = 'closed';
-  
+
   constructor(
     private readonly threshold = 5,
     private readonly timeout = 60000, // 1 minute
     private readonly name: string
   ) {}
-  
+
   async execute<T>(operation: () => Promise<T>): Promise<T> {
     if (this.state === 'open') {
       if (Date.now() - this.lastFailureTime > this.timeout) {
@@ -210,7 +210,7 @@ export class CircuitBreaker {
         );
       }
     }
-    
+
     try {
       const result = await operation();
       this.onSuccess();
@@ -220,7 +220,7 @@ export class CircuitBreaker {
       throw error;
     }
   }
-  
+
   private onSuccess(): void {
     if (this.state === 'half-open') {
       logger.info(`[CircuitBreaker] ${this.name} recovered, closing circuit`);
@@ -228,21 +228,21 @@ export class CircuitBreaker {
     this.failures = 0;
     this.state = 'closed';
   }
-  
+
   private onFailure(): void {
     this.failures++;
     this.lastFailureTime = Date.now();
-    
+
     if (this.failures >= this.threshold) {
       this.state = 'open';
       logger.error(`[CircuitBreaker] ${this.name} threshold exceeded, opening circuit`);
     }
   }
-  
+
   getState(): string {
     return this.state;
   }
-  
+
   reset(): void {
     this.failures = 0;
     this.state = 'closed';
@@ -255,42 +255,42 @@ export class VisionErrorHandler {
   private static instance: VisionErrorHandler;
   private recoveryManager: ErrorRecoveryManager;
   private circuitBreakers: Map<string, CircuitBreaker> = new Map();
-  
+
   private constructor() {
     this.recoveryManager = new ErrorRecoveryManager();
   }
-  
+
   static getInstance(): VisionErrorHandler {
     if (!VisionErrorHandler.instance) {
       VisionErrorHandler.instance = new VisionErrorHandler();
     }
     return VisionErrorHandler.instance;
   }
-  
+
   getCircuitBreaker(name: string, threshold = 5, timeout = 60000): CircuitBreaker {
     if (!this.circuitBreakers.has(name)) {
       this.circuitBreakers.set(name, new CircuitBreaker(threshold, timeout, name));
     }
     return this.circuitBreakers.get(name)!;
   }
-  
+
   async handle(error: any): Promise<boolean> {
     // Convert to VisionError if needed
     if (!(error instanceof VisionError)) {
       error = new ProcessingError(error.message || 'Unknown error', { originalError: error });
     }
-    
+
     return this.recoveryManager.handleError(error);
   }
-  
+
   resetCircuitBreaker(name: string): void {
     const breaker = this.circuitBreakers.get(name);
     if (breaker) {
       breaker.reset();
     }
   }
-  
+
   resetAllCircuitBreakers(): void {
     this.circuitBreakers.forEach(breaker => breaker.reset());
   }
-} 
+}

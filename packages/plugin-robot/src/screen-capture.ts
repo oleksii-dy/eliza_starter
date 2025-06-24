@@ -12,20 +12,20 @@ export class ScreenCaptureService {
   private config: VisionConfig;
   private activeTileIndex = 0;
   private lastCapture: ScreenCapture | null = null;
-  
+
   constructor(config: VisionConfig) {
     this.config = config;
   }
 
   async getScreenInfo(): Promise<{ width: number; height: number } | null> {
     const platform = process.platform;
-    
+
     try {
       if (platform === 'darwin') {
         // macOS: Use system_profiler
         const { stdout } = await execAsync('system_profiler SPDisplaysDataType -json');
         const data = JSON.parse(stdout);
-        
+
         if (data.SPDisplaysDataType && data.SPDisplaysDataType[0]) {
           const display = data.SPDisplaysDataType[0];
           const resolution = display._items?.[0]?.native_resolution;
@@ -33,8 +33,8 @@ export class ScreenCaptureService {
             const match = resolution.match(/(\d+) x (\d+)/);
             if (match) {
               return {
-                width: parseInt(match[1]),
-                height: parseInt(match[2]),
+                width: parseInt(match[1], 10),
+                height: parseInt(match[2], 10),
               };
             }
           }
@@ -45,56 +45,58 @@ export class ScreenCaptureService {
         const match = stdout.match(/(\d+)x(\d+)/);
         if (match) {
           return {
-            width: parseInt(match[1]),
-            height: parseInt(match[2]),
+            width: parseInt(match[1], 10),
+            height: parseInt(match[2], 10),
           };
         }
       } else if (platform === 'win32') {
         // Windows: Use wmic
-        const { stdout } = await execAsync('wmic path Win32_VideoController get CurrentHorizontalResolution,CurrentVerticalResolution /value');
+        const { stdout } = await execAsync(
+          'wmic path Win32_VideoController get CurrentHorizontalResolution,CurrentVerticalResolution /value'
+        );
         const width = stdout.match(/CurrentHorizontalResolution=(\d+)/)?.[1];
         const height = stdout.match(/CurrentVerticalResolution=(\d+)/)?.[1];
         if (width && height) {
           return {
-            width: parseInt(width),
-            height: parseInt(height),
+            width: parseInt(width, 10),
+            height: parseInt(height, 10),
           };
         }
       }
     } catch (error) {
       logger.error('[ScreenCapture] Failed to get screen info:', error);
     }
-    
+
     // Default fallback
     return { width: 1920, height: 1080 };
   }
 
   async captureScreen(): Promise<ScreenCapture> {
     const tempFile = path.join(process.cwd(), `temp_screen_${Date.now()}.png`);
-    
+
     try {
       // Capture the screen
       await this.captureScreenToFile(tempFile);
-      
+
       // Load and process the image
       const imageBuffer = await fs.readFile(tempFile);
       const image = sharp(imageBuffer);
       const metadata = await image.metadata();
-      
+
       const width = metadata.width || 1920;
       const height = metadata.height || 1080;
-      
+
       // Create tiles
       const tileSize = this.config.tileSize || 256;
       const tiles: ScreenTile[] = [];
-      
+
       for (let row = 0; row < Math.ceil(height / tileSize); row++) {
         for (let col = 0; col < Math.ceil(width / tileSize); col++) {
           const x = col * tileSize;
           const y = row * tileSize;
           const tileWidth = Math.min(tileSize, width - x);
           const tileHeight = Math.min(tileSize, height - y);
-          
+
           tiles.push({
             id: `tile-${row}-${col}`,
             row,
@@ -106,7 +108,7 @@ export class ScreenCaptureService {
           });
         }
       }
-      
+
       // Process active tile based on order
       if (this.config.tileProcessingOrder === 'priority') {
         // Focus on center tiles first
@@ -119,7 +121,7 @@ export class ScreenCaptureService {
         // Sequential
         this.activeTileIndex = (this.activeTileIndex + 1) % tiles.length;
       }
-      
+
       // Extract active tile data
       const activeTile = tiles[this.activeTileIndex];
       if (activeTile) {
@@ -133,16 +135,16 @@ export class ScreenCaptureService {
             })
             .png()
             .toBuffer();
-          
+
           activeTile.data = tileBuffer;
         } catch (error) {
           logger.error('[ScreenCapture] Failed to extract tile:', error);
         }
       }
-      
+
       // Clean up temp file
       await fs.unlink(tempFile).catch(() => {});
-      
+
       // Create screen capture object
       const capture: ScreenCapture = {
         timestamp: Date.now(),
@@ -151,7 +153,7 @@ export class ScreenCaptureService {
         data: imageBuffer,
         tiles,
       };
-      
+
       this.lastCapture = capture;
       return capture;
     } catch (error) {
@@ -163,7 +165,7 @@ export class ScreenCaptureService {
 
   private async captureScreenToFile(outputPath: string): Promise<void> {
     const platform = process.platform;
-    
+
     try {
       if (platform === 'darwin') {
         // macOS: Use screencapture
@@ -195,7 +197,7 @@ export class ScreenCaptureService {
       }
     } catch (error: any) {
       logger.error('[ScreenCapture] Screen capture failed:', error);
-      
+
       // Provide helpful error messages
       if (platform === 'linux' && error.message.includes('command not found')) {
         throw new Error('Screen capture tool not found. Install with: sudo apt-get install scrot');
@@ -216,6 +218,6 @@ export class ScreenCaptureService {
   }
 
   getProcessedTiles(): ScreenTile[] {
-    return this.lastCapture?.tiles.filter(t => t.analysis) || [];
+    return this.lastCapture?.tiles.filter((t) => t.analysis) || [];
   }
-} 
+}

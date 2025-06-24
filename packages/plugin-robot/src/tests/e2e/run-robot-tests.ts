@@ -25,15 +25,15 @@ async function runRobotTests() {
     // Load test character
     const characterPath = path.join(__dirname, 'test-character.json');
     const characterData = JSON.parse(fs.readFileSync(characterPath, 'utf-8'));
-    
+
     // Add robot plugin to character
     characterData.plugins = ['@elizaos/plugin-robot'];
 
     // Create runtime
     console.log('Creating test runtime...');
-    const agentId = asUUID('test-agent-' + Date.now());
+    const agentId = asUUID(`test-agent-${Date.now()}`);
     const db = createDatabaseAdapter({ dataDir: ':memory:' }, agentId);
-    
+
     runtime = new AgentRuntime({
       character: characterData,
       adapter: db,
@@ -45,36 +45,35 @@ async function runRobotTests() {
 
     // Run test suites
     const testSuites = [robotRuntimeTests, robotControlTests];
-    
+
     for (const suite of testSuites) {
       console.log(`\n📦 Running suite: ${suite.name}`);
       console.log(`   ${suite.description}\n`);
-      
+
       for (const test of suite.tests) {
         console.log(`   🔄 ${test.name}...`);
-        
+
         try {
           await test.fn(runtime);
-          console.log(`✅ PASSED`);
+          console.log('✅ PASSED');
           testsPassed++;
         } catch (error) {
-          console.error(`❌ FAILED:`, error);
+          console.error('❌ FAILED:', error);
           testsFailed++;
         }
-        
+
         // Small delay between tests
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     }
 
     // Summary
-    console.log('\n' + '='.repeat(60));
+    console.log(`\n${'='.repeat(60)}`);
     console.log('📊 Test Summary:');
     console.log(`   Total:  ${testsPassed + testsFailed} tests`);
     console.log(`   ✅ Passed: ${testsPassed} tests`);
     console.log(`   ❌ Failed: ${testsFailed} tests`);
-    console.log('='.repeat(60) + '\n');
-
+    console.log(`${'='.repeat(60)}\n`);
   } catch (error) {
     console.error('Fatal error running tests:', error);
     process.exit(1);
@@ -89,4 +88,4 @@ async function runRobotTests() {
 }
 
 // Run tests
-runRobotTests().catch(console.error); 
+runRobotTests().catch(console.error);

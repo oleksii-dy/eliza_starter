@@ -53,10 +53,10 @@ declare module 'face-api.js' {
     genderProbability: number;
   }
 
-  export type FullFaceDescription = WithFaceDetection<{}> & 
-    WithFaceLandmarks<{}> & 
-    WithFaceDescriptor<{}> & 
-    WithFaceExpressions<{}> & 
+  export type FullFaceDescription = WithFaceDetection<{}> &
+    WithFaceLandmarks<{}> &
+    WithFaceDescriptor<{}> &
+    WithFaceExpressions<{}> &
     WithAgeAndGender<{}>;
 
   export const env: {
@@ -85,10 +85,13 @@ declare module 'face-api.js' {
     constructor(options: { minConfidence?: number; maxResults?: number });
   }
 
-  export function detectAllFaces(input: any, options?: any): {
+  export function detectAllFaces(
+    input: any,
+    options?: any
+  ): {
     withFaceLandmarks(): any;
     withFaceDescriptors(): any;
     withFaceExpressions(): any;
     withAgeAndGender(): any;
   };
-} 
+}

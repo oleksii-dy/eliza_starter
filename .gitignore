@@ -188,3 +188,6 @@ packages/**/.cursor
 packages/**/*/.cursor
 
 docs/
+
+# ElizaOS centralized data directory
+.eliza/

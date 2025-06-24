@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import { elizaLogger } from '@elizaos/core';
-import { TrainingExample, JSONLEntry, DatasetStats } from '../simple-types.js';
+import { type TrainingExample, type JSONLEntry, type DatasetStats } from '../simple-types.js';
 
 /**
  * Simple dataset builder for Together.ai format
@@ -36,7 +36,7 @@ export class DatasetBuilder {
     try {
       await fs.mkdir(this.dataDir, { recursive: true });
       const filePath = `${this.dataDir}/examples.json`;
-      
+
       try {
         const content = await fs.readFile(filePath, 'utf-8');
         const data = JSON.parse(content);
@@ -49,7 +49,9 @@ export class DatasetBuilder {
         this.examples = [];
       }
     } catch (error) {
-      throw new Error(`Failed to load examples: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to load examples: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -62,19 +64,23 @@ export class DatasetBuilder {
       const filePath = `${this.dataDir}/examples.json`;
       await fs.writeFile(filePath, JSON.stringify(this.examples, null, 2));
     } catch (error) {
-      throw new Error(`Failed to save examples: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to save examples: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
   /**
    * Generate JSONL dataset
    */
-  async generateJSONL(options: {
-    includeThinking?: boolean;
-    minQuality?: number;
-    maxTokens?: number;
-    outputPath?: string;
-  } = {}): Promise<string> {
+  async generateJSONL(
+    options: {
+      includeThinking?: boolean;
+      minQuality?: number;
+      maxTokens?: number;
+      outputPath?: string;
+    } = {}
+  ): Promise<string> {
     const {
       includeThinking = true,
       minQuality = 0.5,
@@ -84,8 +90,8 @@ export class DatasetBuilder {
 
     try {
       // Filter examples by quality
-      const filteredExamples = this.examples.filter(ex => ex.quality >= minQuality);
-      
+      const filteredExamples = this.examples.filter((ex) => ex.quality >= minQuality);
+
       if (filteredExamples.length === 0) {
         throw new Error('No examples meet the quality threshold');
       }
@@ -97,7 +103,8 @@ export class DatasetBuilder {
           messages: [
             {
               role: 'system',
-              content: 'You are an expert ElizaOS developer who creates high-quality plugins and MCP servers. You provide complete, working implementations that follow ElizaOS patterns.',
+              content:
+                'You are an expert ElizaOS developer who creates high-quality plugins and MCP servers. You provide complete, working implementations that follow ElizaOS patterns.',
             },
             {
               role: 'user',
@@ -114,9 +121,12 @@ export class DatasetBuilder {
         assistantContent += example.response;
 
         // Check token count (rough estimation)
-        const tokenCount = this.estimateTokens(JSON.stringify(entry)) + this.estimateTokens(assistantContent);
+        const tokenCount =
+          this.estimateTokens(JSON.stringify(entry)) + this.estimateTokens(assistantContent);
         if (tokenCount > maxTokens) {
-          elizaLogger.warn(`Skipping example ${example.id}: exceeds token limit (${tokenCount} > ${maxTokens})`);
+          elizaLogger.warn(
+            `Skipping example ${example.id}: exceeds token limit (${tokenCount} > ${maxTokens})`
+          );
           continue;
         }
 
@@ -134,11 +144,15 @@ export class DatasetBuilder {
 
       // Write JSONL file
       await fs.writeFile(outputPath, jsonlEntries.join('\n'));
-      elizaLogger.info(`Generated JSONL dataset with ${jsonlEntries.length} examples: ${outputPath}`);
-      
+      elizaLogger.info(
+        `Generated JSONL dataset with ${jsonlEntries.length} examples: ${outputPath}`
+      );
+
       return outputPath;
     } catch (error) {
-      throw new Error(`Failed to generate JSONL: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to generate JSONL: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -147,10 +161,11 @@ export class DatasetBuilder {
    */
   getStats(): DatasetStats {
     const totalExamples = this.examples.length;
-    const averageQuality = totalExamples > 0 
-      ? this.examples.reduce((sum, ex) => sum + ex.quality, 0) / totalExamples
-      : 0;
-    
+    const averageQuality =
+      totalExamples > 0
+        ? this.examples.reduce((sum, ex) => sum + ex.quality, 0) / totalExamples
+        : 0;
+
     const tokenCount = this.examples.reduce((sum, ex) => {
       const exampleText = `${ex.request} ${ex.response} ${ex.thinking || ''}`;
       return sum + this.estimateTokens(exampleText);
@@ -174,7 +189,7 @@ export class DatasetBuilder {
    * Remove example by ID
    */
   async removeExample(id: string): Promise<boolean> {
-    const index = this.examples.findIndex(ex => ex.id === id);
+    const index = this.examples.findIndex((ex) => ex.id === id);
     if (index === -1) {
       return false;
     }
@@ -197,7 +212,7 @@ export class DatasetBuilder {
       for (let i = 0; i < lines.length; i++) {
         try {
           const entry = JSON.parse(lines[i]);
-          
+
           if (!entry.messages || !Array.isArray(entry.messages)) {
             errors.push(`Line ${i + 1}: Missing or invalid 'messages' array`);
             continue;
@@ -213,7 +228,9 @@ export class DatasetBuilder {
             }
           }
         } catch (parseError) {
-          errors.push(`Line ${i + 1}: Invalid JSON - ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+          errors.push(
+            `Line ${i + 1}: Invalid JSON - ${parseError instanceof Error ? parseError.message : String(parseError)}`
+          );
         }
       }
 

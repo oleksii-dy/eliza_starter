@@ -13,7 +13,7 @@ import { sql } from 'drizzle-orm';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createTodoDataService, TodoDataService } from './services/todoDataService';
+import { createTodoDataService } from './services/todoDataService';
 
 // Define the equivalent of __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -123,7 +123,7 @@ export const routes: Route[] = [
         }
         if (agentRooms.length === 0) {
           logger.debug(
-            `[API /api/todos] No valid room details found for agent's participated rooms.`
+            '[API /api/todos] No valid room details found for agent\'s participated rooms.'
           );
           return res.json([]);
         }
@@ -152,7 +152,7 @@ export const routes: Route[] = [
             logger.warn(`[API /api/todos] Room ${room.id} is missing worldId.`);
             // Handle rooms without worldId (e.g., add to a default/unknown world)
             const unknownWorldId = 'unknown-world';
-            if (!roomsByWorld.has(unknownWorldId)) roomsByWorld.set(unknownWorldId, []);
+            if (!roomsByWorld.has(unknownWorldId)) {roomsByWorld.set(unknownWorldId, []);}
             roomsByWorld.get(unknownWorldId)?.push(room);
           }
         }
@@ -160,7 +160,7 @@ export const routes: Route[] = [
         const worldsMap = new Map<string, World>();
         for (const worldId of worldIds) {
           const world = await runtime.getWorld(worldId);
-          if (world) worldsMap.set(worldId, world);
+          if (world) {worldsMap.set(worldId, world);}
         }
         // Add placeholder for unknown world if needed
         if (roomsByWorld.has('unknown-world')) {
@@ -287,7 +287,7 @@ export const routes: Route[] = [
             // Validate date format if necessary
             try {
               new Date(dueDate);
-            } catch (e) {
+            } catch (_e) {
               return res.status(400).send('Invalid due date format');
             }
           }
@@ -310,8 +310,8 @@ export const routes: Route[] = [
 
         await runtime.ensureConnection({
           entityId: runtime.agentId,
-          roomId: roomId,
-          worldId: worldId,
+          roomId,
+          worldId,
           type: ChannelType.GROUP,
           name: name.trim(),
           source: 'the-system',
@@ -474,9 +474,9 @@ export const routes: Route[] = [
         const updatedMetadata = { ...(task.metadata || {}) };
         const updatedTaskData: any = {};
 
-        if (updateData.name) updatedTaskData.name = updateData.name;
+        if (updateData.name) {updatedTaskData.name = updateData.name;}
         if (updateData.description !== undefined)
-          updatedTaskData.description = updateData.description;
+        {updatedTaskData.description = updateData.description;}
 
         // Update priority (for one-off tasks)
         if (updateData.priority && task.type === 'one-off') {

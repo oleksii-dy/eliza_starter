@@ -6,7 +6,7 @@
  * manager works correctly with actual SQL operations.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { TrainingDatabaseManager } from '../../database/TrainingDatabaseManager.js';
 import { elizaLogger } from '@elizaos/core';
 import type { IAgentRuntime, UUID } from '@elizaos/core';

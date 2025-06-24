@@ -10,10 +10,7 @@ import {
   type IAgentRuntime,
   type Memory,
   type State,
-  type Handler,
-  type Validator,
   type HandlerCallback,
-  type UUID,
 } from './types';
 import { logger } from './logger';
 import { CrossPluginIntegrationService } from './services/CrossPluginIntegrationService';
@@ -32,7 +29,7 @@ export const verifyOAuthIdentityWorkflowAction: Action = {
   similes: ['VERIFY_IDENTITY', 'OAUTH_VERIFICATION', 'COMPLETE_VERIFICATION'],
   description: 'Complete OAuth identity verification workflow across all integrated plugins',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     // Check if required services are available
     const hasOAuthService = !!runtime.getService?.('OAUTH_VERIFICATION');
     const hasIdentityManager = !!runtime.getIdentityManager?.();
@@ -67,9 +64,13 @@ export const verifyOAuthIdentityWorkflowAction: Action = {
       const text = message.content.text?.toLowerCase() || '';
       let platform: 'google' | 'github' | 'discord' | 'twitter' = 'google';
 
-      if (text.includes('github')) platform = 'github';
-      else if (text.includes('discord')) platform = 'discord';
-      else if (text.includes('twitter')) platform = 'twitter';
+      if (text.includes('github')) {
+        platform = 'github';
+      } else if (text.includes('discord')) {
+        platform = 'discord';
+      } else if (text.includes('twitter')) {
+        platform = 'twitter';
+      }
 
       // Execute the OAuth verification workflow
       const workflowResult = await integrationService.executeOAuthVerificationWorkflow({
@@ -85,10 +86,10 @@ export const verifyOAuthIdentityWorkflowAction: Action = {
           `📊 Your trust score: ${workflowResult.trustScore?.overall.toFixed(2) || 'N/A'}\n` +
           `🔐 Verification status: ${workflowResult.identityProfile?.verificationStatus || 'verified'}\n` +
           `💰 Payment profile: ${workflowResult.paymentProfile ? 'Active' : 'Not initialized'}\n\n` +
-          `This verification enhances your ability to:\n` +
-          `• Make higher-value payments with reduced risk assessment\n` +
-          `• Build stronger trust relationships\n` +
-          `• Access verified-user features`;
+          'This verification enhances your ability to:\n' +
+          '• Make higher-value payments with reduced risk assessment\n' +
+          '• Build stronger trust relationships\n' +
+          '• Access verified-user features';
 
         await callback?.({
           text: responseText,
@@ -98,7 +99,7 @@ export const verifyOAuthIdentityWorkflowAction: Action = {
       } else {
         const errorText =
           `❌ OAuth verification failed: ${workflowResult.error || 'Unknown error'}\n\n` +
-          `Please try again or contact support if the issue persists.`;
+          'Please try again or contact support if the issue persists.';
 
         await callback?.({
           text: errorText,
@@ -175,7 +176,7 @@ export const assessPaymentRiskWorkflowAction: Action = {
   similes: ['CHECK_PAYMENT_RISK', 'EVALUATE_PAYMENT', 'RISK_ASSESSMENT'],
   description: 'Comprehensive payment risk assessment using all available trust and identity data',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
     const hasPaymentKeywords = [
       'risk assessment',
@@ -243,11 +244,11 @@ export const assessPaymentRiskWorkflowAction: Action = {
         `📊 Risk Level: ${riskColor}\n` +
         `🔐 Trust Score: ${riskResult.trustScore.toFixed(2)}\n` +
         `✅ Verification: ${riskResult.verificationLevel}\n` +
-        `📋 Approval: ${riskResult.approved ? 'APPROVED' : 'REQUIRES ACTION'}\n\n` +
-        (riskResult.requiredActions.length > 0
-          ? `📝 Required Actions:\n${riskResult.requiredActions.map((action) => `• ${action}`).join('\n')}\n\n`
-          : '') +
-        `🛡️ This assessment considers your trust score, identity verification status, and transaction history.`;
+        `📋 Approval: ${riskResult.approved ? 'APPROVED' : 'REQUIRES ACTION'}\n\n${
+          riskResult.requiredActions.length > 0
+            ? `📝 Required Actions:\n${riskResult.requiredActions.map((action) => `• ${action}`).join('\n')}\n\n`
+            : ''
+        }🛡️ This assessment considers your trust score, identity verification status, and transaction history.`;
 
       await callback?.({
         text: responseText,
@@ -306,7 +307,7 @@ export const consolidateIdentityWorkflowAction: Action = {
   description:
     'Consolidate multiple platform identities into a unified profile with conflict resolution',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
     const hasConsolidationKeywords = [
       'consolidate identity',
@@ -346,18 +347,19 @@ export const consolidateIdentityWorkflowAction: Action = {
 
       if (consolidationResult.success) {
         const responseText =
-          `✅ Identity Consolidation Complete!\n\n` +
+          '✅ Identity Consolidation Complete!\n\n' +
           `👤 Primary Entity: ${consolidationResult.primaryEntityId}\n` +
           `🔗 Consolidated Platforms: ${consolidationResult.consolidatedPlatforms.join(', ')}\n` +
           `📊 Final Trust Score: ${consolidationResult.finalTrustScore.toFixed(2)}\n` +
-          `🔐 Verification Level: ${consolidationResult.verificationLevel}\n` +
-          (consolidationResult.mergedEntities.length > 0
-            ? `🔄 Merged Entities: ${consolidationResult.mergedEntities.length}\n`
-            : '') +
-          (consolidationResult.conflicts.length > 0
-            ? `⚠️ Conflicts Detected: ${consolidationResult.conflicts.length} (manual review required)\n`
-            : '') +
-          `\n🎉 Your unified identity profile is now active across all platforms!`;
+          `🔐 Verification Level: ${consolidationResult.verificationLevel}\n${
+            consolidationResult.mergedEntities.length > 0
+              ? `🔄 Merged Entities: ${consolidationResult.mergedEntities.length}\n`
+              : ''
+          }${
+            consolidationResult.conflicts.length > 0
+              ? `⚠️ Conflicts Detected: ${consolidationResult.conflicts.length} (manual review required)\n`
+              : ''
+          }\n🎉 Your unified identity profile is now active across all platforms!`;
 
         await callback?.({
           text: responseText,

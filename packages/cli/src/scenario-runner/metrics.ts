@@ -143,7 +143,9 @@ export class MetricsCollector {
 
   private calculateSubjectResponseRate(context: ScenarioContext): number {
     const subjectActor = context.scenario.actors.find((a) => a.role === 'subject');
-    if (!subjectActor) return 0;
+    if (!subjectActor) {
+      return 0;
+    }
 
     const totalMessages = context.transcript.length;
     const subjectMessages = context.transcript.filter(
@@ -173,7 +175,9 @@ export class BenchmarkAnalyzer {
   }
 
   private calculateSpeedScore(metrics: ScenarioMetrics, benchmarks: any): number {
-    if (!benchmarks.maxDuration) return 1.0;
+    if (!benchmarks.maxDuration) {
+      return 1.0;
+    }
 
     const ratio = metrics.duration / benchmarks.maxDuration;
     return Math.max(0, Math.min(1, 2 - ratio)); // Score decreases as duration increases
@@ -204,7 +208,9 @@ export class BenchmarkAnalyzer {
   }
 
   private calculateVariance(mean: number, values: number[]): number {
-    if (values.length === 0) return 0;
+    if (values.length === 0) {
+      return 0;
+    }
 
     const squaredDiffs = values.map((value) => Math.pow(value - mean, 2));
     return squaredDiffs.reduce((sum, diff) => sum + diff, 0) / values.length;

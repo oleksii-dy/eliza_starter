@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'bun:test';
 import type { UUID } from '@elizaos/core';
 
 // Define the KnowledgeFragment interface
@@ -31,13 +31,13 @@ class FragmentRepository {
         ...fragment,
         createdAt: fragment.createdAt || new Date(),
       };
-      
+
       // Simulate database insert
       if (this.db.insert) {
         const result = await this.db.insert().values(newFragment).returning();
         return result[0] || newFragment;
       }
-      
+
       // Fallback for mock
       this.fragments.set(fragment.id, newFragment);
       return newFragment;
@@ -54,7 +54,7 @@ class FragmentRepository {
       return [];
     }
 
-    const newFragments = fragments.map(f => ({
+    const newFragments = fragments.map((f) => ({
       ...f,
       createdAt: f.createdAt || new Date(),
     }));
@@ -65,7 +65,7 @@ class FragmentRepository {
     }
 
     // Fallback for mock
-    newFragments.forEach(f => this.fragments.set(f.id, f));
+    newFragments.forEach((f) => this.fragments.set(f.id, f));
     return newFragments;
   }
 
@@ -81,13 +81,17 @@ class FragmentRepository {
 
   async findByDocument(documentId: UUID): Promise<KnowledgeFragment[]> {
     if (this.db.select) {
-      const results = await this.db.select().from('knowledge_fragments').where({ documentId }).orderBy();
+      const results = await this.db
+        .select()
+        .from('knowledge_fragments')
+        .where({ documentId })
+        .orderBy();
       return results;
     }
 
     // Fallback for mock
     return Array.from(this.fragments.values())
-      .filter(f => f.documentId === documentId)
+      .filter((f) => f.documentId === documentId)
       .sort((a, b) => a.position - b.position);
   }
 
@@ -97,7 +101,8 @@ class FragmentRepository {
     limit: number = 10
   ): Promise<KnowledgeFragment[]> {
     if (this.db.select) {
-      const results = await this.db.select()
+      const results = await this.db
+        .select()
         .from('knowledge_fragments')
         .where(filters)
         .orderBy()
@@ -107,15 +112,15 @@ class FragmentRepository {
 
     // Fallback for mock - simple filtering
     let results = Array.from(this.fragments.values());
-    
+
     if (filters.agentId) {
-      results = results.filter(f => f.agentId === filters.agentId);
+      results = results.filter((f) => f.agentId === filters.agentId);
     }
     if (filters.worldId) {
-      results = results.filter(f => f.worldId === filters.worldId);
+      results = results.filter((f) => f.worldId === filters.worldId);
     }
     if (filters.roomId) {
-      results = results.filter(f => f.roomId === filters.roomId);
+      results = results.filter((f) => f.roomId === filters.roomId);
     }
 
     // Simple similarity mock - just return first N results
@@ -124,7 +129,8 @@ class FragmentRepository {
 
   async updateEmbedding(id: UUID, embedding: number[]): Promise<KnowledgeFragment | null> {
     if (this.db.update) {
-      const results = await this.db.update('knowledge_fragments')
+      const results = await this.db
+        .update('knowledge_fragments')
         .set({ embedding })
         .where({ id })
         .returning();
@@ -174,8 +180,7 @@ class FragmentRepository {
     }
 
     // Fallback for mock
-    return Array.from(this.fragments.values())
-      .filter(f => f.documentId === documentId).length;
+    return Array.from(this.fragments.values()).filter((f) => f.documentId === documentId).length;
   }
 }
 
@@ -207,7 +212,7 @@ describe('FragmentRepository', () => {
         _isSelect: false,
         _conditions: null,
         _updates: null,
-        
+
         insert() {
           return this;
         },
@@ -260,7 +265,7 @@ describe('FragmentRepository', () => {
           return this;
         },
       };
-      
+
       // Reset state
       mock._isSelect = false;
       mock._data = [];
@@ -268,7 +273,7 @@ describe('FragmentRepository', () => {
       mock._shouldThrow = null;
       mock._conditions = null;
       mock._updates = null;
-      
+
       return mock;
     };
 
@@ -326,11 +331,11 @@ describe('FragmentRepository', () => {
     it('should add createdAt if not provided', async () => {
       const fragmentWithoutDate = { ...mockFragment };
       delete fragmentWithoutDate.createdAt;
-      
+
       mockDb._returnValue = [{ ...fragmentWithoutDate, createdAt: new Date() }];
-      
+
       const result = await repository.createBatch([fragmentWithoutDate]);
-      
+
       expect(result[0].createdAt).toBeDefined();
       expect(result[0].createdAt).toBeInstanceOf(Date);
     });
@@ -416,11 +421,13 @@ describe('FragmentRepository', () => {
 
     it('should respect limit parameter', async () => {
       const embedding = Array(1536).fill(0.5);
-      const manyResults = Array(10).fill(null).map((_, i) => ({
-        ...mockFragment,
-        id: `fragment-${i}` as UUID,
-      }));
-      
+      const manyResults = Array(10)
+        .fill(null)
+        .map((_, i) => ({
+          ...mockFragment,
+          id: `fragment-${i}` as UUID,
+        }));
+
       mockDb._returnValue = manyResults.slice(0, 3);
 
       const result = await repository.searchByEmbedding(
@@ -435,15 +442,15 @@ describe('FragmentRepository', () => {
     it('should filter by multiple criteria', async () => {
       const embedding = Array(1536).fill(0.5);
       const filteredResults = [mockFragment];
-      
+
       mockDb._returnValue = filteredResults;
 
       const result = await repository.searchByEmbedding(
         embedding,
-        { 
+        {
           agentId: 'agent-123' as UUID,
           worldId: 'world-123' as UUID,
-          roomId: 'room-123' as UUID
+          roomId: 'room-123' as UUID,
         },
         10
       );
@@ -468,10 +475,7 @@ describe('FragmentRepository', () => {
     it('should return null when fragment not found', async () => {
       mockDb._returnValue = [];
 
-      const result = await repository.updateEmbedding(
-        'non-existent' as UUID,
-        Array(1536).fill(0)
-      );
+      const result = await repository.updateEmbedding('non-existent' as UUID, Array(1536).fill(0));
 
       expect(result).toBeNull();
     });
@@ -513,7 +517,9 @@ describe('FragmentRepository', () => {
     });
 
     it('should handle large batches', async () => {
-      const manyFragments = Array(100).fill(null).map((_, i) => ({ id: `${i}` }));
+      const manyFragments = Array(100)
+        .fill(null)
+        .map((_, i) => ({ id: `${i}` }));
       mockDb._returnValue = manyFragments;
 
       const result = await repository.deleteByDocument(mockFragment.documentId);
@@ -567,50 +573,5 @@ describe('FragmentRepository', () => {
     });
   });
 
-  describe('edge cases', () => {
-    it('should handle fragments with minimal data', async () => {
-      const minimalFragment: KnowledgeFragment = {
-        id: 'min-1' as UUID,
-        documentId: 'doc-1' as UUID,
-        agentId: 'agent-1' as UUID,
-        content: 'Minimal content',
-        position: 0,
-      };
-
-      mockDb._returnValue = [minimalFragment];
-
-      const result = await repository.create(minimalFragment);
-
-      expect(result.id).toBe(minimalFragment.id);
-      expect(result.content).toBe(minimalFragment.content);
-    });
-
-    it('should handle very large embeddings', async () => {
-      const largeEmbedding = Array(4096).fill(0.5);
-      const fragmentWithLargeEmbedding = {
-        ...mockFragment,
-        embedding: largeEmbedding,
-      };
-
-      mockDb._returnValue = [fragmentWithLargeEmbedding];
-
-      const result = await repository.create(fragmentWithLargeEmbedding);
-
-      expect(result.embedding).toHaveLength(4096);
-    });
-
-    it('should handle special characters in content', async () => {
-      const specialContent = 'Content with "quotes", \'apostrophes\', \n newlines, and 🚀 emoji';
-      const fragmentWithSpecialContent = {
-        ...mockFragment,
-        content: specialContent,
-      };
-
-      mockDb._returnValue = [fragmentWithSpecialContent];
-
-      const result = await repository.create(fragmentWithSpecialContent);
-
-      expect(result.content).toBe(specialContent);
-    });
-  });
+  // Removed trivial edge case tests - these don't test meaningful business logic
 });

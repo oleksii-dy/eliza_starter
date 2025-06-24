@@ -20,11 +20,11 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts && vite build",
+    "build": "bun run typecheck && tsup src/index.ts --format esm --dts && vite build",
     "test": "elizaos test",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "test:unit": "vitest run src/__tests__/unit",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "test:unit": "bun test src/__tests__/unit",
     "demo": "tsx demo/ngrok-demo.ts",
     "demo:api": "tsx demo/api-server.ts",
     "demo:full": "concurrently \"npm run demo:api\" \"npm run dev\"",
@@ -32,7 +32,9 @@
     "dev": "vite",
     "dev:plugin": "tsup src/index.ts --watch",
     "example": "ts-node src/example/main.ts",
-    "lint": "prettier --write ."
+    "lint": "eslint src --fix && prettier --write .",
+    "lint:check": "eslint src && prettier --check .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",
@@ -63,14 +65,16 @@
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
     "@tanstack/eslint-plugin-query": "^5.51.15",
+    "@types/bun": "^1.2.17",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.12",
     "@types/node": "^22.5.0",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
     "@vitejs/plugin-react": "^4.3.1",
-    "@vitest/coverage-v8": "^3.2.4",
     "autoprefixer": "^10.4.19",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",
@@ -88,9 +92,8 @@
     "prettier": "^3.0.0",
     "tailwindcss": "^3.4.10",
     "tsup": "^6.7.0",
-    "typescript": "~5.5.4",
-    "vite": "^5.4.1",
-    "vitest": "^3.2.4"
+    "typescript": "5.8.3",
+    "vite": "^5.4.1"
   },
   "peerDependencies": {
     "react": "^18.2.0",

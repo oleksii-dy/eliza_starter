@@ -16,20 +16,20 @@ const models = [
   { folder: 'ssd_mobilenetv1', file: 'ssd_mobilenetv1_model-weights_manifest.json' },
   { folder: 'ssd_mobilenetv1', file: 'ssd_mobilenetv1_model-shard1' },
   { folder: 'ssd_mobilenetv1', file: 'ssd_mobilenetv1_model-shard2' },
-  
+
   // Face Landmark 68 model files
   { folder: 'face_landmark_68', file: 'face_landmark_68_model-weights_manifest.json' },
   { folder: 'face_landmark_68', file: 'face_landmark_68_model-shard1' },
-  
+
   // Face Recognition model files
   { folder: 'face_recognition', file: 'face_recognition_model-weights_manifest.json' },
   { folder: 'face_recognition', file: 'face_recognition_model-shard1' },
   { folder: 'face_recognition', file: 'face_recognition_model-shard2' },
-  
+
   // Face Expression model files
   { folder: 'face_expression', file: 'face_expression_model-weights_manifest.json' },
   { folder: 'face_expression', file: 'face_expression_model-shard1' },
-  
+
   // Age Gender model files
   { folder: 'age_gender_model', file: 'age_gender_model-weights_manifest.json' },
   { folder: 'age_gender_model', file: 'age_gender_model-shard1' },
@@ -42,20 +42,20 @@ if (!fs.existsSync(MODELS_DIR)) {
 
 function downloadFile(modelInfo) {
   return new Promise((resolve, reject) => {
-    const url = MODELS_BASE_URL + modelInfo.folder + '/' + modelInfo.file;
+    const url = `${MODELS_BASE_URL + modelInfo.folder}/${modelInfo.file}`;
     const filePath = path.join(MODELS_DIR, modelInfo.file);
-    
+
     // Skip if already exists
     if (fs.existsSync(filePath)) {
       console.log(`✓ ${modelInfo.file} already exists`);
       resolve();
       return;
     }
-    
+
     console.log(`Downloading ${modelInfo.file}...`);
-    
+
     const file = fs.createWriteStream(filePath);
-    
+
     https.get(url, (response) => {
       if (response.statusCode === 302 || response.statusCode === 301) {
         // Handle redirect
@@ -64,9 +64,9 @@ function downloadFile(modelInfo) {
             reject(new Error(`Failed to download ${modelInfo.file}: ${redirectResponse.statusCode}`));
             return;
           }
-          
+
           redirectResponse.pipe(file);
-          
+
           file.on('finish', () => {
             file.close();
             console.log(`✓ Downloaded ${modelInfo.file}`);
@@ -78,7 +78,7 @@ function downloadFile(modelInfo) {
         });
       } else if (response.statusCode === 200) {
         response.pipe(file);
-        
+
         file.on('finish', () => {
           file.close();
           console.log(`✓ Downloaded ${modelInfo.file}`);
@@ -97,7 +97,7 @@ function downloadFile(modelInfo) {
 async function downloadAllModels() {
   console.log('Downloading face-api.js models...\n');
   console.log('Note: These models are required for face recognition functionality.\n');
-  
+
   try {
     for (const model of models) {
       await downloadFile(model);
@@ -112,4 +112,4 @@ async function downloadAllModels() {
   }
 }
 
-downloadAllModels(); 
+downloadAllModels();

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { OrchestrationManager } from '../../managers/orchestration-manager';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +11,9 @@ describe('OrchestrationManager', () => {
     // Create mock runtime
     mockRuntime = {
       getSetting: (key: string) => {
-        if (key === 'ANTHROPIC_API_KEY') return 'test-key';
+        if (key === 'ANTHROPIC_API_KEY') {
+          return 'test-key';
+        }
         return null;
       },
       getService: (name: string) => {
@@ -139,7 +141,7 @@ describe('OrchestrationManager', () => {
       await manager.initialize();
 
       // Mock the development phase execution to prevent timeout
-      vi.spyOn(manager as any, 'executeMVPDevelopmentPhase').mockImplementation(async () => {});
+      mock.spyOn(manager as any, 'executeMVPDevelopmentPhase').mockImplementation(async () => {});
 
       // Create a mock project without starting workflow
       const project = {
@@ -216,16 +218,18 @@ describe('OrchestrationManager - Unit Tests', () => {
 
   beforeEach(async () => {
     mockRuntime = {
-      getSetting: vi.fn().mockImplementation((key: string) => {
-        if (key === 'ANTHROPIC_API_KEY') return 'test-key';
+      getSetting: mock().mockImplementation((key: string) => {
+        if (key === 'ANTHROPIC_API_KEY') {
+          return 'test-key';
+        }
         return null;
       }),
-      getService: vi.fn().mockReturnValue({
-        createResearchProject: vi.fn().mockResolvedValue({ id: 'research-1' }),
-        getProject: vi.fn().mockResolvedValue({ status: 'completed', report: 'Mock report' }),
-        storeDocument: vi.fn().mockResolvedValue({ id: 'doc-1' }),
+      getService: mock().mockReturnValue({
+        createResearchProject: mock().mockResolvedValue({ id: 'research-1' }),
+        getProject: mock().mockResolvedValue({ status: 'completed', report: 'Mock report' }),
+        storeDocument: mock().mockResolvedValue({ id: 'doc-1' }),
       }),
-      logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+      logger: { info: mock(), error: mock(), warn: mock(), debug: mock() },
     } as any;
 
     manager = new OrchestrationManager(mockRuntime);
@@ -234,7 +238,7 @@ describe('OrchestrationManager - Unit Tests', () => {
 
   describe('Project Creation & Management', () => {
     it('should create a new plugin project with correct initial state', async () => {
-      vi.spyOn(manager as any, 'startCreationWorkflow').mockImplementation(() => {});
+      mock.spyOn(manager as any, 'startCreationWorkflow').mockImplementation(() => {});
       const project = await manager.createPluginProject(
         'test-plugin',
         'A test plugin',
@@ -250,7 +254,7 @@ describe('OrchestrationManager - Unit Tests', () => {
     });
 
     it('should retrieve a project by its ID', async () => {
-      vi.spyOn(manager as any, 'startCreationWorkflow').mockImplementation(() => {});
+      mock.spyOn(manager as any, 'startCreationWorkflow').mockImplementation(() => {});
       const project = await manager.createPluginProject(
         'test-plugin',
         'A test plugin',
@@ -264,7 +268,7 @@ describe('OrchestrationManager - Unit Tests', () => {
 
   describe('Workflow Progression', () => {
     it('should start the creation workflow when a project is created', async () => {
-      const startWorkflowSpy = vi
+      const startWorkflowSpy = mock
         .spyOn(manager as any, 'startCreationWorkflow')
         .mockImplementation(() => {});
       await manager.createPluginProject('workflow-test', 'A test', uuidv4() as UUID);
@@ -299,18 +303,18 @@ describe('OrchestrationManager - Unit Tests', () => {
       (manager as any).projects.set(project.id, project);
 
       // Mock all the phase execution methods to prevent actual execution
-      const researchSpy = vi
+      const researchSpy = mock
         .spyOn(manager as any, 'executeResearchPhase')
         .mockResolvedValue(undefined);
-      const planningSpy = vi
+      const planningSpy = mock
         .spyOn(manager as any, 'executeMVPPlanningPhase')
         .mockResolvedValue(undefined);
-      vi.spyOn(manager as any, 'executeMVPDevelopmentPhase').mockResolvedValue(undefined);
-      vi.spyOn(manager as any, 'executeFullPlanningPhase').mockResolvedValue(undefined);
-      vi.spyOn(manager as any, 'executeFullDevelopmentPhase').mockResolvedValue(undefined);
-      vi.spyOn(manager as any, 'executeCriticalReviewPhase').mockResolvedValue(undefined);
-      vi.spyOn(manager as any, 'updateProjectStatus').mockResolvedValue(undefined);
-      vi.spyOn(manager as any, 'logToProject').mockImplementation(() => {});
+      mock.spyOn(manager as any, 'executeMVPDevelopmentPhase').mockResolvedValue(undefined);
+      mock.spyOn(manager as any, 'executeFullPlanningPhase').mockResolvedValue(undefined);
+      mock.spyOn(manager as any, 'executeFullDevelopmentPhase').mockResolvedValue(undefined);
+      mock.spyOn(manager as any, 'executeCriticalReviewPhase').mockResolvedValue(undefined);
+      mock.spyOn(manager as any, 'updateProjectStatus').mockResolvedValue(undefined);
+      mock.spyOn(manager as any, 'logToProject').mockImplementation(() => {});
 
       // Start the workflow which will execute phases
       await (manager as any).startCreationWorkflow(project.id);

@@ -8,7 +8,7 @@ export class OCRService {
   private useFallback = false;
 
   async initialize(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {return;}
 
     try {
       logger.info('[OCR] Initializing OCR service...');
@@ -65,7 +65,7 @@ export class OCRService {
     return this.extractText(imageBuffer);
   }
 
-  private async fallbackOCR(imageBuffer: Buffer): Promise<OCRResult> {
+  private async fallbackOCR(_imageBuffer: Buffer): Promise<OCRResult> {
     // Fallback implementation for when Tesseract is not available
     logger.debug('[OCR] Using fallback OCR implementation');
 

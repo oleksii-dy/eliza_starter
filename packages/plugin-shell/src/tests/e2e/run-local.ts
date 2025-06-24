@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { AgentRuntime, createUniqueUuid } from '@elizaos/core';
+import { createUniqueUuid } from '@elizaos/core';
 import { ShellService } from '../../service';
 import shellBasicE2ETests from './shell-basic';
 import shellStatefulE2ETests from './shell-stateful';
@@ -13,9 +13,9 @@ async function runE2ETests() {
   // Create a minimal runtime with shell service
   const runtime = {
     agentId: createUniqueUuid(null as any, 'test-agent'),
-    getSetting: (key: string) => null,
+    getSetting: (_key: string) => null,
     getService: (name: string) => {
-      if (name === 'SHELL') return shellService;
+      if (name === 'SHELL') {return shellService;}
       return null;
     },
     createMemory: async () => {},
@@ -52,18 +52,18 @@ async function runE2ETests() {
       } catch (error) {
         failedTests++;
         console.log('❌ FAILED');
-        console.error(`      Error: ${error.message}`);
+        console.error(`      Error: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
   }
 
   // Summary
-  console.log('\n' + '='.repeat(60));
+  console.log(`\n${'='.repeat(60)}`);
   console.log('📊 Test Summary:');
   console.log(`   Total:  ${totalTests} tests`);
   console.log(`   ✅ Passed: ${passedTests} tests`);
   console.log(`   ❌ Failed: ${failedTests} tests`);
-  console.log('='.repeat(60) + '\n');
+  console.log(`${'='.repeat(60)}\n`);
 
   // Cleanup
   await shellService.stop();

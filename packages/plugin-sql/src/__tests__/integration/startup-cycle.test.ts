@@ -256,9 +256,9 @@ describe.skip('Startup Cycle Integration Test', () => {
     await adapter1.createMemory(
       {
         id: 'test-memory' as UUID,
-        entityId: entityId,
+        entityId,
         agentId: runtime1.agentId,
-        roomId: roomId,
+        roomId,
         content: {
           text: 'Hello from first session',
           source: 'test',
@@ -292,7 +292,7 @@ describe.skip('Startup Cycle Integration Test', () => {
     expect(room).toBeNull();
 
     const memories = await adapter2.getMemories({
-      roomId: roomId,
+      roomId,
       count: 10,
     });
     expect(memories).toHaveLength(0);
@@ -320,9 +320,9 @@ describe.skip('Startup Cycle Integration Test', () => {
     await adapter2.createMemory(
       {
         id: 'test-memory-2' as UUID,
-        entityId: entityId,
+        entityId,
         agentId: runtime2.agentId,
-        roomId: roomId,
+        roomId,
         content: {
           text: 'Hello from second session',
           source: 'test',
@@ -334,7 +334,7 @@ describe.skip('Startup Cycle Integration Test', () => {
 
     // Verify the memory was created in this session
     const sessionMemories = await adapter2.getMemories({
-      roomId: roomId,
+      roomId,
       count: 10,
     });
     expect(sessionMemories).toHaveLength(1);

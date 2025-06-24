@@ -25,7 +25,7 @@ export function sanitizeFilename(name: string): string {
 /**
  * Converts an agent to character JSON data, excluding sensitive information
  */
-export function agentToCharacterData(agent: Agent): Record<string, any> {
+export function agentToCharacterData(agent: Agent): Record<string, unknown> {
   const characterData = {
     id: agent.id,
     name: agent.name,
@@ -43,7 +43,7 @@ export function agentToCharacterData(agent: Agent): Record<string, any> {
 
   // Remove secrets from settings if they exist
   if (characterData.settings && 'secrets' in characterData.settings) {
-    const { secrets, ...settingsWithoutSecrets } = characterData.settings;
+    const { secrets: _secrets, ...settingsWithoutSecrets } = characterData.settings;
     characterData.settings = settingsWithoutSecrets;
   }
 
@@ -65,7 +65,7 @@ export function generateExportFilename(agentName: string): string {
 /**
  * Creates and triggers a download of a JSON file
  */
-export function downloadJsonFile(data: any, filename: string): void {
+export function downloadJsonFile(data: unknown, filename: string): void {
   const blob = new Blob([JSON.stringify(data, null, 2)], {
     type: 'application/json',
   });

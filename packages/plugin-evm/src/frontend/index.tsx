@@ -147,7 +147,7 @@ interface PanelProps {
  */
 const WalletPanelComponent: React.FC<PanelProps> = ({ agentId }) => {
   const apiBase = (window as any).ELIZA_CONFIG?.apiBase || 'http://localhost:3000';
-  
+
   return (
     <div className="p-4">
       <WalletBalanceDisplay agentId={agentId} apiBase={apiBase} />
@@ -160,7 +160,7 @@ const WalletPanelComponent: React.FC<PanelProps> = ({ agentId }) => {
  */
 const RecentActionsPanelComponent: React.FC<PanelProps> = ({ agentId }) => {
   const apiBase = (window as any).ELIZA_CONFIG?.apiBase || 'http://localhost:3000';
-  
+
   return (
     <div className="p-4">
       <RecentActions agentId={agentId} apiBase={apiBase} />
@@ -173,7 +173,7 @@ const RecentActionsPanelComponent: React.FC<PanelProps> = ({ agentId }) => {
  */
 const DashboardPanelComponent: React.FC<PanelProps> = ({ agentId }) => {
   const apiBase = (window as any).ELIZA_CONFIG?.apiBase || 'http://localhost:3000';
-  
+
   return (
     <div className="p-4 space-y-6">
       <WalletBalanceDisplay agentId={agentId} apiBase={apiBase} />

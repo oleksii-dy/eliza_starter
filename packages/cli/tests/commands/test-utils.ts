@@ -417,7 +417,7 @@ export async function waitForServerReady(
           const timeRemaining = maxWaitTime - (Date.now() - startTime);
           if (timeRemaining < maxWaitTime * 0.3) {
             // Less than 30% time remaining
-            console.log(`[DEBUG] Giving up on connection test, trying HTTP anyway...`);
+            console.log('[DEBUG] Giving up on connection test, trying HTTP anyway...');
           } else {
             await new Promise((resolve) => setTimeout(resolve, pollInterval));
             continue;
@@ -609,7 +609,7 @@ export const crossPlatform = {
     }
   },
 
-  killProcessOnPort: killProcessOnPort,
+  killProcessOnPort,
 };
 
 /**

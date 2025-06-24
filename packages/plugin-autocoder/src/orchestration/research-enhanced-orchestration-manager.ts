@@ -694,9 +694,9 @@ ${researchContext.implementationGuidance.approach}
 
 ### Critical Considerations
 ${researchContext.implementationGuidance.keyConsiderations
-  .slice(0, 3)
-  .map((c, i) => `${i + 1}. ${c}`)
-  .join('\n')}
+    .slice(0, 3)
+    .map((c, i) => `${i + 1}. ${c}`)
+    .join('\n')}
 
 ### Risk Factors
 - Complexity: ${researchContext.riskAssessment.complexity}

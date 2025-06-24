@@ -1,4 +1,4 @@
-import { Service, type IAgentRuntime, type Character, type UUID, logger } from '@elizaos/core';
+import { Service, type IAgentRuntime, logger } from '@elizaos/core';
 import fs from 'fs-extra';
 import path from 'path';
 import { z } from 'zod';
@@ -110,7 +110,7 @@ export class CharacterFileManager extends Service {
             logger.info('Character file detected', { path: filePath });
             return;
           }
-        } catch (error) {
+        } catch {
           // Continue searching
         }
       }
@@ -122,7 +122,9 @@ export class CharacterFileManager extends Service {
   private setupValidationRules(): void {
     // System prompt validation - ensure safe and reasonable content
     this.validationRules.set('system', (system: string) => {
-      if (typeof system !== 'string') return false;
+      if (typeof system !== 'string') {
+        return false;
+      }
       return (
         system.length > 10 && // Minimum meaningful length
         system.length < 10000 && // Maximum reasonable length
@@ -137,7 +139,9 @@ export class CharacterFileManager extends Service {
 
     // Bio validation - ensure reasonable length and content
     this.validationRules.set('bio', (bio: string[]) => {
-      if (!Array.isArray(bio)) return false;
+      if (!Array.isArray(bio)) {
+        return false;
+      }
       return bio.every(
         (item) =>
           typeof item === 'string' &&
@@ -150,7 +154,9 @@ export class CharacterFileManager extends Service {
 
     // Topics validation
     this.validationRules.set('topics', (topics: string[]) => {
-      if (!Array.isArray(topics)) return false;
+      if (!Array.isArray(topics)) {
+        return false;
+      }
       return topics.every(
         (topic) =>
           typeof topic === 'string' &&
@@ -392,12 +398,12 @@ export class CharacterFileManager extends Service {
         if (timestampMatch) {
           const dateStr = timestampMatch[1];
           const timeStr = timestampMatch[2];
-          const year = parseInt(dateStr.substring(0, 4));
-          const month = parseInt(dateStr.substring(4, 6)) - 1;
-          const day = parseInt(dateStr.substring(6, 8));
-          const hour = parseInt(timeStr.substring(0, 2));
-          const minute = parseInt(timeStr.substring(2, 4));
-          const second = parseInt(timeStr.substring(4, 6));
+          const year = parseInt(dateStr.substring(0, 4), 10);
+          const month = parseInt(dateStr.substring(4, 6), 10) - 1;
+          const day = parseInt(dateStr.substring(6, 8), 10);
+          const hour = parseInt(timeStr.substring(0, 2), 10);
+          const minute = parseInt(timeStr.substring(2, 4), 10);
+          const second = parseInt(timeStr.substring(4, 6), 10);
 
           timestamp = new Date(year, month, day, hour, minute, second).getTime();
         }

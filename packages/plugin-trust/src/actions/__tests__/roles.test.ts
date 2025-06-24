@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, mock, beforeEach, type Mock } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import { Role, ChannelType } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
@@ -17,15 +17,15 @@ const createMockRuntime = (): IAgentRuntime => {
 
   return {
     agentId: 'test-agent' as UUID,
-    getSetting: vi.fn().mockReturnValue('world-1'),
-    getWorld: vi.fn().mockResolvedValue(mockWorld),
-    updateWorld: vi.fn().mockResolvedValue(true),
-    getEntitiesForRoom: vi.fn().mockResolvedValue([
+    getSetting: mock().mockReturnValue('world-1'),
+    getWorld: mock().mockResolvedValue(mockWorld),
+    updateWorld: mock().mockResolvedValue(true),
+    getEntitiesForRoom: mock().mockResolvedValue([
       { id: 'entity-1', names: ['Alice'] },
       { id: 'entity-2', names: ['Bob'] },
       { id: 'target-entity', names: ['Charlie'] }
     ]),
-    useModel: vi.fn().mockResolvedValue([
+    useModel: mock().mockResolvedValue([
       { entityId: 'target-entity', newRole: Role.ADMIN }
     ])
   } as any;
@@ -63,7 +63,7 @@ describe('updateRoleAction', () => {
       testEntityId
     );
     const state = createMockState('Make Charlie an admin');
-    const callback = vi.fn();
+    const callback = mock();
 
     const result = await updateRoleAction.handler(runtime, memory, state, {}, callback);
 
@@ -83,10 +83,10 @@ describe('updateRoleAction', () => {
   it('should validate the action correctly', async () => {
     const validMemory = createMockMemory('test', testEntityId);
     const state = {} as State;
-    
+
     // Should return true for group channels with serverId
     expect(await updateRoleAction.validate(runtime, validMemory, state)).toBe(true);
-    
+
     // Should return false for non-group channels
     const invalidMemory = {
       ...validMemory,
@@ -107,7 +107,7 @@ describe('updateRoleAction', () => {
       testEntityId
     );
     const state = createMockState('Make Charlie an admin');
-    const callback = vi.fn();
+    const callback = mock();
 
     const result = await updateRoleAction.handler(runtime, memory, state, {}, callback);
 
@@ -126,7 +126,7 @@ describe('updateRoleAction', () => {
       testEntityId
     );
     const state = createMockState('Make someone admin');
-    const callback = vi.fn();
+    const callback = mock();
 
     const result = await updateRoleAction.handler(runtime, memory, state, {}, callback);
 

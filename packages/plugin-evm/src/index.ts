@@ -168,9 +168,9 @@ export const evmPlugin: Plugin = {
   name: 'evm',
   description:
     'Comprehensive EVM chain integration plugin with advanced DeFi, wallet management, cross-chain capabilities, and trust-based smart contract security',
-  actions: actions,
+  actions,
   providers: [...providers],
-  services: services,
+  services,
   tests: [EVMPluginTestSuite],
   dependencies: [],
 

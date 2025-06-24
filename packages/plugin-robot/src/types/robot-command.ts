@@ -8,39 +8,39 @@ export enum RobotCommandType {
   MOVE_TO_POSE = 'MOVE_TO_POSE',
   EXECUTE_MOTION = 'EXECUTE_MOTION',
   STOP = 'STOP',
-  
+
   // Advanced motion
   WALK = 'WALK',
   TURN = 'TURN',
   REACH = 'REACH',
   GRASP = 'GRASP',
   RELEASE = 'RELEASE',
-  
+
   // Head/perception
   LOOK_AT = 'LOOK_AT',
   TRACK = 'TRACK',
   SCAN = 'SCAN',
-  
+
   // Gestures
   WAVE = 'WAVE',
   POINT = 'POINT',
   NOD = 'NOD',
   SHAKE_HEAD = 'SHAKE_HEAD',
-  
+
   // System
   SET_MODE = 'SET_MODE',
   CALIBRATE = 'CALIBRATE',
   RESET = 'RESET',
   EMERGENCY_STOP = 'EMERGENCY_STOP',
-  
+
   // Teaching
   START_TEACHING = 'START_TEACHING',
   STOP_TEACHING = 'STOP_TEACHING',
   RECORD_POSE = 'RECORD_POSE',
   SAVE_MOTION = 'SAVE_MOTION',
-  
+
   // Unknown
-  UNKNOWN = 'UNKNOWN'
+  UNKNOWN = 'UNKNOWN',
 }
 
 /**
@@ -51,19 +51,21 @@ export interface RobotCommand {
   type: RobotCommandType;
   natural_language: string;
   parameters?: {
-    target?: string;        // e.g., "left arm", "head"
-    direction?: string;     // e.g., "up", "forward", "left"
-    amount?: number;        // e.g., 30 degrees, 0.5 meters
-    speed?: number;         // 0-1 normalized
-    duration?: number;      // milliseconds
-    pose?: string;          // named pose
-    motion?: string;        // named motion sequence
-    position?: {            // 3D position
+    target?: string; // e.g., "left arm", "head"
+    direction?: string; // e.g., "up", "forward", "left"
+    amount?: number; // e.g., 30 degrees, 0.5 meters
+    speed?: number; // 0-1 normalized
+    duration?: number; // milliseconds
+    pose?: string; // named pose
+    motion?: string; // named motion sequence
+    position?: {
+      // 3D position
       x: number;
       y: number;
       z: number;
     };
-    orientation?: {         // Quaternion
+    orientation?: {
+      // Quaternion
       x: number;
       y: number;
       z: number;
@@ -116,7 +118,7 @@ export interface RobotCapabilities {
   joints: string[];
   sensors: string[];
   actuators?: string[];
-  
+
   capabilities: {
     walking: boolean;
     running?: boolean;
@@ -129,25 +131,27 @@ export interface RobotCapabilities {
     object_recognition?: boolean;
     force_feedback?: boolean;
   };
-  
+
   limits: {
-    max_velocity: number;       // rad/s or m/s
-    max_acceleration: number;   // rad/s² or m/s²
-    max_payload?: number;       // kg
-    max_reach?: number;         // meters
-    battery_life?: number;      // minutes
+    max_velocity: number; // rad/s or m/s
+    max_acceleration: number; // rad/s² or m/s²
+    max_payload?: number; // kg
+    max_reach?: number; // meters
+    battery_life?: number; // minutes
   };
-  
+
   specifications?: {
-    height?: number;            // meters
-    weight?: number;            // kg
-    footprint?: {              // meters
+    height?: number; // meters
+    weight?: number; // kg
+    footprint?: {
+      // meters
       length: number;
       width: number;
     };
-    workspace?: {              // reachable volume
+    workspace?: {
+      // reachable volume
       min: { x: number; y: number; z: number };
       max: { x: number; y: number; z: number };
     };
   };
-} 
+}

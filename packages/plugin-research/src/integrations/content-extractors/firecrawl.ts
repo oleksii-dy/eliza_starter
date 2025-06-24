@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { z } from 'zod';
 
 // Firecrawl API response schema
@@ -79,10 +79,10 @@ export class FirecrawlContentExtractor {
 
   async extractContent(url: string): Promise<ExtractedContent | null> {
     const startTime = Date.now();
-    
+
     try {
-      elizaLogger.info(`[Firecrawl] Extracting content from: ${url}`);
-      
+      logger.info(`[Firecrawl] Extracting content from: ${url}`);
+
       const response = await axios.post(
         `${this.baseUrl}/scrape`,
         {
@@ -104,23 +104,23 @@ export class FirecrawlContentExtractor {
 
       // Validate response
       const validatedData = FirecrawlResponseSchema.parse(response.data);
-      
+
       if (!validatedData.success || !validatedData.data) {
-        elizaLogger.error(`[Firecrawl] Failed to extract content: ${validatedData.error}`);
+        logger.error(`[Firecrawl] Failed to extract content: ${validatedData.error}`);
         return null;
       }
 
       const data = validatedData.data;
       const content = data.markdown || data.content || '';
-      
+
       if (!content) {
-        elizaLogger.warn(`[Firecrawl] No content extracted from ${url}`);
+        logger.warn(`[Firecrawl] No content extracted from ${url}`);
         return null;
       }
 
       const duration = Date.now() - startTime;
-      elizaLogger.info(`[Firecrawl] Content extracted in ${duration}ms (${content.length} characters)`);
-      
+      logger.info(`[Firecrawl] Content extracted in ${duration}ms (${content.length} characters)`);
+
       return {
         content,
         markdown: data.markdown,
@@ -131,75 +131,75 @@ export class FirecrawlContentExtractor {
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;
-        
+
         // Handle specific error cases
         if (axiosError.response?.status === 401) {
-          elizaLogger.error('[Firecrawl] Invalid API key');
+          logger.error('[Firecrawl] Invalid API key');
           throw new Error('Invalid Firecrawl API key');
         } else if (axiosError.response?.status === 429) {
-          elizaLogger.error('[Firecrawl] Rate limit exceeded');
+          logger.error('[Firecrawl] Rate limit exceeded');
           throw new Error('Firecrawl rate limit exceeded');
         } else if (axiosError.response?.status === 402) {
-          elizaLogger.error('[Firecrawl] Payment required - check your plan');
+          logger.error('[Firecrawl] Payment required - check your plan');
           throw new Error('Firecrawl payment required');
         } else if (axiosError.code === 'ECONNABORTED') {
-          elizaLogger.error(`[Firecrawl] Request timeout after ${duration}ms`);
+          logger.error(`[Firecrawl] Request timeout after ${duration}ms`);
           throw new Error('Firecrawl extraction timeout');
         }
-        
-        elizaLogger.error(`[Firecrawl] API error: ${axiosError.message}`, {
+
+        logger.error(`[Firecrawl] API error: ${axiosError.message}`, {
           status: axiosError.response?.status,
           data: axiosError.response?.data,
         });
       } else if (error instanceof z.ZodError) {
-        elizaLogger.error('[Firecrawl] Invalid response format:', error.issues);
+        logger.error('[Firecrawl] Invalid response format:', error.issues);
       } else {
-        elizaLogger.error('[Firecrawl] Unknown error:', error);
+        logger.error('[Firecrawl] Unknown error:', error);
       }
-      
+
       return null;
     }
   }
 
   async extractBatch(urls: string[]): Promise<Map<string, ExtractedContent | null>> {
-    elizaLogger.info(`[Firecrawl] Extracting content from ${urls.length} URLs`);
-    
+    logger.info(`[Firecrawl] Extracting content from ${urls.length} URLs`);
+
     const results = new Map<string, ExtractedContent | null>();
-    
+
     // Process in batches to avoid rate limits
     const batchSize = 5;
     for (let i = 0; i < urls.length; i += batchSize) {
       const batch = urls.slice(i, i + batchSize);
-      const batchPromises = batch.map(url => 
+      const batchPromises = batch.map(url =>
         this.extractContent(url)
           .then(content => ({ url, content }))
           .catch(error => {
-            elizaLogger.error(`[Firecrawl] Failed to extract ${url}:`, error);
+            logger.error(`[Firecrawl] Failed to extract ${url}:`, error);
             return { url, content: null };
           })
       );
-      
+
       const batchResults = await Promise.all(batchPromises);
       batchResults.forEach(({ url, content }) => {
         results.set(url, content);
       });
-      
+
       // Add delay between batches to respect rate limits
       if (i + batchSize < urls.length) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
-    
+
     return results;
   }
 
   async crawlSite(startUrl: string, maxPages: number = 50): Promise<Map<string, ExtractedContent | null>> {
     try {
-      elizaLogger.info(`[Firecrawl] Starting site crawl from: ${startUrl}`);
-      
+      logger.info(`[Firecrawl] Starting site crawl from: ${startUrl}`);
+
       const response = await axios.post(
         `${this.baseUrl}/crawl`,
         {
@@ -224,16 +224,16 @@ export class FirecrawlContentExtractor {
       );
 
       const jobId = response.data?.jobId;
-      
+
       if (!jobId) {
-        elizaLogger.error('[Firecrawl] No job ID returned from crawl request');
+        logger.error('[Firecrawl] No job ID returned from crawl request');
         return new Map();
       }
-      
+
       // Poll for completion
       return await this.pollCrawlJob(jobId, maxPages);
     } catch (error) {
-      elizaLogger.error('[Firecrawl] Site crawl error:', error);
+      logger.error('[Firecrawl] Site crawl error:', error);
       return new Map();
     }
   }
@@ -241,7 +241,7 @@ export class FirecrawlContentExtractor {
   private async pollCrawlJob(jobId: string, maxPages: number): Promise<Map<string, ExtractedContent | null>> {
     const maxAttempts = 60; // 5 minutes max
     const pollInterval = 5000; // 5 seconds
-    
+
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         const response = await axios.get(
@@ -254,10 +254,10 @@ export class FirecrawlContentExtractor {
         );
 
         const { status, data } = response.data;
-        
+
         if (status === 'completed' && data) {
           const results = new Map<string, ExtractedContent | null>();
-          
+
           data.forEach((page: any) => {
             if (page.markdown || page.content) {
               results.set(page.url, {
@@ -267,30 +267,30 @@ export class FirecrawlContentExtractor {
               });
             }
           });
-          
-          elizaLogger.info(`[Firecrawl] Crawl completed: ${results.size} pages extracted`);
+
+          logger.info(`[Firecrawl] Crawl completed: ${results.size} pages extracted`);
           return results;
         } else if (status === 'failed') {
-          elizaLogger.error('[Firecrawl] Crawl job failed');
+          logger.error('[Firecrawl] Crawl job failed');
           return new Map();
         }
-        
+
         // Still processing
         await new Promise(resolve => setTimeout(resolve, pollInterval));
       } catch (error) {
-        elizaLogger.error('[Firecrawl] Error polling crawl job:', error);
+        logger.error('[Firecrawl] Error polling crawl job:', error);
         return new Map();
       }
     }
-    
-    elizaLogger.error('[Firecrawl] Crawl job timeout');
+
+    logger.error('[Firecrawl] Crawl job timeout');
     return new Map();
   }
 
   private getFormats(): string[] {
     const formats: string[] = ['text'];
-    if (this.config.includeMarkdown) formats.push('markdown');
-    if (this.config.includeHtml) formats.push('html');
+    if (this.config.includeMarkdown) {formats.push('markdown');}
+    if (this.config.includeHtml) {formats.push('html');}
     return formats;
   }
 
@@ -300,15 +300,15 @@ export class FirecrawlContentExtractor {
       const response = await axios.get(`${this.baseUrl}/usage`, {
         headers: { 'Authorization': `Bearer ${this.apiKey}` },
       });
-      
+
       return {
         used: response.data.used || 0,
         limit: response.data.limit || 0,
         remaining: response.data.remaining || 0,
       };
     } catch (error) {
-      elizaLogger.warn('[Firecrawl] Could not fetch usage data');
+      logger.warn('[Firecrawl] Could not fetch usage data');
       return null;
     }
   }
-} 
+}

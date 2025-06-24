@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { ScenarioRunner } from '../../src/scenario-runner/index.js';
 import type { Scenario } from '../../src/scenario-runner/types.js';
 import type { UUID } from '@elizaos/core';
@@ -15,17 +15,17 @@ describe('ScenarioRunner - Simple Tests', () => {
   beforeEach(() => {
     // Minimal mock setup for fast tests
     mockServer = {
-      stop: vi.fn().mockResolvedValue(undefined),
+      stop: mock().mockResolvedValue(undefined),
     };
 
     mockRuntime = {
       agentId: 'test-agent-id' as UUID,
       character: { name: 'Test Agent' },
       logger: {
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        debug: vi.fn(),
+        info: mock(),
+        warn: mock(),
+        error: mock(),
+        debug: mock(),
       },
     };
 
@@ -313,7 +313,7 @@ describe('ScenarioRunner - Simple Tests', () => {
           runner.validateScenario(scenario as Scenario);
           fail('Expected validation to throw an error');
         } catch (error) {
-          expect(error.message).toContain(expectedError);
+          expect((error as Error).message).toContain(expectedError);
         }
       });
     });

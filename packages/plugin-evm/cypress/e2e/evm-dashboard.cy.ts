@@ -276,4 +276,4 @@ describe('EVM Dashboard', () => {
       cy.contains('Recent Actions').should('be.visible');
     });
   });
-}); 
+});

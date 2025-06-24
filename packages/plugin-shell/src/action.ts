@@ -1,6 +1,7 @@
 // run shell command
 import {
   type Action, // Added Action import
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
@@ -83,7 +84,7 @@ async function extractCommandFromMessage(
 
 // New helper function to quote arguments for shell commands like find and grep
 function quoteShellArgs(command: string): string {
-  if (!command) return '';
+  if (!command) {return '';}
 
   const commandParts = command.split(' ');
   const commandName = commandParts[0];
@@ -94,8 +95,8 @@ function quoteShellArgs(command: string): string {
 
   return commandParts
     .map((part, index) => {
-      if (index === 0) return part; // Don't quote the command itself
-      if (part.startsWith('-')) return part; // Don't quote options
+      if (index === 0) {return part;} // Don't quote the command itself
+      if (part.startsWith('-')) {return part;} // Don't quote options
 
       // Check if part contains wildcards and is not already quoted
       const hasWildcard = ['*', '?', '[', ']'].some((char) => part.includes(char));
@@ -143,7 +144,7 @@ export const runShellCommandAction: Action = {
   name: 'RUN_SHELL_COMMAND',
   similes: ['EXECUTE_SHELL_COMMAND', 'TERMINAL_COMMAND', 'RUN_COMMAND'],
   description:
-    'Executes a shell command on the host system and returns its output, error, and exit code. Handles `cd` to change current working directory for the session.',
+    'Executes a shell command on the host system and returns its output, error, and exit code. Handles `cd` to change current working directory for the session. Returns command details for chaining with other shell actions like CLEAR_SHELL_HISTORY.',
   validate: async (runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
     const shellService = runtime.getService<ShellService>('SHELL' as any);
     if (!shellService) {
@@ -159,7 +160,7 @@ export const runShellCommandAction: Action = {
     options: { command?: string },
     callback: HandlerCallback,
     _responses?: Memory[]
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     const shellService = runtime.getService<ShellService>('SHELL' as any);
 
     if (!shellService) {
@@ -168,7 +169,16 @@ export const runShellCommandAction: Action = {
       // No direct shell output to attach here, so save a simple record
       await saveExecutionRecord(runtime, message, thought, text);
       await callback({ thought, text });
-      return;
+      return {
+        data: {
+          actionName: 'RUN_SHELL_COMMAND',
+          error: 'ShellService not available',
+        },
+        values: {
+          success: false,
+          error: 'ShellService not available',
+        },
+      };
     }
 
     let commandToRun = options?.command;
@@ -231,7 +241,16 @@ export const runShellCommandAction: Action = {
       const text = 'What command would you like me to run?';
       await saveExecutionRecord(runtime, message, thought, text);
       await callback({ thought, text });
-      return;
+      return {
+        data: {
+          actionName: 'RUN_SHELL_COMMAND',
+          error: 'No command provided',
+        },
+        values: {
+          success: false,
+          error: 'No command provided',
+        },
+      };
     }
 
     logger.info(`[runShellCommandAction] Extracted command: ${commandToRun}`);
@@ -332,6 +351,26 @@ Respond using XML format:
         text: summaryText,
         attachments: [shellOutputAttachment], // Also include in callback if frontend can use it
       });
+
+      return {
+        data: {
+          actionName: 'RUN_SHELL_COMMAND',
+          command: commandToRun,
+          exitCode,
+          cwd,
+          stdout: output,
+          stderr: error,
+          attachmentId,
+        },
+        values: {
+          success: exitCode === 0,
+          command: commandToRun,
+          exitCode,
+          cwd,
+          outputLength: output?.length || 0,
+          errorLength: error?.length || 0,
+        },
+      };
     } catch (e: any) {
       logger.error('[runShellCommandAction] Error executing command or processing output:', e);
       const thought =
@@ -339,9 +378,42 @@ Respond using XML format:
       const text = `Error during shell command execution: ${e.message}`;
       await saveExecutionRecord(runtime, message, thought, text);
       await callback({ thought, text });
+      return {
+        data: {
+          actionName: 'RUN_SHELL_COMMAND',
+          error: e.message,
+          command: commandToRun,
+        },
+        values: {
+          success: false,
+          error: e.message,
+        },
+      };
     }
   },
   examples: [
+    // Multi-action: Run command then clear history
+    [
+      { name: 'user', content: { text: 'Run a diagnostic command then clear the history for security' } },
+      {
+        name: 'agent',
+        content: {
+          text: "I'll run the diagnostic command and then clear the shell history for security.",
+          actions: ['RUN_SHELL_COMMAND', 'CLEAR_SHELL_HISTORY'],
+        },
+      },
+    ],
+    // Multi-action: Check processes then kill autonomous
+    [
+      { name: 'user', content: { text: 'Show running processes and if autonomous is running, kill it' } },
+      {
+        name: 'agent',
+        content: {
+          text: "I'll check the running processes and stop the autonomous loop if it's active.",
+          actions: ['RUN_SHELL_COMMAND', 'KILL_AUTONOMOUS'],
+        },
+      },
+    ],
     [
       { name: 'user', content: { text: 'list files' } },
       {
@@ -378,7 +450,7 @@ Respond using XML format:
 export const clearShellHistoryAction: Action = {
   name: 'CLEAR_SHELL_HISTORY',
   similes: ['RESET_SHELL', 'CLEAR_TERMINAL'],
-  description: 'Clears the recorded history of shell commands for the current session.',
+  description: 'Clears the recorded history of shell commands for the current session. Often used after running sensitive commands or as part of security cleanup workflows.',
   validate: async (runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
     const shellService = runtime.getService<ShellService>('SHELL' as any);
     return !!shellService;
@@ -390,14 +462,23 @@ export const clearShellHistoryAction: Action = {
     _options: any,
     callback: HandlerCallback,
     _responses?: Memory[]
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     const shellService = runtime.getService<ShellService>('SHELL' as any);
     if (!shellService) {
       await callback({
         thought: 'ShellService is not available. Cannot clear history.',
         text: 'I am currently unable to clear shell history.',
       });
-      return;
+      return {
+        data: {
+          actionName: 'CLEAR_SHELL_HISTORY',
+          error: 'ShellService not available',
+        },
+        values: {
+          success: false,
+          error: 'ShellService not available',
+        },
+      };
     }
 
     try {
@@ -406,15 +487,46 @@ export const clearShellHistoryAction: Action = {
         thought: 'Shell history has been cleared successfully.',
         text: 'Shell command history has been cleared.',
       });
+      return {
+        data: {
+          actionName: 'CLEAR_SHELL_HISTORY',
+          historyCleared: true,
+        },
+        values: {
+          success: true,
+          cleared: true,
+        },
+      };
     } catch (e: any) {
       logger.error('[clearShellHistoryAction] Error clearing history:', e);
       await callback({
         thought: 'An unexpected error occurred while trying to clear shell history.',
         text: `Error clearing shell history: ${e.message}`,
       });
+      return {
+        data: {
+          actionName: 'CLEAR_SHELL_HISTORY',
+          error: e.message,
+        },
+        values: {
+          success: false,
+          error: e.message,
+        },
+      };
     }
   },
   examples: [
+    // Multi-action: Run sensitive command then clear
+    [
+      { name: 'user', content: { text: 'Check environment variables then clear history' } },
+      {
+        name: 'agent',
+        content: {
+          text: "I'll check the environment variables and then clear the history to protect sensitive data.",
+          actions: ['RUN_SHELL_COMMAND', 'CLEAR_SHELL_HISTORY'],
+        },
+      },
+    ],
     [
       { name: 'user', content: { text: 'clear my shell history' } },
       {
@@ -433,8 +545,8 @@ export const clearShellHistoryAction: Action = {
 export const killAutonomousAction: Action = {
   name: 'KILL_AUTONOMOUS',
   similes: ['STOP_AUTONOMOUS', 'HALT_AUTONOMOUS', 'KILL_AUTO_LOOP'],
-  description: 'Stops the autonomous agent loop for debugging purposes.',
-  validate: async (runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
+  description: 'Stops the autonomous agent loop for debugging purposes. Can be chained with RUN_SHELL_COMMAND to check process status before/after stopping.',
+  validate: async (_runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
     // Always allow this action for debugging
     return true;
   },
@@ -445,7 +557,7 @@ export const killAutonomousAction: Action = {
     _options: any,
     callback: HandlerCallback,
     _responses?: Memory[]
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     try {
       // Try to get the autonomous service and stop it
       const autonomousService = runtime.getService('AUTONOMOUS' as any);
@@ -459,12 +571,33 @@ export const killAutonomousAction: Action = {
 
         await saveExecutionRecord(runtime, message, thought, text, ['KILL_AUTONOMOUS']);
         await callback({ thought, text });
+        return {
+          data: {
+            actionName: 'KILL_AUTONOMOUS',
+            autonomousStopped: true,
+          },
+          values: {
+            success: true,
+            stopped: true,
+          },
+        };
       } else {
         const thought = 'Autonomous service not found or already stopped.';
         const text = 'No autonomous loop was running or the service could not be found.';
 
         await saveExecutionRecord(runtime, message, thought, text, ['KILL_AUTONOMOUS']);
         await callback({ thought, text });
+        return {
+          data: {
+            actionName: 'KILL_AUTONOMOUS',
+            autonomousStopped: false,
+            reason: 'Service not found or already stopped',
+          },
+          values: {
+            success: true,
+            stopped: false,
+          },
+        };
       }
     } catch (error: any) {
       logger.error('[killAutonomousAction] Error stopping autonomous service:', error);
@@ -474,9 +607,30 @@ export const killAutonomousAction: Action = {
 
       await saveExecutionRecord(runtime, message, thought, text, ['KILL_AUTONOMOUS']);
       await callback({ thought, text });
+      return {
+        data: {
+          actionName: 'KILL_AUTONOMOUS',
+          error: error.message,
+        },
+        values: {
+          success: false,
+          error: error.message,
+        },
+      };
     }
   },
   examples: [
+    // Multi-action: Check processes then kill
+    [
+      { name: 'user', content: { text: 'Check if autonomous is running and kill it' } },
+      {
+        name: 'agent',
+        content: {
+          text: "I'll check the running processes and stop the autonomous loop if it's running.",
+          actions: ['RUN_SHELL_COMMAND', 'KILL_AUTONOMOUS'],
+        },
+      },
+    ],
     [
       { name: 'user', content: { text: 'kill the autonomous loop' } },
       {

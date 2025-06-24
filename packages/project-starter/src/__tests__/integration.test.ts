@@ -2,16 +2,16 @@ import { IAgentRuntime, logger, Plugin } from '@elizaos/core';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, mock, spyOn } from 'bun:test';
 import { character } from '../index';
 import plugin from '../plugin';
 
 // Set up spies on logger
 beforeAll(() => {
-  vi.spyOn(logger, 'info').mockImplementation(() => {});
-  vi.spyOn(logger, 'error').mockImplementation(() => {});
-  vi.spyOn(logger, 'warn').mockImplementation(() => {});
-  vi.spyOn(logger, 'debug').mockImplementation(() => {});
+  spyOn(logger, 'info').mockImplementation(() => {});
+  spyOn(logger, 'error').mockImplementation(() => {});
+  spyOn(logger, 'warn').mockImplementation(() => {});
+  spyOn(logger, 'debug').mockImplementation(() => {});
 });
 
 afterAll(() => {
@@ -74,11 +74,14 @@ describe('Integration: Character and Plugin', () => {
     // Check if plugin has actions, models, providers, etc. that character might use
     const components = ['models', 'actions', 'providers', 'services', 'routes', 'events'];
     components.forEach((component) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((plugin as any)[component]) {
         // Just verify if these exist, we don't need to test their functionality here
         // Those tests belong in plugin.test.ts, actions.test.ts, etc.
         expect(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           Array.isArray((plugin as any)[component]) ||
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             typeof (plugin as any)[component] === 'object'
         ).toBeTruthy();
       }
@@ -92,27 +95,27 @@ describe('Integration: Runtime Initialization', () => {
     const customMockRuntime = {
       character: { ...character },
       plugins: [],
-      registerPlugin: vi.fn().mockImplementation((plugin: Plugin) => {
+      registerPlugin: mock().mockImplementation((_plugin: Plugin) => {
         // In a real runtime, registering the plugin would call its init method,
         // but since we're testing init itself, we just need to record the call
         return Promise.resolve();
       }),
-      initialize: vi.fn(),
-      getService: vi.fn(),
-      getSetting: vi.fn().mockReturnValue(null),
-      useModel: vi.fn().mockResolvedValue('Test model response'),
-      getProviderResults: vi.fn().mockResolvedValue([]),
-      evaluateProviders: vi.fn().mockResolvedValue([]),
-      evaluate: vi.fn().mockResolvedValue([]),
+      initialize: mock(),
+      getService: mock(),
+      getSetting: mock().mockReturnValue(null),
+      useModel: mock().mockResolvedValue('Test model response'),
+      getProviderResults: mock().mockResolvedValue([]),
+      evaluateProviders: mock().mockResolvedValue([]),
+      evaluate: mock().mockResolvedValue([]),
     } as unknown as IAgentRuntime;
 
     // Ensure we're testing safely - to avoid parallel test race conditions
     const originalInit = plugin.init;
     let initCalled = false;
 
-    // Mock the plugin.init method using spyOnfn instead of direct assignment
+    // Mock the plugin.init method using mock instead of direct assignment
     if (plugin.init) {
-      plugin.init = vi.fn(async (config, runtime) => {
+      plugin.init = mock(async (config, runtime) => {
         // Set flag to indicate our wrapper was called
         initCalled = true;
 

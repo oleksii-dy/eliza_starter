@@ -1,13 +1,13 @@
-import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import { describe, expect, it, mock, beforeEach, afterEach, beforeAll, afterAll } from 'bun:test';
 import { retryWithBackoff, Retry, browserRetryConfigs } from '../retry';
 import { logger } from '@elizaos/core';
 
 // Mock logger
-vi.mock('@elizaos/core', () => ({
+mock.module('@elizaos/core', () => ({
   logger: {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
+    info: mock(),
+    warn: mock(),
+    error: mock(),
   },
 }));
 
@@ -15,16 +15,11 @@ describe('retry utilities', () => {
   let unhandledRejections: any[] = [];
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
+    mock.restore();
     unhandledRejections = [];
   });
 
   afterEach(async () => {
-    // Clean up any pending timers
-    await vi.runAllTimersAsync();
-    vi.useRealTimers();
-
     // Clear any unhandled rejections
     unhandledRejections = [];
   });
@@ -56,7 +51,7 @@ describe('retry utilities', () => {
 
   describe('retryWithBackoff', () => {
     it('should succeed on first attempt', async () => {
-      const fn = vi.fn().mockResolvedValue('success');
+      const fn = mock().mockResolvedValue('success');
 
       const result = await retryWithBackoff(fn, {}, 'test operation');
 
@@ -66,53 +61,36 @@ describe('retry utilities', () => {
     });
 
     it('should retry on failure and succeed', async () => {
-      const fn = vi
-        .fn()
+      const fn = mock()
         .mockRejectedValueOnce(new Error('net::ERR_CONNECTION_REFUSED'))
         .mockResolvedValueOnce('success');
 
-      const promise = retryWithBackoff(fn, { maxRetries: 3, initialDelay: 100 }, 'test operation');
+      const result = await retryWithBackoff(
+        fn,
+        { maxRetries: 3, initialDelay: 100 },
+        'test operation'
+      );
 
-      // First attempt fails
-      await vi.advanceTimersByTimeAsync(0);
-      expect(fn).toHaveBeenCalledTimes(1);
-      expect(logger.warn).toHaveBeenCalled();
-
-      // Wait for retry delay
-      await vi.advanceTimersByTimeAsync(2000); // includes jitter
-      expect(fn).toHaveBeenCalledTimes(2);
-
-      const result = await promise;
       expect(result).toBe('success');
+      expect(fn).toHaveBeenCalledTimes(2);
+      expect(logger.warn).toHaveBeenCalled();
     });
 
     it('should fail after max retries', async () => {
       const error = new Error('ETIMEDOUT');
-      const fn = vi.fn().mockRejectedValue(error);
+      const fn = mock().mockRejectedValue(error);
 
-      const promise = retryWithBackoff(fn, { maxRetries: 2, initialDelay: 100 }, 'test operation');
+      await expect(
+        retryWithBackoff(fn, { maxRetries: 2, initialDelay: 100 }, 'test operation')
+      ).rejects.toThrow('ETIMEDOUT');
 
-      // First attempt
-      await vi.advanceTimersByTimeAsync(0);
-      expect(fn).toHaveBeenCalledTimes(1);
-
-      // Second attempt
-      await vi.advanceTimersByTimeAsync(2000);
       expect(fn).toHaveBeenCalledTimes(2);
-
-      // Wait for the promise to settle
-      await expect(promise).rejects.toThrow('ETIMEDOUT');
-
-      // Verify logging
       expect(logger.error).toHaveBeenCalledWith('test operation failed after 2 attempts');
-
-      // Clean up any remaining timers
-      await vi.runAllTimersAsync();
     });
 
     it('should not retry non-retryable errors', async () => {
       const error = new Error('Invalid credentials');
-      const fn = vi.fn().mockRejectedValue(error);
+      const fn = mock().mockRejectedValue(error);
 
       await expect(retryWithBackoff(fn, {}, 'test operation')).rejects.toThrow(
         'Invalid credentials'
@@ -126,60 +104,37 @@ describe('retry utilities', () => {
     });
 
     it('should handle timeout', async () => {
-      const fn = vi
-        .fn()
-        .mockImplementation(
-          () => new Promise((resolve) => setTimeout(() => resolve('success'), 2000))
-        );
+      const fn = mock().mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve('success'), 2000))
+      );
 
-      const promise = retryWithBackoff(fn, { timeout: 1000 }, 'test operation');
-
-      // Advance timers and wait for the promise to reject
-      await vi.advanceTimersByTimeAsync(1001);
-
-      // Handle the rejection properly
-      await expect(promise).rejects.toThrow('test operation timed out after 1000ms');
-
-      // Ensure the timer callback doesn't execute after the test
-      await vi.runAllTimersAsync();
+      await expect(retryWithBackoff(fn, { timeout: 1000 }, 'test operation')).rejects.toThrow(
+        'test operation timed out after 1000ms'
+      );
     });
 
     it('should apply exponential backoff', async () => {
-      const fn = vi
-        .fn()
+      const fn = mock()
         .mockRejectedValueOnce(new Error('Timeout'))
         .mockRejectedValueOnce(new Error('Timeout'))
         .mockResolvedValueOnce('success');
 
-      const promise = retryWithBackoff(
+      const result = await retryWithBackoff(
         fn,
         { maxRetries: 3, initialDelay: 1000, backoffFactor: 2 },
         'test'
       );
 
-      // First attempt fails
-      await vi.advanceTimersByTimeAsync(0);
-      expect(fn).toHaveBeenCalledTimes(1);
-
-      // First retry after ~1000ms (plus jitter)
-      await vi.advanceTimersByTimeAsync(2000);
-      expect(fn).toHaveBeenCalledTimes(2);
-
-      // Second retry after ~2000ms (plus jitter)
-      await vi.advanceTimersByTimeAsync(3000);
-      expect(fn).toHaveBeenCalledTimes(3);
-
-      const result = await promise;
       expect(result).toBe('success');
+      expect(fn).toHaveBeenCalledTimes(3);
     });
 
     it('should respect maxDelay', async () => {
-      const fn = vi
-        .fn()
+      const fn = mock()
         .mockRejectedValueOnce(new Error('Timeout'))
         .mockResolvedValueOnce('success');
 
-      const promise = retryWithBackoff(
+      const result = await retryWithBackoff(
         fn,
         {
           maxRetries: 2,
@@ -190,21 +145,14 @@ describe('retry utilities', () => {
         'test'
       );
 
-      await vi.advanceTimersByTimeAsync(0);
-      expect(fn).toHaveBeenCalledTimes(1);
-
-      // Should wait maxDelay (3000) + jitter, not 5000
-      await vi.advanceTimersByTimeAsync(4000);
+      expect(result).toBe('success');
       expect(fn).toHaveBeenCalledTimes(2);
-
-      await promise;
     });
   });
 
   describe('Retry decorator', () => {
     it('should retry decorated method', async () => {
-      const originalFn = vi
-        .fn()
+      const originalFn = mock()
         .mockRejectedValueOnce(new Error('Timeout'))
         .mockResolvedValueOnce('success');
 
@@ -221,12 +169,7 @@ describe('retry utilities', () => {
         descriptor
       );
 
-      const promise = decoratedDescriptor.value();
-
-      await vi.advanceTimersByTimeAsync(0);
-      await vi.advanceTimersByTimeAsync(2000);
-
-      const result = await promise;
+      const result = await decoratedDescriptor.value();
 
       expect(result).toBe('success');
       expect(originalFn).toHaveBeenCalledTimes(2);

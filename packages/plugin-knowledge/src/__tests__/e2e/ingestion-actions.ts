@@ -98,7 +98,7 @@ export class IngestionActionsTestSuite implements TestSuite {
               throw new Error(`Expected clean repo URL, got: ${options.repoUrl}`);
             }
             if (!options.subdirectories || !options.subdirectories.includes('packages/docs/docs')) {
-              throw new Error(`Expected subdirectories to include packages/docs/docs`);
+              throw new Error('Expected subdirectories to include packages/docs/docs');
             }
 
             return {

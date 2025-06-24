@@ -4,7 +4,6 @@ import {
   type ServiceTypeName,
   logger,
   type UUID,
-  type Memory,
 } from '@elizaos/core';
 import { createTodoDataService, type TodoData } from './todoDataService';
 import { NotificationManager } from './notificationManager';
@@ -60,7 +59,7 @@ export class TodoReminderService extends Service {
     try {
       this.rolodexMessageService = this.runtime.getService('MESSAGE_DELIVERY' as ServiceTypeName);
       this.rolodexEntityService = this.runtime.getService('ENTITY_RELATIONSHIP' as ServiceTypeName);
-      
+
       if (this.rolodexMessageService && this.rolodexEntityService) {
         logger.info('Rolodex services found - external message delivery enabled');
       } else {
@@ -201,7 +200,7 @@ export class TodoReminderService extends Service {
 
           // Send through rolodex message delivery service
           await this.sendRolodexReminder(reminderMessage);
-          
+
           logger.info(`Sent ${reminderType} reminder via rolodex for todo: ${todo.name}`);
         } catch (error) {
           logger.error('Failed to send reminder via rolodex:', error);
@@ -248,7 +247,7 @@ export class TodoReminderService extends Service {
       case 'upcoming':
         return `⏰ REMINDER: ${todo.name}`;
       case 'daily':
-        return `📅 Daily Reminder`;
+        return '📅 Daily Reminder';
       default:
         return `📋 Reminder: ${todo.name}`;
     }
@@ -261,7 +260,7 @@ export class TodoReminderService extends Service {
       case 'upcoming':
         return `Your task "${todo.name}" is due soon. Don't forget to complete it!`;
       case 'daily':
-        return `Don't forget to complete your daily tasks today!`;
+        return 'Don\'t forget to complete your daily tasks today!';
       default:
         return `Reminder about your task: ${todo.name}`;
     }
@@ -290,6 +289,6 @@ export class TodoReminderService extends Service {
 
   static async stop(runtime: IAgentRuntime): Promise<void> {
     const service = runtime.getService(TodoReminderService.serviceType);
-    if (service) await service.stop();
+    if (service) {await service.stop();}
   }
 }

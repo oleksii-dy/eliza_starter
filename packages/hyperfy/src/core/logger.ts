@@ -24,7 +24,7 @@ class Logger {
 
   constructor(options: LoggerOptions = {}) {
     this.prefix = options.prefix || '';
-    
+
     // Use global log level if set, otherwise use config
     if (Logger.globalLogLevel !== null) {
       this.logLevel = Logger.globalLogLevel;
@@ -118,4 +118,4 @@ export const logger = new Logger();
 // Export factory function for creating named loggers
 export function createLogger(prefix: string, options?: Omit<LoggerOptions, 'prefix'>): Logger {
   return new Logger({ ...options, prefix });
-} 
+}

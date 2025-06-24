@@ -88,7 +88,7 @@ function setupLogStreaming(io: SocketIOServer, router: SocketIORouter) {
 
         // Broadcast to WebSocket clients
         router.broadcastLog(io, logEntry);
-      } catch (error) {
+      } catch (_error) {
         // Ignore JSON parse errors for non-log data
       }
     };
@@ -143,10 +143,14 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
           `Agent-scoped request for Agent ID: ${agentIdFromQuery} from query. Path: ${reqPath}`
         );
         for (const route of runtime.routes) {
-          if (handled) break;
+          if (handled) {
+            break;
+          }
 
           const methodMatches = req.method.toLowerCase() === route.type.toLowerCase();
-          if (!methodMatches) continue;
+          if (!methodMatches) {
+            continue;
+          }
 
           const routePath = route.path.startsWith('/') ? route.path : `/${route.path}`;
 
@@ -267,13 +271,19 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
       logger.debug(`No valid agentId in query. Trying global match for path: ${reqPath}`);
       for (const [_, runtime] of agents) {
         // Iterate over all agents
-        if (handled) break; // If handled by a previous agent's route (e.g. specific match)
+        if (handled) {
+          break;
+        } // If handled by a previous agent's route (e.g. specific match)
 
         for (const route of runtime.routes) {
-          if (handled) break;
+          if (handled) {
+            break;
+          }
 
           const methodMatches = req.method.toLowerCase() === route.type.toLowerCase();
-          if (!methodMatches) continue;
+          if (!methodMatches) {
+            continue;
+          }
 
           const routePath = route.path.startsWith('/') ? route.path : `/${route.path}`;
 

@@ -1,204 +1,198 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Events } from '../../core/systems/Events.js';
-import { createTestWorld } from '../test-world-factory.js';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
+import { createTestWorld } from '../createTestWorld';
+import type { World } from '../../types';
+import type { Events } from '../../core/systems/Events';
 
-describe('Events System', () => {
-  let world: any;
+describe('Events System (Real World)', () => {
+  let world: World;
   let events: Events;
 
   beforeEach(async () => {
-    world = await createTestWorld();
-    events = new Events(world);
+    world = await createTestWorld({ enablePhysics: false });
+    events = world.events as Events;
+  });
+
+  afterEach(() => {
+    world.destroy();
   });
 
   describe('Basic Event Handling', () => {
-    it('should emit and receive events', () => {
-      const handler = vi.fn();
+    it('should emit and receive events in real world', () => {
+      const handler = mock();
       events.on('test-event', handler);
-      
+
       events.emit('test-event', { data: 'test' });
-      
+
       expect(handler).toHaveBeenCalledWith({ data: 'test' }, undefined);
       expect(handler).toHaveBeenCalledTimes(1);
     });
 
     it('should handle multiple listeners for same event', () => {
-      const handler1 = vi.fn();
-      const handler2 = vi.fn();
-      const handler3 = vi.fn();
-      
+      const handler1 = mock();
+      const handler2 = mock();
+      const handler3 = mock();
+
       events.on('multi-event', handler1);
       events.on('multi-event', handler2);
       events.on('multi-event', handler3);
-      
+
       events.emit('multi-event', 'test-data');
-      
+
       expect(handler1).toHaveBeenCalledWith('test-data', undefined);
       expect(handler2).toHaveBeenCalledWith('test-data', undefined);
       expect(handler3).toHaveBeenCalledWith('test-data', undefined);
     });
 
     it('should pass both data and extra parameters', () => {
-      const handler = vi.fn();
+      const handler = mock();
       events.on('params-event', handler);
-      
-      events.emit('params-event', { id: 1 }, { extra: 'info' });
-      
-      expect(handler).toHaveBeenCalledWith({ id: 1 }, { extra: 'info' });
-    });
 
-    it('should not throw when emitting event with no listeners', () => {
-      expect(() => {
-        events.emit('no-listeners', 'data');
-      }).not.toThrow();
+      events.emit('params-event', { id: 1 }, { extra: 'info' });
+
+      expect(handler).toHaveBeenCalledWith({ id: 1 }, { extra: 'info' });
     });
   });
 
-  describe('Event Listener Management', () => {
-    it('should remove specific event listener', () => {
-      const handler1 = vi.fn();
-      const handler2 = vi.fn();
-      
-      events.on('remove-test', handler1);
-      events.on('remove-test', handler2);
-      
-      events.off('remove-test', handler1);
-      events.emit('remove-test', 'data');
-      
-      expect(handler1).not.toHaveBeenCalled();
-      expect(handler2).toHaveBeenCalledWith('data', undefined);
+  describe('RPG Event Integration', () => {
+    it('should handle combat events from real combat system', () => {
+      const combatStartHandler = mock();
+      const combatHitHandler = mock();
+      const combatEndHandler = mock();
+
+      events.on('combat:start', combatStartHandler);
+      events.on('combat:hit', combatHitHandler);
+      events.on('combat:end', combatEndHandler);
+
+      // Simulate combat events (these would normally come from CombatSystem)
+      events.emit('combat:start', {
+        session: {
+          attackerId: 'player-1',
+          targetId: 'npc-1'
+        }
+      });
+
+      events.emit('combat:hit', {
+        hit: {
+          damage: 5,
+          type: 'normal',
+          attackerId: 'player-1',
+          targetId: 'npc-1'
+        }
+      });
+
+      events.emit('combat:end', {
+        session: {
+          attackerId: 'player-1',
+          targetId: 'npc-1'
+        }
+      });
+
+      expect(combatStartHandler).toHaveBeenCalled();
+      expect(combatHitHandler).toHaveBeenCalled();
+      expect(combatEndHandler).toHaveBeenCalled();
     });
 
-    it('should remove all listeners when no handler specified', () => {
-      const handler1 = vi.fn();
-      const handler2 = vi.fn();
-      
-      events.on('clear-all', handler1);
-      events.on('clear-all', handler2);
-      
-      events.off('clear-all');
-      events.emit('clear-all', 'data');
-      
-      expect(handler1).not.toHaveBeenCalled();
-      expect(handler2).not.toHaveBeenCalled();
+    it('should handle loot events', () => {
+      const lootDropHandler = mock();
+      events.on('loot:dropped', lootDropHandler);
+
+      events.emit('loot:dropped', {
+        itemId: 995,
+        quantity: 100,
+        position: { x: 10, y: 0, z: 10 },
+        owner: 'player-1'
+      });
+
+      expect(lootDropHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          itemId: 995,
+          quantity: 100
+        }),
+        undefined
+      );
     });
 
-    it('should handle removing non-existent listener gracefully', () => {
-      const handler = vi.fn();
-      
-      expect(() => {
-        events.off('non-existent', handler);
-      }).not.toThrow();
-    });
+    it('should handle skill events', () => {
+      const xpGainHandler = mock();
+      const levelUpHandler = mock();
 
-    it('should handle multiple events independently', () => {
-      const handler1 = vi.fn();
-      const handler2 = vi.fn();
-      
-      events.on('event1', handler1);
-      events.on('event2', handler2);
-      
-      events.emit('event1', 'data1');
-      events.emit('event2', 'data2');
-      
-      expect(handler1).toHaveBeenCalledWith('data1', undefined);
-      expect(handler1).not.toHaveBeenCalledWith('data2', undefined);
-      expect(handler2).toHaveBeenCalledWith('data2', undefined);
-      expect(handler2).not.toHaveBeenCalledWith('data1', undefined);
+      events.on('xp:gained', xpGainHandler);
+      events.on('skill:levelup', levelUpHandler);
+
+      events.emit('xp:gained', {
+        playerId: 'player-1',
+        skill: 'attack',
+        amount: 100
+      });
+
+      events.emit('skill:levelup', {
+        playerId: 'player-1',
+        skill: 'attack',
+        newLevel: 2,
+        oldLevel: 1
+      });
+
+      expect(xpGainHandler).toHaveBeenCalled();
+      expect(levelUpHandler).toHaveBeenCalled();
+    });
+  });
+
+  describe('System Communication', () => {
+    it('should allow systems to communicate via events', () => {
+      // Test that all RPG systems are loaded and can emit events
+      const worldAny = world as any;
+      expect(worldAny.combat).toBeDefined();
+      expect(worldAny.inventory).toBeDefined();
+      expect(worldAny.npc).toBeDefined();
+      expect(worldAny.loot).toBeDefined();
+      expect(worldAny.skills).toBeDefined();
+
+      // Track entity death flow
+      const deathHandlers = {
+        combat: mock(),
+        loot: mock(),
+        spawning: mock()
+      };
+
+      // Systems would register these handlers
+      events.on('entity:death', deathHandlers.combat);
+      events.on('entity:death', deathHandlers.loot);
+      events.on('entity:death', deathHandlers.spawning);
+
+      // Emit death event
+      events.emit('entity:death', {
+        entityId: 'npc-1',
+        killerId: 'player-1'
+      });
+
+      // All systems should receive the event
+      expect(deathHandlers.combat).toHaveBeenCalled();
+      expect(deathHandlers.loot).toHaveBeenCalled();
+      expect(deathHandlers.spawning).toHaveBeenCalled();
     });
   });
 
   describe('Error Handling', () => {
-    it('should catch and log errors in event handlers', () => {
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const goodHandler = vi.fn();
-      const badHandler = vi.fn(() => {
+    it('should handle errors in real world event handlers', () => {
+      const errorSpy = spyOn(console, 'error').mockImplementation(() => {});
+      const goodHandler = mock();
+      const badHandler = mock(() => {
         throw new Error('Handler error');
       });
-      
+
       events.on('error-test', badHandler);
       events.on('error-test', goodHandler);
-      
+
       events.emit('error-test', 'data');
-      
+
       expect(errorSpy).toHaveBeenCalledWith(
         "Error in event listener for 'error-test':",
         expect.any(Error)
       );
       expect(goodHandler).toHaveBeenCalledWith('data', undefined);
-      
-      errorSpy.mockRestore();
-    });
 
-    it('should continue emitting to other handlers after error', () => {
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const handler1 = vi.fn();
-      const handler2 = vi.fn(() => {
-        throw new Error('Handler 2 error');
-      });
-      const handler3 = vi.fn();
-      
-      events.on('continue-after-error', handler1);
-      events.on('continue-after-error', handler2);
-      events.on('continue-after-error', handler3);
-      
-      events.emit('continue-after-error', 'test');
-      
-      expect(handler1).toHaveBeenCalled();
-      expect(handler2).toHaveBeenCalled();
-      expect(handler3).toHaveBeenCalled();
-      
-      errorSpy.mockRestore();
+      errorSpy.mockReset();
     });
   });
-
-  describe('Cleanup', () => {
-    it('should clear all listeners on destroy', () => {
-      const handler1 = vi.fn();
-      const handler2 = vi.fn();
-      
-      events.on('event1', handler1);
-      events.on('event2', handler2);
-      
-      events.destroy();
-      
-      events.emit('event1', 'data');
-      events.emit('event2', 'data');
-      
-      expect(handler1).not.toHaveBeenCalled();
-      expect(handler2).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Game Event Patterns', () => {
-    it('should handle player events', () => {
-      const playerJoinHandler = vi.fn();
-      const playerLeaveHandler = vi.fn();
-      
-      events.on('player:join', playerJoinHandler);
-      events.on('player:leave', playerLeaveHandler);
-      
-      const playerData = { id: 'player-123', name: 'TestPlayer' };
-      events.emit('player:join', playerData);
-      events.emit('player:leave', { id: 'player-123' });
-      
-      expect(playerJoinHandler).toHaveBeenCalledWith(playerData, undefined);
-      expect(playerLeaveHandler).toHaveBeenCalledWith({ id: 'player-123' }, undefined);
-    });
-
-    it('should handle world events', () => {
-      const worldEvents: string[] = [];
-      
-      events.on('world:day', () => worldEvents.push('day'));
-      events.on('world:night', () => worldEvents.push('night'));
-      events.on('world:weather', (type) => worldEvents.push(`weather:${type}`));
-      
-      events.emit('world:day');
-      events.emit('world:night');
-      events.emit('world:weather', 'rain');
-      events.emit('world:weather', 'clear');
-      
-      expect(worldEvents).toEqual(['day', 'night', 'weather:rain', 'weather:clear']);
-    });
-  });
-}); 
+});

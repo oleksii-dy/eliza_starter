@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 /**
  * PlanningScenarioGenerator - Generates REALM-style planning scenarios for training
- * 
+ *
  * This generator creates complex planning scenarios that require multi-step reasoning,
  * goal decomposition, and strategic thinking. Uses the largest available model (Qwen R1 distill)
  * for maximum reasoning capability.
@@ -222,9 +222,7 @@ export class PlanningScenarioGenerator {
     complexity: 'simple' | 'medium' | 'complex' | 'expert' = 'medium'
   ): Promise<PlanningScenario> {
     // Select domain
-    const selectedDomain = domain === 'random' 
-      ? this.getRandomDomain() 
-      : domain;
+    const selectedDomain = domain === 'random' ? this.getRandomDomain() : domain;
 
     const template = this.scenarioTemplates.get(selectedDomain);
     if (!template) {
@@ -233,7 +231,7 @@ export class PlanningScenarioGenerator {
 
     // Generate scenario
     const scenario = await this.createScenarioFromTemplate(template, selectedDomain, complexity);
-    
+
     elizaLogger.debug(`🎯 Generated planning scenario: ${scenario.title} (${complexity})`);
     return scenario;
   }
@@ -247,20 +245,35 @@ export class PlanningScenarioGenerator {
     complexity: string
   ): Promise<PlanningScenario> {
     const baseScenario = this.selectRandom(template.base_scenarios);
-    const constraints = this.selectRandomSubset(template.constraints, this.getConstraintCount(complexity)) as string[];
-    const resources = this.selectRandomSubset(template.resources, this.getResourceCount(complexity));
+    const constraints = this.selectRandomSubset(
+      template.constraints,
+      this.getConstraintCount(complexity)
+    ) as string[];
+    const resources = this.selectRandomSubset(
+      template.resources,
+      this.getResourceCount(complexity)
+    );
 
     // Generate scenario details
     const scenarioId = uuidv4();
     const title = this.generateScenarioTitle(baseScenario as string, domain);
-    const description = this.generateScenarioDescription(baseScenario as string, constraints as string[] complexity as string);
+    const description = this.generateScenarioDescription(
+      baseScenario as string,
+      constraints as string[],
+      complexity as string
+    );
     const objective = this.generateObjective(baseScenario as string);
-    
+
     // Generate context
     const context = await this.generateScenarioContext(domain, complexity, resources as string[]);
-    
+
     // Generate expected solution
-    const expectedPlan = await this.generateExpectedPlan(baseScenario as string, constraints as string[] resources as string[] complexity as string);
+    const expectedPlan = await this.generateExpectedPlan(
+      baseScenario as string,
+      constraints as string[],
+      resources as string[],
+      complexity as string
+    );
 
     const scenario: PlanningScenario = {
       id: scenarioId,
@@ -275,7 +288,11 @@ export class PlanningScenarioGenerator {
       metadata: {
         created_at: Date.now(),
         scenario_type: 'planning',
-        difficulty_score: this.calculateDifficultyScore(complexity, constraints.length, expectedPlan.steps.length),
+        difficulty_score: this.calculateDifficultyScore(
+          complexity,
+          constraints.length,
+          expectedPlan.steps.length
+        ),
         estimated_solution_time: this.estimateSolutionTime(complexity, expectedPlan.steps.length),
         tags: [domain, complexity, 'planning', 'multi_step'],
       },
@@ -304,14 +321,18 @@ export class PlanningScenarioGenerator {
     const subExamples = await this.createSubProblemExamples(scenario);
     examples.push(...subExamples);
 
-    elizaLogger.debug(`📚 Generated ${examples.length} training examples from scenario ${scenario.title}`);
+    elizaLogger.debug(
+      `📚 Generated ${examples.length} training examples from scenario ${scenario.title}`
+    );
     return examples;
   }
 
   /**
    * Create main training example from scenario
    */
-  private async createMainTrainingExample(scenario: PlanningScenario): Promise<PlanningTrainingExample> {
+  private async createMainTrainingExample(
+    scenario: PlanningScenario
+  ): Promise<PlanningTrainingExample> {
     const input = {
       scenario: scenario.description,
       objective: scenario.objective,
@@ -328,23 +349,28 @@ export class PlanningScenarioGenerator {
     };
 
     const thinking = this.generateThinkingProcess(scenario);
-    
+
     const output = {
       thinking,
       plan: {
         overview: scenario.expectedPlan.reasoning,
-        steps: scenario.expectedPlan.steps.map(step => ({
+        steps: scenario.expectedPlan.steps.map((step) => ({
           action: step.title,
           reasoning: step.description,
           expected_outcome: `Complete ${step.title} successfully`,
-          dependencies: step.dependencies.map(d => scenario.expectedPlan.steps[d - 1]?.title || ''),
+          dependencies: step.dependencies.map(
+            (d) => scenario.expectedPlan.steps[d - 1]?.title || ''
+          ),
           timeline: step.estimated_time,
         })),
         success_criteria: scenario.context.success_criteria,
         risk_assessment: this.generateRiskAssessment(scenario),
-        contingencies: scenario.expectedPlan.contingency_plans.map(cp => cp.response),
+        contingencies: scenario.expectedPlan.contingency_plans.map((cp) => cp.response),
       },
-      confidence: this.calculatePlanConfidence(scenario.complexity, scenario.expectedPlan.steps.length),
+      confidence: this.calculatePlanConfidence(
+        scenario.complexity,
+        scenario.expectedPlan.steps.length
+      ),
     };
 
     return {
@@ -362,7 +388,10 @@ export class PlanningScenarioGenerator {
   /**
    * Create scenario variation
    */
-  private async createScenarioVariation(scenario: PlanningScenario, variation: number): Promise<PlanningTrainingExample> {
+  private async createScenarioVariation(
+    scenario: PlanningScenario,
+    variation: number
+  ): Promise<PlanningTrainingExample> {
     // Modify constraints or context slightly
     const modifiedConstraints = [...scenario.constraints];
     if (variation === 0) {
@@ -389,7 +418,10 @@ export class PlanningScenarioGenerator {
     const output = {
       thinking,
       plan: adaptedPlan,
-      confidence: Math.max(0.6, this.calculatePlanConfidence(scenario.complexity, adaptedPlan.steps.length) - 0.1),
+      confidence: Math.max(
+        0.6,
+        this.calculatePlanConfidence(scenario.complexity, adaptedPlan.steps.length) - 0.1
+      ),
     };
 
     return {
@@ -407,12 +439,14 @@ export class PlanningScenarioGenerator {
   /**
    * Create sub-problem examples
    */
-  private async createSubProblemExamples(scenario: PlanningScenario): Promise<PlanningTrainingExample[]> {
+  private async createSubProblemExamples(
+    scenario: PlanningScenario
+  ): Promise<PlanningTrainingExample[]> {
     const examples: PlanningTrainingExample[] = [];
 
     // Take first 2-3 steps and create focused examples
     const mainSteps = scenario.expectedPlan.steps.slice(0, 3);
-    
+
     for (const step of mainSteps) {
       const subExample: PlanningTrainingExample = {
         input: {
@@ -422,7 +456,9 @@ export class PlanningScenarioGenerator {
           context: {
             step_context: `Part of larger plan: ${scenario.objective}`,
             resources_available: step.resources_needed,
-            dependencies: step.dependencies.map(d => scenario.expectedPlan.steps[d - 1]?.title || ''),
+            dependencies: step.dependencies.map(
+              (d) => scenario.expectedPlan.steps[d - 1]?.title || ''
+            ),
           },
           available_actions: step.resources_needed,
           current_state: { step_number: step.id, total_steps: scenario.expectedPlan.steps.length },
@@ -431,13 +467,17 @@ export class PlanningScenarioGenerator {
           thinking: `I need to focus on ${step.title}. ${step.description}`,
           plan: {
             overview: step.description,
-            steps: [{
-              action: step.title,
-              reasoning: step.description,
-              expected_outcome: `${step.title} completed successfully`,
-              dependencies: step.dependencies.map(d => scenario.expectedPlan.steps[d - 1]?.title || ''),
-              timeline: step.estimated_time,
-            }],
+            steps: [
+              {
+                action: step.title,
+                reasoning: step.description,
+                expected_outcome: `${step.title} completed successfully`,
+                dependencies: step.dependencies.map(
+                  (d) => scenario.expectedPlan.steps[d - 1]?.title || ''
+                ),
+                timeline: step.estimated_time,
+              },
+            ],
             success_criteria: step.success_metrics,
             risk_assessment: step.risks.join(', '),
             contingencies: step.mitigation_strategies,
@@ -468,36 +508,50 @@ export class PlanningScenarioGenerator {
     return items[Math.floor(Math.random() * items.length)];
   }
 
-  private selectRandomSubset<T>(items: T[] count: number): T[] {
+  private selectRandomSubset<T>(items: T[], count: number): T[] {
     const shuffled = [...items].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, Math.min(count, items.length));
   }
 
   private getConstraintCount(complexity: string): number {
     switch (complexity) {
-      case 'simple': return 2;
-      case 'medium': return 3;
-      case 'complex': return 4;
-      case 'expert': return 5;
-      default: return 3;
+      case 'simple':
+        return 2;
+      case 'medium':
+        return 3;
+      case 'complex':
+        return 4;
+      case 'expert':
+        return 5;
+      default:
+        return 3;
     }
   }
 
   private getResourceCount(complexity: string): number {
     switch (complexity) {
-      case 'simple': return 3;
-      case 'medium': return 4;
-      case 'complex': return 5;
-      case 'expert': return 6;
-      default: return 4;
+      case 'simple':
+        return 3;
+      case 'medium':
+        return 4;
+      case 'complex':
+        return 5;
+      case 'expert':
+        return 6;
+      default:
+        return 4;
     }
   }
 
   private generateScenarioTitle(baseScenario: string, domain: string): string {
-    return `${domain.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}: ${baseScenario}`;
+    return `${domain.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}: ${baseScenario}`;
   }
 
-  private generateScenarioDescription(baseScenario: string, constraints: string[] complexity: string): string {
+  private generateScenarioDescription(
+    baseScenario: string,
+    constraints: string[],
+    complexity: string
+  ): string {
     const complexityPrefix = {
       simple: 'You have been asked to',
       medium: 'Your team needs to',
@@ -512,10 +566,14 @@ export class PlanningScenarioGenerator {
     return `Successfully ${baseScenario.toLowerCase()} while meeting all requirements and constraints.`;
   }
 
-  private async generateScenarioContext(domain: string, complexity: string, resources: string[]): Promise<any> {
+  private async generateScenarioContext(
+    domain: string,
+    complexity: string,
+    resources: string[]
+  ): Promise<any> {
     return {
       background: `This is a ${complexity} ${domain.replace('_', ' ')} scenario requiring strategic planning and execution.`,
-      resources: resources,
+      resources,
       timeframe: this.generateTimeframe(complexity),
       stakeholders: this.generateStakeholders(domain),
       success_criteria: this.generateSuccessCriteria(domain, complexity),
@@ -534,10 +592,34 @@ export class PlanningScenarioGenerator {
 
   private generateStakeholders(domain: string): string[] {
     const stakeholderMap: Record<string, string[]> = {
-      software_development: ['Product Manager', 'Engineering Team', 'QA Team', 'DevOps', 'End Users'],
-      business_strategy: ['Executive Team', 'Board of Directors', 'Customers', 'Partners', 'Employees'],
-      ai_research: ['Research Team', 'Data Scientists', 'Product Team', 'Ethics Committee', 'End Users'],
-      project_management: ['Project Sponsor', 'Project Team', 'Stakeholders', 'End Users', 'Vendors'],
+      software_development: [
+        'Product Manager',
+        'Engineering Team',
+        'QA Team',
+        'DevOps',
+        'End Users',
+      ],
+      business_strategy: [
+        'Executive Team',
+        'Board of Directors',
+        'Customers',
+        'Partners',
+        'Employees',
+      ],
+      ai_research: [
+        'Research Team',
+        'Data Scientists',
+        'Product Team',
+        'Ethics Committee',
+        'End Users',
+      ],
+      project_management: [
+        'Project Sponsor',
+        'Project Team',
+        'Stakeholders',
+        'End Users',
+        'Vendors',
+      ],
     };
     return stakeholderMap[domain] || ['Team Lead', 'Team Members', 'Stakeholders'];
   }
@@ -557,7 +639,12 @@ export class PlanningScenarioGenerator {
     return baseCriteria;
   }
 
-  private async generateExpectedPlan(baseScenario: string, constraints: string[] resources: string[] complexity: string): Promise<any> {
+  private async generateExpectedPlan(
+    baseScenario: string,
+    constraints: string[],
+    resources: string[],
+    complexity: string
+  ): Promise<any> {
     const stepCount = this.getStepCount(complexity);
     const steps = [];
 
@@ -591,17 +678,26 @@ export class PlanningScenarioGenerator {
 
   private getStepCount(complexity: string): number {
     switch (complexity) {
-      case 'simple': return 3;
-      case 'medium': return 5;
-      case 'complex': return 7;
-      case 'expert': return 10;
-      default: return 5;
+      case 'simple':
+        return 3;
+      case 'medium':
+        return 5;
+      case 'complex':
+        return 7;
+      case 'expert':
+        return 10;
+      default:
+        return 5;
     }
   }
 
   private generateStepTitle(baseScenario: string, stepNumber: number, totalSteps: number): string {
-    const phase = stepNumber <= totalSteps / 3 ? 'Planning' : 
-                  stepNumber <= 2 * totalSteps / 3 ? 'Implementation' : 'Completion';
+    const phase =
+      stepNumber <= totalSteps / 3
+        ? 'Planning'
+        : stepNumber <= (2 * totalSteps) / 3
+          ? 'Implementation'
+          : 'Completion';
     return `${phase} Phase - Activity ${stepNumber}`;
   }
 
@@ -618,10 +714,38 @@ export class PlanningScenarioGenerator {
 
   private generateAvailableActions(domain: string): string[] {
     const actionMap: Record<string, string[]> = {
-      software_development: ['ANALYZE_REQUIREMENTS', 'DESIGN_ARCHITECTURE', 'IMPLEMENT_CODE', 'WRITE_TESTS', 'DEPLOY_SYSTEM', 'MONITOR_PERFORMANCE'],
-      business_strategy: ['MARKET_RESEARCH', 'STAKEHOLDER_ANALYSIS', 'STRATEGY_FORMULATION', 'EXECUTION_PLANNING', 'RISK_ASSESSMENT', 'PERFORMANCE_MONITORING'],
-      ai_research: ['LITERATURE_REVIEW', 'DATA_COLLECTION', 'MODEL_DEVELOPMENT', 'EXPERIMENTATION', 'EVALUATION', 'PUBLICATION'],
-      project_management: ['PROJECT_PLANNING', 'RESOURCE_ALLOCATION', 'TEAM_COORDINATION', 'PROGRESS_TRACKING', 'RISK_MANAGEMENT', 'STAKEHOLDER_COMMUNICATION'],
+      software_development: [
+        'ANALYZE_REQUIREMENTS',
+        'DESIGN_ARCHITECTURE',
+        'IMPLEMENT_CODE',
+        'WRITE_TESTS',
+        'DEPLOY_SYSTEM',
+        'MONITOR_PERFORMANCE',
+      ],
+      business_strategy: [
+        'MARKET_RESEARCH',
+        'STAKEHOLDER_ANALYSIS',
+        'STRATEGY_FORMULATION',
+        'EXECUTION_PLANNING',
+        'RISK_ASSESSMENT',
+        'PERFORMANCE_MONITORING',
+      ],
+      ai_research: [
+        'LITERATURE_REVIEW',
+        'DATA_COLLECTION',
+        'MODEL_DEVELOPMENT',
+        'EXPERIMENTATION',
+        'EVALUATION',
+        'PUBLICATION',
+      ],
+      project_management: [
+        'PROJECT_PLANNING',
+        'RESOURCE_ALLOCATION',
+        'TEAM_COORDINATION',
+        'PROGRESS_TRACKING',
+        'RISK_MANAGEMENT',
+        'STAKEHOLDER_COMMUNICATION',
+      ],
     };
     return actionMap[domain] || ['PLAN', 'EXECUTE', 'MONITOR', 'ADJUST', 'COMPLETE'];
   }
@@ -640,10 +764,10 @@ export class PlanningScenarioGenerator {
     return `I need to analyze this ${scenario.domain} scenario carefully. The objective is: ${scenario.objective}
 
 Key constraints to consider:
-${scenario.constraints.map(c => `- ${c}`).join('\n')}
+${scenario.constraints.map((c) => `- ${c}`).join('\n')}
 
 Available resources:
-${scenario.context.resources.map(r => `- ${r}`).join('\n')}
+${scenario.context.resources.map((r) => `- ${r}`).join('\n')}
 
 Let me break this down into a strategic plan with clear steps, dependencies, and risk mitigation strategies.`;
   }
@@ -659,21 +783,29 @@ Let me break this down into a strategic plan with clear steps, dependencies, and
       complex: 0.8,
       expert: 0.75,
     };
-    
+
     const base = baseConfidence[complexity as keyof typeof baseConfidence] || 0.8;
     const stepPenalty = Math.max(0, (stepCount - 5) * 0.02);
-    
+
     return Math.max(0.6, base - stepPenalty);
   }
 
-  private calculateDifficultyScore(complexity: string, constraintCount: number, stepCount: number): number {
+  private calculateDifficultyScore(
+    complexity: string,
+    constraintCount: number,
+    stepCount: number
+  ): number {
     const complexityScore = { simple: 1, medium: 2, complex: 3, expert: 4 };
-    return (complexityScore[complexity as keyof typeof complexityScore] || 2) * 10 + constraintCount + stepCount;
+    return (
+      (complexityScore[complexity as keyof typeof complexityScore] || 2) * 10 +
+      constraintCount +
+      stepCount
+    );
   }
 
   private estimateSolutionTime(complexity: string, stepCount: number): number {
     const baseTime = { simple: 10, medium: 20, complex: 45, expert: 90 }; // minutes
-    return (baseTime[complexity as keyof typeof baseTime] || 20) + (stepCount * 2);
+    return (baseTime[complexity as keyof typeof baseTime] || 20) + stepCount * 2;
   }
 
   private adaptPlanToConstraints(originalPlan: any, newConstraints: string[]): any {
@@ -700,20 +832,20 @@ I need to adapt my approach to accommodate this new limitation.`;
   async exportPlanningDataset(limit: number = 5000): Promise<any> {
     try {
       const data = await this.dbManager.getTrainingData({ modelType: 'planning', limit });
-      
-      const formattedData = data.map(item => {
+
+      const formattedData = data.map((item) => {
         const input = JSON.parse(item.input_data);
         const output = JSON.parse(item.output_data);
-        
+
         return {
-          input: input,
-          output: output,
+          input,
+          output,
           metadata: JSON.parse(item.metadata || '{}'),
         };
       });
 
       elizaLogger.info(`📊 Exported ${formattedData.length} planning training samples`);
-      
+
       return {
         model_type: 'planning',
         format: 'realm_style_planning',
@@ -726,7 +858,6 @@ I need to adapt my approach to accommodate this new limitation.`;
           target_model: 'Qwen/QwQ-32B-Preview',
         },
       };
-      
     } catch (error) {
       elizaLogger.error('❌ Failed to export planning dataset:', error);
       throw error;

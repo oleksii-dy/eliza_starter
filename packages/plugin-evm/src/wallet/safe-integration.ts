@@ -97,7 +97,7 @@ export class SafeIntegration {
       params.owners,
       params.threshold,
       params.setupModules,
-      params.fallbackHandler || contracts.fallbackHandler
+      params.fallbackHandler || contracts.fallbackHandler,
     );
 
     // Calculate salt
@@ -109,7 +109,7 @@ export class SafeIntegration {
     const deploymentAddress = this.calculateCreate2Address(
       contracts.proxyFactory,
       salt,
-      initCodeHash
+      initCodeHash,
     );
 
     return deploymentAddress;
@@ -147,7 +147,7 @@ export class SafeIntegration {
     } catch (error) {
       logger.error('Error deploying Safe:', error);
       throw new Error(
-        `Failed to deploy Safe: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to deploy Safe: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -200,7 +200,7 @@ export class SafeIntegration {
     } catch (error) {
       logger.error('Error creating transaction proposal:', error);
       throw new Error(
-        `Failed to create proposal: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to create proposal: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -266,7 +266,7 @@ export class SafeIntegration {
     } catch (error) {
       logger.error('Error executing proposal:', error);
       throw new Error(
-        `Failed to execute proposal: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to execute proposal: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -300,13 +300,13 @@ export class SafeIntegration {
           txData.gasToken,
           txData.refundReceiver,
           txData.nonce,
-        ]
-      )
+        ],
+      ),
     );
 
     const encoded = encodePacked(
       ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
-      ['0x19' as Hex, '0x01' as Hex, this.getDomainSeparator(), safeTxHash]
+      ['0x19' as Hex, '0x01' as Hex, this.getDomainSeparator(), safeTxHash],
     );
 
     return keccak256(encoded);
@@ -317,7 +317,7 @@ export class SafeIntegration {
    */
   getPendingProposals(): MultisigTransactionProposal[] {
     return Array.from(this.proposals.values()).filter(
-      (p) => !p.executed && p.confirmations.length < p.threshold
+      (p) => !p.executed && p.confirmations.length < p.threshold,
     );
   }
 
@@ -326,7 +326,7 @@ export class SafeIntegration {
    */
   getReadyProposals(): MultisigTransactionProposal[] {
     return Array.from(this.proposals.values()).filter(
-      (p) => !p.executed && p.confirmations.length >= p.threshold
+      (p) => !p.executed && p.confirmations.length >= p.threshold,
     );
   }
 
@@ -345,7 +345,7 @@ export class SafeIntegration {
     owners: Address[],
     threshold: number,
     modules?: Address[],
-    fallbackHandler?: Address
+    fallbackHandler?: Address,
   ): Hex {
     return encodeFunctionData({
       abi: [
@@ -394,11 +394,11 @@ export class SafeIntegration {
   private calculateCreate2Address(factory: Address, salt: Hex, initCodeHash: Hex): Address {
     const encoded = encodePacked(
       ['bytes1', 'address', 'bytes32', 'bytes32'],
-      ['0xff', factory, salt, initCodeHash]
+      ['0xff', factory, salt, initCodeHash],
     );
 
     const hash = keccak256(encoded);
-    return ('0x' + hash.slice(26)) as Address;
+    return `0x${hash.slice(26)}` as Address;
   }
 
   private async isContractDeployed(address: Address): Promise<boolean> {
@@ -417,8 +417,8 @@ export class SafeIntegration {
     const hash = keccak256(
       encodePacked(
         ['address', 'uint256', 'bytes32', 'uint256'],
-        [txData.to, txData.value, keccak256(txData.data), txData.nonce]
-      )
+        [txData.to, txData.value, keccak256(txData.data), txData.nonce],
+      ),
     );
     return hash;
   }
@@ -446,8 +446,8 @@ export class SafeIntegration {
           keccak256(toHex('Safe Transaction', { size: 32 })),
           BigInt(this.chainId),
           this.safeAddress || '0x0000000000000000000000000000000000000000',
-        ]
-      )
+        ],
+      ),
     );
   }
 
@@ -457,7 +457,7 @@ export class SafeIntegration {
       params.owners,
       params.threshold,
       params.setupModules,
-      params.fallbackHandler || contracts.fallbackHandler
+      params.fallbackHandler || contracts.fallbackHandler,
     );
 
     return encodeFunctionData({

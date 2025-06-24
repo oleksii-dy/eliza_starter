@@ -36,7 +36,7 @@ async function main() {
   try {
     // Create mock runtime for CLI usage
     const runtime = createMockRuntime();
-    
+
     // Initialize training service
     const trainingService = new TrainingService(runtime);
     await trainingService.initialize();
@@ -108,19 +108,23 @@ async function main() {
     console.log(`📁 Dataset Location: ${datasetPath}`);
     console.log(`📊 Total Conversations: ${stats.totalConversations}`);
     console.log(`💬 Total Messages: ${stats.totalMessages}`);
-    console.log(`📏 Avg Conversation Length: ${stats.averageConversationLength.toFixed(1)} messages`);
+    console.log(
+      `📏 Avg Conversation Length: ${stats.averageConversationLength.toFixed(1)} messages`
+    );
     console.log(`📝 Avg Message Length: ${stats.averageMessageLength.toFixed(1)} characters`);
     console.log(`👥 Unique Participants: ${stats.participantCount}`);
     console.log(`⏰ Time Span: ${stats.timeSpan.durationDays} days`);
     console.log(`⭐ Average Quality: ${stats.qualityMetrics.averageQuality.toFixed(2)}`);
-    console.log(`🎯 Successful Actions: ${stats.actionStats.successfulActions}/${stats.actionStats.totalActions}`);
+    console.log(
+      `🎯 Successful Actions: ${stats.actionStats.successfulActions}/${stats.actionStats.totalActions}`
+    );
     console.log('');
 
     // Action distribution
     if (Object.keys(stats.actionStats.actionTypes).length > 0) {
       console.log('🔧 **Action Distribution:**');
       Object.entries(stats.actionStats.actionTypes)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 10)
         .forEach(([action, count]) => {
           console.log(`   ${action}: ${count}`);
@@ -132,7 +136,7 @@ async function main() {
     if (Object.keys(stats.topicDistribution).length > 0) {
       console.log('📚 **Topic Distribution:**');
       Object.entries(stats.topicDistribution)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 10)
         .forEach(([topic, count]) => {
           console.log(`   ${topic}: ${count}`);
@@ -147,7 +151,6 @@ async function main() {
     console.log('4. Deploy to cloud: npm run deploy');
     console.log('');
     console.log('🎉 Training data extraction completed successfully!');
-
   } catch (error) {
     console.error('❌ Error during extraction:', (error as Error).message);
     console.error('');

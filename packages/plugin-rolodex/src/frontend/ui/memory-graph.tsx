@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { Memory, UUID } from '@elizaos/core';
-// @ts-ignore - react-force-graph-2d doesn't have type declarations
 import ForceGraph2D, { ForceGraphMethods, LinkObject, NodeObject } from 'react-force-graph-2d';
 
 interface ExtendedMemoryMetadata {
@@ -49,7 +48,7 @@ const processGraphData = (memories: Memory[]) => {
     const memoryNode: MemoryNode = {
       id: memory.id,
       name: metadata.title || memory.id.substring(0, 8),
-      memory: memory,
+      memory,
       val: 3, // Reduced base node size
       type: (metadata.type || '').toLowerCase() === 'document' ? 'document' : 'fragment',
     };
@@ -100,7 +99,7 @@ export function MemoryGraph({ memories, onNodeClick, selectedMemoryId }: MemoryG
   const [initialized, setInitialized] = useState(false);
   const [shouldRender, setShouldRender] = useState(true);
   const [graphData, setGraphData] = useState<{ nodes: MemoryNode[]; links: MemoryLink[] }>({
-    nodes: []
+    nodes: [],
     links: []
   });
   const containerRef = useRef<HTMLDivElement>(null);

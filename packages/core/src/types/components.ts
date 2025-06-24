@@ -2,7 +2,7 @@ import type { Memory } from './memory';
 import type { Content } from './primitives';
 import type { IAgentRuntime } from './runtime';
 import type { State } from './state';
-import type { ActionResult, ActionContext } from './planning';
+import type { ActionResult } from './planning';
 
 /**
  * Example content with associated user for demonstration purposes

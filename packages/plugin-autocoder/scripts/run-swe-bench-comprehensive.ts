@@ -260,19 +260,19 @@ async function runComprehensiveBenchmark() {
       timestamp: new Date().toISOString(),
       total_instances: instances.length,
       resolved_instances: resolvedCount,
-      resolution_rate: ((resolvedCount / instances.length) * 100).toFixed(1) + '%',
+      resolution_rate: `${((resolvedCount / instances.length) * 100).toFixed(1)}%`,
       tests_passed_count: testsPassedCount,
-      test_pass_rate: ((testsPassedCount / instances.length) * 100).toFixed(1) + '%',
+      test_pass_rate: `${((testsPassedCount / instances.length) * 100).toFixed(1)}%`,
       compilation_success_count: compilationSuccessCount,
       compilation_success_rate:
-        ((compilationSuccessCount / instances.length) * 100).toFixed(1) + '%',
+        `${((compilationSuccessCount / instances.length) * 100).toFixed(1)}%`,
       validation_statistics: {
         instances_with_passing_validation: totalValidationPassed,
         first_pass_success_count: firstPassInstances,
-        first_pass_success_rate: ((firstPassInstances / instances.length) * 100).toFixed(1) + '%',
+        first_pass_success_rate: `${((firstPassInstances / instances.length) * 100).toFixed(1)}%`,
         total_wasted_iterations: totalWastedIterations,
         average_wasted_iterations: (totalWastedIterations / totalValidationPassed).toFixed(1),
-        average_efficiency: avgEfficiency.toFixed(1) + '%',
+        average_efficiency: `${avgEfficiency.toFixed(1)}%`,
       },
       instance_results: overallResults,
     };
@@ -318,7 +318,7 @@ async function runComprehensiveBenchmark() {
         result.wasted_iterations !== undefined ? result.wasted_iterations.toString() : '-';
       const efficiency =
         result.efficiency_percentage !== undefined
-          ? result.efficiency_percentage.toFixed(1) + '%'
+          ? `${result.efficiency_percentage.toFixed(1)}%`
           : '-';
 
       markdown += `| ${result.instance_id} | ${resolved} | ${tests} | ${compilation} | ${solutionFound} | ${wasted} | ${efficiency} |\n`;
@@ -337,13 +337,13 @@ Based on the validation checkpoint analysis:
 
     if (avgEfficiency < 50) {
       markdown += `- The workflow shows low efficiency (${avgEfficiency.toFixed(1)}%), suggesting many iterations after finding solutions\n`;
-      markdown += `- Consider implementing early termination when validation passes\n`;
+      markdown += '- Consider implementing early termination when validation passes\n';
     } else if (avgEfficiency < 75) {
       markdown += `- The workflow shows moderate efficiency (${avgEfficiency.toFixed(1)}%)\n`;
-      markdown += `- Some optimization opportunities exist to reduce wasted iterations\n`;
+      markdown += '- Some optimization opportunities exist to reduce wasted iterations\n';
     } else {
       markdown += `- The workflow shows good efficiency (${avgEfficiency.toFixed(1)}%)\n`;
-      markdown += `- The validation checkpoint system is effectively minimizing wasted effort\n`;
+      markdown += '- The validation checkpoint system is effectively minimizing wasted effort\n';
     }
 
     await fs.writeFile(path.join(resultsDir, 'comprehensive-report.md'), markdown);

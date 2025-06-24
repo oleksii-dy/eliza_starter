@@ -7,11 +7,8 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "target": "ESNext",
-    "types": ["node", "bun-types"],
     "paths": {
-      "@/src/*": ["./src/*"],
-      "@elizaos/core": ["../../core/src"],
-      "@elizaos/core/*": ["../../core/src/*"]
+      "@/src/*": ["./src/*"]
     },
     "rootDir": ".",
     "moduleResolution": "bundler",

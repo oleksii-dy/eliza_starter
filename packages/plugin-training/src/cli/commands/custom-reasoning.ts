@@ -1,13 +1,7 @@
-import { Command } from 'commander';
+import { type Command } from 'commander';
 import { elizaLogger } from '@elizaos/core';
 import { promises as fs } from 'fs';
-import path from 'path';
-import type {
-  CustomReasoningService,
-  CustomModelType,
-  ExportOptions,
-} from '../../interfaces/CustomReasoningService.js';
-import { TrainingDataCollector } from '../../training/DataCollector.js';
+import type { CustomModelType, ExportOptions } from '../../interfaces/CustomReasoningService.js';
 
 /**
  * CLI commands for managing custom reasoning service
@@ -172,7 +166,7 @@ export function customReasoningCommands(program: Command) {
         const exportOptions: ExportOptions = {
           modelType: options.modelType as CustomModelType,
           format: options.format,
-          limit: parseInt(options.limit),
+          limit: parseInt(options.limit, 10),
           startDate: options.startDate ? new Date(options.startDate) : undefined,
           endDate: options.endDate ? new Date(options.endDate) : undefined,
         };
@@ -181,10 +175,12 @@ export function customReasoningCommands(program: Command) {
         elizaLogger.info(`  Model Type: ${exportOptions.modelType || 'all'}`);
         elizaLogger.info(`  Format: ${exportOptions.format}`);
         elizaLogger.info(`  Limit: ${exportOptions.limit}`);
-        if (exportOptions.startDate)
+        if (exportOptions.startDate) {
           elizaLogger.info(`  Start Date: ${exportOptions.startDate.toISOString()}`);
-        if (exportOptions.endDate)
+        }
+        if (exportOptions.endDate) {
           elizaLogger.info(`  End Date: ${exportOptions.endDate.toISOString()}`);
+        }
         elizaLogger.info('');
 
         // Generate output filename if not provided
@@ -234,7 +230,7 @@ export function customReasoningCommands(program: Command) {
     .option('--dry-run', 'Show what would be deleted without actually deleting')
     .action(async (options) => {
       try {
-        const retentionDays = parseInt(options.days);
+        const retentionDays = parseInt(options.days, 10);
         elizaLogger.info(`🧹 Cleaning up training data older than ${retentionDays} days`);
 
         if (options.dryRun) {
@@ -305,7 +301,7 @@ export function customReasoningCommands(program: Command) {
     .option('-m, --minutes <minutes>', 'Idle minutes before shutdown', '30')
     .action(async (options) => {
       try {
-        const idleMinutes = parseInt(options.minutes);
+        const idleMinutes = parseInt(options.minutes, 10);
         elizaLogger.info(`⏰ Setting auto-shutdown to ${idleMinutes} minutes of idle time`);
         elizaLogger.info('');
         elizaLogger.info('Environment variable to set:');

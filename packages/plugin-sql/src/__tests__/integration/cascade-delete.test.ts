@@ -25,7 +25,7 @@ describe('Cascade Delete Tests', () => {
       await adapter.createWorld({
         id: worldId,
         name: 'Test World',
-        agentId: agentId,
+        agentId,
         serverId: uuidv4() as UUID,
       });
 
@@ -35,9 +35,9 @@ describe('Cascade Delete Tests', () => {
         {
           id: roomId,
           name: 'Test Room',
-          agentId: agentId,
+          agentId,
           serverId: uuidv4() as UUID,
-          worldId: worldId,
+          worldId,
           channelId: uuidv4() as UUID,
           type: 'PUBLIC' as any,
           source: 'test',
@@ -49,7 +49,7 @@ describe('Cascade Delete Tests', () => {
       await adapter.createEntities([
         {
           id: entityId,
-          agentId: agentId,
+          agentId,
           names: ['Test Entity'],
           metadata: { type: 'test' },
         },
@@ -59,9 +59,9 @@ describe('Cascade Delete Tests', () => {
       const memoryId = await adapter.createMemory(
         {
           id: uuidv4() as UUID,
-          agentId: agentId,
-          entityId: entityId,
-          roomId: roomId,
+          agentId,
+          entityId,
+          roomId,
           content: { text: 'Test memory' },
           createdAt: Date.now(),
           embedding: new Array(384).fill(0.1), // Test embedding
@@ -74,8 +74,8 @@ describe('Cascade Delete Tests', () => {
         id: uuidv4() as UUID,
         name: 'Test Task',
         description: 'A test task',
-        roomId: roomId,
-        worldId: worldId,
+        roomId,
+        worldId,
         tags: ['test'],
         metadata: { priority: 'high' },
       });

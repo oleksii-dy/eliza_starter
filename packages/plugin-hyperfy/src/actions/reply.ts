@@ -2,6 +2,7 @@ import { Content } from '@elizaos/core';
 import {
   type Action,
   type ActionExample,
+  type ActionResult,
   composePromptFromState,
   type HandlerCallback,
   type IAgentRuntime,
@@ -49,7 +50,9 @@ function extractReplyContent(response: Memory, replyFieldKeys: string[]): Conten
   const hasReplyAction = response.content.actions?.includes('REPLY');
   const text = getFirstAvailableField(response.content, replyFieldKeys);
 
-  if (!hasReplyAction || !text) return null;
+  if (!hasReplyAction || !text) {
+    return null;
+  }
 
   return {
     ...response.content,
@@ -75,7 +78,8 @@ function extractReplyContent(response: Memory, replyFieldKeys: string[]): Conten
 export const replyAction = {
   name: 'REPLY',
   similes: ['GREET', 'REPLY_TO_MESSAGE', 'SEND_REPLY', 'RESPOND', 'RESPONSE'],
-  description: `Sends a direct message into in-game chat to a player; always use this first when you're speaking in response to someone.`,
+  description:
+    "Sends a direct message into in-game chat to a player; always use this first when you're speaking in response to someone. Can be chained with other metaverse actions for complex scenarios.",
   validate: async (_runtime: IAgentRuntime) => {
     return true;
   },
@@ -86,7 +90,7 @@ export const replyAction = {
     _options: any,
     callback: HandlerCallback,
     responses?: Memory[]
-  ) => {
+  ): Promise<ActionResult> => {
     const replyFieldKeys = ['message', 'text'];
 
     const existingReplies =
@@ -98,7 +102,11 @@ export const replyAction = {
       for (const reply of existingReplies) {
         await callback(reply);
       }
-      return;
+      return {
+        text: existingReplies[0].text || '',
+        values: { replied: true, replyText: existingReplies[0].text },
+        data: { source: 'hyperfy', action: 'REPLY' }
+      };
     }
 
     // Only generate response using LLM if no suitable response was found
@@ -118,22 +126,28 @@ export const replyAction = {
       thought: response.thought,
       // @ts-ignore - Response type is unknown
       text: (response.message as string) || '',
-      actions: ['HYPERFY_REPLY'],
+      actions: ['REPLY'],
       source: 'hyperfy',
     };
 
     await callback(responseContent);
+
+    return {
+      text: responseContent.text,
+      values: { replied: true, replyText: responseContent.text },
+      data: { source: 'hyperfy', action: 'REPLY', thought: responseContent.thought }
+    };
   },
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Hello there!',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'Hi! How can I help you today?',
           actions: ['REPLY'],
@@ -142,13 +156,13 @@ export const replyAction = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: "What's your favorite color?",
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'I really like deep shades of blue. They remind me of the ocean and the night sky.',
           actions: ['REPLY'],
@@ -157,13 +171,13 @@ export const replyAction = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Can you explain how neural networks work?',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'Let me break that down for you in simple terms...',
           actions: ['REPLY'],
@@ -172,14 +186,15 @@ export const replyAction = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Could you help me solve this math problem?',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User needs help with math - I should engage and offer assistance',
           text: "Of course! Let's work through it step by step.",
           actions: ['REPLY'],
         },

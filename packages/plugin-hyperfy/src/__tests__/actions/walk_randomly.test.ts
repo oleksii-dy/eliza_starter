@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { hyperfyWalkRandomlyAction } from '../../actions/walk_randomly';
 import { createMockRuntime, createMockMemory, createMockState } from '../test-utils';
 import { createMockWorld } from '../helpers/mock-world';
@@ -10,24 +10,24 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
   let mockControls: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
     mockWorld = createMockWorld();
-    
+
     mockControls = {
-      startRandomWalk: vi.fn(),
-      stopRandomWalk: vi.fn(),
-      getIsWalkingRandomly: vi.fn().mockReturnValue(false)
+      startRandomWalk: mock(),
+      stopRandomWalk: mock(),
+      getIsWalkingRandomly: mock().mockReturnValue(false),
     };
-    
+
     mockWorld.controls = mockControls;
-    
+
     mockService = {
-      isConnected: vi.fn().mockReturnValue(true),
-      getWorld: vi.fn().mockReturnValue(mockWorld)
+      isConnected: mock().mockReturnValue(true),
+      getWorld: mock().mockReturnValue(mockWorld),
     };
-    
-    mockRuntime.getService = vi.fn().mockReturnValue(mockService);
+
+    mockRuntime.getService = mock().mockReturnValue(mockService);
   });
 
   describe('validate', () => {
@@ -35,7 +35,7 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
       const mockMessage = createMockMemory();
       const mockState = createMockState();
       const result = await hyperfyWalkRandomlyAction.validate(mockRuntime, mockMessage, mockState);
-      
+
       expect(result).toBe(true);
       expect(mockService.isConnected).toHaveBeenCalled();
       expect(mockService.getWorld).toHaveBeenCalled();
@@ -45,9 +45,9 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
       mockService.isConnected.mockReturnValue(false);
       const mockMessage = createMockMemory();
       const mockState = createMockState();
-      
+
       const result = await hyperfyWalkRandomlyAction.validate(mockRuntime, mockMessage, mockState);
-      
+
       expect(result).toBe(false);
     });
 
@@ -55,9 +55,9 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
       mockWorld.controls = null;
       const mockMessage = createMockMemory();
       const mockState = createMockState();
-      
+
       const result = await hyperfyWalkRandomlyAction.validate(mockRuntime, mockMessage, mockState);
-      
+
       expect(result).toBe(false);
     });
   });
@@ -70,16 +70,16 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
     beforeEach(() => {
       mockMessage = {
         id: 'msg-123',
-        content: { text: 'Walk around randomly' }
+        content: { text: 'Walk around randomly' },
       };
-      
+
       mockState = {
         values: {},
         data: {},
-        text: 'test state'
+        text: 'test state',
       };
-      
-      mockCallback = vi.fn();
+
+      mockCallback = mock();
     });
 
     it('should start random walk with default parameters', async () => {
@@ -97,14 +97,14 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
           text: '',
           actions: ['HYPERFY_WALK_RANDOMLY'],
           source: 'hyperfy',
-          metadata: { status: 'started', intervalMs: 4000, maxDistance: 30 }
+          metadata: { status: 'started', intervalMs: 4000, maxDistance: 30 },
         })
       );
     });
 
     it('should start random walk with custom parameters', async () => {
       const options = { interval: 10, distance: 50 };
-      
+
       await hyperfyWalkRandomlyAction.handler(
         mockRuntime,
         mockMessage,
@@ -116,14 +116,14 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
       expect(mockControls.startRandomWalk).toHaveBeenCalledWith(10000, 50);
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
-          metadata: { status: 'started', intervalMs: 10000, maxDistance: 50 }
+          metadata: { status: 'started', intervalMs: 10000, maxDistance: 50 },
         })
       );
     });
 
     it('should stop random walk when command is stop', async () => {
       mockControls.getIsWalkingRandomly.mockReturnValue(true);
-      
+
       await hyperfyWalkRandomlyAction.handler(
         mockRuntime,
         mockMessage,
@@ -138,7 +138,7 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
 
     it('should not call stop if not walking randomly', async () => {
       mockControls.getIsWalkingRandomly.mockReturnValue(false);
-      
+
       await hyperfyWalkRandomlyAction.handler(
         mockRuntime,
         mockMessage,
@@ -152,7 +152,7 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
 
     it('should handle missing controls methods gracefully', async () => {
       mockControls.startRandomWalk = undefined;
-      
+
       await hyperfyWalkRandomlyAction.handler(
         mockRuntime,
         mockMessage,
@@ -163,14 +163,14 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: 'Error: Wander functionality not available in controls.'
+          text: 'Error: Wander functionality not available in controls.',
         })
       );
     });
 
     it('should handle missing service gracefully', async () => {
       mockRuntime.getService.mockReturnValue(null);
-      
+
       await hyperfyWalkRandomlyAction.handler(
         mockRuntime,
         mockMessage,
@@ -181,7 +181,7 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: 'Error: Cannot wander. Hyperfy connection/controls unavailable.'
+          text: 'Error: Cannot wander. Hyperfy connection/controls unavailable.',
         })
       );
     });
@@ -195,20 +195,20 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
     });
 
     it('should have properly formatted examples', () => {
-      hyperfyWalkRandomlyAction.examples!.forEach(example => {
+      hyperfyWalkRandomlyAction.examples!.forEach((example) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBe(2);
-        
+
         const [user, agent] = example;
         expect(user).toHaveProperty('name');
         expect(user).toHaveProperty('content');
         expect(agent).toHaveProperty('name');
         expect(agent).toHaveProperty('content');
-        
+
         if (agent.content.actions) {
           expect(agent.content.actions).toContain('HYPERFY_WALK_RANDOMLY');
         }
       });
     });
   });
-}); 
+});

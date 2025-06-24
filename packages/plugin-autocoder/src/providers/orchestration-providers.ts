@@ -102,7 +102,7 @@ export const projectHistoryProvider: Provider = {
     const failed = allProjects.filter((p) => p.status === 'failed');
     const active = allProjects.filter((p) => p.status !== 'completed' && p.status !== 'failed');
 
-    let historyInfo = `Plugin Development History:\n\n`;
+    let historyInfo = 'Plugin Development History:\n\n';
 
     if (active.length > 0) {
       historyInfo += `Active Projects (${active.length}):\n`;
@@ -204,7 +204,7 @@ export const projectUpdatesProvider: Provider = {
       return { text: 'No active projects to monitor.' };
     }
 
-    let updates = `Real-time Project Updates:\n\n`;
+    let updates = 'Real-time Project Updates:\n\n';
 
     for (const project of activeProjects) {
       updates += `📦 ${project.name} (${project.id.substring(0, 8)}...)\n`;
@@ -226,7 +226,7 @@ export const projectUpdatesProvider: Provider = {
       // Show recent notifications
       const recentNotifs = project.userNotifications.slice(-3);
       if (recentNotifs.length > 0) {
-        updates += `   Recent activity:\n`;
+        updates += '   Recent activity:\n';
         for (const notif of recentNotifs) {
           const icon =
             notif.type === 'error'
@@ -273,7 +273,7 @@ export const developmentProgressProvider: Provider = {
       return { text: 'You have no plugin development projects.' };
     }
 
-    let progress = `Your Plugin Development Progress:\n\n`;
+    let progress = 'Your Plugin Development Progress:\n\n';
 
     for (const project of userProjects) {
       progress += `📊 ${project.name}\n`;

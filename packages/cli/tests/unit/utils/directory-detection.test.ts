@@ -1,7 +1,98 @@
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+// import * as path from 'node:path';
 import { detectDirectoryType, isValidForUpdates } from '../../../src/utils/directory-detection';
+
+// Test fixtures for consistent test data
+const TestFixtures = {
+  packageJson: {
+    elizaProject: {
+      name: 'my-project',
+      packageType: 'project',
+      dependencies: {
+        '@elizaos/core': '^1.0.0',
+      },
+    },
+    elizaPlugin: {
+      name: '@elizaos/plugin-test',
+      packageType: 'plugin',
+      dependencies: {
+        '@elizaos/core': '^1.0.0',
+      },
+    },
+    elizaPluginByKeywords: {
+      name: 'custom-plugin',
+      keywords: ['plugin', 'elizaos'],
+      dependencies: {
+        '@elizaos/core': '^1.0.0',
+      },
+    },
+    monorepoRoot: {
+      name: 'monorepo-root',
+      workspaces: ['packages/*'],
+      // Explicitly no ElizaOS dependencies to avoid project classification
+    },
+    multipleElizaDeps: {
+      name: 'my-project',
+      dependencies: {
+        '@elizaos/core': '^1.0.0',
+        '@elizaos/cli': '^1.0.0',
+        '@elizaos/plugin-discord': '^1.0.0',
+      },
+    },
+    regularProject: {
+      name: 'regular-project',
+      dependencies: {
+        express: '^4.0.0',
+        react: '^18.0.0',
+      },
+    },
+  },
+
+  paths: {
+    testPath: '/test/path',
+    testPlugin: '/test/plugin',
+    testMonorepo: '/test/monorepo',
+    testSubdir: '/test/monorepo/subdir',
+    testRegular: '/test/regular',
+    testMissing: '/test/missing',
+    testInvalid: '/test/invalid',
+    testUnreadable: '/test/unreadable',
+  },
+
+  directoryInfo: {
+    elizaProject: {
+      type: 'elizaos-project' as const,
+      hasPackageJson: true,
+      hasElizaOSDependencies: true,
+      elizaPackageCount: 1,
+    },
+    elizaPlugin: {
+      type: 'elizaos-plugin' as const,
+      hasPackageJson: true,
+      hasElizaOSDependencies: true,
+      elizaPackageCount: 1,
+    },
+    elizaMonorepo: {
+      type: 'elizaos-monorepo' as const,
+      hasPackageJson: true,
+      hasElizaOSDependencies: false,
+      elizaPackageCount: 0,
+    },
+    elizaSubdir: {
+      type: 'elizaos-subdir' as const,
+      hasPackageJson: false,
+      hasElizaOSDependencies: false,
+      elizaPackageCount: 0,
+    },
+    nonElizaDir: {
+      type: 'non-elizaos-dir' as const,
+      hasPackageJson: true,
+      hasElizaOSDependencies: false,
+      elizaPackageCount: 0,
+    },
+  },
+};
 
 // Mock fs
 mock.module('node:fs', () => ({
@@ -11,37 +102,61 @@ mock.module('node:fs', () => ({
   readdirSync: mock(() => []),
 }));
 
-// Mock UserEnvironment
-const mockFindMonorepoRoot = vi.fn();
-vi.mock('../../../src/utils/user-environment', () => ({
+// Mock UserEnvironment - need to mock the singleton instance
+const mockFindMonorepoRoot = mock();
+const mockUserEnvironmentInstance = {
+  findMonorepoRoot: mockFindMonorepoRoot,
+};
+
+mock.module('../../../src/utils/user-environment', () => ({
   UserEnvironment: {
-    getInstance: vi.fn(() => ({
-      findMonorepoRoot: mockFindMonorepoRoot,
-    })),
+    getInstance: mock(() => mockUserEnvironmentInstance),
   },
 }));
 
 describe('directory-detection', () => {
+  let mocks: {
+    findMonorepoRoot: any;
+    existsSync: any;
+    readFileSync: any;
+    readdirSync: any;
+    statSync: any;
+  };
+
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockFindMonorepoRoot.mockReturnValue(undefined);
+    // Systematically reset all mocks
+    mockFindMonorepoRoot.mockReset();
+    (fs.existsSync as any).mockReset();
+    (fs.readFileSync as any).mockReset();
+    (fs.readdirSync as any).mockReset();
+    (fs.statSync as any).mockReset();
+
+    // Store mock references for easy access
+    mocks = {
+      findMonorepoRoot: mockFindMonorepoRoot,
+      existsSync: fs.existsSync as any,
+      readFileSync: fs.readFileSync as any,
+      readdirSync: fs.readdirSync as any,
+      statSync: fs.statSync as any,
+    };
+
+    // Set default successful mocks
+    mocks.existsSync.mockReturnValue(true);
+    mocks.readFileSync.mockReturnValue('{}');
+    mocks.readdirSync.mockReturnValue([]);
+    mocks.statSync.mockReturnValue({ isDirectory: () => true });
+    mocks.findMonorepoRoot.mockReturnValue(null);
   });
 
   describe('detectDirectoryType', () => {
     it('should detect elizaos project', () => {
-      const mockPackageJson = {
-        name: 'my-project',
-        packageType: 'project',
-        dependencies: {
-          '@elizaos/core': '^1.0.0',
-        },
-      };
+      // Setup mocks using test fixtures
+      mocks.existsSync.mockReturnValue(true);
+      mocks.readFileSync.mockReturnValue(JSON.stringify(TestFixtures.packageJson.elizaProject));
+      mocks.readdirSync.mockReturnValue([]);
+      mocks.findMonorepoRoot.mockReturnValue(null);
 
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockPackageJson));
-      vi.mocked(fs.readdirSync).mockReturnValue([]);
-
-      const result = detectDirectoryType('/test/path');
+      const result = detectDirectoryType(TestFixtures.paths.testPath);
 
       expect(result.type).toBe('elizaos-project');
       expect(result.hasPackageJson).toBe(true);
@@ -50,148 +165,127 @@ describe('directory-detection', () => {
     });
 
     it('should detect elizaos plugin', () => {
-      const mockPackageJson = {
-        name: '@elizaos/plugin-test',
-        packageType: 'plugin',
-        dependencies: {
-          '@elizaos/core': '^1.0.0',
-        },
-      };
+      // Setup mocks using test fixtures
+      mocks.existsSync.mockReturnValue(true);
+      mocks.readFileSync.mockReturnValue(JSON.stringify(TestFixtures.packageJson.elizaPlugin));
+      mocks.readdirSync.mockReturnValue([]);
+      mocks.findMonorepoRoot.mockReturnValue(null);
 
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockPackageJson));
-      vi.mocked(fs.readdirSync).mockReturnValue([]);
-
-      const result = detectDirectoryType('/test/plugin');
+      const result = detectDirectoryType(TestFixtures.paths.testPlugin);
 
       expect(result.type).toBe('elizaos-plugin');
       expect(result.hasPackageJson).toBe(true);
     });
 
     it('should detect monorepo root', () => {
-      const mockPackageJson = {
-        name: 'monorepo-root',
-        workspaces: ['packages/*'],
-      };
+      // Setup monorepo-specific file system mocking
+      mocks.existsSync.mockImplementation((filepath: any) => {
+        const pathStr = String(filepath);
+        return pathStr.includes('package.json') || pathStr === TestFixtures.paths.testMonorepo;
+      });
+      mocks.readFileSync.mockReturnValue(JSON.stringify(TestFixtures.packageJson.monorepoRoot));
+      mocks.readdirSync.mockReturnValue(['packages']);
+      mocks.statSync.mockReturnValue({ isDirectory: () => true });
+      mocks.findMonorepoRoot.mockReturnValue(TestFixtures.paths.testMonorepo);
 
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockPackageJson));
-      vi.mocked(fs.readdirSync).mockReturnValue([]);
-
-      // Mock UserEnvironment to return monorepo root
-      mockFindMonorepoRoot.mockReturnValue('/test/monorepo');
-
-      const result = detectDirectoryType('/test/monorepo');
+      const result = detectDirectoryType(TestFixtures.paths.testMonorepo);
 
       expect(result.type).toBe('elizaos-monorepo');
-      expect(result.monorepoRoot).toBe('/test/monorepo');
+      expect(result.monorepoRoot).toBe(TestFixtures.paths.testMonorepo);
     });
 
     it('should detect elizaos subdirectory in monorepo', () => {
-      (fs.existsSync as any).mockImplementation((filepath: any) => {
-        // No package.json in subdirectory
-        return String(filepath) !== path.join('/test/monorepo/subdir', 'package.json');
+      // Setup subdirectory-specific file system mocking
+      mocks.existsSync.mockImplementation((filepath: any) => {
+        const pathStr = String(filepath);
+        if (pathStr.includes('package.json')) {
+          return false; // No package.json in subdirectory
+        }
+        return pathStr === TestFixtures.paths.testSubdir;
       });
-      vi.mocked(fs.readdirSync).mockReturnValue([]);
+      mocks.readdirSync.mockReturnValue(['some-file.txt']);
+      mocks.statSync.mockReturnValue({ isDirectory: () => true });
+      mocks.findMonorepoRoot.mockReturnValue(TestFixtures.paths.testMonorepo);
 
-      // Mock UserEnvironment to return monorepo root
-      mockFindMonorepoRoot.mockReturnValue('/test/monorepo');
-
-      const result = detectDirectoryType('/test/monorepo/subdir');
+      const result = detectDirectoryType(TestFixtures.paths.testSubdir);
 
       expect(result.type).toBe('elizaos-subdir');
       expect(result.hasPackageJson).toBe(false);
-      expect(result.monorepoRoot).toBe('/test/monorepo');
+      expect(result.monorepoRoot).toBe(TestFixtures.paths.testMonorepo);
     });
 
     it('should return non-elizaos-dir for regular project', () => {
-      const mockPackageJson = {
-        name: 'regular-project',
-        dependencies: {
-          express: '^4.0.0',
-        },
-      };
-
-      const dirPath = '/test/regular';
-      (fs.existsSync as any).mockImplementation((p: any) => {
-        const pStr = String(p);
-        // Only the directory and its package.json should exist
-        return pStr === dirPath || pStr === path.join(dirPath, 'package.json');
+      // Setup regular project mocking
+      mocks.existsSync.mockImplementation((filepath: any) => {
+        const pathStr = String(filepath);
+        return pathStr.includes('package.json');
       });
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockPackageJson));
-      vi.mocked(fs.readdirSync).mockReturnValue([]);
+      mocks.readFileSync.mockReturnValue(JSON.stringify(TestFixtures.packageJson.regularProject));
+      mocks.readdirSync.mockReturnValue([]);
+      mocks.statSync.mockReturnValue({ isDirectory: () => true });
+      mocks.findMonorepoRoot.mockReturnValue(null);
 
-      const result = detectDirectoryType(dirPath);
+      const result = detectDirectoryType(TestFixtures.paths.testRegular);
 
       expect(result.type).toBe('non-elizaos-dir');
       expect(result.hasElizaOSDependencies).toBe(false);
     });
 
     it('should handle missing directory', () => {
-      vi.mocked(fs.existsSync).mockReturnValue(false);
+      mocks.existsSync.mockReturnValue(false);
 
-      const result = detectDirectoryType('/test/missing');
+      const result = detectDirectoryType(TestFixtures.paths.testMissing);
 
       expect(result.type).toBe('non-elizaos-dir');
       expect(result.hasPackageJson).toBe(false);
     });
 
     it('should handle invalid JSON in package.json', () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readFileSync).mockReturnValue('invalid json');
-      vi.mocked(fs.readdirSync).mockReturnValue([]);
+      mocks.existsSync.mockReturnValue(true);
+      mocks.readFileSync.mockReturnValue('invalid json');
+      mocks.readdirSync.mockReturnValue([]);
+      mocks.findMonorepoRoot.mockReturnValue(null);
 
-      const result = detectDirectoryType('/test/invalid');
+      const result = detectDirectoryType(TestFixtures.paths.testInvalid);
 
       expect(result.type).toBe('non-elizaos-dir');
       expect(result.hasPackageJson).toBe(true);
     });
 
     it('should count multiple elizaos packages', () => {
-      const mockPackageJson = {
-        name: 'my-project',
-        dependencies: {
-          '@elizaos/core': '^1.0.0',
-          '@elizaos/cli': '^1.0.0',
-          '@elizaos/plugin-discord': '^1.0.0',
-        },
-      };
+      mocks.existsSync.mockReturnValue(true);
+      mocks.readFileSync.mockReturnValue(
+        JSON.stringify(TestFixtures.packageJson.multipleElizaDeps)
+      );
+      mocks.readdirSync.mockReturnValue([]);
+      mocks.findMonorepoRoot.mockReturnValue(null);
 
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockPackageJson));
-      vi.mocked(fs.readdirSync).mockReturnValue([]);
-
-      const result = detectDirectoryType('/test/path');
+      const result = detectDirectoryType(TestFixtures.paths.testPath);
 
       expect(result.elizaPackageCount).toBe(3);
       expect(result.hasElizaOSDependencies).toBe(true);
     });
 
     it('should detect plugin by keywords', () => {
-      const mockPackageJson = {
-        name: 'custom-plugin',
-        keywords: ['plugin', 'elizaos'],
-        dependencies: {
-          '@elizaos/core': '^1.0.0',
-        },
-      };
+      mocks.existsSync.mockReturnValue(true);
+      mocks.readFileSync.mockReturnValue(
+        JSON.stringify(TestFixtures.packageJson.elizaPluginByKeywords)
+      );
+      mocks.readdirSync.mockReturnValue([]);
+      mocks.findMonorepoRoot.mockReturnValue(null);
 
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockPackageJson));
-      vi.mocked(fs.readdirSync).mockReturnValue([]);
-
-      const result = detectDirectoryType('/test/plugin');
+      const result = detectDirectoryType(TestFixtures.paths.testPlugin);
 
       expect(result.type).toBe('elizaos-plugin');
     });
 
     it('should handle unreadable directory', () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      (fs.readdirSync as any).mockImplementation(() => {
+      mocks.existsSync.mockReturnValue(true);
+      mocks.readdirSync.mockImplementation(() => {
         throw new Error('Permission denied');
       });
 
-      const result = detectDirectoryType('/test/unreadable');
+      const result = detectDirectoryType(TestFixtures.paths.testUnreadable);
 
       expect(result.type).toBe('non-elizaos-dir');
       expect(result.hasPackageJson).toBe(false);
@@ -200,58 +294,23 @@ describe('directory-detection', () => {
 
   describe('isValidForUpdates', () => {
     it('should return true for elizaos-project', () => {
-      const info = {
-        type: 'elizaos-project' as const,
-        hasPackageJson: true,
-        hasElizaOSDependencies: true,
-        elizaPackageCount: 1,
-      };
-
-      expect(isValidForUpdates(info)).toBe(true);
+      expect(isValidForUpdates(TestFixtures.directoryInfo.elizaProject)).toBe(true);
     });
 
     it('should return true for elizaos-plugin', () => {
-      const info = {
-        type: 'elizaos-plugin' as const,
-        hasPackageJson: true,
-        hasElizaOSDependencies: true,
-        elizaPackageCount: 1,
-      };
-
-      expect(isValidForUpdates(info)).toBe(true);
+      expect(isValidForUpdates(TestFixtures.directoryInfo.elizaPlugin)).toBe(true);
     });
 
     it('should return true for elizaos-monorepo', () => {
-      const info = {
-        type: 'elizaos-monorepo' as const,
-        hasPackageJson: true,
-        hasElizaOSDependencies: false,
-        elizaPackageCount: 0,
-      };
-
-      expect(isValidForUpdates(info)).toBe(true);
+      expect(isValidForUpdates(TestFixtures.directoryInfo.elizaMonorepo)).toBe(true);
     });
 
     it('should return true for elizaos-subdir', () => {
-      const info = {
-        type: 'elizaos-subdir' as const,
-        hasPackageJson: false,
-        hasElizaOSDependencies: false,
-        elizaPackageCount: 0,
-      };
-
-      expect(isValidForUpdates(info)).toBe(true);
+      expect(isValidForUpdates(TestFixtures.directoryInfo.elizaSubdir)).toBe(true);
     });
 
     it('should return false for non-elizaos-dir', () => {
-      const info = {
-        type: 'non-elizaos-dir' as const,
-        hasPackageJson: true,
-        hasElizaOSDependencies: false,
-        elizaPackageCount: 0,
-      };
-
-      expect(isValidForUpdates(info)).toBe(false);
+      expect(isValidForUpdates(TestFixtures.directoryInfo.nonElizaDir)).toBe(false);
     });
   });
 });

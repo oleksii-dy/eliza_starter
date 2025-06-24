@@ -87,7 +87,7 @@ export default defineConfig(({ mode }): CustomUserConfig => {
     configResolved(config) {
       const originalWarnFn = config.logger.warn;
       config.logger.warn = (msg, options) => {
-        if (typeof msg !== 'string') return originalWarnFn(msg, options);
+        if (typeof msg !== 'string') {return originalWarnFn(msg, options);}
         if (msg.includes('has been externalized for browser compatibility')) {
           return;
         }

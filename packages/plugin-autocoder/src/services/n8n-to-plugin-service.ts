@@ -63,8 +63,7 @@ export interface PluginGenerationJob {
 
 export class N8nToPluginService extends Service {
   static serviceName = 'n8n-to-plugin';
-  capabilityDescription =
-    'Converts n8n workflows into ElizaOS plugin components with state management and caching';
+  capabilityDescription = 'Converts n8n workflows into ElizaOS plugin components with state management and caching';
 
   private jobs: Map<string, PluginGenerationJob> = new Map();
   private anthropic: Anthropic | null = null;
@@ -123,7 +122,7 @@ export class N8nToPluginService extends Service {
     this.jobs.set(jobId, job);
 
     // Start conversion process
-    this.processConversionJob(job).catch((error) => {
+    this.processConversionJob(job).catch(error => {
       elizaLogger.error('[N8nToPlugin] Failed to process conversion job:', error);
       job.status = 'failed';
       job.error = error instanceof Error ? error.message : String(error);
@@ -141,13 +140,12 @@ export class N8nToPluginService extends Service {
 
     for (const workflow of workflows) {
       // Analyze workflow characteristics
-      const hasWebhookTrigger = workflow.triggers?.some((t) => t.type.includes('webhook'));
-      const hasScheduleTrigger = workflow.triggers?.some(
-        (t) => t.type.includes('schedule') || t.type.includes('cron')
-      );
-      const hasDataFetching = workflow.nodes?.some(
-        (n) =>
-          n.type.includes('httpRequest') || n.type.includes('database') || n.type.includes('api')
+      const hasWebhookTrigger = workflow.triggers?.some(t => t.type.includes('webhook'));
+      const hasScheduleTrigger = workflow.triggers?.some(t => t.type.includes('schedule') || t.type.includes('cron'));
+      const hasDataFetching = workflow.nodes?.some(n =>
+        n.type.includes('httpRequest') ||
+        n.type.includes('database') ||
+        n.type.includes('api')
       );
       const isLongRunning = hasScheduleTrigger || (workflow.nodes?.length ?? 0) > 5;
 
@@ -159,7 +157,7 @@ export class N8nToPluginService extends Service {
           workflowName: workflow.name,
           componentType: 'action',
           componentName: this.generateComponentName(workflow.name, 'action'),
-          triggers: workflow.triggers?.map((t) => t.type),
+          triggers: workflow.triggers?.map(t => t.type),
           cacheConfig: {
             enabled: false, // Actions typically don't cache
           },
@@ -192,7 +190,7 @@ export class N8nToPluginService extends Service {
           workflowName: workflow.name,
           componentType: 'service',
           componentName: this.generateComponentName(workflow.name, 'service'),
-          triggers: workflow.triggers?.map((t) => t.type),
+          triggers: workflow.triggers?.map(t => t.type),
           cacheConfig: {
             enabled: true,
             ttl: 3600, // 1 hour for services
@@ -243,7 +241,7 @@ export class N8nToPluginService extends Service {
    */
   getCachedResult(key: string): any | null {
     const cached = this.resultCache.get(key);
-    if (!cached) return null;
+    if (!cached) {return null;}
 
     const now = Date.now();
     if (now - cached.timestamp > cached.ttl * 1000) {
@@ -290,7 +288,7 @@ export class N8nToPluginService extends Service {
       job.progress = 10;
       elizaLogger.info(`[N8nToPlugin] Analyzing workflows for job ${job.id}`);
 
-      job.mappings = job.spec.mappings || (await this.analyzeWorkflows(job.spec.workflows));
+      job.mappings = job.spec.mappings || await this.analyzeWorkflows(job.spec.workflows);
       job.progress = 20;
 
       // Step 2: Generate plugin code (60% progress)
@@ -308,8 +306,8 @@ export class N8nToPluginService extends Service {
 
       // Generate components based on mappings
       for (const mapping of job.mappings) {
-        const workflow = job.spec.workflows.find((w) => w.name === mapping.workflowName);
-        if (!workflow) continue;
+        const workflow = job.spec.workflows.find(w => w.name === mapping.workflowName);
+        if (!workflow) {continue;}
 
         switch (mapping.componentType) {
           case 'action':
@@ -340,7 +338,7 @@ export class N8nToPluginService extends Service {
             break;
         }
 
-        job.progress = 20 + (40 * (job.mappings.indexOf(mapping) + 1)) / job.mappings.length;
+        job.progress = 20 + (40 * (job.mappings.indexOf(mapping) + 1) / job.mappings.length);
       }
 
       // Generate index.ts
@@ -372,9 +370,7 @@ export class N8nToPluginService extends Service {
       job.progress = 100;
       job.completedAt = new Date();
 
-      elizaLogger.info(
-        `[N8nToPlugin] Plugin generation completed for job ${job.id}. Output: ${job.outputPath}`
-      );
+      elizaLogger.info(`[N8nToPlugin] Plugin generation completed for job ${job.id}. Output: ${job.outputPath}`);
     } catch (error) {
       job.status = 'failed';
       job.error = error instanceof Error ? error.message : String(error);
@@ -442,15 +438,11 @@ export const ${componentName}: Action = {
       // Get n8n service for workflow execution
       const n8nService = runtime.getService('n8n-to-plugin');
       
-      ${
-        mapping.stateManagement?.persistState
-          ? `
+      ${mapping.stateManagement?.persistState ? `
       // Load persisted state
       const stateKey = '${mapping.stateManagement.stateKey}';
       const persistedState = n8nService?.getWorkflowState(stateKey) || {};
-      `
-          : ''
-      }
+      ` : ''}
       
       // Extract parameters from message
       const params = {
@@ -460,14 +452,10 @@ export const ${componentName}: Action = {
       // Execute workflow logic
       ${await this.generateWorkflowExecutionLogic(workflow, mapping)}
       
-      ${
-        mapping.stateManagement?.persistState
-          ? `
+      ${mapping.stateManagement?.persistState ? `
       // Persist updated state
       n8nService?.setWorkflowState(stateKey, { ...persistedState, lastExecution: Date.now(), ...result });
-      `
-          : ''
-      }
+      ` : ''}
       
       // Send response
       if (callback) {
@@ -524,9 +512,7 @@ export const ${componentName}: Provider = {
       // Get n8n service for caching
       const n8nService = runtime.getService('n8n-to-plugin');
       
-      ${
-        mapping.cacheConfig?.enabled
-          ? `
+      ${mapping.cacheConfig?.enabled ? `
       // Check cache first
       const cacheKey = '${mapping.cacheConfig.key}';
       const cachedData = n8nService?.getCachedResult(cacheKey);
@@ -535,21 +521,15 @@ export const ${componentName}: Provider = {
         elizaLogger.info('[${componentName}] Returning cached data');
         return this.formatProviderData(cachedData);
       }
-      `
-          : ''
-      }
+      ` : ''}
       
       // Execute workflow to fetch data
       ${await this.generateDataFetchingLogic(workflow)}
       
-      ${
-        mapping.cacheConfig?.enabled
-          ? `
+      ${mapping.cacheConfig?.enabled ? `
       // Cache the result
       n8nService?.setCachedResult(cacheKey, data, ${mapping.cacheConfig.ttl || 300});
-      `
-          : ''
-      }
+      ` : ''}
       
       return this.formatProviderData(data);
       
@@ -574,7 +554,7 @@ export const ${componentName}: Provider = {
     mapping: N8nPluginMapping
   ): Promise<string> {
     const componentName = this.toPascalCase(mapping.componentName);
-    const hasSchedule = mapping.triggers?.some((t) => t.includes('schedule') || t.includes('cron'));
+    const hasSchedule = mapping.triggers?.some(t => t.includes('schedule') || t.includes('cron'));
 
     return `import type { Service, IAgentRuntime } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
@@ -592,50 +572,34 @@ export class ${componentName} extends Service {
   private interval?: NodeJS.Timeout;
   private isRunning: boolean = false;
   
-  ${
-    mapping.stateManagement?.persistState
-      ? `
+  ${mapping.stateManagement?.persistState ? `
   private stateKey = '${mapping.stateManagement.stateKey}';
   private state: any = {};
-  `
-      : ''
-  }
+  ` : ''}
   
-  ${
-    mapping.cacheConfig?.enabled
-      ? `
+  ${mapping.cacheConfig?.enabled ? `
   private cacheKey = '${mapping.cacheConfig.key}';
   private cacheTTL = ${mapping.cacheConfig.ttl || 3600};
-  `
-      : ''
-  }
+  ` : ''}
   
   async start(runtime: IAgentRuntime): Promise<void> {
     this.runtime = runtime;
     elizaLogger.info('[${componentName}] Service started');
     
-    ${
-      mapping.stateManagement?.persistState
-        ? `
+    ${mapping.stateManagement?.persistState ? `
     // Load persisted state
     const n8nService = runtime.getService('n8n-to-plugin');
     this.state = n8nService?.getWorkflowState(this.stateKey) || {};
-    `
-        : ''
-    }
+    ` : ''}
     
-    ${
-      hasSchedule
-        ? `
+    ${hasSchedule ? `
     // Start scheduled execution
     this.startScheduledExecution();
-    `
-        : `
+    ` : `
     // Start service loop
     this.isRunning = true;
     this.runServiceLoop();
-    `
-    }
+    `}
   }
   
   async stop(): Promise<void> {
@@ -643,31 +607,21 @@ export class ${componentName} extends Service {
     
     this.isRunning = false;
     
-    ${
-      hasSchedule
-        ? `
+    ${hasSchedule ? `
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = undefined;
     }
-    `
-        : ''
-    }
+    ` : ''}
     
-    ${
-      mapping.stateManagement?.persistState
-        ? `
+    ${mapping.stateManagement?.persistState ? `
     // Save state before stopping
     const n8nService = this.runtime.getService('n8n-to-plugin');
     n8nService?.setWorkflowState(this.stateKey, this.state);
-    `
-        : ''
-    }
+    ` : ''}
   }
   
-  ${
-    hasSchedule
-      ? `
+  ${hasSchedule ? `
   private startScheduledExecution(): void {
     // Execute based on schedule trigger configuration
     const scheduleInterval = ${this.extractScheduleInterval(workflow)} * 1000; // Convert to ms
@@ -679,8 +633,7 @@ export class ${componentName} extends Service {
     // Execute immediately on start
     this.executeWorkflow();
   }
-  `
-      : `
+  ` : `
   private async runServiceLoop(): Promise<void> {
     while (this.isRunning) {
       try {
@@ -694,16 +647,13 @@ export class ${componentName} extends Service {
       }
     }
   }
-  `
-  }
+  `}
   
   private async executeWorkflow(): Promise<void> {
     try {
       elizaLogger.info('[${componentName}] Executing workflow');
       
-      ${
-        mapping.cacheConfig?.enabled
-          ? `
+      ${mapping.cacheConfig?.enabled ? `
       // Check if we should use cached results
       const n8nService = this.runtime.getService('n8n-to-plugin');
       const cachedResult = n8nService?.getCachedResult(this.cacheKey);
@@ -712,48 +662,34 @@ export class ${componentName} extends Service {
         elizaLogger.info('[${componentName}] Using cached workflow result');
         return;
       }
-      `
-          : ''
-      }
+      ` : ''}
       
       // Execute workflow logic
       ${await this.generateServiceExecutionLogic(workflow, mapping)}
       
-      ${
-        mapping.cacheConfig?.enabled
-          ? `
+      ${mapping.cacheConfig?.enabled ? `
       // Cache the result
       n8nService?.setCachedResult(this.cacheKey, result, this.cacheTTL);
-      `
-          : ''
-      }
+      ` : ''}
       
-      ${
-        mapping.stateManagement?.persistState
-          ? `
+      ${mapping.stateManagement?.persistState ? `
       // Update state
       this.state = { ...this.state, lastExecution: Date.now(), ...result };
       n8nService?.setWorkflowState(this.stateKey, this.state);
-      `
-          : ''
-      }
+      ` : ''}
       
     } catch (error) {
       elizaLogger.error('[${componentName}] Workflow execution error:', error);
     }
   }
   
-  ${
-    mapping.cacheConfig?.enabled
-      ? `
+  ${mapping.cacheConfig?.enabled ? `
   private shouldRefreshCache(): boolean {
     // Add logic to determine if cache should be refreshed
     // For example, based on certain conditions or time
     return false;
   }
-  `
-      : ''
-  }
+  ` : ''}
   
   // Public methods for external access
   public getState(): any {
@@ -777,28 +713,28 @@ export default ${componentName};`;
   private toPascalCase(str: string): string {
     return str
       .split('-')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join('');
   }
 
   private generateSimiles(name: string, description: string): string {
     const words = [...name.split(/[\s-_]+/), ...description.split(/\s+/)];
     const similes = words
-      .filter((w) => w.length > 3)
+      .filter(w => w.length > 3)
       .slice(0, 5)
-      .map((w) => `'${w.toLowerCase()}'`);
+      .map(w => `'${w.toLowerCase()}'`);
 
     return similes.join(',\n    ');
   }
 
   private async generateValidationLogic(workflow: N8nWorkflowSpecification): Promise<string> {
     // Generate validation based on workflow requirements
-    return `// TODO: Add validation logic based on workflow requirements`;
+    return '// TODO: Add validation logic based on workflow requirements';
   }
 
   private generateParameterExtraction(workflow: N8nWorkflowSpecification): string {
     // Extract parameters from workflow nodes
-    return `// TODO: Extract parameters from message`;
+    return '// TODO: Extract parameters from message';
   }
 
   private async generateWorkflowExecutionLogic(
@@ -806,7 +742,7 @@ export default ${componentName};`;
     mapping: N8nPluginMapping
   ): Promise<string> {
     // Generate execution logic based on workflow
-    return `const result = { success: true, message: 'Workflow executed' };`;
+    return 'const result = { success: true, message: \'Workflow executed\' };';
   }
 
   private async generateActionExamples(workflow: N8nWorkflowSpecification): Promise<string> {
@@ -819,11 +755,11 @@ export default ${componentName};`;
   }
 
   private async generateDataFetchingLogic(workflow: N8nWorkflowSpecification): Promise<string> {
-    return `const data = { /* fetched data */ };`;
+    return 'const data = { /* fetched data */ };';
   }
 
   private generateDataFormattingLogic(workflow: N8nWorkflowSpecification): string {
-    return `return JSON.stringify(data, null, 2);`;
+    return 'return JSON.stringify(data, null, 2);';
   }
 
   private extractScheduleInterval(workflow: N8nWorkflowSpecification): number {
@@ -835,7 +771,7 @@ export default ${componentName};`;
     workflow: N8nWorkflowSpecification,
     mapping: N8nPluginMapping
   ): Promise<string> {
-    return `const result = { /* service execution result */ };`;
+    return 'const result = { /* service execution result */ };';
   }
 
   /**
@@ -875,18 +811,12 @@ export const plugin: Plugin = {
   description: '${job.spec.description}',
   actions: [
     ${Array.from(job.generatedCode!.actions.keys()).map(n => this.toPascalCase(n)).join(',\n    ')}
-      .map((n) => this.toPascalCase(n))
-      .join(',\n    ')}
   ],
   providers: [
     ${Array.from(job.generatedCode!.providers.keys()).map(n => this.toPascalCase(n)).join(',\n    ')}
-      .map((n) => this.toPascalCase(n))
-      .join(',\n    ')}
   ],
   services: [
     ${Array.from(job.generatedCode!.services.keys()).map(n => this.toPascalCase(n)).join(',\n    ')}
-      .map((n) => this.toPascalCase(n))
-      .join(',\n    ')}
   ],
 };
 
@@ -902,32 +832,27 @@ ${exports.join('\n')}
    * Generate package.json for the plugin
    */
   private async generatePackageJson(spec: PluginGenerationSpec): Promise<string> {
-    return JSON.stringify(
-      {
-        name: spec.name,
-        version: '0.1.0',
-        description: spec.description,
-        type: 'module',
-        main: 'dist/index.js',
-        types: 'dist/index.d.ts',
-        scripts: {
-          build: 'tsc',
-          test: 'vitest',
-          lint: 'eslint src',
-        },
-        dependencies: {
-          '@elizaos/core': '^0.1.0',
-        },
-        devDependencies: {
-          '@types/node': '^20.0.0',
-          typescript: '^5.0.0',
-          vitest: '^1.0.0',
-          eslint: '^8.0.0',
-        },
+    return JSON.stringify({
+      name: spec.name,
+      version: '0.1.0',
+      description: spec.description,
+      type: 'module',
+      main: 'dist/index.js',
+      types: 'dist/index.d.ts',
+      scripts: {
+        build: 'tsc',
+        test: 'bun test',
+        lint: 'eslint src',
       },
-      null,
-      2
-    );
+      dependencies: {
+        '@elizaos/core': '^0.1.0',
+      },
+      devDependencies: {
+        '@types/node': '^20.0.0',
+        'typescript': '^5.0.0',
+        'eslint': '^8.0.0',
+      },
+    }, null, 2);
   }
 
   /**
@@ -1019,7 +944,7 @@ Add this plugin to your ElizaOS agent configuration.
    * Test generated plugin
    */
   private async testGeneratedPlugin(job: PluginGenerationJob): Promise<void> {
-    if (!job.outputPath) return;
+    if (!job.outputPath) {return;}
 
     try {
       // Run npm install
@@ -1045,7 +970,7 @@ Add this plugin to your ElizaOS agent configuration.
     workflow: N8nWorkflowSpecification,
     mapping: N8nPluginMapping
   ): Promise<string> {
-    return `import { describe, it, expect, vi } from 'vitest';
+    return `import { describe, it, expect, mock  } from 'bun:test';
 import { ${this.toPascalCase(mapping.componentName)} } from '../actions/${mapping.componentName}';
 
 describe('${mapping.componentName}', () => {
@@ -1060,7 +985,7 @@ describe('${mapping.componentName}', () => {
   it('should execute handler successfully', async () => {
     const mockRuntime = { /* mock runtime */ };
     const mockMessage = { /* mock message */ };
-    const mockCallback = vi.fn();
+    const mockCallback = mock();
     
     await ${this.toPascalCase(mapping.componentName)}.handler(mockRuntime, mockMessage, {}, {}, mockCallback);
     
@@ -1073,7 +998,7 @@ describe('${mapping.componentName}', () => {
     workflow: N8nWorkflowSpecification,
     mapping: N8nPluginMapping
   ): Promise<string> {
-    return `import { describe, it, expect } from 'vitest';
+    return `import { describe, it, expect  } from 'bun:test';
 import { ${this.toPascalCase(mapping.componentName)} } from '../providers/${mapping.componentName}';
 
 describe('${mapping.componentName}', () => {
@@ -1092,7 +1017,7 @@ describe('${mapping.componentName}', () => {
     workflow: N8nWorkflowSpecification,
     mapping: N8nPluginMapping
   ): Promise<string> {
-    return `import { describe, it, expect } from 'vitest';
+    return `import { describe, it, expect  } from 'bun:test';
 import ${this.toPascalCase(mapping.componentName)} from '../services/${mapping.componentName}';
 
 describe('${mapping.componentName}', () => {

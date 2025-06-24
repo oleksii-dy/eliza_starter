@@ -90,7 +90,7 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
         const initialCwd = shellService.getCurrentWorkingDirectory();
 
         // Create a test directory structure
-        const testDir = path.join(initialCwd, 'shell-test-' + Date.now());
+        const testDir = path.join(initialCwd, `shell-test-${Date.now()}`);
         const subDir1 = path.join(testDir, 'subdir1');
         const subDir2 = path.join(testDir, 'subdir2');
 
@@ -174,14 +174,9 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
           createdAt: Date.now(),
         };
 
-        let response: any = null;
-        await runShellCommandAction.handler(runtime, getEnvMessage, state, {}, async (resp) => {
-          response = resp;
+        await runShellCommandAction.handler(runtime, getEnvMessage, state, {}, async (_resp) => {
           return [];
         });
-
-        const attachment = response.attachments[0];
-        const outputData = JSON.parse(attachment.text);
 
         // Note: Environment variables set via export in a child process
         // won't persist in the parent. This is a limitation of using execSync.
@@ -202,7 +197,7 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
         }
 
         const initialCwd = shellService.getCurrentWorkingDirectory();
-        const testDir = path.join(initialCwd, 'shell-file-test-' + Date.now());
+        const testDir = path.join(initialCwd, `shell-file-test-${Date.now()}`);
         const roomId = createUniqueUuid(runtime, 'test-room');
         const state: State = { values: {}, data: {}, text: '' };
 

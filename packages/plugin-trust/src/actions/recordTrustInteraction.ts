@@ -1,5 +1,6 @@
 import {
   type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type UUID,
@@ -11,14 +12,14 @@ import { TrustEvidenceType, type TrustInteraction } from '../types/trust';
 
 export const recordTrustInteractionAction: Action = {
   name: 'RECORD_TRUST_INTERACTION',
-  description: 'Records a trust-affecting interaction between entities',
+  description: 'Records a trust-affecting interaction between entities. Logs behaviors that impact trust scores including promises kept, helpful contributions, or negative actions. Can be chained with EVALUATE_TRUST to check updated trust levels or REQUEST_ELEVATION to verify permission changes.',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
     const trustEngine = runtime.getService('trust-engine');
     return !!trustEngine;
   },
 
-  handler: async (runtime: IAgentRuntime, message: Memory) => {
+  handler: async (runtime: IAgentRuntime, message: Memory): Promise<ActionResult> => {
     const trustEngine = runtime.getService('trust-engine') as any;
 
     if (!trustEngine) {
@@ -39,7 +40,13 @@ export const recordTrustInteractionAction: Action = {
     if (!parsedContent || !parsedContent.type) {
       return {
         text: 'Could not parse trust interaction details. Please provide type and optionally: targetEntityId, impact, description',
-        error: true,
+        data: {
+          actionName: 'RECORD_TRUST_INTERACTION',
+          error: 'Missing or invalid interaction type',
+        },
+        values: {
+          success: false,
+        },
       };
     }
 
@@ -52,12 +59,20 @@ export const recordTrustInteractionAction: Action = {
     const validTypes = Object.values(TrustEvidenceType);
     const normalizedType = evidenceType?.toUpperCase();
     const matchedType = validTypes.find(type => type.toUpperCase() === normalizedType);
-    
+
     if (!matchedType) {
       logger.error('[RecordTrustInteraction] Invalid evidence type:', evidenceType);
       return {
         text: `Invalid interaction type. Valid types are: ${validTypes.join(', ')}`,
-        error: true,
+        data: {
+          actionName: 'RECORD_TRUST_INTERACTION',
+          error: 'Invalid evidence type',
+          providedType: evidenceType,
+          validTypes,
+        },
+        values: {
+          success: false,
+        },
       };
     }
 
@@ -97,49 +112,99 @@ export const recordTrustInteractionAction: Action = {
       return {
         text: `Trust interaction recorded: ${matchedType} with impact ${interaction.impact > 0 ? '+' : ''}${interaction.impact}`,
         data: {
+          actionName: 'RECORD_TRUST_INTERACTION',
           interaction,
+          interactionType: matchedType,
+          impact: interaction.impact,
+        },
+        values: {
           success: true,
+          interactionType: matchedType,
+          impact: interaction.impact,
+          targetEntityId: interaction.targetEntityId,
         },
       };
     } catch (error) {
       logger.error('[RecordTrustInteraction] Error recording interaction:', error);
       return {
         text: 'Failed to record trust interaction. Please try again.',
-        error: true,
+        data: {
+          actionName: 'RECORD_TRUST_INTERACTION',
+          error: error instanceof Error ? error.message : String(error),
+        },
+        values: {
+          success: false,
+        },
       };
     }
   },
 
   examples: [
+    // Multi-action: Record interaction then evaluate trust
     [
       {
-        name: 'User',
+        name: '{{user}}',
+        content: {
+          text: 'Record that Alice helped with the project and show her updated trust score',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll record Alice's helpful contribution and then show her updated trust profile.",
+          thought: 'User wants to log positive interaction and see trust impact',
+          actions: ['RECORD_TRUST_INTERACTION', 'EVALUATE_TRUST'],
+        },
+      },
+    ],
+    // Multi-action: Record negative behavior then check elevation eligibility
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Log that Bob was spamming and check if he can still get admin permissions',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll record Bob's spam behavior and then check his permission eligibility.",
+          thought: 'User wants to log negative behavior and verify permission impact',
+          actions: ['RECORD_TRUST_INTERACTION', 'REQUEST_ELEVATION'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
         content: {
           text: 'Record that Alice kept their promise to help with the project',
         },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: 'Trust interaction recorded: PROMISE_KEPT with impact +15',
+          actions: ['RECORD_TRUST_INTERACTION'],
         },
       },
     ],
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'Log suspicious behavior from Bob who is spamming the channel',
         },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: 'Trust interaction recorded: SPAM_BEHAVIOR with impact -10',
+          actions: ['RECORD_TRUST_INTERACTION'],
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 
   similes: [
     'record trust event',

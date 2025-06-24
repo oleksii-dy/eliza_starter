@@ -30,7 +30,7 @@ export const DEEPRESEARCH_BENCH: BenchmarkConfig = {
       id: 'biology_crispr_ethics',
       query: 'Examine the ethical frameworks for human germline editing using CRISPR technology and emerging international regulatory approaches',
       domain: 'biology',
-      depth: 'phd_level', 
+      depth: 'phd_level',
       expectedSources: 25,
       maxDurationMs: 600000,
       description: 'Comprehensive analysis of CRISPR ethics and international regulation'

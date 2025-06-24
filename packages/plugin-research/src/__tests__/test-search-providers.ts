@@ -6,7 +6,7 @@
 import { PyPISearchProvider } from '../integrations/search-providers/pypi';
 import { NPMSearchProvider } from '../integrations/search-providers/npm';
 import { createSearchProvider } from '../integrations/factory';
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 
 // Mock runtime for GitHub search
 const mockRuntime = {
@@ -65,11 +65,11 @@ const mockRuntime = {
 async function testPyPISearch() {
   console.log('\n🐍 Testing PyPI Search Provider...');
   const provider = new PyPISearchProvider();
-  
+
   try {
     const results = await provider.search('machine learning', 5);
     console.log(`✅ Found ${results.length} PyPI packages`);
-    
+
     if (results.length > 0) {
       const first = results[0];
       console.log(`📦 Example: ${first.title}`);
@@ -86,11 +86,11 @@ async function testPyPISearch() {
 async function testNPMSearch() {
   console.log('\n📦 Testing NPM Search Provider...');
   const provider = new NPMSearchProvider();
-  
+
   try {
     const results = await provider.search('typescript', 5);
     console.log(`✅ Found ${results.length} NPM packages`);
-    
+
     if (results.length > 0) {
       const first = results[0];
       console.log(`📦 Example: ${first.title}`);
@@ -107,12 +107,12 @@ async function testNPMSearch() {
 
 async function testGitHubSearch() {
   console.log('\n🐙 Testing GitHub Search Provider...');
-  
+
   try {
     const provider = createSearchProvider('github', mockRuntime);
     const results = await provider.search('typescript compiler', 5);
     console.log(`✅ Found ${results.length} GitHub results`);
-    
+
     if (results.length > 0) {
       const first = results[0];
       console.log(`📦 Example: ${first.title}`);
@@ -131,7 +131,7 @@ async function testGitHubSearch() {
 
 async function testPackageSpecificSearches() {
   console.log('\n🔎 Testing Package-Specific Searches...');
-  
+
   // Test PyPI specific package
   try {
     const pypiProvider = new PyPISearchProvider();
@@ -142,7 +142,7 @@ async function testPackageSpecificSearches() {
   } catch (error) {
     console.log(`⚠️  PyPI specific package test failed: ${error instanceof Error ? error.message : String(error)}`);
   }
-  
+
   // Test NPM specific package
   try {
     const npmProvider = new NPMSearchProvider();
@@ -157,12 +157,12 @@ async function testPackageSpecificSearches() {
 
 async function main() {
   console.log('🧪 Testing ElizaOS Research Plugin - Search Provider Integration\n');
-  
+
   await testPyPISearch();
   await testNPMSearch();
   await testGitHubSearch();
   await testPackageSpecificSearches();
-  
+
   console.log('\n✅ Search provider tests completed!');
   console.log('\n💡 These providers are now integrated into the research service');
   console.log('   and will be automatically selected based on research domain and query keywords.');

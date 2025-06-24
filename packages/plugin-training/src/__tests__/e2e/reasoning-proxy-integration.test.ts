@@ -5,7 +5,7 @@
  * actual ElizaOS runtime instances and correctly handles fallback scenarios.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { ReasoningProxyService } from '../../services/reasoning-proxy';
 import type { IAgentRuntime, Memory, UUID } from '@elizaos/core';
 

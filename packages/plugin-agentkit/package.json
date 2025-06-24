@@ -12,22 +12,25 @@
     "tsup": "8.3.5"
   },
   "devDependencies": {
-    "vitest": "^3.0.0",
-    "@types/node": "^20.0.0",
     "@types/cypress": "^1.1.0",
-    "cypress": "^13.0.0"
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
+    "cypress": "^13.0.0",
+    "eslint": "^9.22.0",
+    "prettier": "3.5.3"
   },
   "scripts": {
-    "build": "tsup --format esm --dts",
+    "build": "bun run typecheck && tsup --format esm --dts",
     "dev": "tsup --format esm --dts --watch",
-    "test": "elizaos test",
-    "test:watch": "vitest watch",
-    "test:e2e": "elizaos test",
-    "test:coverage": "vitest run --coverage",
-    "lint": "biome lint .",
-    "lint:fix": "biome check --apply .",
-    "format": "biome format .",
-    "format:fix": "biome format --write ."
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:e2e": "bun test src/__tests__/e2e",
+    "test:coverage": "bun test --coverage",
+    "lint": "eslint src --fix && prettier --write .",
+    "lint:check": "eslint src && prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write ."
   },
   "publishConfig": {
     "access": "public"

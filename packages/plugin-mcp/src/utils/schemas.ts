@@ -1,22 +1,22 @@
 export const toolSelectionNameSchema = {
-  type: "object",
-  required: ["serverName", "toolName"],
+  type: 'object',
+  required: ['serverName', 'toolName'],
   properties: {
     serverName: {
-      type: "string",
+      type: 'string',
       minLength: 1,
-      errorMessage: "serverName must not be empty",
+      errorMessage: 'serverName must not be empty',
     },
     toolName: {
-      type: "string",
+      type: 'string',
       minLength: 1,
-      errorMessage: "toolName must not be empty",
+      errorMessage: 'toolName must not be empty',
     },
     reasoning: {
-      type: "string",
+      type: 'string',
     },
     noToolAvailable: {
-      type: "boolean",
+      type: 'boolean',
     },
   },
 };
@@ -29,11 +29,11 @@ export interface ToolSelectionName {
 }
 
 export const toolSelectionArgumentSchema = {
-  type: "object",
-  required: ["toolArguments"],
+  type: 'object',
+  required: ['toolArguments'],
   properties: {
     toolArguments: {
-      type: "object",
+      type: 'object',
     },
   },
 };
@@ -43,24 +43,24 @@ export interface ToolSelectionArgument {
 }
 
 export const ResourceSelectionSchema = {
-  type: "object",
-  required: ["serverName", "uri"],
+  type: 'object',
+  required: ['serverName', 'uri'],
   properties: {
     serverName: {
-      type: "string",
+      type: 'string',
       minLength: 1,
-      errorMessage: "serverName must not be empty",
+      errorMessage: 'serverName must not be empty',
     },
     uri: {
-      type: "string",
+      type: 'string',
       minLength: 1,
-      errorMessage: "uri must not be empty",
+      errorMessage: 'uri must not be empty',
     },
     reasoning: {
-      type: "string",
+      type: 'string',
     },
     noResourceAvailable: {
-      type: "boolean",
+      type: 'boolean',
     },
   },
 };

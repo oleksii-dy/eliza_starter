@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll } from 'bun:test';
 import { PluginManagerService } from '../../services/pluginManagerService.ts';
 import type { IAgentRuntime } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
@@ -29,7 +29,7 @@ describe('Registry Known Plugins Validation', () => {
       elizaLogger.info(
         `[Registry Test] Loaded ${Object.keys(registryData).length} plugins from registry`
       );
-    } catch (error) {
+    } catch (_error) {
       elizaLogger.error('[Registry Test] Failed to load registry:', error);
     }
   });
@@ -43,7 +43,7 @@ describe('Registry Known Plugins Validation', () => {
 
     it('should have core plugins in registry', () => {
       for (const pluginName of corePlugins) {
-        const exists = registryData.hasOwnProperty(pluginName);
+        const exists = Object.prototype.hasOwnProperty.call(registryData, pluginName);
         if (!exists) {
           elizaLogger.warn(`[Registry Test] Core plugin "${pluginName}" not found in registry`);
         }
@@ -168,7 +168,7 @@ describe('Registry Known Plugins Validation', () => {
             `[Registry Test] ${category} category: ${pluginsInCategory.length} plugins`
           );
           elizaLogger.info(
-            `[Registry Test] Examples:`,
+            '[Registry Test] Examples:',
             pluginsInCategory.slice(0, 3).map(([name]) => name)
           );
         }

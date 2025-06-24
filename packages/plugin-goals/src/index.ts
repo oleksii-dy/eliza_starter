@@ -19,6 +19,9 @@ import { GoalDataServiceWrapper } from './services/goalDataService.js';
 // Import schema
 import { goalSchema } from './schema.js';
 
+// Import table schemas for registration
+import { GOALS_TABLES } from './database/tables';
+
 // Import tests
 import { GoalsPluginE2ETestSuite } from './tests';
 
@@ -45,6 +48,18 @@ export const GoalsPlugin: Plugin = {
 
   async init(config: Record<string, string>, runtime: IAgentRuntime): Promise<void> {
     try {
+      logger.info('[Goals Plugin] Initializing...');
+
+      // Register goals tables with the unified migrator
+      try {
+        const { schemaRegistry } = await import('@elizaos/plugin-sql');
+        schemaRegistry.registerTables(GOALS_TABLES);
+        logger.info('[Goals Plugin] Registered goals database tables');
+      } catch (error) {
+        logger.error('[Goals Plugin] Failed to register goals tables:', error);
+        throw error;
+      }
+
       // Database migrations are handled by the SQL plugin
       if (runtime.db) {
         logger.info('Database available, GoalsPlugin ready for operation');

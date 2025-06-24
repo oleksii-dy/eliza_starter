@@ -16,17 +16,17 @@ export class OpenAIMcpCompatibility extends McpToolCompatibility {
 
   protected getUnsupportedStringProperties(): string[] {
     const baseUnsupported = ['format']; // OpenAI models often reject format constraints
-    
+
     // Reasoning models (o1, o3) have additional limitations
     if (this.modelInfo.isReasoningModel === true) {
       return [...baseUnsupported, 'pattern'];
     }
-    
+
     // Some older OpenAI models don't handle regex patterns well
     if (this.modelInfo.modelId.includes('gpt-3.5') || this.modelInfo.modelId.includes('davinci')) {
       return [...baseUnsupported, 'pattern'];
     }
-    
+
     return baseUnsupported;
   }
 
@@ -35,7 +35,7 @@ export class OpenAIMcpCompatibility extends McpToolCompatibility {
     if (this.modelInfo.isReasoningModel === true) {
       return ['exclusiveMinimum', 'exclusiveMaximum', 'multipleOf'];
     }
-    
+
     // Regular OpenAI models generally handle number constraints well
     return [];
   }
@@ -45,7 +45,7 @@ export class OpenAIMcpCompatibility extends McpToolCompatibility {
     if (this.modelInfo.isReasoningModel === true) {
       return ['uniqueItems']; // Reasoning models may ignore uniqueItems
     }
-    
+
     return [];
   }
 
@@ -61,10 +61,7 @@ export class OpenAIReasoningMcpCompatibility extends McpToolCompatibility {
   }
 
   shouldApply(): boolean {
-    return (
-      this.modelInfo.provider === 'openai' &&
-      this.modelInfo.isReasoningModel === true
-    );
+    return this.modelInfo.provider === 'openai' && this.modelInfo.isReasoningModel === true;
   }
 
   protected getUnsupportedStringProperties(): string[] {
@@ -98,7 +95,7 @@ export class OpenAIReasoningMcpCompatibility extends McpToolCompatibility {
 
   private formatConstraintsForReasoningModel(constraints: any): string {
     const rules: string[] = [];
-    
+
     if (constraints.minLength) {
       rules.push(`minimum ${constraints.minLength} characters`);
     }
@@ -112,13 +109,13 @@ export class OpenAIReasoningMcpCompatibility extends McpToolCompatibility {
       rules.push(`must be <= ${constraints.maximum}`);
     }
     if (constraints.format === 'email') {
-      rules.push(`must be a valid email address`);
+      rules.push('must be a valid email address');
     }
     if (constraints.format === 'uri' || constraints.format === 'url') {
-      rules.push(`must be a valid URL`);
+      rules.push('must be a valid URL');
     }
     if (constraints.format === 'uuid') {
-      rules.push(`must be a valid UUID`);
+      rules.push('must be a valid UUID');
     }
     if (constraints.pattern) {
       rules.push(`must match pattern: ${constraints.pattern}`);
@@ -132,7 +129,7 @@ export class OpenAIReasoningMcpCompatibility extends McpToolCompatibility {
     if (constraints.maxItems) {
       rules.push(`array must have at most ${constraints.maxItems} items`);
     }
-    
+
     return rules.length > 0 ? rules.join(', ') : JSON.stringify(constraints);
   }
-} 
+}

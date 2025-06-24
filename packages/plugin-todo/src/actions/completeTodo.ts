@@ -1,8 +1,8 @@
 import {
   type Action,
   type ActionExample,
+  type ActionResult,
   composePrompt,
-  createUniqueUuid,
   type HandlerCallback,
   type IAgentRuntime,
   logger,
@@ -10,7 +10,6 @@ import {
   ModelType,
   parseKeyValueXml,
   type State,
-  type UUID,
   formatMessages,
 } from '@elizaos/core';
 import { createTodoDataService, type TodoData } from '../services/todoDataService';
@@ -67,7 +66,7 @@ async function extractTaskCompletion(
       state: {
         text: message.content.text || '',
         availableTasks: tasksText,
-        messageHistory: messageHistory,
+        messageHistory,
       },
       template: extractCompletionTemplate,
     });
@@ -105,7 +104,7 @@ async function extractTaskCompletion(
 export const completeTodoAction: Action = {
   name: 'COMPLETE_TODO',
   similes: ['MARK_COMPLETE', 'FINISH_TASK', 'DONE', 'TASK_DONE', 'TASK_COMPLETED'],
-  description: 'Marks a todo item as completed.',
+  description: 'Marks a todo item as completed. Matches task by name from user message. Updates task status and completion metadata. Returns completed task details including ID, name, and type. Can be chained with LIST_TODOS or CREATE_TODO for workflow continuation.',
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     // Only validate if there are active (non-completed) todos in the current room
@@ -131,7 +130,7 @@ export const completeTodoAction: Action = {
     state: State | undefined,
     options: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     try {
       if (!state) {
         if (callback) {
@@ -141,7 +140,15 @@ export const completeTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'COMPLETE_TODO',
+            error: 'Missing state context',
+          },
+          values: {
+            success: false,
+          },
+        };
       }
       if (!message.roomId || !message.entityId) {
         if (callback) {
@@ -151,14 +158,22 @@ export const completeTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'COMPLETE_TODO',
+            error: 'Missing room or entity context',
+          },
+          values: {
+            success: false,
+          },
+        };
       }
       const roomId = message.roomId;
       const dataService = createTodoDataService(runtime);
 
       // Get all incomplete todos for this room
       const availableTodos = await dataService.getTodos({
-        roomId: roomId,
+        roomId,
         isCompleted: false,
       });
 
@@ -170,7 +185,16 @@ export const completeTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'COMPLETE_TODO',
+            error: 'No incomplete tasks found',
+          },
+          values: {
+            success: false,
+            hasActiveTasks: false,
+          },
+        };
       }
 
       // Extract which task the user wants to complete
@@ -182,13 +206,22 @@ export const completeTodoAction: Action = {
         if (callback) {
           await callback({
             text:
-              "I couldn't determine which task you're marking as completed. Could you be more specific? Here are your current tasks:\n\n" +
-              availableTodos.map((task) => `- ${task.name}`).join('\n'),
+              `I couldn't determine which task you're marking as completed. Could you be more specific? Here are your current tasks:\n\n${
+                availableTodos.map((task) => `- ${task.name}`).join('\n')}`,
             actions: ['COMPLETE_TODO_NOT_FOUND'],
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'COMPLETE_TODO',
+            error: 'Could not identify which task to complete',
+          },
+          values: {
+            success: false,
+            availableTaskCount: availableTodos.length,
+          },
+        };
       }
 
       // Find the task in the available tasks
@@ -202,7 +235,16 @@ export const completeTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'COMPLETE_TODO',
+            error: `Task not found: ${taskCompletion.taskName}`,
+            searchedTaskId: taskCompletion.taskId,
+          },
+          values: {
+            success: false,
+          },
+        };
       }
 
       // Mark the task as completed
@@ -239,6 +281,22 @@ export const completeTodoAction: Action = {
           source: message.content.source,
         });
       }
+
+      return {
+        data: {
+          actionName: 'COMPLETE_TODO',
+          taskId: task.id,
+          taskName: task.name,
+          taskType: task.type,
+          completedAt: new Date().toISOString(),
+        },
+        values: {
+          success: true,
+          taskId: task.id,
+          taskName: task.name,
+          taskType: task.type,
+        },
+      };
     } catch (error) {
       logger.error('Error in completeTodo handler:', error);
       if (callback) {
@@ -248,6 +306,15 @@ export const completeTodoAction: Action = {
           source: message.content.source,
         });
       }
+      return {
+        data: {
+          actionName: 'COMPLETE_TODO',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        values: {
+          success: false,
+        },
+      };
     }
   },
 

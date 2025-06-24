@@ -20,21 +20,21 @@ export interface BenchmarkConfig {
   character: Character;
   plugins: Plugin[];
   enabledProviders?: string[];
-  
+
   // Test data paths
   realmBenchPath?: string;
   apiBankPath?: string;
-  
+
   // Benchmark options
   runRealmBench: boolean;
   runApiBank: boolean;
   maxTestsPerCategory?: number;
   timeoutMs?: number;
-  
+
   // Output configuration
   outputDir: string;
   saveDetailedLogs: boolean;
-  
+
   // Performance monitoring
   enableMetrics: boolean;
   enableMemoryTracking: boolean;
@@ -49,10 +49,10 @@ export interface BenchmarkResults {
     duration: number;
     configuration: Partial<BenchmarkConfig>;
   };
-  
+
   realmBenchResults?: RealmBenchReport;
   apiBankResults?: ApiBankReport;
-  
+
   overallMetrics: {
     totalTests: number;
     totalPassed: number;
@@ -64,7 +64,7 @@ export interface BenchmarkResults {
       average: number;
     };
   };
-  
+
   comparison: {
     planningVsBaseline: {
       improvementRate: number;
@@ -76,7 +76,7 @@ export interface BenchmarkResults {
       recommendations: string[];
     };
   };
-  
+
   summary: {
     status: 'success' | 'partial' | 'failed';
     keyFindings: string[];
@@ -148,7 +148,7 @@ export class BenchmarkRunner {
       await this.saveResults(finalResults);
 
       logger.info(
-        `[BenchmarkRunner] Benchmarks completed successfully: ` +
+        '[BenchmarkRunner] Benchmarks completed successfully: ' +
         `${finalResults.overallMetrics.totalPassed}/${finalResults.overallMetrics.totalTests} passed ` +
         `(${(finalResults.overallMetrics.overallSuccessRate * 100).toFixed(1)}%)`
       );
@@ -199,7 +199,7 @@ export class BenchmarkRunner {
         const missingProviders = this.config.enabledProviders.filter(
           name => !availableProviders.includes(name)
         );
-        
+
         if (missingProviders.length > 0) {
           logger.warn(`[BenchmarkRunner] Missing providers: ${missingProviders.join(', ')}`);
         }
@@ -224,10 +224,10 @@ export class BenchmarkRunner {
     }
 
     const adapter = new RealmBenchAdapter(this.runtime);
-    
+
     // Load test cases
     await adapter.loadTestCases(this.config.realmBenchPath);
-    
+
     // Limit tests if specified
     if (this.config.maxTestsPerCategory) {
       adapter.limitTestsPerCategory(this.config.maxTestsPerCategory);
@@ -235,7 +235,7 @@ export class BenchmarkRunner {
 
     // Run benchmark
     const report = await adapter.runBenchmark();
-    
+
     // Save detailed report
     if (this.config.saveDetailedLogs) {
       const reportPath = path.join(this.config.outputDir, 'realm-bench-detailed.json');
@@ -254,13 +254,13 @@ export class BenchmarkRunner {
     }
 
     const adapter = new ApiBankAdapter(this.runtime);
-    
+
     // Load test cases
     await adapter.loadTestCases(this.config.apiBankPath);
 
     // Run benchmark
     const report = await adapter.runBenchmark();
-    
+
     // Save detailed report
     if (this.config.saveDetailedLogs) {
       const reportPath = path.join(this.config.outputDir, 'api-bank-detailed.json');
@@ -289,7 +289,7 @@ export class BenchmarkRunner {
     if (partialResults.realmBenchResults) {
       totalTests += partialResults.realmBenchResults.totalTests;
       totalPassed += partialResults.realmBenchResults.passedTests;
-      
+
       for (const result of partialResults.realmBenchResults.results) {
         totalPlanningTime += result.metrics.planningTime;
         totalExecutionTime += result.metrics.executionTime;
@@ -300,7 +300,7 @@ export class BenchmarkRunner {
     if (partialResults.apiBankResults) {
       totalTests += partialResults.apiBankResults.totalTests;
       totalPassed += partialResults.apiBankResults.passedTests;
-      
+
       for (const result of partialResults.apiBankResults.results) {
         totalPlanningTime += result.metrics.planningTime;
         totalExecutionTime += result.metrics.executionTime;
@@ -349,7 +349,7 @@ export class BenchmarkRunner {
     // Analyze REALM-Bench performance
     if (results.realmBenchResults) {
       const realm = results.realmBenchResults;
-      
+
       // Check pattern performance
       Object.entries(realm.patternBreakdown).forEach(([pattern, stats]) => {
         if (stats.successRate > 0.8) {
@@ -369,7 +369,7 @@ export class BenchmarkRunner {
     // Analyze API-Bank performance
     if (results.apiBankResults) {
       const apiBank = results.apiBankResults;
-      
+
       // Check level performance
       Object.entries(apiBank.levelBreakdown).forEach(([level, stats]) => {
         if (stats.successRate > 0.7) {
@@ -550,7 +550,7 @@ ${results.apiBankResults ? `
             await service.stop();
           }
         }
-        
+
         logger.info('[BenchmarkRunner] Runtime cleanup completed');
       } catch (error) {
         logger.warn('[BenchmarkRunner] Runtime cleanup had issues:', error);
@@ -572,7 +572,7 @@ class MemoryTracker {
   }
 
   start(): void {
-    if (!this.enabled) return;
+    if (!this.enabled) {return;}
 
     this.measurements = [];
     this.interval = setInterval(() => {

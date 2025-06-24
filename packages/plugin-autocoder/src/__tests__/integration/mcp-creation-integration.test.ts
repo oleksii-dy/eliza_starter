@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import * as path from 'path';
 import type { IAgentRuntime } from '@elizaos/core';
 
 // Mock child_process before any imports that use it
-vi.mock('child_process', () => ({
-  exec: vi.fn((cmd: string, opts: any, callback?: any) => {
+mock.module('child_process', () => ({
+  exec: mock((cmd: string, opts: any, callback?: any) => {
     const cb = callback || ((err: any, stdout: string, stderr: string) => {});
     // Simulate successful command execution
     process.nextTick(() => cb(null, '', ''));
@@ -12,9 +12,9 @@ vi.mock('child_process', () => ({
 }));
 
 // Mock fs/promises for file operations
-vi.mock('fs/promises', () => ({
-  mkdir: vi.fn().mockResolvedValue(undefined),
-  readFile: vi.fn().mockImplementation((filePath: string) => {
+mock.module('fs/promises', () => ({
+  mkdir: mock().mockResolvedValue(undefined),
+  readFile: mock().mockImplementation((filePath: string) => {
     if (filePath.includes('package.json')) {
       // Extract project name from path
       const pathParts = filePath.split(path.sep);
@@ -144,20 +144,20 @@ export async function setupServer(server: Server) {
     }
     return Promise.resolve('// Mock file content');
   }),
-  writeFile: vi.fn().mockResolvedValue(undefined),
-  rm: vi.fn().mockResolvedValue(undefined),
-  access: vi.fn().mockResolvedValue(undefined),
-  readdir: vi.fn().mockResolvedValue([]),
-  stat: vi.fn().mockResolvedValue({ isDirectory: () => true }),
-  copyFile: vi.fn().mockResolvedValue(undefined),
+  writeFile: mock().mockResolvedValue(undefined),
+  rm: mock().mockResolvedValue(undefined),
+  access: mock().mockResolvedValue(undefined),
+  readdir: mock().mockResolvedValue([]),
+  stat: mock().mockResolvedValue({ isDirectory: () => true }),
+  copyFile: mock().mockResolvedValue(undefined),
 }));
 
 import * as fs from 'fs/promises';
 import { MCPCreationService } from '../../services/mcp-creation-service';
 
 // Re-mock util.promisify to return a working async function
-vi.mock('util', () => ({
-  promisify: vi.fn(() => vi.fn().mockResolvedValue({ stdout: '', stderr: '' })),
+mock.module('util', () => ({
+  promisify: mock(() => mock().mockResolvedValue({ stdout: '', stderr: '' })),
 }));
 
 describe('MCP Creation Integration Tests', () => {
@@ -173,7 +173,9 @@ describe('MCP Creation Integration Tests', () => {
     // Minimal runtime mock - just what the service needs
     mockRuntime = {
       getSetting: (key: string) => {
-        if (key === 'ANTHROPIC_API_KEY') return 'test-key';
+        if (key === 'ANTHROPIC_API_KEY') {
+          return 'test-key';
+        }
         return null;
       },
       logger: {

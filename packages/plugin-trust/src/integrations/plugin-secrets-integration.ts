@@ -101,7 +101,7 @@ export async function validateSecretAccess(
       }
 
       // Check if elevation could help
-      const requiresElevation = trustDecision.trustScore >= (requiredTrust - 20) && 
+      const requiresElevation = trustDecision.trustScore >= (requiredTrust - 20) &&
                                trustDecision.trustScore >= 60;
 
       return {
@@ -185,7 +185,7 @@ function calculateRequiredTrust(operation: SecretOperation, sensitivity: SecretS
 
   const baseTrust = baseRequirements[operation];
   const multiplier = sensitivityMultipliers[sensitivity];
-  
+
   return Math.min(Math.round(baseTrust * multiplier), 100);
 }
 
@@ -260,7 +260,7 @@ async function recordSecretInteraction(
 ): Promise<void> {
   try {
     const trustEngine = runtime.getService('trust-engine') as any;
-    if (!trustEngine) return;
+    if (!trustEngine) {return;}
 
     const impact = successful ? getPositiveImpact(operation) : getNegativeImpact(operation);
     const evidenceType = successful ? 'HELPFUL_ACTION' : 'HARMFUL_ACTION';
@@ -329,7 +329,7 @@ export function classifySecretSensitivity(secretName: string, secretValue?: stri
     return SecretSensitivity.CRITICAL;
   }
 
-  // High sensitivity patterns  
+  // High sensitivity patterns
   if (name.includes('password') || name.includes('token') || name.includes('secret') ||
       name.includes('api_key') || name.includes('auth') ||
       value.startsWith('sk-') || value.startsWith('pk_')) {
@@ -349,24 +349,24 @@ export function classifySecretSensitivity(secretName: string, secretValue?: stri
 
 /**
  * Example usage in plugin-secrets-manager action handler:
- * 
+ *
  * export const manageSecretAction: Action = {
  *   name: 'MANAGE_SECRET',
  *   handler: async (runtime, message, state, options, callback) => {
  *     const { operation, secretName, secretValue } = parseSecretRequest(message);
- *     
+ *
  *     // Classify secret sensitivity
  *     const sensitivity = classifySecretSensitivity(secretName, secretValue);
- *     
+ *
  *     // Validate with trust system
  *     const validation = await validateSecretAccess(
- *       runtime, 
- *       message, 
- *       operation, 
- *       secretName, 
+ *       runtime,
+ *       message,
+ *       operation,
+ *       secretName,
  *       sensitivity
  *     );
- *     
+ *
  *     if (!validation.allowed) {
  *       return {
  *         text: `Secret access denied: ${validation.reason}`,
@@ -376,7 +376,7 @@ export function classifySecretSensitivity(secretName: string, secretValue?: stri
  *         requiresElevation: validation.requiresElevation,
  *       };
  *     }
- *     
+ *
  *     // Execute secret operation if validation passes
  *     return executeSecretOperation(operation, secretName, secretValue);
  *   }

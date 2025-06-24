@@ -2,10 +2,10 @@ describe('Entity Graph E2E Tests', () => {
   beforeEach(() => {
     // Visit the page with the entity graph
     cy.visit('/');
-    
+
     // Wait for initial load
     cy.contains('Knowledge').should('be.visible');
-    
+
     // Switch to entity graph view
     cy.contains('button', 'Entity Graph').click();
     cy.wait(1000); // Wait for graph to initialize
@@ -14,13 +14,13 @@ describe('Entity Graph E2E Tests', () => {
   it('displays entity graph with nodes and relationships', () => {
     // Check that the graph container exists
     cy.get('[data-testid="force-graph"]').should('exist');
-    
+
     // Check for legend
     cy.contains('Entity Trust Level').should('be.visible');
     cy.contains('Trusted').should('be.visible');
     cy.contains('Neutral').should('be.visible');
     cy.contains('Suspicious').should('be.visible');
-    
+
     // Check for stats panel
     cy.contains('Network Stats').should('be.visible');
   });
@@ -28,19 +28,19 @@ describe('Entity Graph E2E Tests', () => {
   it('shows and hides filters panel', () => {
     // Initially filters should be hidden
     cy.get('input[placeholder="Search entities..."]').should('not.exist');
-    
+
     // Click to show filters
     cy.contains('Show Filters').click();
-    
+
     // Filters should be visible
     cy.get('input[placeholder="Search entities..."]').should('be.visible');
     cy.contains('Entity Type:').should('be.visible');
     cy.contains('Trust Level:').should('be.visible');
     cy.contains('Min Strength:').should('be.visible');
-    
+
     // Click to hide filters
     cy.contains('Hide Filters').click();
-    
+
     // Filters should be hidden again
     cy.get('input[placeholder="Search entities..."]').should('not.exist');
   });
@@ -48,13 +48,13 @@ describe('Entity Graph E2E Tests', () => {
   it('filters entities by search term', () => {
     // Show filters
     cy.contains('Show Filters').click();
-    
+
     // Type in search box
     cy.get('input[placeholder="Search entities..."]').type('Alice');
-    
+
     // Wait for graph to update
     cy.wait(500);
-    
+
     // Check that stats reflect filtered data
     cy.contains('Network Stats').parent().within(() => {
       // Should show fewer entities if filter is working
@@ -65,13 +65,13 @@ describe('Entity Graph E2E Tests', () => {
   it('filters entities by type', () => {
     // Show filters
     cy.contains('Show Filters').click();
-    
+
     // Select entity type
     cy.get('select').select('person');
-    
+
     // Wait for graph to update
     cy.wait(500);
-    
+
     // Check that the filter is applied
     cy.get('select').should('have.value', 'person');
   });
@@ -79,14 +79,14 @@ describe('Entity Graph E2E Tests', () => {
   it('adjusts trust level range filter', () => {
     // Show filters
     cy.contains('Show Filters').click();
-    
+
     // Find trust level sliders
     cy.contains('Trust Level:').parent().within(() => {
       // Adjust the first slider (minimum)
       cy.get('input[type="range"]').first()
         .invoke('val', '0')
         .trigger('change');
-      
+
       // Check that the label updated
       cy.contains('Trust Level: 0.0 to 1.0').should('exist');
     });
@@ -95,14 +95,14 @@ describe('Entity Graph E2E Tests', () => {
   it('adjusts connection strength threshold', () => {
     // Show filters
     cy.contains('Show Filters').click();
-    
+
     // Find strength slider
     cy.contains('Min Strength:').parent().within(() => {
       // Adjust the slider
       cy.get('input[type="range"]')
         .invoke('val', '0.5')
         .trigger('change');
-      
+
       // Check that the label updated
       cy.contains('Min Strength: 0.5').should('exist');
     });
@@ -112,13 +112,13 @@ describe('Entity Graph E2E Tests', () => {
     // Click on 'friend' relationship type in legend
     cy.contains('Relationship Types').parent().within(() => {
       cy.contains('friend').click();
-      
+
       // Check that it's selected (should have font-bold class)
       cy.contains('friend').parent().should('have.class', 'font-bold');
-      
+
       // Click again to deselect
       cy.contains('friend').click();
-      
+
       // Should not have font-bold class anymore
       cy.contains('friend').parent().should('not.have.class', 'font-bold');
     });
@@ -132,7 +132,7 @@ describe('Entity Graph E2E Tests', () => {
       if ($body.find('g.node').length > 0) {
         // Click on the first node
         cy.get('g.node').first().click();
-        
+
         // Check that entity details panel appears
         cy.contains('Trust Level').should('be.visible');
       }
@@ -142,16 +142,16 @@ describe('Entity Graph E2E Tests', () => {
   it('switches between entity graph and entity list views', () => {
     // Currently in entity graph view
     cy.get('[data-testid="force-graph"]').should('exist');
-    
+
     // Switch to entity list view
     cy.contains('button', 'Entity List').click();
-    
+
     // Should show table view
     cy.get('table').should('be.visible');
-    
+
     // Switch back to graph view
     cy.contains('button', 'Entity Graph').click();
-    
+
     // Should show graph again
     cy.get('[data-testid="force-graph"]').should('exist');
   });
@@ -168,4 +168,4 @@ describe('Entity Graph E2E Tests', () => {
       }
     });
   });
-}); 
+});

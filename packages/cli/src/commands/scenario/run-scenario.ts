@@ -3,7 +3,7 @@ import { getTempDbPath } from '../../utils/temp';
 // Make ALL imports dynamic to avoid loading schema modules before setting database type
 import dotenv from 'dotenv';
 import { existsSync } from 'node:fs';
-import path from 'path';
+// import path from 'path';
 
 export async function runScenarioWithAgents(
   scenario: any, // Use any to avoid static import of types
@@ -83,7 +83,6 @@ export async function runScenarioWithAgents(
 
     // Always include OpenAI plugin for embeddings and LLM
     try {
-      // @ts-ignore: plugin-openai may not be available in all configurations
       const openaiModule = await import('@elizaos/plugin-openai');
       const openaiPlugin = openaiModule.default || (openaiModule as any).plugin || openaiModule;
       if (openaiPlugin && openaiPlugin.name) {
@@ -208,9 +207,9 @@ export async function runScenarioWithAgents(
 
       // Ensure character has necessary settings
       character.settings = {
-        ...character.settings,
-        model: character.settings?.model || 'gpt-4o-mini',
-        temperature: character.settings?.temperature || 0.7,
+        ...(character.settings as any),
+        model: (character.settings as any)?.model || 'gpt-4o-mini',
+        temperature: (character.settings as any)?.temperature || 0.7,
       };
 
       // Add environment variables to character settings for API keys
@@ -230,7 +229,7 @@ export async function runScenarioWithAgents(
       const runtime = new AgentRuntime({
         character,
         plugins: actorPlugins,
-        // @ts-ignore - using internal API
+        // @ts-expect-error - using internal API
         databaseAdapter: server.adapter || server,
         serverUrl: 'http://localhost:3000',
         token: `scenario-${actor.id}`,
@@ -280,7 +279,6 @@ export async function runScenarioWithAgents(
     const runner = new ScenarioRunner(server, primaryRuntime);
 
     // Pass the agents to the runner
-    // @ts-ignore - adding agents property
     runner.agents = agents;
 
     // Run the scenario

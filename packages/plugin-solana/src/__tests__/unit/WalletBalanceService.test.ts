@@ -1,30 +1,30 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, mock, beforeEach, afterEach } from 'bun:test';
 
 // Mock the Solana web3.js module
-vi.mock('@solana/web3.js', () => ({
-  Connection: vi.fn(() => ({
-    getBalance: vi.fn(),
-    getParsedTokenAccountsByOwner: vi.fn(),
+mock.module('@solana/web3.js', () => ({
+  Connection: mock(() => ({
+    getBalance: mock(),
+    getParsedTokenAccountsByOwner: mock(),
   })),
-  PublicKey: vi.fn((key) => ({ toString: () => key })),
+  PublicKey: mock((key) => ({ toString: () => key })),
   LAMPORTS_PER_SOL: 1000000000,
 }));
 
 // Mock the SPL token module
-vi.mock('@solana/spl-token', () => ({
+mock.module('@solana/spl-token', () => ({
   TOKEN_PROGRAM_ID: { toString: () => 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
-  getMint: vi.fn(),
+  getMint: mock(),
 }));
 
 // Mock logger
-vi.mock('@elizaos/core', () => ({
+mock.module('@elizaos/core', () => ({
   Service: class Service {
     constructor(protected runtime: any) {}
   },
   logger: {
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
+    info: mock(),
+    error: mock(),
+    warn: mock(),
   },
 }));
 
@@ -39,12 +39,12 @@ describe('WalletBalanceService', () => {
 
   beforeEach(() => {
     // Reset all mocks
-    vi.clearAllMocks();
+    mock.restore();
 
     // Create a fresh mock connection with jest functions
     mockConnection = {
-      getBalance: vi.fn(),
-      getParsedTokenAccountsByOwner: vi.fn(),
+      getBalance: mock(),
+      getParsedTokenAccountsByOwner: mock(),
     };
 
     // Override the Connection constructor
@@ -52,14 +52,14 @@ describe('WalletBalanceService', () => {
 
     // Create mock runtime
     mockRuntime = {
-      getSetting: vi.fn((key: string) => {
+      getSetting: mock((key: string) => {
         const settings: Record<string, string> = {
           SOLANA_NETWORK: 'mainnet-beta',
           SOLANA_RPC_URL: '',
         };
         return settings[key];
       }),
-      getService: vi.fn(() => null), // No services available in tests
+      getService: mock(() => null), // No services available in tests
     };
 
     // Create service instance
@@ -67,7 +67,7 @@ describe('WalletBalanceService', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('constructor', () => {
@@ -79,8 +79,10 @@ describe('WalletBalanceService', () => {
     });
 
     it('should initialize with testnet when specified', () => {
-      mockRuntime.getSetting = vi.fn((key: string) => {
-        if (key === 'SOLANA_NETWORK') return 'testnet';
+      mockRuntime.getSetting = mock((key: string) => {
+        if (key === 'SOLANA_NETWORK') {
+          return 'testnet';
+        }
         return '';
       });
 
@@ -90,8 +92,10 @@ describe('WalletBalanceService', () => {
 
     it('should use custom RPC URL when provided', () => {
       const customRpc = 'https://custom.rpc.url';
-      mockRuntime.getSetting = vi.fn((key: string) => {
-        if (key === 'SOLANA_RPC_URL') return customRpc;
+      mockRuntime.getSetting = mock((key: string) => {
+        if (key === 'SOLANA_RPC_URL') {
+          return customRpc;
+        }
         return '';
       });
 
@@ -319,8 +323,10 @@ describe('WalletBalanceService', () => {
 
   describe('network handling', () => {
     it('should return correct RPC URL for testnet', () => {
-      mockRuntime.getSetting = vi.fn((key: string) => {
-        if (key === 'SOLANA_NETWORK') return 'testnet';
+      mockRuntime.getSetting = mock((key: string) => {
+        if (key === 'SOLANA_NETWORK') {
+          return 'testnet';
+        }
         return '';
       });
 
@@ -331,8 +337,10 @@ describe('WalletBalanceService', () => {
     });
 
     it('should return correct RPC URL for devnet', () => {
-      mockRuntime.getSetting = vi.fn((key: string) => {
-        if (key === 'SOLANA_NETWORK') return 'devnet';
+      mockRuntime.getSetting = mock((key: string) => {
+        if (key === 'SOLANA_NETWORK') {
+          return 'devnet';
+        }
         return '';
       });
 

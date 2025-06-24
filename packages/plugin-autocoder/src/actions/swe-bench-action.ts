@@ -5,7 +5,9 @@ import {
   type State,
   type ActionResult,
   type Action,
+  type ActionExample,
   type Content,
+  type HandlerCallback,
 } from '@elizaos/core';
 import { SWEBenchRunner } from '../swe-bench/swe-bench-runner';
 import type { BenchmarkOptions } from '../swe-bench/types';
@@ -52,27 +54,33 @@ export const runSWEBenchAction: Action = {
     'test code generation capabilities',
     'run multi-swe-bench evaluation',
   ],
-  description: 'Run Multi-SWE-bench evaluation on TypeScript/JavaScript instances',
+  description:
+    'Run Multi-SWE-bench evaluation on TypeScript/JavaScript instances. Returns evaluation results and report paths for action chaining.',
   examples: [
     [
-      { name: 'user', content: { text: 'Run SWE-bench evaluation on 5 TypeScript instances' } },
+      { name: '{{user}}', content: { text: 'Run SWE-bench evaluation on 5 TypeScript instances' } },
       {
-        name: 'agent',
+        name: '{{agent}}',
         content: {
           text: 'Starting SWE-bench evaluation on 5 TypeScript instances. This will test my code generation capabilities...',
+          thought:
+            'User wants to run SWE-bench evaluation on TypeScript instances to test coding capabilities.',
+          actions: ['RUN_SWE_BENCH'],
         },
       },
     ],
     [
-      { name: 'user', content: { text: 'Benchmark my code fix skills' } },
+      { name: '{{user}}', content: { text: 'Run benchmark and then analyze the results' } },
       {
-        name: 'agent',
+        name: '{{agent}}',
         content: {
-          text: 'SWE-bench run complete. Report available at: .swe-bench-work/reports/benchmark-20241215-143022',
+          text: "I'll run the SWE-bench evaluation first, then provide detailed analysis of the results.",
+          thought: 'User wants benchmarking followed by analysis - a two-step evaluation workflow.',
+          actions: ['RUN_SWE_BENCH', 'ANALYZE_RESULTS'],
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     // Check if we're in testing/development mode
@@ -103,8 +111,8 @@ export const runSWEBenchAction: Action = {
     message: Memory,
     state?: State,
     options?: { [key: string]: unknown },
-    callback?: (response: Content) => Promise<any[]>
-  ) => {
+    callback?: HandlerCallback
+  ): Promise<ActionResult> => {
     try {
       const text = message.content.text || '';
 
@@ -133,7 +141,23 @@ export const runSWEBenchAction: Action = {
       if (callback) {
         await callback({ text: responseText });
       }
-      return { text: responseText };
+      return {
+        text: responseText,
+        values: {
+          success: true,
+          benchmarkComplete: true,
+          instancesRun: instanceIds.length > 0 ? instanceIds.length : parsedOptions.max_instances,
+          reportPath: report.logs_dir,
+          specificInstances: instanceIds.length > 0,
+        },
+        data: {
+          actionName: 'RUN_SWE_BENCH',
+          report,
+          parsedOptions,
+          instanceIds,
+          benchmarkResults: report.results,
+        },
+      };
     } catch (error: any) {
       elizaLogger.error(`[SWE-BENCH] Critical action error: ${error.message}`);
       elizaLogger.error(`[SWE-BENCH] Stack: ${error.stack}`);
@@ -141,7 +165,20 @@ export const runSWEBenchAction: Action = {
       if (callback) {
         await callback({ text: errorText });
       }
-      return { text: errorText };
+      return {
+        text: errorText,
+        values: {
+          success: false,
+          error: true,
+          errorMessage: error.message,
+        },
+        data: {
+          actionName: 'RUN_SWE_BENCH',
+          error: error.message,
+          errorType: 'benchmark_error',
+          stack: error.stack,
+        },
+      };
     }
   },
 };
@@ -229,18 +266,36 @@ export const getSWEBenchStatsAction: Action = {
     'list swe-bench instances',
     'benchmark statistics',
   ],
-  description: 'Get statistics about the Multi-SWE-bench dataset',
+  description:
+    'Get statistics about the Multi-SWE-bench dataset. Returns dataset statistics and instance counts for action chaining.',
   examples: [
     [
-      { name: 'user', content: { text: 'Show me SWE-bench statistics' } },
+      { name: '{{user}}', content: { text: 'Show me SWE-bench statistics' } },
       {
-        name: 'agent',
+        name: '{{agent}}',
         content: {
           text: '📊 **Multi-SWE-bench Dataset Statistics**\n\n**Total Instances**: 2,294\n\n**By Language**:\n- TypeScript: 1,245\n- JavaScript: 1,049\n\n**Top Repositories**:\n- microsoft/TypeScript: 456\n- axios/axios: 189',
+          thought:
+            'User wants to see SWE-bench dataset statistics to understand the available benchmarks.',
+          actions: ['GET_SWE_BENCH_STATS'],
         },
       },
     ],
-  ],
+    [
+      {
+        name: '{{user}}',
+        content: { text: 'Get benchmark stats and then run evaluation on 10 instances' },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll first get the dataset statistics, then run evaluation on 10 instances.",
+          thought: 'User wants stats followed by benchmark execution - a sequential workflow.',
+          actions: ['GET_SWE_BENCH_STATS', 'RUN_SWE_BENCH'],
+        },
+      },
+    ],
+  ] as ActionExample[][],
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     // Check if we're in testing/development mode
@@ -266,15 +321,51 @@ export const getSWEBenchStatsAction: Action = {
     message: Memory,
     state?: State,
     options?: { [key: string]: unknown },
-    callback?: (response: Content) => Promise<any[]>
-  ) => {
-    const runner = new SWEBenchRunner(runtime);
-    await runner.initialize();
-    const stats = await runner.getDatasetStats();
-    const responseText = `SWE-bench dataset stats: ${JSON.stringify(stats, null, 2)}`;
-    if (callback) {
-      await callback({ text: responseText });
+    callback?: HandlerCallback
+  ): Promise<ActionResult> => {
+    try {
+      const runner = new SWEBenchRunner(runtime);
+      await runner.initialize();
+      const stats = await runner.getDatasetStats();
+      const responseText = formatStatsResponse(stats);
+      if (callback) {
+        await callback({ text: responseText });
+      }
+      return {
+        text: responseText,
+        values: {
+          success: true,
+          totalInstances: stats.total,
+          languageCount: Object.keys(stats.byLanguage).length,
+          repositoryCount: Object.keys(stats.byRepo).length,
+          withTests: stats.withTests,
+          withoutTests: stats.withoutTests,
+        },
+        data: {
+          actionName: 'GET_SWE_BENCH_STATS',
+          stats,
+          datasetStatistics: stats,
+          formattedResponse: responseText,
+        },
+      };
+    } catch (error: any) {
+      const errorText = `Error getting SWE-bench statistics: ${error.message}`;
+      if (callback) {
+        await callback({ text: errorText });
+      }
+      return {
+        text: errorText,
+        values: {
+          success: false,
+          error: true,
+          errorMessage: error.message,
+        },
+        data: {
+          actionName: 'GET_SWE_BENCH_STATS',
+          error: error.message,
+          errorType: 'stats_error',
+        },
+      };
     }
-    return { text: responseText };
   },
 };

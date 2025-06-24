@@ -1,9 +1,9 @@
-import { 
+import {
   type IAgentRuntime,
   logger
 } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
-import type { 
+import type {
   TrustRequirements,
   TrustDecision,
   TrustEvidenceType,
@@ -15,7 +15,7 @@ import type { ThreatAssessment } from '../types/security';
 
 /**
  * Core Trust Provider Implementation
- * 
+ *
  * This class provides trust functionality to the ElizaOS core
  * by wrapping the trust plugin's services.
  */
@@ -65,7 +65,7 @@ export class CoreTrustProvider {
    * Evaluate trust requirements for a decision
    */
   async evaluateTrustRequirements(
-    entityId: UUID, 
+    entityId: UUID,
     requirements: TrustRequirements
   ): Promise<TrustDecision> {
     const trustService = await this.ensureTrustService();
@@ -76,8 +76,8 @@ export class CoreTrustProvider {
    * Check permission with trust integration
    */
   async checkPermission(
-    entityId: UUID, 
-    action: string, 
+    entityId: UUID,
+    action: string,
     resource?: string
   ): Promise<AccessDecision> {
     const trustService = await this.ensureTrustService();
@@ -96,7 +96,7 @@ export class CoreTrustProvider {
    * Evaluate threat level for an entity
    */
   async evaluateThreatLevel(
-    entityId: UUID, 
+    entityId: UUID,
     context?: any
   ): Promise<ThreatAssessment> {
     const trustService = await this.ensureTrustService();
@@ -107,13 +107,13 @@ export class CoreTrustProvider {
    * Record activity for trust calculation
    */
   async recordActivity(
-    entityId: UUID, 
-    activity: string, 
+    entityId: UUID,
+    activity: string,
     result: 'success' | 'failure',
     metadata?: Record<string, any>
   ): Promise<void> {
     const trustService = await this.ensureTrustService();
-    
+
     const interaction = {
       sourceEntityId: entityId,
       targetEntityId: this.runtime.agentId,
@@ -125,7 +125,7 @@ export class CoreTrustProvider {
         ...metadata
       }
     };
-    
+
     await trustService.updateTrust(interaction);
   }
 
@@ -144,4 +144,4 @@ export class CoreTrustProvider {
     const trustService = await this.ensureTrustService();
     return trustService.detectThreatsLLM(context);
   }
-} 
+}

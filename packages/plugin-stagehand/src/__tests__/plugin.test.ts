@@ -1,4 +1,14 @@
-import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import {
+  describe,
+  expect,
+  it,
+  mock,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  spyOn,
+} from 'bun:test';
 import { stagehandPlugin, StagehandService } from '../index';
 import { ModelType, logger } from '@elizaos/core';
 import dotenv from 'dotenv';
@@ -8,22 +18,22 @@ import { z } from 'zod';
 dotenv.config();
 
 // Mock the Stagehand module
-vi.mock('@browserbasehq/stagehand', () => {
+mock.module('@browserbasehq/stagehand', () => {
   return {
-    Stagehand: vi.fn().mockImplementation(() => {
+    Stagehand: mock().mockImplementation(() => {
       const mockPage = {
-        goto: vi.fn().mockResolvedValue(undefined),
-        goBack: vi.fn().mockResolvedValue(undefined),
-        goForward: vi.fn().mockResolvedValue(undefined),
-        reload: vi.fn().mockResolvedValue(undefined),
-        waitForLoadState: vi.fn().mockResolvedValue(undefined),
-        title: vi.fn().mockResolvedValue('Test Page Title'),
-        url: vi.fn().mockReturnValue('https://example.com'),
+        goto: mock().mockResolvedValue(undefined),
+        goBack: mock().mockResolvedValue(undefined),
+        goForward: mock().mockResolvedValue(undefined),
+        reload: mock().mockResolvedValue(undefined),
+        waitForLoadState: mock().mockResolvedValue(undefined),
+        title: mock().mockResolvedValue('Test Page Title'),
+        url: mock().mockReturnValue('https://example.com'),
       };
 
       return {
-        init: vi.fn().mockResolvedValue(undefined),
-        close: vi.fn().mockResolvedValue(undefined),
+        init: mock().mockResolvedValue(undefined),
+        close: mock().mockResolvedValue(undefined),
         page: mockPage,
       };
     }),
@@ -32,14 +42,14 @@ vi.mock('@browserbasehq/stagehand', () => {
 
 // Need to spy on logger for documentation
 beforeAll(() => {
-  vi.spyOn(logger, 'info');
-  vi.spyOn(logger, 'error');
-  vi.spyOn(logger, 'warn');
-  vi.spyOn(logger, 'debug');
+  spyOn(logger, 'info');
+  spyOn(logger, 'error');
+  spyOn(logger, 'warn');
+  spyOn(logger, 'debug');
 });
 
 afterAll(() => {
-  vi.restoreAllMocks();
+  mock.restore();
 });
 
 // Create a real runtime for testing
@@ -249,7 +259,7 @@ describe('StagehandService', () => {
     runtime.registerService(StagehandService.serviceType, service);
 
     // Spy on the real service's stop method
-    const stopSpy = vi.spyOn(service, 'stop');
+    const stopSpy = spyOn(service, 'stop');
 
     // Call the static stop method
     await StagehandService.stop(runtime as any);

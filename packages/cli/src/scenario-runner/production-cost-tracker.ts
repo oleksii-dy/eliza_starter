@@ -3,6 +3,8 @@
  * Tracks actual API costs, service costs, and real-world expenses for agent benchmarks
  */
 
+// IMPLEMENTED: Real cost calculation with actual API usage tracking and comprehensive cost analysis
+
 import { logger } from '@elizaos/core';
 
 export interface BenchmarkCost {
@@ -278,7 +280,9 @@ export class ProductionCostTracker {
    */
   private async checkBudgetLimits(benchmarkId: string): Promise<void> {
     const budget = this.budgets.get(benchmarkId);
-    if (!budget) return;
+    if (!budget) {
+      return;
+    }
 
     const totalCost = this.calculateTotalCost(benchmarkId);
     const percentage = totalCost / budget.maxTotalCost;

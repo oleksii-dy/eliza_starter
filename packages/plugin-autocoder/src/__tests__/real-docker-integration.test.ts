@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { AgentRuntime } from '@elizaos/core';
 import type { IAgentRuntime, Character, Memory, State } from '@elizaos/core';
 import { autocoderPlugin } from '../index.ts';

@@ -1,5 +1,5 @@
-import { type IAgentRuntime, logger } from "@elizaos/core";
-import type { UUID } from "@elizaos/core";
+import { type IAgentRuntime, logger } from '@elizaos/core';
+import type { UUID } from '@elizaos/core';
 import { TrustEngine } from './TrustEngine';
 import { SecurityManager } from './SecurityManager';
 import type {
@@ -18,7 +18,7 @@ export class PermissionManager {
   private runtime!: IAgentRuntime;
   private trustEngine!: TrustEngine;
   private securityManager!: SecurityManager;
-  
+
   // Simple permission cache
   private permissionCache = new Map<string, { decision: AccessDecision; expiry: number }>();
   private readonly CACHE_TTL = 300000; // 5 minutes
@@ -40,7 +40,7 @@ export class PermissionManager {
   async checkAccess(request: AccessRequest): Promise<AccessDecision> {
     const startTime = Date.now();
     const cacheKey = JSON.stringify(request);
-    
+
     // Check cache
     const cached = this.permissionCache.get(cacheKey);
     if (cached && cached.expiry > startTime) {
@@ -94,10 +94,10 @@ export class PermissionManager {
     const isOwner = await this.isOwner(request.entityId);
 
     if (isOwner || isAdmin) {
-      return { 
-        allowed: true, 
-        method: 'role-based', 
-        reason: `Allowed by role: ${isOwner ? 'owner' : 'admin'}` 
+      return {
+        allowed: true,
+        method: 'role-based',
+        reason: `Allowed by role: ${isOwner ? 'owner' : 'admin'}`
       };
     }
 
@@ -107,14 +107,14 @@ export class PermissionManager {
       return {
         allowed: true,
         method: 'role-based',
-        reason: 'Allowed by role permission' 
+        reason: 'Allowed by role permission'
       };
     }
 
-    return { 
-      allowed: false, 
-      method: 'denied', 
-      reason: 'No matching role permission' 
+    return {
+      allowed: false,
+      method: 'denied',
+      reason: 'No matching role permission'
     };
   }
 
@@ -156,7 +156,7 @@ export class PermissionManager {
     return {
       allowed: false,
       method: 'denied',
-      reason: `Insufficient trust: ${trustProfile.overallTrust.toFixed(0)} < ${trustRequirements.minimumTrust}` 
+      reason: `Insufficient trust: ${trustProfile.overallTrust.toFixed(0)} < ${trustRequirements.minimumTrust}`
     };
   }
 
@@ -173,7 +173,7 @@ export class PermissionManager {
       'read': { minimumTrust: 20 },
       'view': { minimumTrust: 20 },
       'list': { minimumTrust: 20 },
-      
+
       // Write actions - medium trust
       'create': { minimumTrust: 40 },
       'update': { minimumTrust: 50, dimensions: { reliability: 40 } },
@@ -191,7 +191,7 @@ export class PermissionManager {
 
     // Find matching requirement or use default
     const requirement = requirements[action.toLowerCase()];
-    if (requirement) return requirement;
+    if (requirement) {return requirement;}
 
     // Check if action starts with known prefix
     for (const [prefix, req] of Object.entries(requirements)) {

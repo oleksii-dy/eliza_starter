@@ -4,7 +4,7 @@
  */
 
 import { ResearchService } from '../src/service';
-import { elizaLogger, IAgentRuntime, ModelType } from '@elizaos/core';
+import { logger, IAgentRuntime, ModelType } from '@elizaos/core';
 import { ResearchDomain, ResearchDepth } from '../src/types';
 import { SWE_BENCH } from '../src/benchmarks/standard-benchmarks';
 import fs from 'fs/promises';
@@ -40,7 +40,7 @@ async function createBenchmarkRuntime(): Promise<IAgentRuntime> {
       return process.env[key] || '';
     },
 
-    getService: function (name: string) {
+    getService(name: string) {
       if (name === 'research') {
         return researchService;
       }
@@ -65,7 +65,7 @@ async function createBenchmarkRuntime(): Promise<IAgentRuntime> {
       return completion.choices[0].message.content;
     },
 
-    logger: elizaLogger,
+    logger: logger,
   } as any;
 
   const researchService = await ResearchService.start(runtime);
@@ -160,7 +160,7 @@ async function runTsJsBenchmark() {
           console.log(`\n✅ Research completed in ${Math.round(duration / 1000)}s`);
 
           // Log detailed statistics
-          console.log(`\n📊 Research Statistics:`);
+          console.log('\n📊 Research Statistics:');
           console.log(
             `  - Sources found: ${updated.sources.length}/${benchmarkQuery.expectedSources}`
           );
@@ -180,7 +180,7 @@ async function runTsJsBenchmark() {
 
             if (race) {
               raceScore = race.overall;
-              console.log(`\n📊 RACE Evaluation:`);
+              console.log('\n📊 RACE Evaluation:');
               console.log(`  - Overall: ${(race.overall * 100).toFixed(1)}%`);
               console.log(`  - Comprehensiveness: ${(race.comprehensiveness * 100).toFixed(1)}%`);
               console.log(`  - Technical Depth: ${(race.depth * 100).toFixed(1)}%`);
@@ -191,7 +191,7 @@ async function runTsJsBenchmark() {
 
             if (fact) {
               factScore = fact.citationAccuracy;
-              console.log(`\n📊 FACT Evaluation:`);
+              console.log('\n📊 FACT Evaluation:');
               console.log(`  - Citation Accuracy: ${(fact.citationAccuracy * 100).toFixed(1)}%`);
               console.log(`  - Total Citations: ${fact.totalCitations}`);
               console.log(`  - Verified Citations: ${fact.verifiedCitations}`);
@@ -201,9 +201,9 @@ async function runTsJsBenchmark() {
           // Store result
           results.push({
             id: benchmarkQuery.id,
-            query: query,
+            query,
             projectId: project.id,
-            duration: duration,
+            duration,
             status: 'completed',
             sources: updated.sources.length,
             findings: updated.findings.length,
@@ -218,7 +218,7 @@ async function runTsJsBenchmark() {
           console.error(`\n❌ Research failed: ${updated.error}`);
           results.push({
             id: benchmarkQuery.id,
-            query: query,
+            query,
             projectId: project.id,
             duration: Date.now() - startTime,
             status: 'failed',
@@ -249,7 +249,7 @@ async function runTsJsBenchmark() {
         const final = await researchService.getProject(project.id);
         results.push({
           id: benchmarkQuery.id,
-          query: query,
+          query,
           projectId: project.id,
           duration: timeout,
           status: 'timeout',
@@ -264,7 +264,7 @@ async function runTsJsBenchmark() {
       console.error(`\n❌ Error processing ${benchmarkQuery.id}:`, error);
       results.push({
         id: benchmarkQuery.id,
-        query: query,
+        query,
         projectId: '',
         duration: Date.now() - startTime,
         status: 'failed',
@@ -284,7 +284,7 @@ async function runTsJsBenchmark() {
   }
 
   // Generate comprehensive summary
-  console.log('\n\n' + '='.repeat(70));
+  console.log(`\n\n${'='.repeat(70)}`);
   console.log('📊 TYPESCRIPT/JAVASCRIPT RESEARCH BENCHMARK RESULTS');
   console.log('='.repeat(70));
 
@@ -312,7 +312,7 @@ async function runTsJsBenchmark() {
       successful.filter((r) => r.factScore).reduce((sum, r) => sum + (r.factScore || 0), 0) /
       successful.length;
 
-    console.log(`\n📊 Average Performance Metrics:`);
+    console.log('\n📊 Average Performance Metrics:');
     console.log(`  - Duration: ${Math.round(avgDuration / 1000)}s`);
     console.log(`  - Sources Found: ${Math.round(avgSources)}`);
     console.log(`  - Findings Extracted: ${Math.round(avgFindings)}`);
@@ -323,7 +323,7 @@ async function runTsJsBenchmark() {
   }
 
   // Individual results breakdown
-  console.log(`\n📋 Individual Results:`);
+  console.log('\n📋 Individual Results:');
   for (const result of results) {
     const statusIcon =
       result.status === 'completed' ? '✅' : result.status === 'failed' ? '❌' : '⏰';
@@ -359,22 +359,22 @@ async function runTsJsBenchmark() {
     averageMetrics:
       successful.length > 0
         ? {
-            duration: successful.reduce((sum, r) => sum + r.duration, 0) / successful.length,
-            sources: successful.reduce((sum, r) => sum + r.sources, 0) / successful.length,
-            findings: successful.reduce((sum, r) => sum + r.findings, 0) / successful.length,
-            wordCount: successful.reduce((sum, r) => sum + r.wordCount, 0) / successful.length,
-            citations: successful.reduce((sum, r) => sum + r.citations, 0) / successful.length,
-            raceScore:
+          duration: successful.reduce((sum, r) => sum + r.duration, 0) / successful.length,
+          sources: successful.reduce((sum, r) => sum + r.sources, 0) / successful.length,
+          findings: successful.reduce((sum, r) => sum + r.findings, 0) / successful.length,
+          wordCount: successful.reduce((sum, r) => sum + r.wordCount, 0) / successful.length,
+          citations: successful.reduce((sum, r) => sum + r.citations, 0) / successful.length,
+          raceScore:
               successful
                 .filter((r) => r.raceScore)
                 .reduce((sum, r) => sum + (r.raceScore || 0), 0) / successful.length,
-            factScore:
+          factScore:
               successful
                 .filter((r) => r.factScore)
                 .reduce((sum, r) => sum + (r.factScore || 0), 0) / successful.length,
-          }
+        }
         : null,
-    results: results,
+    results,
   };
 
   await fs.writeFile(outputFile, JSON.stringify(reportData, null, 2));

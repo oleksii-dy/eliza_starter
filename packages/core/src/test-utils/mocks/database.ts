@@ -5,7 +5,7 @@
  * supporting both unit and integration testing scenarios.
  */
 
-import { vi } from './vi-helper';
+import { mock } from './mock-utils';
 import type {
   IDatabaseAdapter,
   UUID,
@@ -36,22 +36,22 @@ export type MockDatabaseOverrides = Partial<IDatabaseAdapter>;
  * @example
  * ```typescript
  * import { createMockDatabase } from '@elizaos/core/test-utils';
- * import { vi } from './vi-helper';
+ * import { mock } from 'bun:test';
  *
  * const mockDb = createMockDatabase({
- *   getMemories: vi.fn().mockResolvedValue([mockMemory]),
- *   createMemory: vi.fn().mockResolvedValue('memory-id')
+ *   getMemories: mock().mockResolvedValue([mockMemory]),
+ *   createMemory: mock().mockResolvedValue('memory-id')
  * });
  * ```
  */
 export function createMockDatabase(overrides: MockDatabaseOverrides = {}): IDatabaseAdapter {
   // Mock database connection
   const mockConnection = {
-    execute: vi.fn().mockResolvedValue([]),
-    query: vi.fn().mockResolvedValue([]),
-    run: vi.fn().mockResolvedValue({ changes: 1 }),
-    all: vi.fn().mockResolvedValue([]),
-    get: vi.fn().mockResolvedValue(null),
+    execute: mock().mockResolvedValue([]),
+    query: mock().mockResolvedValue([]),
+    run: mock().mockResolvedValue({ changes: 1 }),
+    all: mock().mockResolvedValue([]),
+    get: mock().mockResolvedValue(null),
   };
 
   const baseDatabaseAdapter: IDatabaseAdapter = {
@@ -59,98 +59,98 @@ export function createMockDatabase(overrides: MockDatabaseOverrides = {}): IData
     db: overrides.db || mockConnection,
 
     // Core Lifecycle Methods
-    init: vi.fn().mockResolvedValue(undefined),
-    initialize: vi.fn().mockResolvedValue(undefined),
-    isReady: vi.fn().mockResolvedValue(true),
-    runMigrations: vi.fn().mockResolvedValue(undefined),
-    close: vi.fn().mockResolvedValue(undefined),
-    getConnection: vi.fn().mockResolvedValue(mockConnection),
+    init: mock().mockResolvedValue(undefined),
+    initialize: mock().mockResolvedValue(undefined),
+    isReady: mock().mockResolvedValue(true),
+    runMigrations: mock().mockResolvedValue(undefined),
+    close: mock().mockResolvedValue(undefined),
+    getConnection: mock().mockResolvedValue(mockConnection),
 
     // Agent Management
-    getAgent: vi.fn().mockResolvedValue(null),
-    getAgents: vi.fn().mockResolvedValue([]),
-    createAgent: vi.fn().mockResolvedValue(true),
-    updateAgent: vi.fn().mockResolvedValue(true),
-    deleteAgent: vi.fn().mockResolvedValue(true),
+    getAgent: mock().mockResolvedValue(null),
+    getAgents: mock().mockResolvedValue([]),
+    createAgent: mock().mockResolvedValue(true),
+    updateAgent: mock().mockResolvedValue(true),
+    deleteAgent: mock().mockResolvedValue(true),
 
     // Entity Management
-    getEntitiesByIds: vi.fn().mockResolvedValue([]),
-    getEntitiesForRoom: vi.fn().mockResolvedValue([]),
-    createEntities: vi.fn().mockResolvedValue(true),
-    updateEntity: vi.fn().mockResolvedValue(undefined),
+    getEntitiesByIds: mock().mockResolvedValue([]),
+    getEntitiesForRoom: mock().mockResolvedValue([]),
+    createEntities: mock().mockResolvedValue(true),
+    updateEntity: mock().mockResolvedValue(undefined),
 
     // Component Management
-    getComponent: vi.fn().mockResolvedValue(null),
-    getComponents: vi.fn().mockResolvedValue([]),
-    createComponent: vi.fn().mockResolvedValue(true),
-    updateComponent: vi.fn().mockResolvedValue(undefined),
-    deleteComponent: vi.fn().mockResolvedValue(undefined),
+    getComponent: mock().mockResolvedValue(null),
+    getComponents: mock().mockResolvedValue([]),
+    createComponent: mock().mockResolvedValue(true),
+    updateComponent: mock().mockResolvedValue(undefined),
+    deleteComponent: mock().mockResolvedValue(undefined),
 
     // Memory Management
-    getMemories: vi.fn().mockResolvedValue([]),
-    getMemoryById: vi.fn().mockResolvedValue(null),
-    getMemoriesByIds: vi.fn().mockResolvedValue([]),
-    getMemoriesByRoomIds: vi.fn().mockResolvedValue([]),
-    getMemoriesByWorldId: vi.fn().mockResolvedValue([]),
-    getCachedEmbeddings: vi.fn().mockResolvedValue([]),
-    searchMemories: vi.fn().mockResolvedValue([]),
-    createMemory: vi.fn().mockResolvedValue('test-memory-id' as UUID),
-    updateMemory: vi.fn().mockResolvedValue(true),
-    deleteMemory: vi.fn().mockResolvedValue(undefined),
-    deleteManyMemories: vi.fn().mockResolvedValue(undefined),
-    deleteAllMemories: vi.fn().mockResolvedValue(undefined),
-    countMemories: vi.fn().mockResolvedValue(0),
-    ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
+    getMemories: mock().mockResolvedValue([]),
+    getMemoryById: mock().mockResolvedValue(null),
+    getMemoriesByIds: mock().mockResolvedValue([]),
+    getMemoriesByRoomIds: mock().mockResolvedValue([]),
+    getMemoriesByWorldId: mock().mockResolvedValue([]),
+    getCachedEmbeddings: mock().mockResolvedValue([]),
+    searchMemories: mock().mockResolvedValue([]),
+    createMemory: mock().mockResolvedValue('test-memory-id' as UUID),
+    updateMemory: mock().mockResolvedValue(true),
+    deleteMemory: mock().mockResolvedValue(undefined),
+    deleteManyMemories: mock().mockResolvedValue(undefined),
+    deleteAllMemories: mock().mockResolvedValue(undefined),
+    countMemories: mock().mockResolvedValue(0),
+    ensureEmbeddingDimension: mock().mockResolvedValue(undefined),
 
     // Logging
-    log: vi.fn().mockResolvedValue(undefined),
-    getLogs: vi.fn().mockResolvedValue([]),
-    deleteLog: vi.fn().mockResolvedValue(undefined),
+    log: mock().mockResolvedValue(undefined),
+    getLogs: mock().mockResolvedValue([]),
+    deleteLog: mock().mockResolvedValue(undefined),
 
     // World Management
-    createWorld: vi.fn().mockResolvedValue('test-world-id' as UUID),
-    getWorld: vi.fn().mockResolvedValue(null),
-    removeWorld: vi.fn().mockResolvedValue(undefined),
-    getAllWorlds: vi.fn().mockResolvedValue([]),
-    getWorlds: vi.fn().mockResolvedValue([]),
-    updateWorld: vi.fn().mockResolvedValue(undefined),
+    createWorld: mock().mockResolvedValue('test-world-id' as UUID),
+    getWorld: mock().mockResolvedValue(null),
+    removeWorld: mock().mockResolvedValue(undefined),
+    getAllWorlds: mock().mockResolvedValue([]),
+    getWorlds: mock().mockResolvedValue([]),
+    updateWorld: mock().mockResolvedValue(undefined),
 
     // Room Management
-    getRoomsByIds: vi.fn().mockResolvedValue([]),
-    createRooms: vi.fn().mockResolvedValue([]),
-    deleteRoom: vi.fn().mockResolvedValue(undefined),
-    deleteRoomsByWorldId: vi.fn().mockResolvedValue(undefined),
-    updateRoom: vi.fn().mockResolvedValue(undefined),
-    getRoomsForParticipant: vi.fn().mockResolvedValue([]),
-    getRoomsForParticipants: vi.fn().mockResolvedValue([]),
-    getRoomsByWorld: vi.fn().mockResolvedValue([]),
+    getRoomsByIds: mock().mockResolvedValue([]),
+    createRooms: mock().mockResolvedValue([]),
+    deleteRoom: mock().mockResolvedValue(undefined),
+    deleteRoomsByWorldId: mock().mockResolvedValue(undefined),
+    updateRoom: mock().mockResolvedValue(undefined),
+    getRoomsForParticipant: mock().mockResolvedValue([]),
+    getRoomsForParticipants: mock().mockResolvedValue([]),
+    getRoomsByWorld: mock().mockResolvedValue([]),
 
     // Participant Management
-    removeParticipant: vi.fn().mockResolvedValue(true),
-    addParticipantsRoom: vi.fn().mockResolvedValue(true),
-    getParticipantsForEntity: vi.fn().mockResolvedValue([]),
-    getParticipantsForRoom: vi.fn().mockResolvedValue([]),
-    getParticipantUserState: vi.fn().mockResolvedValue(null),
-    setParticipantUserState: vi.fn().mockResolvedValue(undefined),
+    removeParticipant: mock().mockResolvedValue(true),
+    addParticipantsRoom: mock().mockResolvedValue(true),
+    getParticipantsForEntity: mock().mockResolvedValue([]),
+    getParticipantsForRoom: mock().mockResolvedValue([]),
+    getParticipantUserState: mock().mockResolvedValue(null),
+    setParticipantUserState: mock().mockResolvedValue(undefined),
 
     // Relationship Management
-    createRelationship: vi.fn().mockResolvedValue(true),
-    updateRelationship: vi.fn().mockResolvedValue(undefined),
-    getRelationship: vi.fn().mockResolvedValue(null),
-    getRelationships: vi.fn().mockResolvedValue([]),
+    createRelationship: mock().mockResolvedValue(true),
+    updateRelationship: mock().mockResolvedValue(undefined),
+    getRelationship: mock().mockResolvedValue(null),
+    getRelationships: mock().mockResolvedValue([]),
 
     // Cache Management
-    getCache: vi.fn().mockResolvedValue(undefined),
-    setCache: vi.fn().mockResolvedValue(true),
-    deleteCache: vi.fn().mockResolvedValue(true),
+    getCache: mock().mockResolvedValue(undefined),
+    setCache: mock().mockResolvedValue(true),
+    deleteCache: mock().mockResolvedValue(true),
 
     // Task Management
-    createTask: vi.fn().mockResolvedValue('test-task-id' as UUID),
-    getTasks: vi.fn().mockResolvedValue([]),
-    getTask: vi.fn().mockResolvedValue(null),
-    getTasksByName: vi.fn().mockResolvedValue([]),
-    updateTask: vi.fn().mockResolvedValue(undefined),
-    deleteTask: vi.fn().mockResolvedValue(undefined),
+    createTask: mock().mockResolvedValue('test-task-id' as UUID),
+    getTasks: mock().mockResolvedValue([]),
+    getTask: mock().mockResolvedValue(null),
+    getTasksByName: mock().mockResolvedValue([]),
+    updateTask: mock().mockResolvedValue(undefined),
+    deleteTask: mock().mockResolvedValue(undefined),
 
     // Apply overrides
     ...overrides,
@@ -167,15 +167,15 @@ export function createMockDatabase(overrides: MockDatabaseOverrides = {}): IData
  */
 export function createMockDbConnection(overrides: any = {}) {
   return {
-    execute: vi.fn().mockResolvedValue([]),
-    query: vi.fn().mockResolvedValue([]),
-    run: vi.fn().mockResolvedValue({ changes: 1 }),
-    all: vi.fn().mockResolvedValue([]),
-    get: vi.fn().mockResolvedValue(null),
-    prepare: vi.fn().mockReturnValue({
-      get: vi.fn().mockReturnValue(null),
-      all: vi.fn().mockReturnValue([]),
-      run: vi.fn().mockReturnValue({ changes: 1 }),
+    execute: mock().mockResolvedValue([]),
+    query: mock().mockResolvedValue([]),
+    run: mock().mockResolvedValue({ changes: 1 }),
+    all: mock().mockResolvedValue([]),
+    get: mock().mockResolvedValue(null),
+    prepare: mock().mockReturnValue({
+      get: mock().mockReturnValue(null),
+      all: mock().mockReturnValue([]),
+      run: mock().mockReturnValue({ changes: 1 }),
     }),
     ...overrides,
   };

@@ -5,7 +5,7 @@
  */
 
 import { ResearchService } from '../src/service';
-import { elizaLogger, IAgentRuntime, ModelType } from '@elizaos/core';
+import { logger, IAgentRuntime, ModelType } from '@elizaos/core';
 import { ResearchDomain, ResearchDepth } from '../src/types';
 import fs from 'fs/promises';
 import path from 'path';
@@ -58,7 +58,7 @@ async function createQuickRuntime(): Promise<IAgentRuntime> {
       return process.env[key] || '';
     },
 
-    getService: function (name: string) {
+    getService(name: string) {
       if (name === 'research') {
         return researchService;
       }
@@ -82,7 +82,7 @@ async function createQuickRuntime(): Promise<IAgentRuntime> {
       return completion.choices[0].message.content;
     },
 
-    logger: elizaLogger,
+    logger: logger,
   } as any;
 
   const researchService = await ResearchService.start(runtime);
@@ -157,7 +157,7 @@ async function runQuickTsJsBenchmark() {
           console.log(`\n✅ Research completed in ${Math.round(duration / 1000)}s`);
 
           // Log statistics
-          console.log(`📊 Results:`);
+          console.log('📊 Results:');
           console.log(`  - Sources: ${updated.sources.length}`);
           console.log(`  - Findings: ${updated.findings.length}`);
           console.log(`  - Word count: ${updated.report?.wordCount || 0}`);
@@ -165,19 +165,19 @@ async function runQuickTsJsBenchmark() {
           // Get summary
           let summary = 'No report generated';
           if (updated.report?.summary) {
-            summary = updated.report.summary.substring(0, 300) + '...';
+            summary = `${updated.report.summary.substring(0, 300)}...`;
             console.log(`📄 Summary: ${summary.substring(0, 150)}...`);
           }
 
           results.push({
             id: testQuery.id,
             query: testQuery.query,
-            duration: duration,
+            duration,
             status: 'completed',
             sources: updated.sources.length,
             findings: updated.findings.length,
             wordCount: updated.report?.wordCount || 0,
-            summary: summary,
+            summary,
           });
 
           break;
@@ -250,7 +250,7 @@ async function runQuickTsJsBenchmark() {
   const totalDuration = Date.now() - startTime;
 
   // Generate results summary
-  console.log('\n\n' + '='.repeat(60));
+  console.log(`\n\n${'='.repeat(60)}`);
   console.log('📊 TYPESCRIPT/JAVASCRIPT RESEARCH BENCHMARK RESULTS');
   console.log('='.repeat(60));
 
@@ -258,7 +258,7 @@ async function runQuickTsJsBenchmark() {
   const failed = results.filter((r) => r.status === 'failed');
   const timedOut = results.filter((r) => r.status === 'timeout');
 
-  console.log(`\n🎯 Overall Performance:`);
+  console.log('\n🎯 Overall Performance:');
   console.log(`⏱️  Total Runtime: ${Math.round(totalDuration / 1000)}s`);
   console.log(
     `✅ Successful: ${successful.length}/${results.length} (${((successful.length / results.length) * 100).toFixed(1)}%)`
@@ -272,14 +272,14 @@ async function runQuickTsJsBenchmark() {
     const avgFindings = successful.reduce((sum, r) => sum + r.findings, 0) / successful.length;
     const avgWordCount = successful.reduce((sum, r) => sum + r.wordCount, 0) / successful.length;
 
-    console.log(`\n📊 Average Performance Metrics (Successful Queries):`);
+    console.log('\n📊 Average Performance Metrics (Successful Queries):');
     console.log(`  ⏱️  Duration: ${Math.round(avgDuration / 1000)}s`);
     console.log(`  🔍 Sources Found: ${Math.round(avgSources)}`);
     console.log(`  📋 Findings Extracted: ${Math.round(avgFindings)}`);
     console.log(`  📄 Report Word Count: ${Math.round(avgWordCount)}`);
   }
 
-  console.log(`\n📋 Individual Query Results:`);
+  console.log('\n📋 Individual Query Results:');
   for (const result of results) {
     const statusIcon =
       result.status === 'completed' ? '✅' : result.status === 'failed' ? '❌' : '⏰';
@@ -309,7 +309,7 @@ async function runQuickTsJsBenchmark() {
       timeout: 90000,
       evaluationEnabled: false,
     },
-    totalDuration: totalDuration,
+    totalDuration,
     totalQueries: results.length,
     successful: successful.length,
     failed: failed.length,
@@ -318,11 +318,11 @@ async function runQuickTsJsBenchmark() {
     averageMetrics:
       successful.length > 0
         ? {
-            duration: successful.reduce((sum, r) => sum + r.duration, 0) / successful.length,
-            sources: successful.reduce((sum, r) => sum + r.sources, 0) / successful.length,
-            findings: successful.reduce((sum, r) => sum + r.findings, 0) / successful.length,
-            wordCount: successful.reduce((sum, r) => sum + r.wordCount, 0) / successful.length,
-          }
+          duration: successful.reduce((sum, r) => sum + r.duration, 0) / successful.length,
+          sources: successful.reduce((sum, r) => sum + r.sources, 0) / successful.length,
+          findings: successful.reduce((sum, r) => sum + r.findings, 0) / successful.length,
+          wordCount: successful.reduce((sum, r) => sum + r.wordCount, 0) / successful.length,
+        }
         : null,
     queryResults: results,
   };
@@ -341,9 +341,9 @@ async function runQuickTsJsBenchmark() {
   // Final assessment
   const overallSuccess = successful.length >= 2; // At least 2/3 should succeed
   if (overallSuccess) {
-    console.log(`\n🎉 BENCHMARK PASSED: TypeScript/JavaScript research capabilities verified!`);
+    console.log('\n🎉 BENCHMARK PASSED: TypeScript/JavaScript research capabilities verified!');
   } else {
-    console.log(`\n⚠️  BENCHMARK MIXED: Some issues detected in research capabilities`);
+    console.log('\n⚠️  BENCHMARK MIXED: Some issues detected in research capabilities');
   }
 
   console.log('\n✅ Quick TypeScript/JavaScript Research Benchmark Complete!');

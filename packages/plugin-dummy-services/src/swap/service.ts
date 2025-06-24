@@ -37,7 +37,7 @@ export class DummySwapService extends Service implements ISwapService {
     outputMint: string;
     amount: number;
   }): Promise<SwapQuote> {
-    logger.debug(`[DummySwapService] getQuote called for`, params);
+    logger.debug('[DummySwapService] getQuote called for', params);
     // Simulate a quote with some dummy data
     const outAmount = params.amount * 0.99; // Simulate 1% fee/slippage
     const rate = 0.99;
@@ -58,7 +58,7 @@ export class DummySwapService extends Service implements ISwapService {
   }
 
   async swap(params: any): Promise<TransactionResult> {
-    logger.debug(`[DummySwapService] swap called with`, params);
+    logger.debug('[DummySwapService] swap called with', params);
     return {
       success: true,
       transactionId: `dummy-swap-tx-${Date.now()}`,

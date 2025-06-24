@@ -22,11 +22,11 @@ export class SerialProtocol {
         try {
           const serialportModule = await import('serialport');
           this.SerialPortClass = serialportModule.SerialPort;
-        } catch (error) {
+        } catch (_error) {
           throw new Error('SerialPort module not installed. Run: npm install serialport');
         }
       }
-      
+
       this.port = new this.SerialPortClass({
         path: this.portPath,
         baudRate: this.baudRate,
@@ -54,9 +54,9 @@ export class SerialProtocol {
       this.port.on('close', this.handleClose.bind(this));
 
       logger.info(`[SerialProtocol] Connected to ${this.portPath} at ${this.baudRate} baud`);
-    } catch (error) {
-      logger.error('[SerialProtocol] Failed to connect:', error);
-      throw error;
+    } catch (_error) {
+      logger._error('[SerialProtocol] Failed to connect:', _error);
+      throw _error;
     }
   }
 
@@ -142,11 +142,13 @@ export class SerialProtocol {
     for (let i = 2; i < packet.length; i++) {
       sum += packet[i];
     }
-    return (~sum) & 0xFF;
+    return ~sum & 0xff;
   }
 
   private async startProcessingQueue(): Promise<void> {
-    if (this.processing) return;
+    if (this.processing) {
+      return;
+    }
 
     this.processing = true;
     while (this.isConnected) {
@@ -154,10 +156,10 @@ export class SerialProtocol {
         const command = this.commandQueue.shift()!;
         await this.sendPacket(command);
         // Small delay between commands
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       } else {
         // Check queue every 10ms
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
     }
     this.processing = false;
@@ -177,59 +179,64 @@ export class SerialProtocol {
       });
     });
 
-    logger.debug(`[SerialProtocol] Sent command to servo ${command.servoId}: ${ServoCommandType[command.command]}`);
+    logger.debug(
+      `[SerialProtocol] Sent command to servo ${command.servoId}: ${ServoCommandType[command.command]}`
+    );
   }
 
   private handleData(data: Buffer): void {
     // Append to response buffer
     this.responseBuffer = Buffer.concat([this.responseBuffer, data]);
-    
+
     // Process complete packets
-    while (this.responseBuffer.length >= 7) { // Minimum response size
+    while (this.responseBuffer.length >= 7) {
+      // Minimum response size
       // Check for valid header
       if (this.responseBuffer[0] !== 0x55 || this.responseBuffer[1] !== 0x55) {
         // Remove invalid byte and continue
         this.responseBuffer = this.responseBuffer.slice(1);
         continue;
       }
-      
+
       // Extract packet info
       const servoId = this.responseBuffer[2];
       const command = this.responseBuffer[3];
-      
+
       // Determine packet length based on command
       let packetLength = 7; // Default
       if (command === ServoCommandType.READ_POSITION) {
         packetLength = 8; // Position response includes 2 bytes for position
       }
-      
+
       if (this.responseBuffer.length < packetLength) {
         // Wait for more data
         break;
       }
-      
+
       // Extract packet
       const packet = this.responseBuffer.slice(0, packetLength);
       this.responseBuffer = this.responseBuffer.slice(packetLength);
-      
+
       // Verify checksum
       const checksum = packet[packetLength - 1];
       const calculated = this.calculateChecksum(packet.slice(0, -1));
-      
+
       if (checksum !== calculated) {
         logger.warn(`[SerialProtocol] Invalid checksum for servo ${servoId}`);
         continue;
       }
-      
+
       // Handle response
       const callbackKey = `${servoId}-${command}`;
       const callback = this.responseCallbacks.get(callbackKey);
-      
+
       if (callback) {
         callback(packet);
         this.responseCallbacks.delete(callbackKey);
       } else {
-        logger.debug(`[SerialProtocol] Unexpected response from servo ${servoId}: ${ServoCommandType[command]}`);
+        logger.debug(
+          `[SerialProtocol] Unexpected response from servo ${servoId}: ${ServoCommandType[command]}`
+        );
       }
     }
   }
@@ -294,20 +301,20 @@ export class SerialProtocol {
         this.responseCallbacks.delete(`${servoId}-${ServoCommandType.READ_POSITION}`);
         reject(new Error(`Timeout reading position from servo ${servoId}`));
       }, 100); // 100ms timeout
-      
+
       this.responseCallbacks.set(`${servoId}-${ServoCommandType.READ_POSITION}`, (packet) => {
         clearTimeout(timeout);
-        
+
         // Extract position from packet
         // Packet format: [0x55, 0x55, servoId, command, posLow, posHigh, checksum]
         const posLow = packet[4];
         const posHigh = packet[5];
         const position = (posHigh << 8) | posLow;
-        
+
         logger.debug(`[SerialProtocol] Servo ${servoId} position: ${position}`);
         resolve(position);
       });
-      
+
       // Send read command
       this.sendCommand({
         header: [0x55, 0x55],
@@ -320,4 +327,4 @@ export class SerialProtocol {
   isReady(): boolean {
     return this.isConnected;
   }
-} 
+}

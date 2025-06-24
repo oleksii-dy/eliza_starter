@@ -1,5 +1,6 @@
 import {
   type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type UUID,
@@ -11,14 +12,14 @@ import type { ElevationRequest } from '../types/permissions';
 
 export const requestElevationAction: Action = {
   name: 'REQUEST_ELEVATION',
-  description: 'Request temporary elevation of permissions for a specific action',
+  description: 'Request temporary elevation of permissions for a specific action. Validates user trust levels and grants temporary higher privileges with justification. Can be chained with EVALUATE_TRUST to check eligibility first or RECORD_TRUST_INTERACTION to log approval/denial outcomes.',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
     const permissionSystem = runtime.getService('contextual-permissions');
     return !!permissionSystem;
   },
 
-  handler: async (runtime: IAgentRuntime, message: Memory) => {
+  handler: async (runtime: IAgentRuntime, message: Memory): Promise<ActionResult> => {
     const permissionSystem = runtime.getService('contextual-permissions') as any;
     const trustEngine = runtime.getService('trust-engine') as any;
 
@@ -39,7 +40,14 @@ export const requestElevationAction: Action = {
     if (!requestData || !requestData.action) {
       return {
         text: 'Please specify the action you need elevated permissions for. Example: "I need to manage roles to help moderate the channel"',
-        error: true,
+        data: {
+          actionName: 'REQUEST_ELEVATION',
+          error: 'Missing action specification',
+        },
+        values: {
+          success: false,
+          approved: false,
+        },
       };
     }
 
@@ -74,10 +82,18 @@ export const requestElevationAction: Action = {
 
 Please use these permissions responsibly. All actions will be logged for audit.`,
           data: {
+            actionName: 'REQUEST_ELEVATION',
             approved: true,
             elevationId: result.elevationId,
             expiresAt: result.expiresAt,
             permissions: result.grantedPermissions,
+            requestedAction: requestData.action,
+          },
+          values: {
+            success: true,
+            approved: true,
+            elevationId: result.elevationId,
+            expiresAt: result.expiresAt,
           },
         };
       } else {
@@ -90,14 +106,23 @@ Please use these permissions responsibly. All actions will be logged for audit.`
 
         if (result.suggestions && result.suggestions.length > 0) {
           denialMessage +=
-            '\n\nSuggestions:\n' + result.suggestions.map((s) => `• ${s}`).join('\n');
+            `\n\nSuggestions:\n${result.suggestions.map((s) => `• ${s}`).join('\n')}`;
         }
 
         return {
           text: denialMessage,
           data: {
+            actionName: 'REQUEST_ELEVATION',
             approved: false,
             reason: result.reason,
+            currentTrust: trustProfile.overallTrust,
+            requiredTrust: result.requiredTrust,
+            trustDeficit: result.trustDeficit,
+            suggestions: result.suggestions,
+          },
+          values: {
+            success: true,
+            approved: false,
             currentTrust: trustProfile.overallTrust,
             requiredTrust: result.requiredTrust,
           },
@@ -107,41 +132,84 @@ Please use these permissions responsibly. All actions will be logged for audit.`
       logger.error('[RequestElevation] Error processing elevation request:', error);
       return {
         text: 'Failed to process elevation request. Please try again.',
-        error: true,
+        data: {
+          actionName: 'REQUEST_ELEVATION',
+          error: error instanceof Error ? error.message : String(error),
+        },
+        values: {
+          success: false,
+          approved: false,
+        },
       };
     }
   },
 
   examples: [
+    // Multi-action: Check trust then request elevation
     [
       {
-        name: 'User',
+        name: '{{user}}',
+        content: {
+          text: 'Check my trust score and then request admin permissions to moderate the channel',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll evaluate your trust level and then process your elevation request for moderation permissions.",
+          thought: 'User wants trust check followed by permission request',
+          actions: ['EVALUATE_TRUST', 'REQUEST_ELEVATION'],
+        },
+      },
+    ],
+    // Multi-action: Request elevation then record outcome
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Request temporary admin access and log the decision for audit purposes',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll process your elevation request and then record the outcome for audit tracking.",
+          thought: 'User wants permission request followed by audit logging',
+          actions: ['REQUEST_ELEVATION', 'RECORD_TRUST_INTERACTION'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
         content: {
           text: 'I need permission to manage roles to help moderate spam in the channel',
         },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: '✅ Elevation approved! You have been granted temporary manage_roles permissions until 12/20/2024, 5:30:00 PM.\n\nPlease use these permissions responsibly. All actions will be logged for audit.',
+          actions: ['REQUEST_ELEVATION'],
         },
       },
     ],
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'Grant me admin access',
         },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: '❌ Elevation request denied: Insufficient justification provided\n\nYour current trust score is 45/100. You need 15 more trust points for this permission.\n\nSuggestions:\n• Provide a specific justification for why you need admin access\n• Build trust through consistent positive contributions\n• Request more specific permissions instead of full admin access',
+          actions: ['REQUEST_ELEVATION'],
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 
   similes: [
     'request elevated permissions',

@@ -63,7 +63,7 @@ export const githubRepositoryProvider: Provider = {
           .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
           .slice(0, 5);
 
-        contextText += `\nRecent Repositories:\n`;
+        contextText += '\nRecent Repositories:\n';
         recentRepos.forEach((repo) => {
           contextText += `- ${repo.full_name} (${repo.language || 'Unknown'})\n`;
         });
@@ -163,7 +163,7 @@ export const githubIssuesProvider: Provider = {
           .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
           .slice(0, 5);
 
-        contextText += `\nRecent Issues:\n`;
+        contextText += '\nRecent Issues:\n';
         recentIssues.forEach((issue) => {
           const repoMatch = Object.keys(githubState.issues || {}).find(
             (key) => githubState.issues![key].id === issue.id
@@ -282,7 +282,7 @@ export const githubPullRequestsProvider: Provider = {
           .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
           .slice(0, 5);
 
-        contextText += `\nRecent Pull Requests:\n`;
+        contextText += '\nRecent Pull Requests:\n';
         recentPRs.forEach((pr) => {
           const repoMatch = Object.keys(githubState.pullRequests || {}).find(
             (key) => githubState.pullRequests![key].id === pr.id
@@ -366,7 +366,7 @@ export const githubActivityProvider: Provider = {
       // Activity statistics from state
       if (githubState?.activityStats) {
         const stats = githubState.activityStats;
-        contextText += `GitHub Activity Summary:\n`;
+        contextText += 'GitHub Activity Summary:\n';
         contextText += `Total Actions: ${stats.total}\n`;
         contextText += `Successful: ${stats.success}\n`;
         contextText += `Failed: ${stats.failed}\n`;
@@ -379,7 +379,7 @@ export const githubActivityProvider: Provider = {
 
         data.activityStats = stats;
       } else {
-        contextText += `GitHub activity context:\n`;
+        contextText += 'GitHub activity context:\n';
       }
 
       // Recent activity from service
@@ -388,7 +388,7 @@ export const githubActivityProvider: Provider = {
           const recentActivity = githubService.getActivityLog(10);
 
           if (recentActivity.length > 0) {
-            contextText += `\nRecent Activity (last 10 actions):\n`;
+            contextText += '\nRecent Activity (last 10 actions):\n';
             recentActivity.forEach((activity) => {
               const time = new Date(activity.timestamp).toLocaleTimeString();
               const status = activity.success ? '✅' : '❌';
@@ -410,7 +410,7 @@ export const githubActivityProvider: Provider = {
         const rateLimit = githubState.rateLimit;
         const usage = Math.round((rateLimit.used / rateLimit.limit) * 100);
 
-        contextText += `\nAPI Rate Limit:\n`;
+        contextText += '\nAPI Rate Limit:\n';
         contextText += `Used: ${rateLimit.used}/${rateLimit.limit} (${usage}%)\n`;
         contextText += `Remaining: ${rateLimit.remaining}\n`;
 

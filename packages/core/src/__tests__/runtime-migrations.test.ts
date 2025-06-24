@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { AgentRuntime } from '../runtime';
 import { IDatabaseAdapter, Plugin } from '../types';
 import { mockCharacter } from './mockCharacter';
@@ -12,19 +12,19 @@ describe('AgentRuntime Plugin Migrations', () => {
     // Mock database adapter
     mockDatabaseAdapter = {
       db: {},
-      checkHealth: vi.fn().mockResolvedValue(true),
-      init: vi.fn().mockResolvedValue(undefined),
-      query: vi.fn().mockResolvedValue({ rows: [] }),
-      close: vi.fn().mockResolvedValue(undefined),
+      checkHealth: mock().mockResolvedValue(true),
+      init: mock().mockResolvedValue(undefined),
+      query: mock().mockResolvedValue({ rows: [] }),
+      close: mock().mockResolvedValue(undefined),
     } as any;
 
     // Mock logger
     mockLogger = {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
-      success: vi.fn(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      debug: mock(),
+      success: mock(),
     };
 
     // Create runtime instance
@@ -40,7 +40,7 @@ describe('AgentRuntime Plugin Migrations', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   describe('runPluginMigrations', () => {
@@ -70,7 +70,7 @@ describe('AgentRuntime Plugin Migrations', () => {
 
       // Also ensure the public plugins getter returns the same array
       Object.defineProperty(runtime, 'plugins', {
-        get: function () {
+        get() {
           return runtimeAny._plugins;
         },
         configurable: true,
@@ -100,7 +100,7 @@ describe('AgentRuntime Plugin Migrations', () => {
 
       // Also ensure the public plugins getter returns the same array
       Object.defineProperty(runtime, 'plugins', {
-        get: function () {
+        get() {
           return runtimeAny._plugins;
         },
         configurable: true,
@@ -115,7 +115,7 @@ describe('AgentRuntime Plugin Migrations', () => {
 
     it('should run migrations for plugins with schemas', async () => {
       // Mock SQL plugin with migration function
-      const mockRunPluginMigrations = vi.fn().mockResolvedValue(undefined);
+      const mockRunPluginMigrations = mock().mockResolvedValue(undefined);
       const mockSqlPlugin: Plugin & { runPluginMigrations?: Function } = {
         name: '@elizaos/plugin-sql',
         description: 'SQL plugin',
@@ -147,7 +147,7 @@ describe('AgentRuntime Plugin Migrations', () => {
 
       // Also ensure the public plugins getter returns the same array
       Object.defineProperty(runtime, 'plugins', {
-        get: function () {
+        get() {
           return runtimeAny._plugins;
         },
         configurable: true,
@@ -168,7 +168,7 @@ describe('AgentRuntime Plugin Migrations', () => {
     });
 
     it('should count plugins with schemas correctly', async () => {
-      const mockRunPluginMigrations = vi.fn().mockResolvedValue(undefined);
+      const mockRunPluginMigrations = mock().mockResolvedValue(undefined);
 
       const mockSqlPlugin: Plugin & { runPluginMigrations?: Function } = {
         name: '@elizaos/plugin-sql',
@@ -212,7 +212,7 @@ describe('AgentRuntime Plugin Migrations', () => {
 
       // Also ensure the public plugins getter returns the same array
       Object.defineProperty(runtime, 'plugins', {
-        get: function () {
+        get() {
           return runtimeAny._plugins;
         },
         configurable: true,
@@ -250,7 +250,7 @@ describe('AgentRuntime Plugin Migrations', () => {
     });
 
     it('should handle migration errors gracefully', async () => {
-      const mockRunPluginMigrations = vi.fn().mockRejectedValue(new Error('Migration failed'));
+      const mockRunPluginMigrations = mock().mockRejectedValue(new Error('Migration failed'));
 
       const mockSqlPlugin: Plugin & { runPluginMigrations?: Function } = {
         name: '@elizaos/plugin-sql',
@@ -267,7 +267,7 @@ describe('AgentRuntime Plugin Migrations', () => {
 
       // Also ensure the public plugins getter returns the same array
       Object.defineProperty(runtime, 'plugins', {
-        get: function () {
+        get() {
           return runtimeAny._plugins;
         },
         configurable: true,
@@ -284,7 +284,7 @@ describe('AgentRuntime Plugin Migrations', () => {
     });
 
     it('should work with dynamic plugin loading', async () => {
-      const mockRunPluginMigrations = vi.fn().mockResolvedValue(undefined);
+      const mockRunPluginMigrations = mock().mockResolvedValue(undefined);
 
       // Initially no plugins
       const runtimeAny = runtime as any;
@@ -316,7 +316,7 @@ describe('AgentRuntime Plugin Migrations', () => {
 
       // Also ensure the public plugins getter returns the same array
       Object.defineProperty(runtime, 'plugins', {
-        get: function () {
+        get() {
           return runtimeAny._plugins;
         },
         configurable: true,
@@ -366,7 +366,7 @@ describe('AgentRuntime Plugin Migrations', () => {
 
       // Also ensure the public plugins getter returns the same array
       Object.defineProperty(runtime, 'plugins', {
-        get: function () {
+        get() {
           return runtimeAny._plugins;
         },
         configurable: true,

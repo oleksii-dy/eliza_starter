@@ -46,7 +46,7 @@ export async function installPluginFromGitHub(
         // Don't fail the installation if env prompting fails
       }
     } else {
-      console.log(`\n⏭️  Skipping environment variable prompts due to --skip-env-prompt flag`);
+      console.log('\n⏭️  Skipping environment variable prompts due to --skip-env-prompt flag');
     }
 
     process.exit(0);
@@ -121,7 +121,7 @@ export async function installPluginFromRegistry(
         // Don't fail the installation if env prompting fails
       }
     } else {
-      console.log(`\n⏭️  Skipping environment variable prompts due to --skip-env-prompt flag`);
+      console.log('\n⏭️  Skipping environment variable prompts due to --skip-env-prompt flag');
     }
 
     process.exit(0);
@@ -164,7 +164,6 @@ export async function addPlugin(pluginArg: string, opts: AddPluginOptions): Prom
 
   // --- Convert full GitHub HTTPS URL to shorthand ---
   const httpsGitHubUrlRegex =
-    // eslint-disable-next-line no-useless-escape
     /^https?:\/\/github\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_.-]+?)(?:\.git)?(?:(?:#|\/tree\/|\/commit\/)([a-zA-Z0-9_.-]+))?\/?$/;
   const httpsMatch = plugin.match(httpsGitHubUrlRegex);
 

@@ -26,4 +26,4 @@ declare module 'canvas' {
     getImageData(x: number, y: number, width: number, height: number): ImageData;
     drawImage(image: Image, x: number, y: number): void;
   }
-} 
+}

@@ -4,9 +4,9 @@ export {
   getTrustRequirement,
   requiresElevatedTrust,
   getHighRiskActions,
-  updateTrustRequirement} from './trustRequirements';
+  updateTrustRequirement } from './trustRequirements';
 
 // Re-export for convenience
-export type { 
-  TrustRequirements as TrustRequirementsType 
+export type {
+  TrustRequirements as TrustRequirementsType
 } from '../types/trust';

@@ -10,16 +10,14 @@ export class NgrokService extends Service implements ITunnelService {
     'Provides secure tunnel functionality using ngrok for exposing local services to the internet';
 
   private static readonly MIN_TUNNEL_INTERVAL = 2000; // 2 seconds minimum between tunnel starts
-  private static readonly CLEANUP_TIMEOUT = 5000; // 5 seconds max for cleanup
-  
+
   private ngrokProcess: ChildProcess | null = null;
   private tunnelUrl: string | null = null;
   private tunnelPort: number | null = null;
   private startedAt: Date | null = null;
   private lastStartTime = 0;
   private tunnelConfig: TunnelConfig;
-  private isShuttingDown = false;
-  
+
   constructor(runtime: IAgentRuntime) {
     super();
     this.runtime = runtime;
@@ -40,10 +38,11 @@ export class NgrokService extends Service implements ITunnelService {
       );
     }
 
-    const authToken = this.tunnelConfig.authToken || 
-                      this.runtime.getSetting('NGROK_AUTH_TOKEN') || 
-                      process.env.NGROK_AUTH_TOKEN;
-    
+    const authToken =
+      this.tunnelConfig.authToken ||
+      this.runtime.getSetting('NGROK_AUTH_TOKEN') ||
+      process.env.NGROK_AUTH_TOKEN;
+
     if (authToken) {
       await this.setAuthToken(authToken);
       elizaLogger.info('Setting ngrok auth token');
@@ -52,7 +51,7 @@ export class NgrokService extends Service implements ITunnelService {
     }
   }
 
-  static async start(runtime: IAgentRuntime, config?: TunnelConfig): Promise<Service> {
+  static async start(runtime: IAgentRuntime, _config?: TunnelConfig): Promise<Service> {
     const service = new NgrokService(runtime);
     await service.start();
     return service;
@@ -79,16 +78,11 @@ export class NgrokService extends Service implements ITunnelService {
       return this.tunnelUrl || undefined;
     }
 
-    if (port === undefined || port === null) {
+    if (!port) {
       elizaLogger.warn(
         'NgrokService.start() called without a port. The service will be active but no tunnel will be started.'
       );
       return;
-    }
-
-    // Validate port range
-    if (port < 1 || port > 65535) {
-      throw new Error('Invalid port number');
     }
 
     // Validate environment
@@ -132,63 +126,57 @@ export class NgrokService extends Service implements ITunnelService {
         return await this.startTunnelInternal(port);
       } catch (error: any) {
         attempts++;
-        
-        if (error.message && (
-          error.message.includes('domain might already be in use') ||
-          error.message.includes('ERR_NGROK_334') ||
-          error.message.includes('already online')
-        )) {
+
+        if (error.message && error.message.includes('domain might already be in use')) {
           if (attempts < maxAttempts) {
-            elizaLogger.warn(`Domain conflict detected, retrying in ${baseDelay * attempts}ms (attempt ${attempts}/${maxAttempts})`);
+            elizaLogger.warn(
+              `Domain conflict detected, retrying in ${baseDelay * attempts}ms (attempt ${attempts}/${maxAttempts})`
+            );
             await new Promise((resolve) => setTimeout(resolve, baseDelay * attempts));
-            
+
             // Try to stop any existing process just in case
             if (this.ngrokProcess) {
-              await this.forceKillProcess();
+              this.ngrokProcess.kill();
+              this.ngrokProcess = null;
+              await new Promise((resolve) => setTimeout(resolve, 1000));
             }
             continue;
           }
         }
-        
+
         throw error;
       }
     }
-    
+
     throw new Error(`Failed to start tunnel after ${maxAttempts} attempts`);
   }
 
   private async startTunnelInternal(port: number): Promise<string> {
     return new Promise((resolve, reject) => {
-      // Clean up any existing process first
-      if (this.ngrokProcess) {
-        this.ngrokProcess.kill();
-        this.ngrokProcess = null;
-      }
-      
       const args = ['http', port.toString()];
-      
-      if (this.tunnelConfig.region) args.push('--region', this.tunnelConfig.region);
-      
+      if (this.tunnelConfig.region) {
+        args.push('--region', this.tunnelConfig.region);
+      }
+
       // Check for domain configuration
       const domain = this.runtime.getSetting('NGROK_DOMAIN') || process.env.NGROK_DOMAIN;
       const useRandomSubdomain = this.runtime.getSetting('NGROK_USE_RANDOM_SUBDOMAIN') === 'true';
-      
+
       if (domain && !useRandomSubdomain) {
-        args.push('--domain', domain);
+        args.push('--domain', domain as string);
         elizaLogger.info(`Using ngrok domain: ${domain}`);
       } else if (this.tunnelConfig.subdomain && !useRandomSubdomain) {
-        // Only use subdomain if explicitly configured
+        // Only use subdomain if explicitly configured and not in test mode
         // Note: Subdomains require a paid ngrok account
         args.push('--subdomain', this.tunnelConfig.subdomain);
         elizaLogger.info(`Using configured subdomain: ${this.tunnelConfig.subdomain}`);
       }
-      // For free accounts or when random subdomain is requested, 
+      // For free accounts or when random subdomain is requested,
       // don't specify any domain/subdomain - let ngrok generate a random URL
 
       this.ngrokProcess = spawn('ngrok', args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
       let errorOccurred = false;
-      let processStarted = false;
 
       this.ngrokProcess.on('error', (error) => {
         errorOccurred = true;
@@ -199,14 +187,14 @@ export class NgrokService extends Service implements ITunnelService {
       this.ngrokProcess.stderr?.on('data', (data) => {
         const message = data.toString();
         elizaLogger.error('Ngrok error:', message);
-        
+
         if (!errorOccurred) {
           errorOccurred = true;
           // Kill the process to clean up
           if (this.ngrokProcess && !this.ngrokProcess.killed) {
             this.ngrokProcess.kill();
           }
-          
+
           // Handle specific error cases
           if (message.includes('invalid port')) {
             reject(new Error('Invalid port specified'));
@@ -215,15 +203,23 @@ export class NgrokService extends Service implements ITunnelService {
           } else if (message.includes('ERR_NGROK_15002') || message.includes('Pay-as-you-go')) {
             // Pay-as-you-go account requires domain
             if (!domain) {
-              reject(new Error('Pay-as-you-go ngrok account requires NGROK_DOMAIN to be set. Please set NGROK_DOMAIN=your-domain.ngrok-free.app in your .env file'));
+              reject(
+                new Error(
+                  'Pay-as-you-go ngrok account requires NGROK_DOMAIN to be set. Please set NGROK_DOMAIN=your-domain.ngrok-free.app in your .env file'
+                )
+              );
             } else {
-              reject(new Error('Failed to start tunnel with pay-as-you-go account. Ensure your domain is registered at https://dashboard.ngrok.com/domains'));
+              reject(
+                new Error(
+                  'Failed to start tunnel with pay-as-you-go account. Ensure your domain is registered at https://dashboard.ngrok.com/domains'
+                )
+              );
             }
-          } else if (message.includes('ERR_NGROK_334') || 
-                     message.includes('already online') ||
-                     message.includes('failed to start tunnel') || 
-                     message.includes('is already bound to another tunnel') ||
-                     message.includes('tunnel session failed')) {
+          } else if (
+            message.includes('failed to start tunnel') ||
+            message.includes('is already bound to another tunnel') ||
+            message.includes('tunnel session failed')
+          ) {
             // This might happen if the domain is already in use
             reject(new Error('Failed to start tunnel - domain might already be in use'));
           } else {
@@ -236,23 +232,25 @@ export class NgrokService extends Service implements ITunnelService {
       let retryCount = 0;
       const maxRetries = 3;
       const retryDelay = 2000;
-      
+
       const tryFetchUrl = async () => {
-        if (errorOccurred || this.isShuttingDown) {
+        if (errorOccurred) {
           return; // Don't try to fetch URL if we already have an error
         }
-        
+
         try {
           const url = await this.fetchTunnelUrl();
           if (url) {
-            processStarted = true;
             this.tunnelUrl = url;
             this.tunnelPort = port;
             this.startedAt = new Date();
+            elizaLogger.success(`✅ Ngrok tunnel started: ${url}`);
             resolve(url);
           } else if (retryCount < maxRetries) {
             retryCount++;
-            elizaLogger.warn(`Retrying to fetch tunnel URL (attempt ${retryCount}/${maxRetries})...`);
+            elizaLogger.warn(
+              `Retrying to fetch tunnel URL (attempt ${retryCount}/${maxRetries})...`
+            );
             setTimeout(tryFetchUrl, retryDelay);
           } else {
             reject(new Error('Failed to get tunnel URL from ngrok after multiple attempts'));
@@ -260,103 +258,45 @@ export class NgrokService extends Service implements ITunnelService {
         } catch (error) {
           if (retryCount < maxRetries && !errorOccurred) {
             retryCount++;
-            elizaLogger.warn(`Retrying to fetch tunnel URL (attempt ${retryCount}/${maxRetries})...`);
+            elizaLogger.warn(
+              `Retrying to fetch tunnel URL (attempt ${retryCount}/${maxRetries})...`
+            );
             setTimeout(tryFetchUrl, retryDelay);
           } else {
             reject(error);
           }
         }
       };
-      
-      this.ngrokProcess.on('exit', (code) => {
-        elizaLogger.warn(`Ngrok process exited with code ${code}`);
-        this.ngrokProcess = null;
-        
-        // Only reject if we haven't successfully started
-        if (!processStarted && !errorOccurred) {
-          reject(new Error(`Ngrok process exited unexpectedly with code ${code}`));
-        }
-      });
 
-      // Wait a bit for ngrok to start before trying to fetch URL
-      setTimeout(tryFetchUrl, 3000); // Increased from whatever it was before
+      setTimeout(tryFetchUrl, 2000);
     });
   }
 
   async stopTunnel(): Promise<void> {
-    if (!this.isActive() && !this.ngrokProcess) {
-      elizaLogger.warn('No active tunnel to stop');
+    if (!this.ngrokProcess) {
+      elizaLogger.warn('Ngrok tunnel is not running');
       return;
     }
-
-    this.isShuttingDown = true;
     elizaLogger.info('🛑 Stopping ngrok tunnel...');
-
-    if (this.ngrokProcess) {
-      await this.forceKillProcess();
-    }
-
-    this.cleanup();
-    this.isShuttingDown = false;
-
-    // Add a small delay to ensure ngrok fully releases resources
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    elizaLogger.info('✅ Ngrok tunnel stopped');
-  }
-
-  private async forceKillProcess(): Promise<void> {
-    if (!this.ngrokProcess) return;
-    
-    const process = this.ngrokProcess;
-    const pid = process.pid;
-    
-    // First try SIGTERM
-    process.kill('SIGTERM');
-    
-    // Wait for graceful shutdown
-    await new Promise<void>((resolve) => {
-      let resolved = false;
-      
-      const checkInterval = setInterval(() => {
-        if (!process.killed && process.exitCode === null) {
-          // Still running, try SIGKILL
-          try {
-            process.kill('SIGKILL');
-          } catch (e) {
-            // Process might already be dead
-          }
-        } else {
-          if (!resolved) {
-            resolved = true;
-            clearInterval(checkInterval);
-            clearTimeout(timeout);
-            resolve();
-          }
-        }
-      }, 100);
-      
-      // Timeout after CLEANUP_TIMEOUT
-      const timeout = setTimeout(() => {
-        if (!resolved) {
-          resolved = true;
-          clearInterval(checkInterval);
-          
-          // Last resort: try to kill by PID
-          if (pid) {
-            try {
-              spawn('kill', ['-9', pid.toString()]);
-            } catch (e) {
-              // Ignore errors
-            }
-          }
-          
+    return new Promise((resolve) => {
+      if (this.ngrokProcess) {
+        this.ngrokProcess.on('exit', () => {
+          this.cleanup();
+          elizaLogger.info('✅ Ngrok tunnel stopped');
           resolve();
-        }
-      }, NgrokService.CLEANUP_TIMEOUT);
+        });
+        this.ngrokProcess.kill();
+        setTimeout(() => {
+          if (this.ngrokProcess && !this.ngrokProcess.killed) {
+            this.ngrokProcess.kill('SIGKILL');
+          }
+          this.cleanup();
+          resolve();
+        }, 5000);
+      } else {
+        resolve();
+      }
     });
-    
-    this.ngrokProcess = null;
   }
 
   getUrl(): string | null {
@@ -364,7 +304,7 @@ export class NgrokService extends Service implements ITunnelService {
   }
 
   isActive(): boolean {
-    return this.ngrokProcess !== null && !this.ngrokProcess.killed && this.tunnelUrl !== null && !this.isShuttingDown;
+    return this.ngrokProcess !== null && !this.ngrokProcess.killed && this.tunnelUrl !== null;
   }
 
   getStatus(): TunnelStatus {

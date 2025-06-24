@@ -1,0 +1,7 @@
+[test]
+# Test configuration for CrossMint plugin
+timeout = 30000  # 30 seconds for API calls
+
+# Exclude patterns
+# Note: Bun test automatically excludes node_modules and dist
+# Additional excludes can be specified when running tests 

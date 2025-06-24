@@ -62,11 +62,11 @@ export class TrustDatabase implements ITrustDatabase {
   async initialize(runtime: IAgentRuntime, db?: any): Promise<void> {
     this.runtime = runtime;
     this.db = db || runtime.db;
-    
+
     // Skip migrations if we're in a test environment or if the DB isn't ready
     const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
     const isE2ETest = process.env.ELIZAOS_TEST === 'true' || runtime.character?.name === 'Eliza';
-    
+
     if (!isTestEnvironment && !isE2ETest) {
       try {
         await this.runMigrations();
@@ -106,7 +106,7 @@ export class TrustDatabase implements ITrustDatabase {
         logger.debug('Execute failed, trying other methods:', error);
       }
     }
-    
+
     // Try other methods
     if (typeof this.db.rawQuery === 'function') {
       const result = await this.db.rawQuery(sql, params);
@@ -197,12 +197,12 @@ export class TrustDatabase implements ITrustDatabase {
       `);
 
       // Create indexes
-      await this.executeSQL(`CREATE INDEX IF NOT EXISTS idx_trust_evidence_entity ON trust_evidence(entity_id)`);
-      await this.executeSQL(`CREATE INDEX IF NOT EXISTS idx_trust_evidence_timestamp ON trust_evidence(timestamp)`);
-      await this.executeSQL(`CREATE INDEX IF NOT EXISTS idx_trust_comments_entity ON trust_comments(entity_id, evaluator_id)`);
-      await this.executeSQL(`CREATE INDEX IF NOT EXISTS idx_trust_comments_timestamp ON trust_comments(timestamp)`);
-      await this.executeSQL(`CREATE INDEX IF NOT EXISTS idx_delegations_delegator ON permission_delegations(delegator_id)`);
-      
+      await this.executeSQL('CREATE INDEX IF NOT EXISTS idx_trust_evidence_entity ON trust_evidence(entity_id)');
+      await this.executeSQL('CREATE INDEX IF NOT EXISTS idx_trust_evidence_timestamp ON trust_evidence(timestamp)');
+      await this.executeSQL('CREATE INDEX IF NOT EXISTS idx_trust_comments_entity ON trust_comments(entity_id, evaluator_id)');
+      await this.executeSQL('CREATE INDEX IF NOT EXISTS idx_trust_comments_timestamp ON trust_comments(timestamp)');
+      await this.executeSQL('CREATE INDEX IF NOT EXISTS idx_delegations_delegator ON permission_delegations(delegator_id)');
+
     } catch (error) {
       logger.error('Failed to run trust database migrations:', error);
       throw error;
@@ -333,8 +333,8 @@ export class TrustDatabase implements ITrustDatabase {
     }
 
     try {
-      await this.executeSQL(`DELETE FROM trust_profiles WHERE entity_id = ?`, [entityId]);
-      await this.executeSQL(`DELETE FROM trust_evidence WHERE entity_id = ?`, [entityId]);
+      await this.executeSQL('DELETE FROM trust_profiles WHERE entity_id = ?', [entityId]);
+      await this.executeSQL('DELETE FROM trust_evidence WHERE entity_id = ?', [entityId]);
     } catch (error) {
       logger.error('Failed to delete trust profile:', error);
       throw error;
@@ -498,9 +498,9 @@ export class TrustDatabase implements ITrustDatabase {
     }
 
     try {
-      const sql = limit 
-        ? `SELECT * FROM trust_comments WHERE entity_id = ? AND evaluator_id = ? ORDER BY timestamp DESC LIMIT ?`
-        : `SELECT * FROM trust_comments WHERE entity_id = ? AND evaluator_id = ? ORDER BY timestamp DESC`;
+      const sql = limit
+        ? 'SELECT * FROM trust_comments WHERE entity_id = ? AND evaluator_id = ? ORDER BY timestamp DESC LIMIT ?'
+        : 'SELECT * FROM trust_comments WHERE entity_id = ? AND evaluator_id = ? ORDER BY timestamp DESC';
       const params = limit ? [entityId, evaluatorId, limit] : [entityId, evaluatorId];
       const rows = await this.executeSQL(sql, params);
 
@@ -525,24 +525,24 @@ export class TrustDatabase implements ITrustDatabase {
       throw new Error('Database not initialized');
     }
 
-              try {
-        const id = delegation.id || `delegation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        await this.executeSQL(`
+    try {
+      const id = delegation.id || `delegation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      await this.executeSQL(`
           INSERT OR REPLACE INTO permission_delegations (
             id, delegator_id, delegatee_id, permission, resource,
             granted_at, expires_at, active, conditions
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
-          id,
-          delegation.delegatorId,
-          delegation.delegateeId,
-          JSON.stringify(delegation.permissions),
-          JSON.stringify(delegation.context),
-          delegation.createdAt,
-          delegation.expiresAt || null,
-          !delegation.revoked ? 1 : 0,
-          JSON.stringify(delegation.conditions || [])
-        ]);
+        id,
+        delegation.delegatorId,
+        delegation.delegateeId,
+        JSON.stringify(delegation.permissions),
+        JSON.stringify(delegation.context),
+        delegation.createdAt,
+        delegation.expiresAt || null,
+        !delegation.revoked ? 1 : 0,
+        JSON.stringify(delegation.conditions || [])
+      ]);
     } catch (error) {
       logger.error('Failed to save permission delegation:', error);
       throw error;
@@ -570,7 +570,7 @@ export class TrustDatabase implements ITrustDatabase {
         context: JSON.parse(row.resource || '{}'),
         createdAt: row.granted_at,
         expiresAt: row.expires_at,
-        revoked: !Boolean(row.active),
+        revoked: !row.active,
         conditions: JSON.parse(row.conditions || '[]')
       }));
     } catch (error) {

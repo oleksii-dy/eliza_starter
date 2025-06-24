@@ -1,10 +1,9 @@
 // Update the IAttachment interface
 
-import { Agent, UUID } from '@elizaos/core';
 import type {
+  UUID,
   Agent as CoreAgent,
   Character as CoreCharacter,
-  Room as CoreRoom,
   AgentStatus as CoreAgentStatus,
   ChannelType as CoreChannelType,
 } from '@elizaos/core';
@@ -46,7 +45,7 @@ export interface MessageServer {
   name: string;
   sourceType: string;
   sourceId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string; // ISO Date string from server, or Date object
   updatedAt: string; // ISO Date string from server, or Date object
 }
@@ -60,7 +59,7 @@ export interface MessageChannel {
   sourceType?: string;
   sourceId?: string;
   topic?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string; // ISO Date string from server, or Date object
   updatedAt: string; // ISO Date string from server, or Date object
 }
@@ -75,7 +74,7 @@ export interface ServerMessage {
   authorDisplayName?: string; // Optional: May be in metadata or fetched separately
   content: string;
   createdAt: number; // Expecting timestamp MS for UI sorting/display
-  rawMessage?: any;
+  rawMessage?: Record<string, unknown>;
   inReplyToRootMessageId?: UUID;
   sourceType?: string;
   sourceId?: string;
@@ -83,10 +82,10 @@ export interface ServerMessage {
     agentName?: string;
     thought?: string;
     actions?: string[];
-    attachments?: any[];
+    attachments?: unknown[];
     authorDisplayName?: string; // If API puts it here
     serverId?: UUID; // If API puts it here
     prompt?: string; // Add prompt field to store the LLM prompt
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }

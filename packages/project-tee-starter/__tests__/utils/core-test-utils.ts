@@ -129,7 +129,7 @@ export const documentTestResult = (testName: string, result: any, error: Error |
       try {
         logger.info(`RESULT: ${JSON.stringify(result, null, 2).substring(0, 200)}...`);
       } catch (e) {
-        logger.info(`RESULT: [Complex object that couldn't be stringified]`);
+        logger.info("RESULT: [Complex object that couldn't be stringified]");
       }
     }
   }

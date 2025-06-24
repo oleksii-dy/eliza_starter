@@ -1,6 +1,14 @@
 import type { UUID, Memory, KnowledgeItem } from '@elizaos/core';
 import { z } from 'zod';
 
+/**
+ * Extended KnowledgeItem that includes similarity score for search results
+ */
+export interface KnowledgeSearchResult extends KnowledgeItem {
+  /** Similarity score from vector search (0-1, where 1 is most similar) */
+  similarity?: number;
+}
+
 // Schema for validating model configuration
 export const ModelConfigSchema = z.object({
   // Provider configuration
@@ -250,7 +258,7 @@ export function knowledgeItemToDocument(
     fileSize: (metadata as any).fileSize || 0,
     title: (metadata as any).title as string | undefined,
     sourceUrl: (metadata as any).sourceUrl as string | undefined,
-    metadata: metadata,
+    metadata,
   };
 }
 
@@ -470,7 +478,7 @@ export enum KnowledgeSourceType {
   GITHUB_REPO = 'github_repo',
   WEB_PAGE = 'web_page',
   DIRECT_TEXT = 'direct_text',
-  API_IMPORT = 'api_import'
+  API_IMPORT = 'api_import',
 }
 
 // Enhanced metadata for tracking knowledge sources
@@ -485,4 +493,12 @@ export interface KnowledgeSourceMetadata extends Record<string, any> {
   ingestionTimestamp: number;
   userAgent?: string;
   processingDuration?: number;
+}
+
+/**
+ * Extended KnowledgeItem that includes similarity score for search results
+ */
+export interface KnowledgeSearchResult extends KnowledgeItem {
+  /** Similarity score from vector search (0-1, where 1 is most similar) */
+  similarity?: number;
 }

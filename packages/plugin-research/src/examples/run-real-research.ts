@@ -19,7 +19,7 @@ process.env.FILE_LOGGING = 'true';
 // Create runtime with real API keys - NO HARD-CODED FALLBACKS
 const runtime = {
   getSetting: (key: string) => {
-    if (key === 'FILE_LOGGING') return 'true';
+    if (key === 'FILE_LOGGING') {return 'true';}
     const value = process.env[key];
     if (!value) {
       console.warn(`⚠️  Environment variable ${key} not found`);
@@ -59,7 +59,7 @@ async function runRealResearch() {
     const query = queries[i];
     console.log(`\n${'='.repeat(80)}`);
     console.log(`Research ${i + 1}/${queries.length}: ${query}`);
-    console.log('='.repeat(80) + '\n');
+    console.log(`${'='.repeat(80)}\n`);
 
     try {
       // Start research
@@ -71,19 +71,19 @@ async function runRealResearch() {
 
       // Wait for research to complete
       console.log('\n⏳ Research in progress...');
-      
+
       // Check status periodically
       let completed = false;
       let attempts = 0;
       const maxAttempts = 30; // 30 seconds max
-      
+
       while (!completed && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 1000));
         const currentProject = await service.getProject(project.id);
-        
+
         if (currentProject) {
           process.stdout.write(`\r📍 Status: ${currentProject.status} | Phase: ${currentProject.phase || 'N/A'}`);
-          
+
           if (currentProject.status === 'completed' || currentProject.status === 'failed') {
             completed = true;
             console.log('\n');
@@ -94,17 +94,17 @@ async function runRealResearch() {
 
       // Get final project state
       const finalProject = await service.getProject(project.id);
-      
+
       if (finalProject) {
         console.log(`\n✅ Research Status: ${finalProject.status}`);
         console.log(`📑 Sources Found: ${finalProject.sources.length}`);
         console.log(`💡 Key Findings: ${finalProject.findings.length}`);
-        
+
         if (finalProject.report) {
           console.log(`📝 Report Generated: ${finalProject.report.wordCount} words`);
           console.log(`⏱️  Reading Time: ${finalProject.report.readingTime} minutes`);
         }
-        
+
         // The report should already be saved by the service
         console.log('\n📁 Files saved to research_logs/ directory');
       }
@@ -120,23 +120,23 @@ async function runRealResearch() {
   }
 
   // Show saved files
-  console.log('\n' + '='.repeat(80));
+  console.log(`\n${'='.repeat(80)}`);
   console.log('📂 Research Outputs Saved:\n');
-  
+
   try {
     const logsDir = path.join(process.cwd(), 'research_logs');
     const files = await fs.readdir(logsDir);
     const mdFiles = files.filter(f => f.endsWith('.md')).sort();
-    
+
     if (mdFiles.length > 0) {
       console.log('Markdown Reports:');
       mdFiles.forEach(file => {
         console.log(`  📄 ${file}`);
       });
-      
+
       console.log('\n💡 To view a report, run:');
       console.log(`   cat research_logs/${mdFiles[0]}`);
-      
+
       console.log('\n💡 To view all reports:');
       console.log('   ls -la research_logs/');
     } else {
@@ -148,4 +148,4 @@ async function runRealResearch() {
 }
 
 // Run the research
-runRealResearch().catch(console.error); 
+runRealResearch().catch(console.error);

@@ -248,7 +248,11 @@ export interface IPaymentProvider {
   /**
    * Assess payment risk for user and transaction
    */
-  assessPaymentRisk(entityId: UUID, amount: string, method: PaymentMethod): Promise<PaymentRiskLevel>;
+  assessPaymentRisk(
+    entityId: UUID,
+    amount: string,
+    method: PaymentMethod
+  ): Promise<PaymentRiskLevel>;
 }
 
 /**

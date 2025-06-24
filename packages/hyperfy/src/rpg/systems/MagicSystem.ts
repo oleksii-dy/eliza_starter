@@ -53,7 +53,7 @@ export class MagicSystem extends System {
   private spellCooldowns: Map<string, Map<string, number>> = new Map(); // entityId -> spellId -> cooldown end time
   private poisonEffects: Map<string, any> = new Map();
   private weakenedStats: Map<string, any> = new Map();
-  
+
   // Rune IDs
   private readonly RUNES = {
     AIR: 556,
@@ -78,7 +78,7 @@ export class MagicSystem extends System {
     STEAM: 4694, // Water + Fire
     LAVA: 4699   // Earth + Fire
   };
-  
+
   constructor(world: World) {
     super(world);
     this.registerDefaultSpells();
@@ -336,13 +336,13 @@ export class MagicSystem extends System {
    */
   public castSpell(casterId: string, spellId: string, targetId?: string, position?: Vector3): boolean {
     const caster = this.world.entities.get(casterId);
-    if (!caster) return false;
+    if (!caster) {return false;}
 
     const stats = caster.getComponent<StatsComponent>('stats');
-    if (!stats) return false;
+    if (!stats) {return false;}
 
     const spell = this.spells.get(spellId);
-    if (!spell) return false;
+    if (!spell) {return false;}
 
     // Check magic level
     if (stats.magic.level < spell.level) {
@@ -352,7 +352,7 @@ export class MagicSystem extends System {
 
     // Check cooldown
     if (this.isSpellOnCooldown(casterId, spellId)) {
-      this.sendMessage(casterId, "That spell is still on cooldown.");
+      this.sendMessage(casterId, 'That spell is still on cooldown.');
       return false;
     }
 
@@ -364,7 +364,7 @@ export class MagicSystem extends System {
 
     // Check target for combat spells
     if (spell.type === 'combat' && !targetId) {
-      this.sendMessage(casterId, "You need a target to cast this spell.");
+      this.sendMessage(casterId, 'You need a target to cast this spell.');
       return false;
     }
 
@@ -420,18 +420,18 @@ export class MagicSystem extends System {
    */
   private executeCombatSpell(caster: RPGEntity, spell: Spell, targetId: string): void {
     const target = this.world.entities.get(targetId);
-    if (!target) return;
+    if (!target) {return;}
 
     // Check range
     const distance = this.getDistance(caster, target);
     if (spell.range && distance > spell.range) {
-      this.sendMessage(caster.id, "Your target is too far away.");
+      this.sendMessage(caster.id, 'Your target is too far away.');
       return;
     }
 
     // Calculate damage
     const casterStats = caster.getComponent<StatsComponent>('stats');
-    if (!casterStats || !spell.damage) return;
+    if (!casterStats || !spell.damage) {return;}
 
     // Base damage + magic level bonus
     const magicLevel = casterStats.magic.level;
@@ -467,11 +467,11 @@ export class MagicSystem extends System {
    */
   private executeTeleportSpell(caster: RPGEntity, spell: Spell): void {
     const teleportEffect = spell.effects?.find(e => e.type === 'teleport');
-    if (!teleportEffect || !teleportEffect.value) return;
+    if (!teleportEffect || !teleportEffect.value) {return;}
 
     // Teleport player
     const position = teleportEffect.value as Vector3;
-    
+
     this.world.events.emit('player:teleport', {
       playerId: caster.id,
       position,
@@ -486,7 +486,7 @@ export class MagicSystem extends System {
    */
   private executeAlchemySpell(caster: RPGEntity, spell: Spell): void {
     const inventory = caster.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return;
+    if (!inventory) {return;}
 
     // Find the next non-empty item slot
     let targetSlot = -1;
@@ -503,22 +503,22 @@ export class MagicSystem extends System {
     }
 
     const item = inventory.items[targetSlot];
-    if (!item) return;
+    if (!item) {return;}
 
     // Get item value from inventory system
-    const inventorySystem = this.world.getSystemByType(InventorySystem) || 
+    const inventorySystem = this.world.getSystemByType(InventorySystem) ||
                            this.world.getSystem<InventorySystem>('inventory');
-    if (!inventorySystem) return;
+    if (!inventorySystem) {return;}
 
     const itemDef = (inventorySystem as any).itemRegistry?.getItem(item.itemId);
     if (!itemDef) {
-      this.sendMessage(caster.id, "That item cannot be alchemized.");
+      this.sendMessage(caster.id, 'That item cannot be alchemized.');
       return;
     }
 
     // Check if item can be alchemized
     if (!itemDef.tradeable) {
-      this.sendMessage(caster.id, "That item cannot be alchemized.");
+      this.sendMessage(caster.id, 'That item cannot be alchemized.');
       return;
     }
 
@@ -563,8 +563,8 @@ export class MagicSystem extends System {
       case 'poison':
         // Apply poison damage over time
         const stats = target.getComponent<StatsComponent>('stats');
-        if (!stats) return;
-        
+        if (!stats) {return;}
+
         // Create poison effect
         const poisonData = {
           targetId: target.id,
@@ -573,20 +573,20 @@ export class MagicSystem extends System {
           tickRate: effect.value?.tickRate || 3000, // Default damage every 3 seconds
           startTime: Date.now()
         };
-        
+
         // Store poison effect
         this.poisonEffects.set(target.id, poisonData);
-        
+
         // Emit poison event
         this.world.events.emit('effect:poison', poisonData);
-        
-        this.sendMessage(target.id, "You have been poisoned!");
+
+        this.sendMessage(target.id, 'You have been poisoned!');
         break;
       case 'weaken':
         // Reduce target stats temporarily
         const targetStats = target.getComponent<StatsComponent>('stats');
-        if (!targetStats) return;
-        
+        if (!targetStats) {return;}
+
         // Store original stats if not already stored
         if (!this.weakenedStats.has(target.id)) {
           this.weakenedStats.set(target.id, {
@@ -595,13 +595,13 @@ export class MagicSystem extends System {
             defense: targetStats.defense.level
           });
         }
-        
+
         // Apply stat reduction (default 10%)
         const reduction = effect.value?.reduction || 0.1;
         targetStats.attack.level = Math.floor(targetStats.attack.level * (1 - reduction));
         targetStats.strength.level = Math.floor(targetStats.strength.level * (1 - reduction));
         targetStats.defense.level = Math.floor(targetStats.defense.level * (1 - reduction));
-        
+
         // Schedule stat restoration
         setTimeout(() => {
           const originalStats = this.weakenedStats.get(target.id);
@@ -612,8 +612,8 @@ export class MagicSystem extends System {
             this.weakenedStats.delete(target.id);
           }
         }, effect.duration || 60000); // Default 60 seconds
-        
-        this.sendMessage(target.id, "You feel weakened!");
+
+        this.sendMessage(target.id, 'You feel weakened!');
         break;
     }
   }
@@ -623,10 +623,10 @@ export class MagicSystem extends System {
    */
   private hasRunes(entityId: string, requirements: RuneRequirement[]): boolean {
     const entity = this.world.entities.get(entityId);
-    if (!entity) return false;
+    if (!entity) {return false;}
 
     const inventory = entity.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return false;
+    if (!inventory) {return false;}
 
     // Check combination runes
     const runeAmounts = this.calculateRuneAmounts(inventory);
@@ -647,7 +647,7 @@ export class MagicSystem extends System {
     const amounts = new Map<number, number>();
 
     for (const item of inventory.items) {
-      if (!item) continue;
+      if (!item) {continue;}
 
       // Add basic rune amounts
       const current = amounts.get(item.itemId) || 0;
@@ -675,7 +675,7 @@ export class MagicSystem extends System {
    */
   private consumeRunes(entityId: string, requirements: RuneRequirement[]): void {
     const inventorySystem = this.world.getSystem<any>('inventory');
-    if (!inventorySystem) return;
+    if (!inventorySystem) {return;}
 
     // Remove required runes (prioritize basic runes over combination)
     for (const req of requirements) {
@@ -698,10 +698,10 @@ export class MagicSystem extends System {
    */
   private isSpellOnCooldown(entityId: string, spellId: string): boolean {
     const cooldowns = this.spellCooldowns.get(entityId);
-    if (!cooldowns) return false;
+    if (!cooldowns) {return false;}
 
     const cooldownEnd = cooldowns.get(spellId);
-    if (!cooldownEnd) return false;
+    if (!cooldownEnd) {return false;}
 
     return Date.now() < cooldownEnd;
   }
@@ -724,10 +724,10 @@ export class MagicSystem extends System {
   private getDistance(entity1: RPGEntity, entity2: RPGEntity): number {
     const pos1 = entity1.position;
     const pos2 = entity2.position;
-    
+
     const dx = pos1.x - pos2.x;
     const dz = pos1.z - pos2.z;
-    
+
     return Math.sqrt(dx * dx + dz * dz);
   }
 
@@ -749,7 +749,7 @@ export class MagicSystem extends System {
    * Get all spells for level
    */
   public getSpellsForLevel(level: number, spellbook: string = 'standard'): Spell[] {
-    return Array.from(this.spells.values()).filter(s => 
+    return Array.from(this.spells.values()).filter(s =>
       s.level <= level && s.spellbook === spellbook
     );
   }
@@ -784,12 +784,12 @@ export class MagicSystem extends System {
       }
 
       const stats = entity.getComponent<StatsComponent>('stats');
-      if (!stats) continue;
+      if (!stats) {continue;}
 
       // Check if poison has expired
       if (now >= poisonData.startTime + poisonData.duration) {
         this.poisonEffects.delete(entityId);
-        this.sendMessage(entityId, "The poison has worn off.");
+        this.sendMessage(entityId, 'The poison has worn off.');
         continue;
       }
 
@@ -797,10 +797,10 @@ export class MagicSystem extends System {
       const lastTick = poisonData.lastTick || poisonData.startTime;
       if (now >= lastTick + poisonData.tickRate) {
         poisonData.lastTick = now;
-        
+
         // Apply damage
         stats.hitpoints.current = Math.max(0, stats.hitpoints.current - poisonData.damage);
-        
+
         // Create poison hit splat
         this.world.events.emit('combat:damage', {
           targetId: entityId,
@@ -820,4 +820,4 @@ export class MagicSystem extends System {
       }
     }
   }
-} 
+}

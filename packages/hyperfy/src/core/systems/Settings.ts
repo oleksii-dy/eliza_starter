@@ -54,7 +54,7 @@ export class Settings extends System implements ISettings {
     this.avatar = data.avatar ?? null;
     this.public = data.public === null ? undefined : data.public;
     this.playerLimit = data.playerLimit ?? null;
-    
+
     this.emit('change', {
       title: { value: this.title },
       desc: { value: this.desc },
@@ -79,20 +79,20 @@ export class Settings extends System implements ISettings {
   }
 
   override preFixedUpdate(): void {
-    if (!this.changes) return;
+    if (!this.changes) {return;}
     this.emit('change', this.changes);
     this.changes = null;
   }
 
   private modify(key: string, value: any): void {
-    if ((this as any)[key] === value) return;
+    if ((this as any)[key] === value) {return;}
     const prev = (this as any)[key];
     (this as any)[key] = value;
-    
-    if (!this.changes) this.changes = {};
-    if (!this.changes[key]) this.changes[key] = { prev, value: null };
+
+    if (!this.changes) {this.changes = {};}
+    if (!this.changes[key]) {this.changes[key] = { prev, value: null };}
     this.changes[key].value = value;
   }
 
 
-} 
+}

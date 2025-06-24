@@ -1,6 +1,5 @@
 import type { JSONSchema7 } from 'json-schema';
-import { ServiceType, type IAgentRuntime } from '@elizaos/core';
-import type { ServiceTypeName } from '@elizaos/core';
+import type { IAgentRuntime } from '@elizaos/core';
 
 // Constraint types for embedding in descriptions
 export interface StringConstraints {
@@ -288,7 +287,7 @@ export abstract class McpToolCompatibility {
 }
 
 // Model detection utilities
-export function detectModelProvider(runtime: IAgentRuntime): ModelInfo {
+export function detectModelProvider(_runtime: IAgentRuntime): ModelInfo {
   // Try to extract model info from ElizaOS runtime
   // Since there's no MODEL_PROVIDER service type, we'll use a default
   const modelId = 'unknown';
@@ -367,14 +366,17 @@ export function createMcpToolCompatibilitySync(
     switch (modelInfo.provider) {
       case 'openai':
         // Use eval to avoid bundlers trying to process this
+        // eslint-disable-next-line no-eval
         const OpenAIModule = eval('require')('./providers/openai');
         const { OpenAIMcpCompatibility } = OpenAIModule;
         return new OpenAIMcpCompatibility(modelInfo);
       case 'anthropic':
+        // eslint-disable-next-line no-eval
         const AnthropicModule = eval('require')('./providers/anthropic');
         const { AnthropicMcpCompatibility } = AnthropicModule;
         return new AnthropicMcpCompatibility(modelInfo);
       case 'google':
+        // eslint-disable-next-line no-eval
         const GoogleModule = eval('require')('./providers/google');
         const { GoogleMcpCompatibility } = GoogleModule;
         return new GoogleMcpCompatibility(modelInfo);

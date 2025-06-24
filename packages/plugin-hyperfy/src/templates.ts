@@ -170,4 +170,4 @@ Respond using XML format like this:
 </response>
 
 Your response should ONLY include the <response></response> XML block.
-</output>`
+</output>`;

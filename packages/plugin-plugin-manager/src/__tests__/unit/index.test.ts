@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { installPluginFromRegistryAction } from '../../actions/installPluginFromRegistry.ts';
 import { loadPluginAction } from '../../actions/loadPlugin.ts';
 import { startPluginConfigurationAction } from '../../actions/startPluginConfiguration.ts';

@@ -107,11 +107,11 @@ export class HealthMonitoringManager {
       this.recordMetrics(checkKey, this.resultToMetrics(result));
       await this.checkThresholds(checkKey, result);
       return result;
-    } catch (error) {
+    } catch (_error) {
       const errorResult: HealthCheckResult = {
         status: HealthStatus.UNHEALTHY,
-        message: `Health check failed: ${error instanceof Error ? error.message : String(error)}`,
-        details: { error: error instanceof Error ? error.message : String(error) },
+        message: `Health check failed: ${_error instanceof Error ? _error.message : String(_error)}`,
+        details: { error: _error instanceof Error ? _error.message : String(_error) },
         timestamp: Date.now(),
       };
       this.lastCheckResults.set(checkKey, errorResult);
@@ -150,7 +150,7 @@ export class HealthMonitoringManager {
     metrics.lastError = error;
     metrics.lastErrorTime = Date.now();
 
-    // Update status based on error count
+    // Update status based on _error count
     if (metrics.errors > 10) {
       metrics.status = HealthStatus.UNHEALTHY;
     } else if (metrics.errors > 5) {
@@ -189,11 +189,11 @@ export class HealthMonitoringManager {
         success: true,
         message: `Plugin ${pluginId} has been recovered and reset to healthy state`,
       };
-    } catch (error) {
-      elizaLogger.error(`[HealthMonitoringManager] Failed to recover plugin ${pluginId}`, { error });
+    } catch (_error) {
+      elizaLogger.error(`[HealthMonitoringManager] Failed to recover plugin ${pluginId}`, { _error });
       return {
         success: false,
-        message: `Failed to recover plugin: ${error instanceof Error ? error.message : String(error)}`,
+        message: `Failed to recover plugin: ${_error instanceof Error ? _error.message : String(_error)}`,
       };
     }
   }
@@ -217,8 +217,8 @@ export class HealthMonitoringManager {
       const result = await fn();
       metrics.lastActive = Date.now();
       return result;
-    } catch (error) {
-      this.recordError(pluginId, error as Error);
+    } catch (_error) {
+      this.recordError(pluginId, _error as Error);
       throw error;
     }
   }
@@ -430,11 +430,11 @@ export class HealthMonitoringManager {
           },
           timestamp: Date.now(),
         };
-      } catch (error) {
+      } catch (_error) {
         return {
           status: HealthStatus.WARNING,
           message: 'Disk check failed',
-          details: { error: error instanceof Error ? error.message : String(error) },
+          details: { error: _error instanceof Error ? _error.message : String(_error) },
           timestamp: Date.now(),
         };
       }
@@ -497,11 +497,11 @@ export class HealthMonitoringManager {
           },
           timestamp: Date.now(),
         };
-      } catch (error) {
+      } catch (_error) {
         return {
           status: HealthStatus.UNHEALTHY,
-          message: `Plugin manager service error: ${error instanceof Error ? error.message : String(error)}`,
-          details: { error: error instanceof Error ? error.message : String(error) },
+          message: `Plugin manager service error: ${_error instanceof Error ? _error.message : String(_error)}`,
+          details: { error: _error instanceof Error ? _error.message : String(_error) },
           timestamp: Date.now(),
         };
       }
@@ -541,13 +541,13 @@ export class HealthMonitoringManager {
 
       // Check for errors
       const errorCount = this.errorCounts.get(`plugin_${pluginId}`) || 0;
-      if (errorCount > 10) {
+      if (_errorCount > 10) {
         status = HealthStatus.UNHEALTHY;
-        message = `High error rate: ${errorCount} errors`;
+        message = `High _error rate: ${errorCount} errors`;
         details.errorCount = errorCount;
-      } else if (errorCount > 5) {
+      } else if (_errorCount > 5) {
         status = HealthStatus.WARNING;
-        message = `Elevated error rate: ${errorCount} errors`;
+        message = `Elevated _error rate: ${errorCount} errors`;
         details.errorCount = errorCount;
       }
 
@@ -561,11 +561,11 @@ export class HealthMonitoringManager {
         details,
         timestamp: Date.now(),
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         status: HealthStatus.UNHEALTHY,
-        message: `Plugin health check failed: ${error instanceof Error ? error.message : String(error)}`,
-        details: { error: error instanceof Error ? error.message : String(error) },
+        message: `Plugin health check failed: ${_error instanceof Error ? _error.message : String(_error)}`,
+        details: { error: _error instanceof Error ? _error.message : String(_error) },
         timestamp: Date.now(),
       };
     }
@@ -634,11 +634,11 @@ export class HealthMonitoringManager {
             this.lastCheckResults.set(name, result);
             this.recordMetrics(name, this.resultToMetrics(result));
             await this.checkThresholds(name, result);
-          } catch (error) {
+          } catch (_error) {
             elizaLogger.error('[HealthMonitoringManager] Health check failed', {
               check: name,
-              error: error instanceof Error ? error.message : String(error),
-              stack: error instanceof Error ? error.stack : undefined,
+              error: _error instanceof Error ? _error.message : String(_error),
+              stack: _error instanceof Error ? _error.stack : undefined,
             });
           }
         })()
@@ -688,13 +688,13 @@ export class HealthMonitoringManager {
 
   private async checkThresholds(name: string, result: HealthCheckResult): Promise<void> {
     const threshold = this.alertThresholds.get(name);
-    if (!threshold) return;
+    if (!threshold) {return;}
 
     // Extract the metric value from the result
     const metrics = this.resultToMetrics(result);
     const metricValue = metrics[threshold.metric];
 
-    if (metricValue === undefined) return;
+    if (metricValue === undefined) {return;}
 
     // Check if threshold is breached
     let isBreached = false;
@@ -755,9 +755,9 @@ export class HealthMonitoringManager {
         for (const callback of allCallbacks) {
           try {
             callback(alert);
-          } catch (error) {
-            if (error instanceof Error) {
-              elizaLogger.error('[HealthMonitoringManager] Error in alert callback', { error: error.message, name });
+          } catch (_error) {
+            if (_error instanceof Error) {
+              elizaLogger.error('[HealthMonitoringManager] Error in alert callback', { error: _error.message, name });
             }
           }
         }
@@ -799,16 +799,16 @@ export class HealthMonitoringManager {
       const checkKey = `plugin_${pluginId}`;
 
       // Skip if already has a periodic check
-      if (this.checkIntervals.has(checkKey)) continue;
+      if (this.checkIntervals.has(checkKey)) {continue;}
 
       // Create periodic health check for this plugin
       const interval = setInterval(async () => {
         try {
           await this.performHealthCheck(pluginId);
-        } catch (error) {
+        } catch (_error) {
           elizaLogger.error('[HealthMonitoringManager] Periodic check failed', {
             pluginId,
-            error: error instanceof Error ? error.message : String(error),
+            error: _error instanceof Error ? _error.message : String(_error),
           });
         }
       }, this.checkIntervalMs);
@@ -824,4 +824,4 @@ export class HealthMonitoringManager {
       });
     }
   }
-} 
+}

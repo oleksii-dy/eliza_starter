@@ -1,12 +1,6 @@
-import type { TestCase, TestSuite, IAgentRuntime, Memory, UUID } from '@elizaos/core';
-import { EnhancedSecretManager } from '../enhanced-service';
-import { ActionChainService } from '../services/action-chain-service';
+import type { IAgentRuntime } from '@elizaos/core';
 import { uxGuidanceProvider } from '../providers/uxGuidanceProvider';
-import { runWorkflowAction } from '../actions/runWorkflow';
-import { manageSecretAction } from '../actions/manageSecret';
-import { requestSecretFormAction } from '../actions/requestSecretForm';
-import type { UXGuidanceResponse } from '../providers/uxGuidanceProvider';
-import { createTestRuntime, cleanupTestRuntime } from './test-runtime';
+import { ActionChainService } from '../services/action-chain-service';
 
 /**
  * Runtime-based UX flow tests
@@ -19,7 +13,7 @@ export class UXFlowTestSuite implements TestSuite {
   tests: TestCase[] = [
     {
       name: 'Should guide new users through secret setup',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const message: Memory = {
           id: 'test-ux-1' as UUID,
           agentId: runtime.agentId,
@@ -73,7 +67,7 @@ export class UXFlowTestSuite implements TestSuite {
 
     {
       name: 'Should execute user onboarding workflow',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const message: Memory = {
           id: 'test-ux-2' as UUID,
           agentId: runtime.agentId,
@@ -87,7 +81,7 @@ export class UXFlowTestSuite implements TestSuite {
         };
 
         let callbackCalled = false;
-        const callback = async (result: any) => {
+        const _callback = async (_result: any) => {
           callbackCalled = true;
           return [];
         };
@@ -115,7 +109,7 @@ export class UXFlowTestSuite implements TestSuite {
 
     {
       name: 'Should validate secret form action',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const message: Memory = {
           id: 'test-ux-3' as UUID,
           agentId: runtime.agentId,
@@ -129,7 +123,7 @@ export class UXFlowTestSuite implements TestSuite {
         };
 
         // Test validation
-        const isValid = await requestSecretFormAction.validate(runtime, message);
+        const _isValid = await requestSecretFormAction.validate(runtime, message);
 
         // The action should be valid if secret form service is available
         const formService = runtime.getService('SECRET_FORMS');
@@ -147,7 +141,7 @@ export class UXFlowTestSuite implements TestSuite {
 
     {
       name: 'Should handle secret listing',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const message: Memory = {
           id: 'test-ux-4' as UUID,
           agentId: runtime.agentId,
@@ -164,7 +158,7 @@ export class UXFlowTestSuite implements TestSuite {
         };
 
         let callbackResult: any = null;
-        const callback = async (result: any) => {
+        const _callback = async (_result: any) => {
           callbackResult = result;
           return [];
         };
@@ -196,7 +190,7 @@ export class UXFlowTestSuite implements TestSuite {
 
     {
       name: 'Should provide contextual help based on user message',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const testCases = [
           {
             text: 'I have an API key error',
@@ -249,7 +243,7 @@ export class UXFlowTestSuite implements TestSuite {
 
     {
       name: 'Should handle service unavailability gracefully',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         // Create a message when services might not be available
         const message: Memory = {
           id: 'test-ux-5' as UUID,
@@ -301,7 +295,7 @@ export class UXFlowTestSuite implements TestSuite {
 
     {
       name: 'Should verify workflow chain integration',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const actionChainService = runtime.getService('ACTION_CHAIN') as ActionChainService;
         if (!actionChainService) {
           console.log('⚠️ Skipping workflow chain test - ActionChainService not available');

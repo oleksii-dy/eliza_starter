@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'bun:test';
-import { 
-  AgentRuntime, 
-  type UUID, 
-  type IAgentRuntime, 
-  type Memory, 
+import {
+  AgentRuntime,
+  type UUID,
+  type IAgentRuntime,
+  type Memory,
   type Entity,
   type Relationship,
-  ChannelType 
+  ChannelType
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { createIsolatedTestDatabase } from '../test-helpers';
@@ -15,7 +15,7 @@ import type { PgDatabaseAdapter } from '../../pg/adapter';
 
 /**
  * Production Validation Tests for SQL Plugin
- * 
+ *
  * These tests validate the SQL plugin under realistic production conditions:
  * - PostgreSQL database validation (when available)
  * - High concurrency load testing
@@ -34,7 +34,7 @@ describe('SQL Plugin Production Validation', () => {
 
   beforeAll(async () => {
     console.log('[PRODUCTION VALIDATION] Setting up production test environment...');
-    
+
     const setup = await createIsolatedTestDatabase(
       `production_validation_${Date.now()}`,
       []
@@ -44,10 +44,10 @@ describe('SQL Plugin Production Validation', () => {
     runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-    
+
     // Detect database type
     isPostgreSQL = process.env.POSTGRES_URL ? true : false;
-    
+
     console.log(`[PRODUCTION VALIDATION] Using ${isPostgreSQL ? 'PostgreSQL' : 'PGLite'} database`);
     console.log('[PRODUCTION VALIDATION] Production test environment ready');
   }, 60000); // Extended timeout for production setup
@@ -63,7 +63,7 @@ describe('SQL Plugin Production Validation', () => {
     it('should handle high-volume memory creation efficiently', async () => {
       const roomId = uuidv4() as UUID;
       const entityId = uuidv4() as UUID;
-      
+
       // Create test environment
       await runtime.createRoom({
         id: roomId,
@@ -92,9 +92,9 @@ describe('SQL Plugin Production Validation', () => {
           const index = i + j;
           return runtime.createMemory({
             id: uuidv4() as UUID,
-            entityId: entityId,
+            entityId,
             agentId: testAgentId,
-            roomId: roomId,
+            roomId,
             content: {
               text: `Performance test memory ${index} with sufficient content to simulate realistic usage patterns in production environments`,
               source: 'performance-test',
@@ -104,7 +104,7 @@ describe('SQL Plugin Production Validation', () => {
             metadata: {
               type: 'message',
               performanceTest: true,
-              index: index,
+              index,
               batchNumber: Math.floor(i / batchSize),
             },
             createdAt: Date.now() + index,
@@ -112,7 +112,7 @@ describe('SQL Plugin Production Validation', () => {
         });
 
         await Promise.all(batchPromises);
-        
+
         // Brief pause between batches to prevent overwhelming
         if (i + batch < memoryCount) {
           await new Promise(resolve => setTimeout(resolve, 50));
@@ -129,7 +129,7 @@ describe('SQL Plugin Production Validation', () => {
       // Verify data integrity
       const queryStartTime = Date.now();
       const allMemories = await runtime.getMemories({
-        roomId: roomId,
+        roomId,
         count: memoryCount,
         tableName: 'messages',
       });
@@ -144,7 +144,7 @@ describe('SQL Plugin Production Validation', () => {
       const searchStartTime = Date.now();
       const searchResults = await runtime.searchMemories({
         embedding: Array(384).fill(0.5),
-        roomId: roomId,
+        roomId,
         count: 50,
         match_threshold: 0.1,
         tableName: 'messages',
@@ -170,11 +170,11 @@ describe('SQL Plugin Production Validation', () => {
       console.log(`[CONCURRENCY] Testing ${concurrentOperations} concurrent operations...`);
 
       const startTime = Date.now();
-      
+
       // Create multiple concurrent operations of different types
       const promises = Array.from({ length: concurrentOperations }, (_, i) => {
         const operationType = i % 4;
-        
+
         switch (operationType) {
           case 0: // Entity creation
             return runtime.createEntity({
@@ -183,13 +183,13 @@ describe('SQL Plugin Production Validation', () => {
               agentId: testAgentId,
               metadata: { concurrencyTest: true, index: i },
             });
-            
+
           case 1: // Memory creation
             return runtime.createMemory({
               id: uuidv4() as UUID,
               entityId: testAgentId,
               agentId: testAgentId,
-              roomId: roomId,
+              roomId,
               content: {
                 text: `Concurrent memory ${i}`,
                 source: 'concurrency-test',
@@ -202,25 +202,25 @@ describe('SQL Plugin Production Validation', () => {
               },
               createdAt: Date.now() + i,
             }, 'messages');
-            
+
           case 2: // Relationship creation
             return (async () => {
               const sourceId = uuidv4() as UUID;
               const targetId = uuidv4() as UUID;
-              
+
               // Create entities first
               await runtime.createEntity({
                 id: sourceId,
                 names: [`Source ${i}`],
                 agentId: testAgentId,
               });
-              
+
               await runtime.createEntity({
                 id: targetId,
                 names: [`Target ${i}`],
                 agentId: testAgentId,
               });
-              
+
               // Create relationship
               return runtime.createRelationship({
                 sourceEntityId: sourceId,
@@ -229,22 +229,22 @@ describe('SQL Plugin Production Validation', () => {
                 metadata: { index: i, concurrencyTest: true },
               });
             })();
-            
+
           case 3: // Component creation
             return (async () => {
               const entityId = uuidv4() as UUID;
-              
+
               await runtime.createEntity({
                 id: entityId,
                 names: [`Component Entity ${i}`],
                 agentId: testAgentId,
               });
-              
+
               return runtime.createComponent({
                 id: uuidv4() as UUID,
-                entityId: entityId,
+                entityId,
                 agentId: testAgentId,
-                roomId: roomId,
+                roomId,
                 worldId: uuidv4() as UUID,
                 sourceEntityId: testAgentId,
                 type: 'concurrent_test',
@@ -252,7 +252,7 @@ describe('SQL Plugin Production Validation', () => {
                 createdAt: Date.now(),
               });
             })();
-            
+
           default:
             return Promise.resolve(true);
         }
@@ -271,9 +271,9 @@ describe('SQL Plugin Production Validation', () => {
 
       // At least 95% should succeed
       expect(successful / concurrentOperations).toBeGreaterThanOrEqual(0.95);
-      
+
       if (failed > 0) {
-        console.warn(`[CONCURRENCY] ${failed} operations failed:`, 
+        console.warn(`[CONCURRENCY] ${failed} operations failed:`,
           results.filter(r => r.status === 'rejected').map(r => (r as PromiseRejectedResult).reason)
         );
       }
@@ -303,7 +303,7 @@ describe('SQL Plugin Production Validation', () => {
       // Create large number of entities with components
       for (let i = 0; i < entityCount; i++) {
         const entityId = uuidv4() as UUID;
-        
+
         await runtime.createEntity({
           id: entityId,
           names: [`Memory Test Entity ${i}`],
@@ -318,9 +318,9 @@ describe('SQL Plugin Production Validation', () => {
         // Add component to each entity
         await runtime.createComponent({
           id: uuidv4() as UUID,
-          entityId: entityId,
+          entityId,
           agentId: testAgentId,
-          roomId: roomId,
+          roomId,
           worldId: uuidv4() as UUID,
           sourceEntityId: testAgentId,
           type: 'memory_test',
@@ -363,7 +363,7 @@ describe('SQL Plugin Production Validation', () => {
       const entities = await runtime.getEntityByIds(
         Array.from({ length: Math.min(entityCount, 100) }, () => uuidv4() as UUID)
       );
-      
+
       // Should be able to query without issues
       expect(Array.isArray(entities)).toBe(true);
     });
@@ -373,7 +373,7 @@ describe('SQL Plugin Production Validation', () => {
     it('should gracefully handle database connection issues', async () => {
       // This test simulates various error conditions
       const roomId = uuidv4() as UUID;
-      
+
       await runtime.createRoom({
         id: roomId,
         name: 'Error Recovery Test Room',
@@ -384,7 +384,7 @@ describe('SQL Plugin Production Validation', () => {
 
       // Test handling of constraint violations
       const duplicateId = uuidv4() as UUID;
-      
+
       await runtime.createEntity({
         id: duplicateId,
         names: ['Original Entity'],
@@ -405,7 +405,7 @@ describe('SQL Plugin Production Validation', () => {
         id: uuidv4() as UUID,
         entityId: uuidv4() as UUID, // Non-existent entity
         agentId: testAgentId,
-        roomId: roomId,
+        roomId,
         content: {
           text: 'Memory with invalid entity reference',
           source: 'error-test',
@@ -455,31 +455,32 @@ describe('SQL Plugin Production Validation', () => {
       // Create multiple operations that could potentially conflict
       const stressPromises = Array.from({ length: stressOperations }, (_, i) => {
         const operationType = i % 3;
-        
+
         return (async () => {
           try {
             switch (operationType) {
-              case 0: // Update shared entity relationships
+              case 0: { // Update shared entity relationships
                 const targetId = uuidv4() as UUID;
                 await runtime.createEntity({
                   id: targetId,
                   names: [`Stress Target ${i}`],
                   agentId: testAgentId,
                 });
-                
+
                 return runtime.createRelationship({
                   sourceEntityId: sharedEntityId,
                   targetEntityId: targetId,
                   tags: ['stress-test', `batch-${Math.floor(i / 10)}`],
                   metadata: { stressTest: true, index: i },
                 });
+              }
 
-              case 1: // Create memories referencing shared entity
+              case 1: { // Create memories referencing shared entity
                 return runtime.createMemory({
                   id: uuidv4() as UUID,
                   entityId: sharedEntityId,
                   agentId: testAgentId,
-                  roomId: roomId,
+                  roomId,
                   content: {
                     text: `Stress test memory ${i} referencing shared entity`,
                     source: 'stress-test',
@@ -492,13 +493,14 @@ describe('SQL Plugin Production Validation', () => {
                   },
                   createdAt: Date.now() + i,
                 }, 'messages');
+              }
 
-              case 2: // Create components for shared entity
+              case 2: { // Create components for shared entity
                 return runtime.createComponent({
                   id: uuidv4() as UUID,
                   entityId: sharedEntityId,
                   agentId: testAgentId,
-                  roomId: roomId,
+                  roomId,
                   worldId: uuidv4() as UUID,
                   sourceEntityId: testAgentId,
                   type: 'stress_test',
@@ -509,6 +511,7 @@ describe('SQL Plugin Production Validation', () => {
                   },
                   createdAt: Date.now(),
                 });
+              }
 
               default:
                 return Promise.resolve(true);
@@ -521,7 +524,7 @@ describe('SQL Plugin Production Validation', () => {
       });
 
       const stressResults = await Promise.allSettled(stressPromises);
-      const successfulOps = stressResults.filter(r => 
+      const successfulOps = stressResults.filter(r =>
         r.status === 'fulfilled' && (r as PromiseFulfilledResult<any>).value !== false
       ).length;
 
@@ -534,9 +537,9 @@ describe('SQL Plugin Production Validation', () => {
       const relationships = await runtime.getRelationships({
         entityId: sharedEntityId,
       });
-      
+
       const memories = await runtime.getMemories({
-        roomId: roomId,
+        roomId,
         count: stressOperations,
         tableName: 'messages',
       });
@@ -630,7 +633,7 @@ describe('SQL Plugin Production Validation', () => {
             id: userId,
             names: [`Production User ${i}`],
             agentId: testAgentId,
-            metadata: { 
+            metadata: {
               userIndex: i,
               role: i % 3 === 0 ? 'admin' : 'user',
               joinedAt: Date.now(),
@@ -645,12 +648,12 @@ describe('SQL Plugin Production Validation', () => {
 
       // Create messages from each user
       const messagePromises = userIds.flatMap((userId, userIndex) =>
-        Array.from({ length: messagesPerUser }, (_, msgIndex) => 
+        Array.from({ length: messagesPerUser }, (_, msgIndex) =>
           runtime.createMemory({
             id: uuidv4() as UUID,
             entityId: userId,
             agentId: testAgentId,
-            roomId: roomId,
+            roomId,
             content: {
               text: `Message ${msgIndex + 1} from user ${userIndex + 1}: This is a realistic message with enough content to simulate real usage patterns.`,
               source: 'production-load-test',
@@ -659,7 +662,7 @@ describe('SQL Plugin Production Validation', () => {
             embedding: Array(384).fill(Math.random()),
             metadata: {
               type: 'message',
-              userIndex: userIndex,
+              userIndex,
               messageIndex: msgIndex,
               productionLoad: true,
             },
@@ -684,7 +687,7 @@ describe('SQL Plugin Production Validation', () => {
       // Test querying performance
       const queryStartTime = Date.now();
       const recentMessages = await runtime.getMemories({
-        roomId: roomId,
+        roomId,
         count: Math.min(totalMessages, 100),
         tableName: 'messages',
       });
@@ -697,7 +700,7 @@ describe('SQL Plugin Production Validation', () => {
       const searchStartTime = Date.now();
       const searchResults = await runtime.searchMemories({
         embedding: Array(384).fill(0.7),
-        roomId: roomId,
+        roomId,
         count: 20,
         match_threshold: 0.1,
         tableName: 'messages',

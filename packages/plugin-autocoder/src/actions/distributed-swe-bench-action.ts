@@ -200,13 +200,13 @@ function parseDistributedOptions(text: string): BenchmarkOptions {
   if (text.includes('all language')) {
     // Don't set filter to run all languages
   } else {
-    if (text.includes('typescript')) languages.push('TypeScript');
-    if (text.includes('javascript')) languages.push('JavaScript');
-    if (text.includes('java')) languages.push('Java');
-    if (text.includes('go')) languages.push('Go');
-    if (text.includes('rust')) languages.push('Rust');
-    if (text.includes('c++') || text.includes('cpp')) languages.push('C++');
-    if (text.includes(' c ') || text.includes(' c,')) languages.push('C');
+    if (text.includes('typescript')) {languages.push('TypeScript');}
+    if (text.includes('javascript')) {languages.push('JavaScript');}
+    if (text.includes('java')) {languages.push('Java');}
+    if (text.includes('go')) {languages.push('Go');}
+    if (text.includes('rust')) {languages.push('Rust');}
+    if (text.includes('c++') || text.includes('cpp')) {languages.push('C++');}
+    if (text.includes(' c ') || text.includes(' c,')) {languages.push('C');}
 
     if (languages.length > 0) {
       options.language_filter = languages as any;
@@ -230,16 +230,16 @@ function formatDistributedReport(report: any): string {
   const results = report.results;
   const duration = (report.duration / 1000 / 60).toFixed(2);
 
-  let response = `✅ **Distributed SWE-bench Evaluation Complete**\n\n`;
+  let response = '✅ **Distributed SWE-bench Evaluation Complete**\n\n';
   response += `**Duration**: ${duration} minutes\n\n`;
 
-  response += `**Overall Results**:\n`;
+  response += '**Overall Results**:\n';
   response += `- Total Instances: ${results.total_instances}\n`;
   response += `- Resolved: ${results.resolved_instances}\n`;
   response += `- Resolution Rate: ${(results.resolution_rate * 100).toFixed(2)}%\n\n`;
 
   if (results.by_language && Object.keys(results.by_language).length > 0) {
-    response += `**Results by Language**:\n`;
+    response += '**Results by Language**:\n';
     for (const [lang, stats] of Object.entries(results.by_language) as any) {
       const rate = stats.total > 0 ? ((stats.successful / stats.total) * 100).toFixed(2) : 0;
       response += `- ${lang}: ${stats.successful}/${stats.total} (${rate}%)\n`;
@@ -247,19 +247,19 @@ function formatDistributedReport(report: any): string {
     response += '\n';
   }
 
-  response += `**Performance**:\n`;
+  response += '**Performance**:\n';
   response += `- Total Execution Time: ${(results.execution_time?.total / 1000 / 60).toFixed(2)} minutes\n`;
   response += `- Average per Instance: ${(results.execution_time?.average / 1000).toFixed(2)} seconds\n\n`;
 
-  response += `**Infrastructure**:\n`;
-  response += `- Containers Used: 10 (distributed across language types)\n`;
-  response += `- Parallel Execution: Yes\n\n`;
+  response += '**Infrastructure**:\n';
+  response += '- Containers Used: 10 (distributed across language types)\n';
+  response += '- Parallel Execution: Yes\n\n';
 
   response += `📊 Full report saved to: ${report.artifacts_dir}/report.json\n`;
-  response += `📈 Grafana dashboard: http://localhost:3001 (admin/admin)\n`;
-  response += `🔍 Prometheus metrics: http://localhost:9090\n\n`;
+  response += '📈 Grafana dashboard: http://localhost:3001 (admin/admin)\n';
+  response += '🔍 Prometheus metrics: http://localhost:9090\n\n';
 
-  response += `To stop the infrastructure, say "stop distributed swe-bench"`;
+  response += 'To stop the infrastructure, say "stop distributed swe-bench"';
 
   return response;
 }
@@ -269,10 +269,10 @@ function formatStatsResponse(stats: any): string {
     return `❌ Failed to get status: ${stats.message}`;
   }
 
-  let response = `📊 **Distributed SWE-bench Status**\n\n`;
+  let response = '📊 **Distributed SWE-bench Status**\n\n';
 
   if (stats.bridge_status) {
-    response += `**Bridge Server**:\n`;
+    response += '**Bridge Server**:\n';
     response += `- Status: ${stats.bridge_status.status}\n`;
     response += `- Active Tasks: ${stats.bridge_status.activeTasks}\n`;
     response += `- Pending Tasks: ${stats.bridge_status.pendingTasks}\n\n`;

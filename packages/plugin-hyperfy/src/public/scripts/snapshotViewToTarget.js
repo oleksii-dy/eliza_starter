@@ -1,4 +1,4 @@
-window.snapshotViewToTarget = async function(playerData, targetPosition) {
+window.snapshotViewToTarget = async function (playerData, targetPosition) {
   const win = window;
   const THREE = win.THREE;
   const camera = win.camera;

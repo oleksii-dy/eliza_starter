@@ -36,7 +36,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
   private isInitialized = false;
   private participantStates = new Map<string, 'FOLLOWED' | 'MUTED' | null>();
 
-  async initialize(config?: any): Promise<void> {
+  async initialize(_config?: any): Promise<void> {
     this.isInitialized = true;
   }
 
@@ -44,7 +44,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     this.isInitialized = true;
   }
 
-  async runMigrations(schema?: any, pluginName?: string): Promise<void> {
+  async runMigrations(_schema?: any, _pluginName?: string): Promise<void> {
     // Mock implementation - no actual migrations needed
   }
 
@@ -100,7 +100,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     return this.agents.delete(agentId);
   }
 
-  async ensureEmbeddingDimension(dimension: number): Promise<void> {
+  async ensureEmbeddingDimension(_dimension: number): Promise<void> {
     // Mock implementation
   }
 
@@ -112,7 +112,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     return entities.length > 0 ? entities : null;
   }
 
-  async getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]> {
+  async getEntitiesForRoom(roomId: UUID, _includeComponents?: boolean): Promise<Entity[]> {
     return Array.from(this.entities.values()).filter((entity) => entity.agentId === roomId);
   }
 
@@ -135,8 +135,8 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
   async getComponent(
     entityId: UUID,
     type: string,
-    worldId?: UUID,
-    sourceEntityId?: UUID
+    _worldId?: UUID,
+    _sourceEntityId?: UUID
   ): Promise<Component | null> {
     return (
       Array.from(this.components.values()).find(
@@ -145,7 +145,11 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     );
   }
 
-  async getComponents(entityId: UUID, worldId?: UUID, sourceEntityId?: UUID): Promise<Component[]> {
+  async getComponents(
+    entityId: UUID,
+    _worldId?: UUID,
+    _sourceEntityId?: UUID
+  ): Promise<Component[]> {
     return Array.from(this.components.values()).filter((comp) => comp.entityId === entityId);
   }
 
@@ -193,7 +197,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     return this.memories.get(id) || null;
   }
 
-  async getMemoriesByIds(ids: UUID[], tableName?: string): Promise<Memory[]> {
+  async getMemoriesByIds(ids: UUID[], _tableName?: string): Promise<Memory[]> {
     return ids
       .map((id) => this.memories.get(id))
       .filter((memory) => memory !== undefined) as Memory[];
@@ -221,7 +225,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     return memories;
   }
 
-  async getCachedEmbeddings(params: {
+  async getCachedEmbeddings(_params: {
     query_table_name: string;
     query_threshold: number;
     query_input: string;
@@ -255,7 +259,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     return memories.slice(0, params.count);
   }
 
-  async createMemory(memory: Memory, tableName: string, unique?: boolean): Promise<UUID> {
+  async createMemory(memory: Memory, _tableName: string, _unique?: boolean): Promise<UUID> {
     const id = memory.id || (`${Date.now()}-${Math.random()}` as UUID);
     const memoryWithId = { ...memory, id };
     this.memories.set(id, memoryWithId);
@@ -279,7 +283,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     memoryIds.forEach((id) => this.memories.delete(id));
   }
 
-  async deleteAllMemories(roomId: UUID, tableName: string): Promise<void> {
+  async deleteAllMemories(roomId: UUID, _tableName: string): Promise<void> {
     Array.from(this.memories.entries()).forEach(([id, memory]) => {
       if (memory.roomId === roomId) {
         this.memories.delete(id);
@@ -287,7 +291,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     });
   }
 
-  async countMemories(roomId: UUID, unique?: boolean, tableName?: string): Promise<number> {
+  async countMemories(roomId: UUID, _unique?: boolean, _tableName?: string): Promise<number> {
     return Array.from(this.memories.values()).filter((m) => m.roomId === roomId).length;
   }
 
@@ -396,7 +400,6 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
   }
 
   async removeParticipant(entityId: UUID, roomId: UUID): Promise<boolean> {
-    const key = `${roomId}:${entityId}`;
     const participants = this.participants.get(roomId);
     if (participants) {
       const index = participants.indexOf(entityId);
@@ -413,7 +416,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     const participants: Participant[] = [];
 
     // Find all rooms where this entity is a participant
-    this.participants.forEach((participantIds, roomId) => {
+    this.participants.forEach((participantIds, _roomId) => {
       if (participantIds.includes(entityId)) {
         // Get all entities in this room
         participantIds.forEach((participantId) => {
@@ -423,7 +426,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
             if (!participants.some((p) => p.id === participantId)) {
               participants.push({
                 id: participantId,
-                entity: entity,
+                entity,
               });
             }
           }
@@ -434,15 +437,9 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     return participants;
   }
 
-  async getParticipantsForRoom(roomId: UUID): Promise<UUID[]> {
-    const entityIds: UUID[] = [];
-    this.participants.forEach((participantIds, key) => {
-      const [participantRoomId, entityId] = key.split(':') as [UUID, UUID];
-      if (participantRoomId === roomId) {
-        entityIds.push(entityId);
-      }
-    });
-    return entityIds;
+  async getParticipantsForRoom(_roomId: UUID): Promise<UUID[]> {
+    const participants = this.participants.get(_roomId);
+    return participants ? [...participants] : [];
   }
 
   async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {

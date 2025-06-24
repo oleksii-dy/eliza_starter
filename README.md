@@ -138,6 +138,9 @@ elizaos test --name "my-test"    # Run specific tests
 elizaos test e2e                 # Run end-to-end tests only
 elizaos test component           # Run component tests only
 
+# Run tests sequentially (package-by-package in order)
+bun run test:sequential          # Uses turbo --concurrency=1 for serial execution
+
 # Agent management
 elizaos agent list                      # List all available agents
 elizaos agent start --name "Agent"     # Start a specific agent by name
@@ -183,7 +186,7 @@ elizaos test       # Run tests (component, e2e, or all)
 elizaos env        # Manage environment variables and configuration
 elizaos dev        # Start in development mode with auto-rebuild
 elizaos update     # Update CLI and project dependencies
-elizaos stop       # Stop all running ElizaOS agents
+# To stop agents, use Ctrl+C in the terminal where elizaos start is running
 elizaos publish    # Publish plugins to registry
 elizaos plugins    # Manage and discover plugins
 elizaos monorepo   # Monorepo development utilities

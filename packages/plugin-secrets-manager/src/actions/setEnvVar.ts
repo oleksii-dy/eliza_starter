@@ -1,24 +1,11 @@
-import {
-  type Action,
-  type ActionExample,
-  composePrompt,
-  type HandlerCallback,
-  type IAgentRuntime,
-  logger,
-  type Memory,
-  ModelType,
-  parseJSONObjectFromText,
-  type State,
-  type UUID,
-} from '@elizaos/core';
+import { EnvManager } from '../service';
 import type { EnvVarMetadata, EnvVarUpdate, EnvVarConfig } from '../types';
 import { validateEnvVar } from '../validation';
-import { EnvManagerService } from '../service';
 
 /**
  * Template for extracting environment variable assignments from user input
  */
-const extractionTemplate = `# Task: Extract Environment Variable Assignments from User Input
+const _extractionTemplate = `# Task: Extract Environment Variable Assignments from User Input
 
 I need to extract environment variable assignments that the user wants to set based on their message.
 
@@ -195,8 +182,8 @@ async function processEnvVarUpdates(
   let updatedAny = false;
 
   try {
-    const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-    if (!envService) {
+    const env = runtime.get('ENV_MANAGER') as EnvManager;
+    if (!env) {
       throw new Error('Environment manager service not available');
     }
 
@@ -204,7 +191,7 @@ async function processEnvVarUpdates(
     for (const update of updates) {
       const { pluginName, variableName, value } = update;
 
-      const envVars = await envService.getAllEnvVars();
+      const envVars = await env.getAllEnvVars();
       if (!envVars?.[pluginName]?.[variableName]) {
         messages.push(`Environment variable ${variableName} not found for plugin ${pluginName}`);
         continue;
@@ -228,7 +215,7 @@ async function processEnvVarUpdates(
         lastError: validationResult.isValid ? undefined : validationResult.error,
       };
 
-      const updated = await envService.updateEnvVar(pluginName, variableName, updateData);
+      const updated = await env.updateEnvVar(pluginName, variableName, updateData);
 
       if (updated) {
         if (validationResult.isValid) {
@@ -276,13 +263,17 @@ export const setEnvVarAction: Action = {
   similes: ['UPDATE_ENV_VAR', 'CONFIGURE_ENV', 'SET_ENVIRONMENT', 'UPDATE_ENVIRONMENT'],
   description: 'Sets environment variables for plugins based on user input',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (_runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     try {
-      const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-      if (!envService) return false;
+      const env = runtime.get('ENV_MANAGER') as EnvManager;
+      if (!env) {
+        return false;
+      }
 
-      const envVars = await envService.getAllEnvVars();
-      if (!envVars) return false;
+      const envVars = await env.getAllEnvVars();
+      if (!envVars) {
+        return false;
+      }
 
       // Check if there are any missing or invalid environment variables
       for (const plugin of Object.values(envVars)) {
@@ -305,19 +296,19 @@ export const setEnvVarAction: Action = {
     message: Memory,
     state?: State,
     _options?: any,
-    callback?: HandlerCallback
+    callback?: Callback
   ): Promise<void> => {
     try {
       if (!state || !callback) {
         throw new Error('State and callback are required for SET_ENV_VAR action');
       }
 
-      const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-      if (!envService) {
+      const env = runtime.get('ENV_MANAGER') as EnvManager;
+      if (!env) {
         throw new Error('Environment manager service not available');
       }
 
-      const envVars = await envService.getAllEnvVars();
+      const envVars = await env.getAllEnvVars();
       if (!envVars) {
         throw new Error('No environment variables metadata found');
       }
@@ -336,7 +327,7 @@ export const setEnvVarAction: Action = {
         );
 
         // Get updated environment variables
-        const updatedEnvVars = await envService.getAllEnvVars();
+        const updatedEnvVars = await env.getAllEnvVars();
         if (!updatedEnvVars) {
           throw new Error('Failed to retrieve updated environment variables');
         }
@@ -366,10 +357,10 @@ export const setEnvVarAction: Action = {
           stopSequences: [],
         });
 
-        const responseContent = parseJSONObjectFromText(response);
+        const parsedResponse = parseJSONObjectFromText(response);
 
-        await callback({
-          text: responseContent?.text || 'Environment variable updated successfully',
+        await void callback({
+          text: parsedResponse?.text || 'Environment variable updated successfully',
           actions: ['ENV_VAR_UPDATED'],
           source: message.content.source,
         });
@@ -390,17 +381,17 @@ export const setEnvVarAction: Action = {
           stopSequences: [],
         });
 
-        const responseContent = parseJSONObjectFromText(response);
+        const parsedResponse = parseJSONObjectFromText(response);
 
-        await callback({
-          text: responseContent?.text || 'Failed to update environment variable',
+        await void callback({
+          text: parsedResponse?.text || 'Failed to update environment variable',
           actions: ['ENV_VAR_UPDATE_FAILED'],
           source: message.content.source,
         });
       }
     } catch (error) {
       logger.error(`[SetEnvVar] Error in handler: ${error}`);
-      await callback?.({
+      await void callback?.({
         text: "I'm sorry, but I encountered an error while processing your environment variable update. Please try again or contact support if the issue persists.",
         actions: ['ENV_VAR_UPDATE_ERROR'],
         source: message.content.source,

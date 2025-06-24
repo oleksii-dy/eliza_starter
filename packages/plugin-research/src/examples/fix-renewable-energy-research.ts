@@ -8,16 +8,16 @@ import path from 'path';
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 import { ResearchService } from '../service';
-import { elizaLogger, IAgentRuntime, Character, asUUID } from '@elizaos/core';
+import { logger, IAgentRuntime, Character, asUUID } from '@elizaos/core';
 import { TavilySearchProvider } from '../integrations/search-providers/tavily';
 import fs from 'fs/promises';
 
 async function testTavilyDirectly() {
-  elizaLogger.info('=== Testing Tavily Search Directly ===');
+  logger.info('=== Testing Tavily Search Directly ===');
 
   const apiKey = process.env.TAVILY_API_KEY;
   if (!apiKey) {
-    elizaLogger.error('TAVILY_API_KEY not found in environment');
+    logger.error('TAVILY_API_KEY not found in environment');
     return;
   }
 
@@ -25,15 +25,15 @@ async function testTavilyDirectly() {
     const tavily = new TavilySearchProvider({ apiKey });
     const query = 'renewable energy storage technologies environmental economic impacts grid scale';
 
-    elizaLogger.info(`Searching Tavily for: "${query}"`);
+    logger.info(`Searching Tavily for: "${query}"`);
     const results = await tavily.search(query, 5);
 
-    elizaLogger.info(`Found ${results.length} results:`);
+    logger.info(`Found ${results.length} results:`);
     results.forEach((result, i) => {
-      elizaLogger.info(`${i + 1}. ${result.title}`);
-      elizaLogger.info(`   URL: ${result.url}`);
-      elizaLogger.info(`   Score: ${result.score}`);
-      elizaLogger.info(`   Snippet: ${result.snippet?.substring(0, 100)}...`);
+      logger.info(`${i + 1}. ${result.title}`);
+      logger.info(`   URL: ${result.url}`);
+      logger.info(`   Score: ${result.score}`);
+      logger.info(`   Snippet: ${result.snippet?.substring(0, 100)}...`);
     });
 
     // Check if results are relevant
@@ -45,16 +45,16 @@ async function testTavilyDirectly() {
         r.snippet?.toLowerCase().includes('renewable')
     );
 
-    elizaLogger.info(
+    logger.info(
       `\n${relevantResults.length} out of ${results.length} results appear relevant`
     );
   } catch (error) {
-    elizaLogger.error('Tavily search failed:', error);
+    logger.error('Tavily search failed:', error);
   }
 }
 
 async function testWithMinimalRuntime() {
-  elizaLogger.info('\n=== Testing with Minimal Runtime ===');
+  logger.info('\n=== Testing with Minimal Runtime ===');
 
   const runtime: IAgentRuntime = {
     agentId: asUUID('11111111-1111-1111-1111-111111111111'),
@@ -113,7 +113,7 @@ async function testWithMinimalRuntime() {
     },
     // Add useModel for text generation
     useModel: async (modelType: string, params: any) => {
-      elizaLogger.debug(`Mock model called: ${modelType}`);
+      logger.debug(`Mock model called: ${modelType}`);
       // Return simple responses for different types of requests
       return { content: 'Analysis complete.' };
     },
@@ -124,7 +124,7 @@ async function testWithMinimalRuntime() {
 
   try {
     const query = 'Compare renewable energy storage technologies environmental economic impacts';
-    elizaLogger.info(`Creating research project: "${query}"`);
+    logger.info(`Creating research project: "${query}"`);
 
     const project = await service.createResearchProject(query, {
       searchProviders: ['web'],
@@ -135,7 +135,7 @@ async function testWithMinimalRuntime() {
       timeout: 60000,
     });
 
-    elizaLogger.info(`Project created: ${project.id}`);
+    logger.info(`Project created: ${project.id}`);
 
     // Wait for completion
     let attempts = 0;
@@ -143,18 +143,18 @@ async function testWithMinimalRuntime() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const current = await service.getProject(project.id);
-      if (!current) break;
+      if (!current) {break;}
 
       if (attempts % 5 === 0) {
-        elizaLogger.info(
+        logger.info(
           `Status: ${current.status}, Phase: ${current.phase}, Sources: ${current.sources.length}`
         );
 
         // Log first few sources
         if (current.sources.length > 0) {
-          elizaLogger.info('First few sources:');
+          logger.info('First few sources:');
           current.sources.slice(0, 3).forEach((s, i) => {
-            elizaLogger.info(`  ${i + 1}. ${s.title} (${s.url})`);
+            logger.info(`  ${i + 1}. ${s.title} (${s.url})`);
           });
         }
       }
@@ -164,11 +164,11 @@ async function testWithMinimalRuntime() {
           const markdown = await service.exportProject(project.id, 'markdown');
           const reportPath = path.join(__dirname, '../../fixed-renewable-energy-report.md');
           await fs.writeFile(reportPath, markdown);
-          elizaLogger.info(`✅ Report saved to: ${reportPath}`);
+          logger.info(`✅ Report saved to: ${reportPath}`);
 
           // Show preview
-          elizaLogger.info('\nReport Preview:');
-          elizaLogger.info(markdown.substring(0, 1000) + '...');
+          logger.info('\nReport Preview:');
+          logger.info(`${markdown.substring(0, 1000)}...`);
 
           // Check content
           const hasRelevantContent =
@@ -179,14 +179,14 @@ async function testWithMinimalRuntime() {
               markdown.toLowerCase().includes('environmental'));
 
           if (hasRelevantContent) {
-            elizaLogger.info('\n✅ SUCCESS: Report contains relevant renewable energy content!');
+            logger.info('\n✅ SUCCESS: Report contains relevant renewable energy content!');
           } else {
-            elizaLogger.error('\n❌ FAIL: Report does NOT contain relevant content');
-            elizaLogger.info('\nFirst 2000 chars of report:');
-            elizaLogger.info(markdown.substring(0, 2000));
+            logger.error('\n❌ FAIL: Report does NOT contain relevant content');
+            logger.info('\nFirst 2000 chars of report:');
+            logger.info(markdown.substring(0, 2000));
           }
         } else {
-          elizaLogger.error(`Research failed: ${current.error}`);
+          logger.error(`Research failed: ${current.error}`);
         }
         break;
       }
@@ -196,7 +196,7 @@ async function testWithMinimalRuntime() {
 
     await service.stop();
   } catch (error) {
-    elizaLogger.error('Test failed:', error);
+    logger.error('Test failed:', error);
   }
 }
 

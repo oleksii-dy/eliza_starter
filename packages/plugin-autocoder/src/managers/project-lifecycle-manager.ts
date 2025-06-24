@@ -119,7 +119,7 @@ export class ProjectLifecycleManager {
    * Clean up project workspace and temporary files
    */
   private async cleanupWorkspace(project: PluginProject): Promise<void> {
-    if (!project.localPath) return;
+    if (!project.localPath) {return;}
 
     try {
       // Check if it's a temporary directory
@@ -242,7 +242,7 @@ export class ProjectLifecycleManager {
     completedCount: number;
     failedCount: number;
     memoryUsage: number;
-  } {
+    } {
     const active = Array.from(this.activeProjects.values());
     const completed = Array.from(this.completedProjects.values());
 

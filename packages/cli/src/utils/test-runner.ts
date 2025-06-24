@@ -3,20 +3,19 @@ import {
   type Plugin,
   type ProjectAgent,
   type TestSuite,
-  logger,
+  // logger,
 } from '@elizaos/core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 // Ensure logger has all required methods with fallbacks
-const safeLogger = {
-  debug: logger?.debug || console.log,
-  info: logger?.info || console.log,
-  warn: logger?.warn || console.warn,
-  error: logger?.error || console.error,
-  success: logger?.success || console.log,
-};
+// const _safeLogger = {
+//   info: logger?.info || console.log,
+//   warn: logger?.warn || console.warn,
+//   error: logger?.error || console.error,
+//   success: logger?.success || console.log,
+// };
 
 interface TestStats {
   total: number;
@@ -119,7 +118,9 @@ export class TestRunner {
    * @returns True if the name matches the filter or if no filter is specified
    */
   private matchesFilter(name: string, filter?: string): boolean {
-    if (!filter) return true;
+    if (!filter) {
+      return true;
+    }
 
     // Process filter name consistently
     let processedFilter = filter;
@@ -338,7 +339,7 @@ export const myPlugin = {
             }
           } else {
             this.logger.warn(
-              `No dist/e2e directory found. E2E tests should be compiled first. Import may fail.`
+              'No dist/e2e directory found. E2E tests should be compiled first. Import may fail.'
             );
           }
 
@@ -349,7 +350,7 @@ export const myPlugin = {
           } catch (importError) {
             this.logger.error(`Failed to import test file ${fileName}:`, importError);
             this.logger.info(
-              `Make sure your e2e tests are properly compiled with 'npm run build' or 'bun run build'`
+              "Make sure your e2e tests are properly compiled with 'npm run build' or 'bun run build'"
             );
             this.stats.failed++;
             continue;
@@ -395,7 +396,7 @@ export const myPlugin = {
         }
       }
     } catch (error) {
-      this.logger.error(`Error running e2e tests:`, error);
+      this.logger.error('Error running e2e tests:', error);
     }
   }
 

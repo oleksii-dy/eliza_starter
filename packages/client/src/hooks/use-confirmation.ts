@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import ConfirmationDialog from '@/components/confirmation-dialog';
 
 interface ConfirmationOptions {
   title: string;

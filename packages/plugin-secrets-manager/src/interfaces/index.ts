@@ -1,10 +1,10 @@
-import type { IAgentRuntime, UUID } from '@elizaos/core';
+import type { IAgentRuntime } from '@elizaos/core';
 import type { SecretContext, SecretConfig, SecretMetadata, SecretAccessLog } from '../types';
 
 /**
  * Interface for encryption operations
  */
-export interface IEncryptionService {
+export interface IEncryption {
   encrypt(plaintext: string): Promise<string>;
   decrypt(ciphertext: string): Promise<string>;
   generateToken(length?: number): string;
@@ -16,7 +16,12 @@ export interface IEncryptionService {
  */
 export interface ISecretStorage {
   get(key: string, context: SecretContext): Promise<string | null>;
-  set(key: string, value: any, context: SecretContext, config?: Partial<SecretConfig>): Promise<boolean>;
+  set(
+    key: string,
+    value: any,
+    context: SecretContext,
+    config?: Partial<SecretConfig>
+  ): Promise<boolean>;
   list(context: SecretContext): Promise<SecretMetadata>;
   delete(key: string, context: SecretContext): Promise<boolean>;
   exists(key: string, context: SecretContext): Promise<boolean>;
@@ -26,8 +31,17 @@ export interface ISecretStorage {
  * Interface for access control operations
  */
 export interface IAccessControl {
-  checkPermission(key: string, action: 'read' | 'write' | 'delete' | 'share', context: SecretContext): Promise<boolean>;
-  grantAccess(key: string, context: SecretContext, grantee: string, permissions: string[]): Promise<boolean>;
+  checkPermission(
+    key: string,
+    action: 'read' | 'write' | 'delete' | 'share',
+    context: SecretContext
+  ): Promise<boolean>;
+  grantAccess(
+    key: string,
+    context: SecretContext,
+    grantee: string,
+    permissions: string[]
+  ): Promise<boolean>;
   revokeAccess(key: string, context: SecretContext, grantee: string): Promise<boolean>;
   getAccessLogs(key: string, context?: SecretContext): Promise<SecretAccessLog[]>;
 }
@@ -51,7 +65,12 @@ export interface IAuditLogger {
  * Interface for secret validation
  */
 export interface ISecretValidator {
-  validate(key: string, value: any, type: string, method?: string): Promise<{
+  validate(
+    key: string,
+    value: any,
+    type: string,
+    method?: string
+  ): Promise<{
     isValid: boolean;
     error?: string;
   }>;
@@ -65,7 +84,10 @@ export interface ISecretRotation {
   scheduleRotation(key: string, context: SecretContext, intervalMs: number): Promise<void>;
   rotateSecret(key: string, context: SecretContext): Promise<boolean>;
   cancelRotation(key: string, context: SecretContext): Promise<void>;
-  getRotationSchedule(key: string, context: SecretContext): Promise<{ nextRotation: number; interval: number } | null>;
+  getRotationSchedule(
+    key: string,
+    context: SecretContext
+  ): Promise<{ nextRotation: number; interval: number } | null>;
 }
 
 /**
@@ -74,7 +96,10 @@ export interface ISecretRotation {
 export interface ISecretVersioning {
   createVersion(key: string, value: any, context: SecretContext): Promise<string>;
   getVersion(key: string, versionId: string, context: SecretContext): Promise<string | null>;
-  listVersions(key: string, context: SecretContext): Promise<Array<{ id: string; createdAt: number; size: number }>>;
+  listVersions(
+    key: string,
+    context: SecretContext
+  ): Promise<Array<{ id: string; createdAt: number; size: number }>>;
   deleteVersion(key: string, versionId: string, context: SecretContext): Promise<boolean>;
   rollback(key: string, versionId: string, context: SecretContext): Promise<boolean>;
 }
@@ -84,8 +109,14 @@ export interface ISecretVersioning {
  */
 export interface ISecretBackup {
   backup(context: SecretContext): Promise<{ backupId: string; secretCount: number }>;
-  restore(backupId: string, context: SecretContext, overwrite?: boolean): Promise<{ restoredCount: number }>;
-  listBackups(context: SecretContext): Promise<Array<{ id: string; createdAt: number; secretCount: number }>>;
+  restore(
+    backupId: string,
+    context: SecretContext,
+    overwrite?: boolean
+  ): Promise<{ restoredCount: number }>;
+  listBackups(
+    context: SecretContext
+  ): Promise<Array<{ id: string; createdAt: number; secretCount: number }>>;
   deleteBackup(backupId: string): Promise<boolean>;
 }
 
@@ -95,18 +126,32 @@ export interface ISecretBackup {
 export interface ISecretManager {
   // Core operations
   get(key: string, context: SecretContext): Promise<string | null>;
-  set(key: string, value: any, context: SecretContext, config?: Partial<SecretConfig>): Promise<boolean>;
+  set(
+    key: string,
+    value: any,
+    context: SecretContext,
+    config?: Partial<SecretConfig>
+  ): Promise<boolean>;
   list(context: SecretContext): Promise<SecretMetadata>;
   delete(key: string, context: SecretContext): Promise<boolean>;
 
   // Access control
-  grantAccess(key: string, context: SecretContext, grantee: string, permissions: string[]): Promise<boolean>;
+  grantAccess(
+    key: string,
+    context: SecretContext,
+    grantee: string,
+    permissions: string[]
+  ): Promise<boolean>;
   revokeAccess(key: string, context: SecretContext, grantee: string): Promise<boolean>;
-  checkAccess(key: string, context: SecretContext, accessCheck: {
-    actionId?: string;
-    entityId?: string;
-    permission: string;
-  }): Promise<boolean>;
+  checkAccess(
+    key: string,
+    context: SecretContext,
+    accessCheck: {
+      actionId?: string;
+      entityId?: string;
+      permission: string;
+    }
+  ): Promise<boolean>;
 
   // Audit
   getAccessLogs(key: string, context?: SecretContext): Promise<SecretAccessLog[]>;
@@ -122,9 +167,9 @@ export interface ISecretManager {
  */
 export interface ISecretManagerFactory {
   create(runtime: IAgentRuntime): Promise<ISecretManager>;
-  createWithServices(
+  createWiths(
     runtime: IAgentRuntime,
-    encryption: IEncryptionService,
+    encryption: IEncryption,
     storage: ISecretStorage,
     accessControl: IAccessControl,
     auditLogger: IAuditLogger

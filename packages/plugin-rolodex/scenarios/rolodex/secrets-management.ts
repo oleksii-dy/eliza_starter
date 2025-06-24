@@ -3,7 +3,7 @@ import type { Scenario } from '../types';
 export const secretsManagementScenario: Scenario = {
   name: 'Secrets Management with Admin',
   description: 'Admin provides API keys to agents which then use them to perform authenticated actions',
-  
+
   messages: [
     {
       role: 'user',
@@ -86,4 +86,4 @@ export const secretsManagementScenario: Scenario = {
       },
     };
   },
-}; 
+};

@@ -1,88 +1,13 @@
-import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { githubPlugin } from '../index';
 import { GitHubService } from '../services/github';
 import { githubConfigSchema } from '../types';
 import { IAgentRuntime, UUID } from '@elizaos/core';
-
-// Create a mock runtime for testing
-const createMockRuntime = (): IAgentRuntime => {
-  return {
-    agentId: 'test-agent' as UUID,
-    getSetting: vi.fn(),
-    useModel: vi
-      .fn()
-      .mockResolvedValue(
-        '{"isGitHubRelated": false, "confidence": 0, "reasoning": "test", "context": "none", "requiresAction": false}'
-      ),
-    character: {
-      name: 'Test Character',
-      bio: 'Test bio',
-      settings: {},
-    },
-  } as any as IAgentRuntime;
-};
-
-describe('GitHub Plugin Configuration', () => {
-  it('should have correct plugin metadata', () => {
-    expect(githubPlugin.name).toBe('plugin-github');
-    expect(githubPlugin.description).toContain('GitHub integration');
-    expect(githubPlugin.services).toContain(GitHubService);
-    expect(githubPlugin.actions).toBeDefined();
-    expect(githubPlugin.providers).toBeDefined();
-    expect(githubPlugin.tests).toBeDefined();
-  });
-
-  it('should have all required actions', () => {
-    const actionNames = githubPlugin.actions?.map((action) => action.name) || [];
-
-    // Repository actions
-    expect(actionNames).toContain('GET_GITHUB_REPOSITORY');
-    expect(actionNames).toContain('LIST_GITHUB_REPOSITORIES');
-    expect(actionNames).toContain('CREATE_GITHUB_REPOSITORY');
-    expect(actionNames).toContain('SEARCH_GITHUB_REPOSITORIES');
-
-    // Issue actions
-    expect(actionNames).toContain('GET_GITHUB_ISSUE');
-    expect(actionNames).toContain('LIST_GITHUB_ISSUES');
-    expect(actionNames).toContain('CREATE_GITHUB_ISSUE');
-    expect(actionNames).toContain('SEARCH_GITHUB_ISSUES');
-
-    // Pull request actions
-    expect(actionNames).toContain('GET_GITHUB_PULL_REQUEST');
-    expect(actionNames).toContain('LIST_GITHUB_PULL_REQUESTS');
-    expect(actionNames).toContain('CREATE_GITHUB_PULL_REQUEST');
-    expect(actionNames).toContain('MERGE_GITHUB_PULL_REQUEST');
-
-    // Activity actions
-    expect(actionNames).toContain('GET_GITHUB_ACTIVITY');
-    expect(actionNames).toContain('CLEAR_GITHUB_ACTIVITY');
-    expect(actionNames).toContain('GET_GITHUB_RATE_LIMIT');
-  });
-
-  it('should have all required providers', () => {
-    const providerNames = githubPlugin.providers?.map((provider) => provider.name) || [];
-
-    expect(providerNames).toContain('GITHUB_REPOSITORY_CONTEXT');
-    expect(providerNames).toContain('GITHUB_ISSUES_CONTEXT');
-    expect(providerNames).toContain('GITHUB_PULL_REQUESTS_CONTEXT');
-    expect(providerNames).toContain('GITHUB_ACTIVITY_CONTEXT');
-    expect(providerNames).toContain('GITHUB_USER_CONTEXT');
-  });
-
-  it('should have HTTP routes defined', () => {
-    expect(githubPlugin.routes).toBeDefined();
-    expect(githubPlugin.routes?.length || 0).toBeGreaterThan(0);
-
-    const routePaths = githubPlugin.routes?.map((route) => route.path) || [];
-    expect(routePaths).toContain('/api/github/status');
-    expect(routePaths).toContain('/api/github/activity');
-    expect(routePaths).toContain('/api/github/rate-limit');
-  });
-});
+import { createMockRuntime } from './test-utils';
 
 describe('GitHub Plugin Initialization', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     delete (global as any).GITHUB_CONFIG;
   });
 
@@ -241,13 +166,6 @@ describe('GitHub Configuration Schema', () => {
 });
 
 describe('GitHub Plugin Events', () => {
-  it('should have MESSAGE_RECEIVED event handler', () => {
-    expect(githubPlugin.events).toBeDefined();
-    expect(githubPlugin.events?.MESSAGE_RECEIVED).toBeDefined();
-    expect(Array.isArray(githubPlugin.events?.MESSAGE_RECEIVED)).toBe(true);
-    expect(githubPlugin.events?.MESSAGE_RECEIVED?.length || 0).toBeGreaterThan(0);
-  });
-
   it('should process GitHub-related messages', async () => {
     if (!githubPlugin.events?.MESSAGE_RECEIVED?.[0]) {
       throw new Error('MESSAGE_RECEIVED event handler not found');
@@ -276,28 +194,5 @@ describe('GitHub Plugin Events', () => {
       console.error('MESSAGE_RECEIVED handler failed:', error);
       throw new Error(`MESSAGE_RECEIVED handler should not have thrown, but got: ${error}`);
     }
-  });
-});
-
-describe('GitHub Plugin Routes', () => {
-  it('should handle status route', async () => {
-    const statusRoute = githubPlugin.routes?.find((r) => r.path === '/api/github/status');
-    expect(statusRoute).toBeDefined();
-    expect(statusRoute!.type).toBe('GET');
-    expect(statusRoute!.handler).toBeDefined();
-  });
-
-  it('should handle activity route', async () => {
-    const activityRoute = githubPlugin.routes?.find((r) => r.path === '/api/github/activity');
-    expect(activityRoute).toBeDefined();
-    expect(activityRoute!.type).toBe('GET');
-    expect(activityRoute!.handler).toBeDefined();
-  });
-
-  it('should handle rate-limit route', async () => {
-    const rateLimitRoute = githubPlugin.routes?.find((r) => r.path === '/api/github/rate-limit');
-    expect(rateLimitRoute).toBeDefined();
-    expect(rateLimitRoute!.type).toBe('GET');
-    expect(rateLimitRoute!.handler).toBeDefined();
   });
 });

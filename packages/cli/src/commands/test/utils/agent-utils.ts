@@ -13,7 +13,7 @@ export async function createTestAgent(
   logger.debug(`Available plugins: ${plugins.map((p) => p.name).join(', ')}`);
 
   // Ensure we have the SQL plugin for database operations
-  let effectivePlugins = [...plugins];
+  const effectivePlugins = [...plugins];
   const hasSqlPlugin = plugins.some((p) => p.name === '@elizaos/plugin-sql');
 
   if (!hasSqlPlugin) {
@@ -133,7 +133,7 @@ export async function createScenarioCharacters(
 
     try {
       const runtime = new AgentRuntime({
-        character: character,
+        character,
         plugins: characterPlugins,
       });
 

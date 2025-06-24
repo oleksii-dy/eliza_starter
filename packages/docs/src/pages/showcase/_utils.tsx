@@ -21,12 +21,12 @@ export function useFilteredUsers() {
     selectedTags.length === 0
       ? sortedUsers
       : sortedUsers.filter((user) => {
-          if (operator === 'AND') {
-            return selectedTags.every((tag) => user.tags.includes(tag));
-          } else {
-            return selectedTags.some((tag) => user.tags.includes(tag));
-          }
-        });
+        if (operator === 'AND') {
+          return selectedTags.every((tag) => user.tags.includes(tag));
+        } else {
+          return selectedTags.some((tag) => user.tags.includes(tag));
+        }
+      });
 
   return {
     selectedTags,

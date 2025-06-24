@@ -644,7 +644,9 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
     const enabledComponents = new Map<string, Set<string>>();
 
     for (const [pluginName, config] of this.configurations.entries()) {
-      if (!config.enabled) continue;
+      if (!config.enabled) {
+        continue;
+      }
 
       const componentSet = new Set<string>();
 

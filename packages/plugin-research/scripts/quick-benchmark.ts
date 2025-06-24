@@ -5,8 +5,8 @@ import path from 'path';
 // Simple sample results representing our 2-pass report generation system
 const sampleResults = [
   {
-    id: "51",
-    prompt: "From 2020 to 2050, how many elderly people will there be in Japan? What is their consumption potential across various aspects such as clothing, food, housing, and transportation?",
+    id: '51',
+    prompt: 'From 2020 to 2050, how many elderly people will there be in Japan? What is their consumption potential across various aspects such as clothing, food, housing, and transportation?',
     article: `# Japan's Aging Society: Market Size Analysis for Elderly Demographics (2020-2050)
 
 ## Executive Summary
@@ -53,8 +53,8 @@ Key strategic recommendations include: early investment in technology platforms 
 [4] Nomura Research Institute. Silver Market Research Report 2020-2050. Tokyo: NRI, 2020.`
   },
   {
-    id: "62",
-    prompt: "What are the most effective approaches to scaling ion trap quantum computing from small-scale demonstration projects to large-scale systems capable of solving real-world problems?",
+    id: '62',
+    prompt: 'What are the most effective approaches to scaling ion trap quantum computing from small-scale demonstration projects to large-scale systems capable of solving real-world problems?',
     article: `# Scaling Ion Trap Quantum Computing: Pathways to Large-Scale Implementation
 
 ## Executive Summary
@@ -107,8 +107,8 @@ Key strategic recommendations include: prioritizing manufacturing process develo
 [4] Pino, J. M. et al. "Demonstration of the trapped-ion quantum CCD computer architecture." Nature 592, 209-213 (2021).`
   },
   {
-    id: "70",
-    prompt: "Trace the evolution from Java Servlets to the Spring Boot framework. Explain the problems each iteration aimed to solve, and detail the core functionalities of the Spring framework.",
+    id: '70',
+    prompt: 'Trace the evolution from Java Servlets to the Spring Boot framework. Explain the problems each iteration aimed to solve, and detail the core functionalities of the Spring framework.',
     article: `# The Evolution from Java Servlets to Spring Boot: A Comprehensive Framework Journey
 
 ## Executive Summary

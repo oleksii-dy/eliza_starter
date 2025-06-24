@@ -40,10 +40,12 @@ export class Sanitizer {
    * Sanitize HTML input
    */
   sanitizeHTML(input: string): string {
-    if (!input) return '';
+    if (!input) {
+      return '';
+    }
 
     // Configure DOMPurify
-    const config = {
+    const _config = {
       ALLOWED_TAGS: this.options.allowedTags,
       ALLOWED_ATTR: Object.keys(this.options.allowedAttributes || {}),
       KEEP_CONTENT: !this.options.stripUnknown,
@@ -65,7 +67,9 @@ export class Sanitizer {
    * Escape HTML entities
    */
   escapeHTML(input: string): string {
-    if (!input) return '';
+    if (!input) {
+      return '';
+    }
 
     const escapeMap: Record<string, string> = {
       '&': '&amp;',
@@ -83,7 +87,9 @@ export class Sanitizer {
    * Sanitize for use in JavaScript strings
    */
   sanitizeForJS(input: string): string {
-    if (!input) return '';
+    if (!input) {
+      return '';
+    }
 
     return input
       .replace(/\\/g, '\\\\') // Escape backslashes
@@ -99,7 +105,9 @@ export class Sanitizer {
    * Sanitize for use in URLs
    */
   sanitizeURL(input: string): string {
-    if (!input) return '';
+    if (!input) {
+      return '';
+    }
 
     try {
       const url = new URL(input);
@@ -121,10 +129,12 @@ export class Sanitizer {
    * Sanitize file names
    */
   sanitizeFileName(input: string): string {
-    if (!input) return '';
+    if (!input) {
+      return '';
+    }
 
     // Remove any path traversal attempts
-    let sanitized = input.replace(/[\/\\]/g, '');
+    let sanitized = input.replace(/[/\\]/g, '');
 
     // Remove dangerous characters
     sanitized = sanitized.replace(/[<>:"|?*\x00-\x1F]/g, '');
@@ -152,7 +162,9 @@ export class Sanitizer {
    * Sanitize JSON input
    */
   sanitizeJSON(input: string): object | null {
-    if (!input) return null;
+    if (!input) {
+      return null;
+    }
 
     try {
       // Parse JSON to validate structure
@@ -169,7 +181,9 @@ export class Sanitizer {
    * Validate and sanitize environment variable names
    */
   sanitizeEnvVarName(input: string): string {
-    if (!input) return '';
+    if (!input) {
+      return '';
+    }
 
     // Only allow alphanumeric, underscore, and dash
     // Must start with letter or underscore
@@ -185,7 +199,9 @@ export class Sanitizer {
    * Sanitize secret values (minimal processing to preserve data)
    */
   sanitizeSecretValue(input: string): string {
-    if (!input) return '';
+    if (!input) {
+      return '';
+    }
 
     // Only remove null bytes and control characters
     return input.replace(/\x00/g, '').replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
@@ -202,9 +218,13 @@ export class Sanitizer {
    * Sanitize input object recursively
    */
   sanitizeObject(obj: any, maxDepth: number = 10): any {
-    if (maxDepth <= 0) return null;
+    if (maxDepth <= 0) {
+      return null;
+    }
 
-    if (obj === null || obj === undefined) return obj;
+    if (obj === null || obj === undefined) {
+      return obj;
+    }
 
     if (typeof obj === 'string') {
       return this.escapeHTML(obj);

@@ -76,8 +76,8 @@ async function generateScenario(
     plugins: options.plugins?.split(',').map((p) => p.trim()),
     complexity: options.complexity,
     testType: options.testType,
-    duration: parseInt(options.duration || '120'),
-    actors: parseInt(options.actors || '3'),
+    duration: parseInt(options.duration || '120', 10),
+    actors: parseInt(options.actors || '3', 10),
   };
 
   logger.info(`Generating scenario with context: ${JSON.stringify(context, null, 2)}`);

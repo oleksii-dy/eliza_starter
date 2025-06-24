@@ -91,14 +91,14 @@ export class ServerNetwork extends System {
     // get spawn
     const spawnRow = await this.db('config').where('key', 'spawn').first();
     this.spawn = JSON.parse(spawnRow?.value || defaultSpawn);
-    
+
     // hydrate blueprints
     const blueprints = await this.db('blueprints');
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
       (this.world as any).blueprints.add(data, true);
     }
-    
+
     // hydrate entities
     const entities = await this.db('entities');
     for (const entity of entities) {
@@ -106,7 +106,7 @@ export class ServerNetwork extends System {
       data.state = {};
       (this.world as any).entities.add(data, true);
     }
-    
+
     // hydrate settings
     const settingsRow = await this.db('config').where('key', 'settings').first();
     try {
@@ -115,15 +115,15 @@ export class ServerNetwork extends System {
     } catch (err) {
       console.error(err);
     }
-    
+
     // watch settings changes
     (this.world as any).settings.on('change', this.saveSettings);
-    
+
     // queue first save
     if (SAVE_INTERVAL) {
       this.saveTimerId = setTimeout(this.save, SAVE_INTERVAL * 1000);
     }
-    
+
     // Environment model loading is handled by ServerEnvironment.start()
   }
 
@@ -135,7 +135,7 @@ export class ServerNetwork extends System {
     // console.log('->>>', name, data)
     const packet = writePacket(name, data);
     this.sockets.forEach(socket => {
-      if (socket.id === ignoreSocketId) return;
+      if (socket.id === ignoreSocketId) {return;}
       socket.sendPacket(packet);
     });
   }
@@ -187,12 +187,12 @@ export class ServerNetwork extends System {
       deletedApps: 0,
     };
     const now = moment().toISOString();
-    
+
     // blueprints
     for (const id of this.dirtyBlueprints) {
       const blueprint = (this.world as any).blueprints.get(id);
-      if (!blueprint) continue;
-      
+      if (!blueprint) {continue;}
+
       try {
         const record = {
           id: blueprint.id,
@@ -209,7 +209,7 @@ export class ServerNetwork extends System {
         console.error(err);
       }
     }
-    
+
     // app entities
     for (const id of this.dirtyApps) {
       const entity = (this.world as any).entities.get(id);
@@ -242,7 +242,7 @@ export class ServerNetwork extends System {
         this.dirtyApps.delete(id);
       }
     }
-    
+
     // log
     const didSave = counts.upsertedBlueprints > 0 || counts.upsertedApps > 0 || counts.deletedApps > 0;
     if (didSave) {
@@ -250,7 +250,7 @@ export class ServerNetwork extends System {
         `world saved (${counts.upsertedBlueprints} blueprints, ${counts.upsertedApps} apps, ${counts.deletedApps} apps removed)`
       );
     }
-    
+
     // queue again
     this.saveTimerId = setTimeout(this.save, SAVE_INTERVAL * 1000);
   };
@@ -290,8 +290,8 @@ export class ServerNetwork extends System {
 
       // check connection params
       let authToken = params.authToken;
-      let name = params.name;
-      let avatar = params.avatar;
+      const name = params.name;
+      const avatar = params.avatar;
 
       // get or create user
       let user: User | undefined;
@@ -314,7 +314,7 @@ export class ServerNetwork extends System {
         await this.db('users').insert(user);
         authToken = await createJWT({ userId: user.id });
       }
-      
+
       // Convert roles string to array
       if (typeof user.roles === 'string') {
         user.roles = user.roles.split(',').filter(r => r);
@@ -395,7 +395,7 @@ export class ServerNetwork extends System {
     const player = socket.player;
     const playerId = player.data.id;
     const [cmd, arg1, arg2] = args;
-    
+
     // become admin command
     if (cmd === 'admin') {
       const code = arg1;
@@ -423,7 +423,7 @@ export class ServerNetwork extends System {
           .update({ roles: serializeRoles(roles) });
       }
     }
-    
+
     if (cmd === 'name') {
       const name = arg1;
       if (name) {
@@ -442,19 +442,19 @@ export class ServerNetwork extends System {
         await this.db('users').where('id', userId).update({ name });
       }
     }
-    
+
     if (cmd === 'spawn') {
       const op = arg1;
       this.onSpawnModified(socket, op);
     }
-    
+
     if (cmd === 'chat') {
       const op = arg1;
       if (op === 'clear' && this.isBuilder(socket.player)) {
         (this.world as any).chat.clear(true);
       }
     }
-    
+
     if (cmd === 'server') {
       const op = arg1;
       if (op === 'stats') {
@@ -474,7 +474,7 @@ export class ServerNetwork extends System {
         );
       }
     }
-    
+
     // emit event for all except admin
     if (cmd !== 'admin') {
       (this.world as any).events.emit('command', { playerId, args });
@@ -513,12 +513,12 @@ export class ServerNetwork extends System {
     }
     const entity = (this.world as any).entities.add(data);
     this.send('entityAdded', data, socket.id);
-    if (entity.isApp) this.dirtyApps.add(entity.data.id);
+    if (entity.isApp) {this.dirtyApps.add(entity.data.id);}
   };
 
   onEntityModified = async (socket: Socket, data: any): Promise<void> => {
     const entity = (this.world as any).entities.get(data.id);
-    if (!entity) return console.error('onEntityModified: no entity found', data);
+    if (!entity) {return console.error('onEntityModified: no entity found', data);}
     entity.modify(data);
     this.send('entityModified', data, socket.id);
     if (entity.isApp) {
@@ -556,7 +556,7 @@ export class ServerNetwork extends System {
     const entity = (this.world as any).entities.get(id);
     (this.world as any).entities.remove(id);
     this.send('entityRemoved', id, socket.id);
-    if (entity?.isApp) this.dirtyApps.add(id);
+    if (entity?.isApp) {this.dirtyApps.add(id);}
   };
 
   onSettingsModified = (socket: Socket, data: { key: string; value: any }): void => {
@@ -573,9 +573,9 @@ export class ServerNetwork extends System {
     }
     const player = socket.player;
     if (op === 'set') {
-      this.spawn = { 
-        position: player.data.position.slice() as [number, number, number], 
-        quaternion: player.data.quaternion.slice() as [number, number, number, number] 
+      this.spawn = {
+        position: player.data.position.slice() as [number, number, number],
+        quaternion: player.data.quaternion.slice() as [number, number, number, number]
       };
     } else if (op === 'clear') {
       this.spawn = { position: [0, 0, 0], quaternion: [0, 0, 0, 1] };
@@ -632,4 +632,4 @@ export class ServerNetwork extends System {
     this.sockets.forEach(socket => socket.disconnect());
     this.sockets.clear();
   }
-} 
+}

@@ -28,7 +28,7 @@ export async function safeDeleteDirectory(
       actions.warning.push(`Failed to delete ${label.toLowerCase()}`);
       return false;
     }
-  } catch (error) {
+  } catch {
     actions.warning.push(`Failed to delete ${label.toLowerCase()}`);
     return false;
   }

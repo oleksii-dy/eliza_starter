@@ -1,13 +1,3 @@
-import {
-  type Action,
-  type IAgentRuntime,
-  type Memory,
-  type HandlerCallback,
-  type UUID,
-  logger,
-  elizaLogger,
-  parseJSONObjectFromText,
-} from '@elizaos/core';
 import { EnhancedSecretManager } from '../enhanced-service';
 import type { SecretContext, SecretConfig } from '../types';
 
@@ -31,15 +21,17 @@ export const manageSecretAction: Action = {
   description:
     'Manage secrets at different levels (global, world, user) with get, set, delete, and list operations',
 
-  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
-    const hasService = !!runtime.getService('SECRETS');
-    if (!hasService) {
+  validate: async (_runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+    const has = !!runtime.get('SECRETS');
+    if (!has) {
       logger.warn('[ManageSecret] Secrets service not available');
       return false;
     }
 
     const text = message.content.text?.toLowerCase();
-    if (!text) return false;
+    if (!text) {
+      return false;
+    }
     const keywords = [
       'secret',
       'setting',
@@ -58,14 +50,14 @@ export const manageSecretAction: Action = {
     message: Memory,
     state: any,
     options: any,
-    callback?: HandlerCallback
+    callback?: Callback
   ): Promise<boolean> => {
     elizaLogger.info('[ManageSecret] Starting secret management action');
 
-    const secretsService = runtime.getService('SECRETS') as EnhancedSecretManager;
-    if (!secretsService) {
+    const secrets = runtime.get('SECRETS') as EnhancedSecretManager;
+    if (!secrets) {
       if (callback) {
-        callback({
+        void callback({
           text: 'Secret management service is not available.',
           error: true,
         });
@@ -78,7 +70,7 @@ export const manageSecretAction: Action = {
       const messageText = message.content.text;
       if (!messageText) {
         if (callback) {
-          callback({
+          void callback({
             text: 'Message text is required for secret management',
             error: true,
           });
@@ -87,12 +79,11 @@ export const manageSecretAction: Action = {
       }
 
       const params =
-        (parseJSONObjectFromText(messageText) as ManageSecretParams) ||
-        extractParams(messageText);
+        (parseJSONObjectFromText(messageText) as ManageSecretParams) || extractParams(messageText);
 
       if (!params.operation) {
         if (callback) {
-          callback({
+          void callback({
             text: 'Please specify an operation: get, set, delete, or list',
             error: true,
           });
@@ -110,61 +101,64 @@ export const manageSecretAction: Action = {
       };
 
       let result: string;
+      let success: boolean;
 
       switch (params.operation) {
-        case 'get':
+        case 'get': {
           if (!params.key) {
             result = 'Please provide a key to retrieve';
             break;
           }
-
-          const value = await secretsService.get(params.key, context);
-          if (value === null) {
-            result = `Secret "${params.key}" not found or access denied`;
+          const value = await secrets.get(params.key, context);
+          if (!value) {
+            result = `Secret "${params.key}" not found at ${context.level} level`;
           } else {
-            // Don't expose the actual value in the response for security
-            result = `Secret "${params.key}" exists and is accessible`;
+            result = `Retrieved secret "${params.key}": ${value.substring(0, 4)}...`;
           }
+          success = !!value;
           break;
+        }
 
-        case 'set':
+        case 'set': {
           if (!params.key || !params.value) {
             result = 'Please provide both key and value to set';
             break;
           }
 
-          const config: Partial<SecretConfig> = {
+          const _config: Partial<SecretConfig> = {
             type: (params.config?.type as any) || 'secret',
             description: params.config?.description || `Secret: ${params.key}`,
             required: params.config?.required ?? false,
             encrypted: params.config?.encrypted ?? true,
           };
 
-          const success = await secretsService.set(params.key, params.value, context, config);
+          const _success = await secrets.set(params.key, params.value, context, _config);
           if (success) {
             result = `Successfully set ${context.level}-level secret "${params.key}"`;
           } else {
             result = `Failed to set secret "${params.key}" - check permissions`;
           }
           break;
+        }
 
-        case 'delete':
+        case 'delete': {
           if (!params.key) {
             result = 'Please provide a key to delete';
             break;
           }
 
           // For delete, we set the value to null
-          const deleteSuccess = await secretsService.set(params.key, null, context);
+          const deleteSuccess = await secrets.set(params.key, null, context);
           if (deleteSuccess) {
             result = `Successfully deleted ${context.level}-level secret "${params.key}"`;
           } else {
             result = `Failed to delete secret "${params.key}" - check permissions`;
           }
           break;
+        }
 
-        case 'list':
-          const secrets = await secretsService.list(context);
+        case 'list': {
+          const secrets = await secrets.list(context);
           const secretKeys = Object.keys(secrets);
 
           if (secretKeys.length === 0) {
@@ -173,19 +167,20 @@ export const manageSecretAction: Action = {
             result = `Found ${secretKeys.length} ${context.level}-level secrets:\n`;
             result += secretKeys
               .map((key) => {
-                const config = secrets[key];
-                return `- ${key}: ${config.description || 'No description'} (${config.type || 'secret'})`;
+                const _config = secrets[key];
+                return `- ${key}: ${_config.description || 'No description'} (${_config.type || 'secret'})`;
               })
               .join('\n');
           }
           break;
+        }
 
         default:
           result = `Unknown operation: ${params.operation}`;
       }
 
       if (callback) {
-        callback({ text: result });
+        void callback({ text: result });
       }
 
       return true;
@@ -193,7 +188,7 @@ export const manageSecretAction: Action = {
       elizaLogger.error('[ManageSecret] Error:', error);
 
       if (callback) {
-        callback({
+        void callback({
           text: `Error managing secret: ${error instanceof Error ? error.message : String(error)}`,
           error: true,
         });

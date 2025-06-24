@@ -34,17 +34,17 @@ const paymentTrustExemptionsScenario: Scenario = {
 
   // Add evaluator function for test compatibility
   evaluator: (response: string) => {
-    const hasTrustMention = 
+    const hasTrustMention =
       response.toLowerCase().includes('trust') ||
       response.toLowerCase().includes('exemption') ||
       response.toLowerCase().includes('whitelist') ||
       response.toLowerCase().includes('verified');
-    
-    const hasPaymentMention = 
+
+    const hasPaymentMention =
       response.toLowerCase().includes('payment') ||
       response.toLowerCase().includes('access') ||
       response.toLowerCase().includes('service');
-    
+
     return hasTrustMention || hasPaymentMention;
   },
 

@@ -45,11 +45,11 @@ const ffmpegCommand = `ffmpeg -y \
 
 try {
   execSync(ffmpegCommand, { stdio: 'inherit' });
-  console.log(`\n✅ Test video created successfully!`);
+  console.log('\n✅ Test video created successfully!');
   console.log(`📍 Location: ${outputPath}`);
-  console.log(`\nTo use this video for testing, add to your .env file:`);
+  console.log('\nTo use this video for testing, add to your .env file:');
   console.log(`TIKTOK_TEST_VIDEO_PATH=${outputPath}`);
 } catch (error) {
   console.error('Error generating test video:', error.message);
   process.exit(1);
-} 
+}

@@ -16,9 +16,9 @@ describe('PostgreSQL E2E Tests', () => {
   const createTestAdapter = async () => {
     // Generate a unique agent ID for this test to ensure proper isolation
     const agentId = uuidv4() as UUID;
-    
+
     // Use unique data directory for each test instead of shared :memory:
-    const dataDir = `:memory:`; // Each PGLite instance with :memory: is isolated
+    const dataDir = ':memory:'; // Each PGLite instance with :memory: is isolated
     const manager = new PGliteClientManager({ dataDir });
     const adapter = new PgliteDatabaseAdapter(agentId, manager);
     await adapter.init();

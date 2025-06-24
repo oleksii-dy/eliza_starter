@@ -5,7 +5,7 @@
 // - copy paste in here
 // - update version ref above
 
-import * as T from 'three'
+import * as T from 'three';
 
 const D =
     /* glsl */
@@ -388,40 +388,40 @@ const D =
     clearcoat: [e.clearcoat, e.clearcoatNormal, e.clearcoatRoughness],
     transmission: [e.transmission],
     iridescence: [e.iridescence],
-  }
+  };
 function U(M) {
-  let n = 0
-  for (let m = 0; m < M.length; m++) n = M.charCodeAt(m) + (n << 6) + (n << 16) - n
-  const S = n >>> 0
-  return String(S)
+  let n = 0;
+  for (let m = 0; m < M.length; m++) {n = M.charCodeAt(m) + (n << 6) + (n << 16) - n;}
+  const S = n >>> 0;
+  return String(S);
 }
 function k(M) {
   try {
-    new M()
+    new M();
   } catch (n) {
-    if (n.message.indexOf('is not a constructor') >= 0) return !1
+    if (n.message.indexOf('is not a constructor') >= 0) {return !1;}
   }
-  return !0
+  return !0;
 }
 function L(M) {
-  return M.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '')
+  return M.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
 }
 class B extends T.Material {
   constructor({ baseMaterial: n, vertexShader: S, fragmentShader: h, uniforms: m, patchMap: I, cacheKey: f, ...r }) {
-    if (!n) throw new Error('CustomShaderMaterial: baseMaterial is required.')
-    let i
+    if (!n) {throw new Error('CustomShaderMaterial: baseMaterial is required.');}
+    let i;
     if (k(n)) {
-      const _ = Object.keys(r).length === 0
-      i = new n(_ ? void 0 : r)
-    } else (i = n), Object.assign(i, r)
+      const _ = Object.keys(r).length === 0;
+      i = new n(_ ? void 0 : r);
+    } else {(i = n), Object.assign(i, r);}
     if (['ShaderMaterial', 'RawShaderMaterial'].includes(i.type))
-      throw new Error(`CustomShaderMaterial does not support ${i.type} as a base material.`)
-    super(), (this.uniforms = {}), (this.vertexShader = ''), (this.fragmentShader = '')
+    {throw new Error(`CustomShaderMaterial does not support ${i.type} as a base material.`);}
+    super(), (this.uniforms = {}), (this.vertexShader = ''), (this.fragmentShader = '');
     const t = i
     ;(t.name = `CustomShaderMaterial<${i.name}>`),
-      (t.update = this.update.bind(t)),
-      (t.__csm = { prevOnBeforeCompile: i.onBeforeCompile })
-    const o = { ...(t.uniforms || {}), ...(m || {}) }
+    (t.update = this.update.bind(t)),
+    (t.__csm = { prevOnBeforeCompile: i.onBeforeCompile });
+    const o = { ...(t.uniforms || {}), ...(m || {}) };
     return (
       (t.uniforms = this.uniforms = o),
       (t.vertexShader = this.vertexShader = S || ''),
@@ -434,31 +434,31 @@ class B extends T.Material {
         cacheKey: f,
       }),
       t
-    )
+    );
   }
   update({ fragmentShader: n, vertexShader: S, uniforms: h, cacheKey: m, patchMap: I }) {
     const f = L(S || ''),
       r = L(n || ''),
-      i = this
+      i = this;
     h && (i.uniforms = h),
-      S && (i.vertexShader = S),
-      n && (i.fragmentShader = n),
-      Object.entries(w).forEach(([a, o]) => {
-        for (const _ in o) {
-          const s = o[_]
-          ;((r && r.includes(s)) || (f && f.includes(s))) && (i[a] || (i[a] = 1))
-        }
-      })
+    S && (i.vertexShader = S),
+    n && (i.fragmentShader = n),
+    Object.entries(w).forEach(([a, o]) => {
+      for (const _ in o) {
+        const s = o[_]
+          ;((r && r.includes(s)) || (f && f.includes(s))) && (i[a] || (i[a] = 1));
+      }
+    });
     const p = i.__csm.prevOnBeforeCompile,
       t = (a, o, _) => {
-        var c
+        let c;
         let s,
-          d = ''
+          d = '';
         if (o) {
           const l = /void\s+main\s*\(\s*\)[^{]*{((?:[^{}]+|{(?:[^{}]+|{(?:[^{}]+|{(?:[^{}]+|{[^{}]*})*})*})*})*})/gm
-          ;(s = (c = o.matchAll(l).next().value) == null ? void 0 : c[1]), s && (s = s.slice(0, -1))
-          const u = o.indexOf('void main() {')
-          d = o.slice(0, u)
+          ;(s = (c = o.matchAll(l).next().value) == null ? void 0 : c[1]), s && (s = s.slice(0, -1));
+          const u = o.indexOf('void main() {');
+          d = o.slice(0, u);
         }
         if (
           (_ &&
@@ -467,7 +467,7 @@ class B extends T.Material {
             s &&
             (s =
               `csm_UnlitFac = 1.0;
-` + s),
+${s}`),
           a.includes('//~CSM_DEFAULTS'))
         ) {
           a = a.replace(
@@ -479,17 +479,17 @@ class B extends T.Material {
           
           void main() {
           `
-          )
-          const l = a.lastIndexOf('//~CSM_MAIN_END')
+          );
+          const l = a.lastIndexOf('//~CSM_MAIN_END');
           if (l !== -1) {
             const v = `
             ${s ? `${s}` : ''}
             //~CSM_MAIN_END
-          `
-            a = a.slice(0, l) + v + a.slice(l)
+          `;
+            a = a.slice(0, l) + v + a.slice(l);
           }
         } else {
-          const l = /void\s*main\s*\(\s*\)\s*{/gm
+          const l = /void\s*main\s*\(\s*\)\s*{/gm;
           a = a.replace(
             l,
             `
@@ -510,12 +510,12 @@ class B extends T.Material {
             ${s ? `${s}` : ''}
             //~CSM_MAIN_END
           `
-          )
+          );
         }
-        return a
-      }
+        return a;
+      };
     i.onBeforeCompile = (a, o) => {
-      p == null || p(a, o)
+      p == null || p(a, o);
       const s = { ...b, ...(I || {}) },
         d = i.type,
         R = d
@@ -524,48 +524,48 @@ class B extends T.Material {
           : `#define IS_UNKNOWN;
 `
       ;(a.vertexShader =
-        R +
-        `#define IS_VERTEX
-` +
-        a.vertexShader),
-        (a.fragmentShader =
-          R +
-          `#define IS_FRAGMENT
-` +
-          a.fragmentShader)
+        `${R
+        }#define IS_VERTEX
+${
+        a.vertexShader}`),
+      (a.fragmentShader =
+          `${R
+          }#define IS_FRAGMENT
+${
+        a.fragmentShader}`);
       for (const c in s) {
-        const l = c === '*' || (f && f.includes(c))
+        const l = c === '*' || (f && f.includes(c));
         if (c === '*' || (r && r.includes(c)) || l) {
-          const u = O[c]
+          const u = O[c];
           if (u && u !== '*' && (Array.isArray(u) ? !u.includes(d) : u !== d)) {
-            console.error(`CustomShaderMaterial: ${c} is not available in ${d}. Shader cannot compile.`)
-            return
+            console.error(`CustomShaderMaterial: ${c} is not available in ${d}. Shader cannot compile.`);
+            return;
           }
-          const C = s[c]
+          const C = s[c];
           for (const g in C) {
-            const A = C[g]
-            if (typeof A == 'object') {
+            const A = C[g];
+            if (typeof A === 'object') {
               const $ = A.type,
-                N = A.value
+                N = A.value;
               $ === 'fs'
                 ? (a.fragmentShader = a.fragmentShader.replace(g, N))
-                : $ === 'vs' && (a.vertexShader = a.vertexShader.replace(g, N))
+                : $ === 'vs' && (a.vertexShader = a.vertexShader.replace(g, N));
             } else
-              A &&
-                ((a.vertexShader = a.vertexShader.replace(g, A)), (a.fragmentShader = a.fragmentShader.replace(g, A)))
+            {A &&
+                ((a.vertexShader = a.vertexShader.replace(g, A)), (a.fragmentShader = a.fragmentShader.replace(g, A)));}
           }
         }
       }
       ;(a.vertexShader = t(a.vertexShader, f, !1)),
-        (a.fragmentShader = t(a.fragmentShader, r, !0)),
-        h && (a.uniforms = { ...a.uniforms, ...i.uniforms }),
-        (i.uniforms = a.uniforms)
-    }
+      (a.fragmentShader = t(a.fragmentShader, r, !0)),
+      h && (a.uniforms = { ...a.uniforms, ...i.uniforms }),
+      (i.uniforms = a.uniforms);
+    };
     const E = i.customProgramCacheKey
     ;(i.customProgramCacheKey = () =>
       ((m == null ? void 0 : m()) || U((f || '') + (r || ''))) + (E == null ? void 0 : E.call(i))),
-      (i.needsUpdate = !0)
+    (i.needsUpdate = !0);
   }
 }
 
-export { B as default }
+export { B as default };

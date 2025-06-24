@@ -5,7 +5,6 @@ import {
   type ProviderResult,
   type State,
   type UUID,
-  createUniqueUuid,
   logger,
 } from '@elizaos/core';
 import { createTodoDataService } from '../services/todoDataService';
@@ -33,8 +32,6 @@ export const todosProvider: Provider = {
 
       // Fetch room details directly to get worldId
       const roomDetails = await runtime.getRoom(roomId);
-      const worldId =
-        roomDetails?.worldId || message.worldId || createUniqueUuid(runtime, message.entityId);
       logger.debug('TodosProvider - roomDetails:', roomDetails);
 
       // Get data service
@@ -52,7 +49,7 @@ export const todosProvider: Provider = {
 
       // Get completed tasks in the last 7 days
       const completedTodos = allEntityTodos.filter((todo) => {
-        if (!todo.isCompleted) return false;
+        if (!todo.isCompleted) {return false;}
 
         // Check completion date if available
         if (todo.completedAt) {
@@ -89,7 +86,7 @@ export const todosProvider: Provider = {
           if (todo.dueDate) {
             try {
               dueDateText = `due ${todo.dueDate.toLocaleDateString()}`;
-            } catch (e) {
+            } catch (_e) {
               logger.warn(`Invalid due date for todo ${todo.id}: ${todo.dueDate}`);
             }
           }
@@ -114,13 +111,13 @@ export const todosProvider: Provider = {
           if (todo.completedAt) {
             try {
               completedDateText = todo.completedAt.toLocaleDateString();
-            } catch (e) {
+            } catch (_e) {
               logger.warn(`Invalid completion date for todo ${todo.id}`);
             }
           } else if (todo.updatedAt) {
             try {
               completedDateText = todo.updatedAt.toLocaleDateString();
-            } catch (e) {
+            } catch (_e) {
               logger.warn(`Invalid updated date for todo ${todo.id}`);
             }
           }
@@ -131,22 +128,22 @@ export const todosProvider: Provider = {
         .join('\n');
 
       // Build the provider output
-      let output = `# User's Todos (Tasks)\n\nThese are the tasks which the agent is managing for the user. This is the actual list of todos, any other is probably from previous conversations.\n\n`;
+      let output = '# User\'s Todos (Tasks)\n\nThese are the tasks which the agent is managing for the user. This is the actual list of todos, any other is probably from previous conversations.\n\n';
 
       // Daily tasks
-      output += `\n## Daily Todos\n`;
+      output += '\n## Daily Todos\n';
       output += formattedDailyTasks || 'No daily todos.';
 
       // One-off tasks
-      output += `\n\n## One-off Todos\n`;
+      output += '\n\n## One-off Todos\n';
       output += formattedOneOffTasks || 'No one-off todos.';
 
       // Aspirational tasks
-      output += `\n\n## Aspirational Todos\n`;
+      output += '\n\n## Aspirational Todos\n';
       output += formattedAspirationalTasks || 'No aspirational todos.';
 
       // Recently completed tasks
-      output += `\n\n## Recently Completed (Last 7 Days)\n`;
+      output += '\n\n## Recently Completed (Last 7 Days)\n';
       output += formattedCompletedTasks || 'No todos completed in the last 7 days.';
 
       output +=

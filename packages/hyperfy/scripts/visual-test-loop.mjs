@@ -63,7 +63,7 @@ async function runSingleTest() {
         success: code === 0 && !isTimedOut,
         exitCode: code,
         stdout,
-        stderr: isTimedOut ? stderr + '\nTest timed out' : stderr,
+        stderr: isTimedOut ? `${stderr}\nTest timed out` : stderr,
         timestamp: new Date().toISOString(),
         timedOut: isTimedOut
       });
@@ -88,7 +88,7 @@ async function runSingleTest() {
  */
 async function logResult(result) {
   const logEntry = `[${result.timestamp}] ${result.success ? 'PASS' : 'FAIL'} (exit: ${result.exitCode})\n`;
-  
+
   try {
     await fs.appendFile(LOOP_CONFIG.logFile, logEntry);
   } catch (error) {
@@ -101,7 +101,7 @@ async function logResult(result) {
  */
 async function updateSummary(result, stats) {
   stats.totalRuns++;
-  
+
   if (result.success) {
     stats.successCount++;
     stats.consecutiveFailures = 0;
@@ -111,16 +111,16 @@ async function updateSummary(result, stats) {
     stats.consecutiveFailures++;
     stats.lastFailure = result.timestamp;
   }
-  
+
   stats.lastRun = result.timestamp;
   stats.successRate = ((stats.successCount / stats.totalRuns) * 100).toFixed(2);
-  
+
   try {
     await fs.writeFile(LOOP_CONFIG.summaryFile, JSON.stringify(stats, null, 2));
   } catch (error) {
     console.error('Failed to write summary:', error);
   }
-  
+
   return stats;
 }
 
@@ -152,18 +152,18 @@ async function loadSummary() {
 function printStatus(result, stats) {
   const status = result.success ? '✅ PASS' : '❌ FAIL';
   const time = new Date().toLocaleTimeString();
-  
+
   console.log(`\n[${time}] ${status}`);
   console.log(`📊 Stats: ${stats.successCount}/${stats.totalRuns} (${stats.successRate}% success)`);
-  
+
   if (stats.consecutiveFailures > 0) {
     console.log(`⚠️  Consecutive failures: ${stats.consecutiveFailures}`);
   }
-  
+
   if (result.timedOut) {
     console.log('⏱️  Test timed out after', LOOP_CONFIG.testTimeoutMs / 1000, 'seconds');
   }
-  
+
   if (result.success) {
     console.log('🎉 App is rendering correctly');
   } else {
@@ -172,7 +172,7 @@ function printStatus(result, stats) {
       console.log('Error details:', result.stderr.split('\n')[0]);
     }
   }
-  
+
   console.log(`⏰ Next test in ${LOOP_CONFIG.intervalMs / 1000} seconds...`);
 }
 
@@ -196,7 +196,7 @@ function shouldStop(stats) {
 async function runLoop() {
   console.log('🔄 Starting Hyperfy Visual Test Loop');
   console.log('====================================');
-  console.log(`⚙️  Configuration:`);
+  console.log('⚙️  Configuration:');
   console.log(`   - Test interval: ${LOOP_CONFIG.intervalMs / 1000}s`);
   console.log(`   - Max consecutive failures: ${LOOP_CONFIG.maxConsecutiveFailures}`);
   console.log(`   - Log file: ${LOOP_CONFIG.logFile}`);
@@ -204,9 +204,9 @@ async function runLoop() {
   console.log('');
   console.log('Press Ctrl+C to stop the loop');
   console.log('');
-  
+
   let stats = await loadSummary();
-  
+
   // Print initial stats if resuming
   if (stats.totalRuns > 0) {
     console.log('📈 Resuming from previous session:');
@@ -215,24 +215,24 @@ async function runLoop() {
     console.log(`   - Last run: ${stats.lastRun}`);
     console.log('');
   }
-  
+
   while (true) {
     try {
       console.log('🏃 Running visual test...');
       const result = await runSingleTest();
-      
+
       await logResult(result);
       stats = await updateSummary(result, stats);
-      
+
       printStatus(result, stats);
-      
+
       if (shouldStop(stats)) {
         break;
       }
-      
+
       // Wait for next iteration
       await new Promise(resolve => setTimeout(resolve, LOOP_CONFIG.intervalMs));
-      
+
     } catch (error) {
       console.error('💥 Loop error:', error);
       await new Promise(resolve => setTimeout(resolve, LOOP_CONFIG.intervalMs));
@@ -246,7 +246,7 @@ async function runLoop() {
 async function generateReport() {
   try {
     const stats = await loadSummary();
-    
+
     console.log('\n📊 Final Test Report');
     console.log('====================');
     console.log(`Total runs: ${stats.totalRuns}`);
@@ -255,19 +255,19 @@ async function generateReport() {
     console.log(`Success rate: ${stats.successRate}%`);
     console.log(`Started: ${stats.startTime}`);
     console.log(`Last run: ${stats.lastRun}`);
-    
+
     if (stats.lastSuccess) {
       console.log(`Last success: ${stats.lastSuccess}`);
     }
-    
+
     if (stats.lastFailure) {
       console.log(`Last failure: ${stats.lastFailure}`);
     }
-    
-    console.log(`\n📁 Files:`);
+
+    console.log('\n📁 Files:');
     console.log(`- Log: ${LOOP_CONFIG.logFile}`);
     console.log(`- Summary: ${LOOP_CONFIG.summaryFile}`);
-    
+
   } catch (error) {
     console.error('Failed to generate report:', error);
   }
@@ -290,4 +290,4 @@ process.on('SIGTERM', async () => {
 runLoop().catch(error => {
   console.error('💥 Loop failed:', error);
   generateReport().finally(() => process.exit(1));
-}); 
+});

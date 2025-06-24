@@ -259,7 +259,7 @@ export class SWEBenchRunner {
       const analysis = await this.issueAnalyzer.analyzeIssue(instance, repoPath);
 
       // Track token usage
-      let tokenUsage: TokenUsage = {
+      const tokenUsage: TokenUsage = {
         prompt_tokens: 0,
         completion_tokens: 0,
         total: 0,
@@ -374,10 +374,10 @@ export class SWEBenchRunner {
 
       return {
         instance_id: instance.instance_id,
-        success: success,
+        success,
         patch: generatedPatch?.patch || '',
         execution_time: executionTime,
-        iterations: iterations,
+        iterations,
         token_usage: tokenUsage,
         test_results: generatedPatch ? await this.repoManager.runTests(repoPath) : undefined,
         compilation_success: generatedPatch ? await this.repoManager.checkBuild(repoPath) : false,
@@ -444,9 +444,9 @@ export class SWEBenchRunner {
         const issueLength = (inst.issue_body || '').length;
         let complexity: 'low' | 'medium' | 'high';
 
-        if (issueLength < 200) complexity = 'low';
-        else if (issueLength < 500) complexity = 'medium';
-        else complexity = 'high';
+        if (issueLength < 200) {complexity = 'low';}
+        else if (issueLength < 500) {complexity = 'medium';}
+        else {complexity = 'high';}
 
         return options.complexity_filter!.includes(complexity);
       });
@@ -504,12 +504,12 @@ export class SWEBenchRunner {
 
     results.forEach((r) => {
       let complexity: string;
-      if (r.iterations <= 1) complexity = 'low';
-      else if (r.iterations <= 3) complexity = 'medium';
-      else complexity = 'high';
+      if (r.iterations <= 1) {complexity = 'low';}
+      else if (r.iterations <= 3) {complexity = 'medium';}
+      else {complexity = 'high';}
 
       groups[complexity].total++;
-      if (r.success) groups[complexity].success++;
+      if (r.success) {groups[complexity].success++;}
     });
 
     const rates: Record<string, number> = {};
@@ -665,11 +665,11 @@ ${JSON.stringify(report.config, null, 2)}
 | Instance ID | Resolved | Compilation | Tests | Time (s) | Error |
 |------------|----------|-------------|-------|----------|-------|
 ${results.per_instance_results
-  .map(
-    (r) =>
-      `| ${r.instance_id} | ${r.resolved ? '✅' : '❌'} | ${r.compilation_success ? '✅' : '❌'} | ${r.tests_passed ? '✅' : '❌'} | ${(r.execution_time / 1000).toFixed(1)} | ${r.error || '-'} |`
-  )
-  .join('\n')}
+    .map(
+      (r) =>
+        `| ${r.instance_id} | ${r.resolved ? '✅' : '❌'} | ${r.compilation_success ? '✅' : '❌'} | ${r.tests_passed ? '✅' : '❌'} | ${(r.execution_time / 1000).toFixed(1)} | ${r.error || '-'} |`
+    )
+    .join('\n')}
 
 ## Performance Metrics
 - **Average Execution Time**: ${(results.summary.avg_execution_time / 1000).toFixed(1)}s
@@ -678,8 +678,8 @@ ${results.per_instance_results
 
 ## Success by Complexity
 ${Object.entries(results.summary.success_by_complexity)
-  .map(([complexity, rate]) => `- **${complexity}**: ${(rate * 100).toFixed(1)}%`)
-  .join('\n')}
+    .map(([complexity, rate]) => `- **${complexity}**: ${(rate * 100).toFixed(1)}%`)
+    .join('\n')}
 
 ${
   results.summary.common_errors.length > 0

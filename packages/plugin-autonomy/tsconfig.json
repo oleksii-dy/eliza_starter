@@ -21,5 +21,5 @@
     "allowArbitraryExtensions": true,
     "baseUrl": "."
   },
-  "include": ["src/**/*.ts", "e2e/**/*.ts", "__tests__/**/*.ts"]
+  "include": ["src/**/*.ts", "e2e/**/*.ts", "__tests__/**/*.ts", "src/__tests__/**/*.d.ts"]
 }

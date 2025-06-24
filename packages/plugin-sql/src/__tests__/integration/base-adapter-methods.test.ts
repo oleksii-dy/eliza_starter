@@ -254,7 +254,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         id: memoryId,
         agentId: testAgentId,
         entityId: testEntityId,
-        roomId: roomId,
+        roomId,
         content: { text: 'Original content' } as Content,
         createdAt: Date.now(),
         metadata: { type: 'test' },
@@ -448,7 +448,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         id: memoryId,
         agentId: testAgentId,
         entityId: testEntityId,
-        roomId: roomId,
+        roomId,
         content: { text: 'Test memory' } as Content,
         createdAt: Date.now(),
         metadata: { type: 'test' },
@@ -677,7 +677,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         {
           id: uuidv4() as UUID,
           agentId,
-          entityId: entityId,
+          entityId,
           roomId,
           content: { text: 'Meeting scheduled for tomorrow' } as Content,
           createdAt: Date.now() - 3600000, // 1 hour ago
@@ -686,7 +686,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         {
           id: uuidv4() as UUID,
           agentId,
-          entityId: entityId,
+          entityId,
           roomId,
           content: { text: 'Remember to buy groceries' } as Content,
           createdAt: Date.now() - 1800000, // 30 min ago
@@ -695,7 +695,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         {
           id: uuidv4() as UUID,
           agentId,
-          entityId: entityId,
+          entityId,
           roomId,
           content: { text: 'Important meeting notes' } as Content,
           createdAt: Date.now() - 900000, // 15 min ago
@@ -767,7 +767,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         {
           id: uuidv4() as UUID,
           agentId: testAgentId,
-          entityId: entityId,
+          entityId,
           roomId,
           content: { text: 'hello world greeting message' } as Content,
           embedding: createNormalizedEmbedding([0.9, 0.8, 0.7, 0.6, 0.5]),
@@ -777,7 +777,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         {
           id: uuidv4() as UUID,
           agentId: testAgentId,
-          entityId: entityId,
+          entityId,
           roomId,
           content: { text: 'hi planet similar greeting' } as Content,
           embedding: createNormalizedEmbedding([0.85, 0.75, 0.65, 0.55, 0.45]), // Similar to hello world
@@ -787,7 +787,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         {
           id: uuidv4() as UUID,
           agentId: testAgentId,
-          entityId: entityId,
+          entityId,
           roomId,
           content: { text: 'this is a towel' } as Content,
           embedding: createNormalizedEmbedding([0.1, 0.2, 0.3, 0.9, 0.8]), // Very different

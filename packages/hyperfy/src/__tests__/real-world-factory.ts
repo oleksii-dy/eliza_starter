@@ -26,16 +26,16 @@ export interface RealTestWorldOptions extends Partial<WorldOptions> {
 export async function createRealTestWorld(options: RealTestWorldOptions = {}): Promise<WorldType> {
   // Setup test environment
   setupTestEnvironment();
-  
+
   // Enable test mode in config loader
   const configLoader = ConfigLoader.getInstance();
   configLoader.enableTestMode();
-  
+
   const world = new World();
-  
+
   // Remove graphics-dependent systems for testing
   removeGraphicsSystemsForTesting(world);
-  
+
   // Register RPG systems if requested (default: true)
   if (options.enableRPGSystems !== false) {
     world.register('combat', CombatSystem as any);
@@ -48,7 +48,7 @@ export async function createRealTestWorld(options: RealTestWorldOptions = {}): P
     world.register('banking', BankingSystem as any);
     world.register('movement', MovementSystem as any);
   }
-  
+
   // Initialize world with test-appropriate options using Config system
   const appConfig = Config.get();
   const initOptions: WorldOptions = {
@@ -61,20 +61,20 @@ export async function createRealTestWorld(options: RealTestWorldOptions = {}): P
     assetsUrl: options.assetsUrl ?? appConfig.assetsUrl,
     ...options
   };
-  
+
   // Initialize with timeout to prevent hanging
   const initPromise = world.init(initOptions);
-  const timeoutPromise = new Promise((_, reject) => 
+  const timeoutPromise = new Promise((_, reject) =>
     setTimeout(() => reject(new Error('World initialization timed out after 5 seconds')), 5000)
   );
-  
+
   try {
     await Promise.race([initPromise, timeoutPromise]);
   } catch (error) {
     console.error('World initialization failed:', error);
     throw error;
   }
-  
+
   return world as WorldType;
 }
 
@@ -104,8 +104,8 @@ export async function runWorldFor(world: WorldType, ms: number): Promise<void> {
  * Helper to run world until condition is met
  */
 export async function runWorldUntil(
-  world: WorldType, 
-  condition: () => boolean, 
+  world: WorldType,
+  condition: () => boolean,
   timeout = 5000
 ): Promise<void> {
   const start = Date.now();
@@ -123,21 +123,21 @@ export async function runWorldUntil(
  */
 export class RealTestScenario {
   world!: WorldType;
-  
+
   async setup(options?: RealTestWorldOptions): Promise<void> {
     this.world = await createRealTestWorld(options);
   }
-  
+
   async spawnPlayer(id: string, options?: any): Promise<any> {
     if (!this.world.entities) {
       throw new Error('Entities system not available');
     }
-    
+
     const player = this.world.entities.create(id);
     if (!player) {
       throw new Error('Failed to create player entity');
     }
-    
+
     // Add standard player components
     player.addComponent('stats', {
       hitpoints: { current: 100, max: 100 },
@@ -148,14 +148,14 @@ export class RealTestScenario {
       combatLevel: 1,
       ...options?.stats
     });
-    
+
     player.addComponent('inventory', {
       items: new Map(),
       capacity: 28,
       gold: 100,
       ...options?.inventory
     });
-    
+
     player.addComponent('skills', {
       attack: { level: 1, experience: 0 },
       strength: { level: 1, experience: 0 },
@@ -163,7 +163,7 @@ export class RealTestScenario {
       hitpoints: { level: 10, experience: 0 },
       ...options?.skills
     });
-    
+
     player.addComponent('combat', {
       inCombat: false,
       target: null,
@@ -172,7 +172,7 @@ export class RealTestScenario {
       combatStyle: 'melee',
       ...options?.combat
     });
-    
+
     player.addComponent('movement', {
       position: options?.position || { x: 0, y: 0, z: 0 },
       destination: null,
@@ -181,33 +181,33 @@ export class RealTestScenario {
       facingDirection: 0,
       ...options?.movement
     });
-    
+
     // Set entity position
     player.position = options?.position || { x: 0, y: 0, z: 0 };
-    
+
     return player;
   }
-  
+
   async spawnNPC(definitionId: number, position?: any): Promise<any> {
     const npcSystem = (this.world as any).npc;
     if (!npcSystem) {
       throw new Error('NPC system not available');
     }
-    
+
     return npcSystem.spawnNPC(definitionId, position || { x: 0, y: 0, z: 0 });
   }
-  
+
   async runFor(ms: number): Promise<void> {
     return runWorldFor(this.world, ms);
   }
-  
+
   async runUntil(condition: () => boolean, timeout?: number): Promise<void> {
     return runWorldUntil(this.world, condition, timeout);
   }
-  
+
   async cleanup(): Promise<void> {
     if (this.world) {
       this.world.destroy();
     }
   }
-} 
+}

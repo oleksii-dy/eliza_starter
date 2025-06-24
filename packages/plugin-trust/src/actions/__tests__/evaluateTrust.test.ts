@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, mock, beforeEach, type Mock } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import { Role, ChannelType } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
@@ -38,9 +38,9 @@ describe('evaluateTrustAction', () => {
   beforeEach(() => {
     runtime = createMockRuntime();
     trustEngine = {
-      evaluateTrust: vi.fn().mockResolvedValue(mockTrustProfile),
-      calculateTrust: vi.fn().mockResolvedValue(mockTrustProfile),
-      getTrustScore: vi.fn().mockResolvedValue(75)
+      evaluateTrust: mock().mockResolvedValue(mockTrustProfile),
+      calculateTrust: mock().mockResolvedValue(mockTrustProfile),
+      getTrustScore: mock().mockResolvedValue(75)
     };
     (runtime.getService as unknown as Mock).mockReturnValue(trustEngine);
   });
@@ -99,7 +99,7 @@ describe('evaluateTrustAction', () => {
     (runtime.getService as unknown as Mock).mockReturnValue(null);
 
     const memory = createMockMemory('What is my trust score?', testEntityId);
-    
+
     await expect(evaluateTrustAction.handler(runtime, memory)).rejects.toThrow(
       'Trust engine service not available'
     );
@@ -108,7 +108,7 @@ describe('evaluateTrustAction', () => {
   it('should handle trust evaluation with specific context', async () => {
     const memory = createMockMemory('What is my trust score?', testEntityId);
     const result = await evaluateTrustAction.handler(runtime, memory);
-    
+
     expect(trustEngine.evaluateTrust).toHaveBeenCalledWith(
       testEntityId,
       'test-agent',
@@ -165,7 +165,7 @@ describe('evaluateTrustAction', () => {
     const memory = createMockMemory('What is my trust score?', testEntityId);
     const state = {} as State;
     expect(await evaluateTrustAction.validate(runtime, memory, state)).toBe(true);
-    
+
     (runtime.getService as unknown as Mock).mockReturnValue(null);
     expect(await evaluateTrustAction.validate(runtime, memory, state)).toBe(false);
   });

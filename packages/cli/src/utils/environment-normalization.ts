@@ -92,7 +92,7 @@ export async function dynamicImport(modulePath: string): Promise<any> {
     if (resolvedPath.startsWith('/')) {
       try {
         return await import(`file://${normalizedPath}`);
-      } catch (fileError) {
+      } catch {
         // Fall through to original error
       }
     }

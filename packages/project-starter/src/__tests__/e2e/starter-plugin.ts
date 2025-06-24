@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@elizaos/core';
 
 /**
  * Starter Plugin E2E Test Suite
@@ -41,6 +42,7 @@ interface TestSuite {
   description: string;
   tests: Array<{
     name: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fn: (runtime: any) => Promise<any>;
   }>;
 }
@@ -59,7 +61,9 @@ interface Memory {
 }
 
 interface State {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   values: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
   text: string;
 }
@@ -82,6 +86,7 @@ export class StarterTestSuite implements TestSuite {
        * It's a good first test because it validates the basic setup before testing functionality.
        */
       name: 'Character configuration test',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fn: async (runtime: any) => {
         const character = runtime.character;
         const requiredFields = ['name', 'bio', 'plugins', 'system', 'messageExamples'];
@@ -117,6 +122,7 @@ export class StarterTestSuite implements TestSuite {
        * It's important to test this separately from action execution to isolate issues.
        */
       name: 'Plugin initialization test',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fn: async (runtime: any) => {
         // Test plugin initialization with empty config
         try {
@@ -140,6 +146,7 @@ export class StarterTestSuite implements TestSuite {
        * natural language understanding.
        */
       name: 'Hello world action test - Direct execution',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fn: async (runtime: any) => {
         const message: Memory = {
           entityId: uuidv4() as UUID,
@@ -169,6 +176,7 @@ export class StarterTestSuite implements TestSuite {
 
           if (!responseReceived) {
             // Try directly executing the action if processActions didn't work
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const helloWorldAction = runtime.actions.find((a: any) => a.name === 'HELLO_WORLD');
             if (helloWorldAction) {
               await helloWorldAction.handler(
@@ -212,6 +220,7 @@ export class StarterTestSuite implements TestSuite {
        * This tests the full AI pipeline: understanding → decision making → action execution
        */
       name: 'Natural language hello world test',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fn: async (runtime: any) => {
         // Create a unique room for this conversation
         const roomId = uuidv4() as UUID;
@@ -222,7 +231,7 @@ export class StarterTestSuite implements TestSuite {
           // Note: We do NOT specify any actions - the agent must understand and decide
           const userMessage: Memory = {
             entityId: userId,
-            roomId: roomId,
+            roomId,
             content: {
               text: 'Please say hello world', // Natural language request
               source: 'test',
@@ -260,7 +269,7 @@ export class StarterTestSuite implements TestSuite {
               text: userMessage.content.text,
             };
 
-            const result = await runtime.evaluate(userMessage, state, responseCallback);
+            await runtime.evaluate(userMessage, state, responseCallback);
 
             // If evaluate doesn't work, try the action selection pipeline
             if (!agentResponse && runtime.evaluateActions) {
@@ -268,6 +277,7 @@ export class StarterTestSuite implements TestSuite {
 
               if (selectedActions && selectedActions.length > 0) {
                 // Execute the selected action
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const action = runtime.actions.find((a: any) => a.name === selectedActions[0]);
                 if (action) {
                   await action.handler(runtime, userMessage, state, {}, responseCallback, []);
@@ -291,7 +301,7 @@ export class StarterTestSuite implements TestSuite {
 
           // Optionally verify that the HELLO_WORLD action was used
           if (actionUsed && actionUsed !== 'HELLO_WORLD') {
-            console.log(`Note: Agent used action "${actionUsed}" instead of "HELLO_WORLD"`);
+            logger.info(`Note: Agent used action "${actionUsed}" instead of "HELLO_WORLD"`);
           }
 
           // Test passed! The agent successfully understood the natural language request
@@ -309,6 +319,7 @@ export class StarterTestSuite implements TestSuite {
        * HELLO_WORLD_PROVIDER is functioning and returning the expected data.
        */
       name: 'Hello world provider test',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fn: async (runtime: any) => {
         const message: Memory = {
           entityId: uuidv4() as UUID,
@@ -333,6 +344,7 @@ export class StarterTestSuite implements TestSuite {
 
           // Find the specific provider we want to test
           const helloWorldProvider = runtime.providers.find(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (p: any) => p.name === 'HELLO_WORLD_PROVIDER'
           );
 
@@ -358,6 +370,7 @@ export class StarterTestSuite implements TestSuite {
        * starter service can be properly started, accessed, and stopped.
        */
       name: 'Starter service test',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fn: async (runtime: any) => {
         // Test service registration and lifecycle
         try {
@@ -393,19 +406,19 @@ export class StarterTestSuite implements TestSuite {
           const testData = {
             // Your test setup here
           };
-          
+
           // 2. Execute the feature
           const result = await runtime.someMethod(testData);
-          
+
           // 3. Verify the results
           if (!result) {
             throw new Error('Expected result but got nothing');
           }
-          
+
           if (result.someProperty !== 'expected value') {
             throw new Error(`Expected 'expected value' but got '${result.someProperty}'`);
           }
-          
+
           // Test passed if we reach here without throwing
         } catch (error) {
           // Always wrap errors with context for easier debugging

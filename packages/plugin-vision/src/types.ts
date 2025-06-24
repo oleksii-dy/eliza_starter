@@ -156,7 +156,7 @@ export interface VisionConfig {
   vlmUpdateInterval?: number;
   tfChangeThreshold?: number;
   vlmChangeThreshold?: number;
-  
+
   // Screen vision config
   visionMode?: VisionMode;
   screenCaptureInterval?: number; // ms between screen captures
@@ -170,7 +170,7 @@ export interface VisionConfig {
     width: number;
     height: number;
   };
-  
+
   // Multi-display and worker config
   displayIndex?: number; // Specific display to capture
   captureAllDisplays?: boolean; // Cycle through all displays
@@ -216,12 +216,12 @@ export interface EntityAttributes {
   clothing?: string[];
   hairColor?: string;
   accessories?: string[];
-  
+
   // For objects
   objectType?: string;
   color?: string;
   size?: 'small' | 'medium' | 'large';
-  
+
   // Common
   description?: string;
   tags?: string[];

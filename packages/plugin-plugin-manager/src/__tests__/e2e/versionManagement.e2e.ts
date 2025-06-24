@@ -52,7 +52,7 @@ export const versionManagementTests: TestCase[] = [
       // try {
       //   await pluginManager.updatePlugin(pluginName, '2.0.0-broken');
       //   assert.fail('Should have failed to update to broken version');
-      // } catch (error) {
+      // } catch (_error) {
       //   console.log('[VersionMgmt] Update failed as expected, rolling back...');
       //   await pluginManager.rollbackPlugin(pluginName);
       // }
@@ -79,7 +79,7 @@ export const versionManagementTests: TestCase[] = [
       for (const plugin of plugins) {
         try {
           await pluginManager.installPluginFromRegistry(plugin.name, plugin.version);
-        } catch (error) {
+        } catch (_error) {
           console.log(`[VersionMgmt] Skipping ${plugin.name} - not available`);
         }
       }

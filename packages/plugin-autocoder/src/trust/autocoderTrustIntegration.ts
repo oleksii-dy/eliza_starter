@@ -134,10 +134,10 @@ export async function recordAutocoderAction(
 ): Promise<void> {
   try {
     const trustService = runtime.getService('trust-engine');
-    if (!trustService) return;
+    if (!trustService) {return;}
 
     const entityId = message.entityId || (message as any).userId;
-    if (!entityId) return;
+    if (!entityId) {return;}
 
     // Calculate trust impact based on action type and outcome
     let trustChange = 0;
@@ -194,7 +194,7 @@ export function wrapAutocoderActionWithTrust(
       // First run original validation
       if (originalValidate) {
         const originalValid = await originalValidate(runtime, message, state);
-        if (!originalValid) return false;
+        if (!originalValid) {return false;}
       }
 
       // Then check trust requirements

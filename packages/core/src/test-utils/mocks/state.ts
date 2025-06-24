@@ -1,17 +1,12 @@
 /**
  * @fileoverview Mock implementations for State and related interfaces
- * 
+ *
  * This module provides comprehensive mock implementations for state objects,
  * provider results, and state composition utilities.
  */
 
-import { vi } from './vi-helper';
-import type {
-  State,
-  ProviderResult,
-  ActionResult,
-  WorkingMemory,
-} from '../../types';
+import { mock } from './mock-utils';
+import type { State, ProviderResult, ActionResult, WorkingMemory } from '../../types';
 
 /**
  * Type representing overrides for State mock creation
@@ -30,17 +25,17 @@ export type MockActionResultOverrides = Partial<ActionResult>;
 
 /**
  * Create a comprehensive mock State object with intelligent defaults
- * 
+ *
  * This function provides a fully-featured state mock that includes
  * realistic data structures and proper typing for agent context.
- * 
+ *
  * @param overrides - Partial object to override specific properties
  * @returns Complete mock State object
- * 
+ *
  * @example
  * ```typescript
  * import { createMockState } from '@elizaos/core/test-utils';
- * 
+ *
  * const mockState = createMockState({
  *   values: { currentUser: 'john_doe' },
  *   data: { conversationLength: 5 }
@@ -95,21 +90,23 @@ Recent conversation context available.
 
 /**
  * Create a mock ProviderResult object
- * 
+ *
  * @param overrides - Partial object to override specific properties
  * @returns Complete mock ProviderResult object
- * 
+ *
  * @example
  * ```typescript
  * import { createMockProviderResult } from '@elizaos/core/test-utils';
- * 
+ *
  * const providerResult = createMockProviderResult({
  *   text: '[WEATHER] Current weather is sunny',
  *   values: { temperature: 72, conditions: 'sunny' }
  * });
  * ```
  */
-export function createMockProviderResult(overrides: MockProviderResultOverrides = {}): ProviderResult {
+export function createMockProviderResult(
+  overrides: MockProviderResultOverrides = {}
+): ProviderResult {
   const baseResult: ProviderResult = {
     values: {
       mockValue: 'test-value',
@@ -130,14 +127,14 @@ export function createMockProviderResult(overrides: MockProviderResultOverrides 
 
 /**
  * Create a mock ActionResult object
- * 
+ *
  * @param overrides - Partial object to override specific properties
  * @returns Complete mock ActionResult object
- * 
+ *
  * @example
  * ```typescript
  * import { createMockActionResult } from '@elizaos/core/test-utils';
- * 
+ *
  * const actionResult = createMockActionResult({
  *   text: 'Action completed successfully',
  *   values: { success: true, id: 'action-123' }
@@ -166,7 +163,7 @@ export function createMockActionResult(overrides: MockActionResultOverrides = {}
 
 /**
  * Create a state with specific provider context
- * 
+ *
  * @param providerName - Name of the provider
  * @param providerData - Data from the provider
  * @param overrides - Additional state overrides
@@ -192,7 +189,7 @@ export function createMockStateWithProvider(
 
 /**
  * Create a state with action execution history
- * 
+ *
  * @param actionResults - Array of action results
  * @param overrides - Additional state overrides
  * @returns State with action history
@@ -207,7 +204,10 @@ export function createMockStateWithActions(
       ...overrides.data,
     },
     values: {
-      lastActionSuccess: actionResults.length > 0 ? actionResults[actionResults.length - 1].values?.success : undefined,
+      lastActionSuccess:
+        actionResults.length > 0
+          ? actionResults[actionResults.length - 1].values?.success
+          : undefined,
       actionCount: actionResults.length,
       ...overrides.values,
     },
@@ -217,7 +217,7 @@ export function createMockStateWithActions(
 
 /**
  * Create a mock WorkingMemory object
- * 
+ *
  * @param data - Memory data
  * @returns Mock WorkingMemory object
  */
@@ -229,21 +229,29 @@ export function createMockWorkingMemory(data: Record<string, any> = {}): Working
       timestamp: Date.now(),
       ...data,
     },
-    
+
     // Common working memory methods
-    get: vi.fn((key: string) => data[key]),
-    set: vi.fn((key: string, value: any) => { data[key] = value; }),
-    has: vi.fn((key: string) => key in data),
-    delete: vi.fn((key: string) => { const exists = key in data; delete data[key]; return exists; }),
-    clear: vi.fn(() => { Object.keys(data).forEach(key => delete data[key]); }),
-    serialize: vi.fn(() => JSON.stringify(data)),
-    entries: vi.fn(() => Object.entries(data)),
+    get: mock((key: string) => data[key]),
+    set: mock((key: string, value: any) => {
+      data[key] = value;
+    }),
+    has: mock((key: string) => key in data),
+    delete: mock((key: string) => {
+      const exists = key in data;
+      delete data[key];
+      return exists;
+    }),
+    clear: mock(() => {
+      Object.keys(data).forEach((key) => delete data[key]);
+    }),
+    serialize: mock(() => JSON.stringify(data)),
+    entries: mock(() => Object.entries(data)),
   } as unknown as WorkingMemory;
 }
 
 /**
  * Create a state with realistic conversation context
- * 
+ *
  * @param conversationHistory - Array of recent messages
  * @param currentUser - Current user name
  * @param overrides - Additional state overrides
@@ -255,7 +263,7 @@ export function createMockConversationState(
   overrides: MockStateOverrides = {}
 ): State {
   const recentContext = conversationHistory.slice(-3).join(' | ');
-  
+
   return createMockState({
     values: {
       userName: currentUser,

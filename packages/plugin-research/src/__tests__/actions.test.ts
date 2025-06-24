@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { startResearchAction, checkResearchStatusAction } from '../actions';
 import { ResearchService } from '../service';
 import { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
@@ -57,7 +57,7 @@ function createTestRuntime(): IAgentRuntime {
       return settings[key] || null;
     },
     getService: (name: string) => {
-      if (name === 'research') return researchService;
+      if (name === 'research') {return researchService;}
       return null;
     },
     useModel: async () => 'mock response',

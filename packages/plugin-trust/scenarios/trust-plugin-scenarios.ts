@@ -2,7 +2,7 @@ import type { Scenario } from '@elizaos/core';
 
 /**
  * Trust Plugin Scenario Tests
- * 
+ *
  * These scenarios test the trust plugin in real runtime conditions with:
  * - Actual agent instances
  * - Real database operations
@@ -17,7 +17,7 @@ export const trustBuildingScenario: Scenario = {
   description: 'Tests how trust increases through positive interactions and helpful behavior',
   category: 'integration',
   tags: ['trust', 'positive-interaction', 'trust-building'],
-  
+
   actors: [
     {
       id: 'helpful-user',
@@ -65,7 +65,7 @@ export const trustBuildingScenario: Scenario = {
       plugins: ['@elizaos/plugin-trust']
     }
   ],
-  
+
   verification: {
     rules: [
       {
@@ -98,7 +98,7 @@ export const securityThreatScenario: Scenario = {
   description: 'Tests detection of prompt injection, social engineering, and other security threats',
   category: 'security',
   tags: ['trust', 'security', 'threat-detection'],
-  
+
   actors: [
     {
       id: 'malicious-user',
@@ -146,7 +146,7 @@ export const securityThreatScenario: Scenario = {
       plugins: ['@elizaos/plugin-trust']
     }
   ],
-  
+
   verification: {
     rules: [
       {
@@ -180,7 +180,7 @@ export const permissionEscalationScenario: Scenario = {
   description: 'Tests how users gain additional permissions as trust increases',
   category: 'integration',
   tags: ['trust', 'permissions', 'access-control'],
-  
+
   actors: [
     {
       id: 'new-contributor',
@@ -238,12 +238,12 @@ export const permissionEscalationScenario: Scenario = {
       plugins: ['@elizaos/plugin-trust']
     }
   ],
-  
+
   execution: {
     maxDuration: 30000,
     maxSteps: 20
   },
-  
+
   verification: {
     rules: [
       {
@@ -277,7 +277,7 @@ export const multiAgentTrustScenario: Scenario = {
   description: 'Tests trust dynamics between multiple agents and users',
   category: 'integration',
   tags: ['trust', 'multi-agent', 'collaboration'],
-  
+
   actors: [
     {
       id: 'community-leader',
@@ -347,7 +347,7 @@ export const multiAgentTrustScenario: Scenario = {
       plugins: ['@elizaos/plugin-trust']
     }
   ],
-  
+
   verification: {
     rules: [
       {
@@ -381,7 +381,7 @@ export const trustRecoveryScenario: Scenario = {
   description: 'Tests how users can rebuild trust after violations',
   category: 'integration',
   tags: ['trust', 'recovery', 'redemption'],
-  
+
   actors: [
     {
       id: 'reformed-user',
@@ -449,7 +449,7 @@ export const trustRecoveryScenario: Scenario = {
       plugins: ['@elizaos/plugin-trust']
     }
   ],
-  
+
   verification: {
     rules: [
       {

@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { ResearchIntegration, createResearchPrompt } from '../../research/research-integration';
 import type { SWEBenchInstance } from '../../swe-bench/types';
 
 // Mock the research service
 const mockResearchService = {
-  createResearchProject: vi.fn(),
-  getProject: vi.fn(),
-  researchPluginDevelopment: vi.fn(),
+  createResearchProject: mock(),
+  getProject: mock(),
+  researchPluginDevelopment: mock(),
 };
 
 describe('ResearchIntegration', () => {
@@ -16,11 +16,11 @@ describe('ResearchIntegration', () => {
   let tsInstance: SWEBenchInstance;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     // Set up mockRuntime in beforeEach to ensure it's properly initialized
     mockRuntime = {
-      getService: vi.fn().mockReturnValue(mockResearchService),
+      getService: mock().mockReturnValue(mockResearchService),
     };
 
     researchIntegration = new ResearchIntegration(mockRuntime as any);
@@ -102,7 +102,7 @@ describe('ResearchIntegration', () => {
       };
 
       // Clear previous mocks and set up fresh
-      vi.clearAllMocks();
+      mock.restore();
       mockResearchService.createResearchProject.mockResolvedValue(mockProject);
       mockResearchService.getProject.mockResolvedValue(mockProject);
 

@@ -34,20 +34,20 @@ export class RegistryManager {
   }
 
   async initialize(): Promise<void> {
-            // Only log in non-test environments
-        if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
-            elizaLogger.info('[RegistryManager] Initialized');
-        }
+    // Only log in non-test environments
+    if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+      elizaLogger.info('[RegistryManager] Initialized');
+    }
   }
 
   async cleanup(): Promise<void> {
     // Clear caches
     this.searchCache.clear();
     this.metadataCache.clear();
-            // Only log in non-test environments
-        if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
-            elizaLogger.info('[RegistryManager] Cleaned up');
-        }
+    // Only log in non-test environments
+    if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+      elizaLogger.info('[RegistryManager] Cleaned up');
+    }
   }
 
   async searchPlugins(query: string, options: SearchOptions = {}): Promise<SearchResult[]> {
@@ -113,7 +113,7 @@ export class RegistryManager {
       this.cacheSearchResults(query, results);
 
       return results;
-    } catch (error) {
+    } catch (_error) {
       elizaLogger.error('[RegistryManager] Search failed:', error);
       throw error;
     }
@@ -176,7 +176,7 @@ export class RegistryManager {
       this.addToCache(this.metadataCache, cacheKey, pluginInfo, this.METADATA_CACHE_TTL);
 
       return pluginInfo;
-    } catch (error) {
+    } catch (_error) {
       elizaLogger.error('[RegistryManager] Failed to get plugin info:', error);
       throw error;
     }
@@ -220,11 +220,11 @@ export class RegistryManager {
         warnings,
         suggestions,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         valid: false,
         errors: [
-          `Failed to validate package: ${error instanceof Error ? error.message : String(error)}`,
+          `Failed to validate package: ${_error instanceof Error ? _error.message : String(_error)}`,
         ],
         warnings: [],
         suggestions: ['Ensure package.json exists and is valid JSON'],
@@ -264,7 +264,7 @@ export class RegistryManager {
 
   private getFromCache<T>(cache: Map<string, CacheEntry<T>>, key: string): T | null {
     const entry = cache.get(key);
-    if (!entry) return null;
+    if (!entry) {return null;}
 
     const age = Date.now() - entry.timestamp;
     if (age > entry.ttl) {
@@ -305,4 +305,4 @@ export class RegistryManager {
     this.searchCache.clear();
     this.metadataCache.clear();
   }
-} 
+}

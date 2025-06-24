@@ -34,19 +34,19 @@ const paymentMultiCurrencyScenario: Scenario = {
 
   // Add evaluator function for test compatibility
   evaluator: (response: string) => {
-    const hasCurrency = 
+    const hasCurrency =
       response.toLowerCase().includes('eth') ||
       response.toLowerCase().includes('usdc') ||
       response.toLowerCase().includes('matic') ||
       response.toLowerCase().includes('dai') ||
       response.toLowerCase().includes('usdt');
-    
-    const hasConversion = 
+
+    const hasConversion =
       response.toLowerCase().includes('convert') ||
       response.toLowerCase().includes('rate') ||
       response.toLowerCase().includes('equivalent') ||
       response.toLowerCase().includes('approximately');
-    
+
     return hasCurrency || hasConversion;
   },
 

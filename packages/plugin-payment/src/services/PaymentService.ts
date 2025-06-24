@@ -4,10 +4,8 @@ import {
   Service,
   ServiceType,
   asUUID,
-  type Memory,
   elizaLogger as logger,
   type TaskWorker,
-  type Task,
 } from '@elizaos/core';
 import { IPaymentService } from '../interfaces/IPaymentService';
 import {
@@ -21,25 +19,21 @@ import {
   type IWalletAdapter,
   type PaymentTransaction,
   type PaymentSettings,
-  type PaymentHistory,
   type PaymentConfirmation,
   type PaymentCapabilities,
   type PaymentValidation,
 } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { EventEmitter } from 'events';
-import { eq, and, desc, gte, sql } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import {
   paymentTransactions,
   paymentRequests,
   userWallets,
-  paymentSettings as paymentSettingsTable,
   dailySpending,
   type NewPaymentTransaction,
   type NewPaymentRequest,
-  type NewUserWallet,
-  type NewDailySpending,
 } from '../database/schema';
 import { decrypt, encrypt } from '../utils/encryption';
 
@@ -57,7 +51,7 @@ export class PaymentService extends Service implements IPaymentService {
   declare protected runtime: IAgentRuntime;
   private walletAdapters: Map<string, IWalletAdapter> = new Map();
   private eventEmitter: EventEmitter = new EventEmitter();
-  
+
   // Database instance
   private db!: PostgresJsDatabase<any>;
 
@@ -93,7 +87,7 @@ export class PaymentService extends Service implements IPaymentService {
     // Get database instance
     const dbService = runtime.getService('database') as any;
     this.db = dbService?.getDatabase?.();
-    
+
     if (!this.db) {
       logger.error('[PaymentService] No database service available!');
       throw new Error('Database service is required for PaymentService');
@@ -220,7 +214,7 @@ export class PaymentService extends Service implements IPaymentService {
                     completedAt: new Date(),
                   })
                   .where(eq(paymentTransactions.id, tx.id));
-                
+
                 this.emitPaymentEvent(PaymentEventType.PAYMENT_COMPLETED, tx as any);
               }
             }
@@ -338,8 +332,8 @@ export class PaymentService extends Service implements IPaymentService {
   }
 
   private shouldRequireConfirmation(request: PaymentRequest): boolean {
-    if (request.requiresConfirmation) return true;
-    if (!this.settings.requireConfirmation) return false;
+    if (request.requiresConfirmation) {return true;}
+    if (!this.settings.requireConfirmation) {return false;}
 
     const amountNum = Number(request.amount) / 1e6; // Assume 6 decimals
     if (this.settings.autoApprovalEnabled && amountNum <= this.settings.autoApprovalThreshold) {
@@ -571,7 +565,7 @@ export class PaymentService extends Service implements IPaymentService {
         if (adapter) {
           try {
             const status = await adapter.getTransaction(transaction.transactionHash);
-            
+
             // Update in database if status changed
             if (status.status !== transaction.status) {
               await this.db
@@ -581,7 +575,7 @@ export class PaymentService extends Service implements IPaymentService {
                   confirmations: status.confirmations,
                 })
                 .where(eq(paymentTransactions.id, paymentId));
-              
+
               return status.status;
             }
           } catch (error) {
@@ -700,7 +694,7 @@ export class PaymentService extends Service implements IPaymentService {
   ): Promise<boolean> {
     try {
       const adapter = this.getAdapterForMethod(method);
-      if (!adapter) return false;
+      if (!adapter) {return false;}
 
       const wallet = await this.getUserWallet(userId, method);
       const balance = await adapter.getBalance(wallet.address, method);
@@ -843,7 +837,7 @@ export class PaymentService extends Service implements IPaymentService {
 
       if (!confirmation.approved) {
         await this.cancelPayment(paymentId);
-        
+
         const request: PaymentRequest = {
           id: paymentId,
           userId: pendingRequest.userId as UUID,
@@ -854,7 +848,7 @@ export class PaymentService extends Service implements IPaymentService {
           recipientAddress: pendingRequest.recipientAddress || undefined,
           metadata: pendingRequest.metadata as any,
         };
-        
+
         return this.createFailedResult(request, 'Payment rejected');
       }
 
@@ -950,7 +944,7 @@ export class PaymentService extends Service implements IPaymentService {
 
     // Check if user already has a wallet for this method
     const network = this.getNetworkForMethod(method);
-    
+
     const [existingWallet] = await this.db
       .select()
       .from(userWallets)
@@ -971,7 +965,7 @@ export class PaymentService extends Service implements IPaymentService {
       }
 
       const privateKey = decrypt(existingWallet.encryptedPrivateKey, encryptionKey);
-      
+
       return {
         address: existingWallet.address,
         privateKey,
@@ -980,7 +974,7 @@ export class PaymentService extends Service implements IPaymentService {
 
     // Create new wallet if none exists
     const newWallet = await adapter.createWallet();
-    
+
     // Store in database
     const encryptionKey = this.runtime.getSetting('WALLET_ENCRYPTION_KEY');
     if (!encryptionKey) {
@@ -988,7 +982,7 @@ export class PaymentService extends Service implements IPaymentService {
     }
 
     const encryptedPrivateKey = encrypt(newWallet.privateKey, encryptionKey);
-    
+
     const walletId = asUUID(uuidv4());
     await this.db.insert(userWallets).values({
       id: walletId,
@@ -999,7 +993,7 @@ export class PaymentService extends Service implements IPaymentService {
       isActive: true,
       metadata: {
         createdBy: 'payment-service',
-        method: method,
+        method,
       },
     });
 
@@ -1047,7 +1041,7 @@ export class PaymentService extends Service implements IPaymentService {
   }
 
   private async getTrustScore(userId: UUID): Promise<number> {
-    if (!this.trustService) return 0;
+    if (!this.trustService) {return 0;}
 
     try {
       return await this.trustService.getTrustScore(userId);
@@ -1087,7 +1081,7 @@ export class PaymentService extends Service implements IPaymentService {
     try {
       const now = new Date();
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
+
       const [record] = await this.db
         .select()
         .from(dailySpending)
@@ -1109,7 +1103,7 @@ export class PaymentService extends Service implements IPaymentService {
   private async checkBalance(request: PaymentRequest): Promise<boolean> {
     try {
       const adapter = this.getAdapterForMethod(request.method);
-      if (!adapter) return false;
+      if (!adapter) {return false;}
 
       const wallet = await this.getUserWallet(request.userId, request.method);
       const balance = await adapter.getBalance(wallet.address, request.method);
@@ -1158,12 +1152,12 @@ export class PaymentService extends Service implements IPaymentService {
     request: PaymentRequest,
     transactionId: UUID
   ): Promise<void> {
-    if (!this.secretFormService) return;
+    if (!this.secretFormService) {return;}
 
     try {
       // Generate a secure verification code
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-      
+
       // Store verification code in payment request metadata
       await this.db
         .update(paymentRequests)
@@ -1219,7 +1213,7 @@ export class PaymentService extends Service implements IPaymentService {
 
           // Verify the code
           if (
-            storedCode && 
+            storedCode &&
             submission.data.authorization_code === storedCode &&
             expiry && Date.now() < expiry
           ) {
@@ -1277,7 +1271,7 @@ export class PaymentService extends Service implements IPaymentService {
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
       // Get or create daily spending record
-      let [spending] = await this.db
+      const [spending] = await this.db
         .select()
         .from(dailySpending)
         .where(
@@ -1301,7 +1295,7 @@ export class PaymentService extends Service implements IPaymentService {
         // Update spending totals
         const currentTotal = spending.totalSpentUsd ? parseFloat(spending.totalSpentUsd) : 0;
         const currentCount = spending.transactionCount || 0;
-        
+
         await this.db
           .update(dailySpending)
           .set({

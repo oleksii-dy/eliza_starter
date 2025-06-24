@@ -40,7 +40,7 @@ export const planningWorkflowScenario: Scenario = {
             waitTime: 3000
           },
           {
-            type: 'message', 
+            type: 'message',
             content: 'Can you break this down into specific actionable steps with dependencies and timelines?'
           },
           {
@@ -89,7 +89,7 @@ export const planningWorkflowScenario: Scenario = {
       },
       {
         id: 'plan-quality',
-        type: 'llm', 
+        type: 'llm',
         description: 'Generated plan should be comprehensive and well-structured',
         config: {
           successCriteria: `
@@ -101,7 +101,7 @@ export const planningWorkflowScenario: Scenario = {
             5. Is actionable and specific rather than vague
           `,
           priority: 'high',
-          category: 'functionality', 
+          category: 'functionality',
           weight: 0.3
         }
       },

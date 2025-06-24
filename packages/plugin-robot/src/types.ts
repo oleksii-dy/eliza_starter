@@ -167,7 +167,7 @@ export interface VisionConfig {
   vlmUpdateInterval?: number;
   tfChangeThreshold?: number;
   vlmChangeThreshold?: number;
-  
+
   // Screen vision config
   visionMode?: VisionMode;
   screenCaptureInterval?: number; // ms between screen captures
@@ -175,7 +175,8 @@ export interface VisionConfig {
   tileProcessingOrder?: 'sequential' | 'priority' | 'random';
   ocrEnabled?: boolean;
   florence2Enabled?: boolean;
-  screenRegion?: { // Optional: capture only part of screen
+  screenRegion?: {
+    // Optional: capture only part of screen
     x: number;
     y: number;
     width: number;
@@ -216,12 +217,12 @@ export interface EntityAttributes {
   clothing?: string[];
   hairColor?: string;
   accessories?: string[];
-  
+
   // For objects
   objectType?: string;
   color?: string;
   size?: 'small' | 'medium' | 'large';
-  
+
   // Common
   description?: string;
   tags?: string[];
@@ -279,11 +280,11 @@ export interface RobotState {
 
 export interface IMUData {
   timestamp: number;
-  accelerometer: Vector3;  // m/s²
-  gyroscope: Vector3;      // rad/s
-  magnetometer?: Vector3;  // μT (optional)
+  accelerometer: Vector3; // m/s²
+  gyroscope: Vector3; // rad/s
+  magnetometer?: Vector3; // μT (optional)
   orientation?: Quaternion; // Computed orientation (optional)
-  temperature?: number;    // Celsius (optional)
+  temperature?: number; // Celsius (optional)
 }
 
 export interface Quaternion {
@@ -340,17 +341,17 @@ export interface RobotConfig {
   baudRate?: number;
   jointNames: string[];
   jointLimits: { [joint: string]: { min: number; max: number } };
-  
+
   // ROS 2 config
   rosWebsocketUrl?: string;
   jointStateTopic?: string;
   jointCommandTopic?: string;
-  
+
   // Safety config
   maxJointVelocity?: number; // rad/s
   maxJointAcceleration?: number; // rad/s^2
   emergencyStopTopic?: string;
-  
+
   // Simulation config
   useSimulation?: boolean;
   gazeboWorldFile?: string;
@@ -390,3 +391,4 @@ export interface RLAction {
 
 // Export robot command types
 export * from './types/robot-command';
+export type { RobotCapabilities } from './types/robot-command';

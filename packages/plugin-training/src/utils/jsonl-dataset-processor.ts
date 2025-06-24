@@ -1,12 +1,5 @@
-import {
-  type IAgentRuntime,
-  elizaLogger,
-} from '@elizaos/core';
-import {
-  type JSONLDataset,
-  type TrainingDataPoint,
-  type TogetherAIConfig,
-} from '../types.js';
+import { type IAgentRuntime, elizaLogger } from '@elizaos/core';
+import { type JSONLDataset, type TrainingDataPoint, type TogetherAIConfig } from '../types.js';
 
 /**
  * Processes and formats datasets for Together.ai fine-tuning
@@ -34,13 +27,15 @@ export class JSONLDatasetProcessor {
     for (const dataPoint of dataPoints) {
       try {
         const entry = await this.convertSingleDataPoint(dataPoint, systemPrompt, options);
-        
+
         // Validate token count
         const tokenCount = this.estimateTokenCount(entry);
         if (tokenCount <= maxTokens) {
           jsonlEntries.push(entry);
         } else {
-          elizaLogger.warn(`Skipping data point ${dataPoint.id}: exceeds token limit (${tokenCount} > ${maxTokens})`);
+          elizaLogger.warn(
+            `Skipping data point ${dataPoint.id}: exceeds token limit (${tokenCount} > ${maxTokens})`
+          );
         }
       } catch (error) {
         elizaLogger.error(`Error converting data point ${dataPoint.id}:`, error);
@@ -87,13 +82,14 @@ export class JSONLDatasetProcessor {
 
     // Build assistant response
     let assistantContent = '';
-    
+
     // Add thinking block if requested and available
     if (options?.includeThinking && (dataPoint.thinking || dataPoint.output?.reasoning)) {
-      assistantContent += (dataPoint.thinking || dataPoint.output?.reasoning || '') + '\n\n';
+      assistantContent += `${dataPoint.thinking || dataPoint.output?.reasoning || ''}\n\n`;
     }
-    
-    assistantContent += dataPoint.response || dataPoint.output?.decision || dataPoint.output?.code || '';
+
+    assistantContent +=
+      dataPoint.response || dataPoint.output?.decision || dataPoint.output?.code || '';
 
     messages.push({
       role: 'assistant',
@@ -106,7 +102,9 @@ export class JSONLDatasetProcessor {
         type: dataPoint.type || 'unknown',
         subtype: dataPoint.subtype || '',
         quality: dataPoint.quality || 0.5,
-        created_at: (dataPoint.createdAt || new Date(dataPoint.timestamp || Date.now())).toISOString(),
+        created_at: (
+          dataPoint.createdAt || new Date(dataPoint.timestamp || Date.now())
+        ).toISOString(),
         data_point_id: dataPoint.id,
       },
     };
@@ -141,7 +139,9 @@ export class JSONLDatasetProcessor {
       systemPrompt: this.getAdvancedSystemPrompt(),
     });
 
-    elizaLogger.info(`Created datasets - Small: ${smallModelDataset.totalEntries || smallModelDataset.entries?.length || 0}, Large: ${largeModelDataset.totalEntries || largeModelDataset.entries?.length || 0}`);
+    elizaLogger.info(
+      `Created datasets - Small: ${smallModelDataset.totalEntries || smallModelDataset.entries?.length || 0}, Large: ${largeModelDataset.totalEntries || largeModelDataset.entries?.length || 0}`
+    );
 
     return {
       smallModelDataset,
@@ -165,7 +165,7 @@ export class JSONLDatasetProcessor {
 
     // Filter by quality
     if (criteria.minQuality !== undefined) {
-      filtered = filtered.filter(dp => (dp.quality || 0) >= criteria.minQuality!);
+      filtered = filtered.filter((dp) => (dp.quality || 0) >= criteria.minQuality!);
     }
 
     // Filter by complexity
@@ -173,7 +173,7 @@ export class JSONLDatasetProcessor {
       const complexityOrder = ['simple', 'medium', 'complex'];
       const maxIndex = complexityOrder.indexOf(criteria.maxComplexity);
       if (maxIndex !== -1) {
-        filtered = filtered.filter(dp => {
+        filtered = filtered.filter((dp) => {
           const complexity = dp.metadata?.thinking_block?.metadata?.complexity || 'medium';
           return complexityOrder.indexOf(complexity) <= maxIndex;
         });
@@ -182,17 +182,19 @@ export class JSONLDatasetProcessor {
 
     // Include specific types
     if (criteria.includeTypes && criteria.includeTypes.length > 0) {
-      filtered = filtered.filter(dp => 
-        criteria.includeTypes!.includes(dp.type || '') || 
-        criteria.includeTypes!.includes(dp.subtype || '')
+      filtered = filtered.filter(
+        (dp) =>
+          criteria.includeTypes!.includes(dp.type || '') ||
+          criteria.includeTypes!.includes(dp.subtype || '')
       );
     }
 
     // Exclude specific types
     if (criteria.excludeTypes && criteria.excludeTypes.length > 0) {
-      filtered = filtered.filter(dp => 
-        !criteria.excludeTypes!.includes(dp.type || '') && 
-        !criteria.excludeTypes!.includes(dp.subtype || '')
+      filtered = filtered.filter(
+        (dp) =>
+          !criteria.excludeTypes!.includes(dp.type || '') &&
+          !criteria.excludeTypes!.includes(dp.subtype || '')
       );
     }
 
@@ -223,7 +225,7 @@ export class JSONLDatasetProcessor {
       // Validate message structure
       for (let j = 0; j < entry.messages.length; j++) {
         const message = entry.messages[j];
-        
+
         if (!message.role || !message.content) {
           errors.push(`Entry ${i}, Message ${j}: Missing 'role' or 'content'`);
         }
@@ -260,7 +262,7 @@ export class JSONLDatasetProcessor {
     }
 
     const isValid = errors.length === 0;
-    
+
     if (isValid) {
       elizaLogger.info(`JSONL validation passed with ${warnings.length} warnings`);
     } else {
@@ -276,9 +278,7 @@ export class JSONLDatasetProcessor {
   async saveDataset(dataset: JSONLDataset, filePath: string): Promise<void> {
     elizaLogger.info(`Saving dataset to ${filePath}`);
 
-    const content = dataset.entries || [],
-      .map(entry => JSON.stringify(entry))
-      .join('\n');
+    const content = (dataset.entries || []).map((entry) => JSON.stringify(entry)).join('\n');
 
     const fs = await import('fs/promises');
     await fs.writeFile(filePath, content, 'utf-8');
@@ -294,11 +294,11 @@ export class JSONLDatasetProcessor {
 
     const fs = await import('fs/promises');
     const content = await fs.readFile(filePath, 'utf-8');
-    
+
     const entries = content
       .split('\n')
-      .filter(line => line.trim())
-      .map(line => JSON.parse(line));
+      .filter((line) => line.trim())
+      .map((line) => JSON.parse(line));
 
     const dataset: JSONLDataset = {
       entries,
@@ -335,11 +335,13 @@ export class JSONLDatasetProcessor {
     elizaLogger.info('Augmenting dataset with variations');
 
     const augmentedEntries = [...(dataset.entries || [])];
-    const maxAugmentations = augmentationConfig.maxAugmentations || (dataset.entries?.length || 0);
+    const maxAugmentations = augmentationConfig.maxAugmentations || dataset.entries?.length || 0;
     let augmentationCount = 0;
 
-    for (const entry of (dataset.entries || [])) {
-      if (augmentationCount >= maxAugmentations) break;
+    for (const entry of dataset.entries || []) {
+      if (augmentationCount >= maxAugmentations) {
+        break;
+      }
 
       // Paraphrase user requests
       if (augmentationConfig.paraphrase) {
@@ -386,7 +388,7 @@ When creating plugins or MCP servers, you think through the problem step by step
   }
 
   private getSimpleSystemPrompt(): string {
-    return `You are an ElizaOS developer who creates plugins and MCP servers. Provide clean, working implementations that follow ElizaOS patterns.`;
+    return 'You are an ElizaOS developer who creates plugins and MCP servers. Provide clean, working implementations that follow ElizaOS patterns.';
   }
 
   private getAdvancedSystemPrompt(): string {

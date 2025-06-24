@@ -1,6 +1,6 @@
 /**
  * REAL MVP REASONING SERVICE - ZERO LARP CODE
- * 
+ *
  * Implementation based on validated real integration tests.
  * Every line of code has been tested to actually work.
  */
@@ -42,7 +42,7 @@ export class RealReasoningService {
 
     // REAL: Override useModel with interceptor
     const self = this;
-    this.runtime.useModel = async function(modelType: any, params: any, provider?: string) {
+    this.runtime.useModel = async function (modelType: any, params: any, provider?: string) {
       return await self.interceptUseModel(modelType, params, provider);
     };
 
@@ -102,7 +102,7 @@ export class RealReasoningService {
     try {
       // REAL: Call original useModel
       const result = await this.originalUseModel(modelType, params, provider);
-      
+
       // REAL: Record successful execution
       record.output = this.sanitizeOutput(result);
       record.success = true;
@@ -110,7 +110,6 @@ export class RealReasoningService {
 
       elizaLogger.info(`✅ Intercepted ${modelType} call successfully`);
       return result;
-
     } catch (error) {
       // REAL: Record failed execution but still fall back
       record.errorMessage = error instanceof Error ? error.message : String(error);
@@ -118,7 +117,7 @@ export class RealReasoningService {
       this.trainingData.push(record);
 
       elizaLogger.info(`❌ Intercepted ${modelType} call failed, falling back`);
-      
+
       // REAL: Always fall back to original on error
       return await this.originalUseModel(modelType, params, provider);
     }
@@ -154,11 +153,11 @@ const serviceRegistry = new Map<string, RealReasoningService>();
 
 export function getReasoningService(runtime: IAgentRuntime): RealReasoningService {
   const agentId = runtime.agentId;
-  
+
   if (!serviceRegistry.has(agentId)) {
     serviceRegistry.set(agentId, new RealReasoningService(runtime));
   }
-  
+
   return serviceRegistry.get(agentId)!;
 }
 

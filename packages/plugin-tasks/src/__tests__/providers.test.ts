@@ -1,37 +1,11 @@
 import { IAgentRuntime, logger, Memory, State, UUID } from '@elizaos/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import { MockRuntime, setupActionTest } from './test-utils';
 
 // Import providers from source modules
 import choiceProvider from '../providers/choice';
 
-// Mock external dependencies
-vi.mock('@elizaos/core', async (importOriginal) => {
-  const actual = (await importOriginal()) as any;
-  return {
-    ...actual,
-    createUniqueUuid: vi.fn(),
-    getWorldSettings: vi.fn().mockResolvedValue({
-      setting1: { name: 'setting1', value: 'value1', description: 'Description 1' },
-      setting2: { name: 'setting2', value: 'value2', description: 'Description 2', secret: true },
-    }),
-    findWorldsForOwner: vi.fn().mockResolvedValue([
-      {
-        id: 'world-1' as UUID,
-        name: 'Test World',
-        serverId: 'server-1',
-        metadata: { settings: true },
-      },
-    ]),
-    logger: {
-      ...(actual.logger || {}),
-      error: vi.fn(),
-      warn: vi.fn(),
-      debug: vi.fn(),
-      info: vi.fn(),
-    },
-  };
-});
+// Note: Complex module mocking removed for bun:test compatibility
 
 describe('Choice Provider', () => {
   let mockRuntime: MockRuntime;
@@ -39,17 +13,22 @@ describe('Choice Provider', () => {
   let mockState: Partial<State>;
 
   beforeEach(() => {
+    // Set up logger spies for each test
+    spyOn(logger, 'error').mockImplementation(() => {});
+    spyOn(logger, 'warn').mockImplementation(() => {});
+    spyOn(logger, 'debug').mockImplementation(() => {});
+
     const setup = setupActionTest({}); // No specific state overrides needed for these tests
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
 
     // Default mock for getTasks
-    mockRuntime.getTasks = vi.fn().mockResolvedValue([]);
+    mockRuntime.getTasks = mock().mockResolvedValue([]);
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    mock.restore();
   });
 
   it('should list pending tasks with options', async () => {
@@ -77,7 +56,7 @@ describe('Choice Provider', () => {
         },
       },
     ];
-    mockRuntime.getTasks = vi.fn().mockResolvedValue(tasks);
+    mockRuntime.getTasks = mock().mockResolvedValue(tasks);
 
     const result = await choiceProvider.get(
       mockRuntime as IAgentRuntime,
@@ -108,7 +87,7 @@ describe('Choice Provider', () => {
   });
 
   it('should handle no pending tasks gracefully', async () => {
-    mockRuntime.getTasks = vi.fn().mockResolvedValue([]); // No tasks
+    mockRuntime.getTasks = mock().mockResolvedValue([]); // No tasks
 
     const result = await choiceProvider.get(
       mockRuntime as IAgentRuntime,
@@ -132,7 +111,7 @@ describe('Choice Provider', () => {
         metadata: {}, // No options here
       },
     ];
-    mockRuntime.getTasks = vi.fn().mockResolvedValue(tasks);
+    mockRuntime.getTasks = mock().mockResolvedValue(tasks);
 
     const result = await choiceProvider.get(
       mockRuntime as IAgentRuntime,
@@ -147,7 +126,7 @@ describe('Choice Provider', () => {
   });
 
   it('should handle errors from getTasks gracefully', async () => {
-    mockRuntime.getTasks = vi.fn().mockRejectedValue(new Error('Task service error'));
+    mockRuntime.getTasks = mock().mockRejectedValue(new Error('Task service error'));
 
     const result = await choiceProvider.get(
       mockRuntime as IAgentRuntime,
@@ -169,6 +148,11 @@ describe('Facts Provider', () => {
   let mockState: Partial<State>;
 
   beforeEach(() => {
+    // Set up logger spies for each test
+    spyOn(logger, 'error').mockImplementation(() => {});
+    spyOn(logger, 'warn').mockImplementation(() => {});
+    spyOn(logger, 'debug').mockImplementation(() => {});
+
     // Use setupActionTest for consistent test setup
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
@@ -176,7 +160,7 @@ describe('Facts Provider', () => {
     mockState = setup.mockState;
 
     // Mock for initial recent messages
-    mockRuntime.getMemories = vi.fn().mockResolvedValue([
+    mockRuntime.getMemories = mock().mockResolvedValue([
       {
         id: 'msg-prev-1' as UUID,
         content: { text: 'Previous message 1' },
@@ -185,10 +169,10 @@ describe('Facts Provider', () => {
     ]);
 
     // Mock for useModel
-    mockRuntime.useModel = vi.fn().mockResolvedValue([0.1, 0.2, 0.3]); // Example embedding
+    mockRuntime.useModel = mock().mockResolvedValue([0.1, 0.2, 0.3]); // Example embedding
 
     // Mock for searchMemories
-    mockRuntime.searchMemories = vi.fn().mockImplementation(async (params) => {
+    mockRuntime.searchMemories = mock().mockImplementation(async (params) => {
       if (params.tableName === 'facts' && params.count === 6) {
         // Could differentiate between the two calls if needed by params.entityId
         if (params.entityId === mockMessage.entityId) {
@@ -224,6 +208,6 @@ describe('Facts Provider', () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    mock.restore();
   });
 });

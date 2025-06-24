@@ -1,4 +1,4 @@
-import { elizaLogger, IAgentRuntime, ModelType, Service } from '@elizaos/core';
+import { logger, IAgentRuntime, ModelType, Service } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { ResearchEvaluator } from './evaluation/research-evaluator';
 import { SearchResultProcessor } from './processing/result-processor';
@@ -131,7 +131,7 @@ export class ResearchService extends Service {
     this.researchConfig = loadResearchConfig(runtime);
     validateSearchProviderConfig(this.researchConfig, runtime);
 
-    elizaLogger.info(
+    logger.info(
       '[ResearchService] Initializing with configuration:',
       getConfigSummary(this.researchConfig)
     );
@@ -165,7 +165,7 @@ export class ResearchService extends Service {
     const mergedConfig = { ...baseConfig, ...config };
 
     // Always use full research pipeline for best quality
-    elizaLogger.info(`[ResearchService] Starting comprehensive research for: ${query}`);
+    logger.info(`[ResearchService] Starting comprehensive research for: ${query}`);
 
     // Extract metadata from query
     const metadata = await this.extractMetadata(query, mergedConfig);
@@ -186,7 +186,7 @@ export class ResearchService extends Service {
 
     // Start research asynchronously
     this.startResearch(projectId, mergedConfig).catch((error) => {
-      elizaLogger.error(`Research failed for project ${projectId}:`, error);
+      logger.error(`Research failed for project ${projectId}:`, error);
       project.status = ResearchStatus.FAILED;
       project.error = error.message;
     });
@@ -212,7 +212,7 @@ export class ResearchService extends Service {
     // Update the config object for use in research
     this.researchConfig.searchProviders = searchProviders;
 
-    elizaLogger.info(
+    logger.info(
       `[ResearchService] Domain: ${domain}, Selected providers: ${searchProviders.join(', ')}`
     );
 
@@ -324,7 +324,7 @@ export class ResearchService extends Service {
                 bestDomain = domain as ResearchDomain;
               }
             } catch (error) {
-              elizaLogger.debug(
+              logger.debug(
                 `Error processing domain example: ${error instanceof Error ? error.message : String(error)}`
               );
             }
@@ -333,14 +333,14 @@ export class ResearchService extends Service {
 
         // If similarity is high enough, use embedding-based classification
         if (bestSimilarity > 0.7) {
-          elizaLogger.info(
+          logger.info(
             `Domain classified via embeddings: ${bestDomain} (similarity: ${bestSimilarity.toFixed(3)})`
           );
           return bestDomain;
         }
       }
     } catch (error) {
-      elizaLogger.warn(
+      logger.warn(
         'Error using embeddings for domain classification, falling back to LLM:',
         error
       );
@@ -354,8 +354,8 @@ Query: "${query}"
 
 Available domains:
 ${Object.values(ResearchDomain)
-  .map((d) => `- ${d}`)
-  .join('\n')}
+    .map((d) => `- ${d}`)
+    .join('\n')}
 
 Consider:
 - Primary subject matter and field of study
@@ -387,7 +387,7 @@ Respond with ONLY the domain name from the list above. Be precise.`;
         // Exact match first
         for (const domain of Object.values(ResearchDomain)) {
           if (domainText === domain.toLowerCase()) {
-            elizaLogger.info(`Domain classified via LLM: ${domain}`);
+            logger.info(`Domain classified via LLM: ${domain}`);
             return domain as ResearchDomain;
           }
         }
@@ -398,14 +398,14 @@ Respond with ONLY the domain name from the list above. Be precise.`;
             domainText.includes(domain.toLowerCase().replace('_', ' ')) ||
             domainText.includes(domain.toLowerCase().replace('_', ''))
           ) {
-            elizaLogger.info(`Domain classified via LLM (partial match): ${domain}`);
+            logger.info(`Domain classified via LLM (partial match): ${domain}`);
             return domain as ResearchDomain;
           }
         }
 
-        elizaLogger.warn(`Could not extract domain from LLM response: ${domainText}`);
+        logger.warn(`Could not extract domain from LLM response: ${domainText}`);
       } catch (error) {
-        elizaLogger.warn(
+        logger.warn(
           'Error using LLM for domain extraction, falling back to heuristics:',
           error
         );
@@ -442,17 +442,17 @@ Respond with ONLY the domain name from the list above. Be precise.`;
 
     for (const [domain, words] of Object.entries(keywords)) {
       if (words.some((word) => lowerQuery.includes(word))) {
-        elizaLogger.info(`Domain classified via keywords: ${domain}`);
+        logger.info(`Domain classified via keywords: ${domain}`);
         return domain as ResearchDomain;
       }
     }
 
-    elizaLogger.info('Domain classified as GENERAL (no specific match found)');
+    logger.info('Domain classified as GENERAL (no specific match found)');
     return ResearchDomain.GENERAL;
   }
 
   private calculateCosineSimilarity(a: number[], b: number[]): number {
-    if (a.length !== b.length) return 0;
+    if (a.length !== b.length) {return 0;}
 
     let dotProduct = 0;
     let normA = 0;
@@ -477,7 +477,7 @@ Respond with ONLY the domain name from the list above. Be precise.`;
     const isAcademicQuery = this.isAcademicQuery(queryLower);
     const isTechnicalDocumentation = this.isTechnicalDocumentationQuery(queryLower);
 
-    elizaLogger.info(
+    logger.info(
       `[ProviderSelection] Query analysis - Code: ${isCodeRelated}, Academic: ${isAcademicQuery}, TechDocs: ${isTechnicalDocumentation}`
     );
 
@@ -486,7 +486,7 @@ Respond with ONLY the domain name from the list above. Be precise.`;
 
     // CODING PROBLEMS: Focus on technical sources, avoid academic noise
     if (isCodeRelated) {
-      elizaLogger.info(
+      logger.info(
         '[ProviderSelection] Code-related query detected - prioritizing technical sources'
       );
       providers.add('github');
@@ -509,13 +509,13 @@ Respond with ONLY the domain name from the list above. Be precise.`;
 
     // ACADEMIC RESEARCH: Full academic source access
     if (isAcademicQuery || this.isAcademicDomain(domain)) {
-      elizaLogger.info('[ProviderSelection] Academic query detected - including scholarly sources');
+      logger.info('[ProviderSelection] Academic query detected - including scholarly sources');
       providers.add('academic');
     }
 
     // TECHNICAL DOCUMENTATION: Focus on official docs and GitHub
     if (isTechnicalDocumentation) {
-      elizaLogger.info('[ProviderSelection] Technical documentation query detected');
+      logger.info('[ProviderSelection] Technical documentation query detected');
       providers.add('github');
     }
 
@@ -559,7 +559,7 @@ Respond with ONLY the domain name from the list above. Be precise.`;
     }
 
     const selectedProviders = Array.from(providers);
-    elizaLogger.info(`[ProviderSelection] Selected providers: ${selectedProviders.join(', ')}`);
+    logger.info(`[ProviderSelection] Selected providers: ${selectedProviders.join(', ')}`);
 
     return selectedProviders;
   }
@@ -779,20 +779,20 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
         }
 
         // Check for keyword matches
-        if (taskText.includes('compar')) return TaskType.COMPARATIVE;
-        if (taskText.includes('analy')) return TaskType.ANALYTICAL;
-        if (taskText.includes('synth')) return TaskType.SYNTHETIC;
-        if (taskText.includes('eval')) return TaskType.EVALUATIVE;
-        if (taskText.includes('pred') || taskText.includes('forecast')) return TaskType.PREDICTIVE;
+        if (taskText.includes('compar')) {return TaskType.COMPARATIVE;}
+        if (taskText.includes('analy')) {return TaskType.ANALYTICAL;}
+        if (taskText.includes('synth')) {return TaskType.SYNTHETIC;}
+        if (taskText.includes('eval')) {return TaskType.EVALUATIVE;}
+        if (taskText.includes('pred') || taskText.includes('forecast')) {return TaskType.PREDICTIVE;}
 
         // Check for test/mock responses
         if (taskText.includes('mock') || taskText.includes('test')) {
           return TaskType.EXPLORATORY; // Default for test environments
         }
 
-        elizaLogger.warn(`Could not extract task type from response: ${taskText}`);
+        logger.warn(`Could not extract task type from response: ${taskText}`);
       } catch (error) {
-        elizaLogger.warn(
+        logger.warn(
           'Error using model for task type extraction, falling back to heuristics:',
           error
         );
@@ -804,7 +804,7 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
 
   private async startResearch(projectId: string, config: ResearchConfig): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) return;
+    if (!project) {return;}
 
     const controller = new AbortController();
     this.activeResearch.set(projectId, controller);
@@ -817,7 +817,7 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
       await this.updatePhase(project, ResearchPhase.PLANNING);
 
       // Analyze query for relevance criteria
-      elizaLogger.info(`[ResearchService] Analyzing query relevance for: ${project.query}`);
+      logger.info(`[ResearchService] Analyzing query relevance for: ${project.query}`);
       const queryAnalysis = await this.relevanceAnalyzer.analyzeQueryRelevance(project.query);
 
       // Initialize comprehensive logging
@@ -845,7 +845,7 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
           await this.updatePhase(project, ResearchPhase.EVALUATING);
           await this.evaluateProject(project.id);
         } catch (evalError) {
-          elizaLogger.warn(
+          logger.warn(
             '[ResearchService] Evaluation failed, but research completed:',
             evalError
           );
@@ -876,7 +876,7 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
       }
 
       // Log final summary
-      elizaLogger.info(`[ResearchService] Research completed for project ${projectId}:`, {
+      logger.info(`[ResearchService] Research completed for project ${projectId}:`, {
         duration: totalDuration,
         sources: project.sources.length,
         findings: project.findings.length,
@@ -975,16 +975,16 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
         );
         allResults.push(...academicResults);
       } catch (error) {
-        elizaLogger.warn('Academic search failed, continuing with web results:', error);
+        logger.warn('Academic search failed, continuing with web results:', error);
       }
     }
 
     // Score search results for relevance BEFORE processing
-    elizaLogger.info(`[ResearchService] Scoring ${allResults.length} search results for relevance`);
+    logger.info(`[ResearchService] Scoring ${allResults.length} search results for relevance`);
     const relevanceScores = new Map<string, any>();
 
     for (const result of allResults) {
-      if (signal.aborted) break;
+      if (signal.aborted) {break;}
       const relevanceScore = await this.relevanceAnalyzer.scoreSearchResultRelevance(
         result,
         queryAnalysis
@@ -1011,13 +1011,13 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
 
     const mainResults = relevantResults.slice(0, config.maxSearchResults);
 
-    elizaLogger.info(
+    logger.info(
       `[ResearchService] Filtered to ${mainResults.length}/${allResults.length} relevant results (threshold >= 0.3)`
     );
 
     // Process main results
     for (const result of mainResults) {
-      if (signal.aborted) break;
+      if (signal.aborted) {break;}
 
       const source = await this.processSearchResult(result, project);
       if (source) {
@@ -1027,14 +1027,14 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
 
     // Execute sub-queries
     for (const subQuery of queryPlan.subQueries) {
-      if (signal.aborted) break;
+      if (signal.aborted) {break;}
 
       // Check dependencies
       const dependenciesMet = subQuery.dependsOn.every(
         (depId) => queryPlan.subQueries.find((sq) => sq.id === depId)?.completed
       );
 
-      if (!dependenciesMet) continue;
+      if (!dependenciesMet) {continue;}
 
       const subResults = await webProvider.search(
         subQuery.query,
@@ -1042,7 +1042,7 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
       );
 
       for (const result of subResults) {
-        if (signal.aborted) break;
+        if (signal.aborted) {break;}
 
         const source = await this.processSearchResult(result, project);
         if (source) {
@@ -1078,7 +1078,7 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
     try {
       // Skip error results from mock providers
       if ((result.metadata as any)?.error === true) {
-        elizaLogger.warn(`[ResearchService] Skipping error result: ${result.title}`);
+        logger.warn(`[ResearchService] Skipping error result: ${result.title}`);
         return null;
       }
 
@@ -1120,7 +1120,7 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
 
       return source;
     } catch (error) {
-      elizaLogger.warn(`Failed to process search result ${result.url}:`, error);
+      logger.warn(`Failed to process search result ${result.url}:`, error);
       return null;
     }
   }
@@ -1171,8 +1171,8 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
     }
 
     // Adjust based on metadata
-    if (result.metadata?.author) baseScore += 0.05;
-    if (result.metadata?.publishDate) baseScore += 0.05;
+    if (result.metadata?.author) {baseScore += 0.05;}
+    if (result.metadata?.publishDate) {baseScore += 0.05;}
 
     return Math.min(baseScore, 1.0);
   }
@@ -1192,7 +1192,7 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
     const searchProvider = this.searchProviderFactory.getProvider(config.searchProviders[0]);
 
     for (const query of refinedQueries) {
-      if (signal.aborted) break;
+      if (signal.aborted) {break;}
 
       const results = await searchProvider.search(query, Math.floor(config.maxSearchResults / 3));
 
@@ -1206,14 +1206,14 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
   }
 
   private async analyzeFindings(project: ResearchProject, config: ResearchConfig): Promise<void> {
-    elizaLogger.info(`[ResearchService] Analyzing ${project.sources.length} sources`);
+    logger.info(`[ResearchService] Analyzing ${project.sources.length} sources`);
 
     for (const source of project.sources) {
       // Use fullContent if available, otherwise fall back to snippet
       const contentToAnalyze = source.fullContent || source.snippet || source.title;
 
       if (!contentToAnalyze) {
-        elizaLogger.warn(`[ResearchService] No content available for source: ${source.url}`);
+        logger.warn(`[ResearchService] No content available for source: ${source.url}`);
         continue;
       }
 
@@ -1246,7 +1246,7 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
       }
     }
 
-    elizaLogger.info(`[ResearchService] Extracted ${project.findings.length} findings`);
+    logger.info(`[ResearchService] Extracted ${project.findings.length} findings`);
 
     // Update quality score
     const lastIteration =
@@ -1266,7 +1266,7 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
     const sanitizedContent = this.sanitizeContentForLLM(content);
 
     if (!sanitizedContent || sanitizedContent.length < 50) {
-      elizaLogger.warn(
+      logger.warn(
         `[ResearchService] Content too short or empty after sanitization for ${source.title}`
       );
       return [];
@@ -1311,7 +1311,7 @@ Format as JSON array:
 
       // Handle case where LLM returns just an empty array
       if (responseContent.trim() === '[]') {
-        elizaLogger.info(`[ResearchService] No findings found by LLM for ${source.title}`);
+        logger.info(`[ResearchService] No findings found by LLM for ${source.title}`);
         return [];
       }
 
@@ -1335,7 +1335,7 @@ Format as JSON array:
       }
 
       // If no valid JSON found, try fallback
-      elizaLogger.warn(`[ResearchService] No valid findings extracted for ${source.title}`);
+      logger.warn(`[ResearchService] No valid findings extracted for ${source.title}`);
 
       // Fallback: Create a single finding if content seems relevant
       if (sanitizedContent.length > 100) {
@@ -1350,7 +1350,7 @@ Format as JSON array:
 
       return [];
     } catch (e) {
-      elizaLogger.error('[ResearchService] Failed to extract findings from source:', {
+      logger.error('[ResearchService] Failed to extract findings from source:', {
         sourceUrl: source.url,
         error: e instanceof Error ? e.message : String(e),
         contentLength: content.length,
@@ -1370,7 +1370,7 @@ Format as JSON array:
     const sanitizedContent = this.sanitizeContentForLLM(content);
 
     if (!sanitizedContent || sanitizedContent.length < 50) {
-      elizaLogger.warn(
+      logger.warn(
         `[ResearchService] Content too short for claim extraction from ${source.title}`
       );
       return [];
@@ -1411,7 +1411,7 @@ Format as JSON array:
 
       // Handle case where LLM returns just an empty array
       if (responseContent.trim() === '[]') {
-        elizaLogger.info(`[ResearchService] No claims found in ${source.title}`);
+        logger.info(`[ResearchService] No claims found in ${source.title}`);
         return [];
       }
 
@@ -1435,7 +1435,7 @@ Format as JSON array:
       }
       return [];
     } catch (e) {
-      elizaLogger.warn('[ResearchService] Failed to parse claims:', {
+      logger.warn('[ResearchService] Failed to parse claims:', {
         error: e instanceof Error ? e.message : String(e),
         sourceUrl: source.url,
       });
@@ -1458,7 +1458,7 @@ Format as JSON array:
   }
 
   private async synthesizeFindings(project: ResearchProject): Promise<void> {
-    elizaLogger.info(
+    logger.info(
       `[ResearchService] Starting synthesis for ${project.findings.length} findings`
     );
 
@@ -1484,7 +1484,7 @@ Format as JSON array:
     project.metadata.categoryAnalysis = categoryAnalysis;
     project.metadata.synthesis = overallSynthesis;
 
-    elizaLogger.info(
+    logger.info(
       `[ResearchService] Synthesis completed. Overall synthesis length: ${overallSynthesis.length} characters`
     );
   }
@@ -1502,7 +1502,7 @@ Create a comprehensive synthesis that:
 3. Highlights key insights
 4. Maintains academic rigor`;
 
-    elizaLogger.debug(
+    logger.debug(
       `[ResearchService] Calling LLM for category synthesis with prompt length: ${prompt.length}`
     );
 
@@ -1511,7 +1511,7 @@ Create a comprehensive synthesis that:
     });
 
     const result = typeof response === 'string' ? response : (response as any).content || '';
-    elizaLogger.debug(`[ResearchService] Category synthesis response length: ${result.length}`);
+    logger.debug(`[ResearchService] Category synthesis response length: ${result.length}`);
     return result;
   }
 
@@ -1527,8 +1527,8 @@ Task Type: ${project.metadata.taskType}
 
 Category Analyses:
 ${Object.entries(categoryAnalysis)
-  .map(([cat, analysis]) => `${cat}:\n${analysis}`)
-  .join('\n\n')}
+    .map(([cat, analysis]) => `${cat}:\n${analysis}`)
+    .join('\n\n')}
 
 Create a comprehensive synthesis that:
 1. Answers the original research question
@@ -1536,7 +1536,7 @@ Create a comprehensive synthesis that:
 3. Identifies knowledge gaps
 4. Suggests future research directions`;
 
-    elizaLogger.debug(
+    logger.debug(
       `[ResearchService] Calling LLM for overall synthesis with prompt length: ${prompt.length}`
     );
 
@@ -1545,13 +1545,13 @@ Create a comprehensive synthesis that:
     });
 
     const result = typeof response === 'string' ? response : (response as any).content || '';
-    elizaLogger.debug(`[ResearchService] Overall synthesis response length: ${result.length}`);
+    logger.debug(`[ResearchService] Overall synthesis response length: ${result.length}`);
     return result;
   }
 
   private async generateReport(project: ResearchProject): Promise<void> {
     try {
-      elizaLogger.info(
+      logger.info(
         `[ResearchService] Generating comprehensive report for project ${project.id}`
       );
 
@@ -1585,7 +1585,7 @@ Create a comprehensive synthesis that:
       project.report = {
         id: uuidv4(),
         title: `Research Report: ${project.query}`,
-        abstract: executiveSummary.substring(0, 300) + '...',
+        abstract: `${executiveSummary.substring(0, 300)}...`,
         summary: executiveSummary,
         sections: enhancedSections,
         citations: this.extractAllCitations(project),
@@ -1625,9 +1625,9 @@ Create a comprehensive synthesis that:
       // Save to file
       await this.saveReportToFile(project);
 
-      elizaLogger.info('[ResearchService] Report generation complete');
+      logger.info('[ResearchService] Report generation complete');
     } catch (error) {
-      elizaLogger.error('[ResearchService] Report generation failed:', error);
+      logger.error('[ResearchService] Report generation failed:', error);
       throw error;
     }
   }
@@ -1818,14 +1818,14 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
 `;
 
       await fs.writeFile(filepath, fullContent, 'utf-8');
-      elizaLogger.info(`[ResearchService] Report saved to: ${filepath}`);
+      logger.info(`[ResearchService] Report saved to: ${filepath}`);
 
       // Also save JSON version
       const jsonFilepath = filepath.replace('.md', '.json');
       await fs.writeFile(jsonFilepath, JSON.stringify(project, null, 2), 'utf-8');
-      elizaLogger.info(`[ResearchService] JSON data saved to: ${jsonFilepath}`);
+      logger.info(`[ResearchService] JSON data saved to: ${jsonFilepath}`);
     } catch (error) {
-      elizaLogger.error('[ResearchService] Failed to save report to file:', error);
+      logger.error('[ResearchService] Failed to save report to file:', error);
     }
   }
 
@@ -1834,7 +1834,7 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
    * Creates detailed sections for each category with thorough analysis
    */
   private async generateComprehensiveReport(project: ResearchProject): Promise<ReportSection[]> {
-    elizaLogger.info(
+    logger.info(
       `[ResearchService] PASS 1: Generating comprehensive initial report for ${project.findings.length} findings`
     );
 
@@ -1848,7 +1848,7 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
       categories.set(finding.category, existing);
     }
 
-    elizaLogger.info(
+    logger.info(
       `[ResearchService] Found ${categories.size} categories: ${Array.from(categories.keys()).join(', ')}`
     );
 
@@ -1871,7 +1871,7 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
 
     // Generate comprehensive sections for each category
     for (const [category, findings] of categories.entries()) {
-      elizaLogger.info(
+      logger.info(
         `[ResearchService] PASS 1: Generating comprehensive analysis for category: ${category} (${findings.length} findings)`
       );
 
@@ -1932,7 +1932,7 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
     });
 
     const totalWords = sections.reduce((sum, s) => sum + s.metadata.wordCount, 0);
-    elizaLogger.info(
+    logger.info(
       `[ResearchService] PASS 1 completed: Generated ${sections.length} sections with ${totalWords} total words`
     );
 
@@ -1948,17 +1948,17 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
     initialSections: ReportSection[],
     verificationResults: Map<string, any>
   ): Promise<ReportSection[]> {
-    elizaLogger.info(`[ResearchService] PASS 2: Beginning detailed source analysis enhancement`);
+    logger.info('[ResearchService] PASS 2: Beginning detailed source analysis enhancement');
 
     // Step 1: Identify top 10 sources
     const topSources = this.identifyTopSources(project, 10);
-    elizaLogger.info(
+    logger.info(
       `[ResearchService] PASS 2: Identified top ${topSources.length} sources for detailed analysis`
     );
 
     // Step 2: Extract 10k words from each top source
     const detailedSourceContent = await this.extractDetailedSourceContent(topSources);
-    elizaLogger.info(
+    logger.info(
       `[ResearchService] PASS 2: Extracted detailed content from ${detailedSourceContent.size} sources`
     );
 
@@ -1966,7 +1966,7 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
     const enhancedSections: ReportSection[] = [];
 
     for (const section of initialSections) {
-      elizaLogger.info(
+      logger.info(
         `[ResearchService] PASS 2: Enhancing section "${section.heading}" with detailed analysis`
       );
 
@@ -2004,7 +2004,7 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
     });
 
     const totalWords = enhancedSections.reduce((sum, s) => sum + s.metadata.wordCount, 0);
-    elizaLogger.info(
+    logger.info(
       `[ResearchService] PASS 2 completed: Enhanced ${enhancedSections.length} sections with ${totalWords} total words`
     );
 
@@ -2197,7 +2197,7 @@ Be forward-looking and actionable while grounding recommendations in the evidenc
       .sort((a, b) => b.score - a.score)
       .slice(0, count)
       .map((s) => {
-        elizaLogger.info(
+        logger.info(
           `[ResearchService] Top source: ${s.source.title} (Score: ${s.score.toFixed(2)}, Findings: ${s.findingsCount})`
         );
         return s.source;
@@ -2211,13 +2211,13 @@ Be forward-looking and actionable while grounding recommendations in the evidenc
 
     for (const source of sources) {
       try {
-        elizaLogger.info(`[ResearchService] Extracting detailed content from: ${source.title}`);
+        logger.info(`[ResearchService] Extracting detailed content from: ${source.title}`);
 
         let content = source.fullContent || source.snippet || '';
 
         // If we need more content, try to re-extract with higher limits
         if (content.length < 8000 && source.url) {
-          elizaLogger.info(`[ResearchService] Re-extracting with higher limits for: ${source.url}`);
+          logger.info(`[ResearchService] Re-extracting with higher limits for: ${source.url}`);
           const extractor = this.searchProviderFactory.getContentExtractor();
           const extractedContent = await extractor.extractContent(source.url);
           const extractedText =
@@ -2234,11 +2234,11 @@ Be forward-looking and actionable while grounding recommendations in the evidenc
         const detailedText = words.join(' ');
 
         detailedContent.set(source.id, detailedText);
-        elizaLogger.info(
+        logger.info(
           `[ResearchService] Extracted ${detailedText.length} characters from ${source.title}`
         );
       } catch (error) {
-        elizaLogger.warn(
+        logger.warn(
           `[ResearchService] Failed to extract detailed content from ${source.title}:`,
           error
         );
@@ -2263,7 +2263,7 @@ Be forward-looking and actionable while grounding recommendations in the evidenc
     }
 
     if (relevantSources.length === 0) {
-      elizaLogger.info(
+      logger.info(
         `[ResearchService] No detailed content available for section: ${section.heading}`
       );
       return section.content;
@@ -2302,7 +2302,7 @@ Maintain the academic tone and ensure all claims are well-supported by the sourc
 
     const enhancedContent =
       typeof response === 'string' ? response : (response as any).content || section.content;
-    elizaLogger.info(
+    logger.info(
       `[ResearchService] Enhanced section "${section.heading}" from ${section.content.length} to ${enhancedContent.length} characters`
     );
 
@@ -2317,7 +2317,7 @@ Maintain the academic tone and ensure all claims are well-supported by the sourc
 
     for (const [sourceId, content] of detailedContent.entries()) {
       const source = project.sources.find((s) => s.id === sourceId);
-      if (!source) continue;
+      if (!source) {continue;}
 
       const findings = project.findings.filter((f) => f.source.id === sourceId);
 
@@ -2398,7 +2398,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
     const processedUrls = new Set<string>();
 
     for (const source of project.sources) {
-      if (processedUrls.has(source.url)) continue;
+      if (processedUrls.has(source.url)) {continue;}
       processedUrls.add(source.url);
 
       const authors = source.author?.join(', ') || 'Unknown';
@@ -2514,7 +2514,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
   }
 
   private exportAsMarkdown(project: ResearchProject): string {
-    if (!project.report) return '';
+    if (!project.report) {return '';}
 
     let markdown = `# ${project.report.title}\n\n`;
     markdown += `**Generated:** ${new Date(project.report.generatedAt).toISOString()}\n\n`;
@@ -2526,7 +2526,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
       markdown += `${section.content}\n\n`;
     }
 
-    markdown += `## References\n\n`;
+    markdown += '## References\n\n';
     for (const entry of project.report.bibliography) {
       markdown += `- ${entry.citation}\n`;
     }
@@ -2535,7 +2535,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
   }
 
   private exportAsDeepResearchBench(project: ResearchProject): DeepResearchBenchResult {
-    if (!project.report) throw new Error('Report not generated');
+    if (!project.report) {throw new Error('Report not generated');}
 
     const article = project.report.sections.map((s) => `${s.heading}\n\n${s.content}`).join('\n\n');
 
@@ -2550,29 +2550,29 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
         modelVersion: 'eliza-research-1.0',
         evaluationScores: project.report.evaluationMetrics
           ? {
-              race: project.report.evaluationMetrics.raceScore,
-              fact: project.report.evaluationMetrics.factScore,
-            }
+            race: project.report.evaluationMetrics.raceScore,
+            fact: project.report.evaluationMetrics.factScore,
+          }
           : {
-              race: {
-                overall: 0,
-                comprehensiveness: 0,
-                depth: 0,
-                instructionFollowing: 0,
-                readability: 0,
-                breakdown: [],
-              },
-              fact: {
-                citationAccuracy: 0,
-                effectiveCitations: 0,
-                totalCitations: 0,
-                verifiedCitations: 0,
-                disputedCitations: 0,
-                citationCoverage: 0,
-                sourceCredibility: 0,
-                breakdown: [],
-              },
+            race: {
+              overall: 0,
+              comprehensiveness: 0,
+              depth: 0,
+              instructionFollowing: 0,
+              readability: 0,
+              breakdown: [],
             },
+            fact: {
+              citationAccuracy: 0,
+              effectiveCitations: 0,
+              totalCitations: 0,
+              verifiedCitations: 0,
+              disputedCitations: 0,
+              citationCoverage: 0,
+              sourceCredibility: 0,
+              breakdown: [],
+            },
+          },
       },
     };
   }
@@ -2661,7 +2661,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
       const projectInsights = project.findings
         .filter((f) => f.relevance > 0.8 && f.confidence > 0.8)
         .slice(0, 3)
-        .map((f) => f.content.substring(0, 200) + '...');
+        .map((f) => `${f.content.substring(0, 200)}...`);
 
       insights[project.id] = projectInsights;
     }
@@ -2674,7 +2674,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
    * excess whitespace, and special characters that might interfere
    */
   private sanitizeContentForLLM(content: string): string {
-    if (!content) return '';
+    if (!content) {return '';}
 
     // Decode HTML entities
     const htmlEntities: Record<string, string> = {
@@ -2746,7 +2746,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
 
   async addRefinedQueries(projectId: string, queries: string[]): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) throw new Error('Project not found');
+    if (!project) {throw new Error('Project not found');}
 
     // Add as new sub-queries
     const newSubQueries = queries.map((query, index) => ({
@@ -2804,7 +2804,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
       domain: project.metadata.domain,
     };
     this.startResearch(projectId, config).catch((error) => {
-      elizaLogger.error(`Failed to resume research ${projectId}:`, error);
+      logger.error(`Failed to resume research ${projectId}:`, error);
     });
   }
 
@@ -2818,7 +2818,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
     };
 
     // In a real implementation, this would emit to event system
-    elizaLogger.info(`Research progress: ${JSON.stringify(progress)}`);
+    logger.info(`Research progress: ${JSON.stringify(progress)}`);
   }
 
   private calculateProgress(project: ResearchProject): number {
@@ -2832,7 +2832,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
     config: ResearchConfig,
     queryAnalysis: any
   ): Promise<void> {
-    elizaLogger.info(
+    logger.info(
       `[ResearchService] Analyzing ${project.sources.length} sources with relevance verification`
     );
 
@@ -2841,7 +2841,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
       const contentToAnalyze = source.fullContent || source.snippet || source.title;
 
       if (!contentToAnalyze) {
-        elizaLogger.warn(`[ResearchService] No content available for source: ${source.url}`);
+        logger.warn(`[ResearchService] No content available for source: ${source.url}`);
         await this.researchLogger.logContentExtraction(
           project.id,
           source.url,
@@ -2914,7 +2914,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
       });
 
       if (findings.length > 0) {
-        elizaLogger.info(
+        logger.info(
           `[ResearchService] Kept ${relevantFindings.length}/${findings.length} relevant findings from ${source.title} (threshold >= 0.4)`
         );
       }
@@ -2949,7 +2949,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
       }
     }
 
-    elizaLogger.info(`[ResearchService] Extracted ${project.findings.length} relevant findings`);
+    logger.info(`[ResearchService] Extracted ${project.findings.length} relevant findings`);
 
     // Update quality score
     const lastIteration =
@@ -2970,7 +2970,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
     const sanitizedContent = this.sanitizeContentForLLM(content);
 
     if (!sanitizedContent || sanitizedContent.length < 50) {
-      elizaLogger.warn(
+      logger.warn(
         `[ResearchService] Content too short or empty after sanitization for ${source.title}`
       );
       return [];
@@ -3042,7 +3042,7 @@ Format as JSON array with at least one finding if the content is relevant:
   "category": "fact"
 }]`;
 
-    elizaLogger.debug(`[ResearchService] Calling LLM for finding extraction:`, {
+    logger.debug('[ResearchService] Calling LLM for finding extraction:', {
       sourceTitle: source.title,
       originalContentLength: content.length,
       sanitizedContentLength: sanitizedContent.length,
@@ -3062,7 +3062,7 @@ Format as JSON array with at least one finding if the content is relevant:
       temperature: 0.5, // Slightly higher temperature for more diverse extraction
     });
 
-    elizaLogger.debug(`[ResearchService] LLM response received:`, {
+    logger.debug('[ResearchService] LLM response received:', {
       responseType: typeof response,
       responseLength: response ? String(response).length : 0,
       responsePreview: response ? String(response).substring(0, 200) : 'null',
@@ -3074,7 +3074,7 @@ Format as JSON array with at least one finding if the content is relevant:
 
       // Handle case where LLM returns just an empty array
       if (responseContent.trim() === '[]') {
-        elizaLogger.info(`[ResearchService] No findings found by LLM for ${source.title}`);
+        logger.info(`[ResearchService] No findings found by LLM for ${source.title}`);
         return [];
       }
 
@@ -3086,7 +3086,7 @@ Format as JSON array with at least one finding if the content is relevant:
           findings = JSON.parse(jsonMatch[0]);
         } catch (parseError) {
           // Try to clean up common JSON issues
-          let cleanedJson = jsonMatch[0]
+          const cleanedJson = jsonMatch[0]
             .replace(/\n/g, ' ') // Remove newlines
             .replace(/,\s*}/g, '}') // Remove trailing commas
             .replace(/,\s*\]/g, ']'); // Remove trailing commas in arrays
@@ -3094,7 +3094,7 @@ Format as JSON array with at least one finding if the content is relevant:
           try {
             findings = JSON.parse(cleanedJson);
           } catch (secondParseError) {
-            elizaLogger.warn(
+            logger.warn(
               `[ResearchService] Failed to parse JSON response for ${source.title}:`,
               secondParseError
             );
@@ -3117,7 +3117,7 @@ Format as JSON array with at least one finding if the content is relevant:
           );
 
           if (validFindings.length > 0) {
-            elizaLogger.info(
+            logger.info(
               `[ResearchService] Extracted ${validFindings.length} findings from ${source.title}`
             );
             return validFindings;
@@ -3126,7 +3126,7 @@ Format as JSON array with at least one finding if the content is relevant:
       }
 
       // If no findings extracted, try a simpler approach
-      elizaLogger.warn(
+      logger.warn(
         `[ResearchService] No valid findings extracted via JSON for ${source.title}`
       );
 
@@ -3139,7 +3139,7 @@ Format as JSON array with at least one finding if the content is relevant:
           category: 'fact' as const,
         };
 
-        elizaLogger.info(`[ResearchService] Using fallback finding for ${source.title}`);
+        logger.info(`[ResearchService] Using fallback finding for ${source.title}`);
         return [fallbackFinding];
       }
 
@@ -3149,7 +3149,7 @@ Format as JSON array with at least one finding if the content is relevant:
       const errorMessage = e instanceof Error ? e.message : String(e);
       const errorStack = e instanceof Error ? e.stack : undefined;
 
-      elizaLogger.warn('[ResearchService] Finding extraction challenge:', {
+      logger.warn('[ResearchService] Finding extraction challenge:', {
         sourceUrl: source.url,
         sourceTitle: source.title,
         error: errorMessage,
@@ -3173,13 +3173,13 @@ Format as JSON array with at least one finding if the content is relevant:
       // Try one more time with a very simple fallback
       if (sanitizedContent.length > 200 && source.snippet) {
         const simpleFinding = {
-          content: this.sanitizeContentForLLM(source.snippet).substring(0, 300).trim() + '...',
+          content: `${this.sanitizeContentForLLM(source.snippet).substring(0, 300).trim()}...`,
           relevance: 0.4,
           confidence: 0.5,
           category: 'fact' as const,
         };
 
-        elizaLogger.info(`[ResearchService] Using snippet as fallback finding for ${source.title}`);
+        logger.info(`[ResearchService] Using snippet as fallback finding for ${source.title}`);
         return [simpleFinding];
       }
 
@@ -3200,7 +3200,7 @@ Format as JSON array with at least one finding if the content is relevant:
     }
     this.activeResearch.clear();
     // Explicitly return void
-    return;
+
   }
 
   async getProject(projectId: string): Promise<ResearchProject | undefined> {

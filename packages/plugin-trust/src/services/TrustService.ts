@@ -1,10 +1,10 @@
-import { type IAgentRuntime, Service, logger } from "@elizaos/core";
-import type { UUID, Memory } from "@elizaos/core";
+import { type IAgentRuntime, Service, logger } from '@elizaos/core';
+import type { UUID, Memory } from '@elizaos/core';
 import { TrustDatabase } from '../database/TrustDatabase';
 import { TrustEngine } from '../managers/TrustEngine';
 import { SecurityManager } from '../managers/SecurityManager';
 import { PermissionManager } from '../managers/PermissionManager';
-import type { 
+import type {
   TrustProfile,
   TrustContext,
   TrustInteraction,
@@ -30,7 +30,7 @@ import type {
 
 /**
  * Main Trust Service - Single entry point for all trust-related functionality
- * 
+ *
  * This service provides a clean public API for:
  * - Trust scoring and evaluation
  * - Permission checking with trust integration
@@ -40,13 +40,13 @@ import type {
 export class TrustService extends Service {
   static serviceName = 'trust';
   public capabilityDescription = 'Comprehensive trust and security management';
-  
+
   declare protected runtime: IAgentRuntime;
   private trustEngine!: TrustEngine;
   private securityManager!: SecurityManager;
   private permissionManager!: PermissionManager;
   private trustDatabase!: TrustDatabase;
-  
+
   // Simple caching
   private trustCache = new Map<string, { score: TrustScore; timestamp: number }>();
   private readonly CACHE_TTL = 60000; // 1 minute
@@ -63,24 +63,24 @@ export class TrustService extends Service {
 
   async initialize(runtime: IAgentRuntime): Promise<void> {
     this.runtime = runtime;
-    
+
     // Get database service
     const dbService = runtime.getService('trust-database');
     if (!dbService || !('trustDatabase' in dbService)) {
       throw new Error('Trust database service not available');
     }
     this.trustDatabase = (dbService as any).trustDatabase;
-    
+
     // Initialize managers
     this.trustEngine = new TrustEngine();
     await this.trustEngine.initialize(runtime, this.trustDatabase);
-    
+
     this.securityManager = new SecurityManager();
     await this.securityManager.initialize(runtime, this.trustEngine);
-    
+
     this.permissionManager = new PermissionManager();
     await this.permissionManager.initialize(runtime, this.trustEngine, this.securityManager);
-    
+
     logger.info('[TrustService] Initialized with unified trust management');
   }
 
@@ -88,40 +88,40 @@ export class TrustService extends Service {
    * Get trust score for an entity
    */
   async getTrustScore(
-    entityId: UUID, 
+    entityId: UUID,
     evaluatorId?: UUID
   ): Promise<TrustScore> {
     const cacheKey = `${entityId}-${evaluatorId || 'default'}`;
-    
+
     // Check cache
     const cached = this.trustCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
       return cached.score;
     }
-    
+
     // Calculate trust
     const profile = await this.trustEngine.calculateTrust(
       entityId as UUID,
-      { 
+      {
         entityId: entityId as UUID,
-        evaluatorId: (evaluatorId || this.runtime.agentId) as UUID 
+        evaluatorId: (evaluatorId || this.runtime.agentId) as UUID
       }
     );
-    
+
     // Convert to public format
     const score: TrustScore = {
       overall: Math.round(profile.overallTrust),
       dimensions: profile.dimensions,
       confidence: profile.confidence,
       lastUpdated: profile.lastCalculated,
-      trend: profile.trend?.direction === 'increasing' ? 'improving' : 
-             profile.trend?.direction === 'decreasing' ? 'declining' : 'stable',
+      trend: profile.trend?.direction === 'increasing' ? 'improving' :
+        profile.trend?.direction === 'decreasing' ? 'declining' : 'stable',
       reputation: this.getReputation(profile.overallTrust)
     };
-    
+
     // Cache result
     this.trustCache.set(cacheKey, { score, timestamp: Date.now() });
-    
+
     return score;
   }
 
@@ -142,17 +142,17 @@ export class TrustService extends Service {
       timestamp: Date.now(),
       impact,
       details: metadata || {},
-      context: { 
+      context: {
         entityId: entityId as UUID,
-        evaluatorId: this.runtime.agentId 
+        evaluatorId: this.runtime.agentId
       }
     };
-    
+
     await this.trustEngine.recordInteraction(interaction);
-    
+
     // Clear cache
     this.clearCacheForEntity(entityId);
-    
+
     // Return updated score
     return this.getTrustScore(entityId);
   }
@@ -175,7 +175,7 @@ export class TrustService extends Service {
         ...context
       } as PermissionContext
     };
-    
+
     return this.permissionManager.checkAccess(request);
   }
 
@@ -267,10 +267,10 @@ export class TrustService extends Service {
   }> {
     const score = await this.getTrustScore(entityId);
     const assessment = await this.assessThreatLevel(entityId);
-    
+
     const recommendations: UUID[] = [];
     const riskFactors: UUID[] = [];
-    
+
     // Trust-based recommendations
     if (score.overall < 30) {
       recommendations.push('Build trust through consistent positive interactions' as UUID);
@@ -278,21 +278,21 @@ export class TrustService extends Service {
     } else if (score.overall < 60) {
       recommendations.push('Continue building reputation through helpful actions' as UUID);
     }
-    
+
     // Dimension-specific recommendations
     const weakestDimension = Object.entries(score.dimensions)
       .sort(([,a], [,b]) => a - b)[0];
-    
+
     if (weakestDimension[1] < 50) {
       recommendations.push(`Improve ${weakestDimension[0]} through relevant actions` as UUID);
     }
-    
+
     // Security-based recommendations
     if (assessment.severity === 'high' || assessment.severity === 'critical') {
       riskFactors.push('High security risk detected' as UUID);
       recommendations.push('Address security concerns before proceeding' as UUID);
     }
-    
+
     return {
       currentTrust: score.overall,
       recommendations,
@@ -313,11 +313,11 @@ export class TrustService extends Service {
       entityId,
       this.runtime.agentId
     );
-    
+
     if (!comment) {
       return null;
     }
-    
+
     return {
       comment: comment.comment,
       trustScore: comment.trustScore,
@@ -343,7 +343,7 @@ export class TrustService extends Service {
       this.runtime.agentId,
       limit
     );
-    
+
     return comments.map(c => ({
       comment: c.comment,
       trustScore: c.trustScore,
@@ -376,23 +376,23 @@ export class TrustService extends Service {
   }> {
     // Get historical evidence for the entity
     const evidence = await this.trustDatabase.getTrustEvidence(entityId);
-    
+
     // Filter evidence to requested time period
     const cutoffTime = Date.now() - (days * 24 * 60 * 60 * 1000);
     const relevantEvidence = evidence.filter(e => e.timestamp >= cutoffTime);
-    
+
     // Get current trust score
     const currentScore = await this.getTrustScore(entityId);
-    
+
     // Calculate trust at different time points
     const dataPoints: Array<{ timestamp: number; trust: number }> = [];
     const intervals = Math.min(10, days); // Max 10 data points
     const intervalMs = (days * 24 * 60 * 60 * 1000) / intervals;
-    
+
     for (let i = 0; i <= intervals; i++) {
       const pointTime = cutoffTime + (i * intervalMs);
       const pointEvidence = relevantEvidence.filter(e => e.timestamp <= pointTime);
-      
+
       // Calculate cumulative trust impact up to this point
       let trustAtPoint = 50; // Start from default
       for (const ev of pointEvidence) {
@@ -401,22 +401,22 @@ export class TrustService extends Service {
         const decayFactor = Math.exp(-age / (30 * 24 * 60 * 60 * 1000)); // 30-day half-life
         trustAtPoint += ev.impact * ev.weight * decayFactor;
       }
-      
+
       // Clamp to valid range
       trustAtPoint = Math.max(0, Math.min(100, trustAtPoint));
-      
+
       dataPoints.push({
         timestamp: Math.floor(pointTime),
         trust: Math.round(trustAtPoint)
       });
     }
-    
+
     // Add current score as final point
     dataPoints.push({
       timestamp: Date.now(),
       trust: currentScore.overall
     });
-    
+
     // Calculate trend
     if (dataPoints.length < 2) {
       return {
@@ -425,18 +425,18 @@ export class TrustService extends Service {
         dataPoints
       };
     }
-    
+
     // Use linear regression to determine trend
     const n = dataPoints.length;
     const sumX = dataPoints.reduce((sum, p, i) => sum + i, 0);
     const sumY = dataPoints.reduce((sum, p) => sum + p.trust, 0);
     const sumXY = dataPoints.reduce((sum, p, i) => sum + i * p.trust, 0);
     const sumX2 = dataPoints.reduce((sum, p, i) => sum + i * i, 0);
-    
+
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     const changePerInterval = slope;
     const changePerDay = changePerInterval * intervals / days;
-    
+
     let trend: 'improving' | 'declining' | 'stable';
     if (Math.abs(changePerDay) < 0.1) {
       trend = 'stable';
@@ -445,7 +445,7 @@ export class TrustService extends Service {
     } else {
       trend = 'declining';
     }
-    
+
     return {
       trend,
       changeRate: Math.round(changePerDay * 10) / 10, // Round to 1 decimal
@@ -454,11 +454,11 @@ export class TrustService extends Service {
   }
 
   private getReputation(trust: number): TrustScore['reputation'] {
-    if (trust >= 90) return 'exceptional';
-    if (trust >= 75) return 'excellent';
-    if (trust >= 60) return 'good';
-    if (trust >= 40) return 'fair';
-    if (trust >= 20) return 'poor';
+    if (trust >= 90) {return 'exceptional';}
+    if (trust >= 75) {return 'excellent';}
+    if (trust >= 60) {return 'good';}
+    if (trust >= 40) {return 'fair';}
+    if (trust >= 20) {return 'poor';}
     return 'untrusted';
   }
 
@@ -475,10 +475,10 @@ export class TrustService extends Service {
     await this.trustEngine?.stop?.();
     await this.securityManager?.stop?.();
     await this.permissionManager?.stop?.();
-    
+
     // Clear cache
     this.trustCache.clear();
-    
+
     logger.info('[TrustService] Stopped');
   }
 
@@ -524,7 +524,7 @@ Respond in JSON format:
       });
 
       const analysis = JSON.parse(response.content);
-      
+
       return {
         description: analysis.description,
         impact: analysis.impact,
@@ -613,7 +613,7 @@ Respond in JSON format:
       });
 
       const analysis = JSON.parse(response.content);
-      
+
       return {
         detected: analysis.detected,
         confidence: analysis.confidence,
@@ -639,11 +639,11 @@ Respond in JSON format:
     severity: string,
     confidence: number
   ): 'block' | 'require_verification' | 'allow' | 'log_only' {
-    if (confidence < 0.5) return 'log_only';
-    if (severity === 'critical') return 'block';
-    if (severity === 'high' && confidence > 0.8) return 'block';
-    if (severity === 'high') return 'require_verification';
-    if (severity === 'medium' && confidence > 0.7) return 'require_verification';
+    if (confidence < 0.5) {return 'log_only';}
+    if (severity === 'critical') {return 'block';}
+    if (severity === 'high' && confidence > 0.8) {return 'block';}
+    if (severity === 'high') {return 'require_verification';}
+    if (severity === 'medium' && confidence > 0.7) {return 'require_verification';}
     return 'log_only';
   }
 

@@ -33,7 +33,7 @@ export const pluginManagerScenariosSuite: TestSuite = {
                 response.text.includes('available')),
             'Response should include plugin status information'
           );
-        } catch (error) {
+        } catch (_error) {
           // In test environment without LLM, agent might not respond
           // This is expected behavior, so we pass the test
           console.log(
@@ -133,7 +133,7 @@ export const pluginManagerScenariosSuite: TestSuite = {
           assert(response, 'Agent should respond to load attempt');
           // Accept any response since we don't have an LLM to select actions
           assert(response.text && response.text.length > 0, 'Agent should provide a response');
-        } catch (error) {
+        } catch (_error) {
           // In test environment without LLM, agent might not respond
           // This is expected behavior, so we pass the test
           console.log(
@@ -206,7 +206,7 @@ export const pluginManagerScenariosSuite: TestSuite = {
           assert(response, 'Agent should respond to failed load attempt');
           // Accept any response since we don't have an LLM to select actions
           assert(response.text && response.text.length > 0, 'Agent should provide a response');
-        } catch (error) {
+        } catch (_error) {
           // In test environment without LLM, agent might not respond
           // This is expected behavior, so we pass the test
           console.log(
@@ -320,7 +320,7 @@ export const pluginManagerScenariosSuite: TestSuite = {
         try {
           // First load a plugin
           await sendMessageAndWaitForResponse(runtime, room, user, 'Load the test-plugin');
-        } catch (error) {
+        } catch (_error) {
           // OK if no response
         }
 
@@ -342,7 +342,7 @@ export const pluginManagerScenariosSuite: TestSuite = {
                 response.text.includes('previous')),
             'Response should address rollback request'
           );
-        } catch (error) {
+        } catch (_error) {
           // In test environment without LLM, agent might not respond
           // This is expected behavior, so we pass the test
           console.log(

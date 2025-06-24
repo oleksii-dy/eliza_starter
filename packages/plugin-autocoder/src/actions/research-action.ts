@@ -103,7 +103,16 @@ export const testResearchAction: Action = {
       elizaLogger.info('[RESEARCH-TEST] Testing orchestration manager');
       const manager = new ResearchEnhancedOrchestrationManager(
         runtime,
-        path.join(process.cwd(), '.eliza-temp', 'research-workspace')
+        // Use centralized path management for research workspace
+        (() => {
+          try {
+            const { getPluginDataPath } = require('@elizaos/core/utils/path-manager');
+            return getPluginDataPath('autocoder', 'research-workspace');
+          } catch {
+            // Fallback to legacy path if path-manager is not available
+            return path.join(process.cwd(), '.eliza-temp', 'research-workspace');
+          }
+        })()
       );
       const orchestratedPlugin = await manager.createPlugin(testSpec);
 

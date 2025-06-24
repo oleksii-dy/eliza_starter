@@ -1,13 +1,5 @@
 // Note: AgentRuntime is imported dynamically to avoid circular dependencies
-import type {
-  IAgentRuntime,
-  Character,
-  Plugin,
-  IDatabaseAdapter,
-  Service,
-  UUID,
-  Memory,
-} from '../types';
+import type { IAgentRuntime, Character, Plugin, UUID, Memory } from '../types';
 import { TestDatabaseManager } from './test-database';
 import {
   TestModelProvider,
@@ -205,7 +197,7 @@ export class RuntimeTestHarness {
         createdAt: Date.now(),
       };
 
-      const messageId = await runtime.createMemory(memory, 'messages');
+      const _messageId = await runtime.createMemory(memory, 'messages');
 
       // Process message with real runtime - this executes actual logic
       const responses = await runtime.processActions(memory, [], undefined, undefined);

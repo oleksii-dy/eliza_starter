@@ -12,8 +12,4 @@ export const trainingActions: Action[] = [
   monitorTrainingAction,
 ];
 
-export {
-  extractTrainingDataAction,
-  startTrainingAction,
-  monitorTrainingAction,
-};
+export { extractTrainingDataAction, startTrainingAction, monitorTrainingAction };

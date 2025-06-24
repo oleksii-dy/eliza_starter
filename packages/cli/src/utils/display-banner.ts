@@ -118,7 +118,7 @@ export function showUpdateNotification(currentVersion: string, latestVersion: st
     `${blue}│${orange} ${bold}Update available:${reset}${orange} ${currentVersion} → ${green}${bold}${latestVersion}${reset}${orange}${' '.repeat(width - 2 - ` Update available: ${currentVersion} → ${latestVersion}`.length)}${blue}│${reset}`
   );
   console.log(
-    `${blue}│${orange} Run ${green}${bold}bun i -g @elizaos/cli@latest${reset}${orange} to get the latest features${' '.repeat(width - 2 - ` Run bun i -g @elizaos/cli@latest to get the latest features`.length)}${blue}│${reset}`
+    `${blue}│${orange} Run ${green}${bold}bun i -g @elizaos/cli@latest${reset}${orange} to get the latest features${' '.repeat(width - 2 - ' Run bun i -g @elizaos/cli@latest to get the latest features'.length)}${blue}│${reset}`
   );
   console.log(border);
   console.log('');
@@ -220,7 +220,7 @@ ${b}⠀⠀⠀⠀⢸⣿⡦⠀⠀⠉⠛⠿⠃⠀⠀⠀ ${w} ⠀⠀⠀⠀⠀⠀⠀�
   if (!skipUpdateCheck) {
     try {
       await checkAndShowUpdateNotification(version);
-    } catch (error) {
+    } catch {
       // Silently continue if update check fails
     }
   }

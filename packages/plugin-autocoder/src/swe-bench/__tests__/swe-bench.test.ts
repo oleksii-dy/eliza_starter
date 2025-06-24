@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { SWEBenchDataLoader } from '../data-loader';
 import { RepositoryManager } from '../repository-manager';
 import { IssueAnalyzer } from '../issue-analyzer';
@@ -7,16 +7,14 @@ import type { SWEBenchInstance } from '../types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-// Mock node-fetch using vi.hoisted to prevent real network calls
-const mockFetch = vi.hoisted(() =>
-  vi.fn().mockResolvedValue({
-    ok: true,
-    json: async () => ({}),
-    text: async () => '',
-  })
-);
+// Mock node-fetch to prevent real network calls
+const mockFetch = mock().mockResolvedValue({
+  ok: true,
+  json: async () => ({}),
+  text: async () => '',
+});
 
-vi.mock('node-fetch', () => ({ default: mockFetch }));
+mock.module('node-fetch', () => ({ default: mockFetch }));
 
 describe('SWE-bench Components', () => {
   const testCacheDir = '.test-swe-bench-cache';

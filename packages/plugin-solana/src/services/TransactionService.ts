@@ -370,7 +370,9 @@ export class TransactionService extends Service {
 
         lookupTableAccounts = accountInfos
           .map((info, index) => {
-            if (!info) return null;
+            if (!info) {
+              return null;
+            }
             return new AddressLookupTableAccount({
               key: lookupTables[index],
               state: AddressLookupTableAccount.deserialize(info.data),

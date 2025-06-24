@@ -2,7 +2,10 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import type { IAgentRuntime } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
-import type { CustomReasoningService, CodingContext } from '../interfaces/CustomReasoningService.js';
+import type {
+  CustomReasoningService,
+  CodingContext,
+} from '../interfaces/CustomReasoningService.js';
 import { getTrainingConfig } from '../config/training-config.js';
 
 interface AnthropicMessage {
@@ -52,7 +55,7 @@ export class AnthropicAPIProxy {
    */
   createProxyServer(): express.Application {
     const app = express();
-    
+
     // Middleware
     app.use(express.json({ limit: this.config.getAPIConfig().anthropic.requestSizeLimit }));
     app.use(express.urlencoded({ extended: true }));
@@ -91,7 +94,7 @@ export class AnthropicAPIProxy {
   private async handleMessagesRequest(req: Request, res: Response): Promise<void> {
     try {
       const anthropicReq = req.body as AnthropicRequest;
-      
+
       // Validate request
       if (!anthropicReq.messages || !Array.isArray(anthropicReq.messages)) {
         res.status(400).json({ error: 'Invalid request: messages array required' });
@@ -110,7 +113,7 @@ export class AnthropicAPIProxy {
       }
     } catch (error) {
       elizaLogger.error('Error in Anthropic proxy:', error);
-      
+
       if (this.fallbackEnabled) {
         await this.forwardToOriginalAPI(req, res);
       } else {
@@ -179,7 +182,7 @@ export class AnthropicAPIProxy {
       res.json(anthropicResponse);
     } catch (error) {
       elizaLogger.error('Custom coding generation failed:', error);
-      
+
       // Log failure and fallback
       await (this.runtime as any).adapter?.log({
         entityId: this.runtime.agentId,
@@ -210,7 +213,7 @@ export class AnthropicAPIProxy {
   private async forwardToOriginalAPI(req: Request, res: Response): Promise<void> {
     try {
       const url = `${this.config.getAPIConfig().anthropic.baseUrl}${req.path}`;
-      
+
       // Forward headers, but remove host and add anthropic headers
       const headers = { ...req.headers };
       delete headers.host;
@@ -231,17 +234,20 @@ export class AnthropicAPIProxy {
 
       // Stream response
       res.status(response.status);
-      
+
       if (response.body) {
         const reader = response.body.getReader();
-        
+
+        // eslint-disable-next-line no-constant-condition
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            break;
+          }
           res.write(value);
         }
       }
-      
+
       res.end();
     } catch (error) {
       elizaLogger.error('Error forwarding to original Anthropic API:', error);
@@ -257,9 +263,9 @@ export class AnthropicAPIProxy {
    */
   private extractPromptFromMessages(messages: AnthropicMessage[]): string {
     return messages
-      .map(msg => {
-        const content = Array.isArray(msg.content) 
-          ? msg.content.map(c => c.text).join(' ')
+      .map((msg) => {
+        const content = Array.isArray(msg.content)
+          ? msg.content.map((c) => c.text).join(' ')
           : msg.content;
         return `${msg.role}: ${content}`;
       })
@@ -271,16 +277,41 @@ export class AnthropicAPIProxy {
    */
   private detectCodingRequest(prompt: string): boolean {
     const codingKeywords = [
-      'write code', 'generate code', 'create a function', 'implement',
-      'javascript', 'typescript', 'python', 'java', 'c++', 'rust',
-      'function', 'class', 'method', 'algorithm', 'script',
-      'npm', 'package.json', 'import', 'export', 'const ', 'let ',
-      'def ', 'class ', 'public ', 'private ', 'async ', 'await',
-      '```', 'code block', 'programming', 'development',
+      'write code',
+      'generate code',
+      'create a function',
+      'implement',
+      'javascript',
+      'typescript',
+      'python',
+      'java',
+      'c++',
+      'rust',
+      'function',
+      'class',
+      'method',
+      'algorithm',
+      'script',
+      'npm',
+      'package.json',
+      'import',
+      'export',
+      'const ',
+      'let ',
+      'def ',
+      'class ',
+      'public ',
+      'private ',
+      'async ',
+      'await',
+      '```',
+      'code block',
+      'programming',
+      'development',
     ];
 
     const lowerPrompt = prompt.toLowerCase();
-    return codingKeywords.some(keyword => lowerPrompt.includes(keyword));
+    return codingKeywords.some((keyword) => lowerPrompt.includes(keyword));
   }
 
   /**
@@ -288,24 +319,58 @@ export class AnthropicAPIProxy {
    */
   private detectLanguage(prompt: string): string {
     const lowerPrompt = prompt.toLowerCase();
-    
-    if (lowerPrompt.includes('typescript') || lowerPrompt.includes('.ts')) return 'typescript';
-    if (lowerPrompt.includes('javascript') || lowerPrompt.includes('.js') || lowerPrompt.includes('node')) return 'javascript';
-    if (lowerPrompt.includes('python') || lowerPrompt.includes('.py') || lowerPrompt.includes('def ')) return 'python';
-    if (lowerPrompt.includes('java') && !lowerPrompt.includes('javascript')) return 'java';
-    if (lowerPrompt.includes('rust') || lowerPrompt.includes('.rs')) return 'rust';
-    if (lowerPrompt.includes('c++') || lowerPrompt.includes('cpp')) return 'cpp';
-    if (lowerPrompt.includes('go') || lowerPrompt.includes('golang')) return 'go';
-    if (lowerPrompt.includes('php')) return 'php';
-    if (lowerPrompt.includes('ruby')) return 'ruby';
-    if (lowerPrompt.includes('swift')) return 'swift';
-    if (lowerPrompt.includes('kotlin')) return 'kotlin';
-    
-    // Default to JavaScript for web development contexts
-    if (lowerPrompt.includes('react') || lowerPrompt.includes('vue') || lowerPrompt.includes('angular')) {
+
+    if (lowerPrompt.includes('typescript') || lowerPrompt.includes('.ts')) {
+      return 'typescript';
+    }
+    if (
+      lowerPrompt.includes('javascript') ||
+      lowerPrompt.includes('.js') ||
+      lowerPrompt.includes('node')
+    ) {
       return 'javascript';
     }
-    
+    if (
+      lowerPrompt.includes('python') ||
+      lowerPrompt.includes('.py') ||
+      lowerPrompt.includes('def ')
+    ) {
+      return 'python';
+    }
+    if (lowerPrompt.includes('java') && !lowerPrompt.includes('javascript')) {
+      return 'java';
+    }
+    if (lowerPrompt.includes('rust') || lowerPrompt.includes('.rs')) {
+      return 'rust';
+    }
+    if (lowerPrompt.includes('c++') || lowerPrompt.includes('cpp')) {
+      return 'cpp';
+    }
+    if (lowerPrompt.includes('go') || lowerPrompt.includes('golang')) {
+      return 'go';
+    }
+    if (lowerPrompt.includes('php')) {
+      return 'php';
+    }
+    if (lowerPrompt.includes('ruby')) {
+      return 'ruby';
+    }
+    if (lowerPrompt.includes('swift')) {
+      return 'swift';
+    }
+    if (lowerPrompt.includes('kotlin')) {
+      return 'kotlin';
+    }
+
+    // Default to JavaScript for web development contexts
+    if (
+      lowerPrompt.includes('react') ||
+      lowerPrompt.includes('vue') ||
+      lowerPrompt.includes('angular')
+    ) {
+      return 'javascript';
+    }
+
     return 'javascript'; // Default
   }
 
@@ -315,13 +380,13 @@ export class AnthropicAPIProxy {
   private buildCodingContext(messages: AnthropicMessage[]): string {
     // Include system messages and recent user messages for context
     const contextMessages = messages
-      .filter(msg => msg.role === 'system' || msg.role === 'user')
+      .filter((msg) => msg.role === 'system' || msg.role === 'user')
       .slice(-3); // Last 3 context messages
 
     return contextMessages
-      .map(msg => {
-        const content = Array.isArray(msg.content) 
-          ? msg.content.map(c => c.text).join(' ')
+      .map((msg) => {
+        const content = Array.isArray(msg.content)
+          ? msg.content.map((c) => c.text).join(' ')
           : msg.content;
         return `${msg.role}: ${content}`;
       })
@@ -341,12 +406,12 @@ export class AnthropicAPIProxy {
    */
   private sanitizeHeaders(headers: any): any {
     const sanitized = { ...headers };
-    
+
     // Remove sensitive headers
     delete sanitized.authorization;
     delete sanitized['x-api-key'];
     delete sanitized.cookie;
-    
+
     return sanitized;
   }
 
@@ -355,7 +420,7 @@ export class AnthropicAPIProxy {
    */
   async startServer(port: number = this.config.getAPIConfig().anthropic.proxyPort): Promise<void> {
     const app = this.createProxyServer();
-    
+
     return new Promise((resolve, reject) => {
       const server = app.listen(port, (err?: any) => {
         if (err) {
@@ -396,14 +461,19 @@ export class AnthropicAPIProxy {
     successRate: number;
   }> {
     try {
-      const logs = await (this.runtime as any).adapter?.getLogs({
-        entityId: this.runtime.agentId,
-        type: 'anthropic-proxy%',
-        limit: 1000,
-      }) || [];
+      const logs =
+        (await (this.runtime as any).adapter?.getLogs({
+          entityId: this.runtime.agentId,
+          type: 'anthropic-proxy%',
+          limit: 1000,
+        })) || [];
 
-      const customRequests = logs.filter((log: any) => log.type === 'anthropic-proxy-success').length;
-      const fallbackRequests = logs.filter((log: any) => log.type === 'anthropic-proxy-fallback').length;
+      const customRequests = logs.filter(
+        (log: any) => log.type === 'anthropic-proxy-success'
+      ).length;
+      const fallbackRequests = logs.filter(
+        (log: any) => log.type === 'anthropic-proxy-fallback'
+      ).length;
       const totalRequests = customRequests + fallbackRequests;
       const successRate = totalRequests > 0 ? (customRequests / totalRequests) * 100 : 0;
 

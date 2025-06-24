@@ -1,9 +1,9 @@
 /**
  * Conversation/Reply Model - Training on Discord conversations for natural dialogue
- * 
+ *
  * This model trains on actual Discord conversations from the elizaOS community
  * and other sources to learn natural conversation patterns and response generation.
- * 
+ *
  * Key features:
  * - Parse Discord JSON exports into training data
  * - Create character profiles for each user based on their messaging patterns
@@ -11,13 +11,18 @@
  * - Handle <thinking> blocks for reasoning
  * - Support both 8B and 32B model sizes
  * - Preserve authentic communication styles
- * 
+ *
  * Model Sizes:
  * - 8B Model: Casual conversations, simple interactions, quick responses
  * - 32B Model: Complex discussions, technical content, detailed explanations with thinking
  */
 
-export { DiscordConversationParser, type ConversationTrainingExample, type DiscordMessage, type DiscordConversationExport } from './DiscordConversationParser';
+export {
+  DiscordConversationParser,
+  type ConversationTrainingExample,
+  type DiscordMessage,
+  type DiscordConversationExport,
+} from './DiscordConversationParser';
 export { ConversationDatasetBuilder } from './ConversationDatasetBuilder';
 
 // Export configuration
@@ -75,7 +80,7 @@ Your interests: {character_topics}
 Your style: {character_style}
 
 Respond naturally and authentically as this person would.`,
-    
+
     fine_tuning_config: {
       learning_rate: 2e-5,
       batch_size: 8,
@@ -84,7 +89,7 @@ Respond naturally and authentically as this person would.`,
       max_grad_norm: 1.0,
     },
   },
-  
+
   '32B': {
     base_model: 'Qwen/QwQ-32B-Preview', // R1 distillation for thinking
     training_format: 'instruction_following_with_thinking',
@@ -104,7 +109,7 @@ Consider the context, analyze the question, think through implications, plan you
 </thinking>
 
 Then provide your natural response as {character_name} would.`,
-    
+
     fine_tuning_config: {
       learning_rate: 1e-5,
       batch_size: 4,
@@ -127,7 +132,7 @@ export const DATA_PROCESSING_CONFIG = {
     preserve_replies: true,
     extract_actions: true,
   },
-  
+
   character_generation: {
     min_messages_for_profile: 10,
     analyze_writing_style: true,
@@ -135,7 +140,7 @@ export const DATA_PROCESSING_CONFIG = {
     generate_examples: true,
     include_bio: true,
   },
-  
+
   quality_filters: {
     min_context_length: 2,
     max_context_length: 20,

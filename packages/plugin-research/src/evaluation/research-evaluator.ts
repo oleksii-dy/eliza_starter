@@ -1,4 +1,4 @@
-import { IAgentRuntime, elizaLogger, ModelType } from '@elizaos/core';
+import { IAgentRuntime, logger, ModelType } from '@elizaos/core';
 import {
   ResearchProject,
   ResearchReport,
@@ -118,9 +118,9 @@ Respond with JSON:
 
       const response = await this.runtime.useModel(ModelType.TEXT_LARGE, {
         messages: [
-          { 
-            role: 'system', 
-            content: 'You are an expert research evaluator. Provide a balanced, fair assessment.' 
+          {
+            role: 'system',
+            content: 'You are an expert research evaluator. Provide a balanced, fair assessment.'
           },
           { role: 'user', content: prompt }
         ],
@@ -129,7 +129,7 @@ Respond with JSON:
       });
 
       const content = typeof response === 'string' ? response : (response as any).content || '';
-      
+
       // Try to parse JSON response
       try {
         const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -138,7 +138,7 @@ Respond with JSON:
           return Math.max(0, Math.min(1, result.score / 100)); // Normalize to 0-1
         }
       } catch (parseError) {
-        elizaLogger.warn(`[RACEEvaluator] Failed to parse JSON response for ${dimension}:`, parseError);
+        logger.warn(`[RACEEvaluator] Failed to parse JSON response for ${dimension}:`, parseError);
       }
 
       // Fallback: try to extract score from text
@@ -148,10 +148,10 @@ Respond with JSON:
         return Math.max(0, Math.min(1, score / 100));
       }
 
-      elizaLogger.error(`[RACEEvaluator] Failed to extract score for ${dimension}`);
+      logger.error(`[RACEEvaluator] Failed to extract score for ${dimension}`);
       return 0.5; // Default middle score
     } catch (e) {
-      elizaLogger.error(`[RACEEvaluator] Failed to evaluate ${dimension}:`, e);
+      logger.error(`[RACEEvaluator] Failed to evaluate ${dimension}:`, e);
       return 0.5; // Default middle score
     }
   }
@@ -205,7 +205,7 @@ export class FACTEvaluator {
   private async extractFactualClaims(project: ResearchProject): Promise<FactualClaim[]> {
     const claims: FactualClaim[] = [];
 
-    if (!project.report) return claims;
+    if (!project.report) {return claims;}
 
     // Extract claims from report sections
     for (const section of project.report.sections) {
@@ -259,9 +259,9 @@ Extract 3-5 key claims maximum.`;
     try {
       const response = await this.runtime.useModel(ModelType.TEXT_LARGE, {
         messages: [
-          { 
-            role: 'system', 
-            content: 'You are a fact extraction expert. Extract only clear, verifiable claims.' 
+          {
+            role: 'system',
+            content: 'You are a fact extraction expert. Extract only clear, verifiable claims.'
           },
           { role: 'user', content: prompt }
         ],
@@ -270,7 +270,7 @@ Extract 3-5 key claims maximum.`;
       });
 
       const content = typeof response === 'string' ? response : (response as any).content || '';
-      
+
       // Try to parse JSON array
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
@@ -289,9 +289,9 @@ Extract 3-5 key claims maximum.`;
         }));
       }
     } catch (e) {
-      elizaLogger.error('[FACTEvaluator] Failed to extract claims:', e);
+      logger.error('[FACTEvaluator] Failed to extract claims:', e);
     }
-    
+
     return [];
   }
 
@@ -319,7 +319,7 @@ Extract 3-5 key claims maximum.`;
     // 2. Check if the content supports the claim
     // For now, we'll use a simplified verification
 
-    if (!claim.sourceUrls || claim.sourceUrls.length === 0 || !claim.statement) return false;
+    if (!claim.sourceUrls || claim.sourceUrls.length === 0 || !claim.statement) {return false;}
 
     const prompt = `Does this evidence support the claim?
 
@@ -332,9 +332,9 @@ Answer with just "yes" or "no".`;
     try {
       const response = await this.runtime.useModel(ModelType.TEXT_LARGE, {
         messages: [
-          { 
-            role: 'system', 
-            content: 'You are a fact verifier. Answer only yes or no.' 
+          {
+            role: 'system',
+            content: 'You are a fact verifier. Answer only yes or no.'
           },
           { role: 'user', content: prompt }
         ],
@@ -345,7 +345,7 @@ Answer with just "yes" or "no".`;
       const answer = typeof response === 'string' ? response : (response as any).content || '';
       return answer.toLowerCase().includes('yes');
     } catch (e) {
-      elizaLogger.error('[FACTEvaluator] Failed to verify claim:', e);
+      logger.error('[FACTEvaluator] Failed to verify claim:', e);
       return false;
     }
   }

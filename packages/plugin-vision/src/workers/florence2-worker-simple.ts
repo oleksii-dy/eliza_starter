@@ -3,20 +3,20 @@ import sharp from 'sharp';
 
 export class Florence2WorkerModel {
   private initialized = false;
-  
+
   async initialize(): Promise<void> {
     this.initialized = true;
   }
-  
+
   async analyzeTile(tile: { data: Buffer; width: number; height: number }): Promise<Florence2Result> {
     // Simple analysis without TensorFlow
     const metadata = await sharp(tile.data).metadata();
     const stats = await sharp(tile.data).stats();
-    
+
     // Determine scene characteristics
     const brightness = (stats.channels[0].mean + stats.channels[1].mean + stats.channels[2].mean) / 3;
     const isLight = brightness > 180;
-    
+
     // Generate caption based on tile characteristics
     let caption = 'Screen region';
     if (metadata.width && metadata.height) {
@@ -26,16 +26,16 @@ export class Florence2WorkerModel {
         caption = 'Tall screen area';
       }
     }
-    
+
     if (isLight) {
       caption += ' with bright content';
     } else {
       caption += ' with dark content';
     }
-    
+
     // Detect potential UI elements based on color patterns
     const objects: Array<{ label: string; bbox: BoundingBox; confidence: number }> = [];
-    
+
     // Simple heuristic: if mostly uniform color, might be a UI element
     const colorVariance = stats.channels.reduce((sum, ch) => sum + ch.stdev, 0) / 3;
     if (colorVariance < 50) {
@@ -45,7 +45,7 @@ export class Florence2WorkerModel {
         confidence: 0.7,
       });
     }
-    
+
     return {
       caption,
       objects,
@@ -53,16 +53,16 @@ export class Florence2WorkerModel {
       tags: ['screen', 'ui'],
     };
   }
-  
+
   async analyzeImage(imageBuffer: Buffer): Promise<Florence2Result> {
     return this.analyzeTile({ data: imageBuffer, width: 0, height: 0 });
   }
-  
+
   isInitialized(): boolean {
     return this.initialized;
   }
-  
+
   async dispose(): Promise<void> {
     this.initialized = false;
   }
-} 
+}

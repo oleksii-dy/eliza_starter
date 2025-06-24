@@ -8,7 +8,6 @@ import type { GitManager } from './GitManager.js';
 import { JSDocValidator } from './JSDocValidator.js';
 import type { JsDocAnalyzer } from './JsDocAnalyzer.js';
 import type { JsDocGenerator } from './JsDocGenerator.js';
-import { PluginDocumentationGenerator } from './PluginDocumentationGenerator.js';
 import type { TypeScriptParser } from './TypeScriptParser.js';
 import type {
   ASTQueueItem,
@@ -116,7 +115,9 @@ export class DocumentationGenerator {
 
     // Process each TypeScript file
     for (const fileChange of fileChanges) {
-      if (fileChange.status === 'deleted') continue;
+      if (fileChange.status === 'deleted') {
+        continue;
+      }
 
       const filePath = this.configuration.toAbsolutePath(fileChange.filename);
       this.fileOffsets.set(filePath, 0);
@@ -209,7 +210,9 @@ export class DocumentationGenerator {
    * @param ast - The complete AST
    */
   private processNode(node: TSESTree.Node, filePath: string, ast: TSESTree.Program): void {
-    if (!this.jsDocAnalyzer.shouldHaveJSDoc(node)) return;
+    if (!this.jsDocAnalyzer.shouldHaveJSDoc(node)) {
+      return;
+    }
 
     // Process the main node
     const jsDocComment = this.jsDocAnalyzer.getJSDocComment(node, ast.comments || []);
@@ -319,7 +322,7 @@ export class DocumentationGenerator {
       const response = await fetch(contentsUrl);
       const data = await response.json();
       return Buffer.from(data.content, 'base64').toString('utf-8');
-    } catch (_error) {
+    } catch {
       console.error('Error fetching file content from GitHub API, ensure the PR has been merged');
       return '';
     }
@@ -429,7 +432,9 @@ export class DocumentationGenerator {
 
     for (const filePath of this.typeScriptFiles) {
       const ast = this.typeScriptParser.parse(filePath);
-      if (!ast) continue;
+      if (!ast) {
+        continue;
+      }
 
       const sourceCode = fs.readFileSync(filePath, 'utf-8');
 

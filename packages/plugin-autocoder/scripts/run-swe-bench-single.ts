@@ -15,7 +15,7 @@ const SHORT_TIMEOUT = 30000; // 30 seconds timeout
 
 async function runSingleInstance() {
   elizaLogger.info(`🚀 Running SWE-bench for single instance: ${INSTANCE_ID}`);
-  
+
   // Check for API key
   if (!process.env.ANTHROPIC_API_KEY) {
     elizaLogger.error('❌ ANTHROPIC_API_KEY not found in environment');
@@ -29,7 +29,7 @@ async function runSingleInstance() {
     logger: elizaLogger,
     getService: (name: string) => null
   } as unknown as IAgentRuntime;
-  
+
   // Create runner with short timeout and debug options
   const runner = new SWEBenchRunner(runtime, {
     work_dir: '.swe-bench-work-single',
@@ -46,7 +46,7 @@ async function runSingleInstance() {
 
   // Run with debug output
   elizaLogger.info(`⏱️  Running with ${SHORT_TIMEOUT/1000}s timeout...`);
-  
+
   const startTime = Date.now();
   const report = await runner.runBenchmark({
     instance_ids: [INSTANCE_ID],
@@ -59,23 +59,23 @@ async function runSingleInstance() {
 
   // Analyze results
   const result = report.results.per_instance_results[0];
-  
+
   elizaLogger.info('\n📊 Results:');
   elizaLogger.info(`  - Duration: ${(duration / 1000).toFixed(1)}s`);
   elizaLogger.info(`  - Resolved: ${result.resolved ? '✅' : '❌'}`);
   elizaLogger.info(`  - Tests Passed: ${result.tests_passed ? '✅' : '❌'}`);
   elizaLogger.info(`  - Compilation Success: ${result.compilation_success ? '✅' : '❌'}`);
   elizaLogger.info(`  - Error: ${result.error || 'None'}`);
-  
+
   // Save results
   const analysisDir = `swe-bench-analysis/single-${INSTANCE_ID.replace(/[^a-zA-Z0-9-_]/g, '-')}-${Date.now()}`;
   await fs.mkdir(analysisDir, { recursive: true });
-  
+
   await fs.writeFile(
     path.join(analysisDir, 'report.json'),
     JSON.stringify(report, null, 2)
   );
-  
+
   // Create summary
   const summary = `# SWE-bench Single Instance Analysis
 
@@ -100,7 +100,7 @@ async function runSingleInstance() {
   );
 
   elizaLogger.info(`\n📁 Results saved to: ${analysisDir}`);
-  
+
   // Check work directory for artifacts
   const artifactsDir = path.join('.swe-bench-work-single', 'artifacts', INSTANCE_ID);
   try {

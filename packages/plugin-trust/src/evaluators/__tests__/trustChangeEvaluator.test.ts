@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, mock, beforeEach, type Mock } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
 import { trustChangeEvaluator } from '../trustChangeEvaluator';
@@ -6,7 +6,7 @@ import { trustChangeEvaluator } from '../trustChangeEvaluator';
 const createMockRuntime = (): IAgentRuntime =>
   ({
     agentId: 'test-agent' as UUID,
-    getService: vi.fn()
+    getService: mock()
   } as any);
 
 const createMockMemory = (text: string, entityId: UUID): Memory =>
@@ -27,11 +27,11 @@ describe('trustChangeEvaluator', () => {
   beforeEach(() => {
     runtime = createMockRuntime();
     trustService = {
-      recordInteraction: vi.fn().mockResolvedValue({ success: true })
+      recordInteraction: mock().mockResolvedValue({ success: true })
     };
     (runtime.getService as unknown as Mock).mockImplementation((name: string) => {
-      if (name === 'trust-engine') return trustService;
-      if (name === 'llm-evaluator') return null; // No LLM evaluator for these tests
+      if (name === 'trust-engine') {return trustService;}
+      if (name === 'llm-evaluator') {return null;} // No LLM evaluator for these tests
       return null;
     });
   });
@@ -39,25 +39,25 @@ describe('trustChangeEvaluator', () => {
   it('should validate when trust service is available', async () => {
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
-    
+
     expect(await trustChangeEvaluator.validate(runtime, memory, state)).toBe(true);
   });
 
   it('should not validate when trust service is unavailable', async () => {
     (runtime.getService as unknown as Mock).mockReturnValue(null);
-    
+
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
-    
+
     expect(await trustChangeEvaluator.validate(runtime, memory, state)).toBe(false);
   });
 
   it('should analyze trust evidence and update trust', async () => {
     const memory = createMockMemory('Thank you for your help!', testEntityId);
     const state = {} as State;
-    
+
     const result = await trustChangeEvaluator.handler(runtime, memory, state);
-    
+
     expect(trustService.recordInteraction).toHaveBeenCalledWith(
       expect.objectContaining({
         sourceEntityId: testEntityId,
@@ -75,9 +75,9 @@ describe('trustChangeEvaluator', () => {
   it('should detect negative behaviors', async () => {
     const memory = createMockMemory('This is spam spam spam!', testEntityId);
     const state = {} as State;
-    
+
     const result = await trustChangeEvaluator.handler(runtime, memory, state);
-    
+
     expect(trustService.recordInteraction).toHaveBeenCalledWith(
       expect.objectContaining({
         sourceEntityId: testEntityId,
@@ -95,19 +95,19 @@ describe('trustChangeEvaluator', () => {
   it('should not update trust if no patterns match', async () => {
     const memory = createMockMemory('Hello, how are you?', testEntityId);
     const state = {} as State;
-    
+
     const result = await trustChangeEvaluator.handler(runtime, memory, state);
-    
+
     expect(trustService.recordInteraction).not.toHaveBeenCalled();
     expect(result).toBeNull();
   });
 
   it('should handle errors gracefully', async () => {
     trustService.recordInteraction.mockRejectedValue(new Error('Database error'));
-    
+
     const memory = createMockMemory('Thank you!', testEntityId);
     const state = {} as State;
-    
+
     // Should not throw
     const result = await trustChangeEvaluator.handler(runtime, memory, state);
     expect(result).toBeNull();

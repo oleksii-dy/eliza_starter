@@ -83,7 +83,7 @@ create_test_plugin() {
   },
   "devDependencies": {
     "tsup": "^8.0.0",
-    "typescript": "^5.3.0",
+    "typescript": "5.8.3",
     "vitest": "^1.0.0"
   },
   "peerDependencies": {

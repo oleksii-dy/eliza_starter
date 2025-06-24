@@ -1,16 +1,12 @@
 /**
  * @fileoverview Mock implementations for Service and related interfaces
- * 
+ *
  * This module provides comprehensive mock implementations for services,
  * supporting both unit and integration testing scenarios.
  */
 
-import { vi } from './vi-helper';
-import type {
-  Service,
-  ServiceTypeName,
-  IAgentRuntime,
-} from '../../types';
+import { mock } from './mock-utils';
+import type { Service, ServiceTypeName, IAgentRuntime } from '../../types';
 
 /**
  * Type representing overrides for Service mock creation
@@ -19,22 +15,22 @@ export type MockServiceOverrides = Partial<Service>;
 
 /**
  * Create a comprehensive mock Service with intelligent defaults
- * 
+ *
  * This function provides a fully-featured service mock that implements
  * the Service interface with sensible defaults and proper lifecycle methods.
- * 
+ *
  * @param serviceName - Name of the service
  * @param serviceType - Type/category of the service
  * @param overrides - Partial object to override specific methods or properties
  * @returns Complete mock Service implementation
- * 
+ *
  * @example
  * ```typescript
  * import { createMockService } from '@elizaos/core/test-utils';
- * import { vi } from './vi-helper';
- * 
+ * import { mock } from 'bun:test';
+ *
  * const mockService = createMockService('test-service', 'UNKNOWN', {
- *   someMethod: vi.fn().mockResolvedValue('custom result')
+ *   someMethod: mock().mockResolvedValue('custom result')
  * });
  * ```
  */
@@ -57,14 +53,14 @@ export function createMockService(
     },
 
     // Core lifecycle methods
-    stop: vi.fn().mockResolvedValue(undefined),
+    stop: mock().mockResolvedValue(undefined),
 
     // Common service methods that might be implemented
-    start: vi.fn().mockResolvedValue(undefined),
-    initialize: vi.fn().mockResolvedValue(undefined),
-    isReady: vi.fn().mockReturnValue(true),
-    getStatus: vi.fn().mockReturnValue('active'),
-    restart: vi.fn().mockResolvedValue(undefined),
+    start: mock().mockResolvedValue(undefined),
+    initialize: mock().mockResolvedValue(undefined),
+    isReady: mock().mockReturnValue(true),
+    getStatus: mock().mockReturnValue('active'),
+    restart: mock().mockResolvedValue(undefined),
 
     // Runtime property (protected in Service class, but needed for mocks)
     runtime: null,
@@ -78,7 +74,7 @@ export function createMockService(
 
 /**
  * Create a mock database service
- * 
+ *
  * @param overrides - Service-specific overrides
  * @returns Mock database service
  */
@@ -91,7 +87,7 @@ export function createMockDatabaseService(overrides: MockServiceOverrides = {}):
 
 /**
  * Create a mock cache service
- * 
+ *
  * @param overrides - Service-specific overrides
  * @returns Mock cache service
  */
@@ -106,7 +102,7 @@ export function createMockCacheService(overrides: MockServiceOverrides = {}): Se
 
 /**
  * Create a mock HTTP service
- * 
+ *
  * @param overrides - Service-specific overrides
  * @returns Mock HTTP service
  */
@@ -119,7 +115,7 @@ export function createMockHttpService(overrides: MockServiceOverrides = {}): Ser
 
 /**
  * Create a mock blockchain service
- * 
+ *
  * @param overrides - Service-specific overrides
  * @returns Mock blockchain service
  */
@@ -132,7 +128,7 @@ export function createMockBlockchainService(overrides: MockServiceOverrides = {}
 
 /**
  * Create a mock AI model service
- * 
+ *
  * @param overrides - Service-specific overrides
  * @returns Mock AI model service
  */
@@ -145,7 +141,7 @@ export function createMockModelService(overrides: MockServiceOverrides = {}): Se
 
 /**
  * Create a mock messaging service
- * 
+ *
  * @param overrides - Service-specific overrides
  * @returns Mock messaging service
  */
@@ -158,15 +154,17 @@ export function createMockMessagingService(overrides: MockServiceOverrides = {})
 
 /**
  * Create a service map with multiple mock services
- * 
+ *
  * @param services - Array of service configurations
  * @returns Map of service names to mock services
  */
-export function createMockServiceMap(services: Array<{
-  name: string;
-  type?: ServiceTypeName;
-  overrides?: MockServiceOverrides;
-}> = []): Map<string, Service> {
+export function createMockServiceMap(
+  services: Array<{
+    name: string;
+    type?: ServiceTypeName;
+    overrides?: MockServiceOverrides;
+  }> = []
+): Map<string, Service> {
   const serviceMap = new Map<string, Service>();
 
   // Default services if none provided
@@ -188,7 +186,7 @@ export function createMockServiceMap(services: Array<{
 
 /**
  * Create a mock service registry for runtime
- * 
+ *
  * @param runtime - Mock runtime instance
  * @param services - Services to register
  * @returns Updated runtime with registered services
@@ -202,13 +200,13 @@ export function registerMockServices(
   }> = []
 ): any {
   const serviceMap = createMockServiceMap(services);
-  
+
   // Update runtime's getService method to return from the service map
-  runtime.getService = vi.fn().mockImplementation((serviceName: string) => {
+  runtime.getService = mock().mockImplementation((serviceName: string) => {
     return serviceMap.get(serviceName) || null;
   });
 
   runtime.services = serviceMap;
-  
+
   return runtime;
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'bun:test';
 import { hyperfyProvider } from '../../providers/world';
 import { createMockRuntime, createMockWorld, createMockHyperfyService } from '../test-utils';
 
@@ -10,13 +10,13 @@ describe('HYPERFY_WORLD_STATE Provider - Simple Tests', () => {
   let mockState: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
     mockWorld = createMockWorld();
 
     // Add mock message manager
     const mockMessageManager = {
-      getRecentMessages: vi.fn().mockResolvedValue({
+      getRecentMessages: mock().mockResolvedValue({
         formattedHistory: 'No messages yet',
         lastResponseText: '',
         lastActions: [],
@@ -24,13 +24,13 @@ describe('HYPERFY_WORLD_STATE Provider - Simple Tests', () => {
     };
 
     mockService = createMockHyperfyService();
-    mockService.isConnected = vi.fn().mockReturnValue(true);
-    mockService.getWorld = vi.fn().mockReturnValue(mockWorld);
-    mockService.getMessageManager = vi.fn().mockReturnValue(mockMessageManager);
+    mockService.isConnected = mock().mockReturnValue(true);
+    mockService.getWorld = mock().mockReturnValue(mockWorld);
+    mockService.getMessageManager = mock().mockReturnValue(mockMessageManager);
     mockService.currentWorldId = 'test-world-123';
 
-    mockRuntime.getService = vi.fn().mockReturnValue(mockService);
-    mockRuntime.getEntityById = vi.fn().mockResolvedValue(null);
+    mockRuntime.getService = mock().mockReturnValue(mockService);
+    mockRuntime.getEntityById = mock().mockResolvedValue(null);
 
     mockMessage = {
       id: 'msg-123',

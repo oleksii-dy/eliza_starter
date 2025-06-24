@@ -1,20 +1,20 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test';
 import { displayAgent, logHeader } from '../../../src/utils/helpers';
 import type { Agent } from '@elizaos/core';
 import colors from 'yoctocolors';
 
 // Mock dependencies
-vi.mock('@elizaos/core', () => ({
+mock.module('@elizaos/core', () => ({
   logger: {
-    info: vi.fn(),
-    error: vi.fn(),
+    info: mock(),
+    error: mock(),
   },
 }));
 
-vi.mock('yoctocolors', () => ({
+mock.module('yoctocolors', () => ({
   default: {
-    green: vi.fn((text) => text),
-    cyan: vi.fn((text) => text),
+    green: mock((text) => text),
+    cyan: mock((text) => text),
   },
 }));
 
@@ -22,14 +22,14 @@ describe('helpers', () => {
   let consoleSpy: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     // Create console spy in beforeEach
-    consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleSpy = spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {
     consoleSpy.mockRestore();
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   describe('displayAgent', () => {
@@ -227,8 +227,8 @@ describe('helpers', () => {
       logHeader('A Very Long Title That Should Have A Long Border');
 
       // Check that green was called with border characters
-      const greenCalls = vi.mocked(colors.green).mock.calls;
-      const borderCalls = greenCalls.filter((call) => call[0].includes('─'));
+      const greenCalls = (colors.green as any).mock.calls;
+      const borderCalls = greenCalls.filter((call: any[]) => call[0].includes('─'));
 
       expect(borderCalls.length).toBeGreaterThan(0);
     });

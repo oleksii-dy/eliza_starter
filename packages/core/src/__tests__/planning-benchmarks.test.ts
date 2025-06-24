@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll } from 'bun:test';
 import { v4 as uuidv4 } from 'uuid';
 import { AgentRuntime } from '../runtime';
 import {

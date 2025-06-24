@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
-import { 
-  AgentRuntime, 
-  type UUID, 
+import {
+  AgentRuntime,
+  type UUID,
   type IAgentRuntime,
-  ChannelType 
+  ChannelType
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { createIsolatedTestDatabase } from '../test-helpers';
@@ -11,7 +11,7 @@ import type { PgDatabaseAdapter } from '../../pg/adapter';
 
 /**
  * PostgreSQL-Specific Production Tests
- * 
+ *
  * These tests only run when POSTGRES_URL is available and validate:
  * - PostgreSQL-specific features and performance
  * - Schema migrations and constraints
@@ -36,7 +36,7 @@ describe('PostgreSQL Production Validation', () => {
     }
 
     console.log('[PostgreSQL TESTS] Setting up PostgreSQL production test environment...');
-    
+
     const setup = await createIsolatedTestDatabase(
       `postgresql_production_${Date.now()}`,
       []
@@ -46,7 +46,7 @@ describe('PostgreSQL Production Validation', () => {
     runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-    
+
     console.log('[PostgreSQL TESTS] PostgreSQL production test environment ready');
   }, 60000); // Extended timeout for PostgreSQL setup
 
@@ -60,7 +60,7 @@ describe('PostgreSQL Production Validation', () => {
     it.skipIf(!isPostgreSQLAvailable)('should validate vector extension functionality', async () => {
       const roomId = uuidv4() as UUID;
       const entityId = uuidv4() as UUID;
-      
+
       await runtime.createRoom({
         id: roomId,
         name: 'Vector Test Room',
@@ -79,16 +79,16 @@ describe('PostgreSQL Production Validation', () => {
       const vectorSize = 1536; // OpenAI embedding size
       const memories = Array.from({ length: 50 }, (_, i) => ({
         id: uuidv4() as UUID,
-        entityId: entityId,
+        entityId,
         agentId: testAgentId,
-        roomId: roomId,
+        roomId,
         content: {
           text: `Vector test memory ${i} with content for semantic search validation`,
           source: 'vector-test',
           type: 'message',
         },
         embedding: Array(vectorSize).fill(0).map(() => Math.random() * 2 - 1), // Random values between -1 and 1
-        metadata: { 
+        metadata: {
           type: 'message',
           vectorTest: true,
           index: i,
@@ -103,10 +103,10 @@ describe('PostgreSQL Production Validation', () => {
 
       // Test vector search with various similarity thresholds
       const searchEmbedding = Array(vectorSize).fill(0).map(() => Math.random() * 2 - 1);
-      
+
       const searchResults = await runtime.searchMemories({
         embedding: searchEmbedding,
-        roomId: roomId,
+        roomId,
         count: 20,
         match_threshold: 0.0, // Very low threshold to get results
         tableName: 'messages',
@@ -141,11 +141,11 @@ describe('PostgreSQL Production Validation', () => {
       console.log(`[PostgreSQL CONCURRENCY] Testing ${concurrentOps} concurrent operations...`);
 
       const startTime = Date.now();
-      
+
       // Create heavy concurrent load with complex operations
       const promises = Array.from({ length: concurrentOps }, async (_, i) => {
         const entityId = uuidv4() as UUID;
-        
+
         // Create entity with large metadata
         await runtime.createEntity({
           id: entityId,
@@ -166,9 +166,9 @@ describe('PostgreSQL Production Validation', () => {
         // Create memory with embedding
         await runtime.createMemory({
           id: uuidv4() as UUID,
-          entityId: entityId,
+          entityId,
           agentId: testAgentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: `PostgreSQL concurrent memory ${i} with substantial content for testing`,
             source: 'postgresql-concurrency',
@@ -186,9 +186,9 @@ describe('PostgreSQL Production Validation', () => {
         // Create component
         await runtime.createComponent({
           id: uuidv4() as UUID,
-          entityId: entityId,
+          entityId,
           agentId: testAgentId,
-          roomId: roomId,
+          roomId,
           worldId: uuidv4() as UUID,
           sourceEntityId: testAgentId,
           type: 'postgresql_test',
@@ -227,7 +227,7 @@ describe('PostgreSQL Production Validation', () => {
     it.skipIf(!isPostgreSQLAvailable)('should validate PostgreSQL schema constraints', async () => {
       // Test PostgreSQL-specific constraints and features
       const entityId = uuidv4() as UUID;
-      
+
       await runtime.createEntity({
         id: entityId,
         names: ['PostgreSQL Schema Test'],
@@ -237,7 +237,7 @@ describe('PostgreSQL Production Validation', () => {
       // Test foreign key constraints
       const memoryWithValidFK = await runtime.createMemory({
         id: uuidv4() as UUID,
-        entityId: entityId, // Valid entity reference
+        entityId, // Valid entity reference
         agentId: testAgentId,
         roomId: uuidv4() as UUID,
         content: {
@@ -254,7 +254,7 @@ describe('PostgreSQL Production Validation', () => {
       // Test constraint validation with complex data
       const complexMemory = await runtime.createMemory({
         id: uuidv4() as UUID,
-        entityId: entityId,
+        entityId,
         agentId: testAgentId,
         roomId: uuidv4() as UUID,
         content: {
@@ -269,7 +269,7 @@ describe('PostgreSQL Production Validation', () => {
             },
           },
         },
-        metadata: { 
+        metadata: {
           type: 'message',
           complexTest: true,
           unicode: '🎯',
@@ -292,7 +292,7 @@ describe('PostgreSQL Production Validation', () => {
     it.skipIf(!isPostgreSQLAvailable)('should handle large-scale PostgreSQL operations', async () => {
       const largeScale = 2000; // Much larger scale for PostgreSQL
       const roomId = uuidv4() as UUID;
-      
+
       await runtime.createRoom({
         id: roomId,
         name: 'Large Scale PostgreSQL Test',
@@ -314,14 +314,14 @@ describe('PostgreSQL Production Validation', () => {
         const batchPromises = Array.from({ length: batch }, async (_, j) => {
           const index = i + j;
           const entityId = uuidv4() as UUID;
-          
+
           await runtime.createEntity({
             id: entityId,
             names: [`Large Scale Entity ${index}`],
             agentId: testAgentId,
             metadata: {
               largeScale: true,
-              index: index,
+              index,
               batchNumber: Math.floor(i / batchSize),
             },
           });
@@ -346,7 +346,7 @@ describe('PostgreSQL Production Validation', () => {
       const relationshipPromises = Array.from({ length: Math.min(500, entityIds.length - 1) }, (_, i) => {
         const sourceId = entityIds[i];
         const targetId = entityIds[i + 1];
-        
+
         return runtime.createRelationship({
           sourceEntityId: sourceId,
           targetEntityId: targetId,
@@ -419,12 +419,12 @@ describe('PostgreSQL Production Validation', () => {
 
       console.log(`[PostgreSQL BENCHMARK] Creating ${memoryCount} memories with embeddings...`);
 
-      const memoryPromises = Array.from({ length: memoryCount }, (_, i) => 
+      const memoryPromises = Array.from({ length: memoryCount }, (_, i) =>
         runtime.createMemory({
           id: uuidv4() as UUID,
-          entityId: entityId,
+          entityId,
           agentId: testAgentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: `PostgreSQL benchmark memory ${i} with sufficient content for realistic testing scenarios`,
             source: 'postgresql-benchmark',
@@ -453,7 +453,7 @@ describe('PostgreSQL Production Validation', () => {
       // Benchmark query performance
       const queryStartTime = Date.now();
       const allMemories = await runtime.getMemories({
-        roomId: roomId,
+        roomId,
         count: memoryCount,
         tableName: 'messages',
       });
@@ -467,7 +467,7 @@ describe('PostgreSQL Production Validation', () => {
       const searchStartTime = Date.now();
       const searchResults = await runtime.searchMemories({
         embedding: Array(1536).fill(0).map(() => Math.random()),
-        roomId: roomId,
+        roomId,
         count: 50,
         match_threshold: 0.1,
         tableName: 'messages',

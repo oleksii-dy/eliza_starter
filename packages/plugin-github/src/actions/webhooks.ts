@@ -6,7 +6,6 @@ import {
   type HandlerCallback,
   logger,
   ModelType,
-  ITunnelService,
 } from '@elizaos/core';
 import { GitHubService } from '../services/github';
 import { z } from 'zod';
@@ -121,7 +120,7 @@ export const createWebhookAction: Action = {
   ): Promise<void> {
     try {
       const githubService = runtime.getService<GitHubService>('github');
-      const tunnelService = runtime.getService<ITunnelService>('tunnel');
+      const tunnelService = runtime.getService('tunnel') as any;
 
       if (!githubService) {
         throw new Error('GitHub service is not available');
@@ -254,7 +253,9 @@ The webhook has been tested with a ping and is ready to receive events.`,
 
       // Update state
       if (!state.data?.github) {
-        if (!state.data) state!.data = {};
+        if (!state.data) {
+          state!.data = {};
+        }
         state!.data.github = {};
       }
       state!.data.github.lastWebhook = {
@@ -376,7 +377,9 @@ export const listWebhooksAction: Action = {
 
       // Update state
       if (!state.data?.github) {
-        if (!state.data) state!.data = {};
+        if (!state.data) {
+          state!.data = {};
+        }
         state!.data.github = {};
       }
       state!.data.github.lastWebhooks = webhooks;

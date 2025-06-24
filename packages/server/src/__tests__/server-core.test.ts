@@ -54,7 +54,9 @@ describe('Server Core Functionality', () => {
   describe('Request Validation', () => {
     it('should validate agent IDs', () => {
       const isValidAgentId = (id: string): boolean => {
-        if (!id || typeof id !== 'string') return false;
+        if (!id || typeof id !== 'string') {
+          return false;
+        }
 
         // UUID pattern validation
         const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -181,7 +183,9 @@ describe('Server Core Functionality', () => {
 
     it('should validate API key format', () => {
       const isValidApiKey = (key: string): boolean => {
-        if (!key || typeof key !== 'string') return false;
+        if (!key || typeof key !== 'string') {
+          return false;
+        }
 
         // Should be at least 32 characters and contain only alphanumeric and dashes
         const keyPattern = /^[a-zA-Z0-9-_]{32,}$/;

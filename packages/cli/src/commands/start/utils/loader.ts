@@ -70,7 +70,9 @@ export async function loadCharacter(filePath: string): Promise<Character> {
 export async function loadCharacterTryPath(characterPath: string): Promise<Character> {
   if ((serverLoader as any).loadCharacterTryPath) {
     const result = await (serverLoader as any).loadCharacterTryPath(characterPath);
-    if (result) return result;
+    if (result) {
+      return result;
+    }
   }
 
   // Fallback to default character if loader fails

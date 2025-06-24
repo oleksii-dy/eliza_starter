@@ -194,7 +194,7 @@ export default {
     logger.log('Starting TRANSFER handler...');
 
     const transferPrompt = composePromptFromState({
-      state: state,
+      state,
       template: transferTemplate,
     });
 

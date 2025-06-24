@@ -13,7 +13,7 @@ import {
   arbitrumSepolia,
 } from 'viem/chains';
 import { type IAgentRuntime, ModelType } from '@elizaos/core';
-import { vi } from 'vitest';
+import { mock  } from 'bun:test';
 
 // ========== CHAIN CONFIGURATIONS ==========
 
@@ -112,14 +112,14 @@ export const MAINNET_TOKENS = {
 
 export const TESTNET_GOVERNORS = {
   sepolia: {
-    governor: ('0x' + '1'.repeat(40)) as Address,
-    timelock: ('0x' + '2'.repeat(40)) as Address,
-    token: ('0x' + '3'.repeat(40)) as Address,
+    governor: `0x${'1'.repeat(40)}` as Address,
+    timelock: `0x${'2'.repeat(40)}` as Address,
+    token: `0x${'3'.repeat(40)}` as Address,
   },
   baseSepolia: {
-    governor: ('0x' + '4'.repeat(40)) as Address,
-    timelock: ('0x' + '5'.repeat(40)) as Address,
-    token: ('0x' + '6'.repeat(40)) as Address,
+    governor: `0x${'4'.repeat(40)}` as Address,
+    timelock: `0x${'5'.repeat(40)}` as Address,
+    token: `0x${'6'.repeat(40)}` as Address,
   },
 } as const;
 
@@ -256,7 +256,7 @@ export function getTestnetRpcUrl(chain: keyof typeof testnetChains): string {
 
 export function getTokenInfo(
   chain: keyof typeof MAINNET_TOKENS,
-  symbol: string
+  symbol: string,
 ): Address | undefined {
   const tokens = MAINNET_TOKENS[chain];
   return tokens?.[symbol as keyof typeof tokens];
@@ -264,7 +264,7 @@ export function getTokenInfo(
 
 export function estimateTestCosts(
   gasPrice: bigint,
-  ethPrice: number
+  ethPrice: number,
 ): {
   transfer: string;
   swap: string;
@@ -298,7 +298,7 @@ export const testPrivateKey =
 
 export function createMockRuntime(): IAgentRuntime {
   // Mock getSetting to return proper test values
-  const mockGetSetting = vi.fn().mockImplementation((key: string) => {
+  const mockGetSetting = mock().mockImplementation((key: string) => {
     const settings: Record<string, string> = {
       EVM_PRIVATE_KEY: testPrivateKey,
       WALLET_DATABASE_URL: 'sqlite::memory:',
@@ -345,15 +345,15 @@ export function createMockRuntime(): IAgentRuntime {
 
   // Mock cache implementation
   const mockCache = new Map<string, any>();
-  const mockGetCache = vi.fn().mockImplementation(async (key: string) => {
+  const mockGetCache = mock().mockImplementation(async (key: string) => {
     return mockCache.get(key);
   });
 
-  const mockSetCache = vi.fn().mockImplementation(async (key: string, value: any) => {
+  const mockSetCache = mock().mockImplementation(async (key: string, value: any) => {
     mockCache.set(key, value);
   });
 
-  const mockDeleteCache = vi.fn().mockImplementation(async (key: string) => {
+  const mockDeleteCache = mock().mockImplementation(async (key: string) => {
     return mockCache.delete(key);
   });
 
@@ -367,24 +367,24 @@ export function createMockRuntime(): IAgentRuntime {
     services: new Map(),
     events: new Map(),
     routes: [],
-    getPlugin: vi.fn(),
-    getProvider: vi.fn(),
-    getService: vi.fn(),
-    registerAction: vi.fn(),
-    registerEvaluator: vi.fn(),
-    registerProvider: vi.fn(),
-    registerService: vi.fn(),
-    registerPlugin: vi.fn(),
-    unregisterAction: vi.fn(),
-    unregisterEvaluator: vi.fn(),
-    unregisterProvider: vi.fn(),
-    unregisterService: vi.fn(),
-    buildActionInstruction: vi.fn(),
-    buildMessageInstruction: vi.fn(),
-    processActions: vi.fn(),
-    evaluate: vi.fn(),
-    ensureConnection: vi.fn(),
-    useModel: vi.fn().mockResolvedValue(''),
+    getPlugin: mock(),
+    getProvider: mock(),
+    getService: mock(),
+    registerAction: mock(),
+    registerEvaluator: mock(),
+    registerProvider: mock(),
+    registerService: mock(),
+    registerPlugin: mock(),
+    unregisterAction: mock(),
+    unregisterEvaluator: mock(),
+    unregisterProvider: mock(),
+    unregisterService: mock(),
+    buildActionInstruction: mock(),
+    buildMessageInstruction: mock(),
+    processActions: mock(),
+    evaluate: mock(),
+    ensureConnection: mock(),
+    useModel: mock().mockResolvedValue(''),
     getSetting: mockGetSetting,
 
     // Cache methods
@@ -393,15 +393,15 @@ export function createMockRuntime(): IAgentRuntime {
     deleteCache: mockDeleteCache,
 
     // Memory methods
-    createMemory: vi.fn().mockResolvedValue('memory-id'),
-    getMemories: vi.fn().mockResolvedValue([]),
-    searchMemories: vi.fn().mockResolvedValue([]),
-    updateMemory: vi.fn().mockResolvedValue(true),
-    deleteMemory: vi.fn().mockResolvedValue(true),
+    createMemory: mock().mockResolvedValue('memory-id'),
+    getMemories: mock().mockResolvedValue([]),
+    searchMemories: mock().mockResolvedValue([]),
+    updateMemory: mock().mockResolvedValue(true),
+    deleteMemory: mock().mockResolvedValue(true),
 
     // Additional methods
-    processMessage: vi.fn().mockResolvedValue(true),
-    handleMessage: vi.fn().mockResolvedValue(true),
+    processMessage: mock().mockResolvedValue(true),
+    handleMessage: mock().mockResolvedValue(true),
 
     character: {
       name: 'Test Agent',
@@ -435,19 +435,19 @@ export function createMockRuntime(): IAgentRuntime {
     },
     databaseAdapter: {} as any,
     token: 'test-token',
-    fetch: vi.fn(),
+    fetch: mock(),
     bun: {} as any,
     logger: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      debug: mock(),
     } as any,
     cacheManager: {} as any,
-    getConversationLength: vi.fn(),
-    processGoal: vi.fn(),
-    updateRecentMessageState: vi.fn(),
-    composeState: vi.fn().mockResolvedValue({
+    getConversationLength: mock(),
+    processGoal: mock(),
+    updateRecentMessageState: mock(),
+    composeState: mock().mockResolvedValue({
       values: {},
       data: {},
       text: '',

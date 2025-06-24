@@ -11,7 +11,7 @@ import {
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { PluginManagerService } from '../../services/pluginManagerService.ts';
 
 // Mock database adapter since we don't need a real DB for plugin tests
@@ -23,7 +23,7 @@ class MockDatabaseAdapter {
     return [];
   }
   async createMemory() {
-    return;
+
   }
   async getMemoriesByRoomIds() {
     return [];
@@ -35,10 +35,10 @@ class MockDatabaseAdapter {
     return [];
   }
   async createConversation() {
-    return;
+
   }
   async saveMemory() {
-    return;
+
   }
 }
 

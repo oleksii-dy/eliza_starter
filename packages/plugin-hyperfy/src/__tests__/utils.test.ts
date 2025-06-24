@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import {
   calculateDistance3D,
   isWithinRange,
@@ -7,7 +7,7 @@ import {
   formatEntity,
   isInteractableEntity,
   generateAvatarConfig,
-  formatPhysicsData
+  formatPhysicsData,
 } from '../utils';
 
 describe('Hyperfy Utility Functions', () => {
@@ -40,15 +40,14 @@ describe('Hyperfy Utility Functions', () => {
   });
 
   describe('randomPositionInRadius', () => {
-        it('should generate position within specified radius', () => {
+    it('should generate position within specified radius', () => {
       const center = { x: 0, y: 0, z: 0 };
       const radius = 10;
       const position = randomPositionInRadius(center, radius);
 
       // Only check X and Z distance (not Y, as Y is height)
       const horizontalDistance = Math.sqrt(
-        Math.pow(position.x - center.x, 2) + 
-        Math.pow(position.z - center.z, 2)
+        Math.pow(position.x - center.x, 2) + Math.pow(position.z - center.z, 2)
       );
       expect(horizontalDistance).toBeLessThanOrEqual(radius);
     });
@@ -56,7 +55,7 @@ describe('Hyperfy Utility Functions', () => {
     it('should respect height constraints', () => {
       const center = { x: 0, y: 0, z: 0 };
       const position = randomPositionInRadius(center, 10, 5, 15);
-      
+
       expect(position.y).toBeGreaterThanOrEqual(5);
       expect(position.y).toBeLessThanOrEqual(15);
     });
@@ -84,9 +83,9 @@ describe('Hyperfy Utility Functions', () => {
         name: 'Test Entity',
         position: { x: 1.5, y: 2.5, z: 3.5 },
         type: 'object',
-        distance: 5.75
+        distance: 5.75,
       };
-      
+
       const formatted = formatEntity(entity);
       expect(formatted).toContain('Entity: Test Entity');
       expect(formatted).toContain('Position: (1.50, 2.50, 3.50)');
@@ -126,7 +125,7 @@ describe('Hyperfy Utility Functions', () => {
         position: { x: 0, y: 0, z: 0 },
         rotation: { x: 0, y: 0, z: 0 },
         vrm: true,
-        animations: true
+        animations: true,
       });
     });
 
@@ -134,9 +133,9 @@ describe('Hyperfy Utility Functions', () => {
       const config = generateAvatarConfig('avatar.vrm', {
         scale: 1.2,
         position: { x: 5, y: 0, z: 5 },
-        rotation: { x: 0, y: 180, z: 0 }
+        rotation: { x: 0, y: 180, z: 0 },
       });
-      
+
       expect(config.scale).toBe(1.2);
       expect(config.position).toEqual({ x: 5, y: 0, z: 5 });
       expect(config.rotation).toEqual({ x: 0, y: 180, z: 0 });
@@ -148,9 +147,9 @@ describe('Hyperfy Utility Functions', () => {
       const physicsData = {
         velocity: { x: 3, y: 0, z: 4 },
         mass: 75,
-        grounded: true
+        grounded: true,
       };
-      
+
       const formatted = formatPhysicsData(physicsData);
       expect(formatted).toContain('Speed: 5.00 m/s');
       expect(formatted).toContain('Mass: 75 kg');
@@ -163,4 +162,4 @@ describe('Hyperfy Utility Functions', () => {
       expect(formatted).toBe('Grounded: No');
     });
   });
-}); 
+});

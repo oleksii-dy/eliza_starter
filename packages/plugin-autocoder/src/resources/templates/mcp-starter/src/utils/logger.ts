@@ -25,7 +25,7 @@ export function createLogger(prefix: string = 'MCP'): Logger {
   };
 
   const log = (level: LogLevel, message: string, ...args: any[]) => {
-    if (!shouldLog(level)) return;
+    if (!shouldLog(level)) {return;}
 
     const timestamp = new Date().toISOString();
     const formattedMessage = `[${timestamp}] [${prefix}] [${level.toUpperCase()}] ${message}`;

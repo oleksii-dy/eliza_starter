@@ -77,7 +77,7 @@ class ProductionDatabaseService extends Service {
       pool: 'primary',
     });
     this.connections.set('read-replica', {
-      host: this.dbUrl + '-replica',
+      host: `${this.dbUrl}-replica`,
       status: 'connected',
       queries: 0,
       connectionTime: Date.now(),
@@ -572,9 +572,9 @@ const productionSystemProvider: Provider = {
         services: {
           database: dbService
             ? {
-                ...dbService.getConnectionStats(),
-                auditLogSize: dbService.getAuditLog().length,
-              }
+              ...dbService.getConnectionStats(),
+              auditLogSize: dbService.getAuditLog().length,
+            }
             : { status: 'not_available' },
           cache: cacheService ? cacheService.getStats() : { status: 'not_available' },
         },
@@ -663,10 +663,10 @@ ${systemStats.services.cache.cacheSize !== undefined ? `   ├─ Cache Size: ${
   },
 
   determineAlertLevel(healthScore: number): string {
-    if (healthScore >= 90) return 'EXCELLENT';
-    if (healthScore >= 75) return 'GOOD';
-    if (healthScore >= 60) return 'WARNING';
-    if (healthScore >= 40) return 'CRITICAL';
+    if (healthScore >= 90) {return 'EXCELLENT';}
+    if (healthScore >= 75) {return 'GOOD';}
+    if (healthScore >= 60) {return 'WARNING';}
+    if (healthScore >= 40) {return 'CRITICAL';}
     return 'EMERGENCY';
   },
 };
@@ -718,9 +718,9 @@ const productionPerformanceEvaluator: Evaluator = {
         services: {
           database: dbService
             ? {
-                stats: dbService.getConnectionStats(),
-                auditLog: dbService.getAuditLog().slice(-5), // Last 5 transactions
-              }
+              stats: dbService.getConnectionStats(),
+              auditLog: dbService.getAuditLog().slice(-5), // Last 5 transactions
+            }
             : null,
           cache: cacheService ? cacheService.getStats() : null,
         },
@@ -759,10 +759,10 @@ const productionPerformanceEvaluator: Evaluator = {
               messageProcessingTime: metrics.performance.messageProcessingTime,
               systemLoad: metrics.performance.systemLoad,
               memoryUtilization:
-                (
+                `${(
                   (metrics.runtime.memoryUsage.heapUsed / metrics.runtime.memoryUsage.heapTotal) *
                   100
-                ).toFixed(1) + '%',
+                ).toFixed(1)}%`,
             },
           },
           null,
@@ -948,11 +948,11 @@ const productionPerformanceEvaluator: Evaluator = {
     analysis.healthScore = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
 
     // Assign grade
-    if (analysis.healthScore >= 90) analysis.grade = 'A';
-    else if (analysis.healthScore >= 80) analysis.grade = 'B';
-    else if (analysis.healthScore >= 70) analysis.grade = 'C';
-    else if (analysis.healthScore >= 60) analysis.grade = 'D';
-    else analysis.grade = 'F';
+    if (analysis.healthScore >= 90) {analysis.grade = 'A';}
+    else if (analysis.healthScore >= 80) {analysis.grade = 'B';}
+    else if (analysis.healthScore >= 70) {analysis.grade = 'C';}
+    else if (analysis.healthScore >= 60) {analysis.grade = 'D';}
+    else {analysis.grade = 'F';}
 
     return analysis;
   },
@@ -1210,14 +1210,14 @@ export async function testProductionPluginConfiguration(runtime: IAgentRuntime):
     const dbService = runtime.getService('prod-database-service') as ProductionDatabaseService;
     const cacheService = runtime.getService('prod-cache-service') as ProductionCacheService;
 
-    if (!dbService) throw new Error('ProductionDatabaseService not found');
-    if (!cacheService) throw new Error('ProductionCacheService not found');
+    if (!dbService) {throw new Error('ProductionDatabaseService not found');}
+    if (!cacheService) {throw new Error('ProductionCacheService not found');}
 
     const dbStats = dbService.getConnectionStats();
     const cacheStats = cacheService.getStats();
 
-    if (!dbStats.isStarted) throw new Error('ProductionDatabaseService not started');
-    if (cacheStats.cacheSize === undefined) throw new Error('ProductionCacheService not started');
+    if (!dbStats.isStarted) {throw new Error('ProductionDatabaseService not started');}
+    if (cacheStats.cacheSize === undefined) {throw new Error('ProductionCacheService not started');}
 
     console.log('✅ Test 1 passed: Production services started with real connection management');
 
@@ -1225,7 +1225,7 @@ export async function testProductionPluginConfiguration(runtime: IAgentRuntime):
     console.log('🔍 Test 2: Test production database operations with full transaction support');
 
     const queryAction = runtime.actions.find((a) => a.name === 'PROD_QUERY_DATABASE');
-    if (!queryAction) throw new Error('PROD_QUERY_DATABASE action not found');
+    if (!queryAction) {throw new Error('PROD_QUERY_DATABASE action not found');}
 
     const testMessage = {
       id: 'prod-test-msg-1',
@@ -1237,11 +1237,11 @@ export async function testProductionPluginConfiguration(runtime: IAgentRuntime):
     };
 
     const isValid = await queryAction.validate(runtime, testMessage);
-    if (!isValid) throw new Error('Production action validation failed');
+    if (!isValid) {throw new Error('Production action validation failed');}
 
     const result = await queryAction.handler(runtime, testMessage);
-    if (!result || !result.text) throw new Error('Production action execution failed');
-    if (!result.data?.queryResults) throw new Error('Production query did not return results');
+    if (!result || !result.text) {throw new Error('Production action execution failed');}
+    if (!result.data?.queryResults) {throw new Error('Production query did not return results');}
 
     console.log('✅ Test 2 passed: Production database operations with transactions working');
 
@@ -1249,15 +1249,15 @@ export async function testProductionPluginConfiguration(runtime: IAgentRuntime):
     console.log('🔍 Test 3: Test comprehensive production system monitoring');
 
     const systemProvider = runtime.providers.find((p) => p.name === 'PROD_SYSTEM_STATS');
-    if (!systemProvider) throw new Error('PROD_SYSTEM_STATS provider not found');
+    if (!systemProvider) {throw new Error('PROD_SYSTEM_STATS provider not found');}
 
     const providerResult = await systemProvider.get(runtime, testMessage);
     if (!providerResult || !providerResult.text)
-      throw new Error('Production provider execution failed');
+    {throw new Error('Production provider execution failed');}
     if (!providerResult.values?.systemStats)
-      throw new Error('Production provider did not return system stats');
+    {throw new Error('Production provider did not return system stats');}
     if (typeof providerResult.values.healthScore !== 'number')
-      throw new Error('Production provider did not calculate health score');
+    {throw new Error('Production provider did not calculate health score');}
 
     console.log('✅ Test 3 passed: Production system monitoring active with health scoring');
 
@@ -1265,15 +1265,15 @@ export async function testProductionPluginConfiguration(runtime: IAgentRuntime):
     console.log('🔍 Test 4: Test production performance evaluation and metrics');
 
     const perfEvaluator = runtime.evaluators.find((e) => e.name === 'PROD_PERFORMANCE_EVALUATOR');
-    if (!perfEvaluator) throw new Error('PROD_PERFORMANCE_EVALUATOR evaluator not found');
+    if (!perfEvaluator) {throw new Error('PROD_PERFORMANCE_EVALUATOR evaluator not found');}
 
     // Force evaluation by calling directly
     const evalResult = await perfEvaluator.handler(runtime, testMessage);
-    if (!evalResult?.success) throw new Error('Production performance evaluation failed');
+    if (!evalResult?.success) {throw new Error('Production performance evaluation failed');}
     if (!evalResult.metrics)
-      throw new Error('Production performance evaluation did not generate metrics');
+    {throw new Error('Production performance evaluation did not generate metrics');}
     if (!evalResult.analysis)
-      throw new Error('Production performance evaluation did not generate analysis');
+    {throw new Error('Production performance evaluation did not generate analysis');}
 
     console.log(
       '✅ Test 4 passed: Production performance evaluation generating comprehensive metrics'
@@ -1294,12 +1294,12 @@ export async function testProductionPluginConfiguration(runtime: IAgentRuntime):
 
     // Verify service was stopped
     const dbServiceAfterDisable = runtime.getService('prod-database-service');
-    if (dbServiceAfterDisable) throw new Error('ProductionDatabaseService should be disabled');
+    if (dbServiceAfterDisable) {throw new Error('ProductionDatabaseService should be disabled');}
 
     // Verify dependent action now fails validation
     const validationAfterDisable = await queryAction.validate(runtime, testMessage);
     if (validationAfterDisable)
-      throw new Error('Action should fail validation when production service is disabled');
+    {throw new Error('Action should fail validation when production service is disabled');}
 
     // Re-enable database service
     await runtime.configurePlugin('production-plugin-with-env-vars', {
@@ -1312,11 +1312,11 @@ export async function testProductionPluginConfiguration(runtime: IAgentRuntime):
     const dbServiceAfterEnable = runtime.getService(
       'prod-database-service'
     ) as ProductionDatabaseService;
-    if (!dbServiceAfterEnable) throw new Error('ProductionDatabaseService should be re-enabled');
+    if (!dbServiceAfterEnable) {throw new Error('ProductionDatabaseService should be re-enabled');}
 
     const dbStatsAfterEnable = dbServiceAfterEnable.getConnectionStats();
     if (!dbStatsAfterEnable.isStarted)
-      throw new Error('ProductionDatabaseService should be started after re-enabling');
+    {throw new Error('ProductionDatabaseService should be started after re-enabling');}
 
     // Verify service state was properly reset
     const newAuditSize = dbServiceAfterEnable.getAuditLog().length;
@@ -1327,7 +1327,7 @@ export async function testProductionPluginConfiguration(runtime: IAgentRuntime):
     // Verify dependent action now passes validation
     const validationAfterEnable = await queryAction.validate(runtime, testMessage);
     if (!validationAfterEnable)
-      throw new Error('Action should pass validation when production service is re-enabled');
+    {throw new Error('Action should pass validation when production service is re-enabled');}
 
     console.log('✅ Test 5 passed: Production service hot-swap with state preservation working');
 
@@ -1381,13 +1381,13 @@ export async function testProductionPluginConfiguration(runtime: IAgentRuntime):
       auditLogSize: dbServiceAfterEnable.getAuditLog().length,
     });
     console.log('- Cache Service:', {
-      hitRatio: (finalCacheStats.hitRatio * 100).toFixed(1) + '%',
+      hitRatio: `${(finalCacheStats.hitRatio * 100).toFixed(1)}%`,
       cacheSize: `${finalCacheStats.cacheSize}/${finalCacheStats.maxSize}`,
       evictions: finalCacheStats.evictions,
     });
     console.log(
       '- Overall Health Score:',
-      finalSystemStats.values?.healthScore?.toFixed(2) + '/100'
+      `${finalSystemStats.values?.healthScore?.toFixed(2)}/100`
     );
     console.log('- Runtime Services:', runtime.services.size);
     console.log('- Runtime Actions:', runtime.actions.length);

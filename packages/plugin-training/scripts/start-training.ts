@@ -43,7 +43,7 @@ async function main() {
   try {
     // Load configuration if provided
     let config: TrainingConfig;
-    
+
     if (options.config) {
       console.log(`📄 Loading configuration from: ${options.config}`);
       const configData = await fs.readFile(options.config, 'utf-8');
@@ -55,7 +55,7 @@ async function main() {
 
     // Create mock runtime for CLI usage
     const runtime = createMockRuntime();
-    
+
     // Initialize training service
     const trainingService = new TrainingService(runtime);
     await trainingService.initialize();
@@ -78,10 +78,7 @@ async function main() {
     // Upload to Hugging Face if requested
     if (options.uploadHf && config.huggingFaceConfig) {
       console.log('📤 Uploading dataset to Hugging Face...');
-      const huggingFaceUrl = await trainingService.uploadToHuggingFace(
-        options.dataset,
-        config
-      );
+      const huggingFaceUrl = await trainingService.uploadToHuggingFace(options.dataset, config);
       console.log(`✅ Dataset uploaded: ${huggingFaceUrl}`);
     }
 
@@ -147,7 +144,6 @@ async function main() {
       console.log('✨ Training is running in the background!');
       console.log(`Use "npm run monitor -- --job-id ${trainingJob.id}" to check progress.`);
     }
-
   } catch (error) {
     console.error('❌ Error during training setup:', error.message);
     console.error('');
@@ -176,7 +172,8 @@ function buildConfigFromOptions(options: any): TrainingConfig {
     },
     rlaifConfig: {
       judgeModel: options.judge,
-      preferenceDescription: 'helpful, harmless, and honest responses that demonstrate good coding practices',
+      preferenceDescription:
+        'helpful, harmless, and honest responses that demonstrate good coding practices',
       maxResponseVariants: 3,
       scoringStrategy: 'pairwise',
       rewardThreshold: 0.7,
@@ -221,28 +218,40 @@ function buildConfigFromOptions(options: any): TrainingConfig {
 
 function getDefaultRegion(provider: string): string {
   switch (provider) {
-    case 'gcp': return 'us-central1-a';
-    case 'aws': return 'us-west-2';
-    case 'azure': return 'eastus';
-    default: return 'us-central1-a';
+    case 'gcp':
+      return 'us-central1-a';
+    case 'aws':
+      return 'us-west-2';
+    case 'azure':
+      return 'eastus';
+    default:
+      return 'us-central1-a';
   }
 }
 
 function getDefaultInstanceType(provider: string): string {
   switch (provider) {
-    case 'gcp': return 'n1-standard-8';
-    case 'aws': return 'p3.2xlarge';
-    case 'azure': return 'Standard_NC6s_v3';
-    default: return 'n1-standard-8';
+    case 'gcp':
+      return 'n1-standard-8';
+    case 'aws':
+      return 'p3.2xlarge';
+    case 'azure':
+      return 'Standard_NC6s_v3';
+    default:
+      return 'n1-standard-8';
   }
 }
 
 function getDefaultGpuType(provider: string): string {
   switch (provider) {
-    case 'gcp': return 'nvidia-tesla-v100';
-    case 'aws': return 'nvidia-tesla-v100';
-    case 'azure': return 'nvidia-tesla-v100';
-    default: return 'nvidia-tesla-v100';
+    case 'gcp':
+      return 'nvidia-tesla-v100';
+    case 'aws':
+      return 'nvidia-tesla-v100';
+    case 'azure':
+      return 'nvidia-tesla-v100';
+    default:
+      return 'nvidia-tesla-v100';
   }
 }
 
@@ -254,28 +263,30 @@ function displayConfiguration(config: TrainingConfig) {
   console.log(`📦 Batch Size: ${config.atroposConfig.batchSize}`);
   console.log(`📈 Learning Rate: ${config.atroposConfig.learningRate}`);
   console.log(`🎯 Strategy: ${config.rlaifConfig.scoringStrategy}`);
-  
+
   if (config.deploymentConfig) {
     console.log(`☁️ Cloud: ${config.deploymentConfig.provider.toUpperCase()}`);
     console.log(`💻 Instance: ${config.deploymentConfig.instanceType}`);
   }
-  
+
   if (config.huggingFaceConfig) {
-    console.log(`🤗 HF Dataset: ${config.huggingFaceConfig.organization}/${config.huggingFaceConfig.datasetName}`);
+    console.log(
+      `🤗 HF Dataset: ${config.huggingFaceConfig.organization}/${config.huggingFaceConfig.datasetName}`
+    );
   }
-  
+
   console.log('');
 }
 
 async function checkPrerequisites(config: TrainingConfig) {
   console.log('🔍 Checking prerequisites...');
-  
+
   const checks = [
     {
       name: 'Atropos API',
       check: async () => {
         try {
-          const response = await fetch(config.atroposConfig.apiUrl + '/health');
+          const response = await fetch(`${config.atroposConfig.apiUrl}/health`);
           return response.ok;
         } catch {
           return false;
@@ -302,14 +313,14 @@ async function checkPrerequisites(config: TrainingConfig) {
 
   for (const check of checks) {
     const result = await check.check();
-    const status = result ? '✅' : (check.required ? '❌' : '⚠️');
+    const status = result ? '✅' : check.required ? '❌' : '⚠️';
     console.log(`${status} ${check.name}`);
-    
+
     if (!result && check.required) {
       throw new Error(`Required prerequisite failed: ${check.name}`);
     }
   }
-  
+
   console.log('✅ Prerequisites check passed');
   console.log('');
 }
@@ -325,34 +336,34 @@ async function checkDatasetExists(datasetPath: string): Promise<boolean> {
 
 async function monitorTraining(trainingService: TrainingService, jobId: string) {
   const updateInterval = 10000; // 10 seconds
-  
+
   while (true) {
     try {
       const job = await trainingService.monitorTraining(jobId);
-      
+
       if (!job) {
         console.log('❌ Training job not found');
         break;
       }
-      
+
       // Clear previous line and print status
       process.stdout.write('\\r\\x1b[K'); // Clear line
-      
+
       const status = job.status;
       const progress = job.progress;
-      
+
       if (progress) {
         const percentage = ((progress.currentStep / progress.totalSteps) * 100).toFixed(1);
         const progressBar = generateProgressBar(progress.currentStep, progress.totalSteps, 20);
         process.stdout.write(
           `🔄 ${status.toUpperCase()} ${progressBar} ${percentage}% ` +
-          `(${progress.currentStep}/${progress.totalSteps}) ` +
-          `Loss: ${progress.currentLoss?.toFixed(4) || 'N/A'}`
+            `(${progress.currentStep}/${progress.totalSteps}) ` +
+            `Loss: ${progress.currentLoss?.toFixed(4) || 'N/A'}`
         );
       } else {
         process.stdout.write(`🔄 ${status.toUpperCase()}`);
       }
-      
+
       if (status === 'completed') {
         console.log('\\n🎉 Training completed successfully!');
         break;
@@ -366,8 +377,8 @@ async function monitorTraining(trainingService: TrainingService, jobId: string) 
         console.log('\\n🛑 Training was cancelled');
         break;
       }
-      
-      await new Promise(resolve => setTimeout(resolve, updateInterval));
+
+      await new Promise((resolve) => setTimeout(resolve, updateInterval));
     } catch (error) {
       console.log('\\n❌ Error monitoring training:', error.message);
       break;
@@ -376,11 +387,13 @@ async function monitorTraining(trainingService: TrainingService, jobId: string) 
 }
 
 function generateProgressBar(current: number, total: number, length: number = 20): string {
-  if (total === 0) return '░'.repeat(length);
-  
+  if (total === 0) {
+    return '░'.repeat(length);
+  }
+
   const filled = Math.round((current / total) * length);
   const empty = length - filled;
-  
+
   return '█'.repeat(filled) + '░'.repeat(empty);
 }
 

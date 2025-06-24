@@ -1,6 +1,6 @@
 import { Camera, Object3D } from 'three'
 import type { World, WorldOptions, Entity, Player, Vector3, HotReloadable, System } from '../types'
-import { vi } from 'vitest'
+import { mock, spyOn } from 'bun:test'
 
 // Mock implementations for testing
 export class MockWorld implements World {
@@ -81,13 +81,13 @@ export class MockWorld implements World {
   network = createMockNetworkSystem()
 
   // Add emit method
-  emit = vi.fn((event: string, ...args: any[]) => {
+  emit = mock((event: string, ...args: any[]) => {
     return true
   })
 
   // Add on and off methods
-  on = vi.fn()
-  off = vi.fn()
+  on = mock()
+  off = mock()
 
   private running = false
   private tickInterval?: NodeJS.Timeout
@@ -100,9 +100,15 @@ export class MockWorld implements World {
   }
 
   async init(options: WorldOptions): Promise<void> {
-    if (options.assetsUrl) this.assetsUrl = options.assetsUrl
-    if (options.assetsDir) this.assetsDir = options.assetsDir
-    if (options.networkRate) this.networkRate = options.networkRate
+    if (options.assetsUrl) {
+      this.assetsUrl = options.assetsUrl
+    }
+    if (options.assetsDir) {
+      this.assetsDir = options.assetsDir
+    }
+    if (options.networkRate) {
+      this.networkRate = options.networkRate
+    }
 
     for (const system of this.systems) {
       await system.init(options)
@@ -154,8 +160,12 @@ export class MockWorld implements World {
   }
 
   resolveURL(url: string, allowLocal?: boolean): string {
-    if (!url) return url
-    if (url.startsWith('blob:') || url.startsWith('http')) return url
+    if (!url) {
+      return url
+    }
+    if (url.startsWith('blob:') || url.startsWith('http')) {
+      return url
+    }
     if (url.startsWith('asset://')) {
       return url.replace('asset://', this.assetsUrl || '')
     }
@@ -203,20 +213,20 @@ export class MockWorld implements World {
 function createMockSystem(name: string): any {
   return {
     world: null,
-    init: vi.fn(),
-    start: vi.fn(),
-    destroy: vi.fn(),
-    update: vi.fn(),
-    fixedUpdate: vi.fn(),
-    lateUpdate: vi.fn(),
-    preTick: vi.fn(),
-    postTick: vi.fn(),
-    preFixedUpdate: vi.fn(),
-    postFixedUpdate: vi.fn(),
-    preUpdate: vi.fn(),
-    postUpdate: vi.fn(),
-    postLateUpdate: vi.fn(),
-    commit: vi.fn(),
+    init: mock(),
+    start: mock(),
+    destroy: mock(),
+    update: mock(),
+    fixedUpdate: mock(),
+    lateUpdate: mock(),
+    preTick: mock(),
+    postTick: mock(),
+    preFixedUpdate: mock(),
+    postFixedUpdate: mock(),
+    preUpdate: mock(),
+    postUpdate: mock(),
+    postLateUpdate: mock(),
+    commit: mock(),
   }
 }
 
@@ -225,19 +235,19 @@ function createMockEventSystem(): any {
 
   return {
     ...createMockSystem('events'),
-    emit: vi.fn((event: string, data?: any) => {
+    emit: mock((event: string, data?: any) => {
       const eventHandlers = handlers.get(event)
       if (eventHandlers) {
         eventHandlers.forEach(handler => handler(data))
       }
     }),
-    on: vi.fn((event: string, handler: Function) => {
+    on: mock((event: string, handler: Function) => {
       if (!handlers.has(event)) {
         handlers.set(event, new Set())
       }
       handlers.get(event)!.add(handler)
     }),
-    off: vi.fn((event: string, handler?: Function) => {
+    off: mock((event: string, handler?: Function) => {
       if (handler) {
         handlers.get(event)?.delete(handler)
       } else {
@@ -253,7 +263,7 @@ function createMockChatSystem(): any {
   return {
     ...createMockSystem('chat'),
     messages,
-    send: vi.fn((text: string, from?: any) => {
+    send: mock((text: string, from?: any) => {
       messages.push({
         id: `msg-${Date.now()}`,
         text,
@@ -270,16 +280,16 @@ function createMockBlueprintsSystem(): any {
   return {
     ...createMockSystem('blueprints'),
     blueprints,
-    get: vi.fn((id: string) => blueprints.get(id) || null),
-    create: vi.fn((blueprintId: string, options?: any) => {
+    get: mock((id: string) => blueprints.get(id) || null),
+    create: mock((blueprintId: string, options?: any) => {
       return createMockEntity(`bp-entity-${Date.now()}`, blueprintId, options)
     }),
-    modify: vi.fn((data: any) => {
+    modify: mock((data: any) => {
       if (data.id && blueprints.has(data.id)) {
         Object.assign(blueprints.get(data.id), data)
       }
     }),
-    add: vi.fn((blueprint: any, local?: boolean) => {
+    add: mock((blueprint: any, local?: boolean) => {
       blueprints.set(blueprint.id, blueprint)
       return blueprint
     }),
@@ -295,12 +305,12 @@ function createMockEntitiesSystem(): any {
     ...createMockSystem('entities'),
     items,
     players,
-    create: vi.fn((name: string, options?: any) => {
+    create: mock((name: string, options?: any) => {
       const entity = createMockEntity(`entity-${++entityCounter}`, name, options)
       items.set(entity.id, entity)
       return entity
     }),
-    add: vi.fn((data: any, local?: boolean) => {
+    add: mock((data: any, local?: boolean) => {
       const entity = createMockEntity(data.id || `entity-${++entityCounter}`, data.name || 'entity', data)
       entity.type = data.type
       items.set(entity.id, entity)
@@ -309,7 +319,7 @@ function createMockEntitiesSystem(): any {
       }
       return entity
     }),
-    destroyEntity: vi.fn((entityId: string) => {
+    destroyEntity: mock((entityId: string) => {
       const entity = items.get(entityId)
       if (entity) {
         entity.destroy()
@@ -317,9 +327,9 @@ function createMockEntitiesSystem(): any {
         players.delete(entityId)
       }
     }),
-    get: vi.fn((entityId: string) => items.get(entityId) || null),
-    has: vi.fn((entityId: string) => items.has(entityId)),
-    spawnPlayer: vi.fn((playerId: string, options?: any) => {
+    get: mock((entityId: string) => items.get(entityId) || null),
+    has: mock((entityId: string) => items.has(entityId)),
+    spawnPlayer: mock((playerId: string, options?: any) => {
       const player = createMockPlayer(playerId, options)
       items.set(player.id, player)
       players.set(player.id, player)
@@ -332,10 +342,10 @@ function createMockPhysicsSystem(): any {
   return {
     ...createMockSystem('physics'),
     world: { gravity: { x: 0, y: -9.81, z: 0 } },
-    raycast: vi.fn(() => null),
-    sphereCast: vi.fn(() => null),
-    overlapSphere: vi.fn(() => []),
-    simulate: vi.fn(),
+    raycast: mock(() => null),
+    sphereCast: mock(() => null),
+    overlapSphere: mock(() => []),
+    simulate: mock(),
   }
 }
 
@@ -343,8 +353,8 @@ function createMockStageSystem(): any {
   return {
     ...createMockSystem('stage'),
     scene: {
-      add: vi.fn(),
-      remove: vi.fn(),
+      add: mock(),
+      remove: mock(),
       children: [],
     },
     environment: {
@@ -360,10 +370,10 @@ function createMockNetworkSystem(): any {
     id: 'network-1',
     isServer: false,
     isClient: true,
-    send: vi.fn(),
-    sendTo: vi.fn(),
-    broadcast: vi.fn(),
-    upload: vi.fn(),
+    send: mock(),
+    sendTo: mock(),
+    broadcast: mock(),
+    upload: mock(),
     sockets: new Map(),
   }
 }
@@ -371,10 +381,10 @@ function createMockNetworkSystem(): any {
 function createMockAudioSystem(): any {
   return {
     ...createMockSystem('audio'),
-    play: vi.fn(),
-    stop: vi.fn(),
-    setVolume: vi.fn(),
-    createSource: vi.fn(),
+    play: mock(),
+    stop: mock(),
+    setVolume: mock(),
+    createSource: mock(),
     listener: {
       position: { x: 0, y: 0, z: 0 },
       rotation: { x: 0, y: 0, z: 0, w: 1 },
@@ -409,41 +419,41 @@ function createMockEntity(id: string, name: string, options?: any): any {
       children: [],
     },
 
-    addComponent: vi.fn((type: string, data?: any) => {
+    addComponent: mock((type: string, data?: any) => {
       const component = { type, entity: id, data }
       components.set(type, component)
       return component
     }),
 
-    removeComponent: vi.fn((type: string) => {
+    removeComponent: mock((type: string) => {
       components.delete(type)
     }),
 
-    getComponent: vi.fn((type: string) => components.get(type) || null),
+    getComponent: mock((type: string) => components.get(type) || null),
 
-    hasComponent: vi.fn((type: string) => components.has(type)),
+    hasComponent: mock((type: string) => components.has(type)),
 
-    applyForce: vi.fn((force: Vector3) => {
+    applyForce: mock((force: Vector3) => {
       velocity.x += force.x * 0.016 // Simplified physics
       velocity.y += force.y * 0.016
       velocity.z += force.z * 0.016
     }),
 
-    applyImpulse: vi.fn((impulse: Vector3) => {
+    applyImpulse: mock((impulse: Vector3) => {
       velocity.x += impulse.x
       velocity.y += impulse.y
       velocity.z += impulse.z
     }),
 
-    setVelocity: vi.fn((vel: Vector3) => {
+    setVelocity: mock((vel: Vector3) => {
       velocity.x = vel.x
       velocity.y = vel.y
       velocity.z = vel.z
     }),
 
-    getVelocity: vi.fn(() => ({ ...velocity })),
+    getVelocity: mock(() => ({ ...velocity })),
 
-    destroy: vi.fn(),
+    destroy: mock(),
   }
 }
 
@@ -470,7 +480,7 @@ function createMockPlayer(id: string, options?: any): any {
       ...options?.stats,
     },
 
-    spawn: vi.fn((position: Vector3) => {
+    spawn: mock((position: Vector3) => {
       entity.position.x = position.x
       entity.position.y = position.y
       entity.position.z = position.z
@@ -479,12 +489,12 @@ function createMockPlayer(id: string, options?: any): any {
       entity.velocity.z = 0
     }),
 
-    respawn: vi.fn(() => {
+    respawn: mock(() => {
       entity.stats.health = entity.stats.maxHealth
       entity.spawn({ x: 0, y: 10, z: 0 })
     }),
 
-    damage: vi.fn((amount: number, source?: any) => {
+    damage: mock((amount: number, source?: any) => {
       entity.stats.health = Math.max(0, entity.stats.health - amount)
       if (entity.stats.health <= 0) {
         entity.stats.deaths++
@@ -494,7 +504,7 @@ function createMockPlayer(id: string, options?: any): any {
       }
     }),
 
-    heal: vi.fn((amount: number) => {
+    heal: mock((amount: number) => {
       entity.stats.health = Math.min(entity.stats.maxHealth, entity.stats.health + amount)
     }),
 

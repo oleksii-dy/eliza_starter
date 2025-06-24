@@ -56,8 +56,8 @@ export const verifyOAuthIdentityAction: Action = {
       if (!entityGraphService || !entityResolutionService) {
         if (callback) {
           await callback({
-            text: "Sorry, the identity management services are not available right now.",
-            thought: "Missing required Rolodex services for OAuth verification",
+            text: 'Sorry, the identity management services are not available right now.',
+            thought: 'Missing required Rolodex services for OAuth verification',
           });
         }
         return;
@@ -76,8 +76,8 @@ export const verifyOAuthIdentityAction: Action = {
       if (availableProviders.length === 0) {
         if (callback) {
           await callback({
-            text: "Sorry, no OAuth providers are currently configured. Please contact the administrator to set up OAuth authentication.",
-            thought: "No OAuth providers available - need API keys configured",
+            text: 'Sorry, no OAuth providers are currently configured. Please contact the administrator to set up OAuth authentication.',
+            thought: 'No OAuth providers available - need API keys configured',
           });
         }
         return;
@@ -97,7 +97,7 @@ export const verifyOAuthIdentityAction: Action = {
       // If no specific platform requested, show available options
       if (!requestedPlatform) {
         const platformList = availableProviders.map(p => `• ${p.charAt(0).toUpperCase() + p.slice(1)}`).join('\n');
-        
+
         if (callback) {
           await callback({
             text: `I can help you verify your identity using OAuth! Available platforms:\n\n${platformList}\n\nWhich platform would you like to use for verification? Just say something like "verify with Google" or "link my GitHub account".`,
@@ -110,7 +110,7 @@ export const verifyOAuthIdentityAction: Action = {
 
       // Resolve or create entity for the user
       const entityId = asUUID(message.entityId || `entity-${Date.now()}`);
-      
+
       // Try to get existing entity or create new one
       await entityGraphService.trackEntity(
         entityId,
@@ -138,7 +138,7 @@ export const verifyOAuthIdentityAction: Action = {
 
       } catch (error) {
         logger.error('[verifyOAuthIdentityAction] Error creating OAuth challenge:', error);
-        
+
         if (callback) {
           await callback({
             text: `Sorry, I encountered an error setting up ${requestedPlatform} verification: ${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease try again or contact support if the issue persists.`,
@@ -149,11 +149,11 @@ export const verifyOAuthIdentityAction: Action = {
 
     } catch (error) {
       logger.error('[verifyOAuthIdentityAction] OAuth identity verification failed:', error);
-      
+
       if (callback) {
         await callback({
-          text: "Sorry, I encountered an error while setting up identity verification. Please try again later or contact support.",
-          thought: "OAuth identity verification action failed with error",
+          text: 'Sorry, I encountered an error while setting up identity verification. Please try again later or contact support.',
+          thought: 'OAuth identity verification action failed with error',
         });
       }
     }

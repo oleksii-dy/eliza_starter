@@ -1,7 +1,4 @@
-import {
-  type IAgentRuntime,
-  elizaLogger,
-} from '@elizaos/core';
+import { type IAgentRuntime, elizaLogger } from '@elizaos/core';
 import {
   type TrainingConfig,
   type TogetherAIConfig,
@@ -30,14 +27,14 @@ import {
 export class TogetherAIClient {
   private apiKey: string;
   private config: ReturnType<typeof getTrainingConfig>;
-  
+
   constructor(private runtime: IAgentRuntime) {
     this.config = getTrainingConfig(runtime);
     this.apiKey = this.runtime.getSetting('TOGETHER_AI_API_KEY') as string;
     if (!this.apiKey) {
       throw new MissingConfigurationError('TOGETHER_AI_API_KEY');
     }
-    
+
     // Validate API configuration
     const apiConfig = this.config.getAPIConfig().togetherAi;
     ErrorHandler.validateURL(apiConfig.baseUrl, 'TOGETHER_AI_BASE_URL');
@@ -49,7 +46,7 @@ export class TogetherAIClient {
     await withRetry(
       async () => {
         elizaLogger.info('Initializing Together.ai client');
-        
+
         // Test API connection with error handling
         await this.getModels();
         elizaLogger.info('Together.ai client initialized successfully');
@@ -67,7 +64,7 @@ export class TogetherAIClient {
     return await withRetry(
       async () => {
         const response = await this.makeRequest('GET', '/models');
-        
+
         if (!response.data || !Array.isArray(response.data)) {
           throw new APIError(
             'TogetherAI',
@@ -76,13 +73,13 @@ export class TogetherAIClient {
             { responseType: typeof response.data }
           );
         }
-        
+
         const fineTuningModels = response.data.filter((model: any) => model.fine_tuning_available);
-        
+
         if (fineTuningModels.length === 0) {
           elizaLogger.warn('No fine-tuning capable models found');
         }
-        
+
         return fineTuningModels;
       },
       'get_together_ai_models',
@@ -98,14 +95,12 @@ export class TogetherAIClient {
     return await withRetry(
       async () => {
         elizaLogger.info(`Uploading dataset: ${filePath}`);
-        
+
         // Read file with error handling
-        const fileData = await safely(
-          () => this.readFile(filePath),
-          'read_dataset_file',
-          { filePath }
-        );
-        
+        const fileData = await safely(() => this.readFile(filePath), 'read_dataset_file', {
+          filePath,
+        });
+
         if (!fileData) {
           throw new ExternalServiceError(
             'TogetherAI',
@@ -113,7 +108,7 @@ export class TogetherAIClient {
             `Failed to read dataset file: ${filePath}`
           );
         }
-        
+
         const formData = new FormData();
         formData.append('file', new Blob([fileData]), 'dataset.jsonl');
         formData.append('purpose', purpose);
@@ -121,7 +116,7 @@ export class TogetherAIClient {
         const response = await fetch(`${this.config.getAPIConfig().togetherAi.baseUrl}/files`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
           },
           body: formData,
         });
@@ -129,13 +124,13 @@ export class TogetherAIClient {
         if (response.status === 401) {
           throw new AuthenticationError('TogetherAI', 'Invalid or expired API key');
         }
-        
+
         if (response.status === 429) {
           const resetTime = response.headers.get('x-ratelimit-reset');
-          const resetTimestamp = resetTime ? parseInt(resetTime) * 1000 : Date.now() + 60000;
+          const resetTimestamp = resetTime ? parseInt(resetTime, 10) * 1000 : Date.now() + 60000;
           throw new RateLimitError('TogetherAI', resetTimestamp);
         }
-        
+
         if (!response.ok) {
           throw new APIError(
             'TogetherAI',
@@ -146,16 +141,13 @@ export class TogetherAIClient {
         }
 
         const result = await response.json();
-        
+
         if (!result.id) {
-          throw new APIError(
-            'TogetherAI',
-            'Upload response missing file ID',
-            response.status,
-            { result }
-          );
+          throw new APIError('TogetherAI', 'Upload response missing file ID', response.status, {
+            result,
+          });
         }
-        
+
         elizaLogger.info(`Dataset uploaded successfully: ${result.id}`);
         return result.id;
       },
@@ -169,46 +161,51 @@ export class TogetherAIClient {
    * Validate dataset format
    */
   async validateDataset(filePath: string): Promise<boolean> {
-    return await safely(
-      async () => {
-        // Read file with error handling
-        const fileData = await this.readFile(filePath);
-        
-        const formData = new FormData();
-        formData.append('file', new Blob([fileData]), 'dataset.jsonl');
+    return (
+      (await safely(
+        async () => {
+          // Read file with error handling
+          const fileData = await this.readFile(filePath);
 
-        const response = await fetch(`${this.config.getAPIConfig().togetherAi.baseUrl}/files/check`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-          },
-          body: formData,
-        });
+          const formData = new FormData();
+          formData.append('file', new Blob([fileData]), 'dataset.jsonl');
 
-        if (response.status === 401) {
-          throw new AuthenticationError('TogetherAI', 'Invalid API key for validation');
-        }
-        
-        if (!response.ok) {
-          const errorData = await safely(
-            () => response.json(),
-            'parse_validation_error_response'
+          const response = await fetch(
+            `${this.config.getAPIConfig().togetherAi.baseUrl}/files/check`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${this.apiKey}`,
+              },
+              body: formData,
+            }
           );
-          
-          throw new APIError(
-            'TogetherAI',
-            `Dataset validation failed: ${response.statusText}`,
-            response.status,
-            { filePath, errorData }
-          );
-        }
 
-        elizaLogger.info('Dataset validation passed');
-        return true;
-      },
-      'validate_dataset',
-      { filePath }
-    ) || false; // Return false if safely returns null (error occurred)
+          if (response.status === 401) {
+            throw new AuthenticationError('TogetherAI', 'Invalid API key for validation');
+          }
+
+          if (!response.ok) {
+            const errorData = await safely(
+              () => response.json(),
+              'parse_validation_error_response'
+            );
+
+            throw new APIError(
+              'TogetherAI',
+              `Dataset validation failed: ${response.statusText}`,
+              response.status,
+              { filePath, errorData }
+            );
+          }
+
+          elizaLogger.info('Dataset validation passed');
+          return true;
+        },
+        'validate_dataset',
+        { filePath }
+      )) || false
+    ); // Return false if safely returns null (error occurred)
   }
 
   /**
@@ -264,7 +261,7 @@ export class TogetherAIClient {
    */
   async getJobStatus(jobId: string): Promise<TogetherAIJob> {
     const response = await this.makeRequest('GET', `/fine-tuning/jobs/${jobId}`);
-    
+
     return {
       id: response.id,
       status: response.status,
@@ -322,7 +319,7 @@ export class TogetherAIClient {
     budget: number
   ): ModelDeploymentDecision {
     const sizeGB = this.estimateModelSize(modelSize);
-    
+
     // Small models (< 3GB) can run locally
     if (sizeGB < 3) {
       return {
@@ -387,14 +384,10 @@ export class TogetherAIClient {
   /**
    * Test inference with fine-tuned model
    */
-  async testInference(
-    modelName: string,
-    prompt: string,
-    maxTokens = 100
-  ): Promise<string> {
+  async testInference(modelName: string, prompt: string, maxTokens = 100): Promise<string> {
     const response = await this.makeRequest('POST', '/completions', {
       model: modelName,
-      prompt: prompt,
+      prompt,
       max_tokens: maxTokens,
       temperature: 0.7,
     });
@@ -411,7 +404,7 @@ export class TogetherAIClient {
     currency: string;
   }> {
     // Together.ai pricing (per 1M tokens)
-    const pricingMap: Record<string, {inputPrice: number, outputPrice: number}> = {
+    const pricingMap: Record<string, { inputPrice: number; outputPrice: number }> = {
       'deepseek-ai/DeepSeek-R1': { inputPrice: 3.0, outputPrice: 7.0 },
       'deepseek-ai/DeepSeek-R1-Distill-Llama-70B': { inputPrice: 2.0, outputPrice: 2.0 },
       'deepseek-ai/DeepSeek-R1-Distill-Qwen-14B': { inputPrice: 1.0, outputPrice: 1.0 },
@@ -419,17 +412,18 @@ export class TogetherAIClient {
     };
 
     return {
-      ...pricingMap[modelName] || { inputPrice: 1.0, outputPrice: 1.0 },
+      ...(pricingMap[modelName] || { inputPrice: 1.0, outputPrice: 1.0 }),
       currency: 'USD',
     };
   }
 
   private async makeRequest(method: string, endpoint: string, data?: any): Promise<any> {
     const url = `${this.config.getAPIConfig().togetherAi.baseUrl}${endpoint}`;
+    // eslint-disable-next-line no-undef
     const options: RequestInit = {
       method,
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
     };
@@ -439,7 +433,7 @@ export class TogetherAIClient {
     }
 
     const response = await fetch(url, options);
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(`Together.ai API error: ${error.error?.message || response.statusText}`);

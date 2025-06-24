@@ -244,10 +244,10 @@ export const scheduleFollowUpAction: Action = {
       };
     } catch (error) {
       logger.error('[ScheduleFollowUp] Error scheduling follow-up:', error);
-      
+
       if (callback) {
         await callback({
-          text: `❌ Sorry, I had trouble scheduling that follow-up. Please try again or provide more specific details.`,
+          text: '❌ Sorry, I had trouble scheduling that follow-up. Please try again or provide more specific details.',
         });
       }
 

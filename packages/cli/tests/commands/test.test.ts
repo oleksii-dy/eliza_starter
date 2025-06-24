@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach  } from 'bun:test';
 import {
   setupTestEnvironment,
   cleanupTestEnvironment,
@@ -24,7 +24,7 @@ describe('ElizaOS Test Commands', () => {
   });
 
   it('test command accepts -n option with quotes', () => {
-    const result = runCliCommand(context.elizaosCmd, `test -n "filter-name" --help`);
+    const result = runCliCommand(context.elizaosCmd, 'test -n "filter-name" --help');
     expect(result).toContain('Filter tests by name');
   });
 

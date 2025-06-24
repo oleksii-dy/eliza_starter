@@ -5,9 +5,9 @@ import { LootSystem } from '../../rpg/systems/LootSystem';
 import { NPCSystem } from '../../rpg/systems/NPCSystem';
 import { SpawningSystem } from '../../rpg/systems/SpawningSystem';
 import {
-    CombatStyle,
-    SpawnerType,
-    Vector3
+  CombatStyle,
+  SpawnerType,
+  Vector3
 } from '../../rpg/types';
 import { World } from '../../types';
 
@@ -66,7 +66,7 @@ export class RPGDemoWorld {
         minSpacing: 1,
         maxHeight: 0,
         isValidPosition: () => true,
-        getRandomPosition: function() {
+        getRandomPosition() {
           const angle = Math.random() * Math.PI * 2;
           const r = Math.random() * this.radius!;
           return {
@@ -155,7 +155,7 @@ export class RPGDemoWorld {
   createScenarios() {
     const world = this.world;
     const systems = this.systems;
-    
+
     return {
       /**
        * Spawn a player at a specific location
@@ -165,9 +165,9 @@ export class RPGDemoWorld {
           id: `player-${Date.now()}`,
           position
         });
-        
+
         world.entities.items.set(player.data.id, player as any);
-        
+
         // Add stats component
         player.addComponent('stats', {
           type: 'stats',
@@ -197,7 +197,7 @@ export class RPGDemoWorld {
           combatLevel: 3,
           totalLevel: 7
         });
-        
+
         // Add combat component
         player.addComponent('combat', {
           type: 'combat',
@@ -217,11 +217,11 @@ export class RPGDemoWorld {
             magic: false
           }
         });
-        
+
         // Add movement component
         player.addComponent('movement', {
           type: 'movement',
-          position: position,
+          position,
           destination: null,
           path: [],
           moveSpeed: 1,
@@ -234,14 +234,14 @@ export class RPGDemoWorld {
           teleportTime: 0,
           teleportAnimation: ''
         });
-        
+
         // Initialize inventory
-        const initMethod = (systems.inventory as any).createInventory || 
+        const initMethod = (systems.inventory as any).createInventory ||
                           (systems.inventory as any).initializeInventory;
         if (initMethod) {
           initMethod.call(systems.inventory, player.data.id);
         }
-        
+
         return player;
       },
 
@@ -284,4 +284,4 @@ export class RPGDemoWorld {
       }
     };
   }
-} 
+}

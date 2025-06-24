@@ -2,7 +2,6 @@ import { loadProject } from '@/src/project';
 import { AgentServer, jsonToCharacter, loadCharacterTryPath } from '@elizaos/server';
 import {
   buildProject,
-  findNextAvailablePort,
   findAvailablePortInRange,
   isPortFree,
   promptForEnvVars,
@@ -17,7 +16,7 @@ import path from 'node:path';
 import { getElizaCharacter } from '@/src/characters/eliza';
 import { startAgent } from '@/src/commands/start';
 import { E2ETestOptions, TestResult } from '../types';
-import { findMonorepoRoot, processFilterName } from '../utils/project-utils';
+import { processFilterName } from '../utils/project-utils';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -37,10 +36,10 @@ export async function runE2eTests(
       const isPlugin = projectInfo.type === 'elizaos-plugin';
       logger.info(`Building ${isPlugin ? 'plugin' : 'project'}...`);
       await buildProject(cwd, isPlugin);
-      logger.info(`Build completed successfully`);
+      logger.info('Build completed successfully');
     } catch (buildError) {
       logger.error(`Build error: ${buildError}`);
-      logger.warn(`Attempting to continue with tests despite build error`);
+      logger.warn('Attempting to continue with tests despite build error');
     }
   }
 
@@ -59,6 +58,19 @@ export async function runE2eTests(
     const envInfo = await UserEnvironment.getInstanceInfo();
     const envFilePath = envInfo.paths.envFilePath;
 
+    // For E2E tests, always use PGLite for better isolation and reliability
+    // Store original URLs and force PGLite usage by unsetting all PostgreSQL-related env vars
+    const originalPostgresUrl = process.env.POSTGRES_URL;
+    const originalDatabaseUrl = process.env.DATABASE_URL;
+
+    delete process.env.POSTGRES_URL;
+    delete process.env.DATABASE_URL;
+
+    // Set E2E test mode BEFORE loading environment to prevent overrides
+    process.env.NODE_ENV = 'test';
+    process.env.VITEST = 'true';
+    process.env.FORCE_PGLITE = 'true'; // Signal to force PGLite usage
+
     console.info('Setting up environment...');
     console.info(`Eliza directory: ${elizaDir}`);
     console.info(`Database directory: ${elizaDbDir}`);
@@ -70,7 +82,7 @@ export async function runE2eTests(
       console.info(`Cleaning up existing database directory: ${elizaDbDir}`);
       try {
         fs.rmSync(elizaDbDir, { recursive: true, force: true });
-        console.info(`Successfully cleaned up existing database directory`);
+        console.info('Successfully cleaned up existing database directory');
       } catch (error) {
         console.warn(`Failed to clean up existing database directory: ${error}`);
         // Continue anyway, the initialization might handle it
@@ -150,8 +162,13 @@ export async function runE2eTests(
     let project;
     try {
       logger.info('Attempting to load project or plugin...');
-      // Resolve path from monorepo root, not cwd
-      const monorepoRoot = findMonorepoRoot(process.cwd());
+      // Resolve path from monorepo root, not cwd (using centralized detection)
+      const monorepoRoot = UserEnvironment.getInstance().findMonorepoRoot(process.cwd());
+      if (!monorepoRoot) {
+        throw new Error(
+          'Could not find monorepo root. Make sure to run tests from within the Eliza project.'
+        );
+      }
       const targetPath = testPath ? path.resolve(monorepoRoot, testPath) : process.cwd();
       project = await loadProject(targetPath);
 
@@ -173,7 +190,7 @@ export async function runE2eTests(
       server.jsonToCharacter = jsonToCharacter;
       logger.info('Server properties set up');
 
-      const desiredPort = options.port || Number.parseInt(process.env.SERVER_PORT || '3000');
+      const desiredPort = options.port || Number.parseInt(process.env.SERVER_PORT || '3000', 10);
 
       // For tests, try to find a port in a reasonable range to avoid conflicts
       let serverPort: number;
@@ -205,9 +222,9 @@ export async function runE2eTests(
           logger.info(`Trying fallback port range ${fallbackStart}-${fallbackStart + 50}...`);
           serverPort = await findAvailablePortInRange(fallbackStart, fallbackStart + 50);
           logger.warn(`Using fallback port ${serverPort} for testing.`);
-        } catch (fallbackError) {
+        } catch {
           throw new Error(
-            `Could not find an available port for testing. Please free up some ports or specify a different port with --port`
+            'Could not find an available port for testing. Please free up some ports or specify a different port with --port'
           );
         }
       }
@@ -227,8 +244,8 @@ export async function runE2eTests(
           if (error.message && error.message.includes('EADDRINUSE')) {
             throw new Error(
               `Port ${serverPort} became unavailable between check and server start. ` +
-                `This might happen if multiple tests are running. ` +
-                `Try running tests sequentially or use --port to specify a different port.`
+                'This might happen if multiple tests are running. ' +
+                'Try running tests sequentially or use --port to specify a different port.'
             );
           } else {
             throw error;
@@ -266,6 +283,30 @@ export async function runE2eTests(
               id: testAgentId,
             };
 
+            // For E2E tests, force PGLite by clearing any PostgreSQL URLs from character settings
+            if (testCharacter.settings?.POSTGRES_URL) {
+              delete testCharacter.settings.POSTGRES_URL;
+            }
+            if (testCharacter.secrets?.POSTGRES_URL) {
+              delete testCharacter.secrets.POSTGRES_URL;
+            }
+            if (testCharacter.settings?.DATABASE_URL) {
+              delete testCharacter.settings.DATABASE_URL;
+            }
+            if (testCharacter.secrets?.DATABASE_URL) {
+              delete testCharacter.secrets.DATABASE_URL;
+            }
+
+            // Also clear any nested secrets object in settings
+            if (testCharacter.settings?.secrets) {
+              if (testCharacter.settings.secrets.POSTGRES_URL) {
+                delete testCharacter.settings.secrets.POSTGRES_URL;
+              }
+              if (testCharacter.settings.secrets.DATABASE_URL) {
+                delete testCharacter.settings.secrets.DATABASE_URL;
+              }
+            }
+
             // The startAgent function now handles all dependency resolution,
             // including testDependencies when isTestMode is true.
             const runtime = await startAgent(
@@ -296,6 +337,20 @@ export async function runE2eTests(
             try {
               // Make a copy of the original character to avoid modifying the project configuration
               const originalCharacter = { ...agent.character };
+
+              // For E2E tests, force PGLite by clearing any PostgreSQL URLs from character settings
+              if (originalCharacter.settings?.POSTGRES_URL) {
+                delete originalCharacter.settings.POSTGRES_URL;
+              }
+              if (originalCharacter.secrets?.POSTGRES_URL) {
+                delete originalCharacter.secrets.POSTGRES_URL;
+              }
+              if (originalCharacter.settings?.DATABASE_URL) {
+                delete originalCharacter.settings.DATABASE_URL;
+              }
+              if (originalCharacter.secrets?.DATABASE_URL) {
+                delete originalCharacter.secrets.DATABASE_URL;
+              }
 
               logger.debug(`Starting agent: ${originalCharacter.name}`);
 
@@ -414,7 +469,7 @@ export async function runE2eTests(
           if (fs.existsSync(elizaDbDir)) {
             console.info(`Cleaning up test database directory: ${elizaDbDir}`);
             fs.rmSync(elizaDbDir, { recursive: true, force: true });
-            console.info(`Successfully cleaned up test database directory`);
+            console.info('Successfully cleaned up test database directory');
           }
           // Also clean up the parent test directory if it's empty
           const testDir = path.dirname(elizaDbDir);
@@ -425,6 +480,15 @@ export async function runE2eTests(
           console.warn(`Failed to clean up test database directory: ${cleanupError}`);
           // Don't fail the test run due to cleanup issues
         }
+
+        // Restore original environment variables
+        if (originalPostgresUrl !== undefined) {
+          process.env.POSTGRES_URL = originalPostgresUrl;
+        }
+        if (originalDatabaseUrl !== undefined) {
+          process.env.DATABASE_URL = originalDatabaseUrl;
+        }
+        delete process.env.FORCE_PGLITE;
       }
     } catch (error) {
       logger.error('Error in runE2eTests:', error);

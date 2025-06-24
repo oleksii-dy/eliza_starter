@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { mock  } from 'bun:test';
 import {
   stringToUuid,
   type IAgentRuntime,
@@ -30,31 +30,31 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
   return {
     agentId: stringToUuid('test-agent'),
     // Memory operations
-    getMemories: vi.fn().mockResolvedValue([]),
-    saveMemory: vi.fn().mockResolvedValue(undefined),
-    updateMemory: vi.fn().mockResolvedValue(undefined),
+    getMemories: mock().mockResolvedValue([]),
+    saveMemory: mock().mockResolvedValue(undefined),
+    updateMemory: mock().mockResolvedValue(undefined),
 
     // Entity operations
-    getEntity: vi.fn().mockResolvedValue(mockEntity),
-    getEntityById: vi.fn().mockResolvedValue(mockEntity),
-    updateEntity: vi.fn().mockResolvedValue(undefined),
-    createEntity: vi.fn().mockResolvedValue(mockEntity),
+    getEntity: mock().mockResolvedValue(mockEntity),
+    getEntityById: mock().mockResolvedValue(mockEntity),
+    updateEntity: mock().mockResolvedValue(undefined),
+    createEntity: mock().mockResolvedValue(mockEntity),
 
     // Room operations
-    getRoom: vi.fn().mockResolvedValue(mockRoom),
-    getRooms: vi.fn().mockResolvedValue([mockRoom]),
-    createRoom: vi.fn().mockResolvedValue(mockRoom),
-    getEntitiesForRoom: vi.fn().mockResolvedValue([mockEntity]),
+    getRoom: mock().mockResolvedValue(mockRoom),
+    getRooms: mock().mockResolvedValue([mockRoom]),
+    createRoom: mock().mockResolvedValue(mockRoom),
+    getEntitiesForRoom: mock().mockResolvedValue([mockEntity]),
 
     // Relationship operations
-    getRelationships: vi.fn().mockResolvedValue([]),
-    saveRelationships: vi.fn().mockResolvedValue(undefined),
-    updateRelationship: vi.fn().mockResolvedValue(undefined),
-    getRelationshipsByEntityIds: vi.fn().mockResolvedValue([]),
+    getRelationships: mock().mockResolvedValue([]),
+    saveRelationships: mock().mockResolvedValue(undefined),
+    updateRelationship: mock().mockResolvedValue(undefined),
+    getRelationshipsByEntityIds: mock().mockResolvedValue([]),
 
     // Component operations
-    getComponents: vi.fn().mockResolvedValue([]),
-    createComponent: vi.fn().mockResolvedValue({
+    getComponents: mock().mockResolvedValue([]),
+    createComponent: mock().mockResolvedValue({
       id: stringToUuid('test-component'),
       type: 'test',
       agentId: stringToUuid('test-agent'),
@@ -65,25 +65,25 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
       data: {} as Metadata,
       createdAt: Date.now(),
     }),
-    updateComponent: vi.fn().mockResolvedValue(undefined),
-    deleteComponent: vi.fn().mockResolvedValue(undefined),
+    updateComponent: mock().mockResolvedValue(undefined),
+    deleteComponent: mock().mockResolvedValue(undefined),
 
     // Task operations
-    getTasks: vi.fn().mockResolvedValue([]),
-    getTask: vi.fn().mockResolvedValue(null),
-    createTask: vi.fn().mockImplementation((task) => ({
+    getTasks: mock().mockResolvedValue([]),
+    getTask: mock().mockResolvedValue(null),
+    createTask: mock().mockImplementation((task) => ({
       ...task,
       id: stringToUuid(`task-${Date.now()}`),
       createdAt: Date.now(),
     })),
-    updateTask: vi.fn().mockResolvedValue(undefined),
-    deleteTask: vi.fn().mockResolvedValue(undefined),
+    updateTask: mock().mockResolvedValue(undefined),
+    deleteTask: mock().mockResolvedValue(undefined),
 
     // Service operations
-    getService: vi.fn((name: string) => {
+    getService: mock((name: string) => {
       const services: Record<string, any> = {
         entity: {
-          trackEntity: vi.fn().mockResolvedValue({
+          trackEntity: mock().mockResolvedValue({
             entityId: stringToUuid('test-entity-id'),
             agentId: stringToUuid('test-agent'),
             names: ['Test Entity'],
@@ -95,11 +95,11 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           }),
-          searchEntities: vi.fn().mockResolvedValue([]),
-          getEntity: vi.fn().mockResolvedValue(null),
+          searchEntities: mock().mockResolvedValue([]),
+          getEntity: mock().mockResolvedValue(null),
         },
         entityGraph: {
-          trackEntity: vi.fn().mockResolvedValue({
+          trackEntity: mock().mockResolvedValue({
             entityId: stringToUuid('test-entity-id'),
             agentId: stringToUuid('test-agent'),
             names: ['Test Entity'],
@@ -111,12 +111,12 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           }),
-          searchEntities: vi.fn().mockResolvedValue([]),
-          getEntityRelationships: vi.fn().mockResolvedValue([]),
-          analyzeInteraction: vi.fn().mockResolvedValue(null),
+          searchEntities: mock().mockResolvedValue([]),
+          getEntityRelationships: mock().mockResolvedValue([]),
+          analyzeInteraction: mock().mockResolvedValue(null),
         },
         followup: {
-          scheduleFollowUp: vi.fn().mockResolvedValue({
+          scheduleFollowUp: mock().mockResolvedValue({
             id: stringToUuid('test-followup-id'),
             entityId: stringToUuid('test-entity-id'),
             message: 'Test follow-up',
@@ -124,15 +124,15 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
             completed: false,
             metadata: {},
           }),
-          getUpcomingFollowUps: vi.fn().mockResolvedValue([]),
-          completeFollowUp: vi.fn().mockResolvedValue(undefined),
+          getUpcomingFollowUps: mock().mockResolvedValue([]),
+          completeFollowUp: mock().mockResolvedValue(undefined),
         },
       };
       return services[name] || null;
     }),
 
     // Model operations
-    useModel: vi.fn((modelType: any, params: any) => {
+    useModel: mock((modelType: any, params: any) => {
       // Check if it's a validation prompt
       if (params?.prompt?.toLowerCase().includes('answer only yes or no')) {
         return Promise.resolve('yes');
@@ -146,33 +146,33 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
     }),
 
     // Settings
-    getSetting: vi.fn(),
+    getSetting: mock(),
 
     // Event operations
-    emitEvent: vi.fn().mockResolvedValue(undefined),
+    emitEvent: mock().mockResolvedValue(undefined),
 
     // Other operations
-    getParticipantUserState: vi.fn().mockResolvedValue(null),
-    setParticipantUserState: vi.fn().mockResolvedValue(undefined),
-    composeState: vi.fn().mockResolvedValue({
+    getParticipantUserState: mock().mockResolvedValue(null),
+    setParticipantUserState: mock().mockResolvedValue(undefined),
+    composeState: mock().mockResolvedValue({
       values: {},
       data: {},
       text: '',
     }),
-    createRelationship: vi.fn().mockImplementation((rel: Relationship) => ({
+    createRelationship: mock().mockImplementation((rel: Relationship) => ({
       ...rel,
       id: rel.id || stringToUuid(`rel-${Date.now()}`),
     })),
-    getRoomsForParticipant: vi.fn().mockResolvedValue([stringToUuid('test-room')]),
-    getComponent: vi.fn().mockResolvedValue(null),
-    getEntitiesByIds: vi.fn().mockResolvedValue([]),
-    setCache: vi.fn().mockResolvedValue(undefined),
-    getCache: vi.fn().mockResolvedValue(null),
+    getRoomsForParticipant: mock().mockResolvedValue([stringToUuid('test-room')]),
+    getComponent: mock().mockResolvedValue(null),
+    getEntitiesByIds: mock().mockResolvedValue([]),
+    setCache: mock().mockResolvedValue(undefined),
+    getCache: mock().mockResolvedValue(null),
     db: {
-      query: vi.fn().mockResolvedValue([]),
-      execute: vi.fn().mockResolvedValue({ changes: 1 }),
-      getWorlds: vi.fn().mockResolvedValue([]),
-      getWorld: vi.fn().mockResolvedValue(null),
+      query: mock().mockResolvedValue([]),
+      execute: mock().mockResolvedValue({ changes: 1 }),
+      getWorlds: mock().mockResolvedValue([]),
+      getWorld: mock().mockResolvedValue(null),
     },
 
     ...overrides,

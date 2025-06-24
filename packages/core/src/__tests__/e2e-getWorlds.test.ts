@@ -1,4 +1,4 @@
-import { describe, expect, beforeEach, it, vi } from 'vitest';
+import { describe, expect, beforeEach, it, mock, spyOn } from 'bun:test';
 import { AgentRuntime } from '../runtime';
 import { DatabaseAdapter } from '../database';
 import type { Character, World, UUID } from '../types';
@@ -127,69 +127,69 @@ class TestDatabaseAdapter extends DatabaseAdapter {
   }
 
   // Required stub implementations (not used in this test)
-  getAllWorlds = vi.fn();
-  getAgent = vi.fn();
-  getAgents = vi.fn();
-  createAgent = vi.fn();
-  updateAgent = vi.fn();
-  deleteAgent = vi.fn();
-  ensureEmbeddingDimension = vi.fn();
-  getEntitiesByIds = vi.fn();
-  getEntitiesForRoom = vi.fn();
-  createEntities = vi.fn();
-  updateEntity = vi.fn();
-  getComponent = vi.fn();
-  getComponents = vi.fn();
-  createComponent = vi.fn();
-  updateComponent = vi.fn();
-  deleteComponent = vi.fn();
-  getMemories = vi.fn();
-  getMemoryById = vi.fn();
-  getMemoriesByIds = vi.fn();
-  getMemoriesByRoomIds = vi.fn();
-  getCachedEmbeddings = vi.fn();
-  log = vi.fn();
-  getLogs = vi.fn();
-  deleteLog = vi.fn();
-  searchMemories = vi.fn();
-  createMemory = vi.fn();
-  updateMemory = vi.fn();
-  deleteMemory = vi.fn();
-  deleteManyMemories = vi.fn();
-  deleteAllMemories = vi.fn();
-  countMemories = vi.fn();
-  createWorld = vi.fn();
-  getWorld = vi.fn();
-  removeWorld = vi.fn();
-  updateWorld = vi.fn();
-  getRoomsByIds = vi.fn();
-  createRooms = vi.fn();
-  deleteRoom = vi.fn();
-  deleteRoomsByWorldId = vi.fn();
-  updateRoom = vi.fn();
-  getRoomsForParticipant = vi.fn();
-  getRoomsForParticipants = vi.fn();
-  getRoomsByWorld = vi.fn();
-  removeParticipant = vi.fn();
-  getParticipantsForEntity = vi.fn();
-  getParticipantsForRoom = vi.fn();
-  addParticipantsRoom = vi.fn();
-  getParticipantUserState = vi.fn();
-  setParticipantUserState = vi.fn();
-  createRelationship = vi.fn();
-  updateRelationship = vi.fn();
-  getRelationship = vi.fn();
-  getRelationships = vi.fn();
-  getCache = vi.fn();
-  setCache = vi.fn();
-  deleteCache = vi.fn();
-  createTask = vi.fn();
-  getTasks = vi.fn();
-  getTask = vi.fn();
-  getTasksByName = vi.fn();
-  updateTask = vi.fn();
-  deleteTask = vi.fn();
-  getMemoriesByWorldId = vi.fn();
+  getAllWorlds = mock();
+  getAgent = mock();
+  getAgents = mock();
+  createAgent = mock();
+  updateAgent = mock();
+  deleteAgent = mock();
+  ensureEmbeddingDimension = mock();
+  getEntitiesByIds = mock();
+  getEntitiesForRoom = mock();
+  createEntities = mock();
+  updateEntity = mock();
+  getComponent = mock();
+  getComponents = mock();
+  createComponent = mock();
+  updateComponent = mock();
+  deleteComponent = mock();
+  getMemories = mock();
+  getMemoryById = mock();
+  getMemoriesByIds = mock();
+  getMemoriesByRoomIds = mock();
+  getCachedEmbeddings = mock();
+  log = mock();
+  getLogs = mock();
+  deleteLog = mock();
+  searchMemories = mock();
+  createMemory = mock();
+  updateMemory = mock();
+  deleteMemory = mock();
+  deleteManyMemories = mock();
+  deleteAllMemories = mock();
+  countMemories = mock();
+  createWorld = mock();
+  getWorld = mock();
+  removeWorld = mock();
+  updateWorld = mock();
+  getRoomsByIds = mock();
+  createRooms = mock();
+  deleteRoom = mock();
+  deleteRoomsByWorldId = mock();
+  updateRoom = mock();
+  getRoomsForParticipant = mock();
+  getRoomsForParticipants = mock();
+  getRoomsByWorld = mock();
+  removeParticipant = mock();
+  getParticipantsForEntity = mock();
+  getParticipantsForRoom = mock();
+  addParticipantsRoom = mock();
+  getParticipantUserState = mock();
+  setParticipantUserState = mock();
+  createRelationship = mock();
+  updateRelationship = mock();
+  getRelationship = mock();
+  getRelationships = mock();
+  getCache = mock();
+  setCache = mock();
+  deleteCache = mock();
+  createTask = mock();
+  getTasks = mock();
+  getTask = mock();
+  getTasksByName = mock();
+  updateTask = mock();
+  deleteTask = mock();
+  getMemoriesByWorldId = mock();
 }
 
 describe('End-to-End getWorlds API test', () => {
@@ -270,7 +270,7 @@ describe('End-to-End getWorlds API test', () => {
   });
 
   it('should pass agentId automatically', async () => {
-    const getWorldsSpy = vi.spyOn(adapter, 'getWorlds');
+    const getWorldsSpy = spyOn(adapter, 'getWorlds');
 
     await runtime.getWorlds({ serverId: 'test-server' });
 
@@ -334,11 +334,11 @@ describe('End-to-End getWorlds API test', () => {
       averageRoomsPerWorld:
         allWorlds.length > 0
           ? allWorlds.reduce(
-              (sum, world) =>
-                sum +
+            (sum, world) =>
+              sum +
                 (typeof world.metadata?.roomCount === 'number' ? world.metadata.roomCount : 0),
-              0
-            ) / allWorlds.length
+            0
+          ) / allWorlds.length
           : 0,
     };
 

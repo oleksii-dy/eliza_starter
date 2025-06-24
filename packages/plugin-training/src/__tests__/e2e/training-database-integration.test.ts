@@ -8,7 +8,7 @@
  * and validates actual database functionality rather than mock behavior.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { TrainingDatabaseManager } from '../../database/TrainingDatabaseManager.js';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { elizaLogger, createUniqueUuid } from '@elizaos/core';

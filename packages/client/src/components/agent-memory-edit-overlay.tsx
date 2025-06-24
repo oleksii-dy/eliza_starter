@@ -1,7 +1,6 @@
-import type React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useUpdateMemory, useDeleteMemory } from '@/hooks/use-query-hooks';
 import type { Memory, UUID } from '@elizaos/core';
-import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -73,6 +72,7 @@ export default function MemoryEditOverlay({
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
         if (hasUnsavedChanges) {
+          // eslint-disable-next-line no-alert
           if (confirm('You have unsaved changes. Are you sure you want to close?')) {
             onClose();
           }
@@ -111,7 +111,7 @@ export default function MemoryEditOverlay({
       updateMemory(
         {
           agentId,
-          memoryId: memory.id!,
+          memoryId: memory.id as string,
           memoryData: {
             content: parsedContent,
           },
@@ -133,7 +133,7 @@ export default function MemoryEditOverlay({
           },
         }
       );
-    } catch (error) {
+    } catch {
       toast({
         title: 'Invalid JSON',
         description: 'Please enter valid JSON format',
@@ -143,11 +143,12 @@ export default function MemoryEditOverlay({
   }, [editedContent, isValidJson, updateMemory, agentId, memory.id, onClose, toast]);
 
   const handleDelete = useCallback(() => {
+    // eslint-disable-next-line no-alert
     if (confirm('Are you sure you want to delete this memory? This action cannot be undone.')) {
       deleteMemory(
         {
           agentId,
-          memoryId: memory.id!,
+          memoryId: memory.id as string,
         },
         {
           onSuccess: () => {
@@ -177,7 +178,7 @@ export default function MemoryEditOverlay({
         title: 'Formatted',
         description: 'JSON has been formatted',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Format Error',
         description: 'Cannot format invalid JSON',
@@ -187,6 +188,7 @@ export default function MemoryEditOverlay({
   }, [editedContent, toast]);
 
   const handleReset = useCallback(() => {
+    // eslint-disable-next-line no-alert
     if (confirm('Reset to original content? All changes will be lost.')) {
       setEditedContent(originalContent);
     }
@@ -199,7 +201,7 @@ export default function MemoryEditOverlay({
         title: 'Copied',
         description: 'Content copied to clipboard',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Copy Failed',
         description: 'Failed to copy to clipboard',
@@ -215,6 +217,7 @@ export default function MemoryEditOverlay({
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       if (hasUnsavedChanges) {
+        // eslint-disable-next-line no-alert
         if (confirm('You have unsaved changes. Are you sure you want to close?')) {
           onClose();
         }
@@ -224,7 +227,9 @@ export default function MemoryEditOverlay({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div

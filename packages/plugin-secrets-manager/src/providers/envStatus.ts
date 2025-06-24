@@ -1,20 +1,11 @@
-import {
-  logger,
-  type IAgentRuntime,
-  type Memory,
-  type Provider,
-  type ProviderResult,
-  type State,
-  type UUID,
-} from '@elizaos/core';
+import { EnvManager } from '../service';
 import type { EnvVarMetadata, EnvVarConfig } from '../types';
-import { EnvManagerService } from '../service';
 
 /**
  * Formats environment variable status for display
  * NEVER shows actual values for security
  */
-function formatEnvVarStatus(config: EnvVarConfig): string {
+function formatEnvVarStatus(_config: EnvVarConfig): string {
   const statusIcon = {
     missing: '❌',
     generating: '⏳',
@@ -31,7 +22,7 @@ function formatEnvVarStatus(config: EnvVarConfig): string {
   statusText += `   Status: ${config.status.toUpperCase()}\n`;
 
   if (config.canGenerate && config.status === 'missing') {
-    statusText += `   🤖 Can be auto-generated\n`;
+    statusText += '   🤖 Can be auto-generated\n';
   }
 
   if (config.lastError) {
@@ -59,8 +50,8 @@ function generateEnvStatusMessage(envVars: EnvVarMetadata): string {
   let needsUserInput = 0;
   let validVars = 0;
 
-  for (const plugin of Object.values(envVars)) {
-    for (const config of Object.values(plugin)) {
+  for (const _plugin of Object.values(envVars)) {
+    for (const _config of Object.values(plugin)) {
       totalVars++;
       if (config.status === 'valid') {
         validVars++;
@@ -75,7 +66,7 @@ function generateEnvStatusMessage(envVars: EnvVarMetadata): string {
     }
   }
 
-  let statusMessage = `# Environment Variables Status\n\n`;
+  let statusMessage = '# Environment Variables Status\n\n';
   statusMessage += `**Summary:** ${validVars}/${totalVars} variables configured\n`;
 
   if (missingRequired > 0) {
@@ -128,11 +119,11 @@ export const envStatusProvider: Provider = {
   name: 'ENV_STATUS',
   description: 'Current status of environment variables for all plugins',
 
-  get: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<ProviderResult> => {
+  get: async (_runtime: IAgentRuntime, message: Memory, state?: State): Promise<ProviderResult> => {
     try {
-      const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
+      const env = runtime.get('ENV_MANAGER') as EnvManager;
 
-      if (!envService) {
+      if (!env) {
         logger.debug('[EnvStatus] No environment manager service found');
         return {
           data: { envVars: {} },
@@ -146,7 +137,7 @@ export const envStatusProvider: Provider = {
         };
       }
 
-      const envVars = await envService.getAllEnvVars();
+      const envVars = await env.getAllEnvVars();
 
       if (!envVars || Object.keys(envVars).length === 0) {
         logger.debug('[EnvStatus] No environment variables configured yet');
@@ -167,8 +158,8 @@ export const envStatusProvider: Provider = {
       let hasGeneratable = false;
       let needsUserInput = false;
 
-      for (const plugin of Object.values(envVars)) {
-        for (const config of Object.values(plugin)) {
+      for (const _plugin of Object.values(envVars)) {
+        for (const _config of Object.values(plugin)) {
           if (config.required && config.status === 'missing') {
             hasMissing = true;
             if (config.canGenerate) {

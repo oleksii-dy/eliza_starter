@@ -1,15 +1,14 @@
 import {
-  Action,
+  type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
   type HandlerCallback,
   elizaLogger,
 } from '@elizaos/core';
-import {
-  type TrainingServiceInterface,
-} from '../types.js';
-import { TrainingService } from '../services/training-service.js';
+import { type TrainingServiceInterface } from '../types.js';
+import { type TrainingService } from '../services/training-service.js';
 
 /**
  * Action to monitor RLAIF training progress
@@ -17,7 +16,8 @@ import { TrainingService } from '../services/training-service.js';
 export const monitorTrainingAction: Action = {
   name: 'MONITOR_TRAINING',
   similes: ['CHECK_TRAINING', 'TRAINING_STATUS', 'TRAINING_PROGRESS', 'GET_TRAINING_STATUS'],
-  description: 'Monitor the progress and status of RLAIF training jobs',
+  description:
+    'Monitor the progress and status of RLAIF training jobs. Can be chained with START_TRAINING to initiate training or CHECK_TRAINING_STATUS for job status updates.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     // Check if training service is available
@@ -29,7 +29,9 @@ export const monitorTrainingAction: Action = {
 
     // Check if message contains monitoring request
     const text = message.content.text?.toLowerCase();
-    if (!text) return false;
+    if (!text) {
+      return false;
+    }
 
     const monitoringKeywords = [
       'monitor training',
@@ -43,7 +45,7 @@ export const monitorTrainingAction: Action = {
       'training job status',
     ];
 
-    return monitoringKeywords.some(keyword => text.includes(keyword));
+    return monitoringKeywords.some((keyword) => text.includes(keyword));
   },
 
   handler: async (
@@ -52,7 +54,7 @@ export const monitorTrainingAction: Action = {
     state?: State,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
-  ) => {
+  ): Promise<ActionResult> => {
     elizaLogger.info('Executing MONITOR_TRAINING action');
 
     try {
@@ -63,7 +65,7 @@ export const monitorTrainingAction: Action = {
 
       // Extract job ID from message or state
       const jobId = extractJobId(message, state);
-      
+
       if (!jobId) {
         await callback?.({
           text: 'Please specify which training job to monitor. You can say "monitor training [job-id]" or I can show you all active jobs.',
@@ -73,7 +75,7 @@ export const monitorTrainingAction: Action = {
 
         // Show all active jobs if no specific job ID
         const stats = await trainingService.getTrainingStats();
-        
+
         await callback?.({
           text: `📊 **Training Overview**
 
@@ -88,10 +90,16 @@ To monitor a specific training job, use: \`monitor training [job-id]\``,
         });
 
         return {
+          text: 'General training statistics provided',
+          data: {
+            actionName: 'MONITOR_TRAINING',
+            stats,
+            showedOverview: true,
+          },
           values: {
+            success: true,
             datasetStats: stats,
           },
-          text: 'General training statistics provided',
         };
       }
 
@@ -113,6 +121,16 @@ To monitor a specific training job, use: \`monitor training [job-id]\``,
 
         return {
           text: `Training job ${jobId} not found`,
+          data: {
+            actionName: 'MONITOR_TRAINING',
+            jobId,
+            error: 'job_not_found',
+          },
+          values: {
+            success: false,
+            error: 'job_not_found',
+            jobId,
+          },
         };
       }
 
@@ -146,16 +164,24 @@ ${getStatusAdvice(trainingJob.status)}`;
       });
 
       return {
+        text: `Training job ${jobId} status: ${trainingJob.status}`,
+        data: {
+          actionName: 'MONITOR_TRAINING',
+          trainingJob,
+          jobId,
+          duration,
+          progressText,
+          metricsText,
+        },
         values: {
+          success: true,
           trainingJobId: jobId,
           trainingStatus: trainingJob.status,
           progress: trainingJob.progress,
           metrics: trainingJob.metrics,
+          isCompleted: trainingJob.status === 'completed',
+          isFailed: trainingJob.status === 'failed',
         },
-        data: {
-          trainingJob,
-        },
-        text: `Training job ${jobId} status: ${trainingJob.status}`,
       };
     } catch (error) {
       elizaLogger.error('Error in MONITOR_TRAINING action:', error);
@@ -171,11 +197,73 @@ This could happen if:
         actions: ['MONITOR_TRAINING'],
       });
 
-      throw error;
+      return {
+        text: `Failed to monitor training: ${error instanceof Error ? error.message : String(error)}`,
+        data: {
+          actionName: 'MONITOR_TRAINING',
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
 
   examples: [
+    // Multi-action: Start training then monitor
+    [
+      {
+        name: 'User',
+        content: {
+          text: 'Start training with my dataset and monitor the progress',
+        },
+      },
+      {
+        name: 'Assistant',
+        content: {
+          text: "I'll start the training process and monitor its progress.",
+          thought: 'User wants to start training and monitor it',
+          actions: ['START_TRAINING', 'MONITOR_TRAINING'],
+        },
+      },
+    ],
+    // Multi-action: Check status then monitor if running
+    [
+      {
+        name: 'User',
+        content: {
+          text: 'Check my training status and monitor if any jobs are running',
+        },
+      },
+      {
+        name: 'Assistant',
+        content: {
+          text: "I'll check your training status and monitor any active jobs.",
+          thought: 'User wants conditional monitoring based on status',
+          actions: ['CHECK_TRAINING_STATUS', 'MONITOR_TRAINING'],
+        },
+      },
+    ],
+    // Multi-action: Monitor then configure if complete
+    [
+      {
+        name: 'User',
+        content: {
+          text: 'Monitor my training and configure auto-coder when it completes',
+        },
+      },
+      {
+        name: 'Assistant',
+        content: {
+          text: "I'll monitor your training progress and configure auto-coder once it's complete.",
+          thought: 'User wants monitoring followed by configuration',
+          actions: ['MONITOR_TRAINING', 'CONFIGURE_AUTOCODER'],
+        },
+      },
+    ],
     [
       {
         name: 'User',
@@ -202,7 +290,7 @@ This could happen if:
       {
         name: 'Assistant',
         content: {
-          text: "Let me check the current training progress and show you the latest metrics.",
+          text: 'Let me check the current training progress and show you the latest metrics.',
           thought: 'User wants general training progress update',
           actions: ['MONITOR_TRAINING'],
         },
@@ -232,7 +320,7 @@ This could happen if:
  */
 function extractJobId(message: Memory, state?: State): string | null {
   const text = message.content.text || '';
-  
+
   // Check state first
   if (state?.values?.trainingJobId) {
     return state.values.trainingJobId;
@@ -260,12 +348,18 @@ function extractJobId(message: Memory, state?: State): string | null {
  */
 function getStatusEmoji(status: string): string {
   switch (status.toLowerCase()) {
-    case 'pending': return '⏳';
-    case 'running': return '🏃';
-    case 'completed': return '✅';
-    case 'failed': return '❌';
-    case 'cancelled': return '🛑';
-    default: return '❓';
+    case 'pending':
+      return '⏳';
+    case 'running':
+      return '🏃';
+    case 'completed':
+      return '✅';
+    case 'failed':
+      return '❌';
+    case 'cancelled':
+      return '🛑';
+    default:
+      return '❓';
   }
 }
 
@@ -273,15 +367,17 @@ function getStatusEmoji(status: string): string {
  * Calculate duration
  */
 function getDuration(startTime?: Date, endTime?: Date): string {
-  if (!startTime) return 'Not started';
-  
+  if (!startTime) {
+    return 'Not started';
+  }
+
   const end = endTime || new Date();
   const diffMs = end.getTime() - startTime.getTime();
-  
+
   const hours = Math.floor(diffMs / (1000 * 60 * 60));
   const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-  
+
   if (hours > 0) {
     return `${hours}h ${minutes}m ${seconds}s`;
   } else if (minutes > 0) {
@@ -295,17 +391,15 @@ function getDuration(startTime?: Date, endTime?: Date): string {
  * Format progress information
  */
 function formatProgress(progress?: any): string {
-  if (!progress) return '';
-  
-  const {
-    currentStep = 0,
-    totalSteps = 0,
-    currentLoss = 0,
-    bestLoss = 0,
-    eta = 0,
-  } = progress;
+  if (!progress) {
+    return '';
+  }
 
-  if (totalSteps === 0) return '';
+  const { currentStep = 0, totalSteps = 0, currentLoss = 0, bestLoss = 0, eta = 0 } = progress;
+
+  if (totalSteps === 0) {
+    return '';
+  }
 
   const percentage = ((currentStep / totalSteps) * 100).toFixed(1);
   const progressBar = generateProgressBar(currentStep, totalSteps);
@@ -321,11 +415,13 @@ function formatProgress(progress?: any): string {
  * Generate visual progress bar
  */
 function generateProgressBar(current: number, total: number, length: number = 20): string {
-  if (total === 0) return '░'.repeat(length);
-  
+  if (total === 0) {
+    return '░'.repeat(length);
+  }
+
   const filled = Math.round((current / total) * length);
   const empty = length - filled;
-  
+
   return '█'.repeat(filled) + '░'.repeat(empty);
 }
 
@@ -336,7 +432,7 @@ function formatETA(etaSeconds: number): string {
   const hours = Math.floor(etaSeconds / 3600);
   const minutes = Math.floor((etaSeconds % 3600) / 60);
   const seconds = Math.floor(etaSeconds % 60);
-  
+
   if (hours > 0) {
     return `${hours}h ${minutes}m`;
   } else if (minutes > 0) {
@@ -350,41 +446,38 @@ function formatETA(etaSeconds: number): string {
  * Format training metrics
  */
 function formatMetrics(metrics?: any): string {
-  if (!metrics) return '';
-  
-  const {
-    trainingLoss = [],
-    validationLoss = [],
-    accuracy = [],
-    rewardScore = []
-  } = metrics;
+  if (!metrics) {
+    return '';
+  }
+
+  const { trainingLoss = [], validationLoss = [], accuracy = [], rewardScore = [] } = metrics;
 
   let text = '**Metrics:**\\n';
-  
+
   if (trainingLoss.length > 0) {
     const latest = trainingLoss[trainingLoss.length - 1];
     const trend = getTrend(trainingLoss.slice(-5));
     text += `- Training Loss: ${latest.toFixed(4)} ${trend}\\n`;
   }
-  
+
   if (validationLoss.length > 0) {
     const latest = validationLoss[validationLoss.length - 1];
     const trend = getTrend(validationLoss.slice(-5));
     text += `- Validation Loss: ${latest.toFixed(4)} ${trend}\\n`;
   }
-  
+
   if (accuracy.length > 0) {
     const latest = accuracy[accuracy.length - 1];
     const trend = getTrend(accuracy.slice(-5));
     text += `- Accuracy: ${(latest * 100).toFixed(2)}% ${trend}\\n`;
   }
-  
+
   if (rewardScore.length > 0) {
     const latest = rewardScore[rewardScore.length - 1];
     const trend = getTrend(rewardScore.slice(-5));
     text += `- Reward Score: ${latest.toFixed(3)} ${trend}\\n`;
   }
-  
+
   return text;
 }
 
@@ -392,18 +485,26 @@ function formatMetrics(metrics?: any): string {
  * Get trend indicator
  */
 function getTrend(values: number[]): string {
-  if (values.length < 2) return '';
-  
+  if (values.length < 2) {
+    return '';
+  }
+
   const recent = values.slice(-3);
   const older = values.slice(0, -2);
-  
-  if (recent.length === 0 || older.length === 0) return '';
-  
+
+  if (recent.length === 0 || older.length === 0) {
+    return '';
+  }
+
   const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
   const olderAvg = older.reduce((a, b) => a + b, 0) / older.length;
-  
-  if (recentAvg > olderAvg) return '📈';
-  if (recentAvg < olderAvg) return '📉';
+
+  if (recentAvg > olderAvg) {
+    return '📈';
+  }
+  if (recentAvg < olderAvg) {
+    return '📉';
+  }
   return '➡️';
 }
 
@@ -412,23 +513,23 @@ function getTrend(values: number[]): string {
  */
 function formatArtifacts(artifacts: any): string {
   let text = '**Artifacts:**\\n';
-  
+
   if (artifacts.modelPath) {
     text += `- Model: \`${artifacts.modelPath}\`\\n`;
   }
-  
+
   if (artifacts.datasetPath) {
     text += `- Dataset: \`${artifacts.datasetPath}\`\\n`;
   }
-  
+
   if (artifacts.logsPath) {
     text += `- Logs: \`${artifacts.logsPath}\`\\n`;
   }
-  
+
   if (artifacts.checkpointPaths && artifacts.checkpointPaths.length > 0) {
     text += `- Checkpoints: ${artifacts.checkpointPaths.length} saved\\n`;
   }
-  
+
   return text;
 }
 

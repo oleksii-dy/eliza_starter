@@ -5,7 +5,7 @@
  * Verifies OAuth verification, payment risk assessment, and identity consolidation workflows.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import type { IAgentRuntime, Memory, UUID } from '../types';
 import { asUUID } from '../types/primitives';
 import {
@@ -38,7 +38,7 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
         '@elizaos/plugin-secrets-manager',
       ],
     },
-    getSetting: vi.fn((key: string) => {
+    getSetting: mock((key: string) => {
       const settings: Record<string, string> = {
         GOOGLE_CLIENT_ID: 'test-google-client',
         GOOGLE_CLIENT_SECRET: 'test-google-secret',
@@ -47,23 +47,23 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
       };
       return settings[key];
     }),
-    getService: vi.fn((serviceName: string) => {
+    getService: mock((serviceName: string) => {
       if (serviceName === 'OAUTH_VERIFICATION') {
         return {
-          handleCallback: vi.fn().mockResolvedValue({
+          handleCallback: mock().mockResolvedValue({
             id: 'oauth-user-123',
             name: 'Test User',
             email: 'test@example.com',
             verified: true,
             metadata: { provider: 'google' },
           }),
-          createAuthUrl: vi.fn().mockReturnValue('https://oauth.test.com/auth'),
+          createAuthUrl: mock().mockReturnValue('https://oauth.test.com/auth'),
         };
       }
       return null;
     }) as any,
-    getTrustProvider: vi.fn(() => ({
-      getTrustScore: vi.fn().mockImplementation((entityId: UUID) => {
+    getTrustProvider: mock(() => ({
+      getTrustScore: mock().mockImplementation((entityId: UUID) => {
         const score = mockTrustScores.get(entityId) || {
           entityId,
           overall: 0.65,
@@ -82,7 +82,7 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
         };
         return Promise.resolve(score);
       }),
-      updateTrust: vi.fn().mockImplementation((entityId: UUID, evidence) => {
+      updateTrust: mock().mockImplementation((entityId: UUID, evidence) => {
         const currentScore = mockTrustScores.get(entityId) || {
           entityId,
           overall: 0.5,
@@ -113,8 +113,8 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
         return Promise.resolve(currentScore);
       }),
     })) as any,
-    getIdentityManager: vi.fn(() => ({
-      getIdentityProfile: vi.fn().mockImplementation((entityId: UUID) => {
+    getIdentityManager: mock(() => ({
+      getIdentityProfile: mock().mockImplementation((entityId: UUID) => {
         const profile = mockProfiles.get(entityId) || {
           entityId,
           primaryName: 'Test User',
@@ -158,16 +158,16 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
         };
         return Promise.resolve(profile);
       }),
-      verifyIdentity: vi.fn().mockResolvedValue({
+      verifyIdentity: mock().mockResolvedValue({
         success: true,
         verified: true,
         confidence: 0.95,
         reason: 'OAuth verification successful',
         metadata: { platform: 'google' },
       }),
-      linkPlatformIdentity: vi.fn().mockResolvedValue(undefined),
-      findByPlatformIdentity: vi.fn().mockResolvedValue([]),
-      proposeEntityMerge: vi.fn().mockResolvedValue({
+      linkPlatformIdentity: mock().mockResolvedValue(undefined),
+      findByPlatformIdentity: mock().mockResolvedValue([]),
+      proposeEntityMerge: mock().mockResolvedValue({
         id: asUUID('550e8400-e29b-41d4-a716-446655440501'),
         entities: [
           asUUID('550e8400-e29b-41d4-a716-446655440502'),
@@ -181,7 +181,7 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
         estimatedRisk: 'low',
         metadata: {},
       }),
-      executeEntityMerge: vi.fn().mockResolvedValue({
+      executeEntityMerge: mock().mockResolvedValue({
         success: true,
         primaryEntityId: asUUID('550e8400-e29b-41d4-a716-446655440502'),
         mergedEntityIds: [asUUID('550e8400-e29b-41d4-a716-446655440503')],
@@ -189,10 +189,10 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
         rollbackData: null,
         metadata: {},
       }),
-      executeMerge: vi.fn().mockResolvedValue(asUUID('550e8400-e29b-41d4-a716-446655440502')),
+      executeMerge: mock().mockResolvedValue(asUUID('550e8400-e29b-41d4-a716-446655440502')),
     })) as any,
-    getPaymentProvider: vi.fn(() => ({
-      getPaymentProfile: vi.fn().mockResolvedValue({
+    getPaymentProvider: mock(() => ({
+      getPaymentProfile: mock().mockResolvedValue({
         entityId: asUUID('test-entity'),
         preferredMethods: [],
         transactionHistory: [],
@@ -201,9 +201,9 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
         trustScore: 0.65,
         metadata: {},
       }),
-      getPaymentHistory: vi.fn().mockResolvedValue([]),
-      assessPaymentRisk: vi.fn().mockResolvedValue('low'),
-      processPayment: vi.fn().mockResolvedValue({
+      getPaymentHistory: mock().mockResolvedValue([]),
+      assessPaymentRisk: mock().mockResolvedValue('low'),
+      processPayment: mock().mockResolvedValue({
         id: asUUID('payment-123'),
         entityId: asUUID('test-entity'),
         amount: '100',
@@ -232,7 +232,7 @@ describe('Workflow Actions', () => {
   beforeEach(() => {
     mockRuntime = createMockRuntime();
     testEntityId = asUUID('660e8400-e29b-41d4-a716-446655440001');
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('OAuth Identity Verification Workflow', () => {
@@ -264,7 +264,7 @@ describe('Workflow Actions', () => {
 
     it('should handle OAuth verification workflow successfully', async () => {
       const message = createTestMessage('Verify my Google account please', testEntityId);
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
 
       // The workflow should return a failure result due to missing services
       const result = await verifyOAuthIdentityWorkflowAction.handler(
@@ -291,10 +291,10 @@ describe('Workflow Actions', () => {
 
     it('should detect different platforms from message content', async () => {
       const platforms = ['github', 'discord', 'twitter'];
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
 
       for (const platform of platforms) {
-        vi.clearAllMocks();
+        mock.restore();
         const message = createTestMessage(`Please verify my ${platform} account`, testEntityId);
 
         // Should return failure result due to missing services
@@ -349,7 +349,7 @@ describe('Workflow Actions', () => {
         'Assess payment risk for $1000 ETH transaction',
         testEntityId
       );
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
 
       const result = await assessPaymentRiskWorkflowAction.handler(
         mockRuntime as IAgentRuntime,
@@ -382,7 +382,7 @@ describe('Workflow Actions', () => {
 
       for (const testCase of testCases) {
         const message = createTestMessage(testCase.message, testEntityId);
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         await assessPaymentRiskWorkflowAction.handler(
           mockRuntime as IAgentRuntime,
@@ -433,7 +433,7 @@ describe('Workflow Actions', () => {
 
     it('should handle identity consolidation successfully', async () => {
       const message = createTestMessage('Consolidate my platform identities', testEntityId);
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
 
       const result = await consolidateIdentityWorkflowAction.handler(
         mockRuntime as IAgentRuntime,
@@ -483,10 +483,10 @@ describe('Workflow Actions', () => {
     it('should handle missing services gracefully', async () => {
       const runtimeWithoutServices = {
         ...mockRuntime,
-        getService: vi.fn(() => null),
-        getIdentityManager: vi.fn(() => null),
-        getTrustProvider: vi.fn(() => null),
-        getPaymentProvider: vi.fn(() => null),
+        getService: mock(() => null),
+        getIdentityManager: mock(() => null),
+        getTrustProvider: mock(() => null),
+        getPaymentProvider: mock(() => null),
       };
 
       const message = createTestMessage('Verify my Google account', testEntityId);
@@ -509,13 +509,13 @@ describe('Workflow Actions', () => {
     it('should handle workflow execution errors', async () => {
       const faultyRuntime = {
         ...mockRuntime,
-        getTrustProvider: vi.fn(() => {
+        getTrustProvider: mock(() => {
           throw new Error('Service unavailable');
         }),
       };
 
       const message = createTestMessage('Verify my Google account', testEntityId);
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
 
       // The handler will fail gracefully due to missing services, not throw
       const result = await verifyOAuthIdentityWorkflowAction.handler(
@@ -542,7 +542,7 @@ describe('Workflow Actions', () => {
   describe('Integration with CrossPluginIntegrationService', () => {
     it('should properly instantiate CrossPluginIntegrationService', async () => {
       const message = createTestMessage('Verify my Google account', testEntityId);
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
 
       // This test verifies that the service can be instantiated without errors
       await expect(

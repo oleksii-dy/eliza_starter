@@ -10,7 +10,7 @@ const __dirname = dirname(__filename);
 
 async function testScenarioLoading() {
   console.log('Testing scenario loading...\n');
-  
+
   const scenarios = [
     './scenarios/plugin-tests/01-research-knowledge-integration.ts',
     './scenarios/plugin-tests/02-github-todo-workflow.ts',
@@ -18,19 +18,19 @@ async function testScenarioLoading() {
     './scenarios/plugin-tests/04-rolodex-relationship-management.ts',
     './scenarios/plugin-tests/05-stagehand-web-research.ts',
   ];
-  
+
   let successCount = 0;
   let errorCount = 0;
-  
+
   for (const scenarioPath of scenarios) {
     try {
       const fullPath = join(__dirname, scenarioPath);
       console.log(`Loading: ${scenarioPath}`);
-      
+
       // Dynamic import
       const module = await import(fullPath);
       const scenario = module.default || module.scenario;
-      
+
       if (scenario && scenario.id && scenario.name) {
         console.log(`  ✓ Loaded: ${scenario.name} (${scenario.id})`);
         console.log(`    - Actors: ${scenario.actors.length}`);
@@ -38,7 +38,7 @@ async function testScenarioLoading() {
         console.log(`    - Tags: ${scenario.tags.join(', ')}`);
         successCount++;
       } else {
-        console.log(`  ✗ Invalid scenario structure`);
+        console.log('  ✗ Invalid scenario structure');
         errorCount++;
       }
     } catch (error) {
@@ -47,9 +47,9 @@ async function testScenarioLoading() {
     }
     console.log('');
   }
-  
+
   console.log(`\nSummary: ${successCount} loaded successfully, ${errorCount} errors`);
-  
+
   if (successCount > 0) {
     console.log('\nThe scenario files are properly structured!');
     console.log('The issue with the scenario runner is likely related to plugin initialization.');
@@ -60,4 +60,4 @@ async function testScenarioLoading() {
   }
 }
 
-testScenarioLoading().catch(console.error); 
+testScenarioLoading().catch(console.error);

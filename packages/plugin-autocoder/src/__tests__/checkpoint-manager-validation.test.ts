@@ -1,12 +1,12 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, mock, afterEach } from 'bun:test';
 import { CheckpointManager } from '../swe-bench/validation/checkpoint-manager';
 import { DEFAULT_VALIDATION_CONFIG } from '../swe-bench/config/validation-config';
 import type { TestResults } from '../swe-bench/types';
 
 // Mock the test executor and result parser modules
-vi.mock('../swe-bench/validation/test-executor', () => ({
-  TestExecutor: vi.fn().mockImplementation(() => ({
-    executeTests: vi.fn().mockResolvedValue({
+mock.module('../swe-bench/validation/test-executor', () => ({
+  TestExecutor: mock().mockImplementation(() => ({
+    executeTests: mock().mockResolvedValue({
       total: 5,
       passed: 4,
       failed: 1,
@@ -27,9 +27,9 @@ vi.mock('../swe-bench/validation/test-executor', () => ({
   })),
 }));
 
-vi.mock('../swe-bench/validation/result-parser', () => ({
-  ResultParser: vi.fn().mockImplementation(() => ({
-    parseResults: vi.fn().mockResolvedValue({
+mock.module('../swe-bench/validation/result-parser', () => ({
+  ResultParser: mock().mockImplementation(() => ({
+    parseResults: mock().mockResolvedValue({
       results: {
         total: 5,
         passed: 4,
@@ -46,12 +46,12 @@ vi.mock('../swe-bench/validation/result-parser', () => ({
 }));
 
 // Mock fs/promises
-vi.mock('fs/promises', () => ({
-  mkdir: vi.fn().mockResolvedValue(undefined),
-  writeFile: vi.fn().mockResolvedValue(undefined),
-  readFile: vi.fn().mockResolvedValue('{}'),
-  readdir: vi.fn().mockResolvedValue([]),
-  rm: vi.fn().mockResolvedValue(undefined),
+mock.module('fs/promises', () => ({
+  mkdir: mock().mockResolvedValue(undefined),
+  writeFile: mock().mockResolvedValue(undefined),
+  readFile: mock().mockResolvedValue('{}'),
+  readdir: mock().mockResolvedValue([]),
+  rm: mock().mockResolvedValue(undefined),
 }));
 
 describe('CheckpointManager Validation', () => {
@@ -67,7 +67,7 @@ describe('CheckpointManager Validation', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('Session Management', () => {
@@ -145,9 +145,9 @@ describe('CheckpointManager Validation', () => {
 
       // Mock test executor to throw error
       const mockTestExecutor = manager['testExecutor'];
-      vi.spyOn(mockTestExecutor, 'executeTests').mockRejectedValueOnce(
-        new Error('Test execution failed')
-      );
+      mock
+        .spyOn(mockTestExecutor, 'executeTests')
+        .mockRejectedValueOnce(new Error('Test execution failed'));
 
       const checkpoint = await manager.executeValidationCheckpoint(
         sessionId,
@@ -234,7 +234,7 @@ describe('CheckpointManager Validation', () => {
 
       // Mock test executor to return no tests found
       const mockTestExecutor = manager['testExecutor'];
-      vi.spyOn(mockTestExecutor, 'executeTests').mockResolvedValueOnce({
+      mock.spyOn(mockTestExecutor, 'executeTests').mockResolvedValueOnce({
         total: 0,
         passed: 0,
         failed: 0,
@@ -278,7 +278,7 @@ describe('CheckpointManager Validation', () => {
 
       // Mock unreliable execution
       const mockTestExecutor = manager['testExecutor'];
-      vi.spyOn(mockTestExecutor, 'executeTests').mockResolvedValueOnce({
+      mock.spyOn(mockTestExecutor, 'executeTests').mockResolvedValueOnce({
         total: 3,
         passed: 1,
         failed: 2,
@@ -327,7 +327,7 @@ describe('CheckpointManager Validation', () => {
 
       // Mock low-scoring execution to trigger recommendations
       const mockTestExecutor = manager['testExecutor'];
-      vi.spyOn(mockTestExecutor, 'executeTests').mockResolvedValue({
+      mock.spyOn(mockTestExecutor, 'executeTests').mockResolvedValue({
         total: 10,
         passed: 3,
         failed: 7,
@@ -399,7 +399,7 @@ describe('CheckpointManager Validation', () => {
       const mockTestExecutor = manager['testExecutor'];
 
       // First checkpoint - score 60
-      vi.spyOn(mockTestExecutor, 'executeTests').mockResolvedValueOnce({
+      mock.spyOn(mockTestExecutor, 'executeTests').mockResolvedValueOnce({
         total: 5,
         passed: 3,
         failed: 2,
@@ -414,7 +414,7 @@ describe('CheckpointManager Validation', () => {
       await manager.executeValidationCheckpoint(sessionId, 'phase1', '/test/repo');
 
       // Second checkpoint - score 75
-      vi.spyOn(mockTestExecutor, 'executeTests').mockResolvedValueOnce({
+      mock.spyOn(mockTestExecutor, 'executeTests').mockResolvedValueOnce({
         total: 5,
         passed: 4,
         failed: 1,
@@ -429,7 +429,7 @@ describe('CheckpointManager Validation', () => {
       await manager.executeValidationCheckpoint(sessionId, 'phase2', '/test/repo');
 
       // Third checkpoint - score 90
-      vi.spyOn(mockTestExecutor, 'executeTests').mockResolvedValueOnce({
+      mock.spyOn(mockTestExecutor, 'executeTests').mockResolvedValueOnce({
         total: 5,
         passed: 5,
         failed: 0,

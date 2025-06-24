@@ -1,4 +1,4 @@
-import { elizaLogger, IAgentRuntime } from '@elizaos/core';
+import { logger, IAgentRuntime } from '@elizaos/core';
 import { SearchResult, ResearchSource, ResearchFinding, ResearchProject } from '../types';
 import { RelevanceScore, RelevanceAnalysis } from './relevance-analyzer';
 import fs from 'fs/promises';
@@ -81,7 +81,14 @@ export class ResearchLogger {
   private logsDir: string;
 
   constructor(private runtime: IAgentRuntime) {
-    this.logsDir = path.join(process.cwd(), 'research_logs');
+    // Use centralized path management for research logs
+    try {
+      const { getResearchPath } = require('@elizaos/core/utils/path-manager');
+      this.logsDir = getResearchPath('logs');
+    } catch {
+      // Fallback to legacy path if path-manager is not available
+      this.logsDir = path.join(process.cwd(), 'research_logs');
+    }
   }
 
   async initializeSession(
@@ -89,7 +96,7 @@ export class ResearchLogger {
     originalQuery: string,
     queryAnalysis: RelevanceAnalysis
   ): Promise<void> {
-    elizaLogger.info(`[ResearchLogger] Initializing session for project: ${projectId}`);
+    logger.info(`[ResearchLogger] Initializing session for project: ${projectId}`);
 
     const session: ResearchSession = {
       projectId,
@@ -127,9 +134,11 @@ export class ResearchLogger {
     relevanceScores?: Map<string, RelevanceScore>
   ): Promise<void> {
     const session = this.sessions.get(projectId);
-    if (!session) return;
+    if (!session) {
+      return;
+    }
 
-    elizaLogger.info(`[ResearchLogger] Logging search: ${query} (${results.length} results)`);
+    logger.info(`[ResearchLogger] Logging search: ${query} (${results.length} results)`);
 
     const searchLog: SearchLog = {
       timestamp: Date.now(),
@@ -159,7 +168,7 @@ export class ResearchLogger {
     ).length;
     session.summary.relevantResults += relevantCount;
 
-    elizaLogger.info(
+    logger.info(
       `[ResearchLogger] Search logged: ${relevantCount}/${results.length} relevant results`
     );
   }
@@ -175,9 +184,11 @@ export class ResearchLogger {
     relevanceScore?: RelevanceScore
   ): Promise<void> {
     const session = this.sessions.get(projectId);
-    if (!session) return;
+    if (!session) {
+      return;
+    }
 
-    elizaLogger.info(
+    logger.info(
       `[ResearchLogger] Logging content extraction: ${url} (${success ? 'success' : 'failed'})`
     );
 
@@ -210,7 +221,7 @@ export class ResearchLogger {
       }
     }
 
-    elizaLogger.debug(
+    logger.debug(
       `[ResearchLogger] Content extraction logged: ${sourceTitle} - ${contentLength} chars`
     );
   }
@@ -228,9 +239,11 @@ export class ResearchLogger {
     findingRelevanceScores?: Map<string, RelevanceScore>
   ): Promise<void> {
     const session = this.sessions.get(projectId);
-    if (!session) return;
+    if (!session) {
+      return;
+    }
 
-    elizaLogger.info(
+    logger.info(
       `[ResearchLogger] Logging finding extraction: ${sourceUrl} (${findings.length} findings)`
     );
 
@@ -270,7 +283,7 @@ export class ResearchLogger {
       }
     }
 
-    elizaLogger.info(
+    logger.info(
       `[ResearchLogger] Finding extraction logged: ${relevantCount}/${findings.length} relevant findings`
     );
   }
@@ -281,9 +294,11 @@ export class ResearchLogger {
     recommendations: string[]
   ): Promise<ResearchSession> {
     const session = this.sessions.get(projectId);
-    if (!session) throw new Error('Session not found');
+    if (!session) {
+      throw new Error('Session not found');
+    }
 
-    elizaLogger.info(`[ResearchLogger] Finalizing session for project: ${projectId}`);
+    logger.info(`[ResearchLogger] Finalizing session for project: ${projectId}`);
 
     // Calculate overall relevance
     const totalRelevanceScore = session.findingLogs.reduce(
@@ -300,7 +315,7 @@ export class ResearchLogger {
     await this.saveSessionLog(session);
 
     // Log summary
-    elizaLogger.info(`[ResearchLogger] Session summary for ${projectId}:`, {
+    logger.info(`[ResearchLogger] Session summary for ${projectId}:`, {
       duration: Date.now() - session.startTime,
       searches: session.summary.totalSearches,
       results: session.summary.totalResults,
@@ -351,15 +366,15 @@ export class ResearchLogger {
       };
 
       await fs.writeFile(filepath, JSON.stringify(logData, null, 2), 'utf-8');
-      elizaLogger.info(`[ResearchLogger] Session log saved to: ${filepath}`);
+      logger.info(`[ResearchLogger] Session log saved to: ${filepath}`);
 
       // Also create a summary report
       const summaryPath = filepath.replace('.json', '_summary.md');
       const summaryContent = this.generateSummaryReport(session);
       await fs.writeFile(summaryPath, summaryContent, 'utf-8');
-      elizaLogger.info(`[ResearchLogger] Summary report saved to: ${summaryPath}`);
+      logger.info(`[ResearchLogger] Summary report saved to: ${summaryPath}`);
     } catch (error) {
-      elizaLogger.error('[ResearchLogger] Failed to save session log:', error);
+      logger.error('[ResearchLogger] Failed to save session log:', error);
     }
   }
 
@@ -457,20 +472,20 @@ ${session.summary.recommendations.map((rec) => `- ${rec}`).join('\n')}
 
 ## Search Details
 ${session.searchLogs
-  .map(
-    (log, i) => `
+    .map(
+      (log, i) => `
 ### Search ${i + 1}: ${log.query}
 - Provider: ${log.provider}
 - Results: ${log.resultsCount}
 - Relevant: ${log.results.filter((r) => (r.relevanceScore?.score || 0) >= 0.6).length}
 `
-  )
-  .join('\n')}
+    )
+    .join('\n')}
 
 ## Content Extraction
 ${session.extractionLogs
-  .map(
-    (log, i) => `
+    .map(
+      (log, i) => `
 ### Extraction ${i + 1}: ${log.sourceTitle}
 - URL: ${log.url}
 - Method: ${log.method}
@@ -478,8 +493,8 @@ ${session.extractionLogs
 - Content Length: ${log.contentLength} chars
 ${log.error ? `- Error: ${log.error}` : ''}
 `
-  )
-  .join('\n')}
+    )
+    .join('\n')}
 `;
   }
 

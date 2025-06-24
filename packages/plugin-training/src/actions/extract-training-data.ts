@@ -1,5 +1,6 @@
 import {
-  Action,
+  type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
@@ -7,11 +8,8 @@ import {
   elizaLogger,
   ModelType,
 } from '@elizaos/core';
-import {
-  type TrainingConfig,
-  type TrainingServiceInterface,
-} from '../types.js';
-import { TrainingService } from '../services/training-service.js';
+import { type TrainingConfig, type TrainingServiceInterface } from '../types.js';
+import { type TrainingService } from '../services/training-service.js';
 
 /**
  * Action to extract training data from the ElizaOS database
@@ -19,7 +17,8 @@ import { TrainingService } from '../services/training-service.js';
 export const extractTrainingDataAction: Action = {
   name: 'EXTRACT_TRAINING_DATA',
   similes: ['EXTRACT_DATA', 'PREPARE_TRAINING_DATA', 'GET_TRAINING_DATA'],
-  description: 'Extract training data from ElizaOS conversations for model fine-tuning',
+  description:
+    'Extract training data from ElizaOS conversations for model fine-tuning. Can be chained with START_TRAINING to immediately begin training or GENERATE_TRAINING_DATA to create synthetic examples.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     // Check if training service is available
@@ -45,7 +44,9 @@ export const extractTrainingDataAction: Action = {
 
     // Check if message contains extraction request
     const text = message.content.text?.toLowerCase();
-    if (!text) return false;
+    if (!text) {
+      return false;
+    }
 
     const extractionKeywords = [
       'extract training data',
@@ -56,7 +57,7 @@ export const extractTrainingDataAction: Action = {
       'extract conversation data',
     ];
 
-    return extractionKeywords.some(keyword => text.includes(keyword));
+    return extractionKeywords.some((keyword) => text.includes(keyword));
   },
 
   handler: async (
@@ -65,7 +66,7 @@ export const extractTrainingDataAction: Action = {
     state?: State,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
-  ) => {
+  ): Promise<ActionResult> => {
     elizaLogger.info('Executing EXTRACT_TRAINING_DATA action');
 
     try {
@@ -120,16 +121,19 @@ The dataset is ready for RLAIF training with Atropos!`;
       });
 
       return {
+        text: `Training data extracted: ${conversations.length} conversations processed`,
+        data: {
+          actionName: 'EXTRACT_TRAINING_DATA',
+          config,
+          conversations: conversations.slice(0, 5), // Sample for context
+          datasetPath,
+        },
         values: {
+          success: true,
           datasetPath,
           totalConversations: conversations.length,
           datasetStats: stats,
         },
-        data: {
-          config,
-          conversations: conversations.slice(0, 5), // Sample for context
-        },
-        text: `Training data extracted: ${conversations.length} conversations processed`,
       };
     } catch (error) {
       elizaLogger.error('Error in EXTRACT_TRAINING_DATA action:', error);
@@ -140,11 +144,73 @@ The dataset is ready for RLAIF training with Atropos!`;
         actions: ['EXTRACT_TRAINING_DATA'],
       });
 
-      throw error;
+      return {
+        text: `Failed to extract training data: ${error instanceof Error ? error.message : String(error)}`,
+        data: {
+          actionName: 'EXTRACT_TRAINING_DATA',
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
 
   examples: [
+    // Multi-action: Extract data then start training
+    [
+      {
+        name: 'User',
+        content: {
+          text: 'Extract training data from the last 30 days and start RLAIF training',
+        },
+      },
+      {
+        name: 'Assistant',
+        content: {
+          text: "I'll extract training data from the last 30 days and then start RLAIF training.",
+          thought: 'User wants extraction followed by training',
+          actions: ['EXTRACT_TRAINING_DATA', 'START_TRAINING'],
+        },
+      },
+    ],
+    // Multi-action: Extract then generate synthetic examples
+    [
+      {
+        name: 'User',
+        content: {
+          text: 'Extract existing conversations and generate additional training examples',
+        },
+      },
+      {
+        name: 'Assistant',
+        content: {
+          text: "I'll extract existing conversations and then generate additional synthetic training examples.",
+          thought: 'User wants real and synthetic data combination',
+          actions: ['EXTRACT_TRAINING_DATA', 'GENERATE_TRAINING_DATA'],
+        },
+      },
+    ],
+    // Multi-action: Check status, extract, and monitor
+    [
+      {
+        name: 'User',
+        content: {
+          text: 'Check training status, extract new data if needed, and monitor the process',
+        },
+      },
+      {
+        name: 'Assistant',
+        content: {
+          text: "I'll check the training status, extract new data if needed, and set up monitoring.",
+          thought: 'User wants conditional extraction with monitoring',
+          actions: ['CHECK_TRAINING_STATUS', 'EXTRACT_TRAINING_DATA', 'MONITOR_TRAINING'],
+        },
+      },
+    ],
     [
       {
         name: 'User',
@@ -161,38 +227,6 @@ The dataset is ready for RLAIF training with Atropos!`;
         },
       },
     ],
-    [
-      {
-        name: 'User',
-        content: {
-          text: 'Prepare a dataset for RLAIF training with high-quality conversations only',
-        },
-      },
-      {
-        name: 'Assistant',
-        content: {
-          text: "I'll extract high-quality conversations and prepare them for RLAIF training. This will include generating alternative responses and preparing the data in the correct format for Atropos.",
-          thought: 'User wants high-quality data specifically for RLAIF training',
-          actions: ['EXTRACT_TRAINING_DATA'],
-        },
-      },
-    ],
-    [
-      {
-        name: 'User',
-        content: {
-          text: 'Create training set from autocoder plugin conversations',
-        },
-      },
-      {
-        name: 'Assistant',
-        content: {
-          text: "I'll extract training data specifically from autocoder plugin conversations. This will focus on code generation and programming-related interactions.",
-          thought: 'User wants domain-specific training data from autocoder interactions',
-          actions: ['EXTRACT_TRAINING_DATA'],
-        },
-      },
-    ],
   ],
 };
 
@@ -205,7 +239,7 @@ async function parseExtractionConfig(
   state?: State
 ): Promise<TrainingConfig> {
   const text = message.content.text || '';
-  
+
   // Use LLM to extract configuration parameters from natural language
   const configPrompt = `Parse the following request for training data extraction and return a JSON configuration:
 
@@ -266,8 +300,9 @@ Return only valid JSON with this structure:
       temperature: 0.1,
     });
 
-    const configText = typeof response === 'string' ? response : (response as any).content || String(response);
-    
+    const configText =
+      typeof response === 'string' ? response : (response as any).content || String(response);
+
     // Extract JSON from response
     const jsonMatch = configText.match(/\\{[\\s\\S]*\\}/);
     if (!jsonMatch) {
@@ -275,7 +310,7 @@ Return only valid JSON with this structure:
     }
 
     const parsedConfig = JSON.parse(jsonMatch[0]);
-    
+
     // Apply defaults and validation
     const config: TrainingConfig = {
       extractionConfig: {
@@ -334,7 +369,7 @@ Return only valid JSON with this structure:
     return config;
   } catch (error) {
     elizaLogger.error('Error parsing extraction configuration:', error);
-    
+
     // Return default configuration
     return {
       extractionConfig: {

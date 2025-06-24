@@ -41,9 +41,19 @@ export class VersionedVerificationEngine {
   private snapshotsDir: string;
   private versionsFile: string;
 
-  constructor(baseDir: string = './verification-snapshots') {
-    this.snapshotsDir = path.join(baseDir, 'snapshots');
-    this.versionsFile = path.join(baseDir, 'versions.json');
+  constructor(baseDir?: string) {
+    // Use centralized path management for verification snapshots
+    if (!baseDir) {
+      try {
+        const { getVerificationPath } = require('@elizaos/core/utils/path-manager');
+        baseDir = getVerificationPath('snapshots');
+      } catch {
+        // Fallback to legacy path if path-manager is not available
+        baseDir = './verification-snapshots';
+      }
+    }
+    this.snapshotsDir = path.join(baseDir || '.', 'snapshots');
+    this.versionsFile = path.join(baseDir || '.', 'versions.json');
   }
 
   async initializeVersioning(): Promise<void> {
@@ -160,7 +170,9 @@ export class VersionedVerificationEngine {
     let regressions = 0;
 
     for (const file of snapshotFiles) {
-      if (!file.endsWith('.json')) continue;
+      if (!file.endsWith('.json')) {
+        continue;
+      }
 
       try {
         const snapshotPath = path.join(this.snapshotsDir, file);
@@ -190,7 +202,9 @@ export class VersionedVerificationEngine {
           passed++;
         } else {
           failed++;
-          if (isRegression) regressions++;
+          if (isRegression) {
+            regressions++;
+          }
         }
       } catch (error) {
         logger.error(`Failed to process snapshot ${file}:`, error);
@@ -278,7 +292,9 @@ export class VersionedVerificationEngine {
     const matchingSnapshots: VerificationSnapshot[] = [];
 
     for (const file of snapshotFiles) {
-      if (!file.startsWith(ruleId) || !file.endsWith('.json')) continue;
+      if (!file.startsWith(ruleId) || !file.endsWith('.json')) {
+        continue;
+      }
 
       try {
         const snapshotPath = path.join(this.snapshotsDir, file);
@@ -360,7 +376,9 @@ export class VersionedVerificationEngine {
     const snapshots: VerificationSnapshot[] = [];
 
     for (const file of snapshotFiles) {
-      if (!file.includes(version) || !file.endsWith('.json')) continue;
+      if (!file.includes(version) || !file.endsWith('.json')) {
+        continue;
+      }
 
       try {
         const snapshotPath = path.join(this.snapshotsDir, file);

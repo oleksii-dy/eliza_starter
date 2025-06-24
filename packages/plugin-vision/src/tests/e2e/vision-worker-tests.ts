@@ -4,8 +4,7 @@ import { VisionServiceType } from '../../types';
 import { TestPatternGenerator } from '../test-pattern-generator';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+
 
 const execAsync = promisify(exec);
 
@@ -21,21 +20,21 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
 
         // Get vision service from runtime
         const visionService = runtime.getService(VisionServiceType.VISION) as VisionService;
-        
+
         if (!visionService) {
           throw new Error('Vision service not found in runtime');
         }
-        
+
         console.log('✓ Vision service found in runtime');
-        
+
         // Check if service is active
         const isActive = visionService.isActive();
         console.log(`✓ Vision service active: ${isActive}`);
-        
+
         // Get vision mode
         const mode = visionService.getVisionMode();
         console.log(`✓ Vision mode: ${mode}`);
-        
+
         // Get enhanced scene description (which uses worker manager if available)
         const scene = await visionService.getEnhancedSceneDescription();
         if (scene) {
@@ -62,22 +61,22 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
         const startTime = Date.now();
         let frameCount = 0;
         let lastTimestamp = 0;
-        
+
         while (Date.now() - startTime < 5000) {
           const scene = await visionService.getEnhancedSceneDescription();
           if (scene && scene.timestamp !== lastTimestamp) {
             frameCount++;
             lastTimestamp = scene.timestamp;
           }
-          
+
           // Non-blocking check
           await new Promise(resolve => setImmediate(resolve));
         }
-        
+
         const totalTime = (Date.now() - startTime) / 1000;
         const avgFPS = frameCount / totalTime;
         console.log(`✓ Captured ${frameCount} unique frames in ${totalTime.toFixed(2)}s (${avgFPS.toFixed(2)} FPS)`);
-        
+
         if (avgFPS < 1) {
           console.warn('⚠️  FPS is lower than expected - workers may not be enabled');
         }
@@ -101,34 +100,34 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
           fontSize: 72,
           includeGrid: true,
         });
-        
+
         const patternPath = await TestPatternGenerator.savePattern(pattern, 'quadrant-test.png');
         console.log(`✓ Test pattern saved to ${patternPath}`);
-        
+
         // Display the pattern
         await displayTestPattern(patternPath);
-        
+
         try {
           // Wait for OCR to process
           console.log('Waiting for OCR processing...');
           await new Promise(resolve => setTimeout(resolve, 3000));
-          
+
           // Get enhanced scene with OCR results
           const scene = await visionService.getEnhancedSceneDescription();
           const ocrText = scene?.screenAnalysis?.fullScreenOCR || '';
-          
+
           console.log(`OCR detected text: "${ocrText.substring(0, 100)}..."`);
-          
+
           // Verify quadrant numbers
           const verification = TestPatternGenerator.verifyQuadrantNumbers(ocrText);
           console.log(`Found numbers: ${verification.foundNumbers.join(', ')}`);
-          
+
           if (verification.success) {
             console.log('✓ All quadrant numbers detected correctly');
           } else {
             console.warn(`⚠️  Missing numbers: ${verification.missingNumbers.join(', ')}`);
           }
-          
+
           await closeTestPattern();
         } catch (error) {
           await closeTestPattern();
@@ -150,29 +149,26 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
         // Get display count
         const displayCount = await getDisplayCount();
         console.log(`Found ${displayCount} display(s)`);
-        
+
         if (displayCount <= 1) {
           console.log('⚠️  Only one display found, skipping multi-display test');
           return;
         }
 
-        // Track which displays we've seen
-        const seenDisplays = new Set<number>();
-        
         // Run for 10 seconds to cycle through displays
         console.log('Monitoring displays for 10 seconds...');
         const startTime = Date.now();
-        
+
         while (Date.now() - startTime < 10000) {
           const scene = await visionService.getEnhancedSceneDescription();
           if (scene?.screenCapture) {
             // Log current screen info
             console.log(`  Screen: ${scene.screenCapture.width}x${scene.screenCapture.height}`);
           }
-          
+
           await new Promise(resolve => setTimeout(resolve, 500));
         }
-        
+
         console.log(`✓ Monitored ${displayCount} displays`);
       },
     },
@@ -192,7 +188,7 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
           width: 1920,
           height: 1080,
         });
-        
+
         const patternPath = await TestPatternGenerator.savePattern(pattern, 'complex-test.png');
         await displayTestPattern(patternPath);
 
@@ -205,22 +201,22 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
             ocrDetections: 0,
             florence2Detections: 0,
           };
-          
+
           while (Date.now() - startTime < 10000) {
             const scene = await visionService.getEnhancedSceneDescription();
-            
+
             if (scene) {
               stats.frames++;
-              
+
               if (scene.screenAnalysis?.fullScreenOCR) {
                 stats.ocrDetections++;
               }
-              
+
               if (scene.screenAnalysis?.activeTile?.florence2) {
                 stats.florence2Detections++;
               }
             }
-            
+
             // Log every 2 seconds
             if ((Date.now() - startTime) % 2000 < 100) {
               console.log('\nCurrent stats:');
@@ -228,17 +224,17 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
               console.log(`  OCR detections: ${stats.ocrDetections}`);
               console.log(`  Florence-2 detections: ${stats.florence2Detections}`);
             }
-            
+
             await new Promise(resolve => setTimeout(resolve, 100));
           }
-          
+
           const totalTime = (Date.now() - startTime) / 1000;
           console.log('\nFinal statistics:');
           console.log(`  Total frames: ${stats.frames}`);
           console.log(`  Average FPS: ${(stats.frames / totalTime).toFixed(2)}`);
           console.log(`  OCR success rate: ${((stats.ocrDetections / stats.frames) * 100).toFixed(1)}%`);
           console.log(`  Florence-2 success rate: ${((stats.florence2Detections / stats.frames) * 100).toFixed(1)}%`);
-          
+
           await closeTestPattern();
         } catch (error) {
           await closeTestPattern();
@@ -253,7 +249,7 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
 
 async function getDisplayCount(): Promise<number> {
   const platform = process.platform;
-  
+
   try {
     if (platform === 'darwin') {
       const { stdout } = await execAsync('system_profiler SPDisplaysDataType -json');
@@ -261,21 +257,21 @@ async function getDisplayCount(): Promise<number> {
       return data.SPDisplaysDataType?.[0]?._items?.length || 1;
     } else if (platform === 'linux') {
       const { stdout } = await execAsync('xrandr --query | grep " connected" | wc -l');
-      return parseInt(stdout.trim()) || 1;
+      return parseInt(stdout.trim(), 10) || 1;
     } else if (platform === 'win32') {
       const { stdout } = await execAsync('wmic path Win32_DesktopMonitor get DeviceID /format:csv | find /c "DISPLAY"');
-      return parseInt(stdout.trim()) || 1;
+      return parseInt(stdout.trim(), 10) || 1;
     }
   } catch (error) {
     console.error('Failed to get display count:', error);
   }
-  
+
   return 1;
 }
 
 async function displayTestPattern(imagePath: string): Promise<void> {
   const platform = process.platform;
-  
+
   try {
     if (platform === 'darwin') {
       // Open in Preview
@@ -291,7 +287,7 @@ async function displayTestPattern(imagePath: string): Promise<void> {
       // Open with default image viewer
       await execAsync(`start "" "${imagePath}"`);
     }
-    
+
     // Give time for window to open
     await new Promise(resolve => setTimeout(resolve, 1000));
   } catch (error) {
@@ -301,7 +297,7 @@ async function displayTestPattern(imagePath: string): Promise<void> {
 
 async function closeTestPattern(): Promise<void> {
   const platform = process.platform;
-  
+
   try {
     if (platform === 'darwin') {
       // Close Preview
@@ -313,9 +309,9 @@ async function closeTestPattern(): Promise<void> {
       // Close Photos app
       await execAsync('taskkill /IM Microsoft.Photos.exe /F 2>nul || exit 0');
     }
-  } catch (error) {
+  } catch (_error) {
     // Ignore errors when closing
   }
 }
 
-export default new VisionWorkerE2ETestSuite(); 
+export default new VisionWorkerE2ETestSuite();

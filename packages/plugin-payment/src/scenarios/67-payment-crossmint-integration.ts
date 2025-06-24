@@ -158,4 +158,4 @@ Always inform users about the MPC wallet benefits and supported chains.`,
   },
 };
 
-export default crossmintIntegrationScenario; 
+export default crossmintIntegrationScenario;

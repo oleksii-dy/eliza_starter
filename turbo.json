@@ -44,7 +44,9 @@
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**/*.ts", "src/**/*.js", "__tests__/**/*", "*.test.*"]
+      "inputs": ["src/**/*.ts", "src/**/*.js", "__tests__/**/*", "*.test.*"],
+      "cache": false,
+      "persistent": false
     },
     "migrate": {
       "dependsOn": ["@elizaos/core#build"],

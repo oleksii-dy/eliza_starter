@@ -22,7 +22,7 @@ function getGithubPreviewUrl(repoPath) {
  * Fix image URL by removing /eliza/ prefix if present
  */
 function fixImageUrl(url) {
-  if (!url) return null;
+  if (!url) {return null;}
   return url.replace(/^\/eliza\//, '/');
 }
 
@@ -78,11 +78,11 @@ function processRegistryEntry(name, repoUrl) {
 
   return {
     id: name,
-    name: name,
+    name,
     repo_url: repoUrl,
     repo_path: repoPath,
     display_name: displayName,
-    type: type,
+    type,
   };
 }
 
@@ -230,7 +230,7 @@ function generateUsersFile(plugins, customData) {
         repo_url: `github:elizaos-plugins/${pluginId.split('/').pop()}`,
         repo_path: `elizaos-plugins/${pluginId.split('/').pop()}`,
         display_name: displayName,
-        type: type,
+        type,
       });
     }
   }
@@ -263,11 +263,11 @@ function generateUsersFile(plugins, customData) {
 
     return {
       title: plugin.display_name,
-      description: description,
+      description,
       preview: previewUrl,
       website: `https://github.com/${plugin.repo_path}`,
       source: `https://github.com/${plugin.repo_path}`,
-      tags: tags,
+      tags,
     };
   });
 

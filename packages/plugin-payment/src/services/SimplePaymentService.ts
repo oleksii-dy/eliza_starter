@@ -17,10 +17,10 @@ import {
   type NewUserWallet,
   type NewDailySpending,
 } from '../database/schema';
-import { 
-  PaymentRequest, 
-  PaymentResult, 
-  PaymentStatus, 
+import {
+  PaymentRequest,
+  PaymentResult,
+  PaymentStatus,
   PaymentMethod,
   PaymentSettings,
   type IWalletAdapter,
@@ -53,7 +53,7 @@ export class SimplePaymentService extends Service {
     // Get database
     const dbService = runtime.getService('database') as any;
     this.db = dbService?.getDatabase?.();
-    
+
     if (!this.db) {
       throw new Error('Database service is required');
     }
@@ -130,7 +130,7 @@ export class SimplePaymentService extends Service {
       const signer = new ethers.Wallet(wallet.privateKey, provider);
 
       let tx: ethers.TransactionResponse;
-      
+
       if (this.isNativeToken(request.method)) {
         // Send native token
         tx = await signer.sendTransaction({
@@ -154,7 +154,7 @@ export class SimplePaymentService extends Service {
 
       // 7. Update transaction record
       const finalStatus = receipt?.status === 1 ? PaymentStatus.COMPLETED : PaymentStatus.FAILED;
-      
+
       await this.db
         .update(paymentTransactions)
         .set({
@@ -217,8 +217,8 @@ export class SimplePaymentService extends Service {
     const amountUsd = await this.convertToUSD(request.amount, request.method);
 
     if (dailySpent + amountUsd > maxDaily) {
-      return { 
-        isValid: false, 
+      return {
+        isValid: false,
         error: `Daily spending limit exceeded. Limit: $${maxDaily}, Current: $${dailySpent.toFixed(2)}`
       };
     }
@@ -271,10 +271,10 @@ export class SimplePaymentService extends Service {
 
     await this.db.insert(userWallets).values(newWallet);
 
-    logger.info('[SimplePaymentService] Created new wallet', { 
-      userId, 
-      address: wallet.address, 
-      network 
+    logger.info('[SimplePaymentService] Created new wallet', {
+      userId,
+      address: wallet.address,
+      network
     });
 
     return {
@@ -341,7 +341,7 @@ export class SimplePaymentService extends Service {
 
   private async getDailySpending(userId: UUID): Promise<number> {
     const today = new Date().toISOString().split('T')[0];
-    
+
     const [record] = await this.db
       .select()
       .from(dailySpending)
@@ -399,11 +399,11 @@ export class SimplePaymentService extends Service {
   private getProvider(method: PaymentMethod): ethers.JsonRpcProvider {
     const network = this.getNetwork(method);
     const provider = this.providers.get(network);
-    
+
     if (!provider) {
       throw new Error(`No provider for ${network}`);
     }
-    
+
     return provider;
   }
 
@@ -456,9 +456,9 @@ export class SimplePaymentService extends Service {
   }
 
   private getDecimals(method: PaymentMethod): number {
-    if (method.includes('USDC')) return 6;
-    if (method === PaymentMethod.SOL) return 9;
-    if (method === PaymentMethod.BTC) return 8;
+    if (method.includes('USDC')) {return 6;}
+    if (method === PaymentMethod.SOL) {return 9;}
+    if (method === PaymentMethod.BTC) {return 8;}
     return 18;
   }
 
@@ -487,4 +487,4 @@ export class SimplePaymentService extends Service {
     await service.initialize(runtime);
     return service;
   }
-} 
+}

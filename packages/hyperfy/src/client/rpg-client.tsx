@@ -5,7 +5,7 @@ import type { World } from '../types';
 
 // Configuration
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
-const PLAYER_NAME = import.meta.env.VITE_PLAYER_NAME || 'Player' + Math.floor(Math.random() * 1000);
+const PLAYER_NAME = import.meta.env.VITE_PLAYER_NAME || `Player${Math.floor(Math.random() * 1000)}`;
 
 // Global world instance
 let world: World | null = null;
@@ -27,7 +27,7 @@ function RPGClient() {
     try {
       console.log('[RPGClient] Creating world...');
       world = await createRPGClientWorld();
-      
+
       // Initialize world
       await world.init({
         storage: null,
@@ -70,7 +70,7 @@ function RPGClient() {
 
       // Start game loop
       startGameLoop();
-      
+
     } catch (err) {
       console.error('[RPGClient] Failed to initialize:', err);
       setError(err instanceof Error ? err.message : 'Failed to initialize');
@@ -79,15 +79,15 @@ function RPGClient() {
   }
 
   function startGameLoop() {
-    if (!world) return;
-    
+    if (!world) {return;}
+
     function loop(time: number) {
       if (world) {
         world.tick(time);
       }
       requestAnimationFrame(loop);
     }
-    
+
     requestAnimationFrame(loop);
   }
 
@@ -123,21 +123,21 @@ function RPGClient() {
           </div>
         )}
       </div>
-      
+
       <canvas id="rpg-canvas" className="rpg-client-canvas" />
-      
+
       <div className="rpg-client-ui">
         {/* Game UI components would go here */}
         <div className="inventory-panel">
           <h4>Inventory</h4>
           {/* Inventory slots */}
         </div>
-        
+
         <div className="skills-panel">
           <h4>Skills</h4>
           {/* Skill levels */}
         </div>
-        
+
         <div className="chat-panel">
           <h4>Chat</h4>
           {/* Chat messages */}
@@ -238,4 +238,4 @@ const styles = `
 // Inject styles
 const styleElement = document.createElement('style');
 styleElement.textContent = styles;
-document.head.appendChild(styleElement); 
+document.head.appendChild(styleElement);

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { trustProfileProvider } from '../trustProfile';
 import { createMockRuntime, createMockMemory, createMockState } from '../../__tests__/test-utils';
 
@@ -8,25 +8,25 @@ describe('Trust Comments', () => {
   let mockTrustDatabase: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     mockTrustDatabase = {
-      getLatestTrustComment: vi.fn(),
-      getTrustCommentHistory: vi.fn(),
-      saveTrustComment: vi.fn(),
+      getLatestTrustComment: mock(),
+      getTrustCommentHistory: mock(),
+      saveTrustComment: mock(),
     };
 
     mockTrustEngine = {
-      evaluateTrust: vi.fn(),
-      getRecentInteractions: vi.fn(),
-      calculateTrust: vi.fn(),
-      recordInteraction: vi.fn(),
+      evaluateTrust: mock(),
+      getRecentInteractions: mock(),
+      calculateTrust: mock(),
+      recordInteraction: mock(),
     };
 
     mockRuntime = createMockRuntime({
-      getService: vi.fn((name: string) => {
-        if (name === 'trust-engine') return mockTrustEngine;
-        if (name === 'trust-database') return { trustDatabase: mockTrustDatabase };
+      getService: mock((name: string) => {
+        if (name === 'trust-engine') {return mockTrustEngine;}
+        if (name === 'trust-database') {return { trustDatabase: mockTrustDatabase };}
         return null;
       }),
     });
@@ -261,4 +261,4 @@ describe('Trust Comments', () => {
       }
     });
   });
-}); 
+});

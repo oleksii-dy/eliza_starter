@@ -42,7 +42,7 @@ const processGraphData = (memories: Memory[]) => {
     const memoryNode: MemoryNode = {
       id: memory.id,
       name: metadata.title || memory.id.substring(0, 8),
-      memory: memory,
+      memory,
       val: 3, // Reduced base node size
       type: (metadata.type || '').toLowerCase() === 'document' ? 'document' : 'fragment',
     };
@@ -92,7 +92,7 @@ export function MemoryGraph({ memories, onNodeClick, selectedMemoryId }: MemoryG
   const [shouldRender, setShouldRender] = useState(true);
   const [graphData, setGraphData] = useState<{ nodes: MemoryNode[]; links: MemoryLink[] }>({
     nodes: [],
-    links: []
+    links: [],
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });

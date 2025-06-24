@@ -35,9 +35,9 @@ export class NaturalLanguageTestSuite implements TestSuite {
           // Create a message saying "hello world"
           const helloMessage = {
             id: `msg-${Date.now()}`,
-            userId: userId,
+            userId,
             agentId: runtime.agentId,
-            roomId: roomId,
+            roomId,
             content: {
               text: 'hello world',
               type: 'text',
@@ -87,7 +87,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
 
           if (!containsGreeting) {
             throw new Error(
-              `Agent response did not contain a greeting. ` +
+              'Agent response did not contain a greeting. ' +
                 `Response was: "${agentResponse.content.text}"`
             );
           }
@@ -115,9 +115,9 @@ export class NaturalLanguageTestSuite implements TestSuite {
 
             const message = {
               id: `msg-${Date.now()}-${Math.random()}`,
-              userId: userId,
+              userId,
               agentId: runtime.agentId,
-              roomId: roomId,
+              roomId,
               content: {
                 text: greeting,
                 type: 'text',
@@ -170,9 +170,9 @@ export class NaturalLanguageTestSuite implements TestSuite {
           // First message - introduce a topic
           const firstMessage = {
             id: `msg-1-${Date.now()}`,
-            userId: userId,
+            userId,
             agentId: runtime.agentId,
-            roomId: roomId,
+            roomId,
             content: {
               text: "My favorite color is blue. What's yours?",
               type: 'text',
@@ -187,9 +187,9 @@ export class NaturalLanguageTestSuite implements TestSuite {
           // Second message - reference the topic
           const secondMessage = {
             id: `msg-2-${Date.now()}`,
-            userId: userId,
+            userId,
             agentId: runtime.agentId,
-            roomId: roomId,
+            roomId,
             content: {
               text: 'Why did you choose that color?',
               type: 'text',

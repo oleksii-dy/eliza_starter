@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { mock, describe, it, expect, beforeAll, afterAll, beforeEach } from 'bun:test';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import {

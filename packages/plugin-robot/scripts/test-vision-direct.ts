@@ -31,7 +31,7 @@ async function testVisionService() {
     // Create and start service
     console.log('📦 Creating Vision Service...');
     const service = await VisionService.start(mockRuntime);
-    
+
     console.log('✅ Service started successfully!\n');
 
     // Check service status
@@ -53,7 +53,7 @@ async function testVisionService() {
       console.log('  - Description:', scene.description);
       console.log('  - Objects:', scene.objects.length);
       console.log('  - People:', scene.people.length);
-      console.log('  - Change:', scene.changePercentage?.toFixed(1) + '%');
+      console.log('  - Change:', `${scene.changePercentage?.toFixed(1)}%`);
     } else {
       console.log('❌ No scene description available');
     }
@@ -66,11 +66,11 @@ async function testVisionService() {
       console.log('  - Resolution:', `${screen.width}x${screen.height}`);
       console.log('  - Tiles:', screen.tiles.length);
       console.log('  - Total Tiles:', screen.tiles.length);
-      
+
       // Check for tile analysis
       const analyzedTiles = screen.tiles.filter(t => t.analysis);
       console.log('  - Analyzed Tiles:', analyzedTiles.length);
-      
+
       if (analyzedTiles.length > 0) {
         const tile = analyzedTiles[0];
         console.log('\n  📄 First Analyzed Tile:');
@@ -78,7 +78,7 @@ async function testVisionService() {
           console.log('    - Florence2:', tile.analysis.florence2.caption || 'No caption');
         }
         if (tile.analysis?.ocr) {
-          console.log('    - OCR Text:', tile.analysis.ocr.fullText.substring(0, 100) + '...');
+          console.log('    - OCR Text:', `${tile.analysis.ocr.fullText.substring(0, 100)}...`);
         }
       }
     } else {
@@ -109,13 +109,13 @@ async function testVisionService() {
     // Monitor for changes
     console.log('\n👀 Monitoring for changes (10 seconds)...\n');
     let changeCount = 0;
-    
+
     const monitor = setInterval(async () => {
       const currentScene = await service.getSceneDescription();
       if (currentScene && currentScene.sceneChanged) {
         changeCount++;
-        console.log(`[${new Date().toLocaleTimeString()}] Change #${changeCount}:`, 
-          currentScene.description.substring(0, 80) + '...');
+        console.log(`[${new Date().toLocaleTimeString()}] Change #${changeCount}:`,
+          `${currentScene.description.substring(0, 80)}...`);
       }
     }, 1000);
 
@@ -123,12 +123,12 @@ async function testVisionService() {
     setTimeout(async () => {
       clearInterval(monitor);
       console.log(`\n📊 Summary: Detected ${changeCount} scene changes in 10 seconds`);
-      
+
       // Clean up
       console.log('\n🧹 Stopping service...');
       await service.stop();
       console.log('✅ Service stopped');
-      
+
       process.exit(0);
     }, 10000);
 
@@ -139,4 +139,4 @@ async function testVisionService() {
 }
 
 // Run the test
-testVisionService().catch(console.error); 
+testVisionService().catch(console.error);

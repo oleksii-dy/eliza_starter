@@ -86,7 +86,7 @@ export const recoverPluginAction: Action = {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
-    if (!pluginManager) return false;
+    if (!pluginManager) {return false;}
 
     // Check if the message text contains recovery/rollback keywords
     const text = message.content.text?.toLowerCase() || '';
@@ -292,10 +292,10 @@ export const recoverPluginAction: Action = {
               pluginId,
             },
           };
-        } catch (error) {
+        } catch (_error) {
           elizaLogger.error('[recoverPluginAction] Error during recovery:', error);
 
-          const errorMessage = `Error during plugin recovery: ${error instanceof Error ? error.message : String(error)}`;
+          const errorMessage = `Error during plugin recovery: ${_error instanceof Error ? _error.message : String(_error)}`;
 
           if (callback) {
             await callback({
@@ -323,10 +323,10 @@ export const recoverPluginAction: Action = {
           data: { success: false },
         };
       }
-    } catch (error) {
+    } catch (_error) {
       elizaLogger.error('[recoverPluginAction] Error during recovery:', error);
 
-      const errorMessage = `Error during plugin recovery: ${error instanceof Error ? error.message : String(error)}`;
+      const errorMessage = `Error during plugin recovery: ${_error instanceof Error ? _error.message : String(_error)}`;
 
       if (callback) {
         await callback({

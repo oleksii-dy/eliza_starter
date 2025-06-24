@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { type ParserOptions, parse } from '@typescript-eslint/parser/dist/index.js';
-import { type ActionBounds, ActionMetadata } from './types';
+import { type ActionBounds } from './types';
 
 /**
  * A class for parsing TypeScript files.
@@ -49,7 +49,7 @@ export class TypeScriptParser {
       const content = fs.readFileSync(file, 'utf-8');
 
       // Determine if this is a TSX file based on file extension or JSX syntax
-      const isTsxFile =
+      const _isTsxFile =
         file.endsWith('.tsx') ||
         (content.includes('<') && content.includes('>') && content.includes('React'));
 

@@ -1,6 +1,6 @@
 /**
  * Comprehensive Relationship Ontology for ElizaOS Rolodex Plugin
- * 
+ *
  * This ontology defines all possible relationship dimensions between entities,
  * supporting multi-dimensional relationships where entities can have multiple
  * concurrent relationship types with varying strengths.
@@ -13,7 +13,7 @@ import { UUID } from '@elizaos/core';
  */
 export enum RelationshipCategory {
   PROFESSIONAL = 'professional',
-  PERSONAL = 'personal', 
+  PERSONAL = 'personal',
   SOCIAL = 'social',
   ADVERSARIAL = 'adversarial',
   TRANSACTIONAL = 'transactional',

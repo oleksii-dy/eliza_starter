@@ -1,10 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { GitHubService } from '../services/github';
 import { Octokit } from '@octokit/rest';
 import type { IAgentRuntime } from '@elizaos/core';
 
 // Mock Octokit
-vi.mock('@octokit/rest');
+mock.module('@octokit/rest', () => ({
+  Octokit: mock(),
+}));
 
 describe('PR and Branch Management Tests', () => {
   let mockRuntime: any;
@@ -12,12 +14,12 @@ describe('PR and Branch Management Tests', () => {
   let mockOctokit: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     // Create mock Octokit instance
     mockOctokit = {
       repos: {
-        createOrUpdateFileContents: vi.fn().mockResolvedValue({
+        createOrUpdateFileContents: mock().mockResolvedValue({
           data: {
             commit: { sha: 'new-commit-sha' },
             content: { sha: 'new-file-sha' },
@@ -27,7 +29,7 @@ describe('PR and Branch Management Tests', () => {
             'x-ratelimit-reset': String(Date.now() / 1000 + 3600),
           },
         }),
-        getContent: vi.fn().mockResolvedValue({
+        getContent: mock().mockResolvedValue({
           data: {
             type: 'file',
             content: Buffer.from('# Test Content').toString('base64'),
@@ -38,14 +40,14 @@ describe('PR and Branch Management Tests', () => {
             'x-ratelimit-reset': String(Date.now() / 1000 + 3600),
           },
         }),
-        deleteFile: vi.fn().mockResolvedValue({
+        deleteFile: mock().mockResolvedValue({
           data: { commit: { sha: 'delete-commit-sha' } },
           headers: {
             'x-ratelimit-remaining': '4999',
             'x-ratelimit-reset': String(Date.now() / 1000 + 3600),
           },
         }),
-        compareCommits: vi.fn().mockResolvedValue({
+        compareCommits: mock().mockResolvedValue({
           data: {
             status: 'ahead',
             ahead_by: 2,
@@ -60,7 +62,7 @@ describe('PR and Branch Management Tests', () => {
             'x-ratelimit-reset': String(Date.now() / 1000 + 3600),
           },
         }),
-        getBranch: vi.fn().mockResolvedValue({
+        getBranch: mock().mockResolvedValue({
           data: {
             name: 'test-branch',
             commit: { sha: 'branch-sha' },
@@ -71,7 +73,7 @@ describe('PR and Branch Management Tests', () => {
             'x-ratelimit-reset': String(Date.now() / 1000 + 3600),
           },
         }),
-        listBranches: vi.fn().mockResolvedValue({
+        listBranches: mock().mockResolvedValue({
           data: [
             { name: 'main', protected: true },
             { name: 'develop', protected: false },
@@ -82,7 +84,7 @@ describe('PR and Branch Management Tests', () => {
             'x-ratelimit-reset': String(Date.now() / 1000 + 3600),
           },
         }),
-        get: vi.fn().mockResolvedValue({
+        get: mock().mockResolvedValue({
           data: { default_branch: 'main' },
           headers: {
             'x-ratelimit-remaining': '4999',
@@ -91,7 +93,7 @@ describe('PR and Branch Management Tests', () => {
         }),
       },
       pulls: {
-        create: vi.fn().mockResolvedValue({
+        create: mock().mockResolvedValue({
           data: {
             number: 123,
             title: 'Test PR',
@@ -103,7 +105,7 @@ describe('PR and Branch Management Tests', () => {
             'x-ratelimit-reset': String(Date.now() / 1000 + 3600),
           },
         }),
-        list: vi.fn().mockResolvedValue({
+        list: mock().mockResolvedValue({
           data: [
             {
               number: 123,
@@ -117,7 +119,7 @@ describe('PR and Branch Management Tests', () => {
             'x-ratelimit-reset': String(Date.now() / 1000 + 3600),
           },
         }),
-        get: vi.fn().mockResolvedValue({
+        get: mock().mockResolvedValue({
           data: {
             number: 123,
             title: 'Test PR',
@@ -130,7 +132,7 @@ describe('PR and Branch Management Tests', () => {
             'x-ratelimit-reset': String(Date.now() / 1000 + 3600),
           },
         }),
-        merge: vi.fn().mockResolvedValue({
+        merge: mock().mockResolvedValue({
           data: {
             sha: 'merge-sha',
             merged: true,
@@ -143,7 +145,7 @@ describe('PR and Branch Management Tests', () => {
         }),
       },
       git: {
-        createRef: vi.fn().mockResolvedValue({
+        createRef: mock().mockResolvedValue({
           data: {
             ref: 'refs/heads/new-branch',
             object: { sha: 'new-branch-sha' },
@@ -153,7 +155,7 @@ describe('PR and Branch Management Tests', () => {
             'x-ratelimit-reset': String(Date.now() / 1000 + 3600),
           },
         }),
-        getRef: vi.fn().mockResolvedValue({
+        getRef: mock().mockResolvedValue({
           data: {
             ref: 'refs/heads/main',
             object: { sha: 'main-sha' },
@@ -163,7 +165,7 @@ describe('PR and Branch Management Tests', () => {
             'x-ratelimit-reset': String(Date.now() / 1000 + 3600),
           },
         }),
-        deleteRef: vi.fn().mockResolvedValue({
+        deleteRef: mock().mockResolvedValue({
           headers: {
             'x-ratelimit-remaining': '4999',
             'x-ratelimit-reset': String(Date.now() / 1000 + 3600),
@@ -171,7 +173,7 @@ describe('PR and Branch Management Tests', () => {
         }),
       },
       rateLimit: {
-        get: vi.fn().mockResolvedValue({
+        get: mock().mockResolvedValue({
           data: {
             rate: {
               limit: 5000,
@@ -189,12 +191,12 @@ describe('PR and Branch Management Tests', () => {
     };
 
     // Mock Octokit constructor
-    vi.mocked(Octokit).mockImplementation(() => mockOctokit as any);
+    mock(Octokit).mockImplementation(() => mockOctokit as any);
 
     // Create mock runtime
     mockRuntime = {
       agentId: 'test-agent',
-      getSetting: vi.fn((key: string) => {
+      getSetting: mock((key: string) => {
         const settings: Record<string, string> = {
           GITHUB_TOKEN: 'ghp_test123',
           GITHUB_OWNER: 'testowner',
@@ -202,10 +204,10 @@ describe('PR and Branch Management Tests', () => {
         return settings[key];
       }),
       logger: {
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        debug: vi.fn(),
+        info: mock(),
+        warn: mock(),
+        error: mock(),
+        debug: mock(),
       },
     };
 

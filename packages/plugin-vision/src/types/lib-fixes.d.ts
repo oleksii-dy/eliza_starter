@@ -1,35 +1,13 @@
 /// <reference no-default-lib="true"/>
 /// <reference lib="es2022" />
 /// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+/// <reference lib="webworker" />
 
-// Fix WebGL2RenderingContext conflicts
-interface WebGL2RenderingContextBase {
-  clearBufferfv(buffer: number, drawbuffer: number, values: Float32List | Iterable<number>, srcOffset?: number): void;
-  clearBufferiv(buffer: number, drawbuffer: number, values: Int32List | Iterable<number>, srcOffset?: number): void;
-  clearBufferuiv(buffer: number, drawbuffer: number, values: Uint32List | Iterable<number>, srcOffset?: number): void;
-}
-
-interface WebGL2RenderingContextOverloads {
-  uniform1fv(location: WebGLUniformLocation | null, data: Float32List | Iterable<number>, srcOffset?: number, srcLength?: number): void;
-  uniform2fv(location: WebGLUniformLocation | null, data: Float32List | Iterable<number>, srcOffset?: number, srcLength?: number): void;
-  uniform3fv(location: WebGLUniformLocation | null, data: Float32List | Iterable<number>, srcOffset?: number, srcLength?: number): void;
-  uniform4fv(location: WebGLUniformLocation | null, data: Float32List | Iterable<number>, srcOffset?: number, srcLength?: number): void;
-  uniform1iv(location: WebGLUniformLocation | null, data: Int32List | Iterable<number>, srcOffset?: number, srcLength?: number): void;
-  uniform2iv(location: WebGLUniformLocation | null, data: Int32List | Iterable<number>, srcOffset?: number, srcLength?: number): void;
-  uniform3iv(location: WebGLUniformLocation | null, data: Int32List | Iterable<number>, srcOffset?: number, srcLength?: number): void;
-  uniform4iv(location: WebGLUniformLocation | null, data: Int32List | Iterable<number>, srcOffset?: number, srcLength?: number): void;
-  uniformMatrix2fv(location: WebGLUniformLocation | null, transpose: boolean, data: Float32List | Iterable<number>, srcOffset?: number, srcLength?: number): void;
-  uniformMatrix3fv(location: WebGLUniformLocation | null, transpose: boolean, data: Float32List | Iterable<number>, srcOffset?: number, srcLength?: number): void;
-  uniformMatrix4fv(location: WebGLUniformLocation | null, transpose: boolean, data: Float32List | Iterable<number>, srcOffset?: number, srcLength?: number): void;
-}
-
-// Fix WeakMap parameter conflicts
-interface WeakMap<K extends WeakKey, V> {
-  delete(key: K): boolean;
-  get(key: K): V | undefined;
-  has(key: K): boolean;
-  set(key: K, value: V): this;
-}
+// Type aliases for WebGL array types
+type _Float32List = Float32Array | ArrayLike<number>;
+type _Int32List = Int32Array | ArrayLike<number>;
+type _Uint32List = Uint32Array | ArrayLike<number>;
 
 // Fix pg-protocol
 declare module 'pg-protocol/dist/messages' {
@@ -56,65 +34,22 @@ declare module 'pg-protocol/dist/messages' {
   }
 }
 
-// Fix Chai namespace conflicts (Vitest uses Chai assertions)
-declare namespace Chai {
-  type Message = string | (() => string);
-  type ObjectProperty = string | symbol | number;
-  type ChaiPlugin = (chai: any, utils: any) => void;
-  type AssertionArgs = any[];
-  type Operator = string;
-  type OperatorComparable = boolean | null | number | string | undefined | Date;
-  
-  interface AssertionError extends Error {
-    name: string;
-    message: string;
-    actual?: any;
-    expected?: any;
-    operator?: string;
-    showDiff?: boolean;
-  }
-  
-  interface ExpectStatic {
-    (val: any, message?: string): Assertion;
-  }
-  
-  interface Assertion {
-    to: Assertion;
-    be: Assertion;
-    been: Assertion;
-    is: Assertion;
-    that: Assertion;
-    which: Assertion;
-    and: Assertion;
-    has: Assertion;
-    have: Assertion;
-    with: Assertion;
-    at: Assertion;
-    of: Assertion;
-    same: Assertion;
-    but: Assertion;
-    does: Assertion;
-    still: Assertion;
-    also: Assertion;
-  }
-}
-
 // React types for React Router
 declare module 'react' {
   export interface FC<P = {}> {
     (props: P): ReactElement | null;
   }
-  
+
   export interface ComponentType<P = {}> {
     (props: P): ReactElement | null;
   }
-  
+
   export interface ReactElement {
     type: any;
     props: any;
     key: any;
   }
-  
+
   export type ReactNode = ReactElement | string | number | boolean | null | undefined;
 }
 
@@ -126,23 +61,23 @@ declare module 'react-router' {
     path: string;
     url: string;
   }
-  
+
   export interface RouteComponentProps<Params = {}> {
     match: match<Params>;
     location: Location;
     history: History;
   }
-  
+
   export interface SwitchProps {
     children?: any;
     location?: Location;
   }
-  
+
   export interface PromptProps {
     message: string | ((location: Location) => string | boolean);
     when?: boolean;
   }
-  
+
   export interface RedirectProps {
     to: string | Location;
     push?: boolean;
@@ -151,31 +86,31 @@ declare module 'react-router' {
     exact?: boolean;
     strict?: boolean;
   }
-  
+
   export interface RouteChildrenProps<Params = {}> {
     match: match<Params> | null;
     location: Location;
     history: History;
   }
-  
+
   export const Prompt: any;
   export const Switch: any;
   export const Redirect: any;
   export const Route: any;
   export const Router: any;
-  export const withRouter: <P extends RouteComponentProps>(component: any) => any;
+  export const withRouter: <_P extends RouteComponentProps>(component: any) => any;
   export const useHistory: () => History;
   export const useLocation: () => Location;
   export const useParams: <Params = {}>() => Params;
   export const useRouteMatch: <Params = {}>() => match<Params>;
-  
+
   export interface Location {
     pathname: string;
     search: string;
     hash: string;
     state?: any;
   }
-  
+
   export interface History {
     length: number;
     action: string;
@@ -190,7 +125,7 @@ declare module 'react-router' {
     block(prompt?: string | ((location: Location, action: string) => string | boolean)): () => void;
     listen(listener: (location: Location, action: string) => void): () => void;
   }
-  
+
   export const RouterChildContext: any;
 }
 
@@ -201,21 +136,4 @@ declare module 'mdx' {
   };
 }
 
-// Fix webgl-ext types
-interface EXT_color_buffer_half_float {
-  readonly RGBA16F_EXT: 0x881A;
-  readonly RGB16F_EXT: 0x881B;
-  readonly FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT: 0x8211;
-  readonly UNSIGNED_NORMALIZED_EXT: 0x8C17;
-}
-
-interface WEBGL_compressed_texture_etc1 {
-  readonly COMPRESSED_RGB_ETC1_WEBGL: 0x8D64;
-}
-
-// Fix WebGL2 constant types
-interface WebGL2RenderingContext {
-  readonly RGBA8: 0x8058;
-}
-
-export {}; 
+export {};

@@ -14,14 +14,14 @@ export const getStockPriceAction: Action = {
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const text = message.content.text?.toLowerCase() || '';
-    
+
     // Check for stock/finance-related keywords
     const stockKeywords = ['stock', 'price', 'quote', 'ticker', 'shares', 'market'];
     const hasStockKeyword = stockKeywords.some(kw => text.includes(kw));
-    
+
     // Check if we have the finance API key
     const hasApiKey = !!runtime.getSetting('FINANCE_API_KEY');
-    
+
     return hasStockKeyword && hasApiKey;
   },
 
@@ -34,12 +34,12 @@ export const getStockPriceAction: Action = {
   ) => {
     try {
       const apiKey = runtime.getSetting('FINANCE_API_KEY');
-      
+
       if (!apiKey) {
         if (callback) {
           await callback({
             text: "I don't have access to the finance API. Please ask an admin to provide the FINANCE_API_KEY.",
-            thought: "Missing FINANCE_API_KEY - cannot access stock prices",
+            thought: 'Missing FINANCE_API_KEY - cannot access stock prices',
           });
         }
         return;
@@ -52,7 +52,7 @@ export const getStockPriceAction: Action = {
 
       // Simulate API call with the key
       logger.info(`[getStockPriceAction] Fetching stock price for ${ticker} with API key: ${apiKey.substring(0, 5)}...`);
-      
+
       // Simulate stock data (in real implementation, this would call actual API)
       const stockData = {
         symbol: ticker,
@@ -90,11 +90,11 @@ export const getStockPriceAction: Action = {
 
     } catch (error) {
       logger.error('[getStockPriceAction] Error getting stock price:', error);
-      
+
       if (callback) {
         await callback({
-          text: "I encountered an error while fetching stock prices. Please try again.",
-          thought: "Error in getStockPriceAction handler",
+          text: 'I encountered an error while fetching stock prices. Please try again.',
+          thought: 'Error in getStockPriceAction handler',
         });
       }
     }
@@ -130,4 +130,4 @@ export const getStockPriceAction: Action = {
       },
     ],
   ],
-}; 
+};

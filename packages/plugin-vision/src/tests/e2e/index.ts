@@ -23,4 +23,4 @@ export const testSuites = [
   VisionWorkerE2ETestSuite, // Worker-based tests
 ];
 
-export default testSuites; 
+export default testSuites;

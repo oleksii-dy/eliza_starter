@@ -15,19 +15,19 @@ export const relationshipBuildingScenario: Scenario = {
       plugins: ['rolodex'],
       script: {
         steps: [
-          { 
-            type: 'message', 
-            content: "Hey team! I'm excited to work with all of you on this AI safety project. @Bob, I heard great things about your work on distributed systems." 
+          {
+            type: 'message',
+            content: "Hey team! I'm excited to work with all of you on this AI safety project. @Bob, I heard great things about your work on distributed systems."
           },
           { type: 'wait', waitTime: 4000 },
-          { 
-            type: 'message', 
-            content: "@Carol, your UX expertise will be crucial for making our safety tools accessible. Let's schedule a design review next week?" 
+          {
+            type: 'message',
+            content: "@Carol, your UX expertise will be crucial for making our safety tools accessible. Let's schedule a design review next week?"
           },
           { type: 'wait', waitTime: 8000 },
           {
             type: 'message',
-            content: "Great discussion everyone! @Bob, thanks for sharing those optimization insights. @David, your theoretical framework is exactly what we needed!"
+            content: 'Great discussion everyone! @Bob, thanks for sharing those optimization insights. @David, your theoretical framework is exactly what we needed!'
           },
           { type: 'wait', waitTime: 12000 },
           {
@@ -46,19 +46,19 @@ export const relationshipBuildingScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 2000 },
-          { 
-            type: 'message', 
-            content: "Thanks @Alice! I'm thrilled to be part of this project. @David, I'd love to discuss how we can implement your theoretical models efficiently." 
+          {
+            type: 'message',
+            content: "Thanks @Alice! I'm thrilled to be part of this project. @David, I'd love to discuss how we can implement your theoretical models efficiently."
           },
           { type: 'wait', waitTime: 6000 },
-          { 
-            type: 'message', 
-            content: "@Carol, I can help integrate the backend with your UI designs. We've done similar work at my previous company." 
+          {
+            type: 'message',
+            content: "@Carol, I can help integrate the backend with your UI designs. We've done similar work at my previous company."
           },
           { type: 'wait', waitTime: 10000 },
           {
             type: 'message',
-            content: "Absolutely @Alice! Those optimizations should give us a 3x speedup. @David, your input was invaluable."
+            content: 'Absolutely @Alice! Those optimizations should give us a 3x speedup. @David, your input was invaluable.'
           },
           { type: 'wait', waitTime: 14000 },
           {
@@ -77,19 +77,19 @@ export const relationshipBuildingScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 3000 },
-          { 
-            type: 'message', 
-            content: "@Alice, I'd love to schedule that design review! @Bob, thanks for offering to help with the integration. Your backend expertise is much appreciated!" 
+          {
+            type: 'message',
+            content: "@Alice, I'd love to schedule that design review! @Bob, thanks for offering to help with the integration. Your backend expertise is much appreciated!"
           },
           { type: 'wait', waitTime: 7000 },
-          { 
-            type: 'message', 
-            content: "@David, I'm creating user flows based on your safety framework. Could we collaborate on making the concepts more intuitive for non-technical users?" 
+          {
+            type: 'message',
+            content: "@David, I'm creating user flows based on your safety framework. Could we collaborate on making the concepts more intuitive for non-technical users?"
           },
           { type: 'wait', waitTime: 15000 },
           {
             type: 'message',
-            content: "Hi @Eve! Great to have another team member. I handle the UX side - let me know if you need any design assets for your work with @Bob."
+            content: 'Hi @Eve! Great to have another team member. I handle the UX side - let me know if you need any design assets for your work with @Bob.'
           },
         ],
       },
@@ -103,19 +103,19 @@ export const relationshipBuildingScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 3500 },
-          { 
-            type: 'message', 
-            content: "@Bob, yes! Let's definitely discuss implementation. I have some ideas on optimizing the attention mechanisms. @Alice, thanks for bringing us together!" 
+          {
+            type: 'message',
+            content: "@Bob, yes! Let's definitely discuss implementation. I have some ideas on optimizing the attention mechanisms. @Alice, thanks for bringing us together!"
           },
           { type: 'wait', waitTime: 7500 },
-          { 
-            type: 'message', 
-            content: "@Carol, I'd be happy to help simplify the concepts! Your UX perspective is exactly what we need to make this accessible." 
+          {
+            type: 'message',
+            content: "@Carol, I'd be happy to help simplify the concepts! Your UX perspective is exactly what we need to make this accessible."
           },
           { type: 'wait', waitTime: 11000 },
           {
             type: 'message',
-            content: "This collaboration is fantastic! @Alice, your leadership is really bringing out the best in everyone. @Bob, those optimizations are brilliant!"
+            content: 'This collaboration is fantastic! @Alice, your leadership is really bringing out the best in everyone. @Bob, those optimizations are brilliant!'
           },
         ],
       },
@@ -129,14 +129,14 @@ export const relationshipBuildingScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 13000 },
-          { 
-            type: 'message', 
-            content: "Hello everyone! I'm Eve Thompson, just joined as a junior engineer. Excited to learn from all of you and contribute to this amazing project!" 
+          {
+            type: 'message',
+            content: "Hello everyone! I'm Eve Thompson, just joined as a junior engineer. Excited to learn from all of you and contribute to this amazing project!"
           },
           { type: 'wait', waitTime: 16000 },
-          { 
-            type: 'message', 
-            content: "Thank you @Alice for the warm welcome! @Bob, I really appreciate the mentorship offer. Looking forward to our pair programming session!" 
+          {
+            type: 'message',
+            content: 'Thank you @Alice for the warm welcome! @Bob, I really appreciate the mentorship offer. Looking forward to our pair programming session!'
           },
           { type: 'wait', waitTime: 17000 },
           {
@@ -260,4 +260,4 @@ export const relationshipBuildingScenario: Scenario = {
   },
 };
 
-export default relationshipBuildingScenario; 
+export default relationshipBuildingScenario;

@@ -1,21 +1,25 @@
-import { Command } from 'commander';
+import { type Command } from 'commander';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { elizaLogger } from '@elizaos/core';
 import { InstructionFormatter } from '../../processors/instruction-formatter.js';
-import type { 
-  ConversationThread, 
-  TrackedUser, 
+import type {
+  ConversationThread,
+  TrackedUser,
   GenerationConfig,
   GenerationStats,
-  InstructionExample
+  InstructionExample,
 } from '../../types/discord-types.js';
 
 export function generateConversationDataCommand(program: Command) {
   program
     .command('generate-conversation-data')
     .description('Generate instruction tuning data from Discord conversations')
-    .option('-i, --input-dir <path>', 'Input directory with extracted Discord data', './discord-data')
+    .option(
+      '-i, --input-dir <path>',
+      'Input directory with extracted Discord data',
+      './discord-data'
+    )
     .option('-o, --output <path>', 'Output JSONL file', './training-dataset.jsonl')
     .option('--examples-per-user <number>', 'Target examples per user', '200')
     .option('--context-window <number>', 'Number of context messages', '10')
@@ -36,38 +40,42 @@ export function generateConversationDataCommand(program: Command) {
     .action(async (options) => {
       try {
         elizaLogger.info('🎯 Starting conversation data generation...');
-        
+
         // Validate input directory
         const inputDir = path.resolve(options.inputDir);
         try {
           await fs.access(inputDir);
         } catch (error) {
           elizaLogger.error(`❌ Input directory not found: ${inputDir}`);
-          elizaLogger.info('💡 Run "eliza-training extract-discord" first to extract conversations');
+          elizaLogger.info(
+            '💡 Run "eliza-training extract-discord" first to extract conversations'
+          );
           process.exit(1);
         }
-        
+
         // Load extracted data
         elizaLogger.info('📂 Loading extracted Discord data...');
         const { conversations, users } = await loadExtractedData(inputDir);
-        
-        elizaLogger.info(`📊 Loaded ${conversations.length} conversations and ${users.length} users`);
-        
+
+        elizaLogger.info(
+          `📊 Loaded ${conversations.length} conversations and ${users.length} users`
+        );
+
         // Validate split ratios
         const trainSplit = parseFloat(options.trainSplit);
         const valSplit = parseFloat(options.valSplit);
         const testSplit = parseFloat(options.testSplit);
-        
+
         if (Math.abs(trainSplit + valSplit + testSplit - 1.0) > 0.001) {
           elizaLogger.error('❌ Split ratios must sum to 1.0');
           process.exit(1);
         }
-        
+
         // Create generation configuration
         const config: GenerationConfig = {
-          examplesPerUser: parseInt(options.examplesPerUser),
-          contextWindow: parseInt(options.contextWindow),
-          maxExamples: parseInt(options.maxExamples),
+          examplesPerUser: parseInt(options.examplesPerUser, 10),
+          contextWindow: parseInt(options.contextWindow, 10),
+          maxExamples: parseInt(options.maxExamples, 10),
           includeSystemPrompt: options.includeSystemPrompt,
           personalityInSystem: options.personalityInSystem,
           includeChannelContext: options.includeChannelContext,
@@ -77,9 +85,9 @@ export function generateConversationDataCommand(program: Command) {
           diversifyContexts: options.diversifyContexts,
           outputFormat: options.outputFormat as 'jsonl' | 'json',
           splitRatio: [trainSplit, valSplit, testSplit],
-          shuffleData: options.shuffle
+          shuffleData: options.shuffle,
         };
-        
+
         elizaLogger.info('📋 Generation configuration:');
         elizaLogger.info(`  Examples per user: ${config.examplesPerUser}`);
         elizaLogger.info(`  Context window: ${config.contextWindow} messages`);
@@ -88,63 +96,67 @@ export function generateConversationDataCommand(program: Command) {
         elizaLogger.info(`  Balance users: ${config.balanceUserExamples}`);
         elizaLogger.info(`  Include personality: ${config.personalityInSystem}`);
         elizaLogger.info(`  Split ratio: ${config.splitRatio.join('/')}`);
-        
+
         // Initialize formatter
         const formatter = new InstructionFormatter(config);
-        
+
         // Generate instruction examples
         elizaLogger.info('🔄 Generating instruction examples...');
         const examples = await formatter.generateInstructionExamples(conversations, users);
-        
+
         if (examples.length === 0) {
-          elizaLogger.error('❌ No examples generated. Check your quality threshold and input data.');
+          elizaLogger.error(
+            '❌ No examples generated. Check your quality threshold and input data.'
+          );
           process.exit(1);
         }
-        
+
         elizaLogger.info(`✅ Generated ${examples.length} instruction examples`);
-        
+
         // Preview mode - show examples without saving
-        if (parseInt(options.preview) > 0) {
-          const previewCount = Math.min(parseInt(options.preview), examples.length);
+        if (parseInt(options.preview, 10) > 0) {
+          const previewCount = Math.min(parseInt(options.preview, 10), examples.length);
           elizaLogger.info(`\n👀 Previewing first ${previewCount} examples:\n`);
-          
+
           for (let i = 0; i < previewCount; i++) {
             const example = examples[i];
-            console.log(`\n--- Example ${i + 1} ---`);
-            console.log(`User: ${example.metadata.username}`);
-            console.log(`Quality: ${example.metadata.qualityScore.toFixed(2)}`);
-            console.log(`Context: ${example.metadata.contextLength} messages`);
-            console.log('');
-            
+            console.info(`\n--- Example ${i + 1} ---`);
+            console.info(`User: ${example.metadata.username}`);
+            console.info(`Quality: ${example.metadata.qualityScore.toFixed(2)}`);
+            console.info(`Context: ${example.metadata.contextLength} messages`);
+            console.info('');
+
             for (const message of example.messages) {
-              console.log(`${message.role.toUpperCase()}: ${message.content.substring(0, 200)}${message.content.length > 200 ? '...' : ''}`);
-              console.log('');
+              console.info(
+                `${message.role.toUpperCase()}: ${message.content.substring(0, 200)}${message.content.length > 200 ? '...' : ''}`
+              );
+              console.info('');
             }
           }
-          
+
           elizaLogger.info('👀 Preview complete. Use without --preview to save data.');
           return;
         }
-        
+
         // Split data
         elizaLogger.info('📊 Splitting data into train/validation/test sets...');
         const splits = formatter.splitExamples(examples);
-        
+
         elizaLogger.info(`  Training: ${splits.train.length} examples`);
         elizaLogger.info(`  Validation: ${splits.validation.length} examples`);
         elizaLogger.info(`  Test: ${splits.test.length} examples`);
-        
+
         // Generate statistics
         const stats = generateStatistics(examples, users);
-        
+
         // Save data
         const outputPath = path.resolve(options.output);
         const outputDir = path.dirname(outputPath);
         const outputName = path.parse(outputPath).name;
         const outputExt = config.outputFormat === 'jsonl' ? '.jsonl' : '.json';
-        
+
         await fs.mkdir(outputDir, { recursive: true });
-        
+
         // Save training sets
         if (config.outputFormat === 'jsonl') {
           await fs.writeFile(
@@ -173,61 +185,78 @@ export function generateConversationDataCommand(program: Command) {
             JSON.stringify(splits.test, null, 2)
           );
         }
-        
+
         // Save complete dataset
         if (config.outputFormat === 'jsonl') {
           await fs.writeFile(outputPath, formatter.formatAsJSONL(examples));
         } else {
           await fs.writeFile(outputPath, JSON.stringify(examples, null, 2));
         }
-        
+
         // Save statistics and metadata
         const metadataPath = path.join(outputDir, `${outputName}-metadata.json`);
-        await fs.writeFile(metadataPath, JSON.stringify({
-          config,
-          stats,
-          generated_at: new Date().toISOString(),
-          total_examples: examples.length,
-          train_examples: splits.train.length,
-          validation_examples: splits.validation.length,
-          test_examples: splits.test.length
-        }, null, 2));
-        
+        await fs.writeFile(
+          metadataPath,
+          JSON.stringify(
+            {
+              config,
+              stats,
+              generated_at: new Date().toISOString(),
+              total_examples: examples.length,
+              train_examples: splits.train.length,
+              validation_examples: splits.validation.length,
+              test_examples: splits.test.length,
+            },
+            null,
+            2
+          )
+        );
+
         // Display summary
         elizaLogger.info('\n📊 Generation Summary:');
         elizaLogger.info(`  Total examples: ${stats.totalExamples.toLocaleString()}`);
         elizaLogger.info(`  Users included: ${stats.usersIncluded.toLocaleString()}`);
-        elizaLogger.info(`  Average context length: ${stats.averageContextLength.toFixed(1)} messages`);
+        elizaLogger.info(
+          `  Average context length: ${stats.averageContextLength.toFixed(1)} messages`
+        );
         elizaLogger.info(`  Average quality score: ${stats.averageQualityScore.toFixed(2)}`);
-        
+
         elizaLogger.info('\n📁 Files created:');
         elizaLogger.info(`  Complete dataset: ${outputPath}`);
-        elizaLogger.info(`  Training set: ${path.join(outputDir, `${outputName}-train${outputExt}`)}`);
-        elizaLogger.info(`  Validation set: ${path.join(outputDir, `${outputName}-validation${outputExt}`)}`);
+        elizaLogger.info(
+          `  Training set: ${path.join(outputDir, `${outputName}-train${outputExt}`)}`
+        );
+        elizaLogger.info(
+          `  Validation set: ${path.join(outputDir, `${outputName}-validation${outputExt}`)}`
+        );
         elizaLogger.info(`  Test set: ${path.join(outputDir, `${outputName}-test${outputExt}`)}`);
         elizaLogger.info(`  Metadata: ${metadataPath}`);
-        
+
         // Show top users
         elizaLogger.info('\n👥 Top users in dataset:');
         const topUsers = Object.entries(stats.userDistribution)
           .sort((a, b) => b[1] - a[1])
           .slice(0, 10);
-        
+
         for (const [username, count] of topUsers) {
-          const percentage = (count / stats.totalExamples * 100).toFixed(1);
+          const percentage = ((count / stats.totalExamples) * 100).toFixed(1);
           elizaLogger.info(`  ${username}: ${count} examples (${percentage}%)`);
         }
-        
+
         elizaLogger.info('\n✅ Conversation data generation completed successfully!');
-        
+
         // Next steps suggestion
         elizaLogger.info('\n💡 Next steps:');
         elizaLogger.info(`  1. Review the training data in ${outputPath}`);
-        elizaLogger.info(`  2. Train model: eliza-training train-model --file ${path.join(outputDir, `${outputName}-train${outputExt}`)}`);
+        elizaLogger.info(
+          `  2. Train model: eliza-training train-model --file ${path.join(outputDir, `${outputName}-train${outputExt}`)}`
+        );
         elizaLogger.info('  3. Monitor training progress and evaluate results');
-        
       } catch (error) {
-        elizaLogger.error('❌ Error generating conversation data:', error instanceof Error ? error.message : String(error));
+        elizaLogger.error(
+          '❌ Error generating conversation data:',
+          error instanceof Error ? error.message : String(error)
+        );
         process.exit(1);
       }
     });
@@ -242,19 +271,21 @@ async function loadExtractedData(inputDir: string): Promise<{
 }> {
   const conversationsPath = path.join(inputDir, 'conversations.json');
   const usersPath = path.join(inputDir, 'users.json');
-  
+
   try {
     const [conversationsData, usersData] = await Promise.all([
       fs.readFile(conversationsPath, 'utf-8'),
-      fs.readFile(usersPath, 'utf-8')
+      fs.readFile(usersPath, 'utf-8'),
     ]);
-    
+
     const conversations = JSON.parse(conversationsData) as ConversationThread[];
     const users = JSON.parse(usersData) as TrackedUser[];
-    
+
     return { conversations, users };
   } catch (error) {
-    throw new Error(`Failed to load extracted data: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to load extracted data: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
@@ -265,23 +296,23 @@ function generateStatistics(examples: InstructionExample[], users: TrackedUser[]
   const userDistribution: Record<string, number> = {};
   const topicDistribution: Record<string, number> = {};
   const channelDistribution: Record<string, number> = {};
-  
+
   let totalContextLength = 0;
   let totalQualityScore = 0;
-  
+
   for (const example of examples) {
     // User distribution
     const username = example.metadata.username;
     userDistribution[username] = (userDistribution[username] || 0) + 1;
-    
+
     // Channel distribution
     const channel = example.metadata.channelName || 'Unknown';
     channelDistribution[channel] = (channelDistribution[channel] || 0) + 1;
-    
+
     // Context and quality
     totalContextLength += example.metadata.contextLength;
     totalQualityScore += example.metadata.qualityScore;
-    
+
     // Simple topic extraction
     const content = example.messages.join(' ').toLowerCase();
     const topics = ['development', 'ai', 'discord', 'eliza', 'help', 'bug', 'feature'];
@@ -291,7 +322,7 @@ function generateStatistics(examples: InstructionExample[], users: TrackedUser[]
       }
     }
   }
-  
+
   return {
     totalExamples: examples.length,
     usersIncluded: Object.keys(userDistribution).length,
@@ -299,6 +330,6 @@ function generateStatistics(examples: InstructionExample[], users: TrackedUser[]
     averageQualityScore: totalQualityScore / examples.length,
     topicDistribution,
     channelDistribution,
-    userDistribution
+    userDistribution,
   };
 }

@@ -41,24 +41,24 @@ const multiChainBridgeScenario: Scenario = {
   ],
   actions: ['BRIDGE_TOKENS'],
   evaluator: (response: string) => {
-    const hasBridge = 
+    const hasBridge =
       response.toLowerCase().includes('bridg') ||
       response.toLowerCase().includes('cross-chain') ||
       response.toLowerCase().includes('transfer');
-    
-    const hasChains = 
+
+    const hasChains =
       response.toLowerCase().includes('ethereum') ||
       response.toLowerCase().includes('arbitrum') ||
       response.toLowerCase().includes('polygon') ||
       response.toLowerCase().includes('optimism') ||
       response.toLowerCase().includes('bsc');
-    
+
     const hasAmount = /\d+(\.\d+)?\s*(USDC|ETH|MATIC|BTC|SOL)/i.test(response);
     const hasFees = /fee|cost|gas|\$/i.test(response);
-    
+
     return hasBridge && hasChains && (hasAmount || hasFees);
   },
   tags: ['payment', 'bridge', 'cross-chain', 'multichain', 'transfer'],
 };
 
-export default multiChainBridgeScenario; 
+export default multiChainBridgeScenario;

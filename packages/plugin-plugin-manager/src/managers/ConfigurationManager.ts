@@ -1,6 +1,5 @@
 import { elizaLogger } from '@elizaos/core';
 import type { IAgentRuntime } from '@elizaos/core';
-import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { z } from 'zod';
@@ -8,13 +7,13 @@ import type { ValidationResult } from '../services/interfaces.ts';
 import type { PluginEnvironmentVariable } from '../types.ts';
 
 // Configuration schemas
-const EnvVarSchema = z.object({
+const _EnvVarSchema = z.object({
   name: z.string().regex(/^[A-Z][A-Z0-9_]*$/),
   value: z.string(),
   sensitive: z.boolean().optional(),
 });
 
-const ConfigurationSchema = z.record(z.string(), z.any());
+const _ConfigurationSchema = z.record(z.string(), z.any());
 
 export class ConfigurationManager {
   private runtime: IAgentRuntime;
@@ -177,7 +176,7 @@ export class ConfigurationManager {
   async loadConfiguration(pluginName: string): Promise<Record<string, any>> {
     // Check cache first
     const cached = this.configCache.get(pluginName);
-    if (cached) return cached;
+    if (cached) {return cached;}
 
     try {
       const configFile = path.join(this.configPath, `${pluginName}.json`);
@@ -259,10 +258,10 @@ export class ConfigurationManager {
 
     for (const [key, value] of Object.entries(config)) {
       if (sensitiveVars.has(key) && typeof value === 'string') {
-        // Throw error for sensitive data without proper encryption
+        // Throw _error for sensitive data without proper encryption
         throw new Error(
           `Cannot store sensitive configuration "${key}" without proper encryption. ` +
-            `Please implement a secure encryption service or use environment variables for sensitive data.`
+            'Please implement a secure encryption service or use environment variables for sensitive data.'
         );
       } else {
         secureConfig[key] = value;
@@ -309,7 +308,7 @@ export class ConfigurationManager {
   clearCache(): void {
     this.configCache.clear();
   }
-  
+
   async cleanup(): Promise<void> {
     this.clearCache();
     // Only log in non-test environments
@@ -317,4 +316,4 @@ export class ConfigurationManager {
       elizaLogger.info('[ConfigurationManager] Cleaned up');
     }
   }
-} 
+}

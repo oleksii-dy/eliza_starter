@@ -13,7 +13,7 @@ export const update = new Command()
   .name('update')
   .description('Update ElizaOS CLI and project dependencies')
   .option('-c, --check', 'Check for available updates without applying them')
-  .option('-sb, --skip-build', 'Skip building after updating')
+  .option('--skip-build', 'Skip building after updating')
   .option('--cli', 'Update only the CLI')
   .option('--packages', 'Update only packages')
   .hook('preAction', async () => {
@@ -41,10 +41,14 @@ export const update = new Command()
           console.info('  # or');
           console.info('  npm install -g @elizaos/cli');
 
-          if (!updatePackages) return;
+          if (!updatePackages) {
+            return;
+          }
         } else {
           const success = await performCliUpdate();
-          if (!updatePackages) return;
+          if (!updatePackages) {
+            return;
+          }
           if (!success) {
             console.warn('CLI update failed, continuing with package updates...');
           }

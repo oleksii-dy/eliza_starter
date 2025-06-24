@@ -43,7 +43,7 @@
     "skipLibCheck": true,
     
     // Advanced
-    "types": ["node", "vitest/globals"],
+    "types": ["node", "bun-types"],
     "jsx": "react-jsx",
     "jsxImportSource": "react"
   },

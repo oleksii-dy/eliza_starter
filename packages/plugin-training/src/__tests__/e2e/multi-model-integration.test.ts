@@ -1,5 +1,5 @@
-import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-import { IAgentRuntime } from '@elizaos/core';
+import { describe, it, beforeAll, afterAll, expect } from 'bun:test';
+import { type IAgentRuntime } from '@elizaos/core';
 import { createTestRuntime } from '../test-utils';
 
 // Model 1: ShouldRespond

@@ -1,6 +1,6 @@
 {
   "name": "@elizaos/plugin-message-handling",
-  "version": "1.0.6",
+  "version": "1.0.12",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -32,18 +32,24 @@
   "devDependencies": {
     "@types/bun": "^1.2.16",
     "@types/node": "^22.15.3",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
+    "eslint": "^9.22.0",
     "prettier": "3.5.3",
     "tsup": "8.5.0",
+    "typescript": "5.8.3",
     "zod": "^3.22.4"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "bun run typecheck && tsup",
     "dev": "tsup --watch",
-    "lint": "prettier --write ./src",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "lint:check": "eslint src && prettier --check ./src",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
     "format": "prettier --write ./src",
     "format:check": "prettier --check ./src",
-    "test": "bun test",
+    "test": "elizaos test",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage"
   },

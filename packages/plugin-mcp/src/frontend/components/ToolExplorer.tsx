@@ -18,11 +18,11 @@ export const ToolExplorer: React.FC<ToolExplorerProps> = ({ server, onExecute })
     setToolArgs({});
     setResult(null);
     setError(null);
-    
+
     // Initialize args based on schema
     if (tool.inputSchema?.properties) {
       const initialArgs: Record<string, any> = {};
-      Object.keys(tool.inputSchema.properties).forEach(key => {
+      Object.keys(tool.inputSchema.properties).forEach((key) => {
         const prop = tool.inputSchema.properties[key];
         if (prop.type === 'string') {
           initialArgs[key] = '';
@@ -41,19 +41,21 @@ export const ToolExplorer: React.FC<ToolExplorerProps> = ({ server, onExecute })
   };
 
   const handleArgChange = (key: string, value: any) => {
-    setToolArgs(prev => ({
+    setToolArgs((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
   const handleExecute = async () => {
-    if (!selectedTool) return;
-    
+    if (!selectedTool) {
+      return;
+    }
+
     setExecuting(true);
     setError(null);
     setResult(null);
-    
+
     try {
       const response = await onExecute(server.name, selectedTool.name, toolArgs);
       setResult(response);
@@ -66,7 +68,7 @@ export const ToolExplorer: React.FC<ToolExplorerProps> = ({ server, onExecute })
 
   const renderArgInput = (key: string, schema: any) => {
     const value = toolArgs[key];
-    
+
     if (schema.type === 'string') {
       if (schema.enum) {
         return (
@@ -77,12 +79,14 @@ export const ToolExplorer: React.FC<ToolExplorerProps> = ({ server, onExecute })
           >
             <option value="">Select...</option>
             {schema.enum.map((opt: string) => (
-              <option key={opt} value={opt}>{opt}</option>
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
             ))}
           </select>
         );
       }
-      
+
       return (
         <input
           type="text"
@@ -93,7 +97,7 @@ export const ToolExplorer: React.FC<ToolExplorerProps> = ({ server, onExecute })
         />
       );
     }
-    
+
     if (schema.type === 'number') {
       return (
         <input
@@ -105,7 +109,7 @@ export const ToolExplorer: React.FC<ToolExplorerProps> = ({ server, onExecute })
         />
       );
     }
-    
+
     if (schema.type === 'boolean') {
       return (
         <label className="arg-checkbox">
@@ -118,7 +122,7 @@ export const ToolExplorer: React.FC<ToolExplorerProps> = ({ server, onExecute })
         </label>
       );
     }
-    
+
     if (schema.type === 'array' || schema.type === 'object') {
       return (
         <textarea
@@ -138,7 +142,7 @@ export const ToolExplorer: React.FC<ToolExplorerProps> = ({ server, onExecute })
         />
       );
     }
-    
+
     return <div>Unsupported type: {schema.type}</div>;
   };
 
@@ -157,57 +161,51 @@ export const ToolExplorer: React.FC<ToolExplorerProps> = ({ server, onExecute })
                 onClick={() => handleToolSelect(tool)}
               >
                 <div className="tool-name">{tool.name}</div>
-                {tool.description && (
-                  <div className="tool-description">{tool.description}</div>
-                )}
+                {tool.description && <div className="tool-description">{tool.description}</div>}
               </li>
             ))}
           </ul>
         )}
       </div>
-      
+
       {selectedTool && (
         <div className="tool-details">
           <h3>{selectedTool.name}</h3>
           {selectedTool.description && (
             <p className="tool-description">{selectedTool.description}</p>
           )}
-          
+
           {selectedTool.inputSchema?.properties && (
             <div className="tool-args">
               <h4>Arguments</h4>
-              {Object.entries(selectedTool.inputSchema.properties).map(([key, schema]: [string, any]) => (
-                <div key={key} className="arg-field">
-                  <label className="arg-label">
-                    {key}
-                    {selectedTool.inputSchema.required?.includes(key) && (
-                      <span className="required">*</span>
-                    )}
-                  </label>
-                  {renderArgInput(key, schema)}
-                  {schema.description && (
-                    <small className="arg-help">{schema.description}</small>
-                  )}
-                </div>
-              ))}
+              {Object.entries(selectedTool.inputSchema.properties).map(
+                ([key, schema]: [string, any]) => (
+                  <div key={key} className="arg-field">
+                    <label className="arg-label">
+                      {key}
+                      {selectedTool.inputSchema.required?.includes(key) && (
+                        <span className="required">*</span>
+                      )}
+                    </label>
+                    {renderArgInput(key, schema)}
+                    {schema.description && <small className="arg-help">{schema.description}</small>}
+                  </div>
+                )
+              )}
             </div>
           )}
-          
-          <button
-            className="execute-btn"
-            onClick={handleExecute}
-            disabled={executing}
-          >
+
+          <button className="execute-btn" onClick={handleExecute} disabled={executing}>
             {executing ? 'Executing...' : 'Execute Tool'}
           </button>
-          
+
           {error && (
             <div className="execution-error">
               <h4>Error</h4>
               <pre>{error}</pre>
             </div>
           )}
-          
+
           {result && (
             <div className="execution-result">
               <h4>Result</h4>
@@ -218,4 +216,4 @@ export const ToolExplorer: React.FC<ToolExplorerProps> = ({ server, onExecute })
       )}
     </div>
   );
-}; 
+};

@@ -1,17 +1,17 @@
-import type { State } from "@elizaos/core";
+import type { State } from '@elizaos/core';
 import {
   type McpProviderData,
   type McpServer,
   ResourceSelectionSchema,
   type ValidationResult,
-} from "../types";
-import { validateJsonSchema } from "./json";
+} from '../types';
+import { validateJsonSchema } from './json';
 import {
   toolSelectionArgumentSchema,
   toolSelectionNameSchema,
   type ToolSelectionArgument,
   type ToolSelectionName,
-} from "./schemas";
+} from './schemas';
 
 export interface ToolSelection {
   serverName: string;
@@ -42,14 +42,14 @@ export function validateToolSelectionName(
   const mcpData = state.values.mcp || {};
 
   const server: McpServer | null = mcpData[data.serverName];
-  if (!server || server.status !== "connected") {
+  if (!server || server.status !== 'connected') {
     return {
       success: false,
       error: `Server "${data.serverName}" not found or not connected`,
     };
   }
 
-  const toolInfo = server.tools?.[data.toolName as keyof McpServer["tools"]];
+  const toolInfo = server.tools?.[data.toolName as keyof McpServer['tools']];
   if (!toolInfo) {
     return {
       success: false,
@@ -103,27 +103,29 @@ export function createToolSelectionFeedbackPrompt(
   composedState: State,
   userMessage: string
 ): string {
-  let toolsDescription = "";
+  let toolsDescription = '';
 
   for (const [serverName, server] of Object.entries(composedState.values.mcp || {}) as [
     string,
     McpProviderData[string],
   ][]) {
-    if (server.status !== "connected") continue;
+    if (server.status !== 'connected') {
+      continue;
+    }
 
     for (const [toolName, tool] of Object.entries(server.tools || {}) as [
       string,
       { description?: string },
     ][]) {
       toolsDescription += `Tool: ${toolName} (Server: ${serverName})\n`;
-      toolsDescription += `Description: ${tool.description || "No description available"}\n\n`;
+      toolsDescription += `Description: ${tool.description || 'No description available'}\n\n`;
     }
   }
 
   return createFeedbackPrompt(
     originalResponse,
     errorMessage,
-    "tool",
+    'tool',
     toolsDescription,
     userMessage
   );
@@ -135,22 +137,24 @@ export function createResourceSelectionFeedbackPrompt(
   composedState: State,
   userMessage: string
 ): string {
-  let resourcesDescription = "";
+  let resourcesDescription = '';
 
   for (const [serverName, server] of Object.entries(composedState.values.mcp || {}) as [
     string,
     McpProviderData[string],
   ][]) {
-    if (server.status !== "connected") continue;
+    if (server.status !== 'connected') {
+      continue;
+    }
 
     for (const [uri, resource] of Object.entries(server.resources || {}) as [
       string,
       { description?: string; name?: string },
     ][]) {
       resourcesDescription += `Resource: ${uri} (Server: ${serverName})\n`;
-      resourcesDescription += `Name: ${resource.name || "No name available"}\n`;
+      resourcesDescription += `Name: ${resource.name || 'No name available'}\n`;
       resourcesDescription += `Description: ${
-        resource.description || "No description available"
+        resource.description || 'No description available'
       }\n\n`;
     }
   }
@@ -158,7 +162,7 @@ export function createResourceSelectionFeedbackPrompt(
   return createFeedbackPrompt(
     originalResponse,
     errorMessage,
-    "resource",
+    'resource',
     resourcesDescription,
     userMessage
   );

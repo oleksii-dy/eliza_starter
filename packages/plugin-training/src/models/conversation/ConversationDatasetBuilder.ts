@@ -97,7 +97,7 @@ export class ConversationDatasetBuilder {
       characterFiles,
     };
 
-    elizaLogger.info(`🎉 Conversation dataset built successfully:`, result);
+    elizaLogger.info('🎉 Conversation dataset built successfully:', result);
     return result;
   }
 
@@ -548,7 +548,9 @@ Your communication style: ${character.style?.all?.join(', ')}`;
    * Store examples in training database
    */
   private async storeInDatabase(examples: ConversationTrainingExample[]): Promise<void> {
-    if (!this.runtime) return;
+    if (!this.runtime) {
+      return;
+    }
 
     try {
       const dbPath = this.runtime.getSetting('TRAINING_DATABASE_URL') || 'sqlite:./training.db';
@@ -614,8 +616,8 @@ Your communication style: ${character.style?.all?.join(', ')}`;
         const output = JSON.parse(item.output_data);
 
         return {
-          input: input,
-          output: output,
+          input,
+          output,
           metadata: JSON.parse(item.metadata || '{}'),
         };
       });

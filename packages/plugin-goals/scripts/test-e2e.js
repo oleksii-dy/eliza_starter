@@ -24,10 +24,10 @@ function log(message, color = 'reset') {
 function waitForServer(port, retries = MAX_RETRIES) {
   return new Promise((resolve, reject) => {
     let attempts = 0;
-    
+
     const check = () => {
       attempts++;
-      
+
       const req = http.get(`http://localhost:${port}/`, (res) => {
         if (res.statusCode === 200 || res.statusCode === 404) {
           log(`✅ Server is ready on port ${port} (Status: ${res.statusCode})`, 'green');
@@ -37,15 +37,15 @@ function waitForServer(port, retries = MAX_RETRIES) {
           retry();
         }
       });
-      
+
       req.on('error', (err) => {
         log(`⏳ Waiting for server... (Connection error: ${err.message})`, 'yellow');
         retry();
       });
-      
+
       req.end();
     };
-    
+
     const retry = () => {
       if (attempts >= retries) {
         reject(new Error(`Server failed to start after ${retries} attempts`));
@@ -53,7 +53,7 @@ function waitForServer(port, retries = MAX_RETRIES) {
         setTimeout(check, RETRY_DELAY);
       }
     };
-    
+
     check();
   });
 }
@@ -62,7 +62,7 @@ function waitForServer(port, retries = MAX_RETRIES) {
 async function runTests() {
   let serverProcess = null;
   let exitCode = 0;
-  
+
   try {
     // Start the dev server
     log('🚀 Starting Eliza server...', 'blue');
@@ -72,19 +72,19 @@ async function runTests() {
       cwd: process.cwd(),
       detached: true
     });
-    
+
     // Capture server output
     serverProcess.stdout.on('data', (data) => {
       process.stdout.write(`[Server] ${data}`);
     });
-    
+
     serverProcess.stderr.on('data', (data) => {
       process.stderr.write(`[Server Error] ${data}`);
     });
-    
+
     // Wait for server to be ready
     await waitForServer(SERVER_PORT);
-    
+
     // Run Cypress tests
     log('\n🧪 Running Cypress tests...', 'blue');
     const cypressProcess = spawn('npm', ['run', 'cypress:run'], {
@@ -92,7 +92,7 @@ async function runTests() {
       shell: true,
       cwd: process.cwd()
     });
-    
+
     // Wait for Cypress to complete
     await new Promise((resolve, reject) => {
       cypressProcess.on('close', (code) => {
@@ -104,12 +104,12 @@ async function runTests() {
           reject(new Error(`Cypress exited with code ${code}`));
         }
       });
-      
+
       cypressProcess.on('error', (err) => {
         reject(err);
       });
     });
-    
+
   } catch (error) {
     log(`\n❌ Test failed: ${error.message}`, 'red');
     exitCode = 1;
@@ -117,7 +117,7 @@ async function runTests() {
     // Clean up server process
     if (serverProcess) {
       log('\n🛑 Shutting down server...', 'yellow');
-      
+
       // Kill the entire process group using the detached PID
       try {
         process.kill(-serverProcess.pid);
@@ -126,7 +126,7 @@ async function runTests() {
         serverProcess.kill();
       }
     }
-    
+
     process.exit(exitCode);
   }
 }
@@ -145,4 +145,4 @@ process.on('SIGTERM', () => {
 // Run the tests
 log('🎯 Goals Plugin E2E Test Suite', 'blue');
 log('================================\n', 'blue');
-runTests(); 
+runTests();

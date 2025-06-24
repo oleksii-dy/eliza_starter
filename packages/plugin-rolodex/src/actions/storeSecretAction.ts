@@ -14,17 +14,17 @@ export const storeSecretAction: Action = {
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const text = message.content.text?.toLowerCase() || '';
-    
+
     // Check if message is from admin (contains "Admin:" prefix)
     const isAdmin = text.includes('admin:');
-    
+
     // Check if message contains API key patterns
     const hasApiKey = /_API_KEY=\w+/.test(message.content.text || '');
-    
+
     // Check for keywords
     const keywords = ['api key', 'secret', 'credential', 'store', 'save'];
     const hasKeywords = keywords.some(kw => text.includes(kw));
-    
+
     return isAdmin && (hasApiKey || hasKeywords);
   },
 
@@ -37,23 +37,23 @@ export const storeSecretAction: Action = {
   ) => {
     try {
       const text = message.content.text || '';
-      
+
       // Extract API keys from the message
       const apiKeyPattern = /(\w+_API_KEY)=(\w+)/g;
       const matches = [...text.matchAll(apiKeyPattern)];
-      
+
       if (matches.length === 0) {
         if (callback) {
           await callback({
             text: "I couldn't find any API keys in the correct format (KEY_NAME=value). Please provide them in the format: API_KEY_NAME=your_key_value",
-            thought: "No API keys found in the expected format",
+            thought: 'No API keys found in the expected format',
           });
         }
         return;
       }
 
       const storedKeys: string[] = [];
-      
+
       // Store each key securely
       for (const [, keyName, keyValue] of matches) {
         // In a real implementation, this would store in a secure vault
@@ -62,7 +62,7 @@ export const storeSecretAction: Action = {
           ...(runtime as any).character.secrets,
           [keyName]: keyValue,
         };
-        
+
         storedKeys.push(keyName);
         logger.info(`[storeSecretAction] Stored secret: ${keyName}`);
       }
@@ -87,11 +87,11 @@ export const storeSecretAction: Action = {
 
     } catch (error) {
       logger.error('[storeSecretAction] Error storing secrets:', error);
-      
+
       if (callback) {
         await callback({
-          text: "I encountered an error while storing the API keys. Please try again.",
-          thought: "Error in storeSecretAction handler",
+          text: 'I encountered an error while storing the API keys. Please try again.',
+          thought: 'Error in storeSecretAction handler',
         });
       }
     }
@@ -127,4 +127,4 @@ export const storeSecretAction: Action = {
       },
     ],
   ],
-}; 
+};

@@ -1,4 +1,4 @@
-import { IAgentRuntime, Memory, IDatabaseAdapter, UUID, elizaLogger } from '@elizaos/core';
+import { type IAgentRuntime, type UUID, elizaLogger } from '@elizaos/core';
 import { randomUUID } from 'crypto';
 
 /**
@@ -56,10 +56,10 @@ export async function createMockRuntime(): Promise<Partial<IAgentRuntime>> {
     getSetting: (key: string) => process.env[key] || null,
 
     logger: {
-      info: console.log,
-      warn: console.warn,
-      error: console.error,
-      debug: console.debug,
+      info: (...args: any[]) => console.info(...args),
+      warn: (...args: any[]) => console.warn(...args),
+      error: (...args: any[]) => console.error(...args),
+      debug: (...args: any[]) => console.debug(...args),
     },
 
     // Minimal mock implementations

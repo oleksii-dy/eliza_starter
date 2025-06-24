@@ -1,4 +1,4 @@
-import type { Scenario } from '@elizaos/cli';
+import type { Scenario } from '../types.js';
 
 /**
  * Minimal test scenario to debug model loading issues
@@ -16,7 +16,7 @@ export const minimalTestScenario: Scenario = {
       role: 'subject', // This is the agent being tested
       bio: 'A minimal test agent',
       system: 'You are a test agent. Always respond with "Hello" when someone greets you.',
-      plugins: ['@elizaos/plugin-openai'] // Explicitly include OpenAI plugin
+      plugins: ['@elizaos/plugin-openai'], // Explicitly include OpenAI plugin
     },
     {
       id: 'user-actor' as any,
@@ -33,29 +33,29 @@ export const minimalTestScenario: Scenario = {
             content: 'Hello, are you working?',
             description: 'Send initial greeting to test agent',
             timeout: 5000,
-            critical: true
+            critical: true,
           },
           {
             id: 'wait-response',
             type: 'wait',
             waitTime: 3000,
-            description: 'Wait for agent response'
-          }
+            description: 'Wait for agent response',
+          },
         ],
         goals: ['Test basic agent responsiveness', 'Verify model handlers are working'],
-        personality: 'Direct and testing-focused'
-      }
-    }
+        personality: 'Direct and testing-focused',
+      },
+    },
   ],
 
   setup: {
     roomType: 'group',
-    roomName: 'Test Room'
+    roomName: 'Test Room',
   },
 
   execution: {
     maxDuration: 15000, // 15 seconds
-    maxSteps: 10
+    maxSteps: 10,
   },
 
   verification: {
@@ -65,22 +65,24 @@ export const minimalTestScenario: Scenario = {
         type: 'llm',
         description: 'Basic functionality check',
         config: {
-          successCriteria: 'Agent should respond appropriately to messages and show it can process text using LLM capabilities',
+          successCriteria:
+            'Agent should respond appropriately to messages and show it can process text using LLM capabilities',
         },
-        weight: 1
+        weight: 1,
       },
       {
         id: 'response-check',
         type: 'llm',
         description: 'Response content verification',
         config: {
-          successCriteria: 'Agent should include "Hello" in response as instructed by its system prompt',
+          successCriteria:
+            'Agent should include "Hello" in response as instructed by its system prompt',
           requiredKeywords: ['Hello'],
         },
-        weight: 1
-      }
-    ]
-  }
+        weight: 1,
+      },
+    ],
+  },
 };
 
 export default minimalTestScenario;

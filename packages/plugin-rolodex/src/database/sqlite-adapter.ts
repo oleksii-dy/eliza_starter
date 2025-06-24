@@ -1,4 +1,4 @@
-// @ts-ignore - Bun sqlite is available at runtime
+// @ts-expect-error - Bun sqlite is available at runtime
 import { Database } from 'bun:sqlite';
 import { logger, stringToUuid } from '@elizaos/core';
 import { asUUID, type UUID, type IAgentRuntime } from '@elizaos/core';
@@ -146,7 +146,7 @@ export class SQLiteAdapter extends DatabaseAdapter {
     `);
 
     const row = stmt.get(entityId) as any;
-    if (!row) return null;
+    if (!row) {return null;}
 
     return {
       entityId: asUUID(row.entity_id),
@@ -260,7 +260,7 @@ export class SQLiteAdapter extends DatabaseAdapter {
     `);
 
     const row = stmt.get(sourceId, targetId) as any;
-    if (!row) return undefined;
+    if (!row) {return undefined;}
 
     return {
       id: asUUID(row.id),
@@ -406,7 +406,7 @@ export class SQLiteAdapter extends DatabaseAdapter {
       params.push(JSON.stringify(updates.metadata));
     }
 
-    if (fields.length === 0) return;
+    if (fields.length === 0) {return;}
 
     params.push(id);
     const query = `UPDATE follow_ups SET ${fields.join(', ')} WHERE id = ?`;
@@ -492,4 +492,4 @@ export class SQLiteAdapter extends DatabaseAdapter {
   close() {
     this.db.close();
   }
-} 
+}

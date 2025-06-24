@@ -1,13 +1,8 @@
 import {
-  ChannelType,
   type IAgentRuntime,
-  type Room,
-  type Route,
-  type UUID,
-  type World,
-  createUniqueUuid,
   logger,
 } from '@elizaos/core';
+import { type Route } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
 
 import fs from 'node:fs';
@@ -162,7 +157,7 @@ export const routes: Route[] = [
   {
     type: 'GET',
     path: '/api/goals',
-    handler: async (req: any, res: any, runtime: IAgentRuntime) => {
+    handler: async (_req: any, _res: any, _runtime: IAgentRuntime) => {
       // ... existing code ...
     },
   },
@@ -317,10 +312,18 @@ export const routes: Route[] = [
 
         // Apply updates
         const updates: any = {};
-        if (updateData.name) updates.name = updateData.name;
-        if (updateData.description !== undefined) updates.description = updateData.description;
-        if (updateData.tags) updates.tags = updateData.tags;
-        if (updateData.metadata) updates.metadata = { ...goal.metadata, ...updateData.metadata };
+        if (updateData.name) {
+          updates.name = updateData.name;
+        }
+        if (updateData.description !== undefined) {
+          updates.description = updateData.description;
+        }
+        if (updateData.tags) {
+          updates.tags = updateData.tags;
+        }
+        if (updateData.metadata) {
+          updates.metadata = { ...goal.metadata, ...updateData.metadata };
+        }
 
         await dataService.updateGoal(goalId, updates);
 
@@ -369,13 +372,3 @@ export const routes: Route[] = [
 ];
 
 export default routes;
-
-// TaskUpdate interface for API updates
-interface TaskUpdate {
-  name?: string;
-  description?: string;
-  priority?: 1 | 2 | 3 | 4;
-  urgent?: boolean;
-  dueDate?: string | null; // Expect ISO string or null
-  recurring?: 'daily' | 'weekly' | 'monthly';
-}

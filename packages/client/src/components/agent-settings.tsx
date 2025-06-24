@@ -5,8 +5,7 @@ import ConfirmationDialog from '@/components/confirmation-dialog';
 import { useConfirmation } from '@/hooks/use-confirmation';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/api';
-import type { Agent, UUID } from '@elizaos/core';
-import { AgentStatus } from '@elizaos/core';
+import { AgentStatus, type Agent, type UUID } from '@elizaos/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -138,7 +137,9 @@ export default function AgentSettings({
   };
 
   const handleDelete = () => {
-    if (isDeleting) return; // Prevent multiple clicks
+    if (isDeleting) {
+      return;
+    } // Prevent multiple clicks
 
     confirm(
       {
@@ -213,7 +214,7 @@ export default function AgentSettings({
         // Handle specific error codes
         if (deleteError instanceof Error) {
           const errorMessage = deleteError.message;
-          const statusCode = (deleteError as any).statusCode;
+          const statusCode = (deleteError as Error & { statusCode?: number }).statusCode;
 
           if (
             statusCode === 409 ||

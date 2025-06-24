@@ -252,8 +252,8 @@ export class MCPCreationService extends Service {
         build: 'tsc && chmod +x dist/mcp-server/index.js',
         start: 'node --loader ts-node/esm dist/mcp-server/index.js',
         dev: 'node --loader ts-node/esm src/mcp-server/index.ts',
-        test: 'vitest run',
-        'test:watch': 'vitest',
+        test: 'bun test',
+        'test:watch': 'bun test --watch',
         lint: 'eslint src --ext .ts',
         typecheck: 'tsc --noEmit',
       },
@@ -269,7 +269,6 @@ export class MCPCreationService extends Service {
         '@types/node': '^22.10.0',
         'ts-node': '^10.9.2',
         typescript: '^5.3.0',
-        vitest: '^1.0.0',
         '@typescript-eslint/eslint-plugin': '^6.0.0',
         '@typescript-eslint/parser': '^6.0.0',
         eslint: '^8.0.0',
@@ -359,7 +358,7 @@ export class MCPCreationService extends Service {
       );
 
       // Generate tool file
-      let toolContent = templateContent
+      const toolContent = templateContent
         .replace(/\{\{TOOL_NAME\}\}/g, tool.name)
         .replace(/\{\{TOOL_DESCRIPTION\}\}/g, tool.description)
         .replace('{{TOOL_PARAMETERS}}', JSON.stringify(paramsObj, null, 2))
@@ -840,16 +839,16 @@ export class MCPCreationService extends Service {
   ): Promise<void> {
     let readme = `# ${config.name}\n\n`;
     readme += `${config.description || 'An MCP (Model Context Protocol) server'}\n\n`;
-    readme += `## Installation\n\n`;
-    readme += `\`\`\`bash\nnpm install\n\`\`\`\n\n`;
-    readme += `## Usage\n\n`;
-    readme += `### Development\n\n`;
-    readme += `\`\`\`bash\nnpm run dev\n\`\`\`\n\n`;
-    readme += `### Production\n\n`;
-    readme += `\`\`\`bash\nnpm run build\nnpm start\n\`\`\`\n\n`;
+    readme += '## Installation\n\n';
+    readme += '```bash\nnpm install\n```\n\n';
+    readme += '## Usage\n\n';
+    readme += '### Development\n\n';
+    readme += '```bash\nnpm run dev\n```\n\n';
+    readme += '### Production\n\n';
+    readme += '```bash\nnpm run build\nnpm start\n```\n\n';
 
     if (config.tools && config.tools.length > 0) {
-      readme += `## Available Tools\n\n`;
+      readme += '## Available Tools\n\n';
       for (const tool of config.tools) {
         readme += `### ${tool.name}\n\n`;
         readme += `${tool.description}\n\n`;
@@ -860,7 +859,7 @@ export class MCPCreationService extends Service {
     }
 
     if (config.resources && config.resources.length > 0) {
-      readme += `## Available Resources\n\n`;
+      readme += '## Available Resources\n\n';
       for (const resource of config.resources) {
         readme += `### ${resource.name}\n\n`;
         readme += `${resource.description}\n\n`;
@@ -870,9 +869,9 @@ export class MCPCreationService extends Service {
       }
     }
 
-    readme += `## Testing\n\n`;
-    readme += `\`\`\`bash\nnpm test\n\`\`\`\n\n`;
-    readme += `## License\n\nMIT\n`;
+    readme += '## Testing\n\n';
+    readme += '```bash\nnpm test\n```\n\n';
+    readme += '## License\n\nMIT\n';
 
     const readmePath = path.join(projectPath, 'README.md');
     await fs.writeFile(readmePath, readme);
@@ -938,11 +937,11 @@ coverage/
         dependencies[packageName] = version;
       } else {
         // Add common dependencies with default versions
-        if (dep === 'axios') dependencies['axios'] = '^1.6.0';
-        if (dep === 'dotenv') dependencies['dotenv'] = '^16.0.0';
-        if (dep === 'zod') dependencies['zod'] = '^3.22.0';
-        if (dep === 'node-fetch') dependencies['node-fetch'] = '^3.0.0';
-        if (dep === 'pg') dependencies['pg'] = '^8.11.0';
+        if (dep === 'axios') {dependencies['axios'] = '^1.6.0';}
+        if (dep === 'dotenv') {dependencies['dotenv'] = '^16.0.0';}
+        if (dep === 'zod') {dependencies['zod'] = '^3.22.0';}
+        if (dep === 'node-fetch') {dependencies['node-fetch'] = '^3.0.0';}
+        if (dep === 'pg') {dependencies['pg'] = '^8.11.0';}
         // Add more as needed
       }
     }
@@ -1027,7 +1026,7 @@ coverage/
 
           // Add missing type imports
           if (stderr.includes('Cannot find name') && !content.includes('import type')) {
-            content = `import type { McpContext, McpToolResult } from '../types';\n` + content;
+            content = `import type { McpContext, McpToolResult } from '../types';\n${content}`;
             modified = true;
           }
 
@@ -1080,7 +1079,7 @@ coverage/
         const testPath = path.join(testDir, testFileName);
 
         if (!(await this.fileExists(testPath))) {
-          const testContent = `import { describe, it, expect } from 'vitest';
+          const testContent = `import { describe, it, expect  } from 'bun:test';
 import { ${tool.name}Tool } from '../mcp-server/tools/${tool.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-tool';
 
 describe('${tool.name} Tool', () => {

@@ -174,7 +174,7 @@ export async function ingestGitHubRepository(
           id: generateFileId(owner, repo, file.path),
           filename: file.name,
           path: file.path,
-          content: content, // Include the actual file content
+          content, // Include the actual file content
           fragmentCount: 0, // Would be set by actual processing
           sourceMetadata,
         });
@@ -384,7 +384,7 @@ function filterGitHubFiles(
     }
 
     // Check file extension
-    const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+    const extension = `.${file.name.split('.').pop()?.toLowerCase()}`;
     if (!options.allowedExtensions.includes(extension)) {
       logger.debug(`Skipping file with unsupported extension: ${file.path}`);
       return false;
@@ -586,7 +586,7 @@ function extractTextFromElement(element: Element, minTextLength: number): string
       const childText = extractTextFromElement(childElement, minTextLength);
       if (childText.trim()) {
         if (isBlock && textParts.length > 0) {
-          textParts.push('\n' + childText.trim());
+          textParts.push(`\n${childText.trim()}`);
         } else {
           textParts.push(childText.trim());
         }
@@ -601,7 +601,9 @@ function extractTextFromElement(element: Element, minTextLength: number): string
  * Helper functions
  */
 function getSubdirectoryFromPath(filePath: string, subdirectories?: string[]): string | undefined {
-  if (!subdirectories) return undefined;
+  if (!subdirectories) {
+    return undefined;
+  }
 
   for (const subdir of subdirectories) {
     if (filePath.startsWith(subdir)) {

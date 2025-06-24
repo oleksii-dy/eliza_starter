@@ -115,4 +115,4 @@ export abstract class System extends EventEmitter implements ISystem {
   postTick(): void {
     // Override in subclasses if needed
   }
-} 
+}

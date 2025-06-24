@@ -1,6 +1,7 @@
 import {
   type Action,
   type ActionExample,
+  type ActionResult,
   composePrompt,
   type HandlerCallback,
   type IAgentRuntime,
@@ -156,7 +157,9 @@ async function extractGoalUpdate(
   try {
     // Format goal details for the prompt
     let goalDetails = `Name: ${goal.name}\n`;
-    if (goal.description) goalDetails += `Description: ${goal.description}\n`;
+    if (goal.description) {
+      goalDetails += `Description: ${goal.description}\n`;
+    }
     goalDetails += `Owner Type: ${goal.ownerType}\n`;
     goalDetails += `Created: ${goal.createdAt?.toLocaleDateString() || 'Unknown'}\n`;
 
@@ -184,8 +187,12 @@ async function extractGoalUpdate(
 
     // Return only valid fields
     const finalUpdate: GoalUpdate = {};
-    if (parsedUpdate.name) finalUpdate.name = String(parsedUpdate.name);
-    if (parsedUpdate.description) finalUpdate.description = String(parsedUpdate.description);
+    if (parsedUpdate.name) {
+      finalUpdate.name = String(parsedUpdate.name);
+    }
+    if (parsedUpdate.description) {
+      finalUpdate.description = String(parsedUpdate.description);
+    }
 
     // Return null if no valid fields remain
     if (Object.keys(finalUpdate).length === 0) {
@@ -206,7 +213,7 @@ async function extractGoalUpdate(
 export const updateGoalAction: Action = {
   name: 'UPDATE_GOAL',
   similes: ['EDIT_GOAL', 'MODIFY_GOAL', 'CHANGE_GOAL', 'REVISE_GOAL'],
-  description: "Updates an existing goal's name or description.",
+  description: "Updates an existing goal's name or description. Can be chained with LIST_GOALS to see updated goals or COMPLETE_GOAL to mark it done.",
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     // Check if any active goals exist
@@ -232,7 +239,7 @@ export const updateGoalAction: Action = {
     state: State | undefined,
     options: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     try {
       if (!state) {
         if (callback) {
@@ -242,7 +249,16 @@ export const updateGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'UPDATE_GOAL',
+            error: 'No active goals',
+          },
+          values: {
+            success: false,
+            error: 'No active goals',
+          },
+        };
       }
 
       const dataService = createGoalDataService(runtime);
@@ -256,10 +272,10 @@ export const updateGoalAction: Action = {
 
       const entityGoals = message.entityId
         ? await dataService.getGoals({
-            ownerType: 'entity',
-            ownerId: message.entityId as UUID,
-            isCompleted: false,
-          })
+          ownerType: 'entity',
+          ownerId: message.entityId as UUID,
+          isCompleted: false,
+        })
         : [];
 
       const availableGoals = [...agentGoals, ...entityGoals];
@@ -272,7 +288,16 @@ export const updateGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'UPDATE_GOAL',
+            error: 'No active goals',
+          },
+          values: {
+            success: false,
+            error: 'No active goals',
+          },
+        };
       }
 
       // Phase 1: Extract which goal to update
@@ -280,14 +305,25 @@ export const updateGoalAction: Action = {
       if (!goalSelection.isFound) {
         if (callback) {
           await callback({
-            text:
-              "I couldn't determine which goal you want to update. Could you be more specific? Here are the current goals:\n\n" +
-              availableGoals.map((goal) => `- ${goal.name} (${goal.ownerType} goal)`).join('\n'),
+            text: `I couldn't determine which goal you want to update. Could you be more specific? Here are the current goals:\n\n${availableGoals
+              .map((goal) => `- ${goal.name} (${goal.ownerType} goal)`)
+              .join('\n')}`,
             actions: ['UPDATE_GOAL_NOT_FOUND'],
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'UPDATE_GOAL',
+            error: 'Goal not found',
+            availableGoals: availableGoals.map((g) => ({ id: g.id, name: g.name, ownerType: g.ownerType })),
+          },
+          values: {
+            success: false,
+            error: 'Goal not found',
+            needsClarification: true,
+          },
+        };
       }
 
       const goal = availableGoals.find((g) => g.id === goalSelection.goalId);
@@ -299,7 +335,17 @@ export const updateGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'UPDATE_GOAL',
+            error: 'Goal not found',
+            attemptedGoalName: goalSelection.goalName,
+          },
+          values: {
+            success: false,
+            error: 'Goal not found',
+          },
+        };
       }
 
       // Phase 2: Extract what updates to make
@@ -312,7 +358,18 @@ export const updateGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'UPDATE_GOAL',
+            error: 'Invalid update',
+            goalId: goal.id,
+            goalName: goal.name,
+          },
+          values: {
+            success: false,
+            error: 'Invalid update',
+          },
+        };
       }
 
       // Phase 3: Apply the update
@@ -320,8 +377,12 @@ export const updateGoalAction: Action = {
 
       const ownerText = goal.ownerType === 'agent' ? 'Agent' : 'User';
       const updateText: string[] = [];
-      if (update.name) updateText.push(`name to "${update.name}"`);
-      if (update.description) updateText.push(`description to "${update.description}"`);
+      if (update.name) {
+        updateText.push(`name to "${update.name}"`);
+      }
+      if (update.description) {
+        updateText.push(`description to "${update.description}"`);
+      }
 
       if (callback) {
         await callback({
@@ -330,6 +391,21 @@ export const updateGoalAction: Action = {
           source: message.content.source,
         });
       }
+      return {
+        data: {
+          actionName: 'UPDATE_GOAL',
+          updatedGoalId: goal.id,
+          updatedGoalName: goal.name,
+          updates: update,
+          updateText: updateText.join(' and '),
+        },
+        values: {
+          success: true,
+          goalId: goal.id,
+          goalName: goal.name,
+          updatedFields: Object.keys(update),
+        },
+      };
     } catch (error) {
       logger.error('Error in updateGoal handler:', error);
       if (callback) {
@@ -339,19 +415,63 @@ export const updateGoalAction: Action = {
           source: message.content.source,
         });
       }
+      return {
+        data: {
+          actionName: 'UPDATE_GOAL',
+          error: error instanceof Error ? error.message : String(error),
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
 
   examples: [
+    // Multi-action: Update goal then list all goals to show modification workflow
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
+        content: {
+          text: 'Update my French learning goal to Spanish and show me all my goals',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'I\'ve updated your goal to "Learn Spanish fluently". Now let me show you all your goals.',
+          thought: "The user wants to modify an existing goal and then see their complete goal list. I need to chain UPDATE_GOAL with LIST_GOALS to show the modification took effect in the context of all their goals.",
+          actions: ['UPDATE_GOAL', 'LIST_GOALS'],
+        },
+      },
+    ],
+    // Multi-action: Update goal then mark complete to demonstrate goal lifecycle completion
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Change my exercise goal description to "30 minutes daily" and mark it complete',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'I\'ve updated the description. Now I\'ll mark it as complete.',
+          thought: "The user wants to update a goal\'s details and then immediately complete it. This shows the update-complete workflow where we refine the goal definition before marking it as achieved.",
+          actions: ['UPDATE_GOAL', 'COMPLETE_GOAL'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
         content: {
           text: 'Update my French learning goal to be about Spanish instead',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: '✓ User goal updated: Changed name to "Learn Spanish fluently".',
           actions: ['UPDATE_GOAL_SUCCESS'],
@@ -360,13 +480,13 @@ export const updateGoalAction: Action = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Change the description of my marathon goal to include a specific time target',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: '✓ User goal updated: Changed description to "Complete a marathon in under 4 hours".',
           actions: ['UPDATE_GOAL_SUCCESS'],

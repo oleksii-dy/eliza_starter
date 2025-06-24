@@ -37,6 +37,7 @@ async function main() {
   // Add a simple check in case the path is incorrect
   let version = '0.0.0'; // Fallback version
   if (!existsSync(packageJsonPath)) {
+    // Use default version if package.json not found
   } else {
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
     version = packageJson.version;
@@ -79,6 +80,7 @@ async function main() {
     { name: 'test-production-verification', path: './commands/test-production-verification.js' },
     { name: 'stress-test-verification', path: './commands/stress-test-verification.js' },
     { name: 'env', path: './commands/env/index.js' },
+    { name: 'cleanup', path: './commands/cleanup/index.js' },
     { name: 'publish', path: './commands/publish.js' },
   ];
 

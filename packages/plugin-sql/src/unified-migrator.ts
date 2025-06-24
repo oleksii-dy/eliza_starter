@@ -88,8 +88,8 @@ export class UnifiedMigrator {
         // For PostgreSQL in test mode, create test schema
         if (this.dbType === 'postgres' && schema === 'test') {
           try {
-            await this.db.execute(sql.raw(`CREATE SCHEMA IF NOT EXISTS test`));
-            await this.db.execute(sql.raw(`SET search_path TO test, public`));
+            await this.db.execute(sql.raw('CREATE SCHEMA IF NOT EXISTS test'));
+            await this.db.execute(sql.raw('SET search_path TO test, public'));
             logger.info('[UnifiedMigrator] Test schema initialized for PostgreSQL');
           } catch (error) {
             logger.error('[UnifiedMigrator] Failed to initialize test schema:', error);
@@ -132,7 +132,7 @@ export class UnifiedMigrator {
     }
 
     logger.info(`[UnifiedMigrator] Registering ${tables.length} plugin tables`);
-    
+
     // Validate each table schema before registration
     for (const table of tables) {
       if (!table.name || !table.sql || !table.pluginName) {
@@ -214,9 +214,9 @@ export class UnifiedMigrator {
           error:
             vectorError instanceof Error
               ? {
-                  message: vectorError.message,
-                  stack: vectorError.stack?.split('\n').slice(0, 5),
-                }
+                message: vectorError.message,
+                stack: vectorError.stack?.split('\n').slice(0, 5),
+              }
               : String(vectorError),
         });
         logger.warn(
@@ -406,13 +406,13 @@ export class UnifiedMigrator {
               } else if (this.dbType === 'pglite') {
                 const tables = await this.db.execute(
                   sql.raw(
-                    `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`
+                    'SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\''
                   )
                 );
-                logger.warn(`[UnifiedMigrator] Available PGLite tables:`, tables);
+                logger.warn('[UnifiedMigrator] Available PGLite tables:', tables);
               }
             } catch (listError) {
-              logger.warn(`[UnifiedMigrator] Could not list tables:`, listError);
+              logger.warn('[UnifiedMigrator] Could not list tables:', listError);
             }
 
             // Mark as ready anyway to prevent blocking, but log the issue

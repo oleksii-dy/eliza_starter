@@ -17,7 +17,7 @@ console.log('==========================================');
 
 function testComponentExistence() {
   console.log('\n📋 Testing Component Files...');
-  
+
   const pluginDir = join(__dirname, 'packages', 'plugin-rolodex');
   const requiredFiles = [
     'src/index.ts',
@@ -27,9 +27,9 @@ function testComponentExistence() {
     'src/providers/facts.ts',
     'src/types/index.ts'
   ];
-  
+
   let allExist = true;
-  
+
   for (const file of requiredFiles) {
     const fullPath = join(pluginDir, file);
     try {
@@ -45,18 +45,18 @@ function testComponentExistence() {
       allExist = false;
     }
   }
-  
+
   return allExist;
 }
 
 function testActionImplementation() {
   console.log('\n🎯 Testing Action Implementation...');
-  
+
   const findEntityPath = join(__dirname, 'packages', 'plugin-rolodex', 'src', 'actions', 'findEntity.ts');
-  
+
   try {
     const content = readFileSync(findEntityPath, 'utf8');
-    
+
     // Check for key implementation details
     const checks = [
       { pattern: /levenshteinDistance/, description: 'Levenshtein distance algorithm' },
@@ -65,7 +65,7 @@ function testActionImplementation() {
       { pattern: /handler.*async/, description: 'Handler function' },
       { pattern: /fuzzy.*search|similarity/, description: 'Fuzzy search logic' },
     ];
-    
+
     let allChecks = true;
     for (const check of checks) {
       if (check.pattern.test(content)) {
@@ -75,7 +75,7 @@ function testActionImplementation() {
         allChecks = false;
       }
     }
-    
+
     return allChecks;
   } catch (error) {
     console.log(`  ❌ Could not read action file: ${error.message}`);
@@ -85,12 +85,12 @@ function testActionImplementation() {
 
 function testEvaluatorImplementation() {
   console.log('\n🧠 Testing Evaluator Implementation...');
-  
+
   const evalPath = join(__dirname, 'packages', 'plugin-rolodex', 'src', 'evaluators', 'relationshipExtraction.ts');
-  
+
   try {
     const content = readFileSync(evalPath, 'utf8');
-    
+
     const checks = [
       { pattern: /name:\s*['"`]EXTRACT_RELATIONSHIPS['"`]/, description: 'Evaluator name' },
       { pattern: /validate.*async/, description: 'Validation function' },
@@ -98,7 +98,7 @@ function testEvaluatorImplementation() {
       { pattern: /createRelationship/, description: 'Relationship creation' },
       { pattern: /extractRelationships/, description: 'Relationship extraction' },
     ];
-    
+
     let allChecks = true;
     for (const check of checks) {
       if (check.pattern.test(content)) {
@@ -108,7 +108,7 @@ function testEvaluatorImplementation() {
         allChecks = false;
       }
     }
-    
+
     return allChecks;
   } catch (error) {
     console.log(`  ❌ Could not read evaluator file: ${error.message}`);
@@ -118,21 +118,21 @@ function testEvaluatorImplementation() {
 
 function testProviderImplementation() {
   console.log('\n📊 Testing Provider Implementation...');
-  
+
   const entitiesPath = join(__dirname, 'packages', 'plugin-rolodex', 'src', 'providers', 'entities.ts');
   const factsPath = join(__dirname, 'packages', 'plugin-rolodex', 'src', 'providers', 'facts.ts');
-  
+
   let allChecks = true;
-  
+
   try {
     const entitiesContent = readFileSync(entitiesPath, 'utf8');
-    
+
     const entitiesChecks = [
       { pattern: /name:\s*['"`]ENTITIES['"`]/, description: 'Entities provider name' },
       { pattern: /get.*async/, description: 'Provider get function' },
       { pattern: /getEntitiesForRoom/, description: 'Entity retrieval' },
     ];
-    
+
     for (const check of entitiesChecks) {
       if (check.pattern.test(entitiesContent)) {
         console.log(`  ✅ Entities provider: ${check.description}`);
@@ -145,16 +145,16 @@ function testProviderImplementation() {
     console.log(`  ❌ Could not read entities provider: ${error.message}`);
     allChecks = false;
   }
-  
+
   try {
     const factsContent = readFileSync(factsPath, 'utf8');
-    
+
     const factsChecks = [
       { pattern: /name:\s*['"`]FACTS['"`]/, description: 'Facts provider name' },
       { pattern: /get.*async/, description: 'Provider get function' },
       { pattern: /searchMemories/, description: 'Memory search' },
     ];
-    
+
     for (const check of factsChecks) {
       if (check.pattern.test(factsContent)) {
         console.log(`  ✅ Facts provider: ${check.description}`);
@@ -167,18 +167,18 @@ function testProviderImplementation() {
     console.log(`  ❌ Could not read facts provider: ${error.message}`);
     allChecks = false;
   }
-  
+
   return allChecks;
 }
 
 function testPluginIndex() {
   console.log('\n📦 Testing Plugin Index...');
-  
+
   const indexPath = join(__dirname, 'packages', 'plugin-rolodex', 'src', 'index.ts');
-  
+
   try {
     const content = readFileSync(indexPath, 'utf8');
-    
+
     const checks = [
       { pattern: /name:\s*['"`]@elizaos\/plugin-rolodex['"`]/, description: 'Plugin name' },
       { pattern: /actions:\s*\[/, description: 'Actions array' },
@@ -189,7 +189,7 @@ function testPluginIndex() {
       { pattern: /factsProvider|facts/, description: 'Facts provider' },
       { pattern: /relationshipExtractionEvaluator/, description: 'Relationship evaluator' },
     ];
-    
+
     let allChecks = true;
     for (const check of checks) {
       if (check.pattern.test(content)) {
@@ -199,7 +199,7 @@ function testPluginIndex() {
         allChecks = false;
       }
     }
-    
+
     return allChecks;
   } catch (error) {
     console.log(`  ❌ Could not read plugin index: ${error.message}`);
@@ -215,12 +215,12 @@ async function main() {
     testProviderImplementation(),
     testPluginIndex()
   ];
-  
+
   const allPassed = results.every(r => r);
-  
+
   console.log('\n🏁 Final Results:');
   console.log('=================');
-  
+
   if (allPassed) {
     console.log('✅ All core functionality verified!');
     console.log('');

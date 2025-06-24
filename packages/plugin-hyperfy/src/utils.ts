@@ -5,13 +5,12 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import path from 'path';
 
-
 export async function hashFileBuffer(buffer: Buffer): Promise<string> {
-    const hashBuf = await crypto.subtle.digest('SHA-256', buffer)
-    const hash = Array.from(new Uint8Array(hashBuf))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('')
-    return hash
+  const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
+  const hash = Array.from(new Uint8Array(hashBuf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return hash;
 }
 
 export async function convertToAudioBuffer(speechResponse: any): Promise<Buffer> {
@@ -27,8 +26,12 @@ export async function convertToAudioBuffer(speechResponse: any): Promise<Buffer>
     try {
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
-        if (value) chunks.push(value);
+        if (done) {
+          break;
+        }
+        if (value) {
+          chunks.push(value);
+        }
       }
       return Buffer.concat(chunks);
     } finally {
@@ -58,7 +61,7 @@ export async function convertToAudioBuffer(speechResponse: any): Promise<Buffer>
 export function getModuleDirectory(): string {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
-  return __dirname
+  return __dirname;
 }
 
 const mimeTypes: Record<string, string> = {
@@ -82,31 +85,31 @@ function getMimeTypeFromPath(filePath: string): string {
 }
 
 export const resolveUrl = async (url: string, world: any): Promise<string | null> => {
-  if (typeof url !== "string") {
+  if (typeof url !== 'string') {
     console.error(`Invalid URL type provided: ${typeof url}`);
     return null;
   }
-  if (url.startsWith("asset://")) {
+  if (url.startsWith('asset://')) {
     if (!world.assetsUrl) {
-      console.error(
-        "Cannot resolve asset:// URL, world.assetsUrl not set."
-      );
+      console.error('Cannot resolve asset:// URL, world.assetsUrl not set.');
       return null;
     }
-    const filename = url.substring("asset://".length);
-    const baseUrl = world.assetsUrl.replace(/[/\\\\]$/, ""); // Remove trailing slash (either / or \)
+    const filename = url.substring('asset://'.length);
+    const baseUrl = world.assetsUrl.replace(/[/\\\\]$/, ''); // Remove trailing slash (either / or \)
     return `${baseUrl}/${filename}`;
   }
-  if (url.startsWith("http://") || url.startsWith("https://")) {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
-  
+
   try {
     const buffer = await fsPromises.readFile(url);
     const mimeType = getMimeTypeFromPath(url);
     return `data:${mimeType};base64,${buffer.toString('base64')}`;
   } catch (err: any) {
-    console.warn(`File not found at "${url}", falling back to resolve relative to module directory.`);
+    console.warn(
+      `File not found at "${url}", falling back to resolve relative to module directory.`
+    );
   }
 
   // Fallback: resolve relative to module directory
@@ -125,7 +128,7 @@ export const resolveUrl = async (url: string, world: any): Promise<string | null
     }
     return null;
   }
-}
+};
 
 /**
  * Fetches and validates actions from the runtime.
@@ -216,11 +219,11 @@ export function randomPositionInRadius(
 ): { x: number; y: number; z: number } {
   const angle = Math.random() * Math.PI * 2;
   const distance = Math.sqrt(Math.random()) * radius; // Use sqrt for uniform distribution
-  
+
   return {
     x: center.x + Math.cos(angle) * distance,
     y: center.y + minHeight + Math.random() * (maxHeight - minHeight),
-    z: center.z + Math.sin(angle) * distance
+    z: center.z + Math.sin(angle) * distance,
   };
 }
 
@@ -235,11 +238,11 @@ export function parseHyperfyWorldUrl(url: string): string | null {
     // Handle different Hyperfy URL formats
     // e.g., https://hyperfy.io/world-name or https://custom-domain.com
     const pathParts = urlObj.pathname.split('/').filter(Boolean);
-    
+
     if (urlObj.hostname.includes('hyperfy.io') && pathParts.length > 0) {
       return pathParts[0];
     }
-    
+
     // For custom domains, the entire domain might be the world ID
     return urlObj.hostname;
   } catch (error) {
@@ -255,19 +258,21 @@ export function parseHyperfyWorldUrl(url: string): string | null {
  */
 export function formatEntity(entity: any): string {
   const parts = [`Entity: ${entity.name || 'Unnamed'}`];
-  
+
   if (entity.position) {
-    parts.push(`Position: (${entity.position.x.toFixed(2)}, ${entity.position.y.toFixed(2)}, ${entity.position.z.toFixed(2)})`);
+    parts.push(
+      `Position: (${entity.position.x.toFixed(2)}, ${entity.position.y.toFixed(2)}, ${entity.position.z.toFixed(2)})`
+    );
   }
-  
+
   if (entity.type) {
     parts.push(`Type: ${entity.type}`);
   }
-  
+
   if (entity.distance !== undefined) {
     parts.push(`Distance: ${entity.distance.toFixed(2)}m`);
   }
-  
+
   return parts.join(' | ');
 }
 
@@ -308,7 +313,7 @@ export function generateAvatarConfig(
     position: customization?.position || { x: 0, y: 0, z: 0 },
     rotation: customization?.rotation || { x: 0, y: 0, z: 0 },
     vrm: true,
-    animations: true
+    animations: true,
   };
 }
 
@@ -319,23 +324,21 @@ export function generateAvatarConfig(
  */
 export function formatPhysicsData(physicsData: any): string {
   const parts: string[] = [];
-  
+
   if (physicsData.velocity) {
     const speed = Math.sqrt(
-      physicsData.velocity.x ** 2 + 
-      physicsData.velocity.y ** 2 + 
-      physicsData.velocity.z ** 2
+      physicsData.velocity.x ** 2 + physicsData.velocity.y ** 2 + physicsData.velocity.z ** 2
     );
     parts.push(`Speed: ${speed.toFixed(2)} m/s`);
   }
-  
+
   if (physicsData.mass !== undefined) {
     parts.push(`Mass: ${physicsData.mass} kg`);
   }
-  
+
   if (physicsData.grounded !== undefined) {
     parts.push(`Grounded: ${physicsData.grounded ? 'Yes' : 'No'}`);
   }
-  
+
   return parts.join(', ');
 }

@@ -291,7 +291,7 @@ export class EventBridge {
 
   unsubscribePlugin(pluginName: string, eventTypes?: string[]): void {
     const pluginSubscriptions = this.pluginEventSubscriptions.get(pluginName);
-    if (!pluginSubscriptions) return;
+    if (!pluginSubscriptions) {return;}
 
     const typesToRemove = eventTypes || Array.from(pluginSubscriptions);
 
@@ -380,7 +380,7 @@ export class EventBridge {
       const filterKey = `${pluginName}:${event.type}`;
       const filter = this.eventFilters.get(filterKey);
       if (filter && !filter(event)) {
-        return; // Event filtered out
+        // Event filtered out
       }
 
       // Emit via runtime's plugin system
@@ -419,7 +419,7 @@ export class EventBridge {
   }
 
   private async processBatchedEvents(): Promise<void> {
-    if (this.eventQueue.length === 0) return;
+    if (this.eventQueue.length === 0) {return;}
 
     const events = [...this.eventQueue];
     this.eventQueue = [];
@@ -565,7 +565,7 @@ export class EventBridge {
   // Private Methods
   private async emitLocal(event: any): Promise<void> {
     const handlers = this.eventHandlers.get(event.type);
-    if (!handlers || handlers.size === 0) return;
+    if (!handlers || handlers.size === 0) {return;}
 
     for (const handler of handlers) {
       try {
@@ -582,7 +582,7 @@ export class EventBridge {
 
   private async emitCrossPlugin(event: any): Promise<void> {
     const listeners = this.crossPluginListeners.get(event.type);
-    if (!listeners || listeners.length === 0) return;
+    if (!listeners || listeners.length === 0) {return;}
 
     for (const listener of listeners) {
       try {
@@ -600,7 +600,7 @@ export class EventBridge {
       // Could be implemented with a different approach if needed
       logger.debug(`[EventBridge] Runtime event emission not available for ${event.type}`);
     } catch (error) {
-      logger.error(`[EventBridge] Error emitting to runtime:`, error);
+      logger.error('[EventBridge] Error emitting to runtime:', error);
     }
   }
 
@@ -640,7 +640,7 @@ export class EventBridge {
     queueSize: number;
     subscribedPlugins: Record<string, string[]>;
     eventSubscriptions: Record<string, string[]>;
-  } {
+    } {
     return {
       emitted: Object.fromEntries(this.eventStats.emitted),
       handled: Object.fromEntries(this.eventStats.handled),
@@ -686,7 +686,7 @@ export class EventBridge {
       lastResponse?: number;
       error?: string;
     }[]
-  > {
+    > {
     const results: Array<{
       pluginName: string;
       connected: boolean;

@@ -1,4 +1,4 @@
-import { vi, expect } from 'vitest';
+import { mock, expect  } from 'bun:test';
 import type { IAgentRuntime, Memory, State, Character, UUID, Service } from '@elizaos/core';
 
 // Define ModelType locally for testing
@@ -73,11 +73,11 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
 
   // Mock logger
   const mockLogger = {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-    trace: vi.fn(),
+    info: mock(),
+    warn: mock(),
+    error: mock(),
+    debug: mock(),
+    trace: mock(),
   };
 
   // Memory operation counters for tracking
@@ -91,7 +91,7 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
     logger: mockLogger,
 
     // Settings and configuration
-    getSetting: vi.fn((key: string) => {
+    getSetting: mock((key: string) => {
       if (simulateErrors && key === 'ERROR_SETTING') {
         throw new Error('Setting access error');
       }
@@ -99,7 +99,7 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
     }),
 
     // Model operations
-    useModel: vi.fn(async (modelType: string, params: any) => {
+    useModel: mock(async (modelType: string, params: any) => {
       if (networkTimeout) {
         throw new Error('Network timeout');
       }
@@ -124,7 +124,7 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
     }),
 
     // Memory operations
-    createMemory: vi.fn(async (memory: Memory, tableName?: string) => {
+    createMemory: mock(async (memory: Memory, tableName?: string) => {
       memoryCreateCount++;
 
       if (memoryErrors.length > 0 && memoryCreateCount <= memoryErrors.length) {
@@ -135,7 +135,7 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
       return memoryId;
     }),
 
-    getMemories: vi.fn(async (params: any) => {
+    getMemories: mock(async (params: any) => {
       memoryQueryCount++;
 
       if (simulateErrors && memoryQueryCount > 2) {
@@ -145,35 +145,35 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
       return memoryResults.slice(0, params.count || 10);
     }),
 
-    searchMemories: vi.fn(async (params: any) => {
+    searchMemories: mock(async (params: any) => {
       return memoryResults.filter((m) => m.similarity > (params.match_threshold || 0.5));
     }),
 
-    getConversationLength: vi.fn(() => {
+    getConversationLength: mock(() => {
       return memoryResults.length || 5; // Default conversation length
     }),
 
     // Entity and relationship operations
-    getEntitiesForRoom: vi.fn(async (roomId: UUID) => {
+    getEntitiesForRoom: mock(async (roomId: UUID) => {
       return [
         {
           id: 'entity-1' as UUID,
           names: ['Test User'],
           metadata: { platform: 'test' },
-          agentId: agentId,
+          agentId,
         },
       ];
     }),
 
     // Task operations
-    createTask: vi.fn(async (task: any) => {
+    createTask: mock(async (task: any) => {
       if (simulateErrors && task.name.includes('ERROR')) {
         throw new Error('Task creation error');
       }
       return `task-${Date.now()}` as UUID;
     }),
 
-    getTasks: vi.fn(async (params: any) => {
+    getTasks: mock(async (params: any) => {
       return [
         {
           id: 'task-1' as UUID,
@@ -185,28 +185,28 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
       ];
     }),
 
-    updateTask: vi.fn(async (taskId: UUID, updates: any) => {
+    updateTask: mock(async (taskId: UUID, updates: any) => {
       return true;
     }),
 
-    deleteTask: vi.fn(async (taskId: UUID) => {
+    deleteTask: mock(async (taskId: UUID) => {
       return true;
     }),
 
     // Service operations
-    getService: vi.fn(<T extends Service>(serviceName: string): T | null => {
+    getService: mock(<T extends Service>(serviceName: string): T | null => {
       if (simulateErrors && serviceName === 'error-service') {
         return null;
       }
       return services[serviceName] || null;
     }),
 
-    registerService: vi.fn(async (service: any) => {
+    registerService: mock(async (service: any) => {
       services[service.serviceType] = service;
     }),
 
     // State composition
-    composeState: vi.fn(async (message: Memory, providers?: string[]): Promise<State> => {
+    composeState: mock(async (message: Memory, providers?: string[]): Promise<State> => {
       if (simulateErrors && providers?.includes('ERROR_PROVIDER')) {
         throw new Error('State composition error');
       }
@@ -227,11 +227,11 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
     }),
 
     // Entity operations
-    createEntity: vi.fn(async (entity: any) => {
+    createEntity: mock(async (entity: any) => {
       return `entity-${Date.now()}` as UUID;
     }),
 
-    getEntityById: vi.fn(async (entityId: UUID) => {
+    getEntityById: mock(async (entityId: UUID) => {
       return {
         id: entityId,
         names: ['Test Entity'],
@@ -241,12 +241,12 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
     }),
 
     // Room operations
-    createRoom: vi.fn(async (room: any) => {
+    createRoom: mock(async (room: any) => {
       const roomId = room.id || (`room-${Date.now()}` as UUID);
       return roomId;
     }),
 
-    getRoom: vi.fn(async (roomId: UUID) => {
+    getRoom: mock(async (roomId: UUID) => {
       if (simulateErrors && roomId.includes('error')) {
         return null;
       }
@@ -263,12 +263,12 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
     }),
 
     // World operations
-    createWorld: vi.fn(async (world: any) => {
+    createWorld: mock(async (world: any) => {
       const worldId = world.id || (`world-${Date.now()}` as UUID);
       return worldId;
     }),
 
-    getWorld: vi.fn(async (worldId: UUID) => {
+    getWorld: mock(async (worldId: UUID) => {
       if (simulateErrors && worldId.includes('error')) {
         return null;
       }
@@ -282,35 +282,35 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
     }),
 
     // Event operations
-    emitEvent: vi.fn(async (eventType: string, payload: any) => {
+    emitEvent: mock(async (eventType: string, payload: any) => {
       // Mock event emission
     }),
 
     // Component operations
-    createComponent: vi.fn(async (component: any) => {
+    createComponent: mock(async (component: any) => {
       return `component-${Date.now()}` as UUID;
     }),
 
-    getComponents: vi.fn(async (entityId: UUID) => {
+    getComponents: mock(async (entityId: UUID) => {
       return [];
     }),
 
     // Database operations (simplified)
     db: {
-      query: vi.fn(async (sql: string, params?: any[]) => {
+      query: mock(async (sql: string, params?: any[]) => {
         return [];
       }),
-      run: vi.fn(async (sql: string, params?: any[]) => {
+      run: mock(async (sql: string, params?: any[]) => {
         return { changes: 1, lastInsertRowid: 1 };
       }),
     } as any,
 
     // Additional mock methods that might be called
-    processActions: vi.fn(async () => {}),
-    evaluate: vi.fn(async () => []),
-    registerAction: vi.fn(),
-    registerProvider: vi.fn(),
-    registerEvaluator: vi.fn(),
+    processActions: mock(async () => {}),
+    evaluate: mock(async () => []),
+    registerAction: mock(),
+    registerProvider: mock(),
+    registerEvaluator: mock(),
 
     // Plugin operations
     plugins: [],
@@ -366,8 +366,8 @@ export function createMockService(serviceType: string, methods: Record<string, a
   return {
     serviceType,
     capabilityDescription: `Mock ${serviceType} service`,
-    start: vi.fn(async () => {}),
-    stop: vi.fn(async () => {}),
+    start: mock(async () => {}),
+    stop: mock(async () => {}),
     ...methods,
   };
 }

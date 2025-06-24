@@ -29,7 +29,7 @@ export * from './services/HybridCrossMintUniversalWalletService';
 
 /**
  * Real CrossMint Plugin for ElizaOS
- * 
+ *
  * Provides REAL enterprise blockchain infrastructure with:
  * - Actual CrossMint API integration for MPC wallets
  * - Real Coinbase X.402 payment protocol implementation
@@ -40,7 +40,7 @@ export * from './services/HybridCrossMintUniversalWalletService';
 export const realCrossmintPlugin: Plugin = {
   name: '@elizaos/plugin-crossmint-real',
   description: 'Real CrossMint enterprise blockchain platform with actual API integration and Coinbase X.402 protocol',
-  
+
   // Plugin configuration
   config: {
     CROSSMINT_API_KEY: {
@@ -80,7 +80,7 @@ export const realCrossmintPlugin: Plugin = {
   // Real Services
   services: [
     RealCrossMintService,
-    RealX402Service, 
+    RealX402Service,
     HybridCrossMintUniversalWalletService
   ],
 
@@ -175,7 +175,7 @@ export default realCrossmintPlugin;
 
 /**
  * IMPORTANT NOTES FOR PRODUCTION USE:
- * 
+ *
  * 1. API Keys: This plugin requires real API keys from CrossMint
  * 2. Environment: Use 'staging' for testing, 'production' for live operations
  * 3. Rate Limits: Be aware of API rate limits in production
@@ -184,7 +184,7 @@ export default realCrossmintPlugin;
  * 6. Testing: Use the included scenario tests to validate functionality
  * 7. Monitoring: Monitor API usage and costs in CrossMint Console
  * 8. Documentation: Refer to CrossMint API docs for latest updates
- * 
+ *
  * For development and testing:
  * - Set CROSSMINT_ENVIRONMENT=staging
  * - Use staging API keys

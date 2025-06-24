@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { HybridVerificationEngine } from '../../../src/scenario-runner/hybrid-verification.js';
 import { ExplainableVerificationEngine } from '../../../src/scenario-runner/explainable-verification.js';
 import { SecureVerificationEngine } from '../../../src/scenario-runner/secure-verification.js';
@@ -20,7 +20,7 @@ describe('HybridVerificationEngine', () => {
   beforeEach(() => {
     runtime = {
       agentId: 'test-agent' as UUID,
-      generateText: vi.fn().mockResolvedValue('PASSED: Test passed successfully'),
+      generateText: mock(() => Promise.resolve('PASSED: Test passed successfully')),
     } as any;
 
     engine = new HybridVerificationEngine(runtime);
@@ -76,7 +76,7 @@ describe('HybridVerificationEngine', () => {
 
     it('should enhance with LLM when enabled', async () => {
       mockRule.config.llmEnhancement = true;
-      vi.mocked(runtime).useModel = vi.fn().mockResolvedValue('Enhanced result');
+      runtime.useModel = mock(async () => 'Enhanced result') as any;
       const results = await engine.verify([mockRule], mockContext);
 
       expect(results).toHaveLength(1);
@@ -473,7 +473,7 @@ describe('PerformanceOptimizer', () => {
 
   describe('caching', () => {
     it('should cache computation results', async () => {
-      const compute = vi.fn().mockResolvedValue('result');
+      const compute = mock(() => Promise.resolve('result'));
 
       // First call - compute
       const result1 = await optimizer.getFromCacheOrCompute('test-key', compute);

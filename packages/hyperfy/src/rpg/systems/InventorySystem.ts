@@ -20,7 +20,7 @@ export class InventorySystem extends System {
   private inventories: Map<string, InventoryComponent> = new Map();
   private itemRegistry: ItemRegistry;
   private equipmentCalculator: EquipmentBonusCalculator;
-  
+
   // Configuration
   private readonly MAX_STACK_SIZE = 2147483647; // Max int32
 
@@ -28,7 +28,7 @@ export class InventorySystem extends System {
     super(world);
     this.itemRegistry = new ItemRegistry();
     this.equipmentCalculator = new EquipmentBonusCalculator(this.itemRegistry);
-    
+
     // Register default items
     this.itemRegistry.loadDefaults();
   }
@@ -38,7 +38,7 @@ export class InventorySystem extends System {
    */
   override async init(_options: any): Promise<void> {
     console.log('[InventorySystem] Initializing...');
-    
+
     // Listen for entity creation to add inventory components
     this.world.events.on('entity:created', (event: any) => {
       const entity = this.getEntity(event.entityId);
@@ -46,7 +46,7 @@ export class InventorySystem extends System {
         this.createInventory(event.entityId);
       }
     });
-    
+
     // Listen for entity destruction to clean up
     this.world.events.on('entity:destroyed', (event: any) => {
       this.inventories.delete(event.entityId);
@@ -68,14 +68,14 @@ export class InventorySystem extends System {
    */
   addItem(entityId: string, itemId: number, quantity: number): boolean {
     const entity = this.getEntity(entityId);
-    if (!entity) return false;
-    
+    if (!entity) {return false;}
+
     const inventory = entity.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return false;
-    
+    if (!inventory) {return false;}
+
     const itemDef = this.itemRegistry.get(itemId);
-    if (!itemDef) return false;
-    
+    if (!itemDef) {return false;}
+
     // Try to stack with existing items
     if (itemDef.stackable) {
       const existingStack = inventory.items.find(stack => stack?.itemId === itemId);
@@ -84,17 +84,17 @@ export class InventorySystem extends System {
         return true;
       }
     }
-    
+
     // Find free slot
     const freeSlot = inventory.items.findIndex(slot => !slot);
-    if (freeSlot === -1) return false;
-    
+    if (freeSlot === -1) {return false;}
+
     // Add to inventory
     inventory.items[freeSlot] = {
       itemId,
       quantity
     };
-    
+
     return true;
   }
 
@@ -103,40 +103,40 @@ export class InventorySystem extends System {
    */
   removeItem(entityId: string, slot: number, quantity?: number): ItemStack | null {
     const inventory = this.inventories.get(entityId);
-    if (!inventory) return null;
-    
+    if (!inventory) {return null;}
+
     const item = inventory.items[slot];
-    if (!item) return null;
-    
+    if (!item) {return null;}
+
     const removeQuantity = quantity || item.quantity;
-    
+
     if (removeQuantity >= item.quantity) {
       // Remove entire stack
       inventory.items[slot] = null;
       this.updateWeight(inventory);
       this.syncInventory(entityId);
-      
+
       this.world.events.emit('inventory:item-removed', {
         entityId,
         itemId: item.itemId,
         quantity: item.quantity,
         slot
       });
-      
+
       return { ...item };
     } else {
       // Remove partial stack
       item.quantity -= removeQuantity;
       this.updateWeight(inventory);
       this.syncInventory(entityId);
-      
+
       this.world.events.emit('inventory:item-removed', {
         entityId,
         itemId: item.itemId,
         quantity: removeQuantity,
         slot
       });
-      
+
       return {
         itemId: item.itemId,
         quantity: removeQuantity
@@ -149,28 +149,28 @@ export class InventorySystem extends System {
    */
   moveItem(entityId: string, fromSlot: number, toSlot: number): boolean {
     const inventory = this.inventories.get(entityId);
-    if (!inventory) return false;
-    
-    if (fromSlot < 0 || fromSlot >= inventory.maxSlots || 
+    if (!inventory) {return false;}
+
+    if (fromSlot < 0 || fromSlot >= inventory.maxSlots ||
         toSlot < 0 || toSlot >= inventory.maxSlots) {
       return false;
     }
-    
+
     const fromItem = inventory.items[fromSlot] || null;
     const toItem = inventory.items[toSlot] || null;
-    
+
     // Simple swap
     inventory.items[fromSlot] = toItem;
     inventory.items[toSlot] = fromItem;
-    
+
     this.syncInventory(entityId);
-    
+
     this.world.events.emit('inventory:item-moved', {
       entityId,
       fromSlot,
       toSlot
     });
-    
+
     return true;
   }
 
@@ -179,50 +179,50 @@ export class InventorySystem extends System {
    */
   equipItem(entity: RPGEntity, inventorySlot: number, equipmentSlot: EquipmentSlot): boolean {
     const inventory = entity.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return false;
-    
+    if (!inventory) {return false;}
+
     const stack = inventory.items[inventorySlot];
-    if (!stack) return false;
-    
+    if (!stack) {return false;}
+
     const itemDef = this.itemRegistry.get(stack.itemId);
-    if (!itemDef || !itemDef.equipment) return false;
-    
+    if (!itemDef || !itemDef.equipment) {return false;}
+
     // Check if slot matches item type
     if (itemDef.equipment.slot !== equipmentSlot) {
       return false;
     }
-    
+
     // Unequip current item if any
     const currentEquipped = inventory.equipment[equipmentSlot];
     if (currentEquipped) {
       this.unequipItem(entity, equipmentSlot);
     }
-    
+
     // Remove from inventory
     const removedStack = this.removeFromSlot(inventory, inventorySlot, 1);
-    if (!removedStack) return false;
-    
+    if (!removedStack) {return false;}
+
     // Equip item (convert ItemDefinition to Equipment)
     const equipment: Equipment = {
       ...itemDef,
       metadata: stack.metadata
     } as Equipment;
-    
+
     inventory.equipment[equipmentSlot] = equipment;
-    
-    // Sync network if available  
+
+    // Sync network if available
     this.syncEquipNetwork(entity, equipmentSlot, equipment);
-    
+
     // Update combat bonuses
     this.updateCombatBonuses(entity);
-    
+
     // Emit event
     this.world.events.emit('inventory:item-equipped', {
       entity,
       item: removedStack,
       slot: equipmentSlot
     });
-    
+
     return true;
   }
 
@@ -231,33 +231,33 @@ export class InventorySystem extends System {
    */
   unequipItem(entity: RPGEntity, slot: EquipmentSlot): boolean {
     const inventory = entity.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return false;
-    
+    if (!inventory) {return false;}
+
     const equipment = inventory.equipment[slot];
-    if (!equipment) return false;
-    
+    if (!equipment) {return false;}
+
     // Add to inventory
     if (!this.addItem(entity.data.id, equipment.id, 1)) {
       // Inventory full
       return false;
     }
-    
+
     // Remove from equipment
     inventory.equipment[slot] = null;
-    
+
     // Sync network if available
     this.syncUnequipNetwork(entity, slot);
-    
+
     // Update combat bonuses
     this.updateCombatBonuses(entity);
-    
+
     // Emit event
     this.world.events.emit('inventory:item-unequipped', {
       entity,
       item: equipment,
       slot
     });
-    
+
     return true;
   }
 
@@ -266,15 +266,15 @@ export class InventorySystem extends System {
    */
   dropItem(entity: RPGEntity, slotIndex: number, quantity: number = 1): boolean {
     const inventory = entity.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return false;
-    
+    if (!inventory) {return false;}
+
     const stack = inventory.items[slotIndex];
-    if (!stack) return false;
-    
+    if (!stack) {return false;}
+
     // Remove from inventory
     const droppedStack = this.removeFromSlot(inventory, slotIndex, quantity);
-    if (!droppedStack) return false;
-    
+    if (!droppedStack) {return false;}
+
     // Get entity position from movement component
     const position = this.getEntityPosition(entity);
     if (!position) {
@@ -282,7 +282,7 @@ export class InventorySystem extends System {
       this.addItem(entity.data.id, droppedStack.itemId, droppedStack.quantity);
       return false;
     }
-    
+
     // Create dropped item entity
     const droppedEntity = {
       id: `dropped_${Date.now()}_${Math.random()}`,
@@ -297,13 +297,13 @@ export class InventorySystem extends System {
       droppedBy: entity.data.id,
       droppedAt: Date.now()
     };
-    
+
     // Add to world entities
     (this.world as any).entities?.set(droppedEntity.id, droppedEntity);
-    
+
     // Sync network if available
     this.syncDropItemNetwork(entity, droppedStack, droppedEntity);
-    
+
     // Emit event
     this.world.events.emit('inventory:item-dropped', {
       entity,
@@ -311,7 +311,7 @@ export class InventorySystem extends System {
       position,
       droppedEntity
     });
-    
+
     return true;
   }
 
@@ -328,8 +328,8 @@ export class InventorySystem extends System {
    */
   getFreeSlots(entityId: string): number {
     const inventory = this.inventories.get(entityId);
-    if (!inventory) return 0;
-    
+    if (!inventory) {return 0;}
+
     return inventory.items.filter(item => item === null).length;
   }
 
@@ -338,14 +338,14 @@ export class InventorySystem extends System {
    */
   findItem(entityId: string, itemId: number): number | null {
     const inventory = this.inventories.get(entityId);
-    if (!inventory) return null;
-    
+    if (!inventory) {return null;}
+
     for (let i = 0; i < inventory.items.length; i++) {
       if (inventory.items[i]?.itemId === itemId) {
         return i;
       }
     }
-    
+
     return null;
   }
 
@@ -354,8 +354,8 @@ export class InventorySystem extends System {
    */
   private createInventory(entityId: string): void {
     const entity = this.world.entities.get(entityId);
-    if (!entity) return;
-    
+    if (!entity) {return;}
+
     const inventory: InventoryComponent = {
       type: 'inventory',
       entity: entity as any,
@@ -393,12 +393,12 @@ export class InventorySystem extends System {
         prayerBonus: 0
       }
     };
-    
+
     // Check if entity is an RPGEntity with addComponent method
     if ('addComponent' in entity && typeof entity.addComponent === 'function') {
       entity.addComponent('inventory', inventory);
     }
-    
+
     this.inventories.set(entityId, inventory);
   }
 
@@ -419,7 +419,7 @@ export class InventorySystem extends System {
    */
   private updateWeight(inventory: InventoryComponent): void {
     let totalWeight = 0;
-    
+
     // Items weight
     for (const item of inventory.items) {
       if (item) {
@@ -429,7 +429,7 @@ export class InventorySystem extends System {
         }
       }
     }
-    
+
     // Equipment weight
     for (const slot in inventory.equipment) {
       const equipped = inventory.equipment[slot as EquipmentSlot];
@@ -437,7 +437,7 @@ export class InventorySystem extends System {
         totalWeight += equipped.weight;
       }
     }
-    
+
     inventory.totalWeight = totalWeight;
   }
 
@@ -446,7 +446,7 @@ export class InventorySystem extends System {
    */
   private updateEquipmentBonuses(inventory: InventoryComponent): void {
     inventory.equipmentBonuses = this.equipmentCalculator.calculateTotalBonuses(inventory.equipment);
-    
+
     // Update stats component if exists
     const entity = this.getEntityByInventory(inventory);
     if (entity) {
@@ -462,8 +462,8 @@ export class InventorySystem extends System {
    */
   private syncInventory(entityId: string): void {
     const inventory = this.inventories.get(entityId);
-    if (!inventory) return;
-    
+    if (!inventory) {return;}
+
     // Network sync if available
     const network = (this.world as any).network;
     if (network) {
@@ -474,7 +474,7 @@ export class InventorySystem extends System {
         bonuses: inventory.equipmentBonuses
       });
     }
-    
+
     // Also emit event for local systems
     this.world.events.emit('inventory:sync', {
       entityId,
@@ -500,12 +500,12 @@ export class InventorySystem extends System {
    */
   private shouldHaveInventory(entity: any): boolean {
     // Players always have inventory
-    if (entity.data?.type === 'player' || entity.type === 'player') return true;
-    
+    if (entity.data?.type === 'player' || entity.type === 'player') {return true;}
+
     // Some NPCs might have inventory (shopkeepers, etc)
     const npcComponent = entity.getComponent?.('npc');
-    if (npcComponent && npcComponent.hasInventory) return true;
-    
+    if (npcComponent && npcComponent.hasInventory) {return true;}
+
     return false;
   }
 
@@ -521,7 +521,7 @@ export class InventorySystem extends System {
       }
       return entity as unknown as RPGEntity;
     }
-    
+
     // Handle production environment
     const entity = this.world.entities.get?.(entityId);
     if (!entity || typeof entity.getComponent !== 'function') {
@@ -582,7 +582,7 @@ export class InventorySystem extends System {
       model: 'coins.glb',
       icon: 'coins.png'
     });
-    
+
     this.itemRegistry.register({
       id: 1038,
       name: 'Red partyhat',
@@ -601,7 +601,7 @@ export class InventorySystem extends System {
       model: 'red_partyhat.glb',
       icon: 'red_partyhat.png'
     });
-    
+
     // Add more default items...
   }
 
@@ -614,12 +614,12 @@ export class InventorySystem extends System {
     if (movement?.position) {
       return movement.position;
     }
-    
+
     // Fall back to entity position
     if (entity.position) {
       return entity.position;
     }
-    
+
     // Try data position
     if (entity.data?.position) {
       if (Array.isArray(entity.data.position)) {
@@ -631,7 +631,7 @@ export class InventorySystem extends System {
       }
       return entity.data.position;
     }
-    
+
     return null;
   }
 
@@ -640,10 +640,10 @@ export class InventorySystem extends System {
    */
   private syncDropItemNetwork(entity: RPGEntity, stack: ItemStack, droppedEntity: any): void {
     const network = (this.world as any).network;
-    if (!network) return;
-    
+    if (!network) {return;}
+
     const itemDef = this.itemRegistry.get(stack.itemId);
-    
+
     network.broadcast('item_dropped', {
       entityId: entity.data.id,
       item: {
@@ -655,14 +655,14 @@ export class InventorySystem extends System {
       position: droppedEntity.position
     });
   }
-  
+
   /**
    * Sync equip item over network
    */
   private syncEquipNetwork(entity: RPGEntity, slot: EquipmentSlot, equipment: Equipment): void {
     const network = (this.world as any).network;
-    if (!network) return;
-    
+    if (!network) {return;}
+
     network.broadcast('item_equipped', {
       entityId: entity.data.id,
       slot,
@@ -673,14 +673,14 @@ export class InventorySystem extends System {
       }
     });
   }
-  
+
   /**
    * Sync unequip item over network
    */
   private syncUnequipNetwork(entity: RPGEntity, slot: EquipmentSlot): void {
     const network = (this.world as any).network;
-    if (!network) return;
-    
+    if (!network) {return;}
+
     network.broadcast('item_unequipped', {
       entityId: entity.data.id,
       slot
@@ -693,12 +693,12 @@ export class InventorySystem extends System {
   private updateCombatBonuses(entity: RPGEntity): void {
     const inventory = entity.getComponent<InventoryComponent>('inventory');
     const stats = entity.getComponent<StatsComponent>('stats');
-    
-    if (!inventory || !stats) return;
-    
+
+    if (!inventory || !stats) {return;}
+
     // Calculate bonuses from equipment
     const bonuses = this.equipmentCalculator.calculateTotalBonuses(inventory.equipment);
-    
+
     // Apply to stats
     stats.combatBonuses = bonuses;
   }
@@ -708,8 +708,8 @@ export class InventorySystem extends System {
    */
   private removeFromSlot(inventory: InventoryComponent, slot: number, quantity: number): ItemStack | null {
     const stack = inventory.items[slot];
-    if (!stack || stack.quantity < quantity) return null;
-    
+    if (!stack || stack.quantity < quantity) {return null;}
+
     if (stack.quantity === quantity) {
       // Remove entire stack
       inventory.items[slot] = null;
@@ -729,8 +729,8 @@ export class InventorySystem extends System {
    */
   private canEquipToSlot(itemStack: ItemStack, slot: EquipmentSlot): boolean {
     const itemDef = this.itemRegistry.get(itemStack.itemId);
-    if (!itemDef || !itemDef.equipment) return false;
-    
+    if (!itemDef || !itemDef.equipment) {return false;}
+
     const equipmentSlot = itemDef.equipment.slot;
     return equipmentSlot === slot;
   }
@@ -740,14 +740,14 @@ export class InventorySystem extends System {
    */
   private addItemToEntity(entity: RPGEntity, itemStack: ItemStack): boolean {
     const inventory = entity.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return false;
-    
+    if (!inventory) {return false;}
+
     // Find free slot
     const freeSlot = inventory.items.findIndex(slot => !slot);
-    if (freeSlot === -1) return false;
-    
+    if (freeSlot === -1) {return false;}
+
     // Add to inventory
     inventory.items[freeSlot] = itemStack;
     return true;
   }
-} 
+}

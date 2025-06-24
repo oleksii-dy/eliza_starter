@@ -24,13 +24,12 @@ elizaos dev [options]
 
 ## Options
 
-| Option                          | Description                                                          |
-| ------------------------------- | -------------------------------------------------------------------- |
-| `-c, --configure`               | Reconfigure services and AI models (skips using saved configuration) |
-| `-char, --character [paths...]` | Character file(s) to use - accepts paths or URLs                     |
-| `-b, --build`                   | Build the project before starting                                    |
-| `-p, --port <port>`             | Port to listen on                                                    |
-| `--no-open`                     | Do not automatically open the browser on start                       |
+| Option                   | Description                                                          |
+| ------------------------ | -------------------------------------------------------------------- |
+| `-c, --configure`        | Reconfigure services and AI models (skips using saved configuration) |
+| `--character [paths...]` | Character file(s) to use - accepts paths or URLs                     |
+| `-b, --build`            | Build the project before starting                                    |
+| `-p, --port <port>`      | Port to listen on                                                    |
 
 </TabItem>
 <TabItem value="examples" label="Examples">
@@ -56,9 +55,6 @@ elizaos dev --configure
 
 # Build before starting development
 elizaos dev --build
-
-# Start without opening the browser
-elizaos dev --no-open
 ```
 
 ### Character File Specification

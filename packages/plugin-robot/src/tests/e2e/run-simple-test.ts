@@ -17,18 +17,18 @@ async function runSimpleRobotTest() {
     const path = await import('path');
     const { fileURLToPath } = await import('url');
     const { dirname } = await import('path');
-    
+
     // Get current directory
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-    
+
     // Import our plugin from the built version
     const robotPlugin = (await import('../../../dist/index.js')).default;
-    
+
     // Load test character
     const characterPath = path.join(__dirname, 'test-character.json');
     const characterData = JSON.parse(fs.readFileSync(characterPath, 'utf-8'));
-    
+
     // Add robot plugin to character
     characterData.plugins = ['@elizaos/plugin-robot'];
 
@@ -36,15 +36,15 @@ async function runSimpleRobotTest() {
     console.log('Creating test runtime...');
     // Generate a proper UUID v4
     const uuid = () => {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
       });
     };
     const agentId = asUUID(uuid());
     const db = createDatabaseAdapter({ dataDir: ':memory:' }, agentId);
-    
+
     const runtime = new AgentRuntime({
       character: characterData,
       adapter: db,
@@ -57,30 +57,30 @@ async function runSimpleRobotTest() {
     // Test 1: Check robot service
     console.log('Test 1: Robot Service Check');
     const robotService = runtime.getService('ROBOT');
-    
+
     if (!robotService) {
       throw new Error('Robot service not found');
     }
-    
+
     console.log('✓ Robot service found');
-    
+
     // Get state (cast to any to access methods)
     const state = (robotService as any).getState();
     console.log(`✓ Robot state: Status=${state.status}, Mode=${state.mode}`);
     console.log(`  Joints: ${state.joints.length}`);
     console.log(`  Emergency Stop: ${state.isEmergencyStopped}\n`);
-    
+
     // Test 2: Check actions
     console.log('Test 2: Robot Actions Check');
-    const commandAction = runtime.actions.find(a => a.name === 'ROBOT_COMMAND');
-    
+    const commandAction = runtime.actions.find((a) => a.name === 'ROBOT_COMMAND');
+
     if (!commandAction) {
       throw new Error('Robot command action not found');
     }
-    
+
     console.log('✓ Robot command action found');
     console.log(`  Description: ${commandAction.description}\n`);
-    
+
     // Test 3: Process a simple command
     console.log('Test 3: Process Robot Command');
     const message = {
@@ -94,30 +94,29 @@ async function runSimpleRobotTest() {
       },
       createdAt: Date.now(),
     };
-    
+
     // Validate command
     const cmdState = { values: {}, data: {}, text: '' };
     const isValid = await commandAction.validate(runtime, message as any, cmdState);
     console.log(`✓ Command validation: ${isValid}`);
-    
+
     if (isValid) {
       // Process message using runtime's internal method
       await (runtime as any).processMessage(message);
-      
+
       // Wait for processing
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Check for response using runtime's internal methods
       const messages = await (runtime as any).messageManager.getMessages({
         roomId: 'test-room',
         limit: 5,
       });
-      
-      const response = messages.find((m: any) => 
-        m.userId === runtime.agentId && 
-        m.id !== message.id
+
+      const response = messages.find(
+        (m: any) => m.userId === runtime.agentId && m.id !== message.id
       );
-      
+
       if (response) {
         console.log('✓ Response received');
         console.log(`  Text: ${response.content.text?.substring(0, 100)}...`);
@@ -125,11 +124,11 @@ async function runSimpleRobotTest() {
         console.log('⚠️  No response received');
       }
     }
-    
+
     // Test 4: Check capabilities
     console.log('\nTest 4: Robot Capabilities');
     const capabilities = (robotService as any).getCapabilities();
-    
+
     if (capabilities) {
       console.log(`✓ Robot: ${capabilities.name}`);
       console.log(`  Type: ${capabilities.type}`);
@@ -140,12 +139,11 @@ async function runSimpleRobotTest() {
     } else {
       console.log('⚠️  No capabilities available');
     }
-    
+
     console.log('\n✅ All tests completed successfully!');
-    
+
     // Cleanup
     await runtime.stop();
-    
   } catch (error) {
     console.error('❌ Test failed:', error);
     process.exit(1);
@@ -153,4 +151,4 @@ async function runSimpleRobotTest() {
 }
 
 // Run test
-runSimpleRobotTest().catch(console.error); 
+runSimpleRobotTest().catch(console.error);

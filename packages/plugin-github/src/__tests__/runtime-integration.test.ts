@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'bun:test';
 import { githubPlugin, GitHubService } from '../index';
 import { IAgentRuntime, UUID } from '@elizaos/core';
 
@@ -8,9 +8,9 @@ describe('Runtime Integration: GitHub Plugin with runtime.getSetting', () => {
   beforeEach(() => {
     mockRuntime = {
       agentId: 'test-agent' as UUID,
-      getSetting: vi.fn(),
-      getService: vi.fn(),
-      registerService: vi.fn(),
+      getSetting: mock(),
+      getService: mock(),
+      registerService: mock(),
       services: new Map(),
       character: {
         name: 'Test Character',
@@ -23,7 +23,9 @@ describe('Runtime Integration: GitHub Plugin with runtime.getSetting', () => {
   it('should initialize with runtime.getSetting for token', async () => {
     // Mock getSetting to return a test token
     mockRuntime.getSetting.mockImplementation((key: string) => {
-      if (key === 'GITHUB_TOKEN') return 'ghp_test123456789';
+      if (key === 'GITHUB_TOKEN') {
+        return 'ghp_test123456789';
+      }
       return null;
     });
 
@@ -32,13 +34,20 @@ describe('Runtime Integration: GitHub Plugin with runtime.getSetting', () => {
 
     // Verify getSetting was called
     expect(mockRuntime.getSetting).toHaveBeenCalledWith('GITHUB_TOKEN');
+
+    // Verify the plugin initialized successfully
+    expect(mockRuntime.character.settings).toBeDefined();
   });
 
-  it('should use runtime.getSetting in GitHubService', async () => {
+  it('should use runtime.getSetting in GitHubService and validate token', async () => {
     // Mock getSetting
     mockRuntime.getSetting.mockImplementation((key: string) => {
-      if (key === 'GITHUB_TOKEN') return 'ghp_runtime_token';
-      if (key === 'GITHUB_OWNER') return 'runtime-owner';
+      if (key === 'GITHUB_TOKEN') {
+        return 'ghp_runtime_token';
+      }
+      if (key === 'GITHUB_OWNER') {
+        return 'runtime-owner';
+      }
       return null;
     });
 
@@ -47,6 +56,11 @@ describe('Runtime Integration: GitHub Plugin with runtime.getSetting', () => {
 
     // Verify getSetting was called for token during construction
     expect(mockRuntime.getSetting).toHaveBeenCalledWith('GITHUB_TOKEN');
+
+    // Verify the service has the correct configuration
+    const activityLog = service.getActivityLog();
+    expect(activityLog).toBeDefined();
+    expect(Array.isArray(activityLog)).toBe(true);
   });
 
   it('should throw when getSetting returns null', async () => {
@@ -68,24 +82,30 @@ describe('Runtime Integration: GitHub Plugin with runtime.getSetting', () => {
 
     // Should not throw in test mode
     await expect(githubPlugin.init!({}, mockRuntime)).resolves.not.toThrow();
+
+    // Verify that the plugin initialized without throwing
+    expect(mockRuntime.character.settings).toBeDefined();
   });
 
   it('should work with actions using runtime settings', async () => {
     // Mock runtime with token
     mockRuntime.getSetting.mockImplementation((key: string) => {
-      if (key === 'GITHUB_TOKEN') return 'ghp_test123';
+      if (key === 'GITHUB_TOKEN') {
+        return 'ghp_test123';
+      }
       return null;
     });
 
-    // Mock GitHub service
+    // Mock GitHub service with proper methods
     const mockService = {
-      getRateLimit: vi.fn().mockResolvedValue({
+      getRateLimit: mock().mockResolvedValue({
         limit: 5000,
         remaining: 4500,
         used: 500,
         reset: Date.now() / 1000 + 3600,
         resource: 'core',
       }),
+      getActivityLog: mock().mockReturnValue([]),
     };
 
     mockRuntime.getService.mockReturnValue(mockService);
@@ -94,7 +114,7 @@ describe('Runtime Integration: GitHub Plugin with runtime.getSetting', () => {
     const rateLimitAction = githubPlugin.actions?.find((a) => a.name === 'GET_GITHUB_RATE_LIMIT');
 
     // Execute action
-    const callback = vi.fn();
+    const callback = mock();
     await rateLimitAction!.handler(
       mockRuntime as IAgentRuntime,
       {
@@ -119,5 +139,8 @@ describe('Runtime Integration: GitHub Plugin with runtime.getSetting', () => {
         }),
       })
     );
+
+    // Verify the service method was actually called
+    expect(mockService.getRateLimit).toHaveBeenCalled();
   });
 });

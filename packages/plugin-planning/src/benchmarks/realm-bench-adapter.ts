@@ -548,7 +548,7 @@ export class RealmBenchAdapter {
   /**
    * Generate comprehensive benchmark report
    */
-  private generateReport(results: RealmBenchResult[] totalDuration: number): RealmBenchReport {
+  private generateReport(results: RealmBenchResult[], totalDuration: number): RealmBenchReport {
     const passedTests = results.filter(r => r.success).length;
     const failedTests = results.length - passedTests;
 

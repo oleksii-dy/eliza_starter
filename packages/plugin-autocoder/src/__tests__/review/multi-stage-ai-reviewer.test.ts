@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { MultiStageAIReviewer } from '../../review/multi-stage-ai-reviewer';
 import type { Code, VerificationContext } from '../../verification/types';
 
 // Mock Anthropic SDK
-const mockAnthropicCreate = vi.fn();
-const mockAnthropicConstructor = vi.fn();
+const mockAnthropicCreate = mock();
+const mockAnthropicConstructor = mock();
 
 // Mock the entire module before importing
-vi.mock('@anthropic-ai/sdk', () => ({
-  default: vi.fn(() => ({
+mock.module('@anthropic-ai/sdk', () => ({
+  default: mock(() => ({
     messages: {
       create: mockAnthropicCreate,
     },
@@ -57,7 +57,7 @@ describe('MultiStageAIReviewer', () => {
   const mockApiKey = 'test-api-key';
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     reviewer = new MultiStageAIReviewer(mockApiKey);
   });
 

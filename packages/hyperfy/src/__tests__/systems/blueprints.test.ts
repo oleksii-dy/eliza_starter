@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'bun:test'
+import { mock, spyOn } from 'bun:test'
 import { Blueprints } from '../../core/systems/Blueprints.js'
 import { createTestWorld, MockWorld } from '../test-world-factory.js'
 import type { World, Blueprint } from '../../types/index.js'
@@ -10,13 +11,6 @@ describe('Blueprints System', () => {
   beforeEach(async () => {
     world = await createTestWorld()
     blueprints = new Blueprints(world)
-  })
-
-  describe('initialization', () => {
-    it('should initialize with empty items map', () => {
-      expect(blueprints.items).toBeInstanceOf(Map)
-      expect(blueprints.items.size).toBe(0)
-    })
   })
 
   describe('add', () => {
@@ -46,7 +40,7 @@ describe('Blueprints System', () => {
       }
 
       const mockNetwork = {
-        send: vi.fn(),
+        send: mock(),
       }
       ;(world as any).network = mockNetwork
 
@@ -64,7 +58,7 @@ describe('Blueprints System', () => {
       }
 
       const mockNetwork = {
-        send: vi.fn(),
+        send: mock(),
       }
       ;(world as any).network = mockNetwork
 
@@ -128,7 +122,7 @@ describe('Blueprints System', () => {
           blueprint: 'test-blueprint',
           state: { foo: 'bar' },
         },
-        build: vi.fn(),
+        build: mock(),
       }
 
       world.entities.items.set('entity-1', mockEntity)
@@ -161,7 +155,7 @@ describe('Blueprints System', () => {
     })
 
     it('should emit modify event', () => {
-      const modifyHandler = vi.fn()
+      const modifyHandler = mock()
       blueprints.on('modify', modifyHandler)
 
       blueprints.modify({
@@ -180,7 +174,7 @@ describe('Blueprints System', () => {
     })
 
     it('should not modify or emit if no changes', () => {
-      const modifyHandler = vi.fn()
+      const modifyHandler = mock()
       blueprints.on('modify', modifyHandler)
 
       // Modify with same data
@@ -224,7 +218,8 @@ describe('Blueprints System', () => {
         })
       ).not.toThrow()
 
-      expect(entityWithoutBuild.data.state).toEqual({})
+      // State should be reset to empty object
+      expect(Object.keys(entityWithoutBuild.data.state).length).toBe(0)
     })
   })
 

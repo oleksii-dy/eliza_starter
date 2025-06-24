@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { hyperfyAmbientSpeechAction } from '../../actions/ambient';
 import { createMockRuntime } from '../test-utils';
 
@@ -6,7 +6,7 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
   let mockRuntime: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
   });
 
@@ -38,16 +38,16 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
         text: 'test state',
       };
 
-      mockCallback = vi.fn();
+      mockCallback = mock();
 
       // Mock composeState
-      mockRuntime.composeState = vi.fn().mockResolvedValue({
+      mockRuntime.composeState = mock().mockResolvedValue({
         ...mockState,
         hyperfyStatus: 'Connected to world',
       });
 
       // Mock useModel for ambient speech generation
-      mockRuntime.useModel = vi.fn().mockResolvedValue({
+      mockRuntime.useModel = mock().mockResolvedValue({
         thought: 'Observing the peaceful environment',
         message: 'This place feels ancient... wonder what stories it holds.',
       });

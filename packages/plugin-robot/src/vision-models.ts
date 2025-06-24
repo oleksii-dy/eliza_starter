@@ -1,5 +1,5 @@
 // Lightweight vision models for object and pose detection
-import type { DetectedObject, PersonInfo, BoundingBox } from './types';
+import type { DetectedObject, PersonInfo } from './types';
 import { logger } from '@elizaos/core';
 
 // Type definitions for TensorFlow models
@@ -37,7 +37,6 @@ export class VisionModels {
 
       // Dynamically import TensorFlow
       try {
-        // @ts-ignore - Dynamic import of TensorFlow
         this.tf = await import('@tensorflow/tfjs-node');
         logger.info('[VisionModels] TensorFlow.js loaded');
       } catch (error) {
@@ -48,7 +47,6 @@ export class VisionModels {
       if (enableObjectDetection) {
         logger.info('[VisionModels] Loading COCO-SSD object detection model...');
         try {
-          // @ts-ignore - Dynamic import of COCO-SSD
           const cocoSsd = await import('@tensorflow-models/coco-ssd');
           this.objectDetectionModel = await cocoSsd.load({
             base: 'mobilenet_v2',
@@ -63,7 +61,6 @@ export class VisionModels {
       if (enablePoseDetection) {
         logger.info('[VisionModels] Loading PoseNet model...');
         try {
-          // @ts-ignore - Dynamic import of PoseNet
           const posenet = await import('@tensorflow-models/posenet');
           this.poseDetectionModel = await posenet.load({
             architecture: 'MobileNetV1',
@@ -149,58 +146,60 @@ export class VisionModels {
   }
 
   convertPosesToPersonInfo(poses: Pose[]): PersonInfo[] {
-    return poses.map((pose, index) => {
-      const keypoints = pose.keypoints;
-      
-      // Calculate bounding box from keypoints
-      const visibleKeypoints = keypoints.filter(kp => kp.score > 0.5);
-      if (visibleKeypoints.length === 0) {
-        return null;
-      }
+    return poses
+      .map((pose, index) => {
+        const keypoints = pose.keypoints;
 
-      const xs = visibleKeypoints.map(kp => kp.position.x);
-      const ys = visibleKeypoints.map(kp => kp.position.y);
-      const minX = Math.min(...xs);
-      const maxX = Math.max(...xs);
-      const minY = Math.min(...ys);
-      const maxY = Math.max(...ys);
+        // Calculate bounding box from keypoints
+        const visibleKeypoints = keypoints.filter((kp) => kp.score > 0.5);
+        if (visibleKeypoints.length === 0) {
+          return null;
+        }
 
-      // Determine pose based on keypoint positions
-      const poseType = this.determinePoseType(keypoints);
-      const facing = this.determineFacing(keypoints);
+        const xs = visibleKeypoints.map((kp) => kp.position.x);
+        const ys = visibleKeypoints.map((kp) => kp.position.y);
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
 
-      return {
-        id: `person-pose-${Date.now()}-${index}`,
-        confidence: pose.score,
-        pose: poseType,
-        facing: facing,
-        boundingBox: {
-          x: Math.round(minX),
-          y: Math.round(minY),
-          width: Math.round(maxX - minX),
-          height: Math.round(maxY - minY),
-        },
-        keypoints: keypoints.map(kp => ({
-          part: kp.part,
-          position: {
-            x: Math.round(kp.position.x),
-            y: Math.round(kp.position.y),
+        // Determine pose based on keypoint positions
+        const poseType = this.determinePoseType(keypoints);
+        const facing = this.determineFacing(keypoints);
+
+        return {
+          id: `person-pose-${Date.now()}-${index}`,
+          confidence: pose.score,
+          pose: poseType,
+          facing,
+          boundingBox: {
+            x: Math.round(minX),
+            y: Math.round(minY),
+            width: Math.round(maxX - minX),
+            height: Math.round(maxY - minY),
           },
-          score: kp.score,
-        })),
-      };
-    }).filter(person => person !== null) as PersonInfo[];
+          keypoints: keypoints.map((kp) => ({
+            part: kp.part,
+            position: {
+              x: Math.round(kp.position.x),
+              y: Math.round(kp.position.y),
+            },
+            score: kp.score,
+          })),
+        };
+      })
+      .filter((person) => person !== null) as PersonInfo[];
   }
 
   private determinePoseType(keypoints: Keypoint[]): 'standing' | 'sitting' | 'lying' | 'unknown' {
     // Get key body parts
-    const nose = keypoints.find(kp => kp.part === 'nose');
-    const leftHip = keypoints.find(kp => kp.part === 'leftHip');
-    const rightHip = keypoints.find(kp => kp.part === 'rightHip');
-    const leftKnee = keypoints.find(kp => kp.part === 'leftKnee');
-    const rightKnee = keypoints.find(kp => kp.part === 'rightKnee');
-    const leftAnkle = keypoints.find(kp => kp.part === 'leftAnkle');
-    const rightAnkle = keypoints.find(kp => kp.part === 'rightAnkle');
+    const nose = keypoints.find((kp) => kp.part === 'nose');
+    const leftHip = keypoints.find((kp) => kp.part === 'leftHip');
+    const rightHip = keypoints.find((kp) => kp.part === 'rightHip');
+    const leftKnee = keypoints.find((kp) => kp.part === 'leftKnee');
+    const rightKnee = keypoints.find((kp) => kp.part === 'rightKnee');
+    const leftAnkle = keypoints.find((kp) => kp.part === 'leftAnkle');
+    const rightAnkle = keypoints.find((kp) => kp.part === 'rightAnkle');
 
     if (!nose || (!leftHip && !rightHip)) {
       return 'unknown';
@@ -208,7 +207,7 @@ export class VisionModels {
 
     // Calculate average positions
     const hipY = ((leftHip?.position.y || 0) + (rightHip?.position.y || 0)) / 2;
-    const kneeY = ((leftKnee?.position.y || 0) + (rightKnee?.position.y || 0)) / 2;
+    const _kneeY = ((leftKnee?.position.y || 0) + (rightKnee?.position.y || 0)) / 2;
     const ankleY = ((leftAnkle?.position.y || 0) + (rightAnkle?.position.y || 0)) / 2;
 
     // Determine pose based on relative positions
@@ -226,11 +225,11 @@ export class VisionModels {
 
   private determineFacing(keypoints: Keypoint[]): 'camera' | 'away' | 'left' | 'right' | 'unknown' {
     // Get facial keypoints
-    const nose = keypoints.find(kp => kp.part === 'nose');
-    const leftEye = keypoints.find(kp => kp.part === 'leftEye');
-    const rightEye = keypoints.find(kp => kp.part === 'rightEye');
-    const leftEar = keypoints.find(kp => kp.part === 'leftEar');
-    const rightEar = keypoints.find(kp => kp.part === 'rightEar');
+    const nose = keypoints.find((kp) => kp.part === 'nose');
+    const leftEye = keypoints.find((kp) => kp.part === 'leftEye');
+    const rightEye = keypoints.find((kp) => kp.part === 'rightEye');
+    const leftEar = keypoints.find((kp) => kp.part === 'leftEar');
+    const rightEar = keypoints.find((kp) => kp.part === 'rightEar');
 
     if (!nose) {
       return 'unknown';
@@ -262,17 +261,17 @@ export class VisionModels {
   private rgbaToRgb(rgbaBuffer: Buffer): Uint8Array {
     const pixelCount = rgbaBuffer.length / 4;
     const rgbData = new Uint8Array(pixelCount * 3);
-    
+
     for (let i = 0; i < pixelCount; i++) {
       const rgbaIndex = i * 4;
       const rgbIndex = i * 3;
-      
-      rgbData[rgbIndex] = rgbaBuffer[rgbaIndex];     // R
+
+      rgbData[rgbIndex] = rgbaBuffer[rgbaIndex]; // R
       rgbData[rgbIndex + 1] = rgbaBuffer[rgbaIndex + 1]; // G
       rgbData[rgbIndex + 2] = rgbaBuffer[rgbaIndex + 2]; // B
       // Skip alpha channel
     }
-    
+
     return rgbData;
   }
 
@@ -287,4 +286,4 @@ export class VisionModels {
   hasPoseDetection(): boolean {
     return this.poseDetectionModel !== null;
   }
-} 
+}

@@ -1,5 +1,6 @@
 import {
   type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
@@ -10,7 +11,7 @@ import {
   ModelType,
 } from '@elizaos/core';
 import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as path from 'node:path';
 
 /**
  * Analyze Action - Actually analyzes code, repositories, and data
@@ -19,7 +20,8 @@ import * as path from 'path';
 export const analyzeDataAction: Action = {
   name: 'ANALYZE_DATA',
   similes: ['ANALYZE_CODE', 'EXAMINE_REPO', 'STUDY_STRUCTURE', 'REVIEW_PROJECT'],
-  description: 'Actually analyzes code, project structure, and provides real insights',
+  description:
+    'Analyzes code, project structure, and provides real insights about the codebase. Can be chained with command execution for build verification or file operations for detailed code examination',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
@@ -37,8 +39,19 @@ export const analyzeDataAction: Action = {
     state?: State,
     options?: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
-    if (!callback) return;
+  ): Promise<ActionResult> => {
+    if (!callback) {
+      return {
+        data: {
+          actionName: 'ANALYZE_DATA',
+          error: 'No callback provided',
+        },
+        values: {
+          success: false,
+          error: 'No callback provided',
+        },
+      };
+    }
 
     try {
       const text = message.content.text || '';
@@ -85,12 +98,21 @@ export const analyzeDataAction: Action = {
 
           // Detect languages by extension
           const ext = path.extname(file).toLowerCase();
-          if (['.js', '.jsx', '.ts', '.tsx'].includes(ext))
+          if (['.js', '.jsx', '.ts', '.tsx'].includes(ext)) {
             analysis.languages.add('JavaScript/TypeScript');
-          if (['.py'].includes(ext)) analysis.languages.add('Python');
-          if (['.rs'].includes(ext)) analysis.languages.add('Rust');
-          if (['.go'].includes(ext)) analysis.languages.add('Go');
-          if (['.java'].includes(ext)) analysis.languages.add('Java');
+          }
+          if (['.py'].includes(ext)) {
+            analysis.languages.add('Python');
+          }
+          if (['.rs'].includes(ext)) {
+            analysis.languages.add('Rust');
+          }
+          if (['.go'].includes(ext)) {
+            analysis.languages.add('Go');
+          }
+          if (['.java'].includes(ext)) {
+            analysis.languages.add('Java');
+          }
 
           // Count file types
           analysis.structure[ext] = (analysis.structure[ext] || 0) + 1;
@@ -109,10 +131,18 @@ export const analyzeDataAction: Action = {
         };
 
         // Detect frameworks
-        if (packageJson.dependencies?.react) analysis.frameworks.add('React');
-        if (packageJson.dependencies?.vue) analysis.frameworks.add('Vue');
-        if (packageJson.dependencies?.express) analysis.frameworks.add('Express');
-        if (packageJson.dependencies?.['@elizaos/core']) analysis.frameworks.add('ElizaOS');
+        if (packageJson.dependencies?.react) {
+          analysis.frameworks.add('React');
+        }
+        if (packageJson.dependencies?.vue) {
+          analysis.frameworks.add('Vue');
+        }
+        if (packageJson.dependencies?.express) {
+          analysis.frameworks.add('Express');
+        }
+        if (packageJson.dependencies?.['@elizaos/core']) {
+          analysis.frameworks.add('ElizaOS');
+        }
       } catch {
         // Not a Node.js project or no package.json
       }
@@ -193,6 +223,26 @@ This analysis has been stored for future reference.`;
           success: true,
         },
       });
+
+      return {
+        data: {
+          actionName: 'ANALYZE_DATA',
+          targetPath,
+          projectType: analysis.type,
+          fileCount: analysis.files.length,
+          languages: Array.from(analysis.languages),
+          frameworks: Array.from(analysis.frameworks),
+          dependencies: Object.keys(analysis.dependencies),
+          structure: analysis.structure,
+          insights: analysis.insights,
+        },
+        values: {
+          success: true,
+          analyzedPath: targetPath,
+          totalFiles: analysis.files.length,
+          primaryLanguages: Array.from(analysis.languages),
+        },
+      };
     } catch (error) {
       logger.error('Error in analyzeData handler:', error);
       await callback({
@@ -200,6 +250,17 @@ This analysis has been stored for future reference.`;
         actions: ['ANALYZE_DATA_ERROR'],
         source: message.content.source,
       });
+
+      return {
+        data: {
+          actionName: 'ANALYZE_DATA',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
     }
   },
 
@@ -216,6 +277,36 @@ This analysis has been stored for future reference.`;
         content: {
           text: "I've analyzed the project at: /current/directory\n\n**Project Type:** Node.js/JavaScript\n**Languages:** JavaScript/TypeScript\n**Total Files:** 45\n\n[Detailed analysis would appear here]",
           actions: ['ANALYZE_DATA'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Analyze the project and then run the build command to verify everything works',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll analyze the project structure first, then run the build command to verify everything is working correctly.",
+          actions: ['ANALYZE_DATA', 'EXECUTE_COMMAND'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Examine the repository and find the main configuration files',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll analyze the repository structure and then locate the main configuration files for you.",
+          actions: ['ANALYZE_DATA', 'READ_FILE'],
         },
       },
     ],

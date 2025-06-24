@@ -73,19 +73,19 @@ describe('Plugin Schema Registration Tests', () => {
 
       // Verify the table exists and is usable
       const testId = uuidv4();
-      const insertSql = adapter instanceof PgliteDatabaseAdapter 
+      const insertSql = adapter instanceof PgliteDatabaseAdapter
         ? `INSERT INTO test_plugin_table (id, agent_id, test_data) VALUES ('${testId}', '${testAgentId}', '{"test": true}')`
         : `INSERT INTO test_plugin_table (id, agent_id, test_data) VALUES ('${testId}', '${testAgentId}', '{"test": true}')`;
-      
+
       await db.execute(sql.raw(insertSql));
 
-      // Query the data back  
+      // Query the data back
       const selectSql = `SELECT * FROM test_plugin_table WHERE id = '${testId}'`;
       const queryResult = await db.execute(sql.raw(selectSql));
-      
+
       // Handle both direct array results and query response objects
       const result = Array.isArray(queryResult) ? queryResult : queryResult.rows || [queryResult];
-      
+
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThan(0);
       expect(result[0].id).toBe(testId);
@@ -238,7 +238,7 @@ describe('Plugin Schema Registration Tests', () => {
 
       // Create the table (should use fallback for PGLite, regular for PostgreSQL)
       const db = adapter.getDatabase();
-      
+
       // This should not throw regardless of vector support
       await expect(async () => {
         await schemaRegistry.createTables(db, adapter instanceof PgliteDatabaseAdapter ? 'pglite' : 'postgres');

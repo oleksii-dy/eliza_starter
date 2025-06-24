@@ -83,7 +83,7 @@ describe('Secret Management System E2E Tests', () => {
         expect(response.body).to.have.property('url');
         expect(response.body).to.have.property('sessionId');
         expect(response.body.url).to.include(ngrokDomain);
-        
+
         portalUrl = response.body.url;
         sessionId = response.body.sessionId;
       });
@@ -91,7 +91,7 @@ describe('Secret Management System E2E Tests', () => {
 
     it('should access secure portal via ngrok URL', () => {
       cy.visit(portalUrl);
-      
+
       // Verify portal loads correctly
       cy.get('h1').should('contain', 'OpenAI Configuration');
       cy.get('form').should('exist');
@@ -101,13 +101,13 @@ describe('Secret Management System E2E Tests', () => {
 
     it('should submit secrets through secure form', () => {
       cy.visit(portalUrl);
-      
+
       // Fill out the form
       cy.get('input[name="OPENAI_API_KEY"]').type('sk-test-key-123456789');
-      
+
       // Submit the form
       cy.get('button[type="submit"]').click();
-      
+
       // Verify success message
       cy.get('.success-message').should('contain', 'Information submitted successfully');
       cy.url().should('include', '/success');
@@ -191,7 +191,7 @@ describe('Secret Management System E2E Tests', () => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('requestId');
         expect(response.body).to.have.property('status', 'pending');
-        
+
         requestId = response.body.requestId;
       });
     });
@@ -315,7 +315,7 @@ describe('Secret Management System E2E Tests', () => {
   describe('Security and Error Handling', () => {
     it('should reject invalid session access', () => {
       const invalidUrl = `https://${ngrokDomain}/secrets/invalid-session-id`;
-      
+
       cy.request({
         url: invalidUrl,
         failOnStatusCode: false
@@ -339,10 +339,10 @@ describe('Secret Management System E2E Tests', () => {
         context: { level: 'user', userId: testUserId }
       }).then((response) => {
         const portalUrl = response.body.url;
-        
+
         // Wait for expiry
         cy.wait(2000);
-        
+
         // Try to access expired portal
         cy.request({
           url: portalUrl,
@@ -355,7 +355,7 @@ describe('Secret Management System E2E Tests', () => {
 
     it('should enforce rate limits on tunnel creation', () => {
       // Rapid tunnel creation attempts
-      const requests = Array.from({ length: 5 }, (_, i) => 
+      const requests = Array.from({ length: 5 }, (_, i) =>
         cy.request({
           method: 'POST',
           url: '/api/ngrok/start',
@@ -410,7 +410,7 @@ describe('Secret Management System E2E Tests', () => {
 
     it('should maintain performance under load', () => {
       const startTime = Date.now();
-      
+
       cy.request('POST', '/api/secrets/form/create', {
         agentId: testAgentId,
         request: {
@@ -422,7 +422,7 @@ describe('Secret Management System E2E Tests', () => {
       }).then((response) => {
         const endTime = Date.now();
         const duration = endTime - startTime;
-        
+
         expect(response.status).to.eq(200);
         expect(duration).to.be.lessThan(5000); // Should complete within 5 seconds
       });

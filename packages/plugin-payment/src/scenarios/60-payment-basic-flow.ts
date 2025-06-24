@@ -33,17 +33,17 @@ const paymentBasicFlowScenario: any = {
 
   // Add evaluator function for test compatibility
   evaluator: (response: string) => {
-    const hasPaymentMention = 
+    const hasPaymentMention =
       response.toLowerCase().includes('payment') ||
       response.toLowerCase().includes('cost') ||
       response.toLowerCase().includes('usdc') ||
       response.toLowerCase().includes('price');
-    
-    const hasServiceMention = 
+
+    const hasServiceMention =
       response.toLowerCase().includes('research') ||
       response.toLowerCase().includes('analysis') ||
       response.toLowerCase().includes('service');
-    
+
     return hasPaymentMention || hasServiceMention;
   },
 

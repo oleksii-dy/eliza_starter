@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { stringToUuid } from '@elizaos/core';
 import type { EntityProfile } from '../types';
 import { asUUID } from '@elizaos/core';
@@ -8,21 +8,21 @@ import type { RolodexService } from '../services/RolodexService';
 // Create mock runtime
 const createMockRuntime = (): any => ({
   agentId: stringToUuid('test-agent'),
-  getEntityById: vi.fn(),
-  updateEntity: vi.fn(),
-  getEntitiesForRoom: vi.fn(),
-  getRoomsForParticipant: vi.fn(),
-  getRelationships: vi.fn().mockResolvedValue([]),
-  createRelationship: vi.fn(),
-  updateRelationship: vi.fn(),
-  getTasks: vi.fn().mockResolvedValue([]),
-  createTask: vi.fn(),
-  useModel: vi.fn(),
+  getEntityById: mock(),
+  updateEntity: mock(),
+  getEntitiesForRoom: mock(),
+  getRoomsForParticipant: mock(),
+  getRelationships: mock().mockResolvedValue([]),
+  createRelationship: mock(),
+  updateRelationship: mock(),
+  getTasks: mock().mockResolvedValue([]),
+  createTask: mock(),
+  useModel: mock(),
   logger: {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
+    info: mock(),
+    warn: mock(),
+    error: mock(),
+    debug: mock(),
   },
 });
 
@@ -31,7 +31,7 @@ describe('RolodexService', () => {
   let mockRuntime: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
     service = createRolodexService(mockRuntime);
   });
@@ -42,7 +42,7 @@ describe('RolodexService', () => {
 
       // Mock the entity graph manager
       service.entityGraphManager = {
-        searchEntities: vi.fn().mockResolvedValue([
+        searchEntities: mock().mockResolvedValue([
           {
             entity: {
               entityId: stringToUuid('sarah'),
@@ -90,7 +90,7 @@ describe('RolodexService', () => {
 
       // Mock the entity graph manager
       service.entityGraphManager = {
-        getEntityRelationships: vi.fn().mockResolvedValue([
+        getEntityRelationships: mock().mockResolvedValue([
           {
             id: asUUID(stringToUuid('rel-1')),
             sourceEntityId: entityId,
@@ -122,7 +122,7 @@ describe('RolodexService', () => {
 
       // Mock the follow-up manager
       service.followUpManager = {
-        scheduleFollowUp: vi.fn().mockResolvedValue({
+        scheduleFollowUp: mock().mockResolvedValue({
           id: 'followup-1',
           entityId,
           message: followUp.message,
@@ -143,7 +143,7 @@ describe('RolodexService', () => {
 
       // Mock the follow-up manager
       service.followUpManager = {
-        getFollowUps: vi.fn().mockResolvedValue([
+        getFollowUps: mock().mockResolvedValue([
           {
             id: 'followup-1',
             entityId,

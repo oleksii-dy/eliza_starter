@@ -379,7 +379,7 @@ export class BridgeServer {
 
       // Find suitable container
       const container = availableContainers.find((c) => {
-        if (c.status !== 'idle') return false;
+        if (c.status !== 'idle') {return false;}
 
         // Check if container supports the language
         if (language === 'typescript' || language === 'javascript') {
@@ -474,8 +474,8 @@ export class BridgeServer {
     const metrics: string[] = [];
 
     // Container metrics
-    metrics.push(`# HELP swebench_containers_total Total number of connected containers`);
-    metrics.push(`# TYPE swebench_containers_total gauge`);
+    metrics.push('# HELP swebench_containers_total Total number of connected containers');
+    metrics.push('# TYPE swebench_containers_total gauge');
     metrics.push(`swebench_containers_total ${this.containers.size}`);
 
     // Container status metrics
@@ -484,8 +484,8 @@ export class BridgeServer {
       statusCounts[container.status]++;
     }
 
-    metrics.push(`# HELP swebench_containers_by_status Number of containers by status`);
-    metrics.push(`# TYPE swebench_containers_by_status gauge`);
+    metrics.push('# HELP swebench_containers_by_status Number of containers by status');
+    metrics.push('# TYPE swebench_containers_by_status gauge');
     for (const [status, count] of Object.entries(statusCounts)) {
       metrics.push(`swebench_containers_by_status{status="${status}"} ${count}`);
     }
@@ -496,8 +496,8 @@ export class BridgeServer {
       taskStatusCounts[task.status]++;
     }
 
-    metrics.push(`# HELP swebench_tasks_by_status Number of tasks by status`);
-    metrics.push(`# TYPE swebench_tasks_by_status gauge`);
+    metrics.push('# HELP swebench_tasks_by_status Number of tasks by status');
+    metrics.push('# TYPE swebench_tasks_by_status gauge');
     for (const [status, count] of Object.entries(taskStatusCounts)) {
       metrics.push(`swebench_tasks_by_status{status="${status}"} ${count}`);
     }

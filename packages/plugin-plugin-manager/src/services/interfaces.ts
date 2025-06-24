@@ -1,13 +1,5 @@
 import type {
-  PluginState,
-  InstallProgress,
-  SearchResult,
-  PluginEnvironmentVariable,
   PublishResult,
-  GitHubRepoInfo,
-  HealthCheckResult,
-  HealthMetrics,
-  AlertThreshold,
 } from '../types.ts';
 
 // Supporting interfaces

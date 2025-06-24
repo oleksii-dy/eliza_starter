@@ -2,158 +2,141 @@
  * Integration tests for AgentServer class
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test';
 import { AgentServer } from '../index';
 import { logger, type UUID, ChannelType } from '@elizaos/core';
 import type { ServerOptions } from '../index';
 import http from 'node:http';
 
-// Mock AgentRuntime for testing
-class MockAgentRuntime {
-  agentId: string;
-  character: any;
-  adapter: any;
-  plugins: any[];
+// Mock AgentRuntime for testing (removed unused class)
 
-  constructor(config: any) {
-    this.agentId = config.agentId;
-    this.character = config.character;
-    this.adapter = config.adapter;
-    this.plugins = config.plugins || [];
-  }
-
-  async initialize() {
-    // Mock successful initialization
-    return Promise.resolve();
-  }
-}
-
-vi.mock('@elizaos/plugin-sql', () => ({
-  createDatabaseAdapter: vi.fn(() => ({
+mock.module('@elizaos/plugin-sql', () => ({
+  createDatabaseAdapter: mock(() => ({
     // Core database methods
-    init: vi.fn().mockResolvedValue(undefined),
-    close: vi.fn().mockResolvedValue(undefined),
-    getDatabase: vi.fn(() => ({
-      execute: vi.fn().mockResolvedValue([]),
+    init: mock().mockResolvedValue(undefined),
+    close: mock().mockResolvedValue(undefined),
+    getDatabase: mock(() => ({
+      execute: mock().mockResolvedValue([]),
     })),
-    db: { execute: vi.fn().mockResolvedValue([]) },
-    isReady: vi.fn().mockResolvedValue(true),
-    runMigrations: vi.fn().mockResolvedValue(undefined),
+    db: { execute: mock().mockResolvedValue([]) },
+    isReady: mock().mockResolvedValue(true),
+    runMigrations: mock().mockResolvedValue(undefined),
 
     // Agent management
-    getAgents: vi.fn().mockResolvedValue([]),
-    getAgent: vi.fn().mockResolvedValue({
+    getAgents: mock().mockResolvedValue([]),
+    getAgent: mock().mockResolvedValue({
       id: '00000000-0000-0000-0000-000000000000',
       name: 'MigrationAgent',
       createdAt: new Date(),
       updatedAt: new Date(),
     }),
-    createAgent: vi.fn().mockResolvedValue(true),
-    updateAgent: vi.fn().mockResolvedValue(true),
-    deleteAgent: vi.fn().mockResolvedValue(true),
+    createAgent: mock().mockResolvedValue(true),
+    updateAgent: mock().mockResolvedValue(true),
+    deleteAgent: mock().mockResolvedValue(true),
 
     // Entity management
-    getEntityById: vi.fn().mockResolvedValue(null),
-    getEntitiesByIds: vi.fn().mockResolvedValue([]),
-    getEntitiesForRoom: vi.fn().mockResolvedValue([]),
-    createEntity: vi.fn().mockResolvedValue('test-entity-id'),
-    createEntities: vi.fn().mockResolvedValue(true),
-    updateEntity: vi.fn().mockResolvedValue(undefined),
+    getEntityById: mock().mockResolvedValue(null),
+    getEntitiesByIds: mock().mockResolvedValue([]),
+    getEntitiesForRoom: mock().mockResolvedValue([]),
+    createEntity: mock().mockResolvedValue('test-entity-id'),
+    createEntities: mock().mockResolvedValue(true),
+    updateEntity: mock().mockResolvedValue(undefined),
 
     // Component management
-    getComponent: vi.fn().mockResolvedValue(null),
-    getComponents: vi.fn().mockResolvedValue([]),
-    createComponent: vi.fn().mockResolvedValue('test-component-id'),
-    updateComponent: vi.fn().mockResolvedValue(undefined),
-    deleteComponent: vi.fn().mockResolvedValue(undefined),
+    getComponent: mock().mockResolvedValue(null),
+    getComponents: mock().mockResolvedValue([]),
+    createComponent: mock().mockResolvedValue('test-component-id'),
+    updateComponent: mock().mockResolvedValue(undefined),
+    deleteComponent: mock().mockResolvedValue(undefined),
 
     // Memory management
-    getMemories: vi.fn().mockResolvedValue([]),
-    getMemoryById: vi.fn().mockResolvedValue(null),
-    getMemoriesByIds: vi.fn().mockResolvedValue([]),
-    getMemoriesByRoomIds: vi.fn().mockResolvedValue([]),
-    getMemoriesByWorldId: vi.fn().mockResolvedValue([]),
-    getCachedEmbeddings: vi.fn().mockResolvedValue([]),
-    log: vi.fn().mockResolvedValue(undefined),
-    getLogs: vi.fn().mockResolvedValue([]),
-    deleteLog: vi.fn().mockResolvedValue(undefined),
-    searchMemories: vi.fn().mockResolvedValue([]),
-    createMemory: vi.fn().mockResolvedValue('test-memory-id'),
-    updateMemory: vi.fn().mockResolvedValue(true),
-    deleteMemory: vi.fn().mockResolvedValue(undefined),
-    deleteManyMemories: vi.fn().mockResolvedValue(undefined),
-    deleteAllMemories: vi.fn().mockResolvedValue(undefined),
-    countMemories: vi.fn().mockResolvedValue(0),
-    ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
+    getMemories: mock().mockResolvedValue([]),
+    getMemoryById: mock().mockResolvedValue(null),
+    getMemoriesByIds: mock().mockResolvedValue([]),
+    getMemoriesByRoomIds: mock().mockResolvedValue([]),
+    getMemoriesByWorldId: mock().mockResolvedValue([]),
+    getCachedEmbeddings: mock().mockResolvedValue([]),
+    log: mock().mockResolvedValue(undefined),
+    getLogs: mock().mockResolvedValue([]),
+    deleteLog: mock().mockResolvedValue(undefined),
+    searchMemories: mock().mockResolvedValue([]),
+    createMemory: mock().mockResolvedValue('test-memory-id'),
+    updateMemory: mock().mockResolvedValue(true),
+    deleteMemory: mock().mockResolvedValue(undefined),
+    deleteManyMemories: mock().mockResolvedValue(undefined),
+    deleteAllMemories: mock().mockResolvedValue(undefined),
+    countMemories: mock().mockResolvedValue(0),
+    ensureEmbeddingDimension: mock().mockResolvedValue(undefined),
 
     // World management
-    createWorld: vi.fn().mockResolvedValue('test-world-id'),
-    getWorld: vi.fn().mockResolvedValue(null),
-    removeWorld: vi.fn().mockResolvedValue(undefined),
-    getWorlds: vi.fn().mockResolvedValue([]),
-    getAllWorlds: vi.fn().mockResolvedValue([]),
-    updateWorld: vi.fn().mockResolvedValue(undefined),
+    createWorld: mock().mockResolvedValue('test-world-id'),
+    getWorld: mock().mockResolvedValue(null),
+    removeWorld: mock().mockResolvedValue(undefined),
+    getWorlds: mock().mockResolvedValue([]),
+    getAllWorlds: mock().mockResolvedValue([]),
+    updateWorld: mock().mockResolvedValue(undefined),
 
     // Room management
-    getRoom: vi.fn().mockResolvedValue(null),
-    getRooms: vi.fn().mockResolvedValue([]),
-    getRoomsByIds: vi.fn().mockResolvedValue([]),
-    createRoom: vi.fn().mockResolvedValue('test-room-id'),
-    createRooms: vi.fn().mockResolvedValue([]),
-    deleteRoom: vi.fn().mockResolvedValue(undefined),
-    deleteRoomsByWorldId: vi.fn().mockResolvedValue(undefined),
-    updateRoom: vi.fn().mockResolvedValue(undefined),
-    getRoomsForParticipant: vi.fn().mockResolvedValue([]),
-    getRoomsForParticipants: vi.fn().mockResolvedValue([]),
-    getRoomsByWorld: vi.fn().mockResolvedValue([]),
+    getRoom: mock().mockResolvedValue(null),
+    getRooms: mock().mockResolvedValue([]),
+    getRoomsByIds: mock().mockResolvedValue([]),
+    createRoom: mock().mockResolvedValue('test-room-id'),
+    createRooms: mock().mockResolvedValue([]),
+    deleteRoom: mock().mockResolvedValue(undefined),
+    deleteRoomsByWorldId: mock().mockResolvedValue(undefined),
+    updateRoom: mock().mockResolvedValue(undefined),
+    getRoomsForParticipant: mock().mockResolvedValue([]),
+    getRoomsForParticipants: mock().mockResolvedValue([]),
+    getRoomsByWorld: mock().mockResolvedValue([]),
 
     // Participant management
-    addParticipant: vi.fn().mockResolvedValue(true),
-    removeParticipant: vi.fn().mockResolvedValue(true),
-    addParticipantsRoom: vi.fn().mockResolvedValue(true),
-    getParticipantsForEntity: vi.fn().mockResolvedValue([]),
-    getParticipantsForRoom: vi.fn().mockResolvedValue([]),
-    getParticipantUserState: vi.fn().mockResolvedValue(null),
-    setParticipantUserState: vi.fn().mockResolvedValue(undefined),
+    addParticipant: mock().mockResolvedValue(true),
+    removeParticipant: mock().mockResolvedValue(true),
+    addParticipantsRoom: mock().mockResolvedValue(true),
+    getParticipantsForEntity: mock().mockResolvedValue([]),
+    getParticipantsForRoom: mock().mockResolvedValue([]),
+    getParticipantUserState: mock().mockResolvedValue(null),
+    setParticipantUserState: mock().mockResolvedValue(undefined),
 
     // Relationship management
-    createRelationship: vi.fn().mockResolvedValue(true),
-    updateRelationship: vi.fn().mockResolvedValue(undefined),
-    getRelationship: vi.fn().mockResolvedValue(null),
-    getRelationships: vi.fn().mockResolvedValue([]),
+    createRelationship: mock().mockResolvedValue(true),
+    updateRelationship: mock().mockResolvedValue(undefined),
+    getRelationship: mock().mockResolvedValue(null),
+    getRelationships: mock().mockResolvedValue([]),
 
     // Cache management
-    getCache: vi.fn().mockResolvedValue(undefined),
-    setCache: vi.fn().mockResolvedValue(true),
-    deleteCache: vi.fn().mockResolvedValue(true),
+    getCache: mock().mockResolvedValue(undefined),
+    setCache: mock().mockResolvedValue(true),
+    deleteCache: mock().mockResolvedValue(true),
 
     // Task management
-    createTask: vi.fn().mockResolvedValue('test-task-id'),
-    getTasks: vi.fn().mockResolvedValue([]),
-    getTask: vi.fn().mockResolvedValue(null),
-    getTasksByName: vi.fn().mockResolvedValue([]),
-    updateTask: vi.fn().mockResolvedValue(undefined),
-    deleteTask: vi.fn().mockResolvedValue(undefined),
+    createTask: mock().mockResolvedValue('test-task-id'),
+    getTasks: mock().mockResolvedValue([]),
+    getTask: mock().mockResolvedValue(null),
+    getTasksByName: mock().mockResolvedValue([]),
+    updateTask: mock().mockResolvedValue(undefined),
+    deleteTask: mock().mockResolvedValue(undefined),
 
     // Message server management
-    getMessageServers: vi.fn(() =>
+    getMessageServers: mock(() =>
       Promise.resolve([{ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' }])
     ),
-    createMessageServer: vi
-      .fn()
-      .mockResolvedValue({ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' }),
-    addAgentToServer: vi.fn().mockResolvedValue(undefined),
-    getChannelsForServer: vi.fn().mockResolvedValue([]),
-    createChannel: vi.fn().mockResolvedValue({ id: '123e4567-e89b-12d3-a456-426614174000' }),
-    getAgentsForServer: vi.fn().mockResolvedValue([]),
+    createMessageServer: mock().mockResolvedValue({
+      id: '00000000-0000-0000-0000-000000000000',
+      name: 'Default Server',
+    }),
+    addAgentToServer: mock().mockResolvedValue(undefined),
+    getChannelsForServer: mock().mockResolvedValue([]),
+    createChannel: mock().mockResolvedValue({ id: '123e4567-e89b-12d3-a456-426614174000' }),
+    getAgentsForServer: mock().mockResolvedValue([]),
   })),
-  DatabaseService: vi.fn().mockImplementation((runtime, db) => ({
+  DatabaseService: mock().mockImplementation(() => ({
     // Database service methods would go here if needed
   })),
-  DatabaseMigrationService: vi.fn(() => ({
-    initializeWithDatabase: vi.fn().mockResolvedValue(undefined),
-    discoverAndRegisterPluginSchemas: vi.fn(),
-    runAllPluginMigrations: vi.fn().mockResolvedValue(undefined),
+  DatabaseMigrationService: mock(() => ({
+    initializeWithDatabase: mock().mockResolvedValue(undefined),
+    discoverAndRegisterPluginSchemas: mock(),
+    runAllPluginMigrations: mock().mockResolvedValue(undefined),
   })),
   plugin: {
     name: '@elizaos/plugin-sql',
@@ -167,47 +150,51 @@ vi.mock('@elizaos/plugin-sql', () => ({
 }));
 
 // Mock filesystem operations
-vi.mock('node:fs', () => ({
+mock.module('node:fs', () => ({
   default: {
-    mkdirSync: vi.fn(),
-    existsSync: vi.fn(() => true),
-    readFileSync: vi.fn(() => '{}'),
-    writeFileSync: vi.fn(),
+    mkdirSync: mock(),
+    existsSync: mock(() => true),
+    readFileSync: mock(() => '{}'),
+    writeFileSync: mock(),
   },
-  mkdirSync: vi.fn(),
-  existsSync: vi.fn(() => true),
-  readFileSync: vi.fn(() => '{}'),
-  writeFileSync: vi.fn(),
+  mkdirSync: mock(),
+  existsSync: mock(() => true),
+  readFileSync: mock(() => '{}'),
+  writeFileSync: mock(),
 }));
 
 // Mock Socket.IO
-vi.mock('socket.io', () => ({
-  Server: vi.fn(() => ({
-    on: vi.fn(),
-    emit: vi.fn(),
-    to: vi.fn(() => ({
-      emit: vi.fn(),
+mock.module('socket.io', () => ({
+  Server: mock(() => ({
+    on: mock(),
+    emit: mock(),
+    to: mock(() => ({
+      emit: mock(),
     })),
-    close: vi.fn((callback) => {
-      if (callback) callback();
+    close: mock((callback) => {
+      if (callback) {
+        callback();
+      }
     }),
   })),
 }));
 
 // Mock the socketio module
-vi.mock('../src/socketio/index', () => ({
-  setupSocketIO: vi.fn(() => ({
-    on: vi.fn(),
-    emit: vi.fn(),
-    to: vi.fn(() => ({
-      emit: vi.fn(),
+mock.module('../src/socketio/index', () => ({
+  setupSocketIO: mock(() => ({
+    on: mock(),
+    emit: mock(),
+    to: mock(() => ({
+      emit: mock(),
     })),
-    close: vi.fn((callback) => {
-      if (callback) callback();
+    close: mock((callback) => {
+      if (callback) {
+        callback();
+      }
     }),
   })),
-  SocketIORouter: vi.fn(() => ({
-    setupListeners: vi.fn(),
+  SocketIORouter: mock(() => ({
+    setupListeners: mock(),
   })),
 }));
 
@@ -216,27 +203,31 @@ describe('AgentServer Integration Tests', () => {
   let mockServer: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     // Mock HTTP server with all methods Socket.IO expects
     mockServer = {
-      listen: vi.fn((_port, callback) => {
-        if (callback) callback();
+      listen: mock((_port, callback) => {
+        if (callback) {
+          callback();
+        }
       }),
-      close: vi.fn((callback) => {
-        if (callback) callback();
+      close: mock((callback) => {
+        if (callback) {
+          callback();
+        }
       }),
-      listeners: vi.fn(() => []),
-      removeAllListeners: vi.fn(),
-      on: vi.fn(),
-      once: vi.fn(),
-      emit: vi.fn(),
-      address: vi.fn(() => ({ port: 3000 })),
+      listeners: mock(() => []),
+      removeAllListeners: mock(),
+      on: mock(),
+      once: mock(),
+      emit: mock(),
+      address: mock(() => ({ port: 3000 })),
       timeout: 0,
       keepAliveTimeout: 5000,
     };
 
-    vi.spyOn(http, 'createServer').mockReturnValue(mockServer as any);
+    spyOn(http, 'createServer').mockReturnValue(mockServer as any);
 
     server = new AgentServer();
   });
@@ -245,7 +236,7 @@ describe('AgentServer Integration Tests', () => {
     if (server) {
       await server.stop();
     }
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('Constructor', () => {
@@ -286,7 +277,7 @@ describe('AgentServer Integration Tests', () => {
     it('should prevent double initialization', async () => {
       await server.initialize();
 
-      const loggerWarnSpy = vi.spyOn(logger, 'warn');
+      const loggerWarnSpy = spyOn(logger, 'warn');
       await server.initialize();
 
       expect(loggerWarnSpy).toHaveBeenCalledWith(
@@ -338,22 +329,22 @@ describe('AgentServer Integration Tests', () => {
       mockRuntime = {
         agentId: '123e4567-e89b-12d3-a456-426614174000',
         character: { name: 'TestAgent' },
-        registerPlugin: vi.fn().mockResolvedValue(undefined),
-        stop: vi.fn().mockResolvedValue(undefined),
+        registerPlugin: mock().mockResolvedValue(undefined),
+        stop: mock().mockResolvedValue(undefined),
         plugins: [],
-        registerProvider: vi.fn(),
-        registerAction: vi.fn(),
+        registerProvider: mock(),
+        registerAction: mock(),
       };
 
       // Mock the database methods
       server.database = {
         ...server.database,
-        getMessageServers: vi.fn().mockResolvedValue([]),
-        createMessageServer: vi.fn().mockResolvedValue({ id: 'server-id' }),
+        getMessageServers: mock().mockResolvedValue([]),
+        createMessageServer: mock().mockResolvedValue({ id: 'server-id' }),
         db: {
-          execute: vi.fn().mockResolvedValue([]),
+          execute: mock().mockResolvedValue([]),
         },
-        addAgentToServer: vi.fn().mockResolvedValue(undefined),
+        addAgentToServer: mock().mockResolvedValue(undefined),
       } as any;
     });
 
@@ -413,7 +404,7 @@ describe('AgentServer Integration Tests', () => {
     });
 
     it('should register custom middleware', () => {
-      const customMiddleware = vi.fn((_req, _res, next) => next());
+      const customMiddleware = mock((_req, _res, next) => next());
 
       server.registerMiddleware(customMiddleware);
 
@@ -429,15 +420,15 @@ describe('AgentServer Integration Tests', () => {
       // Mock database methods
       server.database = {
         ...server.database,
-        createMessageServer: vi.fn().mockResolvedValue({ id: 'server-id', name: 'Test Server' }),
-        getMessageServers: vi.fn().mockResolvedValue([]),
-        getMessageServerById: vi.fn().mockResolvedValue({ id: 'server-id' }),
-        createChannel: vi.fn().mockResolvedValue({ id: 'channel-id' }),
-        getChannelsForServer: vi.fn().mockResolvedValue([]),
-        createMessage: vi.fn().mockResolvedValue({ id: 'message-id' }),
-        getMessagesForChannel: vi.fn().mockResolvedValue([]),
-        addAgentToServer: vi.fn().mockResolvedValue(undefined),
-        getAgentsForServer: vi.fn().mockResolvedValue([]),
+        createMessageServer: mock().mockResolvedValue({ id: 'server-id', name: 'Test Server' }),
+        getMessageServers: mock().mockResolvedValue([]),
+        getMessageServerById: mock().mockResolvedValue({ id: 'server-id' }),
+        createChannel: mock().mockResolvedValue({ id: 'channel-id' }),
+        getChannelsForServer: mock().mockResolvedValue([]),
+        createMessage: mock().mockResolvedValue({ id: 'message-id' }),
+        getMessagesForChannel: mock().mockResolvedValue([]),
+        addAgentToServer: mock().mockResolvedValue(undefined),
+        getAgentsForServer: mock().mockResolvedValue([]),
       } as any;
     });
 
@@ -493,7 +484,7 @@ describe('AgentServer Integration Tests', () => {
     });
 
     it('should throw error when adding agent to non-existent server', async () => {
-      (server.database as any).getMessageServerById = vi.fn().mockResolvedValue(null);
+      (server.database as any).getMessageServerById = mock().mockResolvedValue(null);
 
       const serverId = 'non-existent-server' as any;
       const agentId = 'agent-id' as any;
@@ -507,7 +498,7 @@ describe('AgentServer Integration Tests', () => {
   describe('Error Handling', () => {
     it('should handle constructor errors gracefully', () => {
       // Mock logger to throw error
-      vi.spyOn(logger, 'debug').mockImplementation(() => {
+      spyOn(logger, 'debug').mockImplementation(() => {
         throw new Error('Logger error');
       });
 

@@ -6,11 +6,11 @@ import type { TrackedEntity } from './types';
 export const visionEnhancedProvider: Provider = {
   name: 'VISION_ENHANCED',
   description: 'Provides enhanced visual context including entity tracking and recognition',
-  
-  async get(runtime: IAgentRuntime, message: Memory, state: State) {
+
+  async get(runtime: IAgentRuntime, message: Memory, _state: State) {
     try {
       const visionService = runtime.getService('VISION') as VisionService | null;
-      
+
       if (!visionService || !visionService.isActive()) {
         return {
           text: 'Visual perception with entity tracking is not currently available.',
@@ -37,9 +37,9 @@ export const visionEnhancedProvider: Provider = {
       // Get entity tracker (would be initialized in service)
       const worldId = message.worldId || 'default-world';
       const entityTracker = new EntityTracker(worldId);
-      
+
       // Update entities with current detections
-      const trackedEntities = await entityTracker.updateEntities(
+      const _trackedEntities = await entityTracker.updateEntities(
         scene.objects,
         scene.people,
         undefined, // Face profiles would come from FaceRecognition service
@@ -54,17 +54,20 @@ export const visionEnhancedProvider: Provider = {
 
       // Build enhanced context
       let contextText = `Visual Context (Enhanced):\n${scene.description}\n\n`;
-      
+
       // Add entity information
       if (activeEntities.length > 0) {
-        contextText += `Currently Present:\n`;
+        contextText += 'Currently Present:\n';
         for (const entity of activeEntities) {
           const name = entity.attributes.name || `Unknown ${entity.entityType}`;
           const duration = Date.now() - entity.firstSeen;
-          const durationStr = duration < 60000 ? `${Math.round(duration/1000)}s` : `${Math.round(duration/60000)}m`;
-          
+          const durationStr =
+            duration < 60000
+              ? `${Math.round(duration / 1000)}s`
+              : `${Math.round(duration / 60000)}m`;
+
           contextText += `- ${name} (present for ${durationStr})`;
-          
+
           if (entity.entityType === 'person' && entity.appearances.length > 0) {
             const lastAppearance = entity.appearances[entity.appearances.length - 1];
             contextText += ` at position (${Math.round(lastAppearance.boundingBox.x)}, ${Math.round(lastAppearance.boundingBox.y)})`;
@@ -74,23 +77,26 @@ export const visionEnhancedProvider: Provider = {
       }
 
       if (recentlyLeft.length > 0) {
-        contextText += `\nRecently Left:\n`;
+        contextText += '\nRecently Left:\n';
         for (const { entity, leftAt } of recentlyLeft) {
           const name = entity.attributes.name || `Unknown ${entity.entityType}`;
           const timeAgo = Date.now() - leftAt;
-          const timeStr = timeAgo < 60000 ? `${Math.round(timeAgo/1000)}s ago` : `${Math.round(timeAgo/60000)}m ago`;
+          const timeStr =
+            timeAgo < 60000
+              ? `${Math.round(timeAgo / 1000)}s ago`
+              : `${Math.round(timeAgo / 60000)}m ago`;
           contextText += `- ${name} left ${timeStr}\n`;
         }
       }
 
       // Add statistics
-      contextText += `\nTracking Statistics:\n`;
+      contextText += '\nTracking Statistics:\n';
       contextText += `- Total entities tracked: ${stats.totalEntities}\n`;
       contextText += `- Currently active: ${stats.activeEntities}\n`;
       contextText += `- People: ${stats.people}, Objects: ${stats.objects}\n`;
 
       // Build structured data
-      const entityData = activeEntities.map(e => ({
+      const entityData = activeEntities.map((e) => ({
         id: e.id,
         type: e.entityType,
         name: e.attributes.name,
@@ -116,7 +122,7 @@ export const visionEnhancedProvider: Provider = {
             timeAgo: Date.now() - leftAt,
           })),
           statistics: stats,
-          worldId: worldId,
+          worldId,
         },
         data: {
           objects: scene.objects,
@@ -135,4 +141,4 @@ export const visionEnhancedProvider: Provider = {
       };
     }
   },
-}; 
+};

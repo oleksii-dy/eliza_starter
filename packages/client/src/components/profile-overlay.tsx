@@ -2,9 +2,8 @@ import { useAgentManagement } from '@/hooks/use-agent-management';
 import { useToast } from '@/hooks/use-toast';
 import { exportCharacterAsJson } from '@/lib/export-utils';
 import { formatAgentName, moment } from '@/lib/utils';
-import type { Agent, UUID } from '@elizaos/core';
-import { AgentStatus } from '@elizaos/core';
-import { Brain, Cog, Loader2, Play, X, Download, Settings } from 'lucide-react';
+import { AgentStatus, type Agent, type UUID } from '@elizaos/core';
+import { Brain, Loader2, Play, X, Download, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useAgent } from '../hooks/use-query-hooks';
 import StopAgentButton from './stop-agent-button';
@@ -30,13 +29,15 @@ interface ProfileOverlayProps {
  * @returns The profile overlay component, or null if not open.
  */
 export default function ProfileOverlay({ isOpen, onClose, agentId }: ProfileOverlayProps) {
-  if (!isOpen) return null;
-
   const { startAgent, isAgentStarting, isAgentStopping } = useAgentManagement();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const { data: agentData } = useAgent(agentId);
+
+  if (!isOpen) {
+    return null;
+  }
 
   const agent = agentData?.data as Agent | undefined;
 
@@ -58,13 +59,17 @@ export default function ProfileOverlay({ isOpen, onClose, agentId }: ProfileOver
 
   // Handle agent start
   const handleAgentStart = () => {
-    if (isProcessing) return;
-    startAgent(agent!);
+    if (isProcessing || !agent) {
+      return;
+    }
+    startAgent(agent);
   };
 
   // Handle character export
   const handleExportCharacter = () => {
-    if (!agentData?.data) return;
+    if (!agentData?.data) {
+      return;
+    }
 
     // Ensure agent has required properties for export
     const agent = {

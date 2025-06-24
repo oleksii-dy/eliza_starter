@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach } from 'bun:test';
 import { execSync } from 'child_process';
 import { mkdtemp, rm, readFile } from 'fs/promises';
 import { join } from 'path';
@@ -12,33 +12,20 @@ import {
 } from './test-utils';
 import { TEST_TIMEOUTS } from '../test-timeouts';
 
-// Mock fs module properly
-vi.mock('fs', async () => {
-  const actual = await vi.importActual('fs');
-  return {
-    ...actual,
-    existsSync: vi.fn((path: string) => {
-      // Return true for CLI dist file and other essential files
-      if (path.includes('dist/index.js') || path.includes('package.json') || path.includes('.gitignore')) {
-        return true;
-      }
-      return (actual as any).existsSync(path);
-    }),
-  };
-});
-
-// Mock the selection module to avoid complex dependencies
+// Mock functions for AI model selection
 const mockGetAvailableAIModels = () => [
   { value: 'local', title: 'Local AI', description: 'Run models locally' },
   { value: 'openai', title: 'OpenAI', description: 'Use OpenAI models' },
   { value: 'claude', title: 'Claude', description: 'Use Anthropic Claude' },
   { value: 'ollama', title: 'Ollama (self-hosted)', description: 'Self-hosted models for privacy' },
-  { value: 'google', title: 'Google Generative AI', description: 'Gemini models' }
+  { value: 'google', title: 'Google Generative AI', description: 'Gemini models' },
 ];
 
 // Mock the config module
 const mockIsValidOllamaEndpoint = (endpoint: string) => {
-  if (!endpoint || typeof endpoint !== 'string') return false;
+  if (!endpoint || typeof endpoint !== 'string') {
+    return false;
+  }
   try {
     const url = new URL(endpoint);
     return url.protocol === 'http:' || url.protocol === 'https:';
@@ -47,7 +34,7 @@ const mockIsValidOllamaEndpoint = (endpoint: string) => {
   }
 };
 
-// Replace imports with mocks
+// Use the mock functions
 const getAvailableAIModels = mockGetAvailableAIModels;
 const isValidOllamaEndpoint = mockIsValidOllamaEndpoint;
 
@@ -67,17 +54,17 @@ describe('ElizaOS Create Commands', () => {
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
     const cliPath = join(scriptDir, '../dist/index.js');
-    
+
     // Check if CLI is built, if not build it
     if (!existsSync(cliPath)) {
       console.log('CLI not built, building now...');
       const cliPackageDir = join(scriptDir, '..');
-      execSync('bun run build', { 
+      execSync('bun run build', {
         cwd: cliPackageDir,
-        stdio: 'inherit'
+        stdio: 'inherit',
       });
     }
-    
+
     elizaosCmd = `bun "${cliPath}"`;
 
     // Setup CLI commands
@@ -211,11 +198,11 @@ describe('ElizaOS Create Commands', () => {
     // Use cross-platform commands
     try {
       crossPlatform.removeDir('existing-app');
-      execSync(`mkdir existing-app`, { stdio: 'ignore' });
+      execSync('mkdir existing-app', { stdio: 'ignore' });
       if (process.platform === 'win32') {
-        execSync(`echo test > existing-app\\file.txt`, { stdio: 'ignore' });
+        execSync('echo test > existing-app\\file.txt', { stdio: 'ignore' });
       } else {
-        execSync(`echo "test" > existing-app/file.txt`, { stdio: 'ignore' });
+        execSync('echo "test" > existing-app/file.txt', { stdio: 'ignore' });
       }
     } catch (e) {
       // Ignore setup errors
@@ -233,7 +220,7 @@ describe('ElizaOS Create Commands', () => {
       // Use cross-platform commands
       try {
         crossPlatform.removeDir('create-in-place');
-        execSync(`mkdir create-in-place`, { stdio: 'ignore' });
+        execSync('mkdir create-in-place', { stdio: 'ignore' });
       } catch (e) {
         // Ignore setup errors
       }

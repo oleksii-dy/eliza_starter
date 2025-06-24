@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { v4 as uuidv4 } from 'uuid';
 import { AgentRuntime } from '../runtime';
 import {
@@ -72,7 +72,9 @@ class MockPlanningService extends Service implements IPlanningService {
     state: any,
     responseContent: any
   ): Promise<ActionPlan | null> {
-    if (!this.enabled) return null;
+    if (!this.enabled) {
+      return null;
+    }
     return this.generatePlan(message, {
       goal: 'Simple plan',
       constraints: [],
@@ -386,7 +388,7 @@ const createTestCharacter = (): Character => ({
   secrets: {},
 });
 
-describe('Planning Service Integration', () => {
+describe('Runtime Planning Service Detection and Fallback', () => {
   let runtime: AgentRuntime;
   let adapter: InMemoryDatabaseAdapter;
   let mockPlanningService: MockPlanningService;
@@ -398,7 +400,7 @@ describe('Planning Service Integration', () => {
     const testCharacter = createTestCharacter();
     runtime = new AgentRuntime({
       character: testCharacter,
-      adapter: adapter,
+      adapter,
     });
 
     // Register model handlers for planning

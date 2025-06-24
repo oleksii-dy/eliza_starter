@@ -4,7 +4,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { spawn } from 'child_process';
 import type { PluginState, InstallProgress } from '../types.ts';
-import { PluginStatus } from '../types.ts';
+import { PluginStatusValues } from '../types.ts';
 import crypto from 'crypto';
 
 // Safe command execution
@@ -39,9 +39,9 @@ async function safeExecute(
       stderr += data.toString();
     });
 
-    child.on('error', (error) => {
+    child.on('error', (_error) => {
       clearTimeout(timer);
-      reject(error);
+      reject(_error);
     });
 
     child.on('close', (code) => {
@@ -51,11 +51,11 @@ async function safeExecute(
       } else if (code === 0) {
         resolve({ stdout, stderr });
       } else {
-        const error = new Error(`Command failed with code ${code}: ${stderr}`);
-        (error as any).code = code;
-        (error as any).stdout = stdout;
-        (error as any).stderr = stderr;
-        reject(error);
+        const _error = new Error(`Command failed with code ${code}: ${stderr}`);
+        (_error as any).code = code;
+        (_error as any).stdout = stdout;
+        (_error as any).stderr = stderr;
+        reject(_error);
       }
     });
   });
@@ -123,8 +123,8 @@ export class InstallationManager {
     // Clean up temp directory
     try {
       await fs.rm(this.tempRoot, { recursive: true, force: true });
-    } catch (error) {
-      elizaLogger.warn('[InstallationManager] Failed to clean temp directory', error);
+    } catch (_error) {
+      elizaLogger.warn('[InstallationManager] Failed to clean temp directory', _error);
     }
 
     // Only log in non-test environments
@@ -247,7 +247,7 @@ export class InstallationManager {
         id: `${packageJson.name}-${Date.now()}`,
         name: packageJson.name,
         version: packageJson.version,
-        status: PluginStatus.READY,
+        status: PluginStatusValues.READY,
         missingEnvVars: [],
         buildLog: [],
         packageJson,
@@ -273,10 +273,10 @@ export class InstallationManager {
       this.installationCache.set(pluginName, pluginState);
 
       return pluginState;
-    } catch (error) {
-      // Cleanup on error
+    } catch (_error) {
+      // Cleanup on _error
       await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
-      throw error;
+      throw _error;
     }
   }
 
@@ -303,7 +303,7 @@ export class InstallationManager {
       if (!stats.isDirectory()) {
         throw new Error('Bundle path must be a directory');
       }
-    } catch (error) {
+    } catch (_error) {
       throw new Error(`Bundle path not found: ${bundlePath}`);
     }
 
@@ -328,7 +328,7 @@ export class InstallationManager {
       id: `${packageJson.name}-local-${Date.now()}`,
       name: packageJson.name,
       version: packageJson.version,
-      status: PluginStatus.READY,
+      status: PluginStatusValues.READY,
       missingEnvVars: [],
       buildLog: [],
       packageJson,
@@ -363,7 +363,7 @@ export class InstallationManager {
 
     // Check if directory exists and is within install root
     if (!this.isPathWithinRoot(pluginDir, this.installRoot)) {
-      throw new Error(`Invalid plugin path`);
+      throw new Error('Invalid plugin path');
     }
 
     try {
@@ -449,6 +449,7 @@ export class InstallationManager {
     // Security checks - reject dangerous patterns
     const dangerousPatterns = [
       /[<>:"|?*\\]/, // Special chars (but allow / for scopes)
+      // eslint-disable-next-line no-control-regex
       /[\x00-\x1f\x7f]/, // Control characters
       /[;`&$()]/, // Shell special characters
       /\.\./, // Double dots

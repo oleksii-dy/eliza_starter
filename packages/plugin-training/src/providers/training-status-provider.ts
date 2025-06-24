@@ -5,16 +5,15 @@ import {
   type State,
   elizaLogger,
 } from '@elizaos/core';
-import {
-  type TrainingServiceInterface,
-} from '../types.js';
+import { type TrainingServiceInterface } from '../types.js';
 
 /**
  * Provider that injects current training status into agent context
  */
 export const trainingStatusProvider: Provider = {
   name: 'TRAINING_STATUS',
-  description: 'Provides current training job status including dataset quality metrics, active job progress, and completion statistics when agent needs to report on model training activities or guide training decisions',
+  description:
+    'Provides current training job status including dataset quality metrics, active job progress, and completion statistics when agent needs to report on model training activities or guide training decisions',
   dynamic: true, // Only included when training-related conversation is happening
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
@@ -36,7 +35,7 @@ export const trainingStatusProvider: Provider = {
         'dataset',
         'fine-tune',
         'model',
-      ].some(keyword => text.includes(keyword));
+      ].some((keyword) => text.includes(keyword));
 
       if (!isTrainingRelated && !state.values.trainingJobId) {
         return {
@@ -58,10 +57,10 @@ Actions: ${stats.actionStats.successfulActions}/${stats.actionStats.totalActions
       if (state.values.trainingJobId) {
         try {
           const trainingJob = await trainingService.monitorTraining(state.values.trainingJobId);
-          
+
           if (trainingJob) {
             const progress = trainingJob.progress;
-            const progressText = progress 
+            const progressText = progress
               ? ` (${progress.currentStep}/${progress.totalSteps} steps, loss: ${progress.currentLoss?.toFixed(4)})`
               : '';
 

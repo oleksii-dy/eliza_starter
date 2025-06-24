@@ -87,8 +87,8 @@ export class OODALoopService extends Service {
   private async initializeAutonomousEnvironment() {
     // For autonomous operations, we don't need persistent rooms/worlds
     // Just use consistent UUIDs for this session
-    this.autonomousWorldId = asUUID(`00000000-0000-0000-0000-000000000001`);
-    this.autonomousRoomId = asUUID(`00000000-0000-0000-0000-000000000002`);
+    this.autonomousWorldId = asUUID('00000000-0000-0000-0000-000000000001');
+    this.autonomousRoomId = asUUID('00000000-0000-0000-0000-000000000002');
 
     // Try to create the world and room if they don't exist (only in environments that support it)
     if (
@@ -135,17 +135,17 @@ export class OODALoopService extends Service {
     // Load timing configuration from environment
     const loopInterval = process.env.AUTONOMOUS_LOOP_INTERVAL;
     if (loopInterval) {
-      this.baseLoopDelay = Math.max(parseInt(loopInterval), this.minLoopDelay);
+      this.baseLoopDelay = Math.max(parseInt(loopInterval, 10), this.minLoopDelay);
     }
 
     const maxConcurrent = process.env.AUTONOMOUS_MAX_CONCURRENT;
     if (maxConcurrent) {
-      this.maxConcurrentActions = parseInt(maxConcurrent);
+      this.maxConcurrentActions = parseInt(maxConcurrent, 10);
     }
 
     const actionTimeout = process.env.AUTONOMOUS_ACTION_TIMEOUT;
     if (actionTimeout) {
-      this.actionTimeout = parseInt(actionTimeout);
+      this.actionTimeout = parseInt(actionTimeout, 10);
     }
 
     this.logger.info('OODA Loop configuration loaded', {
@@ -465,14 +465,23 @@ export class OODALoopService extends Service {
     let relevance = 0.5;
 
     // Increase relevance for urgent tasks
-    if (task.tags?.includes('urgent')) relevance += 0.3;
-    if (task.tags?.includes('high-priority')) relevance += 0.2;
-    if (task.tags?.includes('autonomous')) relevance += 0.1;
+    if (task.tags?.includes('urgent')) {
+      relevance += 0.3;
+    }
+    if (task.tags?.includes('high-priority')) {
+      relevance += 0.2;
+    }
+    if (task.tags?.includes('autonomous')) {
+      relevance += 0.1;
+    }
 
     // Recently created tasks are more relevant
     const ageHours = (Date.now() - task.createdAt) / (1000 * 60 * 60);
-    if (ageHours < 1) relevance += 0.2;
-    else if (ageHours < 24) relevance += 0.1;
+    if (ageHours < 1) {
+      relevance += 0.2;
+    } else if (ageHours < 24) {
+      relevance += 0.1;
+    }
 
     return Math.min(relevance, 1);
   }
@@ -493,9 +502,15 @@ export class OODALoopService extends Service {
     let relevance = 0.3; // Base relevance
 
     // Increase relevance if resources are constrained
-    if (status.cpu > 80) relevance += 0.3;
-    if (status.memory > 80) relevance += 0.2;
-    if (status.taskSlots.used >= status.taskSlots.total) relevance += 0.4;
+    if (status.cpu > 80) {
+      relevance += 0.3;
+    }
+    if (status.memory > 80) {
+      relevance += 0.2;
+    }
+    if (status.taskSlots.used >= status.taskSlots.total) {
+      relevance += 0.4;
+    }
 
     return Math.min(relevance, 1);
   }
@@ -1213,7 +1228,9 @@ export class OODALoopService extends Service {
   }
 
   private calculateAverageGoalProgress(): number {
-    if (this.goals.length === 0) return 0;
+    if (this.goals.length === 0) {
+      return 0;
+    }
 
     const totalProgress = this.goals.reduce((sum, goal) => sum + goal.progress, 0);
     return totalProgress / this.goals.length;

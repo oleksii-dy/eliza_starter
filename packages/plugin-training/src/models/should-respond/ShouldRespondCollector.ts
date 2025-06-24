@@ -1,6 +1,6 @@
 import { elizaLogger, type IAgentRuntime, type Memory, type State } from '@elizaos/core';
 import { TrainingDatabaseManager } from '../../database/TrainingDatabaseManager';
-import { TrainingDataPoint } from '../../types';
+import { type TrainingDataPoint } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -67,8 +67,8 @@ Context: ${JSON.stringify(inputContext.conversationContext)}`,
         },
         output: {
           decision: decision ? 'RESPOND' : 'IGNORE',
-          reasoning: reasoning,
-          confidence: confidence,
+          reasoning,
+          confidence,
         },
         metadata: {
           agentId: runtime.agentId,
@@ -213,19 +213,32 @@ Context: ${JSON.stringify(inputContext.conversationContext)}`,
   private classifyMessageType(message: Memory): string {
     const text = message.content.text || '';
 
-    if (/^\s*$/.test(text)) return 'empty';
-    if (/^[!/.]/.test(text)) return 'command';
-    if (/\?/.test(text)) return 'question';
-    if (/\b(hello|hi|hey|good morning|good afternoon|good evening)\b/i.test(text))
+    if (/^\s*$/.test(text)) {
+      return 'empty';
+    }
+    if (/^[!/.]/.test(text)) {
+      return 'command';
+    }
+    if (/\?/.test(text)) {
+      return 'question';
+    }
+    if (/\b(hello|hi|hey|good morning|good afternoon|good evening)\b/i.test(text)) {
       return 'greeting';
-    if (/\b(thanks|thank you|bye|goodbye|see you|ttyl)\b/i.test(text)) return 'closing';
-    if (text.length > 500) return 'long_message';
-    if (text.length < 10) return 'short_message';
+    }
+    if (/\b(thanks|thank you|bye|goodbye|see you|ttyl)\b/i.test(text)) {
+      return 'closing';
+    }
+    if (text.length > 500) {
+      return 'long_message';
+    }
+    if (text.length < 10) {
+      return 'short_message';
+    }
 
     return 'statement';
   }
 
-  private findLastAgentMessage(messages: any[] agentId: string) {
+  private findLastAgentMessage(messages: any[], agentId: string) {
     for (let i = messages.length - 1; i >= 0; i--) {
       if (messages[i].entityId === agentId) {
         return {
@@ -239,13 +252,15 @@ Context: ${JSON.stringify(inputContext.conversationContext)}`,
   }
 
   private getTimeSinceLastResponse(state: State, agentId: string): number {
-    const lastResponse = this.findLastAgentMessage(state.data?.recentMessages || [] agentId);
+    const lastResponse = this.findLastAgentMessage(state.data?.recentMessages || [], agentId);
     return lastResponse ? Date.now() - lastResponse.timestamp : Infinity;
   }
 
   private isConversationActive(state: State): boolean {
     const recentMessages = state.data?.recentMessages || [];
-    if (recentMessages.length === 0) return false;
+    if (recentMessages.length === 0) {
+      return false;
+    }
 
     const lastMessage = recentMessages[recentMessages.length - 1];
     const timeSinceLastMessage = Date.now() - (lastMessage.createdAt || 0);
@@ -257,13 +272,19 @@ Context: ${JSON.stringify(inputContext.conversationContext)}`,
     const recentMessages = state.data?.recentMessages || [];
     const userMessages = recentMessages.filter((msg: any) => msg.entityId === userId);
 
-    if (userMessages.length >= 3) return 'high';
-    if (userMessages.length >= 1) return 'medium';
+    if (userMessages.length >= 3) {
+      return 'high';
+    }
+    if (userMessages.length >= 1) {
+      return 'medium';
+    }
     return 'low';
   }
 
   private getConversationTimeSpan(messages: any[]): number {
-    if (messages.length < 2) return 0;
+    if (messages.length < 2) {
+      return 0;
+    }
     const first = messages[0].createdAt || 0;
     const last = messages[messages.length - 1].createdAt || 0;
     return last - first;
@@ -287,7 +308,7 @@ Context: ${JSON.stringify(inputContext.conversationContext)}`,
     try {
       const data = await this.dbManager.getTrainingData({
         modelType: 'should_respond',
-        limit: limit,
+        limit,
       });
 
       // Format for training (minimal input/output pairs)

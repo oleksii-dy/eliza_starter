@@ -39,15 +39,15 @@ export class RefactoringEngine {
     const prompt = `Analyze the following code and suggest refactorings:
 
 ${implementation.files
-  .map(
-    (f) => `
+    .map(
+      (f) => `
 File: ${f.path}
 \`\`\`typescript
 ${f.content}
 \`\`\`
 `
-  )
-  .join('\n')}
+    )
+    .join('\n')}
 
 Refactoring Goals:
 - Maintain test compatibility: ${options.maintainTestCompatibility}

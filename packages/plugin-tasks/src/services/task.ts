@@ -245,7 +245,7 @@ export class TaskService extends Service {
   private async executeTask(task: Task) {
     try {
       if (!task || !task.id) {
-        logger.debug(`[Bootstrap] Task not found`);
+        logger.debug('[Bootstrap] Task not found');
         return;
       }
 

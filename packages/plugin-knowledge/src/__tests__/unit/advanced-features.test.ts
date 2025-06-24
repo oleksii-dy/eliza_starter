@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import {
   advancedSearchAction,
   knowledgeAnalyticsAction,
@@ -8,7 +8,7 @@ import { KnowledgeService } from '../../service';
 import type { IAgentRuntime, Memory, State, UUID, ActionResult } from '@elizaos/core';
 
 // Create mock functions for testing
-const createMockFn = () => vi.fn();
+const createMockFn = () => mock();
 
 describe('Advanced Knowledge Features', () => {
   let mockRuntime: IAgentRuntime;
@@ -21,20 +21,20 @@ describe('Advanced Knowledge Features', () => {
 
   beforeEach(() => {
     mockKnowledgeService = {
-      advancedSearch: vi.fn(),
-      getAnalytics: vi.fn(),
-      exportKnowledge: vi.fn(),
-      importKnowledge: vi.fn(),
-      batchOperation: vi.fn(),
+      advancedSearch: mock(),
+      getAnalytics: mock(),
+      exportKnowledge: mock(),
+      importKnowledge: mock(),
+      batchOperation: mock(),
     } as any;
 
     mockRuntime = {
       agentId: generateMockUuid(1),
-      getService: vi.fn().mockReturnValue(mockKnowledgeService),
-      getSetting: vi.fn(),
+      getService: mock().mockReturnValue(mockKnowledgeService),
+      getSetting: mock(),
     } as any;
 
-    mockCallback = vi.fn();
+    mockCallback = mock();
     mockState = {
       values: {},
       data: {},
@@ -107,7 +107,12 @@ describe('Advanced Knowledge Features', () => {
       expect(callArgs.filters?.dateRange?.start).toBeInstanceOf(Date);
       expect(callArgs.sort).toEqual({ field: 'similarity', order: 'desc' });
 
-      expect(result.data).toEqual(mockResults);
+      expect(result.data).toEqual({
+        actionName: 'ADVANCED_KNOWLEDGE_SEARCH',
+        results: mockResults.results,
+        totalCount: mockResults.totalCount,
+        filters: callArgs.filters,
+      });
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           text: expect.stringContaining('Found 1 documents'),
@@ -200,7 +205,10 @@ describe('Advanced Knowledge Features', () => {
         mockCallback
       )) as ActionResult;
 
-      expect(result.data).toEqual(mockAnalytics);
+      expect(result.data).toEqual({
+        actionName: 'KNOWLEDGE_ANALYTICS',
+        analytics: mockAnalytics,
+      });
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           text: expect.stringContaining('Total Documents: 42'),

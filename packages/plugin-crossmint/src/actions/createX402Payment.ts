@@ -1,5 +1,6 @@
 import {
   type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
@@ -17,9 +18,9 @@ import { CrossMintError } from '../types/crossmint';
 export const createX402PaymentAction: Action = {
   name: 'CREATE_X402_PAYMENT',
   similes: ['CREATE_PAYMENT', 'REQUEST_PAYMENT', 'X402_PAYMENT'],
-  description: 'Create an X.402 compliant payment request using CrossMint',
+  description: 'Create an X.402 compliant payment request using CrossMint. Can be chained with CHECK_PAYMENT_STATUS to monitor completion or REAL_CREATE_X402_PAYMENT for production payments',
 
-  validate: async (runtime: IAgentRuntime, message: Memory) => {
+  validate: async (runtime: IAgentRuntime, _message: Memory) => {
     const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
     return !!crossmintService;
   },
@@ -30,7 +31,7 @@ export const createX402PaymentAction: Action = {
     state?: State,
     options?: any,
     callback?: HandlerCallback
-  ) => {
+  ): Promise<ActionResult> => {
     try {
       const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
       if (!crossmintService) {
@@ -74,7 +75,7 @@ export const createX402PaymentAction: Action = {
 
       // Create payment request
       const expiresAt = Date.now() + (paymentDetails.expiresIn * 60 * 60 * 1000);
-      
+
       const paymentRequest = await crossmintService.createPaymentRequest({
         amount: paymentDetails.amount,
         currency: paymentDetails.currency,
@@ -100,17 +101,29 @@ The payment request is X.402 compliant and can be used for HTTP-native payments.
       });
 
       return {
-        text: responseText,
         data: {
+          actionName: 'CREATE_X402_PAYMENT',
           paymentRequest,
           x402Compliant: true,
+          paymentId: paymentRequest.id,
+          paymentUrl: paymentRequest.paymentUrl,
+          amount: paymentRequest.amount,
+          currency: paymentRequest.currency,
+          network: paymentDetails.network,
+          expiresAt,
+        },
+        values: {
+          success: true,
+          paymentId: paymentRequest.id,
+          paymentUrl: paymentRequest.paymentUrl,
+          amount: paymentRequest.amount,
         },
       };
     } catch (error) {
       logger.error('Error creating X.402 payment:', error);
-      
+
       const errorMessage = `❌ Failed to create X.402 payment request: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      
+
       await callback?.({
         text: errorMessage,
         thought: 'Failed to create X.402 payment request',
@@ -118,22 +131,80 @@ The payment request is X.402 compliant and can be used for HTTP-native payments.
       });
 
       return {
-        text: errorMessage,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        data: {
+          actionName: 'CREATE_X402_PAYMENT',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          errorType: error instanceof CrossMintError ? 'crossmint_error' : 'unknown_error',
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
       };
     }
   },
 
   examples: [
+    // Multi-action: Create payment then monitor status workflow
     [
       {
-        name: 'User',
+        name: '{{user}}',
+        content: {
+          text: 'Create a payment request for 50 USDC and monitor when it gets paid',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll create the payment request and set up monitoring for payment completion.",
+          thought: 'First create the X.402 payment request, then chain to status monitoring to track payment completion in real-time',
+          actions: ['CREATE_X402_PAYMENT', 'CHECK_PAYMENT_STATUS'],
+        },
+      },
+    ],
+    // Multi-action: Create test then production payment workflow
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Create a test payment first, then create the real payment request',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll create a test payment request first, then create the production payment.",
+          thought: 'Start with a test payment to validate the flow, then create the actual production payment request using the real X.402 service',
+          actions: ['CREATE_X402_PAYMENT', 'REAL_CREATE_X402_PAYMENT'],
+        },
+      },
+    ],
+    // Multi-action: Create payment and mint NFT workflow
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Create a payment request for NFT purchase, then mint the NFT once paid',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll create the payment request and mint the NFT after payment confirmation.",
+          thought: 'Create payment request first, then chain to NFT minting which will only execute after payment verification',
+          actions: ['CREATE_X402_PAYMENT', 'MINT_NFT'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
         content: {
           text: 'Create a payment request for 25 USDC on Ethereum',
         },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: '✅ X.402 Payment Request Created\n\n**Payment ID:** payment-123...\n**Amount:** 25 USDC\n**Network:** ethereum\n**Payment Link:** https://crossmint.io/pay/...\n**Expires:** Tomorrow at 3:00 PM\n\nThe payment request is X.402 compliant and can be used for HTTP-native payments.',
           thought: 'Created X.402 payment request for 25 USDC',
@@ -143,13 +214,13 @@ The payment request is X.402 compliant and can be used for HTTP-native payments.
     ],
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: {
           text: 'I need to request payment of 0.1 SOL from someone',
         },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: '✅ X.402 Payment Request Created\n\n**Payment ID:** payment-456...\n**Amount:** 0.1 SOL\n**Network:** solana\n**Payment Link:** https://crossmint.io/pay/...\n**Expires:** Tomorrow at 3:00 PM\n\nThe payment request is X.402 compliant and can be used for HTTP-native payments.',
           thought: 'Created X.402 payment request for 0.1 SOL',

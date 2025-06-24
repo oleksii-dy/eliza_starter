@@ -50,7 +50,7 @@ export interface DataDirStatus {
 export async function ensureElizaDir() {
   try {
     await fs.mkdir(ELIZA_DIR, { recursive: true });
-  } catch (error) {
+  } catch {
     // Directory already exists
   }
 }
@@ -61,7 +61,7 @@ export async function getRegistrySettings(): Promise<RegistrySettings> {
   try {
     const content = await fs.readFile(REGISTRY_SETTINGS_FILE, 'utf-8');
     return JSON.parse(content);
-  } catch (error) {
+  } catch {
     // Return default settings if file doesn't exist
     return {
       defaultRegistry: REGISTRY_REPO,
@@ -79,7 +79,7 @@ export async function getEnvVar(key: string): Promise<string | undefined> {
     const envContent = await fs.readFile(getEnvFile(), 'utf-8');
     const env = dotenv.parse(envContent);
     return env[key];
-  } catch (error) {
+  } catch {
     return undefined;
   }
 }
@@ -90,7 +90,7 @@ export async function setEnvVar(key: string, value: string) {
   let envContent = '';
   try {
     envContent = await fs.readFile(getEnvFile(), 'utf-8');
-  } catch (error) {
+  } catch {
     // File doesn't exist yet
   }
 
@@ -139,7 +139,7 @@ export async function setGitHubToken(token: string) {
       if (existsSync(getEnvFile())) {
         envContent = await fs.readFile(getEnvFile(), 'utf-8');
       }
-    } catch (error) {
+    } catch {
       // File doesn't exist, create it with empty content
       envContent = '# Eliza environment variables\n\n';
     }
@@ -605,9 +605,8 @@ export async function getPackageDetails(packageName: string): Promise<{
     const packageUrl = `${REGISTRY_URL.replace('index.json', '')}packages/${normalizedName}.json`;
 
     // Use agent only if https_proxy is defined
-    const requestOptions: RequestInit = {};
+    const requestOptions: Record<string, any> = {};
     if (process.env.https_proxy) {
-      // @ts-ignore - HttpsProxyAgent is not in the RequestInit type, but is used by node-fetch
       requestOptions.agent = new HttpsProxyAgent(process.env.https_proxy);
     }
 

@@ -1,23 +1,24 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { envStatusProvider } from './envStatus';
 import { type IAgentRuntime, type Memory, type State, type UUID, logger } from '@elizaos/core';
-import { EnvManagerService } from '../service';
+import { type IAgentRuntime, type Memory, type State, type UUID, logger } from '@elizaos/core';
+import { describe, it, expect, beforeEach, vi } from 'bun:test';
+import { EnvManager } from '../service';
+import { envStatusProvider } from './envStatus';
 
 describe('envStatusProvider', () => {
   let mockRuntime: IAgentRuntime;
   let mockMessage: Memory;
   let mockState: State;
-  let mockEnvService: any;
+  let mockEnv: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
-    mockEnvService = {
-      getAllEnvVars: vi.fn(),
+    mockEnv = {
+      getAllEnvVars: mock(),
     };
 
     mockRuntime = {
-      getService: vi.fn().mockReturnValue(mockEnvService),
+      get: mock().mockReturnValue(mockEnv),
       character: { name: 'TestAgent' },
     } as any;
 
@@ -47,8 +48,8 @@ describe('envStatusProvider', () => {
 
   describe('get method', () => {
     it('should return empty status when service is not available', async () => {
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
-      const debugSpy = vi.spyOn(logger, 'debug');
+      mockRuntime.get = mock().mockReturnValue(null);
+      const debugSpy = mock.spyOn(logger, 'debug');
 
       const result = await envStatusProvider.get(mockRuntime, mockMessage, mockState);
 
@@ -62,8 +63,8 @@ describe('envStatusProvider', () => {
     });
 
     it('should return empty status when no environment variables exist', async () => {
-      mockEnvService.getAllEnvVars.mockResolvedValue(null);
-      const debugSpy = vi.spyOn(logger, 'debug');
+      mockEnv.getAllEnvVars.mockResolvedValue(null);
+      const debugSpy = mock.spyOn(logger, 'debug');
 
       const result = await envStatusProvider.get(mockRuntime, mockMessage, mockState);
 
@@ -92,7 +93,7 @@ describe('envStatusProvider', () => {
         },
       };
 
-      mockEnvService.getAllEnvVars.mockResolvedValue(mockEnvVars);
+      mockEnv.getAllEnvVars.mockResolvedValue(mockEnvVars);
 
       const result = await envStatusProvider.get(mockRuntime, mockMessage, mockState);
 
@@ -144,7 +145,7 @@ describe('envStatusProvider', () => {
         },
       };
 
-      mockEnvService.getAllEnvVars.mockResolvedValue(mockEnvVars);
+      mockEnv.getAllEnvVars.mockResolvedValue(mockEnvVars);
 
       const result = await envStatusProvider.get(mockRuntime, mockMessage, mockState);
 
@@ -183,7 +184,7 @@ describe('envStatusProvider', () => {
         },
       };
 
-      mockEnvService.getAllEnvVars.mockResolvedValue(mockEnvVars);
+      mockEnv.getAllEnvVars.mockResolvedValue(mockEnvVars);
 
       const result = await envStatusProvider.get(mockRuntime, mockMessage, mockState);
 
@@ -230,7 +231,7 @@ describe('envStatusProvider', () => {
         },
       };
 
-      mockEnvService.getAllEnvVars.mockResolvedValue(mockEnvVars);
+      mockEnv.getAllEnvVars.mockResolvedValue(mockEnvVars);
 
       const result = await envStatusProvider.get(mockRuntime, mockMessage, mockState);
 
@@ -249,8 +250,8 @@ describe('envStatusProvider', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      mockEnvService.getAllEnvVars.mockRejectedValue(new Error('Test error'));
-      const errorSpy = vi.spyOn(logger, 'error');
+      mockEnv.getAllEnvVars.mockRejectedValue(new Error('Test error'));
+      const errorSpy = mock.spyOn(logger, 'error');
 
       const result = await envStatusProvider.get(mockRuntime, mockMessage, mockState);
 
@@ -290,7 +291,7 @@ describe('envStatusProvider', () => {
         },
       };
 
-      mockEnvService.getAllEnvVars.mockResolvedValue(mockEnvVars);
+      mockEnv.getAllEnvVars.mockResolvedValue(mockEnvVars);
 
       // Test in DM context (previously would show values)
       mockMessage.content.channelType = 'DM';
@@ -311,7 +312,7 @@ describe('envStatusProvider', () => {
   describe('Edge Cases', () => {
     it('should handle empty plugin list', async () => {
       // Mock env vars with empty object
-      mockEnvService.getAllEnvVars.mockResolvedValue({});
+      mockEnv.getAllEnvVars.mockResolvedValue({});
 
       const result = await envStatusProvider.get(mockRuntime, mockMessage, mockState);
 
@@ -325,28 +326,28 @@ describe('envStatusProvider', () => {
 
 describe('envStatusProvider Additional Coverage', () => {
   let mockRuntime: IAgentRuntime;
-  let mockEnvService: EnvManagerService;
+  let mockEnv: EnvManager;
   let mockLogger: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
-    mockEnvService = {
-      getAllEnvVars: vi.fn(),
-      getMissingEnvVars: vi.fn(),
-      hasMissingEnvVars: vi.fn(),
+    mockEnv = {
+      getAllEnvVars: mock(),
+      getMissingEnvVars: mock(),
+      hasMissingEnvVars: mock(),
     } as any;
 
     mockRuntime = {
       character: { name: 'TestAgent' },
-      getService: vi.fn().mockReturnValue(mockEnvService),
+      get: mock().mockReturnValue(mockEnv),
     } as any;
 
     mockLogger = {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      debug: mock(),
     };
 
     // Mock logger methods directly
@@ -365,7 +366,7 @@ describe('envStatusProvider Additional Coverage', () => {
       createdAt: Date.now(),
     } as Memory;
 
-    (mockEnvService.getAllEnvVars as any).mockRejectedValue(new Error('Database error'));
+    (mockEnv.getAllEnvVars as any).mockRejectedValue(new Error('Database error'));
 
     const result = await envStatusProvider.get(mockRuntime, mockMessage, {} as any);
 
@@ -385,8 +386,8 @@ describe('envStatusProvider Additional Coverage', () => {
       createdAt: Date.now(),
     } as Memory;
 
-    (mockEnvService.hasMissingEnvVars as any).mockResolvedValue(false);
-    (mockEnvService.getAllEnvVars as any).mockResolvedValue({
+    (mockEnv.hasMissingEnvVars as any).mockResolvedValue(false);
+    (mockEnv.getAllEnvVars as any).mockResolvedValue({
       'test-plugin': {
         API_KEY: {
           type: 'api_key',

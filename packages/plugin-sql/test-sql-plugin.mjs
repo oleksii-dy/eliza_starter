@@ -8,12 +8,12 @@ console.log('Testing SQL Plugin Runtime Table Creation...\n');
 
 async function testSQLPlugin() {
   const testDir = path.join(process.cwd(), '.test-eliza', `test-${Date.now()}`);
-  const testAgentId = stringToUuid('test-agent-' + Date.now());
-  
+  const testAgentId = stringToUuid(`test-agent-${Date.now()}`);
+
   try {
     // Create test directory
     await fs.mkdir(testDir, { recursive: true });
-    
+
     console.log('1. Testing plugin properties:');
     console.log('   Plugin name:', plugin.name);
     console.log('   Plugin description:', plugin.description);
@@ -61,20 +61,20 @@ async function testSQLPlugin() {
     console.log();
 
     console.log('4. Testing table operations:');
-    
+
     // Test entity creation
-    const entityId = stringToUuid('test-entity-' + Date.now());
+    const entityId = stringToUuid(`test-entity-${Date.now()}`);
     await runtime.createEntity({
       id: entityId,
       names: ['Test Entity'],
       agentId: testAgentId,
     });
-    
+
     const entity = await runtime.getEntityById(entityId);
     console.log('   ✅ Entity created and retrieved:', entity?.names[0]);
 
     // Test room creation
-    const roomId = stringToUuid('test-room-' + Date.now());
+    const roomId = stringToUuid(`test-room-${Date.now()}`);
     await runtime.createRoom({
       id: roomId,
       name: 'Test Room',
@@ -82,7 +82,7 @@ async function testSQLPlugin() {
       type: 'GROUP',
       agentId: testAgentId,
     });
-    
+
     const room = await runtime.getRoom(roomId);
     console.log('   ✅ Room created and retrieved:', room?.name);
 
@@ -93,32 +93,32 @@ async function testSQLPlugin() {
 
     // Test memory operations
     const memoryId = await runtime.createMemory({
-      entityId: entityId,
+      entityId,
       agentId: testAgentId,
-      roomId: roomId,
+      roomId,
       content: {
         text: 'Test memory',
         type: 'test',
       },
     });
-    
+
     const memory = await runtime.getMemoryById(memoryId);
     console.log('   ✅ Memory created and retrieved:', memory?.content.text);
 
     console.log('\n✅ All SQL plugin tests passed! Tables are being created correctly.\n');
-    
+
     // Cleanup
     await fs.rm(testDir, { recursive: true, force: true });
-    
+
   } catch (error) {
     console.error('\n❌ Test failed:', error);
     console.error('Stack:', error.stack);
-    
+
     // Cleanup on error
     try {
       await fs.rm(testDir, { recursive: true, force: true });
     } catch {}
-    
+
     process.exit(1);
   }
 }

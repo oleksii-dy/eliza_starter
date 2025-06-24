@@ -3,9 +3,7 @@ import {
   type IAgentRuntime,
   type UUID,
   type Action,
-  type Memory,
-  type HandlerCallback,
-  logger,
+  type MemoryCallback,
   elizaLogger,
 } from '@elizaos/core';
 
@@ -83,7 +81,7 @@ export class ActionChainService extends Service {
 
   static async start(runtime: IAgentRuntime): Promise<ActionChainService> {
     const service = new ActionChainService(runtime);
-    await service.initialize();
+    await void service.initialize();
     return service;
   }
 
@@ -95,7 +93,7 @@ export class ActionChainService extends Service {
 
     // Start cleanup interval for expired sessions
     this.cleanupInterval = setInterval(() => {
-      this.cleanupExpiredSessions();
+      void this.cleanupExpiredSessions();
     }, 60000); // Clean up every minute
 
     elizaLogger.info('[ActionChainService] Action chain service started');
@@ -213,7 +211,7 @@ export class ActionChainService extends Service {
         if (!execution.success) {
           // Handle failure
           if (step.onFailure && step.onFailure.length > 0) {
-            elizaLogger.info(`[ActionChainService] Step failed, executing failure actions`);
+            elizaLogger.info('[ActionChainService] Step failed, executing failure actions');
             await this.executeFailureActions(step.onFailure, context);
           }
 
@@ -347,7 +345,7 @@ export class ActionChainService extends Service {
 
     // Execute action with promise-based callback
     return new Promise((resolve, reject) => {
-      const callback: HandlerCallback = async (response) => {
+      const _callback: Callback = async (response) => {
         if (response.error) {
           reject(new Error(response.text || 'Action execution failed'));
         } else {
@@ -406,10 +404,12 @@ export class ActionChainService extends Service {
     // This would need to be implemented based on how actions are registered in the runtime
     // For now, we'll assume actions are available through plugins
     if (this.runtime.plugins) {
-      for (const plugin of this.runtime.plugins) {
+      for (const _plugin of this.runtime.plugins) {
         if (plugin.actions) {
           const action = plugin.actions.find((a) => a.name === actionName);
-          if (action) return action;
+          if (action) {
+            return action;
+          }
         }
       }
     }
@@ -519,7 +519,7 @@ export class ActionChainService extends Service {
    * Generate session ID
    */
   private generateSessionId(): string {
-    return 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    return `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**

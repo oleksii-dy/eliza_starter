@@ -1,16 +1,15 @@
 import type { IAgentRuntime, UUID } from '@elizaos/core';
-import { Service, logger, createUniqueUuid } from '@elizaos/core';
+import { logger, createUniqueUuid } from '@elizaos/core';
+import { secureCrypto } from '../security/crypto';
+import { EnvManagerService } from '../service';
 import type {
   SecretContext,
   SecretConfig,
   SecretMetadata,
-  SecretPermission,
   SecretAccessLog,
   EncryptedSecret,
 } from '../types';
 import { validateEnvVar } from '../validation';
-import { secureCrypto } from '../security/crypto';
-import { EnvManagerService } from '../service';
 
 /**
  * Unified Secret Manager Service
@@ -32,7 +31,7 @@ export class UnifiedSecretManager extends EnvManagerService {
 
   static async start(runtime: IAgentRuntime): Promise<UnifiedSecretManager> {
     const service = new UnifiedSecretManager(runtime);
-    await service.initialize();
+    await void service.initialize();
     return service;
   }
 
@@ -71,7 +70,13 @@ export class UnifiedSecretManager extends EnvManagerService {
       return await this.storage.get(key, context);
     } catch (error) {
       logger.error(`Error getting secret ${key}:`, error);
-      await this.audit.logAccess(key, 'read', context, false, error instanceof Error ? error.message : String(error));
+      await this.audit.logAccess(
+        key,
+        'read',
+        context,
+        false,
+        error instanceof Error ? error.message : String(error)
+      );
       return null;
     }
   }
@@ -112,7 +117,13 @@ export class UnifiedSecretManager extends EnvManagerService {
       return await this.storage.set(key, value, context, config);
     } catch (error) {
       logger.error(`Error setting secret ${key}:`, error);
-      await this.audit.logAccess(key, 'write', context, false, error instanceof Error ? error.message : String(error));
+      await this.audit.logAccess(
+        key,
+        'write',
+        context,
+        false,
+        error instanceof Error ? error.message : String(error)
+      );
       return false;
     }
   }
@@ -133,7 +144,13 @@ export class UnifiedSecretManager extends EnvManagerService {
       return await this.storage.delete(key, context);
     } catch (error) {
       logger.error(`Error deleting secret ${key}:`, error);
-      await this.audit.logAccess(key, 'delete', context, false, error instanceof Error ? error.message : String(error));
+      await this.audit.logAccess(
+        key,
+        'delete',
+        context,
+        false,
+        error instanceof Error ? error.message : String(error)
+      );
       return false;
     }
   }
@@ -163,7 +180,11 @@ export class UnifiedSecretManager extends EnvManagerService {
     return await this.rotation.rotateSecret(key, context);
   }
 
-  async scheduleRotation(key: string, context: SecretContext, intervalMs: number): Promise<boolean> {
+  async scheduleRotation(
+    key: string,
+    context: SecretContext,
+    intervalMs: number
+  ): Promise<boolean> {
     await this.rotation.scheduleRotation(key, context, intervalMs);
     return true;
   }
@@ -182,7 +203,10 @@ export class UnifiedSecretManager extends EnvManagerService {
   }
 
   // Versioning
-  async getSecretVersions(key: string, context: SecretContext): Promise<Array<{ id: string; createdAt: number; size: number }>> {
+  async getSecretVersions(
+    key: string,
+    context: SecretContext
+  ): Promise<Array<{ id: string; createdAt: number; size: number }>> {
     return await this.versioning.listVersions(key, context);
   }
 
@@ -192,12 +216,12 @@ export class UnifiedSecretManager extends EnvManagerService {
 
   async stop(): Promise<void> {
     logger.info('[UnifiedSecretManager] Stopping service');
-    
+
     await this.rotation.stop();
     await this.audit.stop();
-    
+
     await super.stop();
-    
+
     logger.info('[UnifiedSecretManager] Service stopped');
   }
 }
@@ -213,25 +237,31 @@ class EncryptionManager {
   constructor(private runtime: IAgentRuntime) {
     const salt = this.runtime.getSetting('ENCRYPTION_SALT') || secureCrypto.generateToken(32);
     this.encryptionPassword = this.runtime.agentId + salt;
-    
+
     if (!this.runtime.getSetting('ENCRYPTION_SALT')) {
-      logger.warn('Generated new encryption salt. Store ENCRYPTION_SALT in environment for persistence.');
+      logger.warn(
+        'Generated new encryption salt. Store ENCRYPTION_SALT in environment for persistence.'
+      );
     }
   }
 
   async encrypt(plaintext: string): Promise<string> {
-    if (!plaintext) return plaintext;
+    if (!plaintext) {
+      return plaintext;
+    }
     return await secureCrypto.encrypt(plaintext, this.encryptionPassword);
   }
 
   async decrypt(ciphertext: string): Promise<string> {
-    if (!ciphertext) return ciphertext;
-    
+    if (!ciphertext) {
+      return ciphertext;
+    }
+
     // Handle legacy format
     if (typeof ciphertext === 'object' && this.isEncrypted(ciphertext)) {
       return (ciphertext as EncryptedSecret).value || '';
     }
-    
+
     return await secureCrypto.decrypt(ciphertext, this.encryptionPassword);
   }
 
@@ -244,11 +274,11 @@ class EncryptionManager {
         return false;
       }
     }
-    
+
     if (typeof data === 'object' && data !== null) {
       return !!(data.algorithm && data.value);
     }
-    
+
     return false;
   }
 }
@@ -264,14 +294,21 @@ class StorageManager {
 
   async get(key: string, context: SecretContext): Promise<string | null> {
     switch (context.level) {
-      case 'global':
+      case 'global': {
         return await this.getGlobalSecret(key);
-      case 'world':
-        if (!context.worldId) throw new Error('World ID required');
+      }
+      case 'world': {
+        if (!context.worldId) {
+          throw new Error('World ID required');
+        }
         return await this.getWorldSecret(key, context.worldId);
-      case 'user':
-        if (!context.userId) throw new Error('User ID required');
+      }
+      case 'user': {
+        if (!context.userId) {
+          throw new Error('User ID required');
+        }
         return await this.getUserSecret(key, context.userId);
+      }
       default:
         throw new Error(`Invalid secret level: ${context.level}`);
     }
@@ -302,38 +339,52 @@ class StorageManager {
     };
 
     switch (context.level) {
-      case 'global':
+      case 'global': {
         return await this.setGlobalSecret(key, value, fullConfig);
-      case 'world':
-        if (!context.worldId) throw new Error('World ID required');
+      }
+      case 'world': {
+        if (!context.worldId) {
+          throw new Error('World ID required');
+        }
         return await this.setWorldSecret(key, value, context.worldId, fullConfig);
-      case 'user':
-        if (!context.userId) throw new Error('User ID required');
+      }
+      case 'user': {
+        if (!context.userId) {
+          throw new Error('User ID required');
+        }
         return await this.setUserSecret(key, value, context.userId, fullConfig);
+      }
       default:
         throw new Error(`Invalid secret level: ${context.level}`);
     }
   }
 
-  async list(context: SecretContext): Promise<SecretMetadata> {
+  async list(_context: SecretContext): Promise<SecretMetadata> {
     const metadata: SecretMetadata = {};
-    
+
     // Implementation would fetch and filter secrets based on context
     // Omitting values for security
-    
+
     return metadata;
   }
 
   async delete(key: string, context: SecretContext): Promise<boolean> {
     switch (context.level) {
-      case 'global':
+      case 'global': {
         return await this.deleteGlobalSecret(key);
-      case 'world':
-        if (!context.worldId) throw new Error('World ID required');
+      }
+      case 'world': {
+        if (!context.worldId) {
+          throw new Error('World ID required');
+        }
         return await this.deleteWorldSecret(key, context.worldId);
-      case 'user':
-        if (!context.userId) throw new Error('User ID required');
+      }
+      case 'user': {
+        if (!context.userId) {
+          throw new Error('User ID required');
+        }
         return await this.deleteUserSecret(key, context.userId);
+      }
       default:
         return false;
     }
@@ -347,36 +398,40 @@ class StorageManager {
   // Private implementation methods
   private async getGlobalSecret(key: string): Promise<string | null> {
     const envValue = this.runtime.getSetting(key);
-    if (envValue) return envValue;
+    if (envValue) {
+      return envValue;
+    }
 
     const characterSecrets = this.runtime.character.secrets;
     return (characterSecrets?.[key] as string) || null;
   }
 
-  private async setGlobalSecret(key: string, value: any, config: SecretConfig): Promise<boolean> {
+  private async setGlobalSecret(key: string, value: any, _config: SecretConfig): Promise<boolean> {
     this.runtime.setSetting(key, value);
-    
+
     if (!this.runtime.character.secrets) {
       this.runtime.character.secrets = {};
     }
     this.runtime.character.secrets[key] = value;
-    
+
     return true;
   }
 
   private async deleteGlobalSecret(key: string): Promise<boolean> {
     this.runtime.setSetting(key, null);
-    
+
     if (this.runtime.character.secrets?.[key]) {
       delete this.runtime.character.secrets[key];
     }
-    
+
     return true;
   }
 
   private async getWorldSecret(key: string, worldId: string): Promise<string | null> {
     const world = await this.runtime.getWorld(worldId as UUID);
-    if (!world?.metadata?.secrets?.[key]) return null;
+    if (!world?.metadata?.secrets?.[key]) {
+      return null;
+    }
 
     const secretData = world.metadata.secrets[key];
     if (typeof secretData === 'object' && secretData.encrypted) {
@@ -392,10 +447,16 @@ class StorageManager {
     config: SecretConfig
   ): Promise<boolean> {
     const world = await this.runtime.getWorld(worldId as UUID);
-    if (!world) throw new Error(`World ${worldId} not found`);
+    if (!world) {
+      throw new Error(`World ${worldId} not found`);
+    }
 
-    if (!world.metadata) world.metadata = {};
-    if (!world.metadata.secrets) world.metadata.secrets = {};
+    if (!world.metadata) {
+      world.metadata = {};
+    }
+    if (!world.metadata.secrets) {
+      world.metadata.secrets = {};
+    }
 
     const finalValue = config.encrypted ? await this.encryption.encrypt(value) : value;
 
@@ -410,7 +471,9 @@ class StorageManager {
 
   private async deleteWorldSecret(key: string, worldId: string): Promise<boolean> {
     const world = await this.runtime.getWorld(worldId as UUID);
-    if (!world?.metadata?.secrets?.[key]) return false;
+    if (!world?.metadata?.secrets?.[key]) {
+      return false;
+    }
 
     delete world.metadata.secrets[key];
     await this.runtime.updateWorld(world);
@@ -423,8 +486,10 @@ class StorageManager {
       const data = c.data as any;
       return data?.key === key && c.type === 'secret' && !data?.deleted;
     });
-    
-    if (!secretComponent) return null;
+
+    if (!secretComponent) {
+      return null;
+    }
 
     const secretData = secretComponent.data as any;
     if (secretData.metadata?.encrypted && secretData.value) {
@@ -479,8 +544,10 @@ class StorageManager {
   private async deleteUserSecret(key: string, userId: string): Promise<boolean> {
     const components = await this.runtime.getComponents(userId as UUID);
     const secretComponent = components.find((c) => c.data?.key === key && c.type === 'secret');
-    
-    if (!secretComponent) return false;
+
+    if (!secretComponent) {
+      return false;
+    }
 
     await this.runtime.updateComponent({
       ...secretComponent,
@@ -489,7 +556,7 @@ class StorageManager {
         deleted: true,
         deletedAt: Date.now(),
         value: null,
-      }
+      },
     });
 
     return true;
@@ -512,19 +579,25 @@ class AccessControlManager {
   ): Promise<boolean> {
     // Global secrets
     if (context.level === 'global') {
-      if (action === 'read') return true;
+      if (action === 'read') {
+        return true;
+      }
       return context.requesterId === this.runtime.agentId;
     }
 
     // World secrets
     if (context.level === 'world' && context.worldId) {
       const world = await this.runtime.getWorld(context.worldId as UUID);
-      if (!world) return false;
+      if (!world) {
+        return false;
+      }
 
-      const requesterRole = world.metadata?.roles?.[context.requesterId || ''] || 'NONE';
+      const requester = world.metadata?.roles?.[context.requesterId || ''] || 'NONE';
 
-      if (action === 'read') return true;
-      return requesterRole === 'OWNER' || requesterRole === 'ADMIN';
+      if (action === 'read') {
+        return true;
+      }
+      return requester === 'OWNER' || requester === 'ADMIN';
     }
 
     // User secrets
@@ -538,8 +611,8 @@ class AccessControlManager {
   async grantAccess(
     key: string,
     context: SecretContext,
-    grantee: string,
-    permissions: string[]
+    _grantee: string,
+    _permissions: string[]
   ): Promise<boolean> {
     if (!(await this.checkPermission(key, 'share', context))) {
       return false;
@@ -549,7 +622,7 @@ class AccessControlManager {
     return true;
   }
 
-  async revokeAccess(key: string, context: SecretContext, grantee: string): Promise<boolean> {
+  async revokeAccess(key: string, context: SecretContext, _grantee: string): Promise<boolean> {
     if (!(await this.checkPermission(key, 'share', context))) {
       return false;
     }
@@ -597,46 +670,62 @@ class AuditManager {
 
   async getAccessLogs(key: string, context?: SecretContext): Promise<SecretAccessLog[]> {
     return this.accessLogs.filter((log) => {
-      if (log.secretKey !== key) return false;
+      if (log.secretKey !== key) {
+        return false;
+      }
       if (context && log.context) {
-        if (context.level && log.context.level !== context.level) return false;
-        if (context.worldId && log.context.worldId !== context.worldId) return false;
-        if (context.userId && log.context.userId !== context.userId) return false;
+        if (context.level && log.context.level !== context.level) {
+          return false;
+        }
+        if (context.worldId && log.context.worldId !== context.worldId) {
+          return false;
+        }
+        if (context.userId && log.context.userId !== context.userId) {
+          return false;
+        }
       }
       return true;
     });
   }
 
   private startPersistence(): void {
-    this.persistenceInterval = setInterval(async () => {
-      await this.persistLogs();
-    }, 5 * 60 * 1000);
+    this.persistenceInterval = setInterval(
+      async () => {
+        await this.persistLogs();
+      },
+      5 * 60 * 1000
+    );
   }
 
   private async persistLogs(): Promise<void> {
-    if (this.accessLogs.length === 0) return;
+    if (this.accessLogs.length === 0) {
+      return;
+    }
 
     const recentLogs = this.accessLogs.slice(-1000);
-    
-    await this.runtime.createMemory({
-      entityId: this.runtime.agentId,
-      agentId: this.runtime.agentId,
-      roomId: this.runtime.agentId,
-      content: {
-        text: `Audit logs batch: ${recentLogs.length} entries`,
-        metadata: {
-          type: 'audit_logs',
-          logs: recentLogs,
-          timestamp: Date.now(),
+
+    await this.runtime.createMemory(
+      {
+        entityId: this.runtime.agentId,
+        agentId: this.runtime.agentId,
+        roomId: this.runtime.agentId,
+        content: {
+          text: `Audit logs batch: ${recentLogs.length} entries`,
+          metadata: {
+            type: 'audit_logs',
+            logs: recentLogs,
+            timestamp: Date.now(),
+          },
         },
       },
-    }, 'audit');
+      'audit'
+    );
   }
 
   private async archiveLogs(): Promise<void> {
-    const toArchive = this.accessLogs.slice(0, Math.floor(this.MAX_LOGS * 0.2));
+    const _toArchive = this.accessLogs.slice(0, Math.floor(this.MAX_LOGS * 0.2));
     this.accessLogs = this.accessLogs.slice(Math.floor(this.MAX_LOGS * 0.2));
-    
+
     // Archive implementation
   }
 
@@ -663,47 +752,50 @@ class VersioningManager {
   async createVersion(key: string, value: any, context: SecretContext): Promise<string> {
     const versionId = createUniqueUuid(this.runtime, `${key}-${Date.now()}`);
     const encryptedValue = await this.encryption.encrypt(String(value));
-    
-    await this.runtime.createMemory({
-      id: versionId,
-      entityId: this.runtime.agentId,
-      agentId: this.runtime.agentId,
-      roomId: this.runtime.agentId,
-      content: {
-        text: `Secret version: ${key}`,
-        metadata: {
-          type: 'secret_version',
-          version: {
-            id: versionId,
-            key,
-            value: encryptedValue,
-            context,
-            createdAt: Date.now(),
-            size: String(value).length,
+
+    await this.runtime.createMemory(
+      {
+        id: versionId,
+        entityId: this.runtime.agentId,
+        agentId: this.runtime.agentId,
+        roomId: this.runtime.agentId,
+        content: {
+          text: `Secret version: ${key}`,
+          metadata: {
+            type: 'secret_version',
+            version: {
+              id: versionId,
+              key,
+              value: encryptedValue,
+              context,
+              createdAt: Date.now(),
+              size: String(value).length,
+            },
           },
         },
       },
-    }, 'versions');
+      'versions'
+    );
 
     await this.cleanupOldVersions(key, context);
-    
+
     return versionId;
   }
 
   async listVersions(
-    key: string,
-    context: SecretContext
+    _key: string,
+    _context: SecretContext
   ): Promise<Array<{ id: string; createdAt: number; size: number }>> {
     // Implementation would fetch from memories
     return [];
   }
 
-  async rollback(key: string, versionId: string, context: SecretContext): Promise<boolean> {
+  async rollback(_key: string, _versionId: string, _context: SecretContext): Promise<boolean> {
     // Implementation would restore from version
     return false;
   }
 
-  private async cleanupOldVersions(key: string, context: SecretContext): Promise<void> {
+  private async cleanupOldVersions(_key: string, _context: SecretContext): Promise<void> {
     // Implementation would remove old versions
   }
 }
@@ -723,33 +815,29 @@ class RotationManager {
     this.startRotationTimer();
   }
 
-  async scheduleRotation(
-    key: string,
-    context: SecretContext,
-    intervalMs: number
-  ): Promise<void> {
+  async scheduleRotation(key: string, context: SecretContext, intervalMs: number): Promise<void> {
     const scheduleKey = this.getScheduleKey(key, context);
-    
+
     this.schedules.set(scheduleKey, {
       key,
       context,
       intervalMs,
       nextRotation: Date.now() + intervalMs,
     });
-    
+
     await this.persistSchedule(scheduleKey);
   }
 
   async rotateSecret(key: string, context: SecretContext): Promise<boolean> {
     // Generate new value and update
     const newValue = this.generateSecureToken(32);
-    
+
     const success = await this.storage.set(key, newValue, context);
-    
+
     if (success) {
       await this.audit.logAccess(key, 'write', context, true, 'Secret rotated');
     }
-    
+
     return success;
   }
 
@@ -765,7 +853,7 @@ class RotationManager {
 
   private async processRotations(): Promise<void> {
     const now = Date.now();
-    
+
     for (const [key, schedule] of this.schedules) {
       if (schedule.nextRotation <= now) {
         await this.rotateSecret(schedule.key, schedule.context);
@@ -778,7 +866,7 @@ class RotationManager {
     return `${context.level}:${context.worldId || ''}:${context.userId || ''}:${key}`;
   }
 
-  private async persistSchedule(scheduleKey: string): Promise<void> {
+  private async persistSchedule(_scheduleKey: string): Promise<void> {
     // Persist to memory
   }
 
@@ -807,18 +895,18 @@ class BackupManager {
   async backup(context: SecretContext): Promise<{ backupId: string; secretCount: number }> {
     const backupId = createUniqueUuid(this.runtime, `backup-${Date.now()}`);
     const secrets = await this.storage.list(context);
-    
+
     // Implementation would create backup
-    
+
     return { backupId, secretCount: Object.keys(secrets).length };
   }
 
   async restore(
     backupId: string,
     context: SecretContext,
-    overwrite: boolean = false
+    _overwrite: boolean = false
   ): Promise<{ restoredCount: number }> {
     // Implementation would restore from backup
     return { restoredCount: 0 };
   }
-} 
+}

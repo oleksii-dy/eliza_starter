@@ -320,7 +320,7 @@ export class EvaluationBridge {
    * Calculate average of numbers
    */
   private calculateAverage(numbers: number[]): number {
-    if (numbers.length === 0) return 0;
+    if (numbers.length === 0) {return 0;}
     return numbers.reduce((sum, n) => sum + n, 0) / numbers.length;
   }
 
@@ -337,9 +337,9 @@ export class EvaluationBridge {
 
     results.forEach((r, i) => {
       // Mock complexity assignment
-      if (i % 3 === 0) groups.low += r.resolved ? 1 : 0;
-      else if (i % 3 === 1) groups.medium += r.resolved ? 1 : 0;
-      else groups.high += r.resolved ? 1 : 0;
+      if (i % 3 === 0) {groups.low += r.resolved ? 1 : 0;}
+      else if (i % 3 === 1) {groups.medium += r.resolved ? 1 : 0;}
+      else {groups.high += r.resolved ? 1 : 0;}
     });
 
     return groups;

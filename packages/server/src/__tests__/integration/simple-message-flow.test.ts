@@ -4,14 +4,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { AgentServer } from '../../index';
-import type {
-  IAgentRuntime,
-  UUID,
-  Character,
-  Content,
-  Memory,
-  HandlerCallback,
-} from '@elizaos/core';
+import type { IAgentRuntime, UUID, Character, Content, Memory } from '@elizaos/core';
 import { AgentRuntime, ChannelType } from '@elizaos/core';
 import { createDatabaseAdapter } from '@elizaos/plugin-sql';
 import path from 'node:path';
@@ -96,7 +89,7 @@ describe('Simple Message Flow Test', () => {
       name: 'Simple Test Channel',
       type: ChannelType.GROUP,
       source: 'test',
-      serverId: serverId,
+      serverId,
     });
 
     // Add agent as participant to the room
@@ -111,7 +104,7 @@ describe('Simple Message Flow Test', () => {
             id: channelId,
             name: 'Simple Test Channel',
             type: ChannelType.GROUP,
-            serverId: serverId,
+            serverId,
             metadata: {},
           },
           [agent.agentId]
@@ -150,7 +143,6 @@ describe('Simple Message Flow Test', () => {
 
     // Create a message from user
     const userMessage = await agentServer.createMessage({
-      id: messageId,
       channelId,
       authorId: userId,
       content: messageText,
@@ -224,8 +216,7 @@ describe('Simple Message Flow Test', () => {
     const messageText = 'Please reply to this message';
 
     // Create a message
-    const userMessage = await agentServer.createMessage({
-      id: messageId,
+    await agentServer.createMessage({
       channelId,
       authorId: userId,
       content: messageText,
@@ -279,7 +270,7 @@ describe('Simple Message Flow Test', () => {
 
     // Test if agent runtime is properly initialized
     expect(agent).toBeDefined();
-    expect(agent.agentId).toBe('simple-agent');
+    expect(agent.agentId).toBe('simple-agent' as UUID);
     expect(agent.character).toBeDefined();
     expect(agent.character.name).toBe('Simple Agent');
 
@@ -299,7 +290,7 @@ describe('Simple Message Flow Test', () => {
     try {
       const state = await agent.composeState(testMemory);
       console.log('State composed successfully');
-      console.log('State text preview:', state.text.substring(0, 100) + '...');
+      console.log('State text preview:', `${state.text.substring(0, 100)}...`);
       expect(state).toBeDefined();
       expect(state.text).toBeTruthy();
     } catch (error) {

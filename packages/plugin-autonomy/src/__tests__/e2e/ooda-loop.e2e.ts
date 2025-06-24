@@ -346,7 +346,7 @@ export const oodaLoopE2ETests: TestCase[] = [
           for (let i = 0; i < 5; i++) {
             await runtime.createTask({
               name: `Test task ${i + 1}`,
-              description: `Task to test concurrent execution limits`,
+              description: 'Task to test concurrent execution limits',
               tags: ['TODO', 'autonomous', 'test', `priority-${(i % 3) + 1}`],
               metadata: {
                 actionName: 'EXECUTE_TASK',

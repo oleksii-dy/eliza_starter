@@ -15,7 +15,7 @@ import { applyRuntimeExtensions } from '../coreExtensions.ts';
 import {
   EventType,
   PluginManagerServiceType,
-  PluginStatus,
+  PluginStatusValues,
   type ComponentRegistration,
   type InstallProgress,
   type LoadPluginParams,
@@ -197,7 +197,7 @@ async function installFromNpm(
       message: 'Installing dependencies...',
     });
   } catch (error: any) {
-    logger.error(`Failed to install npm package:`, error);
+    logger.error('Failed to install npm package:', error);
     throw error;
   }
 }
@@ -215,7 +215,7 @@ async function installFromGit(
     const { execa } = await import('execa');
 
     // Clone the repository to a temporary directory
-    const tempDir = path.join(targetDir, '..', 'temp-' + Date.now());
+    const tempDir = path.join(targetDir, '..', `temp-${Date.now()}`);
     await fs.ensureDir(tempDir);
 
     try {
@@ -269,7 +269,7 @@ async function installFromGit(
       await fs.remove(tempDir);
     }
   } catch (error: any) {
-    logger.error(`Failed to install git repository:`, error);
+    logger.error('Failed to install git repository:', error);
     throw error;
   }
 }
@@ -488,7 +488,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
       const state: PluginState = {
         id: pluginId,
         name: plugin.name,
-        status: PluginStatus.LOADED,
+        status: PluginStatusValues.LOADED,
         plugin,
         missingEnvVars: [],
         buildLog: [],
@@ -572,7 +572,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
   }
 
   getLoadedPlugins(): PluginState[] {
-    return this.getAllPlugins().filter((p) => p.status === PluginStatus.LOADED);
+    return this.getAllPlugins().filter((p) => p.status === PluginStatusValues.LOADED);
   }
 
   updatePluginState(id: string, update: Partial<PluginState>): void {
@@ -589,7 +589,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
       throw new Error(`Plugin ${pluginId} not found in registry`);
     }
 
-    if (pluginState.status === PluginStatus.LOADED && !force) {
+    if (pluginState.status === PluginStatusValues.LOADED && !force) {
       // Only log in non-test environments
       if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
         logger.info(`[PluginManagerService] Plugin ${pluginState.name} already loaded`);
@@ -598,8 +598,8 @@ export class PluginManagerService extends Service implements PluginRegistry {
     }
 
     if (
-      pluginState.status !== PluginStatus.READY &&
-      pluginState.status !== PluginStatus.UNLOADED &&
+      pluginState.status !== PluginStatusValues.READY &&
+      pluginState.status !== PluginStatusValues.UNLOADED &&
       !force
     ) {
       throw new Error(
@@ -633,7 +633,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
 
       // Update state
       this.updatePluginState(pluginId, {
-        status: PluginStatus.LOADED,
+        status: PluginStatusValues.LOADED,
         loadedAt: Date.now(),
         error: undefined,
       });
@@ -650,7 +650,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
       logger.error(`[PluginManagerService] Failed to load plugin ${pluginState.name}:`, errorMsg);
 
       this.updatePluginState(pluginId, {
-        status: PluginStatus.ERROR,
+        status: PluginStatusValues.ERROR,
         error: errorMsg,
       });
 
@@ -671,7 +671,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
       throw new Error(`Plugin ${pluginId} not found in registry`);
     }
 
-    if (pluginState.status !== PluginStatus.LOADED) {
+    if (pluginState.status !== PluginStatusValues.LOADED) {
       // Only log in non-test environments
       if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
         logger.info(`[PluginManagerService] Plugin ${pluginState.name} is not loaded`);
@@ -700,7 +700,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
 
       // Update state
       this.updatePluginState(pluginId, {
-        status: PluginStatus.UNLOADED,
+        status: PluginStatusValues.UNLOADED,
         unloadedAt: Date.now(),
       });
 
@@ -716,7 +716,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
       logger.error(`[PluginManagerService] Failed to unload plugin ${pluginState.name}:`, errorMsg);
 
       this.updatePluginState(pluginId, {
-        status: PluginStatus.ERROR,
+        status: PluginStatusValues.ERROR,
         error: errorMsg,
       });
 
@@ -734,7 +734,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
     const state: PluginState = {
       id: pluginId,
       name: plugin.name,
-      status: PluginStatus.READY,
+      status: PluginStatusValues.READY,
       plugin,
       missingEnvVars: [],
       buildLog: [],
@@ -1345,7 +1345,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
   // from CapabilityAnalysisService
   public async analyzeCurrentCapabilities(): Promise<CapabilityProfile> {
     const cached = this._getCapabilityCache();
-    if (cached) return cached;
+    if (cached) {return cached;}
 
     // Only log in non-test environments
     if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
@@ -1402,7 +1402,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
       userQuery,
     });
     const cached = this._getFromModelCache(cacheKey);
-    if (cached) return cached;
+    if (cached) {return cached;}
 
     const prompt = this._buildEvaluationPrompt(plugins, context, userQuery);
     const response = (await this.runtime.useModel(ModelType.TEXT_LARGE, {
@@ -1420,7 +1420,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
     agentCapabilities: string[],
     recentTasks: string[]
   ): Promise<RankedPlugin[]> {
-    const prompt = `You are an expert at analyzing plugin ecosystems...`; // full prompt
+    const prompt = 'You are an expert at analyzing plugin ecosystems...'; // full prompt
     const response = (await this.runtime.useModel(ModelType.TEXT_LARGE, {
       prompt,
       temperature: 0.4,
@@ -1434,7 +1434,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
     context: AgentContext,
     userQuery?: string
   ): string {
-    let prompt = `You are an expert at evaluating plugin relevance...`; // full prompt
+    const prompt = 'You are an expert at evaluating plugin relevance...'; // full prompt
     return prompt;
   }
 
@@ -1472,17 +1472,17 @@ export class PluginManagerService extends Service implements PluginRegistry {
       // Exact name match gets highest score
       if (pluginNameLower === queryLower) {
         score += 10;
-        matchReasons.push(`Exact name match`);
+        matchReasons.push('Exact name match');
       }
       // Name contains the full query
       else if (pluginNameLower.includes(queryLower)) {
         score += 5;
-        matchReasons.push(`Name contains query`);
+        matchReasons.push('Name contains query');
       }
       // Name contains all keywords
       else if (keywords.every((kw) => pluginNameLower.includes(kw))) {
         score += 3;
-        matchReasons.push(`Name contains all keywords`);
+        matchReasons.push('Name contains all keywords');
       }
 
       // Check individual keywords
@@ -1499,7 +1499,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
       // Check if description contains the full query
       if (plugin.description?.toLowerCase().includes(queryLower)) {
         score += 2;
-        matchReasons.push(`Description contains query`);
+        matchReasons.push('Description contains query');
       }
 
       if (score > 0) {
@@ -1567,7 +1567,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
       const pluginData = new Map<string, any>();
       for (const [name, entry] of Object.entries(registry)) {
         pluginData.set(name, {
-          name: name,
+          name,
           description: entry.description || 'No description available',
           tags: this._extractTagsFromDescription(entry.description || ''),
           repository: entry.repository,

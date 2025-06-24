@@ -28,9 +28,9 @@ const ctxKnowledgeEnabled =
 
 // Log settings at startup
 if (ctxKnowledgeEnabled) {
-  logger.info(`Document processor starting with Contextual Knowledge ENABLED`);
+  logger.info('Document processor starting with Contextual Knowledge ENABLED');
 } else {
-  logger.info(`Document processor starting with Contextual Knowledge DISABLED`);
+  logger.info('Document processor starting with Contextual Knowledge DISABLED');
 }
 
 // Default provider rate limits

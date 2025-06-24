@@ -8,7 +8,7 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { createSearchProvider } from '../src/integrations/factory';
 
 class MockRuntime {
@@ -33,11 +33,11 @@ async function validateTavilyConfig() {
 
   // Test provider selection
   console.log('🎯 Provider Selection Test:');
-  
+
   try {
     const webProvider = createSearchProvider('web', runtime);
     console.log(`✅ Web provider created: ${webProvider.constructor.name}`);
-    
+
     if (webProvider.constructor.name === 'TavilySearchProvider') {
       console.log('🎉 SUCCESS: Tavily is being used as the primary web search provider!');
     } else {
@@ -54,11 +54,11 @@ async function validateTavilyConfig() {
     try {
       const tavilyProvider = createSearchProvider('tavily', runtime);
       console.log('✅ Tavily provider created successfully');
-      
+
       // Test a simple search (commented out to avoid API usage during config test)
       // const results = await tavilyProvider.search('test query', 1);
       // console.log(`✅ Test search completed: ${results.length} results`);
-      
+
     } catch (error) {
       console.error(`❌ Tavily provider creation failed: ${error.message}`);
     }
@@ -81,7 +81,7 @@ async function validateTavilyConfig() {
   console.log('   Domain Blacklisting: ✅ Enabled');
   console.log('   Intelligent Source Selection: ✅ Enabled');
   console.log('   Benchmark Infrastructure: ✅ Ready');
-  
+
   if (process.env.TAVILY_API_KEY) {
     console.log('\n🎉 CONFIGURATION COMPLETE: Ready for production benchmarking with Tavily!');
   } else {

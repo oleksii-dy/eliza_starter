@@ -4,7 +4,7 @@ const { createIsolatedTestDatabase } = require('./src/__tests__/test-helpers.ts'
 async function debug() {
   console.log('Creating test database...');
   const { adapter, cleanup } = await createIsolatedTestDatabase('debug-test');
-  
+
   try {
     console.log('Creating test entity...');
     const testEntity = {
@@ -13,15 +13,15 @@ async function debug() {
       metadata: { test: true },
       agentId: adapter.agentId
     };
-    
+
     const created = await adapter.createEntities([testEntity]);
     console.log('Create result:', created);
-    
+
     console.log('Retrieving entity...');
     const retrieved = await adapter.getEntitiesByIds([testEntity.id]);
     console.log('Retrieved result:', retrieved);
     console.log('Retrieved length:', retrieved?.length);
-    
+
   } catch (error) {
     console.error('Error:', error);
   } finally {

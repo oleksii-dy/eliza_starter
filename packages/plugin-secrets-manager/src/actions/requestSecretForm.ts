@@ -1,15 +1,6 @@
-import {
-  type Action,
-  type IAgentRuntime,
-  type Memory,
-  type HandlerCallback,
-  logger,
-  elizaLogger,
-  parseJSONObjectFromText,
-} from '@elizaos/core';
-import { SecretFormService } from '../services/secret-form-service';
-import type { SecretFormRequest, FormSubmission } from '../types/form';
+import { SecretForm } from '../services/secret-form-service';
 import type { SecretContext, SecretConfig } from '../types';
+import type { SecretFormRequest, FormSubmission } from '../types/form';
 
 interface RequestSecretFormParams {
   secrets: Array<{
@@ -28,15 +19,17 @@ export const requestSecretFormAction: Action = {
   name: 'REQUEST_SECRET_FORM',
   description: 'Create a secure web form for collecting secrets from users',
 
-  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
-    const hasService = !!runtime.getService('SECRET_FORMS');
-    if (!hasService) {
+  validate: async (_runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+    const has = !!runtime.get('SECRET_FORMS');
+    if (!has) {
       logger.warn('[RequestSecretForm] Secret form service not available');
       return false;
     }
 
     const text = message.content.text?.toLowerCase();
-    if (!text) return false;
+    if (!text) {
+      return false;
+    }
     const keywords = [
       'request secret',
       'need information',
@@ -54,14 +47,14 @@ export const requestSecretFormAction: Action = {
     message: Memory,
     state: any,
     options: any,
-    callback?: HandlerCallback
+    callback?: Callback
   ): Promise<boolean> => {
     elizaLogger.info('[RequestSecretForm] Starting secret form request');
 
-    const formService = runtime.getService('SECRET_FORMS') as SecretFormService;
-    if (!formService) {
+    const form = runtime.get('SECRET_FORMS') as SecretForm;
+    if (!form) {
       if (callback) {
-        callback({
+        void callback({
           text: 'Secret form service is not available.',
           error: true,
         });
@@ -74,7 +67,7 @@ export const requestSecretFormAction: Action = {
       const messageText = message.content.text;
       if (!messageText) {
         if (callback) {
-          callback({
+          void callback({
             text: 'Message text is required for secret form request',
             error: true,
           });
@@ -88,7 +81,7 @@ export const requestSecretFormAction: Action = {
 
       if (!params.secrets || params.secrets.length === 0) {
         if (callback) {
-          callback({
+          void callback({
             text: 'Please specify what secrets you need to collect.',
             error: true,
           });
@@ -135,11 +128,7 @@ export const requestSecretFormAction: Action = {
       };
 
       // Create the form
-      const { url, sessionId } = await formService.createSecretForm(
-        request,
-        context,
-        submissionCallback
-      );
+      const { url, sessionId } = await form.createSecretForm(request, context, submissionCallback);
 
       elizaLogger.info('[RequestSecretForm] Form created', { url, sessionId });
 
@@ -147,7 +136,7 @@ export const requestSecretFormAction: Action = {
       const responseText = generateResponseMessage(url, params.secrets.length, request.expiresIn!);
 
       if (callback) {
-        callback({
+        void callback({
           text: responseText,
           data: {
             formUrl: url,
@@ -162,7 +151,7 @@ export const requestSecretFormAction: Action = {
       elizaLogger.error('[RequestSecretForm] Error:', error);
 
       if (callback) {
-        callback({
+        void callback({
           text: `Error creating secret form: ${error instanceof Error ? error.message : String(error)}`,
           error: true,
         });
@@ -256,7 +245,7 @@ function extractRequestParams(text: string): RequestSecretFormParams {
 
   // Check for service-specific patterns when API keys are mentioned
   const hasApiKeys = /(?:api\s*)?keys?/gi.test(text);
-  
+
   if (hasApiKeys) {
     // Check for specific services mentioned
     if (/openai/gi.test(text)) {
@@ -267,7 +256,7 @@ function extractRequestParams(text: string): RequestSecretFormParams {
         required: true,
       });
     }
-    
+
     if (/anthropic/gi.test(text)) {
       params.secrets.push({
         key: 'ANTHROPIC_API_KEY',
@@ -276,7 +265,7 @@ function extractRequestParams(text: string): RequestSecretFormParams {
         required: true,
       });
     }
-    
+
     if (/groq/gi.test(text)) {
       params.secrets.push({
         key: 'GROQ_API_KEY',
@@ -286,16 +275,16 @@ function extractRequestParams(text: string): RequestSecretFormParams {
       });
     }
   }
-  
+
   // Then check for other patterns (excluding generic API key if specific services found)
-  const hasSpecificApiKeys = params.secrets.some(s => s.type === 'api_key');
-  
+  const hasSpecificApiKeys = params.secrets.some((s) => s.type === 'api_key');
+
   for (const secretPattern of secretPatterns) {
     // Skip generic API_KEY pattern if we already found specific API keys
     if (secretPattern.key === 'API_KEY' && hasSpecificApiKeys) {
       continue;
     }
-    
+
     if (secretPattern.pattern.test(text)) {
       const exists = params.secrets.some((s) => s.key === secretPattern.key);
       if (!exists) {
@@ -327,7 +316,7 @@ function extractRequestParams(text: string): RequestSecretFormParams {
   // Extract expiration time if mentioned
   const timeMatch = text.match(/(\d+)\s*(minutes?|hours?)/i);
   if (timeMatch) {
-    const amount = parseInt(timeMatch[1]);
+    const amount = parseInt(timeMatch[1], 10);
     const unit = timeMatch[2].toLowerCase();
     params.expiresIn = unit.includes('hour') ? amount * 60 * 60 * 1000 : amount * 60 * 1000;
   }
@@ -344,7 +333,7 @@ function generateResponseMessage(url: string, secretCount: number, expiresIn: nu
     `I've created a secure form to collect your ${secretText}. Please visit the following link to provide the information:\n\n` +
     `🔒 ${url}\n\n` +
     `This form will expire in ${expirationMinutes} minutes and can only be submitted once. ` +
-    `Your information will be encrypted and stored securely.\n\n` +
-    `After submission, the form will automatically close and your data will be cleared from the browser.`
+    'Your information will be encrypted and stored securely.\n\n' +
+    'After submission, the form will automatically close and your data will be cleared from the browser.'
   );
 }

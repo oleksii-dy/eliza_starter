@@ -7,7 +7,7 @@
 
 // Simulate the createUniqueUuid function since we can't import from @elizaos/core in a standalone demo
 function createUniqueUuid(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
@@ -22,7 +22,7 @@ class MockRuntime {
     bio: ['I am an AI-powered humanoid robot with 24 degrees of freedom and visual perception capabilities'],
     system: 'You are controlling an AiNex humanoid robot. You can see through my camera, control my joints, and learn new motions through teaching.'
   };
-  
+
   logger = {
     info: (msg: string, data?: any) => console.log(`[INFO] ${msg}`, data || ''),
     error: (msg: string, data?: any) => console.error(`[ERROR] ${msg}`, data || ''),
@@ -41,7 +41,7 @@ class MockRuntime {
   }
 
   services = new Map();
-  
+
   getService(name: string) {
     return this.services.get(name);
   }
@@ -99,7 +99,7 @@ async function runScenario(title: string, interactions: Array<{user: string, act
   console.log(`\n${'═'.repeat(60)}`);
   console.log(`📋 ${title}`);
   console.log(`${'═'.repeat(60)}\n`);
-  
+
   for (const interaction of interactions) {
     console.log(`👤 User: "${interaction.user}"`);
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -184,8 +184,8 @@ async function main() {
         console.log('🤖 Robot: Checking system status...');
         console.log(`   🔋 Battery: ${robotState.battery}%`);
         console.log(`   🌡️ Temperature: ${robotState.temperature}°C`);
-        console.log(`   📊 IMU Status: Stable (upright orientation)`);
-        console.log(`   ⚙️ All servos: Operational`);
+        console.log('   📊 IMU Status: Stable (upright orientation)');
+        console.log('   ⚙️ All servos: Operational');
       }
     }
   ]);
@@ -339,4 +339,4 @@ async function main() {
 main().catch(console.error);
 
 // Export to make this a module
-export {}; 
+export {};

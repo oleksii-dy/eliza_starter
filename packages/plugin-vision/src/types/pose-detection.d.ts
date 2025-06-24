@@ -34,4 +34,4 @@ declare module '@tensorflow-models/pose-detection' {
     model: SupportedModels,
     config?: PosenetModelConfig | any
   ): Promise<PoseDetector>;
-} 
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach, afterEach  } from 'bun:test';
 import { render, screen, cleanup, waitFor, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { io } from 'socket.io-client';
@@ -7,9 +7,14 @@ import OODAMonitor from '../../ui/OODAMonitor';
 import { OODAPhase, type OODAContext, type LoopMetrics } from '../../types';
 import { mockSocket } from '../setup';
 
+// Mock socket.io-client
+mock.module('socket.io-client', () => ({
+  io: mock(() => mockSocket),
+}));
+
 // Mock the types module
-vi.mock('../../types', async () => {
-  const actual = await vi.importActual('../../types');
+mock.module('../../types', async () => {
+  const actual = await import('../../types');
   return {
     ...actual,
     OODAPhase: {
@@ -28,7 +33,7 @@ describe('OODAMonitor Component', () => {
 
   beforeEach(() => {
     user = userEvent.setup();
-    vi.clearAllMocks();
+    mock.restore();
     // Reset mock socket state
     mockSocket.connected = false;
     (mockSocket.on as any).mockClear();
@@ -45,7 +50,7 @@ describe('OODAMonitor Component', () => {
     const connectHandler = (mockSocket.on as any).mock.calls.find(
       (call: any[]) => call[0] === 'connect'
     )[1];
-    
+
     await act(async () => {
       connectHandler();
     });
@@ -53,7 +58,7 @@ describe('OODAMonitor Component', () => {
     const contextHandler = (mockSocket.on as any).mock.calls.find(
       (call: any[]) => call[0] === 'ooda:context'
     )[1];
-    
+
     await act(async () => {
       contextHandler(context);
     });
@@ -64,7 +69,7 @@ describe('OODAMonitor Component', () => {
     const connectHandler = (mockSocket.on as any).mock.calls.find(
       (call: any[]) => call[0] === 'connect'
     )[1];
-    
+
     await act(async () => {
       connectHandler();
     });
@@ -73,26 +78,26 @@ describe('OODAMonitor Component', () => {
     const contextHandler = (mockSocket.on as any).mock.calls.find(
       (call: any[]) => call[0] === 'ooda:context'
     )[1];
-    
+
     await act(async () => {
       contextHandler({
         runId: 'test-metrics-run',
         phase: OODAPhase.ACTING,
         startTime: Date.now() - 10000,
         endTime: null,
-        observations: []
-        orientation: { currentGoals: [] strategies: [] worldModel: {} },
-        decisions: []
-        actions: []
-        reflections: []
-        errors: []
+        observations: [],
+        orientation: { currentGoals: [], strategies: [], worldModel: {} },
+        decisions: [],
+        actions: [],
+        reflections: [],
+        errors: [],
       });
     });
 
     const metricsHandler = (mockSocket.on as any).mock.calls.find(
       (call: any[]) => call[0] === 'ooda:metrics'
     )[1];
-    
+
     await act(async () => {
       metricsHandler(metrics);
     });
@@ -130,7 +135,7 @@ describe('OODAMonitor Component', () => {
   describe('WebSocket Connection Management', () => {
     it('should set up socket event listeners on mount', () => {
       render(<OODAMonitor />);
-      
+
       expect(mockSocket.on).toHaveBeenCalledWith('connect', expect.any(Function));
       expect(mockSocket.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
       expect(mockSocket.on).toHaveBeenCalledWith('connect_error', expect.any(Function));
@@ -140,12 +145,12 @@ describe('OODAMonitor Component', () => {
 
     it('should emit initial requests on connection', async () => {
       render(<OODAMonitor />);
-      
+
       // Simulate connection
       const connectHandler = (mockSocket.on as any).mock.calls.find(
         (call: any[]) => call[0] === 'connect'
       )[1];
-      
+
       await act(async () => {
         connectHandler();
       });
@@ -158,11 +163,11 @@ describe('OODAMonitor Component', () => {
 
     it('should show connected state when socket connects', async () => {
       render(<OODAMonitor />);
-      
+
       const connectHandler = (mockSocket.on as any).mock.calls.find(
         (call: any[]) => call[0] === 'connect'
       )[1];
-      
+
       await act(async () => {
         connectHandler();
       });
@@ -174,11 +179,11 @@ describe('OODAMonitor Component', () => {
 
     it('should handle connection errors', async () => {
       render(<OODAMonitor />);
-      
+
       const errorHandler = (mockSocket.on as any).mock.calls.find(
         (call: any[]) => call[0] === 'connect_error'
       )[1];
-      
+
       await act(async () => {
         errorHandler(new Error('Connection failed'));
       });
@@ -190,7 +195,7 @@ describe('OODAMonitor Component', () => {
 
     it('should handle disconnection', async () => {
       render(<OODAMonitor />);
-      
+
       // First connect
       const connectHandler = (mockSocket.on as any).mock.calls.find(
         (call: any[]) => call[0] === 'connect'
@@ -203,7 +208,7 @@ describe('OODAMonitor Component', () => {
       const disconnectHandler = (mockSocket.on as any).mock.calls.find(
         (call: any[]) => call[0] === 'disconnect'
       )[1];
-      
+
       await act(async () => {
         disconnectHandler();
       });
@@ -221,12 +226,12 @@ describe('OODAMonitor Component', () => {
 
     it('should clear error state on successful connection', async () => {
       render(<OODAMonitor />);
-      
+
       // Simulate error
       const errorHandler = (mockSocket.on as any).mock.calls.find(
         (call: any[]) => call[0] === 'connect_error'
       )[1];
-      
+
       await act(async () => {
         errorHandler(new Error('Connection failed'));
       });
@@ -239,7 +244,7 @@ describe('OODAMonitor Component', () => {
       const connectHandler = (mockSocket.on as any).mock.calls.find(
         (call: any[]) => call[0] === 'connect'
       )[1];
-      
+
       await act(async () => {
         connectHandler();
       });
@@ -258,19 +263,19 @@ describe('OODAMonitor Component', () => {
       endTime: null,
       observations: [],
       orientation: {
-        currentGoals: []
-        strategies: []
+        currentGoals: [],
+        strategies: [],
         worldModel: {},
       },
-      decisions: []
-      actions: []
-      reflections: []
-      errors: []
+      decisions: [],
+      actions: [],
+      reflections: [],
+      errors: [],
     };
 
     it('should display run ID when context received', async () => {
       render(<OODAMonitor />);
-      
+
       await connectAndSendContext(mockContext);
 
       await waitFor(() => {
@@ -280,11 +285,11 @@ describe('OODAMonitor Component', () => {
 
     it('should show waiting message when connected but no context', async () => {
       render(<OODAMonitor />);
-      
+
       const connectHandler = (mockSocket.on as any).mock.calls.find(
         (call: any[]) => call[0] === 'connect'
       )[1];
-      
+
       await act(async () => {
         connectHandler();
       });
@@ -312,16 +317,16 @@ describe('OODAMonitor Component', () => {
           phase,
           startTime: Date.now(),
           endTime: null,
-          observations: []
-          orientation: { currentGoals: [] strategies: [] worldModel: {} },
-          decisions: []
-          actions: []
-          reflections: []
-          errors: []
+          observations: [],
+          orientation: { currentGoals: [], strategies: [], worldModel: {} },
+          decisions: [],
+          actions: [],
+          reflections: [],
+          errors: [],
         };
 
         render(<OODAMonitor />);
-        
+
         await connectAndSendContext(contextWithPhase);
 
         await waitFor(() => {
@@ -343,7 +348,7 @@ describe('OODAMonitor Component', () => {
 
     it('should display all metrics when received', async () => {
       render(<OODAMonitor />);
-      
+
       await connectAndSendMetrics(mockMetrics);
 
       await waitFor(() => {
@@ -358,7 +363,7 @@ describe('OODAMonitor Component', () => {
 
     it('should format duration correctly for milliseconds', async () => {
       render(<OODAMonitor />);
-      
+
       await connectAndSendMetrics({ ...mockMetrics, cycleTime: 500 });
 
       await waitFor(() => {
@@ -368,7 +373,7 @@ describe('OODAMonitor Component', () => {
 
     it('should format duration correctly for minutes', async () => {
       render(<OODAMonitor />);
-      
+
       await connectAndSendMetrics({ ...mockMetrics, cycleTime: 65000 });
 
       await waitFor(() => {
@@ -408,15 +413,15 @@ describe('OODAMonitor Component', () => {
         strategies: [],
         worldModel: {},
       },
-      decisions: []
-      actions: []
-      reflections: []
-      errors: []
+      decisions: [],
+      actions: [],
+      reflections: [],
+      errors: [],
     };
 
     it('should display goals with descriptions and priorities', async () => {
       render(<OODAMonitor />);
-      
+
       await connectAndSendContext(mockContextWithGoals);
 
       await waitFor(() => {
@@ -445,19 +450,19 @@ describe('OODAMonitor Component', () => {
         },
       ],
       orientation: {
-        currentGoals: []
-        strategies: []
+        currentGoals: [],
+        strategies: [],
         worldModel: {},
       },
-      decisions: []
-      actions: []
-      reflections: []
-      errors: []
+      decisions: [],
+      actions: [],
+      reflections: [],
+      errors: [],
     };
 
     it('should display recent observations', async () => {
       render(<OODAMonitor />);
-      
+
       await connectAndSendContext(mockContextWithObservations);
 
       await waitFor(() => {
@@ -476,8 +481,8 @@ describe('OODAMonitor Component', () => {
       endTime: null,
       observations: [],
       orientation: {
-        currentGoals: []
-        strategies: []
+        currentGoals: [],
+        strategies: [],
         worldModel: {},
       },
       decisions: [],
@@ -492,13 +497,13 @@ describe('OODAMonitor Component', () => {
           result: { success: true },
         },
       ],
-      reflections: []
-      errors: []
+      reflections: [],
+      errors: [],
     };
 
     it('should display recent actions with status', async () => {
       render(<OODAMonitor />);
-      
+
       await connectAndSendContext(mockContextWithActions);
 
       await waitFor(() => {
@@ -517,13 +522,13 @@ describe('OODAMonitor Component', () => {
       endTime: null,
       observations: [],
       orientation: {
-        currentGoals: []
-        strategies: []
+        currentGoals: [],
+        strategies: [],
         worldModel: {},
       },
-      decisions: []
-      actions: []
-      reflections: []
+      decisions: [],
+      actions: [],
+      reflections: [],
       errors: [
         {
           message: 'Test error occurred',
@@ -535,7 +540,7 @@ describe('OODAMonitor Component', () => {
 
     it('should display errors when present', async () => {
       render(<OODAMonitor />);
-      
+
       await connectAndSendContext(mockContextWithErrors);
 
       await waitFor(() => {
@@ -550,16 +555,16 @@ describe('OODAMonitor Component', () => {
         phase: OODAPhase.ACTING,
         startTime: Date.now() - 10000,
         endTime: null,
-        observations: []
-        orientation: { currentGoals: [] strategies: [] worldModel: {} },
-        decisions: []
-        actions: []
-        reflections: []
-        errors: []
+        observations: [],
+        orientation: { currentGoals: [], strategies: [], worldModel: {} },
+        decisions: [],
+        actions: [],
+        reflections: [],
+        errors: [],
       };
 
       render(<OODAMonitor />);
-      
+
       await connectAndSendContext(contextWithoutErrors);
 
       await waitFor(() => {
@@ -571,28 +576,28 @@ describe('OODAMonitor Component', () => {
   describe('Component State Management', () => {
     it('should handle multiple rapid context updates', async () => {
       render(<OODAMonitor />);
-      
+
       const contexts = [
         { runId: 'run-1', phase: OODAPhase.OBSERVING },
         { runId: 'run-2', phase: OODAPhase.ORIENTING },
         { runId: 'run-3', phase: OODAPhase.DECIDING },
-      ].map(ctx => ({
+      ].map((ctx) => ({
         ...ctx,
         startTime: Date.now(),
         endTime: null,
-        observations: []
-        orientation: { currentGoals: [] strategies: [] worldModel: {} },
-        decisions: []
-        actions: []
-        reflections: []
-        errors: []
+        observations: [],
+        orientation: { currentGoals: [], strategies: [], worldModel: {} },
+        decisions: [],
+        actions: [],
+        reflections: [],
+        errors: [],
       }));
 
       // Connect first
       const connectHandler = (mockSocket.on as any).mock.calls.find(
         (call: any[]) => call[0] === 'connect'
       )[1];
-      
+
       await act(async () => {
         connectHandler();
       });
@@ -618,17 +623,17 @@ describe('OODAMonitor Component', () => {
   describe('Accessibility', () => {
     it('should have proper heading structure', () => {
       render(<OODAMonitor />);
-      
+
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('OODA Loop Monitor');
     });
 
     it('should show proper connection status', async () => {
       render(<OODAMonitor />);
-      
+
       const connectHandler = (mockSocket.on as any).mock.calls.find(
         (call: any[]) => call[0] === 'connect'
       )[1];
-      
+
       await act(async () => {
         connectHandler();
       });

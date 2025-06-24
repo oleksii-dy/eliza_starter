@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, mock } from 'bun:test';
 import {
   StagehandError,
   BrowserNavigationError,
@@ -141,7 +141,7 @@ describe('Error Classes', () => {
 
 describe('handleBrowserError', () => {
   it('should handle StagehandError', () => {
-    const callback = vi.fn();
+    const callback = mock();
     const error = new BrowserNavigationError('https://example.com');
 
     handleBrowserError(error, callback);
@@ -158,7 +158,7 @@ describe('handleBrowserError', () => {
   });
 
   it('should convert timeout errors', () => {
-    const callback = vi.fn();
+    const callback = mock();
     const error = new Error('Operation timeout after 5000ms');
 
     handleBrowserError(error, callback, 'load page');
@@ -174,7 +174,7 @@ describe('handleBrowserError', () => {
   });
 
   it('should convert navigation errors', () => {
-    const callback = vi.fn();
+    const callback = mock();
     const error = new Error('Failed to navigate to page');
 
     handleBrowserError(error, callback);
@@ -189,7 +189,7 @@ describe('handleBrowserError', () => {
   });
 
   it('should handle generic errors', () => {
-    const callback = vi.fn();
+    const callback = mock();
     const error = new Error('Something went wrong');
 
     handleBrowserError(error, callback, 'perform action');
@@ -207,7 +207,7 @@ describe('handleBrowserError', () => {
   });
 
   it('should handle non-Error objects', () => {
-    const callback = vi.fn();
+    const callback = mock();
     const error = 'String error';
 
     handleBrowserError(error, callback, 'do something');
@@ -224,7 +224,7 @@ describe('handleBrowserError', () => {
   });
 
   it('should use default action when not provided', () => {
-    const callback = vi.fn();
+    const callback = mock();
     const error = new Error('Test error');
 
     handleBrowserError(error, callback);

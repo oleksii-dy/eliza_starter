@@ -41,7 +41,7 @@
   ],
   "dependencies": {
     "@browserbasehq/stagehand": "^1.7.0",
-    "@elizaos/core": "^1.0.0",
+    "@elizaos/core": "workspace:*",
     "@elizaos/plugin-anthropic": "^1.0.0",
     "@elizaos/plugin-discord": "github:elizaos-plugins/plugin-discord#v1.0.10",
     "@elizaos/plugin-knowledge": "1.0.4",
@@ -58,16 +58,15 @@
     "dotenv": "16.4.5",
     "prettier": "3.5.3",
     "tsup": "8.5.0",
-    "typescript": "5.8.2",
-    "vitest": "3.1.4",
-    "@vitest/coverage-v8": "^2.0.5"
+    "typescript": "5.8.3"
   },
   "scripts": {
     "start": "elizaos start",
     "dev": "elizaos dev",
     "build": "tsup",
-    "lint": "prettier --write ./src",
-    "test:component": "npx vitest run --coverage",
+    "lint": "eslint . --fix && prettier --write ./src",
+    "lint:check": "eslint . && prettier --check ./src",
+    "test:component": "bun test --coverage",
     "test:e2e": "elizaos test",
     "test": "elizaos test",
     "publish": "elizaos publish",

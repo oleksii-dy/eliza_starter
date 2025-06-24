@@ -1,11 +1,5 @@
-import {
-  type IAgentRuntime,
-  elizaLogger,
-} from '@elizaos/core';
-import {
-  type TrainingConfig,
-  type CloudInstance,
-} from '../types.js';
+import { type IAgentRuntime, elizaLogger } from '@elizaos/core';
+import { type TrainingConfig, type CloudInstance } from '../types.js';
 import { spawn } from 'child_process';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -418,7 +412,7 @@ echo "- Bridge WebSocket: ws://$(curl -s ifconfig.me):8765"
     elizaLogger.info(`Deploying training to ${config.deploymentConfig.provider}`);
 
     const instanceId = `eliza-training-${Date.now()}`;
-    
+
     const instance: CloudInstance = {
       id: instanceId,
       provider: config.deploymentConfig.provider,
@@ -452,11 +446,13 @@ echo "- Bridge WebSocket: ws://$(curl -s ifconfig.me):8765"
 
       instance.status = 'running';
       elizaLogger.info(`Training deployed successfully: ${instanceId}`);
-      
+
       return instance;
     } catch (error) {
       instance.status = 'terminated';
-      elizaLogger.error(`Error deploying training: ${error instanceof Error ? error.message : String(error)}`);
+      elizaLogger.error(
+        `Error deploying training: ${error instanceof Error ? error.message : String(error)}`
+      );
       throw error;
     }
   }
@@ -485,22 +481,19 @@ echo "- Bridge WebSocket: ws://$(curl -s ifconfig.me):8765"
     const amiId = this.runtime.getSetting('AWS_AMI_ID') as string;
 
     if (!keyName || !securityGroup || !subnetId || !amiId) {
-      throw new Error('Missing AWS configuration: AWS_KEY_NAME, AWS_SECURITY_GROUP, AWS_SUBNET_ID, AWS_AMI_ID');
+      throw new Error(
+        'Missing AWS configuration: AWS_KEY_NAME, AWS_SECURITY_GROUP, AWS_SUBNET_ID, AWS_AMI_ID'
+      );
     }
 
-    const args = [
-      config.deploymentConfig!.instanceType,
-      keyName,
-      securityGroup,
-      subnetId,
-      amiId,
-    ];
+    const args = [config.deploymentConfig!.instanceType, keyName, securityGroup, subnetId, amiId];
 
     await this.runDeploymentScript('deploy-aws.sh', args);
   }
 
   private async deployToAzure(instance: CloudInstance, config: TrainingConfig): Promise<void> {
-    const resourceGroup = this.runtime.getSetting('AZURE_RESOURCE_GROUP') as string || 'eliza-training-rg';
+    const resourceGroup =
+      (this.runtime.getSetting('AZURE_RESOURCE_GROUP') as string) || 'eliza-training-rg';
 
     const args = [
       resourceGroup,

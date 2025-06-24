@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { mock  } from 'bun:test';
 import type { IAgentRuntime, Memory, State, UUID, Provider, Action, Service } from '@elizaos/core';
 
 /**
@@ -24,7 +24,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     },
 
     // Settings
-    getSetting: vi.fn((key: string) => {
+    getSetting: mock((key: string) => {
       const settings: Record<string, string> = {
         API_KEY: 'test-api-key',
         SECRET_KEY: 'test-secret',
@@ -34,12 +34,12 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     }),
 
     // Services
-    getService: vi.fn((name: string) => {
+    getService: mock((name: string) => {
       const services: Record<string, any> = {
         'test-service': {
-          start: vi.fn(),
-          stop: vi.fn(),
-          doSomething: vi.fn().mockResolvedValue('service result'),
+          start: mock(),
+          stop: mock(),
+          doSomething: mock().mockResolvedValue('service result'),
         },
         hyperfy: createMockHyperfyService(),
         ...overrides.services,
@@ -48,12 +48,12 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     }),
 
     // Model/LLM
-    useModel: vi.fn().mockResolvedValue('mock model response'),
-    generateText: vi.fn().mockResolvedValue('generated text'),
+    useModel: mock().mockResolvedValue('mock model response'),
+    generateText: mock().mockResolvedValue('generated text'),
 
     // Memory operations
     messageManager: {
-      createMemory: vi.fn().mockResolvedValue({
+      createMemory: mock().mockResolvedValue({
         id: 'test-memory-id' as UUID,
         entityId: 'test-entity-id' as UUID,
         roomId: 'test-room-id' as UUID,
@@ -61,18 +61,18 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
         content: { text: 'test message' },
         createdAt: Date.now(),
       }),
-      getMemories: vi.fn().mockResolvedValue([]),
-      updateMemory: vi.fn().mockResolvedValue(true),
-      deleteMemory: vi.fn().mockResolvedValue(true),
-      searchMemories: vi.fn().mockResolvedValue([]),
-      getLastMessages: vi.fn().mockResolvedValue([]),
+      getMemories: mock().mockResolvedValue([]),
+      updateMemory: mock().mockResolvedValue(true),
+      deleteMemory: mock().mockResolvedValue(true),
+      searchMemories: mock().mockResolvedValue([]),
+      getLastMessages: mock().mockResolvedValue([]),
       ...(overrides as any).messageManager,
     },
 
     // Memory methods
-    getMemories: vi.fn().mockResolvedValue([]),
-    getMemoriesByEntityId: vi.fn().mockResolvedValue([]),
-    createMemory: vi.fn().mockResolvedValue({
+    getMemories: mock().mockResolvedValue([]),
+    getMemoriesByEntityId: mock().mockResolvedValue([]),
+    createMemory: mock().mockResolvedValue({
       id: 'test-memory-id' as UUID,
       entityId: 'test-entity-id' as UUID,
       roomId: 'test-room-id' as UUID,
@@ -82,13 +82,13 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     }),
 
     // State
-    composeState: vi.fn().mockResolvedValue({
+    composeState: mock().mockResolvedValue({
       values: {},
       data: {},
       text: '',
       hyperfyStatus: 'Connected to Hyperfy world',
     }),
-    updateState: vi.fn().mockResolvedValue(true),
+    updateState: mock().mockResolvedValue(true),
 
     // Actions & Providers
     actions: [],
@@ -96,54 +96,54 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     evaluators: [],
 
     // Components
-    createComponent: vi.fn().mockResolvedValue(true),
-    getComponents: vi.fn().mockResolvedValue([]),
-    updateComponent: vi.fn().mockResolvedValue(true),
+    createComponent: mock().mockResolvedValue(true),
+    getComponents: mock().mockResolvedValue([]),
+    updateComponent: mock().mockResolvedValue(true),
 
     // Database
     db: {
-      query: vi.fn().mockResolvedValue([]),
-      execute: vi.fn().mockResolvedValue({ changes: 1 }),
-      getWorlds: vi.fn().mockResolvedValue([]),
-      getWorld: vi.fn().mockResolvedValue(null),
+      query: mock().mockResolvedValue([]),
+      execute: mock().mockResolvedValue({ changes: 1 }),
+      getWorlds: mock().mockResolvedValue([]),
+      getWorld: mock().mockResolvedValue(null),
     },
 
     // Additional methods
-    getEntityById: vi.fn().mockResolvedValue(null),
-    getRoom: vi.fn().mockResolvedValue({
+    getEntityById: mock().mockResolvedValue(null),
+    getRoom: mock().mockResolvedValue({
       id: 'test-room-id',
       entities: [],
     }),
-    getEntitiesForRoom: vi.fn().mockResolvedValue([]),
+    getEntitiesForRoom: mock().mockResolvedValue([]),
 
     // Logging
     logger: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      debug: mock(),
     },
 
     // Entity management
-    ensureConnection: vi.fn().mockResolvedValue({
+    ensureConnection: mock().mockResolvedValue({
       entityId: 'test-entity-id' as UUID,
       roomId: 'test-room-id' as UUID,
     }),
 
     // Event handling
-    emitEvent: vi.fn(),
-    on: vi.fn(),
-    off: vi.fn(),
+    emitEvent: mock(),
+    on: mock(),
+    off: mock(),
 
     // Process actions
-    processActions: vi.fn().mockResolvedValue(undefined),
+    processActions: mock().mockResolvedValue(undefined),
 
     // Evaluate
-    evaluate: vi.fn().mockResolvedValue(null),
+    evaluate: mock().mockResolvedValue(null),
 
     // Entity operations
-    updateEntity: vi.fn().mockResolvedValue(true),
-    createEntity: vi.fn().mockResolvedValue(true),
+    updateEntity: mock().mockResolvedValue(true),
+    createEntity: mock().mockResolvedValue(true),
 
     // Apply any overrides
     ...overrides,
@@ -197,10 +197,10 @@ export function createMockService(name: string, overrides: any = {}): any {
   return {
     serviceName: name,
     capabilityDescription: `Mock ${name} service`,
-    start: vi.fn().mockResolvedValue(undefined),
-    stop: vi.fn().mockResolvedValue(undefined),
-    isConnected: vi.fn().mockReturnValue(true),
-    getWorld: vi.fn().mockReturnValue(null),
+    start: mock().mockResolvedValue(undefined),
+    stop: mock().mockResolvedValue(undefined),
+    isConnected: mock().mockReturnValue(true),
+    getWorld: mock().mockReturnValue(null),
     ...overrides,
   };
 }
@@ -219,7 +219,7 @@ export function setupTest(
   } = {}
 ) {
   // Create mock callback function
-  const callbackFn = vi.fn();
+  const callbackFn = mock();
 
   // Create a message
   const mockMessage = createMockMemory(overrides.messageOverrides);
@@ -254,38 +254,38 @@ export function createMockWorld(): any {
         x: 0,
         y: 0,
         z: 0,
-        fromArray: vi.fn(),
-        toArray: vi.fn().mockReturnValue([0, 0, 0]),
+        fromArray: mock(),
+        toArray: mock().mockReturnValue([0, 0, 0]),
       },
       quaternion: {
         x: 0,
         y: 0,
         z: 0,
         w: 1,
-        fromArray: vi.fn(),
-        toArray: vi.fn().mockReturnValue([0, 0, 0, 1]),
+        fromArray: mock(),
+        toArray: mock().mockReturnValue([0, 0, 0, 1]),
       },
-      scale: { x: 1, y: 1, z: 1, fromArray: vi.fn(), toArray: vi.fn().mockReturnValue([1, 1, 1]) },
+      scale: { x: 1, y: 1, z: 1, fromArray: mock(), toArray: mock().mockReturnValue([1, 1, 1]) },
     },
     root: {
       position: {
         x: 0,
         y: 0,
         z: 0,
-        fromArray: vi.fn(),
-        toArray: vi.fn().mockReturnValue([0, 0, 0]),
+        fromArray: mock(),
+        toArray: mock().mockReturnValue([0, 0, 0]),
       },
       quaternion: {
         x: 0,
         y: 0,
         z: 0,
         w: 1,
-        fromArray: vi.fn(),
-        toArray: vi.fn().mockReturnValue([0, 0, 0, 1]),
+        fromArray: mock(),
+        toArray: mock().mockReturnValue([0, 0, 0, 1]),
       },
-      scale: { x: 1, y: 1, z: 1, fromArray: vi.fn(), toArray: vi.fn().mockReturnValue([1, 1, 1]) },
+      scale: { x: 1, y: 1, z: 1, fromArray: mock(), toArray: mock().mockReturnValue([1, 1, 1]) },
     },
-    destroy: vi.fn(),
+    destroy: mock(),
   });
 
   mockEntities.set('entity-2', {
@@ -295,38 +295,38 @@ export function createMockWorld(): any {
         x: 5,
         y: 0,
         z: 5,
-        fromArray: vi.fn(),
-        toArray: vi.fn().mockReturnValue([5, 0, 5]),
+        fromArray: mock(),
+        toArray: mock().mockReturnValue([5, 0, 5]),
       },
       quaternion: {
         x: 0,
         y: 0,
         z: 0,
         w: 1,
-        fromArray: vi.fn(),
-        toArray: vi.fn().mockReturnValue([0, 0, 0, 1]),
+        fromArray: mock(),
+        toArray: mock().mockReturnValue([0, 0, 0, 1]),
       },
-      scale: { x: 1, y: 1, z: 1, fromArray: vi.fn(), toArray: vi.fn().mockReturnValue([1, 1, 1]) },
+      scale: { x: 1, y: 1, z: 1, fromArray: mock(), toArray: mock().mockReturnValue([1, 1, 1]) },
     },
     root: {
       position: {
         x: 5,
         y: 0,
         z: 5,
-        fromArray: vi.fn(),
-        toArray: vi.fn().mockReturnValue([5, 0, 5]),
+        fromArray: mock(),
+        toArray: mock().mockReturnValue([5, 0, 5]),
       },
       quaternion: {
         x: 0,
         y: 0,
         z: 0,
         w: 1,
-        fromArray: vi.fn(),
-        toArray: vi.fn().mockReturnValue([0, 0, 0, 1]),
+        fromArray: mock(),
+        toArray: mock().mockReturnValue([0, 0, 0, 1]),
       },
-      scale: { x: 1, y: 1, z: 1, fromArray: vi.fn(), toArray: vi.fn().mockReturnValue([1, 1, 1]) },
+      scale: { x: 1, y: 1, z: 1, fromArray: mock(), toArray: mock().mockReturnValue([1, 1, 1]) },
     },
-    destroy: vi.fn(),
+    destroy: mock(),
   });
 
   return {
@@ -348,24 +348,24 @@ export function createMockWorld(): any {
       items: mockEntities,
     },
     chat: {
-      add: vi.fn(),
+      add: mock(),
       msgs: [],
     },
     controls: {
-      goto: vi.fn(),
-      stopAllActions: vi.fn(),
+      goto: mock(),
+      stopAllActions: mock(),
     },
     actions: {
-      execute: vi.fn(),
-      getNearby: vi.fn().mockReturnValue([]),
+      execute: mock(),
+      getNearby: mock().mockReturnValue([]),
     },
     network: {
-      upload: vi.fn(),
-      send: vi.fn(),
+      upload: mock(),
+      send: mock(),
     },
     assetsUrl: 'https://test.hyperfy.io/assets',
     blueprints: {
-      add: vi.fn(),
+      add: mock(),
     },
   };
 }
@@ -375,53 +375,53 @@ export function createMockWorld(): any {
  */
 export function createMockHyperfyService(): any {
   return {
-    start: vi.fn(),
-    stop: vi.fn(),
-    isConnected: vi.fn().mockReturnValue(true),
-    getWorld: vi.fn().mockReturnValue(createMockWorld()),
-    getMessageManager: vi.fn().mockReturnValue({
-      sendMessage: vi.fn(),
-      handleMessage: vi.fn(),
-      getRecentMessages: vi.fn().mockResolvedValue({
+    start: mock(),
+    stop: mock(),
+    isConnected: mock().mockReturnValue(true),
+    getWorld: mock().mockReturnValue(createMockWorld()),
+    getMessageManager: mock().mockReturnValue({
+      sendMessage: mock(),
+      handleMessage: mock(),
+      getRecentMessages: mock().mockResolvedValue({
         formattedHistory: 'No messages yet',
         lastResponseText: '',
         lastActions: [],
       }),
     }),
-    getEmoteManager: vi.fn().mockReturnValue({
-      playEmote: vi.fn(),
-      uploadEmotes: vi.fn(),
+    getEmoteManager: mock().mockReturnValue({
+      playEmote: mock(),
+      uploadEmotes: mock(),
     }),
-    getBehaviorManager: vi.fn().mockReturnValue({
-      start: vi.fn(),
-      stop: vi.fn(),
+    getBehaviorManager: mock().mockReturnValue({
+      start: mock(),
+      stop: mock(),
       isRunning: false,
     }),
-    getBuildManager: vi.fn().mockReturnValue({
-      duplicate: vi.fn(),
-      translate: vi.fn(),
-      rotate: vi.fn(),
-      scale: vi.fn(),
-      delete: vi.fn(),
-      importEntity: vi.fn(),
+    getBuildManager: mock().mockReturnValue({
+      duplicate: mock(),
+      translate: mock(),
+      rotate: mock(),
+      scale: mock(),
+      delete: mock(),
+      importEntity: mock(),
     }),
-    getVoiceManager: vi.fn().mockReturnValue({
-      start: vi.fn(),
-      stop: vi.fn(),
+    getVoiceManager: mock().mockReturnValue({
+      start: mock(),
+      stop: mock(),
     }),
     currentWorldId: 'test-world-123',
-    connect: vi.fn().mockResolvedValue(true),
-    disconnect: vi.fn().mockResolvedValue(true),
+    connect: mock().mockResolvedValue(true),
+    disconnect: mock().mockResolvedValue(true),
   };
 }
 
 // Add spy on console for common usage in tests
 export function setupLoggerSpies() {
-  vi.spyOn(console, 'info').mockImplementation(() => {});
-  vi.spyOn(console, 'error').mockImplementation(() => {});
-  vi.spyOn(console, 'warn').mockImplementation(() => {});
-  vi.spyOn(console, 'debug').mockImplementation(() => {});
+  mock.spyOn(console, 'info').mockImplementation(() => {});
+  mock.spyOn(console, 'error').mockImplementation(() => {});
+  mock.spyOn(console, 'warn').mockImplementation(() => {});
+  mock.spyOn(console, 'debug').mockImplementation(() => {});
 
   // allow tests to restore originals
-  return () => vi.restoreAllMocks();
+  return () => mock.restore();
 }

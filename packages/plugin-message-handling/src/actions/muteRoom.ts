@@ -199,7 +199,7 @@ export const muteRoomAction: Action = {
           roomMuteState: muteSuccess ? 'MUTED' : 'NOT_MUTED',
           lastMuteTime: muteSuccess ? Date.now() : undefined,
           muteAttempted: shouldMute,
-          muteSuccess: muteSuccess,
+          muteSuccess,
         },
         text: muteSuccess
           ? `Room ${room.name} has been muted`

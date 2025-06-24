@@ -86,11 +86,9 @@ export const visionProvider: Provider = {
               },
               {} as Record<string, number>
             );
-            perceptionText +=
-              '\n  Poses: ' +
-              Object.entries(poseCounts)
-                .map(([pose, count]) => `${count} ${pose}`)
-                .join(', ');
+            perceptionText += `\n  Poses: ${Object.entries(poseCounts)
+              .map(([pose, count]) => `${count} ${pose}`)
+              .join(', ')}`;
           }
 
           if (facings.length > 0) {
@@ -101,11 +99,9 @@ export const visionProvider: Provider = {
               },
               {} as Record<string, number>
             );
-            perceptionText +=
-              '\n  Facing: ' +
-              Object.entries(facingCounts)
-                .map(([facing, count]) => `${count} facing ${facing}`)
-                .join(', ');
+            perceptionText += `\n  Facing: ${Object.entries(facingCounts)
+              .map(([facing, count]) => `${count} facing ${facing}`)
+              .join(', ')}`;
           }
         }
 

@@ -1,7 +1,7 @@
-import type { IAgentRuntime, TestSuite } from '@elizaos/core';
 import { strict as assert } from 'node:assert';
+import type { IAgentRuntime, TestSuite } from '@elizaos/core';
+import { EnvManagerService } from '../void service.ts';
 import { setupScenario, sendMessageAndWaitForResponse } from './test-utils.ts';
-import { EnvManagerService } from '../service.ts';
 
 /**
  * E2E test suite for environment variable management scenarios
@@ -11,11 +11,11 @@ export const envScenariosSuite: TestSuite = {
   tests: [
     {
       name: 'Scenario 1: Agent proactively asks for missing environment variables',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
         // Ensure we have missing env vars by declaring some
-        const mockPlugin = {
+        const mock = {
           name: 'test-plugin',
           declaredEnvVars: {
             TEST_API_KEY: {
@@ -26,11 +26,11 @@ export const envScenariosSuite: TestSuite = {
             },
           },
         };
-        runtime.plugins.push(mockPlugin as any);
+        runtime.plugins.push(mock as any);
 
         // Initialize the service to scan for requirements
         const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-        await envService.scanPluginRequirements();
+        await envService.scanRequirements();
 
         // Send a message that might trigger env var check
         const response = await sendMessageAndWaitForResponse(
@@ -53,11 +53,11 @@ export const envScenariosSuite: TestSuite = {
 
     {
       name: 'Scenario 2: User provides environment variable unprompted',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
         // Set up a plugin with missing env var
-        const mockPlugin = {
+        const mock = {
           name: 'openai',
           declaredEnvVars: {
             OPENAI_API_KEY: {
@@ -68,10 +68,10 @@ export const envScenariosSuite: TestSuite = {
             },
           },
         };
-        runtime.plugins.push(mockPlugin as any);
+        runtime.plugins.push(mock as any);
 
         const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-        await envService.scanPluginRequirements();
+        await envService.scanRequirements();
 
         // User provides API key without being asked
         const response = await sendMessageAndWaitForResponse(
@@ -98,11 +98,11 @@ export const envScenariosSuite: TestSuite = {
 
     {
       name: 'Scenario 3: Multi-turn conversation for multiple variables',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
         // Set up multiple missing env vars
-        const mockPlugin = {
+        const mock = {
           name: 'multi-service',
           declaredEnvVars: {
             SERVICE_API_KEY: {
@@ -125,10 +125,10 @@ export const envScenariosSuite: TestSuite = {
             },
           },
         };
-        runtime.plugins.push(mockPlugin as any);
+        runtime.plugins.push(mock as any);
 
         const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-        await envService.scanPluginRequirements();
+        await envService.scanRequirements();
 
         // First turn: Ask about env vars
         const response1 = await sendMessageAndWaitForResponse(
@@ -197,11 +197,11 @@ export const envScenariosSuite: TestSuite = {
 
     {
       name: 'Scenario 4: Invalid value handling and validation',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
         // Set up plugin with validation
-        const mockPlugin = {
+        const mock = {
           name: 'validated-service',
           declaredEnvVars: {
             VALIDATED_API_KEY: {
@@ -213,10 +213,10 @@ export const envScenariosSuite: TestSuite = {
             },
           },
         };
-        runtime.plugins.push(mockPlugin as any);
+        runtime.plugins.push(mock as any);
 
         const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-        await envService.scanPluginRequirements();
+        await envService.scanRequirements();
 
         // Provide an invalid API key
         const response = await sendMessageAndWaitForResponse(
@@ -244,11 +244,11 @@ export const envScenariosSuite: TestSuite = {
 
     {
       name: 'Scenario 5: False positive prevention - unrelated messages',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
         // Set up a plugin
-        const mockPlugin = {
+        const mock = {
           name: 'chat-service',
           declaredEnvVars: {
             CHAT_API_KEY: {
@@ -259,10 +259,10 @@ export const envScenariosSuite: TestSuite = {
             },
           },
         };
-        runtime.plugins.push(mockPlugin as any);
+        runtime.plugins.push(mock as any);
 
         const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-        await envService.scanPluginRequirements();
+        await envService.scanRequirements();
 
         // Send messages that shouldn't trigger env var setting
         const testMessages = [
@@ -291,11 +291,11 @@ export const envScenariosSuite: TestSuite = {
 
     {
       name: 'Scenario 6: Duplicate value prevention',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
         // Set up plugin
-        const mockPlugin = {
+        const mock = {
           name: 'dup-test',
           declaredEnvVars: {
             DUP_TEST_KEY: {
@@ -306,10 +306,10 @@ export const envScenariosSuite: TestSuite = {
             },
           },
         };
-        runtime.plugins.push(mockPlugin as any);
+        runtime.plugins.push(mock as any);
 
         const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-        await envService.scanPluginRequirements();
+        await envService.scanRequirements();
 
         // First: Set the variable
         const response1 = await sendMessageAndWaitForResponse(
@@ -334,18 +334,18 @@ export const envScenariosSuite: TestSuite = {
 
         // Should either skip or acknowledge it's already set
         const envVars = await envService.getAllEnvVars();
-        const config = envVars?.['dup-test']?.DUP_TEST_KEY;
+        const _config = envVars?.['dup-test']?.DUP_TEST_KEY;
         assert.equal(config?.attempts, 1, 'Should not increment attempts for duplicate');
       },
     },
 
     {
       name: 'Scenario 7: Auto-generation of supported variables',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
         // Set up plugin with generatable vars
-        const mockPlugin = {
+        const mock = {
           name: 'crypto-service',
           declaredEnvVars: {
             JWT_SECRET: {
@@ -368,10 +368,10 @@ export const envScenariosSuite: TestSuite = {
             },
           },
         };
-        runtime.plugins.push(mockPlugin as any);
+        runtime.plugins.push(mock as any);
 
         const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-        await envService.scanPluginRequirements();
+        await envService.scanRequirements();
 
         // Ask to generate all
         const response = await sendMessageAndWaitForResponse(
@@ -402,11 +402,11 @@ export const envScenariosSuite: TestSuite = {
 
     {
       name: 'Scenario 8: Mixed manual and auto-generated variables',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
         // Set up plugin with mixed vars
-        const mockPlugin = {
+        const mock = {
           name: 'mixed-service',
           declaredEnvVars: {
             API_KEY: {
@@ -429,10 +429,10 @@ export const envScenariosSuite: TestSuite = {
             },
           },
         };
-        runtime.plugins.push(mockPlugin as any);
+        runtime.plugins.push(mock as any);
 
         const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-        await envService.scanPluginRequirements();
+        await envService.scanRequirements();
 
         // First: Set manual vars
         const response1 = await sendMessageAndWaitForResponse(
@@ -466,11 +466,11 @@ export const envScenariosSuite: TestSuite = {
 
     {
       name: 'Scenario 9: Environment status check',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
         // Set up mixed status
-        const mockPlugin = {
+        const mock = {
           name: 'status-test',
           declaredEnvVars: {
             VALID_KEY: {
@@ -495,10 +495,10 @@ export const envScenariosSuite: TestSuite = {
             },
           },
         };
-        runtime.plugins.push(mockPlugin as any);
+        runtime.plugins.push(mock as any);
 
         const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-        await envService.scanPluginRequirements();
+        await envService.scanRequirements();
 
         // Ask for status
         const response = await sendMessageAndWaitForResponse(
@@ -519,7 +519,7 @@ export const envScenariosSuite: TestSuite = {
 
     {
       name: 'Scenario 10: Complex multi-plugin setup',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
         // Set up multiple plugins
@@ -574,7 +574,7 @@ export const envScenariosSuite: TestSuite = {
         plugins.forEach((p) => runtime.plugins.push(p as any));
 
         const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-        await envService.scanPluginRequirements();
+        await envService.scanRequirements();
 
         // Complex setup message
         const response = await sendMessageAndWaitForResponse(

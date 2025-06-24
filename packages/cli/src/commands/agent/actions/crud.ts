@@ -21,7 +21,7 @@ export async function getAgent(opts: OptionValues): Promise<void> {
     // API Endpoint: GET /agents/:agentId
     const response = await fetch(`${baseUrl}/${resolvedAgentId}`);
     if (!response.ok) {
-      logger.error(`Failed to get agent`);
+      logger.error('Failed to get agent');
       process.exit(1);
     }
 
@@ -34,7 +34,13 @@ export async function getAgent(opts: OptionValues): Promise<void> {
     // Save to file if output option is specified - exit early
     if (opts.output !== undefined) {
       // Extract config without metadata fields
-      const { id, createdAt, updatedAt, enabled, ...agentConfig } = agent;
+      const {
+        id: _id,
+        createdAt: _createdAt,
+        updatedAt: _updatedAt,
+        enabled: _enabled,
+        ...agentConfig
+      } = agent;
 
       // Create filename with appropriate .json extension
       const filename =
@@ -54,11 +60,15 @@ export async function getAgent(opts: OptionValues): Promise<void> {
 
     // Display JSON if requested
     if (opts.json) {
-      const { id, createdAt, updatedAt, enabled, ...agentConfig } = agent;
+      const {
+        id: _id,
+        createdAt: _createdAt,
+        updatedAt: _updatedAt,
+        enabled: _enabled,
+        ...agentConfig
+      } = agent;
       console.log(JSON.stringify(agentConfig, null, 2));
     }
-
-    return;
   } catch (error) {
     await checkServer(opts);
     handleError(error);
@@ -87,7 +97,6 @@ export async function removeAgent(opts: OptionValues): Promise<void> {
 
     // Server returns 204 No Content for successful deletion, no need to parse response
     console.log(`Successfully removed agent ${opts.name}`);
-    return;
   } catch (error) {
     await checkServer(opts);
     handleError(error);
@@ -122,7 +131,6 @@ export async function clearAgentMemories(opts: OptionValues): Promise<void> {
     console.log(
       `Successfully cleared ${result?.deletedCount || 0} memories for agent ${opts.name}`
     );
-    return;
   } catch (error) {
     await checkServer(opts);
     handleError(error);

@@ -411,7 +411,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
 
       if (address === 'native') {
         coinId = nativeTokenIds[`native-${network}`];
-        if (!coinId) return null;
+        if (!coinId) {return null;}
         apiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true`;
       } else {
         // Token contract address
@@ -433,7 +433,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
       }
 
       const data = await response.json() as Record<string, { usd: number; usd_24h_change?: number; usd_24h_vol?: number; usd_market_cap?: number }>;
-      
+
       // Extract price data
       let priceData: any;
       if (coinId) {
@@ -450,7 +450,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
 
       // Get symbol from token info if not native
       let symbol = coinId ? coinId.toUpperCase() : 'UNKNOWN';
-      
+
       // Try to get more token info
       if (!coinId && address !== 'native') {
         try {
@@ -465,7 +465,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
               },
             }
           );
-          
+
           if (infoResponse.ok) {
             const infoData = await infoResponse.json() as { symbol?: string };
             symbol = infoData.symbol?.toUpperCase() || symbol;
@@ -504,7 +504,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
     try {
       const coinIds = [
         'ethereum',
-        'matic-network', 
+        'matic-network',
         'bitcoin',
         'solana',
         'usd-coin',
@@ -513,7 +513,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
       ];
 
       const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinIds.join(',')}&vs_currencies=usd`;
-      
+
       const response = await fetch(url, {
         headers: {
           'x-cg-demo-api-key': this.runtime.getSetting('COINGECKO_API_KEY'),
@@ -528,7 +528,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
 
       // Update cache with fresh prices
       const now = new Date();
-      
+
       if (data.ethereum?.usd) {
         await this.updatePriceCache({
           address: 'native',
@@ -539,7 +539,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
           timestamp: now,
         });
       }
-      
+
       if (data['matic-network']?.usd) {
         await this.updatePriceCache({
           address: 'native',
@@ -550,7 +550,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
           timestamp: now,
         });
       }
-      
+
       if (data.bitcoin?.usd) {
         await this.updatePriceCache({
           address: 'btc',
@@ -561,7 +561,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
           timestamp: now,
         });
       }
-      
+
       if (data.solana?.usd) {
         await this.updatePriceCache({
           address: 'So11111111111111111111111111111111111111112',
@@ -572,7 +572,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
           timestamp: now,
         });
       }
-      
+
       if (data['usd-coin']?.usd) {
         // Update USDC on Ethereum
         await this.updatePriceCache({
@@ -583,7 +583,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
           source: 'coingecko',
           timestamp: now,
         });
-        
+
         // Update USDC on Solana
         await this.updatePriceCache({
           address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',

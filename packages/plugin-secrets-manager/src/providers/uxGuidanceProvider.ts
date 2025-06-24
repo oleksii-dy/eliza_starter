@@ -1,12 +1,3 @@
-import {
-  type IAgentRuntime,
-  type Memory,
-  type Provider,
-  type ProviderResult,
-  type State,
-  logger,
-  elizaLogger,
-} from '@elizaos/core';
 import { EnhancedSecretManager } from '../enhanced-service';
 import { ActionChainService } from '../services/action-chain-service';
 import type { SecretContext } from '../types';
@@ -76,12 +67,13 @@ export interface StatusSummary {
 
 export const uxGuidanceProvider: Provider = {
   name: 'UX_GUIDANCE',
-  description: 'Provides interactive UI guidance, contextual help suggestions, and smart workflows for secure secret management when user needs assistance with API keys or configuration',
+  description:
+    'Provides interactive UI guidance, contextual help suggestions, and smart workflows for secure secret management when user needs assistance with API keys or configuration',
 
-  get: async (runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> => {
+  get: async (_runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> => {
     elizaLogger.info('[UXGuidanceProvider] Generating UX guidance');
 
-    const secretsManager = runtime.getService('SECRETS') as EnhancedSecretManager;
+    const _secretsManager = runtime.getService('SECRETS') as EnhancedSecretManager;
     const actionChainService = runtime.getService('ACTION_CHAIN') as ActionChainService;
 
     const context: SecretContext = {
@@ -273,9 +265,15 @@ function generateStatusSummary(
 
   // Calculate security score (0-100)
   let securityScore = 100;
-  if (missingCount > 0) securityScore -= missingCount * 10;
-  if (expiredSecrets > 0) securityScore -= expiredSecrets * 15;
-  if (weakSecrets > 0) securityScore -= weakSecrets * 20;
+  if (missingCount > 0) {
+    securityScore -= missingCount * 10;
+  }
+  if (expiredSecrets > 0) {
+    securityScore -= expiredSecrets * 15;
+  }
+  if (weakSecrets > 0) {
+    securityScore -= weakSecrets * 20;
+  }
   securityScore = Math.max(0, securityScore);
 
   return {

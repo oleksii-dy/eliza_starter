@@ -7,7 +7,7 @@
  * If this test fails, the plugin is NOT production ready.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { AgentRuntime, elizaLogger, type Character, type IAgentRuntime } from '@elizaos/core';
 import sqlPlugin from '@elizaos/plugin-sql';
 import * as fs from 'fs/promises';

@@ -27,7 +27,6 @@ export default class AutonomousService extends Service {
       this.loopTimeout = null;
     }
     console.log('[AutonomousService] Autonomous loop stopped');
-    return;
   }
 
   static async start(runtime: IAgentRuntime): Promise<Service> {
@@ -41,7 +40,6 @@ export default class AutonomousService extends Service {
     if (service) {
       await service.stop();
     }
-    return;
   }
 
   constructor(runtime: IAgentRuntime) {
@@ -120,8 +118,8 @@ export default class AutonomousService extends Service {
         type: 'text',
         source: 'auto',
       },
-      roomId: roomId,
-      worldId: worldId,
+      roomId,
+      worldId,
       entityId: copilotEntityId,
     };
 

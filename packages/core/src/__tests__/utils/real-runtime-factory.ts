@@ -391,9 +391,7 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   }
 
   // Missing required methods
-  async runMigrations(): Promise<void> {
-    return;
-  }
+  async runMigrations(): Promise<void> {}
   async isReady(): Promise<boolean> {
     return true;
   }
@@ -418,24 +416,16 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   async getLogs(params: any): Promise<any[]> {
     return [];
   }
-  async deleteLog(id: UUID): Promise<void> {
-    return;
-  }
-  async deleteManyMemories(ids: UUID[]): Promise<void> {
-    return;
-  }
-  async deleteAllMemories(roomId: UUID, tableName: string): Promise<void> {
-    return;
-  }
+  async deleteLog(id: UUID): Promise<void> {}
+  async deleteManyMemories(ids: UUID[]): Promise<void> {}
+  async deleteAllMemories(roomId: UUID, tableName: string): Promise<void> {}
   async countMemories(roomId: UUID): Promise<number> {
     return 0;
   }
   async getAllWorlds(): Promise<any[]> {
     return [];
   }
-  async deleteRoomsByWorldId(worldId: UUID): Promise<void> {
-    return;
-  }
+  async deleteRoomsByWorldId(worldId: UUID): Promise<void> {}
   async getRoomsForParticipant(entityId: UUID): Promise<UUID[]> {
     return [];
   }
@@ -457,9 +447,7 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   async getMemoriesByWorldId(params: any): Promise<any[]> {
     return [];
   }
-  async ensureEmbeddingDimension(dimension: number): Promise<void> {
-    return;
-  }
+  async ensureEmbeddingDimension(dimension: number): Promise<void> {}
 
   // Add any other missing methods that are required by the interface
   [key: string]: any;
@@ -633,11 +621,7 @@ export async function createRealTestRuntime(
 
         // Handle planning requests
         if (prompt.includes('plan') || prompt.includes('steps')) {
-          return (
-            '<plan><goal>Execute user request</goal><steps><step><id>' +
-            uuidv4() +
-            '</id><action>REPLY</action><parameters>{}</parameters></step></steps><executionModel>sequential</executionModel></plan>'
-          );
+          return `<plan><goal>Execute user request</goal><steps><step><id>${uuidv4()}</id><action>REPLY</action><parameters>{}</parameters></step></steps><executionModel>sequential</executionModel></plan>`;
         }
 
         // Handle fact extraction

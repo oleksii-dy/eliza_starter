@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { mock } from 'bun:test';
 import type { IAgentRuntime as CoreIAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 import type { CustodialWallet } from '../types/wallet';
 import type { IAgentRuntime } from '../types/core.d';
@@ -8,11 +8,11 @@ import type { IAgentRuntime } from '../types/core.d';
  */
 export function createMockRuntime(overrides: any = {}): IAgentRuntime {
   const mockDb = {
-    execute: vi.fn().mockResolvedValue({ changes: 1 }),
-    query: vi.fn().mockResolvedValue([]),
-    all: vi.fn().mockResolvedValue([]),
-    run: vi.fn().mockResolvedValue({ changes: 1 }),
-    get: vi.fn().mockResolvedValue(null),
+    execute: mock().mockResolvedValue({ changes: 1 }),
+    query: mock().mockResolvedValue([]),
+    all: mock().mockResolvedValue([]),
+    run: mock().mockResolvedValue({ changes: 1 }),
+    get: mock().mockResolvedValue(null),
   };
 
   const baseRuntime = {
@@ -41,7 +41,7 @@ export function createMockRuntime(overrides: any = {}): IAgentRuntime {
     },
 
     // Core methods
-    getSetting: vi.fn((key: string) => {
+    getSetting: mock((key: string) => {
       const settings: Record<string, string> = {
         CDP_API_KEY_NAME: 'test-api-key',
         CDP_API_KEY_PRIVATE_KEY: 'test-private-key',
@@ -50,26 +50,26 @@ export function createMockRuntime(overrides: any = {}): IAgentRuntime {
       };
       return settings[key];
     }),
-    useModel: vi.fn().mockResolvedValue('mock response'),
-    composeState: vi.fn().mockResolvedValue({
+    useModel: mock().mockResolvedValue('mock response'),
+    composeState: mock().mockResolvedValue({
       values: {},
       data: {},
       text: '',
     }),
 
     // Database methods
-    getMemories: vi.fn().mockResolvedValue([]),
-    createMemory: vi.fn().mockResolvedValue('test-memory-id' as UUID),
+    getMemories: mock().mockResolvedValue([]),
+    createMemory: mock().mockResolvedValue('test-memory-id' as UUID),
 
     // Service methods
-    getService: vi.fn().mockReturnValue(null),
+    getService: mock().mockReturnValue(null),
 
     // Logger
     logger: {
-      info: vi.fn(),
-      error: vi.fn(),
-      warn: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      error: mock(),
+      warn: mock(),
+      debug: mock(),
     },
 
     // Apply overrides

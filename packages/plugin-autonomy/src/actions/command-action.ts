@@ -1,5 +1,6 @@
 import {
   type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
@@ -20,13 +21,14 @@ const execAsync = promisify(exec);
 export const executeCommandAction: Action = {
   name: 'EXECUTE_COMMAND',
   similes: ['RUN_COMMAND', 'EXEC_CMD', 'SYSTEM_COMMAND', 'CHECK_DISK', 'CHECK_MEMORY'],
-  description: 'Actually executes system commands and returns real output',
+  description:
+    'Executes system commands and returns real output. Can be chained with analysis actions to verify results or with file operations to process command output',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
-    
+
     // Check for common command patterns
-    const hasCommandKeywords = (
+    const hasCommandKeywords =
       (text.includes('run') && text.includes('command')) ||
       text.includes('execute') ||
       (text.includes('check') &&
@@ -35,8 +37,7 @@ export const executeCommandAction: Action = {
       text.includes('free -m') ||
       text.includes('uptime') ||
       text.includes('ps aux') ||
-      text.includes('du -h')
-    );
+      text.includes('du -h');
 
     if (!hasCommandKeywords) {
       return false;
@@ -44,19 +45,20 @@ export const executeCommandAction: Action = {
 
     // Security validation: Extract and validate the command
     let command = '';
-    
+
     // Extract command from multiple patterns
     const cmdMatch1 = text.match(/(?:execute|run):\s*(.+?)(?:\s*$|\s*\n|$)/i);
     const cmdMatch2 = text.match(/(?:run|execute)\s+(?:command\s+)?[`"]?([^`"]+)[`"]?/i);
-    
-    
+
     if (cmdMatch1) {
       command = cmdMatch1[1].trim().toLowerCase();
     } else if (cmdMatch2) {
       command = cmdMatch2[1].trim().toLowerCase();
     } else {
       // Look for direct command patterns in text
-      const directMatch = text.match(/(rm\s|sudo\s|su\s|chmod\s|chown\s|mkfs\s|dd\s|format\s|del\s|wget\s|curl\s|nc\s|netcat\s|ssh\s|scp\s)/i);
+      const directMatch = text.match(
+        /(rm\s|sudo\s|su\s|chmod\s|chown\s|mkfs\s|dd\s|format\s|del\s|wget\s|curl\s|nc\s|netcat\s|ssh\s|scp\s)/i
+      );
       if (directMatch) {
         command = text.toLowerCase();
       } else {
@@ -81,10 +83,33 @@ export const executeCommandAction: Action = {
 
     // Built-in dangerous command blocking (be specific to avoid false positives)
     const dangerousPatterns = [
-      'rm -rf', 'sudo ', 'su ', 'chmod ', 'chown ', 'mkfs ', 'dd if=', 'format ',
-      'del ', 'wget ', 'curl ', 'nc ', 'netcat ', 'ssh ', 'scp ', '&&', '||', ';',
-      '`', ' exec ', 'eval ', ' | ', '$(', 'attacker.com', 'malware.com',
-      'evil.com', 'evil.sh'
+      'rm -rf',
+      'sudo ',
+      'su ',
+      'chmod ',
+      'chown ',
+      'mkfs ',
+      'dd if=',
+      'format ',
+      'del ',
+      'wget ',
+      'curl ',
+      'nc ',
+      'netcat ',
+      'ssh ',
+      'scp ',
+      '&&',
+      '||',
+      ';',
+      '`',
+      ' exec ',
+      'eval ',
+      ' | ',
+      '$(',
+      'attacker.com',
+      'malware.com',
+      'evil.com',
+      'evil.sh',
     ];
 
     // Check full text for dangerous patterns too (not just extracted command)
@@ -107,7 +132,21 @@ export const executeCommandAction: Action = {
     }
 
     // Default allowed commands
-    const defaultAllowed = ['echo', 'ls', 'pwd', 'cat', 'df', 'free', 'uptime', 'ps', 'du', 'date', 'uname', 'whoami', 'hostname'];
+    const defaultAllowed = [
+      'echo',
+      'ls',
+      'pwd',
+      'cat',
+      'df',
+      'free',
+      'uptime',
+      'ps',
+      'du',
+      'date',
+      'uname',
+      'whoami',
+      'hostname',
+    ];
     const commandBase = command.split(/\s+/)[0];
     return defaultAllowed.includes(commandBase);
   },
@@ -118,8 +157,19 @@ export const executeCommandAction: Action = {
     state?: State,
     options?: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
-    if (!callback) return;
+  ): Promise<ActionResult> => {
+    if (!callback) {
+      return {
+        data: {
+          actionName: 'EXECUTE_COMMAND',
+          error: 'No callback provided',
+        },
+        values: {
+          success: false,
+          error: 'No callback provided',
+        },
+      };
+    }
 
     try {
       const text = message.content.text || '';
@@ -164,7 +214,7 @@ export const executeCommandAction: Action = {
 
       const commandBase = command.split(/\s+/)[0];
       const isAllowed = allowedCommands.some(
-        (allowed) => commandBase === allowed || command.startsWith(allowed + ' ')
+        (allowed) => commandBase === allowed || command.startsWith(`${allowed} `)
       );
 
       if (!isAllowed) {
@@ -173,7 +223,19 @@ export const executeCommandAction: Action = {
           actions: ['EXECUTE_COMMAND_BLOCKED'],
           source: message.content.source,
         });
-        return;
+        return {
+          data: {
+            actionName: 'EXECUTE_COMMAND',
+            command,
+            blocked: true,
+            reason: 'Command not in allowed list',
+          },
+          values: {
+            success: false,
+            blocked: true,
+            attemptedCommand: command,
+          },
+        };
       }
 
       // Execute the command
@@ -182,7 +244,7 @@ export const executeCommandAction: Action = {
         maxBuffer: 1024 * 1024, // 1MB buffer
       });
 
-      const output = stdout || stderr;
+      const output = stdout || stderr || '';
 
       // Store command execution in memory
       await runtime.createMemory(
@@ -213,7 +275,7 @@ export const executeCommandAction: Action = {
         const diskUsage = lines.find((line) => line.includes('/') && !line.includes('/dev'));
         if (diskUsage) {
           const match = diskUsage.match(/(\d+)%/);
-          if (match && parseInt(match[1]) > 80) {
+          if (match && parseInt(match[1], 10) > 80) {
             analysis = '\n\n⚠️ Warning: Disk usage is above 80%!';
           }
         }
@@ -241,6 +303,23 @@ Command executed successfully at ${new Date().toISOString()}.`;
           success: true,
         },
       });
+
+      return {
+        data: {
+          actionName: 'EXECUTE_COMMAND',
+          command,
+          output,
+          exitCode: stderr ? 1 : 0,
+          executedAt: new Date().toISOString(),
+          analysis,
+        },
+        values: {
+          success: true,
+          executedCommand: command,
+          outputLines: output.split('\n').length,
+          hasWarnings: analysis.includes('Warning'),
+        },
+      };
     } catch (error) {
       logger.error('Error in executeCommand handler:', error);
       await callback({
@@ -248,6 +327,17 @@ Command executed successfully at ${new Date().toISOString()}.`;
         actions: ['EXECUTE_COMMAND_ERROR'],
         source: message.content.source,
       });
+
+      return {
+        data: {
+          actionName: 'EXECUTE_COMMAND',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
     }
   },
 
@@ -264,6 +354,36 @@ Command executed successfully at ${new Date().toISOString()}.`;
         content: {
           text: 'I executed the command: `df -h`\n\nOutput:\n```\nFilesystem      Size  Used Avail Use% Mounted on\n/dev/sda1       100G   45G   50G  45% /\n```\n\nCommand executed successfully.',
           actions: ['EXECUTE_COMMAND'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Check system memory and then analyze the output to identify any issues',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll check the system memory usage and analyze the results for any potential issues.",
+          actions: ['EXECUTE_COMMAND', 'ANALYZE_DATA'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'List the files in the current directory and then read the README if it exists',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll list the directory contents and then read the README file if one is present.",
+          actions: ['EXECUTE_COMMAND', 'READ_FILE'],
         },
       },
     ],

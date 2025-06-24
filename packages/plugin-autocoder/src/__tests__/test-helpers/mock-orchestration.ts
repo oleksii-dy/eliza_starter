@@ -1,20 +1,20 @@
-import { vi } from 'vitest';
+import { mock  } from 'bun:test';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 
 export function createMockRuntime(): IAgentRuntime {
   return {
     agentId: uuidv4() as UUID,
-    getSetting: vi.fn().mockImplementation((key: string) => {
-      if (key === 'ANTHROPIC_API_KEY') return 'test-key';
-      if (key === 'PLUGIN_DATA_DIR') return '/tmp/test-data';
+    getSetting: mock().mockImplementation((key: string) => {
+      if (key === 'ANTHROPIC_API_KEY') {return 'test-key';}
+      if (key === 'PLUGIN_DATA_DIR') {return '/tmp/test-data';}
       return null;
     }),
-    getService: vi.fn().mockImplementation((name: string) => {
+    getService: mock().mockImplementation((name: string) => {
       if (name === 'research') {
         return {
-          createResearchProject: vi.fn().mockResolvedValue({ id: 'research-1' }),
-          getProject: vi.fn().mockResolvedValue({
+          createResearchProject: mock().mockResolvedValue({ id: 'research-1' }),
+          getProject: mock().mockResolvedValue({
             id: 'research-1',
             status: 'completed',
             report: 'Test research report',
@@ -24,27 +24,27 @@ export function createMockRuntime(): IAgentRuntime {
       }
       if (name === 'knowledge') {
         return {
-          storeDocument: vi.fn().mockResolvedValue({ id: 'doc-1' }),
-          getKnowledge: vi.fn().mockResolvedValue([]),
+          storeDocument: mock().mockResolvedValue({ id: 'doc-1' }),
+          getKnowledge: mock().mockResolvedValue([]),
         };
       }
       if (name === 'env-manager') {
         return {
-          getEnvVar: vi.fn().mockReturnValue(null),
+          getEnvVar: mock().mockReturnValue(null),
         };
       }
       if (name === 'plugin-manager') {
         return {
-          clonePlugin: vi.fn().mockResolvedValue({ path: '/tmp/test-project' }),
+          clonePlugin: mock().mockResolvedValue({ path: '/tmp/test-project' }),
         };
       }
       return null;
     }),
     logger: {
-      info: vi.fn(),
-      error: vi.fn(),
-      warn: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      error: mock(),
+      warn: mock(),
+      debug: mock(),
     },
   } as any;
 }
@@ -52,7 +52,7 @@ export function createMockRuntime(): IAgentRuntime {
 export function mockAnthropicClient() {
   return {
     messages: {
-      create: vi.fn().mockResolvedValue({
+      create: mock().mockResolvedValue({
         content: [
           {
             type: 'text',
@@ -68,7 +68,7 @@ export const plugin = {
 
 File: src/__tests__/index.test.ts
 \`\`\`typescript
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect  } from 'bun:test';
 import { plugin } from '../index';
 
 describe('Plugin', () => {

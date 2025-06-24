@@ -87,7 +87,7 @@ describe('PostgreSQL Vector Search Tests', () => {
 
     // Create embeddings that simulate semantic similarity
     // These embeddings are designed to have known similarity relationships
-    const createEmbedding = (values: number[] noise: number = 0.1): number[] => {
+    const createEmbedding = (values: number[], noise: number = 0.1): number[] => {
       const embedding = new Array(384).fill(0);
 
       // Set initial values

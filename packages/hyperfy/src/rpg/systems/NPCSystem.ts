@@ -25,21 +25,21 @@ export class NPCSystem extends System {
   // Core management
   private npcs: Map<string, NPCEntity> = new Map();
   private npcDefinitions: Map<number, NPCDefinition> = new Map();
-  
+
   // Sub-managers
   private behaviorManager: NPCBehaviorManager;
   private dialogueManager: NPCDialogueManager;
   private spawnManager: NPCSpawnManager;
-  
+
   // Configuration
   private readonly INTERACTION_RANGE = 3;
-  
+
   // Add counter for unique IDs
   private npcIdCounter = 0;
-  
+
   // Logger
   private logger = createLogger('NPCSystem');
-  
+
   constructor(world: World) {
     super(world);
     this.behaviorManager = new NPCBehaviorManager(world);
@@ -52,16 +52,16 @@ export class NPCSystem extends System {
    */
   override async init(_options: any): Promise<void> {
     this.logger.info('Initializing...');
-    
+
     // Initialize sub-managers
     this.behaviorManager.init();
-    
+
     // Load NPC definitions from config
     const configLoader = ConfigLoader.getInstance();
     if (!configLoader.isConfigLoaded()) {
       await configLoader.loadAllConfigurations();
     }
-    
+
     // Register all NPCs from config
     const npcConfigs = configLoader.getAllNPCs();
     this.logger.debug(`Found ${Object.keys(npcConfigs).length} NPC configs`);
@@ -71,7 +71,7 @@ export class NPCSystem extends System {
       this.logger.debug(`Registered NPC: ${definition.name} (ID: ${definition.id})`);
     }
     this.logger.info(`Loaded ${this.npcDefinitions.size} NPC definitions from config`);
-    
+
     // Listen for entity events
     this.world.events.on('entity:created', (event: any) => {
       const entity = this.getEntity(event.entityId);
@@ -79,11 +79,11 @@ export class NPCSystem extends System {
         this.onNPCCreated(entity as NPCEntity);
       }
     });
-    
+
     this.world.events.on('entity:destroyed', (event: any) => {
       this.npcs.delete(event.entityId);
     });
-    
+
     // Listen for combat events
     this.world.events.on('entity:death', (event: any) => {
       const npc = this.npcs.get(event.entityId);
@@ -101,7 +101,7 @@ export class NPCSystem extends System {
     for (const [_npcId, npc] of this.npcs) {
       this.behaviorManager.updateBehavior(npc, delta);
     }
-    
+
     // Update spawn points
     this.spawnManager.update(delta);
   }
@@ -189,18 +189,18 @@ export class NPCSystem extends System {
       this.logger.warn(`Unknown NPC definition: ${definitionId}`);
       return null;
     }
-    
+
     // Create NPC entity
     const npc = this.createNPCEntity(definition, position);
-    
+
     // Set spawner reference
     if (spawnerId) {
       npc.spawnerId = spawnerId;
     }
-    
+
     // Add to world
     this.addNPCToWorld(npc);
-    
+
     return npc;
   }
 
@@ -209,17 +209,17 @@ export class NPCSystem extends System {
    */
   despawnNPC(npcId: string): void {
     const npc = this.npcs.get(npcId);
-    if (!npc) return;
-    
+    if (!npc) {return;}
+
     // Clean up
     this.npcs.delete(npcId);
-    
+
     // Emit event
     this.world.events.emit('npc:despawned', {
       npcId,
       position: npc.position
     });
-    
+
     // Remove from world
     this.world.entities.destroyEntity(npcId);
   }
@@ -230,27 +230,27 @@ export class NPCSystem extends System {
   interactWithNPC(playerId: string, npcId: string): void {
     const player = this.getEntity(playerId) as PlayerEntity;
     const npc = this.npcs.get(npcId);
-    
-    if (!player || !npc) return;
-    
+
+    if (!player || !npc) {return;}
+
     // Check distance
     const playerPos = this.getEntityPosition(player);
     const npcPos = this.getEntityPosition(npc);
-    if (!playerPos || !npcPos) return;
-    
+    if (!playerPos || !npcPos) {return;}
+
     const distance = this.getDistance(playerPos, npcPos);
     if (distance > this.INTERACTION_RANGE) {
       this.sendMessage(playerId, "You're too far away.");
       return;
     }
-    
+
     // Check if NPC is in combat
     const npcCombat = npc.getComponent<CombatComponent>('combat');
     if (npcCombat?.inCombat && npc.npcType !== NPCType.BOSS) {
-      this.sendMessage(playerId, "The NPC is busy fighting!");
+      this.sendMessage(playerId, 'The NPC is busy fighting!');
       return;
     }
-    
+
     // Handle based on NPC type
     switch (npc.npcType) {
       case NPCType.QUEST_GIVER:
@@ -268,7 +268,7 @@ export class NPCSystem extends System {
       default:
         this.handleGenericInteraction(playerId, npc);
     }
-    
+
     // Update last interaction time
     npc.lastInteraction = Date.now();
   }
@@ -292,14 +292,14 @@ export class NPCSystem extends System {
    */
   getNPCsInRange(position: Vector3, range: number): NPCEntity[] {
     const npcsInRange: NPCEntity[] = [];
-    
+
     for (const npc of this.npcs.values()) {
       const distance = this.getDistance(position, npc.position);
       if (distance <= range) {
         npcsInRange.push(npc);
       }
     }
-    
+
     return npcsInRange;
   }
 
@@ -311,7 +311,7 @@ export class NPCSystem extends System {
       position,
       definition
     });
-    
+
     // Add NPC component
     const npcComponent: NPCComponent = {
       type: 'npc',
@@ -325,7 +325,7 @@ export class NPCSystem extends System {
       faction: definition.faction || 'neutral',
       state: NPCState.IDLE,
       level: definition.level || 1,
-      
+
       // Combat stats
       combatLevel: definition.combatLevel || 1,
       maxHitpoints: definition.maxHitpoints || 10,
@@ -333,32 +333,32 @@ export class NPCSystem extends System {
       attackStyle: definition.attackStyle || AttackType.MELEE,
       aggressionLevel: definition.aggressionLevel || 0,
       aggressionRange: definition.aggressionRange || 5,
-      
+
       // Combat abilities
       attackBonus: definition.combat?.attackBonus || 0,
       strengthBonus: definition.combat?.strengthBonus || 0,
       defenseBonus: definition.combat?.defenseBonus || 0,
       maxHit: definition.combat?.maxHit || 1,
       attackSpeed: definition.combat?.attackSpeed || 4,
-      
+
       // Spawning
       respawnTime: definition.respawnTime || 60000,
       wanderRadius: definition.wanderRadius || 5,
       spawnPoint: { ...position },
-      
+
       // Interaction
       lootTable: definition.lootTable,
       dialogue: definition.dialogue,
       shop: definition.shop,
       questGiver: definition.questGiver ? true : false,
-      
+
       // State
       currentTarget: null,
       lastInteraction: 0
     };
-    
+
     npc.addComponent('npc', npcComponent);
-    
+
     // Add stats component if combat NPC
     if (this.isCombatNPC(definition)) {
       const stats: StatsComponent = {
@@ -398,7 +398,7 @@ export class NPCSystem extends System {
       };
       npc.addComponent('stats', stats);
     }
-    
+
     // Add movement component
     const movement: MovementComponent = {
       type: 'movement',
@@ -422,7 +422,7 @@ export class NPCSystem extends System {
       teleportAnimation: ''
     };
     npc.addComponent('movement', movement);
-    
+
     return npc;
   }
 
@@ -431,10 +431,10 @@ export class NPCSystem extends System {
    */
   private addNPCToWorld(npc: NPCEntity): void {
     this.npcs.set(npc.id, npc);
-    
+
     // Add to world entities
     (this.world.entities as any).items.set(npc.id, npc);
-    
+
     // Emit event
     this.world.events.emit('npc:spawned', {
       npcId: npc.id,
@@ -455,8 +455,8 @@ export class NPCSystem extends System {
    */
   private onNPCDeath(npc: NPCEntity, killerId?: string): void {
     const npcComponent = npc.getComponent<NPCComponent>('npc');
-    if (!npcComponent) return;
-    
+    if (!npcComponent) {return;}
+
     // Drop loot
     if (npcComponent.lootTable && killerId) {
       this.world.events.emit('npc:death:loot', {
@@ -466,7 +466,7 @@ export class NPCSystem extends System {
         position: npc.position
       });
     }
-    
+
     // Schedule respawn
     if (npcComponent.respawnTime > 0 && npc.spawnerId) {
       this.spawnManager.scheduleRespawn(
@@ -475,7 +475,7 @@ export class NPCSystem extends System {
         npcComponent.respawnTime
       );
     }
-    
+
     // Remove from active NPCs
     this.npcs.delete(npc.id);
   }
@@ -485,9 +485,9 @@ export class NPCSystem extends System {
    */
   private handleQuestGiverInteraction(playerId: string, npc: NPCEntity): void {
     this.dialogueManager.startDialogue(playerId, npc.id);
-    
+
     this.world.events.emit('quest:interact', {
-      playerId: playerId,
+      playerId,
       npcId: npc.id
     });
   }
@@ -497,10 +497,10 @@ export class NPCSystem extends System {
    */
   private handleShopInteraction(playerId: string, npc: NPCEntity): void {
     const npcComponent = npc.getComponent<NPCComponent>('npc');
-    if (!npcComponent?.shop) return;
-    
+    if (!npcComponent?.shop) {return;}
+
     this.world.events.emit('shop:open', {
-      playerId: playerId,
+      playerId,
       npcId: npc.id,
       shop: npcComponent.shop
     });
@@ -511,7 +511,7 @@ export class NPCSystem extends System {
    */
   private handleBankerInteraction(playerId: string, npc: NPCEntity): void {
     this.world.events.emit('bank:open', {
-      playerId: playerId,
+      playerId,
       npcId: npc.id
     });
   }
@@ -528,8 +528,8 @@ export class NPCSystem extends System {
    */
   private handleGenericInteraction(playerId: string, npc: NPCEntity): void {
     const npcComponent = npc.getComponent<NPCComponent>('npc');
-    if (!npcComponent) return;
-    
+    if (!npcComponent) {return;}
+
     // Show examine text or start dialogue
     if (npcComponent.dialogue) {
       this.dialogueManager.startDialogue(playerId, npc.id);
@@ -565,7 +565,7 @@ export class NPCSystem extends System {
       }
       return entity as unknown as RPGEntity;
     }
-    
+
     const entity = this.world.entities.get?.(entityId);
     if (!entity || typeof entity.getComponent !== 'function') {
       return undefined;
@@ -601,7 +601,7 @@ export class NPCSystem extends System {
     if (entity.position && typeof entity.position === 'object') {
       return entity.position;
     }
-    
+
     if (entity.data?.position) {
       // If position is an array, convert to Vector3
       if (Array.isArray(entity.data.position)) {
@@ -613,7 +613,7 @@ export class NPCSystem extends System {
       }
       return entity.data.position;
     }
-    
+
     return null;
   }
-} 
+}

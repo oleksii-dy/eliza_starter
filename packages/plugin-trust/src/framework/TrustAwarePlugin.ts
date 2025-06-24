@@ -15,63 +15,63 @@ import { type ActionPermission, PermissionUtils } from '../types/permissions';
  */
 export abstract class TrustAwarePlugin implements Plugin {
   protected trustService: TrustService | null = null;
-  
+
   /**
    * Define required trust levels for actions
    * Override in subclasses
    */
   protected abstract trustRequirements: Record<string, number>;
-  
+
   /**
    * Define required permissions for actions
    * Override in subclasses
    */
   protected abstract permissions: Record<string, ActionPermission>;
-  
+
   /**
    * Initialize trust-aware services
    */
   async init(config: Record<string, string>, runtime: IAgentRuntime): Promise<void> {
     // Get trust service
     const trustServiceWrapper = runtime.getService('trust');
-    
+
     if (trustServiceWrapper && 'trustService' in trustServiceWrapper) {
       this.trustService = (trustServiceWrapper as any).trustService;
     }
-    
+
     // Wrap actions with trust checking
     if (this.actions) {
       this.actions = this.actions.map(action => this.wrapAction(action));
     }
   }
-  
+
   /**
    * Wrap an action with trust and permission checking
    */
   protected wrapAction(action: Action): Action {
     const originalHandler = action.handler;
     const originalValidate = action.validate;
-    
+
     return {
       ...action,
       validate: async (runtime: IAgentRuntime, message: Memory, state?: any) => {
         // Run original validation first
         if (originalValidate) {
           const valid = await originalValidate(runtime, message, state);
-          if (!valid) return false;
+          if (!valid) {return false;}
         }
-        
+
         // Check trust requirements
         const trustRequired = this.trustRequirements[action.name];
         if (trustRequired && this.trustService) {
           const trustScore = await this.trustService.getTrustScore(message.entityId);
-          
+
           if (trustScore.overall < trustRequired) {
             logger.warn(`[TrustAware] Insufficient trust for ${action.name}: ${trustScore.overall} < ${trustRequired}`);
             return false;
           }
         }
-        
+
         // Check permissions
         const permission = this.permissions[action.name];
         if (permission && this.trustService) {
@@ -81,17 +81,17 @@ export abstract class TrustAwarePlugin implements Plugin {
             return false;
           }
         }
-        
+
         return true;
       },
-      
+
       handler: async (runtime: IAgentRuntime, message: Memory, state?: any, options?: any, callback?: any) => {
         // Log action for audit
         logger.info(`[TrustAware] Audit: ${message.entityId} executing ${action.name}`);
-        
+
         // Execute original handler
         const result = await originalHandler(runtime, message, state, options, callback);
-        
+
         // Update trust based on action outcome
         if (this.trustService && result) {
           // Success increases trust slightly
@@ -105,12 +105,12 @@ export abstract class TrustAwarePlugin implements Plugin {
             }
           );
         }
-        
+
         return result;
       }
     };
   }
-  
+
   /**
    * Check if user has permission to execute action
    */
@@ -119,34 +119,34 @@ export abstract class TrustAwarePlugin implements Plugin {
     message: Memory,
     permission: ActionPermission
   ): Promise<boolean> {
-    if (!this.trustService) return true; // Fallback to allow if no trust service
-    
+    if (!this.trustService) {return true;} // Fallback to allow if no trust service
+
     const context = {
       caller: message.entityId,
       action: permission.action,
       trust: 0,
       roles: [] as string[]
     };
-    
+
     // Get user's trust score
     const trustScore = await this.trustService.getTrustScore(message.entityId);
     context.trust = trustScore.overall;
-    
+
     // Check unix-style permissions
     return PermissionUtils.canExecute(permission.unix, context);
   }
-  
+
   /**
    * Get trust level for a user
    */
   protected async getTrustLevel(runtime: IAgentRuntime, userId: UUID): Promise<number> {
-    if (!this.trustService) return 0;
-    
+    if (!this.trustService) {return 0;}
+
     const trustScore = await this.trustService.getTrustScore(userId);
-    
+
     return trustScore.overall;
   }
-  
+
   /**
    * Check if user is trusted (>= 80 trust score)
    */
@@ -154,7 +154,7 @@ export abstract class TrustAwarePlugin implements Plugin {
     const trust = await this.getTrustLevel(runtime, userId);
     return trust >= 80;
   }
-  
+
   /**
    * Check if user is admin
    */
@@ -162,14 +162,14 @@ export abstract class TrustAwarePlugin implements Plugin {
     // This is a simplified check - in real implementation would check actual roles
     return false;
   }
-  
+
   /**
    * Check if user is system/agent
    */
   protected isSystem(userId: UUID): boolean {
     return false;
   }
-  
+
   // Required Plugin properties
   abstract name: string;
   abstract description: string;
@@ -183,7 +183,7 @@ export abstract class TrustAwarePlugin implements Plugin {
 export const exampleTrustAwarePlugin: Plugin = {
   name: 'example-trust-aware',
   description: 'Example of trust-aware plugin',
-  
+
   actions: [
     {
       name: 'sensitive-action',
@@ -198,9 +198,9 @@ export const exampleTrustAwarePlugin: Plugin = {
           logger.error('Trust service not available');
           return false;
         }
-        
+
         const trustService = trustServiceWrapper.trustService as TrustService;
-        
+
         // Check access
         const hasAccess = await trustService.checkPermission(
           message.entityId,
@@ -210,11 +210,11 @@ export const exampleTrustAwarePlugin: Plugin = {
             roomId: message.roomId
           }
         );
-        
+
         if (!hasAccess.allowed) {
           return false;
         }
-        
+
         // Execute action
         logger.info('Executing sensitive action');
         return true;

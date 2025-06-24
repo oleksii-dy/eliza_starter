@@ -1,3 +1,10 @@
 [test]
-# Use vitest as the test runner
-runner = "vitest"
+timeout = 60000
+coverage = true
+
+[test.env]
+NODE_ENV = "test"
+
+coverage-exclude = [
+  "**/dist/**",
+]

@@ -1,17 +1,17 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 
 // Mock the MCP SDK
-vi.mock('@modelcontextprotocol/sdk/server/index.js', () => ({
-  Server: vi.fn().mockImplementation(() => ({
-    start: vi.fn(),
-    stop: vi.fn(),
-    on: vi.fn(),
-    registerTool: vi.fn(),
-    registerResource: vi.fn(),
+mock.module('@modelcontextprotocol/sdk/server/index.js', () => ({
+  Server: mock().mockImplementation(() => ({
+    start: mock(),
+    stop: mock(),
+    on: mock(),
+    registerTool: mock(),
+    registerResource: mock(),
   })),
 }));
 
@@ -19,7 +19,7 @@ describe('MCP Server', () => {
   let mockServer: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
     mockServer = new Server();
   });
@@ -36,7 +36,7 @@ describe('MCP Server', () => {
     });
 
     it('should handle server errors', () => {
-      const errorHandler = vi.fn();
+      const errorHandler = mock();
       mockServer.on('error', errorHandler);
       expect(mockServer.on).toHaveBeenCalledWith('error', errorHandler);
     });

@@ -1,6 +1,6 @@
 /**
  * RelationshipOntologyService - Core service for multi-dimensional relationship management
- * 
+ *
  * This service replaces the single-type RelationshipService with a comprehensive
  * multi-dimensional relationship system that tracks multiple concurrent relationship
  * types between entities.
@@ -65,22 +65,22 @@ export class RelationshipOntologyManager {
 
   async initialize(): Promise<void> {
     logger.info('[RelationshipOntologyManager] Initializing...');
-    
+
     // Load existing relationships into cache
     await this.loadRelationships();
-    
+
     logger.info('[RelationshipOntologyManager] Initialized successfully');
   }
 
   async stop(): Promise<void> {
     logger.info('[RelationshipOntologyManager] Stopping...');
-    
+
     // Save any pending changes
     await this.persistCache();
-    
+
     this._matrixCache.clear();
     this._dimensionHistory.clear();
-    
+
     logger.info('[RelationshipOntologyManager] Stopped');
   }
 
@@ -112,11 +112,11 @@ export class RelationshipOntologyManager {
 
     try {
       // Get or create relationship matrix
-      let matrix = await this.getRelationshipMatrix(sourceEntityId, targetEntityId);
-      
+      const matrix = await this.getRelationshipMatrix(sourceEntityId, targetEntityId);
+
       // Extract patterns from interaction
       const patterns = matchRelationshipPattern(interaction);
-      
+
       // Get recent messages for context
       const messages = await this.getRecentMessages(sourceEntityId, targetEntityId);
       messages.push({
@@ -127,7 +127,7 @@ export class RelationshipOntologyManager {
         content: { text: interaction },
         createdAt: context?.timestamp?.getTime() || Date.now()
       });
-      
+
       // Extract evidence
       const evidence = await extractRelationshipEvidence(
         this.runtime,
@@ -135,19 +135,19 @@ export class RelationshipOntologyManager {
         targetEntityId,
         messages
       );
-      
+
       // Calculate strength factors
       const factors = calculateStrengthFactors(messages, matrix?.metadata);
-      
+
       // Update or create dimensions based on patterns
       const updatedDimensions: RelationshipDimension[] = [];
-      
+
       for (const pattern of patterns) {
         // Find existing dimension or create new one
         let dimension = matrix?.dimensions.find(
           d => d.category === pattern.category && d.type === pattern.type
         );
-        
+
         if (!dimension) {
           // Create new dimension
           dimension = {
@@ -161,7 +161,7 @@ export class RelationshipOntologyManager {
             trajectory: 'stable'
           };
         }
-        
+
         // Add pattern-specific evidence
         const patternEvidence: RelationshipEvidence = {
           type: EvidenceType.DIRECT_STATEMENT,
@@ -175,33 +175,33 @@ export class RelationshipOntologyManager {
           },
           timestamp: context?.timestamp || new Date()
         };
-        
+
         // Update dimension
         const updatedDimension = updateDimension(
           dimension,
-          [patternEvidence, ...evidence.filter(e => 
+          [patternEvidence, ...evidence.filter(e =>
             this.isRelevantEvidence(e, pattern.category)
           )],
           factors,
           this._config
         );
-        
+
         // Update trajectory
         const historyKey = `${sourceEntityId}-${targetEntityId}-${pattern.category}-${pattern.type}`;
         const history = this._dimensionHistory.get(historyKey) || [];
         history.push(updatedDimension.strength);
-        if (history.length > 20) history.shift(); // Keep last 20 data points
+        if (history.length > 20) {history.shift();} // Keep last 20 data points
         this._dimensionHistory.set(historyKey, history);
-        
+
         updatedDimension.trajectory = determineTrajectory(updatedDimension, history);
-        
+
         updatedDimensions.push(updatedDimension);
       }
-      
+
       // Preserve existing dimensions not in current patterns
       if (matrix) {
         for (const existingDim of matrix.dimensions) {
-          if (!updatedDimensions.find(d => 
+          if (!updatedDimensions.find(d =>
             d.category === existingDim.category && d.type === existingDim.type
           )) {
             // Decay existing dimension slightly
@@ -210,7 +210,7 @@ export class RelationshipOntologyManager {
               strength: existingDim.strength * 0.95, // 5% decay
               lastUpdated: new Date()
             };
-            
+
             // Remove if below threshold
             if (decayedDimension.strength >= this._config.dimensionThreshold) {
               updatedDimensions.push(decayedDimension);
@@ -218,7 +218,7 @@ export class RelationshipOntologyManager {
           }
         }
       }
-      
+
       // Update metadata
       const metadata: RelationshipMetadata = {
         totalInteractions: (matrix?.metadata.totalInteractions || 0) + 1,
@@ -229,33 +229,33 @@ export class RelationshipOntologyManager {
         volatility: 0,
         healthScore: 0
       };
-      
+
       // Calculate composite metrics
       const composite = calculateCompositeRelationship(updatedDimensions, metadata);
-      
+
       // Update peak strength
       if (composite.overallStrength > (matrix?.metadata.peakStrength || 0)) {
         metadata.peakStrength = composite.overallStrength;
         metadata.peakStrengthAt = new Date();
       }
-      
+
       // Calculate volatility
       const allHistories = updatedDimensions.map(d => {
         const key = `${sourceEntityId}-${targetEntityId}-${d.category}-${d.type}`;
         return this._dimensionHistory.get(key) || [];
       }).flat();
-      
+
       if (allHistories.length > 2) {
         const avg = allHistories.reduce((sum, s) => sum + s, 0) / allHistories.length;
-        const variance = allHistories.reduce((sum, s) => 
+        const variance = allHistories.reduce((sum, s) =>
           sum + Math.pow(s - avg, 2), 0
         ) / allHistories.length;
         metadata.volatility = Math.sqrt(variance);
       }
-      
+
       // Calculate health score (combination of strength, consistency, and trajectory)
       metadata.healthScore = this.calculateHealthScore(composite, metadata);
-      
+
       // Create updated matrix
       const updatedMatrix = createRelationshipMatrix(
         sourceEntityId,
@@ -263,7 +263,7 @@ export class RelationshipOntologyManager {
         updatedDimensions,
         metadata
       );
-      
+
       // Update composite with LLM-generated narrative if enabled
       if (this._config.enableInference) {
         updatedMatrix.composite.narrativeSummary = await this.generateNarrative(
@@ -271,12 +271,12 @@ export class RelationshipOntologyManager {
           interaction
         );
       }
-      
+
       // Cache and persist
       const cacheKey = this.getCacheKey(sourceEntityId, targetEntityId);
       this._matrixCache.set(cacheKey, updatedMatrix);
       await this.persistMatrix(updatedMatrix);
-      
+
       // Emit event
       if (this._eventBridge) {
         this._eventBridge.emit({
@@ -295,9 +295,9 @@ export class RelationshipOntologyManager {
           }
         });
       }
-      
+
       return updatedMatrix;
-      
+
     } catch (error) {
       logger.error('[RelationshipOntologyService] Error analyzing interaction', error);
       throw error;
@@ -314,19 +314,19 @@ export class RelationshipOntologyManager {
     // Check cache first
     const cacheKey = this.getCacheKey(sourceEntityId, targetEntityId);
     const cached = this._matrixCache.get(cacheKey);
-    if (cached) return cached;
-    
+    if (cached) {return cached;}
+
     // Try to load from storage
     try {
       const relationships = await this.runtime.getRelationships({
         entityId: sourceEntityId
       });
-      
+
       const relationship = relationships.find(r =>
         (r.sourceEntityId === sourceEntityId && r.targetEntityId === targetEntityId) ||
         (r.sourceEntityId === targetEntityId && r.targetEntityId === sourceEntityId)
       );
-      
+
       if (relationship && relationship.metadata?.matrixData) {
         const matrix = this.deserializeMatrix(relationship.metadata.matrixData);
         this._matrixCache.set(cacheKey, matrix);
@@ -335,7 +335,7 @@ export class RelationshipOntologyManager {
     } catch (error) {
       logger.warn('[RelationshipOntologyService] Error loading relationship', error);
     }
-    
+
     return null;
   }
 
@@ -344,17 +344,17 @@ export class RelationshipOntologyManager {
    */
   async getEntityRelationships(entityId: UUID): Promise<RelationshipMatrix[]> {
     const matrices: RelationshipMatrix[] = [];
-    
+
     try {
       const relationships = await this.runtime.getRelationships({
         entityId
       });
-      
+
       for (const rel of relationships) {
         if (rel.metadata?.matrixData) {
           const matrix = this.deserializeMatrix(rel.metadata.matrixData);
           matrices.push(matrix);
-          
+
           // Update cache
           const cacheKey = this.getCacheKey(matrix.sourceEntityId, matrix.targetEntityId);
           this._matrixCache.set(cacheKey, matrix);
@@ -363,7 +363,7 @@ export class RelationshipOntologyManager {
     } catch (error) {
       logger.error('[RelationshipOntologyService] Error getting entity relationships', error);
     }
-    
+
     return matrices;
   }
 
@@ -379,41 +379,41 @@ export class RelationshipOntologyManager {
     primaryOnly?: boolean;
   }): Promise<RelationshipMatrix[]> {
     let matrices: RelationshipMatrix[] = [];
-    
+
     if (criteria.entityId) {
       matrices = await this.getEntityRelationships(criteria.entityId);
     } else {
       // Get all from cache
       matrices = Array.from(this._matrixCache.values());
     }
-    
+
     return matrices.filter(matrix => {
       // Category filter
       if (criteria.category) {
         const hasCategory = matrix.dimensions.some(d => d.category === criteria.category);
-        if (!hasCategory) return false;
+        if (!hasCategory) {return false;}
       }
-      
+
       // Type filter
       if (criteria.type) {
         const hasType = matrix.dimensions.some(d => d.type === criteria.type);
-        if (!hasType) return false;
+        if (!hasType) {return false;}
       }
-      
+
       // Strength filter
       if (criteria.minStrength !== undefined) {
         if (criteria.primaryOnly && matrix.composite.primaryDimension) {
-          if (matrix.composite.primaryDimension.strength < criteria.minStrength) return false;
+          if (matrix.composite.primaryDimension.strength < criteria.minStrength) {return false;}
         } else {
-          if (matrix.composite.overallStrength < criteria.minStrength) return false;
+          if (matrix.composite.overallStrength < criteria.minStrength) {return false;}
         }
       }
-      
+
       // Complexity filter
       if (criteria.maxComplexity !== undefined) {
-        if (matrix.composite.complexity > criteria.maxComplexity) return false;
+        if (matrix.composite.complexity > criteria.maxComplexity) {return false;}
       }
-      
+
       return true;
     });
   }
@@ -428,7 +428,7 @@ export class RelationshipOntologyManager {
     try {
       const source = await this.runtime.getEntityById(matrix.sourceEntityId);
       const target = await this.runtime.getEntityById(matrix.targetEntityId);
-      
+
       const prompt = `Given the following multi-dimensional relationship data, provide a natural language summary of how the agent views this relationship. Focus on the narrative perspective, not the raw data.
 
 Source Entity: ${source?.names[0] || 'Unknown'}
@@ -436,9 +436,9 @@ Target Entity: ${target?.names[0] || 'Unknown'}
 
 Relationship Dimensions:
 ${matrix.dimensions.map(d => {
-  const typeInfo = this.getTypeInfo(d.category, d.type);
-  return `- ${typeInfo?.label || d.type}: ${Math.round(d.strength * 100)}% strength (${d.trajectory})`;
-}).join('\n')}
+    const typeInfo = this.getTypeInfo(d.category, d.type);
+    return `- ${typeInfo?.label || d.type}: ${Math.round(d.strength * 100)}% strength (${d.trajectory})`;
+  }).join('\n')}
 
 Overall Strength: ${Math.round(matrix.composite.overallStrength * 100)}%
 Complexity: ${matrix.composite.complexity > 0.6 ? 'High' : matrix.composite.complexity > 0.3 ? 'Medium' : 'Low'}
@@ -453,7 +453,7 @@ Provide a 1-2 sentence narrative summary from the agent's perspective. Be natura
         temperature: 0.7,
         maxTokens: 150
       });
-      
+
       return response.trim();
     } catch (error) {
       logger.warn('[RelationshipOntologyService] Error generating narrative', error);
@@ -465,12 +465,12 @@ Provide a 1-2 sentence narrative summary from the agent's perspective. Be natura
   /**
    * Helper methods
    */
-  
+
   private getCacheKey(sourceId: UUID, targetId: UUID): string {
     // Normalize order for bidirectional lookup
     return [sourceId, targetId].sort().join('-');
   }
-  
+
   private isRelevantEvidence(
     evidence: RelationshipEvidence,
     category: RelationshipCategory
@@ -486,53 +486,53 @@ Provide a 1-2 sentence narrative summary from the agent's perspective. Be natura
       [RelationshipCategory.CREATIVE]: ['create', 'collaborate', 'art', 'music', 'write'],
       [RelationshipCategory.COMMUNITY]: ['volunteer', 'organize', 'support', 'cause', 'help']
     };
-    
+
     const keywords = categoryKeywords[category] || [];
     const content = evidence.content.toLowerCase();
-    
+
     return keywords.some(keyword => content.includes(keyword));
   }
-  
+
   private calculateHealthScore(
     composite: CompositeRelationship,
     metadata: RelationshipMetadata
   ): number {
     let score = 0;
-    
+
     // Strength component (40%)
     score += composite.overallStrength * 0.4;
-    
+
     // Stability component (30%)
     const stability = 1 - Math.min(1, metadata.volatility);
     score += stability * 0.3;
-    
+
     // Trajectory component (20%)
-    if (composite.trajectory === 'improving') score += 0.2;
-    else if (composite.trajectory === 'stable') score += 0.15;
-    else if (composite.trajectory === 'declining') score += 0.05;
-    else score += 0.1; // turbulent
-    
+    if (composite.trajectory === 'improving') {score += 0.2;}
+    else if (composite.trajectory === 'stable') {score += 0.15;}
+    else if (composite.trajectory === 'declining') {score += 0.05;}
+    else {score += 0.1;} // turbulent
+
     // Recency component (10%)
     const daysSinceInteraction = metadata.lastInteractionAt
       ? (Date.now() - metadata.lastInteractionAt.getTime()) / (1000 * 60 * 60 * 24)
       : 999;
     const recencyScore = Math.max(0, 1 - daysSinceInteraction / 30);
     score += recencyScore * 0.1;
-    
+
     return Math.max(0, Math.min(1, score));
   }
-  
+
   private getTypeInfo(category: RelationshipCategory, type: string) {
     const categoryTypes = RELATIONSHIP_TYPES[category];
-    if (!categoryTypes) return null;
-    
+    if (!categoryTypes) {return null;}
+
     for (const typeInfo of Object.values(categoryTypes)) {
-      if (typeInfo.id === type) return typeInfo;
+      if (typeInfo.id === type) {return typeInfo;}
     }
-    
+
     return null;
   }
-  
+
   private async getRecentMessages(
     sourceEntityId: UUID,
     targetEntityId: UUID,
@@ -546,9 +546,9 @@ Provide a 1-2 sentence narrative summary from the agent's perspective. Be natura
         count: limit * 2,
         unique: false
       });
-      
+
       // Filter for messages between these entities
-      return memories.filter(m => 
+      return memories.filter(m =>
         (m.entityId === sourceEntityId || m.entityId === targetEntityId) &&
         m.content?.text
       ).slice(0, limit);
@@ -557,7 +557,7 @@ Provide a 1-2 sentence narrative summary from the agent's perspective. Be natura
       return [];
     }
   }
-  
+
   private async loadRelationships(): Promise<void> {
     try {
       // This would load all relationships with matrix data
@@ -567,31 +567,31 @@ Provide a 1-2 sentence narrative summary from the agent's perspective. Be natura
       logger.error('[RelationshipOntologyService] Error loading relationships', error);
     }
   }
-  
+
   private async persistCache(): Promise<void> {
     for (const matrix of this._matrixCache.values()) {
       await this.persistMatrix(matrix);
     }
   }
-  
+
   private async persistMatrix(matrix: RelationshipMatrix): Promise<void> {
     try {
       // Convert to legacy format for storage
       const relationship = this.matrixToLegacyRelationship(matrix);
-      
+
       // Store matrix data in metadata
       relationship.metadata = {
         ...relationship.metadata,
         matrixData: this.serializeMatrix(matrix)
       };
-      
+
       // Use runtime to persist
       await this.runtime.createRelationship(relationship);
     } catch (error) {
       logger.error('[RelationshipOntologyService] Error persisting matrix', error);
     }
   }
-  
+
   private serializeMatrix(matrix: RelationshipMatrix): any {
     return {
       id: matrix.id,
@@ -607,7 +607,7 @@ Provide a 1-2 sentence narrative summary from the agent's perspective. Be natura
       updatedAt: matrix.updatedAt
     };
   }
-  
+
   private deserializeMatrix(data: any): RelationshipMatrix {
     return {
       ...data,
@@ -634,10 +634,10 @@ Provide a 1-2 sentence narrative summary from the agent's perspective. Be natura
       }))
     };
   }
-  
+
   private matrixToLegacyRelationship(matrix: RelationshipMatrix): any {
     const primary = matrix.composite.primaryDimension;
-    
+
     return {
       id: matrix.id,
       sourceEntityId: matrix.sourceEntityId,

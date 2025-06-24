@@ -31,10 +31,11 @@ if (!existsSync(cliDistEntry)) {
 }
 
 // Store original handlers
-const originalHandlers = {
-  unhandledRejection: process.listeners('unhandledRejection'),
-  uncaughtException: process.listeners('uncaughtException'),
-};
+// const originalHandlers = {
+  //   unhandledRejection: process.listeners('unhandledRejection'),
+  //   uncaughtException: process.listeners('uncaughtException'),
+// };
+
 
 // Mock socket.io to prevent server startup issues in tests
 mock.module('socket.io', () => ({
@@ -61,10 +62,10 @@ mock.module('express', () => {
   };
 
   const mockExpress = mock(() => mockApp);
-  mockExpress.static = mock();
-  mockExpress.json = mock();
-  mockExpress.urlencoded = mock();
-  mockExpress.Router = mock(() => ({
+  (mockExpress as any).static = mock();
+  (mockExpress as any).json = mock();
+  (mockExpress as any).urlencoded = mock();
+  (mockExpress as any).Router = mock(() => ({
     use: mock(),
     get: mock(),
     post: mock(),
@@ -80,15 +81,15 @@ mock.module('express', () => {
 
 // Mock body-parser to prevent server startup issues
 mock.module('body-parser', () => ({
-  json: mock(() => (req: any, res: any, next: any) => next()),
-  urlencoded: mock(() => (req: any, res: any, next: any) => next()),
-  text: mock(() => (req: any, res: any, next: any) => next()),
-  raw: mock(() => (req: any, res: any, next: any) => next()),
+  json: mock(() => (_req: any, _res: any, next: any) => next()),
+  urlencoded: mock(() => (_req: any, _res: any, next: any) => next()),
+  text: mock(() => (_req: any, _res: any, next: any) => next()),
+  raw: mock(() => (_req: any, _res: any, next: any) => next()),
 }));
 
 // Mock helmet for security headers
 mock.module('helmet', () => {
-  const helmet = mock(() => (req: any, res: any, next: any) => next());
+  const helmet = mock(() => (_req: any, _res: any, next: any) => next());
   return {
     default: helmet,
     ...helmet,
@@ -97,7 +98,7 @@ mock.module('helmet', () => {
 
 // Mock cors
 mock.module('cors', () => {
-  const cors = mock(() => (req: any, res: any, next: any) => next());
+  const cors = mock(() => (_req: any, _res: any, next: any) => next());
   return {
     default: cors,
     ...cors,
@@ -125,7 +126,7 @@ global.console = {
 // terminate any child processes they created.
 // ---------------------------------------------------------------------------
 
-import { afterAll } from 'vitest';
+import { afterAll  } from 'bun:test';
 
 afterAll(async () => {
   // Give any pending "exit" events from child processes a brief moment to

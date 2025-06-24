@@ -1,4 +1,4 @@
-import { elizaLogger, IAgentRuntime, ModelType } from '@elizaos/core';
+import { logger, IAgentRuntime, ModelType } from '@elizaos/core';
 import { SearchResult, ResearchSource, ResearchFinding } from '../types';
 
 export interface RelevanceScore {
@@ -26,7 +26,7 @@ export class RelevanceAnalyzer {
    * Analyze the research query to understand what constitutes relevance
    */
   async analyzeQueryRelevance(query: string): Promise<RelevanceAnalysis> {
-    elizaLogger.info(`[RelevanceAnalyzer] Analyzing query intent: ${query}`);
+    logger.info(`[RelevanceAnalyzer] Analyzing query intent: ${query}`);
 
     const prompt = `Analyze this research query to define what makes a source or finding relevant:
 
@@ -65,7 +65,7 @@ Format as JSON:
 
       if (jsonMatch) {
         const analysis = JSON.parse(jsonMatch[0]);
-        elizaLogger.info(`[RelevanceAnalyzer] Query analysis complete:`, {
+        logger.info('[RelevanceAnalyzer] Query analysis complete:', {
           intent: analysis.queryIntent,
           keyTopicsCount: analysis.keyTopics?.length || 0,
           requiredElementsCount: analysis.requiredElements?.length || 0,
@@ -73,7 +73,7 @@ Format as JSON:
         return analysis;
       }
     } catch (error) {
-      elizaLogger.error('[RelevanceAnalyzer] Failed to analyze query relevance:', error);
+      logger.error('[RelevanceAnalyzer] Failed to analyze query relevance:', error);
     }
 
     // Fallback analysis
@@ -92,7 +92,7 @@ Format as JSON:
     result: SearchResult,
     queryAnalysis: RelevanceAnalysis
   ): Promise<RelevanceScore> {
-    elizaLogger.debug(`[RelevanceAnalyzer] Scoring search result: ${result.title}`);
+    logger.debug(`[RelevanceAnalyzer] Scoring search result: ${result.title}`);
 
     const prompt = `Score the relevance of this search result to the research query:
 
@@ -142,7 +142,7 @@ Format as JSON:
         const score = JSON.parse(jsonMatch[0]);
         const finalScore = (score.queryAlignment + score.topicRelevance + score.specificity) / 3;
 
-        elizaLogger.debug(`[RelevanceAnalyzer] Search result scored:`, {
+        logger.debug('[RelevanceAnalyzer] Search result scored:', {
           url: result.url,
           score: finalScore,
           breakdown: {
@@ -161,7 +161,7 @@ Format as JSON:
         };
       }
     } catch (error) {
-      elizaLogger.error('[RelevanceAnalyzer] Failed to score search result:', error);
+      logger.error('[RelevanceAnalyzer] Failed to score search result:', error);
     }
 
     // Fallback: Simple keyword matching
@@ -186,7 +186,7 @@ Format as JSON:
     queryAnalysis: RelevanceAnalysis,
     originalQuery: string
   ): Promise<RelevanceScore> {
-    elizaLogger.debug(`[RelevanceAnalyzer] Scoring finding relevance`);
+    logger.debug('[RelevanceAnalyzer] Scoring finding relevance');
 
     const prompt = `Score how well this research finding answers the original query:
 
@@ -237,7 +237,7 @@ Format as JSON:
         const score = JSON.parse(jsonMatch[0]);
         const finalScore = (score.queryAlignment + score.topicRelevance + score.specificity) / 3;
 
-        elizaLogger.debug(`[RelevanceAnalyzer] Finding scored:`, {
+        logger.debug('[RelevanceAnalyzer] Finding scored:', {
           score: finalScore,
           category: finding.category,
           sourceUrl: finding.source.url,
@@ -252,7 +252,7 @@ Format as JSON:
         };
       }
     } catch (error) {
-      elizaLogger.error('[RelevanceAnalyzer] Failed to score finding:', error);
+      logger.error('[RelevanceAnalyzer] Failed to score finding:', error);
     }
 
     // Fallback scoring
@@ -277,7 +277,7 @@ Format as JSON:
     gaps: string[];
     recommendations: string[];
   }> {
-    elizaLogger.info(
+    logger.info(
       `[RelevanceAnalyzer] Verifying query answering for ${findings.length} findings`
     );
 
@@ -324,7 +324,7 @@ Format as JSON:
 
       if (jsonMatch) {
         const assessment = JSON.parse(jsonMatch[0]);
-        elizaLogger.info(`[RelevanceAnalyzer] Query answering assessment:`, {
+        logger.info('[RelevanceAnalyzer] Query answering assessment:', {
           coverage: assessment.coverage,
           gapsCount: assessment.gaps?.length || 0,
           recommendationsCount: assessment.recommendations?.length || 0,
@@ -332,7 +332,7 @@ Format as JSON:
         return assessment;
       }
     } catch (error) {
-      elizaLogger.error('[RelevanceAnalyzer] Failed to verify query answering:', error);
+      logger.error('[RelevanceAnalyzer] Failed to verify query answering:', error);
     }
 
     return {
@@ -374,7 +374,7 @@ Format as JSON:
   }
 
   private calculateKeywordScore(text: string, keywords: string[]): number {
-    if (!keywords.length) return 0.5;
+    if (!keywords.length) {return 0.5;}
 
     const lowerText = text.toLowerCase();
     const matches = keywords.filter((keyword) => lowerText.includes(keyword.toLowerCase()));

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { stringToUuid } from '@elizaos/core';
 import { asUUID } from '@elizaos/core';
 import { trackEntityAction } from '../actions/trackEntity';
@@ -10,7 +10,7 @@ describe('Rolodex Plugin Integration Tests', () => {
   let mockRuntime: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
   });
 
@@ -38,7 +38,7 @@ describe('Rolodex Plugin Integration Tests', () => {
       expect(isValid).toBe(true);
 
       // Test handler
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
       const result = await trackEntityAction.handler(
         mockRuntime,
         message,
@@ -73,7 +73,7 @@ describe('Rolodex Plugin Integration Tests', () => {
         trackMessage,
         { values: {}, data: {}, text: trackMessage.content.text },
         {},
-        vi.fn()
+        mock()
       );
 
       // Now search for the entity
@@ -97,7 +97,7 @@ describe('Rolodex Plugin Integration Tests', () => {
       const isValid = await searchEntitiesAction.validate(mockRuntime, searchMessage, searchState);
       expect(isValid).toBe(true);
 
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
       const result = await searchEntitiesAction.handler(
         mockRuntime,
         searchMessage,
@@ -141,12 +141,12 @@ describe('Rolodex Plugin Integration Tests', () => {
         }
         return Promise.resolve('yes');
       });
-      
+
       const isValid = await scheduleFollowUpAction.validate(mockRuntime, message, state);
       expect(isValid).toBe(true);
 
-      const mockCallback = vi.fn();
-      
+      const mockCallback = mock();
+
       // Mock the LLM response for follow-up extraction
       mockRuntime.useModel.mockResolvedValueOnce(JSON.stringify({
         entityName: 'Sarah Chen',
@@ -154,7 +154,7 @@ describe('Rolodex Plugin Integration Tests', () => {
         message: 'partnership discussion',
         priority: 'medium'
       }));
-      
+
       const result = await scheduleFollowUpAction.handler(
         mockRuntime,
         message,
@@ -175,7 +175,7 @@ describe('Rolodex Plugin Integration Tests', () => {
       // Verify action examples are properly formatted
       expect(trackEntityAction.examples).toBeDefined();
       expect(Array.isArray(trackEntityAction.examples)).toBe(true);
-      
+
       if (trackEntityAction.examples && trackEntityAction.examples.length > 0) {
         const example = trackEntityAction.examples[0];
         expect(Array.isArray(example)).toBe(true);
@@ -199,4 +199,4 @@ describe('Rolodex Plugin Integration Tests', () => {
       expect(mockService).toBeDefined();
     });
   });
-}); 
+});

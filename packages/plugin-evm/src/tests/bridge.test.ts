@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import type { Account, Chain } from 'viem';
 import { parseEther, formatEther } from 'viem';
@@ -16,31 +16,31 @@ const ETH_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}
 
 // Mock the ICacheManager
 const mockCacheManager = {
-  get: vi.fn().mockResolvedValue(null),
-  set: vi.fn(),
+  get: mock().mockResolvedValue(null),
+  set: mock(),
 };
 
 describe('Bridge Action', () => {
   let wp: WalletProvider;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    mock.restore();
     mockCacheManager.get.mockResolvedValue(null);
 
     const pk = TEST_PRIVATE_KEY as `0x${string}`;
-    
+
     // Initialize with multiple testnets for bridging
     const customChains = {
       sepolia: testnetChains.sepolia,
       baseSepolia: testnetChains.baseSepolia,
       optimismSepolia: testnetChains.optimismSepolia,
     };
-    
+
     wp = new WalletProvider(pk, mockCacheManager as any, customChains);
   });
 
   afterEach(() => {
-    // Remove vi.clearAllTimers() as it's not needed in Bun test runner
+    mock.restore();
   });
 
   describe('Constructor', () => {
@@ -164,7 +164,7 @@ describe('Bridge Action', () => {
           }
         } else {
           console.warn('Skipping bridge test - insufficient balance');
-          
+
           // Test the error case instead
           await expect(
             bridgeAction.bridge({
@@ -209,7 +209,7 @@ describe('Bridge Action', () => {
     describe('Token Bridge Tests', () => {
       it('should handle WETH bridge attempts', async () => {
         const balance = await wp.getWalletBalanceForChain('sepolia');
-        
+
         if (balance && parseFloat(balance) > 0.01) {
           try {
             const result = await bridgeAction.bridge({
@@ -253,17 +253,20 @@ describe('Bridge Action', () => {
       };
 
       const balance = await wp.getWalletBalanceForChain('sepolia');
-      
+
       if (balance && parseFloat(balance) > 0.001) {
         try {
-          await bridgeAction.bridge({
-            fromChain: 'sepolia' as any,
-            toChain: 'baseSepolia' as any,
-            fromToken: ETH_ADDRESS,
-            toToken: ETH_ADDRESS,
-            amount: '0.0001',
-          }, progressCallback);
-          
+          await bridgeAction.bridge(
+            {
+              fromChain: 'sepolia' as any,
+              toChain: 'baseSepolia' as any,
+              fromToken: ETH_ADDRESS,
+              toToken: ETH_ADDRESS,
+              amount: '0.0001',
+            },
+            progressCallback
+          );
+
           // If bridge succeeds, progress callback should have been called
           expect(progressCallbackCalled).toBe(true);
         } catch (error) {
@@ -311,7 +314,7 @@ describe('Bridge Action', () => {
           expect(result.from).toBe(fundedWp.getAddress());
 
           console.log(`Funded bridge successful: ${result.hash}`);
-          
+
           // Note: Cross-chain bridges take time to complete
           // In a real test, you might want to wait and check the destination chain
           console.log('Bridge initiated - check destination chain for completion');
@@ -337,11 +340,11 @@ describe('Bridge Action', () => {
     it('should validate supported bridge routes', () => {
       // Test that our test chains are properly configured
       const supportedChains = wp.getSupportedChains();
-      
+
       expect(supportedChains).toContain('sepolia');
       expect(supportedChains).toContain('baseSepolia');
       expect(supportedChains).toContain('optimismSepolia');
-      
+
       console.log(`Supported chains for bridging: ${supportedChains.join(', ')}`);
     });
 
@@ -369,7 +372,7 @@ describe('Bridge Action', () => {
     it('should handle bridge cost estimation', async () => {
       // Test bridge cost estimation (without executing)
       const balance = await wp.getWalletBalanceForChain('sepolia');
-      
+
       if (balance && parseFloat(balance) > 0.001) {
         try {
           // This would normally get route quotes to estimate costs
@@ -380,11 +383,11 @@ describe('Bridge Action', () => {
             toToken: ETH_ADDRESS,
             amount: '0.001',
           };
-          
+
           // Validate parameters are reasonable for cost estimation
           expect(parseFloat(bridgeParams.amount)).toBeGreaterThan(0);
           expect(bridgeParams.fromChain).not.toBe(bridgeParams.toChain);
-          
+
           console.log('Bridge parameters valid for cost estimation');
         } catch (error) {
           console.warn('Bridge cost estimation failed:', error);
@@ -394,4 +397,4 @@ describe('Bridge Action', () => {
       }
     });
   });
-}); 
+});

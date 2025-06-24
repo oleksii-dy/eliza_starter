@@ -8,7 +8,7 @@ import type { Component } from '../types';
  */
 export class RPGEntity extends Entity {
   components: Map<string, Component>;
-  
+
   // Declare inherited properties for TypeScript
   declare world: World;
   declare data: any;
@@ -23,7 +23,7 @@ export class RPGEntity extends Entity {
       quaternion: data.quaternion || [0, 0, 0, 1],
       ...data
     };
-    
+
     super(world, entityData);
     this.components = new Map();
   }
@@ -32,7 +32,8 @@ export class RPGEntity extends Entity {
    * Add a component to the entity
    */
   override addComponent(type: string, data?: any): Component {
-    const component = { type, entity: this, data } as Component;
+    // If data already has a type property, use it directly
+    const component = data && data.type ? data : { type, entityId: this.data.id, ...data } as Component;
     this.components.set(type, component);
     return component;
   }
@@ -91,13 +92,13 @@ export class RPGEntity extends Entity {
    */
   override serialize(): any {
     const data = super.serialize();
-    
+
     // Add component data
     const componentData: any = {};
     this.components.forEach((component, type) => {
       componentData[type] = component;
     });
-    
+
     return {
       ...data,
       components: componentData
@@ -109,8 +110,8 @@ export class RPGEntity extends Entity {
     for (const [type, _] of this.components) {
       this.removeComponent(type);
     }
-    
+
     // Call parent destroy
     super.destroy(local);
   }
-} 
+}

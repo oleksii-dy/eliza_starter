@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, mock, beforeEach, type Mock } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import { ChannelType } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
@@ -39,13 +39,13 @@ const createMockRuntime = (): IAgentRuntime => {
 
   return {
     agentId: 'test-agent' as UUID,
-    getRoom: vi.fn().mockResolvedValue({
+    getRoom: mock().mockResolvedValue({
       id: 'room-1',
       type: ChannelType.GROUP,
       serverId: 'server-1'
     }),
-    getWorld: vi.fn().mockResolvedValue(mockWorld),
-    getEntityById: vi.fn().mockImplementation((id: string) => mockEntities[id])
+    getWorld: mock().mockResolvedValue(mockWorld),
+    getEntityById: mock().mockImplementation((id: string) => mockEntities[id])
   } as any;
 };
 
@@ -64,15 +64,15 @@ describe('roleProvider', () => {
 
   beforeEach(() => {
     runtime = createMockRuntime();
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   it('should provide role information', async () => {
     const memory = createMockMemory('test', testEntityId);
     const state = { data: {} } as State;
-    
+
     const result = await roleProvider.get(runtime, memory, state);
-    
+
     expect(result).toBeDefined();
     expect(result.text).toContain('# Server Role Hierarchy');
     expect(result.text).toContain('## Owners');
@@ -89,23 +89,23 @@ describe('roleProvider', () => {
       type: ChannelType.DM,
       serverId: null
     });
-    
+
     const memory = createMockMemory('test', testEntityId);
     const state = { data: {} } as State;
-    
+
     const result = await roleProvider.get(runtime, memory, state);
-    
+
     expect(result.text).toContain('No access to role information in DMs');
   });
 
   it('should handle missing world data', async () => {
     (runtime.getWorld as Mock).mockResolvedValue(null);
-    
+
     const memory = createMockMemory('test', testEntityId);
     const state = { data: {} } as State;
-    
+
     const result = await roleProvider.get(runtime, memory, state);
-    
+
     expect(result.text).toContain('No role information available');
   });
 
@@ -117,12 +117,12 @@ describe('roleProvider', () => {
         roles: {}
       }
     });
-    
+
     const memory = createMockMemory('test', testEntityId);
     const state = { data: {} } as State;
-    
+
     const result = await roleProvider.get(runtime, memory, state);
-    
+
     expect(result.values?.roles).toContain('No role information available');
   });
 });

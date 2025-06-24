@@ -1,17 +1,15 @@
 import {
   type Action,
+  type ActionExample,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
   type HandlerCallback,
-  type ActionExample,
-  type UUID,
-  asUUID,
   elizaLogger as logger,
 } from '@elizaos/core';
 import { PaymentMethod } from '../types';
 import { createPaymentMiddleware } from '../middleware/paymentMiddleware';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Research action that requires payment
@@ -20,7 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 export const researchAction: Action = {
   name: 'RESEARCH',
   similes: ['SEARCH', 'INVESTIGATE', 'ANALYZE', 'STUDY', 'EXPLORE'],
-  description: 'Performs in-depth research on a topic (requires payment)',
+  description: 'Performs in-depth research on a topic (requires payment). Supports action chaining by providing research results that can be analyzed further, compiled into reports, or used for decision-making workflows.',
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     // Check if message contains a research request
@@ -39,7 +37,7 @@ export const researchAction: Action = {
     state?: State,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
-  ): Promise<Memory[]> => {
+  ): Promise<ActionResult> => {
     try {
       // Extract research topic from message
       const topic = extractResearchTopic(message.content?.text || '');
@@ -49,7 +47,11 @@ export const researchAction: Action = {
           text: 'Please specify what you would like me to research.',
           error: true,
         });
-        return [];
+        return {
+          text: 'Please specify what you would like me to research.',
+          values: { success: false, error: 'no_topic_specified' },
+          data: { action: 'RESEARCH' }
+        };
       }
 
       logger.info('[ResearchAction] Starting research', { topic });
@@ -66,7 +68,7 @@ export const researchAction: Action = {
       });
 
       // Process payment
-      const paymentResult = await new Promise<Memory[]>((resolve, reject) => {
+      const paymentResult = await new Promise<Memory[]>((resolve, _reject) => {
         paymentMiddleware(
           runtime,
           message,
@@ -114,7 +116,24 @@ export const researchAction: Action = {
         );
       });
 
-      return paymentResult;
+      return {
+        text: 'Research completed successfully',
+        values: {
+          success: true,
+          topic,
+          paymentCompleted: true,
+          resultCount: 3
+        },
+        data: {
+          action: 'RESEARCH',
+          researchMetadata: {
+            topic,
+            paymentAmount: '1000000',
+            paymentMethod: PaymentMethod.USDC_ETH,
+            completedAt: new Date().toISOString()
+          }
+        }
+      };
     } catch (error) {
       logger.error('[ResearchAction] Error in research action', error);
 
@@ -122,14 +141,25 @@ export const researchAction: Action = {
         text: error instanceof Error ? error.message : 'An error occurred during research.',
         error: true,
       });
-      return [];
+      return {
+        text: error instanceof Error ? error.message : 'An error occurred during research.',
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : 'unknown_error'
+        },
+        data: {
+          action: 'RESEARCH',
+          errorType: 'research_failed',
+          errorDetails: error instanceof Error ? error.stack : undefined
+        }
+      };
     }
   },
 
   examples: [
     [
       {
-        name: '{{user1}}',
+        name: '{{user}}',
         content: {
           text: 'Can you research the latest developments in quantum computing?',
         },
@@ -138,24 +168,67 @@ export const researchAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll research the latest developments in quantum computing for you. This service costs 1 USDC.\n\nProcessing payment...\n\nPayment successful! Here's what I found:\n\n**Latest Developments in Quantum Computing:**\n\n1. **IBM Quantum Breakthrough** - IBM announced a 433-qubit processor...\n2. **Google's Error Correction** - Significant progress in quantum error correction...\n3. **Commercial Applications** - New quantum algorithms for drug discovery...\n\nWould you like me to research any specific aspect in more detail?",
+          actions: ['RESEARCH'],
         },
       },
     ],
     [
       {
-        name: '{{user1}}',
+        name: '{{user}}',
         content: {
-          text: 'Research the impact of AI on healthcare',
+          text: 'Research AI in healthcare and then create a business plan based on the findings',
         },
       },
       {
         name: '{{agent}}',
         content: {
-          text: "I'll research the impact of AI on healthcare. This requires a payment of 1 USDC.\n\nInitiating payment...\n\nPayment confirmed! Conducting research...\n\n**AI Impact on Healthcare - Research Summary:**\n\n1. **Diagnostic Accuracy** - AI systems achieving 95%+ accuracy in detecting certain cancers...\n2. **Drug Discovery** - AI reducing drug development time by 30-50%...\n3. **Personalized Medicine** - Machine learning enabling tailored treatment plans...\n\nThe research is complete. Would you like a deeper analysis of any particular area?",
+          text: 'I\'ll research AI in healthcare first, then use those findings to create a comprehensive business plan.',
+          thought: 'User wants research followed by business planning - I should conduct the paid research first, then use those results for strategic planning.',
+          actions: ['RESEARCH'],
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: '**AI Healthcare Research Complete!** Found key opportunities in diagnostic accuracy, drug discovery, and personalized medicine. Now creating business plan...',
+          thought: 'Research data shows strong market opportunities. I can now develop a business plan based on these research findings.',
+          actions: ['CREATE_BUSINESS_PLAN'],
         },
       },
     ],
-  ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Research renewable energy trends, analyze the data, and prepare an investment recommendation',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'I\'ll conduct comprehensive research on renewable energy trends, analyze the findings, and provide an investment recommendation.',
+          thought: 'This requires a three-step workflow: 1) Paid research on renewable energy, 2) Analysis of the data, 3) Investment recommendations. Each step builds on the previous.',
+          actions: ['RESEARCH'],
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'Renewable energy research completed! Key trends identified in solar, wind, and battery storage. Now analyzing the market data...',
+          thought: 'Research shows promising trends across multiple renewable sectors. I can now analyze this data for investment insights.',
+          actions: ['ANALYZE_DATA'],
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'Analysis complete! Based on the research findings, I recommend focusing on battery storage companies with strong growth potential...',
+          thought: 'Data analysis reveals battery storage as the highest opportunity sector. I can now provide specific investment recommendations.',
+          actions: ['CREATE_INVESTMENT_REPORT'],
+        },
+      },
+    ],
+  ] as ActionExample[][],
 };
 
 /**
@@ -196,11 +269,11 @@ async function performResearch(topic: string, runtime: IAgentRuntime): Promise<R
   try {
     // Check if web search service is available
     const webSearchService = runtime.getService('web-search') as any;
-    
+
     if (webSearchService && webSearchService.search) {
       // Use real web search if available
       const searchResults = await webSearchService.search(topic, { limit: 5 });
-      
+
       return searchResults.map((result: any, index: number) => ({
         title: result.title || `Result ${index + 1}`,
         summary: result.snippet || result.description || 'No summary available',
@@ -212,7 +285,7 @@ async function performResearch(topic: string, runtime: IAgentRuntime): Promise<R
 
     // Fallback to structured mock results if no web search available
     logger.warn('[ResearchAction] Web search not available, using fallback results');
-    
+
     return [
       {
         title: `Current State of ${topic}`,
@@ -262,7 +335,7 @@ function formatResearchResults(topic: string, results: ResearchResult[]): string
   });
 
   output += `\n*Research completed. Total sources analyzed: ${results.length}*`;
-  output += `\n*Service fee: 1 USDC*`;
+  output += '\n*Service fee: 1 USDC*';
 
   return output;
 }

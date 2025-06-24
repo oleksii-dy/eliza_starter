@@ -141,7 +141,7 @@ export async function runScenarioTests(
 
     const duration = ((performance.now() - startTime) / 1000).toFixed(2);
 
-    logger.info(`\n📊 Scenario test summary:`);
+    logger.info('\n📊 Scenario test summary:');
     logger.info(`  Total scenarios: ${allScenarios.length}`);
     logger.info(`  Executed: ${totalExecuted}`);
     logger.info(`  Passed: ${totalPassed}`);

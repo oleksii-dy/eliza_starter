@@ -1,4 +1,4 @@
-import { IAgentRuntime, elizaLogger } from '@elizaos/core';
+import { IAgentRuntime, logger } from '@elizaos/core';
 import { ResearchService } from '../service';
 import { EvaluationMetrics, EvaluationResults, ResearchProject, DeepResearchBenchResult, ResearchStatus } from '../types';
 import fs from 'fs/promises';
@@ -70,7 +70,7 @@ export interface BenchmarkSummary {
 
 export class BenchmarkRunner {
   private results: BenchmarkResult[] = [];
-  
+
   constructor(
     private runtime: IAgentRuntime,
     private researchService: ResearchService
@@ -79,9 +79,9 @@ export class BenchmarkRunner {
   async runBenchmark(config: BenchmarkConfig): Promise<BenchmarkResult> {
     const runId = `run_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const startTime = Date.now();
-    
-    elizaLogger.info(`[BenchmarkRunner] Starting benchmark: ${config.name} (${runId})`);
-    
+
+    logger.info(`[BenchmarkRunner] Starting benchmark: ${config.name} (${runId})`);
+
     const queryResults: QueryResult[] = [];
     let successCount = 0;
     let totalDuration = 0;
@@ -91,11 +91,11 @@ export class BenchmarkRunner {
 
     // Run each query
     for (const benchmarkQuery of config.queries) {
-      elizaLogger.info(`[BenchmarkRunner] Running query: ${benchmarkQuery.id}`);
-      
+      logger.info(`[BenchmarkRunner] Running query: ${benchmarkQuery.id}`);
+
       const queryStartTime = Date.now();
       let queryResult: QueryResult;
-      
+
       try {
         // Create research project
         const project = await this.researchService.createResearchProject(
@@ -119,27 +119,27 @@ export class BenchmarkRunner {
         // Evaluate if project completed successfully
         let raceScore: number | undefined;
         let factScore: number | undefined;
-        
+
         if (completedProject.evaluation && 'raceScore' in completedProject.evaluation) {
           // EvaluationMetrics format (from report)
           const evalMetrics = completedProject.evaluation as unknown as EvaluationMetrics;
           if (evalMetrics.raceScore) {
             raceScore = evalMetrics.raceScore.overall;
-            if (raceScore !== undefined) raceScores.push(raceScore);
+            if (raceScore !== undefined) {raceScores.push(raceScore);}
           }
           if (evalMetrics.factScore) {
             factScore = evalMetrics.factScore.citationAccuracy;
-            if (factScore !== undefined) factScores.push(factScore);
+            if (factScore !== undefined) {factScores.push(factScore);}
           }
         } else if (completedProject.evaluationResults) {
           // EvaluationResults format (from service)
           if (completedProject.evaluationResults.raceEvaluation?.scores) {
             raceScore = completedProject.evaluationResults.raceEvaluation.scores.overall;
-            if (raceScore !== undefined) raceScores.push(raceScore);
+            if (raceScore !== undefined) {raceScores.push(raceScore);}
           }
           if (completedProject.evaluationResults.factEvaluation?.scores) {
             factScore = completedProject.evaluationResults.factEvaluation.scores.citationAccuracy;
-            if (factScore !== undefined) factScores.push(factScore);
+            if (factScore !== undefined) {factScores.push(factScore);}
           }
         }
 
@@ -171,16 +171,16 @@ export class BenchmarkRunner {
         totalDuration += queryDuration;
         totalSources += sourcesFound;
 
-        elizaLogger.info(`[BenchmarkRunner] Query ${benchmarkQuery.id} completed successfully`, {
+        logger.info(`[BenchmarkRunner] Query ${benchmarkQuery.id} completed successfully`, {
           duration: queryDuration,
           sources: sourcesFound,
-          raceScore: raceScore,
+          raceScore,
         });
-        
+
       } catch (error) {
         const queryDuration = Date.now() - queryStartTime;
         const errorMessage = error instanceof Error ? error.message : String(error);
-        
+
         queryResult = {
           queryId: benchmarkQuery.id,
           query: benchmarkQuery.query,
@@ -190,17 +190,17 @@ export class BenchmarkRunner {
           error: errorMessage,
         };
 
-        elizaLogger.error(`[BenchmarkRunner] Query ${benchmarkQuery.id} failed:`, error);
+        logger.error(`[BenchmarkRunner] Query ${benchmarkQuery.id} failed:`, error);
       }
 
       queryResults.push(queryResult);
     }
 
     // Calculate summary
-    const averageRaceScore = raceScores.length > 0 
-      ? raceScores.reduce((a, b) => a + b, 0) / raceScores.length 
+    const averageRaceScore = raceScores.length > 0
+      ? raceScores.reduce((a, b) => a + b, 0) / raceScores.length
       : undefined;
-    
+
     const averageFactScore = factScores.length > 0
       ? factScores.reduce((a, b) => a + b, 0) / factScores.length
       : undefined;
@@ -240,12 +240,12 @@ export class BenchmarkRunner {
 
     // Save results
     await this.saveBenchmarkResult(benchmarkResult, config.outputDir);
-    
+
     if (config.includeReport) {
       await this.generateMarkdownReport(benchmarkResult, config.outputDir);
     }
 
-    elizaLogger.info(`[BenchmarkRunner] Benchmark completed:`, {
+    logger.info('[BenchmarkRunner] Benchmark completed:', {
       name: config.name,
       runId,
       successRate: summary.successfulQueries / summary.totalQueries,
@@ -263,7 +263,7 @@ export class BenchmarkRunner {
 
     while (checks < maxChecks) {
       const project = await this.researchService.getProject(projectId);
-      
+
       if (!project) {
         throw new Error(`Project ${projectId} not found`);
       }
@@ -284,52 +284,52 @@ export class BenchmarkRunner {
   }
 
   private calculateQualityGrade(raceScore?: number, factScore?: number): 'A' | 'B' | 'C' | 'D' | 'F' {
-    if (!raceScore && !factScore) return 'F';
-    
-    const avgScore = raceScore && factScore 
-      ? (raceScore + factScore) / 2 
+    if (!raceScore && !factScore) {return 'F';}
+
+    const avgScore = raceScore && factScore
+      ? (raceScore + factScore) / 2
       : (raceScore || factScore || 0);
 
-    if (avgScore >= 0.9) return 'A';
-    if (avgScore >= 0.8) return 'B';
-    if (avgScore >= 0.7) return 'C';
-    if (avgScore >= 0.6) return 'D';
+    if (avgScore >= 0.9) {return 'A';}
+    if (avgScore >= 0.8) {return 'B';}
+    if (avgScore >= 0.7) {return 'C';}
+    if (avgScore >= 0.6) {return 'D';}
     return 'F';
   }
 
   private async saveBenchmarkResult(result: BenchmarkResult, outputDir: string): Promise<void> {
     try {
       await fs.mkdir(outputDir, { recursive: true });
-      
+
       const filename = `${result.benchmarkId}_${result.runId}.json`;
       const filepath = path.join(outputDir, filename);
-      
+
       await fs.writeFile(filepath, JSON.stringify(result, null, 2));
-      
-      elizaLogger.info(`[BenchmarkRunner] Results saved to: ${filepath}`);
+
+      logger.info(`[BenchmarkRunner] Results saved to: ${filepath}`);
     } catch (error) {
-      elizaLogger.error('[BenchmarkRunner] Failed to save benchmark result:', error);
+      logger.error('[BenchmarkRunner] Failed to save benchmark result:', error);
     }
   }
 
   private async generateMarkdownReport(result: BenchmarkResult, outputDir: string): Promise<void> {
     try {
       const report = this.formatMarkdownReport(result);
-      
+
       const filename = `${result.benchmarkId}_${result.runId}_report.md`;
       const filepath = path.join(outputDir, filename);
-      
+
       await fs.writeFile(filepath, report);
-      
-      elizaLogger.info(`[BenchmarkRunner] Report generated: ${filepath}`);
+
+      logger.info(`[BenchmarkRunner] Report generated: ${filepath}`);
     } catch (error) {
-      elizaLogger.error('[BenchmarkRunner] Failed to generate report:', error);
+      logger.error('[BenchmarkRunner] Failed to generate report:', error);
     }
   }
 
   private formatMarkdownReport(result: BenchmarkResult): string {
     const { summary, metadata, environment } = result;
-    
+
     return `# Research Benchmark Report
 
 ## Benchmark: ${result.benchmarkName}
@@ -355,8 +355,8 @@ export class BenchmarkRunner {
 | **Failed** | ${summary.failedQueries} |
 | **Avg Duration** | ${(summary.averageDuration / 1000).toFixed(1)}s |
 | **Avg Sources** | ${summary.averageSourcesFound.toFixed(1)} |
-| **Avg RACE Score** | ${summary.averageRaceScore ? (summary.averageRaceScore * 100).toFixed(1) + '%' : 'N/A'} |
-| **Avg FACT Score** | ${summary.averageFactScore ? (summary.averageFactScore * 100).toFixed(1) + '%' : 'N/A'} |
+| **Avg RACE Score** | ${summary.averageRaceScore ? `${(summary.averageRaceScore * 100).toFixed(1)}%` : 'N/A'} |
+| **Avg FACT Score** | ${summary.averageFactScore ? `${(summary.averageFactScore * 100).toFixed(1)}%` : 'N/A'} |
 
 ## Detailed Results
 
@@ -384,11 +384,11 @@ ${this.generateQualityDistribution(result.queries)}
 
   private formatQueryResult(query: QueryResult): string {
     const status = query.success ? '✅' : '❌';
-    const raceScore = query.evaluation?.raceScore?.overall 
-      ? (query.evaluation.raceScore.overall * 100).toFixed(1) + '%'
+    const raceScore = query.evaluation?.raceScore?.overall
+      ? `${(query.evaluation.raceScore.overall * 100).toFixed(1)}%`
       : 'N/A';
     const factScore = query.evaluation?.factScore?.citationAccuracy
-      ? (query.evaluation.factScore.citationAccuracy * 100).toFixed(1) + '%'
+      ? `${(query.evaluation.factScore.citationAccuracy * 100).toFixed(1)}%`
       : 'N/A';
 
     return `### ${status} ${query.queryId}
@@ -403,7 +403,7 @@ ${query.error ? `**Error:** ${query.error}  ` : ''}`;
 
   private generateQualityDistribution(queries: QueryResult[]): string {
     const grades = { A: 0, B: 0, C: 0, D: 0, F: 0 };
-    
+
     queries.forEach(query => {
       if (query.evaluation?.raceScore) {
         const grade = this.calculateQualityGrade(query.evaluation.raceScore.overall);
@@ -432,22 +432,22 @@ ${query.error ? `**Error:** ${query.error}  ` : ''}`;
     try {
       const files = await fs.readdir(outputDir);
       const jsonFiles = files.filter(f => f.endsWith('.json') && !f.includes('_report'));
-      
+
       const results: BenchmarkResult[] = [];
-      
+
       for (const file of jsonFiles) {
         try {
           const content = await fs.readFile(path.join(outputDir, file), 'utf-8');
           const result = JSON.parse(content) as BenchmarkResult;
           results.push(result);
         } catch (error) {
-          elizaLogger.warn(`[BenchmarkRunner] Failed to load result file ${file}:`, error);
+          logger.warn(`[BenchmarkRunner] Failed to load result file ${file}:`, error);
         }
       }
-      
+
       return results.sort((a, b) => b.timestamp - a.timestamp);
     } catch (error) {
-      elizaLogger.error('[BenchmarkRunner] Failed to load previous results:', error);
+      logger.error('[BenchmarkRunner] Failed to load previous results:', error);
       return [];
     }
   }

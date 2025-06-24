@@ -168,11 +168,11 @@ export class EnhancedPatchGenerator {
 
     let iterations = 0;
     const maxIterations = analysis.complexity === 'high' ? 8 : 5;
-    let bestPatch: GeneratedPatch | null = null;
-    let bestScore = 0;
-    let lastPatch = '';
+    const bestPatch: GeneratedPatch | null = null;
+    const bestScore = 0;
+    const lastPatch = '';
     let solutionFoundAt: string | null = null;
-    let bestCheckpoint: ValidationCheckpoint | null = null;
+    const bestCheckpoint: ValidationCheckpoint | null = null;
 
     // Enhanced patch generation with improved scoring
     const scoringCriteria = {
@@ -183,7 +183,7 @@ export class EnhancedPatchGenerator {
       performanceImpact: 0.1,
     };
     let lastVerificationResult: any = null;
-    let approach = '';
+    const approach = '';
 
     // Phase 4: Iterative patch generation with verification
     for (let iteration = 1; iteration <= maxIterations; iteration++) {
@@ -350,10 +350,10 @@ export class EnhancedPatchGenerator {
         : iterations,
       efficiency_percentage: solutionFoundAt
         ? Math.round(
-            ((iterations - (iterations - parseInt(solutionFoundAt.match(/\d+/)?.[0] || '0'))) /
+          ((iterations - (iterations - parseInt(solutionFoundAt.match(/\d+/)?.[0] || '0'))) /
               iterations) *
               100
-          )
+        )
         : 0,
     };
   }
@@ -558,24 +558,24 @@ export class EnhancedPatchGenerator {
         ...(buildPassed
           ? []
           : [
-              {
-                type: 'build',
-                message: 'Build failed - check syntax and types',
-                severity: 'critical' as const,
-                file: 'N/A',
-                line: 0,
-              },
-            ]),
+            {
+              type: 'build',
+              message: 'Build failed - check syntax and types',
+              severity: 'critical' as const,
+              file: 'N/A',
+              line: 0,
+            },
+          ]),
         ...(testResults && testResults.failed > 0
           ? [
-              {
-                type: 'test',
-                message: `${testResults.failed} tests failed`,
-                severity: 'critical' as const,
-                file: 'N/A',
-                line: 0,
-              },
-            ]
+            {
+              type: 'test',
+              message: `${testResults.failed} tests failed`,
+              severity: 'critical' as const,
+              file: 'N/A',
+              line: 0,
+            },
+          ]
           : []),
       ],
     };
@@ -1108,12 +1108,12 @@ ${
     ? `**Research Findings:**
 Based on comprehensive research, here are key insights:
 ${context.research_context.findings
-  .slice(0, 5)
-  .map(
-    (f, i) =>
-      `${i + 1}. ${f.type.toUpperCase()}: ${f.content} (Confidence: ${(f.confidence * 100).toFixed(0)}%)`
-  )
-  .join('\n')}
+    .slice(0, 5)
+    .map(
+      (f, i) =>
+        `${i + 1}. ${f.type.toUpperCase()}: ${f.content} (Confidence: ${(f.confidence * 100).toFixed(0)}%)`
+    )
+    .join('\n')}
 
 **Implementation Guidance:**
 Approach: ${context.research_context.implementationGuidance.approach}
@@ -1127,9 +1127,9 @@ Security Impact: ${context.research_context.riskAssessment.securityImpact}
 ${
   context.research_context.riskAssessment.risks.length > 0
     ? `Key Risks: ${context.research_context.riskAssessment.risks
-        .slice(0, 2)
-        .map((r) => r.description)
-        .join(', ')}`
+      .slice(0, 2)
+      .map((r) => r.description)
+      .join(', ')}`
     : ''
 }
 `
@@ -1141,9 +1141,9 @@ ${
     ? `**Generated Tests (${testSuite.tests.length} tests):**
 These tests verify the fix is correct:
 ${testSuite.tests
-  .slice(0, 3)
-  .map((t: any) => `- ${t.name}: ${t.description}`)
-  .join('\n')}
+    .slice(0, 3)
+    .map((t: any) => `- ${t.name}: ${t.description}`)
+    .join('\n')}
 `
     : ''
 }
@@ -1159,17 +1159,17 @@ ${instance.hints && instance.hints.length > 0 ? `**Hints:**\n${instance.hints.jo
 Verification Score: ${previousVerificationResult.score}/100
 Build: ${previousVerificationResult.realWorldChecks?.buildPassed ? 'PASSED' : 'FAILED'}
 Tests: ${
-        previousVerificationResult.realWorldChecks
-          ? `${previousVerificationResult.realWorldChecks.testsPassed}/${previousVerificationResult.realWorldChecks.testsRun} passed`
-          : 'N/A'
-      }
+  previousVerificationResult.realWorldChecks
+    ? `${previousVerificationResult.realWorldChecks.testsPassed}/${previousVerificationResult.realWorldChecks.testsRun} passed`
+    : 'N/A'
+}
 Lint: ${previousVerificationResult.realWorldChecks?.lintPassed ? 'PASSED' : 'FAILED/N/A'}
 
 Critical Errors:
 ${previousVerificationResult.criticalErrors
-  .slice(0, 5)
-  .map((e: any) => `- [${e.type}] ${e.message}${e.file !== 'N/A' ? ` in ${e.file}` : ''}`)
-  .join('\n')}
+    .slice(0, 5)
+    .map((e: any) => `- [${e.type}] ${e.message}${e.file !== 'N/A' ? ` in ${e.file}` : ''}`)
+    .join('\n')}
 
 ${
   previousPatch
@@ -1236,7 +1236,7 @@ import { Something } from 'something';
     elizaLogger.debug('[ENHANCED-PATCH] Prompt length:', prompt.length);
 
     // Log first 500 chars of prompt for context
-    elizaLogger.info('[ENHANCED-PATCH] Prompt preview:', prompt.substring(0, 500) + '...');
+    elizaLogger.info('[ENHANCED-PATCH] Prompt preview:', `${prompt.substring(0, 500)}...`);
 
     const response = await this.anthropic!.messages.create({
       model: 'claude-opus-4-20250514',
@@ -1253,7 +1253,7 @@ import { Something } from 'something';
     const content = contentBlock.type === 'text' ? contentBlock.text : '';
 
     // Log first 500 chars of response
-    elizaLogger.info('[ENHANCED-PATCH] Response preview:', content.substring(0, 500) + '...');
+    elizaLogger.info('[ENHANCED-PATCH] Response preview:', `${content.substring(0, 500)}...`);
 
     // Track token usage
     if (response.usage) {

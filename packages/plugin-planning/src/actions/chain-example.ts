@@ -119,7 +119,7 @@ export const processAnalysisAction: Action = {
       },
       text: decisions.suggestedResponse,
       continueChain: !decisions.needsMoreInfo,
-    };
+    } as any; // Extended ActionResult with continueChain
   },
 };
 
@@ -184,9 +184,9 @@ export const executeFinalAction: Action = {
       text: execution.message,
       cleanup: async () => {
         console.log('[ChainExample] Cleaning up resources...');
-        // Perform any cleanup operations here
+        // Clean up any resources here
       },
-    };
+    } as any; // Extended ActionResult with cleanup
   },
 };
 
@@ -267,7 +267,7 @@ export const chainExampleAction: Action = {
         await callback({
           text: `I've prepared a ${actionPlan.steps.length}-step action chain to demonstrate our capabilities. The chain will: analyze context, generate a strategy, and execute it.`,
           actions: ['CHAIN_EXAMPLE'],
-          actionPlan: actionPlan,
+          actionPlan,
         });
       }
 
@@ -354,7 +354,7 @@ export const analyzeContextAction: Action = {
       return {
         data: {
           actionName: 'ANALYZE_CONTEXT',
-          analysis: analysis,
+          analysis,
           contextLength: message.content.text?.length || 0,
           analysisComplete: true,
           analysisResults: analysis,
@@ -424,7 +424,7 @@ export const generateStrategyAction: Action = {
       return {
         data: {
           actionName: 'GENERATE_STRATEGY',
-          strategy: strategy,
+          strategy,
           basedOn: analysisResults,
           strategyGenerated: true,
           readyToExecute: true,
@@ -476,7 +476,7 @@ export const createPlanAction: Action = {
 
       // Extract project requirements from the message
       const text = message.content.text || '';
-      
+
       // Create a comprehensive plan structure
       const plan = {
         id: uuidv4(),
@@ -553,7 +553,7 @@ export const createPlanAction: Action = {
         planId: plan.id,
         currentPhase: 0,
         completedTasks: [],
-        plan: plan,
+        plan,
       };
 
       if (callback) {
@@ -583,7 +583,7 @@ Ready to begin execution when you are!`,
       return {
         data: {
           actionName: 'CREATE_PLAN',
-          plan: plan,
+          plan,
           planId: plan.id,
           phaseCount: plan.phases.length,
           taskCount: plan.phases.reduce((total, phase) => total + phase.tasks.length, 0),
@@ -593,7 +593,7 @@ Ready to begin execution when you are!`,
       };
     } catch (error) {
       console.error('[CREATE_PLAN] Error creating plan:', error);
-      
+
       if (callback) {
         await callback({
           text: 'I encountered an error while creating the comprehensive plan. Let me try a simpler approach.',
@@ -632,4 +632,4 @@ Ready to begin execution when you are!`,
       },
     ],
   ],
-}; 
+};

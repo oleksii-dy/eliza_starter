@@ -436,7 +436,7 @@ export class FullDocumentationGenerator {
         // Create a provider object with relevant information
         const provider = {
           fileName: relativePath,
-          content: content,
+          content,
           // Extract provider properties
           name: relativePath.split('/').pop()?.replace('.ts', ''),
         };

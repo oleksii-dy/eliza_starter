@@ -20,7 +20,7 @@ interface CodeBlockGroupProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const CodeBlock = React.forwardRef<HTMLDivElement, CodeBlockProps>(
-  ({ className, children, variant = 'agent', ...props }, ref) => {
+  ({ className, children, ...props }, ref) => {
     return (
       <div
         ref={ref}
@@ -57,7 +57,10 @@ const CodeBlockGroup = React.forwardRef<HTMLDivElement, CodeBlockGroupProps>(
 CodeBlockGroup.displayName = 'CodeBlockGroup';
 
 const CodeBlockCode = React.forwardRef<HTMLDivElement, CodeBlockCodeProps>(
-  ({ code, language = 'text', className, variant = 'agent', ...props }, ref) => {
+  (
+    { code, language: _language = 'text', className, variant: _variant = 'agent', ...props },
+    ref
+  ) => {
     return (
       <div
         ref={ref}

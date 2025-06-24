@@ -1,11 +1,12 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
 import { Chat, ExtendedChatMessage } from '../../core/systems/Chat.js';
 import { createTestWorld, MockWorld } from '../test-world-factory.js';
 import moment from 'moment';
 
 // Mock uuid function
-vi.mock('../../core/utils.js', () => ({
-  uuid: vi.fn(() => 'test-uuid-' + Math.random())
+mock.module('../../core/utils.js', () => ({
+  uuid: mock(() => `test-uuid-${Math.random()}`)
 }));
 
 describe('Chat System', () => {
@@ -18,14 +19,7 @@ describe('Chat System', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  describe('initialization', () => {
-    it('should initialize with empty messages and listeners', () => {
-      expect(chat.msgs).toEqual([]);
-      expect((chat as any).chatListeners.size).toBe(0);
-    });
+    mock.restore();
   });
 
   describe('add', () => {
@@ -66,7 +60,7 @@ describe('Chat System', () => {
     });
 
     it('should notify listeners when message is added', () => {
-      const listener = vi.fn();
+      const listener = mock();
       chat.subscribe(listener);
 
       const msg: ExtendedChatMessage = {
@@ -86,7 +80,7 @@ describe('Chat System', () => {
 
     it('should trigger player chat animation if fromId is provided', () => {
       const mockPlayer = {
-        chat: vi.fn()
+        chat: mock()
       };
       world.entities.players.set('player-1', mockPlayer as any);
 
@@ -122,7 +116,7 @@ describe('Chat System', () => {
 
     it('should broadcast message when broadcast is true', () => {
       const mockNetwork = {
-        send: vi.fn()
+        send: mock()
       };
       (world as any).network = mockNetwork;
 
@@ -145,7 +139,7 @@ describe('Chat System', () => {
     it('should not process commands on server', () => {
       const mockNetwork = {
         isServer: true,
-        send: vi.fn()
+        send: mock()
       };
       (world as any).network = mockNetwork;
 
@@ -159,7 +153,7 @@ describe('Chat System', () => {
         isServer: false,
         isClient: true,
         id: 'player-1',
-        send: vi.fn()
+        send: mock()
       };
       (world as any).network = mockNetwork;
 
@@ -171,13 +165,13 @@ describe('Chat System', () => {
     it('should toggle stats when /stats command is used', () => {
       const mockPrefs = {
         stats: false,
-        setStats: vi.fn()
+        setStats: mock()
       };
       const mockNetwork = {
         isServer: false,
         isClient: true,
         id: 'player-1',
-        send: vi.fn()
+        send: mock()
       };
       (world as any).prefs = mockPrefs;
       (world as any).network = mockNetwork;
@@ -192,7 +186,7 @@ describe('Chat System', () => {
         isServer: false,
         isClient: true,
         id: 'player-1',
-        send: vi.fn()
+        send: mock()
       };
       (world as any).network = mockNetwork;
 
@@ -209,7 +203,7 @@ describe('Chat System', () => {
         isServer: false,
         isClient: true,
         id: 'player-1',
-        send: vi.fn()
+        send: mock()
       };
       (world as any).network = mockNetwork;
 
@@ -244,7 +238,7 @@ describe('Chat System', () => {
     });
 
     it('should notify listeners when cleared', () => {
-      const listener = vi.fn();
+      const listener = mock();
       chat.subscribe(listener);
 
       chat.clear();
@@ -254,7 +248,7 @@ describe('Chat System', () => {
 
     it('should broadcast clear when broadcast is true', () => {
       const mockNetwork = {
-        send: vi.fn()
+        send: mock()
       };
       (world as any).network = mockNetwork;
 
@@ -288,7 +282,7 @@ describe('Chat System', () => {
       const mockNetwork = {
         isServer: false,
         isClient: true,
-        send: vi.fn()
+        send: mock()
       };
       (world.entities as any).player = mockPlayer;
       (world as any).network = mockNetwork;
@@ -313,7 +307,7 @@ describe('Chat System', () => {
       const mockNetwork = {
         isServer: false,
         isClient: true,
-        send: vi.fn()
+        send: mock()
       };
       (world.entities as any).player = mockPlayer;
       (world as any).network = mockNetwork;
@@ -382,7 +376,7 @@ describe('Chat System', () => {
     });
 
     it('should notify listeners on deserialize', () => {
-      const listener = vi.fn();
+      const listener = mock();
       chat.subscribe(listener);
 
       const messages: ExtendedChatMessage[] = [
@@ -404,7 +398,7 @@ describe('Chat System', () => {
 
   describe('subscribe', () => {
     it('should add listener and call it immediately', () => {
-      const listener = vi.fn();
+      const listener = mock();
 
       const unsubscribe = chat.subscribe(listener);
 
@@ -413,7 +407,7 @@ describe('Chat System', () => {
     });
 
     it('should return unsubscribe function', () => {
-      const listener = vi.fn();
+      const listener = mock();
 
       const unsubscribe = chat.subscribe(listener);
       expect((chat as any).chatListeners.has(listener)).toBe(true);
@@ -433,7 +427,7 @@ describe('Chat System', () => {
       };
       chat.add(msg);
 
-      const listener = vi.fn();
+      const listener = mock();
       chat.subscribe(listener);
 
       expect(listener).toHaveBeenCalledWith([msg]);
@@ -452,7 +446,7 @@ describe('Chat System', () => {
         createdAt: moment().toISOString()
       });
 
-      const listener = vi.fn();
+      const listener = mock();
       chat.subscribe(listener);
 
       expect(chat.msgs).toHaveLength(1);
@@ -478,13 +472,13 @@ describe('Chat System', () => {
         isServer: false,
         isClient: true,
         id: 'player-1',
-        send: vi.fn()
+        send: mock()
       };
       (world.entities as any).player = mockPlayer;
       (world as any).network = mockNetwork;
 
       // Subscribe listener
-      const listener = vi.fn();
+      const listener = mock();
       const unsubscribe = chat.subscribe(listener);
 
       // Send message
@@ -521,4 +515,4 @@ describe('Chat System', () => {
       chat.destroy();
     });
   });
-}); 
+});

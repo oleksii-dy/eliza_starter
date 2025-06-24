@@ -1,6 +1,7 @@
 import {
   type Action,
   type ActionExample,
+  type ActionResult,
   createUniqueUuid,
   formatMessages,
   type HandlerCallback,
@@ -25,11 +26,6 @@ interface TodoTaskInput {
   recurring?: 'daily' | 'weekly' | 'monthly'; // For recurring tasks
 }
 
-// Interface for choice options
-interface ChoiceOption {
-  name: string;
-  description: string;
-}
 
 /**
  * Template for extracting todo information from the user's message.
@@ -157,7 +153,7 @@ export const createTodoAction: Action = {
   name: 'CREATE_TODO',
   similes: ['ADD_TODO', 'NEW_TASK', 'ADD_TASK', 'CREATE_TASK'],
   description:
-    'Creates a new todo item from a user description (daily, one-off, or aspirational) immediately.',
+    'Creates a new todo item from user description. Supports daily recurring tasks, one-off tasks with priorities and due dates, and aspirational goals. Returns created todo details including ID, name, and type. Can be chained with LIST_TODOS to show updated list.',
 
   validate: async (_runtime: IAgentRuntime, _message: Memory): Promise<boolean> => {
     // No validation needed if we create directly - let handler decide
@@ -170,8 +166,8 @@ export const createTodoAction: Action = {
     stateFromTrigger: State | undefined,
     options: any,
     callback?: HandlerCallback,
-    responses?: Memory[]
-  ): Promise<void> => {
+    _responses?: Memory[]
+  ): Promise<ActionResult> => {
     let todo: TodoTaskInput | null = null;
 
     try {
@@ -183,7 +179,15 @@ export const createTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CREATE_TODO',
+            error: 'Missing room or entity context',
+          },
+          values: {
+            success: false,
+          },
+        };
       }
 
       // Step 1: Compose state with relevant providers (use stateFromTrigger if available)
@@ -201,7 +205,15 @@ export const createTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CREATE_TODO',
+            error: 'Could not extract todo information',
+          },
+          values: {
+            success: false,
+          },
+        };
       }
 
       // Step 3: Get the data service
@@ -227,18 +239,28 @@ export const createTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CREATE_TODO',
+            error: 'Duplicate task found',
+            duplicateId: duplicateTodo.id,
+          },
+          values: {
+            success: false,
+            isDuplicate: true,
+          },
+        };
       }
 
       // Step 5: Create the task using the data service
       const tags = ['TODO'];
       if (todo.taskType === 'daily') {
         tags.push('daily');
-        if (todo.recurring) tags.push(`recurring-${todo.recurring}`);
+        if (todo.recurring) {tags.push(`recurring-${todo.recurring}`);}
       } else if (todo.taskType === 'one-off') {
         tags.push('one-off');
-        if (todo.priority) tags.push(`priority-${todo.priority}`);
-        if (todo.urgent) tags.push('urgent');
+        if (todo.priority) {tags.push(`priority-${todo.priority}`);}
+        if (todo.urgent) {tags.push('urgent');}
       } else if (todo.taskType === 'aspirational') {
         tags.push('aspirational');
       }
@@ -246,14 +268,14 @@ export const createTodoAction: Action = {
       const metadata: Record<string, any> = {
         createdAt: new Date().toISOString(),
       };
-      if (todo.description) metadata.description = todo.description;
-      if (todo.dueDate) metadata.dueDate = todo.dueDate;
+      if (todo.description) {metadata.description = todo.description;}
+      if (todo.dueDate) {metadata.dueDate = todo.dueDate;}
 
       const room = state.data?.room ?? (await runtime.getRoom(message.roomId));
       const worldId =
         room?.worldId || message.worldId || createUniqueUuid(runtime, message.entityId);
 
-      logger.debug(`[createTodoAction] Creating task with:`, {
+      logger.debug('[createTodoAction] Creating task with:', {
         name: todo.name,
         type: todo.taskType,
         tags,
@@ -305,6 +327,24 @@ export const createTodoAction: Action = {
           source: message.content.source,
         });
       }
+
+      return {
+        data: {
+          actionName: 'CREATE_TODO',
+          todoId: createdTodoId,
+          todoName: todo.name,
+          todoType: todo.taskType,
+          priority: todo.taskType === 'one-off' ? todo.priority : undefined,
+          urgent: todo.taskType === 'one-off' ? todo.urgent : undefined,
+          dueDate: todo.dueDate,
+        },
+        values: {
+          success: true,
+          createdTodoId,
+          todoName: todo.name,
+          todoType: todo.taskType,
+        },
+      };
     } catch (error) {
       logger.error('Error in createTodo handler:', error);
       if (callback) {
@@ -314,10 +354,37 @@ export const createTodoAction: Action = {
           source: message.content.source,
         });
       }
+
+      return {
+        data: {
+          actionName: 'CREATE_TODO',
+          error: error instanceof Error ? error.message : String(error),
+        },
+        values: {
+          success: false,
+        },
+      };
     }
   },
 
   examples: [
+    // Multi-action example: CREATE_TODO followed by LIST_TODOS
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Add a todo to finish my taxes by April 15 and then show me all my todos',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: "I'll create a one-off todo for your taxes and then show your todo list.",
+          actions: ['CREATE_TODO', 'LIST_TODOS'],
+        },
+      },
+    ],
+    // Single action with confirmation
     [
       {
         name: '{{name1}}',
@@ -346,6 +413,23 @@ export const createTodoAction: Action = {
         },
       },
     ],
+    // Multi-action example: CREATE_TODO then COMPLETE_TODO
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Add a quick task to email John and mark it as done right away',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: "I'll create the task and then mark it as completed.",
+          actions: ['CREATE_TODO', 'COMPLETE_TODO'],
+        },
+      },
+    ],
+    // Daily task example
     [
       {
         name: '{{name1}}',
@@ -374,6 +458,23 @@ export const createTodoAction: Action = {
         },
       },
     ],
+    // Multi-action example: CREATE_TODO with urgent priority then GET_ACTIVE_TODOS
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Add an urgent task to fix the production bug and show me my urgent tasks',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: "I'll create an urgent task and then show your active urgent tasks.",
+          actions: ['CREATE_TODO', 'GET_ACTIVE_TODOS'],
+        },
+      },
+    ],
+    // Aspirational goal example
     [
       {
         name: '{{name1}}',

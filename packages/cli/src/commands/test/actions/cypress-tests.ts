@@ -52,7 +52,7 @@ export async function runCypressTests(
     let config: any = {};
     try {
       config = await loadProjectConfig(projectPath);
-    } catch (error) {
+    } catch {
       logger.warn('Could not load project config, continuing with default configuration');
     }
 
@@ -95,7 +95,7 @@ export async function runCypressTests(
         if (process.platform !== 'win32' && serverProcess.pid) {
           try {
             process.kill(-serverProcess.pid, 'SIGTERM');
-          } catch (e) {
+          } catch {
             // Fallback to regular kill
             serverProcess.kill('SIGTERM');
           }
@@ -113,7 +113,7 @@ export async function runCypressTests(
           } else if (!serverProcess.killed) {
             serverProcess.kill('SIGKILL');
           }
-        } catch (e) {
+        } catch {
           // Process already dead
         }
       } catch (error) {
@@ -136,7 +136,7 @@ async function waitForServer(port: number, maxAttempts: number = 30): Promise<vo
         // Server is responding
         return;
       }
-    } catch (error) {
+    } catch {
       // Server not ready yet
     }
 

@@ -1,71 +1,71 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, mock, beforeEach, afterEach } from 'bun:test';
 
 // Mock dependencies
-vi.mock('@solana/web3.js', () => ({
-  Connection: vi.fn(() => ({
-    simulateTransaction: vi.fn(),
-    sendTransaction: vi.fn(),
-    confirmTransaction: vi.fn(),
-    getRecentPrioritizationFees: vi.fn(),
-    getSlot: vi.fn(),
-    getLatestBlockhash: vi.fn().mockResolvedValue({
+mock.module('@solana/web3.js', () => ({
+  Connection: mock(() => ({
+    simulateTransaction: mock(),
+    sendTransaction: mock(),
+    confirmTransaction: mock(),
+    getRecentPrioritizationFees: mock(),
+    getSlot: mock(),
+    getLatestBlockhash: mock().mockResolvedValue({
       blockhash: 'mock-blockhash',
       lastValidBlockHeight: 100,
     }),
-    sendRawTransaction: vi.fn(),
-    getSignatureStatus: vi.fn(),
-    getTransaction: vi.fn(),
+    sendRawTransaction: mock(),
+    getSignatureStatus: mock(),
+    getTransaction: mock(),
   })),
-  Transaction: vi.fn().mockImplementation(() => ({
-    add: vi.fn(),
-    sign: vi.fn(),
-    serialize: vi.fn(),
+  Transaction: mock().mockImplementation(() => ({
+    add: mock(),
+    sign: mock(),
+    serialize: mock(),
     recentBlockhash: 'recent-blockhash',
     feePayer: null,
     instructions: [],
   })),
-  TransactionInstruction: vi.fn(),
+  TransactionInstruction: mock(),
   Keypair: {
-    generate: vi.fn(() => ({
+    generate: mock(() => ({
       publicKey: { toString: () => 'generated-pubkey' },
       secretKey: new Uint8Array(64),
     })),
   },
   SystemProgram: {
-    transfer: vi.fn(() => ({
+    transfer: mock(() => ({
       keys: [],
       programId: { toString: () => 'SystemProgram' },
       data: new Uint8Array(),
     })),
   },
   ComputeBudgetProgram: {
-    setComputeUnitLimit: vi.fn(() => ({
+    setComputeUnitLimit: mock(() => ({
       keys: [],
       programId: { toString: () => 'ComputeBudget' },
       data: new Uint8Array(),
     })),
-    setComputeUnitPrice: vi.fn(() => ({
+    setComputeUnitPrice: mock(() => ({
       keys: [],
       programId: { toString: () => 'ComputeBudget' },
       data: new Uint8Array(),
     })),
   },
-  PublicKey: vi.fn((key) => ({
+  PublicKey: mock((key) => ({
     toString: () => key,
     toBase58: () => key,
   })),
   LAMPORTS_PER_SOL: 1000000000,
 }));
 
-vi.mock('@elizaos/core', () => ({
+mock.module('@elizaos/core', () => ({
   Service: class Service {
     constructor(protected runtime: any) {}
   },
   logger: {
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
+    info: mock(),
+    error: mock(),
+    warn: mock(),
+    debug: mock(),
   },
 }));
 
@@ -88,7 +88,7 @@ describe('TransactionService', () => {
   let mockKeypair: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     mockKeypair = {
       publicKey: { toString: () => 'test-public-key' },
@@ -96,30 +96,30 @@ describe('TransactionService', () => {
     };
 
     mockConnection = {
-      simulateTransaction: vi.fn(),
-      sendTransaction: vi.fn(),
-      confirmTransaction: vi.fn(),
-      getRecentPrioritizationFees: vi.fn(),
-      getSlot: vi.fn(),
-      getLatestBlockhash: vi.fn().mockResolvedValue({
+      simulateTransaction: mock(),
+      sendTransaction: mock(),
+      confirmTransaction: mock(),
+      getRecentPrioritizationFees: mock(),
+      getSlot: mock(),
+      getLatestBlockhash: mock().mockResolvedValue({
         blockhash: 'mock-blockhash',
         lastValidBlockHeight: 100,
       }),
-      sendRawTransaction: vi.fn(),
-      getSignatureStatus: vi.fn(),
-      getTransaction: vi.fn(),
+      sendRawTransaction: mock(),
+      getSignatureStatus: mock(),
+      getTransaction: mock(),
     };
 
     mockRuntime = {
-      getSetting: vi.fn((key: string) => {
+      getSetting: mock((key: string) => {
         const settings: Record<string, string> = {
           SOLANA_RPC_URL: 'https://api.devnet.solana.com',
           SOLANA_NETWORK: 'devnet',
         };
         return settings[key];
       }),
-      getService: vi.fn(() => ({
-        getAgentKeypair: vi.fn().mockResolvedValue(mockKeypair),
+      getService: mock(() => ({
+        getAgentKeypair: mock().mockResolvedValue(mockKeypair),
       })),
     };
 
@@ -129,7 +129,7 @@ describe('TransactionService', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('constructor', () => {
@@ -141,7 +141,7 @@ describe('TransactionService', () => {
     });
 
     it('should handle missing RPC service gracefully', () => {
-      mockRuntime.getService = vi.fn(() => null);
+      mockRuntime.getService = mock(() => null);
 
       expect(() => new TransactionService(mockRuntime)).not.toThrow();
     });
@@ -159,9 +159,9 @@ describe('TransactionService', () => {
       };
 
       mockTransaction = {
-        add: vi.fn().mockReturnThis(),
-        sign: vi.fn(),
-        serialize: vi.fn().mockReturnValue(new Uint8Array()),
+        add: mock().mockReturnThis(),
+        sign: mock(),
+        serialize: mock().mockReturnValue(new Uint8Array()),
         recentBlockhash: 'recent-blockhash',
         feePayer: mockKeypair.publicKey,
         instructions: [mockInstruction],
@@ -255,7 +255,7 @@ describe('TransactionService', () => {
 
       // Mock instructions array with unshift method
       mockTransaction.instructions = [];
-      mockTransaction.instructions.unshift = vi.fn();
+      mockTransaction.instructions.unshift = mock();
 
       const result = await service.sendTransaction(mockTransaction, [mockKeypair], {
         priorityFee: 5000,
@@ -388,8 +388,10 @@ describe('TransactionService', () => {
 
   describe('network-specific behavior', () => {
     it('should handle devnet transactions', () => {
-      mockRuntime.getSetting = vi.fn((key: string) => {
-        if (key === 'SOLANA_NETWORK') return 'devnet';
+      mockRuntime.getSetting = mock((key: string) => {
+        if (key === 'SOLANA_NETWORK') {
+          return 'devnet';
+        }
         return '';
       });
 
@@ -398,8 +400,10 @@ describe('TransactionService', () => {
     });
 
     it('should handle mainnet transactions with higher fees', () => {
-      mockRuntime.getSetting = vi.fn((key: string) => {
-        if (key === 'SOLANA_NETWORK') return 'mainnet-beta';
+      mockRuntime.getSetting = mock((key: string) => {
+        if (key === 'SOLANA_NETWORK') {
+          return 'mainnet-beta';
+        }
         return '';
       });
 

@@ -1,6 +1,5 @@
 import { defineConfig } from 'tsup';
 import { copy } from 'esbuild-plugin-copy';
-import path from 'path';
 
 const isTestEnv = process.env.ELIZA_TEST_MODE === 'true' || process.env.VITEST === 'true';
 
@@ -39,12 +38,8 @@ export default defineConfig({
   format: ['esm'],
   dts: false,
   sourcemap: false,
-  // Ensure that all external dependencies are properly handled.
-  // The regex explicitly includes dependencies that should not be externalized.
-  noExternal: [
-    /^(?!(@electric-sql\/pglite|zod|@elizaos\/core|@elizaos\/server|@elizaos\/scenarios|chokidar|semver|octokit|execa|@noble\/curves)).*/,
-  ],
-  external: ['@elizaos/server', '@elizaos/scenarios'],
+  // Externalize problematic fs-related dependencies
+  external: ['fs-extra'],
   platform: 'node',
   minify: false,
   target: 'esnext',
@@ -67,14 +62,6 @@ const require = createRequire(import.meta.url);
       // Recommended to resolve assets relative to the tsup.config.ts file directory
       resolveFrom: 'cwd',
       assets: [
-        {
-          from: '../../node_modules/@electric-sql/pglite/dist/pglite.data',
-          to: './dist',
-        },
-        {
-          from: '../../node_modules/@electric-sql/pglite/dist/pglite.wasm',
-          to: './dist',
-        },
         {
           from: './templates/**/*',
           to: './dist/templates',

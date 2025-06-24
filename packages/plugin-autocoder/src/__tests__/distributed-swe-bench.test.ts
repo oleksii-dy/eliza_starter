@@ -1,23 +1,23 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { DistributedSWEBenchManager } from '../orchestration/distributed-swe-bench-manager';
 import { runDistributedSWEBenchAction } from '../actions/distributed-swe-bench-action';
 import axios from 'axios';
 import type { IAgentRuntime, Memory } from '@elizaos/core';
 
 // Mock axios
-vi.mock('axios');
+mock.module('axios');
 
 // Mock child_process
-vi.mock('child_process', () => ({
-  exec: vi.fn((cmd, callback) => callback(null, { stdout: 'success', stderr: '' })),
-  promisify: vi.fn(() => vi.fn().mockResolvedValue({ stdout: 'success', stderr: '' })),
+mock.module('child_process', () => ({
+  exec: mock((cmd, callback) => callback(null, { stdout: 'success', stderr: '' })),
+  promisify: mock(() => mock().mockResolvedValue({ stdout: 'success', stderr: '' })),
 }));
 
 describe('Distributed SWE-bench', () => {
   let mockRuntime: IAgentRuntime;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     mockRuntime = {
       agentId: 'test-agent',
@@ -30,9 +30,9 @@ describe('Distributed SWE-bench', () => {
         topics: [],
         plugins: [],
       },
-      getSetting: vi.fn(),
-      getService: vi.fn(),
-      useModel: vi.fn().mockResolvedValue('mock patch'),
+      getSetting: mock(),
+      getService: mock(),
+      useModel: mock().mockResolvedValue('mock patch'),
     } as unknown as IAgentRuntime;
   });
 
@@ -187,7 +187,7 @@ describe('Distributed SWE-bench', () => {
         };
 
         // Mock to prevent actual infrastructure start
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // We'll test the option parsing by checking what gets passed
         // This would require exposing the parseDistributedOptions function

@@ -1,4 +1,4 @@
-import type { UUID } from "@elizaos/core";
+import type { UUID } from '@elizaos/core';
 // Temporary type definitions for disabled services
 
 export enum AuditCategory {
@@ -57,5 +57,5 @@ export interface AuditEntry {
 
 // Stub AuditLogger interface
 export interface AuditLogger {
-    log(entry: Omit<AuditEntry, "id" | "timestamp">): Promise<string>;
+    log(entry: Omit<AuditEntry, 'id' | 'timestamp'>): Promise<string>;
 }

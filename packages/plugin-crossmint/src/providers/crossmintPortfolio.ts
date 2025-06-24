@@ -17,10 +17,10 @@ export const crossmintPortfolioProvider: Provider = {
   dynamic: true, // Only when requested due to API calls
   position: 10,
 
-  get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
+  get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
     try {
       const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
-      
+
       if (!crossmintService) {
         return {
           text: '',
@@ -30,14 +30,14 @@ export const crossmintPortfolioProvider: Provider = {
 
       // Get portfolio information
       const portfolio = await crossmintService.getPortfolio();
-      
-      const totalValueText = portfolio.totalValueUsd > 0 
-        ? `$${portfolio.totalValueUsd.toFixed(2)}` 
+
+      const totalValueText = portfolio.totalValueUsd > 0
+        ? `$${portfolio.totalValueUsd.toFixed(2)}`
         : 'Unable to determine value';
 
       const assetsList = portfolio.assets
         .filter(asset => parseFloat(asset.balance) > 0)
-        .map(asset => 
+        .map(asset =>
           `- ${asset.balanceFormatted} ${asset.symbol} on ${asset.chain}${asset.valueUsd ? ` ($${asset.valueUsd.toFixed(2)})` : ''}`
         )
         .join('\n');
@@ -73,7 +73,7 @@ Note: Portfolio values are estimated and may not reflect real-time market prices
       };
     } catch (error) {
       logger.error('Error in CrossMint portfolio provider:', error);
-      
+
       return {
         text: '[CROSSMINT PORTFOLIO]\nPortfolio information temporarily unavailable\n[/CROSSMINT PORTFOLIO]',
         values: {

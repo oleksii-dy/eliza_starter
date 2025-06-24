@@ -16,10 +16,10 @@ export const crossmintWalletProvider: Provider = {
   description: 'Provides CrossMint MPC wallet status, supported blockchain networks, and enterprise infrastructure capabilities when agent needs to manage cross-chain transactions or X.402 payments',
   position: 5,
 
-  get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
+  get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
     try {
       const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
-      
+
       if (!crossmintService) {
         return {
           text: '',
@@ -30,7 +30,7 @@ export const crossmintWalletProvider: Provider = {
       // Get wallet information
       const wallets = await crossmintService.getWallets();
       const supportedChains = await crossmintService.getSupportedChains();
-      
+
       const walletSummary = wallets.map(wallet => ({
         id: wallet.id,
         address: wallet.address,
@@ -67,7 +67,7 @@ Available Actions:
           crossmintSupportedChains: supportedChains.map(c => c.id),
           crossmintCapabilities: [
             'X402_PAYMENTS',
-            'MPC_WALLETS', 
+            'MPC_WALLETS',
             'CROSS_CHAIN_TRANSFERS',
             'NFT_INFRASTRUCTURE',
             'ENTERPRISE_BLOCKCHAIN',
@@ -81,7 +81,7 @@ Available Actions:
       };
     } catch (error) {
       logger.error('Error in CrossMint wallet provider:', error);
-      
+
       return {
         text: '[CROSSMINT WALLET]\nCrossMint wallet service temporarily unavailable\n[/CROSSMINT WALLET]',
         values: {

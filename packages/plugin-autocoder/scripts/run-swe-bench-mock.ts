@@ -50,9 +50,9 @@ async function runSWEBenchMockTest() {
     console.log(
       `TypeScript/JavaScript: ${(stats.byLanguage['TypeScript'] || 0) + (stats.byLanguage['JavaScript'] || 0)}`
     );
-    console.log(`By language:`, stats.byLanguage);
+    console.log('By language:', stats.byLanguage);
     console.log(
-      `By repository:`,
+      'By repository:',
       Object.entries(stats.byRepo)
         .slice(0, 5)
         .map(([k, v]) => `${k}: ${v}`)
@@ -87,11 +87,11 @@ async function runSWEBenchMockTest() {
       duration_minutes: (report.duration / 1000 / 60).toFixed(2),
       total_instances: report.results.total_instances,
       resolved: report.results.resolved_instances,
-      resolution_rate: (report.results.resolution_rate * 100).toFixed(1) + '%',
-      compilation_success_rate: (report.results.compilation_success_rate * 100).toFixed(1) + '%',
-      test_pass_rate: (report.results.test_pass_rate * 100).toFixed(1) + '%',
+      resolution_rate: `${(report.results.resolution_rate * 100).toFixed(1)}%`,
+      compilation_success_rate: `${(report.results.compilation_success_rate * 100).toFixed(1)}%`,
+      test_pass_rate: `${(report.results.test_pass_rate * 100).toFixed(1)}%`,
       avg_execution_time_seconds: (report.results.summary.avg_execution_time / 1000).toFixed(1),
-      total_cost: '$' + report.results.summary.total_cost.toFixed(2),
+      total_cost: `$${report.results.summary.total_cost.toFixed(2)}`,
       instances: report.results.per_instance_results.map((r) => ({
         id: r.instance_id,
         resolved: r.resolved,

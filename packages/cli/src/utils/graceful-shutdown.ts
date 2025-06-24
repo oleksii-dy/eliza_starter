@@ -156,7 +156,9 @@ export class GracefulShutdownHandler {
    * Stop all running agents
    */
   private async stopAllAgents(): Promise<void> {
-    if (!this.server) return;
+    if (!this.server) {
+      return;
+    }
 
     try {
       // Stop all agents - this would depend on the server implementation

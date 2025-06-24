@@ -169,12 +169,18 @@ function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRuntime {
 
     async getMemories(params: any) {
       const results = Array.from(memories.values()).filter((m) => {
-        if (params.roomId && m.roomId !== params.roomId) return false;
-        if (params.entityId && m.entityId !== params.entityId) return false;
-        if (params.tableName === 'knowledge' && m.metadata?.type !== MemoryType.FRAGMENT)
+        if (params.roomId && m.roomId !== params.roomId) {
           return false;
-        if (params.tableName === 'documents' && m.metadata?.type !== MemoryType.DOCUMENT)
+        }
+        if (params.entityId && m.entityId !== params.entityId) {
           return false;
+        }
+        if (params.tableName === 'knowledge' && m.metadata?.type !== MemoryType.FRAGMENT) {
+          return false;
+        }
+        if (params.tableName === 'documents' && m.metadata?.type !== MemoryType.DOCUMENT) {
+          return false;
+        }
         return true;
       });
 
@@ -523,7 +529,7 @@ export class KnowledgeTestSuite implements TestSuite {
           // Ensure no docs folder exists
           const docsPath = path.join(process.cwd(), 'docs');
           if (fs.existsSync(docsPath)) {
-            fs.renameSync(docsPath, docsPath + '.backup');
+            fs.renameSync(docsPath, `${docsPath}.backup`);
           }
 
           // Initialize should log appropriate warnings/errors
@@ -535,8 +541,8 @@ export class KnowledgeTestSuite implements TestSuite {
           // The plugin was successfully initialized as seen in the logs.
 
           // Restore docs folder if it was backed up
-          if (fs.existsSync(docsPath + '.backup')) {
-            fs.renameSync(docsPath + '.backup', docsPath);
+          if (fs.existsSync(`${docsPath}.backup`)) {
+            fs.renameSync(`${docsPath}.backup`, docsPath);
           }
         } finally {
           process.env = originalEnv;

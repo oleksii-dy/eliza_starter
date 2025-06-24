@@ -3,10 +3,10 @@
  * No mocks - tests actual behavior
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
-  createTestRuntime, 
-  createTestMessage, 
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import {
+  createTestRuntime,
+  createTestMessage,
   processMessageAndWait,
   cleanupRuntime,
   getService,
@@ -58,10 +58,10 @@ describe('Rolodex Plugin Real Integration Tests', () => {
 
       // Search for the entity
       const searchResults = await rolodexService.searchEntities('Sarah Johnson');
-      
+
       expect(searchResults).toBeDefined();
       expect(searchResults.length).toBeGreaterThan(0);
-      
+
       const sarah = searchResults[0];
       expect(sarah.names).toContain('Sarah Johnson');
       expect(sarah.metadata?.organization).toBe('Acme Corp');
@@ -91,7 +91,7 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       // Check updated entity
       const searchResults = await rolodexService.searchEntities('John Smith');
       expect(searchResults.length).toBeGreaterThan(0);
-      
+
       const john = searchResults[0];
       expect(john.metadata?.role).toContain('Senior Developer');
     });
@@ -114,16 +114,16 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       // Find Alice
       const aliceResults = await rolodexService.searchEntities('Alice Chen');
       expect(aliceResults.length).toBeGreaterThan(0);
-      
+
       const alice = aliceResults[0];
-      
+
       // Get Alice's relationships
       const relationships = await rolodexService.getRelationships(alice.id);
       expect(relationships.length).toBeGreaterThan(0);
-      
+
       // Should have management relationships
-      const managementRels = relationships.filter(r => 
-        r.metadata?.type === 'management' || 
+      const managementRels = relationships.filter(r =>
+        r.metadata?.type === 'management' ||
         r.metadata?.relationshipType === 'manages'
       );
       expect(managementRels.length).toBeGreaterThan(0);
@@ -144,7 +144,7 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       // Find both entities
       const davidResults = await rolodexService.searchEntities('David Lee');
       const emmaResults = await rolodexService.searchEntities('Emma Wang');
-      
+
       expect(davidResults.length).toBeGreaterThan(0);
       expect(emmaResults.length).toBeGreaterThan(0);
 
@@ -185,14 +185,14 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       const followUps = await rolodexService.getUpcomingFollowUps();
       expect(followUps.length).toBeGreaterThan(0);
 
-      const frankFollowUp = followUps.find(f => 
-        f.message?.includes('Frank Zhang') || 
+      const frankFollowUp = followUps.find(f =>
+        f.message?.includes('Frank Zhang') ||
         f.message?.includes('partnership')
       );
-      
+
       expect(frankFollowUp).toBeDefined();
       expect(frankFollowUp?.scheduledFor).toBeDefined();
-      
+
       // Should be scheduled for roughly a week from now
       const scheduledDate = new Date(frankFollowUp!.scheduledFor);
       const now = new Date();
@@ -237,7 +237,7 @@ describe('Rolodex Plugin Real Integration Tests', () => {
 
       // Get trust score
       const trustScore = await rolodexService.getTrustScore(entity.id);
-      
+
       // Trust score should exist (if trust service is available)
       // or be null (if trust service is not available)
       if (trustScore) {
@@ -266,15 +266,15 @@ describe('Rolodex Plugin Real Integration Tests', () => {
 
       // Search for variations
       const results = await rolodexService.searchEntities('Johnson');
-      
+
       // Should consolidate to one entity (or have high confidence matches)
       expect(results.length).toBeGreaterThanOrEqual(1);
-      
+
       // The entity should have all name variations
-      const robertEntity = results.find(e => 
+      const robertEntity = results.find(e =>
         e.names.some(n => n.includes('Robert') || n.includes('Bob') || n.includes('Rob'))
       );
-      
+
       expect(robertEntity).toBeDefined();
     });
   });
@@ -298,7 +298,7 @@ describe('Rolodex Plugin Real Integration Tests', () => {
 
       // Get network stats
       const stats = await rolodexService.getNetworkStats();
-      
+
       expect(stats).toBeDefined();
       expect(stats.totalEntities).toBeGreaterThan(0);
       expect(stats.totalRelationships).toBeGreaterThan(0);
@@ -327,7 +327,7 @@ describe('Rolodex Plugin Real Integration Tests', () => {
 
       // Process message with action
       await (runtime as any).processMessage(message);
-      
+
       // Wait for action processing
       await waitForCondition(async () => {
         const results = await rolodexService.searchEntities('Kelly Park');
@@ -337,10 +337,10 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       // Verify entity was tracked
       const results = await rolodexService.searchEntities('Kelly Park');
       expect(results.length).toBeGreaterThan(0);
-      
+
       const kelly = results[0];
       expect(kelly.metadata?.organization).toBe('DesignCo');
       expect(kelly.metadata?.role).toBe('Creative Director');
     });
   });
-}); 
+});

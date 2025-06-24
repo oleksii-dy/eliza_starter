@@ -8,7 +8,7 @@ export class CircularSpawnArea implements SpawnArea {
   avoidOverlap: boolean;
   minSpacing: number;
   maxHeight: number;
-  
+
   constructor(
     private center: Vector3,
     public radius: number,
@@ -20,23 +20,23 @@ export class CircularSpawnArea implements SpawnArea {
     this.avoidOverlap = avoidOverlap;
     this.maxHeight = maxHeight;
   }
-  
+
   /**
    * Get a random position within the circular area
    */
   getRandomPosition(): Vector3 {
     const angle = Math.random() * Math.PI * 2;
     const distance = Math.sqrt(Math.random()) * this.radius;
-    
+
     const yOffset = this.maxHeight > 0 ? (Math.random() - 0.5) * this.maxHeight * 2 : 0;
-    
+
     return {
       x: this.center.x + Math.cos(angle) * distance,
       y: this.center.y + yOffset,
       z: this.center.z + Math.sin(angle) * distance
     };
   }
-  
+
   /**
    * Check if position is valid within the area
    */
@@ -44,7 +44,7 @@ export class CircularSpawnArea implements SpawnArea {
     const distance = this.distance(position, this.center);
     return distance <= this.radius;
   }
-  
+
   /**
    * Calculate distance between two positions
    */
@@ -54,4 +54,4 @@ export class CircularSpawnArea implements SpawnArea {
     const dz = a.z - b.z;
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
-} 
+}

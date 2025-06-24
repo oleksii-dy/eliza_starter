@@ -13,7 +13,7 @@ import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from './ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Separator } from './ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import Loader from './loader';
@@ -266,12 +266,12 @@ const useCreateRoom = () => {
       return response.json();
     },
     onSuccess: (newRoomData) => {
-      console.log(`Room created successfully:`, newRoomData);
+      console.log('Room created successfully:', newRoomData);
       queryClient.invalidateQueries({ queryKey: ['goalsStructured'] });
     },
     onError: (error) => {
       console.error('Error creating room:', error);
-      alert(`Error creating room: ${error.message}`);
+      window.alert(`Error creating room: ${error.message}`);
     },
   });
 };
@@ -297,13 +297,15 @@ const AddTaskForm = ({ worlds }: { worlds: WorldWithRooms[] }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !selectedRoomId) {
-      alert('Please enter a task name and select a world/room.');
+      window.alert('Please enter a task name and select a world/room.');
       return;
     }
     const taskData: any = { name: name.trim(), type, roomId: selectedRoomId };
     if (type === 'one-off') {
       taskData.priority = parseInt(priority, 10);
-      if (dueDate) taskData.dueDate = dueDate;
+      if (dueDate) {
+        taskData.dueDate = dueDate;
+      }
       taskData.isUrgent = isUrgent;
     }
     addTaskMutation.mutate(taskData, {
@@ -315,7 +317,7 @@ const AddTaskForm = ({ worlds }: { worlds: WorldWithRooms[] }) => {
         setIsUrgent(false);
       },
       onError: (error) => {
-        alert(`Error adding task: ${error.message}`);
+        window.alert(`Error adding task: ${error.message}`);
       },
     });
   };
@@ -653,11 +655,11 @@ function App() {
   }, [worlds, isSuccess, error]);
 
   const handleAddRoom = (worldId: string) => {
-    const roomName = prompt('Enter the name for the new room:');
+    const roomName = window.prompt('Enter the name for the new room:');
     if (roomName && roomName.trim()) {
       createRoomMutation.mutate({ worldId, name: roomName.trim() });
     } else if (roomName !== null) {
-      alert('Room name cannot be empty.');
+      window.alert('Room name cannot be empty.');
     }
   };
 
@@ -741,14 +743,14 @@ function App() {
                       <CardContent className="space-y-1 p-2 pt-1">
                         {room.tasks.filter((task) => !task.tags?.includes('completed')).length >
                         0 ? (
-                          room.tasks
-                            .filter((task) => !task.tags?.includes('completed'))
-                            .map((task) => <TaskItem key={task.id} task={task} />)
-                        ) : (
-                          <p className="text-muted-foreground text-xs px-2 py-1">
+                            room.tasks
+                              .filter((task) => !task.tags?.includes('completed'))
+                              .map((task) => <TaskItem key={task.id} task={task} />)
+                          ) : (
+                            <p className="text-muted-foreground text-xs px-2 py-1">
                             No pending tasks in this room.
-                          </p>
-                        )}
+                            </p>
+                          )}
                         {room.tasks.some((task) => task.tags?.includes('completed')) && (
                           <>
                             <Separator className="my-2" />

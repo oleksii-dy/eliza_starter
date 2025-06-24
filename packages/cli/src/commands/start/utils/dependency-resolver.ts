@@ -18,7 +18,9 @@ export function resolvePluginDependencies(
       logger.warn(`Plugin dependency "${pluginName}" not found and will be skipped.`);
       return;
     }
-    if (visited.has(pluginName)) return;
+    if (visited.has(pluginName)) {
+      return;
+    }
     if (visiting.has(pluginName)) {
       logger.error(`Circular dependency detected involving plugin: ${pluginName}`);
       return;

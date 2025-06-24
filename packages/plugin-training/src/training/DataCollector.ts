@@ -17,14 +17,7 @@ export class TrainingDataCollector {
    * Export training data from database logs
    */
   async exportTrainingData(options: ExportOptions = {}): Promise<TrainingDataset> {
-    const {
-      modelType,
-      limit = 1000,
-      offset = 0,
-      startDate,
-      endDate,
-      format = 'jsonl',
-    } = options;
+    const { modelType, limit = 1000, offset = 0, startDate, endDate, format = 'jsonl' } = options;
 
     // Build type filter
     const typeFilter = modelType ? `training-data:${modelType}` : 'training-data%';
@@ -43,8 +36,12 @@ export class TrainingDataCollector {
       if (startDate || endDate) {
         filteredLogs = logs.filter((log: any) => {
           const logTime = log.createdAt || Date.now();
-          if (startDate && logTime < startDate.getTime()) return false;
-          if (endDate && logTime > endDate.getTime()) return false;
+          if (startDate && logTime < startDate.getTime()) {
+            return false;
+          }
+          if (endDate && logTime > endDate.getTime()) {
+            return false;
+          }
           return true;
         });
       }
@@ -69,10 +66,13 @@ export class TrainingDataCollector {
           exportedAt: Date.now(),
           agentId: this.runtime.agentId,
           totalSamples: samples.length,
-          dateRange: (startDate || endDate) ? {
-            start: startDate?.getTime() || 0,
-            end: endDate?.getTime() || Date.now(),
-          } : undefined,
+          dateRange:
+            startDate || endDate
+              ? {
+                  start: startDate?.getTime() || 0,
+                  end: endDate?.getTime() || Date.now(),
+                }
+              : undefined,
         },
       };
 
@@ -111,11 +111,16 @@ export class TrainingDataCollector {
     const output = dataPoint.output;
 
     // Extract the core decision prompt
-    const conversationContext = input.conversationContext
-      ?.map((msg: any) => `${msg.entityId === this.runtime.agentId ? 'Agent' : 'User'}: ${msg.content.text}`)
-      .join('\n') || '';
+    const conversationContext =
+      input.conversationContext
+        ?.map(
+          (msg: any) =>
+            `${msg.entityId === this.runtime.agentId ? 'Agent' : 'User'}: ${msg.content.text}`
+        )
+        .join('\n') || '';
 
-    const systemPrompt = `You are an AI agent deciding whether to respond to a message. Consider the conversation context and determine if the agent should RESPOND, IGNORE, or STOP.`;
+    const systemPrompt =
+      'You are an AI agent deciding whether to respond to a message. Consider the conversation context and determine if the agent should RESPOND, IGNORE, or STOP.';
 
     const userPrompt = `Recent conversation:
 ${conversationContext}
@@ -152,7 +157,8 @@ Should the agent respond to this message?`;
     const input = dataPoint.input;
     const output = dataPoint.output;
 
-    const systemPrompt = `You are an AI agent planning how to respond to a message. Generate a thought process, select appropriate actions, choose relevant providers for context, and create a response.`;
+    const systemPrompt =
+      'You are an AI agent planning how to respond to a message. Generate a thought process, select appropriate actions, choose relevant providers for context, and create a response.';
 
     const userPrompt = `Message: ${input.messageText}
 
@@ -193,11 +199,12 @@ Plan your response:`;
     const input = dataPoint.input;
     const output = dataPoint.output;
 
-    const systemPrompt = `You are an expert programmer. Generate clean, efficient code based on the given requirements.`;
+    const systemPrompt =
+      'You are an expert programmer. Generate clean, efficient code based on the given requirements.';
 
     const userPrompt = input.prompt;
 
-    const assistantResponse = output.explanation 
+    const assistantResponse = output.explanation
       ? `${output.explanation}\n\n\`\`\`${input.language || 'javascript'}\n${output.code}\n\`\`\``
       : `\`\`\`${input.language || 'javascript'}\n${output.code}\n\`\`\``;
 
@@ -221,7 +228,7 @@ Plan your response:`;
    * Convert dataset to JSONL format
    */
   async exportToJSONL(dataset: TrainingDataset): Promise<string> {
-    return dataset.samples.map(sample => JSON.stringify(sample)).join('\n');
+    return dataset.samples.map((sample) => JSON.stringify(sample)).join('\n');
   }
 
   /**
@@ -234,7 +241,7 @@ Plan your response:`;
       await fs.mkdir(dir, { recursive: true });
 
       let content: string;
-      
+
       if (dataset.format === 'jsonl') {
         content = await this.exportToJSONL(dataset);
       } else {
@@ -242,10 +249,8 @@ Plan your response:`;
       }
 
       await fs.writeFile(filePath, content, 'utf-8');
-      
-      elizaLogger.info(
-        `Saved ${dataset.samples.length} training samples to ${filePath}`
-      );
+
+      elizaLogger.info(`Saved ${dataset.samples.length} training samples to ${filePath}`);
     } catch (error) {
       elizaLogger.error(`Failed to save training data to ${filePath}:`, error);
       throw error;
@@ -277,16 +282,16 @@ Plan your response:`;
       for (const log of logs) {
         const dataPoint = log.body as TrainingDataPoint;
         const modelType = dataPoint.modelType;
-        
+
         byModelType[modelType] = (byModelType[modelType] || 0) + 1;
-        
+
         const timestamp = dataPoint.timestamp || log.createdAt || Date.now();
         minTime = Math.min(minTime, timestamp);
         maxTime = Math.max(maxTime, timestamp);
       }
 
       // Count recent samples (last 24 hours)
-      const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
       const recentSamples = logs.filter((log: any) => {
         const timestamp = (log.body as TrainingDataPoint).timestamp || log.createdAt || Date.now();
         return timestamp > oneDayAgo;
@@ -309,8 +314,8 @@ Plan your response:`;
    */
   async cleanupOldData(retentionDays: number = 30): Promise<number> {
     try {
-      const cutoffTime = Date.now() - (retentionDays * 24 * 60 * 60 * 1000);
-      
+      const cutoffTime = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
+
       // Get old training data logs
       const logs = await (this.runtime as any).adapter.getLogs({
         entityId: this.runtime.agentId,
@@ -356,9 +361,9 @@ Plan your response:`;
     recommendations: string[];
   }> {
     const stats = await this.getTrainingDataStats();
-    
+
     const recommendations: string[] = [];
-    
+
     // Check if we have enough data for each model type
     Object.entries(stats.byModelType).forEach(([modelType, count]) => {
       if (count < 100) {
@@ -378,11 +383,9 @@ Plan your response:`;
     // Check data distribution
     const totalSamples = stats.total;
     const modelTypes = Object.keys(stats.byModelType);
-    
+
     if (modelTypes.length === 1) {
-      recommendations.push(
-        'Consider enabling more model types to collect diverse training data'
-      );
+      recommendations.push('Consider enabling more model types to collect diverse training data');
     }
 
     return {
@@ -396,13 +399,23 @@ Plan your response:`;
 
   private assessDataQuality(stats: any): string {
     const { total, byModelType, recentSamples } = stats;
-    
-    if (total < 50) return 'Insufficient';
-    if (total < 200) return 'Limited';
-    if (Object.keys(byModelType).length < 2) return 'Narrow';
-    if (recentSamples < 5) return 'Stale';
-    if (total > 1000 && Object.keys(byModelType).length >= 2) return 'Excellent';
-    
+
+    if (total < 50) {
+      return 'Insufficient';
+    }
+    if (total < 200) {
+      return 'Limited';
+    }
+    if (Object.keys(byModelType).length < 2) {
+      return 'Narrow';
+    }
+    if (recentSamples < 5) {
+      return 'Stale';
+    }
+    if (total > 1000 && Object.keys(byModelType).length >= 2) {
+      return 'Excellent';
+    }
+
     return 'Good';
   }
 }

@@ -1,39 +1,35 @@
-// Remove jest-dom import as it's not needed for non-React tests
-import { vi } from 'vitest';
+import { mock  } from 'bun:test';
 
 // Mock Socket.IO client
 const mockSocket = {
-  on: vi.fn(),
-  emit: vi.fn(),
-  close: vi.fn(),
-  connect: vi.fn(),
-  disconnect: vi.fn(),
+  on: mock(),
+  emit: mock(),
+  close: mock(),
+  connect: mock(),
+  disconnect: mock(),
   connected: false,
   id: 'mock-socket-id',
 };
 
-vi.mock('socket.io-client', () => ({
-  io: vi.fn(() => mockSocket),
-  Socket: vi.fn(() => mockSocket),
-}));
-
 // Mock console.error to reduce noise in tests
-global.console.error = vi.fn();
+global.console.error = mock();
 
-// Setup window.matchMedia for CSS media queries
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
+// Only setup window.matchMedia if window is defined (jsdom environment)
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: mock().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: mock(), // deprecated
+      removeListener: mock(), // deprecated
+      addEventListener: mock(),
+      removeEventListener: mock(),
+      dispatchEvent: mock(),
+    })),
+  });
+}
 
 // Export mock socket for tests to use
 export { mockSocket };

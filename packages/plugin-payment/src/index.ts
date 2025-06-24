@@ -1,4 +1,4 @@
-import { type Plugin, type IAgentRuntime, ServiceType, logger } from '@elizaos/core';
+import { type Plugin, type IAgentRuntime, logger } from '@elizaos/core';
 import { PaymentService } from './services/PaymentService';
 import { PriceOracleService } from './services/PriceOracleService';
 import { UniversalPaymentService } from './services/UniversalPaymentService';
@@ -7,6 +7,9 @@ import { sendPaymentAction } from './actions/sendPaymentAction';
 
 // Import scenarios
 import scenarios from './scenarios';
+
+// Import table schemas for registration
+import { PAYMENT_TABLES } from './database/tables';
 
 // Export types
 export * from './types';
@@ -68,10 +71,20 @@ export const paymentPlugin: Plugin = {
 
   providers: [],
 
-  scenarios: scenarios,
+  scenarios,
 
   async init(config: Record<string, string>, runtime: IAgentRuntime): Promise<void> {
     logger.info('[Payment Plugin] Initializing...');
+
+    // Register payment tables with the unified migrator
+    try {
+      const { schemaRegistry } = await import('@elizaos/plugin-sql');
+      schemaRegistry.registerTables(PAYMENT_TABLES);
+      logger.info('[Payment Plugin] Registered payment database tables');
+    } catch (error) {
+      logger.error('[Payment Plugin] Failed to register payment tables:', error);
+      throw error;
+    }
 
     // Register actions
     runtime.registerAction(researchAction);

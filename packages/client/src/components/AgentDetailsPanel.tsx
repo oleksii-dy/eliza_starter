@@ -2,8 +2,7 @@ import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import type { Agent } from '@elizaos/core';
-import { AgentStatus } from '@elizaos/core';
+import { AgentStatus, type Agent } from '@elizaos/core';
 
 interface AgentDetailsPanelProps {
   agent: Agent;

@@ -7,7 +7,7 @@ import {
   elizaLogger,
 } from '@elizaos/core';
 
-type EVMActionName = 
+type EVMActionName =
   | 'EVM_TRANSFER_TOKENS'
   | 'EVM_BRIDGE_TOKENS'
   | 'EVM_SWAP_TOKENS'
@@ -28,16 +28,16 @@ export const EVM_TRUST_REQUIREMENTS = {
   // Critical financial operations requiring ADMIN_ROLE
   EVM_TRANSFER_TOKENS: { minTrustScore: 0.8, requiredRole: 'ADMIN_ROLE', maxValueUSD: null },
   EVM_BRIDGE_TOKENS: { minTrustScore: 0.9, requiredRole: 'ADMIN_ROLE', maxValueUSD: null },
-  
+
   // Standard trading operations requiring FINANCE_ROLE
   EVM_SWAP_TOKENS: { minTrustScore: 0.6, requiredRole: 'FINANCE_ROLE', maxValueUSD: 10000 },
-  
+
   // Governance operations requiring ADMIN_ROLE
   GOV_PROPOSE: { minTrustScore: 0.9, requiredRole: 'ADMIN_ROLE', maxValueUSD: null },
   GOV_VOTE: { minTrustScore: 0.7, requiredRole: 'FINANCE_ROLE', maxValueUSD: null },
   GOV_QUEUE: { minTrustScore: 0.9, requiredRole: 'ADMIN_ROLE', maxValueUSD: null },
   GOV_EXECUTE: { minTrustScore: 0.95, requiredRole: 'ADMIN_ROLE', maxValueUSD: null },
-  
+
   // Read-only operations requiring USER_ROLE
   GET_BALANCE: { minTrustScore: 0.3, requiredRole: 'USER_ROLE', maxValueUSD: 0 },
   CHECK_ALLOWANCE: { minTrustScore: 0.3, requiredRole: 'USER_ROLE', maxValueUSD: 0 },
@@ -59,7 +59,7 @@ export async function validateEVMTrust(
     functionName?: string;
     chainId?: number;
     estimatedGas?: string;
-  }
+  },
 ): Promise<{ allowed: boolean; reason?: string; trustScore?: number }> {
   try {
     // Get trust service
@@ -85,7 +85,7 @@ export async function validateEVMTrust(
     const trustScore = await (trustService as any).getTrustScore(entityId);
     if (trustScore < requirements.minTrustScore) {
       elizaLogger.warn(
-        `EVM action ${actionName} rejected: insufficient trust score ${trustScore} < ${requirements.minTrustScore}`
+        `EVM action ${actionName} rejected: insufficient trust score ${trustScore} < ${requirements.minTrustScore}`,
       );
       return {
         allowed: false,
@@ -98,7 +98,7 @@ export async function validateEVMTrust(
     const hasRole = await (roleService as any).hasRole(entityId, requirements.requiredRole);
     if (!hasRole) {
       elizaLogger.warn(
-        `EVM action ${actionName} rejected: insufficient role permissions for ${requirements.requiredRole}`
+        `EVM action ${actionName} rejected: insufficient role permissions for ${requirements.requiredRole}`,
       );
       return {
         allowed: false,
@@ -108,7 +108,10 @@ export async function validateEVMTrust(
     }
 
     // Enhanced security checks for smart contract operations
-    if (requirements.requiredRole === 'ADMIN_ROLE' || requirements.requiredRole === 'FINANCE_ROLE') {
+    if (
+      requirements.requiredRole === 'ADMIN_ROLE' ||
+      requirements.requiredRole === 'FINANCE_ROLE'
+    ) {
       const securityModule = runtime.getService('security-module');
       if (securityModule) {
         const securityCheck = await (securityModule as any).validateSmartContractOperation({
@@ -135,7 +138,7 @@ export async function validateEVMTrust(
           runtime,
           transactionDetails.contractAddress,
           transactionDetails.functionName,
-          entityId
+          entityId,
         );
         if (!contractValidation.allowed) {
           return {
@@ -152,7 +155,7 @@ export async function validateEVMTrust(
           runtime,
           transactionDetails,
           requirements.maxValueUSD,
-          trustScore
+          trustScore,
         );
         if (!amountCheck.allowed) {
           return {
@@ -169,7 +172,7 @@ export async function validateEVMTrust(
           runtime,
           message,
           transactionDetails,
-          trustScore
+          trustScore,
         );
         if (!highValueCheck.allowed) {
           return {
@@ -183,7 +186,8 @@ export async function validateEVMTrust(
 
     elizaLogger.info(
       `EVM action ${actionName} authorized: trust=${trustScore.toFixed(2)}, role=${requirements.requiredRole}`,
-      transactionDetails && `chain=${transactionDetails.chainId}, contract=${transactionDetails.contractAddress}`
+      transactionDetails &&
+        `chain=${transactionDetails.chainId}, contract=${transactionDetails.contractAddress}`,
     );
 
     return { allowed: true, trustScore };
@@ -200,7 +204,7 @@ async function validateSmartContractSecurity(
   runtime: IAgentRuntime,
   contractAddress: string,
   functionName?: string,
-  entityId?: string
+  entityId?: string,
 ): Promise<{ allowed: boolean; reason?: string }> {
   try {
     const securityModule = runtime.getService('security-module');
@@ -240,7 +244,10 @@ async function validateSmartContractSecurity(
     return { allowed: true };
   } catch (error) {
     elizaLogger.error('Smart contract security validation error:', error);
-    return { allowed: false, reason: `Contract security validation error: ${(error as Error).message}` };
+    return {
+      allowed: false,
+      reason: `Contract security validation error: ${(error as Error).message}`,
+    };
   }
 }
 
@@ -251,7 +258,7 @@ async function validateTransactionValue(
   runtime: IAgentRuntime,
   transactionDetails: { amount?: number; tokenSymbol?: string; chainId?: number },
   maxAllowedValue: number,
-  trustScore: number
+  trustScore: number,
 ): Promise<{ allowed: boolean; reason?: string }> {
   try {
     if (!transactionDetails.amount) {
@@ -266,11 +273,13 @@ async function validateTransactionValue(
       try {
         const tokenPrice = await (priceOracle as any).getTokenPrice(
           transactionDetails.tokenSymbol,
-          transactionDetails.chainId
+          transactionDetails.chainId,
         );
         usdValue = transactionDetails.amount * tokenPrice;
       } catch (error) {
-        elizaLogger.warn(`Could not get price for ${transactionDetails.tokenSymbol}, using raw amount`);
+        elizaLogger.warn(
+          `Could not get price for ${transactionDetails.tokenSymbol}, using raw amount`,
+        );
       }
     }
 
@@ -297,14 +306,14 @@ async function validateTransactionValue(
 async function validateHighValueEVMTransaction(
   runtime: IAgentRuntime,
   message: Memory,
-  transactionDetails: { 
-    amount?: number; 
-    recipient?: string; 
-    tokenSymbol?: string; 
+  transactionDetails: {
+    amount?: number;
+    recipient?: string;
+    tokenSymbol?: string;
     chainId?: number;
     contractAddress?: string;
   },
-  trustScore: number
+  trustScore: number,
 ): Promise<{ allowed: boolean; reason?: string }> {
   try {
     const VERY_HIGH_VALUE_THRESHOLD = 50000; // $50k USD
@@ -321,7 +330,7 @@ async function validateHighValueEVMTransaction(
       try {
         const tokenPrice = await (priceOracle as any).getTokenPrice(
           transactionDetails.tokenSymbol,
-          transactionDetails.chainId
+          transactionDetails.chainId,
         );
         usdValue = transactionDetails.amount * tokenPrice;
       } catch (error) {
@@ -351,7 +360,8 @@ async function validateHighValueEVMTransaction(
         if (!recipientCheck.trusted) {
           return {
             allowed: false,
-            reason: `Very high-value transaction to untrusted recipient requires additional verification`,
+            reason:
+              'Very high-value transaction to untrusted recipient requires additional verification',
           };
         }
       }
@@ -371,7 +381,10 @@ async function validateHighValueEVMTransaction(
     return { allowed: true };
   } catch (error) {
     elizaLogger.error('Error validating high-value EVM transaction:', error);
-    return { allowed: false, reason: `High-value transaction validation error: ${(error as Error).message}` };
+    return {
+      allowed: false,
+      reason: `High-value transaction validation error: ${(error as Error).message}`,
+    };
   }
 }
 
@@ -380,7 +393,7 @@ async function validateHighValueEVMTransaction(
  */
 async function validateGasLimits(
   runtime: IAgentRuntime,
-  transactionDetails: { estimatedGas?: string; contractAddress?: string }
+  transactionDetails: { estimatedGas?: string; contractAddress?: string },
 ): Promise<{ allowed: boolean; reason?: string }> {
   try {
     if (!transactionDetails.estimatedGas) {
@@ -412,14 +425,18 @@ export async function recordEVMAction(
   message: Memory,
   actionName: string,
   success: boolean,
-  details?: any
+  details?: any,
 ): Promise<void> {
   try {
     const trustService = runtime.getService('trust-engine');
-    if (!trustService) return;
+    if (!trustService) {
+      return;
+    }
 
     const entityId = message.entityId;
-    if (!entityId) return;
+    if (!entityId) {
+      return;
+    }
 
     // Calculate trust impact based on action type and outcome
     let trustChange = 0;
@@ -457,7 +474,7 @@ export async function recordEVMAction(
     });
 
     elizaLogger.debug(
-      `Recorded trust change ${trustChange} for EVM action ${actionName} (${success ? 'success' : 'failure'})`
+      `Recorded trust change ${trustChange} for EVM action ${actionName} (${success ? 'success' : 'failure'})`,
     );
   } catch (error) {
     elizaLogger.error('Failed to record EVM action trust impact:', error);
@@ -467,18 +484,23 @@ export async function recordEVMAction(
 /**
  * Extract transaction details from message or state
  */
-export function extractEVMTransactionDetails(message: Memory, state?: State): {
-  amount?: number;
-  tokenSymbol?: string;
-  recipient?: string;
-  contractAddress?: string;
-  functionName?: string;
-  chainId?: number;
-  estimatedGas?: string;
-} | undefined {
+export function extractEVMTransactionDetails(
+  message: Memory,
+  state?: State,
+):
+  | {
+      amount?: number;
+      tokenSymbol?: string;
+      recipient?: string;
+      contractAddress?: string;
+      functionName?: string;
+      chainId?: number;
+      estimatedGas?: string;
+    }
+  | undefined {
   try {
     const messageText = message.content.text?.toLowerCase() || '';
-    
+
     // Extract amount
     const amountMatch = messageText.match(/(\d+(?:\.\d+)?)\s*(eth|usdc|btc|dai|usdt|\$|\w+)/i);
     const amount = amountMatch ? parseFloat(amountMatch[1]) : undefined;
@@ -527,7 +549,7 @@ export function extractEVMTransactionDetails(message: Memory, state?: State): {
  */
 export function wrapEVMActionWithTrust(
   action: Action,
-  trustRequirements: { minTrustScore: number; requiredRole: string; maxValueUSD: number | null }
+  trustRequirements: { minTrustScore: number; requiredRole: string; maxValueUSD: number | null },
 ): Action {
   const originalHandler = action.handler;
   const originalValidate = action.validate;
@@ -538,7 +560,9 @@ export function wrapEVMActionWithTrust(
       // First run original validation
       if (originalValidate) {
         const originalValid = await originalValidate(runtime, message, state);
-        if (!originalValid) return false;
+        if (!originalValid) {
+          return false;
+        }
       }
 
       // Extract transaction details for validation
@@ -550,7 +574,7 @@ export function wrapEVMActionWithTrust(
         message,
         action.name,
         trustRequirements,
-        transactionDetails
+        transactionDetails,
       );
 
       return trustCheck.allowed;
@@ -560,7 +584,7 @@ export function wrapEVMActionWithTrust(
       message: Memory,
       state: State | undefined,
       options?: any,
-      callback?: HandlerCallback
+      callback?: HandlerCallback,
     ) => {
       // Extract transaction details for validation
       const transactionDetails = extractEVMTransactionDetails(message, state);
@@ -571,17 +595,17 @@ export function wrapEVMActionWithTrust(
         message,
         action.name,
         trustRequirements,
-        transactionDetails
+        transactionDetails,
       );
 
       if (!trustCheck.allowed) {
         const errorMessage = `Access denied for EVM action '${action.name}': ${trustCheck.reason}`;
         elizaLogger.warn(errorMessage);
-        
+
         if (callback) {
           callback({
             text: errorMessage,
-            content: { 
+            content: {
               error: trustCheck.reason,
               requiredTrustScore: trustRequirements.minTrustScore,
               requiredRole: trustRequirements.requiredRole,
@@ -595,14 +619,17 @@ export function wrapEVMActionWithTrust(
       try {
         // Execute original handler
         const result = await originalHandler(runtime, message, state, options, callback);
-        
+
         // Record successful execution
         await recordEVMAction(runtime, message, action.name, true, { result, transactionDetails });
-        
+
         return result;
       } catch (error) {
         // Record failed execution
-        await recordEVMAction(runtime, message, action.name, false, { error: (error as Error).message, transactionDetails });
+        await recordEVMAction(runtime, message, action.name, false, {
+          error: (error as Error).message,
+          transactionDetails,
+        });
         throw error;
       }
     },
@@ -617,7 +644,7 @@ export function wrapEVMActionsWithTrust(actions: Action[]): Action[] {
     // Get requirements for this action
     const actionName = action.name as EVMActionName;
     const reqs = EVM_TRUST_REQUIREMENTS[actionName];
-    
+
     if (!reqs) {
       // If no specific requirements, use default minimal requirements
       return action;
@@ -626,7 +653,7 @@ export function wrapEVMActionsWithTrust(actions: Action[]): Action[] {
     const requirements = {
       minTrustScore: reqs.minTrustScore,
       requiredRole: reqs.requiredRole,
-      maxValueUSD: reqs.maxValueUSD
+      maxValueUSD: reqs.maxValueUSD,
     };
 
     return wrapEVMActionWithTrust(action, requirements);

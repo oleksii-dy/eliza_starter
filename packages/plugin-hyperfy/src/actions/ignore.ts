@@ -1,6 +1,7 @@
 import type {
   Action,
   ActionExample,
+  ActionResult,
   IAgentRuntime,
   Memory,
   HandlerCallback,
@@ -37,7 +38,7 @@ export const ignoreAction: Action = {
     return true;
   },
   description:
-    'Call this action if ignoring the user. If the user is aggressive, creepy or is finished with the conversation, use this action. Or, if both you and the user have already said goodbye, use this action instead of saying bye again. Use IGNORE any time the conversation has naturally ended. Do not use IGNORE if the user has engaged directly, or if something went wrong an you need to tell them. Only ignore if the user should be ignored.',
+    'Call this action if ignoring the user. If the user is aggressive, creepy or is finished with the conversation, use this action. Or, if both you and the user have already said goodbye, use this action instead of saying bye again. Use IGNORE any time the conversation has naturally ended. Do not use IGNORE if the user has engaged directly, or if something went wrong an you need to tell them. Only ignore if the user should be ignored. Can end action chains when no further response is needed.',
   handler: async (
     _runtime: IAgentRuntime,
     _message: Memory,
@@ -45,128 +46,163 @@ export const ignoreAction: Action = {
     _options: any,
     callback: HandlerCallback,
     responses?: Memory[]
-  ) => {
+  ): Promise<ActionResult> => {
     // If a callback and the agent's response content are available, call the callback
     if (callback && responses?.[0]?.content) {
       // Pass the agent's original response content (thought, IGNORE action, etc.)
       await callback(responses[0].content);
     }
-    // Still return true to indicate the action handler succeeded
-    return true;
+    
+    return {
+      text: '',
+      values: { ignored: true, reason: 'conversation_ended_or_inappropriate' },
+      data: { action: 'IGNORE', hasResponse: !!responses?.[0]?.content }
+    };
   },
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: { text: 'Go screw yourself' },
       },
       {
-        name: '{{name2}}',
-        content: { text: '', actions: ['IGNORE'] },
+        name: '{{agent}}',
+        content: { 
+          thought: 'User is being hostile and inappropriate - I should ignore this message',
+          text: '', 
+          actions: ['IGNORE'] 
+        },
       },
     ],
 
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: { text: 'Shut up, bot' },
       },
       {
-        name: '{{name2}}',
-        content: { text: '', actions: ['IGNORE'] },
+        name: '{{agent}}',
+        content: { 
+          thought: 'User is being rude and dismissive - best to ignore this',
+          text: '', 
+          actions: ['IGNORE'] 
+        },
       },
     ],
 
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: { text: 'Got any investment advice' },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'Uh, don’t let the volatility sway your long-term strategy',
         },
       },
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: { text: 'Wise words I think' },
       },
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: { text: 'I gotta run, talk to you later' },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: { text: 'See ya' },
       },
-      { name: '{{name1}}', content: { text: '' }, actions: ['IGNORE'] },
+      { 
+        name: '{{agent}}', 
+        content: { 
+          thought: 'Conversation has naturally concluded with goodbyes - no need to respond further',
+          text: '', 
+          actions: ['IGNORE'] 
+        }
+      },
     ],
 
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: { text: 'Gotta go' },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: { text: 'Okay, talk to you later' },
       },
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: { text: 'Cya' },
       },
       {
-        name: '{{name2}}',
-        content: { text: '', actions: ['IGNORE'] },
+        name: '{{agent}}',
+        content: { 
+          thought: 'User said goodbye and I responded - conversation is over, no need for further response',
+          text: '', 
+          actions: ['IGNORE'] 
+        },
       },
     ],
 
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: { text: 'bye' },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: { text: 'cya' },
       },
       {
-        name: '{{name1}}',
-        content: { text: '', actions: ['IGNORE'] },
+        name: '{{user}}',
+        content: { 
+          thought: 'User said goodbye and I responded - conversation is over, no need for further response',
+          text: '', 
+          actions: ['IGNORE'] 
+        },
       },
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Who added this stupid bot to the chat',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: { text: 'Sorry, am I being annoying' },
       },
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: { text: 'Yeah' },
       },
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: { text: 'PLEASE shut up' },
       },
-      { name: '{{name2}}', content: { text: '', actions: ['IGNORE'] } },
+      { 
+        name: '{{agent}}', 
+        content: { 
+          thought: 'User is being persistently rude and asking me to shut up - I should ignore this behavior',
+          text: '', 
+          actions: ['IGNORE'] 
+        } 
+      },
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'ur so dumb',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User is being insulting - I should ignore this inappropriate behavior',
           text: '',
           actions: ['IGNORE'],
         },
@@ -174,26 +210,27 @@ export const ignoreAction: Action = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'later nerd',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'bye',
         },
       },
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: '',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User said goodbye rudely but conversation is over - no further response needed',
           text: '',
           actions: ['IGNORE'],
         },
@@ -201,14 +238,15 @@ export const ignoreAction: Action = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'wanna cyber',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User is making inappropriate sexual advances - I should call this out and ignore',
           text: 'thats inappropriate',
           actions: ['IGNORE'],
         },
@@ -216,20 +254,21 @@ export const ignoreAction: Action = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Im out ttyl',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'cya',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User left and I said goodbye - conversation is complete',
           text: '',
           actions: ['IGNORE'],
         },
@@ -237,26 +276,27 @@ export const ignoreAction: Action = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'u there',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'yes how can I help',
         },
       },
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'k nvm figured it out',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User resolved their issue and no longer needs help - no response needed',
           text: '',
           actions: ['IGNORE'],
         },

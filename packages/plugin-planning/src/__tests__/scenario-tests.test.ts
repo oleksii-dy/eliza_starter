@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { v4 as uuidv4 } from 'uuid';
 import {
   analyzeInputAction,
@@ -47,29 +47,29 @@ const createMockRuntime = (overrides?: Partial<IAgentRuntime>): IAgentRuntime =>
     },
 
     // Action registration and selection
-    registerAction: vi.fn((action: Action) => {
+    registerAction: mock((action: Action) => {
       registeredActions.push(action);
     }),
 
-    getAction: vi.fn((name: string) => {
+    getAction: mock((name: string) => {
       return registeredActions.find((a) => a.name === name);
     }),
 
-    getActions: vi.fn(() => registeredActions),
+    getActions: mock(() => registeredActions),
 
     // Provider registration and selection
-    registerProvider: vi.fn((provider: Provider) => {
+    registerProvider: mock((provider: Provider) => {
       registeredProviders.push(provider);
     }),
 
-    getProvider: vi.fn((name: string) => {
+    getProvider: mock((name: string) => {
       return registeredProviders.find((p) => p.name === name);
     }),
 
-    getProviders: vi.fn(() => registeredProviders),
+    getProviders: mock(() => registeredProviders),
 
     // State composition with providers
-    composeState: vi.fn(async (message: Memory, includeList?: string[]) => {
+    composeState: mock(async (message: Memory, includeList?: string[]) => {
       const state: State = {
         values: {},
         data: { providers: {} },
@@ -84,7 +84,7 @@ const createMockRuntime = (overrides?: Partial<IAgentRuntime>): IAgentRuntime =>
       for (const provider of providersToRun) {
         const result = await provider.get(mockRuntime, message, state);
         if (result.text) {
-          state.text += result.text + '\n';
+          state.text += `${result.text}\n`;
         }
         if (result.data) {
           state.data.providers[provider.name] = result.data;
@@ -98,7 +98,7 @@ const createMockRuntime = (overrides?: Partial<IAgentRuntime>): IAgentRuntime =>
     }),
 
     // Model selection (for LLM action selection)
-    useModel: vi.fn(async (type: (typeof ModelType)[keyof typeof ModelType], params: any) => {
+    useModel: mock(async (type: (typeof ModelType)[keyof typeof ModelType], params: any) => {
       if (type === ModelType.TEXT_LARGE) {
         // Simulate LLM selecting actions based on message content
         const prompt = params.prompt || '';
@@ -118,10 +118,10 @@ const createMockRuntime = (overrides?: Partial<IAgentRuntime>): IAgentRuntime =>
     }),
 
     logger: {
-      info: vi.fn(),
-      error: vi.fn(),
-      warn: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      error: mock(),
+      warn: mock(),
+      debug: mock(),
     },
 
     ...overrides,
@@ -295,7 +295,7 @@ describe('Planning Plugin Scenario Tests', () => {
       };
 
       const state = await runtime.composeState(message);
-      const callback = vi.fn();
+      const callback = mock();
 
       // Step 1: Analyze
       const result1 = await analyzeInputAction.handler(runtime, message, state, {});
@@ -349,7 +349,7 @@ describe('Planning Plugin Scenario Tests', () => {
       };
 
       const state = await runtime.composeState(message);
-      const callback = vi.fn();
+      const callback = mock();
 
       // Analyze
       const result1 = await analyzeInputAction.handler(runtime, message, state, {});
@@ -636,7 +636,7 @@ describe('Planning Plugin Scenario Tests', () => {
 
       // Should classify as strategic planning
       expect(state.data.providers.messageClassifier.classification).toBe('strategic');
-      
+
       // Should detect high complexity (adjusting to actual behavior)
       expect(state.data.providers.taskComplexity?.complexity).toBeTruthy();
       expect(state.data.providers.taskComplexity?.estimatedSteps).toBeGreaterThan(1);
@@ -646,7 +646,7 @@ describe('Planning Plugin Scenario Tests', () => {
       if (!result1 || typeof result1 === 'boolean') {
         throw new Error('Expected ActionResult, got boolean or null');
       }
-      
+
       // Should identify multiple required phases
       expect(result1.data?.topics).toContain('development');
       expect(result1.data?.topics).toContain('testing');
@@ -671,10 +671,10 @@ describe('Planning Plugin Scenario Tests', () => {
 
       // Should detect as analysis task (actual behavior)
       expect(['processing', 'analysis']).toContain(state.data.providers.messageClassifier.classification);
-      
+
       // Should identify resource requirements
       expect(state.data.providers.resourceAvailability?.resourcesNeeded).toContain('data_processing');
-      
+
       // Complex task requiring multiple steps
       expect(state.data.providers.taskComplexity?.complexity).toBe('high');
       expect(state.data.providers.taskComplexity?.estimatedSteps).toBeGreaterThan(3);
@@ -699,16 +699,16 @@ describe('Planning Plugin Scenario Tests', () => {
       if (state.data.providers.messageClassifier?.requiredCapabilities) {
         expect(state.data.providers.messageClassifier.requiredCapabilities).toContain('coordination');
       }
-      
+
       // Should be high priority due to stakeholder involvement
       expect(state.values.isPriority).toBe(true);
-      
+
       // Should identify multiple action requirements
       const result1 = await analyzeInputAction.handler(runtime, message, state, {});
       if (!result1 || typeof result1 === 'boolean') {
         throw new Error('Expected ActionResult, got boolean or null');
       }
-      
+
       expect(result1.data?.topics).toContain('coordinate');
       expect(result1.data?.topics).toContain('feedback');
       expect(result1.data?.topics).toContain('meeting');
@@ -732,16 +732,16 @@ describe('Planning Plugin Scenario Tests', () => {
       // Should detect urgency and high priority
       expect(state.values.isPriority).toBe(true);
       expect(state.data.providers.priorityDetector?.priority).toBe('critical');
-      
+
       // Should classify as execution or strategic task
       expect(['execution', 'strategic', 'general']).toContain(state.data.providers.messageClassifier.classification);
-      
+
       // Should identify multiple parallel actions needed
       const result1 = await analyzeInputAction.handler(runtime, message, state, {});
       if (!result1 || typeof result1 === 'boolean') {
         throw new Error('Expected ActionResult, got boolean or null');
       }
-      
+
       expect(result1.data?.sentiment).toBe('urgent');
       expect(result1.data?.topics).toContain('diagnose');
       expect(result1.data?.topics).toContain('notify');
@@ -764,22 +764,22 @@ describe('Planning Plugin Scenario Tests', () => {
 
       // Should classify as analysis
       expect(state.data.providers.messageClassifier.classification).toBe('analysis');
-      
+
       // Check for research capability if requiredCapabilities exists
       if (state.data.providers.messageClassifier?.requiredCapabilities) {
         expect(state.data.providers.messageClassifier.requiredCapabilities).toContain('research');
       }
-      
+
       // Should identify complex multi-source analysis
       expect(state.data.providers.taskComplexity?.complexity).toBe('high');
       expect(state.data.providers.taskComplexity?.dataSources).toBeGreaterThan(1);
-      
+
       // Should require multiple processing steps
       const result1 = await analyzeInputAction.handler(runtime, message, state, {});
       if (!result1 || typeof result1 === 'boolean') {
         throw new Error('Expected ActionResult, got boolean or null');
       }
-      
+
       expect(result1.data?.topics).toContain('analyze');
       expect(result1.data?.topics).toContain('opportunities');
       expect(result1.data?.wordCount).toBeGreaterThan(20); // Complex request
@@ -803,17 +803,17 @@ describe('Planning Plugin Scenario Tests', () => {
       // Should identify as strategic or general task (actual behavior for long complex messages)
       expect(['strategic', 'general']).toContain(state.data.providers.messageClassifier.classification);
       expect(state.data.providers.taskComplexity?.requiresAutomation).toBe(true);
-      
+
       // Should identify conditional logic requirements
       const result1 = await analyzeInputAction.handler(runtime, message, state, {});
       if (!result1 || typeof result1 === 'boolean') {
         throw new Error('Expected ActionResult, got boolean or null');
       }
-      
+
       expect(result1.data?.topics).toContain('automated');
       expect(result1.data?.topics).toContain('monitors');
       expect(result1.data?.topics).toContain('escalates');
-      
+
       // Process should identify multiple conditional branches
       const result2 = await processAnalysisAction.handler(runtime, message, state, {
         previousResults: [result1],
@@ -821,7 +821,7 @@ describe('Planning Plugin Scenario Tests', () => {
       if (!result2 || typeof result2 === 'boolean') {
         throw new Error('Expected ActionResult, got boolean or null');
       }
-      
+
       expect(result2.data?.decisions?.isComplex).toBe(true);
       expect(result2.data?.decisions?.requiresAction).toBe(true);
     });
@@ -844,17 +844,17 @@ describe('Planning Plugin Scenario Tests', () => {
       // Should identify as analysis or strategic task (both are reasonable)
       expect(['analysis', 'strategic', 'general']).toContain(state.data.providers.messageClassifier.classification);
       expect(state.data.providers.resourceAvailability?.resourcesNeeded).toContain('cloud_infrastructure');
-      
+
       // Should identify performance constraints
       const result1 = await analyzeInputAction.handler(runtime, message, state, {});
       if (!result1 || typeof result1 === 'boolean') {
         throw new Error('Expected ActionResult, got boolean or null');
       }
-      
+
       expect(result1.data?.topics).toContain('optimize');
       expect(result1.data?.topics).toContain('costs');
       expect(result1.data?.topics).toContain('uptime');
-      
+
       // Should require complex multi-step execution
       const result2 = await processAnalysisAction.handler(runtime, message, state, {
         previousResults: [result1],
@@ -862,7 +862,7 @@ describe('Planning Plugin Scenario Tests', () => {
       if (!result2 || typeof result2 === 'boolean') {
         throw new Error('Expected ActionResult, got boolean or null');
       }
-      
+
       expect(result2.data?.decisions?.isComplex).toBe(true);
       expect(result2.data?.decisions?.requiresAction).toBe(true);
     });
@@ -910,7 +910,7 @@ describe('Planning Plugin Scenario Tests', () => {
       );
 
       // Execute the action
-      const callback = vi.fn();
+      const callback = mock();
       const result = await classificationDependentAction.handler(
         runtime,
         strategicMessage,
@@ -963,7 +963,7 @@ describe('Planning Plugin Scenario Tests', () => {
         content: { text: 'This will fail intentionally' },
       };
 
-      const callback = vi.fn();
+      const callback = mock();
       const emptyState: State = { values: {}, data: {}, text: '' };
       const result = await conditionalFailureAction.handler(
         runtime,

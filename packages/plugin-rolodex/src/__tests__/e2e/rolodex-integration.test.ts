@@ -20,7 +20,7 @@ export class RolodexIntegrationTestSuite implements TestSuite {
           // Create test world and room
           const worldId = await createTestWorld(runtime);
           const roomId = await createTestRoom(runtime, worldId);
-          
+
           // Create unique test identifiers
           const userId = stringToUuid(`test-user-${Date.now()}`);
 

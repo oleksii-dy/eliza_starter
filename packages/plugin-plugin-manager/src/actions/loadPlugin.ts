@@ -93,14 +93,14 @@ export const loadPluginAction: Action = {
     ],
   ],
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
-    if (!pluginManager) return false;
+    if (!pluginManager) {return false;}
 
     // Check if the message text contains load-related keywords
-    const text = message.content.text?.toLowerCase() || '';
+    const text = _message.content.text?.toLowerCase() || '';
     const hasLoadKeyword =
       text.includes('load') ||
       text.includes('enable') ||
@@ -275,10 +275,10 @@ export const loadPluginAction: Action = {
           status: 'loaded',
         },
       };
-    } catch (error) {
-      logger.error('[loadPluginAction] Error loading plugin:', error);
+    } catch (_error) {
+      logger.error('[loadPluginAction] Error loading plugin:', _error);
 
-      const errorMessage = `Failed to load plugin: ${error instanceof Error ? error.message : String(error)}`;
+      const errorMessage = `Failed to load plugin: ${_error instanceof Error ? _error.message : String(_error)}`;
       if (callback) {
         await callback({
           text: errorMessage,
@@ -289,7 +289,7 @@ export const loadPluginAction: Action = {
       return {
         text: errorMessage,
         data: {
-          error: error instanceof Error ? error.message : String(error),
+          error: _error instanceof Error ? _error.message : String(_error),
         },
       };
     }

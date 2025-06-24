@@ -4,7 +4,7 @@ import { setupScenario, sendMessageAndWaitForResponse, getResponseText } from '.
 
 /**
  * Defines a suite of E2E tests for LP Manager plugin real-world Discord/Telegram scenarios.
- * 
+ *
  * These scenarios simulate authentic user interactions with the LP management agent,
  * covering the complete user journey from onboarding to advanced yield optimization.
  */
@@ -12,7 +12,7 @@ export const lpManagerScenariosSuite: TestSuite = {
   name: 'LP Manager Plugin Real-World Scenarios',
   tests: [
     {
-      name: "Scenario 1: New User Onboarding - First Time LP Experience",
+      name: 'Scenario 1: New User Onboarding - First Time LP Experience',
       fn: async (runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
@@ -21,7 +21,7 @@ export const lpManagerScenariosSuite: TestSuite = {
           runtime,
           room,
           user,
-          "Hey! I keep hearing about providing liquidity to earn yield. Can you help me get started? I have some SOL and USDC sitting around doing nothing."
+          'Hey! I keep hearing about providing liquidity to earn yield. Can you help me get started? I have some SOL and USDC sitting around doing nothing.'
         );
 
         const resp = getResponseText(response);
@@ -42,7 +42,7 @@ export const lpManagerScenariosSuite: TestSuite = {
     },
 
     {
-      name: "Scenario 2: User Vault Creation and Setup",
+      name: 'Scenario 2: User Vault Creation and Setup',
       fn: async (runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
@@ -51,7 +51,7 @@ export const lpManagerScenariosSuite: TestSuite = {
           runtime,
           room,
           user,
-          "Yes, I want to start LP management. Set me up with a vault please!"
+          'Yes, I want to start LP management. Set me up with a vault please!'
         );
 
         const resp = getResponseText(response);
@@ -81,7 +81,7 @@ export const lpManagerScenariosSuite: TestSuite = {
           runtime,
           room,
           user,
-          "I want to LP all my SOL and USDC. Find me the best pool with good APR!"
+          'I want to LP all my SOL and USDC. Find me the best pool with good APR!'
         );
 
         const resp = getResponseText(response);
@@ -111,7 +111,7 @@ export const lpManagerScenariosSuite: TestSuite = {
           runtime,
           room,
           user,
-          "Just LP 10 USDC for now. What SOL amount do I need to pair with it?"
+          'Just LP 10 USDC for now. What SOL amount do I need to pair with it?'
         );
 
         const resp = getResponseText(response);
@@ -141,7 +141,7 @@ export const lpManagerScenariosSuite: TestSuite = {
           runtime,
           room,
           user,
-          "I want to LP 50% of my SOL bag. Keep the rest for emergencies."
+          'I want to LP 50% of my SOL bag. Keep the rest for emergencies.'
         );
 
         const resp = getResponseText(response);
@@ -192,7 +192,7 @@ export const lpManagerScenariosSuite: TestSuite = {
     },
 
     {
-      name: "Scenario 7: Yield Optimization Discovery - Auto-rebalance Alert",
+      name: 'Scenario 7: Yield Optimization Discovery - Auto-rebalance Alert',
       fn: async (runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
@@ -201,7 +201,7 @@ export const lpManagerScenariosSuite: TestSuite = {
           runtime,
           room,
           user,
-          "I heard there are higher yield opportunities. Can you check if I should move my LP to a better pool?"
+          'I heard there are higher yield opportunities. Can you check if I should move my LP to a better pool?'
         );
 
         const resp = getResponseText(response);
@@ -222,7 +222,7 @@ export const lpManagerScenariosSuite: TestSuite = {
     },
 
     {
-      name: "Scenario 8: Auto-Rebalance Configuration - Risk Preferences",
+      name: 'Scenario 8: Auto-Rebalance Configuration - Risk Preferences',
       fn: async (runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
@@ -231,7 +231,7 @@ export const lpManagerScenariosSuite: TestSuite = {
           runtime,
           room,
           user,
-          "I want to enable auto-rebalancing but only if the gain is at least 5%. Also, keep slippage under 1%. Can you set that up?"
+          'I want to enable auto-rebalancing but only if the gain is at least 5%. Also, keep slippage under 1%. Can you set that up?'
         );
 
         const resp = getResponseText(response);
@@ -261,7 +261,7 @@ export const lpManagerScenariosSuite: TestSuite = {
           runtime,
           room,
           user,
-          "SOL is pumping! I want to withdraw 30% of my LP position to take some profits."
+          'SOL is pumping! I want to withdraw 30% of my LP position to take some profits.'
         );
 
         const resp = getResponseText(response);
@@ -282,7 +282,7 @@ export const lpManagerScenariosSuite: TestSuite = {
     },
 
     {
-      name: "Scenario 10: Emergency Full Withdrawal - 'Exit all positions'", 
+      name: "Scenario 10: Emergency Full Withdrawal - 'Exit all positions'",
       fn: async (runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
@@ -291,7 +291,7 @@ export const lpManagerScenariosSuite: TestSuite = {
           runtime,
           room,
           user,
-          "Market is crashing! I need to exit all my LP positions immediately and get back to stablecoins."
+          'Market is crashing! I need to exit all my LP positions immediately and get back to stablecoins.'
         );
 
         const resp = getResponseText(response);
@@ -312,7 +312,7 @@ export const lpManagerScenariosSuite: TestSuite = {
     },
 
     {
-      name: "Scenario 11: Advanced Strategy - Stablecoin Focus",
+      name: 'Scenario 11: Advanced Strategy - Stablecoin Focus',
       fn: async (runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
@@ -342,7 +342,7 @@ export const lpManagerScenariosSuite: TestSuite = {
     },
 
     {
-      name: "Scenario 12: Pool Comparison and Analysis",
+      name: 'Scenario 12: Pool Comparison and Analysis',
       fn: async (runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
@@ -351,7 +351,7 @@ export const lpManagerScenariosSuite: TestSuite = {
           runtime,
           room,
           user,
-          "Compare all SOL/USDC pools across different DEXs. Show me TVL, APR, and fees for each."
+          'Compare all SOL/USDC pools across different DEXs. Show me TVL, APR, and fees for each.'
         );
 
         const resp = getResponseText(response);
@@ -372,7 +372,7 @@ export const lpManagerScenariosSuite: TestSuite = {
     },
 
     {
-      name: "Scenario 13: Multi-DEX Strategy - Diversification",
+      name: 'Scenario 13: Multi-DEX Strategy - Diversification',
       fn: async (runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
@@ -381,7 +381,7 @@ export const lpManagerScenariosSuite: TestSuite = {
           runtime,
           room,
           user,
-          "I want to spread my risk. Can you help me LP across multiple DEXs? Maybe 40% on Orca, 40% on Raydium, and 20% on Meteora?"
+          'I want to spread my risk. Can you help me LP across multiple DEXs? Maybe 40% on Orca, 40% on Raydium, and 20% on Meteora?'
         );
 
         const resp = getResponseText(response);
@@ -402,7 +402,7 @@ export const lpManagerScenariosSuite: TestSuite = {
     },
 
     {
-      name: "Scenario 14: Impermanent Loss Concern",
+      name: 'Scenario 14: Impermanent Loss Concern',
       fn: async (runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
@@ -432,7 +432,7 @@ export const lpManagerScenariosSuite: TestSuite = {
     },
 
     {
-      name: "Scenario 15: Performance Tracking Request",
+      name: 'Scenario 15: Performance Tracking Request',
       fn: async (runtime: IAgentRuntime) => {
         const { user, room } = await setupScenario(runtime);
 
@@ -441,7 +441,7 @@ export const lpManagerScenariosSuite: TestSuite = {
           runtime,
           room,
           user,
-          "How much have I earned from LP fees this week? Show me my total returns including both fees and price changes."
+          'How much have I earned from LP fees this week? Show me my total returns including both fees and price changes.'
         );
 
         const resp = getResponseText(response);

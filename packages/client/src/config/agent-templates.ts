@@ -53,7 +53,7 @@ export const agentTemplates: AgentTemplate[] = [
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-message-handling',
         '@elizaos/plugin-discord',
       ],
       style: {
@@ -104,7 +104,7 @@ export const agentTemplates: AgentTemplate[] = [
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-message-handling',
         '@elizaos/plugin-telegram',
       ],
       style: {
@@ -159,7 +159,7 @@ export const agentTemplates: AgentTemplate[] = [
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-message-handling',
         '@elizaos/plugin-slack',
       ],
       style: {
@@ -215,7 +215,7 @@ export const agentTemplates: AgentTemplate[] = [
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-message-handling',
         '@elizaos/plugin-twitter',
       ],
       style: {
@@ -274,7 +274,7 @@ export const agentTemplates: AgentTemplate[] = [
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-message-handling',
         '@elizaos/plugin-github',
       ],
       style: {
@@ -329,7 +329,7 @@ export const agentTemplates: AgentTemplate[] = [
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-message-handling',
         '@elizaos/plugin-instagram',
       ],
       style: {

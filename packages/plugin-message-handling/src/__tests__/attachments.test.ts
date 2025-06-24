@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, mock, spyOn, beforeEach, afterEach } from 'bun:test';
 import { processAttachments } from '../events';
 import { IAgentRuntime, Media, ModelType, ContentType, logger } from '@elizaos/core';
 import { createMockRuntime, MockRuntime } from './test-utils';
@@ -8,21 +8,21 @@ describe('processAttachments', () => {
 
   beforeEach(() => {
     mockRuntime = createMockRuntime();
-    vi.clearAllMocks();
+    mock.restore();
 
     // Spy on logger methods
-    vi.spyOn(logger, 'debug').mockImplementation(() => {});
-    vi.spyOn(logger, 'warn').mockImplementation(() => {});
-    vi.spyOn(logger, 'error').mockImplementation(() => {});
-    vi.spyOn(logger, 'info').mockImplementation(() => {});
+    spyOn(logger, 'debug').mockImplementation(() => {});
+    spyOn(logger, 'warn').mockImplementation(() => {});
+    spyOn(logger, 'error').mockImplementation(() => {});
+    spyOn(logger, 'info').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   it('should return empty array for no attachments', async () => {
-    const result = await processAttachments([] mockRuntime as IAgentRuntime);
+    const result = await processAttachments([], mockRuntime as IAgentRuntime);
     expect(result).toEqual([]);
   });
 
@@ -40,7 +40,7 @@ describe('processAttachments', () => {
     };
 
     // Mock the image description model response
-    mockRuntime.useModel = vi.fn().mockResolvedValue(`<response>
+    mockRuntime.useModel = mock().mockResolvedValue(`<response>
   <title>Beautiful Sunset</title>
   <description>A stunning sunset over the ocean with vibrant colors</description>
   <text>This image captures a breathtaking sunset scene over a calm ocean. The sky is painted with brilliant hues of orange, pink, and purple as the sun dips below the horizon. Gentle waves lap at the shore, creating a peaceful and serene atmosphere.</text>
@@ -117,7 +117,7 @@ describe('processAttachments', () => {
       },
     ];
 
-    mockRuntime.useModel = vi.fn().mockResolvedValue(`<response>
+    mockRuntime.useModel = mock().mockResolvedValue(`<response>
   <title>Test Image</title>
   <description>A test image description</description>
   <text>Detailed description of the test image</text>
@@ -142,7 +142,7 @@ describe('processAttachments', () => {
     };
 
     // Mock object response instead of XML
-    mockRuntime.useModel = vi.fn().mockResolvedValue({
+    mockRuntime.useModel = mock().mockResolvedValue({
       title: 'Object Response Title',
       description: 'Object response description',
       text: 'Object response text',
@@ -165,7 +165,7 @@ describe('processAttachments', () => {
     };
 
     // Mock malformed XML response
-    mockRuntime.useModel = vi.fn().mockResolvedValue('This is not valid XML');
+    mockRuntime.useModel = mock().mockResolvedValue('This is not valid XML');
 
     const result = await processAttachments([imageAttachment], mockRuntime as IAgentRuntime);
 
@@ -193,7 +193,7 @@ describe('processAttachments', () => {
     ];
 
     // Mock error for first image, success for second
-    mockRuntime.useModel = vi.fn().mockRejectedValueOnce(new Error('Model API error'))
+    mockRuntime.useModel = mock().mockRejectedValueOnce(new Error('Model API error'))
       .mockResolvedValueOnce(`<response>
   <title>Second Image</title>
   <description>Description of second image</description>
@@ -234,7 +234,7 @@ describe('processAttachments', () => {
     ];
 
     let callCount = 0;
-    mockRuntime.useModel = vi.fn().mockImplementation(() => {
+    mockRuntime.useModel = mock().mockImplementation(() => {
       callCount++;
       return Promise.resolve(`<response>
   <title>Image ${callCount}</title>
@@ -263,7 +263,7 @@ describe('processAttachments', () => {
     };
 
     // Mock response without title
-    mockRuntime.useModel = vi.fn().mockResolvedValue(`<response>
+    mockRuntime.useModel = mock().mockResolvedValue(`<response>
   <description>A description without title</description>
   <text>Detailed text without title</text>
 </response>`);

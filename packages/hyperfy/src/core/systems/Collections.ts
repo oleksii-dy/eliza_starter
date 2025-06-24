@@ -11,7 +11,7 @@ interface Collection {
 
 /**
  * Collections System
- * 
+ *
  * Manages collections of items/assets in the world
  */
 export class Collections extends System implements ICollections {
@@ -72,4 +72,4 @@ export class Collections extends System implements ICollections {
     this.collections = [];
     this.items.clear();
   }
-} 
+}

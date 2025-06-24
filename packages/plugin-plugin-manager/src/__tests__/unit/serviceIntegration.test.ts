@@ -5,7 +5,7 @@ import {
   type ServiceTypeName,
   type UUID,
 } from '@elizaos/core';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import { PluginManagerService } from '../../services/pluginManagerService.ts';
 import { PluginManagerServiceType } from '../../types.ts';
 
@@ -90,7 +90,7 @@ class MockAuton8nService extends Service {
       if (!capabilities.core.includes(pluginName)) {
         try {
           await this.pluginManager.installPluginFromRegistry(pluginName);
-        } catch (error) {
+        } catch (_error) {
           return false;
         }
       }
@@ -128,20 +128,20 @@ describe('Plugin Manager Service Integration', () => {
       services: new Map(),
       events: new Map(),
 
-      getService: vi.fn((name: string) => {
+      getService: mock((name: string) => {
         if (name === PluginManagerServiceType.PLUGIN_MANAGER) {
           return pluginManager;
         }
         return runtime.services.get(name as ServiceTypeName);
       }),
 
-      registerAction: vi.fn(),
-      registerProvider: vi.fn(),
-      registerEvaluator: vi.fn(),
-      registerEvent: vi.fn(),
-      emitEvent: vi.fn(),
-      getSetting: vi.fn(),
-      useModel: vi.fn().mockResolvedValue('Mock LLM response'),
+      registerAction: mock(),
+      registerProvider: mock(),
+      registerEvaluator: mock(),
+      registerEvent: mock(),
+      emitEvent: mock(),
+      getSetting: mock(),
+      useModel: mock().mockResolvedValue('Mock LLM response'),
     } as any;
 
     pluginManager = new PluginManagerService(runtime);
@@ -158,7 +158,7 @@ describe('Plugin Manager Service Integration', () => {
 
     it('should allow autocoder to search and clone plugins', async () => {
       // Mock search results
-      vi.spyOn(pluginManager, 'searchPlugins').mockResolvedValue([
+      spyOn(pluginManager, 'searchPlugins').mockResolvedValue([
         {
           plugin: {
             name: '@elizaos/plugin-weather',
@@ -171,7 +171,7 @@ describe('Plugin Manager Service Integration', () => {
       ]);
 
       // Mock clone result
-      vi.spyOn(pluginManager, 'cloneRepository').mockResolvedValue({
+      spyOn(pluginManager, 'cloneRepository').mockResolvedValue({
         success: true,
         path: './autocoder-workspace/@elizaos/plugin-weather',
       });
@@ -185,7 +185,7 @@ describe('Plugin Manager Service Integration', () => {
     });
 
     it('should provide plugin recommendations for tasks', async () => {
-      vi.spyOn(pluginManager, 'recommendPlugins').mockResolvedValue([
+      spyOn(pluginManager, 'recommendPlugins').mockResolvedValue([
         {
           plugin: { name: '@elizaos/plugin-database', description: 'Database operations' },
           score: 90,
@@ -215,14 +215,14 @@ describe('Plugin Manager Service Integration', () => {
     });
 
     it('should prepare workflow by installing required plugins', async () => {
-      vi.spyOn(pluginManager, 'analyzeCurrentCapabilities').mockResolvedValue({
+      spyOn(pluginManager, 'analyzeCurrentCapabilities').mockResolvedValue({
         core: ['basic-action'],
         plugins: new Map(),
         coverage: {},
         limitations: [],
       });
 
-      vi.spyOn(pluginManager, 'installPluginFromRegistry').mockResolvedValue({
+      spyOn(pluginManager, 'installPluginFromRegistry').mockResolvedValue({
         name: '@elizaos/plugin-http',
         version: '1.0.0',
         status: 'installed',
@@ -245,7 +245,7 @@ describe('Plugin Manager Service Integration', () => {
 
       const pluginId = await pluginManager.registerPlugin(mockPlugin);
 
-      vi.spyOn(pluginManager, 'loadPlugin').mockResolvedValue(undefined);
+      spyOn(pluginManager, 'loadPlugin').mockResolvedValue(undefined);
 
       const success = await auton8nService.executeWorkflowStep('workflow-plugin');
 
@@ -308,7 +308,7 @@ describe('Plugin Manager Service Integration', () => {
 
   describe('Service Discovery and Capability Enhancement', () => {
     it('should provide capability gap analysis for plugins', async () => {
-      vi.spyOn(pluginManager, 'suggestCapabilityEnhancements').mockResolvedValue([
+      spyOn(pluginManager, 'suggestCapabilityEnhancements').mockResolvedValue([
         {
           capability: 'image-processing',
           priority: 'high',
@@ -326,7 +326,7 @@ describe('Plugin Manager Service Integration', () => {
     });
 
     it('should handle plugin publishing workflow', async () => {
-      vi.spyOn(pluginManager, 'publishPlugin').mockResolvedValue({
+      spyOn(pluginManager, 'publishPlugin').mockResolvedValue({
         success: true,
         packageName: '@elizaos/plugin-custom',
         version: '1.0.0',
@@ -342,7 +342,7 @@ describe('Plugin Manager Service Integration', () => {
 
   describe('Error Handling and Resilience', () => {
     it('should handle service unavailability gracefully', async () => {
-      runtime.getService = vi.fn().mockReturnValue(undefined);
+      runtime.getService = mock().mockReturnValue(undefined);
 
       let pmWasUndefined = false;
       const plugin: Plugin = {
@@ -361,7 +361,7 @@ describe('Plugin Manager Service Integration', () => {
     });
 
     it('should handle plugin operation failures', async () => {
-      vi.spyOn(pluginManager, 'installPluginFromRegistry').mockRejectedValue(
+      spyOn(pluginManager, 'installPluginFromRegistry').mockRejectedValue(
         new Error('Network error')
       );
 

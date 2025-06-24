@@ -190,7 +190,9 @@ export class DiscordConversationParser {
 
     // Group messages by user
     for (const message of messages) {
-      if (message.author.bot) continue;
+      if (message.author.bot) {
+        continue;
+      }
 
       const userId = message.author.id;
       if (!userMessageMap.has(userId)) {
@@ -232,7 +234,7 @@ export class DiscordConversationParser {
       name: user.displayName || user.username,
       username: user.username,
       bio: [
-        `Discord user active in tech/AI communities`,
+        'Discord user active in tech/AI communities',
         `Communication style: ${messageAnalysis.style}`,
         `Average message length: ${messageAnalysis.avgLength} characters`,
         `Typical response time: ${messageAnalysis.avgResponseTime}`,
@@ -246,7 +248,7 @@ ${style.description}`,
         .slice(0, 5)
         .map((msg) => msg.content)
         .filter((content) => content.length > 0),
-      topics: topics,
+      topics,
       knowledge: [],
       plugins: [],
       settings: {
@@ -291,9 +293,15 @@ ${style.description}`,
     const questionsAsked = messages.filter((msg) => msg.content.includes('?')).length;
 
     let style = 'conversational';
-    if (shortMessages / messages.length > 0.7) style = 'concise';
-    if (longMessages / messages.length > 0.3) style = 'detailed';
-    if (questionsAsked / messages.length > 0.4) style = 'inquisitive';
+    if (shortMessages / messages.length > 0.7) {
+      style = 'concise';
+    }
+    if (longMessages / messages.length > 0.3) {
+      style = 'detailed';
+    }
+    if (questionsAsked / messages.length > 0.4) {
+      style = 'inquisitive';
+    }
 
     return {
       avgLength: Math.round(avgLength),
@@ -436,7 +444,9 @@ ${style.description}`,
         ]);
       }
 
-      if (examples.length >= 5) break;
+      if (examples.length >= 5) {
+        break;
+      }
     }
 
     // Add single message examples if not enough pairs
@@ -543,7 +553,7 @@ ${style.description}`,
           response: {
             text: currentMessage.content,
             actions: actions.length > 0 ? actions : undefined,
-            thinking: thinking,
+            thinking,
           },
           reasoning: this.generateReasoning(currentMessage, messageHistory),
           confidence: this.calculateConfidence(currentMessage, messageHistory),
@@ -553,7 +563,7 @@ ${style.description}`,
           messageId: currentMessage.id,
           responseType: this.classifyResponseType(currentMessage),
           contextLength: messageHistory.length,
-          userId: userId,
+          userId,
         },
       };
 
@@ -688,16 +698,24 @@ ${style.description}`,
     let confidence = 0.7; // Base confidence
 
     // Higher confidence for responses to questions
-    if (currentMessage.content.includes('?')) confidence += 0.1;
+    if (currentMessage.content.includes('?')) {
+      confidence += 0.1;
+    }
 
     // Higher confidence for replies
-    if (currentMessage.reference) confidence += 0.1;
+    if (currentMessage.reference) {
+      confidence += 0.1;
+    }
 
     // Higher confidence with more context
-    if (history.length > 5) confidence += 0.1;
+    if (history.length > 5) {
+      confidence += 0.1;
+    }
 
     // Lower confidence for very short responses
-    if (currentMessage.content.length < 20) confidence -= 0.2;
+    if (currentMessage.content.length < 20) {
+      confidence -= 0.2;
+    }
 
     return Math.min(Math.max(confidence, 0.1), 0.95);
   }
@@ -708,12 +726,24 @@ ${style.description}`,
   private classifyResponseType(message: DiscordMessage): string {
     const content = message.content.toLowerCase();
 
-    if (content.includes('?')) return 'question';
-    if (message.reference) return 'reply';
-    if (message.attachments.length > 0) return 'media_share';
-    if (/```/.test(message.content)) return 'code_share';
-    if (content.length > 500) return 'detailed_explanation';
-    if (content.length < 20) return 'brief_response';
+    if (content.includes('?')) {
+      return 'question';
+    }
+    if (message.reference) {
+      return 'reply';
+    }
+    if (message.attachments.length > 0) {
+      return 'media_share';
+    }
+    if (/```/.test(message.content)) {
+      return 'code_share';
+    }
+    if (content.length > 500) {
+      return 'detailed_explanation';
+    }
+    if (content.length < 20) {
+      return 'brief_response';
+    }
 
     return 'general_message';
   }
@@ -729,20 +759,34 @@ ${style.description}`,
   }
 
   private formatResponseTime(ms: number): string {
-    if (ms < 1000) return 'immediate';
-    if (ms < 60000) return `${Math.round(ms / 1000)}s`;
-    if (ms < 3600000) return `${Math.round(ms / 60000)}m`;
+    if (ms < 1000) {
+      return 'immediate';
+    }
+    if (ms < 60000) {
+      return `${Math.round(ms / 1000)}s`;
+    }
+    if (ms < 3600000) {
+      return `${Math.round(ms / 60000)}m`;
+    }
     return `${Math.round(ms / 3600000)}h`;
   }
 
   private classifyResponsePattern(responseTimes: number[]): string {
-    if (responseTimes.length === 0) return 'unknown';
+    if (responseTimes.length === 0) {
+      return 'unknown';
+    }
 
     const avgTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
 
-    if (avgTime < 30000) return 'very_active'; // < 30s
-    if (avgTime < 300000) return 'active'; // < 5m
-    if (avgTime < 1800000) return 'moderate'; // < 30m
+    if (avgTime < 30000) {
+      return 'very_active';
+    } // < 30s
+    if (avgTime < 300000) {
+      return 'active';
+    } // < 5m
+    if (avgTime < 1800000) {
+      return 'moderate';
+    } // < 30m
     return 'casual'; // > 30m
   }
 

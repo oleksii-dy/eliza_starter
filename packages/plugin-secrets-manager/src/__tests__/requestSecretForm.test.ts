@@ -1,76 +1,60 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { type IAgentRuntime, type Memory, type HandlerCallback, type State } from '@elizaos/core';
+import * as core from '@elizaos/core';
+import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test';
 import { requestSecretFormAction } from '../actions/requestSecretForm';
-import type { IAgentRuntime, Memory, HandlerCallback, State } from '@elizaos/core';
-import { SecretFormService } from '../services/secret-form-service';
 
 // Import core functions to spy on them
-import { parseJSONObjectFromText } from '@elizaos/core';
-
 // Mock logger
-const mockLogger = {
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
-  debug: vi.fn(),
+const _mockLogger = {
+  info: mock(),
+  warn: mock(),
+  error: mock(),
+  debug: mock(),
 };
-
 // Mock the core module's parseJSONObjectFromText function
-import * as core from '@elizaos/core';
-const parseJSONSpy = vi.spyOn(core, 'parseJSONObjectFromText');
-
+const parseJSONSpy = spyOn(core, 'parseJSONObjectFromText');
 describe('requestSecretFormAction', () => {
   let mockRuntime: IAgentRuntime;
-  let mockFormService: any;
+  let mockForm: any;
   let mockCallback: HandlerCallback;
   let mockState: State;
-
   beforeEach(() => {
-    vi.clearAllMocks();
-
-    mockFormService = {
-      createSecretForm: vi.fn().mockResolvedValue({
+    mock.restore();
+    mockForm = {
+      createSecretForm: mock().mockResolvedValue({
         url: 'https://test.ngrok.io/form/123',
         sessionId: 'session-123',
       }),
     } as any;
-
     mockRuntime = {
       agentId: 'agent-123',
-      getService: vi.fn().mockReturnValue(mockFormService),
+      get: mock().mockReturnValue(mockForm),
     } as any;
-
-    mockCallback = vi.fn();
-
+    mockCallback = mock();
     mockState = {
       values: {},
       data: {},
       text: '',
     };
   });
-
   describe('validate', () => {
     it('should return true when service exists and keywords match', async () => {
       const message: Memory = {
         content: { text: 'I need you to request secret from me' },
         entityId: 'user-123',
       } as any;
-
       const result = await requestSecretFormAction.validate(mockRuntime, message);
       expect(result).toBe(true);
     });
-
     it('should return false when service does not exist', async () => {
-      mockRuntime.getService = vi.fn(() => null);
-
+      mockRuntime.get = mock(() => null);
       const message: Memory = {
         content: { text: 'request secret' },
         entityId: 'user-123',
       } as any;
-
       const result = await requestSecretFormAction.validate(mockRuntime, message);
       expect(result).toBe(false);
     });
-
     it('should match various keywords', async () => {
       const testCases = [
         'request secret from user',
@@ -80,39 +64,32 @@ describe('requestSecretFormAction', () => {
         'ask for api key',
         'request credentials',
       ];
-
       for (const text of testCases) {
         const message: Memory = {
           content: { text },
           entityId: 'user-123',
         } as any;
-
         const result = await requestSecretFormAction.validate(mockRuntime, message);
         expect(result).toBe(true);
       }
     });
-
     it('should return false for non-matching text', async () => {
       const message: Memory = {
         content: { text: 'hello world' },
         entityId: 'user-123',
       } as any;
-
       const result = await requestSecretFormAction.validate(mockRuntime, message);
       expect(result).toBe(false);
     });
   });
-
   describe('handler', () => {
     it('should create form for API key request', async () => {
       const message: Memory = {
         content: { text: 'Request my OpenAI API key' },
         entityId: 'user-123',
       } as any;
-
       await requestSecretFormAction.handler(mockRuntime, message, mockState, {}, mockCallback);
-
-      expect(mockFormService.createSecretForm).toHaveBeenCalledWith(
+      expect(mockForm.createSecretForm).toHaveBeenCalledWith(
         expect.objectContaining({
           secrets: expect.arrayContaining([
             expect.objectContaining({
@@ -131,7 +108,6 @@ describe('requestSecretFormAction', () => {
         }),
         expect.any(Function)
       );
-
       expect(mockCallback).toHaveBeenCalledWith({
         text: expect.stringContaining('https://test.ngrok.io/form/123'),
         data: {
@@ -141,39 +117,30 @@ describe('requestSecretFormAction', () => {
         },
       });
     });
-
     it('should handle multiple API keys', async () => {
       // Ensure parseJSONObjectFromText returns null for natural language
-      const parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
+      // const _parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
       parseJSONSpy.mockReturnValue(null);
-
       const message: Memory = {
         content: { text: 'I need you to collect my OpenAI and Anthropic API keys' },
         entityId: 'user-123',
       } as any;
-
       await requestSecretFormAction.handler(mockRuntime, message, mockState, {}, mockCallback);
-
-      const formCall = mockFormService.createSecretForm.mock.calls[0];
+      const formCall = mockForm.createSecretForm.mock.calls[0];
       const request = formCall[0];
-
       expect(request.secrets).toHaveLength(2);
       const keys = request.secrets.map((s) => s.key);
       expect(keys).toContain('OPENAI_API_KEY');
       expect(keys).toContain('ANTHROPIC_API_KEY');
     });
-
     it('should handle webhook URL request', async () => {
       const message: Memory = {
         content: { text: 'Create a form for webhook configuration' },
         entityId: 'user-123',
       } as any;
-
       await requestSecretFormAction.handler(mockRuntime, message, mockState, {}, mockCallback);
-
-      const formCall = mockFormService.createSecretForm.mock.calls[0];
+      const formCall = mockForm.createSecretForm.mock.calls[0];
       const request = formCall[0];
-
       expect(request.secrets[0]).toMatchObject({
         key: 'WEBHOOK_URL',
         config: {
@@ -182,7 +149,6 @@ describe('requestSecretFormAction', () => {
         },
       });
     });
-
     it('should parse JSON parameters', async () => {
       parseJSONSpy.mockReturnValue({
         secrets: [
@@ -198,86 +164,63 @@ describe('requestSecretFormAction', () => {
         mode: 'inline',
         expiresIn: 600000,
       });
-
       const message: Memory = {
         content: { text: '{"secrets": [...]}' },
         entityId: 'user-123',
       } as any;
-
       await requestSecretFormAction.handler(mockRuntime, message, mockState, {}, mockCallback);
-
-      const formCall = mockFormService.createSecretForm.mock.calls[0];
+      const formCall = mockForm.createSecretForm.mock.calls[0];
       const request = formCall[0];
-
       expect(request.title).toBe('Custom Form');
       expect(request.description).toBe('Custom Description');
       expect(request.mode).toBe('inline');
       expect(request.expiresIn).toBe(600000);
     });
-
     it('should handle custom expiration times', async () => {
       // Ensure parseJSONObjectFromText returns null for natural language
       parseJSONSpy.mockReturnValue(null);
-
       const message: Memory = {
         content: { text: 'Create a form for my API key that expires in 5 minutes' },
         entityId: 'user-123',
       } as any;
-
       await requestSecretFormAction.handler(mockRuntime, message, mockState, {}, mockCallback);
-
-      const formCall = mockFormService.createSecretForm.mock.calls[0];
+      const formCall = mockForm.createSecretForm.mock.calls[0];
       const request = formCall[0];
-
       expect(request.expiresIn).toBe(5 * 60 * 1000);
     });
-
     it('should handle hour expiration', async () => {
       // Ensure parseJSONObjectFromText returns null for natural language
       parseJSONSpy.mockReturnValue(null);
-
       const message: Memory = {
         content: { text: 'Create a form for my password that expires in 2 hours' },
         entityId: 'user-123',
       } as any;
-
       await requestSecretFormAction.handler(mockRuntime, message, mockState, {}, mockCallback);
-
-      const formCall = mockFormService.createSecretForm.mock.calls[0];
+      const formCall = mockForm.createSecretForm.mock.calls[0];
       const request = formCall[0];
-
       expect(request.expiresIn).toBe(2 * 60 * 60 * 1000);
     });
-
     it('should use inline mode when specified', async () => {
       const message: Memory = {
         content: { text: 'Create a quick inline form for API key' },
         entityId: 'user-123',
       } as any;
-
       await requestSecretFormAction.handler(mockRuntime, message, mockState, {}, mockCallback);
-
-      const formCall = mockFormService.createSecretForm.mock.calls[0];
+      const formCall = mockForm.createSecretForm.mock.calls[0];
       const request = formCall[0];
-
       expect(request.mode).toBe('inline');
     });
-
     it('should handle credit card request', async () => {
       // Ensure parseJSONObjectFromText returns null for natural language
-      const parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
+      // const _parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
       parseJSONSpy.mockReturnValue(null);
-
       const message: Memory = {
         content: { text: 'Please request my credit card information' },
         entityId: 'user-123',
       } as any;
-
       await requestSecretFormAction.handler(mockRuntime, message, mockState, {}, mockCallback);
-
-      const formCall = mockFormService.createSecretForm.mock.calls[0];
+      const formCall = mockForm.createSecretForm.mock.calls[0];
       const request = formCall[0];
-
       expect(request.secrets[0]).toMatchObject({
         key: 'CREDIT_CARD',
         config: {
@@ -286,15 +229,12 @@ describe('requestSecretFormAction', () => {
         },
       });
     });
-
     it('should handle service not available', async () => {
-      mockRuntime.getService = vi.fn(() => null);
-
+      mockRuntime.get = mock(() => null);
       const message: Memory = {
         content: { text: 'Request API key' },
         entityId: 'user-123',
       } as any;
-
       const result = await requestSecretFormAction.handler(
         mockRuntime,
         message,
@@ -302,25 +242,21 @@ describe('requestSecretFormAction', () => {
         {},
         mockCallback
       );
-
       expect(result).toBe(false);
       expect(mockCallback).toHaveBeenCalledWith({
         text: 'Secret form service is not available.',
         error: true,
       });
     });
-
     it('should handle no secrets specified', async () => {
-      const parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
+      // const _parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
       parseJSONSpy.mockReturnValue({
         secrets: [],
       });
-
       const message: Memory = {
         content: { text: '{"secrets": []}' },
         entityId: 'user-123',
       } as any;
-
       const result = await requestSecretFormAction.handler(
         mockRuntime,
         message,
@@ -328,26 +264,21 @@ describe('requestSecretFormAction', () => {
         {},
         mockCallback
       );
-
       expect(result).toBe(false);
       expect(mockCallback).toHaveBeenCalledWith({
         text: 'Please specify what secrets you need to collect.',
         error: true,
       });
     });
-
     it('should handle form creation errors', async () => {
       // Make sure parseJSONObjectFromText returns null for natural language
-      const parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
+      // const _parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
       parseJSONSpy.mockReturnValue(null);
-
-      (mockFormService.createSecretForm as any).mockRejectedValue(new Error('Ngrok tunnel failed'));
-
+      (mockForm.createSecretForm as any).mockRejectedValue(new Error('Ngrok tunnel failed'));
       const message: Memory = {
         content: { text: 'Request API key' },
         entityId: 'user-123',
       } as any;
-
       const result = await requestSecretFormAction.handler(
         mockRuntime,
         message,
@@ -355,29 +286,23 @@ describe('requestSecretFormAction', () => {
         {},
         mockCallback
       );
-
       expect(result).toBe(false);
       expect(mockCallback).toHaveBeenCalledWith({
         text: 'Error creating secret form: Ngrok tunnel failed',
         error: true,
       });
     });
-
     it('should add generic secret if no specific type found', async () => {
       // Make sure parseJSONObjectFromText returns null for natural language
-      const parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
+      // const _parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
       parseJSONSpy.mockReturnValue(null);
-
       const message: Memory = {
         content: { text: 'Request some secret information' },
         entityId: 'user-123',
       } as any;
-
       await requestSecretFormAction.handler(mockRuntime, message, mockState, {}, mockCallback);
-
-      const formCall = mockFormService.createSecretForm.mock.calls[0];
+      const formCall = mockForm.createSecretForm.mock.calls[0];
       const request = formCall[0];
-
       expect(request.secrets[0]).toMatchObject({
         key: 'SECRET',
         config: {
@@ -386,26 +311,20 @@ describe('requestSecretFormAction', () => {
         },
       });
     });
-
     it('should handle submission callback', async () => {
       // Make sure parseJSONObjectFromText returns null for natural language
-      const parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
+      // const _parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
       parseJSONSpy.mockReturnValue(null);
-
       const message: Memory = {
         content: { text: 'Request API key' },
         entityId: 'user-123',
       } as any;
-
       await requestSecretFormAction.handler(mockRuntime, message, mockState, {}, mockCallback);
-
       // Verify createSecretForm was called
-      expect(mockFormService.createSecretForm).toHaveBeenCalled();
-
+      expect(mockForm.createSecretForm).toHaveBeenCalled();
       // Get the callback function
-      const formCall = mockFormService.createSecretForm.mock.calls[0];
+      const formCall = mockForm.createSecretForm.mock.calls[0];
       const submissionCallback = formCall[2];
-
       // Simulate form submission
       const submission = {
         formId: 'form-123',
@@ -413,17 +332,14 @@ describe('requestSecretFormAction', () => {
         data: { API_KEY: 'test-key' },
         submittedAt: Date.now(),
       };
-
-      // Callback should not throw - it returns void/undefined
+      // HandlerCallback should not throw - it returns void/undefined
       await expect(submissionCallback?.(submission)).resolves.toBeUndefined();
     });
   });
-
   describe('examples', () => {
     it('should have valid examples', () => {
       expect(requestSecretFormAction.examples).toBeDefined();
       expect(requestSecretFormAction.examples).toHaveLength(3);
-
       // Check first example
       const firstExample = requestSecretFormAction.examples![0];
       expect(firstExample[0].name).toBe('user');

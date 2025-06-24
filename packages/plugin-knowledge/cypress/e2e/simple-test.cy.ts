@@ -35,7 +35,7 @@ describe('Plugin Knowledge Server Test', () => {
   it('should verify knowledge plugin API endpoints work', () => {
     // Get a test agent ID - we'll use a dummy one since we just want to test the API structure
     const testAgentId = 'b438180f-bcb4-0e28-8cb1-ec0264051e59';
-    
+
     // Test documents endpoint
     cy.request({
       method: 'GET',
@@ -49,7 +49,7 @@ describe('Plugin Knowledge Server Test', () => {
 
     // Test search endpoint
     cy.request({
-      method: 'GET', 
+      method: 'GET',
       url: `/api/search?agentId=${testAgentId}&q=test`,
       failOnStatusCode: false,
     }).then((response) => {
@@ -69,4 +69,4 @@ describe('Plugin Knowledge Server Test', () => {
       expect(response.body.data).to.have.property('chunks');
     });
   });
-}); 
+});

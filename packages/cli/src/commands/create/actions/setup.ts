@@ -141,7 +141,6 @@ export async function setupAIModelConfig(
 
       default:
         console.warn(`Unknown AI model: ${aiModel}, skipping configuration`);
-        return;
     }
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

@@ -25,13 +25,14 @@ export const knowledgeProvider: Provider = {
 
     const firstFiveKnowledgeItems = knowledgeData?.slice(0, 5);
 
-    let knowledge =
-      (firstFiveKnowledgeItems && firstFiveKnowledgeItems.length > 0
+    let knowledge = `${
+      firstFiveKnowledgeItems && firstFiveKnowledgeItems.length > 0
         ? addHeader(
-            '# Knowledge',
-            firstFiveKnowledgeItems.map((knowledge) => `- ${knowledge.content.text}`).join('\n')
-          )
-        : '') + '\n';
+          '# Knowledge',
+          firstFiveKnowledgeItems.map((knowledge) => `- ${knowledge.content.text}`).join('\n')
+        )
+        : ''
+    }\n`;
 
     const tokenLength = 3.5;
 

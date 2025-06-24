@@ -38,4 +38,4 @@
     "TEMPERATURE_LIMIT": "80.0"
   },
   "plugins": ["@elizaos/plugin-robot"]
-} 
+}

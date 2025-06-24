@@ -1,6 +1,6 @@
 {
   "name": "@elizaos/plugin-hyperfy",
-  "description": "${PLUGINDESCRIPTION}",
+  "description": "Connect ElizaOS agents to 3D Hyperfy worlds",
   "version": "1.0.6",
   "type": "module",
   "private": true,
@@ -21,7 +21,7 @@
   },
   "homepage": "https://elizaos.ai",
   "bugs": {
-    "url": "https://github.com/${GITHUB_USERNAME}/${PLUGINNAME}/issues"
+    "url": "https://github.com/elizaos/elizaos/issues"
   },
   "exports": {
     "./package.json": "./package.json",
@@ -40,7 +40,8 @@
     "tsup.config.ts"
   ],
   "dependencies": {
-    "@elizaos/core": "^1.0.0",
+    "@elizaos/core": "workspace:*",
+    "@elizaos/hyperfy": "workspace:*",
     "@tanstack/react-query": "^5.80.7",
     "@types/lodash-es": "^4.17.12",
     "clsx": "^2.1.1",
@@ -67,14 +68,16 @@
     "prettier": "3.5.3",
     "tailwindcss-animate": "^1.0.7",
     "tsup": "8.5.0",
-    "typescript": "^5.8.3",
-    "vitest": "3.1.4"
+    "typescript": "5.8.3",
+    "@types/bun": "1.2.17"
   },
   "scripts": {
     "start": "elizaos start",
     "dev": "elizaos dev",
     "build": "tsc --noEmit && vite build && tsup",
-    "lint": "prettier --write ./src",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx --fix && prettier --write ./src",
+    "lint:check": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "lint:strict": "eslint src --ext .ts,.tsx,.js,.jsx --max-warnings 0",
     "test": "elizaos test",
     "publish": "elizaos publish",
     "format": "prettier --write ./src",

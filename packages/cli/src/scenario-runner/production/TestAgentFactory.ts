@@ -48,7 +48,9 @@ export class TestAgentFactory {
         for (const pluginName of config.plugins) {
           try {
             // Skip sql plugin since we already added it
-            if (pluginName === 'sql') continue;
+            if (pluginName === 'sql') {
+              continue;
+            }
 
             // Try to load from @elizaos scope
             const plugin = await loadAndPreparePlugin(`@elizaos/plugin-${pluginName}`);

@@ -53,7 +53,7 @@ describe('Memory Integration Tests', () => {
 
       // Log the IDs for debugging
       console.log('Test IDs:', {
-        testAgentId: testAgentId,
+        testAgentId,
         adapterAgentId: (adapter as any).agentId,
         testEntityId,
         testRoomId,

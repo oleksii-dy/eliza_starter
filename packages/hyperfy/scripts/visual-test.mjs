@@ -28,7 +28,7 @@ function delay(ms) {
 
 async function waitForBackendServer(port, timeout = 30000) {
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < timeout) {
     try {
       const response = await fetch(`http://localhost:${port}/health`);
@@ -40,23 +40,23 @@ async function waitForBackendServer(port, timeout = 30000) {
     }
     await delay(1000);
   }
-  
+
   throw new Error(`Backend server did not start within ${timeout/1000} seconds`);
 }
 
 async function waitForDevServer(devServer, timeout = DEV_SERVER_TIMEOUT) {
   const startTime = Date.now();
   let actualPort = null;
-  
+
   return new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new Error(`Dev server did not start within ${timeout/1000} seconds`));
     }, timeout);
-    
+
     const checkOutput = (data) => {
       const output = data.toString();
       console.log('Dev server:', output.trim());
-      
+
       // Look for Vite's port announcement
       const portMatch = output.match(/Local:\s+http:\/\/localhost:(\d+)/);
       if (portMatch) {
@@ -65,7 +65,7 @@ async function waitForDevServer(devServer, timeout = DEV_SERVER_TIMEOUT) {
         resolve(actualPort);
       }
     };
-    
+
     devServer.stdout.on('data', checkOutput);
     devServer.stderr.on('data', (data) => {
       const output = data.toString();
@@ -76,9 +76,9 @@ async function waitForDevServer(devServer, timeout = DEV_SERVER_TIMEOUT) {
 }
 
 async function runVisualTest(attempt = 1) {
-  console.log(`\n🎯 Visual Test`);
+  console.log('\n🎯 Visual Test');
   console.log('=====================================');
-  
+
   // Kill any existing servers first
   console.log('🧹 Cleaning up existing servers...');
   try {
@@ -88,11 +88,11 @@ async function runVisualTest(attempt = 1) {
   } catch (e) {
     // Ignore errors if processes don't exist
   }
-  
+
   let backendServer = null;
   let devServer = null;
   let devServerOutput = '';
-  
+
   try {
     // First build the project to ensure backend can run
     console.log('🔨 Building project...');
@@ -100,7 +100,7 @@ async function runVisualTest(attempt = 1) {
       shell: true,
       stdio: 'inherit'
     });
-    
+
     await new Promise((resolve, reject) => {
       buildProcess.on('close', (code) => {
         if (code === 0) {
@@ -110,13 +110,13 @@ async function runVisualTest(attempt = 1) {
         }
       });
     });
-    
+
     // Start backend server
     console.log(`🚀 Starting backend server on port ${BACKEND_PORT}...`);
     backendServer = spawn('npm', ['start'], {
       shell: true,
       stdio: 'pipe',
-      env: { 
+      env: {
         ...process.env,
         PORT: BACKEND_PORT,
         WORLD: process.env.WORLD || './world',
@@ -128,25 +128,25 @@ async function runVisualTest(attempt = 1) {
         LIVEKIT_API_SECRET: ''
       }
     });
-    
+
     backendServer.stdout.on('data', (data) => {
       console.log('Backend:', data.toString().trim());
     });
-    
+
     backendServer.stderr.on('data', (data) => {
       console.error('Backend error:', data.toString().trim());
     });
-    
+
     // Wait for backend to be ready
     await waitForBackendServer(BACKEND_PORT);
     console.log(`✅ Backend server is ready on port ${BACKEND_PORT}`);
-    
+
     // Start frontend dev server
     console.log('🚀 Starting frontend dev server...');
     devServer = spawn('npm', ['run', 'dev:vite'], {
       shell: true,
       stdio: 'pipe',
-      env: { 
+      env: {
         ...process.env,
         PUBLIC_WS_URL: `ws://localhost:${BACKEND_PORT}/ws`,
         PUBLIC_ASSETS_URL: `http://localhost:${BACKEND_PORT}/assets/`,
@@ -158,12 +158,12 @@ async function runVisualTest(attempt = 1) {
     });
 
     let actualPort = null;
-    
+
     devServer.stdout.on('data', (data) => {
       const output = data.toString();
       devServerOutput += output;
     });
-    
+
     devServer.stderr.on('data', (data) => {
       const output = data.toString();
       devServerOutput += output;
@@ -218,29 +218,29 @@ async function runVisualTest(attempt = 1) {
 
     // Navigate to the page
     console.log(`📍 Navigating to ${TEST_URL}...`);
-    await page.goto(TEST_URL, { 
+    await page.goto(TEST_URL, {
       waitUntil: 'networkidle',
-      timeout: 30000 
+      timeout: 30000
     });
 
     // Wait for initial load
     console.log(`⏳ Waiting ${WAIT_TIME/1000} seconds for world to load...`);
-    
+
     // Check world state periodically
     let lastLogTime = Date.now();
     const checkInterval = setInterval(async () => {
       try {
         const worldState = await page.evaluate(() => {
           const world = window.world;
-          if (!world) return { exists: false };
-          
+          if (!world) {return { exists: false };}
+
           return {
             exists: true,
             frame: world.frame || 0,
             time: world.time || 0,
             systemsCount: world.systems?.length || 0,
             systems: world.systems?.map(s => s.constructor.name) || [],
-            
+
             // Loader state
             loader: {
               exists: !!world.loader,
@@ -249,7 +249,7 @@ async function runVisualTest(attempt = 1) {
               promises: world.loader?.promises?.size || 0,
               results: world.loader?.results?.size || 0
             },
-            
+
             // Settings state
             settings: {
               exists: !!world.settings,
@@ -258,7 +258,7 @@ async function runVisualTest(attempt = 1) {
               modelUrl: typeof world.settings?.model === 'object' ? world.settings?.model?.url : world.settings?.model,
               avatar: world.settings?.avatar || null
             },
-            
+
             // Environment state
             environment: {
               exists: !!world.environment,
@@ -267,7 +267,7 @@ async function runVisualTest(attempt = 1) {
               skyExists: !!world.environment?.sky,
               csmExists: !!world.environment?.csm
             },
-            
+
             // Graphics state
             graphics: {
               exists: !!world.graphics,
@@ -275,7 +275,7 @@ async function runVisualTest(attempt = 1) {
               rendererInitialized: !!(world.graphics?.renderer?.domElement),
               viewportSize: world.graphics ? `${world.graphics.width}x${world.graphics.height}` : 'N/A'
             },
-            
+
             // Network state
             network: {
               exists: !!world.network,
@@ -284,7 +284,7 @@ async function runVisualTest(attempt = 1) {
               wsStateText: ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][world.network?.ws?.readyState] || 'UNKNOWN',
               id: world.network?.id || null
             },
-            
+
             // Entities state
             entities: {
               count: world.entities?.getAll?.()?.length || 0,
@@ -292,7 +292,7 @@ async function runVisualTest(attempt = 1) {
               playerExists: !!world.entities?.player,
               playerId: world.entities?.player?.data?.id || null
             },
-            
+
             // Stage state
             stage: {
               exists: !!world.stage,
@@ -330,7 +330,7 @@ async function runVisualTest(attempt = 1) {
     // Get final world diagnostics
     const diagnostics = await page.evaluate(() => {
       const world = window.world;
-      if (!world) return null;
+      if (!world) {return null;}
 
       // Check for any ready events
       const readyEvents = [];
@@ -341,14 +341,14 @@ async function runVisualTest(attempt = 1) {
       return {
         worldExists: true,
         frame: world.frame || 0,
-        
+
         rendererInfo: {
           exists: !!world.graphics?.renderer,
           initialized: !!(world.graphics?.renderer?.domElement),
           inDOM: !!(world.graphics?.renderer?.domElement?.parentNode),
           size: world.graphics ? `${world.graphics.width}x${world.graphics.height}` : 'N/A'
         },
-        
+
         entitiesInfo: {
           count: world.entities?.getAll?.()?.length || 0,
           list: world.entities?.getAll?.()?.map(e => ({
@@ -357,28 +357,28 @@ async function runVisualTest(attempt = 1) {
             position: e.data?.position
           })) || []
         },
-        
+
         stageInfo: {
           sceneChildren: world.stage?.scene?.children?.length || 0,
           sceneChildTypes: world.stage?.scene?.children?.map(c => c.type || c.constructor.name) || []
         },
-        
+
         playerInfo: {
           exists: !!world.entities?.player,
           id: world.entities?.player?.data?.id,
           position: world.entities?.player?.base?.position,
           avatarLoaded: !!world.entities?.player?.avatar
         },
-        
+
         environmentInfo: {
           modelLoaded: !!world.environment?.model,
           skyVisible: world.environment?.sky?.visible,
           baseModel: world.environment?.base?.model,
           settingsModel: world.settings?.model
         },
-        
+
         readyEvents,
-        
+
         loaderInfo: {
           preloadCount: world.loader?.preloadItems?.length || 0,
           loadedCount: world.loader?.results?.size || 0,
@@ -399,7 +399,7 @@ async function runVisualTest(attempt = 1) {
     console.log('🔍 Analyzing screenshot...');
     const metadata = await sharp(screenshotPath).metadata();
     const { width, height } = metadata;
-    
+
     // Get center region (30% of width/height)
     const centerWidth = Math.floor(width * 0.3);
     const centerHeight = Math.floor(height * 0.3);
@@ -415,24 +415,24 @@ async function runVisualTest(attempt = 1) {
     let blackPixels = 0;
     let skyboxPixels = 0;
     const totalPixels = centerWidth * centerHeight;
-    
+
     // Check each pixel (RGB format)
     for (let i = 0; i < centerRegion.length; i += 3) {
       const r = centerRegion[i];
       const g = centerRegion[i + 1];
       const b = centerRegion[i + 2];
-      
+
       // Check if pixel is black (loading screen)
       if (r < 10 && g < 10 && b < 10) {
         blackPixels++;
       }
-      
+
       // Check if pixel matches skybox color #6acdff (rgb(106, 205, 255))
       // Allow some tolerance for compression/rendering differences
       const rDiff = Math.abs(r - 106);
       const gDiff = Math.abs(g - 205);
       const bDiff = Math.abs(b - 255);
-      
+
       if (rDiff < 30 && gDiff < 30 && bDiff < 30) {
         skyboxPixels++;
       }
@@ -440,13 +440,13 @@ async function runVisualTest(attempt = 1) {
 
     const blackPercentage = (blackPixels / totalPixels) * 100;
     const skyboxPercentage = (skyboxPixels / totalPixels) * 100;
-    
-    console.log(`\n📊 Analysis Results:`);
+
+    console.log('\n📊 Analysis Results:');
     console.log(`  - Screenshot dimensions: ${width}x${height}`);
     console.log(`  - Center region: ${centerWidth}x${centerHeight}`);
     console.log(`  - Black pixels: ${blackPixels}/${totalPixels} (${blackPercentage.toFixed(2)}%)`);
     console.log(`  - Skybox-colored pixels: ${skyboxPixels}/${totalPixels} (${skyboxPercentage.toFixed(2)}%)`);
-    console.log(`  - Black threshold: 80%`);
+    console.log('  - Black threshold: 80%');
     console.log(`  - Skybox threshold: ${SKYBOX_THRESHOLD * 100}%`);
 
     // Save diagnostic screenshot with center region marked
@@ -502,7 +502,7 @@ async function runVisualTest(attempt = 1) {
     // Determine the state
     let state = 'unknown';
     let errorMessage = null;
-    
+
     if (blackPercentage > 80) {
       state = 'loading';
       errorMessage = `Loading overlay still visible: ${blackPercentage.toFixed(2)}% black pixels`;
@@ -512,9 +512,9 @@ async function runVisualTest(attempt = 1) {
     } else {
       state = 'working';
     }
-    
+
     console.log(`\n🎯 State: ${state.toUpperCase()}`);
-    
+
     if (errorMessage) {
       throw new Error(errorMessage);
     }
@@ -526,12 +526,12 @@ async function runVisualTest(attempt = 1) {
 
   } catch (error) {
     console.error('\n❌ Visual test failed:', error.message);
-    
+
     if (devServerOutput) {
       console.log('\n📝 Dev Server Output:');
       console.log(devServerOutput.slice(-2000)); // Last 2000 chars
     }
-    
+
     throw error;
   } finally {
     // Clean up servers
@@ -555,9 +555,9 @@ try {
     runVisualTest(1),
     timeoutPromise
   ]);
-  
+
   process.exit(0);
 } catch (error) {
   console.error('\n💥 Test failed:', error.message);
   process.exit(1);
-} 
+}

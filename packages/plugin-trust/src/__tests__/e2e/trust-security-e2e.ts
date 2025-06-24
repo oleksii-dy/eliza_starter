@@ -143,7 +143,7 @@ export class TrustSecurityE2ETests implements TestSuite {
 
         // Test with low-trust entity
         const lowTrustEntity = `low-trust-${Date.now()}` as UUID;
-        
+
         // Try to access sensitive resource
         const permissionResult = await trustService.checkPermission(
           lowTrustEntity,
@@ -160,7 +160,7 @@ export class TrustSecurityE2ETests implements TestSuite {
 
         // Test with high-trust entity
         const highTrustEntity = `high-trust-${Date.now()}` as UUID;
-        
+
         // Build trust
         for (let i = 0; i < 5; i++) {
           await trustService.updateTrust(
@@ -189,4 +189,4 @@ export class TrustSecurityE2ETests implements TestSuite {
   ];
 }
 
-export const trustSecurityE2ETests = new TrustSecurityE2ETests(); 
+export const trustSecurityE2ETests = new TrustSecurityE2ETests();

@@ -1,6 +1,6 @@
 import { Service, type IAgentRuntime } from '@elizaos/core';
 import type { ITunnelService, TunnelStatus } from '@elizaos/core';
-import { vi } from 'vitest';
+import { jest } from 'bun:test';
 
 export class MockNgrokService extends Service implements ITunnelService {
   static serviceType = 'tunnel';
@@ -12,7 +12,7 @@ export class MockNgrokService extends Service implements ITunnelService {
   private mockActive = false;
 
   // Mock functions to track calls
-  startTunnel = vi.fn().mockImplementation(async (port?: number) => {
+  startTunnel = jest.fn().mockImplementation(async (port?: number) => {
     if (typeof port !== 'number') {
       return;
     }
@@ -23,24 +23,26 @@ export class MockNgrokService extends Service implements ITunnelService {
     return this.mockUrl;
   });
 
-  stopTunnel = vi.fn().mockImplementation(async () => {
+  stopTunnel = jest.fn().mockImplementation(async () => {
     this.mockActive = false;
     this.mockUrl = null;
     this.mockPort = null;
     this.mockStartedAt = null;
   });
 
-  getUrl = vi.fn().mockImplementation(() => this.mockUrl);
+  getUrl = jest.fn().mockImplementation(() => this.mockUrl);
 
-  isActive = vi.fn().mockImplementation(() => this.mockActive);
+  isActive = jest.fn().mockImplementation(() => this.mockActive);
 
-  getStatus = vi.fn().mockImplementation((): TunnelStatus => ({
-    active: this.mockActive,
-    url: this.mockUrl,
-    port: this.mockPort,
-    startedAt: this.mockStartedAt,
-    provider: 'ngrok',
-  }));
+  getStatus = jest.fn().mockImplementation(
+    (): TunnelStatus => ({
+      active: this.mockActive,
+      url: this.mockUrl,
+      port: this.mockPort,
+      startedAt: this.mockStartedAt,
+      provider: 'ngrok',
+    })
+  );
 
   // Base Service methods
   async start(): Promise<void> {}
@@ -51,4 +53,4 @@ export class MockNgrokService extends Service implements ITunnelService {
 
 export function createMockNgrokService(runtime: IAgentRuntime): MockNgrokService {
   return new MockNgrokService(runtime);
-} 
+}

@@ -73,7 +73,7 @@ export class RolodexService extends Service {
   // Trust service integration
   private trustService?: any;
   private trustManagerService?: any;
-  
+
   private databaseReady = false;
 
   constructor() {
@@ -83,7 +83,6 @@ export class RolodexService extends Service {
   // Static factory method required by ElizaOS
   static async start(runtime: IAgentRuntime): Promise<Service> {
     const service = new RolodexService();
-    // @ts-ignore - runtime is set by base class
     service.runtime = runtime;
     await service.initialize();
     return service;
@@ -185,11 +184,11 @@ export class RolodexService extends Service {
         logger.error('[RolodexService] Database adapter not available');
         return false;
       }
-      
+
       // Try to get entities to verify the runtime's database is working
       const roomIds = await this.runtime.getRoomsForParticipant(this.runtime.agentId);
       logger.info(`[RolodexService] Runtime database verified, found ${roomIds.length} rooms`);
-      
+
       return true;
     } catch (error) {
       logger.error('[RolodexService] Table verification failed:', error);
@@ -213,14 +212,14 @@ export class RolodexService extends Service {
    */
   async upsertEntity(entity: Partial<Entity>): Promise<Entity> {
     this.ensureReady();
-    
+
     if (!this.entityResolutionManager) {
       throw new Error('Entity resolution manager not initialized');
     }
 
     // Use entity resolution for intelligent entity management
     const entityId = entity.id || stringToUuid(entity.names?.[0] || `entity-${Date.now()}`);
-    
+
     // Check for existing entities that might be the same
     const candidates = await this.entityResolutionManager.resolveEntity(
       entity.names?.[0] || '',
@@ -257,7 +256,7 @@ export class RolodexService extends Service {
    */
   async searchEntities(query: string, limit = 10): Promise<Entity[]> {
     this.ensureReady();
-    
+
     if (!this.entityGraphManager) {
       return [];
     }
@@ -290,7 +289,7 @@ export class RolodexService extends Service {
     }
   ): Promise<Relationship> {
     this.ensureReady();
-    
+
     if (!this.relationshipOntologyManager) {
       throw new Error('Relationship ontology manager not initialized');
     }
@@ -312,7 +311,7 @@ export class RolodexService extends Service {
    */
   async getRelationships(entityId: UUID): Promise<Relationship[]> {
     this.ensureReady();
-    
+
     if (!this.entityGraphManager) {
       return [];
     }
@@ -378,14 +377,14 @@ export class RolodexService extends Service {
     }
   ): Promise<any> {
     this.ensureReady();
-    
+
     if (!this.followUpManager) {
       throw new Error('Follow-up manager not initialized');
     }
 
     return await this.followUpManager.scheduleFollowUp(
-      entityId, 
-      followUp.message, 
+      entityId,
+      followUp.message,
       followUp.scheduledFor,
       followUp
     );
@@ -400,7 +399,7 @@ export class RolodexService extends Service {
     includePast?: boolean;
   }): Promise<any[]> {
     this.ensureReady();
-    
+
     if (!this.followUpManager) {
       return [];
     }
@@ -448,7 +447,7 @@ export class RolodexService extends Service {
    */
   async mergeEntities(primaryId: UUID, secondaryId: UUID): Promise<Entity> {
     this.ensureReady();
-    
+
     if (!this.entityResolutionManager) {
       throw new Error('Entity resolution manager not initialized');
     }
@@ -461,7 +460,7 @@ export class RolodexService extends Service {
    */
   async getNetworkStats(): Promise<any> {
     this.ensureReady();
-    
+
     if (!this.entityGraphManager) {
       return {
         totalEntities: 0,
@@ -497,32 +496,32 @@ export class RolodexService extends Service {
    */
   async stop(): Promise<void> {
     logger.info('[RolodexService] Stopping...');
-    
+
     // Stop managers in reverse order
     if (this.autonomousRelationshipManager) {
       await this.autonomousRelationshipManager.stop();
     }
-    
+
     if (this.entityGraphManager) {
       await this.entityGraphManager.stop();
     }
-    
+
     if (this.followUpManager) {
       await this.followUpManager.stop();
     }
-    
+
     if (this.relationshipOntologyManager) {
       await this.relationshipOntologyManager.stop();
     }
-    
+
     if (this.entityResolutionManager) {
       await this.entityResolutionManager.stop();
     }
-    
+
     if (this.eventBridge) {
       await this.eventBridge.stop();
     }
-    
+
     this.databaseReady = false;
     logger.info('[RolodexService] Stopped');
   }
@@ -541,7 +540,7 @@ export class RolodexService extends Service {
    */
   async getAllRelationships(): Promise<any[]> {
     this.ensureReady();
-    
+
     if (!this.entityGraphManager) {
       return [];
     }
@@ -564,9 +563,9 @@ export class RolodexService extends Service {
       // Collect entities from all rooms
       for (const roomId of roomIds) {
         const entities = await this.runtime.getEntitiesForRoom(roomId);
-        
+
         for (const entity of entities) {
-          if (!entity.id || seenIds.has(entity.id)) continue;
+          if (!entity.id || seenIds.has(entity.id)) {continue;}
           seenIds.add(entity.id);
           allEntities.push({
             id: entity.id,

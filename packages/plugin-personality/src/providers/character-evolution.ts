@@ -10,7 +10,7 @@ export const characterEvolutionProvider: Provider = {
   dynamic: true, // Only included when explicitly requested
   position: 5, // After basic providers but before decision-making
 
-  get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
+  get: async (runtime: IAgentRuntime, message: Memory, _state: State) => {
     try {
       const characterInfo = await gatherCharacterInfo(runtime);
       const recentModifications = await getRecentModifications(runtime, message.roomId);
@@ -154,7 +154,7 @@ function formatEvolutionContext(
 
   // Evolution suggestions
   if (evolutionSuggestions.length > 0) {
-    sections.push(`Pending Evolution Suggestions:`);
+    sections.push('Pending Evolution Suggestions:');
     evolutionSuggestions.forEach((suggestion, index) => {
       const age = Date.now() - suggestion.timestamp;
       const ageStr = formatAge(age);
@@ -187,8 +187,14 @@ function formatAge(ageMs: number): string {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (days > 0) return `${days}d`;
-  if (hours > 0) return `${hours}h`;
-  if (minutes > 0) return `${minutes}m`;
+  if (days > 0) {
+    return `${days}d`;
+  }
+  if (hours > 0) {
+    return `${hours}h`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m`;
+  }
   return '< 1m';
 }

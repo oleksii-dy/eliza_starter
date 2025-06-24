@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, mock, beforeEach, type Mock } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
 import { recordTrustInteractionAction } from '../recordTrustInteraction';
@@ -7,7 +7,7 @@ import type { TrustInteraction } from '../../types/trust';
 const createMockRuntime = (): IAgentRuntime =>
   ({
     agentId: 'test-agent' as UUID,
-    getService: vi.fn()
+    getService: mock()
   } as any);
 
 const createMockMemory = (text: string, entityId: UUID): Memory =>
@@ -27,7 +27,7 @@ describe('recordTrustInteractionAction', () => {
   beforeEach(() => {
     runtime = createMockRuntime();
     trustService = {
-      recordInteraction: vi.fn().mockResolvedValue({ success: true })
+      recordInteraction: mock().mockResolvedValue({ success: true })
     };
     (runtime.getService as unknown as Mock).mockReturnValue(trustService);
   });
@@ -55,15 +55,15 @@ describe('recordTrustInteractionAction', () => {
   it('should validate the action correctly', async () => {
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
-    
+
     // Mock trust-engine service
     (runtime.getService as unknown as Mock).mockImplementation((name: string) => {
-      if (name === 'trust-engine') return trustService;
+      if (name === 'trust-engine') {return trustService;}
       return null;
     });
-    
+
     expect(await recordTrustInteractionAction.validate(runtime, memory, state)).toBe(true);
-    
+
     (runtime.getService as unknown as Mock).mockReturnValue(null);
     expect(await recordTrustInteractionAction.validate(runtime, memory, state)).toBe(false);
   });

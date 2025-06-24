@@ -84,7 +84,7 @@ export class DynamicLoaderManager {
    * Dynamically load a component from a file
    */
   async loadComponent(options: DynamicLoadOptions): Promise<DynamicLoadResult> {
-    logger.info(`Loading component with options:`, options);
+    logger.info('Loading component with options:', options);
 
     try {
       const absolutePath = path.resolve(options.filePath);
@@ -234,7 +234,7 @@ export class DynamicLoaderManager {
         tests,
       };
     } catch (error) {
-      logger.error(`Test failed:`, error);
+      logger.error('Test failed:', error);
       return {
         passed: false,
         tests: [
@@ -308,7 +308,7 @@ export class DynamicLoaderManager {
         result,
       };
     } catch (error) {
-      logger.error(`Sandbox execution failed:`, error);
+      logger.error('Sandbox execution failed:', error);
       return {
         success: false,
         sandboxed: true,
@@ -473,7 +473,7 @@ export class DynamicLoaderManager {
           exportLines.push(`module.exports.${name} = ${name};`);
         });
         // Add 'default' as a self-reference
-        exportLines.push(`module.exports.default = module.exports;`);
+        exportLines.push('module.exports.default = module.exports;');
       } else if (namedExports.length > 0) {
         // No default export, so create module.exports as an object
         exportLines.push('module.exports = {};');
@@ -484,7 +484,7 @@ export class DynamicLoaderManager {
 
       // Append exports at the end
       if (exportLines.length > 0) {
-        jsCode = jsCode + '\n\n' + exportLines.join('\n');
+        jsCode = `${jsCode}\n\n${exportLines.join('\n')}`;
       }
 
       return jsCode;
@@ -558,7 +558,7 @@ export class DynamicLoaderManager {
 
     // Look for named exports that are actual components (objects with expected properties)
     for (const [key, value] of Object.entries(exports)) {
-      if (!value || typeof value !== 'object') continue;
+      if (!value || typeof value !== 'object') {continue;}
 
       // Check if the export has properties expected for the component type
       const component = value as any;

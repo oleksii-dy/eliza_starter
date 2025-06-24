@@ -1,16 +1,16 @@
 // Mock composePromptFromState before importing actions
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
+mock.module('@elizaos/core', async () => {
+  const actual = await import('@elizaos/core');
   return {
     ...actual,
-    composePromptFromState: vi.fn((template, state) => {
+    composePromptFromState: mock((template, state) => {
       // Simple mock - just return the template
       return template || '';
     }),
   };
 });
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { stringToUuid, type Memory } from '@elizaos/core';
 import {
   createMockRuntime,
@@ -37,21 +37,21 @@ describe('Rolodex Actions', () => {
   let mockState: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     mockRolodexService = {
-      searchEntities: vi.fn(),
-      updateEntity: vi.fn(),
-      removeEntity: vi.fn(),
-      trackEntity: vi.fn(),
-      getEntity: vi.fn(),
-      upsertEntity: vi.fn().mockResolvedValue({
+      searchEntities: mock(),
+      updateEntity: mock(),
+      removeEntity: mock(),
+      trackEntity: mock(),
+      getEntity: mock(),
+      upsertEntity: mock().mockResolvedValue({
         id: stringToUuid('test-entity'),
         agentId: stringToUuid('test-agent'),
         names: ['Test Entity'],
         metadata: {},
       }),
-      scheduleFollowUp: vi.fn().mockResolvedValue({
+      scheduleFollowUp: mock().mockResolvedValue({
         id: stringToUuid('test-followup'),
         entityId: stringToUuid('test-entity'),
         message: 'Test follow-up',
@@ -62,7 +62,7 @@ describe('Rolodex Actions', () => {
     };
 
     mockRolodexService = {
-      upsertEntity: vi.fn().mockResolvedValue({
+      upsertEntity: mock().mockResolvedValue({
         id: stringToUuid('john'),
         agentId: stringToUuid('agent'),
         names: ['John'],
@@ -74,7 +74,7 @@ describe('Rolodex Actions', () => {
           bio: 'A helpful person',
         },
       }),
-      trackEntity: vi.fn().mockResolvedValue({
+      trackEntity: mock().mockResolvedValue({
         entityId: stringToUuid('john'),
         type: 'person',
         names: ['John'],
@@ -87,7 +87,7 @@ describe('Rolodex Actions', () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }),
-      searchEntities: vi.fn().mockResolvedValue([
+      searchEntities: mock().mockResolvedValue([
         {
           entity: {
             entityId: stringToUuid('sarah'),
@@ -102,7 +102,7 @@ describe('Rolodex Actions', () => {
           matchReason: 'name match',
         },
       ]),
-      updateEntityProfile: vi.fn().mockResolvedValue({
+      updateEntityProfile: mock().mockResolvedValue({
         entityId: stringToUuid('sarah'),
         type: 'person',
         names: ['Sarah'],
@@ -113,7 +113,7 @@ describe('Rolodex Actions', () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }),
-      getEntity: vi.fn().mockResolvedValue({
+      getEntity: mock().mockResolvedValue({
         entityId: stringToUuid('sarah'),
         type: 'person',
         names: ['Sarah'],
@@ -124,7 +124,7 @@ describe('Rolodex Actions', () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }),
-      scheduleFollowUp: vi.fn().mockResolvedValue({
+      scheduleFollowUp: mock().mockResolvedValue({
         id: stringToUuid('followup-1'),
         entityId: stringToUuid('sarah'),
         message: 'project discussion',
@@ -136,7 +136,7 @@ describe('Rolodex Actions', () => {
     };
 
     mockFollowUpManager = {
-      scheduleFollowUp: vi.fn().mockResolvedValue({
+      scheduleFollowUp: mock().mockResolvedValue({
         id: 'task-123',
         name: 'FOLLOW_UP',
         description: 'Follow up with Sarah',
@@ -150,7 +150,7 @@ describe('Rolodex Actions', () => {
     };
 
     mockRuntime = createMockRuntime({
-      getService: vi.fn((serviceName: string) => {
+      getService: mock((serviceName: string) => {
         if (serviceName === 'entity') {
           return mockRolodexService;
         } else if (serviceName === 'followup') {
@@ -160,11 +160,11 @@ describe('Rolodex Actions', () => {
         }
         return null;
       }),
-      useModel: vi.fn(),
-      createEntity: vi.fn().mockResolvedValue(true),
+      useModel: mock(),
+      createEntity: mock().mockResolvedValue(true),
     });
 
-    mockCallback = vi.fn();
+    mockCallback = mock();
 
     mockMessage = createMockMemory({
       content: { text: 'Test message' },
@@ -218,7 +218,7 @@ describe('Rolodex Actions', () => {
       }));
 
       // Mock findEntityByName on runtime
-      mockRuntime.findEntityByName = vi.fn().mockResolvedValue(null); // Entity doesn't exist yet
+      mockRuntime.findEntityByName = mock().mockResolvedValue(null); // Entity doesn't exist yet
 
       const result = await trackEntityAction.handler(
         mockRuntime,
@@ -242,7 +242,7 @@ describe('Rolodex Actions', () => {
       });
 
       const runtimeWithoutService = createMockRuntime({
-        getService: vi.fn(() => null),
+        getService: mock(() => null),
       });
 
       const result = await trackEntityAction.handler(
@@ -317,7 +317,7 @@ describe('Rolodex Actions', () => {
       `);
 
       // Mock entity exists in runtime
-      mockRuntime.findEntityByName = vi.fn().mockResolvedValue({
+      mockRuntime.findEntityByName = mock().mockResolvedValue({
         id: stringToUuid('sarah'),
         names: ['Sarah'],
         agentId: stringToUuid('agent'),
@@ -360,7 +360,7 @@ describe('Rolodex Actions', () => {
       `);
 
       // Mock entity exists in runtime
-      mockRuntime.findEntityByName = vi.fn().mockResolvedValue({
+      mockRuntime.findEntityByName = mock().mockResolvedValue({
         id: stringToUuid('john'),
         names: ['John'],
         agentId: stringToUuid('agent'),
@@ -424,14 +424,14 @@ describe('Rolodex Actions', () => {
       `);
 
       // Mock getRoom to return a room with worldId
-      mockRuntime.getRoom = vi.fn().mockResolvedValue({
+      mockRuntime.getRoom = mock().mockResolvedValue({
         id: stringToUuid('room'),
         worldId: stringToUuid('world'),
         name: 'Test Room',
       });
 
       // Mock getRooms to return rooms
-      mockRuntime.getRooms = vi.fn().mockResolvedValue([
+      mockRuntime.getRooms = mock().mockResolvedValue([
         {
           id: stringToUuid('room'),
           worldId: stringToUuid('world'),
@@ -440,7 +440,7 @@ describe('Rolodex Actions', () => {
       ]);
 
       // Mock getEntitiesForRoom to return the entity
-      mockRuntime.getEntitiesForRoom = vi.fn().mockResolvedValue([
+      mockRuntime.getEntitiesForRoom = mock().mockResolvedValue([
         {
           id: stringToUuid('john-doe'),
           names: ['John Doe'],
@@ -449,13 +449,13 @@ describe('Rolodex Actions', () => {
       ]);
 
       // Mock getRelationships to return relationships
-      mockRuntime.getRelationships = vi.fn().mockResolvedValue([
+      mockRuntime.getRelationships = mock().mockResolvedValue([
         { id: 'rel1', sourceEntityId: stringToUuid('john-doe') },
         { id: 'rel2', targetEntityId: stringToUuid('john-doe') },
       ]);
 
       // Mock getRoomsForParticipant
-      mockRuntime.getRoomsForParticipant = vi.fn().mockResolvedValue([stringToUuid('room')]);
+      mockRuntime.getRoomsForParticipant = mock().mockResolvedValue([stringToUuid('room')]);
 
       await removeEntityAction.handler(mockRuntime, message, mockState, undefined, mockCallback);
 
@@ -499,7 +499,7 @@ describe('Rolodex Actions', () => {
       }));
 
       // Mock entity exists in runtime
-      mockRuntime.findEntityByName = vi.fn().mockResolvedValue({
+      mockRuntime.findEntityByName = mock().mockResolvedValue({
         id: stringToUuid('sarah'),
         names: ['Sarah'],
         agentId: stringToUuid('agent'),

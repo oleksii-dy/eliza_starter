@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import { type Command } from 'commander';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { elizaLogger } from '@elizaos/core';
@@ -47,15 +47,15 @@ export function extractDiscordCommand(program: Command) {
         const config: ExtractionConfig = {
           repoPath,
           outputDir: path.resolve(options.outputDir),
-          minMessages: parseInt(options.minMessages),
+          minMessages: parseInt(options.minMessages, 10),
           maxGapHours: parseFloat(options.maxGapHours),
-          minConversationLength: parseInt(options.minConversationLength),
-          minUserMessages: parseInt(options.minUserMessages),
-          topUserCount: parseInt(options.topUsers),
+          minConversationLength: parseInt(options.minConversationLength, 10),
+          minUserMessages: parseInt(options.minUserMessages, 10),
+          topUserCount: parseInt(options.topUsers, 10),
           excludeBots: options.excludeBots,
           excludeSystemMessages: options.excludeSystem,
-          minContentLength: parseInt(options.minContentLength),
-          maxContentLength: parseInt(options.maxContentLength),
+          minContentLength: parseInt(options.minContentLength, 10),
+          maxContentLength: parseInt(options.maxContentLength, 10),
           excludeUrls: options.excludeUrls,
           excludeAttachmentOnly: options.excludeAttachmentOnly,
           minQualityScore: parseFloat(options.minQualityScore),

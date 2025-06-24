@@ -26,7 +26,7 @@ export interface World {
   hot: Set<HotReloadable>;
   rig: any; // THREE.Object3D
   camera: any; // THREE.PerspectiveCamera
-  
+
   // Systems
   settings: Settings;
   collections: Collections;
@@ -39,7 +39,7 @@ export interface World {
   entities: Entities;
   physics: Physics;
   stage: Stage;
-  
+
   // Additional properties
   builder?: {
     enabled: boolean;
@@ -68,7 +68,7 @@ export interface World {
     send(type: string, data: any): void;
     upload(file: File): Promise<void>;
   };
-  
+
   // Methods
   register(key: string, SystemClass: SystemConstructor): System;
   init(options: WorldOptions): Promise<void>;
@@ -79,11 +79,11 @@ export interface World {
   setHot(item: HotReloadable, hot: boolean): void;
   setupMaterial(material: any): void;
   inject(runtime: any): void;
-  
+
   // System access methods
   getSystem<T extends System>(name: string): T | undefined;
   getSystemByType<T extends System>(constructor: new (world: World) => T): T | undefined;
-  
+
   // Add graphics property
   graphics?: {
     renderer: {
@@ -94,7 +94,7 @@ export interface World {
       };
     };
   };
-  
+
   // Add emit and on methods
   emit?: (event: string, ...args: any[]) => boolean;
   on?: <T extends string | symbol>(event: T, fn: (...args: any[]) => void, context?: any) => any;
@@ -104,12 +104,12 @@ export interface World {
 // System Types
 export interface System {
   world: World;
-  
+
   // Lifecycle
   init(options: WorldOptions): Promise<void>;
   start(): void;
   destroy(): void;
-  
+
   // Update cycle
   preTick(): void;
   preFixedUpdate(willFixedStep: boolean): void;
@@ -141,28 +141,28 @@ export interface Entity {
   scale: Vector3;
   velocity?: Vector3;
   isPlayer: boolean;
-  
+
   // Component management
   addComponent(type: string, data?: any): Component;
   removeComponent(type: string): void;
   getComponent<T extends Component>(type: string): T | null;
   hasComponent(type: string): boolean;
-  
+
   // Physics
   applyForce(force: Vector3): void;
   applyImpulse(impulse: Vector3): void;
   setVelocity(velocity: Vector3): void;
   getVelocity(): Vector3;
-  
+
   // Lifecycle
   fixedUpdate?(delta: number): void;
   update?(delta: number): void;
   lateUpdate?(delta: number): void;
-  
+
   // Event handling
   on?(event: string, callback: Function): void;
   off?(event: string, callback: Function): void;
-  
+
   // Serialization
   serialize(): any;
   destroy(local?: boolean): void;
@@ -172,7 +172,7 @@ export interface Component {
   type: string;
   entity: Entity;
   data: any;
-  
+
   init?(): void;
   update?(delta: number): void;
   fixedUpdate?(delta: number): void;
@@ -212,7 +212,7 @@ export interface RigidBody {
   rotation: Quaternion;
   velocity: Vector3;
   angularVelocity: Vector3;
-  
+
   applyForce(force: Vector3, point?: Vector3): void;
   applyImpulse(impulse: Vector3, point?: Vector3): void;
   setLinearVelocity(velocity: Vector3): void;
@@ -223,7 +223,7 @@ export interface Collider {
   type: 'box' | 'sphere' | 'capsule' | 'mesh';
   isTrigger: boolean;
   material?: PhysicsMaterial;
-  
+
   onCollisionEnter?: (other: Collider) => void;
   onCollisionStay?: (other: Collider) => void;
   onCollisionExit?: (other: Collider) => void;
@@ -248,7 +248,7 @@ export interface NetworkPacket {
 export interface NetworkConnection {
   id: string;
   latency: number;
-  
+
   send(packet: NetworkPacket): void;
   disconnect(): void;
 }
@@ -259,7 +259,7 @@ export interface Player extends Entity {
   input: PlayerInput;
   stats: PlayerStats;
   avatar?: any; // Avatar node
-  
+
   spawn(position: Vector3): void;
   respawn(): void;
   damage(amount: number, source?: Entity): void;
@@ -289,7 +289,7 @@ export interface Node {
   children: Node[];
   transform: Transform;
   visible: boolean;
-  
+
   add(child: Node): void;
   remove(child: Node): void;
   traverse(callback: (node: Node) => void): void;
@@ -416,18 +416,18 @@ export interface Entities extends System {
   players: Map<string, Player>;
   player?: Player;
   apps: Map<string, Entity>;
-  
+
   // Add methods
   getLocalPlayer(): Player | null;
   getPlayer(id: string): Player | null;
-  
+
   create(name: string, options?: any): Entity;
   destroyEntity(entityId: string): void;
   get(entityId: string): Entity | null;
   has(entityId: string): boolean;
   remove(entityId: string): void;
   set(entityId: string, entity: Entity): void;
-  
+
   // Additional methods
   getAll(): Entity[];
   getAllPlayers(): Player[];
@@ -439,7 +439,7 @@ export interface Entities extends System {
 export interface Physics extends System {
   world: any; // PhysX world
   physics?: any; // PhysX physics object
-  
+
   raycast(origin: Vector3, direction: Vector3, maxDistance?: number, layerMask?: number): RaycastHit | null;
   sphereCast(origin: Vector3, radius: number, direction: Vector3, maxDistance?: number, layerMask?: number): RaycastHit | null;
   overlapSphere(position: Vector3, radius: number): Collider[];
@@ -461,4 +461,4 @@ export interface Stage extends System {
   scene: any; // THREE.Scene
   environment: any;
   clean(): void;
-} 
+}

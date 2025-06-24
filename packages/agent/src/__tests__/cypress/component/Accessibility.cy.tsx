@@ -16,8 +16,12 @@ const AccessibleForm: React.FC<{ onSubmit: (data: any) => void }> = ({ onSubmit 
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name) newErrors.name = 'Name is required';
-    if (!formData.email) newErrors.email = 'Email is required';
+    if (!formData.name) {
+      newErrors.name = 'Name is required';
+    }
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    }
     if (formData.email && !formData.email.includes('@')) {
       newErrors.email = 'Please enter a valid email';
     }

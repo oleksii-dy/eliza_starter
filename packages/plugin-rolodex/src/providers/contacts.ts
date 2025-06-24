@@ -39,7 +39,7 @@ export const contactsProvider: Provider = {
       const grouped = contactDetails.reduce(
         (acc, contact) => {
           const type = contact.type;
-          if (!acc[type]) acc[type] = [];
+          if (!acc[type]) {acc[type] = [];}
           acc[type].push(contact);
           return acc;
         },

@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { TrustEngine } from '../TrustEngine';
 import { createMockRuntime } from '../../__tests__/test-utils';
 import type { IAgentRuntime } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
-import { 
+import {
   TrustEvidenceType,
   type TrustProfile,
   type TrustRequirements,
@@ -18,21 +18,21 @@ describe('TrustEngine', () => {
   let mockTrustDatabase: any;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
-    
+
     // Create mock database
     mockTrustDatabase = {
-      getTrustProfile: vi.fn(),
-      saveTrustProfile: vi.fn(),
-      addTrustEvidence: vi.fn(),
-      getTrustEvidence: vi.fn().mockResolvedValue([]),
-      getTrustCommentHistory: vi.fn().mockResolvedValue([]),
-      saveTrustComment: vi.fn(),
-      getInteractions: vi.fn().mockResolvedValue([]),
-      saveInteraction: vi.fn(),
+      getTrustProfile: mock(),
+      saveTrustProfile: mock(),
+      addTrustEvidence: mock(),
+      getTrustEvidence: mock().mockResolvedValue([]),
+      getTrustCommentHistory: mock().mockResolvedValue([]),
+      saveTrustComment: mock(),
+      getInteractions: mock().mockResolvedValue([]),
+      saveInteraction: mock(),
     };
-    
+
     // Create trust engine and initialize with mock database
     trustEngine = new TrustEngine();
     await trustEngine.initialize(mockRuntime, mockTrustDatabase);
@@ -56,12 +56,12 @@ describe('TrustEngine', () => {
         entityId,
         evaluatorId: mockRuntime.agentId
       };
-      
+
       // Mock no existing profile
       mockTrustDatabase.getTrustProfile.mockResolvedValue(null);
-      
+
       const result = await trustEngine.calculateTrust(entityId, context);
-      
+
       expect(result).toMatchObject({
         entityId,
         overallTrust: 50, // Default trust
@@ -83,7 +83,7 @@ describe('TrustEngine', () => {
           lastChangeAt: expect.any(Number)
         }
       });
-      
+
       // calculateTrust doesn't save the profile, it just returns it
       expect(mockTrustDatabase.getTrustProfile).toHaveBeenCalled();
     });
@@ -94,7 +94,7 @@ describe('TrustEngine', () => {
         entityId,
         evaluatorId: mockRuntime.agentId
       };
-      
+
       // Mock existing profile
       mockTrustDatabase.getTrustProfile.mockResolvedValue({
         entityId,
@@ -117,7 +117,7 @@ describe('TrustEngine', () => {
           lastChangeAt: Date.now() - 3600000
         }
       });
-      
+
       // Mock interactions
       mockTrustDatabase.getInteractions.mockResolvedValue([
         {
@@ -128,9 +128,9 @@ describe('TrustEngine', () => {
           impact: 10
         }
       ]);
-      
+
       const result = await trustEngine.calculateTrust(entityId, context);
-      
+
       expect(result.overallTrust).toBeGreaterThanOrEqual(60);
       expect(result.interactionCount).toBeGreaterThanOrEqual(5);
       expect(result.trend.direction).toBeDefined();
@@ -151,9 +151,9 @@ describe('TrustEngine', () => {
         impact: 15,
         details: { description: 'Fulfilled commitment' }
       };
-      
+
       await trustEngine.recordInteraction(interaction);
-      
+
       // recordInteraction now calls recordSemanticEvidence internally
       expect(mockTrustDatabase.getTrustProfile).toHaveBeenCalled();
       expect(mockTrustDatabase.saveTrustProfile).toHaveBeenCalled();
@@ -181,9 +181,9 @@ describe('TrustEngine', () => {
         reportedBy: mockRuntime.agentId,
         context: { entityId, evaluatorId: mockRuntime.agentId }
       };
-      
+
       await trustEngine.recordSemanticEvidence(entityId, evidence);
-      
+
       // recordSemanticEvidence saves trust profile and evidence
       expect(mockTrustDatabase.saveTrustProfile).toHaveBeenCalled();
       expect(mockTrustDatabase.addTrustEvidence).toHaveBeenCalled();
@@ -208,7 +208,7 @@ describe('TrustEngine', () => {
         entityId,
         evaluatorId: mockRuntime.agentId
       };
-      
+
       // Mock profile that meets requirements
       mockTrustDatabase.getTrustProfile.mockResolvedValue({
         entityId,
@@ -223,9 +223,9 @@ describe('TrustEngine', () => {
         confidence: 0.8,
         interactionCount: 10
       });
-      
+
       const result = await trustEngine.evaluateTrustDecision(entityId, requirements, context);
-      
+
       expect(result.approved).toBe(true);
       expect(result.trustScore).toBe(75);
       expect(result.reason?.toLowerCase()).toContain('trust requirements met');
@@ -241,7 +241,7 @@ describe('TrustEngine', () => {
         entityId,
         evaluatorId: mockRuntime.agentId
       };
-      
+
       // Mock profile that doesn't meet requirements
       mockTrustDatabase.getTrustProfile.mockResolvedValue({
         entityId,
@@ -256,9 +256,9 @@ describe('TrustEngine', () => {
         confidence: 0.7,
         interactionCount: 5
       });
-      
+
       const result = await trustEngine.evaluateTrustDecision(entityId, requirements, context);
-      
+
       expect(result.approved).toBe(false);
       expect(result.trustScore).toBe(60);
       expect(result.suggestions).toBeDefined();
@@ -278,7 +278,7 @@ describe('TrustEngine', () => {
         entityId,
         evaluatorId: mockRuntime.agentId
       };
-      
+
       // Mock profile with low integrity
       mockTrustDatabase.getTrustProfile.mockResolvedValue({
         entityId,
@@ -293,9 +293,9 @@ describe('TrustEngine', () => {
         confidence: 0.8,
         interactionCount: 15
       });
-      
+
       const result = await trustEngine.evaluateTrustDecision(entityId, requirements, context);
-      
+
       expect(result.approved).toBe(false);
       expect(result.reason).toContain('integrity');
       expect(result.dimensionsChecked?.integrity).toBe(50);
@@ -334,7 +334,7 @@ describe('TrustEngine', () => {
       });
 
       const result = await trustEngine.calculateTrust(entityId, context);
-      
+
       expect(result).toBeDefined();
       expect(result.overallTrust).toBeGreaterThanOrEqual(50);
     });
@@ -351,7 +351,7 @@ describe('TrustEngine', () => {
         entityId,
         evaluatorId: mockRuntime.agentId
       };
-      
+
       // Mock profile with lower trust
       mockTrustDatabase.getTrustProfile.mockResolvedValue({
         entityId,
@@ -372,7 +372,7 @@ describe('TrustEngine', () => {
           lastChangeAt: Date.now() - 86400000
         }
       });
-      
+
       // Mock recent positive interactions
       mockTrustDatabase.getInteractions.mockResolvedValue([
         {
@@ -386,9 +386,9 @@ describe('TrustEngine', () => {
           impact: 10
         }
       ]);
-      
+
       const result = await trustEngine.calculateTrust(entityId, context);
-      
+
       // The trend might be stable if not enough data points
       expect(['increasing', 'stable']).toContain(result.trend.direction);
       expect(result.trend.changeRate).toBeGreaterThanOrEqual(0);
@@ -398,10 +398,10 @@ describe('TrustEngine', () => {
   describe('stop', () => {
     it('should clean up resources', async () => {
       await trustEngine.initialize(mockRuntime, mockTrustDatabase);
-      
+
       // Should not throw
       await trustEngine.stop();
       // Test passes if no error is thrown
     });
   });
-}); 
+});

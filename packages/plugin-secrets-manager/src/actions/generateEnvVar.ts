@@ -1,18 +1,8 @@
-import {
-  type Action,
-  type ActionExample,
-  type HandlerCallback,
-  type IAgentRuntime,
-  logger,
-  type Memory,
-  type State,
-  type UUID,
-} from '@elizaos/core';
-import type { EnvVarMetadata, GenerationScriptMetadata } from '../types';
-import { generateScript, getGenerationDescription } from '../generation';
-import { validateEnvVar } from '../validation';
-import { EnvManagerService } from '../service';
 import { v4 as uuidv4 } from 'uuid';
+import { generateScript } from '../generation';
+import { EnvManager } from '../service';
+import type { GenerationScriptMetadata } from '../types';
+import { validateEnvVar } from '../validation';
 
 /**
  * Generate environment variable action
@@ -22,13 +12,17 @@ export const generateEnvVarAction: Action = {
   similes: ['AUTO_GENERATE_ENV', 'CREATE_ENV_VAR', 'GENERATE_VARIABLE'],
   description: 'Automatically generates environment variables that can be created programmatically',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     try {
-      const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-      if (!envService) return false;
+      const envService = runtime.getService('ENV_MANAGER') as EnvManager;
+      if (!env) {
+        return false;
+      }
 
       const envVars = await envService.getAllEnvVars();
-      if (!envVars) return false;
+      if (!envVars) {
+        return false;
+      }
 
       // Check if there are any generatable environment variables
       for (const plugin of Object.values(envVars)) {
@@ -58,8 +52,8 @@ export const generateEnvVarAction: Action = {
         throw new Error('Callback is required for GENERATE_ENV_VAR action');
       }
 
-      const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
-      if (!envService) {
+      const envService = runtime.getService('ENV_MANAGER') as EnvManager;
+      if (!env) {
         throw new Error('Environment manager service not available');
       }
 
@@ -87,7 +81,7 @@ export const generateEnvVarAction: Action = {
       }
 
       if (generatableVars.length === 0) {
-        await callback({
+        await void callback({
           text: 'No environment variables can be auto-generated at this time.',
           actions: ['GENERATE_ENV_VAR_NONE'],
           source: message.content.source,
@@ -121,7 +115,7 @@ export const generateEnvVarAction: Action = {
 
           // Get shell service to execute the script
           const shellService = runtime.getService('SHELL' as any);
-          if (!shellService) {
+          if (!shell) {
             throw new Error('Shell service not available for script execution');
           }
 
@@ -221,20 +215,20 @@ export const generateEnvVarAction: Action = {
           const failedCount = generatableVars.length - generatedCount;
           const additionalMessage = `\n\n${failedCount} variable${failedCount > 1 ? 's' : ''} could not be generated and will need to be provided manually.`;
 
-          await callback({
+          await void callback({
             text: successMessage + additionalMessage,
             actions: ['GENERATE_ENV_VAR_PARTIAL'],
             source: message.content.source,
           });
         } else {
-          await callback({
+          await void callback({
             text: successMessage,
             actions: ['GENERATE_ENV_VAR_SUCCESS'],
             source: message.content.source,
           });
         }
       } else {
-        await callback({
+        await void callback({
           text: `❌ Failed to generate any environment variables:\n\n${results.join('\n')}\n\nThese variables will need to be provided manually.`,
           actions: ['GENERATE_ENV_VAR_FAILED'],
           source: message.content.source,
@@ -242,7 +236,7 @@ export const generateEnvVarAction: Action = {
       }
     } catch (error) {
       logger.error(`[GenerateEnvVar] Error in handler: ${error}`);
-      await callback?.({
+      await void callback?.({
         text: "I'm sorry, but I encountered an error while trying to generate environment variables. Please try again or set them manually.",
         actions: ['GENERATE_ENV_VAR_ERROR'],
         source: message.content.source,

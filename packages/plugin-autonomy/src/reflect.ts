@@ -119,7 +119,7 @@ export const reflectAction = {
     await runtime.createMemory(memory, 'messages');
 
     await callback(memory.content);
-    
+
     // Return a promise
     return Promise.resolve();
   },

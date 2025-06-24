@@ -5,7 +5,6 @@
  * content structures, and memory-related operations.
  */
 
-import { vi } from './vi-helper';
 import { ContentType } from '../../types';
 import type {
   Memory,

@@ -126,7 +126,9 @@ SENTRY_SEND_DEFAULT_PII=
  * @returns True if the URL appears valid
  */
 export function isValidPostgresUrl(url: string): boolean {
-  if (!url || typeof url !== 'string') return false;
+  if (!url || typeof url !== 'string') {
+    return false;
+  }
 
   try {
     // More robust validation using URL constructor
@@ -316,7 +318,9 @@ export async function setupPgLite(
  * @throws {Error} If reading from or writing to the `.env` file fails.
  */
 export async function storePostgresUrl(url: string, envFilePath: string): Promise<void> {
-  if (!url) return;
+  if (!url) {
+    return;
+  }
 
   try {
     // Read existing content first to avoid duplicates
@@ -350,7 +354,9 @@ export async function storePostgresUrl(url: string, envFilePath: string): Promis
  * @throws {Error} If reading from or writing to the `.env` file fails.
  */
 export async function storePgliteDataDir(dataDir: string, envFilePath: string): Promise<void> {
-  if (!dataDir) return;
+  if (!dataDir) {
+    return;
+  }
 
   try {
     // Read existing content first to avoid duplicates
@@ -384,7 +390,9 @@ export async function promptAndStorePostgresUrl(envFilePath: string): Promise<st
     message: 'Enter your Postgres URL:',
     placeholder: 'postgresql://user:password@host:port/dbname',
     validate: (value) => {
-      if (value.trim() === '') return 'Postgres URL cannot be empty';
+      if (value.trim() === '') {
+        return 'Postgres URL cannot be empty';
+      }
 
       const isValid = isValidPostgresUrl(value);
       if (!isValid) {
@@ -421,7 +429,9 @@ export async function promptAndStorePostgresUrl(envFilePath: string): Promise<st
  * @returns True if the key appears valid
  */
 export function isValidOpenAIKey(key: string): boolean {
-  if (!key || typeof key !== 'string') return false;
+  if (!key || typeof key !== 'string') {
+    return false;
+  }
 
   // OpenAI API keys typically start with 'sk-' and are 51 characters long
   return key.startsWith('sk-') && key.length >= 20;
@@ -433,7 +443,9 @@ export function isValidOpenAIKey(key: string): boolean {
  * @returns True if the key appears valid
  */
 export function isValidAnthropicKey(key: string): boolean {
-  if (!key || typeof key !== 'string') return false;
+  if (!key || typeof key !== 'string') {
+    return false;
+  }
 
   // Anthropic API keys typically start with 'sk-ant-'
   return key.startsWith('sk-ant-') && key.length >= 20;
@@ -445,7 +457,9 @@ export function isValidAnthropicKey(key: string): boolean {
  * @returns True if the key appears valid
  */
 export function isValidGoogleKey(key: string): boolean {
-  if (!key || typeof key !== 'string') return false;
+  if (!key || typeof key !== 'string') {
+    return false;
+  }
 
   // Google API keys are typically 39 characters long and contain alphanumeric chars with dashes
   return key.length === 39 && /^[A-Za-z0-9_-]+$/.test(key);
@@ -457,7 +471,9 @@ export function isValidGoogleKey(key: string): boolean {
  * @param envFilePath Path to the .env file
  */
 export async function storeOpenAIKey(key: string, envFilePath: string): Promise<void> {
-  if (!key) return;
+  if (!key) {
+    return;
+  }
 
   try {
     // Read existing content first to avoid duplicates
@@ -486,7 +502,9 @@ export async function storeOpenAIKey(key: string, envFilePath: string): Promise<
  * @param envFilePath Path to the .env file
  */
 export async function storeGoogleKey(key: string, envFilePath: string): Promise<void> {
-  if (!key) return;
+  if (!key) {
+    return;
+  }
 
   try {
     // Read existing content first to avoid duplicates
@@ -517,7 +535,9 @@ export async function storeGoogleKey(key: string, envFilePath: string): Promise<
  * @param envFilePath Path to the .env file
  */
 export async function storeAnthropicKey(key: string, envFilePath: string): Promise<void> {
-  if (!key) return;
+  if (!key) {
+    return;
+  }
 
   try {
     // Read existing content first to avoid duplicates
@@ -585,8 +605,12 @@ async function promptAndStoreProviderConfig<T>(
       validate: input.validate,
     };
 
-    if (input.placeholder) promptConfig.placeholder = input.placeholder;
-    if (input.initialValue) promptConfig.initialValue = input.initialValue;
+    if (input.placeholder) {
+      promptConfig.placeholder = input.placeholder;
+    }
+    if (input.initialValue) {
+      promptConfig.initialValue = input.initialValue;
+    }
 
     const response = await promptFn(promptConfig);
 
@@ -630,7 +654,9 @@ export async function promptAndStoreOpenAIKey(envFilePath: string): Promise<stri
         message: 'Enter your OpenAI API key:',
         type: 'password',
         validate: (value) => {
-          if (value.trim() === '') return 'OpenAI API key cannot be empty';
+          if (value.trim() === '') {
+            return 'OpenAI API key cannot be empty';
+          }
           return undefined;
         },
       },
@@ -666,7 +692,9 @@ export async function promptAndStoreAnthropicKey(envFilePath: string): Promise<s
         message: 'Enter your Anthropic API key:',
         type: 'password',
         validate: (value) => {
-          if (value.trim() === '') return 'Anthropic API key cannot be empty';
+          if (value.trim() === '') {
+            return 'Anthropic API key cannot be empty';
+          }
           return undefined;
         },
       },
@@ -692,7 +720,9 @@ export async function promptAndStoreAnthropicKey(envFilePath: string): Promise<s
  * @returns True if the endpoint appears valid
  */
 export function isValidOllamaEndpoint(endpoint: string): boolean {
-  if (!endpoint || typeof endpoint !== 'string') return false;
+  if (!endpoint || typeof endpoint !== 'string') {
+    return false;
+  }
 
   try {
     const url = new URL(endpoint);
@@ -711,7 +741,9 @@ export async function storeOllamaConfig(
   config: { endpoint: string; model: string },
   envFilePath: string
 ): Promise<void> {
-  if (!config.endpoint || !config.model) return;
+  if (!config.endpoint || !config.model) {
+    return;
+  }
 
   try {
     // Read existing content first to avoid duplicates
@@ -770,9 +802,12 @@ export async function promptAndStoreOllamaConfig(
         initialValue: 'http://localhost:11434',
         type: 'text',
         validate: (value) => {
-          if (value.trim() === '') return 'Ollama endpoint cannot be empty';
-          if (!isValidOllamaEndpoint(value))
+          if (value.trim() === '') {
+            return 'Ollama endpoint cannot be empty';
+          }
+          if (!isValidOllamaEndpoint(value)) {
             return 'Invalid URL format (http:// or https:// required)';
+          }
           return undefined;
         },
       },
@@ -783,7 +818,9 @@ export async function promptAndStoreOllamaConfig(
         initialValue: 'llama2',
         type: 'text',
         validate: (value) => {
-          if (value.trim() === '') return 'Model name cannot be empty';
+          if (value.trim() === '') {
+            return 'Model name cannot be empty';
+          }
           return undefined;
         },
       },
@@ -816,7 +853,9 @@ export async function promptAndStoreGoogleKey(envFilePath: string): Promise<stri
         message: 'Enter your Google Generative AI API key:',
         type: 'password',
         validate: (value) => {
-          if (value.trim() === '') return 'Google API key cannot be empty';
+          if (value.trim() === '') {
+            return 'Google API key cannot be empty';
+          }
           return undefined;
         },
       },
@@ -850,7 +889,7 @@ export async function configureDatabaseSettings(reconfigure = false): Promise<st
   await loadEnvironment(path.dirname(envFilePath));
 
   // Check if we already have database configuration in env
-  let postgresUrl = process.env.POSTGRES_URL;
+  const postgresUrl = process.env.POSTGRES_URL;
   const pgliteDataDir = await resolvePgliteDir(undefined, elizaDbDir);
 
   // Add debug logging
@@ -1019,7 +1058,7 @@ export function formatEnvFileWithTemplate(
       const equalIndex = trimmedLine.indexOf('=');
       const key = trimmedLine.substring(0, equalIndex).trim();
 
-      if (key && envVars.hasOwnProperty(key)) {
+      if (key && Object.prototype.hasOwnProperty.call(envVars, key)) {
         lines.push(`${key}=${envVars[key]}`);
         processedKeys.add(key);
       } else {

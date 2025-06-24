@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'bun:test';
 import { githubPlugin, GitHubService } from '../index';
 import { IAgentRuntime, Memory, State, UUID, AgentRuntime, logger } from '@elizaos/core';
 
@@ -14,9 +14,13 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
   describe('Plugin Initialization Scenarios', () => {
     it('should initialize with runtime.getSetting', async () => {
       const mockRuntime = {
-        getSetting: vi.fn().mockImplementation((key: string) => {
-          if (key === 'GITHUB_TOKEN') return 'ghp_test123456789';
-          if (key === 'GITHUB_OWNER') return 'test-owner';
+        getSetting: mock().mockImplementation((key: string) => {
+          if (key === 'GITHUB_TOKEN') {
+            return 'ghp_test123456789';
+          }
+          if (key === 'GITHUB_OWNER') {
+            return 'test-owner';
+          }
           return null;
         }),
         agentId: 'test-agent' as UUID,
@@ -31,7 +35,7 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
 
     it('should handle missing token gracefully in development', async () => {
       const mockRuntime = {
-        getSetting: vi.fn().mockReturnValue(null),
+        getSetting: mock().mockReturnValue(null),
         agentId: 'test-agent' as UUID,
         character: {
           name: 'Test Character',
@@ -49,8 +53,10 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
       process.env.GITHUB_TOKEN = 'ghp_env_token';
 
       const mockRuntime = {
-        getSetting: vi.fn().mockImplementation((key: string) => {
-          if (key === 'GITHUB_TOKEN') return 'ghp_runtime_token';
+        getSetting: mock().mockImplementation((key: string) => {
+          if (key === 'GITHUB_TOKEN') {
+            return 'ghp_runtime_token';
+          }
           return null;
         }),
         agentId: 'test-agent' as UUID,
@@ -70,13 +76,15 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
   describe('Service Lifecycle Scenarios', () => {
     it('should handle service start and stop correctly', async () => {
       const mockRuntime = {
-        getSetting: vi.fn().mockImplementation((key: string) => {
-          if (key === 'GITHUB_TOKEN') return 'ghp_test123456789';
+        getSetting: mock().mockImplementation((key: string) => {
+          if (key === 'GITHUB_TOKEN') {
+            return 'ghp_test123456789';
+          }
           return null;
         }),
         agentId: 'test-agent' as UUID,
-        getService: vi.fn(),
-        registerService: vi.fn(),
+        getService: mock(),
+        registerService: mock(),
       } as any as IAgentRuntime;
 
       // Start service
@@ -93,16 +101,18 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
     it('should register with runtime correctly', async () => {
       const services = new Map();
       const mockRuntime = {
-        getSetting: vi.fn().mockImplementation((key: string) => {
-          if (key === 'GITHUB_TOKEN') return 'ghp_test123456789';
+        getSetting: mock().mockImplementation((key: string) => {
+          if (key === 'GITHUB_TOKEN') {
+            return 'ghp_test123456789';
+          }
           return null;
         }),
         agentId: 'test-agent' as UUID,
         services,
-        registerService: vi.fn().mockImplementation((service: any) => {
+        registerService: mock().mockImplementation((service: any) => {
           services.set(service.serviceType || 'github', service);
         }),
-        getService: vi.fn().mockImplementation((type: string) => {
+        getService: mock().mockImplementation((type: string) => {
           return services.get(type);
         }),
       } as any as IAgentRuntime;
@@ -124,18 +134,26 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
     it('should support multiple agents with different configurations', async () => {
       const agent1Runtime = {
         agentId: 'agent1' as UUID,
-        getSetting: vi.fn().mockImplementation((key: string) => {
-          if (key === 'GITHUB_TOKEN') return 'ghp_agent1_token';
-          if (key === 'GITHUB_OWNER') return 'agent1-owner';
+        getSetting: mock().mockImplementation((key: string) => {
+          if (key === 'GITHUB_TOKEN') {
+            return 'ghp_agent1_token';
+          }
+          if (key === 'GITHUB_OWNER') {
+            return 'agent1-owner';
+          }
           return null;
         }),
       } as any as IAgentRuntime;
 
       const agent2Runtime = {
         agentId: 'agent2' as UUID,
-        getSetting: vi.fn().mockImplementation((key: string) => {
-          if (key === 'GITHUB_TOKEN') return 'ghp_agent2_token';
-          if (key === 'GITHUB_OWNER') return 'agent2-owner';
+        getSetting: mock().mockImplementation((key: string) => {
+          if (key === 'GITHUB_TOKEN') {
+            return 'ghp_agent2_token';
+          }
+          if (key === 'GITHUB_OWNER') {
+            return 'agent2-owner';
+          }
           return null;
         }),
       } as any as IAgentRuntime;
@@ -157,13 +175,13 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
     it('should provide context based on runtime state', async () => {
       const mockRuntime = {
         agentId: 'test-agent' as UUID,
-        getSetting: vi.fn().mockReturnValue('ghp_test123'),
-        getService: vi.fn().mockReturnValue({
-          getActivityLog: vi.fn().mockReturnValue([
+        getSetting: mock().mockReturnValue('ghp_test123'),
+        getService: mock().mockReturnValue({
+          getActivityLog: mock().mockReturnValue([
             { action: 'searchRepositories', timestamp: Date.now(), success: true },
             { action: 'getRepository', timestamp: Date.now(), success: true },
           ]),
-          getAuthenticatedUser: vi.fn().mockResolvedValue({ login: 'testuser' }),
+          getAuthenticatedUser: mock().mockResolvedValue({ login: 'testuser' }),
         }),
       } as any as IAgentRuntime;
 
@@ -189,15 +207,15 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
     it('should handle service unavailability gracefully', async () => {
       const mockRuntime = {
         agentId: 'test-agent' as UUID,
-        getSetting: vi.fn(),
-        getService: vi.fn().mockReturnValue(null), // No service available
+        getSetting: mock(),
+        getService: mock().mockReturnValue(null), // No service available
       } as any as IAgentRuntime;
 
       // Try to use an action without service
       const action = githubPlugin.actions?.find((a) => a.name === 'GET_GITHUB_REPOSITORY');
       expect(action).toBeDefined();
 
-      const callback = vi.fn();
+      const callback = mock();
       await action!.handler(
         mockRuntime,
         createMemory('Get repo details'),
@@ -217,7 +235,7 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
     it('should recover from temporary failures', async () => {
       let callCount = 0;
       const mockService = {
-        getRepository: vi.fn().mockImplementation(() => {
+        getRepository: mock().mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
             throw new Error('Network error');
@@ -228,12 +246,12 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
 
       const mockRuntime = {
         agentId: 'test-agent' as UUID,
-        getSetting: vi.fn(),
-        getService: vi.fn().mockReturnValue(mockService),
+        getSetting: mock(),
+        getService: mock().mockReturnValue(mockService),
       } as any as IAgentRuntime;
 
       const action = githubPlugin.actions?.find((a) => a.name === 'GET_GITHUB_REPOSITORY');
-      const callback = vi.fn();
+      const callback = mock();
 
       // First attempt fails
       await action!.handler(
@@ -276,8 +294,10 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
 
       const mockRuntime = {
         agentId: 'test-agent' as UUID,
-        getSetting: vi.fn().mockImplementation((key: string) => {
-          if (key === 'GITHUB_TOKEN') return currentToken;
+        getSetting: mock().mockImplementation((key: string) => {
+          if (key === 'GITHUB_TOKEN') {
+            return currentToken;
+          }
           return null;
         }),
       } as any as IAgentRuntime;
@@ -301,11 +321,11 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
   describe('Performance Scenarios', () => {
     it('should handle rate limiting appropriately', async () => {
       const mockService = {
-        searchRepositories: vi.fn().mockResolvedValue({
+        searchRepositories: mock().mockResolvedValue({
           total_count: 1000,
           items: Array(30).fill({ name: 'repo' }),
         }),
-        getRateLimit: vi.fn().mockResolvedValue({
+        getRateLimit: mock().mockResolvedValue({
           limit: 60,
           remaining: 5,
           reset: Date.now() / 1000 + 3600,
@@ -314,8 +334,8 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
 
       const mockRuntime = {
         agentId: 'test-agent' as UUID,
-        getSetting: vi.fn(),
-        getService: vi.fn().mockReturnValue(mockService),
+        getSetting: mock(),
+        getService: mock().mockReturnValue(mockService),
       } as any as IAgentRuntime;
 
       // Check rate limit before heavy operation
@@ -344,18 +364,18 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
 
     it('should efficiently handle bulk operations', async () => {
       const mockService = {
-        getRepository: vi.fn().mockImplementation((owner: string, repo: string) => ({
+        getRepository: mock().mockImplementation((owner: string, repo: string) => ({
           name: repo,
           owner: { login: owner },
           stargazers_count: Math.floor(Math.random() * 1000),
         })),
-        getActivityLog: vi.fn().mockReturnValue([]),
+        getActivityLog: mock().mockReturnValue([]),
       };
 
       const mockRuntime = {
         agentId: 'test-agent' as UUID,
-        getSetting: vi.fn(),
-        getService: vi.fn().mockReturnValue(mockService),
+        getSetting: mock(),
+        getService: mock().mockReturnValue(mockService),
       } as any as IAgentRuntime;
 
       // Simulate bulk repository checks

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, mock, beforeEach, type Mock } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
 import { requestElevationAction } from '../requestElevation';
@@ -7,7 +7,7 @@ import type { Permission } from '../../types/permissions';
 const createMockRuntime = (): IAgentRuntime =>
   ({
     agentId: 'test-agent' as UUID,
-    getService: vi.fn()
+    getService: mock()
   } as any);
 
 const createMockMemory = (text: string, entityId: UUID): Memory =>
@@ -27,7 +27,7 @@ describe('requestElevationAction', () => {
   beforeEach(() => {
     runtime = createMockRuntime();
     const permissionService = {
-      requestElevation: vi.fn().mockResolvedValue({
+      requestElevation: mock().mockResolvedValue({
         approved: true,
         elevationId: 'elevation-123',
         expiresAt: Date.now() + 3600000,
@@ -35,14 +35,14 @@ describe('requestElevationAction', () => {
       })
     };
     trustService = {
-      evaluateTrust: vi.fn().mockResolvedValue({
+      evaluateTrust: mock().mockResolvedValue({
         overallTrust: 75,
         dimensions: {}
       })
     };
     (runtime.getService as unknown as Mock).mockImplementation((name: string) => {
-      if (name === 'contextual-permissions') return permissionService;
-      if (name === 'trust-engine') return trustService;
+      if (name === 'contextual-permissions') {return permissionService;}
+      if (name === 'trust-engine') {return trustService;}
       return null;
     });
   });
@@ -96,13 +96,13 @@ describe('requestElevationAction', () => {
   it('should validate the action correctly', async () => {
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
-    
+
     // Should return true when contextual-permissions service is available
     expect(await requestElevationAction.validate(runtime, memory, state)).toBe(true);
-    
+
     // Should return false when service is not available
     (runtime.getService as unknown as Mock).mockImplementation((name: string) => {
-      if (name === 'contextual-permissions') return null;
+      if (name === 'contextual-permissions') {return null;}
       return trustService;
     });
     expect(await requestElevationAction.validate(runtime, memory, state)).toBe(false);

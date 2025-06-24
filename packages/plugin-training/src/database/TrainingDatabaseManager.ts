@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import type { IAgentRuntime, UUID, IDatabaseAdapter } from '@elizaos/core';
+import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
 import type { TrainingDataPoint, CustomModelType } from '../types.js';
 
@@ -70,11 +70,12 @@ export interface ModelDeployment {
 
 export class TrainingDatabaseManager {
   private db: any; // Use any for now since IDatabaseAdapter interface is incomplete
-  
+
   constructor(private runtime?: IAgentRuntime) {
     // Access database through proper channels if runtime is available
     if (runtime) {
-      this.db = (runtime as any).adapter?.db || (runtime as any).databaseAdapter?.db || (runtime as any).db;
+      this.db =
+        (runtime as any).adapter?.db || (runtime as any).databaseAdapter?.db || (runtime as any).db;
     }
   }
 
@@ -87,31 +88,29 @@ export class TrainingDatabaseManager {
       const possiblePaths = [
         path.join(__dirname, 'training-schema.sql'),
         path.join(process.cwd(), 'src', 'database', 'training-schema.sql'),
-        path.join(process.cwd(), 'database', 'training-schema.sql')
+        path.join(process.cwd(), 'database', 'training-schema.sql'),
       ];
-      
-      let schemaPath: string | undefined;
+
       let schema: string | undefined;
-      
+
       for (const possiblePath of possiblePaths) {
         try {
           schema = await fs.readFile(possiblePath, 'utf-8');
-          schemaPath = possiblePath;
           break;
         } catch (error) {
           // Continue to next path
         }
       }
-      
+
       if (!schema) {
         throw new Error('Could not find training-schema.sql in any expected location');
       }
-      
+
       // Execute schema in chunks for better compatibility
       const statements = schema
         .split(';')
-        .map(stmt => stmt.trim())
-        .filter(stmt => stmt.length > 0);
+        .map((stmt) => stmt.trim())
+        .filter((stmt) => stmt.length > 0);
 
       for (const statement of statements) {
         try {
@@ -199,14 +198,16 @@ export class TrainingDatabaseManager {
   /**
    * Get training data for export
    */
-  async getTrainingData(options: {
-    modelType?: CustomModelType;
-    limit?: number;
-    offset?: number;
-    startDate?: Date;
-    endDate?: Date;
-    isTrainingSample?: boolean;
-  } = {}): Promise<TrainingDataRecord[]> {
+  async getTrainingData(
+    options: {
+      modelType?: CustomModelType;
+      limit?: number;
+      offset?: number;
+      startDate?: Date;
+      endDate?: Date;
+      isTrainingSample?: boolean;
+    } = {}
+  ): Promise<TrainingDataRecord[]> {
     const {
       modelType,
       limit = 1000,
@@ -246,7 +247,9 @@ export class TrainingDatabaseManager {
         ...row,
         input_data: JSON.parse(row.input_data),
         output_data: JSON.parse(row.output_data),
-        conversation_context: row.conversation_context ? JSON.parse(row.conversation_context) : null,
+        conversation_context: row.conversation_context
+          ? JSON.parse(row.conversation_context)
+          : null,
         state_data: row.state_data ? JSON.parse(row.state_data) : null,
         metadata: row.metadata ? JSON.parse(row.metadata) : null,
         tags: row.tags ? JSON.parse(row.tags) : [],
@@ -270,7 +273,8 @@ export class TrainingDatabaseManager {
     totalCost: number;
   }> {
     try {
-      const stats = await this.db.get(`
+      const stats = await this.db.get(
+        `
         SELECT 
           COUNT(*) as total,
           AVG(confidence_score) as avg_confidence,
@@ -278,30 +282,41 @@ export class TrainingDatabaseManager {
           SUM(cost_usd) as total_cost
         FROM training_data 
         WHERE agent_id = ? AND is_training_sample = true
-      `, [this.runtime?.agentId || 'default-agent']);
+      `,
+        [this.runtime?.agentId || 'default-agent']
+      );
 
-      const byModelType = await this.db.all(`
+      const byModelType = await this.db.all(
+        `
         SELECT model_type, COUNT(*) as count
         FROM training_data 
         WHERE agent_id = ? AND is_training_sample = true
         GROUP BY model_type
-      `, [this.runtime?.agentId || 'default-agent']);
+      `,
+        [this.runtime?.agentId || 'default-agent']
+      );
 
-      const byDate = await this.db.all(`
+      const byDate = await this.db.all(
+        `
         SELECT DATE(created_at) as date, COUNT(*) as count
         FROM training_data 
         WHERE agent_id = ? AND is_training_sample = true
         GROUP BY DATE(created_at)
         ORDER BY date DESC
         LIMIT 30
-      `, [this.runtime?.agentId || 'default-agent']);
+      `,
+        [this.runtime?.agentId || 'default-agent']
+      );
 
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const recentStats = await this.db.get(`
+      const recentStats = await this.db.get(
+        `
         SELECT COUNT(*) as recent_samples
         FROM training_data 
         WHERE agent_id = ? AND is_training_sample = true AND created_at > ?
-      `, [this.runtime?.agentId || 'default-agent', oneDayAgo]);
+      `,
+        [this.runtime?.agentId || 'default-agent', oneDayAgo]
+      );
 
       return {
         total: stats.total || 0,
@@ -321,30 +336,35 @@ export class TrainingDatabaseManager {
   /**
    * Create training session
    */
-  async createTrainingSession(session: Omit<TrainingSession, 'id' | 'created_at' | 'updated_at'>): Promise<UUID> {
+  async createTrainingSession(
+    session: Omit<TrainingSession, 'id' | 'created_at' | 'updated_at'>
+  ): Promise<UUID> {
     const id = crypto.randomUUID() as UUID;
-    
+
     try {
-      await this.db.run(`
+      await this.db.run(
+        `
         INSERT INTO training_sessions (
           id, agent_id, model_type, session_name, base_model, training_config,
           training_samples_count, validation_samples_count, data_start_date, data_end_date,
           status, progress_percent
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        id,
-        session.agent_id,
-        session.model_type,
-        session.session_name,
-        session.base_model,
-        JSON.stringify(session.training_config),
-        session.training_samples_count,
-        session.validation_samples_count,
-        session.data_start_date,
-        session.data_end_date,
-        session.status,
-        session.progress_percent,
-      ]);
+      `,
+        [
+          id,
+          session.agent_id,
+          session.model_type,
+          session.session_name,
+          session.base_model,
+          JSON.stringify(session.training_config),
+          session.training_samples_count,
+          session.validation_samples_count,
+          session.data_start_date,
+          session.data_end_date,
+          session.status,
+          session.progress_percent,
+        ]
+      );
 
       return id;
     } catch (error) {
@@ -358,18 +378,15 @@ export class TrainingDatabaseManager {
    */
   async updateTrainingSession(id: UUID, updates: Partial<TrainingSession>): Promise<void> {
     const setClause = Object.keys(updates)
-      .map(key => `${key} = ?`)
+      .map((key) => `${key} = ?`)
       .join(', ');
-    
-    const values = Object.values(updates).map(value => 
+
+    const values = Object.values(updates).map((value) =>
       typeof value === 'object' ? JSON.stringify(value) : value
     );
 
     try {
-      await this.db.run(
-        `UPDATE training_sessions SET ${setClause} WHERE id = ?`,
-        [...values, id]
-      );
+      await this.db.run(`UPDATE training_sessions SET ${setClause} WHERE id = ?`, [...values, id]);
     } catch (error) {
       elizaLogger.error('Failed to update training session:', error);
       throw error;
@@ -410,10 +427,13 @@ export class TrainingDatabaseManager {
     const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000).toISOString();
 
     try {
-      const result = await this.db.run(`
+      const result = await this.db.run(
+        `
         DELETE FROM training_data 
         WHERE agent_id = ? AND created_at < ?
-      `, [this.runtime?.agentId || 'default-agent', cutoffDate]);
+      `,
+        [this.runtime?.agentId || 'default-agent', cutoffDate]
+      );
 
       const deletedCount = result.changes || 0;
       elizaLogger.info(`Cleaned up ${deletedCount} old training data records`);
@@ -441,25 +461,28 @@ export class TrainingDatabaseManager {
     fullContext?: any;
   }): Promise<void> {
     try {
-      await this.db.run(`
+      await this.db.run(
+        `
         INSERT INTO reasoning_decisions (
           agent_id, room_id, message_id, decision_type, model_used, custom_reasoning_used,
           input_summary, output_summary, response_time_ms, success, error_message, full_context
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        this.runtime?.agentId || 'default-agent',
-        decision.roomId,
-        decision.messageId,
-        decision.decisionType,
-        decision.modelUsed,
-        decision.customReasoningUsed,
-        decision.inputSummary,
-        decision.outputSummary,
-        decision.responseTimeMs,
-        decision.success,
-        decision.errorMessage,
-        JSON.stringify(decision.fullContext),
-      ]);
+      `,
+        [
+          this.runtime?.agentId || 'default-agent',
+          decision.roomId,
+          decision.messageId,
+          decision.decisionType,
+          decision.modelUsed,
+          decision.customReasoningUsed,
+          decision.inputSummary,
+          decision.outputSummary,
+          decision.responseTimeMs,
+          decision.success,
+          decision.errorMessage,
+          JSON.stringify(decision.fullContext),
+        ]
+      );
     } catch (error) {
       elizaLogger.error('Failed to store reasoning decision:', error);
     }

@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import EventEmitter from 'eventemitter3';
-import type { 
-  World as IWorld, 
-  WorldOptions, 
-  System, 
-  SystemConstructor, 
+import type {
+  World as IWorld,
+  WorldOptions,
+  System,
+  SystemConstructor,
   HotReloadable,
   Settings,
   Collections,
@@ -38,18 +38,18 @@ export class World extends EventEmitter implements IWorld {
   frame = 0;
   time = 0;
   accumulator = 0;
-  
+
   // Core properties
   systems: System[] = [];
   networkRate = 1 / 8; // 8Hz
   assetsUrl: string | null = null;
   assetsDir: string | null = null;
   hot = new Set<HotReloadable>();
-  
+
   // Three.js objects
   rig: any; // THREE.Object3D with any event map
   camera: THREE.PerspectiveCamera;
-  
+
   // Systems
   settings!: Settings;
   collections!: Collections;
@@ -62,7 +62,7 @@ export class World extends EventEmitter implements IWorld {
   entities!: Entities;
   physics!: Physics;
   stage!: Stage;
-  
+
   // Optional properties from interface
   ui?: any;
   loader?: any;
@@ -77,7 +77,7 @@ export class World extends EventEmitter implements IWorld {
   controls: any;
   prefs: any;
   audio: any = null;
-  
+
   // Storage
   storage?: any;
 
@@ -115,11 +115,11 @@ export class World extends EventEmitter implements IWorld {
     this.storage = options.storage;
     this.assetsDir = options.assetsDir || null;
     this.assetsUrl = options.assetsUrl || null;
-    
+
     for (const system of this.systems) {
       await system.init(options);
     }
-    
+
     this.start();
   }
 
@@ -132,23 +132,23 @@ export class World extends EventEmitter implements IWorld {
   tick = (time: number): void => {
     // begin any stats/performance monitors
     this.preTick();
-    
+
     // update time, delta, frame and accumulator
     time /= 1000;
     let delta = time - this.time;
-    if (delta < 0) delta = 0;
+    if (delta < 0) {delta = 0;}
     if (delta > this.maxDeltaTime) {
       delta = this.maxDeltaTime;
     }
-    
+
     this.frame++;
     this.time = time;
     this.accumulator += delta;
-    
+
     // prepare physics
     const willFixedStep = this.accumulator >= this.fixedDeltaTime;
     this.preFixedUpdate(willFixedStep);
-    
+
     // run as many fixed updates as we can for this ticks delta
     while (this.accumulator >= this.fixedDeltaTime) {
       // run all fixed updates
@@ -158,29 +158,29 @@ export class World extends EventEmitter implements IWorld {
       // decrement accumulator
       this.accumulator -= this.fixedDeltaTime;
     }
-    
+
     // interpolate physics for remaining delta time
     const alpha = this.accumulator / this.fixedDeltaTime;
     this.preUpdate(alpha);
-    
+
     // run all updates
     this.update(delta, alpha);
-    
+
     // run post updates, eg cleaning all node matrices
     this.postUpdate(delta);
-    
+
     // run all late updates
     this.lateUpdate(delta, alpha);
-    
+
     // run post late updates, eg cleaning all node matrices
     this.postLateUpdate(delta);
-    
+
     // commit all changes, eg render on the client
     this.commit();
-    
+
     // end any stats/performance monitors
     this.postTick();
-  }
+  };
 
   private preTick(): void {
     for (const system of this.systems) {
@@ -263,7 +263,7 @@ export class World extends EventEmitter implements IWorld {
   setupMaterial = (material: THREE.Material): void => {
     // @ts-ignore - CSM is added by environment system
     this.environment?.csm?.setupMaterial(material);
-  }
+  };
 
   setHot(item: HotReloadable, hot: boolean): void {
     if (hot) {
@@ -274,17 +274,17 @@ export class World extends EventEmitter implements IWorld {
   }
 
   resolveURL(url: string, allowLocal?: boolean): string {
-    if (!url) return url;
+    if (!url) {return url;}
     url = url.trim();
-    
+
     if (url.startsWith('blob')) {
       return url;
     }
-    
+
     if (url.startsWith('asset://')) {
       if (this.assetsDir && allowLocal) {
         // Ensure assetsDir has trailing slash for proper URL construction
-        const assetsDir = this.assetsDir.endsWith('/') ? this.assetsDir : this.assetsDir + '/';
+        const assetsDir = this.assetsDir.endsWith('/') ? this.assetsDir : `${this.assetsDir}/`;
         return url.replace('asset://', assetsDir);
       } else if (this.assetsUrl) {
         return url.replace('asset://', this.assetsUrl);
@@ -293,19 +293,19 @@ export class World extends EventEmitter implements IWorld {
         return url;
       }
     }
-    
+
     if (url.match(/^https?:\/\//i)) {
       return url;
     }
-    
+
     if (url.startsWith('//')) {
       return `https:${url}`;
     }
-    
+
     if (url.startsWith('/')) {
       return url;
     }
-    
+
     return `https://${url}`;
   }
 
@@ -318,7 +318,7 @@ export class World extends EventEmitter implements IWorld {
     if ((this as any)[name]) {
       return (this as any)[name] as T;
     }
-    
+
     // Otherwise search in the systems array
     return this.systems.find(s => s.constructor.name.toLowerCase() === name.toLowerCase()) as T | undefined;
   }
@@ -331,9 +331,9 @@ export class World extends EventEmitter implements IWorld {
     for (const system of this.systems) {
       system.destroy();
     }
-    
+
     this.systems = [];
     this.hot.clear();
     this.removeAllListeners();
   }
-} 
+}

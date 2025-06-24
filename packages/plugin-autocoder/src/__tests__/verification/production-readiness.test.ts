@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'bun:test';
 import { ProductionReadinessValidator } from '../../verification/production-readiness-validator';
 import type { Code, VerificationContext } from '../../verification/types';
 

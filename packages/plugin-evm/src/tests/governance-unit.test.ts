@@ -1,5 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createMockRuntime, testPrivateKey, MOCK_PROPOSAL, TESTNET_GOVERNORS, getTestChains } from './test-config';
+import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test';
+import {
+  createMockRuntime,
+  testPrivateKey,
+  MOCK_PROPOSAL,
+  TESTNET_GOVERNORS,
+  getTestChains,
+} from './test-config';
 import { ProposeAction, proposeAction as govProposeAction } from '../actions/gov-propose';
 import { WalletProvider } from '../providers/wallet';
 import type { IAgentRuntime } from '@elizaos/core';
@@ -19,14 +25,14 @@ describe('Governance Unit Tests', () => {
   describe('ProposeAction', () => {
     it('should create proposal with valid parameters', async () => {
       // Mock the wallet client to return a successful transaction
-      const getWalletClientSpy = vi.spyOn(mockWalletProvider, 'getWalletClient');
-      const mockSendTransaction = vi.fn().mockResolvedValue('0xmockhash' as Hash);
+      const getWalletClientSpy = spyOn(mockWalletProvider, 'getWalletClient');
+      const mockSendTransaction = mock().mockResolvedValue('0xmockhash' as Hash);
       const mockPublicClient = {
-        waitForTransactionReceipt: vi.fn().mockResolvedValue({ logs: [] }),
+        waitForTransactionReceipt: mock().mockResolvedValue({ logs: [] }),
       };
-      vi.spyOn(mockWalletProvider, 'getPublicClient').mockReturnValue(mockPublicClient as any);
-      vi.spyOn(mockWalletProvider, 'getChainConfigs').mockReturnValue({ id: 11155111 } as any);
-      
+      spyOn(mockWalletProvider, 'getPublicClient').mockReturnValue(mockPublicClient as any);
+      spyOn(mockWalletProvider, 'getChainConfigs').mockReturnValue({ id: 11155111 } as any);
+
       getWalletClientSpy.mockReturnValue({
         account: { address: '0x1234567890123456789012345678901234567890' as Address },
         sendTransaction: mockSendTransaction,
@@ -36,13 +42,13 @@ describe('Governance Unit Tests', () => {
         chain: 'sepolia' as const,
         governor: TESTNET_GOVERNORS.sepolia.governor,
         targets: MOCK_PROPOSAL.targets,
-        values: MOCK_PROPOSAL.values.map(v => BigInt(v)),
+        values: MOCK_PROPOSAL.values.map((v) => BigInt(v)),
         calldatas: MOCK_PROPOSAL.calldatas,
         description: MOCK_PROPOSAL.description,
       };
 
       const result = await proposeActionInstance.propose(params);
-      
+
       expect(result).toBeDefined();
       expect(result.hash).toBe('0xmockhash');
       expect(mockSendTransaction).toHaveBeenCalled();
@@ -51,48 +57,52 @@ describe('Governance Unit Tests', () => {
 
     it('should handle missing wallet account', async () => {
       // Mock wallet client without account
-      const getWalletClientSpy = vi.spyOn(mockWalletProvider, 'getWalletClient');
+      const getWalletClientSpy = spyOn(mockWalletProvider, 'getWalletClient');
       getWalletClientSpy.mockReturnValue({
         account: undefined,
-        writeContract: vi.fn(),
+        writeContract: mock(),
       } as any);
 
       const params = {
         chain: 'sepolia' as const,
         governor: TESTNET_GOVERNORS.sepolia.governor,
         targets: MOCK_PROPOSAL.targets,
-        values: MOCK_PROPOSAL.values.map(v => BigInt(v)),
+        values: MOCK_PROPOSAL.values.map((v) => BigInt(v)),
         calldatas: MOCK_PROPOSAL.calldatas,
         description: MOCK_PROPOSAL.description,
       };
 
-      await expect(proposeActionInstance.propose(params)).rejects.toThrow('Wallet account is not available');
+      await expect(proposeActionInstance.propose(params)).rejects.toThrow(
+        'Wallet account is not available'
+      );
       getWalletClientSpy.mockRestore();
     });
 
     it('should handle transaction failures', async () => {
       // Mock wallet client that throws
-      const getWalletClientSpy = vi.spyOn(mockWalletProvider, 'getWalletClient');
-      vi.spyOn(mockWalletProvider, 'getChainConfigs').mockReturnValue({ id: 11155111 } as any);
-      vi.spyOn(mockWalletProvider, 'getPublicClient').mockReturnValue({
-        waitForTransactionReceipt: vi.fn(),
+      const getWalletClientSpy = spyOn(mockWalletProvider, 'getWalletClient');
+      spyOn(mockWalletProvider, 'getChainConfigs').mockReturnValue({ id: 11155111 } as any);
+      spyOn(mockWalletProvider, 'getPublicClient').mockReturnValue({
+        waitForTransactionReceipt: mock(),
       } as any);
-      
+
       getWalletClientSpy.mockReturnValue({
         account: { address: '0x1234567890123456789012345678901234567890' as Address },
-        sendTransaction: vi.fn().mockRejectedValue(new Error('Transaction failed')),
+        sendTransaction: mock().mockRejectedValue(new Error('Transaction failed')),
       } as any);
 
       const params = {
         chain: 'sepolia' as const,
         governor: TESTNET_GOVERNORS.sepolia.governor,
         targets: MOCK_PROPOSAL.targets,
-        values: MOCK_PROPOSAL.values.map(v => BigInt(v)),
+        values: MOCK_PROPOSAL.values.map((v) => BigInt(v)),
         calldatas: MOCK_PROPOSAL.calldatas,
         description: MOCK_PROPOSAL.description,
       };
 
-      await expect(proposeActionInstance.propose(params)).rejects.toThrow('Vote failed: Transaction failed');
+      await expect(proposeActionInstance.propose(params)).rejects.toThrow(
+        'Vote failed: Transaction failed'
+      );
       getWalletClientSpy.mockRestore();
     });
   });

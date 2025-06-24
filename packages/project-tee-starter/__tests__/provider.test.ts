@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll } from 'bun:test';
 import plugin from '../src/plugin';
 import type { IAgentRuntime, Memory, State, Provider } from '@elizaos/core';
 import { logger } from '@elizaos/core';
@@ -31,7 +31,7 @@ function documentTestResult(testName: string, result: any, error: Error | null =
       try {
         logger.info(`RESULT: ${JSON.stringify(result, null, 2).substring(0, 200)}...`);
       } catch (e) {
-        logger.info(`RESULT: [Complex object that couldn't be stringified]`);
+        logger.info("RESULT: [Complex object that couldn't be stringified]");
       }
     }
   }

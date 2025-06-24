@@ -1,5 +1,4 @@
 import {
-  Content,
   type Action,
   type ActionExample,
   composePromptFromState,
@@ -54,7 +53,7 @@ export const replyAction = {
   name: 'REPLY',
   similes: ['GREET', 'REPLY_TO_MESSAGE', 'SEND_REPLY', 'RESPOND', 'RESPONSE'],
   description:
-    'Replies to the current conversation with the text from the generated message. Default if the agent is responding with a message and no other action. Use REPLY at the beginning of a chain of actions as an acknowledgement, and at the end of a chain of actions as a final response.',
+    'Replies to the current conversation with the text from the generated message. Default if the agent is responding with a message and no other action. Use REPLY at the beginning of a chain of actions as an acknowledgement, and at the end of a chain of actions as a final response. Returns response content and metadata for action chaining.',
   validate: async (_runtime: IAgentRuntime) => {
     return true;
   },
@@ -95,18 +94,29 @@ export const replyAction = {
       await callback(responseContent);
 
       return {
+        text: `Generated reply: ${responseContent.text}`,
+        values: {
+          success: true,
+          responded: true,
+          lastReply: responseContent.text,
+          lastReplyTime: Date.now(),
+          thoughtProcess: response.thought,
+        },
         data: {
           actionName: 'REPLY',
           response: responseContent,
           thought: response.thought,
-        },
-        values: {
-          lastReply: responseContent.text,
-          lastReplyTime: Date.now(),
+          messageGenerated: true,
         },
       };
     } catch (error) {
       return {
+        text: 'Error generating reply',
+        values: {
+          success: false,
+          responded: false,
+          error: true,
+        },
         data: {
           actionName: 'REPLY',
           error: error instanceof Error ? error.message : String(error),
@@ -122,13 +132,13 @@ export const replyAction = {
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Hello there!',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'Hi! How can I help you today?',
           actions: ['REPLY'],
@@ -137,13 +147,13 @@ export const replyAction = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: "What's your favorite color?",
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'I really like deep shades of blue. They remind me of the ocean and the night sky.',
           actions: ['REPLY'],
@@ -152,13 +162,13 @@ export const replyAction = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Can you explain how neural networks work?',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'Let me break that down for you in simple terms...',
           actions: ['REPLY'],
@@ -167,13 +177,13 @@ export const replyAction = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Could you help me solve this math problem?',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: "Of course! Let's work through it step by step.",
           actions: ['REPLY'],

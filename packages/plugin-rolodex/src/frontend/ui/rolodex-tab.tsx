@@ -355,7 +355,7 @@ const useKnowledgeDocuments = (
   enabled: boolean = true,
   includeEmbedding: boolean = false
 ) => {
-  return useQuery<Memory[] Error>({
+  return useQuery<Memory[], Error>({
     queryKey: ['agents', agentId, 'knowledge', 'documents', { includeEmbedding }],
     queryFn: async () => {
       const response = await apiClient.getKnowledgeDocuments(agentId, { includeEmbedding });
@@ -366,7 +366,7 @@ const useKnowledgeDocuments = (
 };
 
 const useEntities = (agentId: UUID, enabled: boolean = true) => {
-  return useQuery<Entity[] Error>({
+  return useQuery<Entity[], Error>({
     queryKey: ['agents', agentId, 'entities'],
     queryFn: async () => {
       const response = await apiClient.getEntities(agentId);
@@ -377,7 +377,7 @@ const useEntities = (agentId: UUID, enabled: boolean = true) => {
 };
 
 const useRelationships = (agentId: UUID, enabled: boolean = true) => {
-  return useQuery<Relationship[] Error>({
+  return useQuery<Relationship[], Error>({
     queryKey: ['agents', agentId, 'relationships'],
     queryFn: async () => {
       const response = await apiClient.getRelationships(agentId);

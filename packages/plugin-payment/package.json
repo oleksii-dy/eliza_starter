@@ -13,7 +13,9 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "test": "elizaos test"
+    "test": "elizaos test",
+    "lint": "eslint 'src/**/*.{js,ts,tsx}' --config ../../eslint.config.js",
+    "lint:fix": "eslint 'src/**/*.{js,ts,tsx}' --config ../../eslint.config.js --fix"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",
@@ -29,13 +31,15 @@
   },
   "devDependencies": {
     "@elizaos/plugin-sql": "workspace:*",
+    "@eslint/js": "^9.29.0",
     "@types/node": "^22.10.2",
     "@types/uuid": "^10.0.0",
-    "@vitest/coverage-v8": "^2.1.8",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "eslint": "^9.29.0",
     "rimraf": "^6.0.1",
     "tsup": "^8.5.0",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "typescript": "5.8.3"
   },
   "files": [
     "dist"

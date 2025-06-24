@@ -16,10 +16,10 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       name: 'Complete entity management workflow',
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing complete entity management workflow...');
-        
+
         const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
         const followUpService = runtime.getService('followUp') as unknown as FollowUpManager;
-        
+
         if (!entityGraphService || !followUpService) {
           throw new Error('Required services not available');
         }
@@ -27,7 +27,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
         // 1. Track a new entity from conversation
         const roomId = stringToUuid(`test-room-${Date.now()}`);
         const userId = stringToUuid(`test-user-${Date.now()}`);
-        
+
         const introMessage = {
           id: stringToUuid(`msg-intro-${Date.now()}`),
           entityId: userId,
@@ -71,7 +71,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
 
         // 4. Verify relationship was created
         const relationships = await entityGraphService.getEntityRelationships(alice.entityId);
-        
+
         if (relationships.length === 0) {
           console.warn('⚠️ No relationships found - relationship extraction may need improvement');
         } else {
@@ -133,7 +133,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       name: 'Natural language entity extraction',
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing natural language entity extraction...');
-        
+
         const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
@@ -174,7 +174,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
 
         // Check for specific entities
         const expectedEntities = ['Emma Wilson', 'David Chen', 'StartupXYZ', 'Venture Partners'];
-        const foundEntities = expectedEntities.filter(name => 
+        const foundEntities = expectedEntities.filter(name =>
           entityNames.some(en => en.toLowerCase().includes(name.toLowerCase()))
         );
 
@@ -185,7 +185,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
         console.log(`✓ Successfully extracted ${foundEntities.length} entities from natural language`);
 
         // Check for relationships
-        const emmaSearch = entities.find(e => 
+        const emmaSearch = entities.find(e =>
           e.entity.names.some(n => n.toLowerCase().includes('emma'))
         );
 
@@ -202,7 +202,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       name: 'Trust score evolution',
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing trust score evolution...');
-        
+
         const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
@@ -283,10 +283,10 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       name: 'Follow-up task management',
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing follow-up task management...');
-        
+
         const followUpService = runtime.getService('followUp') as unknown as FollowUpManager;
         const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
-        
+
         if (!followUpService || !entityGraphService) {
           throw new Error('Required services not available');
         }
@@ -356,4 +356,4 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
   ];
 }
 
-export default new RolodexPluginE2ETestSuite(); 
+export default new RolodexPluginE2ETestSuite();

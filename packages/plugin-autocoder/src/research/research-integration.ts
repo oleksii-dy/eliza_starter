@@ -436,7 +436,7 @@ export class ResearchIntegration {
 
     // Extract insights from research
     if (project.report?.summary) {
-      approach = project.report.summary.substring(0, 200) + '...';
+      approach = `${project.report.summary.substring(0, 200)}...`;
     }
 
     project.findings.forEach((finding) => {
@@ -462,10 +462,10 @@ export class ResearchIntegration {
         considerations.length > 0
           ? considerations
           : [
-              'Follow existing code patterns',
-              'Ensure backward compatibility',
-              'Add comprehensive error handling',
-            ],
+            'Follow existing code patterns',
+            'Ensure backward compatibility',
+            'Add comprehensive error handling',
+          ],
       testingStrategy: `Create unit tests for ${language} implementation`,
       performanceConsiderations: [
         'Optimize for common use cases',
@@ -560,12 +560,12 @@ export class ResearchIntegration {
     const text =
       `${instance.repo} ${instance.issue_title} ${instance.issue_body || ''}`.toLowerCase();
 
-    if (text.includes('typescript') || text.includes('.ts')) return 'typescript';
-    if (text.includes('javascript') || text.includes('.js')) return 'javascript';
-    if (text.includes('python') || text.includes('.py')) return 'python';
-    if (text.includes('java') && !text.includes('javascript')) return 'java';
-    if (text.includes('rust') || text.includes('.rs')) return 'rust';
-    if (text.includes('go') || text.includes('golang')) return 'go';
+    if (text.includes('typescript') || text.includes('.ts')) {return 'typescript';}
+    if (text.includes('javascript') || text.includes('.js')) {return 'javascript';}
+    if (text.includes('python') || text.includes('.py')) {return 'python';}
+    if (text.includes('java') && !text.includes('javascript')) {return 'java';}
+    if (text.includes('rust') || text.includes('.rs')) {return 'rust';}
+    if (text.includes('go') || text.includes('golang')) {return 'go';}
 
     return 'typescript'; // Default assumption
   }
@@ -577,14 +577,14 @@ export class ResearchIntegration {
     const text =
       `${instance.repo} ${instance.issue_title} ${instance.issue_body || ''}`.toLowerCase();
 
-    if (text.includes('react')) return 'react';
-    if (text.includes('vue')) return 'vue';
-    if (text.includes('angular')) return 'angular';
-    if (text.includes('express')) return 'express';
-    if (text.includes('fastify')) return 'fastify';
-    if (text.includes('django')) return 'django';
-    if (text.includes('flask')) return 'flask';
-    if (text.includes('spring')) return 'spring';
+    if (text.includes('react')) {return 'react';}
+    if (text.includes('vue')) {return 'vue';}
+    if (text.includes('angular')) {return 'angular';}
+    if (text.includes('express')) {return 'express';}
+    if (text.includes('fastify')) {return 'fastify';}
+    if (text.includes('django')) {return 'django';}
+    if (text.includes('flask')) {return 'flask';}
+    if (text.includes('spring')) {return 'spring';}
 
     return undefined;
   }
@@ -719,14 +719,14 @@ export class ResearchIntegration {
     return findings.length > 0
       ? findings
       : [
-          {
-            type: 'solution_pattern',
-            content: `Systematic approach needed for ${instance.issue_title}`,
-            source: 'Default analysis',
-            confidence: 0.6,
-            relevance: 0.7,
-          },
-        ];
+        {
+          type: 'solution_pattern',
+          content: `Systematic approach needed for ${instance.issue_title}`,
+          source: 'Default analysis',
+          confidence: 0.6,
+          relevance: 0.7,
+        },
+      ];
   }
 
   /**
@@ -782,11 +782,11 @@ export class ResearchIntegration {
         considerations.length > 0
           ? considerations
           : [
-              'Follow project conventions',
-              'Maintain code quality standards',
-              'Ensure comprehensive testing',
-              'Document changes appropriately',
-            ],
+            'Follow project conventions',
+            'Maintain code quality standards',
+            'Ensure comprehensive testing',
+            'Document changes appropriately',
+          ],
       testingStrategy: `Create comprehensive tests for ${language} implementation covering edge cases`,
       performanceConsiderations: [
         'Profile performance-critical paths',
@@ -804,14 +804,14 @@ export class ResearchIntegration {
         codePatterns.length > 0
           ? codePatterns
           : [
-              {
-                pattern: 'Standard implementation',
-                description: 'Follow established project patterns',
-                example: '// Implementation following project conventions',
-                whenToUse: 'Default approach for this codebase',
-                alternatives: ['Custom implementation patterns'],
-              },
-            ],
+            {
+              pattern: 'Standard implementation',
+              description: 'Follow established project patterns',
+              example: '// Implementation following project conventions',
+              whenToUse: 'Default approach for this codebase',
+              alternatives: ['Custom implementation patterns'],
+            },
+          ],
     };
   }
 
@@ -877,11 +877,11 @@ export class ResearchIntegration {
         considerations.length > 0
           ? considerations.slice(0, 5)
           : [
-              'Follow ElizaOS architecture patterns',
-              'Implement proper TypeScript interfaces',
-              'Add comprehensive error handling',
-              'Ensure proper service lifecycle management',
-            ],
+            'Follow ElizaOS architecture patterns',
+            'Implement proper TypeScript interfaces',
+            'Add comprehensive error handling',
+            'Ensure proper service lifecycle management',
+          ],
       testingStrategy: 'Comprehensive unit and integration tests',
       performanceConsiderations: [
         'Optimize plugin initialization',
@@ -897,14 +897,14 @@ export class ResearchIntegration {
         patterns.length > 0
           ? patterns.slice(0, 3)
           : [
-              {
-                pattern: 'ElizaOS Plugin Structure',
-                description: 'Standard plugin implementation pattern',
-                example: 'export const plugin: Plugin = { name, description, actions, providers };',
-                whenToUse: 'All ElizaOS plugins',
-                alternatives: ['Custom plugin structure'],
-              },
-            ],
+            {
+              pattern: 'ElizaOS Plugin Structure',
+              description: 'Standard plugin implementation pattern',
+              example: 'export const plugin: Plugin = { name, description, actions, providers };',
+              whenToUse: 'All ElizaOS plugins',
+              alternatives: ['Custom plugin structure'],
+            },
+          ],
     };
   }
 }

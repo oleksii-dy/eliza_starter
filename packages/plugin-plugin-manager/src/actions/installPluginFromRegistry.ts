@@ -69,11 +69,11 @@ export const installPluginFromRegistryAction: Action = {
 
       if (pluginInfo.status === 'needs_configuration') {
         const configMessage =
-          `Plugin ${pluginInfo.name} has been installed but requires configuration:\n` +
-          pluginInfo.requiredEnvVars
-            .map((v) => `- ${v.name}: ${v.description}${v.sensitive ? ' (sensitive)' : ''}`)
-            .join('\n') +
-          '\n\nUse "configure plugin" to set up the required environment variables.';
+          `Plugin ${pluginInfo.name} has been installed but requires configuration:\n${
+            pluginInfo.requiredEnvVars
+              .map((v) => `- ${v.name}: ${v.description}${v.sensitive ? ' (sensitive)' : ''}`)
+              .join('\n')
+          }\n\nUse "configure plugin" to set up the required environment variables.`;
 
         if (callback) {
           await callback({
@@ -99,8 +99,8 @@ export const installPluginFromRegistryAction: Action = {
       return {
         text: successMessage,
       };
-    } catch (error: any) {
-      const errorMessage = `Failed to install plugin: ${error.message}`;
+    } catch (_error: any) {
+      const errorMessage = `Failed to install plugin: ${_error.message}`;
 
       if (callback) {
         await callback({
@@ -115,7 +115,7 @@ export const installPluginFromRegistryAction: Action = {
     }
   },
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> {
     // Simply check if the plugin manager service is available
     const pluginManagerService = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER

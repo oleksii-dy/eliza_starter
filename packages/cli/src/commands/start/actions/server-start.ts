@@ -50,7 +50,9 @@ export async function startAgents(options: ServerStartOptions): Promise<void> {
   }
 
   const postgresUrl = await configureDatabaseSettings(options.configure);
-  if (postgresUrl) process.env.POSTGRES_URL = postgresUrl;
+  if (postgresUrl) {
+    process.env.POSTGRES_URL = postgresUrl;
+  }
 
   const pgliteDataDir = postgresUrl ? undefined : await resolvePgliteDir();
 
@@ -65,7 +67,7 @@ export async function startAgents(options: ServerStartOptions): Promise<void> {
   // Setup graceful shutdown handler
   gracefulShutdownHandler.setServer(server);
 
-  const desiredPort = options.port || Number.parseInt(process.env.SERVER_PORT || '3000');
+  const desiredPort = options.port || Number.parseInt(process.env.SERVER_PORT || '3000', 10);
   const serverPort = await findNextAvailablePort(desiredPort);
   if (serverPort !== desiredPort) {
     logger.warn(`Port ${desiredPort} is in use, using port ${serverPort} instead`);

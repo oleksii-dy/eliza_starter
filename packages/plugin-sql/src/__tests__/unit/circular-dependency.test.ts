@@ -13,7 +13,7 @@ describe('Circular Dependency Fix', () => {
       const agentTable = schema.agentTable;
       const entityTable = schema.entityTable;
       const componentTable = schema.componentTable;
-      
+
       // Access properties to ensure the proxy is working
       expect(agentTable).toBeDefined();
       expect(entityTable).toBeDefined();
@@ -27,7 +27,7 @@ describe('Circular Dependency Fix', () => {
     expect(schema.agentTable).toBeDefined();
     expect(schema.entityTable).toBeDefined();
     expect(schema.componentTable).toBeDefined();
-    
+
     // The fact that we got here without errors means the circular dependency is fixed
   });
 });

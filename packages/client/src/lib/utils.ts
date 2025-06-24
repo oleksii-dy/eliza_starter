@@ -1,10 +1,9 @@
 import { AVATAR_IMAGE_MAX_SIZE } from '@/constants';
-import type { UUID } from '@elizaos/core';
+import type { UUID, Agent } from '@elizaos/core';
 import { type ClassValue, clsx } from 'clsx';
 import dayjs from 'dayjs';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import { twMerge } from 'tailwind-merge';
-import type { Agent, UUID as CoreUUID } from '@elizaos/core';
 import type { MessageChannel as ClientMessageChannel } from '@/types';
 
 /**
@@ -139,7 +138,7 @@ export const getAgentAvatar = (
 export const generateGroupName = (
   channel: Partial<ClientMessageChannel> | undefined,
   participants: Partial<Agent>[] | undefined,
-  currentUserId: CoreUUID | string | undefined
+  currentUserId: UUID | string | undefined
 ): string => {
   if (channel?.name && channel.name.trim() !== '') {
     return channel.name;
@@ -152,7 +151,9 @@ export const generateGroupName = (
     ) {
       // If only current user is a participant (and has a name), or no other named participants
       const currentUserParticipant = participants.find((p) => p.id === currentUserId);
-      if (currentUserParticipant) return currentUserParticipant.name || 'Unnamed Group';
+      if (currentUserParticipant) {
+        return currentUserParticipant.name || 'Unnamed Group';
+      }
       return 'Unnamed Group'; // Fallback if current user somehow has no name
     }
     if (otherParticipants.length > 0) {

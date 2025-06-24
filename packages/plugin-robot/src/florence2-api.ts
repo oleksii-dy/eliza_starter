@@ -22,7 +22,9 @@ export class Florence2API {
   }
 
   async initialize(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {
+      return;
+    }
 
     logger.info('[Florence2API] Initializing...');
 
@@ -246,7 +248,9 @@ export class Florence2API {
   private parseObjects(
     odData: any
   ): Array<{ label: string; bbox: BoundingBox; confidence: number }> {
-    if (!odData.bboxes || !odData.labels) return [];
+    if (!odData.bboxes || !odData.labels) {
+      return [];
+    }
 
     const objects: Array<{ label: string; bbox: BoundingBox; confidence: number }> = [];
     for (let i = 0; i < odData.bboxes.length; i++) {
@@ -267,7 +271,9 @@ export class Florence2API {
   }
 
   private parseRegions(regionData: any): Array<{ description: string; bbox: BoundingBox }> {
-    if (!regionData.bboxes || !regionData.labels) return [];
+    if (!regionData.bboxes || !regionData.labels) {
+      return [];
+    }
 
     const regions: Array<{ description: string; bbox: BoundingBox }> = [];
     for (let i = 0; i < regionData.bboxes.length; i++) {

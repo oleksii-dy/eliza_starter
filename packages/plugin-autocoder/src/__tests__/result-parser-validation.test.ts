@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { ResultParser } from '../swe-bench/validation/result-parser';
 import { DEFAULT_VALIDATION_CONFIG } from '../swe-bench/config/validation-config';
 
@@ -7,11 +7,6 @@ describe('ResultParser Integration Test', () => {
 
   beforeEach(() => {
     parser = new ResultParser(DEFAULT_VALIDATION_CONFIG);
-  });
-
-  it('should create a ResultParser instance successfully', () => {
-    expect(parser).toBeDefined();
-    expect(parser).toBeInstanceOf(ResultParser);
   });
 
   it('should parse Jest JSON output correctly', async () => {

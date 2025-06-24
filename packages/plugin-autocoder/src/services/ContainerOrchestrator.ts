@@ -564,7 +564,7 @@ export class ContainerOrchestrator extends Service {
 
   private async handleUnexpectedTermination(containerId: string): Promise<void> {
     const managedContainer = this.managedContainers.get(containerId);
-    if (!managedContainer) return;
+    if (!managedContainer) {return;}
 
     elizaLogger.warn(
       `Handling unexpected termination for ${managedContainer.agentConfig.agentName}`
@@ -581,7 +581,7 @@ export class ContainerOrchestrator extends Service {
 
   private async handleUnhealthyContainer(containerId: string): Promise<void> {
     const managedContainer = this.managedContainers.get(containerId);
-    if (!managedContainer) return;
+    if (!managedContainer) {return;}
 
     elizaLogger.warn(`Handling unhealthy container: ${managedContainer.agentConfig.agentName}`);
 

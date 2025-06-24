@@ -124,7 +124,7 @@ export const recentMessagesProvider: Provider = {
         return {
           data: {
             recentMessages: [],
-            recentInteractions: []
+            recentInteractions: [],
           },
           values: {
             recentPosts: '',
@@ -289,7 +289,7 @@ export const recentMessagesProvider: Provider = {
       return {
         data: {
           recentMessages: [],
-          recentInteractions: []
+          recentInteractions: [],
         },
         values: {
           recentPosts: '',

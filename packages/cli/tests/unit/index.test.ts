@@ -1,69 +1,69 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test';
 import { Command } from 'commander';
 
 // Mock all dependencies before importing
-vi.mock('@/src/commands/create', () => ({
+mock.module('@/src/commands/create', () => ({
   default: new Command('create').description('Mocked create command'),
   create: new Command('create').description('Mocked create command'),
 }));
 
-vi.mock('@/src/commands/start', () => ({
+mock.module('@/src/commands/start', () => ({
   default: new Command('start').description('Mocked start command'),
   start: new Command('start').description('Mocked start command'),
 }));
 
-vi.mock('@/src/commands/test', () => ({
+mock.module('@/src/commands/test', () => ({
   default: new Command('test').description('Mocked test command'),
   test: new Command('test').description('Mocked test command'),
 }));
 
-vi.mock('@/src/commands/update', () => ({
+mock.module('@/src/commands/update', () => ({
   default: new Command('update').description('Mocked update command'),
   update: new Command('update').description('Mocked update command'),
 }));
 
-vi.mock('@/src/commands/env', () => ({
+mock.module('@/src/commands/env', () => ({
   default: new Command('env').description('Mocked env command'),
   env: new Command('env').description('Mocked env command'),
 }));
 
-vi.mock('@/src/commands/monorepo', () => ({
+mock.module('@/src/commands/monorepo', () => ({
   default: new Command('monorepo').description('Mocked monorepo command'),
   monorepo: new Command('monorepo').description('Mocked monorepo command'),
 }));
 
-vi.mock('@/src/commands/dev', () => ({
+mock.module('@/src/commands/dev', () => ({
   default: new Command('dev').description('Mocked dev command'),
   dev: new Command('dev').description('Mocked dev command'),
 }));
 
-vi.mock('@/src/commands/agent', () => ({
+mock.module('@/src/commands/agent', () => ({
   default: new Command('agent').description('Mocked agent command'),
   agent: new Command('agent').description('Mocked agent command'),
 }));
 
-vi.mock('@/src/commands/plugins', () => ({
+mock.module('@/src/commands/plugins', () => ({
   default: new Command('plugins').description('Mocked plugins command'),
   plugins: new Command('plugins').description('Mocked plugins command'),
 }));
 
-vi.mock('@/src/commands/publish', () => ({
+mock.module('@/src/commands/publish', () => ({
   default: new Command('publish').description('Mocked publish command'),
   publish: new Command('publish').description('Mocked publish command'),
 }));
 
-vi.mock('@/src/commands/tee', () => ({
+mock.module('@/src/commands/tee', () => ({
   default: new Command('tee').description('Mocked tee command'),
   teeCommand: new Command('tee').description('Mocked tee command'),
 }));
 
 // Mock utilities
-const mockDisplayBanner = vi.fn().mockResolvedValue(undefined);
-const mockHandleError = vi.fn();
-const mockGetVersion = vi.fn().mockReturnValue('1.0.0-test');
-const mockCheckAndShowUpdateNotification = vi.fn().mockResolvedValue(undefined);
+const mockDisplayBanner = mock().mockResolvedValue(undefined);
+const mockHandleError = mock();
+const mockGetVersion = mock().mockReturnValue('1.0.0-test');
+const mockCheckAndShowUpdateNotification = mock().mockResolvedValue(undefined);
 
-vi.mock('@/src/utils', () => ({
+mock.module('@/src/utils', () => ({
   default: {
     displayBanner: mockDisplayBanner,
     handleError: mockHandleError,
@@ -76,42 +76,42 @@ vi.mock('@/src/utils', () => ({
   checkAndShowUpdateNotification: mockCheckAndShowUpdateNotification,
 }));
 
-vi.mock('@/src/project', () => ({
-  default: { loadProject: vi.fn() },
-  loadProject: vi.fn(),
+mock.module('@/src/project', () => ({
+  default: { loadProject: mock() },
+  loadProject: mock(),
 }));
 
-vi.mock('@/src/version', () => ({
+mock.module('@/src/version', () => ({
   default: { version: '1.0.0-test' },
   version: '1.0.0-test',
 }));
 
 // Mock fs
-vi.mock('node:fs', async () => {
-  const actual = await vi.importActual('node:fs');
+mock.module('node:fs', async () => {
+  const actual = await import('node:fs');
   return {
     ...actual,
-    existsSync: vi.fn(() => true),
-    readFileSync: vi.fn(() => JSON.stringify({ version: '1.0.0-test' })),
+    existsSync: mock(() => true),
+    readFileSync: mock(() => JSON.stringify({ version: '1.0.0-test' })),
   };
 });
 
 // Mock logger
-vi.mock('@elizaos/core', () => ({
+mock.module('@elizaos/core', () => ({
   default: {
     logger: {
-      error: vi.fn(),
-      info: vi.fn(),
-      success: vi.fn(),
+      error: mock(),
+      info: mock(),
+      success: mock(),
     },
     VECTOR_DIMS: 1536,
     DatabaseAdapter: class MockDatabaseAdapter {},
     Service: class MockService {},
   },
   logger: {
-    error: vi.fn(),
-    info: vi.fn(),
-    success: vi.fn(),
+    error: mock(),
+    info: mock(),
+    success: mock(),
   },
   VECTOR_DIMS: 1536,
   DatabaseAdapter: class MockDatabaseAdapter {},
@@ -119,16 +119,16 @@ vi.mock('@elizaos/core', () => ({
 }));
 
 // Mock emoji-handler
-const mockConfigureEmojis = vi.fn();
-vi.mock('@/src/utils/emoji-handler', () => ({
+const mockConfigureEmojis = mock();
+mock.module('@/src/utils/emoji-handler', () => ({
   default: { configureEmojis: mockConfigureEmojis },
   configureEmojis: mockConfigureEmojis,
 }));
 
 // Mock child_process for stop command
-vi.mock('node:child_process', () => ({
-  default: { exec: vi.fn((_cmd, callback) => callback?.(null)) },
-  exec: vi.fn((_cmd, callback) => callback?.(null)),
+mock.module('node:child_process', () => ({
+  default: { exec: mock((_cmd, callback) => callback?.(null)) },
+  exec: mock((_cmd, callback) => callback?.(null)),
 }));
 
 describe('CLI main index', () => {
@@ -137,12 +137,12 @@ describe('CLI main index', () => {
   let originalEnv: NodeJS.ProcessEnv;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     // Save original values
     originalArgv = [...process.argv];
     originalEnv = { ...process.env };
     // Mock process.exit
-    mockExit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+    mockExit = spyOn(process, 'exit').mockImplementation(() => undefined as never);
   });
 
   afterEach(() => {
@@ -151,7 +151,7 @@ describe('CLI main index', () => {
     process.env = originalEnv;
     mockExit.mockRestore();
     // Clear module cache to allow re-importing
-    vi.resetModules();
+    // Reset modules - bun test doesn't need this
   });
 
   it('should configure emoji settings when --no-emoji flag is present', async () => {

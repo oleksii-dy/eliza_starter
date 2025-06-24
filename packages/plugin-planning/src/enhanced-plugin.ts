@@ -35,7 +35,7 @@ export const enhancedMessageClassifierProvider: Provider = {
 
   get: async (runtime, message, state) => {
     const text = message.content?.text || '';
-    
+
     if (!runtime.useModel) {
       // Fallback to pattern-based classification if no LLM available
       return fallbackClassification(text);
@@ -124,16 +124,16 @@ Reasoning: ${analysis.reasoning}
 // Fallback classification for when LLM is not available
 function fallbackClassification(text: string) {
   const textLower = text.toLowerCase();
-  
+
   let classification = 'SIMPLE';
   let complexity = 'simple';
-  
+
   // Enhanced pattern matching
   const enterpriseIndicators = ['enterprise', 'organization', 'company', 'business', 'stakeholder', 'board', 'executive'];
   const strategicIndicators = ['plan', 'strategy', 'coordinate', 'manage', 'organize', 'workflow'];
   const researchIndicators = ['research', 'analyze', 'investigate', 'study', 'evaluate'];
   const complexityIndicators = ['integration', 'migration', 'transformation', 'implementation'];
-  
+
   if (enterpriseIndicators.some(ind => textLower.includes(ind))) {
     classification = 'ENTERPRISE';
     complexity = 'enterprise';
@@ -152,7 +152,7 @@ function fallbackClassification(text: string) {
     text: `[ENHANCED CLASSIFIER]\nClassification: ${classification}\nComplexity: ${complexity}\n[/ENHANCED CLASSIFIER]`,
     values: {
       messageClassification: classification,
-      complexity: complexity,
+      complexity,
       requiresPlanning: classification !== 'SIMPLE',
     },
   };
@@ -167,34 +167,34 @@ export const enhancedCreatePlanAction: Action = {
   validate: async (runtime, message, state) => {
     const analysis = state?.values;
     const text = message.content?.text || '';
-    
+
     // Always plan for complex requests
-    if (analysis?.requiresPlanning) return true;
-    
+    if (analysis?.requiresPlanning) {return true;}
+
     // Plan for any request with keywords indicating complexity
-    if (text.includes('plan') || 
-        text.includes('strategy') || 
-        text.includes('coordinate') || 
+    if (text.includes('plan') ||
+        text.includes('strategy') ||
+        text.includes('coordinate') ||
         text.includes('organize') ||
         text.includes('project') ||
         text.includes('enterprise') ||
-        text.includes('stakeholder')) return true;
-    
+        text.includes('stakeholder')) {return true;}
+
     // Plan for medium+ complexity or longer requests
-    if (analysis?.complexity && analysis.complexity !== 'simple') return true;
-    if (text.length > 80) return true; // Longer requests likely need planning
-    
+    if (analysis?.complexity && analysis.complexity !== 'simple') {return true;}
+    if (text.length > 80) {return true;} // Longer requests likely need planning
+
     // Plan for multi-step indicators
     const multiStepIndicators = ['and', 'then', 'also', 'after', 'before', 'while'];
-    if (multiStepIndicators.some(indicator => text.toLowerCase().includes(indicator))) return true;
-    
+    if (multiStepIndicators.some(indicator => text.toLowerCase().includes(indicator))) {return true;}
+
     return false;
   },
 
   handler: async (runtime, message, state, options, callback) => {
     const userRequest = message.content?.text || '';
     const analysis = state?.values || {};
-    
+
     if (!runtime.useModel) {
       // Fallback to simple planning if no LLM
       return fallbackPlanning(userRequest, analysis, callback);
@@ -204,10 +204,10 @@ export const enhancedCreatePlanAction: Action = {
       // Get available tools/actions from runtime
       const availableActions = getAvailableActions(runtime);
       const availableProviders = getAvailableProviders(runtime);
-      
+
       // Create comprehensive planning prompt
       const planningPrompt = createPlanningPrompt(userRequest, analysis, availableActions, availableProviders);
-      
+
       // Generate plan using LLM
       const response = await runtime.useModel('TEXT_LARGE', {
         prompt: planningPrompt,
@@ -217,7 +217,7 @@ export const enhancedCreatePlanAction: Action = {
 
       // Parse the plan from LLM response
       const plan = parsePlanFromLLMResponse(response, userRequest);
-      
+
       if (callback) {
         await callback({
           text: `I've analyzed your request and created a comprehensive ${plan.complexity} plan with ${plan.steps.length} steps. This plan considers ${plan.stakeholders?.length || 0} stakeholders and ${plan.constraints?.length || 0} constraints.`,
@@ -227,13 +227,13 @@ export const enhancedCreatePlanAction: Action = {
       }
 
       return {
-        values: { 
+        values: {
           plan,
           planCreated: true,
           planType: 'enhanced',
           nextActions: plan.steps.map(s => s.action)
         },
-        data: { 
+        data: {
           strategicPlan: plan,
           executionSteps: plan.steps.map(s => s.action),
           planningAnalysis: analysis
@@ -277,7 +277,7 @@ export const enhancedExecutePlanAction: Action = {
 
   handler: async (runtime, message, state, options, callback) => {
     const plan = state?.data?.strategicPlan || state?.values?.plan;
-    
+
     if (!plan) {
       if (callback) {
         await callback({
@@ -290,14 +290,14 @@ export const enhancedExecutePlanAction: Action = {
 
     // Execute plan with enhanced context awareness
     const executionResults = [];
-    
+
     for (let i = 0; i < plan.steps.length; i++) {
       const step = plan.steps[i];
-      
+
       // Generate contextual execution output
       const executionOutput = await generateStepExecution(step, plan, runtime);
       executionResults.push(executionOutput);
-      
+
       if (callback) {
         await callback({
           text: executionOutput.message,
@@ -305,7 +305,7 @@ export const enhancedExecutePlanAction: Action = {
           actions: [step.action],
         });
       }
-      
+
       // Simulate realistic processing time
       await new Promise(resolve => setTimeout(resolve, 150));
     }
@@ -319,13 +319,13 @@ export const enhancedExecutePlanAction: Action = {
     }
 
     return {
-      values: { 
+      values: {
         planExecuted: true,
         executionComplete: true,
         success: true,
-        executionResults 
+        executionResults
       },
-      data: { 
+      data: {
         executionResult: 'success',
         completedSteps: plan.steps.length,
         stepResults: executionResults
@@ -356,7 +356,7 @@ function getAvailableProviders(runtime: any): string[] {
   }));
 }
 
-function createPlanningPrompt(userRequest: string, analysis: any, availableActions: any[] availableProviders: any[]): string {
+function createPlanningPrompt(userRequest: string, analysis: any, availableActions: any[], availableProviders: any[]): string {
   return `You are an intelligent planning assistant. Create a comprehensive strategic plan for the following request:
 
 USER REQUEST: "${userRequest}"
@@ -410,7 +410,7 @@ function parsePlanFromLLMResponse(response: string, userRequest: string): any {
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const planData = JSON.parse(jsonMatch[0]);
-      
+
       // Ensure required fields exist
       return {
         goal: planData.goal || `Complete user request: ${userRequest}`,
@@ -430,7 +430,7 @@ function parsePlanFromLLMResponse(response: string, userRequest: string): any {
   } catch (error) {
     console.warn('Failed to parse LLM plan response:', error);
   }
-  
+
   // Fallback plan
   return {
     goal: `Complete user request: ${userRequest}`,
@@ -470,11 +470,11 @@ async function generateStepExecution(step: any, plan: any, runtime: any): Promis
   };
 
   const message = actionMessages[step.action] || `${step.action.toLowerCase().replace('_', ' ')} completed successfully`;
-  
+
   return {
     step: step.number,
     action: step.action,
-    message: message,
+    message,
     timestamp: Date.now(),
     success: true
   };
@@ -484,22 +484,22 @@ function fallbackPlanning(userRequest: string, analysis: any, callback: any): an
   // Simple fallback planning logic
   const steps = [];
   const text = userRequest.toLowerCase();
-  
+
   if (text.includes('email')) {
     steps.push({ number: 1, action: 'COMPOSE_EMAIL', description: 'Compose email' });
     steps.push({ number: 2, action: 'SEND_EMAIL', description: 'Send email' });
   }
-  
+
   if (text.includes('research') || text.includes('analyze')) {
     steps.push({ number: steps.length + 1, action: 'SEARCH_INFORMATION', description: 'Search for information' });
     steps.push({ number: steps.length + 1, action: 'ANALYZE_RESULTS', description: 'Analyze results' });
   }
-  
+
   if (text.includes('document') || text.includes('report')) {
     steps.push({ number: steps.length + 1, action: 'GATHER_DATA', description: 'Gather data' });
     steps.push({ number: steps.length + 1, action: 'CREATE_DOCUMENT', description: 'Create document' });
   }
-  
+
   if (steps.length === 0) {
     steps.push({ number: 1, action: 'ANALYZE_REQUEST', description: 'Analyze request' });
     steps.push({ number: 2, action: 'EXECUTE_ACTION', description: 'Execute action' });
@@ -509,7 +509,7 @@ function fallbackPlanning(userRequest: string, analysis: any, callback: any): an
   const plan = {
     goal: `Complete user request: ${userRequest}`,
     complexity: analysis.complexity || 'medium',
-    steps: steps,
+    steps,
     stakeholders: ['user'],
     constraints: [],
     risks: [],
@@ -540,7 +540,7 @@ export const enhancedPlanningPlugin: Plugin = {
   actions: [enhancedCreatePlanAction, enhancedExecutePlanAction],
 
   services: [],
-  
+
   evaluators: [],
 };
 

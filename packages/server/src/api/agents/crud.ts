@@ -156,7 +156,7 @@ export function createAgentCrudRouter(
         success: true,
         data: {
           id: newAgent.id,
-          character: character,
+          character,
         },
       });
       logger.success(`[AGENT CREATE] Successfully created agent: ${character.name}`);

@@ -1,9 +1,8 @@
-import { ChannelType } from '@elizaos/core';
+import { ChannelType, type Agent, AgentStatus, type UUID, validateUuid } from '@elizaos/core';
 import { Separator } from '@/components/ui/separator';
 import { GROUP_CHAT_SOURCE } from '@/constants';
 import { useAgentsWithDetails, useChannels } from '@/hooks/use-query-hooks';
 import { apiClient } from '@/lib/api';
-import { type Agent, AgentStatus, type UUID, validateUuid } from '@elizaos/core';
 import { useQueryClient, useQuery, useMutation, type UseQueryResult } from '@tanstack/react-query';
 import { Loader2, Trash, X } from 'lucide-react';
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
@@ -103,7 +102,9 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
   // Update group mutation
   const updateGroupMutation = useMutation({
     mutationFn: async ({ name, participantIds }: { name: string; participantIds: UUID[] }) => {
-      if (!channelId) throw new Error('Channel ID is required for update');
+      if (!channelId) {
+        throw new Error('Channel ID is required for update');
+      }
       return await apiClient.updateChannel(channelId, {
         name,
         participantCentralUserIds: participantIds,
@@ -128,7 +129,9 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
   // Delete group mutation
   const deleteGroupMutation = useMutation({
     mutationFn: async () => {
-      if (!channelId) throw new Error('Channel ID is required for delete');
+      if (!channelId) {
+        throw new Error('Channel ID is required for delete');
+      }
       return await apiClient.deleteChannel(channelId);
     },
     onSuccess: () => {
@@ -141,7 +144,11 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
     onError: (error) => {
       clientLogger.error('Failed to delete channel', error);
       const errorMsg = error instanceof Error ? error.message : 'Could not delete group.';
-      if (typeof error === 'object' && error !== null && (error as any).statusCode === 404) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        (error as { statusCode?: number }).statusCode === 404
+      ) {
         toast({
           title: 'Error Deleting Group',
           description: 'Delete operation not found on server.',
@@ -161,7 +168,9 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
   }: UseQueryResult<ChannelParticipantsResponse, Error> = useQuery({
     queryKey: ['channelParticipants', channelId],
     queryFn: async () => {
-      if (!channelId) return { success: true, data: [] };
+      if (!channelId) {
+        return { success: true, data: [] };
+      }
       return apiClient.getChannelParticipants(channelId);
     },
     enabled: !!channelId,
@@ -186,9 +195,15 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
 
   // Separate effect for handling participants
   useEffect(() => {
-    if (isLoadingAgents) return;
-    if (channelId && isLoadingChannelParticipants) return;
-    if (!channelId) return; // Only handle edit mode
+    if (isLoadingAgents) {
+      return;
+    }
+    if (channelId && isLoadingChannelParticipants) {
+      return;
+    }
+    if (!channelId) {
+      return;
+    } // Only handle edit mode
 
     if (isErrorChannelParticipants) {
       toast({
@@ -241,7 +256,9 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
   ]);
 
   const comboboxOptions: ComboboxOption[] = useMemo(() => {
-    if (isLoadingAgents || isErrorAgents) return [];
+    if (isLoadingAgents || isErrorAgents) {
+      return [];
+    }
     return allAvailableSelectableAgents.map((agent) => ({
       id: agent.id,
       label: `${agent.name}${agent.status === AgentStatus.INACTIVE ? ' (Inactive)' : ''}`,
@@ -252,9 +269,15 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
   const STABLE_EMPTY_COMBOBOX_OPTIONS_ARRAY = useMemo(() => [], []);
 
   const initialSelectedComboboxOptions: ComboboxOption[] = useMemo(() => {
-    if (isLoadingAgents) return STABLE_EMPTY_COMBOBOX_OPTIONS_ARRAY;
-    if (!channelId) return STABLE_EMPTY_COMBOBOX_OPTIONS_ARRAY; // Create mode
-    if (selectedAgents.length === 0) return STABLE_EMPTY_COMBOBOX_OPTIONS_ARRAY; // No agents selected
+    if (isLoadingAgents) {
+      return STABLE_EMPTY_COMBOBOX_OPTIONS_ARRAY;
+    }
+    if (!channelId) {
+      return STABLE_EMPTY_COMBOBOX_OPTIONS_ARRAY;
+    } // Create mode
+    if (selectedAgents.length === 0) {
+      return STABLE_EMPTY_COMBOBOX_OPTIONS_ARRAY;
+    } // No agents selected
 
     return selectedAgents.map((agent) => ({
       id: agent.id,
@@ -274,12 +297,16 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
   );
 
   const handleDeleteGroup = useCallback(async () => {
-    if (!channelId) return;
+    if (!channelId) {
+      return;
+    }
     const channel = channelsData?.data?.channels.find((ch) => ch.id === channelId);
     const confirmDelete = window.confirm(
       `Are you sure you want to permanently delete the group chat "${channel?.name || chatName || 'this group'}"? This action cannot be undone.`
     );
-    if (!confirmDelete) return;
+    if (!confirmDelete) {
+      return;
+    }
     deleteGroupMutation.mutate();
   }, [channelId, chatName, channelsData, deleteGroupMutation]);
 

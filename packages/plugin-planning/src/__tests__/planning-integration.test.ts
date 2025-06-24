@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import { v4 as uuidv4 } from 'uuid';
 import {
   type IAgentRuntime,
@@ -23,35 +23,35 @@ describe('Planning Integration Tests', () => {
   let planningService: PlanningService;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
     planningService = new PlanningService(mockRuntime);
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('Service Registration and Initialization', () => {
     it('should register planning service in runtime', async () => {
       const runtime = createMockRuntime();
-      
+
       // Simulate service registration
-      const mockGetService = vi.fn().mockReturnValue(new PlanningService(runtime));
+      const mockGetService = mock().mockReturnValue(new PlanningService(runtime));
       runtime.getService = mockGetService;
 
       const service = runtime.getService<IPlanningService>('planning');
-      
+
       expect(service).toBeInstanceOf(PlanningService);
       expect(mockGetService).toHaveBeenCalledWith('planning');
     });
 
     it('should handle missing planning service gracefully', () => {
       const runtime = createMockRuntime();
-      runtime.getService = vi.fn().mockReturnValue(null);
+      runtime.getService = mock().mockReturnValue(null);
 
       const service = runtime.getService<IPlanningService>('planning');
-      
+
       expect(service).toBeNull();
     });
   });
@@ -105,7 +105,7 @@ describe('Planning Integration Tests', () => {
         content: { text: 'Plan a project timeline for the new feature' },
       });
       const state = createMockState();
-      
+
       const planningContext: PlanningContext = {
         goal: 'Create a comprehensive project timeline',
         constraints: [
@@ -147,7 +147,7 @@ describe('Planning Integration Tests', () => {
         content: { text: 'Process multiple tasks simultaneously' },
       });
       const state = createMockState();
-      
+
       const planningContext: PlanningContext = {
         goal: 'Process multiple tasks',
         constraints: [],
@@ -176,7 +176,7 @@ describe('Planning Integration Tests', () => {
         content: { text: 'Coordinate dependent tasks with prerequisites' },
       });
       const state = createMockState();
-      
+
       const planningContext: PlanningContext = {
         goal: 'Coordinate dependent tasks',
         constraints: [],
@@ -206,14 +206,14 @@ describe('Planning Integration Tests', () => {
       const message = createMockMemory({
         content: { text: 'Execute test plan' },
       });
-      
+
       // Add specific REPLY and THINK actions to mockRuntime for this test
       mockRuntime.actions = [
         {
           name: 'REPLY',
           similes: [],
           description: 'Send a reply',
-          handler: vi.fn().mockImplementation(async (runtime, message, state, options, callback) => {
+          handler: mock().mockImplementation(async (runtime, message, state, options, callback) => {
             // Call the callback if provided
             if (callback) {
               await callback({
@@ -223,14 +223,14 @@ describe('Planning Integration Tests', () => {
             }
             return { text: options.text || 'Reply sent' };
           }),
-          validate: vi.fn().mockResolvedValue(true),
+          validate: mock().mockResolvedValue(true),
           examples: [],
         },
         {
           name: 'THINK',
           similes: [],
           description: 'Think about something',
-          handler: vi.fn().mockImplementation(async (runtime, message, state, options, callback) => {
+          handler: mock().mockImplementation(async (runtime, message, state, options, callback) => {
             // Call the callback if provided
             if (callback) {
               await callback({
@@ -240,11 +240,11 @@ describe('Planning Integration Tests', () => {
             }
             return { text: `Thought: ${options.thought || 'Processing'}` };
           }),
-          validate: vi.fn().mockResolvedValue(true),
+          validate: mock().mockResolvedValue(true),
           examples: [],
         },
       ];
-      
+
       const plan: ActionPlan = {
         id: asUUID(uuidv4()),
         goal: 'Test sequential execution',
@@ -269,7 +269,7 @@ describe('Planning Integration Tests', () => {
       };
 
       const responses: any[] = [];
-      const mockCallback = vi.fn((content) => {
+      const mockCallback = mock((content) => {
         responses.push(content);
         return Promise.resolve([]);
       });
@@ -286,7 +286,7 @@ describe('Planning Integration Tests', () => {
       const message = createMockMemory({
         content: { text: 'Execute failing plan' },
       });
-      
+
       const plan: ActionPlan = {
         id: asUUID(uuidv4()),
         goal: 'Test error handling',
@@ -309,12 +309,12 @@ describe('Planning Integration Tests', () => {
         name: 'FAILING_ACTION',
         similes: [],
         description: 'An action that fails',
-        handler: vi.fn().mockRejectedValue(new Error('Action failed')),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockRejectedValue(new Error('Action failed')),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       }];
 
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
 
       const result = await planningService.executePlan(mockRuntime, plan, message, mockCallback);
 
@@ -329,7 +329,7 @@ describe('Planning Integration Tests', () => {
       const message = createMockMemory({
         content: { text: 'Test working memory' },
       });
-      
+
       const plan: ActionPlan = {
         id: asUUID(uuidv4()),
         goal: 'Test working memory persistence',
@@ -359,7 +359,7 @@ describe('Planning Integration Tests', () => {
           name: 'SET_VALUE',
           similes: [],
           description: 'Set a value in working memory',
-          handler: vi.fn().mockImplementation(async (runtime, message, state, options, callback) => {
+          handler: mock().mockImplementation(async (runtime, message, state, options, callback) => {
             const { key, value, context } = options;
             // Use the working memory from context
             if (context?.workingMemory) {
@@ -374,14 +374,14 @@ describe('Planning Integration Tests', () => {
             }
             return { text: `Set ${key} = ${value}` };
           }),
-          validate: vi.fn().mockResolvedValue(true),
+          validate: mock().mockResolvedValue(true),
           examples: [],
         },
         {
           name: 'GET_VALUE',
           similes: [],
           description: 'Get a value from working memory',
-          handler: vi.fn().mockImplementation(async (runtime, message, state, options, callback) => {
+          handler: mock().mockImplementation(async (runtime, message, state, options, callback) => {
             const { key, context } = options;
             // Use the working memory from context
             const value = context?.workingMemory?.get(key) || 'undefined';
@@ -394,13 +394,13 @@ describe('Planning Integration Tests', () => {
             }
             return { text: `Retrieved ${key} = ${value}` };
           }),
-          validate: vi.fn().mockResolvedValue(true),
+          validate: mock().mockResolvedValue(true),
           examples: [],
         },
       ];
 
       const responses: any[] = [];
-      const mockCallback = vi.fn((content) => {
+      const mockCallback = mock((content) => {
         responses.push(content);
         return Promise.resolve([]);
       });
@@ -467,7 +467,7 @@ describe('Planning Integration Tests', () => {
     it('should detect circular dependencies in DAG plans', async () => {
       const stepA = asUUID(uuidv4());
       const stepB = asUUID(uuidv4());
-      
+
       const circularPlan: ActionPlan = {
         id: asUUID(uuidv4()),
         goal: 'Plan with circular dependencies',
@@ -610,7 +610,7 @@ describe('Planning Integration Tests', () => {
       };
 
       const message = createMockMemory();
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
 
       const result = await planningService.executePlan(mockRuntime, emptyPlan, message, mockCallback);
 
@@ -624,7 +624,7 @@ describe('Planning Integration Tests', () => {
         content: { text: 'Test malformed context' },
       });
       const state = createMockState();
-      
+
       const malformedContext = {
         goal: '', // Empty goal
         constraints: null as any, // Invalid constraints
@@ -640,7 +640,7 @@ describe('Planning Integration Tests', () => {
 
     it('should handle runtime service unavailability', async () => {
       const brokenRuntime = createMockRuntime();
-      brokenRuntime.useModel = vi.fn().mockRejectedValue(new Error('Model service unavailable'));
+      brokenRuntime.useModel = mock().mockRejectedValue(new Error('Model service unavailable'));
 
       const planningServiceWithBrokenRuntime = new PlanningService(brokenRuntime);
       const message = createMockMemory();
@@ -677,7 +677,7 @@ describe('Planning Integration Tests', () => {
       };
 
       const message = createMockMemory();
-      const mockCallback = vi.fn().mockResolvedValue([]);
+      const mockCallback = mock().mockResolvedValue([]);
 
       const startTime = Date.now();
       const result = await planningService.executePlan(mockRuntime, largePlan, message, mockCallback);
@@ -717,16 +717,16 @@ describe('Planning Integration Tests', () => {
         name: 'SLOW_ACTION',
         similes: [],
         description: 'A slow action',
-        handler: vi.fn().mockImplementation(async () => {
+        handler: mock().mockImplementation(async () => {
           await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
           return { text: 'Slow result' };
         }),
-        validate: vi.fn().mockResolvedValue(true),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       }];
 
       const message = createMockMemory();
-      const mockCallback = vi.fn();
+      const mockCallback = mock();
 
       const result = await planningService.executePlan(mockRuntime, timeoutPlan, message, mockCallback);
 

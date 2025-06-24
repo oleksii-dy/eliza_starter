@@ -1,5 +1,6 @@
 import {
   type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
@@ -9,7 +10,7 @@ import {
   createUniqueUuid,
 } from '@elizaos/core';
 import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as path from 'node:path';
 import { homedir } from 'os';
 
 /**
@@ -19,18 +20,18 @@ import { homedir } from 'os';
 export const fileOperationAction: Action = {
   name: 'FILE_OPERATION',
   similes: ['CREATE_FILE', 'WRITE_FILE', 'READ_FILE', 'SAVE_REPORT', 'MAKE_NOTES'],
-  description: 'Actually performs file operations - create, read, write files',
+  description:
+    'Performs file operations - create, read, write files. Can be chained with analysis actions to process file contents or command execution to use file data',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
-    
+
     // Basic action validation
-    const hasFileKeywords = (
+    const hasFileKeywords =
       (text.includes('create') &&
         (text.includes('file') || text.includes('report') || text.includes('notes'))) ||
       text.includes('save') ||
-      (text.includes('write') && text.includes('file'))
-    );
+      (text.includes('write') && text.includes('file'));
 
     if (!hasFileKeywords) {
       return false;
@@ -38,13 +39,27 @@ export const fileOperationAction: Action = {
 
     // Security validation: Check for directory traversal and dangerous paths
     const dangerousPatterns = [
-      '../', '..\\', '/etc/', '/root/', '/bin/', '/usr/', '/sys/',
-      '/proc/', 'c:\\windows\\', 'c:\\program files\\', '%systemroot%',
-      '~/.ssh/', '~/.bash', '/home/user/.ssh', 'passwd', 'shadow', 'config/sam'
+      '../',
+      '..\\',
+      '/etc/',
+      '/root/',
+      '/bin/',
+      '/usr/',
+      '/sys/',
+      '/proc/',
+      'c:\\windows\\',
+      'c:\\program files\\',
+      '%systemroot%',
+      '~/.ssh/',
+      '~/.bash',
+      '/home/user/.ssh',
+      'passwd',
+      'shadow',
+      'config/sam',
     ];
 
     // Special handling: /var/tmp is safe (not /var/ in general)
-    const hasDangerousPattern = dangerousPatterns.some(pattern => {
+    const hasDangerousPattern = dangerousPatterns.some((pattern) => {
       if (pattern === '/var/') {
         // Allow /var/tmp but block other /var paths
         return text.includes('/var/') && !text.includes('/var/tmp');
@@ -65,7 +80,7 @@ export const fileOperationAction: Action = {
         const fileMatch = text.match(/(?:at|to|in)\s+([/~]?[^\s]+)/i);
         if (fileMatch) {
           const requestedPath = fileMatch[1].toLowerCase();
-          const isAllowed = allowed.some((allowedPath: string) => 
+          const isAllowed = allowed.some((allowedPath: string) =>
             requestedPath.startsWith(allowedPath.toLowerCase())
           );
           return isAllowed;
@@ -80,9 +95,7 @@ export const fileOperationAction: Action = {
     const fileMatch = text.match(/(?:at|to|in)\s+([/~]?[^\s]+)/i);
     if (fileMatch) {
       const requestedPath = fileMatch[1].toLowerCase();
-      return defaultSafePaths.some(safePath => 
-        requestedPath.startsWith(safePath)
-      );
+      return defaultSafePaths.some((safePath) => requestedPath.startsWith(safePath));
     }
 
     return true;
@@ -94,14 +107,25 @@ export const fileOperationAction: Action = {
     state?: State,
     options?: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
-    if (!callback) return;
+  ): Promise<ActionResult> => {
+    if (!callback) {
+      return {
+        data: {
+          actionName: 'FILE_OPERATION',
+          error: 'No callback provided',
+        },
+        values: {
+          success: false,
+          error: 'No callback provided',
+        },
+      };
+    }
 
     try {
       const text = message.content.text || '';
 
       // Determine operation type and file details
-      let operation = 'create';
+      const operation = 'create';
       let fileName = '';
       let content = '';
       let filePath = '';
@@ -187,7 +211,7 @@ Request: ${text}
               filePath,
               fileName,
               size: stats.size,
-              created: stats.birthtime,
+              created: stats.birthtime || new Date(),
               timestamp: new Date().toISOString(),
             },
           },
@@ -206,7 +230,7 @@ Request: ${text}
 
 Location: ${filePath}
 Size: ${stats.size} bytes
-Created: ${stats.birthtime.toISOString()}
+Created: ${stats.birthtime ? stats.birthtime.toISOString() : new Date().toISOString()}
 
 The file has been initialized with appropriate content structure. You can now add or modify content as needed.`;
 
@@ -221,6 +245,23 @@ The file has been initialized with appropriate content structure. You can now ad
           success: true,
         },
       });
+
+      return {
+        data: {
+          actionName: 'FILE_OPERATION',
+          operation,
+          filePath,
+          fileName,
+          fileSize: stats.size,
+          createdAt: stats.birthtime ? stats.birthtime.toISOString() : new Date().toISOString(),
+        },
+        values: {
+          success: true,
+          filePath,
+          operationType: operation,
+          fileSizeBytes: stats.size,
+        },
+      };
     } catch (error) {
       logger.error('Error in fileOperation handler:', error);
       await callback({
@@ -228,6 +269,17 @@ The file has been initialized with appropriate content structure. You can now ad
         actions: ['FILE_OPERATION_ERROR'],
         source: message.content.source,
       });
+
+      return {
+        data: {
+          actionName: 'FILE_OPERATION',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
     }
   },
 
@@ -244,6 +296,36 @@ The file has been initialized with appropriate content structure. You can now ad
         content: {
           text: "I've created the file: research-findings.md\n\nLocation: /Users/username/autonomy-files/research-findings.md\nSize: 245 bytes\nCreated: 2024-01-15T10:30:00.000Z\n\nThe file has been initialized with appropriate content structure.",
           actions: ['FILE_OPERATION'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Create a summary file with the command output results',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll execute the command first to get the results, then create a summary file with the output.",
+          actions: ['EXECUTE_COMMAND', 'FILE_OPERATION'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Write the analysis findings to a report and push it to git',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll create a report file with the analysis findings and then commit and push it to the git repository.",
+          actions: ['FILE_OPERATION', 'GIT_OPERATION'],
         },
       },
     ],

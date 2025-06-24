@@ -1,17 +1,17 @@
-import { describe, it, expect, vi, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach, mock } from 'bun:test';
 import plugin from '../plugin';
 import { z } from 'zod';
 import { createMockRuntime } from './utils/core-test-utils';
 
 // Mock logger
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
+mock.module('@elizaos/core', async () => {
+  const actual = await import('@elizaos/core');
   return {
     ...actual,
     logger: {
-      info: vi.fn(),
-      error: vi.fn(),
-      warn: vi.fn(),
+      info: mock(),
+      error: mock(),
+      warn: mock(),
     },
   };
 });
@@ -24,7 +24,7 @@ describe('Plugin Configuration Schema', () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     // Reset environment variables before each test
     process.env = { ...originalEnv };
   });
@@ -110,7 +110,7 @@ describe('Plugin Configuration Schema', () => {
       await initPlugin(testConfig, createMockRuntime());
 
       // Verify environment variable was set
-      expect(process.env.EXAMPLE_PLUGIN_VARIABLE).toBe('test-value');
+      expect(process.env.EXAMPLE_PLUGIN_VARIABLE as unknown as string).toBe('test-value');
     }
   });
 
@@ -126,7 +126,7 @@ describe('Plugin Configuration Schema', () => {
       await initPlugin(testConfig, createMockRuntime());
 
       // Verify environment variable was not changed
-      expect(process.env.EXAMPLE_PLUGIN_VARIABLE).toBe('pre-existing-value');
+      expect(process.env.EXAMPLE_PLUGIN_VARIABLE as unknown as string).toBe('pre-existing-value');
     }
   });
 
@@ -150,7 +150,7 @@ describe('Plugin Configuration Schema', () => {
 
     // Mock the parseAsync function
     const originalParseAsync = schema.parseAsync;
-    schema.parseAsync = vi.fn().mockRejectedValue(mockZodError);
+    schema.parseAsync = mock().mockRejectedValue(mockZodError);
 
     try {
       // Use the mocked schema directly to avoid TypeScript errors
@@ -176,7 +176,7 @@ describe('Plugin Configuration Schema', () => {
 
     // Mock the parseAsync function
     const originalParseAsync = schema.parseAsync;
-    schema.parseAsync = vi.fn().mockRejectedValue(genericError);
+    schema.parseAsync = mock().mockRejectedValue(genericError);
 
     try {
       // Use the mocked schema directly to avoid TypeScript errors

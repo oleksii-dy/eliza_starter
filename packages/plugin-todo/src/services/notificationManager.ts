@@ -76,7 +76,7 @@ export class NotificationManager {
    * Process queued notifications
    */
   private async processNotificationQueue() {
-    if (this.isProcessing || this.notificationQueue.length === 0) return;
+    if (this.isProcessing || this.notificationQueue.length === 0) {return;}
 
     this.isProcessing = true;
     try {
@@ -133,7 +133,7 @@ export class NotificationManager {
    * Send an in-app notification
    */
   private async sendInAppNotification(notification: NotificationData) {
-    if (!notification.roomId) return;
+    if (!notification.roomId) {return;}
 
     const message = createMessageMemory({
       entityId: this.runtime.agentId,
@@ -180,10 +180,10 @@ export class NotificationManager {
    * Check if browser notifications should be sent
    */
   private shouldSendBrowserNotification(notification: NotificationData): boolean {
-    if (!notification.roomId) return false;
+    if (!notification.roomId) {return false;}
 
     const prefs = this.getUserPreferences(notification.roomId);
-    if (!prefs.enabled || !prefs.browserNotifications) return false;
+    if (!prefs.enabled || !prefs.browserNotifications) {return false;}
 
     // Check if this type of reminder is enabled
     switch (notification.type) {
@@ -204,10 +204,10 @@ export class NotificationManager {
    * Check if we're in quiet hours
    */
   private isInQuietHours(roomId?: UUID): boolean {
-    if (!roomId) return false;
+    if (!roomId) {return false;}
 
     const prefs = this.getUserPreferences(roomId);
-    if (!prefs.quietHours) return false;
+    if (!prefs.quietHours) {return false;}
 
     const now = new Date();
     const currentHour = now.getHours();
@@ -226,7 +226,7 @@ export class NotificationManager {
    */
   public getUserPreferences(userOrRoomId: UUID): NotificationPreferences {
     const existing = this.userPreferences.get(userOrRoomId);
-    if (existing) return existing;
+    if (existing) {return existing;}
 
     // Return default preferences
     const defaults: NotificationPreferences = {

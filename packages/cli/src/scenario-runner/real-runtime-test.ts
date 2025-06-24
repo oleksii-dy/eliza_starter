@@ -7,7 +7,7 @@
  * Run with: node dist/src/scenario-runner/real-runtime-test.js
  */
 
-import { logger, createUniqueUuid, type UUID, type Character } from '@elizaos/core';
+import { createUniqueUuid, type UUID, type Character } from '@elizaos/core';
 import { AgentServer } from '@elizaos/server';
 import { ScenarioRunner } from './index.js';
 import { runProductionVerificationTests } from './integration-test.js';
@@ -28,8 +28,8 @@ async function main() {
     let sqlPlugin;
     try {
       const sqlPluginModule = await import('@elizaos/plugin-sql');
-      sqlPlugin = sqlPluginModule.default || sqlPluginModule.sqlPlugin;
-    } catch (error) {
+      sqlPlugin = sqlPluginModule.default || sqlPluginModule.plugin;
+    } catch {
       console.log('⚠️ SQL plugin not available, creating minimal adapter for testing');
       sqlPlugin = {
         name: '@elizaos/plugin-sql',
@@ -119,21 +119,25 @@ async function main() {
     console.log('🧪 Test 1: Basic Runtime Functionality');
     try {
       const testRoomId = createUniqueUuid(runtime, 'basic-test-room') as UUID;
-      const memoryId = await runtime.createMemory(
+      const testUserId = createUniqueUuid(runtime, 'test-user') as UUID;
+
+      // Create a test memory
+      await runtime.createMemory(
         {
-          entityId: runtime.agentId,
+          entityId: testUserId,
           roomId: testRoomId,
           content: {
             text: 'Basic functionality test message',
             source: 'real-test',
           },
         },
-        'messages'
+        'memories'
       );
 
       const memories = await runtime.getMemories({
         roomId: testRoomId,
         count: 10,
+        tableName: 'memories',
       });
 
       if (memories.length === 0) {
@@ -245,7 +249,9 @@ async function main() {
       }
 
       console.log('   ✅ Real scenario execution: PASSED');
-      console.log(`      📊 Score: ${(result.verification.overallScore * 100).toFixed(1)}%`);
+      console.log(
+        `      📊 Score: ${((result.verification?.overallScore || 0) * 100).toFixed(1)}%`
+      );
       console.log(`      💬 Messages: ${result.transcript.length} total`);
       console.log(`      👥 User messages: ${userMessages.length}`);
       console.log(`      🤖 Agent messages: ${agentMessages.length}`);
@@ -260,7 +266,7 @@ async function main() {
       const WebSocket = (await import('ws')).default;
       const ws = new WebSocket(`ws://localhost:${testPort}`);
 
-      let messageReceived = false;
+      // let _messageReceived = false;
       const messagePromise = new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('WebSocket timeout'));
@@ -270,11 +276,11 @@ async function main() {
           try {
             const message = JSON.parse(data.toString());
             if (message.type === 'messageBroadcast' || message.type === 'connection_established') {
-              messageReceived = true;
+              // _messageReceived = true;
               clearTimeout(timeout);
               resolve();
             }
-          } catch (error) {
+          } catch {
             // Ignore parsing errors
           }
         });

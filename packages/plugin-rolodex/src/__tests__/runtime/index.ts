@@ -14,19 +14,19 @@ export class RolodexRuntimeTestSuite implements TestSuite {
   tests = [
     // Entity extraction tests
     ...entityExtractionRuntimeTests.tests,
-    
+
     // Relationship management tests
     ...relationshipManagementRuntimeTests.tests,
-    
+
     // Follow-up management tests
     ...followUpRuntimeTests.tests,
-    
+
     // Integration test combining all features
     {
       name: 'End-to-end conversation workflow',
       fn: async (runtime: any) => {
         console.log('🧪 Testing end-to-end conversation workflow...');
-        
+
         const entityGraphService = runtime.getService('entityGraph');
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
@@ -34,7 +34,7 @@ export class RolodexRuntimeTestSuite implements TestSuite {
 
         const roomId = runtime.stringToUuid(`test-room-${Date.now()}`);
         const userId = runtime.stringToUuid(`test-user-${Date.now()}`);
-        
+
         // Simulate a realistic conversation
         const conversation = [
           'I just had a great meeting with Sam Taylor from InnovateTech.',
@@ -44,7 +44,7 @@ export class RolodexRuntimeTestSuite implements TestSuite {
           'I should follow up with both of them next week to finalize the partnership terms.',
           'Jordan mentioned they work closely with Morgan Chen who leads their API team.',
         ];
-        
+
         // Process the conversation
         for (let i = 0; i < conversation.length; i++) {
           const message = {
@@ -58,22 +58,22 @@ export class RolodexRuntimeTestSuite implements TestSuite {
             },
             createdAt: Date.now() + (i * 1000), // Stagger timestamps
           };
-          
+
           await (runtime as any).processMessage(message);
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
-        
+
         // Verify entities were extracted
         const samResults = await entityGraphService.searchEntities('Sam Taylor');
         const jordanResults = await entityGraphService.searchEntities('Jordan Lee');
         const morganResults = await entityGraphService.searchEntities('Morgan Chen');
-        
+
         console.log('✓ Entities extracted:', {
           'Sam Taylor': samResults.length > 0,
           'Jordan Lee': jordanResults.length > 0,
           'Morgan Chen': morganResults.length > 0,
         });
-        
+
         // Verify relationships
         if (samResults.length > 0 && jordanResults.length > 0) {
           const samRelationships = await entityGraphService.getEntityRelationships(
@@ -81,19 +81,19 @@ export class RolodexRuntimeTestSuite implements TestSuite {
           );
           console.log(`✓ Sam has ${samRelationships.length} relationships`);
         }
-        
+
         // Verify follow-ups
         const followUps = await entityGraphService.getUpcomingFollowUps({
           includePast: false,
         });
         console.log(`✓ ${followUps.length} follow-ups scheduled`);
-        
+
         // Check organization entity
         const innovateTechResults = await entityGraphService.searchEntities('InnovateTech');
         if (innovateTechResults.length > 0) {
           console.log('✓ Organization entity created:', innovateTechResults[0].entity.type);
         }
-        
+
         console.log('✅ End-to-end conversation workflow PASSED');
       },
     },
@@ -105,4 +105,4 @@ export const rolodexRuntimeTests = new RolodexRuntimeTestSuite();
 export { entityExtractionRuntimeTests, relationshipManagementRuntimeTests, followUpRuntimeTests };
 
 // Default export for ElizaOS test runner
-export default rolodexRuntimeTests; 
+export default rolodexRuntimeTests;

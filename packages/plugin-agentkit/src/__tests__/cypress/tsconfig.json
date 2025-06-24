@@ -4,4 +4,4 @@
     "types": ["cypress"]
   },
   "include": ["**/*.ts"]
-} 
+}

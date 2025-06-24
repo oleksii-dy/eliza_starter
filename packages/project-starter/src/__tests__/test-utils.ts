@@ -1,11 +1,9 @@
 import { mock, spyOn } from 'bun:test';
-import { Content, IAgentRuntime, Memory, State, logger } from '@elizaos/core';
+import { IAgentRuntime, Memory, State, logger } from '@elizaos/core';
 import {
   createMockRuntime as baseMockRuntime,
   createMockMemory as baseMockMemory,
   createMockState as baseMockState,
-} from '@elizaos/core/test-utils';
-import {
   documentTestResult,
   runCoreActionTests,
 } from './utils/core-test-utils';
@@ -22,7 +20,7 @@ import plugin from '../plugin';
 export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime {
   // Use the centralized mock runtime with project-specific configuration
   return baseMockRuntime({
-    character: character,
+    character,
     plugins: [plugin],
     registerPlugin: mock(),
     initialize: mock(),

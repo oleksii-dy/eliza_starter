@@ -24,10 +24,10 @@ export class DummyTokenDataService extends Service implements ITokenDataService 
     const symbol = query ? query.toUpperCase() : randomAddress.substring(2, 6).toUpperCase();
     return {
       id: `${chain}:${randomAddress}`,
-      symbol: symbol,
+      symbol,
       name: `Dummy Token ${symbol}`,
       address: randomAddress,
-      chain: chain,
+      chain,
       sourceProvider: 'dummy',
       price: Math.random() * 100,
       priceChange24hPercent: (Math.random() - 0.5) * 20,

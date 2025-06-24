@@ -120,7 +120,7 @@ describe('PGLite Stress Tests', () => {
       expect(results.length).toBe(30);
 
       // Verify no errors occurred
-      const readOperationCount = Math.floor(30 / 3) + (0 % 3 === 0 ? 1 : 0);
+      const readOperationCount = Math.floor(30 / 3) + (30 % 3 === 0 ? 1 : 0);
       const writeOperationCount = 30 - readOperationCount;
 
       // Check that read operations returned arrays

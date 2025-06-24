@@ -188,8 +188,8 @@ export const checkReasoningStatusAction: Action = {
 
       const statusText = isEnabled ? 'enabled' : 'disabled';
       const statusDetail = isEnabled
-        ? `Currently collecting training data from model interactions.`
-        : `Not currently collecting training data.`;
+        ? 'Currently collecting training data from model interactions.'
+        : 'Not currently collecting training data.';
 
       await callback?.({
         text: `Custom reasoning is ${statusText}. ${statusDetail} Total records: ${totalRecords} (${successfulRecords} successful, ${failedRecords} failed).`,

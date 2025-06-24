@@ -28,6 +28,6 @@ function createTasksTable() {
 /**
  * Represents the tasks table in the database.
  * Uses lazy initialization to ensure proper database type configuration.
- 
+
  */
 export const tasksTable = createLazyTableProxy(createTasksTable);

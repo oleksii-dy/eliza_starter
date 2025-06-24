@@ -1,4 +1,4 @@
-import type { Scenario } from "../types.js"
+import type { Scenario } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const crosschainassetsScenario: Scenario = {
@@ -7,7 +7,7 @@ export const crosschainassetsScenario: Scenario = {
   description: 'Manage assets across multiple blockchain networks',
   category: 'integration',
   tags: ['solana', 'evm', 'planning', 'secrets-manager', 'complex-workflow'],
-  
+
   actors: [
     {
       id: uuidv4() as any,
@@ -24,31 +24,31 @@ export const crosschainassetsScenario: Scenario = {
           {
             type: 'message',
             content: 'Check my asset balances across Solana, Ethereum, and Polygon networks.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 8000,
-      },
+          },
           {
             type: 'message',
             content: 'Create a plan to rebalance my portfolio for optimal yield.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 10000,
-      },
+          },
           {
             type: 'message',
             content: 'Securely retrieve wallet credentials and execute the rebalancing.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 12000,
-      },
+          },
           {
             type: 'message',
             content: 'Set up alerts for significant price movements.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 14000,
@@ -68,7 +68,7 @@ export const crosschainassetsScenario: Scenario = {
       plugins: ['solana', 'evm', 'planning', 'secrets-manager'],
     },
   },
-  
+
   execution: {
     maxDuration: 300000,
     maxSteps: 25,
@@ -80,7 +80,7 @@ export const crosschainassetsScenario: Scenario = {
       },
     ],
   },
-  
+
   verification: {
     rules: [
       {
@@ -88,7 +88,8 @@ export const crosschainassetsScenario: Scenario = {
         type: 'llm',
         description: 'All required plugins were utilized',
         config: {
-          criteria: 'The agent successfully used solana, evm, planning, secrets-manager plugins to complete the workflow',
+          criteria:
+            'The agent successfully used solana, evm, planning, secrets-manager plugins to complete the workflow',
         },
         weight: 3,
       },
@@ -109,7 +110,7 @@ export const crosschainassetsScenario: Scenario = {
           criteria: 'Multiple actions from different plugins were chained together effectively',
         },
         weight: 3,
-      }
+      },
     ],
     expectedOutcomes: [
       {
@@ -134,7 +135,7 @@ export const crosschainassetsScenario: Scenario = {
       ],
     },
   },
-  
+
   benchmarks: {
     maxDuration: 300000,
     maxSteps: 25,

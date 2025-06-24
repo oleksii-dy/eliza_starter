@@ -47,13 +47,13 @@ export class PvPSystem extends System {
   private pvpZones: Map<string, PvPZone> = new Map();
   private skulledPlayers: Map<string, SkullData> = new Map();
   private combatProtection: Map<string, number> = new Map(); // New player protection
-  
+
   // Configuration
   private readonly SKULL_DURATION = 20 * 60 * 1000; // 20 minutes
   private readonly NEW_PLAYER_PROTECTION = 6 * 60 * 60 * 1000; // 6 hours
   private readonly COMBAT_LEVEL_RANGE = 5; // Default wilderness combat range
   private readonly SAFE_ZONE_DELAY = 10000; // 10 seconds to leave combat in safe zone
-  
+
   constructor(world: World) {
     super(world);
     this.initializeZones();
@@ -64,13 +64,13 @@ export class PvPSystem extends System {
    */
   override async init(_options: any): Promise<void> {
     console.log('[PvPSystem] Initializing...');
-    
+
     // Listen for combat events
     this.world.events.on('combat:attack', this.handleCombatAttack.bind(this));
     this.world.events.on('player:death', this.handlePlayerDeath.bind(this));
     this.world.events.on('player:spawned', this.handlePlayerSpawn.bind(this));
     this.world.events.on('player:move', this.handlePlayerMove.bind(this));
-    
+
     // Listen for zone transitions
     this.world.events.on('player:zone:enter', this.handleZoneEnter.bind(this));
     this.world.events.on('player:zone:leave', this.handleZoneLeave.bind(this));
@@ -95,7 +95,7 @@ export class PvPSystem extends System {
         multiCombat: true
       }
     });
-    
+
     this.registerZone({
       id: 'wilderness_deep',
       name: 'Deep Wilderness',
@@ -110,7 +110,7 @@ export class PvPSystem extends System {
         multiCombat: true
       }
     });
-    
+
     // PvP worlds safe zones
     this.registerZone({
       id: 'edgeville_safe',
@@ -125,7 +125,7 @@ export class PvPSystem extends System {
         itemLoss: false
       }
     });
-    
+
     // Dangerous PvP zones (like Clan Wars)
     this.registerZone({
       id: 'clan_wars_dangerous',
@@ -161,12 +161,12 @@ export class PvPSystem extends System {
   }): void {
     const attacker = this.world.entities.get(event.attackerId) as PlayerEntity;
     const target = this.world.entities.get(event.targetId) as PlayerEntity;
-    
-    if (!attacker || !target) return;
-    
+
+    if (!attacker || !target) {return;}
+
     // Check if both are players
-    if (attacker.type !== 'player' || target.type !== 'player') return;
-    
+    if (attacker.type !== 'player' || target.type !== 'player') {return;}
+
     // Check if PvP is allowed
     if (!this.canAttackPlayer(attacker, target)) {
       this.world.events.emit('combat:cancel', {
@@ -175,7 +175,7 @@ export class PvPSystem extends System {
       });
       return;
     }
-    
+
     // Handle skulling
     this.handleSkulling(attacker, target);
   }
@@ -186,48 +186,48 @@ export class PvPSystem extends System {
   public canAttackPlayer(attacker: PlayerEntity, target: PlayerEntity): boolean {
     const attackerPos = attacker.position;
     const targetPos = target.position;
-    
+
     // Check if both in same zone
     const attackerZone = this.getPlayerZone(attackerPos);
     const targetZone = this.getPlayerZone(targetPos);
-    
+
     if (!attackerZone || !targetZone || attackerZone.id !== targetZone.id) {
       this.sendMessage(attacker.id, "You can't attack players in different zones.");
       return false;
     }
-    
+
     // Check zone rules
     if (attackerZone.type === 'safe') {
       this.sendMessage(attacker.id, "You can't attack players in safe zones.");
       return false;
     }
-    
+
     // Check new player protection
     if (this.hasNewPlayerProtection(target)) {
-      this.sendMessage(attacker.id, "That player is under new player protection.");
+      this.sendMessage(attacker.id, 'That player is under new player protection.');
       return false;
     }
-    
+
     // Check wilderness combat levels
     if (attackerZone.type === 'wilderness') {
       const wildLevel = this.getWildernessLevel(attackerPos);
       if (!this.isWithinCombatRange(attacker, target, wildLevel)) {
-        this.sendMessage(attacker.id, "Your combat level difference is too great.");
+        this.sendMessage(attacker.id, 'Your combat level difference is too great.');
         return false;
       }
     }
-    
+
     // Check single/multi combat
     if (attackerZone.rules.singleCombat) {
       const attackerCombat = attacker.getComponent<CombatComponent>('combat');
       const targetCombat = target.getComponent<CombatComponent>('combat');
-      
+
       if (attackerCombat?.inCombat || targetCombat?.inCombat) {
         this.sendMessage(attacker.id, "You can't attack in single combat areas when already in combat.");
         return false;
       }
     }
-    
+
     return true;
   }
 
@@ -236,17 +236,17 @@ export class PvPSystem extends System {
    */
   private handleSkulling(attacker: PlayerEntity, target: PlayerEntity): void {
     const zone = this.getPlayerZone(attacker.position);
-    if (!zone || !zone.rules.skulling) return;
-    
+    if (!zone || !zone.rules.skulling) {return;}
+
     // Check if target has skull
     const targetSkull = this.skulledPlayers.get(target.id);
-    
+
     // Check if attacker already skulled on this target
     const attackerSkull = this.skulledPlayers.get(attacker.id);
     if (attackerSkull?.attackedPlayers.has(target.id)) {
       return; // Already skulled on this player
     }
-    
+
     // If target doesn't have skull or hasn't attacked attacker, skull the attacker
     if (!targetSkull || !targetSkull.attackedPlayers.has(attacker.id)) {
       this.skullPlayer(attacker, target);
@@ -258,7 +258,7 @@ export class PvPSystem extends System {
    */
   private skullPlayer(player: PlayerEntity, victim: PlayerEntity): void {
     let skullData = this.skulledPlayers.get(player.id);
-    
+
     if (!skullData) {
       skullData = {
         playerId: player.id,
@@ -272,19 +272,19 @@ export class PvPSystem extends System {
       skullData.skullTime = Date.now();
       skullData.expiresAt = Date.now() + this.SKULL_DURATION;
     }
-    
+
     skullData.attackedPlayers.add(victim.id);
-    
+
     // Update player skull timer
     (player as any).skullTimer = this.SKULL_DURATION;
-    
+
     // Emit skull event
     this.world.events.emit('player:skulled', {
       playerId: player.id,
       duration: this.SKULL_DURATION
     });
-    
-    this.sendMessage(player.id, "A skull appears above your head.");
+
+    this.sendMessage(player.id, 'A skull appears above your head.');
   }
 
   /**
@@ -295,20 +295,20 @@ export class PvPSystem extends System {
     killerId?: string;
     position: Vector3;
   }): void {
-    if (!event.killerId) return;
-    
+    if (!event.killerId) {return;}
+
     const victim = this.world.entities.get(event.playerId) as PlayerEntity;
     const killer = this.world.entities.get(event.killerId) as PlayerEntity;
-    
-    if (!victim || !killer || killer.type !== 'player') return;
-    
+
+    if (!victim || !killer || killer.type !== 'player') {return;}
+
     // Remove victim's skull
     this.skulledPlayers.delete(event.playerId);
     (victim as any).skullTimer = 0;
-    
+
     // Award kill to killer
     this.awardPvPKill(killer, victim);
-    
+
     // Emit PvP death event
     this.world.events.emit('pvp:death', {
       victimId: event.playerId,
@@ -328,15 +328,15 @@ export class PvPSystem extends System {
       killStreak: 0,
       bestKillStreak: 0
     };
-    
+
     killerStats.kills++;
     killerStats.killStreak++;
     if (killerStats.killStreak > killerStats.bestKillStreak) {
       killerStats.bestKillStreak = killerStats.killStreak;
     }
-    
+
     (killer as any).pvpStats = killerStats;
-    
+
     // Award points/rewards based on victim's risk
     const riskValue = this.calculateRiskValue(victim);
     if (riskValue > 0) {
@@ -346,7 +346,7 @@ export class PvPSystem extends System {
         riskValue
       });
     }
-    
+
     // Announce kill
     const zone = this.getPlayerZone(killer.position);
     if (zone?.type === 'wilderness') {
@@ -369,11 +369,11 @@ export class PvPSystem extends System {
    */
   private handlePlayerMove(event: { playerId: string; from: Vector3; to: Vector3 }): void {
     const player = this.world.entities.get(event.playerId) as PlayerEntity;
-    if (!player) return;
-    
+    if (!player) {return;}
+
     const fromZone = this.getPlayerZone(event.from);
     const toZone = this.getPlayerZone(event.to);
-    
+
     // Check zone transition
     if (fromZone?.id !== toZone?.id) {
       if (fromZone) {
@@ -389,7 +389,7 @@ export class PvPSystem extends System {
         });
       }
     }
-    
+
     // Update wilderness level
     if (toZone?.type === 'wilderness') {
       const wildLevel = this.getWildernessLevel(event.to);
@@ -404,19 +404,19 @@ export class PvPSystem extends System {
    */
   private handleZoneEnter(event: { playerId: string; zoneId: string }): void {
     const zone = this.pvpZones.get(event.zoneId);
-    if (!zone) return;
-    
+    if (!zone) {return;}
+
     switch (zone.type) {
       case 'wilderness':
-        this.sendMessage(event.playerId, "You have entered the Wilderness!");
-        this.sendMessage(event.playerId, "Other players can now attack you!");
+        this.sendMessage(event.playerId, 'You have entered the Wilderness!');
+        this.sendMessage(event.playerId, 'Other players can now attack you!');
         break;
       case 'dangerous':
         this.sendMessage(event.playerId, `You have entered ${zone.name}.`);
-        this.sendMessage(event.playerId, "This is a dangerous area!");
+        this.sendMessage(event.playerId, 'This is a dangerous area!');
         break;
       case 'safe':
-        this.sendMessage(event.playerId, "You have entered a safe zone.");
+        this.sendMessage(event.playerId, 'You have entered a safe zone.');
         break;
     }
   }
@@ -426,10 +426,10 @@ export class PvPSystem extends System {
    */
   private handleZoneLeave(event: { playerId: string; zoneId: string }): void {
     const zone = this.pvpZones.get(event.zoneId);
-    if (!zone) return;
-    
+    if (!zone) {return;}
+
     if (zone.type === 'wilderness') {
-      this.sendMessage(event.playerId, "You have left the Wilderness.");
+      this.sendMessage(event.playerId, 'You have left the Wilderness.');
     }
   }
 
@@ -451,8 +451,8 @@ export class PvPSystem extends System {
   private getWildernessLevel(position: Vector3): number {
     // Wilderness level increases as you go north (higher Z coordinate)
     const wildernessStart = 3520;
-    if (position.z < wildernessStart) return 0;
-    
+    if (position.z < wildernessStart) {return 0;}
+
     const level = Math.floor((position.z - wildernessStart) / 8) + 1;
     return Math.min(level, 56); // Max wilderness level
   }
@@ -463,16 +463,16 @@ export class PvPSystem extends System {
   private isWithinCombatRange(attacker: PlayerEntity, target: PlayerEntity, wildLevel: number): boolean {
     const attackerStats = attacker.getComponent<StatsComponent>('stats');
     const targetStats = target.getComponent<StatsComponent>('stats');
-    
-    if (!attackerStats || !targetStats) return false;
-    
+
+    if (!attackerStats || !targetStats) {return false;}
+
     const attackerCombat = attackerStats.combatLevel;
     const targetCombat = targetStats.combatLevel;
-    
+
     const range = wildLevel || this.COMBAT_LEVEL_RANGE;
     const minLevel = attackerCombat - range;
     const maxLevel = attackerCombat + range;
-    
+
     return targetCombat >= minLevel && targetCombat <= maxLevel;
   }
 
@@ -481,12 +481,12 @@ export class PvPSystem extends System {
    */
   private hasNewPlayerProtection(player: PlayerEntity): boolean {
     const protection = this.combatProtection.get(player.id);
-    if (!protection) return false;
-    
+    if (!protection) {return false;}
+
     if (Date.now() < protection) {
       return true;
     }
-    
+
     // Protection expired
     this.combatProtection.delete(player.id);
     return false;
@@ -497,27 +497,27 @@ export class PvPSystem extends System {
    */
   private calculateRiskValue(player: PlayerEntity): number {
     const inventory = player.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return 0;
-    
+    if (!inventory) {return 0;}
+
     let totalValue = 0;
-    
+
     // Calculate inventory value
     for (const item of inventory.items) {
       if (item) {
         totalValue += this.getItemValue(item.itemId) * item.quantity;
       }
     }
-    
+
     // Calculate equipment value
     for (const slot of Object.values(inventory.equipment)) {
       if (slot) {
         totalValue += this.getItemValue(slot.id);
       }
     }
-    
+
     return totalValue;
   }
-  
+
   /**
    * Get item value from registry
    */
@@ -567,21 +567,21 @@ export class PvPSystem extends System {
    */
   update(_delta: number): void {
     const now = Date.now();
-    
+
     // Update skull timers
     for (const [playerId, skullData] of this.skulledPlayers) {
       if (now >= skullData.expiresAt) {
         this.skulledPlayers.delete(playerId);
-        
+
         const player = this.world.entities.get(playerId) as PlayerEntity;
         if (player) {
           (player as any).skullTimer = 0;
-          
+
           this.world.events.emit('player:skull:removed', {
             playerId
           });
-          
-          this.sendMessage(playerId, "Your PK skull has disappeared.");
+
+          this.sendMessage(playerId, 'Your PK skull has disappeared.');
         }
       }
     }
@@ -592,8 +592,8 @@ export class PvPSystem extends System {
    */
   public getPlayerPvPStats(playerId: string): any {
     const player = this.world.entities.get(playerId) as PlayerEntity;
-    if (!player) return null;
-    
+    if (!player) {return null;}
+
     return (player as any).pvpStats || {
       kills: 0,
       deaths: 0,
@@ -608,4 +608,4 @@ export class PvPSystem extends System {
   public isPlayerSkulled(playerId: string): boolean {
     return this.skulledPlayers.has(playerId);
   }
-} 
+}

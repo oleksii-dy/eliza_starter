@@ -1,6 +1,6 @@
 /**
  * Plugin Processor - Plugin-Specific Training Data Generation
- * 
+ *
  * Processes ElizaOS plugins to generate comprehensive training scenarios.
  * Analyzes plugin structure, functionality, and creates detailed creation workflows.
  */
@@ -83,33 +83,33 @@ export class PluginProcessor {
    */
   async processPlugin(repoDir: string, files: ExtractedFile[]): Promise<TrainingScenario[]> {
     elizaLogger.info(`🔌 Processing plugin in: ${repoDir}`);
-    
+
     // Analyze plugin structure and functionality
     const analysis = await this.analyzePlugin(files);
-    
+
     elizaLogger.info(`📋 Analyzed plugin: ${analysis.name}`);
     elizaLogger.info(`   Actions: ${analysis.actions.length}`);
     elizaLogger.info(`   Providers: ${analysis.providers.length}`);
     elizaLogger.info(`   Services: ${analysis.services.length}`);
-    
+
     // Generate comprehensive plugin description
     const description = await this.generateAnalysisDescription(
-      analysis.name, 
-      analysis.actions, 
-      analysis.providers, 
-      analysis.services, 
+      analysis.name,
+      analysis.actions,
+      analysis.providers,
+      analysis.services,
       files[0]?.content || ''
     );
-    
+
     // Create user query for plugin creation
     const userQuery = await this.generatePluginUserQuery(analysis);
-    
+
     // Generate thinking process for plugin development
     const thinkingProcess = await this.generatePluginThinkingProcess(analysis, files);
-    
+
     // Format all plugin files with detailed markup
     const concatenatedCode = this.concatenatePluginFiles(files, analysis);
-    
+
     // Create main plugin training scenario
     const mainScenario: TrainingScenario = {
       id: `plugin-${analysis.name.replace(/[^a-zA-Z0-9]/g, '-')}`,
@@ -118,8 +118,8 @@ export class PluginProcessor {
       context: {
         fileTree: this.generatePluginFileTree(files),
         relatedFiles: files,
-        targetFile: files.find(f => f.relativePath === analysis.mainFile) || files[0],
-        repositoryContext: this.generatePluginContext(analysis)
+        targetFile: files.find((f) => f.relativePath === analysis.mainFile) || files[0],
+        repositoryContext: this.generatePluginContext(analysis),
       },
       thinkingProcess,
       expectedOutput: concatenatedCode,
@@ -128,15 +128,17 @@ export class PluginProcessor {
         estimatedTokens: this.estimateTokens(userQuery + thinkingProcess + concatenatedCode),
         language: 'typescript',
         purpose: `ElizaOS plugin: ${analysis.functionality.join(', ')}`,
-        generationTime: Date.now()
-      }
+        generationTime: Date.now(),
+      },
     };
 
     // Generate additional scenarios for individual components
     const componentScenarios = await this.generateComponentScenarios(analysis, files);
-    
-    elizaLogger.info(`✅ Generated ${1 + componentScenarios.length} scenarios for plugin ${analysis.name}`);
-    
+
+    elizaLogger.info(
+      `✅ Generated ${1 + componentScenarios.length} scenarios for plugin ${analysis.name}`
+    );
+
     return [mainScenario, ...componentScenarios];
   }
 
@@ -151,8 +153,10 @@ export class PluginProcessor {
     }
 
     // Find package.json
-    const packageFile = files.find(f => f.relativePath.endsWith('package.json'));
-    const packageInfo = packageFile ? this.parsePackageJson(packageFile.content) : this.getDefaultPackageInfo();
+    const packageFile = files.find((f) => f.relativePath.endsWith('package.json'));
+    const packageInfo = packageFile
+      ? this.parsePackageJson(packageFile.content)
+      : this.getDefaultPackageInfo();
 
     // Extract plugin name
     const name = this.extractPluginName(mainFile, packageInfo);
@@ -169,7 +173,13 @@ export class PluginProcessor {
     const dependencies = this.extractAllDependencies(files);
 
     // Generate description using LLM
-    const description = await this.generateAnalysisDescription(name, actions, providers, services, mainFile.content);
+    const description = await this.generateAnalysisDescription(
+      name,
+      actions,
+      providers,
+      services,
+      mainFile.content
+    );
 
     return {
       name,
@@ -184,7 +194,7 @@ export class PluginProcessor {
       routes,
       tests,
       mainFile: mainFile.relativePath,
-      packageInfo
+      packageInfo,
     };
   }
 
@@ -196,7 +206,8 @@ export class PluginProcessor {
     for (const file of files) {
       if (
         (file.relativePath.includes('index.ts') || file.relativePath.includes('plugin.ts')) &&
-        (file.content.includes(': Plugin') || file.content.includes('export const') && file.content.includes('Plugin'))
+        (file.content.includes(': Plugin') ||
+          (file.content.includes('export const') && file.content.includes('Plugin')))
       ) {
         return file;
       }
@@ -221,26 +232,26 @@ export class PluginProcessor {
     for (const file of files) {
       // Look for Action exports
       const actionMatches = file.content.matchAll(/export const (\w+):\s*Action\s*=\s*{([^}]+)}/gs);
-      
+
       for (const match of actionMatches) {
         const actionName = match[1];
         const actionBody = match[2];
-        
+
         // Extract description
         const descMatch = actionBody.match(/description:\s*['"`]([^'"`]+)['"`]/);
         const description = descMatch ? descMatch[1] : 'Action description not found';
-        
+
         // Extract similes
         const similesMatch = actionBody.match(/similes:\s*\[([^\]]+)\]/);
-        const similes = similesMatch 
-          ? similesMatch[1].split(',').map(s => s.trim().replace(/['"`]/g, ''))
+        const similes = similesMatch
+          ? similesMatch[1].split(',').map((s) => s.trim().replace(/['"`]/g, ''))
           : [];
 
         actions.push({
           name: actionName,
           file: file.relativePath,
           description,
-          similes
+          similes,
         });
       }
     }
@@ -255,15 +266,17 @@ export class PluginProcessor {
     const providers: ProviderInfo[] = [];
 
     for (const file of files) {
-      const providerMatches = file.content.matchAll(/export const (\w+):\s*Provider\s*=\s*{([^}]+)}/gs);
-      
+      const providerMatches = file.content.matchAll(
+        /export const (\w+):\s*Provider\s*=\s*{([^}]+)}/gs
+      );
+
       for (const match of providerMatches) {
         const providerName = match[1];
         const providerBody = match[2];
-        
+
         const descMatch = providerBody.match(/description:\s*['"`]([^'"`]+)['"`]/);
         const description = descMatch ? descMatch[1] : 'Provider description not found';
-        
+
         const dynamicMatch = providerBody.match(/dynamic:\s*(true|false)/);
         const dynamic = dynamicMatch ? dynamicMatch[1] === 'true' : false;
 
@@ -271,7 +284,7 @@ export class PluginProcessor {
           name: providerName,
           file: file.relativePath,
           description,
-          dynamic
+          dynamic,
         });
       }
     }
@@ -286,19 +299,21 @@ export class PluginProcessor {
     const evaluators: EvaluatorInfo[] = [];
 
     for (const file of files) {
-      const evaluatorMatches = file.content.matchAll(/export const (\w+):\s*Evaluator\s*=\s*{([^}]+)}/gs);
-      
+      const evaluatorMatches = file.content.matchAll(
+        /export const (\w+):\s*Evaluator\s*=\s*{([^}]+)}/gs
+      );
+
       for (const match of evaluatorMatches) {
         const evaluatorName = match[1];
         const evaluatorBody = match[2];
-        
+
         const descMatch = evaluatorBody.match(/description:\s*['"`]([^'"`]+)['"`]/);
         const description = descMatch ? descMatch[1] : 'Evaluator description not found';
 
         evaluators.push({
           name: evaluatorName,
           file: file.relativePath,
-          description
+          description,
         });
       }
     }
@@ -315,14 +330,14 @@ export class PluginProcessor {
     for (const file of files) {
       // Look for classes extending Service
       const serviceMatches = file.content.matchAll(/export class (\w+) extends Service\s*{/g);
-      
+
       for (const match of serviceMatches) {
         const className = match[1];
-        
+
         // Extract service name and type
         const serviceNameMatch = file.content.match(/static serviceName\s*=\s*['"`]([^'"`]+)['"`]/);
         const serviceTypeMatch = file.content.match(/static serviceType\s*=\s*['"`]([^'"`]+)['"`]/);
-        
+
         const serviceName = serviceNameMatch ? serviceNameMatch[1] : className.toLowerCase();
         const serviceType = serviceTypeMatch ? serviceTypeMatch[1] : 'unknown';
 
@@ -330,7 +345,7 @@ export class PluginProcessor {
           name: serviceName,
           file: file.relativePath,
           className,
-          serviceType
+          serviceType,
         });
       }
     }
@@ -346,14 +361,16 @@ export class PluginProcessor {
 
     for (const file of files) {
       // Look for route definitions
-      const routeMatches = file.content.matchAll(/{\s*path:\s*['"`]([^'"`]+)['"`],\s*type:\s*['"`]([^'"`]+)['"`],\s*handler:\s*(\w+)/gs);
-      
+      const routeMatches = file.content.matchAll(
+        /{\s*path:\s*['"`]([^'"`]+)['"`],\s*type:\s*['"`]([^'"`]+)['"`],\s*handler:\s*(\w+)/gs
+      );
+
       for (const match of routeMatches) {
         routes.push({
           path: match[1],
           method: match[2],
           handler: match[3],
-          file: file.relativePath
+          file: file.relativePath,
         });
       }
     }
@@ -371,15 +388,18 @@ export class PluginProcessor {
       if (file.isTestFile) {
         const testMatches = file.content.match(/(?:describe|it|test)\s*\(/g);
         const testCount = testMatches ? testMatches.length : 0;
-        
+
         let type: 'unit' | 'integration' | 'e2e' = 'unit';
-        if (file.relativePath.includes('e2e')) type = 'e2e';
-        else if (file.relativePath.includes('integration')) type = 'integration';
+        if (file.relativePath.includes('e2e')) {
+          type = 'e2e';
+        } else if (file.relativePath.includes('integration')) {
+          type = 'integration';
+        }
 
         tests.push({
           file: file.relativePath,
           type,
-          testCount
+          testCount,
         });
       }
     }
@@ -399,9 +419,9 @@ Description: ${analysis.description}
 Functionality: ${analysis.functionality.join(', ')}
 
 Components:
-- Actions: ${analysis.actions.map(a => a.name).join(', ')}
-- Providers: ${analysis.providers.map(p => p.name).join(', ')}
-- Services: ${analysis.services.map(s => s.name).join(', ')}
+- Actions: ${analysis.actions.map((a) => a.name).join(', ')}
+- Providers: ${analysis.providers.map((p) => p.name).join(', ')}
+- Services: ${analysis.services.map((s) => s.name).join(', ')}
 
 Requirements:
 1. Make it sound like a natural request from someone who needs this functionality
@@ -415,7 +435,7 @@ Generate only the user request, nothing else.`;
     const response = await this.runtime.useModel('TEXT_LARGE', {
       prompt,
       temperature: 0.7,
-      max_tokens: 300
+      max_tokens: 300,
     });
 
     return (response as string).trim();
@@ -424,16 +444,19 @@ Generate only the user request, nothing else.`;
   /**
    * Generate plugin thinking process
    */
-  private async generatePluginThinkingProcess(analysis: PluginAnalysis, files: ExtractedFile[]): Promise<string> {
+  private async generatePluginThinkingProcess(
+    analysis: PluginAnalysis,
+    files: ExtractedFile[]
+  ): Promise<string> {
     const prompt = `
 Generate a comprehensive thinking process for creating this ElizaOS plugin.
 
 Plugin Analysis:
 - Name: ${analysis.name}
 - Description: ${analysis.description}
-- Actions: ${analysis.actions.map(a => `${a.name} (${a.description})`).join(', ')}
-- Providers: ${analysis.providers.map(p => `${p.name} (${p.description})`).join(', ')}
-- Services: ${analysis.services.map(s => `${s.name} (${s.serviceType})`).join(', ')}
+- Actions: ${analysis.actions.map((a) => `${a.name} (${a.description})`).join(', ')}
+- Providers: ${analysis.providers.map((p) => `${p.name} (${p.description})`).join(', ')}
+- Services: ${analysis.services.map((s) => `${s.name} (${s.serviceType})`).join(', ')}
 - Dependencies: ${analysis.dependencies.slice(0, 10).join(', ')}
 
 Create a detailed thinking process that covers:
@@ -458,7 +481,7 @@ Be detailed about the implementation approach for each component.`;
     const response = await this.runtime.useModel('TEXT_LARGE', {
       prompt,
       temperature: 0.5,
-      max_tokens: 2000
+      max_tokens: 2000,
     });
 
     return `<thinking>\n${response}\n</thinking>`;
@@ -467,32 +490,32 @@ Be detailed about the implementation approach for each component.`;
   /**
    * Concatenate all plugin files with detailed markup
    */
-  private concatenatePluginFiles(files: ExtractedFile[] analysis: PluginAnalysis): string {
+  private concatenatePluginFiles(files: ExtractedFile[], analysis: PluginAnalysis): string {
     let output = '';
-    
+
     // Add plugin overview
-    output += `<plugin_overview>\n`;
+    output += '<plugin_overview>\n';
     output += `Name: ${analysis.name}\n`;
     output += `Description: ${analysis.description}\n`;
     output += `Main File: ${analysis.mainFile}\n`;
     output += `Components: ${analysis.actions.length} actions, ${analysis.providers.length} providers, ${analysis.services.length} services\n`;
     output += `Dependencies: ${analysis.dependencies.slice(0, 5).join(', ')}\n`;
-    output += `</plugin_overview>\n\n`;
-    
+    output += '</plugin_overview>\n\n';
+
     // Add file tree
     output += '<file_tree>\n';
     output += this.generatePluginFileTree(files);
     output += '</file_tree>\n\n';
-    
+
     // Add each file with detailed markup
     for (const file of files) {
       const componentType = this.identifyComponentType(file, analysis);
-      
+
       output += `<file path="${file.relativePath}" language="${file.language}" purpose="${file.purpose}" component_type="${componentType}">\n`;
       output += file.content;
       output += '\n</file>\n\n';
     }
-    
+
     return output;
   }
 
@@ -501,11 +524,11 @@ Be detailed about the implementation approach for each component.`;
    */
   private generatePluginFileTree(files: ExtractedFile[]): string {
     const tree: Record<string, any> = {};
-    
+
     for (const file of files) {
       const parts = file.relativePath.split('/');
       let current = tree;
-      
+
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
         if (i === parts.length - 1) {
@@ -513,7 +536,7 @@ Be detailed about the implementation approach for each component.`;
             type: 'file',
             language: file.language,
             size: `${Math.round(file.size / 1024)}KB`,
-            purpose: file.purpose.split(', ')[0]
+            purpose: file.purpose.split(', ')[0],
           };
         } else {
           current[part] = current[part] || { type: 'directory' };
@@ -521,7 +544,7 @@ Be detailed about the implementation approach for each component.`;
         }
       }
     }
-    
+
     return this.formatPluginTree(tree, 0);
   }
 
@@ -531,54 +554,67 @@ Be detailed about the implementation approach for each component.`;
   private formatPluginTree(obj: any, depth: number): string {
     const indent = '  '.repeat(depth);
     let result = '';
-    
+
     const entries = Object.entries(obj).filter(([key]) => key !== 'type');
-    
+
     for (const [key, value] of entries) {
       if (typeof value === 'object' && value !== null && (value as any).type === 'file') {
         result += `${indent}├── ${key} (${(value as any).language}, ${(value as any).size}, ${(value as any).purpose})\n`;
-      } else if (typeof value === 'object' && value !== null && (value as any).type === 'directory') {
+      } else if (
+        typeof value === 'object' &&
+        value !== null &&
+        (value as any).type === 'directory'
+      ) {
         result += `${indent}├── ${key}/\n`;
         result += this.formatPluginTree(value, depth + 1);
       }
     }
-    
+
     return result;
   }
 
   /**
    * Generate additional scenarios for individual components
    */
-  private async generateComponentScenarios(analysis: PluginAnalysis, files: ExtractedFile[]): Promise<TrainingScenario[]> {
+  private async generateComponentScenarios(
+    analysis: PluginAnalysis,
+    files: ExtractedFile[]
+  ): Promise<TrainingScenario[]> {
     const scenarios: TrainingScenario[] = [];
-    
+
     // Generate scenarios for actions
-    for (const action of analysis.actions.slice(0, 3)) { // Limit to first 3
-      const actionFile = files.find(f => f.relativePath === action.file);
+    for (const action of analysis.actions.slice(0, 3)) {
+      // Limit to first 3
+      const actionFile = files.find((f) => f.relativePath === action.file);
       if (actionFile) {
         const scenario = await this.generateActionScenario(action, actionFile, analysis);
         scenarios.push(scenario);
       }
     }
-    
+
     // Generate scenarios for services
-    for (const service of analysis.services.slice(0, 2)) { // Limit to first 2
-      const serviceFile = files.find(f => f.relativePath === service.file);
+    for (const service of analysis.services.slice(0, 2)) {
+      // Limit to first 2
+      const serviceFile = files.find((f) => f.relativePath === service.file);
       if (serviceFile) {
         const scenario = await this.generateServiceScenario(service, serviceFile, analysis);
         scenarios.push(scenario);
       }
     }
-    
+
     return scenarios;
   }
 
   /**
    * Generate training scenario for a specific action
    */
-  private async generateActionScenario(action: ActionInfo, file: ExtractedFile, analysis: PluginAnalysis): Promise<TrainingScenario> {
+  private async generateActionScenario(
+    action: ActionInfo,
+    file: ExtractedFile,
+    analysis: PluginAnalysis
+  ): Promise<TrainingScenario> {
     const userQuery = `Create an ElizaOS action called ${action.name} that ${action.description.toLowerCase()}`;
-    
+
     const thinkingProcess = `<thinking>
 The user wants to create an ElizaOS action for ${action.description}. This will be part of the ${analysis.name} plugin.
 
@@ -604,7 +640,7 @@ For this action, I need to:
         fileTree: `src/actions/${path.basename(action.file)}`,
         relatedFiles: [],
         targetFile: file,
-        repositoryContext: `ElizaOS Plugin: ${analysis.name}`
+        repositoryContext: `ElizaOS Plugin: ${analysis.name}`,
       },
       thinkingProcess,
       expectedOutput: `<file path="${action.file}" language="typescript" purpose="ElizaOS action">
@@ -615,17 +651,21 @@ ${file.content}
         estimatedTokens: this.estimateTokens(userQuery + thinkingProcess + file.content),
         language: 'typescript',
         purpose: `ElizaOS action: ${action.description}`,
-        generationTime: Date.now()
-      }
+        generationTime: Date.now(),
+      },
     };
   }
 
   /**
    * Generate training scenario for a specific service
    */
-  private async generateServiceScenario(service: ServiceInfo, file: ExtractedFile, analysis: PluginAnalysis): Promise<TrainingScenario> {
+  private async generateServiceScenario(
+    service: ServiceInfo,
+    file: ExtractedFile,
+    analysis: PluginAnalysis
+  ): Promise<TrainingScenario> {
     const userQuery = `Create an ElizaOS service for ${analysis.name} that manages ${service.serviceType} functionality`;
-    
+
     const thinkingProcess = `<thinking>
 The user needs a service for the ${analysis.name} plugin to handle ${service.serviceType} functionality.
 
@@ -651,7 +691,7 @@ For this service, I need to:
         fileTree: `src/services/${path.basename(service.file)}`,
         relatedFiles: [],
         targetFile: file,
-        repositoryContext: `ElizaOS Plugin: ${analysis.name}`
+        repositoryContext: `ElizaOS Plugin: ${analysis.name}`,
       },
       thinkingProcess,
       expectedOutput: `<file path="${service.file}" language="typescript" purpose="ElizaOS service">
@@ -662,21 +702,25 @@ ${file.content}
         estimatedTokens: this.estimateTokens(userQuery + thinkingProcess + file.content),
         language: 'typescript',
         purpose: `ElizaOS service: ${service.serviceType}`,
-        generationTime: Date.now()
-      }
+        generationTime: Date.now(),
+      },
     };
   }
 
   // Helper methods...
-  
+
   private extractPluginName(mainFile: ExtractedFile, packageInfo: PackageInfo): string {
     // Try to extract from plugin object
     const nameMatch = mainFile.content.match(/name:\s*['"]([^'"]+)['"]/);
-    if (nameMatch) return nameMatch[1];
-    
+    if (nameMatch) {
+      return nameMatch[1];
+    }
+
     // Use package name
-    if (packageInfo.name) return packageInfo.name;
-    
+    if (packageInfo.name) {
+      return packageInfo.name;
+    }
+
     // Fallback to filename
     return path.basename(mainFile.relativePath, '.ts');
   }
@@ -689,7 +733,7 @@ ${file.content}
         version: pkg.version || '1.0.0',
         description: pkg.description || '',
         dependencies: pkg.dependencies || {},
-        devDependencies: pkg.devDependencies || {}
+        devDependencies: pkg.devDependencies || {},
       };
     } catch (error) {
       return this.getDefaultPackageInfo();
@@ -702,29 +746,45 @@ ${file.content}
       version: '1.0.0',
       description: '',
       dependencies: {},
-      devDependencies: {}
+      devDependencies: {},
     };
   }
 
   private extractAllDependencies(files: ExtractedFile[]): string[] {
     const dependencies = new Set<string>();
-    
+
     for (const file of files) {
-      file.dependencies.forEach(dep => dependencies.add(dep));
+      file.dependencies.forEach((dep) => dependencies.add(dep));
     }
-    
+
     return Array.from(dependencies);
   }
 
-  private determineFunctionality(actions: ActionInfo[] providers: ProviderInfo[] evaluators: EvaluatorInfo[] services: ServiceInfo[] routes: RouteInfo[]): string[] {
+  private determineFunctionality(
+    actions: ActionInfo[],
+    providers: ProviderInfo[],
+    evaluators: EvaluatorInfo[],
+    services: ServiceInfo[],
+    routes: RouteInfo[]
+  ): string[] {
     const functionality: string[] = [];
-    
-    if (actions.length > 0) functionality.push('actions');
-    if (providers.length > 0) functionality.push('providers');
-    if (evaluators.length > 0) functionality.push('evaluators');
-    if (services.length > 0) functionality.push('services');
-    if (routes.length > 0) functionality.push('routes');
-    
+
+    if (actions.length > 0) {
+      functionality.push('actions');
+    }
+    if (providers.length > 0) {
+      functionality.push('providers');
+    }
+    if (evaluators.length > 0) {
+      functionality.push('evaluators');
+    }
+    if (services.length > 0) {
+      functionality.push('services');
+    }
+    if (routes.length > 0) {
+      functionality.push('routes');
+    }
+
     return functionality;
   }
 
@@ -733,33 +793,60 @@ ${file.content}
   }
 
   private assessPluginComplexity(analysis: PluginAnalysis): 'simple' | 'medium' | 'complex' {
-    const componentCount = analysis.actions.length + analysis.providers.length + analysis.services.length;
-    
-    if (componentCount > 10) return 'complex';
-    if (componentCount > 5) return 'medium';
+    const componentCount =
+      analysis.actions.length + analysis.providers.length + analysis.services.length;
+
+    if (componentCount > 10) {
+      return 'complex';
+    }
+    if (componentCount > 5) {
+      return 'medium';
+    }
     return 'simple';
   }
 
   private identifyComponentType(file: ExtractedFile, analysis: PluginAnalysis): string {
-    if (file.relativePath === analysis.mainFile) return 'main_plugin';
-    if (file.isTestFile) return 'test';
-    if (file.isConfigFile) return 'config';
-    if (file.relativePath.includes('actions')) return 'action';
-    if (file.relativePath.includes('providers')) return 'provider';
-    if (file.relativePath.includes('evaluators')) return 'evaluator';
-    if (file.relativePath.includes('services')) return 'service';
-    if (file.relativePath.includes('types')) return 'types';
+    if (file.relativePath === analysis.mainFile) {
+      return 'main_plugin';
+    }
+    if (file.isTestFile) {
+      return 'test';
+    }
+    if (file.isConfigFile) {
+      return 'config';
+    }
+    if (file.relativePath.includes('actions')) {
+      return 'action';
+    }
+    if (file.relativePath.includes('providers')) {
+      return 'provider';
+    }
+    if (file.relativePath.includes('evaluators')) {
+      return 'evaluator';
+    }
+    if (file.relativePath.includes('services')) {
+      return 'service';
+    }
+    if (file.relativePath.includes('types')) {
+      return 'types';
+    }
     return 'utility';
   }
 
-  private async generateAnalysisDescription(name: string, actions: ActionInfo[] providers: ProviderInfo[] services: ServiceInfo[] content: string): Promise<string> {
+  private async generateAnalysisDescription(
+    name: string,
+    actions: ActionInfo[],
+    providers: ProviderInfo[],
+    services: ServiceInfo[],
+    content: string
+  ): Promise<string> {
     const prompt = `
 Analyze this ElizaOS plugin and provide a concise description:
 
 Plugin Name: ${name}
-Actions: ${actions.map(a => a.name).join(', ')}
-Providers: ${providers.map(p => p.name).join(', ')}
-Services: ${services.map(s => s.name).join(', ')}
+Actions: ${actions.map((a) => a.name).join(', ')}
+Providers: ${providers.map((p) => p.name).join(', ')}
+Services: ${services.map((s) => s.name).join(', ')}
 
 Main file content preview:
 ${content.substring(0, 500)}...
@@ -769,7 +856,7 @@ Provide a 1-2 sentence description of what this plugin does and its main functio
     const response = await this.runtime.useModel('TEXT_LARGE', {
       prompt,
       temperature: 0.3,
-      max_tokens: 100
+      max_tokens: 100,
     });
 
     return (response as string).trim();

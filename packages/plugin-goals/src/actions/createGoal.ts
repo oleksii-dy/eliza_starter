@@ -1,6 +1,7 @@
 import {
   type Action,
   type ActionExample,
+  type ActionResult,
   formatMessages,
   type HandlerCallback,
   type IAgentRuntime,
@@ -196,9 +197,10 @@ async function checkForSimilarGoal(
 export const createGoalAction: Action = {
   name: 'CREATE_GOAL',
   similes: ['ADD_GOAL', 'NEW_GOAL', 'SET_GOAL', 'TRACK_GOAL'],
-  description: 'Creates a new long-term achievable goal for the agent or a user.',
+  description:
+    'Creates a new long-term achievable goal for the agent or a user. Can be chained with LIST_GOALS to see all goals or UPDATE_GOAL to modify properties',
 
-  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+  validate: async (_runtime: IAgentRuntime, _message: Memory): Promise<boolean> => {
     // Always allow validation, we'll check limits in the handler
     return true;
   },
@@ -207,9 +209,9 @@ export const createGoalAction: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     state: State | undefined,
-    options: any,
+    _options: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     try {
       // Step 1: Compose state if needed
       const currentState = state || (await runtime.composeState(message, ['GOALS']));
@@ -225,7 +227,16 @@ export const createGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CREATE_GOAL',
+            error: 'Failed to understand goal',
+          },
+          values: {
+            success: false,
+            error: 'Failed to understand goal',
+          },
+        };
       }
 
       // Step 3: Get the data service
@@ -245,7 +256,19 @@ export const createGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CREATE_GOAL',
+            error: 'Goal limit reached',
+            currentCount: activeGoalCount,
+            maxAllowed: 10,
+          },
+          values: {
+            success: false,
+            error: 'Goal limit reached',
+            goalCount: activeGoalCount,
+          },
+        };
       }
 
       // Step 5: Check for similar goals
@@ -260,7 +283,19 @@ export const createGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CREATE_GOAL',
+            warning: 'Similar goal exists',
+            similarGoal: similarityCheck.similarGoalName,
+            confidence: similarityCheck.confidence,
+          },
+          values: {
+            success: false,
+            hasSimilar: true,
+            similarGoal: similarityCheck.similarGoalName,
+          },
+        };
       }
 
       // Step 6: Create the goal
@@ -303,6 +338,22 @@ export const createGoalAction: Action = {
           source: message.content.source,
         });
       }
+
+      return {
+        data: {
+          actionName: 'CREATE_GOAL',
+          createdGoalId,
+          goalInfo,
+          activeGoalCount: activeGoalCount + 1,
+        },
+        values: {
+          success: true,
+          goalId: createdGoalId,
+          goalName: goalInfo.name,
+          ownerType: goalInfo.ownerType,
+          totalGoals: activeGoalCount + 1,
+        },
+      };
     } catch (error) {
       logger.error('Error in createGoal handler:', error);
       if (callback) {
@@ -312,19 +363,63 @@ export const createGoalAction: Action = {
           source: message.content.source,
         });
       }
+      return {
+        data: {
+          actionName: 'CREATE_GOAL',
+          error: error instanceof Error ? error.message : String(error),
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
 
   examples: [
+    // Multi-action: Create goal then list all goals to show chaining workflow
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
+        content: {
+          text: 'Create a goal to learn French fluently and show me all my goals',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll create a goal to learn French fluently and then show you all your goals.",
+          thought: "The user wants to create a new goal and see their complete goal list. I need to chain CREATE_GOAL with LIST_GOALS to complete this workflow in the proper sequence.",
+          actions: ['CREATE_GOAL', 'LIST_GOALS'],
+        },
+      },
+    ],
+    // Multi-action: Create goal then confirm it to demonstrate goal lifecycle workflow
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Add a goal to run a marathon and ask me to confirm it',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll create a goal to run a marathon and then ask for your confirmation to ensure it's exactly what you want.",
+          thought: "The user wants goal creation followed by confirmation. This demonstrates the create-confirm workflow pattern where we create the goal and then verify it with the user before finalizing.",
+          actions: ['CREATE_GOAL', 'CONFIRM_GOAL'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
         content: {
           text: 'I want to set a goal to learn French fluently',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: '✅ New goal created: "Learn French fluently"',
           actions: ['CREATE_GOAL_SUCCESS'],
@@ -333,13 +428,13 @@ export const createGoalAction: Action = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Add a goal for me to run a marathon',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: '✅ New goal created: "Run a marathon"',
           actions: ['CREATE_GOAL_SUCCESS'],
@@ -348,13 +443,13 @@ export const createGoalAction: Action = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'I have a goal to get better at cooking',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: '✅ New goal created: "Get better at cooking"\n\n⚠️ You now have 5 active goals. Consider focusing on completing some of these before adding more.',
           actions: ['CREATE_GOAL_SUCCESS'],

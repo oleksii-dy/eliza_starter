@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { Command } from 'commander';
 import { scenarioCommand } from '../../src/commands/scenario/index.js';
 import type { Scenario } from '../../src/scenario-runner/types.js';
@@ -90,8 +90,8 @@ mockCore.AgentRuntime.mockImplementation(() => ({
   emitEvent: mockFn(),
   useModel: mockFn(),
 }));
-mockCore.createUniqueUuid = vi.fn().mockReturnValue('test-uuid');
-mockCore.asUUID = vi.fn().mockImplementation((id: string) => id);
+mockCore.createUniqueUuid = mock().mockReturnValue('test-uuid');
+mockCore.asUUID = mock().mockImplementation((id: string) => id);
 
 describe('Scenario Command Integration', () => {
   let program: Command;

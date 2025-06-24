@@ -1,4 +1,4 @@
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { SearchResult } from '../types';
 
 export interface ProcessingConfig {
@@ -32,7 +32,7 @@ export class SearchResultProcessor {
   }
 
   async processResults(results: SearchResult[]): Promise<ProcessedResults> {
-    elizaLogger.info(`Processing ${results.length} search results`);
+    logger.info(`Processing ${results.length} search results`);
     const startTime = Date.now();
 
     let processed = [...results];
@@ -44,9 +44,9 @@ export class SearchResultProcessor {
     const beforeDomain = processed.length;
     processed = this.filterBlacklistedDomains(processed);
     domainFiltered = beforeDomain - processed.length;
-    
+
     if (domainFiltered > 0) {
-      elizaLogger.info(`Filtered ${domainFiltered} results from blacklisted domains`);
+      logger.info(`Filtered ${domainFiltered} results from blacklisted domains`);
     }
 
     // Step 2: Quality filtering
@@ -71,7 +71,7 @@ export class SearchResultProcessor {
     const diversityScore = this.calculateDiversityScore(processed);
     const duration = Date.now() - startTime;
 
-    elizaLogger.info(
+    logger.info(
       `Result processing completed in ${duration}ms: ` +
       `${processed.length} final results (removed ${duplicatesRemoved} duplicates, ` +
       `${qualityFiltered} low-quality), diversity: ${diversityScore.toFixed(2)}`
@@ -90,7 +90,7 @@ export class SearchResultProcessor {
     const blacklistedDomains = [
       // Social media platforms (can't extract meaningful content)
       'facebook.com',
-      'instagram.com', 
+      'instagram.com',
       'twitter.com',
       'x.com',
       'linkedin.com',
@@ -98,54 +98,54 @@ export class SearchResultProcessor {
       'snapchat.com',
       'pinterest.com',
       'reddit.com', // Often low-quality discussion
-      
+
       // Video platforms (no transcripts usually available)
       'youtube.com',
       'youtu.be',
       'vimeo.com',
       'dailymotion.com',
       'twitch.tv',
-      
+
       // Ad-heavy or low-quality content farms
       'wikihow.com', // Often surface-level
       'ehow.com',
       'answers.com',
       'ask.com',
       'quora.com', // Mixed quality, often opinion-based
-      
+
       // Paywalled content that we can't access
       'wsj.com',
       'nytimes.com',
       'ft.com',
       'economist.com',
-      
+
       // Shopping/commercial sites for technical queries
       'amazon.com',
       'ebay.com',
       'alibaba.com',
       'etsy.com'
     ];
-    
+
     return results.filter(result => {
-      if (!result.url) return true;
-      
+      if (!result.url) {return true;}
+
       try {
         const url = new URL(result.url);
         const domain = url.hostname.toLowerCase().replace(/^www\./, '');
-        
-        const isBlacklisted = blacklistedDomains.some(blacklisted => 
-          domain === blacklisted || domain.endsWith('.' + blacklisted)
+
+        const isBlacklisted = blacklistedDomains.some(blacklisted =>
+          domain === blacklisted || domain.endsWith(`.${blacklisted}`)
         );
-        
+
         if (isBlacklisted) {
-          elizaLogger.debug(`Filtered result from blacklisted domain: ${domain}`);
+          logger.debug(`Filtered result from blacklisted domain: ${domain}`);
           return false;
         }
-        
+
         return true;
       } catch (error) {
         // Invalid URL, filter it out
-        elizaLogger.debug(`Filtered result with invalid URL: ${result.url}`);
+        logger.debug(`Filtered result with invalid URL: ${result.url}`);
         return false;
       }
     });
@@ -173,7 +173,7 @@ export class SearchResultProcessor {
   }
 
   private isLowQualityContent(result: SearchResult): boolean {
-    if (!result.content) return true;
+    if (!result.content) {return true;}
     const content = result.content.toLowerCase();
     const title = result.title.toLowerCase();
 
@@ -285,7 +285,7 @@ export class SearchResultProcessor {
     if (this.config.prioritizeRecent) {
       const newDate = this.extractDate(newResult);
       const existingDate = this.extractDate(existing);
-      
+
       if (newDate && existingDate && newDate > existingDate) {
         return true;
       }
@@ -417,7 +417,7 @@ export class SearchResultProcessor {
         diversityPenalty *= 0.9;
       }
 
-      const adjustedScore = (result.score || 0.5) * 
+      const adjustedScore = (result.score || 0.5) *
         (1 - this.config.diversityWeight + this.config.diversityWeight * diversityPenalty);
 
       diversified.push({
@@ -433,7 +433,7 @@ export class SearchResultProcessor {
   }
 
   private calculateDiversityScore(results: SearchResult[]): number {
-    if (results.length === 0) return 0;
+    if (results.length === 0) {return 0;}
 
     const domains = new Set(results.map(r => new URL(r.url).hostname));
     const providers = new Set(results.map(r => r.provider));

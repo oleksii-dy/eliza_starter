@@ -8,7 +8,7 @@
  * and validates actual functionality rather than mock behavior.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import type { IAgentRuntime, Memory, UUID, State } from '@elizaos/core';
 import {
   enableCustomReasoningAction,
@@ -98,7 +98,9 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
       // Override runtime to simulate missing API key
       const originalGetSetting = runtime.getSetting;
       runtime.getSetting = (key: string) => {
-        if (key === 'TOGETHER_AI_API_KEY') return '';
+        if (key === 'TOGETHER_AI_API_KEY') {
+          return '';
+        }
         return originalGetSetting(key);
       };
 
@@ -124,7 +126,9 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
       // Simulate service initialization failure by providing invalid settings
       const originalGetSetting = runtime.getSetting;
       runtime.getSetting = (key: string) => {
-        if (key === 'TOGETHER_AI_API_KEY') return 'invalid-key-format';
+        if (key === 'TOGETHER_AI_API_KEY') {
+          return 'invalid-key-format';
+        }
         return originalGetSetting(key);
       };
 
@@ -421,7 +425,9 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
       // Remove reasoning service
       const originalGetService = runtime.getService;
       runtime.getService = (name: string) => {
-        if (name === 'together-reasoning') return null;
+        if (name === 'together-reasoning') {
+          return null;
+        }
         return originalGetService(name);
       };
 
@@ -517,10 +523,10 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
 
     // Service registry
     services: new Map(),
-    getService: function (name: string) {
+    getService(name: string) {
       return this.services?.get(name) || null;
     },
-    registerService: function (name: string, service: any) {
+    registerService(name: string, service: any) {
       this.services?.set(name, service);
     },
 

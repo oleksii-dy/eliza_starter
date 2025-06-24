@@ -1,12 +1,13 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { EnhancedSecretManager } from '../enhanced-service';
-import { ActionChainService } from '../services/action-chain-service';
-import { uxGuidanceProvider } from '../providers/uxGuidanceProvider';
-import { runWorkflowAction } from '../actions/runWorkflow';
-import { manageSecretAction } from '../actions/manageSecret';
-import { requestSecretFormAction } from '../actions/requestSecretForm';
 import type { IAgentRuntime, Memory, UUID } from '@elizaos/core';
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { requestSecretFormAction } from '../actions/requestSecretForm';
+import { runWorkflowAction } from '../actions/runWorkflow';
+import { EnhancedSecretManager } from '../enhanced-service';
+import { uxGuidanceProvider } from '../providers/uxGuidanceProvider';
 import type { UXGuidanceResponse } from '../providers/uxGuidanceProvider';
+import { ActionChainService } from '../services/action-chain-service';
+import { ActionChainService } from '../services/action-chain-service';
+import { ActionChainService } from '../services/action-chain-service';
 
 // Helper function to get guidance
 const getGuidance = async (
@@ -29,29 +30,31 @@ const createMockRuntime = (): IAgentRuntime => {
         secrets: {},
       },
     },
-    getSetting: vi.fn((key: string) => {
-      if (key === 'ENCRYPTION_SALT') return 'test-salt';
+    getSetting: mock((key: string) => {
+      if (key === 'ENCRYPTION_SALT') {
+        return 'test-salt';
+      }
       return null;
     }),
-    getService: vi.fn((type: string) => services.get(type)),
-    registerService: vi.fn((ServiceClass: any) => {
+    getService: mock((type: string) => services.get(type)),
+    registerService: mock((ServiceClass: any) => {
       const instance = new ServiceClass(runtime);
       services.set(ServiceClass.serviceType || ServiceClass.serviceName, instance);
       return instance;
     }),
     plugins: [],
     db: {
-      getComponents: vi.fn().mockResolvedValue([]),
-      createComponent: vi.fn().mockResolvedValue(true),
-      updateComponent: vi.fn().mockResolvedValue(true),
-      getWorlds: vi.fn().mockResolvedValue([]),
-      updateWorld: vi.fn().mockResolvedValue(true),
+      getComponents: mock().mockResolvedValue([]),
+      createComponent: mock().mockResolvedValue(true),
+      updateComponent: mock().mockResolvedValue(true),
+      gets: mock().mockResolvedValue([]),
+      update: mock().mockResolvedValue(true),
     },
-    getWorld: vi.fn().mockResolvedValue(null),
-    updateWorld: vi.fn().mockResolvedValue(true),
-    getComponents: vi.fn().mockResolvedValue([]),
-    updateComponent: vi.fn().mockResolvedValue(true),
-    createComponent: vi.fn().mockResolvedValue(true),
+    get: mock().mockResolvedValue(null),
+    update: mock().mockResolvedValue(true),
+    getComponents: mock().mockResolvedValue([]),
+    updateComponent: mock().mockResolvedValue(true),
+    createComponent: mock().mockResolvedValue(true),
   } as any;
 
   return runtime;
@@ -63,7 +66,7 @@ describe('Secrets Manager UX Flow Tests', () => {
   let actionChainService: ActionChainService;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    mock.restore();
 
     mockRuntime = createMockRuntime();
 
@@ -76,8 +79,12 @@ describe('Secrets Manager UX Flow Tests', () => {
     // Register services manually for testing
     const services = mockRuntime.getService as any;
     services.mockImplementation((type: string) => {
-      if (type === 'SECRETS') return secretsManager;
-      if (type === 'ACTION_CHAIN') return actionChainService;
+      if (type === 'SECRETS') {
+        return secretsManager;
+      }
+      if (type === 'ACTION_CHAIN') {
+        return actionChainService;
+      }
       return null;
     });
 
@@ -140,7 +147,7 @@ describe('Secrets Manager UX Flow Tests', () => {
       };
 
       let callbackResult: any = null;
-      const callback = vi.fn(async (result) => {
+      const _callback = mock(async (_result) => {
         callbackResult = result;
         return [];
       });
@@ -175,13 +182,13 @@ describe('Secrets Manager UX Flow Tests', () => {
       };
 
       let callbackResult: any = null;
-      const callback = vi.fn(async (result) => {
+      const _callback = mock(async (_result) => {
         callbackResult = result;
         return [];
       });
 
       // Action should be validated
-      const isValid = await requestSecretFormAction.validate(mockRuntime, message);
+      const _isValid = await requestSecretFormAction.validate(mockRuntime, message);
       expect(isValid).toBe(false); // No form service in mock
 
       // If form service was available, it would create a form
@@ -205,7 +212,7 @@ describe('Secrets Manager UX Flow Tests', () => {
       };
 
       let callbackResult: any = null;
-      const callback = vi.fn(async (result) => {
+      const _callback = mock(async (_result) => {
         callbackResult = result;
         return [];
       });
@@ -243,8 +250,8 @@ describe('Secrets Manager UX Flow Tests', () => {
         },
       };
 
-      vi.spyOn(secretsManager, 'list').mockResolvedValue(userSecrets);
-      vi.spyOn(secretsManager, 'getMissingEnvVars').mockResolvedValue([]);
+      mock.spyOn(secretsManager, 'list').mockResolvedValue(userSecrets);
+      mock.spyOn(secretsManager, 'getMissingEnvVars').mockResolvedValue([]);
 
       const message: Memory = {
         id: 'test-5' as UUID,
@@ -350,8 +357,8 @@ describe('Secrets Manager UX Flow Tests', () => {
         },
       };
 
-      vi.spyOn(secretsManager, 'list').mockResolvedValue(userSecrets);
-      vi.spyOn(secretsManager, 'getMissingEnvVars').mockResolvedValue([]);
+      mock.spyOn(secretsManager, 'list').mockResolvedValue(userSecrets);
+      mock.spyOn(secretsManager, 'getMissingEnvVars').mockResolvedValue([]);
 
       const message: Memory = {
         id: 'test-6' as UUID,
@@ -392,10 +399,10 @@ describe('Secrets Manager UX Flow Tests', () => {
         agentId: mockRuntime.agentId,
         character: mockRuntime.character,
         getSetting: mockRuntime.getSetting,
-        getService: vi.fn().mockReturnValue(null), // Always return null
+        getService: mock().mockReturnValue(null), // Always return null
         db: mockRuntime.db,
-        getWorld: mockRuntime.getWorld,
-        updateWorld: mockRuntime.updateWorld,
+        get: mockRuntime.get,
+        update: mockRuntime.update,
         getComponents: mockRuntime.getComponents,
         updateComponent: mockRuntime.updateComponent,
         createComponent: mockRuntime.createComponent,
@@ -518,7 +525,7 @@ describe('Secrets Manager UX Flow Tests', () => {
       };
 
       const callbackResults: any[] = [];
-      const callback = vi.fn(async (result) => {
+      const _callback = mock(async (_result) => {
         callbackResults.push(result);
         return [];
       });
@@ -553,8 +560,12 @@ describe('UX Flow Scenarios from secrets_scripts.md', () => {
     // Register services manually for testing
     const services = mockRuntime.getService as any;
     services.mockImplementation((type: string) => {
-      if (type === 'SECRETS') return secretsManager;
-      if (type === 'ACTION_CHAIN') return actionChainService;
+      if (type === 'SECRETS') {
+        return secretsManager;
+      }
+      if (type === 'ACTION_CHAIN') {
+        return actionChainService;
+      }
       return null;
     });
 
@@ -575,7 +586,7 @@ describe('UX Flow Scenarios from secrets_scripts.md', () => {
       createdAt: Date.now(),
     };
 
-    const isValid = await requestSecretFormAction.validate(mockRuntime, message);
+    const _isValid = await requestSecretFormAction.validate(mockRuntime, message);
     // Would be true if form service was available
 
     // Check that the action recognizes the intent
@@ -606,7 +617,7 @@ describe('UX Flow Scenarios from secrets_scripts.md', () => {
   });
 
   it('should handle missing secrets detection', async () => {
-    vi.spyOn(secretsManager, 'getMissingEnvVars').mockResolvedValue([
+    mock.spyOn(secretsManager, 'getMissingEnvVars').mockResolvedValue([
       {
         varName: 'OPENAI_API_KEY',
         plugin: 'user',

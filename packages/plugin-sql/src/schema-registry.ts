@@ -224,7 +224,7 @@ class SchemaRegistry {
         logger.error(`[SchemaRegistry] Failed to create table '${table.name}':`, error);
         // Log the actual SQL that failed
         logger.error(
-          `[SchemaRegistry] Failed SQL:`,
+          '[SchemaRegistry] Failed SQL:',
           table.fallbackSql && dbType === 'pglite' ? table.fallbackSql : table.sql
         );
         throw error;

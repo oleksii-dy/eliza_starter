@@ -1,5 +1,7 @@
 import {
   type Action,
+  type ActionResult,
+  type ActionExample,
   type HandlerCallback,
   type IAgentRuntime,
   type Memory,
@@ -69,7 +71,7 @@ You are an expert perception module inside a Hyperfy world. Carefully examine th
 
 <instructions>
 - List every notable object, character, or feature.
-- For each, state its approximate position relative to the camera (e.g. "left‑front, 3 m", "above and slightly behind").
+- For each, state its approximate position relative to the camera (e.g. "left‑front, 3 m", "above and slightly behind").
 - Mention colours, sizes, spatial relationships, lighting and motion cues.
 - Conclude with a brief note that the scene takes place in a Hyperfy world.
 </instructions>
@@ -155,7 +157,7 @@ export const hyperfyScenePerceptionAction: Action = {
   name: 'HYPERFY_SCENE_PERCEPTION',
   similes: ['LOOK_AROUND', 'OBSERVE_SURROUNDINGS', 'LOOK_AT_SCENE', 'CHECK_VIEW'],
   description:
-    'Choose this when the user asks the agent to look around, look in a specific direction, or examine a visible object — it captures and interprets a scene snapshot to generate a context-aware response.',
+    'Choose this when the user asks the agent to look around, look in a specific direction, or examine a visible object — it captures and interprets a scene snapshot to generate a context-aware response. Can be chained with GOTO or AMBIENT_SPEECH actions for immersive exploration sequences.',
   validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
     return !!service && service.isConnected() && !!service.getWorld();
@@ -167,7 +169,7 @@ export const hyperfyScenePerceptionAction: Action = {
     state?: State,
     _options?: {},
     callback?: HandlerCallback
-  ) => {
+  ): Promise<ActionResult> => {
     const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
     const world = service?.getWorld();
     const puppeteerManager = service?.getPuppeteerManager();
@@ -181,14 +183,22 @@ export const hyperfyScenePerceptionAction: Action = {
       if (callback) {
         await callback({ text: 'Unable to observe environment. Hyperfy world not available.' });
       }
-      return;
+      return {
+        text: 'Unable to observe environment. Hyperfy world not available.',
+        values: { success: false, error: 'world_unavailable' },
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+      };
     }
 
     if (!puppeteerManager) {
       if (callback) {
         await callback({ text: 'Unable to capture visual. Screenshot service not available.' });
       }
-      return;
+      return {
+        text: 'Unable to capture visual. Screenshot service not available.',
+        values: { success: false, error: 'screenshot_service_unavailable' },
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+      };
     }
 
     state = await runtime.composeState(message);
@@ -204,24 +214,34 @@ export const hyperfyScenePerceptionAction: Action = {
     } catch (err) {
       logger.error('Snapshot‑selector model failed:', err);
       if (callback) {
-        await callback({
+        const errorResponse = {
           thought: 'Cannot decide how to look.',
           metadata: { error: 'selector_failure' },
-        });
+        };
+        await callback(errorResponse);
       }
-      return;
+      return {
+        text: 'Unable to determine how to observe the scene.',
+        values: { success: false, error: 'selector_failure' },
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+      };
     }
 
     const selection = parseKeyValueXml(selectionRaw);
     if (!selection || !selection.snapshotType) {
       logger.error('[PERCEPTION] No valid selection from model');
       if (callback) {
-        await callback({
+        const clarificationResponse = {
           text: selection?.parameter || 'Can you clarify what you want me to observe?',
           thought: 'Unable to determine observation type',
-        });
+        };
+        await callback(clarificationResponse);
       }
-      return;
+      return {
+        text: selection?.parameter || 'Can you clarify what you want me to observe?',
+        values: { success: false, needsClarification: true },
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+      };
     }
 
     const { snapshotType, parameter } = selection;
@@ -229,12 +249,17 @@ export const hyperfyScenePerceptionAction: Action = {
     // Handle clarification requests (NONE case)
     if (snapshotType === 'NONE') {
       if (callback) {
-        await callback({
+        const clarificationResponse = {
           text: parameter || 'Can you clarify what you want me to observe?',
           thought: 'Unable to determine observation type',
-        });
+        };
+        await callback(clarificationResponse);
       }
-      return;
+      return {
+        text: parameter || 'Can you clarify what you want me to observe?',
+        values: { success: false, needsClarification: true },
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+      };
     }
 
     /* Capture snapshot */
@@ -245,15 +270,20 @@ export const hyperfyScenePerceptionAction: Action = {
           imgBase64 = await puppeteerManager.snapshotEquirectangular();
           break;
         case SnapshotType.LOOK_DIRECTION:
-          if (!parameter || !['front', 'back', 'left', 'right'].includes(parameter))
+          if (!parameter || !['front', 'back', 'left', 'right'].includes(parameter)) {
             throw new Error('Bad direction');
+          }
           imgBase64 = await puppeteerManager.snapshotFacingDirection(parameter);
           break;
         case SnapshotType.LOOK_AT_ENTITY:
-          if (!parameter) throw new Error('Missing entityId');
+          if (!parameter) {
+            throw new Error('Missing entityId');
+          }
           const ent = world.entities.items.get(parameter);
           const pos = ent?.base?.position || ent?.root?.position;
-          if (!pos) throw new Error('No position');
+          if (!pos) {
+            throw new Error('No position');
+          }
           if (world?.controls?.followEntity) {
             await world.controls.followEntity(parameter);
           }
@@ -265,12 +295,17 @@ export const hyperfyScenePerceptionAction: Action = {
     } catch (err) {
       logger.error('Snapshot failed:', err);
       if (callback) {
-        await callback({
+        const snapshotErrorResponse = {
           thought: 'Snapshot failed.',
           metadata: { error: 'snapshot_failure', snapshotType },
-        });
+        };
+        await callback(snapshotErrorResponse);
       }
-      return;
+      return {
+        text: 'Unable to capture visual snapshot.',
+        values: { success: false, error: 'snapshot_failure', snapshotType },
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+      };
     }
 
     /* IMAGE_DESCRIPTION – detailed scene analysis */
@@ -289,12 +324,17 @@ export const hyperfyScenePerceptionAction: Action = {
     } catch (err) {
       logger.error('IMAGE_DESCRIPTION failed:', err);
       if (callback) {
-        await callback({
+        const visionErrorResponse = {
           thought: 'Cannot understand the scene.',
           metadata: { error: 'vision_failure' },
-        });
+        };
+        await callback(visionErrorResponse);
       }
-      return;
+      return {
+        text: 'Unable to analyze the visual scene.',
+        values: { success: false, error: 'vision_failure' },
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+      };
     }
 
     //  Add dynamic header for scene perception
@@ -302,7 +342,8 @@ export const hyperfyScenePerceptionAction: Action = {
 
     switch (snapshotType) {
       case SnapshotType.LOOK_AROUND:
-        scenePerceptionHeader = `Here is a broad visual capture of the area as seen from the {{agentName}} current position. The following is a detailed description of what the {{agentName}} can observe all around:`;
+        scenePerceptionHeader =
+          'Here is a broad visual capture of the area as seen from the {{agentName}} current position. The following is a detailed description of what the {{agentName}} can observe all around:';
         break;
       case SnapshotType.LOOK_DIRECTION:
         scenePerceptionHeader = `Here is the visual capture looking toward the **${parameter}** side. The following is a detailed description of what the {{agentName}} sees in that direction:`;
@@ -311,7 +352,7 @@ export const hyperfyScenePerceptionAction: Action = {
         scenePerceptionHeader = `Here is the visual capture focused on the target entity ("${parameter}"). The following is a detailed description of what the {{agentName}} observes when looking at it:`;
         break;
       default:
-        scenePerceptionHeader = `Here is a scene snapshot for contextual understanding:`;
+        scenePerceptionHeader = 'Here is a scene snapshot for contextual understanding:';
     }
 
     const fullSceneDescription = `${scenePerceptionHeader}\n\n${sceneDescription}`;
@@ -327,44 +368,73 @@ export const hyperfyScenePerceptionAction: Action = {
     } catch (err) {
       logger.error('Response generator failed:', err);
       if (callback) {
-        await callback({
+        const responseErrorResponse = {
           thought: 'No response generated.',
           metadata: { error: 'text_large_failure' },
-        });
+        };
+        await callback(responseErrorResponse);
       }
-      return;
+      return {
+        text: 'Unable to generate response to visual scene.',
+        values: { success: false, error: 'text_large_failure' },
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+      };
     }
 
     const parsed = parseKeyValueXml(xmlRaw);
 
     if (!parsed) {
       if (callback) {
-        await callback({
+        const parseErrorResponse = {
           thought: 'Malformed XML.',
           metadata: { error: 'xml_parse_failure', xmlRaw },
-        });
+        };
+        await callback(parseErrorResponse);
       }
-      return;
+      return {
+        text: 'Unable to process response.',
+        values: { success: false, error: 'xml_parse_failure' },
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+      };
     }
 
     if (callback) {
-      await callback({
+      const finalResponse = {
         ...parsed,
         thought: parsed.thought || '',
         text: parsed.text || '',
         emote: parsed.emote || '',
         metadata: { snapshotType, sceneDescription },
-      });
+      };
+      await callback(finalResponse);
     }
+    
+    return {
+      text: parsed.text || '',
+      values: { 
+        success: true, 
+        snapshotType, 
+        hasEmote: !!parsed.emote,
+        sceneAnalyzed: true
+      },
+      data: { 
+        action: 'HYPERFY_SCENE_PERCEPTION',
+        snapshotType,
+        sceneDescription,
+        thought: parsed.thought,
+        emote: parsed.emote
+      }
+    };
   },
 
   examples: [
     // General observation
     [
-      { name: '{{name1}}', content: { text: "What's around you right now?" } },
+      { name: '{{user}}', content: { text: "What's around you right now?" } },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User wants me to observe my current surroundings - I should take a comprehensive look around',
           text: 'Looking around...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -374,10 +444,11 @@ export const hyperfyScenePerceptionAction: Action = {
 
     // Spatial direction
     [
-      { name: '{{name1}}', content: { text: "Can you see what's behind you?" } },
+      { name: '{{user}}', content: { text: "Can you see what's behind you?" } },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User wants me to look in a specific direction - behind me',
           text: 'Checking behind me...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -387,10 +458,11 @@ export const hyperfyScenePerceptionAction: Action = {
 
     // Exploration or scouting
     [
-      { name: '{{name1}}', content: { text: 'Scan the area for any threats or movement.' } },
+      { name: '{{user}}', content: { text: 'Scan the area for any threats or movement.' } },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User wants me to do a tactical scan - I should look around carefully for potential dangers',
           text: 'Scanning the surroundings now...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -401,12 +473,13 @@ export const hyperfyScenePerceptionAction: Action = {
     // Object-centric look
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: { text: 'Can you take a look at that glowing statue over there?' },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User wants me to examine a specific object - I should focus my vision on the glowing statue',
           text: 'Inspecting the statue...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -416,10 +489,11 @@ export const hyperfyScenePerceptionAction: Action = {
 
     // Directional command
     [
-      { name: '{{name1}}', content: { text: "Look to your left. What's over there?" } },
+      { name: '{{user}}', content: { text: "Look to your left. What's over there?" } },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User wants me to look in a specific direction - to my left',
           text: 'Turning left...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -429,10 +503,11 @@ export const hyperfyScenePerceptionAction: Action = {
 
     // Subtle curiosity
     [
-      { name: '{{name1}}', content: { text: 'Anything interesting nearby?' } },
+      { name: '{{user}}', content: { text: 'Anything interesting nearby?' } },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User is asking about interesting things nearby - I should do a general observation',
           text: 'Let me check the surroundings...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -447,8 +522,9 @@ export const hyperfyScenePerceptionAction: Action = {
         content: { text: "Before we move forward, can you check what's up ahead?" },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User wants me to scout ahead before we proceed - I should look forward',
           text: 'Checking forward path...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -463,8 +539,9 @@ export const hyperfyScenePerceptionAction: Action = {
         content: { text: "I feel like we're being watched. Can you look around?" },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User feels unsafe and wants me to check for threats - I should do a careful scan',
           text: 'Doing a quick scan...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -479,8 +556,9 @@ export const hyperfyScenePerceptionAction: Action = {
         content: { text: "Pretend you're a security camera and scan the area!" },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User wants me to roleplay as a security camera - I should scan systematically',
           text: 'Activating security cam mode! Scanning...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -490,10 +568,11 @@ export const hyperfyScenePerceptionAction: Action = {
 
     // Checking behind an object
     [
-      { name: '{{name1}}', content: { text: 'Is there anything behind that large crate?' } },
+      { name: '{{user}}', content: { text: 'Is there anything behind that large crate?' } },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User wants me to check what\'s hidden behind a specific object - I should focus on that area',
           text: "I'll take a look behind it...",
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',

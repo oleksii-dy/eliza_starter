@@ -5,15 +5,15 @@ import { logger } from '@elizaos/core';
 
 async function testVision() {
   console.log('Testing Florence-2 Local Model...\n');
-  
+
   const florence2 = new Florence2Local();
-  
+
   try {
     // Initialize the model
     console.log('1. Initializing model...');
     await florence2.initialize();
     console.log('✅ Model initialized\n');
-    
+
     // Create a simple test image buffer (1x1 white pixel)
     const testImageBuffer = Buffer.from([
       0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
@@ -26,26 +26,26 @@ async function testVision() {
       0xE7, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E,
       0x44, 0xAE, 0x42, 0x60, 0x82
     ]);
-    
+
     // Test image analysis
     console.log('2. Analyzing test image...');
     const result = await florence2.analyzeImage(testImageBuffer);
     console.log('✅ Analysis complete\n');
-    
+
     console.log('Results:');
     console.log('- Caption:', result.caption);
     console.log('- Tags:', result.tags);
     console.log('- Objects:', result.objects?.length || 0);
-    
+
     // Test with a more realistic scenario
     console.log('\n3. Testing with realistic fallback...');
     // Since we can't capture a real image in this test, the fallback will be used
     const fallbackResult = await florence2.analyzeImage(Buffer.from('fake image data'));
     console.log('- Fallback caption:', fallbackResult.caption);
     console.log('- Fallback tags:', fallbackResult.tags);
-    
+
     console.log('\n✅ All tests passed!');
-    
+
   } catch (error) {
     console.error('❌ Test failed:', error);
   } finally {
@@ -54,4 +54,4 @@ async function testVision() {
   }
 }
 
-testVision().catch(console.error); 
+testVision().catch(console.error);

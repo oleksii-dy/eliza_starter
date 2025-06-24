@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import { autoPlugin } from '../../index';
 import { createMockRuntime, createMockMemory, createMockState } from '../utils/mock-runtime';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
@@ -14,8 +14,8 @@ describe('Component Integration Tests', () => {
   let resourceService: any;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
-    
+    mock.restore();
+
     // Create runtime with integrated services
     mockRuntime = createMockRuntime({
       settings: {
@@ -26,15 +26,17 @@ describe('Component Integration Tests', () => {
     });
 
     // Start the actual services
-    const oodaServiceClass = autoPlugin.services?.find(s => s.serviceType === 'autonomous');
-    const resourceServiceClass = autoPlugin.services?.find(s => s.serviceType === 'resource-monitor');
+    const oodaServiceClass = autoPlugin.services?.find((s) => s.serviceType === 'autonomous');
+    const resourceServiceClass = autoPlugin.services?.find(
+      (s) => s.serviceType === 'resource-monitor'
+    );
 
     if (oodaServiceClass && resourceServiceClass) {
       oodaService = await oodaServiceClass.start(mockRuntime);
       resourceService = await resourceServiceClass.start(mockRuntime);
 
       // Register services with mock runtime
-      mockRuntime.getService = vi.fn((serviceName: string) => {
+      mockRuntime.getService = mock((serviceName: string) => {
         if (serviceName === AutonomousServiceType.AUTONOMOUS) {
           return oodaService;
         }
@@ -54,7 +56,7 @@ describe('Component Integration Tests', () => {
     if (resourceService) {
       await resourceService.stop();
     }
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   describe('OODA Service + Resource Monitor Integration', () => {
@@ -63,7 +65,7 @@ describe('Component Integration Tests', () => {
       expect(resourceService).toBeDefined();
 
       // Wait for services to initialize
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Get resource status
       const resourceStatus = resourceService.getResourceStatus();
@@ -87,10 +89,10 @@ describe('Component Integration Tests', () => {
       };
 
       // Mock resource service to return high usage
-      resourceService.getResourceStatus = vi.fn().mockReturnValue(highUsageStatus);
+      resourceService.getResourceStatus = mock().mockReturnValue(highUsageStatus);
 
       // Wait for OODA cycle to process resource status
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify resource service is tracking constraints
       expect(resourceService.isResourceConstrained()).toBe(true);
@@ -101,7 +103,9 @@ describe('Component Integration Tests', () => {
 
   describe('Provider + Service Integration', () => {
     it('should provide real-time OODA context through world provider', async () => {
-      const worldProvider = autoPlugin.providers?.find(p => p.name === 'AUTONOMOUS_WORLD_CONTEXT');
+      const worldProvider = autoPlugin.providers?.find(
+        (p) => p.name === 'AUTONOMOUS_WORLD_CONTEXT'
+      );
       expect(worldProvider).toBeDefined();
 
       if (worldProvider) {
@@ -119,7 +123,7 @@ describe('Component Integration Tests', () => {
     });
 
     it('should provide formatted message feed through autonomous feed provider', async () => {
-      const feedProvider = autoPlugin.providers?.find(p => p.name === 'AUTONOMOUS_FEED');
+      const feedProvider = autoPlugin.providers?.find((p) => p.name === 'AUTONOMOUS_FEED');
       expect(feedProvider).toBeDefined();
 
       if (feedProvider) {
@@ -151,7 +155,7 @@ describe('Component Integration Tests', () => {
 
   describe('Action + Service Integration', () => {
     it('should execute REFLECT action with OODA service context', async () => {
-      const reflectAction = autoPlugin.actions?.find(a => a.name === 'REFLECT');
+      const reflectAction = autoPlugin.actions?.find((a) => a.name === 'REFLECT');
       expect(reflectAction).toBeDefined();
 
       if (reflectAction) {
@@ -159,7 +163,7 @@ describe('Component Integration Tests', () => {
           content: { text: 'Reflecting on recent activities', source: 'user' },
         });
         const mockState = createMockState();
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Execute reflect action
         await reflectAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
@@ -194,8 +198,10 @@ describe('Component Integration Tests', () => {
   describe('End-to-End Component Workflow', () => {
     it('should execute complete autonomous workflow with all components', async () => {
       // 1. Get initial state from providers
-      const worldProvider = autoPlugin.providers?.find(p => p.name === 'AUTONOMOUS_WORLD_CONTEXT');
-      const feedProvider = autoPlugin.providers?.find(p => p.name === 'AUTONOMOUS_FEED');
+      const worldProvider = autoPlugin.providers?.find(
+        (p) => p.name === 'AUTONOMOUS_WORLD_CONTEXT'
+      );
+      const feedProvider = autoPlugin.providers?.find((p) => p.name === 'AUTONOMOUS_FEED');
 
       const mockMessage = createMockMemory({
         content: { text: 'Execute autonomous workflow', source: 'user' },
@@ -215,9 +221,9 @@ describe('Component Integration Tests', () => {
       }
 
       // 3. Execute action based on context
-      const reflectAction = autoPlugin.actions?.find(a => a.name === 'REFLECT');
+      const reflectAction = autoPlugin.actions?.find((a) => a.name === 'REFLECT');
       if (reflectAction) {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
         await reflectAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
         expect(mockCallback).toHaveBeenCalled();
       }
@@ -230,13 +236,15 @@ describe('Component Integration Tests', () => {
     it('should handle service failures gracefully across components', async () => {
       // Simulate OODA service failure
       oodaService.stop();
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Update mock runtime to return null service
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
-      
+      mockRuntime.getService = mock().mockReturnValue(null);
+
       // Providers should handle missing service
-      const worldProvider = autoPlugin.providers?.find(p => p.name === 'AUTONOMOUS_WORLD_CONTEXT');
+      const worldProvider = autoPlugin.providers?.find(
+        (p) => p.name === 'AUTONOMOUS_WORLD_CONTEXT'
+      );
       if (worldProvider) {
         const mockMessage = createMockMemory();
         const mockState = createMockState();
@@ -248,7 +256,8 @@ describe('Component Integration Tests', () => {
 
       // Actions should still validate without throwing
       const actions = autoPlugin.actions || [];
-      for (const action of actions.slice(0, 3)) { // Test first 3 actions
+      for (const action of actions.slice(0, 3)) {
+        // Test first 3 actions
         try {
           const mockMessage = createMockMemory();
           const mockState = createMockState();
@@ -264,7 +273,9 @@ describe('Component Integration Tests', () => {
   describe('Cross-Component Data Flow', () => {
     it('should pass data between providers and actions correctly', async () => {
       // Get world context from provider
-      const worldProvider = autoPlugin.providers?.find(p => p.name === 'AUTONOMOUS_WORLD_CONTEXT');
+      const worldProvider = autoPlugin.providers?.find(
+        (p) => p.name === 'AUTONOMOUS_WORLD_CONTEXT'
+      );
       expect(worldProvider).toBeDefined();
 
       if (worldProvider) {
@@ -272,7 +283,7 @@ describe('Component Integration Tests', () => {
         const mockState = createMockState();
 
         const worldResult = await worldProvider.get(mockRuntime, mockMessage, mockState);
-        
+
         // Use world context in state for action
         const enhancedState = {
           ...mockState,
@@ -287,11 +298,11 @@ describe('Component Integration Tests', () => {
         };
 
         // Execute action with enhanced state
-        const reflectAction = autoPlugin.actions?.find(a => a.name === 'REFLECT');
+        const reflectAction = autoPlugin.actions?.find((a) => a.name === 'REFLECT');
         if (reflectAction) {
-          const mockCallback = vi.fn();
+          const mockCallback = mock();
           await reflectAction.handler(mockRuntime, mockMessage, enhancedState, {}, mockCallback);
-          
+
           expect(mockCallback).toHaveBeenCalled();
           const response = mockCallback.mock.calls[0][0];
           expect(response.text).toBeDefined();
@@ -301,11 +312,11 @@ describe('Component Integration Tests', () => {
 
     it('should maintain consistent state across service interactions', async () => {
       // Wait for service operations
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Verify service maintains consistency (no direct context access)
       expect(oodaService.serviceName).toBe('autonomous');
-      
+
       // Service should maintain its core functionality
       expect(typeof oodaService.stop).toBe('function');
     });
@@ -321,7 +332,7 @@ describe('Component Integration Tests', () => {
       const mockState = createMockState();
 
       const providerResults = await Promise.all(
-        providers.map(provider => provider.get(mockRuntime, mockMessage, mockState))
+        providers.map((provider) => provider.get(mockRuntime, mockMessage, mockState))
       );
 
       const providerTime = Date.now() - startTime;
@@ -329,7 +340,7 @@ describe('Component Integration Tests', () => {
       expect(providerResults.length).toBe(providers.length);
 
       // Verify all providers returned valid results
-      providerResults.forEach(result => {
+      providerResults.forEach((result) => {
         expect(result).toBeDefined();
         expect(result.text).toBeDefined();
       });
@@ -339,8 +350,10 @@ describe('Component Integration Tests', () => {
       const concurrentOperations: Promise<any>[] = [];
 
       // Start multiple provider operations concurrently
-      const worldProvider = autoPlugin.providers?.find(p => p.name === 'AUTONOMOUS_WORLD_CONTEXT');
-      const feedProvider = autoPlugin.providers?.find(p => p.name === 'AUTONOMOUS_FEED');
+      const worldProvider = autoPlugin.providers?.find(
+        (p) => p.name === 'AUTONOMOUS_WORLD_CONTEXT'
+      );
+      const feedProvider = autoPlugin.providers?.find((p) => p.name === 'AUTONOMOUS_FEED');
 
       if (worldProvider && feedProvider) {
         const mockMessage = createMockMemory();
@@ -350,9 +363,9 @@ describe('Component Integration Tests', () => {
         concurrentOperations.push(feedProvider.get(mockRuntime, mockMessage, mockState));
 
         // Add action execution
-        const reflectAction = autoPlugin.actions?.find(a => a.name === 'REFLECT');
+        const reflectAction = autoPlugin.actions?.find((a) => a.name === 'REFLECT');
         if (reflectAction) {
-          const mockCallback = vi.fn();
+          const mockCallback = mock();
           concurrentOperations.push(
             reflectAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback)
           );

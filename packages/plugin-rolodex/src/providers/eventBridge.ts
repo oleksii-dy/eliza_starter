@@ -43,14 +43,14 @@ export const eventBridgeProvider: Provider = {
       const reliability = totalAttempted > 0 ? (totalEventsDelivered / totalAttempted) * 100 : 100;
 
       const text = [
-        `[EVENT BRIDGE STATUS]`,
+        '[EVENT BRIDGE STATUS]',
         `Cross-plugin event system: ${hasActiveConnections ? 'ACTIVE' : 'INACTIVE'}`,
         `Connected plugins: ${subscribedPlugins.length}`,
         `Events emitted: ${totalEventsEmitted}`,
         `Cross-plugin delivery: ${totalEventsDelivered}/${totalAttempted} (${reliability.toFixed(1)}% success)`,
         hasActiveConnections ? `Active subscriptions: ${subscribedPlugins.join(', ')}` : '',
         `Queue size: ${stats.queueSize}`,
-        `[/EVENT BRIDGE STATUS]`,
+        '[/EVENT BRIDGE STATUS]',
       ]
         .filter(Boolean)
         .join('\n');
@@ -65,7 +65,7 @@ export const eventBridgeProvider: Provider = {
           crossPluginDelivery: {
             delivered: totalEventsDelivered,
             failed: totalEventsFailed,
-            reliability: reliability,
+            reliability,
           },
           eventStatistics: stats,
         },

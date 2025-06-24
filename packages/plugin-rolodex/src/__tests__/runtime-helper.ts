@@ -3,7 +3,7 @@
  * Uses actual ElizaOS runtime instead of mocks
  */
 
-import { 
+import {
   Character,
   stringToUuid,
   type Plugin,
@@ -42,7 +42,7 @@ export interface TestRuntimeOptions {
  */
 export async function createTestRuntime(options: TestRuntimeOptions = {}): Promise<IAgentRuntime> {
   const testName = options.testName || `rolodex-test-${Date.now()}`;
-  
+
   // Merge character options
   const character: Character = {
     ...testCharacter,
@@ -68,7 +68,7 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
   const maxRetries = 10;
   let retries = 0;
   let rolodexService: any = null;
-  
+
   while (retries < maxRetries) {
     // Try both service name and type
     rolodexService = runtime.getService('rolodex') || runtime.getService('RolodexService');
@@ -83,12 +83,12 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
   if (!rolodexService) {
     // Debug: List all available services
     console.error('[runtime-helper] Available services:', Array.from(runtime.services?.keys() || []));
-    
+
     // Also check if it's available under a different name
     for (const [key, service] of runtime.services || new Map()) {
       console.error(`[runtime-helper] Service: ${key}, Type: ${service.constructor.name}`);
     }
-    
+
     throw new Error('Rolodex service not available after initialization');
   }
 
@@ -128,14 +128,14 @@ export async function waitForCondition(
   interval: number = 100
 ): Promise<void> {
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < timeout) {
     if (await condition()) {
       return;
     }
     await new Promise(resolve => setTimeout(resolve, interval));
   }
-  
+
   throw new Error('Condition not met within timeout');
 }
 
@@ -149,10 +149,10 @@ export async function processMessageAndWait(
 ): Promise<void> {
   // In ElizaOS, messages are handled differently based on the runtime implementation
   // For testing, we need to trigger the action/evaluator pipeline directly
-  
+
   // First, compose the state
   const state = await runtime.composeState(message);
-  
+
   // Create a callback for responses
   const responses: Memory[] = [];
   const callback = async (content: any) => {
@@ -167,13 +167,13 @@ export async function processMessageAndWait(
     responses.push(response);
     return responses;
   };
-  
+
   // Process through the action pipeline
   await runtime.processActions(message, responses, state, callback);
-  
+
   // Also run evaluators
   await runtime.evaluate(message, state, true, callback, responses);
-  
+
   // Wait for async operations to complete
   await new Promise(resolve => setTimeout(resolve, waitTime));
 }
@@ -185,7 +185,7 @@ export async function cleanupRuntime(runtime: IAgentRuntime): Promise<void> {
   if (!runtime) {
     return;
   }
-  
+
   try {
     // Stop all services if available
     if (runtime.services && runtime.services instanceof Map) {
@@ -214,10 +214,10 @@ export async function cleanupRuntime(runtime: IAgentRuntime): Promise<void> {
  */
 export function getService<T>(runtime: IAgentRuntime, serviceName: string): T {
   // Try multiple possible service names
-  let service = runtime.getService(serviceName) || 
+  let service = runtime.getService(serviceName) ||
                 runtime.getService('RolodexService') ||
                 runtime.getService('rolodexService');
-  
+
   // If still not found, try to find by type
   if (!service && runtime.services) {
     for (const [key, svc] of runtime.services) {
@@ -227,12 +227,12 @@ export function getService<T>(runtime: IAgentRuntime, serviceName: string): T {
       }
     }
   }
-  
+
   if (!service) {
     // Debug: List all available services
-    console.error(`[getService] Service ${serviceName} not found. Available services:`, 
+    console.error(`[getService] Service ${serviceName} not found. Available services:`,
       Array.from(runtime.services?.keys() || []));
     throw new Error(`Service ${serviceName} not found`);
   }
   return service as T;
-} 
+}

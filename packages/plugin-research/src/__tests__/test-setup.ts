@@ -17,7 +17,7 @@ export function verifyApiKeys(): void {
   ];
 
   const missingKeys = requiredKeys.filter(key => !process.env[key]);
-  
+
   if (missingKeys.length > 0) {
     console.warn('⚠️  Missing API keys for E2E tests:', missingKeys.join(', '));
     console.warn('Some tests may fail without proper API keys configured.');
@@ -27,4 +27,4 @@ export function verifyApiKeys(): void {
 }
 
 // Call verification on import
-verifyApiKeys(); 
+verifyApiKeys();

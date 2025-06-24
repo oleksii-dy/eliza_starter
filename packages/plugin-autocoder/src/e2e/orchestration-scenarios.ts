@@ -121,7 +121,7 @@ async function waitForStatus(
 
   while (Date.now() - startTime < timeout) {
     const project = await service.getProject(projectId);
-    if (!project) throw new Error(`Project ${projectId} not found during wait`);
+    if (!project) {throw new Error(`Project ${projectId} not found during wait`);}
 
     if (project.status === status) {
       return project;

@@ -1,33 +1,34 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { ingestGitHubRepository, ingestWebPage } from '../../ingestion-utils';
 import type { GitHubIngestionOptions, WebPageIngestionOptions } from '../../types';
 
 // Mock fetch globally
-const mockFetch = vi.fn();
+const mockFetch = mock();
 global.fetch = mockFetch as any;
 
 describe('GitHub Repository Ingestion', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   it('should parse GitHub URL correctly', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve([
-        {
-          type: 'file',
-          name: 'README.md',
-          path: 'README.md',
-          size: 1000,
-          download_url: 'https://raw.githubusercontent.com/owner/repo/main/README.md'
-        }
-      ])
+      json: () =>
+        Promise.resolve([
+          {
+            type: 'file',
+            name: 'README.md',
+            path: 'README.md',
+            size: 1000,
+            download_url: 'https://raw.githubusercontent.com/owner/repo/main/README.md',
+          },
+        ]),
     });
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      text: () => Promise.resolve('# Test README\nThis is a test file.')
+      text: () => Promise.resolve('# Test README\nThis is a test file.'),
     });
 
     const options: GitHubIngestionOptions = {
@@ -45,20 +46,21 @@ describe('GitHub Repository Ingestion', () => {
   it('should filter files by subdirectories', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve([
-        {
-          type: 'file',
-          name: 'test.md',
-          path: 'docs/test.md',
-          size: 500,
-          download_url: 'https://raw.githubusercontent.com/owner/repo/main/docs/test.md'
-        }
-      ])
+      json: () =>
+        Promise.resolve([
+          {
+            type: 'file',
+            name: 'test.md',
+            path: 'docs/test.md',
+            size: 500,
+            download_url: 'https://raw.githubusercontent.com/owner/repo/main/docs/test.md',
+          },
+        ]),
     });
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      text: () => Promise.resolve('# Documentation\nTest content.')
+      text: () => Promise.resolve('# Documentation\nTest content.'),
     });
 
     const options: GitHubIngestionOptions = {
@@ -76,7 +78,7 @@ describe('GitHub Repository Ingestion', () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 404,
-      statusText: 'Not Found'
+      statusText: 'Not Found',
     });
 
     const options: GitHubIngestionOptions = {
@@ -85,7 +87,7 @@ describe('GitHub Repository Ingestion', () => {
     };
 
     const result = await ingestGitHubRepository(options);
-    
+
     // Should complete but with no processed files
     expect(result.processedFiles).toBe(0);
     expect(result.totalFiles).toBe(0);
@@ -94,27 +96,28 @@ describe('GitHub Repository Ingestion', () => {
   it('should filter large files', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve([
-        {
-          type: 'file',
-          name: 'large-file.txt',
-          path: 'large-file.txt',
-          size: 10 * 1024 * 1024, // 10MB
-          download_url: 'https://raw.githubusercontent.com/owner/repo/main/large-file.txt'
-        },
-        {
-          type: 'file',
-          name: 'small-file.txt',
-          path: 'small-file.txt',
-          size: 1000,
-          download_url: 'https://raw.githubusercontent.com/owner/repo/main/small-file.txt'
-        }
-      ])
+      json: () =>
+        Promise.resolve([
+          {
+            type: 'file',
+            name: 'large-file.txt',
+            path: 'large-file.txt',
+            size: 10 * 1024 * 1024, // 10MB
+            download_url: 'https://raw.githubusercontent.com/owner/repo/main/large-file.txt',
+          },
+          {
+            type: 'file',
+            name: 'small-file.txt',
+            path: 'small-file.txt',
+            size: 1000,
+            download_url: 'https://raw.githubusercontent.com/owner/repo/main/small-file.txt',
+          },
+        ]),
     });
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      text: () => Promise.resolve('Small file content')
+      text: () => Promise.resolve('Small file content'),
     });
 
     const options: GitHubIngestionOptions = {
@@ -133,7 +136,7 @@ describe('GitHub Repository Ingestion', () => {
 
 describe('Web Page Ingestion', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   it('should extract text from HTML page', async () => {
@@ -155,9 +158,9 @@ describe('Web Page Ingestion', () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       headers: {
-        get: () => 'text/html'
+        get: () => 'text/html',
       },
-      text: () => Promise.resolve(mockHtml)
+      text: () => Promise.resolve(mockHtml),
     });
 
     const options: WebPageIngestionOptions = {
@@ -194,9 +197,9 @@ describe('Web Page Ingestion', () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       headers: {
-        get: () => 'application/json'
+        get: () => 'application/json',
       },
-      text: () => Promise.resolve('{"error": "not html"}')
+      text: () => Promise.resolve('{"error": "not html"}'),
     });
 
     const options: WebPageIngestionOptions = {
@@ -222,9 +225,9 @@ describe('Web Page Ingestion', () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       headers: {
-        get: () => 'text/html'
+        get: () => 'text/html',
       },
-      text: () => Promise.resolve(mockHtml)
+      text: () => Promise.resolve(mockHtml),
     });
 
     const options: WebPageIngestionOptions = {

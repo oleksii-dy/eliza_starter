@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { SearchResult } from '../../types';
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { z } from 'zod';
 
 // Tavily API response schema validation
@@ -66,7 +66,7 @@ export class TavilySearchProvider {
     const startTime = Date.now();
 
     try {
-      elizaLogger.info(`[Tavily] Searching for: ${query}`);
+      logger.info(`[Tavily] Searching for: ${query}`);
 
       const response = await axios.post(
         this.baseUrl,
@@ -114,7 +114,7 @@ export class TavilySearchProvider {
       }));
 
       const duration = Date.now() - startTime;
-      elizaLogger.info(`[Tavily] Found ${results.length} results in ${duration}ms`);
+      logger.info(`[Tavily] Found ${results.length} results in ${duration}ms`);
 
       return results;
     } catch (error) {
@@ -125,25 +125,25 @@ export class TavilySearchProvider {
 
         // Handle specific error cases
         if (axiosError.response?.status === 401) {
-          elizaLogger.error('[Tavily] Invalid API key');
+          logger.error('[Tavily] Invalid API key');
           throw new Error('Invalid Tavily API key');
         } else if (axiosError.response?.status === 429) {
-          elizaLogger.error('[Tavily] Rate limit exceeded');
+          logger.error('[Tavily] Rate limit exceeded');
           throw new Error('Tavily rate limit exceeded');
         } else if (axiosError.code === 'ECONNABORTED') {
-          elizaLogger.error(`[Tavily] Request timeout after ${duration}ms`);
+          logger.error(`[Tavily] Request timeout after ${duration}ms`);
           throw new Error('Tavily search timeout');
         }
 
-        elizaLogger.error(`[Tavily] API error: ${axiosError.message}`, {
+        logger.error(`[Tavily] API error: ${axiosError.message}`, {
           status: axiosError.response?.status,
           data: axiosError.response?.data,
         });
       } else if (error instanceof z.ZodError) {
-        elizaLogger.error('[Tavily] Invalid response format:', error.issues);
+        logger.error('[Tavily] Invalid response format:', error.issues);
         throw new Error('Invalid Tavily API response format');
       } else {
-        elizaLogger.error('[Tavily] Unknown error:', error);
+        logger.error('[Tavily] Unknown error:', error);
       }
 
       throw error;
@@ -161,7 +161,7 @@ export class TavilySearchProvider {
 
         if (attempt < maxRetries) {
           const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-          elizaLogger.warn(`[Tavily] Retry attempt ${attempt} after ${delay}ms`);
+          logger.warn(`[Tavily] Retry attempt ${attempt} after ${delay}ms`);
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
@@ -180,7 +180,7 @@ export class TavilySearchProvider {
 
       return response.data;
     } catch (error) {
-      elizaLogger.warn('[Tavily] Could not fetch usage data');
+      logger.warn('[Tavily] Could not fetch usage data');
       return null;
     }
   }

@@ -2,10 +2,9 @@ import {
   type IAgentRuntime,
   type Memory,
   type Provider,
-  type ProviderResult,
-  logger,
-  type UUID,
   type State,
+  type UUID,
+  logger,
 } from '@elizaos/core';
 import { createGoalDataService } from '../services/goalDataService.js';
 
@@ -15,8 +14,9 @@ import { createGoalDataService } from '../services/goalDataService.js';
 export const goalsProvider: Provider = {
   name: 'GOALS',
   description: 'Provides information about active goals and recent achievements',
+  dynamic: true,
 
-  get: async (runtime: IAgentRuntime, message?: Memory, state?: State) => {
+  get: async (runtime: IAgentRuntime, message: Memory, _state?: State) => {
     try {
       const dataService = createGoalDataService(runtime);
 
@@ -81,7 +81,7 @@ export const goalsProvider: Provider = {
       const totalActive = activeGoals.length;
       const totalCompleted = completedGoals.length;
 
-      output += `## Summary\n`;
+      output += '## Summary\n';
       output += `- Active goals: ${totalActive}\n`;
       output += `- Completed goals: ${totalCompleted}\n`;
 

@@ -54,9 +54,9 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
       extensions: isTest
         ? {}
         : {
-            vector,
-            fuzzystrmatch,
-          },
+          vector,
+          fuzzystrmatch,
+        },
       relaxedDurability: true,
       // Additional stability options for testing
       ...(isTest && {
@@ -170,7 +170,7 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
       // Check if there's an ongoing shutdown for this instance
       const shutdownPromise = PGliteClientManager.shutdownPromises.get(instanceKey);
       if (shutdownPromise) {
-        logger.info(`PGLiteClientManager: Waiting for instance cleanup to complete...`);
+        logger.info('PGLiteClientManager: Waiting for instance cleanup to complete...');
         await shutdownPromise;
         // After cleanup, proceed to create new instance
       } else {

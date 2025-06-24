@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { plugin } from '../../index';
 import type { AgentRuntime } from '@elizaos/core';
 import { tmpdir } from 'os';
@@ -17,8 +17,7 @@ describe('PostgreSQL Initialization Tests', () => {
     delete process.env.PGLITE_PATH;
     delete process.env.DATABASE_PATH;
 
-    // Reset the pluginInitialized flag by re-importing the module
-    vi.resetModules();
+    // Note: Module reset not needed with bun test
 
     mockRuntime = {
       agentId: '00000000-0000-0000-0000-000000000000',
@@ -32,16 +31,16 @@ describe('PostgreSQL Initialization Tests', () => {
         knowledge: [],
         plugins: [],
       },
-      getSetting: vi.fn(),
-      registerDatabaseAdapter: vi.fn(),
-      registerService: vi.fn(),
-      getService: vi.fn(),
+      getSetting: mock(),
+      registerDatabaseAdapter: mock(),
+      registerService: mock(),
+      getService: mock(),
     } as any;
   });
 
   afterEach(() => {
     process.env = originalEnv;
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   it.skipIf(!hasActualPostgres)(
@@ -57,7 +56,7 @@ describe('PostgreSQL Initialization Tests', () => {
 
       const postgresUrl = process.env.POSTGRES_URL!;
       (mockRuntime.getSetting as any).mockImplementation((key: string) => {
-        if (key === 'POSTGRES_URL') return postgresUrl;
+        if (key === 'POSTGRES_URL') {return postgresUrl;}
         return undefined;
       });
 
@@ -77,13 +76,13 @@ describe('PostgreSQL Initialization Tests', () => {
     // Simulate existing adapter
     (mockRuntime as any).adapter = {
       test: true,
-      isReady: vi.fn().mockResolvedValue(true),
-      init: vi.fn().mockResolvedValue(undefined),
-      getDatabase: vi.fn().mockReturnValue({
-        execute: vi.fn().mockResolvedValue({ rows: [{ tablename: 'agents' }] }),
+      isReady: mock().mockResolvedValue(true),
+      init: mock().mockResolvedValue(undefined),
+      getDatabase: mock().mockReturnValue({
+        execute: mock().mockResolvedValue({ rows: [{ tablename: 'agents' }] }),
       }),
       db: {
-        execute: vi.fn().mockResolvedValue({ rows: [{ tablename: 'agents' }] }),
+        execute: mock().mockResolvedValue({ rows: [{ tablename: 'agents' }] }),
       },
     };
 
@@ -97,9 +96,9 @@ describe('PostgreSQL Initialization Tests', () => {
     const { plugin: freshPlugin } = await import('../../index');
 
     // Use a proper temporary directory that actually exists
-    const pglitePath = join(tmpdir(), 'eliza-test-pglite-' + Date.now());
+    const pglitePath = join(tmpdir(), `eliza-test-pglite-${Date.now()}`);
     (mockRuntime.getSetting as any).mockImplementation((key: string) => {
-      if (key === 'PGLITE_PATH') return pglitePath;
+      if (key === 'PGLITE_PATH') {return pglitePath;}
       return undefined;
     });
 
@@ -116,9 +115,9 @@ describe('PostgreSQL Initialization Tests', () => {
     const { plugin: freshPlugin } = await import('../../index');
 
     // Use a proper temporary directory that actually exists
-    const databasePath = join(tmpdir(), 'eliza-test-db-' + Date.now());
+    const databasePath = join(tmpdir(), `eliza-test-db-${Date.now()}`);
     (mockRuntime.getSetting as any).mockImplementation((key: string) => {
-      if (key === 'DATABASE_PATH') return databasePath;
+      if (key === 'DATABASE_PATH') {return databasePath;}
       return undefined;
     });
 

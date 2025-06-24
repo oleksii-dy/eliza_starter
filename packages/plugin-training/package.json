@@ -29,32 +29,16 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "eslint . && prettier --check .",
+    "lint:fix": "eslint . --fix && prettier --write .",
     "test": "elizaos test",
-    "test:mvp": "node test-mvp.cjs",
-    "test:mvp-only": "vitest run src/__tests__/mvp/",
-    "test:enhanced": "node test-enhanced.cjs",
-    "test:enhanced-vitest": "vitest run src/__tests__/enhanced-integration.test.ts",
-    "test:coverage": "vitest --coverage",
-    "test:watch": "vitest --watch",
-    "test:ui": "vitest --ui",
-    "test:unit": "vitest --run src/__tests__/actions src/__tests__/database src/__tests__/filesystem src/__tests__/integration",
-    "test:e2e": "vitest --run src/__tests__/e2e",
-    "test:ci": "vitest --run --coverage.enabled --coverage.reporter=json",
-    "test:e2e-pipeline": "bun run scripts/test-e2e-pipeline.ts",
-    "test:full-pipeline": "./scripts/run-e2e-tests.sh",
     "validate": "./scripts/run-e2e-tests.sh",
     "cli": "node dist/cli/index.js",
     "extract-data": "node dist/scripts/extract-training-data.js",
     "prepare-dataset": "node dist/scripts/prepare-dataset.js",
     "start-atropos": "python atropos/start_atropos.py",
     "train": "python atropos/run_training.py",
-    "deploy": "python atropos/deploy_training.py",
-    "reasoning:config": "node dist/cli/index.js reasoning config",
-    "reasoning:setup": "node dist/cli/index.js reasoning setup",
-    "reasoning:status": "node dist/cli/index.js reasoning models status",
-    "reasoning:costs": "node dist/cli/index.js reasoning costs report",
-    "reasoning:export": "node dist/cli/index.js reasoning data export"
+    "deploy": "python atropos/deploy_training.py"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",
@@ -82,8 +66,7 @@
     "@types/ws": "^8.5.13",
     "eslint": "^8.57.1",
     "tsup": "^8.3.5",
-    "typescript": "^5.7.2",
-    "vitest": "^3.2.4"
+    "typescript": "5.8.3"
   },
   "files": [
     "dist",

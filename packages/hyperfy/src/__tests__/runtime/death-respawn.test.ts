@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { createTestWorld } from '../test-world-factory';
 import { DeathRespawnSystem } from '../../rpg/systems/DeathRespawnSystem';
 import { InventorySystem } from '../../rpg/systems/InventorySystem';
 import { CombatSystem } from '../../rpg/systems/CombatSystem';
 import { RPGEntity } from '../../rpg/entities/RPGEntity';
-import { 
-  StatsComponent, 
-  InventoryComponent, 
-  MovementComponent, 
-  CombatComponent, 
+import {
+  StatsComponent,
+  InventoryComponent,
+  MovementComponent,
+  CombatComponent,
   DeathComponent,
-  PlayerEntity 
+  PlayerEntity
 } from '../../rpg/types';
 import type { World } from '../../types';
 
@@ -23,12 +23,12 @@ describe('DeathRespawnSystem Runtime Tests', () => {
   beforeEach(async () => {
     // Create actual world instance
     world = await createTestWorld();
-    
+
     // Register required systems
     inventorySystem = world.register('inventory', InventorySystem) as InventorySystem;
     combatSystem = world.register('combat', CombatSystem) as CombatSystem;
     deathSystem = world.register('deathRespawn', DeathRespawnSystem) as DeathRespawnSystem;
-    
+
     // Initialize systems
     await inventorySystem.init({});
     await combatSystem.init({});
@@ -53,9 +53,9 @@ describe('DeathRespawnSystem Runtime Tests', () => {
         playTime: 0,
         membershipStatus: false
       };
-      
+
       const player = world.entities.add(playerData) as PlayerEntity;
-      
+
       // Add required components
       player.addComponent('stats', {
         type: 'stats',
@@ -85,7 +85,7 @@ describe('DeathRespawnSystem Runtime Tests', () => {
         combatLevel: 70,
         totalLevel: 153
       } as StatsComponent);
-      
+
       player.addComponent('inventory', {
         type: 'inventory',
         items: new Array(28).fill(null),
@@ -121,7 +121,7 @@ describe('DeathRespawnSystem Runtime Tests', () => {
           prayerBonus: 0
         }
       } as InventoryComponent);
-      
+
       player.addComponent('movement', {
         type: 'movement',
         position: { x: 100, y: 0, z: 100 },
@@ -141,7 +141,7 @@ describe('DeathRespawnSystem Runtime Tests', () => {
         teleportTime: 0,
         teleportAnimation: ''
       } as unknown as MovementComponent);
-      
+
       player.addComponent('combat', {
         type: 'combat',
         inCombat: false,
@@ -160,54 +160,54 @@ describe('DeathRespawnSystem Runtime Tests', () => {
           magic: false
         }
       } as unknown as CombatComponent);
-      
+
       // Add some items to inventory
       const inventory = player.getComponent<InventoryComponent>('inventory')!;
-      
+
       // Add valuable items
       inventory.items[0] = { itemId: 1, quantity: 1 }; // Bronze sword (value: 15)
       inventory.items[1] = { itemId: 995, quantity: 10000 }; // 10k coins (value: 10000)
       inventory.items[2] = { itemId: 315, quantity: 20 }; // Shrimps (value: 100)
       inventory.items[3] = { itemId: 526, quantity: 5 }; // Bones (value: 5)
-      
+
       // Trigger death event
       world.events.emit('entity:death', {
         entityId: player.id,
         killerId: 'test-killer'
       });
-      
+
       // Allow event processing
       await new Promise(resolve => setTimeout(resolve, 10));
-      
+
       // Check death component was created
       const death = player.getComponent<DeathComponent>('death');
       expect(death).toBeDefined();
       expect(death?.isDead).toBe(true);
       expect(death?.deathLocation).toEqual({ x: 100, y: 0, z: 100 });
       expect(death?.killer).toBe('test-killer');
-      
+
       // Check items kept (should keep 3 most valuable: coins, shrimps, bronze sword)
       expect(death?.itemsKeptOnDeath).toHaveLength(3);
       expect(death?.itemsLostOnDeath).toHaveLength(1); // Bones should be lost
-      
+
       // Check gravestone was created
       expect(death?.gravestoneId).toBeTruthy();
       const gravestone = world.entities.get(death!.gravestoneId!);
       expect(gravestone).toBeDefined();
       expect(gravestone?.type).toBe('gravestone');
-      
+
       // Test respawn
       world.events.emit('player:respawn', {
         playerId: player.id
       });
-      
+
       await new Promise(resolve => setTimeout(resolve, 10));
-      
+
       // Check player was respawned
       const stats = player.getComponent<StatsComponent>('stats')!;
       expect(stats.hitpoints.current).toBe(stats.hitpoints.max);
       expect(death?.isDead).toBe(false);
-      
+
       const movement = player.getComponent<MovementComponent>('movement')!;
       // Should respawn at Lumbridge (default)
       expect(movement.position).toEqual({ x: 3200, y: 0, z: 3200 });
@@ -226,15 +226,15 @@ describe('DeathRespawnSystem Runtime Tests', () => {
         playTime: 0,
         membershipStatus: false
       };
-      
+
       const player = world.entities.add(playerData) as PlayerEntity;
-      
+
       // Add components (simplified)
       player.addComponent('stats', {
         type: 'stats',
         hitpoints: { current: 0, max: 10, level: 10, xp: 1000 }
       } as any);
-      
+
       player.addComponent('inventory', {
         type: 'inventory',
         items: [
@@ -243,27 +243,27 @@ describe('DeathRespawnSystem Runtime Tests', () => {
         ],
         equipment: {}
       } as any);
-      
+
       player.addComponent('movement', {
         type: 'movement',
         position: { x: 3200, y: 0, z: 3200 }
       } as any);
-      
+
       player.addComponent('combat', {
         type: 'combat',
         inCombat: false
       } as any);
-      
+
       // Trigger death in safe zone
       world.events.emit('entity:death', {
         entityId: player.id
       });
-      
+
       await new Promise(resolve => setTimeout(resolve, 10));
-      
+
       const death = player.getComponent<DeathComponent>('death');
       expect(death).toBeDefined();
-      
+
       // Should keep all items in safe zone
       expect(death?.itemsKeptOnDeath).toHaveLength(1); // All items kept
       expect(death?.itemsLostOnDeath).toHaveLength(0);
@@ -285,15 +285,15 @@ describe('DeathRespawnSystem Runtime Tests', () => {
         playTime: 0,
         membershipStatus: false
       };
-      
+
       const player = world.entities.add(playerData) as PlayerEntity;
-      
+
       // Add minimal components
       player.addComponent('stats', {
         type: 'stats',
         hitpoints: { current: 0, max: 10, level: 10, xp: 1000 }
       } as any);
-      
+
       player.addComponent('inventory', {
         type: 'inventory',
         items: [
@@ -303,44 +303,44 @@ describe('DeathRespawnSystem Runtime Tests', () => {
         ],
         equipment: {}
       } as any);
-      
+
       player.addComponent('movement', {
         type: 'movement',
         position: { x: 100, y: 0, z: 100 }
       } as any);
-      
+
       player.addComponent('combat', {
         type: 'combat',
         inCombat: false
       } as any);
-      
+
       // Trigger death
       world.events.emit('entity:death', {
         entityId: player.id
       });
-      
+
       await new Promise(resolve => setTimeout(resolve, 10));
-      
+
       const death = player.getComponent<DeathComponent>('death');
       const gravestoneId = death!.gravestoneId!;
-      
+
       // Respawn player
       world.events.emit('player:respawn', {
         playerId: player.id
       });
-      
+
       await new Promise(resolve => setTimeout(resolve, 10));
-      
+
       // Give player coins to pay reclaim fee
       const inventory = player.getComponent<InventoryComponent>('inventory')!;
       inventory.items[0] = { itemId: 995, quantity: 10000 }; // 10k coins for fee
-      
+
       // Try to reclaim items
       const success = deathSystem.reclaimItems(player.id, gravestoneId);
-      
+
       // Should fail - need more implementation for inventory system integration
       // For now, just verify the gravestone exists
       expect(gravestoneId).toBeTruthy();
     });
   });
-}); 
+});

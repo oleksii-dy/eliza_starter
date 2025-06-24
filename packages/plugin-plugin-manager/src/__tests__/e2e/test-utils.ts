@@ -61,7 +61,7 @@ export async function setupScenario(runtime: IAgentRuntime): Promise<{ user: Ent
     type: ChannelType.DM,
     source: 'e2e-test',
     serverId: 'e2e-test-server',
-    worldId: worldId,
+    worldId,
     agentId: runtime.agentId,
   };
   await runtime.createRoom(room);
@@ -91,7 +91,7 @@ export function sendMessageAndWaitForResponse(
   user: Entity,
   text: string
 ): Promise<Content> {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     assert(runtime.agentId, 'Runtime must have an agentId to send a message');
     assert(user.id, 'User must have an id to send a message');
 
@@ -121,14 +121,14 @@ export function sendMessageAndWaitForResponse(
     };
 
     // Store the message first
-    await runtime.createMemory(message, 'messages');
-
-    // Emit the event to trigger the agent's message processing logic.
-    runtime.emitEvent(EventType.MESSAGE_RECEIVED, {
-      runtime,
-      message,
-      callback,
-    });
+    runtime.createMemory(message, 'messages').then(() => {
+      // Emit the event to trigger the agent's message processing logic.
+      runtime.emitEvent(EventType.MESSAGE_RECEIVED, {
+        runtime,
+        message,
+        callback,
+      });
+    }).catch(reject);
   });
 }
 
@@ -150,8 +150,8 @@ export async function sendMessageWithTimeoutHandling(
 ): Promise<Content | null> {
   try {
     return await sendMessageAndWaitForResponse(runtime, room, user, text);
-  } catch (error: any) {
-    if (error.message === 'Timeout waiting for agent response') {
+  } catch (_error: any) {
+    if (_error.message === 'Timeout waiting for agent response') {
       // This is expected in test environments without an LLM
       console.log('No agent response (expected in test environment without LLM)');
       return null;

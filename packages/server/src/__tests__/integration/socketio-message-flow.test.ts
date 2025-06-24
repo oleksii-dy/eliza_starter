@@ -61,7 +61,7 @@ describe('Socket.IO End-to-End Message Flow', () => {
     } as Character;
 
     // Create a real agent runtime for testing
-    const db = createDatabaseAdapter(
+    const db = await createDatabaseAdapter(
       {
         dataDir: testDbPath,
       },
@@ -90,8 +90,12 @@ describe('Socket.IO End-to-End Message Flow', () => {
 
   afterAll(async () => {
     // Close all connections
-    if (client1) client1.close();
-    if (client2) client2.close();
+    if (client1) {
+      client1.close();
+    }
+    if (client2) {
+      client2.close();
+    }
 
     // Stop server
     await agentServer.stop();
@@ -117,8 +121,12 @@ describe('Socket.IO End-to-End Message Flow', () => {
 
   afterEach(() => {
     // Disconnect clients after each test
-    if (client1.connected) client1.disconnect();
-    if (client2.connected) client2.disconnect();
+    if (client1.connected) {
+      client1.disconnect();
+    }
+    if (client2.connected) {
+      client2.disconnect();
+    }
   });
 
   describe('Connection and Channel Joining', () => {

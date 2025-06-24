@@ -303,7 +303,7 @@ export class DependencyManager {
     plugin: { name: string; path?: string },
     manifest: DependencyManifest
   ): Promise<void> {
-    if (!plugin.path) return;
+    if (!plugin.path) {return;}
 
     try {
       const analysis = await this.serviceDiscovery.analyzePlugin(plugin.path);
@@ -346,7 +346,7 @@ export class DependencyManager {
 
     while (toProcess.length > 0 && processed.size < maxDepth) {
       const pluginName = toProcess.shift();
-      if (!pluginName || processed.has(pluginName)) continue;
+      if (!pluginName || processed.has(pluginName)) {continue;}
 
       processed.add(pluginName);
 

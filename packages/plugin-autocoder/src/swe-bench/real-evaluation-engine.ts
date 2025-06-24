@@ -27,7 +27,6 @@ export class RealEvaluationEngine {
 
   constructor(config: EvaluationConfig) {
     this.workDir = config.output_dir || path.join(process.cwd(), '.eliza-temp', 'swe-bench-real-eval');
-      config.output_dir || path.join(process.cwd(), '.eliza-temp', 'swe-bench-real-eval');
     this.cacheDir = config.cache_dir || path.join(this.workDir, 'cache');
     this.timeout = config.timeout_per_instance || 300; // 5 minutes default
     this.maxParallel = config.parallel_instances || 2; // Conservative default
@@ -435,7 +434,7 @@ export class RealEvaluationEngine {
       elizaLogger.info(`[REAL-EVAL] Repository cloned and checked out to ${instance.base_commit}`);
     } catch (error) {
       // Enhanced error logging with context
-      elizaLogger.error(`[REAL-EVAL] Failed to clone/checkout repository:`, {
+      elizaLogger.error('[REAL-EVAL] Failed to clone/checkout repository:', {
         repo_url: instance.repo_url,
         base_commit: instance.base_commit,
         instance_id: instance.instance_id,
@@ -573,11 +572,11 @@ export class RealEvaluationEngine {
         }
       } catch (packageError) {
         // Not a Node.js project or package.json doesn't exist
-        elizaLogger.warn(`[REAL-EVAL] No package.json found, trying direct test execution`);
+        elizaLogger.warn('[REAL-EVAL] No package.json found, trying direct test execution');
         return await this.runTestsDirectly(workDir, logFile);
       }
     } catch (error) {
-      elizaLogger.error(`[REAL-EVAL] Test execution failed:`, error);
+      elizaLogger.error('[REAL-EVAL] Test execution failed:', error);
 
       // Check if it's a compilation error
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -664,7 +663,7 @@ export class RealEvaluationEngine {
           const testFiles = findOutput.trim().split('\n');
 
           // Try to run tests with different test runners
-          for (const testRunner of ['jest', 'mocha', 'vitest', 'tap']) {
+          for (const testRunner of ['jest', 'mocha', 'bun:test', 'tap']) {
             try {
               const testOutput = await this.runCommand(
                 ['npx', testRunner, ...testFiles],
@@ -958,7 +957,7 @@ export class RealEvaluationEngine {
   }
 
   private calculateAverage(numbers: number[]): number {
-    if (numbers.length === 0) return 0;
+    if (numbers.length === 0) {return 0;}
     return numbers.reduce((sum, n) => sum + n, 0) / numbers.length;
   }
 
@@ -967,9 +966,9 @@ export class RealEvaluationEngine {
     const groups = { low: 0, medium: 0, high: 0 };
 
     results.forEach((r, i) => {
-      if (i % 3 === 0) groups.low += r.resolved ? 1 : 0;
-      else if (i % 3 === 1) groups.medium += r.resolved ? 1 : 0;
-      else groups.high += r.resolved ? 1 : 0;
+      if (i % 3 === 0) {groups.low += r.resolved ? 1 : 0;}
+      else if (i % 3 === 1) {groups.medium += r.resolved ? 1 : 0;}
+      else {groups.high += r.resolved ? 1 : 0;}
     });
 
     return groups;
@@ -994,16 +993,16 @@ export class RealEvaluationEngine {
   private classifyError(error: string): string {
     const errorLower = error.toLowerCase();
 
-    if (errorLower.includes('timeout')) return 'Timeout';
+    if (errorLower.includes('timeout')) {return 'Timeout';}
     if (errorLower.includes('compilation') || errorLower.includes('compile'))
-      return 'Compilation Error';
-    if (errorLower.includes('test') || errorLower.includes('assertion')) return 'Test Failure';
+    {return 'Compilation Error';}
+    if (errorLower.includes('test') || errorLower.includes('assertion')) {return 'Test Failure';}
     if (errorLower.includes('patch') || errorLower.includes('apply'))
-      return 'Patch Application Failed';
+    {return 'Patch Application Failed';}
     if (errorLower.includes('install') || errorLower.includes('dependency'))
-      return 'Dependency Error';
-    if (errorLower.includes('git') || errorLower.includes('clone')) return 'Repository Error';
-    if (errorLower.includes('import') || errorLower.includes('module')) return 'Import Error';
+    {return 'Dependency Error';}
+    if (errorLower.includes('git') || errorLower.includes('clone')) {return 'Repository Error';}
+    if (errorLower.includes('import') || errorLower.includes('module')) {return 'Import Error';}
 
     return 'Other Error';
   }

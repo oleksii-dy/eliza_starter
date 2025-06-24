@@ -68,7 +68,7 @@ export class ProductionScenarioRunner {
       }
 
       // Execute the scenario
-      logger.info(`🎬 Executing scenario steps...`);
+      logger.info('🎬 Executing scenario steps...');
       const result = await this.executeScenarioSteps(scenario, transcript);
 
       if (result.errors.length > 0) {
@@ -78,7 +78,7 @@ export class ProductionScenarioRunner {
 
       // Run verifications if enabled
       if (this.config.enableVerification && scenario.expectations) {
-        logger.info(`🔍 Running verifications...`);
+        logger.info('🔍 Running verifications...');
         const verificationResult = await this.runVerifications(scenario, transcript);
 
         if (!verificationResult.success) {
@@ -90,7 +90,7 @@ export class ProductionScenarioRunner {
       // Run benchmarks if enabled
       let metrics: MetricsReport | undefined;
       if (this.config.enableMetrics && scenario.benchmarks) {
-        logger.info(`📊 Running benchmarks...`);
+        logger.info('📊 Running benchmarks...');
         metrics = await this.runBenchmarks(scenario, transcript, startTime);
 
         if (metrics.failures && metrics.failures.length > 0) {
@@ -101,7 +101,7 @@ export class ProductionScenarioRunner {
 
       const duration = Date.now() - startTime;
 
-      logger.info(`\n📋 Scenario Results:`);
+      logger.info('\n📋 Scenario Results:');
       logger.info(
         `   Status: ${status === 'passed' ? '✅ PASSED' : status === 'failed' ? '❌ FAILED' : '⚠️  PARTIAL'}`
       );
@@ -123,7 +123,7 @@ export class ProductionScenarioRunner {
         metrics,
       };
     } catch (error) {
-      logger.error(`Fatal error in scenario execution:`, error);
+      logger.error('Fatal error in scenario execution:', error);
       return {
         scenario: scenario.name,
         status: 'failed',
@@ -234,7 +234,7 @@ export class ProductionScenarioRunner {
     transcript: TranscriptMessage[]
   ): Promise<{ success: boolean; errors: string[]; critical: boolean }> {
     const errors: string[] = [];
-    let critical = false;
+    const critical = false;
 
     if (!scenario.expectations) {
       return { success: true, errors: [], critical: false };
@@ -255,7 +255,9 @@ export class ProductionScenarioRunner {
     // Verify response times
     if (scenario.expectations.responseTime) {
       const slowResponses = transcript.filter((msg, index) => {
-        if (index === 0 || msg.messageType !== 'incoming') return false;
+        if (index === 0 || msg.messageType !== 'incoming') {
+          return false;
+        }
         const prevMsg = transcript[index - 1];
         const responseTime = msg.timestamp - prevMsg.timestamp;
         return responseTime > scenario.expectations!.responseTime!.max;

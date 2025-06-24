@@ -5,7 +5,7 @@
 
 import { ResearchService } from './src/service';
 import { deepResearchBenchmark } from './src/benchmark/deepresearch-benchmark';
-import { elizaLogger, IAgentRuntime, ModelType } from '@elizaos/core';
+import { logger, IAgentRuntime, ModelType } from '@elizaos/core';
 import { ResearchConfig, ResearchDomain, ResearchDepth } from './src/types';
 
 // Create a mock runtime for testing
@@ -42,7 +42,7 @@ In summary, the research demonstrates...`,
         };
       }
 
-      return { content: 'Mock response for: ' + lastMessage?.content?.substring(0, 100) };
+      return { content: `Mock response for: ${lastMessage?.content?.substring(0, 100)}` };
     },
 
     // Other required methods
@@ -59,27 +59,27 @@ In summary, the research demonstrates...`,
     updateState: async () => true,
     composeState: async () => ({ values: {}, data: {}, text: '' }),
     db: {} as any,
-    logger: elizaLogger,
+    logger: logger,
   } as unknown as IAgentRuntime;
 };
 
 async function testBenchmark() {
-  elizaLogger.info('Starting DeepResearch benchmark test...');
+  logger.info('Starting DeepResearch benchmark test...');
 
   try {
     // Check benchmark setup
     const setupResult = await deepResearchBenchmark.checkSetup();
     if (!setupResult.success) {
-      elizaLogger.error('Benchmark setup check failed:', setupResult.error);
+      logger.error('Benchmark setup check failed:', setupResult.error);
 
       // Try to install dependencies
-      elizaLogger.info('Attempting to install benchmark dependencies...');
+      logger.info('Attempting to install benchmark dependencies...');
       const installed = await deepResearchBenchmark.setupBenchmark();
       if (!installed) {
         throw new Error('Failed to install benchmark dependencies');
       }
     } else {
-      elizaLogger.info('Benchmark setup OK:', setupResult);
+      logger.info('Benchmark setup OK:', setupResult);
     }
 
     // Create runtime and service
@@ -90,7 +90,7 @@ async function testBenchmark() {
     const testQuery =
       'Research the latest advancements in quantum error correction codes and their implications for building scalable quantum computers';
 
-    elizaLogger.info(`Creating research project for: "${testQuery}"`);
+    logger.info(`Creating research project for: "${testQuery}"`);
 
     // Create research project with high quality settings
     const project = await researchService.createResearchProject(testQuery, {
@@ -100,7 +100,7 @@ async function testBenchmark() {
       evaluationEnabled: true,
     });
 
-    elizaLogger.info(`Research project created: ${project.id}`);
+    logger.info(`Research project created: ${project.id}`);
 
     // Wait for research to complete
     let completed = false;
@@ -112,33 +112,33 @@ async function testBenchmark() {
 
       const updatedProject = await researchService.getProject(project.id);
       if (updatedProject) {
-        elizaLogger.info(
+        logger.info(
           `Project status: ${updatedProject.status} (phase: ${updatedProject.phase})`
         );
 
         if (updatedProject.status === 'completed' && updatedProject.report) {
           completed = true;
 
-          elizaLogger.info('Research completed! Running benchmark evaluation...');
+          logger.info('Research completed! Running benchmark evaluation...');
 
           try {
             // Run the benchmark evaluation
             const benchmarkResult = await deepResearchBenchmark.evaluateProject(updatedProject);
 
-            elizaLogger.info('=== BENCHMARK RESULTS ===');
-            elizaLogger.info(`Comprehensiveness: ${benchmarkResult.comprehensiveness}`);
-            elizaLogger.info(`Insight: ${benchmarkResult.insight}`);
-            elizaLogger.info(`Instruction Following: ${benchmarkResult.instructionFollowing}`);
-            elizaLogger.info(`Readability: ${benchmarkResult.readability}`);
-            elizaLogger.info(`Overall Score: ${benchmarkResult.overallScore}`);
+            logger.info('=== BENCHMARK RESULTS ===');
+            logger.info(`Comprehensiveness: ${benchmarkResult.comprehensiveness}`);
+            logger.info(`Insight: ${benchmarkResult.insight}`);
+            logger.info(`Instruction Following: ${benchmarkResult.instructionFollowing}`);
+            logger.info(`Readability: ${benchmarkResult.readability}`);
+            logger.info(`Overall Score: ${benchmarkResult.overallScore}`);
 
             // Export the report
             const exportPath = `./benchmark_results/benchmark_${project.id}.json`;
             const exported = await researchService.exportProject(project.id, 'deepresearch');
             await fs.writeFile(exportPath, exported);
-            elizaLogger.info(`Report exported to: ${exportPath}`);
+            logger.info(`Report exported to: ${exportPath}`);
           } catch (benchError) {
-            elizaLogger.error('Benchmark evaluation failed:', benchError);
+            logger.error('Benchmark evaluation failed:', benchError);
           }
         } else if (updatedProject.status === 'failed') {
           throw new Error(`Research failed: ${updatedProject.error}`);
@@ -152,7 +152,7 @@ async function testBenchmark() {
       throw new Error('Research timed out after 5 minutes');
     }
   } catch (error) {
-    elizaLogger.error('Test failed:', error);
+    logger.error('Test failed:', error);
     process.exit(1);
   }
 }
@@ -163,10 +163,10 @@ import * as fs from 'fs/promises';
 // Run the test
 testBenchmark()
   .then(() => {
-    elizaLogger.info('Test completed successfully!');
+    logger.info('Test completed successfully!');
     process.exit(0);
   })
   .catch((error) => {
-    elizaLogger.error('Test failed:', error);
+    logger.error('Test failed:', error);
     process.exit(1);
   });

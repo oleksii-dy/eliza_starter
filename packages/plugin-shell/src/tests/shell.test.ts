@@ -1,32 +1,11 @@
-import { describe, it, expect, beforeEach, vi, afterEach, beforeAll } from 'vitest';
-import {
-  type IAgentRuntime,
-  type Memory,
-  type State,
-  ModelType,
-  ContentType,
-} from '@elizaos/core';
+import { describe, it, expect, beforeEach, mock, afterEach, beforeAll } from 'bun:test';
+import { type IAgentRuntime, type Memory, type State, ModelType, ContentType } from '@elizaos/core';
 import { ShellService } from '../service';
 import { shellProvider } from '../provider';
 import { runShellCommandAction, clearShellHistoryAction, killAutonomousAction } from '../action';
 import * as child_process from 'child_process';
 
-// Mock child_process
-vi.mock('child_process');
-
-// Mock the core logger to silence output during tests
-vi.mock('@elizaos/core', async (importOriginal) => {
-  const original = await importOriginal<typeof import('@elizaos/core')>();
-  return {
-    ...original,
-    logger: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
-    },
-  };
-});
+// Note: Complex module mocking removed for bun:test compatibility
 
 describe('ShellService', () => {
   let shellService: ShellService;
@@ -36,20 +15,20 @@ describe('ShellService', () => {
     // Mock the runtime
     mockRuntime = {
       agentId: 'test-agent-id',
-      getService: vi.fn(),
-      createMemory: vi.fn(),
-      composeState: vi.fn(),
-      useModel: vi.fn(),
+      getService: mock(),
+      createMemory: mock(),
+      composeState: mock(),
+      useModel: mock(),
     } as unknown as IAgentRuntime;
 
     shellService = new ShellService(mockRuntime);
 
     // Reset mocks
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   it('should initialize with the correct CWD', () => {
@@ -57,7 +36,7 @@ describe('ShellService', () => {
   });
 
   it('should execute a simple command successfully', async () => {
-    const mockExecSync = vi.mocked(child_process.execSync);
+    const mockExecSync = mock(child_process.execSync);
     mockExecSync.mockReturnValue('hello' as any);
 
     const result = await shellService.executeCommand('echo hello');
@@ -78,7 +57,7 @@ describe('ShellService', () => {
   });
 
   it('should handle a failing command and capture stderr', async () => {
-    const mockExecSync = vi.mocked(child_process.execSync);
+    const mockExecSync = mock(child_process.execSync);
     const error = new Error('Command failed') as any;
     error.stderr =
       "ls: cannot access '/nonexistent-directory-for-testing': No such file or directory";
@@ -96,7 +75,7 @@ describe('ShellService', () => {
   });
 
   it('should change the current working directory with cd', async () => {
-    const mockExecSync = vi.mocked(child_process.execSync);
+    const mockExecSync = mock(child_process.execSync);
     mockExecSync.mockReturnValue('' as any);
 
     const initialCwd = shellService.getCurrentWorkingDirectory();
@@ -114,7 +93,7 @@ describe('ShellService', () => {
   });
 
   it('should handle invalid cd command', async () => {
-    const mockExecSync = vi.mocked(child_process.execSync);
+    const mockExecSync = mock(child_process.execSync);
     const error = new Error('Command failed') as any;
     error.message = 'ENOENT: no such file or directory';
     error.status = 1;
@@ -131,7 +110,7 @@ describe('ShellService', () => {
   });
 
   it('should record command history', async () => {
-    const mockExecSync = vi.mocked(child_process.execSync);
+    const mockExecSync = mock(child_process.execSync);
     mockExecSync.mockReturnValueOnce('test1' as any);
     mockExecSync.mockReturnValueOnce('test2' as any);
 
@@ -147,7 +126,7 @@ describe('ShellService', () => {
   });
 
   it('should limit history to maxHistoryLength', async () => {
-    const mockExecSync = vi.mocked(child_process.execSync);
+    const mockExecSync = mock(child_process.execSync);
 
     // Execute more than maxHistoryLength commands
     for (let i = 0; i < 110; i++) {
@@ -160,7 +139,7 @@ describe('ShellService', () => {
   });
 
   it('should clear command history', async () => {
-    const mockExecSync = vi.mocked(child_process.execSync);
+    const mockExecSync = mock(child_process.execSync);
     mockExecSync.mockReturnValue('test1' as any);
 
     await shellService.executeCommand('echo test1');
@@ -170,7 +149,7 @@ describe('ShellService', () => {
   });
 
   it('should track file operations', async () => {
-    const mockExecSync = vi.mocked(child_process.execSync);
+    const mockExecSync = mock(child_process.execSync);
     mockExecSync.mockReturnValue('' as any);
 
     // Execute file operation commands
@@ -188,7 +167,7 @@ describe('ShellService', () => {
   });
 
   it('should handle complex file operations', async () => {
-    const mockExecSync = vi.mocked(child_process.execSync);
+    const mockExecSync = mock(child_process.execSync);
     mockExecSync.mockReturnValue('' as any);
 
     await shellService.executeCommand('mv source.txt dest.txt');
@@ -213,7 +192,7 @@ describe('ShellProvider', () => {
 
   beforeEach(() => {
     mockShellService = {
-      getHistory: vi.fn().mockReturnValue([
+      getHistory: mock().mockReturnValue([
         {
           command: 'ls -la',
           output: 'total 64\ndrwxr-xr-x  10 user  staff   320 Dec  5 10:00 .',
@@ -230,11 +209,11 @@ describe('ShellProvider', () => {
           cwd: '/home/user',
         },
       ]),
-      getCurrentWorkingDirectory: vi.fn().mockReturnValue('/home/user'),
+      getCurrentWorkingDirectory: mock().mockReturnValue('/home/user'),
     } as unknown as ShellService;
 
     mockRuntime = {
-      getService: vi.fn().mockReturnValue(mockShellService),
+      getService: mock().mockReturnValue(mockShellService),
     } as unknown as IAgentRuntime;
 
     mockMemory = {
@@ -268,7 +247,7 @@ describe('ShellProvider', () => {
   });
 
   it('should handle missing shell service', async () => {
-    mockRuntime.getService = vi.fn().mockReturnValue(null);
+    mockRuntime.getService = mock().mockReturnValue(null);
 
     const result = await shellProvider.get(mockRuntime, mockMemory, mockState);
 
@@ -281,7 +260,7 @@ describe('ShellProvider', () => {
 
   it('should truncate very long output', async () => {
     const longOutput = 'x'.repeat(10000);
-    mockShellService.getHistory = vi.fn().mockReturnValue([
+    mockShellService.getHistory = mock().mockReturnValue([
       {
         command: 'cat largefile',
         output: longOutput,
@@ -309,27 +288,27 @@ describe('Shell Actions', () => {
 
   beforeEach(() => {
     mockShellService = {
-      executeCommand: vi.fn().mockResolvedValue({
+      executeCommand: mock().mockResolvedValue({
         output: 'command output',
         error: '',
         exitCode: 0,
         cwd: '/home/user',
       }),
-      clearHistory: vi.fn(),
-      getHistory: vi.fn().mockReturnValue([]),
-      getCurrentWorkingDirectory: vi.fn().mockReturnValue('/home/user'),
+      clearHistory: mock(),
+      getHistory: mock().mockReturnValue([]),
+      getCurrentWorkingDirectory: mock().mockReturnValue('/home/user'),
     } as unknown as ShellService;
 
     mockRuntime = {
       agentId: 'test-agent-id',
-      getService: vi.fn().mockReturnValue(mockShellService),
-      createMemory: vi.fn(),
-      composeState: vi.fn().mockResolvedValue({
+      getService: mock().mockReturnValue(mockShellService),
+      createMemory: mock(),
+      composeState: mock().mockResolvedValue({
         values: {},
         data: {},
         text: 'test state',
       }),
-      useModel: vi.fn().mockResolvedValue('<response><command>ls -la</command></response>'),
+      useModel: mock().mockResolvedValue('<response><command>ls -la</command></response>'),
     } as unknown as IAgentRuntime;
 
     mockMemory = {
@@ -348,7 +327,7 @@ describe('Shell Actions', () => {
       text: '',
     } as State;
 
-    mockCallback = vi.fn();
+    mockCallback = mock();
   });
 
   describe('runShellCommandAction', () => {
@@ -358,13 +337,13 @@ describe('Shell Actions', () => {
     });
 
     it('should not validate when shell service is unavailable', async () => {
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
+      mockRuntime.getService = mock().mockReturnValue(null);
       const isValid = await runShellCommandAction.validate(mockRuntime, mockMemory, mockState);
       expect(isValid).toBe(false);
     });
 
     it('should execute command from options', async () => {
-      await runShellCommandAction.handler(
+      const result = await runShellCommandAction.handler(
         mockRuntime,
         mockMemory,
         mockState,
@@ -385,41 +364,51 @@ describe('Shell Actions', () => {
           ]),
         })
       );
+      expect(result).toBeDefined();
+      expect(result.values.success).toBe(true);
+      expect(result.data.command).toBe('pwd');
     });
 
     it('should extract command from natural language', async () => {
-      await runShellCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
+      const result = await runShellCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockRuntime.useModel).toHaveBeenCalledWith(
         ModelType.TEXT_SMALL,
         expect.objectContaining({ prompt: expect.stringContaining('extract') })
       );
       expect(mockShellService.executeCommand).toHaveBeenCalledWith('ls -la');
+      expect(result).toBeDefined();
+      expect(result.values.success).toBe(true);
+      expect(result.data.command).toBe('ls -la');
     });
 
     it('should handle direct shell commands', async () => {
       mockMemory.content.text = 'ls -la';
 
-      await runShellCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
+      const result = await runShellCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockShellService.executeCommand).toHaveBeenCalledWith('ls -la');
+      expect(result).toBeDefined();
+      expect(result.values.success).toBe(true);
     });
 
     it('should quote wildcards for find and grep commands', async () => {
       mockMemory.content.text = 'find . -name *.txt';
 
-      await runShellCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
+      const result = await runShellCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockShellService.executeCommand).toHaveBeenCalledWith("find . -name '*.txt'");
+      expect(result).toBeDefined();
+      expect(result.values.success).toBe(true);
     });
 
     it('should handle command execution errors', async () => {
       // This test intentionally causes an error to verify that the
       // action's error handling works correctly. The `ERROR` log that
       // may appear in the console is expected for this test case.
-      mockShellService.executeCommand = vi.fn().mockRejectedValue(new Error('Command failed'));
+      mockShellService.executeCommand = mock().mockRejectedValue(new Error('Command failed'));
 
-      await runShellCommandAction.handler(
+      const result = await runShellCommandAction.handler(
         mockRuntime,
         mockMemory,
         mockState,
@@ -433,12 +422,15 @@ describe('Shell Actions', () => {
           text: expect.stringContaining('Error during shell command execution'),
         })
       );
+      expect(result).toBeDefined();
+      expect(result.values.success).toBe(false);
+      expect(result.values.error).toContain('Command failed');
     });
   });
 
   describe('clearShellHistoryAction', () => {
     it('should clear shell history', async () => {
-      await clearShellHistoryAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
+      const result = await clearShellHistoryAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockShellService.clearHistory).toHaveBeenCalled();
       expect(mockCallback).toHaveBeenCalledWith(
@@ -447,12 +439,15 @@ describe('Shell Actions', () => {
           text: 'Shell command history has been cleared.',
         })
       );
+      expect(result).toBeDefined();
+      expect(result.values.success).toBe(true);
+      expect(result.values.cleared).toBe(true);
     });
 
     it('should handle missing shell service', async () => {
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
+      mockRuntime.getService = mock().mockReturnValue(null);
 
-      await clearShellHistoryAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
+      const result = await clearShellHistoryAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -460,19 +455,22 @@ describe('Shell Actions', () => {
           text: 'I am currently unable to clear shell history.',
         })
       );
+      expect(result).toBeDefined();
+      expect(result.values.success).toBe(false);
+      expect(result.values.error).toBe('ShellService not available');
     });
   });
 
   describe('killAutonomousAction', () => {
     it('should stop autonomous service', async () => {
       const mockAutonomousService = {
-        stop: vi.fn(),
+        stop: mock(),
       };
-      mockRuntime.getService = vi.fn((name) =>
+      mockRuntime.getService = mock((name) =>
         name === 'AUTONOMOUS' ? mockAutonomousService : mockShellService
       ) as any;
 
-      await killAutonomousAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
+      const result = await killAutonomousAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockAutonomousService.stop).toHaveBeenCalled();
       expect(mockCallback).toHaveBeenCalledWith(
@@ -481,12 +479,15 @@ describe('Shell Actions', () => {
           text: expect.stringContaining('Autonomous loop has been killed'),
         })
       );
+      expect(result).toBeDefined();
+      expect(result.values.success).toBe(true);
+      expect(result.values.stopped).toBe(true);
     });
 
     it('should handle missing autonomous service', async () => {
-      mockRuntime.getService = vi.fn((name) => (name === 'SHELL' ? mockShellService : null)) as any;
+      mockRuntime.getService = mock((name) => (name === 'SHELL' ? mockShellService : null)) as any;
 
-      await killAutonomousAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
+      const result = await killAutonomousAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -494,6 +495,9 @@ describe('Shell Actions', () => {
           text: expect.stringContaining('No autonomous loop was running'),
         })
       );
+      expect(result).toBeDefined();
+      expect(result.values.success).toBe(true);
+      expect(result.values.stopped).toBe(false);
     });
   });
 });

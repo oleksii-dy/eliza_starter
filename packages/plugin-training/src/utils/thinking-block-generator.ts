@@ -1,7 +1,4 @@
-import {
-  type IAgentRuntime,
-  elizaLogger,
-} from '@elizaos/core';
+import { type IAgentRuntime, elizaLogger } from '@elizaos/core';
 import {
   type ThinkingBlock,
   type CodeGenerationSuccess,
@@ -104,52 +101,52 @@ export class ThinkingBlockGenerator {
     request: string;
     context: any;
     solution: CodeGenerationSuccess;
-    files: Array<{path: string, content: string}>;
+    files: Array<{ path: string; content: string }>;
     outcome: any;
   }): Promise<string> {
     const { type, request, context, solution, files, outcome } = params;
 
-    let thinking = `<thinking>\n`;
-    
+    let thinking = '<thinking>\n';
+
     // 1. Analyze the request
     thinking += `The user is asking me to ${this.analyzeRequestType(request)}. Let me break this down:\n\n`;
-    
+
     // 2. Understand requirements
-    thinking += `Requirements Analysis:\n`;
+    thinking += 'Requirements Analysis:\n';
     thinking += await this.analyzeRequirements(request, context);
-    thinking += `\n`;
+    thinking += '\n';
 
     // 3. Plan the architecture
-    thinking += `Architecture Planning:\n`;
+    thinking += 'Architecture Planning:\n';
     thinking += await this.planArchitecture(type, request, files);
-    thinking += `\n`;
+    thinking += '\n';
 
     // 4. Implementation strategy
-    thinking += `Implementation Strategy:\n`;
+    thinking += 'Implementation Strategy:\n';
     thinking += await this.planImplementation(files, outcome);
-    thinking += `\n`;
+    thinking += '\n';
 
     // 5. File structure reasoning
-    thinking += `File Structure Reasoning:\n`;
+    thinking += 'File Structure Reasoning:\n';
     thinking += await this.explainFileStructure(files);
-    thinking += `\n`;
+    thinking += '\n';
 
     // 6. Code implementation logic
-    thinking += `Code Implementation Logic:\n`;
+    thinking += 'Code Implementation Logic:\n';
     thinking += await this.explainImplementation(files, outcome);
-    thinking += `\n`;
+    thinking += '\n';
 
     // 7. Testing and validation approach
-    thinking += `Testing and Validation:\n`;
+    thinking += 'Testing and Validation:\n';
     thinking += await this.explainTesting(files, outcome);
-    thinking += `\n`;
+    thinking += '\n';
 
     // 8. Final verification
-    thinking += `Final Verification:\n`;
+    thinking += 'Final Verification:\n';
     thinking += `This implementation should successfully create a ${type} that:\n`;
     thinking += await this.summarizeCapabilities(outcome);
-    
-    thinking += `</thinking>\n`;
+
+    thinking += '</thinking>\n';
 
     return thinking;
   }
@@ -166,22 +163,22 @@ export class ThinkingBlockGenerator {
 
   private async analyzeRequirements(request: string, context: any): Promise<string> {
     let analysis = '';
-    
+
     // Extract key requirements from the request
     const requirements = this.extractRequirements(request);
-    
+
     analysis += `- Primary Goal: ${requirements.primary}\n`;
-    
+
     if (requirements.features.length > 0) {
-      analysis += `- Required Features:\n`;
-      requirements.features.forEach(feature => {
+      analysis += '- Required Features:\n';
+      requirements.features.forEach((feature) => {
         analysis += `  * ${feature}\n`;
       });
     }
 
     if (requirements.constraints.length > 0) {
-      analysis += `- Constraints:\n`;
-      requirements.constraints.forEach(constraint => {
+      analysis += '- Constraints:\n';
+      requirements.constraints.forEach((constraint) => {
         analysis += `  * ${constraint}\n`;
       });
     }
@@ -193,53 +190,74 @@ export class ThinkingBlockGenerator {
     return analysis;
   }
 
-  private async planArchitecture(type: string, request: string, files: Array<{path: string, content: string}>): Promise<string> {
+  private async planArchitecture(
+    type: string,
+    request: string,
+    files: Array<{ path: string; content: string }>
+  ): Promise<string> {
     let plan = '';
 
     if (type === 'plugin-creation') {
-      plan += `For an ElizaOS plugin, I need to follow the standard plugin architecture:\n`;
-      plan += `- Main plugin file (index.ts) with Plugin interface implementation\n`;
-      plan += `- Actions for user interactions\n`;
-      plan += `- Providers for context injection\n`;
-      plan += `- Services for stateful functionality (if needed)\n`;
-      plan += `- Proper TypeScript types and interfaces\n`;
+      plan += 'For an ElizaOS plugin, I need to follow the standard plugin architecture:\n';
+      plan += '- Main plugin file (index.ts) with Plugin interface implementation\n';
+      plan += '- Actions for user interactions\n';
+      plan += '- Providers for context injection\n';
+      plan += '- Services for stateful functionality (if needed)\n';
+      plan += '- Proper TypeScript types and interfaces\n';
     } else if (type === 'mcp-creation') {
-      plan += `For an MCP server, I need to implement:\n`;
-      plan += `- MCP server initialization and connection handling\n`;
-      plan += `- Tool definitions and implementations\n`;
-      plan += `- Proper request/response handling\n`;
-      plan += `- Error handling and validation\n`;
+      plan += 'For an MCP server, I need to implement:\n';
+      plan += '- MCP server initialization and connection handling\n';
+      plan += '- Tool definitions and implementations\n';
+      plan += '- Proper request/response handling\n';
+      plan += '- Error handling and validation\n';
     }
 
     plan += `\nFile structure analysis shows ${files.length} files needed:\n`;
-    files.forEach(file => {
+    files.forEach((file) => {
       plan += `- ${file.path}: ${this.describeFilePurpose(file)}\n`;
     });
 
     return plan;
   }
 
-  private describeFilePurpose(file: {path: string, content: string}): string {
+  private describeFilePurpose(file: { path: string; content: string }): string {
     const path = file.path;
-    if (path.includes('action')) return 'Action implementation';
-    if (path.includes('provider')) return 'Provider implementation';
-    if (path.includes('service')) return 'Service implementation';
-    if (path.includes('evaluator')) return 'Evaluator implementation';
-    if (path.includes('index')) return 'Plugin entry point';
-    if (path.includes('test')) return 'Test file';
-    if (path.includes('types')) return 'Type definitions';
+    if (path.includes('action')) {
+      return 'Action implementation';
+    }
+    if (path.includes('provider')) {
+      return 'Provider implementation';
+    }
+    if (path.includes('service')) {
+      return 'Service implementation';
+    }
+    if (path.includes('evaluator')) {
+      return 'Evaluator implementation';
+    }
+    if (path.includes('index')) {
+      return 'Plugin entry point';
+    }
+    if (path.includes('test')) {
+      return 'Test file';
+    }
+    if (path.includes('types')) {
+      return 'Type definitions';
+    }
     return 'Implementation file';
   }
 
-  private async planImplementation(files: Array<{path: string, content: string}>, outcome: any): Promise<string> {
+  private async planImplementation(
+    files: Array<{ path: string; content: string }>,
+    outcome: any
+  ): Promise<string> {
     let plan = '';
 
-    plan += `Implementation will proceed in logical order:\n`;
-    plan += `1. Set up core types and interfaces\n`;
-    plan += `2. Implement main functionality\n`;
-    plan += `3. Add supporting utilities\n`;
-    plan += `4. Integrate with ElizaOS patterns\n`;
-    plan += `5. Add comprehensive error handling\n`;
+    plan += 'Implementation will proceed in logical order:\n';
+    plan += '1. Set up core types and interfaces\n';
+    plan += '2. Implement main functionality\n';
+    plan += '3. Add supporting utilities\n';
+    plan += '4. Integrate with ElizaOS patterns\n';
+    plan += '5. Add comprehensive error handling\n';
 
     if (outcome.dependencies && outcome.dependencies.length > 0) {
       plan += `\nDependencies to include: ${outcome.dependencies.join(', ')}\n`;
@@ -248,10 +266,12 @@ export class ThinkingBlockGenerator {
     return plan;
   }
 
-  private async explainFileStructure(files: Array<{path: string, content: string}>): Promise<string> {
+  private async explainFileStructure(
+    files: Array<{ path: string; content: string }>
+  ): Promise<string> {
     let explanation = '';
 
-    files.forEach(file => {
+    files.forEach((file) => {
       const purpose = this.describeFileDetailedPurpose(file);
       explanation += `${file.path}:\n`;
       explanation += `  Purpose: ${purpose}\n`;
@@ -261,26 +281,29 @@ export class ThinkingBlockGenerator {
     return explanation;
   }
 
-  private async explainImplementation(files: Array<{path: string, content: string}>, outcome: any): Promise<string> {
+  private async explainImplementation(
+    files: Array<{ path: string; content: string }>,
+    outcome: any
+  ): Promise<string> {
     let explanation = '';
 
-    explanation += `The implementation follows these key principles:\n`;
-    explanation += `- Type safety with comprehensive TypeScript interfaces\n`;
-    explanation += `- ElizaOS architectural patterns and conventions\n`;
-    explanation += `- Proper error handling and logging\n`;
-    explanation += `- Clear separation of concerns\n`;
-    explanation += `- Extensible and maintainable code structure\n\n`;
+    explanation += 'The implementation follows these key principles:\n';
+    explanation += '- Type safety with comprehensive TypeScript interfaces\n';
+    explanation += '- ElizaOS architectural patterns and conventions\n';
+    explanation += '- Proper error handling and logging\n';
+    explanation += '- Clear separation of concerns\n';
+    explanation += '- Extensible and maintainable code structure\n\n';
 
     // Analyze specific implementation details
-    files.forEach(file => {
+    files.forEach((file) => {
       if (file.path.includes('index.ts')) {
-        explanation += `Main plugin/module file implements core functionality:\n`;
+        explanation += 'Main plugin/module file implements core functionality:\n';
         explanation += this.analyzeMainFile(file.content);
       } else if (file.path.includes('action')) {
-        explanation += `Action files handle user interactions:\n`;
+        explanation += 'Action files handle user interactions:\n';
         explanation += this.analyzeActionFile(file.content);
       } else if (file.path.includes('provider')) {
-        explanation += `Provider files inject context:\n`;
+        explanation += 'Provider files inject context:\n';
         explanation += this.analyzeProviderFile(file.content);
       }
     });
@@ -288,20 +311,23 @@ export class ThinkingBlockGenerator {
     return explanation;
   }
 
-  private async explainTesting(files: Array<{path: string, content: string}>, outcome: any): Promise<string> {
+  private async explainTesting(
+    files: Array<{ path: string; content: string }>,
+    outcome: any
+  ): Promise<string> {
     let testing = '';
 
-    testing += `Testing approach for this implementation:\n`;
-    testing += `- Unit tests for individual functions\n`;
-    testing += `- Integration tests with ElizaOS runtime\n`;
-    testing += `- End-to-end workflow testing\n`;
-    testing += `- Error scenario validation\n`;
+    testing += 'Testing approach for this implementation:\n';
+    testing += '- Unit tests for individual functions\n';
+    testing += '- Integration tests with ElizaOS runtime\n';
+    testing += '- End-to-end workflow testing\n';
+    testing += '- Error scenario validation\n';
 
-    const hasTests = files.some(file => file.path.includes('test') || file.path.includes('spec'));
+    const hasTests = files.some((file) => file.path.includes('test') || file.path.includes('spec'));
     if (hasTests) {
-      testing += `- Test files included in implementation\n`;
+      testing += '- Test files included in implementation\n';
     } else {
-      testing += `- Test files should be added for production use\n`;
+      testing += '- Test files should be added for production use\n';
     }
 
     return testing;
@@ -312,18 +338,18 @@ export class ThinkingBlockGenerator {
 
     if (outcome.pluginName) {
       summary += `- Function as a complete ElizaOS plugin named "${outcome.pluginName}"\n`;
-      summary += `- Integrate seamlessly with the ElizaOS runtime\n`;
-      summary += `- Provide the specified functionality through actions and providers\n`;
+      summary += '- Integrate seamlessly with the ElizaOS runtime\n';
+      summary += '- Provide the specified functionality through actions and providers\n';
     }
 
     if (outcome.mcpName) {
       summary += `- Function as a complete MCP server named "${outcome.mcpName}"\n`;
-      summary += `- Handle MCP protocol communication\n`;
-      summary += `- Provide the specified tools and capabilities\n`;
+      summary += '- Handle MCP protocol communication\n';
+      summary += '- Provide the specified tools and capabilities\n';
     }
 
-    summary += `- Handle errors gracefully and provide meaningful feedback\n`;
-    summary += `- Follow best practices for maintainability and extensibility\n`;
+    summary += '- Handle errors gracefully and provide meaningful feedback\n';
+    summary += '- Follow best practices for maintainability and extensibility\n';
 
     return summary;
   }
@@ -334,7 +360,7 @@ export class ThinkingBlockGenerator {
     constraints: string[];
   } {
     const primary = request.split('.')[0] || request.substring(0, 100);
-    
+
     const features: string[] = [];
     const constraints: string[] = [];
 
@@ -346,7 +372,7 @@ export class ThinkingBlockGenerator {
       /will (.*?)(?:\.|$)/gi,
     ];
 
-    featurePatterns.forEach(pattern => {
+    featurePatterns.forEach((pattern) => {
       const matches = request.matchAll(pattern);
       for (const match of matches) {
         if (match[1]) {
@@ -363,7 +389,7 @@ export class ThinkingBlockGenerator {
       /without (.*?)(?:\.|$)/gi,
     ];
 
-    constraintPatterns.forEach(pattern => {
+    constraintPatterns.forEach((pattern) => {
       const matches = request.matchAll(pattern);
       for (const match of matches) {
         if (match[1]) {
@@ -375,7 +401,7 @@ export class ThinkingBlockGenerator {
     return { primary, features, constraints };
   }
 
-  private describeFileContentPurpose(file: {path: string, content: string}): string {
+  private describeFileContentPurpose(file: { path: string; content: string }): string {
     if (file.path.includes('index.ts')) {
       return 'Main entry point and plugin/module definition';
     } else if (file.path.includes('action')) {
@@ -394,9 +420,9 @@ export class ThinkingBlockGenerator {
     return 'Supporting module';
   }
 
-  private describeFileDetailedPurpose(file: {path: string, content: string}): string {
+  private describeFileDetailedPurpose(file: { path: string; content: string }): string {
     const basicPurpose = this.describeFileContentPurpose(file);
-    
+
     // Analyze content for more specific purpose
     if (file.content.includes('export const') && file.content.includes('Action')) {
       return `${basicPurpose} - Implements specific actions for user commands`;
@@ -433,7 +459,7 @@ export class ThinkingBlockGenerator {
 
   private analyzeMainFile(content: string): string {
     let analysis = '';
-    
+
     if (content.includes('Plugin')) {
       analysis += '- Defines the main plugin configuration\n';
       analysis += '- Registers actions, providers, and services\n';
@@ -448,23 +474,33 @@ export class ThinkingBlockGenerator {
   }
 
   private analyzeActionFile(content: string): string {
-    return '- Implements action handlers with validation and execution logic\n' +
-           '- Provides user-facing functionality\n' +
-           '- Includes proper error handling and responses\n';
+    return (
+      '- Implements action handlers with validation and execution logic\n' +
+      '- Provides user-facing functionality\n' +
+      '- Includes proper error handling and responses\n'
+    );
   }
 
   private analyzeProviderFile(content: string): string {
-    return '- Supplies contextual information to the runtime\n' +
-           '- Enhances agent decision-making with relevant data\n' +
-           '- Follows ElizaOS provider patterns\n';
+    return (
+      '- Supplies contextual information to the runtime\n' +
+      '- Enhances agent decision-making with relevant data\n' +
+      '- Follows ElizaOS provider patterns\n'
+    );
   }
 
-  private assessComplexity(files: Array<{path: string, content: string}>): 'simple' | 'medium' | 'complex' {
+  private assessComplexity(
+    files: Array<{ path: string; content: string }>
+  ): 'simple' | 'medium' | 'complex' {
     const totalLines = files.reduce((sum, file) => sum + file.content.split('\n').length, 0);
     const fileCount = files.length;
 
-    if (fileCount <= 2 && totalLines < 200) return 'simple';
-    if (fileCount <= 5 && totalLines < 500) return 'medium';
+    if (fileCount <= 2 && totalLines < 200) {
+      return 'simple';
+    }
+    if (fileCount <= 5 && totalLines < 500) {
+      return 'medium';
+    }
     return 'complex';
   }
 

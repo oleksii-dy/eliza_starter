@@ -5,7 +5,7 @@
       "extensions": [".ts", ".tsx"],
       "container": "node",
       "buildTools": ["npm", "yarn", "pnpm", "bun"],
-      "testFrameworks": ["jest", "vitest", "mocha", "jasmine"],
+      "testFrameworks": ["jest", "bun", "mocha", "jasmine"],
       "compilers": ["tsc", "tsx", "ts-node"],
       "linters": ["eslint", "tslint"],
       "defaultBuildCommand": "npm run build",
@@ -16,7 +16,7 @@
       "extensions": [".js", ".jsx", ".mjs", ".cjs"],
       "container": "node",
       "buildTools": ["npm", "yarn", "pnpm", "bun"],
-      "testFrameworks": ["jest", "vitest", "mocha", "jasmine", "ava"],
+      "testFrameworks": ["jest", "bun", "mocha", "jasmine", "ava"],
       "linters": ["eslint", "jshint"],
       "defaultBuildCommand": "npm run build",
       "defaultTestCommand": "npm test"

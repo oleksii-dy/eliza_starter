@@ -42,7 +42,7 @@ export const clonePluginAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory): Promise<boolean> => {
     // Simply check if the plugin manager service is available
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
@@ -162,7 +162,7 @@ export const clonePluginAction: Action = {
 
       if (result.dependencies && Object.keys(result.dependencies).length > 0) {
         responseText += '\n\n**Dependencies to install:**\n';
-        responseText += '```bash\ncd ' + result.localPath + '\nnpm install\n```';
+        responseText += `\`\`\`bash\ncd ${result.localPath}\nnpm install\n\`\`\``;
       }
 
       if (callback) {
@@ -182,8 +182,8 @@ export const clonePluginAction: Action = {
             pluginId = await pluginManager.registerPlugin(plugin.default);
             elizaLogger.info(`[clonePluginAction] Registered cloned plugin with ID: ${pluginId}`);
           }
-        } catch (error) {
-          elizaLogger.warn('[clonePluginAction] Could not auto-register cloned plugin:', error);
+        } catch (_error) {
+          elizaLogger.warn('[clonePluginAction] Could not auto-register cloned plugin:', _error);
         }
       }
 
@@ -193,13 +193,13 @@ export const clonePluginAction: Action = {
           success: true,
           pluginName: result.pluginName,
           localPath: result.localPath,
-          pluginId: pluginId,
+          pluginId,
         },
       };
-    } catch (error) {
-      elizaLogger.error('[clonePluginAction] Error cloning plugin:', error);
+    } catch (_error) {
+      elizaLogger.error('[clonePluginAction] Error cloning plugin:', _error);
 
-      const errorMessage = `Error cloning plugin: ${error instanceof Error ? error.message : String(error)}`;
+      const errorMessage = `Error cloning plugin: ${_error instanceof Error ? _error.message : String(_error)}`;
 
       if (callback) {
         await callback({

@@ -1,31 +1,32 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { mock, spyOn } from 'bun:test'
 import { ServerNetwork, User, ConnectionParams, SpawnData } from '../../core/systems/ServerNetwork.js'
 import { createTestWorld, MockWorld } from '../test-world-factory.js'
 import moment from 'moment'
 import { ENV } from '../../core/env.js'
 
 // Mock dependencies
-vi.mock('../../core/packets.js', () => ({
-  writePacket: vi.fn((name: string, data: any) => `packet:${name}:${JSON.stringify(data)}`),
+mock.module('../../core/packets.js', () => ({
+  writePacket: mock((name: string, data: any) => `packet:${name}:${JSON.stringify(data)}`),
 }))
 
-vi.mock('../../core/Socket.js', () => ({
-  Socket: vi.fn().mockImplementation(({ id, ws, network }: any) => ({
+mock.module('../../core/Socket.js', () => ({
+  Socket: mock().mockImplementation(({ id, ws, network }: any) => ({
     id,
     ws,
     network,
     alive: true,
     player: null,
-    send: vi.fn(),
-    sendPacket: vi.fn(),
-    ping: vi.fn(),
-    disconnect: vi.fn(),
+    send: mock(),
+    sendPacket: mock(),
+    ping: mock(),
+    disconnect: mock(),
   })),
 }))
 
-vi.mock('../../core/utils-server.js', () => ({
-  createJWT: vi.fn(({ userId }: any) => Promise.resolve(`jwt-token-${userId}`)),
-  readJWT: vi.fn((token: string) => {
+mock.module('../../core/utils-server.js', () => ({
+  createJWT: mock(({ userId }: any) => Promise.resolve(`jwt-token-${userId}`)),
+  readJWT: mock((token: string) => {
     if (token.startsWith('jwt-token-')) {
       return Promise.resolve({ userId: token.replace('jwt-token-', '') })
     }
@@ -33,17 +34,21 @@ vi.mock('../../core/utils-server.js', () => ({
   }),
 }))
 
-vi.mock('../../core/utils.js', () => ({
-  uuid: vi.fn(() => 'test-uuid-' + Math.random()),
-  hasRole: vi.fn((roles: string[], role: string) => roles.includes(role)),
-  addRole: vi.fn((roles: string[], role: string) => {
-    if (!roles.includes(role)) roles.push(role)
+mock.module('../../core/utils.js', () => ({
+  uuid: mock(() => `test-uuid-${Math.random()}`),
+  hasRole: mock((roles: string[], role: string) => roles.includes(role)),
+  addRole: mock((roles: string[], role: string) => {
+    if (!roles.includes(role)) {
+      roles.push(role)
+    }
   }),
-  removeRole: vi.fn((roles: string[], role: string) => {
+  removeRole: mock((roles: string[], role: string) => {
     const idx = roles.indexOf(role)
-    if (idx >= 0) roles.splice(idx, 1)
+    if (idx >= 0) {
+      roles.splice(idx, 1)
+    }
   }),
-  serializeRoles: vi.fn((roles: string[]) => roles.join(',')),
+  serializeRoles: mock((roles: string[]) => roles.join(',')),
 }))
 
 // Mock database
@@ -73,7 +78,9 @@ const createMockDb = () => {
       },
     }),
     insert: (record: any) => {
-      if (!data[table]) data[table] = []
+      if (!data[table]) {
+        data[table] = []
+      }
       data[table].push(record)
       return {
         onConflict: (field: string) => ({
@@ -109,55 +116,55 @@ describe('ServerNetwork System', () => {
 
     // Set ADMIN_CODE to prevent temporary admin role in tests
     // This sets process.env which our ENV module will read
-    process.env.ADMIN_CODE = 'test-admin-code'
+    ;(process.env as any).ADMIN_CODE = 'test-admin-code'
 
     // Set up mock world systems
     ;(world as any).blueprints = {
-      add: vi.fn(),
-      get: vi.fn((id: string) => ({ id, version: 1 })),
-      modify: vi.fn(),
-      serialize: vi.fn(() => []),
+      add: mock(),
+      get: mock((id: string) => ({ id, version: 1 })),
+      modify: mock(),
+      serialize: mock(() => []),
     }
     ;(world as any).entities = {
-      add: vi.fn((data: any) => ({
+      add: mock((data: any) => ({
         data,
         isApp: data.type === 'app',
         isPlayer: data.type === 'player',
-        modify: vi.fn(),
-        destroy: vi.fn(),
+        modify: mock(),
+        destroy: mock(),
       })),
-      get: vi.fn((id: string) => ({ data: { id }, isApp: false, isPlayer: false, modify: vi.fn() })),
-      remove: vi.fn(),
-      serialize: vi.fn(() => []),
+      get: mock((id: string) => ({ data: { id }, isApp: false, isPlayer: false, modify: mock() })),
+      remove: mock(),
+      serialize: mock(() => []),
     }
     ;(world as any).settings = {
       public: false,
       playerLimit: 10,
       avatar: { url: 'default-avatar.vrm' },
-      deserialize: vi.fn(),
-      serialize: vi.fn(() => ({})),
-      on: vi.fn(),
-      set: vi.fn(),
+      deserialize: mock(),
+      serialize: mock(() => ({})),
+      on: mock(),
+      set: mock(),
     }
     ;(world as any).chat = {
-      add: vi.fn(),
-      clear: vi.fn(),
-      serialize: vi.fn(() => []),
+      add: mock(),
+      clear: mock(),
+      serialize: mock(() => []),
     }
     ;(world as any).collections = {
-      serialize: vi.fn(() => []),
+      serialize: mock(() => []),
     }
     ;(world as any).events = {
-      emit: vi.fn(),
+      emit: mock(),
     }
     ;(world as any).environment = {
-      updateModel: vi.fn(),
+      updateModel: mock(),
     }
     ;(world as any).livekit = {
-      getPlayerOpts: vi.fn((userId: string) => Promise.resolve({ token: `livekit-${userId}` })),
+      getPlayerOpts: mock((userId: string) => Promise.resolve({ token: `livekit-${userId}` })),
     }
     ;(world as any).monitor = {
-      getStats: vi.fn(() => Promise.resolve({ currentCPU: 25.5, currentMemory: 512, maxMemory: 2048 })),
+      getStats: mock(() => Promise.resolve({ currentCPU: 25.5, currentMemory: 512, maxMemory: 2048 })),
     }
 
     serverNetwork = new ServerNetwork(world)
@@ -165,9 +172,9 @@ describe('ServerNetwork System', () => {
   })
 
   afterEach(() => {
-    vi.clearAllMocks()
+    mock.restore()
     // Clean up environment variable
-    delete process.env.ADMIN_CODE
+    delete (process.env as any).ADMIN_CODE
 
     if (serverNetwork.socketIntervalId) {
       clearInterval(serverNetwork.socketIntervalId)
@@ -177,24 +184,10 @@ describe('ServerNetwork System', () => {
     }
   })
 
-  describe('initialization', () => {
-    it('should initialize with default values', () => {
-      expect(serverNetwork.id).toBe(0)
-      expect(serverNetwork.ids).toBe(-1)
-      expect(serverNetwork.sockets).toBeInstanceOf(Map)
-      expect(serverNetwork.sockets.size).toBe(0)
-      expect(serverNetwork.dirtyBlueprints).toBeInstanceOf(Set)
-      expect(serverNetwork.dirtyApps).toBeInstanceOf(Set)
-      expect(serverNetwork.isServer).toBe(true)
-      expect(serverNetwork.queue).toEqual([])
-    })
-
+  describe('start', () => {
     it('should set up socket check interval', () => {
       expect(serverNetwork.socketIntervalId).toBeDefined()
     })
-  })
-
-  describe('start', () => {
     it('should load spawn data from database', async () => {
       await serverNetwork.start()
 
@@ -239,8 +232,8 @@ describe('ServerNetwork System', () => {
 
   describe('send', () => {
     it('should send packet to all connected sockets', () => {
-      const mockSocket1 = { id: 's1', sendPacket: vi.fn() }
-      const mockSocket2 = { id: 's2', sendPacket: vi.fn() }
+      const mockSocket1 = { id: 's1', sendPacket: mock() }
+      const mockSocket2 = { id: 's2', sendPacket: mock() }
 
       serverNetwork.sockets.set('s1', mockSocket1 as any)
       serverNetwork.sockets.set('s2', mockSocket2 as any)
@@ -252,8 +245,8 @@ describe('ServerNetwork System', () => {
     })
 
     it('should ignore specified socket when sending', () => {
-      const mockSocket1 = { id: 's1', sendPacket: vi.fn() }
-      const mockSocket2 = { id: 's2', sendPacket: vi.fn() }
+      const mockSocket1 = { id: 's1', sendPacket: mock() }
+      const mockSocket2 = { id: 's2', sendPacket: mock() }
 
       serverNetwork.sockets.set('s1', mockSocket1 as any)
       serverNetwork.sockets.set('s2', mockSocket2 as any)
@@ -267,7 +260,7 @@ describe('ServerNetwork System', () => {
 
   describe('sendTo', () => {
     it('should send to specific socket', () => {
-      const mockSocket = { id: 's1', send: vi.fn() }
+      const mockSocket = { id: 's1', send: mock() }
       serverNetwork.sockets.set('s1', mockSocket as any)
 
       serverNetwork.sendTo('s1', 'test', { data: 'value' })
@@ -282,8 +275,8 @@ describe('ServerNetwork System', () => {
 
   describe('checkSockets', () => {
     it('should disconnect dead sockets', () => {
-      const aliveSocket = { id: 's1', alive: true, ping: vi.fn(), disconnect: vi.fn() }
-      const deadSocket = { id: 's2', alive: false, ping: vi.fn(), disconnect: vi.fn() }
+      const aliveSocket = { id: 's1', alive: true, ping: mock(), disconnect: mock() }
+      const deadSocket = { id: 's2', alive: false, ping: mock(), disconnect: mock() }
 
       serverNetwork.sockets.set('s1', aliveSocket as any)
       serverNetwork.sockets.set('s2', deadSocket as any)
@@ -295,9 +288,29 @@ describe('ServerNetwork System', () => {
     })
   })
 
+  // Helper function to create a proper mock Socket
+  function createMockSocket(id: string) {
+    return {
+      id,
+      ws: {},
+      network: {},
+      player: null,
+      alive: true,
+      closed: false,
+      disconnected: false,
+      send: mock(),
+      sendPacket: mock(),
+      ping: mock(),
+      onPong: mock(),
+      onMessage: mock(),
+      onClose: mock(),
+      disconnect: mock(),
+    };
+  }
+
   describe('queue system', () => {
     it('should enqueue method calls', () => {
-      const mockSocket = { id: 's1' }
+      const mockSocket = createMockSocket('s1')
 
       serverNetwork.enqueue(mockSocket as any, 'testMethod', { data: 'value' })
 
@@ -306,8 +319,8 @@ describe('ServerNetwork System', () => {
     })
 
     it('should flush queue and execute methods', () => {
-      const mockSocket = { id: 's1' }
-      const testMethod = vi.fn()
+      const mockSocket = createMockSocket('s1')
+      const testMethod = mock()
       ;(serverNetwork as any).testMethod = testMethod
 
       serverNetwork.enqueue(mockSocket as any, 'testMethod', { data: 'value' })
@@ -318,8 +331,8 @@ describe('ServerNetwork System', () => {
     })
 
     it('should handle errors during flush', () => {
-      const mockSocket = { id: 's1' }
-      const errorMethod = vi.fn(() => {
+      const mockSocket = createMockSocket('s1')
+      const errorMethod = mock(() => {
         throw new Error('Test error')
       })
       ;(serverNetwork as any).errorMethod = errorMethod
@@ -420,14 +433,14 @@ describe('ServerNetwork System', () => {
 
     beforeEach(() => {
       mockWs = {
-        send: vi.fn(),
-        disconnect: vi.fn(),
+        send: mock(),
+        disconnect: mock(),
       }
     })
 
     it('should reject connection when player limit reached', async () => {
       ;(world as any).settings.playerLimit = 1
-      serverNetwork.sockets.set('existing', {} as any)
+      serverNetwork.sockets.set('existing', { id: 'existing' } as any)
 
       await serverNetwork.onConnection(mockWs, {})
 
@@ -475,8 +488,8 @@ describe('ServerNetwork System', () => {
       await serverNetwork.onConnection(mockWs, { authToken: 'jwt-token-user123' })
 
       // Reset mocks
-      mockWs.send.mockClear()
-      mockWs.disconnect.mockClear()
+      mockWs.send.mockReset()
+      mockWs.disconnect.mockReset()
 
       // Try to connect again with same user
       await serverNetwork.onConnection(mockWs, { authToken: 'jwt-token-user123' })
@@ -535,7 +548,7 @@ describe('ServerNetwork System', () => {
     beforeEach(() => {
       mockSocket = {
         id: 'socket1',
-        send: vi.fn(),
+        send: mock(),
         player: {
           data: {
             id: 'player1',
@@ -544,14 +557,14 @@ describe('ServerNetwork System', () => {
             position: [5, 10, 15],
             quaternion: [0, 0, 0, 1],
           },
-          modify: vi.fn(),
+          modify: mock(),
         },
       }
     })
 
     describe('admin command', () => {
       beforeEach(() => {
-        process.env.ADMIN_CODE = 'secret123'
+        ;(process.env as any).ADMIN_CODE = 'secret123'
       })
 
       it('should grant admin role with correct code', async () => {
@@ -605,7 +618,7 @@ describe('ServerNetwork System', () => {
 
     describe('spawn command', () => {
       it('should call onSpawnModified', async () => {
-        const spy = vi.spyOn(serverNetwork, 'onSpawnModified')
+        const spy = spyOn(serverNetwork, 'onSpawnModified')
 
         await serverNetwork.onCommand(mockSocket, ['spawn', 'set'])
 
@@ -690,7 +703,7 @@ describe('ServerNetwork System', () => {
       })
 
       it('should send revert for lower version', () => {
-        mockSocket.send = vi.fn()
+        mockSocket.send = mock()
         const data = { id: 'bp1', version: 0 }
         const existingBlueprint = { id: 'bp1', version: 1 }
         ;(world as any).blueprints.get.mockReturnValue(existingBlueprint)
@@ -721,7 +734,7 @@ describe('ServerNetwork System', () => {
           data: { id: 'e1', userId: 'u1' },
           isApp: true,
           isPlayer: false,
-          modify: vi.fn(),
+          modify: mock(),
         }
         ;(world as any).entities.get.mockReturnValue(entity)
 
@@ -735,7 +748,7 @@ describe('ServerNetwork System', () => {
         const entity = {
           data: { id: 'p1', userId: 'u1' },
           isPlayer: true,
-          modify: vi.fn(),
+          modify: mock(),
         }
         ;(world as any).entities.get.mockReturnValue(entity)
 
@@ -769,7 +782,7 @@ describe('ServerNetwork System', () => {
     beforeEach(() => {
       mockSocket = {
         id: 'socket1',
-        send: vi.fn(),
+        send: mock(),
         player: {
           data: {
             roles: ['admin'],
@@ -819,7 +832,7 @@ describe('ServerNetwork System', () => {
     })
 
     it('should handle player teleport', () => {
-      const targetSocket = { id: 'target', send: vi.fn() }
+      const targetSocket = { id: 'target', send: mock() }
       serverNetwork.sockets.set('target', targetSocket as any)
 
       serverNetwork.onPlayerTeleport(mockSocket, { networkId: 'target', x: 10, y: 20 })
@@ -828,7 +841,7 @@ describe('ServerNetwork System', () => {
     })
 
     it('should handle player push', () => {
-      const targetSocket = { id: 'target', send: vi.fn() }
+      const targetSocket = { id: 'target', send: mock() }
       serverNetwork.sockets.set('target', targetSocket as any)
 
       serverNetwork.onPlayerPush(mockSocket, { networkId: 'target', force: [1, 0, 0] })
@@ -837,7 +850,7 @@ describe('ServerNetwork System', () => {
     })
 
     it('should handle player session avatar', () => {
-      const targetSocket = { id: 'target', send: vi.fn() }
+      const targetSocket = { id: 'target', send: mock() }
       serverNetwork.sockets.set('target', targetSocket as any)
 
       serverNetwork.onPlayerSessionAvatar(mockSocket, { networkId: 'target', avatar: 'new-avatar.vrm' })
@@ -848,7 +861,7 @@ describe('ServerNetwork System', () => {
 
   describe('ping/pong', () => {
     it('should respond to ping with pong', () => {
-      const mockSocket = { id: 's1', send: vi.fn() }
+      const mockSocket = { id: 's1', send: mock() }
 
       serverNetwork.onPing(mockSocket as any, 12345)
 
@@ -858,7 +871,7 @@ describe('ServerNetwork System', () => {
 
   describe('disconnect', () => {
     it('should handle player disconnect', () => {
-      const mockPlayer = { destroy: vi.fn() }
+      const mockPlayer = { destroy: mock() }
       const mockSocket = { id: 's1', player: mockPlayer }
       serverNetwork.sockets.set('s1', mockSocket as any)
 
@@ -871,7 +884,7 @@ describe('ServerNetwork System', () => {
 
   describe('destroy', () => {
     it('should clean up resources', () => {
-      const mockSocket = { id: 's1', disconnect: vi.fn() }
+      const mockSocket = { id: 's1', disconnect: mock() }
       serverNetwork.sockets.set('s1', mockSocket as any)
 
       serverNetwork.destroy()

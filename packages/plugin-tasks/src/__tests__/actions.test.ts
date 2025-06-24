@@ -5,15 +5,15 @@ import {
   type State,
   logger,
 } from '@elizaos/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import type { MockRuntime } from './test-utils';
 import { setupActionTest } from './test-utils';
 
 // Spy on commonly used methods for logging
 beforeEach(() => {
-  vi.spyOn(logger, 'error').mockImplementation(() => {});
-  vi.spyOn(logger, 'warn').mockImplementation(() => {});
-  vi.spyOn(logger, 'debug').mockImplementation(() => {});
+  spyOn(logger, 'error').mockImplementation(() => {});
+  spyOn(logger, 'warn').mockImplementation(() => {});
+  spyOn(logger, 'debug').mockImplementation(() => {});
 });
 
 describe('Choice Action (Extended)', () => {
@@ -30,7 +30,7 @@ describe('Choice Action (Extended)', () => {
     callbackFn = setup.callbackFn as HandlerCallback;
 
     // Mock realistic response that parses the task from message content
-    mockRuntime.useModel = vi.fn().mockImplementation((modelType, params) => {
+    mockRuntime.useModel = mock().mockImplementation((modelType, params) => {
       if (params?.prompt?.includes('Extract selected task and option')) {
         return Promise.resolve(`
 \`\`\`json
@@ -46,7 +46,7 @@ describe('Choice Action (Extended)', () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    mock.restore();
   });
 
   it('should validate choice action correctly based on pending tasks', async () => {
@@ -87,7 +87,7 @@ describe('Choice Action (Extended)', () => {
       },
     ];
 
-    mockRuntime.getTasks = vi.fn().mockResolvedValue(tasks);
+    mockRuntime.getTasks = mock().mockResolvedValue(tasks);
 
     // Set message content that should match the first task's first option
     if (mockMessage.content) {
@@ -166,7 +166,7 @@ describe('Choice Action (Extended)', () => {
 
   it('should handle task with no options gracefully', async () => {
     // Setup task with missing options
-    mockRuntime.getTasks = vi.fn().mockResolvedValue([
+    mockRuntime.getTasks = mock().mockResolvedValue([
       {
         id: 'task-no-options',
         name: 'Task Without Options',

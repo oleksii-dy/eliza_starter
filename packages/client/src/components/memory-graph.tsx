@@ -3,6 +3,23 @@ import ForceGraph2D from 'react-force-graph-2d';
 import type { Memory } from '@elizaos/core';
 import { computePca } from '@/lib/pca';
 
+interface GraphNode {
+  id: string;
+  memory: Memory;
+  x: number;
+  y: number;
+  fx: number;
+  fy: number;
+  val: number;
+  color: string;
+}
+
+interface GraphLink {
+  source: string;
+  target: string;
+  value: number;
+}
+
 export default function MemoryGraph({
   memories,
   onSelect,
@@ -69,7 +86,7 @@ export default function MemoryGraph({
     }));
 
     // Create links between temporally adjacent memories
-    const links: any[] = [];
+    const links: GraphLink[] = [];
     const sortedMemories = [...memoriesWithEmbeddings].sort(
       (a, b) => (a.createdAt || 0) - (b.createdAt || 0)
     );
@@ -130,19 +147,23 @@ export default function MemoryGraph({
           width={dimensions.width}
           height={dimensions.height}
           graphData={data}
-          nodeLabel={(node: any) => {
+          nodeLabel={(node: GraphNode) => {
             const content = node.memory?.content;
             const text = content?.text || '';
-            const truncated = text.length > 100 ? text.substring(0, 100) + '...' : text;
+            const truncated = text.length > 100 ? `${text.substring(0, 100)}...` : text;
             return truncated || node.memory?.id || 'Memory';
           }}
-          onNodeClick={(node: any) => {
+          onNodeClick={(node: GraphNode) => {
             console.log('Node clicked:', node);
             if (node.memory) {
               onSelect(node.memory);
             }
           }}
-          nodeCanvasObject={(node: any, ctx, globalScale) => {
+          nodeCanvasObject={(
+            node: GraphNode,
+            ctx: CanvasRenderingContext2D,
+            globalScale: number
+          ) => {
             const label = node.memory?.entityId === node.memory?.agentId ? 'A' : 'U';
             const fontSize = 12 / globalScale;
             ctx.font = `${fontSize}px Sans-Serif`;

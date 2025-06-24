@@ -1,7 +1,7 @@
-import * as fs from 'fs/promises'
-import * as path from 'path'
-import type { NPCDefinition, ItemDefinition, LootTable as LootTableType } from '../types'
-import { ENV } from '../../core/env'
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import type { NPCDefinition, ItemDefinition, LootTable as LootTableType } from '../types';
+import { ENV } from '../../core/env';
 
 // Shop type from NPC definition
 type Shop = NPCDefinition['shop']
@@ -87,15 +87,15 @@ interface QuestConfig {
 }
 
 export class ConfigLoader {
-  private static instance: ConfigLoader
-  private configLoaded = false
+  private static instance: ConfigLoader;
+  private configLoaded = false;
 
   // Configuration data
-  private npcs: { [key: number]: NPCConfig } = {}
-  private items: { [key: number]: ItemConfig } = {}
-  private lootTables: { [key: string]: LootTable } = {}
-  private skills: { [key: string]: SkillConfig } = {}
-  private quests: { [key: number]: QuestConfig } = {}
+  private npcs: { [key: number]: NPCConfig } = {};
+  private items: { [key: number]: ItemConfig } = {};
+  private lootTables: { [key: string]: LootTable } = {};
+  private skills: { [key: string]: SkillConfig } = {};
+  private quests: { [key: number]: QuestConfig } = {};
 
   private constructor() {
     // Empty constructor - no path needed for test mode
@@ -103,39 +103,39 @@ export class ConfigLoader {
 
   static getInstance(): ConfigLoader {
     if (!ConfigLoader.instance) {
-      ConfigLoader.instance = new ConfigLoader()
+      ConfigLoader.instance = new ConfigLoader();
     }
-    return ConfigLoader.instance
+    return ConfigLoader.instance;
   }
 
   /**
    * Enable test mode with hardcoded data
    */
   enableTestMode(): void {
-    this.loadTestData()
-    this.configLoaded = true
+    this.loadTestData();
+    this.configLoaded = true;
   }
 
   /**
    * Load all configurations
    */
   async loadAllConfigurations(): Promise<void> {
-    if (this.configLoaded) return
+    if (this.configLoaded) {return;}
 
     // Only use test data if explicitly in test mode
     if (ENV.TEST) {
-      this.enableTestMode()
-      return
+      this.enableTestMode();
+      return;
     }
 
     // In production/development, config files are required
     try {
-      await this.loadFromFiles()
-      this.configLoaded = true
+      await this.loadFromFiles();
+      this.configLoaded = true;
     } catch (error) {
       throw new Error(
         `Failed to load configuration files: ${error}. Configuration files are required in non-test environments.`
-      )
+      );
     }
   }
 
@@ -143,75 +143,75 @@ export class ConfigLoader {
    * Load configurations from files
    */
   private async loadFromFiles(): Promise<void> {
-    const configDir = path.join(process.cwd(), 'src/rpg/config')
+    const configDir = path.join(process.cwd(), 'src/rpg/config');
 
     try {
       // Load NPCs
-      const npcFiles = ['monsters.json', 'guards.json', 'quest_givers.json', 'shops.json']
+      const npcFiles = ['monsters.json', 'guards.json', 'quest_givers.json', 'shops.json'];
       for (const file of npcFiles) {
         try {
-          const filePath = path.join(configDir, 'npcs', file)
-          const data = await fs.readFile(filePath, 'utf-8')
-          const npcs = JSON.parse(data)
-          Object.assign(this.npcs, npcs)
+          const filePath = path.join(configDir, 'npcs', file);
+          const data = await fs.readFile(filePath, 'utf-8');
+          const npcs = JSON.parse(data);
+          Object.assign(this.npcs, npcs);
         } catch (error) {
-          console.warn(`Failed to load NPC file ${file}:`, error)
+          console.warn(`Failed to load NPC file ${file}:`, error);
         }
       }
 
       // Load Items
-      const itemFiles = ['basic_items.json', 'food_items.json', 'bones.json']
+      const itemFiles = ['basic_items.json', 'food_items.json', 'bones.json'];
       for (const file of itemFiles) {
         try {
-          const filePath = path.join(configDir, 'items', file)
-          const data = await fs.readFile(filePath, 'utf-8')
-          const items = JSON.parse(data)
-          Object.assign(this.items, items)
+          const filePath = path.join(configDir, 'items', file);
+          const data = await fs.readFile(filePath, 'utf-8');
+          const items = JSON.parse(data);
+          Object.assign(this.items, items);
         } catch (error) {
-          console.warn(`Failed to load item file ${file}:`, error)
+          console.warn(`Failed to load item file ${file}:`, error);
         }
       }
 
       // Load Loot Tables
-      const lootFiles = ['goblin_drops.json', 'skeleton_drops.json', 'hill_giant_drops.json', 'common_drops.json']
+      const lootFiles = ['goblin_drops.json', 'skeleton_drops.json', 'hill_giant_drops.json', 'common_drops.json'];
       for (const file of lootFiles) {
         try {
-          const filePath = path.join(configDir, 'loot', file)
-          const data = await fs.readFile(filePath, 'utf-8')
-          const lootTable = JSON.parse(data)
-          this.lootTables[lootTable.id] = lootTable
+          const filePath = path.join(configDir, 'loot', file);
+          const data = await fs.readFile(filePath, 'utf-8');
+          const lootTable = JSON.parse(data);
+          this.lootTables[lootTable.id] = lootTable;
         } catch (error) {
-          console.warn(`Failed to load loot file ${file}:`, error)
+          console.warn(`Failed to load loot file ${file}:`, error);
         }
       }
 
       // Load Skills
-      const skillFiles = ['combat.json', 'gathering.json']
+      const skillFiles = ['combat.json', 'gathering.json'];
       for (const file of skillFiles) {
         try {
-          const filePath = path.join(configDir, 'skills', file)
-          const data = await fs.readFile(filePath, 'utf-8')
-          const skills = JSON.parse(data)
-          Object.assign(this.skills, skills)
+          const filePath = path.join(configDir, 'skills', file);
+          const data = await fs.readFile(filePath, 'utf-8');
+          const skills = JSON.parse(data);
+          Object.assign(this.skills, skills);
         } catch (error) {
-          console.warn(`Failed to load skill file ${file}:`, error)
+          console.warn(`Failed to load skill file ${file}:`, error);
         }
       }
 
       // Load Quests
-      const questFiles = ['tutorial_quest.json', 'goblin_menace.json']
+      const questFiles = ['tutorial_quest.json', 'goblin_menace.json'];
       for (const file of questFiles) {
         try {
-          const filePath = path.join(configDir, 'quests', file)
-          const data = await fs.readFile(filePath, 'utf-8')
-          const quest = JSON.parse(data)
-          this.quests[quest.id] = quest
+          const filePath = path.join(configDir, 'quests', file);
+          const data = await fs.readFile(filePath, 'utf-8');
+          const quest = JSON.parse(data);
+          this.quests[quest.id] = quest;
         } catch (error) {
-          console.warn(`Failed to load quest file ${file}:`, error)
+          console.warn(`Failed to load quest file ${file}:`, error);
         }
       }
     } catch (error) {
-      throw new Error(`Failed to load configurations: ${error}`)
+      throw new Error(`Failed to load configurations: ${error}`);
     }
   }
 
@@ -260,7 +260,7 @@ export class ConfigLoader {
           speed: 6,
         },
       },
-    }
+    };
 
     // Test Items
     this.items = {
@@ -290,7 +290,7 @@ export class ConfigLoader {
         stackable: true,
         equipable: false,
       },
-    }
+    };
 
     // Test Loot Tables
     this.lootTables = {
@@ -308,7 +308,7 @@ export class ConfigLoader {
         name: 'Common Drops',
         drops: [{ itemId: 2, chance: 0.5, minQuantity: 1, maxQuantity: 1 }],
       },
-    }
+    };
 
     // Test Skills
     this.skills = {
@@ -332,7 +332,7 @@ export class ConfigLoader {
         baseExperience: 83,
         experienceTable: [0, 83, 174, 276, 388, 512, 650, 801, 969, 1154, 1358],
       },
-    }
+    };
 
     // Test Quests
     this.quests = {
@@ -352,97 +352,97 @@ export class ConfigLoader {
         rewards: { experience: { attack: 500 }, items: [{ id: 2, quantity: 5 }] },
         steps: [],
       },
-    }
+    };
   }
 
   /**
    * Get NPC configuration by ID
    */
   getNPC(id: number): NPCConfig | null {
-    return this.npcs[id] || null
+    return this.npcs[id] || null;
   }
 
   /**
    * Get all NPCs
    */
   getAllNPCs(): { [key: number]: NPCConfig } {
-    return this.npcs
+    return this.npcs;
   }
 
   /**
    * Get item configuration by ID
    */
   getItem(id: number): ItemConfig | null {
-    return this.items[id] || null
+    return this.items[id] || null;
   }
 
   /**
    * Get all items
    */
   getAllItems(): { [key: number]: ItemConfig } {
-    return this.items
+    return this.items;
   }
 
   /**
    * Get loot table by ID
    */
   getLootTable(id: string): LootTable | null {
-    return this.lootTables[id] || null
+    return this.lootTables[id] || null;
   }
 
   /**
    * Get all loot tables
    */
   getAllLootTables(): { [key: string]: LootTable } {
-    return this.lootTables
+    return this.lootTables;
   }
 
   /**
    * Get skill configuration by name
    */
   getSkill(name: string): SkillConfig | null {
-    return this.skills[name] || null
+    return this.skills[name] || null;
   }
 
   /**
    * Get all skills
    */
   getAllSkills(): { [key: string]: SkillConfig } {
-    return this.skills
+    return this.skills;
   }
 
   /**
    * Get quest configuration by ID
    */
   getQuest(id: number): QuestConfig | null {
-    return this.quests[id] || null
+    return this.quests[id] || null;
   }
 
   /**
    * Get all quests
    */
   getAllQuests(): { [key: number]: QuestConfig } {
-    return this.quests
+    return this.quests;
   }
 
   /**
    * Check if configuration is loaded
    */
   isConfigLoaded(): boolean {
-    return this.configLoaded
+    return this.configLoaded;
   }
 
   /**
    * Reload all configurations
    */
   async reload(): Promise<void> {
-    this.configLoaded = false
-    this.npcs = {}
-    this.items = {}
-    this.lootTables = {}
-    this.skills = {}
-    this.quests = {}
+    this.configLoaded = false;
+    this.npcs = {};
+    this.items = {};
+    this.lootTables = {};
+    this.skills = {};
+    this.quests = {};
 
-    await this.loadAllConfigurations()
+    await this.loadAllConfigurations();
   }
 }

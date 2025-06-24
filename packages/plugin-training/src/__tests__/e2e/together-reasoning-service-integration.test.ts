@@ -5,7 +5,7 @@
  * actual ElizaOS runtime instances and correctly handles real API calls.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { elizaLogger } from '@elizaos/core';
 import { TogetherReasoningService } from '../../services/TogetherReasoningService';
 import type { IAgentRuntime, Memory, UUID } from '@elizaos/core';
@@ -90,10 +90,10 @@ describe('TogetherReasoningService Runtime Integration', () => {
 
   it('should export training data successfully', async () => {
     // Mock some training data in the runtime adapter
-    let storedLogs: any[] = [];
+    const storedLogs: any[] = [];
     runtime.log = (async (logData: any) => {
       storedLogs.push({
-        id: 'log-' + Date.now(),
+        id: `log-${Date.now()}`,
         createdAt: Date.now(),
         body: logData.body,
         type: logData.type,

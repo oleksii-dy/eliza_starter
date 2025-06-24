@@ -1,4 +1,4 @@
-import { IAgentRuntime, Memory, UUID, ActionResult, State } from '@elizaos/core';
+import { IAgentRuntime, UUID } from '@elizaos/core';
 import {
   PaymentRequest,
   PaymentResult,

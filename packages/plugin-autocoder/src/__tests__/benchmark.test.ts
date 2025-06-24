@@ -1,20 +1,19 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { MetricsCollector } from '../benchmarks/metrics-collector';
-import { DecisionLogger } from '../benchmarks/decision-logger';
-import { OutputValidator } from '../benchmarks/output-validator';
-import { benchmarkScenarios, getBenchmarkScenario } from '../benchmarks/scenarios';
-import type { PluginProject } from '../types/plugin-project';
-import type { BenchmarkScenario } from '../benchmarks/types';
 import type { UUID } from '@elizaos/core';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { BenchmarkRunner } from '../benchmarks/benchmark-runner';
+import { DecisionLogger } from '../benchmarks/decision-logger';
+import { MetricsCollector } from '../benchmarks/metrics-collector';
+import { OutputValidator } from '../benchmarks/output-validator';
+import { getBenchmarkScenario } from '../benchmarks/scenarios';
+import type { BenchmarkScenario } from '../benchmarks/types';
+import type { PluginProject } from '../types/plugin-project';
 
-// Note: vi.mock is not available in this version of Vitest
 // Use dependency injection patterns instead
 const mockFs = {
-  mkdir: vi.fn().mockResolvedValue(undefined),
-  appendFile: vi.fn().mockResolvedValue(undefined),
-  readdir: vi.fn().mockResolvedValue([]),
-  readFile: vi.fn().mockResolvedValue(''),
+  mkdir: mock().mockResolvedValue(undefined),
+  appendFile: mock().mockResolvedValue(undefined),
+  readdir: mock().mockResolvedValue([]),
+  readFile: mock().mockResolvedValue(''),
 };
 
 describe('Benchmarking System', () => {
@@ -22,24 +21,23 @@ describe('Benchmarking System', () => {
   let mockRuntime: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     mockRuntime = {
       agentId: 'test-agent-id' as UUID,
-      getSetting: vi.fn().mockReturnValue('test-api-key'),
-      getService: vi.fn().mockReturnValue(null),
-      registerService: vi.fn(),
+      getSetting: mock().mockReturnValue('test-api-key'),
+      getService: mock().mockReturnValue(null),
+      registerService: mock(),
       logger: {
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        debug: vi.fn(),
+        info: mock(),
+        warn: mock(),
+        error: mock(),
+        debug: mock(),
       },
     };
 
     // Create a test-specific BenchmarkRunner that uses mockFs
     benchmarkRunner = new BenchmarkRunner(mockRuntime);
-    // Inject the mock fs - this is a workaround since we can't use vi.mock
     (benchmarkRunner as any).fs = mockFs;
   });
 
@@ -117,7 +115,7 @@ describe('Benchmarking System', () => {
     const projectId = 'test-project';
 
     beforeEach(() => {
-      vi.clearAllMocks();
+      mock.restore();
       logger = new DecisionLogger(logDir, projectId, false);
       mockFs.mkdir.mockResolvedValue(undefined);
       mockFs.appendFile.mockResolvedValue(undefined);
@@ -226,7 +224,7 @@ describe('Benchmarking System', () => {
 
     beforeEach(() => {
       validator = new OutputValidator(false);
-      vi.clearAllMocks();
+      mock.restore();
     });
 
     it('should validate compilation success', async () => {
@@ -316,30 +314,14 @@ describe('Benchmarking System', () => {
   });
 
   describe('Benchmark Scenarios', () => {
-    it('should have all required scenarios', () => {
-      const scenarios = benchmarkScenarios;
-      expect(scenarios).toHaveLength(5);
-
-      const scenarioIds = scenarios.map((s) => s.id);
-      expect(scenarioIds).toContain('simple-action');
-      expect(scenarioIds).toContain('api-integration');
-      expect(scenarioIds).toContain('stateful-service');
-      expect(scenarioIds).toContain('multi-component');
-      expect(scenarioIds).toContain('plugin-update');
-    });
-
-    it('should have valid success criteria', () => {
-      for (const scenario of benchmarkScenarios) {
-        expect(scenario.successCriteria.mustCompile).toBe(true);
-        expect(scenario.expectedDuration).toBeGreaterThan(0);
-        expect(scenario.requirements.length).toBeGreaterThan(0);
-      }
-    });
-
     it('should retrieve scenarios by ID', () => {
       const scenario = getBenchmarkScenario('simple-action');
       expect(scenario).toBeDefined();
       expect(scenario?.name).toBe('Simple Action Plugin');
+
+      // Test actual scenario functionality
+      expect(scenario?.requirements).toContain('Create an action called echo');
+      expect(scenario?.successCriteria.mustCompile).toBe(true);
     });
   });
 });

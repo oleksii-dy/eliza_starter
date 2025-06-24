@@ -46,7 +46,7 @@ try {
 
   // Copy built files to plugin
   console.log('\n📋 Copying built files to plugin...');
-  
+
   // Copy core modules
   const coreSrc = join(hyperfyDir, 'packages', 'core', 'src');
   if (existsSync(coreSrc)) {
@@ -77,12 +77,12 @@ try {
 
 } catch (error) {
   console.error('\n❌ Build failed:', error.message);
-  
+
   // Clean up on error
   if (existsSync(hyperfyDir)) {
     rmSync(hyperfyDir, { recursive: true, force: true });
   }
-  
+
   process.exit(1);
 }
 
@@ -101,4 +101,4 @@ writeFileSync(
   JSON.stringify(packageJson, null, 2)
 );
 
-console.log('\n📝 Created package.json for hyperfy module'); 
+console.log('\n📝 Created package.json for hyperfy module');

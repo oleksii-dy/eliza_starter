@@ -48,7 +48,7 @@ export function detectDirectoryType(dir: string): DirectoryInfo {
 
   try {
     fs.readdirSync(dir);
-  } catch (error) {
+  } catch {
     return {
       type: 'non-elizaos-dir',
       hasPackageJson: false,
@@ -102,7 +102,7 @@ export function detectDirectoryType(dir: string): DirectoryInfo {
   try {
     const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf8');
     packageJson = JSON.parse(packageJsonContent);
-  } catch (error) {
+  } catch {
     return {
       type: 'non-elizaos-dir',
       hasPackageJson: true,

@@ -3110,14 +3110,36 @@ paths:
             schema:
               type: object
               required:
-                - userId
-                - text
+                - author_id
+                - content
+                - server_id
               properties:
-                userId:
+                author_id:
                   type: string
                   format: uuid
-                text:
+                  description: Central ID of the author sending the message
+                content:
                   type: string
+                  description: Message content
+                in_reply_to_message_id:
+                  type: string
+                  format: uuid
+                  description: ID of the root message being replied to (optional)
+                server_id:
+                  type: string
+                  format: uuid
+                  description: Central server ID this channel belongs to
+                raw_message:
+                  description: Raw message payload (string or JSON object)
+                  oneOf:
+                    - type: object
+                    - type: string
+                metadata:
+                  type: object
+                  description: Additional metadata such as user_display_name
+                source_type:
+                  type: string
+                  description: Source identifier (e.g. 'eliza_gui')
                 attachments:
                   type: array
                   items:
@@ -3894,6 +3916,11 @@ paths:
         
         **Events**:
         
+
+        **Connection URL**: `ws://localhost:3000/socket.io/`
+
+        **Events**:
+
         ### Client to Server Events:
         - `join` - Join a room/channel
           ```json
@@ -3903,6 +3930,7 @@ paths:
           }
           ```
         
+
         - `leave` - Leave a room/channel
           ```json
           {
@@ -3911,6 +3939,7 @@ paths:
           }
           ```
         
+
         - `message` - Send a message
           ```json
           {
@@ -3921,6 +3950,7 @@ paths:
           }
           ```
         
+
         - `request-world-state` - Request current state
           ```json
           {
@@ -3928,6 +3958,7 @@ paths:
           }
           ```
         
+
         ### Server to Client Events:
         - `messageBroadcast` - New message broadcast
           ```json
@@ -3946,6 +3977,7 @@ paths:
           }
           ```
         
+
         - `messageComplete` - Message processing complete
           ```json
           {
@@ -3954,6 +3986,7 @@ paths:
           }
           ```
         
+
         - `world-state` - World state update
           ```json
           {
@@ -3964,6 +3997,7 @@ paths:
           }
           ```
         
+
         - `logEntry` - Real-time log entry
           ```json
           {
@@ -3975,6 +4009,7 @@ paths:
           }
           ```
         
+
         - `error` - Error event
           ```json
           {

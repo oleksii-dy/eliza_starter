@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { TavilySearchProvider } from '../integrations/search-providers/tavily';
 import { ExaSearchProvider } from '../integrations/search-providers/exa';
 import { SerpAPISearchProvider } from '../integrations/search-providers/serpapi';
@@ -76,4 +76,4 @@ describe('API Verification', () => {
     // We expect at least 4 out of 5 to work (Semantic Scholar key is invalid)
     expect(workingCount).toBeGreaterThanOrEqual(4);
   }, 60000); // 60 second timeout for testing multiple APIs
-}); 
+});

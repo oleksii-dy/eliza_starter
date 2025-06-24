@@ -1,6 +1,6 @@
-import { elizaLogger } from '@elizaos/core';/**
+import { elizaLogger } from '@elizaos/core'; /**
  * File Extractor - Core Infrastructure for Training Data Generation
- * 
+ *
  * Extracts and analyzes all relevant files from repositories.
  * Provides detailed metadata for training scenario generation.
  */
@@ -37,8 +37,19 @@ export interface ExtractionResult {
 
 export class FileExtractor {
   private readonly SUPPORTED_EXTENSIONS = [
-    '.ts', '.tsx', '.js', '.jsx', '.json', '.md', '.yml', '.yaml', 
-    '.toml', '.txt', '.env.example', '.gitignore', '.dockerignore'
+    '.ts',
+    '.tsx',
+    '.js',
+    '.jsx',
+    '.json',
+    '.md',
+    '.yml',
+    '.yaml',
+    '.toml',
+    '.txt',
+    '.env.example',
+    '.gitignore',
+    '.dockerignore',
   ];
 
   private readonly IGNORE_PATTERNS = [
@@ -58,7 +69,7 @@ export class FileExtractor {
     '**/package-lock.json',
     '**/yarn.lock',
     '**/bun.lockb',
-    '**/.DS_Store'
+    '**/.DS_Store',
   ];
 
   /**
@@ -74,35 +85,37 @@ export class FileExtractor {
     let totalSize = 0;
 
     // Create glob patterns for supported extensions
-    const patterns = this.SUPPORTED_EXTENSIONS.map(ext => `**/*${ext}`);
+    const patterns = this.SUPPORTED_EXTENSIONS.map((ext) => `**/*${ext}`);
 
     for (const pattern of patterns) {
       const matchedFiles = await glob(pattern, {
         cwd: repoDir,
         ignore: this.IGNORE_PATTERNS,
         absolute: true,
-        nodir: true
+        nodir: true,
       });
 
       for (const filePath of matchedFiles) {
         try {
           const extractedFile = await this.extractFile(filePath, repoDir);
           files.push(extractedFile);
-          
+
           // Update statistics
           languages[extractedFile.language] = (languages[extractedFile.language] || 0) + 1;
           const ext = path.extname(extractedFile.relativePath);
           fileTypes[ext] = (fileTypes[ext] || 0) + 1;
           totalSize += extractedFile.size;
-          
         } catch (error) {
-          elizaLogger.warn(`⚠️  Failed to extract file ${filePath}:`, error instanceof Error ? error.message : String(error));
+          elizaLogger.warn(
+            `⚠️  Failed to extract file ${filePath}:`,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       }
     }
 
     const extractionTime = Date.now() - startTime;
-    
+
     elizaLogger.info(`✅ Extracted ${files.length} files in ${extractionTime}ms`);
     elizaLogger.info(`📊 Languages found: ${Object.keys(languages).join(', ')}`);
 
@@ -112,7 +125,7 @@ export class FileExtractor {
       totalSize,
       languages,
       fileTypes,
-      extractionTime
+      extractionTime,
     };
   }
 
@@ -123,7 +136,7 @@ export class FileExtractor {
     const content = await fs.readFile(filePath, 'utf-8');
     const relativePath = path.relative(repoDir, filePath);
     const stats = await fs.stat(filePath);
-    
+
     const language = this.detectLanguage(filePath);
     const dependencies = this.extractDependencies(content, language);
     const imports = this.extractImports(content, language);
@@ -146,7 +159,7 @@ export class FileExtractor {
       complexity,
       isTestFile,
       isConfigFile,
-      lastModified: stats.mtime.toISOString()
+      lastModified: stats.mtime.toISOString(),
     };
   }
 
@@ -156,7 +169,7 @@ export class FileExtractor {
   private detectLanguage(filePath: string): string {
     const ext = path.extname(filePath).toLowerCase();
     const basename = path.basename(filePath).toLowerCase();
-    
+
     const languageMap: Record<string, string> = {
       '.ts': 'typescript',
       '.tsx': 'typescript-react',
@@ -168,13 +181,19 @@ export class FileExtractor {
       '.yaml': 'yaml',
       '.toml': 'toml',
       '.txt': 'text',
-      '.env': 'env'
+      '.env': 'env',
     };
 
-    if (basename.includes('dockerfile')) return 'dockerfile';
-    if (basename.includes('makefile')) return 'makefile';
-    if (ext === '' && basename.startsWith('.')) return 'config';
-    
+    if (basename.includes('dockerfile')) {
+      return 'dockerfile';
+    }
+    if (basename.includes('makefile')) {
+      return 'makefile';
+    }
+    if (ext === '' && basename.startsWith('.')) {
+      return 'config';
+    }
+
     return languageMap[ext] || 'text';
   }
 
@@ -183,7 +202,7 @@ export class FileExtractor {
    */
   private extractDependencies(content: string, language: string): string[] {
     const dependencies = new Set<string>();
-    
+
     if (language.includes('typescript') || language.includes('javascript')) {
       // Extract import statements
       const importRegex = /import.*?from\s+['"]([^'"]+)['"]/g;
@@ -191,21 +210,21 @@ export class FileExtractor {
       while ((match = importRegex.exec(content)) !== null) {
         dependencies.add(match[1]);
       }
-      
+
       // Extract require statements
       const requireRegex = /require\(['"]([^'"]+)['"]\)/g;
       while ((match = requireRegex.exec(content)) !== null) {
         dependencies.add(match[1]);
       }
-      
+
       // Extract dynamic imports
       const dynamicImportRegex = /import\(['"]([^'"]+)['"]\)/g;
       while ((match = dynamicImportRegex.exec(content)) !== null) {
         dependencies.add(match[1]);
       }
     }
-    
-    return Array.from(dependencies).filter(dep => !dep.startsWith('.'));
+
+    return Array.from(dependencies).filter((dep) => !dep.startsWith('.'));
   }
 
   /**
@@ -213,7 +232,7 @@ export class FileExtractor {
    */
   private extractImports(content: string, language: string): string[] {
     const imports = new Set<string>();
-    
+
     if (language.includes('typescript') || language.includes('javascript')) {
       const importRegex = /import.*?from\s+['"]([^'"]+)['"]/g;
       let match;
@@ -223,7 +242,7 @@ export class FileExtractor {
         }
       }
     }
-    
+
     return Array.from(imports);
   }
 
@@ -232,28 +251,29 @@ export class FileExtractor {
    */
   private extractExports(content: string, language: string): string[] {
     const exports = new Set<string>();
-    
+
     if (language.includes('typescript') || language.includes('javascript')) {
       // Named exports
-      const namedExportRegex = /export\s+(?:const|let|var|function|class|interface|type|enum)\s+(\w+)/g;
+      const namedExportRegex =
+        /export\s+(?:const|let|var|function|class|interface|type|enum)\s+(\w+)/g;
       let match;
       while ((match = namedExportRegex.exec(content)) !== null) {
         exports.add(match[1]);
       }
-      
+
       // Export declarations
       const exportDeclRegex = /export\s*{\s*([^}]+)\s*}/g;
       while ((match = exportDeclRegex.exec(content)) !== null) {
-        const items = match[1].split(',').map(item => item.trim().split(' as ')[0].trim());
-        items.forEach(item => exports.add(item));
+        const items = match[1].split(',').map((item) => item.trim().split(' as ')[0].trim());
+        items.forEach((item) => exports.add(item));
       }
-      
+
       // Default exports
       if (content.includes('export default')) {
         exports.add('default');
       }
     }
-    
+
     return Array.from(exports);
   }
 
@@ -263,7 +283,7 @@ export class FileExtractor {
   private analyzePurpose(content: string, relativePath: string): string {
     const purposes = [];
     const pathLower = relativePath.toLowerCase();
-    
+
     // Path-based analysis
     if (pathLower.includes('test') || pathLower.includes('spec')) {
       purposes.push('testing');
@@ -301,7 +321,7 @@ export class FileExtractor {
     if (pathLower === 'package.json') {
       purposes.push('package configuration');
     }
-    
+
     // Content-based analysis
     if (content.includes('export interface') || content.includes('export type')) {
       purposes.push('type definitions');
@@ -309,7 +329,10 @@ export class FileExtractor {
     if (content.includes('export class')) {
       purposes.push('class implementation');
     }
-    if (content.includes('export function') || content.includes('export const') && content.includes('= (')) {
+    if (
+      content.includes('export function') ||
+      (content.includes('export const') && content.includes('= ('))
+    ) {
       purposes.push('functions');
     }
     if (content.includes(': Action')) {
@@ -330,7 +353,7 @@ export class FileExtractor {
     if (content.includes('describe(') || content.includes('it(') || content.includes('test(')) {
       purposes.push('unit tests');
     }
-    
+
     return purposes.length > 0 ? purposes.join(', ') : 'general implementation';
   }
 
@@ -342,11 +365,15 @@ export class FileExtractor {
     const functions = (content.match(/function\s+\w+|=>\s*{|:\s*\(/g) || []).length;
     const classes = (content.match(/class\s+\w+/g) || []).length;
     const interfaces = (content.match(/interface\s+\w+/g) || []).length;
-    
+
     const complexityScore = lines * 0.1 + functions * 5 + classes * 10 + interfaces * 3;
-    
-    if (complexityScore > 500) return 'complex';
-    if (complexityScore > 100) return 'medium';
+
+    if (complexityScore > 500) {
+      return 'complex';
+    }
+    if (complexityScore > 100) {
+      return 'medium';
+    }
     return 'simple';
   }
 
@@ -355,13 +382,15 @@ export class FileExtractor {
    */
   private isTestFile(relativePath: string): boolean {
     const pathLower = relativePath.toLowerCase();
-    return pathLower.includes('test') || 
-           pathLower.includes('spec') || 
-           pathLower.includes('__tests__') ||
-           pathLower.endsWith('.test.ts') ||
-           pathLower.endsWith('.test.js') ||
-           pathLower.endsWith('.spec.ts') ||
-           pathLower.endsWith('.spec.js');
+    return (
+      pathLower.includes('test') ||
+      pathLower.includes('spec') ||
+      pathLower.includes('__tests__') ||
+      pathLower.endsWith('.test.ts') ||
+      pathLower.endsWith('.test.js') ||
+      pathLower.endsWith('.spec.ts') ||
+      pathLower.endsWith('.spec.js')
+    );
   }
 
   /**
@@ -369,39 +398,70 @@ export class FileExtractor {
    */
   private isConfigFile(relativePath: string): boolean {
     const configFiles = [
-      'package.json', 'tsconfig.json', 'vite.config.ts', 'vitest.config.ts',
-      'eslint.config.js', 'prettier.config.js', 'jest.config.js',
-      'rollup.config.js', 'webpack.config.js', 'babel.config.js',
-      '.gitignore', '.npmignore', '.dockerignore', 'Dockerfile',
-      'docker-compose.yml', 'Makefile', '.env.example'
+      'package.json',
+      'tsconfig.json',
+      'vite.config.ts',
+      'vitest.config.ts',
+      'eslint.config.js',
+      'prettier.config.js',
+      'jest.config.js',
+      'rollup.config.js',
+      'webpack.config.js',
+      'babel.config.js',
+      '.gitignore',
+      '.npmignore',
+      '.dockerignore',
+      'Dockerfile',
+      'docker-compose.yml',
+      'Makefile',
+      '.env.example',
     ];
-    
+
     const basename = path.basename(relativePath);
-    return configFiles.includes(basename) || 
-           basename.startsWith('.') ||
-           relativePath.toLowerCase().includes('config');
+    return (
+      configFiles.includes(basename) ||
+      basename.startsWith('.') ||
+      relativePath.toLowerCase().includes('config')
+    );
   }
 
   /**
    * Filter files by criteria
    */
-  filterFiles(files: ExtractedFile[] criteria: {
-    language?: string;
-    purpose?: string;
-    complexity?: 'simple' | 'medium' | 'complex';
-    excludeTests?: boolean;
-    excludeConfig?: boolean;
-    minSize?: number;
-    maxSize?: number;
-  }): ExtractedFile[] {
-    return files.filter(file => {
-      if (criteria.language && file.language !== criteria.language) return false;
-      if (criteria.purpose && !file.purpose.includes(criteria.purpose)) return false;
-      if (criteria.complexity && file.complexity !== criteria.complexity) return false;
-      if (criteria.excludeTests && file.isTestFile) return false;
-      if (criteria.excludeConfig && file.isConfigFile) return false;
-      if (criteria.minSize && file.size < criteria.minSize) return false;
-      if (criteria.maxSize && file.size > criteria.maxSize) return false;
+  filterFiles(
+    files: ExtractedFile[],
+    criteria: {
+      language?: string;
+      purpose?: string;
+      complexity?: 'simple' | 'medium' | 'complex';
+      excludeTests?: boolean;
+      excludeConfig?: boolean;
+      minSize?: number;
+      maxSize?: number;
+    }
+  ): ExtractedFile[] {
+    return files.filter((file) => {
+      if (criteria.language && file.language !== criteria.language) {
+        return false;
+      }
+      if (criteria.purpose && !file.purpose.includes(criteria.purpose)) {
+        return false;
+      }
+      if (criteria.complexity && file.complexity !== criteria.complexity) {
+        return false;
+      }
+      if (criteria.excludeTests && file.isTestFile) {
+        return false;
+      }
+      if (criteria.excludeConfig && file.isConfigFile) {
+        return false;
+      }
+      if (criteria.minSize && file.size < criteria.minSize) {
+        return false;
+      }
+      if (criteria.maxSize && file.size > criteria.maxSize) {
+        return false;
+      }
       return true;
     });
   }
@@ -419,27 +479,27 @@ export class FileExtractor {
   } {
     const totalLines = files.reduce((sum, file) => sum + file.content.split('\n').length, 0);
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    
+
     const languageDistribution: Record<string, number> = {};
     const complexityDistribution: Record<string, number> = {};
     const purposeDistribution: Record<string, number> = {};
-    
-    files.forEach(file => {
+
+    files.forEach((file) => {
       languageDistribution[file.language] = (languageDistribution[file.language] || 0) + 1;
       complexityDistribution[file.complexity] = (complexityDistribution[file.complexity] || 0) + 1;
-      
-      file.purpose.split(', ').forEach(purpose => {
+
+      file.purpose.split(', ').forEach((purpose) => {
         purposeDistribution[purpose] = (purposeDistribution[purpose] || 0) + 1;
       });
     });
-    
+
     return {
       totalFiles: files.length,
       totalLines,
       averageFileSize: files.length > 0 ? Math.round(totalSize / files.length) : 0,
       languageDistribution,
       complexityDistribution,
-      purposeDistribution
+      purposeDistribution,
     };
   }
 }

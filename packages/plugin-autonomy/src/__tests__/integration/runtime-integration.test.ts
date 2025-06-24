@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import { autoPlugin } from '../../index';
 import { createMockRuntime, createMockMemory, createMockState } from '../utils/mock-runtime';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
@@ -13,8 +13,8 @@ describe('Runtime Integration Tests', () => {
   let oodaService: any;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
-    
+    mock.restore();
+
     // Create comprehensive mock runtime
     mockRuntime = createMockRuntime({
       settings: {
@@ -37,19 +37,23 @@ describe('Runtime Integration Tests', () => {
     });
 
     // Initialize OODA service
-    const oodaServiceClass = autoPlugin.services?.find(s => s.serviceType === 'autonomous');
+    const oodaServiceClass = autoPlugin.services?.find((s) => s.serviceType === 'autonomous');
     if (oodaServiceClass) {
       oodaService = await oodaServiceClass.start(mockRuntime);
-      mockRuntime.getService = vi.fn((serviceName: string) => {
-        if (serviceName === AutonomousServiceType.AUTONOMOUS) return oodaService;
+      mockRuntime.getService = mock((serviceName: string) => {
+        if (serviceName === AutonomousServiceType.AUTONOMOUS) {
+          return oodaService;
+        }
         return null;
       });
     }
   });
 
   afterEach(async () => {
-    if (oodaService) await oodaService.stop();
-    vi.restoreAllMocks();
+    if (oodaService) {
+      await oodaService.stop();
+    }
+    mock.restore();
   });
 
   describe('Memory Integration', () => {
@@ -73,7 +77,7 @@ describe('Runtime Integration Tests', () => {
         count: 10,
         tableName: 'autonomous',
       });
-      
+
       expect(Array.isArray(memories)).toBe(true);
       expect(mockRuntime.createMemory).toHaveBeenCalledWith(testMemory, 'autonomous');
     });
@@ -88,7 +92,7 @@ describe('Runtime Integration Tests', () => {
       };
 
       const results = await mockRuntime.searchMemories(searchQuery);
-      
+
       expect(Array.isArray(results)).toBe(true);
       expect(mockRuntime.searchMemories).toHaveBeenCalledWith(searchQuery);
     });
@@ -166,7 +170,7 @@ describe('Runtime Integration Tests', () => {
         roomId: autonomousTask.roomId,
         tags: ['autonomous'],
       });
-      
+
       expect(Array.isArray(tasks)).toBe(true);
       expect(mockRuntime.createTask).toHaveBeenCalledWith(autonomousTask);
 
@@ -177,7 +181,7 @@ describe('Runtime Integration Tests', () => {
           status: 'completed',
         },
       });
-      
+
       expect(updateResult).toBeTruthy();
 
       // Delete task
@@ -197,19 +201,19 @@ describe('Runtime Integration Tests', () => {
 
       // Test state composition with all providers
       const fullState = await mockRuntime.composeState(testMessage);
-      
+
       expect(fullState).toBeDefined();
       expect(fullState.values).toBeDefined();
       expect(fullState.data).toBeDefined();
       expect(fullState.text).toBeDefined();
-      
+
       expect(fullState.values.currentDate).toBeDefined();
       expect(fullState.values.agentName).toBe('TestAgent');
       expect(fullState.data.message).toBeDefined();
 
       // Test state composition with specific providers
       const specificState = await mockRuntime.composeState(testMessage, ['TIME', 'CHARACTER']);
-      
+
       expect(specificState).toBeDefined();
       expect(specificState.data.providers).toEqual(['TIME', 'CHARACTER']);
     });
@@ -223,13 +227,15 @@ describe('Runtime Integration Tests', () => {
       });
 
       const state = await mockRuntime.composeState(oodaMessage);
-      
+
       // Verify OODA service is available in state
       expect(state).toBeDefined();
       expect(state.values.agentName).toBeDefined();
-      
+
       // Test with provider that uses OODA service
-      const worldProvider = autoPlugin.providers?.find(p => p.name === 'AUTONOMOUS_WORLD_CONTEXT');
+      const worldProvider = autoPlugin.providers?.find(
+        (p) => p.name === 'AUTONOMOUS_WORLD_CONTEXT'
+      );
       if (worldProvider) {
         const worldContext = await worldProvider.get(mockRuntime, oodaMessage, state);
         expect(worldContext.values!.autonomousActive).toBe(true);
@@ -251,7 +257,7 @@ describe('Runtime Integration Tests', () => {
 
       // Test event emission
       await mockRuntime.emitEvent('AUTONOMOUS_PHASE_CHANGE', eventPayload);
-      
+
       expect(mockRuntime.emitEvent).toHaveBeenCalledWith('AUTONOMOUS_PHASE_CHANGE', eventPayload);
     });
   });
@@ -362,7 +368,7 @@ describe('Runtime Integration Tests', () => {
       expect(autoPlugin.providers!.length).toBeGreaterThan(0);
 
       // Test service lifecycle
-      const oodaServiceClass = autoPlugin.services?.find(s => s.serviceType === 'autonomous');
+      const oodaServiceClass = autoPlugin.services?.find((s) => s.serviceType === 'autonomous');
       if (oodaServiceClass) {
         const serviceInstance = await oodaServiceClass.start(mockRuntime);
         expect(serviceInstance).toBeDefined();
@@ -381,7 +387,9 @@ describe('Runtime Integration Tests', () => {
       });
 
       // Provider should handle runtime errors
-      const worldProvider = autoPlugin.providers?.find(p => p.name === 'AUTONOMOUS_WORLD_CONTEXT');
+      const worldProvider = autoPlugin.providers?.find(
+        (p) => p.name === 'AUTONOMOUS_WORLD_CONTEXT'
+      );
       if (worldProvider) {
         const errorMessage = createMockMemory();
         const errorState = createMockState();
@@ -396,7 +404,8 @@ describe('Runtime Integration Tests', () => {
 
       // Actions should validate properly even with errors
       const actions = autoPlugin.actions || [];
-      for (const action of actions.slice(0, 2)) { // Test first 2 actions
+      for (const action of actions.slice(0, 2)) {
+        // Test first 2 actions
         try {
           const errorMessage = createMockMemory();
           const errorState = createMockState();

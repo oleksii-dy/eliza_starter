@@ -25,4 +25,4 @@ const timeout = setTimeout(() => {
 proc.on('exit', (code) => {
   clearTimeout(timeout);
   process.exit(code || 0);
-}); 
+});

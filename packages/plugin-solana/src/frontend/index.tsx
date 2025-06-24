@@ -143,7 +143,7 @@ interface PanelProps {
  */
 const PanelComponent: React.FC<PanelProps> = ({ agentId }) => {
   const apiBase = (window as any).ELIZA_CONFIG?.apiBase || 'http://localhost:3000';
-  
+
   return (
     <div className="p-4">
       <WalletBalanceDisplay agentId={agentId} apiBase={apiBase} />

@@ -1,7 +1,7 @@
-import type { IAgentRuntime, TestSuite, Plugin } from '@elizaos/core';
 import { strict as assert } from 'node:assert';
-import { setupScenario, sendMessageAndWaitForResponse } from './test-utils.ts';
-import { EnvManagerService } from '../service.ts';
+import type { IAgentRuntime, TestSuite } from '@elizaos/core';
+import { EnvManagerService } from '../service';
+import { setupScenario, sendMessageAndWaitForResponse } from './test-utils';
 
 /**
  * Mock service that uses environment variables
@@ -39,7 +39,7 @@ export const envPersistenceSuite: TestSuite = {
     {
       name: 'Test 1: Variables persist in runtime settings',
       fn: async (runtime: IAgentRuntime) => {
-        const { user, room } = await setupScenario(runtime);
+        const { user: _user, room: _room } = await setupScenario(runtime);
 
         // Set up a plugin
         const mockPlugin = {
@@ -61,8 +61,8 @@ export const envPersistenceSuite: TestSuite = {
         // Set a variable
         const response = await sendMessageAndWaitForResponse(
           runtime,
-          room,
-          user,
+          _room,
+          _user,
           'Set PERSIST_TEST_KEY to persist-value-123'
         );
 
@@ -86,7 +86,7 @@ export const envPersistenceSuite: TestSuite = {
     {
       name: 'Test 2: Variables available after service restart',
       fn: async (runtime: IAgentRuntime) => {
-        const { user, room } = await setupScenario(runtime);
+        const { user: _user, room: _room } = await setupScenario(runtime);
 
         // Set up plugin and set variables
         const mockPlugin = {
@@ -108,14 +108,19 @@ export const envPersistenceSuite: TestSuite = {
         };
         runtime.plugins.push(mockPlugin as any);
 
-        let envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
+        const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
         await envService.scanPluginRequirements();
 
         // Set manual variable
-        await sendMessageAndWaitForResponse(runtime, room, user, 'RESTART_API_KEY=restart-key-456');
+        await sendMessageAndWaitForResponse(
+          runtime,
+          _room,
+          _user,
+          'RESTART_API_KEY=restart-key-456'
+        );
 
         // Generate secret
-        await sendMessageAndWaitForResponse(runtime, room, user, 'Generate RESTART_SECRET');
+        await sendMessageAndWaitForResponse(runtime, _room, _user, 'Generate RESTART_SECRET');
 
         // Verify both are set
         const apiKey1 = runtime.getSetting('ENV_RESTART_API_KEY');
@@ -151,7 +156,7 @@ export const envPersistenceSuite: TestSuite = {
     {
       name: 'Test 3: Variables available in other services',
       fn: async (runtime: IAgentRuntime) => {
-        const { user, room } = await setupScenario(runtime);
+        const { user: _user, room: _room } = await setupScenario(runtime);
 
         // Set up plugin
         const mockPlugin = {
@@ -179,8 +184,8 @@ export const envPersistenceSuite: TestSuite = {
         // Set environment variables
         await sendMessageAndWaitForResponse(
           runtime,
-          room,
-          user,
+          _room,
+          _user,
           'MOCK_API_KEY=mock-key-789 and DATABASE_URL=postgres://localhost/testdb'
         );
 
@@ -203,7 +208,7 @@ export const envPersistenceSuite: TestSuite = {
     {
       name: 'Test 4: Character secrets integration',
       fn: async (runtime: IAgentRuntime) => {
-        const { user, room } = await setupScenario(runtime);
+        const { user: _user, room: _room } = await setupScenario(runtime);
 
         // Pre-populate some secrets in character
         if (!runtime.character.settings) {
@@ -240,8 +245,8 @@ export const envPersistenceSuite: TestSuite = {
         // Check status - existing should be valid
         const response1 = await sendMessageAndWaitForResponse(
           runtime,
-          room,
-          user,
+          _room,
+          _user,
           "What's the status of my environment variables?"
         );
 
@@ -256,8 +261,8 @@ export const envPersistenceSuite: TestSuite = {
         // Generate new secret
         const response2 = await sendMessageAndWaitForResponse(
           runtime,
-          room,
-          user,
+          _room,
+          _user,
           'Generate NEW_SECRET'
         );
 
@@ -274,7 +279,7 @@ export const envPersistenceSuite: TestSuite = {
     {
       name: 'Test 5: Persistence across multiple operations',
       fn: async (runtime: IAgentRuntime) => {
-        const { user, room } = await setupScenario(runtime);
+        const { user: _user, room: _room } = await setupScenario(runtime);
 
         // Complex plugin setup
         const plugins = [
@@ -302,13 +307,13 @@ export const envPersistenceSuite: TestSuite = {
         // Operation 1: Set manual keys
         await sendMessageAndWaitForResponse(
           runtime,
-          room,
-          user,
+          _room,
+          _user,
           'API_KEY_1=key1-value and API_KEY_2=key2-value'
         );
 
         // Operation 2: Generate crypto keys
-        await sendMessageAndWaitForResponse(runtime, room, user, 'Generate all the crypto keys');
+        await sendMessageAndWaitForResponse(runtime, _room, _user, 'Generate all the crypto keys');
 
         // Operation 3: Check everything persisted
         const allVars = ['API_KEY_1', 'API_KEY_2', 'SIGNING_KEY', 'ENCRYPTION_KEY'];
@@ -334,7 +339,7 @@ export const envPersistenceSuite: TestSuite = {
     {
       name: 'Test 6: Metadata persistence and recovery',
       fn: async (runtime: IAgentRuntime) => {
-        const { user, room } = await setupScenario(runtime);
+        const { user: _user, room: _room } = await setupScenario(runtime);
 
         // Set up plugin with various metadata
         const mockPlugin = {
@@ -357,11 +362,11 @@ export const envPersistenceSuite: TestSuite = {
         };
         runtime.plugins.push(mockPlugin as any);
 
-        let envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
+        const envService = runtime.getService('ENV_MANAGER') as EnvManagerService;
         await envService.scanPluginRequirements();
 
         // Set variable with validation failure
-        await sendMessageAndWaitForResponse(runtime, room, user, 'META_VAR_1=invalid-format');
+        await sendMessageAndWaitForResponse(runtime, _room, _user, 'META_VAR_1=invalid-format');
 
         // Get current metadata
         const envVars1 = await envService.getAllEnvVars();
@@ -395,7 +400,7 @@ export const envPersistenceSuite: TestSuite = {
     {
       name: 'Test 7: Empty state initialization',
       fn: async (runtime: IAgentRuntime) => {
-        const { user, room } = await setupScenario(runtime);
+        const { user: _user, room: _room } = await setupScenario(runtime);
 
         // Ensure clean state
         if (runtime.character.settings?.secrets) {
@@ -443,7 +448,7 @@ export const envPersistenceSuite: TestSuite = {
     {
       name: 'Test 8: Concurrent access and updates',
       fn: async (runtime: IAgentRuntime) => {
-        const { user, room } = await setupScenario(runtime);
+        const { user: _user, room: _room } = await setupScenario(runtime);
 
         // Set up plugin
         const mockPlugin = {

@@ -20,7 +20,7 @@ declare module './index' {
     livekit?: any;
     environment?: any;
   }
-  
+
   interface Entity {
     // Additional entity properties
     data?: any;
@@ -43,7 +43,7 @@ declare module 'three' {
       entity?: Entity;
     };
   }
-  
+
   interface Material {
     // needsUpdate is already defined in Three.js types
   }
@@ -55,7 +55,7 @@ declare global {
     world?: World;
     preview?: any;
   }
-  
+
   const world: World;
   // __dirname and __filename are already defined in node types
   const PHYSX: any;
@@ -282,15 +282,15 @@ declare module 'three' {
     fromPxVec3?(pxVec3: any): this;
     fromArray(array: number[], offset?: number): this;
   }
-  
+
   interface Quaternion {
     toPxTransform?(pxTransform: any): void;
     fromArray(array: number[], offset?: number): this;
   }
-  
+
   interface Matrix4 {
     toPxTransform?(pxTransform: any): void;
   }
 }
 
-export {}; // Make this a module 
+export {}; // Make this a module

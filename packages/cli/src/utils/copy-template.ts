@@ -164,13 +164,13 @@ export async function copyTemplate(
 
   try {
     // Get the CLI package version for dependency updates
-    const cliPackageJsonPath = path.resolve(
-      path.dirname(require.resolve('@elizaos/cli/package.json')),
-      'package.json'
-    );
+    // const cliPackageJsonPath = path.resolve(
+    //   path.dirname(require.resolve('@elizaos/cli/package.json')),
+    //   'package.json'
+    // );
 
-    const cliPackageJson = JSON.parse(await fs.readFile(cliPackageJsonPath, 'utf8'));
-    const cliPackageVersion = cliPackageJson.version;
+    // const cliPackageJson = JSON.parse(await fs.readFile(cliPackageJsonPath, 'utf8'));
+    // const _cliPackageVersion = cliPackageJson.version;
 
     const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
 

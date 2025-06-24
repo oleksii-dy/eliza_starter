@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { Content, Entity, IAgentRuntime, Memory, ModelType, State } from '../types';
 import * as utils from '../utils';
 import {
@@ -254,7 +254,7 @@ describe('Utils Comprehensive Tests', () => {
     });
 
     it('should respect chunk overlap', async () => {
-      const text = 'Word1 Word2 Word3 Word4 Word5 ' + 'Word6 '.repeat(100);
+      const text = `Word1 Word2 Word3 Word4 Word5 ${'Word6 '.repeat(100)}`;
       const chunks = await splitChunks(text, 50, 10);
 
       expect(chunks.length).toBeGreaterThan(1);
@@ -266,7 +266,7 @@ describe('Utils Comprehensive Tests', () => {
 
     beforeEach(() => {
       mockRuntime = {
-        useModel: vi.fn(async (type: any, params: any) => {
+        useModel: mock(async (type: any, params: any) => {
           if (type === 'TEXT_TOKENIZER_ENCODE') {
             // Simple mock: each word is a token
             return params.prompt.split(' ');
@@ -800,7 +800,7 @@ describe('Utils Comprehensive Tests', () => {
         role: 'developer',
         task: 'write tests',
       };
-      const template = `Hello {{name}}, as a {{role}}, please {{task}}.`;
+      const template = 'Hello {{name}}, as a {{role}}, please {{task}}.';
 
       const result = composePrompt({ state, template });
 
@@ -811,7 +811,7 @@ describe('Utils Comprehensive Tests', () => {
       const state = {
         name: 'Bob',
       };
-      const template = `Hello {{name}}, your role is {{role}}.`;
+      const template = 'Hello {{name}}, your role is {{role}}.';
 
       const result = composePrompt({ state, template });
 
@@ -821,7 +821,7 @@ describe('Utils Comprehensive Tests', () => {
 
     it('should handle empty state', () => {
       const state = {};
-      const template = `Template with {{placeholder}}.`;
+      const template = 'Template with {{placeholder}}.';
 
       const result = composePrompt({ state, template });
 
@@ -833,7 +833,7 @@ describe('Utils Comprehensive Tests', () => {
       const state = {
         word: 'test',
       };
-      const template = `{{word}} {{word}} {{word}}`;
+      const template = '{{word}} {{word}} {{word}}';
 
       const result = composePrompt({ state, template });
 
@@ -880,7 +880,7 @@ describe('Utils Comprehensive Tests', () => {
         text: '',
       };
 
-      const template = `Bio: {{bio}}\nLore: {{lore}}\nRecent: {{recentMessages}}`;
+      const template = 'Bio: {{bio}}\nLore: {{lore}}\nRecent: {{recentMessages}}';
 
       const result = composePromptFromState({ state: mockState, template });
 
@@ -915,7 +915,7 @@ describe('Utils Comprehensive Tests', () => {
         text: '',
       };
 
-      const template = `Actors: {{actors}}\nSender: {{senderName}}`;
+      const template = 'Actors: {{actors}}\nSender: {{senderName}}';
 
       const result = composePromptFromState({ state: mockState, template });
 
@@ -939,7 +939,7 @@ describe('Utils Comprehensive Tests', () => {
         text: '',
       };
 
-      const template = `Bio: {{bio}}\nMissing: {{missingProp}}`;
+      const template = 'Bio: {{bio}}\nMissing: {{missingProp}}';
 
       const result = composePromptFromState({ state: mockState, template });
 
@@ -1041,20 +1041,16 @@ describe('Utils Comprehensive Tests', () => {
   });
 
   it('composePrompt inserts state values', () => {
-    //const spy = vi.vi.spyOn(utils, 'composeRandomUser').mockImplementation((t) => t);
     const out = utils.composePrompt({ state: { a: 'x' }, template: 'Hello {{a}}' });
     expect(out).toBe('Hello x');
-    //spy.mockRestore();
   });
 
   it('composePromptFromState flattens state values', () => {
-    //const spy = vi.vi.spyOn(utils, 'composeRandomUser').mockImplementation((t) => t);
     const out = utils.composePromptFromState({
       state: { values: { b: 'y' }, data: {}, text: '', c: 'z' },
       template: '{{b}} {{c}}',
     });
     expect(out).toBe('y z');
-    //spy.mockRestore();
   });
 
   it('formatPosts formats conversation text', () => {
@@ -1084,10 +1080,14 @@ describe('Utils Comprehensive Tests', () => {
 
   it('trimTokens truncates using runtime tokenizer', async () => {
     const runtime = {
-      useModel: vi.fn(
+      useModel: mock(
         async (type: (typeof ModelType)[keyof typeof ModelType], { prompt, tokens }: any) => {
-          if (type === ModelType.TEXT_TOKENIZER_ENCODE) return prompt.split(' ');
-          if (type === ModelType.TEXT_TOKENIZER_DECODE) return tokens.join(' ');
+          if (type === ModelType.TEXT_TOKENIZER_ENCODE) {
+            return prompt.split(' ');
+          }
+          if (type === ModelType.TEXT_TOKENIZER_DECODE) {
+            return tokens.join(' ');
+          }
           return [];
         }
       ),

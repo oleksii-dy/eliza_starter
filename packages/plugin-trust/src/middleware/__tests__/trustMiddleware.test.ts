@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { TrustMiddleware } from '../trustMiddleware';
 import type { Action, IAgentRuntime, Memory, ActionResult, UUID } from '@elizaos/core';
 import { createMockRuntime } from '../../__tests__/test-utils';
@@ -12,11 +12,11 @@ describe('TrustMiddleware', () => {
   let testMessage: Memory;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     // Create mock trust service
     mockTrustService = {
-      getTrustScore: vi.fn().mockResolvedValue({
+      getTrustScore: mock().mockResolvedValue({
         overall: 75,
         dimensions: {
           reliability: 80,
@@ -30,7 +30,7 @@ describe('TrustMiddleware', () => {
         trend: 'stable',
         reputation: 'good'
       }),
-      updateTrust: vi.fn().mockResolvedValue({
+      updateTrust: mock().mockResolvedValue({
         overall: 76,
         dimensions: {
           reliability: 81,
@@ -48,7 +48,7 @@ describe('TrustMiddleware', () => {
 
     // Create mock runtime with trust service
     mockRuntime = createMockRuntime({
-      getService: vi.fn((name: string) => {
+      getService: mock((name: string) => {
         if (name === 'trust') {
           return {
             trustService: mockTrustService
@@ -62,8 +62,8 @@ describe('TrustMiddleware', () => {
     testAction = {
       name: 'TEST_ACTION',
       description: 'Test action for middleware',
-      validate: vi.fn().mockResolvedValue(true),
-      handler: vi.fn().mockResolvedValue({
+      validate: mock().mockResolvedValue(true),
+      handler: mock().mockResolvedValue({
         values: { success: true },
         data: { result: 'completed' },
         text: 'Action completed successfully'
@@ -106,7 +106,7 @@ describe('TrustMiddleware', () => {
     });
 
     it('should deny access when trust is insufficient', async () => {
-      mockTrustService.getTrustScore = vi.fn().mockResolvedValue({
+      mockTrustService.getTrustScore = mock().mockResolvedValue({
         overall: 25,
         dimensions: {},
         confidence: 0.5,
@@ -148,7 +148,7 @@ describe('TrustMiddleware', () => {
     });
 
     it('should handle missing trust service gracefully', async () => {
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
+      mockRuntime.getService = mock().mockReturnValue(null);
 
       const wrappedAction = TrustMiddleware.wrapAction(testAction);
 
@@ -185,7 +185,7 @@ describe('TrustMiddleware', () => {
 
     it('should record failed action execution', async () => {
       const error = new Error('Action failed');
-      testAction.handler = vi.fn().mockRejectedValue(error);
+      testAction.handler = mock().mockRejectedValue(error);
 
       const wrappedAction = TrustMiddleware.wrapAction(testAction);
 
@@ -228,7 +228,7 @@ describe('TrustMiddleware', () => {
     });
 
     it('should convert boolean results to ActionResult format', async () => {
-      testAction.handler = vi.fn().mockResolvedValue(true);
+      testAction.handler = mock().mockResolvedValue(true);
 
       const wrappedAction = TrustMiddleware.wrapAction(testAction);
 
@@ -252,8 +252,8 @@ describe('TrustMiddleware', () => {
           {
             name: 'ANOTHER_ACTION',
             description: 'Another test action',
-            validate: vi.fn().mockResolvedValue(true),
-            handler: vi.fn().mockResolvedValue({ values: {}, data: {}, text: 'Done' }),
+            validate: mock().mockResolvedValue(true),
+            handler: mock().mockResolvedValue({ values: {}, data: {}, text: 'Done' }),
             similes: [],
             examples: [],
           }
@@ -301,9 +301,9 @@ describe('TrustMiddleware', () => {
         name: 'test-plugin',
         description: 'Test plugin',
         actions: [
-          { name: 'READ_DATA', description: 'Read data', validate: vi.fn(), handler: vi.fn(), similes: [], examples: [] },
-          { name: 'WRITE_DATA', description: 'Write data', validate: vi.fn(), handler: vi.fn(), similes: [], examples: [] },
-          { name: 'DELETE_DATA', description: 'Delete data', validate: vi.fn(), handler: vi.fn(), similes: [], examples: [] }
+          { name: 'READ_DATA', description: 'Read data', validate: mock(), handler: mock(), similes: [], examples: [] },
+          { name: 'WRITE_DATA', description: 'Write data', validate: mock(), handler: mock(), similes: [], examples: [] },
+          { name: 'DELETE_DATA', description: 'Delete data', validate: mock(), handler: mock(), similes: [], examples: [] }
         ]
       };
 
@@ -342,7 +342,7 @@ describe('TrustMiddleware', () => {
     });
 
     it('should return false when user has insufficient trust', async () => {
-      mockTrustService.getTrustScore = vi.fn().mockResolvedValue({
+      mockTrustService.getTrustScore = mock().mockResolvedValue({
         overall: 25,
         dimensions: {},
         confidence: 0.5,
@@ -361,7 +361,7 @@ describe('TrustMiddleware', () => {
     });
 
     it('should return false when trust service is unavailable', async () => {
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
+      mockRuntime.getService = mock().mockReturnValue(null);
 
       const canExecute = await TrustMiddleware.canExecuteAction(
         mockRuntime,
@@ -373,7 +373,7 @@ describe('TrustMiddleware', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      mockTrustService.getTrustScore = vi.fn().mockRejectedValue(new Error('Database error'));
+      mockTrustService.getTrustScore = mock().mockRejectedValue(new Error('Database error'));
 
       const canExecute = await TrustMiddleware.canExecuteAction(
         mockRuntime,
@@ -384,4 +384,4 @@ describe('TrustMiddleware', () => {
       expect(canExecute).toBe(false);
     });
   });
-}); 
+});

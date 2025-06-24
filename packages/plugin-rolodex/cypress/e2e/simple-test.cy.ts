@@ -4,4 +4,4 @@ describe('Simple Test', () => {
     cy.contains('type').click();
     cy.url().should('include', '/commands/actions');
   });
-}); 
+});

@@ -20,7 +20,7 @@ export class BrowserNavigationError extends StagehandError {
     super(
       `Failed to navigate to ${url}: ${originalError?.message || 'Unknown error'}`,
       'BROWSER_NAVIGATION_ERROR',
-      `I couldn't navigate to the requested page. The URL might be invalid or the site might be down.`,
+      "I couldn't navigate to the requested page. The URL might be invalid or the site might be down.",
       true,
       { url, originalError: originalError?.message }
     );
@@ -32,7 +32,7 @@ export class BrowserSessionError extends StagehandError {
     super(
       message,
       'BROWSER_SESSION_ERROR',
-      `I'm having trouble with the browser session. Please try again.`,
+      "I'm having trouble with the browser session. Please try again.",
       true,
       details
     );
@@ -56,7 +56,7 @@ export class BrowserTimeoutError extends StagehandError {
     super(
       `Browser action "${action}" timed out after ${timeoutMs}ms`,
       'BROWSER_TIMEOUT_ERROR',
-      `The browser operation took too long and timed out. The page might be slow or unresponsive.`,
+      'The browser operation took too long and timed out. The page might be slow or unresponsive.',
       true,
       { action, timeoutMs }
     );
@@ -68,7 +68,7 @@ export class BrowserExtractionError extends StagehandError {
     super(
       `Failed to extract data: ${originalError?.message || 'Unknown error'}`,
       'BROWSER_EXTRACTION_ERROR',
-      `I couldn't extract the requested information from the page. The content might not be available or the page structure might have changed.`,
+      "I couldn't extract the requested information from the page. The content might not be available or the page structure might have changed.",
       true,
       { instruction, originalError: originalError?.message }
     );
@@ -80,7 +80,7 @@ export class BrowserSecurityError extends StagehandError {
     super(
       message,
       'BROWSER_SECURITY_ERROR',
-      `This operation was blocked for security reasons. Please check if the URL is allowed.`,
+      'This operation was blocked for security reasons. Please check if the URL is allowed.',
       false,
       details
     );
@@ -92,7 +92,7 @@ export class BrowserServiceNotAvailableError extends StagehandError {
     super(
       'Stagehand service is not available',
       'SERVICE_NOT_AVAILABLE',
-      `The browser automation service is not currently available. Please try again later.`,
+      'The browser automation service is not currently available. Please try again later.',
       false
     );
   }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { ignoreAction } from '../../actions/ignore';
 import { createMockRuntime } from '../test-utils';
 
@@ -6,7 +6,7 @@ describe('IGNORE Action', () => {
   let mockRuntime: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
   });
 
@@ -27,27 +27,29 @@ describe('IGNORE Action', () => {
       mockMessage = {
         id: 'msg-123',
         content: {
-          text: 'Go away bot'
-        }
+          text: 'Go away bot',
+        },
       };
-      
+
       mockState = {
         values: {},
         data: {},
-        text: 'test state'
+        text: 'test state',
       };
-      
-      mockCallback = vi.fn();
+
+      mockCallback = mock();
     });
 
     it('should return true and call callback with response content', async () => {
-      const responses = [{
-        content: {
-          text: '',
-          thought: 'User is being rude, I should ignore them',
-          actions: ['IGNORE']
-        }
-      }];
+      const responses = [
+        {
+          content: {
+            text: '',
+            thought: 'User is being rude, I should ignore them',
+            actions: ['IGNORE'],
+          },
+        },
+      ];
 
       const result = await ignoreAction.handler(
         mockRuntime,
@@ -92,12 +94,14 @@ describe('IGNORE Action', () => {
     });
 
     it('should handle null callback gracefully', async () => {
-      const responses = [{
-        content: {
-          text: '',
-          actions: ['IGNORE']
-        }
-      }];
+      const responses = [
+        {
+          content: {
+            text: '',
+            actions: ['IGNORE'],
+          },
+        },
+      ];
 
       const result = await ignoreAction.handler(
         mockRuntime,
@@ -117,16 +121,16 @@ describe('IGNORE Action', () => {
           content: {
             text: '',
             thought: 'First ignore response',
-            actions: ['IGNORE']
-          }
+            actions: ['IGNORE'],
+          },
         },
         {
           content: {
             text: '',
             thought: 'Second ignore response',
-            actions: ['IGNORE']
-          }
-        }
+            actions: ['IGNORE'],
+          },
+        },
       ];
 
       const result = await ignoreAction.handler(
@@ -152,14 +156,14 @@ describe('IGNORE Action', () => {
     });
 
     it('should have properly formatted examples', () => {
-      ignoreAction.examples!.forEach(example => {
+      ignoreAction.examples!.forEach((example) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBeGreaterThanOrEqual(2);
-        
-        example.forEach(message => {
+
+        example.forEach((message) => {
           expect(message).toHaveProperty('name');
           expect(message).toHaveProperty('content');
-          
+
           // Check if it's an agent response with IGNORE action
           if (message.content.actions) {
             expect(message.content.actions).toContain('IGNORE');
@@ -174,24 +178,28 @@ describe('IGNORE Action', () => {
 
     it('should include examples of different ignore scenarios', () => {
       const examples = ignoreAction.examples!;
-      
+
       // Should have examples for:
       // 1. Aggressive user behavior
-      const aggressiveExample = examples.find(ex => 
-        ex[0].content.text?.toLowerCase().includes('screw') ||
-        ex[0].content.text?.toLowerCase().includes('shut up')
+      const aggressiveExample = examples.find(
+        (ex) =>
+          ex[0].content.text?.toLowerCase().includes('screw') ||
+          ex[0].content.text?.toLowerCase().includes('shut up')
       );
       expect(aggressiveExample).toBeDefined();
-      
+
       // 2. End of conversation
-      const goodbyeExample = examples.find(ex => 
-        ex.some(msg => msg.content.text?.toLowerCase().includes('bye') ||
-                      msg.content.text?.toLowerCase().includes('cya'))
+      const goodbyeExample = examples.find((ex) =>
+        ex.some(
+          (msg) =>
+            msg.content.text?.toLowerCase().includes('bye') ||
+            msg.content.text?.toLowerCase().includes('cya')
+        )
       );
       expect(goodbyeExample).toBeDefined();
-      
+
       // 3. Inappropriate content
-      const inappropriateExample = examples.find(ex =>
+      const inappropriateExample = examples.find((ex) =>
         ex[0].content.text?.toLowerCase().includes('cyber')
       );
       expect(inappropriateExample).toBeDefined();
@@ -216,4 +224,4 @@ describe('IGNORE Action', () => {
       expect(ignoreAction.description).toContain('conversation has naturally ended');
     });
   });
-}); 
+});

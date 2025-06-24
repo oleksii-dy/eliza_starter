@@ -3,7 +3,6 @@ import { execSync, type ExecSyncOptions } from 'child_process';
 import path from 'path'; // Added for path normalization
 import {
   Service,
-  ServiceType,
   type IAgentRuntime,
   type ServiceTypeName,
   logger,

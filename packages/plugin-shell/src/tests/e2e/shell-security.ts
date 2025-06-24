@@ -18,7 +18,6 @@ export class ShellSecurityE2ETestSuite implements TestSuite {
           throw new Error('Shell service not available');
         }
 
-        const initialCwd = shellService.getCurrentWorkingDirectory();
         const roomId = createUniqueUuid(runtime, 'test-room');
         const state: State = { values: {}, data: {}, text: '' };
 

@@ -402,7 +402,7 @@ export class TDDEngine {
         file.content = lines.join('\n');
       } else {
         // Append to file
-        file.content += '\n\n' + fix.code;
+        file.content += `\n\n${fix.code}`;
       }
     }
 
@@ -441,9 +441,9 @@ export class TDDEngine {
 
       if (testResults.passed) {
         refactored = candidate;
-        elizaLogger.success(`[TDD] Refactoring applied successfully`);
+        elizaLogger.success('[TDD] Refactoring applied successfully');
       } else {
-        elizaLogger.warn(`[TDD] Refactoring caused test failures, skipping`);
+        elizaLogger.warn('[TDD] Refactoring caused test failures, skipping');
       }
     }
 

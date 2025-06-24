@@ -1,4 +1,14 @@
-import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import {
+  describe,
+  expect,
+  it,
+  mock,
+  spyOn,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from 'bun:test';
 import { stagehandPlugin, StagehandService, BrowserSession } from '../index';
 import {
   createMockRuntime,
@@ -10,22 +20,22 @@ import { Memory, State, logger } from '@elizaos/core';
 import { Stagehand } from '@browserbasehq/stagehand';
 
 // Mock the Stagehand module
-vi.mock('@browserbasehq/stagehand', () => {
+mock.module('@browserbasehq/stagehand', () => {
   return {
-    Stagehand: vi.fn().mockImplementation(() => {
+    Stagehand: mock().mockImplementation(() => {
       const mockPage = {
-        goto: vi.fn().mockResolvedValue(undefined),
-        goBack: vi.fn().mockResolvedValue(undefined),
-        goForward: vi.fn().mockResolvedValue(undefined),
-        reload: vi.fn().mockResolvedValue(undefined),
-        waitForLoadState: vi.fn().mockResolvedValue(undefined),
-        title: vi.fn().mockResolvedValue('Test Page Title'),
-        url: vi.fn().mockReturnValue('https://example.com'),
+        goto: mock().mockResolvedValue(undefined),
+        goBack: mock().mockResolvedValue(undefined),
+        goForward: mock().mockResolvedValue(undefined),
+        reload: mock().mockResolvedValue(undefined),
+        waitForLoadState: mock().mockResolvedValue(undefined),
+        title: mock().mockResolvedValue('Test Page Title'),
+        url: mock().mockReturnValue('https://example.com'),
       };
 
       return {
-        init: vi.fn().mockResolvedValue(undefined),
-        close: vi.fn().mockResolvedValue(undefined),
+        init: mock().mockResolvedValue(undefined),
+        close: mock().mockResolvedValue(undefined),
         page: mockPage,
       };
     }),
@@ -38,7 +48,7 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  vi.restoreAllMocks();
+  mock.restore();
 });
 
 describe('BROWSER_STATE provider', () => {
@@ -48,7 +58,7 @@ describe('BROWSER_STATE provider', () => {
   let browserStateProvider: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     // Create mock runtime and service
     mockRuntime = createMockRuntime();
@@ -59,7 +69,7 @@ describe('BROWSER_STATE provider', () => {
     mockSession = new BrowserSession('test-session-1', mockStagehand as any);
 
     // Mock service methods
-    vi.spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
+    spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
 
     // Set up runtime to return our mock service
     mockRuntime.getService.mockReturnValue(mockService);
@@ -98,7 +108,7 @@ describe('BROWSER_STATE provider', () => {
     });
 
     it('should return no session message when no session exists', async () => {
-      mockService.getCurrentSession = vi.fn().mockResolvedValue(undefined);
+      mockService.getCurrentSession = mock().mockResolvedValue(undefined);
 
       const mockMessage = createMockMemory();
       const mockState = createMockState();
@@ -118,7 +128,7 @@ describe('BROWSER_STATE provider', () => {
 
     it('should handle errors gracefully when getting page info fails', async () => {
       // Make page.title throw an error
-      mockSession.page.title = vi.fn().mockRejectedValue(new Error('Page error'));
+      mockSession.page.title = mock().mockRejectedValue(new Error('Page error'));
 
       const mockMessage = createMockMemory();
       const mockState = createMockState();
@@ -171,7 +181,7 @@ describe('BROWSER_STATE provider', () => {
     });
 
     it('should handle URL without title', async () => {
-      mockSession.page.title = vi.fn().mockResolvedValue('');
+      mockSession.page.title = mock().mockResolvedValue('');
 
       const mockMessage = createMockMemory();
       const mockState = createMockState();

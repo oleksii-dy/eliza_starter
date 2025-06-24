@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
 /**
  * Single Benchmark Runner
- * 
+ *
  * This script runs a single research benchmark test with real APIs
  * to validate that the research plugin actually works.
- * 
+ *
  * Usage: bun run src/__tests__/single-benchmark-runner.ts
  */
 
 import { ResearchService } from '../service';
-import { IAgentRuntime, ModelType, elizaLogger } from '@elizaos/core';
+import { IAgentRuntime, ModelType, logger } from '@elizaos/core';
 import { ResearchStatus, ResearchPhase, ResearchDepth, ResearchDomain } from '../types';
 // Removed real-runtime import - using simplified approach
 import { config } from 'dotenv';
@@ -117,7 +117,7 @@ async function runBenchmarkEvaluation(project: any): Promise<any> {
   // Save project to temp file for Python benchmark
   const tempDir = path.join(process.cwd(), 'temp');
   await fs.mkdir(tempDir, { recursive: true });
-  
+
   const projectFile = path.join(tempDir, `project_${project.id}.json`);
   await fs.writeFile(projectFile, JSON.stringify(project, null, 2));
 
@@ -133,9 +133,9 @@ async function runBenchmarkEvaluation(project: any): Promise<any> {
 
   try {
     // Run Python benchmark
-    const cmd = `cd deep_research_bench && python deepresearch_bench_race.py eliza --limit 1`;
+    const cmd = 'cd deep_research_bench && python deepresearch_bench_race.py eliza --limit 1';
     const { stdout, stderr } = await execAsync(cmd);
-    
+
     if (stderr) {
       console.warn('Benchmark warnings:', stderr);
     }
@@ -143,7 +143,7 @@ async function runBenchmarkEvaluation(project: any): Promise<any> {
     // Parse results
     const resultFile = path.join(process.cwd(), 'deep_research_bench', 'results', 'race_result.txt');
     const results = await fs.readFile(resultFile, 'utf-8');
-    
+
     const scores: Record<string, number> = {};
     results.split('\n').forEach(line => {
       const [key, value] = line.split(':');
@@ -173,80 +173,80 @@ async function runSingleBenchmark() {
         // Return fake embedding
         return new Array(1536).fill(0).map(() => Math.random());
       }
-      
+
       // Check different message indices for different types of calls
       const userPrompt = params.messages?.[1]?.content || ''; // Usually user message
       const systemOrUser = params.messages?.[0]?.content || ''; // Could be system or user
       const prompt = userPrompt || systemOrUser; // Use whichever has content
       const allMessages = params.messages || [];
-      
+
       // Debug: check all messages for synthesis content
       for (let i = 0; i < allMessages.length; i++) {
         const msg = allMessages[i]?.content || '';
         if (msg.toLowerCase().includes('synthesis') || msg.toLowerCase().includes('synthesize')) {
-          console.log(`[DEBUG] SYNTHESIS PROMPT FOUND in message ${i}:`, msg.substring(0, 200) + '...');
+          console.log(`[DEBUG] SYNTHESIS PROMPT FOUND in message ${i}:`, `${msg.substring(0, 200)}...`);
         }
       }
-      
+
       // Debug: log all non-trivial prompts to understand what we're missing
       if (prompt.length > 100 && !prompt.includes('Extract key findings')) {
-        console.log('[DEBUG] Non-finding prompt detected:', prompt.substring(0, 150) + '...');
+        console.log('[DEBUG] Non-finding prompt detected:', `${prompt.substring(0, 150)}...`);
       }
-      
+
       if (prompt.includes('Extract key findings') && prompt.includes('Format as JSON array')) {
         // Return valid JSON for finding extraction
         return JSON.stringify([
           {
-            "content": "Federated learning preserves privacy by keeping data distributed across healthcare institutions, only sharing model updates rather than raw patient data.",
-            "relevance": 0.9,
-            "confidence": 0.8,
-            "category": "privacy_technique"
+            'content': 'Federated learning preserves privacy by keeping data distributed across healthcare institutions, only sharing model updates rather than raw patient data.',
+            'relevance': 0.9,
+            'confidence': 0.8,
+            'category': 'privacy_technique'
           },
           {
-            "content": "Differential privacy adds calibrated noise to model parameters to prevent reconstruction of individual patient records while maintaining model utility.",
-            "relevance": 0.85,
-            "confidence": 0.9,
-            "category": "privacy_technique"
+            'content': 'Differential privacy adds calibrated noise to model parameters to prevent reconstruction of individual patient records while maintaining model utility.',
+            'relevance': 0.85,
+            'confidence': 0.9,
+            'category': 'privacy_technique'
           },
           {
-            "content": "Homomorphic encryption allows computations on encrypted data, enabling secure federated learning without revealing sensitive healthcare information.",
-            "relevance": 0.9,
-            "confidence": 0.85,
-            "category": "privacy_technique"
+            'content': 'Homomorphic encryption allows computations on encrypted data, enabling secure federated learning without revealing sensitive healthcare information.',
+            'relevance': 0.9,
+            'confidence': 0.85,
+            'category': 'privacy_technique'
           }
         ]);
       }
-      
+
       // Check if this is a relevance scoring call
       if (prompt.includes('Format as JSON:') && prompt.includes('queryAlignment')) {
         // Return high relevance scores for our test findings
         return JSON.stringify({
-          "queryAlignment": 0.9,
-          "topicRelevance": 0.85,
-          "specificity": 0.8,
-          "reasoning": "This finding directly addresses privacy-preserving techniques in federated learning healthcare applications as requested in the query.",
-          "score": 0.85
+          'queryAlignment': 0.9,
+          'topicRelevance': 0.85,
+          'specificity': 0.8,
+          'reasoning': 'This finding directly addresses privacy-preserving techniques in federated learning healthcare applications as requested in the query.',
+          'score': 0.85
         });
       }
-      
+
       // Check if this is a factual claims extraction call
       if (prompt.includes('fact-checker extracting verifiable claims')) {
         return JSON.stringify([
           {
-            "statement": "Federated learning enables collaborative machine learning without sharing raw healthcare data",
-            "evidence": ["Distributed model training", "Privacy preservation", "Healthcare applications"],
-            "confidence": 0.9
+            'statement': 'Federated learning enables collaborative machine learning without sharing raw healthcare data',
+            'evidence': ['Distributed model training', 'Privacy preservation', 'Healthcare applications'],
+            'confidence': 0.9
           },
           {
-            "statement": "Differential privacy provides mathematical guarantees for privacy protection",
-            "evidence": ["Noise injection", "Privacy budget", "Utility preservation"],
-            "confidence": 0.85
+            'statement': 'Differential privacy provides mathematical guarantees for privacy protection',
+            'evidence': ['Noise injection', 'Privacy budget', 'Utility preservation'],
+            'confidence': 0.85
           }
         ]);
       }
-      
+
       // Handle comprehensive report generation calls
-      
+
       // Executive Summary
       if (prompt.includes('Create a comprehensive executive summary for this research project')) {
         console.log('[DEBUG] Executive summary generation detected');
@@ -376,7 +376,7 @@ Language bias is a potential limitation as the search was restricted to English-
 The interdisciplinary nature of the research topic spanning computer science, healthcare informatics, and privacy law presented challenges in applying uniform quality assessment criteria across diverse methodological approaches and publication venues.`;
       }
 
-      // Implications Section  
+      // Implications Section
       if (prompt.includes('Create a comprehensive implications and future directions section')) {
         console.log('[DEBUG] Implications section generation detected');
         return `# Implications and Future Directions
@@ -451,10 +451,10 @@ Research funding agencies should prioritize interdisciplinary research that comb
       // Check for category synthesis specifically
       if (prompt.includes('Synthesize these') && prompt.includes('findings into a coherent summary')) {
         console.log('[DEBUG] Category synthesis detected');
-        return `This category demonstrates significant advancements in privacy-preserving techniques for federated learning in healthcare. The findings reveal three key approaches: differential privacy provides mathematical guarantees through noise injection, homomorphic encryption enables computation on encrypted data, and secure multi-party computation allows collaborative learning without data sharing. These techniques can be combined to create robust privacy frameworks for sensitive healthcare applications.`;
+        return 'This category demonstrates significant advancements in privacy-preserving techniques for federated learning in healthcare. The findings reveal three key approaches: differential privacy provides mathematical guarantees through noise injection, homomorphic encryption enables computation on encrypted data, and secure multi-party computation allows collaborative learning without data sharing. These techniques can be combined to create robust privacy frameworks for sensitive healthcare applications.';
       }
-      
-      // Check for overall synthesis specifically  
+
+      // Check for overall synthesis specifically
       if (prompt.includes('Create an overall synthesis') && prompt.includes('research project')) {
         console.log('[DEBUG] Overall synthesis detected');
         return `This research provides a comprehensive analysis of privacy-preserving techniques in federated learning for healthcare applications. 
@@ -563,23 +563,23 @@ The source addresses gaps identified in previous literature regarding practical 
 
 The methodological approach employed in this source represents an advancement over earlier studies through its integration of technical evaluation with organizational and regulatory considerations. This comprehensive approach provides a more complete picture of federated learning viability in healthcare settings.`;
       }
-      
+
       // Log what prompts are falling through to the default case
       if (prompt.length > 100) {
-        console.log('[DEBUG] Unhandled prompt falling to default response:', prompt.substring(0, 200) + '...');
+        console.log('[DEBUG] Unhandled prompt falling to default response:', `${prompt.substring(0, 200)}...`);
       }
-      
+
       // Return mock text response for other calls
-      return "This is a test response from the model";
+      return 'This is a test response from the model';
     },
     getSetting: (key: string) => process.env[key] || null,
   } as any as IAgentRuntime;
-  
+
   // Create research service
   const service = new ResearchService(runtime);
 
   console.log(`📋 Test Query: "${TEST_QUERY.query}"\n`);
-  console.log(`Expected Quality Metrics:`);
+  console.log('Expected Quality Metrics:');
   console.log(`- Minimum Sources: ${TEST_QUERY.minimumRequirements.sources}`);
   console.log(`- Minimum Academic Sources: ${TEST_QUERY.minimumRequirements.academicSources}`);
   console.log(`- Minimum Word Count: ${TEST_QUERY.minimumRequirements.wordCount}`);
@@ -616,7 +616,7 @@ The methodological approach employed in this source represents an advancement ov
       // Log phase-specific metrics
       console.log(`  Sources: ${proj.sources.length}`);
       console.log(`  Findings: ${proj.findings.length}`);
-      
+
       if (phase === ResearchPhase.ANALYZING) {
         const academicSources = proj.sources.filter((s: any) => s.type === 'academic');
         console.log(`  Academic Sources: ${academicSources.length}`);
@@ -628,17 +628,17 @@ The methodological approach employed in this source represents an advancement ov
     // Analyze results
     console.log('📈 Results Analysis:');
     console.log(`- Total Sources: ${finalProject.sources.length} (Required: ${TEST_QUERY.minimumRequirements.sources})`);
-    
+
     const academicSources = finalProject.sources.filter((s: any) =>
-      s.type === 'academic' || 
-      s.url.includes('arxiv.org') || 
+      s.type === 'academic' ||
+      s.url.includes('arxiv.org') ||
       s.url.includes('pubmed') ||
       s.url.includes('.edu')
     );
     console.log(`- Academic Sources: ${academicSources.length} (Required: ${TEST_QUERY.minimumRequirements.academicSources})`);
-    
+
     console.log(`- Key Findings: ${finalProject.findings.length} (Required: ${TEST_QUERY.minimumRequirements.findings})`);
-    
+
     if (finalProject.report) {
       console.log(`- Word Count: ${finalProject.report.wordCount} (Required: ${TEST_QUERY.minimumRequirements.wordCount})`);
       console.log(`- Citations: ${finalProject.report.citations.length}`);
@@ -708,10 +708,10 @@ The methodological approach employed in this source represents an advancement ov
     // Save detailed results
     const resultsDir = path.join(process.cwd(), 'benchmark_results');
     await fs.mkdir(resultsDir, { recursive: true });
-    
+
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const resultFile = path.join(resultsDir, `benchmark_${timestamp}.json`);
-    
+
     await fs.writeFile(resultFile, JSON.stringify({
       testQuery: TEST_QUERY,
       project: finalProject,

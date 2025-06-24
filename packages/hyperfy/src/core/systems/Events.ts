@@ -22,8 +22,8 @@ export class Events extends System implements IEvents {
     // Extract data and extra from args for backward compatibility
     const [data, extra] = args;
     const callbacks = this.eventListeners.get(event);
-    if (!callbacks) return false;
-    
+    if (!callbacks) {return false;}
+
     for (const callback of callbacks) {
       try {
         callback(data, extra);
@@ -50,7 +50,7 @@ export class Events extends System implements IEvents {
       this.eventListeners.delete(event);
       return this;
     }
-    
+
     const callbacks = this.eventListeners.get(event);
     if (callbacks) {
       // If context was provided, we need to find the bound version
@@ -66,4 +66,4 @@ export class Events extends System implements IEvents {
   override destroy(): void {
     this.eventListeners.clear();
   }
-} 
+}

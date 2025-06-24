@@ -2,7 +2,7 @@ import React from 'react';
 
 // Mock the context modules before importing the component
 beforeEach(() => {
-  cy.stub(React, 'useContext').callsFake((context: any) => {
+  cy.stub(React, 'useContext').callsFake((context: React.Context<unknown>) => {
     if (context.displayName === 'AuthContext' || context._currentValue === undefined) {
       return {
         openApiKeyDialog: cy.stub(),

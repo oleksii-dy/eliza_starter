@@ -1,7 +1,6 @@
 import { Service, ServiceType, IAgentRuntime } from '../types/index';
 import {
   UnifiedPluginConfiguration,
-  PluginConfigurationState,
   PluginDependency,
   ConfigurationValidationResult,
   ConfigurationError,

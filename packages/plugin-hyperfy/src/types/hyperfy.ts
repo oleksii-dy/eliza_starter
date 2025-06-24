@@ -161,6 +161,13 @@ export interface HyperfyControls {
   camera?: THREE.Camera;
   screen?: { width: number; height: number };
   followEntity?: (entityId: string) => void;
+  setKey?: (keyName: string, isDown: boolean) => void;
+  keyX?: {
+    pressed: boolean;
+    released: boolean;
+    onPress?: () => void;
+    onRelease?: () => void;
+  };
 }
 
 // Action Types
@@ -304,25 +311,23 @@ export interface ScreenshotResult {
 
 // Export utility type guards
 export function isHyperfyEntity(obj: unknown): obj is HyperfyEntity {
-  return obj !== null && 
-    typeof obj === 'object' && 
+  return (
+    obj !== null &&
+    typeof obj === 'object' &&
     'data' in obj &&
     typeof (obj as any).data === 'object' &&
-    'id' in (obj as any).data;
+    'id' in (obj as any).data
+  );
 }
 
 export function isHyperfyPlayer(entity: HyperfyEntity): entity is HyperfyPlayer {
-  return 'moving' in entity && 
-    entity.data.id !== undefined &&
-    entity.data.name !== undefined;
+  return 'moving' in entity && entity.data.id !== undefined && entity.data.name !== undefined;
 }
 
 export function isHyperfyChatMessage(obj: unknown): obj is HyperfyChatMessage {
-  return obj !== null &&
-    typeof obj === 'object' &&
-    'id' in obj &&
-    'text' in obj &&
-    'timestamp' in obj;
+  return (
+    obj !== null && typeof obj === 'object' && 'id' in obj && 'text' in obj && 'timestamp' in obj
+  );
 }
 
 export interface HyperfyBlueprints {
@@ -342,4 +347,4 @@ export interface HyperfyEntities {
   remove: (id: string) => void;
   clear: () => void;
   update: (id: string, data: Partial<HyperfyEntityData>) => void;
-} 
+}

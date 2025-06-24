@@ -1,0 +1,17 @@
+# Build output
+dist/
+node_modules/
+
+# Test runners and benchmarks
+run-*.ts
+test-*.ts
+simple-test.ts
+debug-*.ts
+
+# Generated files
+*.mjs
+*.js
+
+# Config files
+vitest.config.ts
+tsup.config.ts 

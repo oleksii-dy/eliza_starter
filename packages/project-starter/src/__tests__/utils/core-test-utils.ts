@@ -1,6 +1,5 @@
-import { mock } from 'bun:test';
 import { composeActionExamples, formatActionNames, formatActions } from '@elizaos/core';
-import type { Action, Content, IAgentRuntime, Memory, State } from '@elizaos/core';
+import type { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { logger } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -82,14 +81,63 @@ export const runCoreActionTests = (actions: Action[]) => {
   };
 };
 
-// Re-export from core test-utils
-export {
-  createMockRuntime,
-  createMockState,
-} from '@elizaos/core/test-utils';
+/**
+ * Creates a mock runtime for testing
+ */
+export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime {
+  return {
+    agentId: uuidv4(),
+    character: {
+      name: 'Test Character',
+      system: 'Test system prompt',
+      modelProvider: 'openai',
+    },
+    evaluators: [],
+    actions: [],
+    providers: [],
+    services: {},
+    memory: {},
+    messageManager: {},
+    state: {},
+    ...overrides,
+  } as unknown as IAgentRuntime;
+}
 
-// Import the base function and create a proper wrapper
-import { createMockMemory } from '@elizaos/core/test-utils';
+/**
+ * Creates a mock state for testing
+ */
+export function createMockState(overrides: Partial<State> = {}): State {
+  return {
+    values: {},
+    data: {},
+    text: '',
+    ...overrides,
+  } as State;
+}
+
+/**
+ * Creates a mock Memory object for testing
+ *
+ * @param text - The message text
+ * @param overrides - Optional overrides for the default memory properties
+ * @returns A mock memory object
+ */
+export function createMockMemory(overrides: Partial<Memory> = {}): Memory {
+  const entityId = uuidv4();
+  const roomId = uuidv4();
+
+  return {
+    id: uuidv4(),
+    entityId,
+    roomId,
+    content: {
+      text: '',
+      source: 'test',
+    },
+    timestamp: Date.now(),
+    ...overrides,
+  } as Memory;
+}
 
 /**
  * Creates a mock Message object for testing
@@ -111,7 +159,11 @@ export function createMockMessage(text: string, overrides: Partial<Memory> = {})
 /**
  * Documents test results for logging and debugging
  */
-export const documentTestResult = (testName: string, result: any, error: Error | null = null) => {
+export const documentTestResult = (
+  testName: string,
+  result: unknown,
+  error: Error | null = null
+) => {
   // Clean, useful test documentation for developers
   logger.info(`✓ Testing: ${testName}`);
 
@@ -138,12 +190,9 @@ export const documentTestResult = (testName: string, result: any, error: Error |
           const more = keys.length > 3 ? ` +${keys.length - 3} more` : '';
           logger.info(`  → {${preview}${more}}`);
         }
-      } catch (e) {
-        logger.info(`  → [Complex object]`);
+      } catch (_e) {
+        logger.info('  → [Complex object]');
       }
     }
   }
 };
-
-// Note: createMockMessage and createMockState moved to @elizaos/core/test-utils
-// Use the centralized mock system instead

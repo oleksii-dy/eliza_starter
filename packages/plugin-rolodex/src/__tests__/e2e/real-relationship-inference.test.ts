@@ -4,17 +4,17 @@ import { createTestWorld, createTestRoom } from './test-helpers';
 
 export const realRelationshipInferenceTests: TestSuite = {
   name: 'Real Relationship Inference Tests',
-  
+
   tests: [
     {
       name: 'Infer relationships from conversation context',
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing real relationship inference from natural language...');
-        
+
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
         const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
-        
+
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -23,21 +23,21 @@ export const realRelationshipInferenceTests: TestSuite = {
         const aliceId = stringToUuid(`alice-${Date.now()}`);
         const bobId = stringToUuid(`bob-${Date.now()}`);
         const charlieId = stringToUuid(`charlie-${Date.now()}`);
-        
+
         await runtime.createEntity({
           id: aliceId,
           names: ['Alice Chen'],
           agentId: runtime.agentId,
           metadata: { type: 'person' },
         });
-        
+
         await runtime.createEntity({
           id: bobId,
           names: ['Bob Smith'],
           agentId: runtime.agentId,
           metadata: { type: 'person' },
         });
-        
+
         await runtime.createEntity({
           id: charlieId,
           names: ['Charlie Davis'],
@@ -82,7 +82,7 @@ export const realRelationshipInferenceTests: TestSuite = {
 
         for (const test of relationshipTests) {
           console.log(`\n🔗 Testing relationship inference: "${test.context.substring(0, 60)}..."`);
-          
+
           const relationship = await entityGraphService.analyzeInteraction(
             test.source,
             test.target,
@@ -134,11 +134,11 @@ export const realRelationshipInferenceTests: TestSuite = {
       name: 'Detect complex and implicit relationships',
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing complex relationship detection...');
-        
+
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
         const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
-        
+
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -146,11 +146,11 @@ export const realRelationshipInferenceTests: TestSuite = {
         // Create entities for complex relationship testing
         const entities: Record<string, UUID> = {};
         const names = ['David', 'Emma', 'Frank', 'Grace'];
-        
+
         for (const name of names) {
           const id = stringToUuid(`${name.toLowerCase()}-${Date.now()}`);
           entities[name] = id;
-          
+
           await runtime.createEntity({
             id,
             names: [name],
@@ -192,7 +192,7 @@ export const realRelationshipInferenceTests: TestSuite = {
 
         for (const test of complexTests) {
           console.log(`\n🔍 Testing complex relationship: "${test.context.substring(0, 50)}..."`);
-          
+
           const relationship = await entityGraphService.analyzeInteraction(
             test.source,
             test.target,
@@ -206,11 +206,11 @@ export const realRelationshipInferenceTests: TestSuite = {
 
           console.log(`✓ Detected relationship type: ${relationship.relationshipType || 'unknown'}`);
           console.log(`✓ Strength: ${relationship.strength || 0}%`);
-          
+
           // Check if metadata captures complexity
           if (relationship.metadata) {
             console.log(`✓ Metadata keys: ${Object.keys(relationship.metadata).join(', ')}`);
-            
+
             if (relationship.metadata.tags && Array.isArray(relationship.metadata.tags)) {
               console.log(`✓ Relationship tags: ${relationship.metadata.tags.join(', ')}`);
             }
@@ -230,11 +230,11 @@ export const realRelationshipInferenceTests: TestSuite = {
       name: 'Update relationships based on new interactions',
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing relationship evolution over time...');
-        
+
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
         const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
-        
+
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -242,14 +242,14 @@ export const realRelationshipInferenceTests: TestSuite = {
         // Create two entities
         const henryId = stringToUuid(`henry-${Date.now()}`);
         const isabelId = stringToUuid(`isabel-${Date.now()}`);
-        
+
         await runtime.createEntity({
           id: henryId,
           names: ['Henry'],
           agentId: runtime.agentId,
           metadata: { type: 'person' },
         });
-        
+
         await runtime.createEntity({
           id: isabelId,
           names: ['Isabel'],
@@ -282,10 +282,10 @@ export const realRelationshipInferenceTests: TestSuite = {
         ];
 
         let previousStrength = 0;
-        
+
         for (const [index, interaction] of interactions.entries()) {
           console.log(`\n📈 Interaction ${index + 1}: "${interaction.context.substring(0, 50)}..."`);
-          
+
           const relationship = await entityGraphService.analyzeInteraction(
             henryId,
             isabelId,
@@ -300,7 +300,7 @@ export const realRelationshipInferenceTests: TestSuite = {
           console.log(`✓ Relationship type: ${relationship.relationshipType || 'unknown'}`);
           const currentStrength = relationship.strength || 0;
           console.log(`✓ Current strength: ${currentStrength}%`);
-          
+
           // Verify strength is in expected range
           const [minStrength, maxStrength] = interaction.expectedStrengthRange;
           if (currentStrength < minStrength || currentStrength > maxStrength) {
@@ -314,14 +314,14 @@ export const realRelationshipInferenceTests: TestSuite = {
           }
 
           previousStrength = currentStrength;
-          
+
           // Wait a bit between interactions
           await new Promise(resolve => setTimeout(resolve, 500));
         }
 
         // Verify final relationship state
         const finalRelationships = await entityGraphService.getEntityRelationships(henryId);
-        const isabelRelationship = finalRelationships.find(r => 
+        const isabelRelationship = finalRelationships.find(r =>
           r.targetEntityId === isabelId || r.sourceEntityId === isabelId
         );
 
@@ -338,4 +338,4 @@ export const realRelationshipInferenceTests: TestSuite = {
       },
     },
   ],
-}; 
+};

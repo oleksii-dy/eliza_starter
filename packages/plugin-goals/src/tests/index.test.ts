@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, spyOn, beforeEach } from 'bun:test';
 import GoalsPlugin from '../index';
-import type { IAgentRuntime } from '@elizaos/core';
+import { type IAgentRuntime, logger } from '@elizaos/core';
 
 describe('GoalsPlugin', () => {
   it('should export GoalsPlugin with correct structure', () => {
@@ -25,17 +25,29 @@ describe('GoalsPlugin', () => {
     expect(actionNames).toContain('CANCEL_GOAL');
   });
 
-  it('should initialize without errors', async () => {
+  it('should initialize without errors when database is available', async () => {
     const mockRuntime: IAgentRuntime = {
       agentId: 'test-agent' as any,
       db: {
-        execute: vi.fn(),
+        execute: mock(() => Promise.resolve({ rows: [] })),
       },
     } as any;
 
     const config = {};
-    if (GoalsPlugin.init) {
-      await expect(GoalsPlugin.init(config, mockRuntime)).resolves.toBeUndefined();
-    }
+
+    // Should not throw when database is available
+    await expect(GoalsPlugin.init!(config, mockRuntime)).resolves.toBeUndefined();
+  });
+
+  it('should handle missing database gracefully', async () => {
+    const mockRuntime: IAgentRuntime = {
+      agentId: 'test-agent' as any,
+      db: null, // No database available
+    } as any;
+
+    const config = {};
+
+    // Should not throw when no database is available
+    await expect(GoalsPlugin.init!(config, mockRuntime)).resolves.toBeUndefined();
   });
 });

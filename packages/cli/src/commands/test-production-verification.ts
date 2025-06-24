@@ -135,7 +135,7 @@ export const testProductionVerificationCommand = new Command()
 
       if (results.detailedResults.reliabilityImprovement) {
         const reliability = results.detailedResults.reliabilityImprovement;
-        console.log(`\n1. Reliability Improvement:`);
+        console.log('\n1. Reliability Improvement:');
         console.log(`   - Consistency Check: ${reliability.consistencyCheck ? '✅' : '❌'}`);
         console.log(`   - Reliability Score: ${(reliability.reliabilityScore * 100).toFixed(1)}%`);
         console.log(`   - Enhanced Results: ${reliability.enhancedResults.length} rules enhanced`);
@@ -143,7 +143,7 @@ export const testProductionVerificationCommand = new Command()
 
       if (results.detailedResults.performanceImprovement) {
         const performance = results.detailedResults.performanceImprovement;
-        console.log(`\n2. Performance Improvement:`);
+        console.log('\n2. Performance Improvement:');
         console.log(`   - Cache Hit Rate: ${(performance.cacheHitRate * 100).toFixed(1)}%`);
         console.log(`   - Batch Efficiency: ${performance.batchEfficiency.toFixed(2)}x`);
         console.log(`   - Total Time: ${performance.totalTime}ms`);
@@ -152,7 +152,7 @@ export const testProductionVerificationCommand = new Command()
 
       if (results.detailedResults.securityImprovement) {
         const security = results.detailedResults.securityImprovement;
-        console.log(`\n3. Security Improvement:`);
+        console.log('\n3. Security Improvement:');
         console.log(`   - Data Classification: ${security.dataClassification}`);
         console.log(`   - Sanitization Applied: ${security.sanitizationApplied ? '✅' : '❌'}`);
         console.log(`   - Local Processing Used: ${security.localProcessingUsed ? '✅' : '❌'}`);
@@ -161,7 +161,7 @@ export const testProductionVerificationCommand = new Command()
 
       if (results.detailedResults.explainabilityImprovement) {
         const explainability = results.detailedResults.explainabilityImprovement;
-        console.log(`\n4. Explainability Improvement:`);
+        console.log('\n4. Explainability Improvement:');
         console.log(`   - Decision Path: ${explainability.hasDecisionPath ? '✅' : '❌'}`);
         console.log(`   - Data Flow Tracking: ${explainability.hasDataFlow ? '✅' : '❌'}`);
         console.log(`   - Counter Examples: ${explainability.hasCounterExamples ? '✅' : '❌'}`);
@@ -171,7 +171,7 @@ export const testProductionVerificationCommand = new Command()
 
       if (results.detailedResults.versioningImprovement) {
         const versioning = results.detailedResults.versioningImprovement;
-        console.log(`\n5. Versioning Improvement:`);
+        console.log('\n5. Versioning Improvement:');
         console.log(`   - Snapshot Created: ${versioning.snapshotCreated ? '✅' : '❌'}`);
         console.log(`   - Validation Passed: ${versioning.validationPassed ? '✅' : '❌'}`);
         console.log(`   - Regression Detection: ${versioning.regressionDetected ? '✅' : '❌'}`);

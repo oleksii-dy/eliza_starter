@@ -128,7 +128,7 @@ export class CapSolverService {
       // Use proxy version
       task.type = 'AntiTurnstileTask';
       const proxyParts = proxy.split(':');
-      task.proxy = proxyParts[0] + ':' + proxyParts[1];
+      task.proxy = `${proxyParts[0]}:${proxyParts[1]}`;
       if (proxyParts.length > 2) {
         task.proxyLogin = proxyParts[2];
         task.proxyPassword = proxyParts[3];
@@ -165,7 +165,7 @@ export class CapSolverService {
 
     if (proxy) {
       const proxyParts = proxy.split(':');
-      task.proxy = proxyParts[0] + ':' + proxyParts[1];
+      task.proxy = `${proxyParts[0]}:${proxyParts[1]}`;
       if (proxyParts.length > 2) {
         task.proxyLogin = proxyParts[2];
         task.proxyPassword = proxyParts[3];
@@ -200,7 +200,7 @@ export class CapSolverService {
 
     if (proxy) {
       const proxyParts = proxy.split(':');
-      task.proxy = proxyParts[0] + ':' + proxyParts[1];
+      task.proxy = `${proxyParts[0]}:${proxyParts[1]}`;
       if (proxyParts.length > 2) {
         task.proxyLogin = proxyParts[2];
         task.proxyPassword = proxyParts[3];
@@ -227,7 +227,7 @@ export class CapSolverService {
 
     if (proxy) {
       const proxyParts = proxy.split(':');
-      task.proxy = proxyParts[0] + ':' + proxyParts[1];
+      task.proxy = `${proxyParts[0]}:${proxyParts[1]}`;
       if (proxyParts.length > 2) {
         task.proxyLogin = proxyParts[2];
         task.proxyPassword = proxyParts[3];

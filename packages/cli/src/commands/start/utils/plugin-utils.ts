@@ -28,7 +28,7 @@ const pluginNameMapping: Record<string, string> = {
   todo: '@elizaos/plugin-todo',
   trust: '@elizaos/plugin-trust',
   rolodex: '@elizaos/plugin-rolodex',
-  bootstrap: '@elizaos/plugin-bootstrap',
+  bootstrap: '@elizaos/plugin-message-handling',
   openai: '@elizaos/plugin-openai',
   anthropic: '@elizaos/plugin-anthropic',
   sql: '@elizaos/plugin-sql',
@@ -61,8 +61,10 @@ async function loadPluginModuleWithEnvironment(pluginName: string): Promise<any>
   try {
     // First try the standard loadPluginModule
     const module = await loadPluginModule(pluginName);
-    if (module) return module;
-  } catch (error) {
+    if (module) {
+      return module;
+    }
+  } catch {
     logger.debug(
       `Standard plugin loading failed for ${pluginName}, trying environment-aware loading`
     );
@@ -114,11 +116,11 @@ export async function loadAndPreparePlugin(pluginName: string): Promise<Plugin |
       if (error instanceof Error && error.message.includes('Cannot find module')) {
         if (envConfig.requiresJsExtensions) {
           logger.info(
-            `Hint: In the built CLI environment, make sure all relative imports have .js extensions`
+            'Hint: In the built CLI environment, make sure all relative imports have .js extensions'
           );
         }
         if (envConfig.isTypeScript) {
-          logger.info(`Hint: In TypeScript environment, you can import .ts files directly`);
+          logger.info('Hint: In TypeScript environment, you can import .ts files directly');
         }
       }
 
@@ -169,7 +171,7 @@ export async function loadAndPreparePlugin(pluginName: string): Promise<Plugin |
   // Provide helpful debugging info
   if (envConfig.isMonorepo) {
     logger.info(
-      `Running in monorepo context. Make sure the plugin is properly built if using TypeScript.`
+      'Running in monorepo context. Make sure the plugin is properly built if using TypeScript.'
     );
   }
 

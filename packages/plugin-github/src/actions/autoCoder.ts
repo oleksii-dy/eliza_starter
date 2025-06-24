@@ -85,8 +85,8 @@ Respond with JSON:
 
     const result = JSON.parse(response);
     return result.shouldAutoCode && result.confidence > 0.7;
-  } catch (error) {
-    logger.warn('Failed to evaluate auto-coding suitability:', error);
+  } catch (_error) {
+    logger.warn('Failed to evaluate auto-coding suitability:', _error);
     return false;
   }
 }
@@ -117,7 +117,9 @@ export const autoCodeIssueAction: Action = {
 
   async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
     const githubService = runtime.getService<GitHubService>('github');
-    if (!githubService) return false;
+    if (!githubService) {
+      return false;
+    }
 
     // If this is from a webhook event, validate the issue is suitable for auto-coding
     const { issue, repository } = state?.data || {};
@@ -402,8 +404,8 @@ I recommend having a human developer review this issue.`,
 ### 🔧 Changes Made
 
 ${codeGeneration.changes
-  .map((change) => `- **${change.action.toUpperCase()}** \`${change.file}\`: ${change.reasoning}`)
-  .join('\n')}
+    .map((change) => `- **${change.action.toUpperCase()}** \`${change.file}\`: ${change.reasoning}`)
+    .join('\n')}
 
 ### 🧪 Testing ${codeGeneration.testingNeeded ? 'Required' : 'Recommended'}
 
@@ -620,11 +622,15 @@ export const respondToMentionAction: Action = {
 
   async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
     const githubService = runtime.getService<GitHubService>('github');
-    if (!githubService) return false;
+    if (!githubService) {
+      return false;
+    }
 
     // Validate this is actually a mention of the agent
     const { issue, comment, repository } = state?.data || {};
-    if (!issue || !repository) return false;
+    if (!issue || !repository) {
+      return false;
+    }
 
     const mentionText = comment?.body || issue?.body || '';
     const agentName = runtime.character.name;
@@ -731,7 +737,7 @@ export const respondToMentionAction: Action = {
             repository.owner.login,
             repository.name,
             issue.number,
-            `I attempted to create an automated fix but encountered an issue. A human developer should review this request.`
+            'I attempted to create an automated fix but encountered an issue. A human developer should review this request.'
           );
         }
       }
@@ -759,7 +765,7 @@ export const respondToMentionAction: Action = {
             repository.owner.login,
             repository.name,
             issue.number,
-            `I see you've mentioned me, but I encountered an error processing your request. Please try again or contact a human developer.`
+            "I see you've mentioned me, but I encountered an error processing your request. Please try again or contact a human developer."
           );
         }
       } catch (fallbackError) {

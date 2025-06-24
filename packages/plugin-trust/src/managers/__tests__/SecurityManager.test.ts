@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { SecurityManager } from '../SecurityManager';
 import { createMockRuntime } from '../../__tests__/test-utils';
 import type { IAgentRuntime } from '@elizaos/core';
@@ -17,14 +17,14 @@ describe('SecurityManager', () => {
   let mockTrustEngine: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
-    
+
     // Mock trust engine
     mockTrustEngine = {
-      recordInteraction: vi.fn()
+      recordInteraction: mock()
     };
-    
+
     securityManager = new SecurityManager();
   });
 
@@ -47,9 +47,9 @@ describe('SecurityManager', () => {
         timestamp: Date.now(),
         platform: 'test' as UUID
       };
-      
+
       const result = await securityManager.analyzeContent(content, entityId, context);
-      
+
       expect(result).toMatchObject({
         detected: false,
         confidence: 0,
@@ -66,9 +66,9 @@ describe('SecurityManager', () => {
         timestamp: Date.now(),
         platform: 'test' as UUID
       };
-      
+
       const result = await securityManager.analyzeContent(content, entityId, context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.type).toBe('prompt_injection');
       expect(result.severity).toBe('high');
@@ -82,9 +82,9 @@ describe('SecurityManager', () => {
         timestamp: Date.now(),
         platform: 'test' as UUID
       };
-      
+
       const result = await securityManager.analyzeContent(content, entityId, context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.type).toBe('credential_theft');
       expect(result.severity).toBe('critical');
@@ -103,9 +103,9 @@ describe('SecurityManager', () => {
         timestamp: Date.now(),
         platform: 'test' as UUID
       };
-      
+
       const result = await securityManager.assessThreatLevel(context);
-      
+
       expect(result).toMatchObject({
         detected: false,
         confidence: expect.any(Number),
@@ -120,9 +120,9 @@ describe('SecurityManager', () => {
         timestamp: Date.now(),
         platform: 'test' as UUID
       };
-      
+
       const result = await securityManager.assessThreatLevel(context);
-      
+
       expect(result.details).toContain('No entity ID');
     });
   });
@@ -140,16 +140,16 @@ describe('SecurityManager', () => {
         timestamp: Date.now(),
         roomId: 'room-123' as UUID
       };
-      
+
       await securityManager.storeMemory(memory);
-      
+
       // Should not throw
       expect(true).toBe(true);
     });
 
     it('should limit memory history per entity', async () => {
       const entityId = 'entity-123' as UUID;
-      
+
       // Store 150 memories (over the 100 limit)
       for (let i = 0; i < 150; i++) {
         await securityManager.storeMemory({
@@ -160,7 +160,7 @@ describe('SecurityManager', () => {
           roomId: 'room-123' as UUID
         });
       }
-      
+
       // Should have kept only the most recent 100
       const history = (securityManager as any).messageHistory.get(entityId);
       expect(history?.length).toBe(100);
@@ -182,9 +182,9 @@ describe('SecurityManager', () => {
         timestamp: Date.now(),
         result: 'success' as const
       };
-      
+
       await securityManager.storeAction(action);
-      
+
       // Check action was stored
       const history = (securityManager as any).actionHistory.get(action.entityId);
       expect(history).toBeDefined();
@@ -194,7 +194,7 @@ describe('SecurityManager', () => {
 
     it('should limit action history per entity', async () => {
       const entityId = 'entity-123' as UUID;
-      
+
       // Store 60 actions (over the 50 limit)
       for (let i = 0; i < 60; i++) {
         await securityManager.storeAction({
@@ -205,7 +205,7 @@ describe('SecurityManager', () => {
           result: 'success' as const
         });
       }
-      
+
       // Should have kept only the most recent 50
       const history = (securityManager as any).actionHistory.get(entityId);
       expect(history?.length).toBe(50);
@@ -223,4 +223,4 @@ describe('SecurityManager', () => {
       // Test passes if no error is thrown
     });
   });
-}); 
+});

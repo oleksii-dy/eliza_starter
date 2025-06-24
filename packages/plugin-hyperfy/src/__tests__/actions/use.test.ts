@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { hyperfyUseItemAction } from '../../actions/use';
 import { createMockRuntime } from '../test-utils';
 import { createMockWorld } from '../helpers/mock-world';
@@ -11,41 +11,41 @@ describe('HYPERFY_USE_ITEM Action', () => {
   let mockActions: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
     mockWorld = createMockWorld();
-    
+
     mockControls = {
-      goto: vi.fn().mockResolvedValue(true)
+      goto: mock().mockResolvedValue(true),
     };
-    
+
     mockActions = {
-      performAction: vi.fn()
+      performAction: mock(),
     };
-    
+
     mockWorld.controls = mockControls;
     mockWorld.actions = mockActions;
-    
+
     // Mock entities
     mockWorld.entities.items.set('item-123', {
       root: {
-        position: { x: 10, y: 0, z: 20 }
-      }
+        position: { x: 10, y: 0, z: 20 },
+      },
     });
-    
+
     mockService = {
-      isConnected: vi.fn().mockReturnValue(true),
-      getWorld: vi.fn().mockReturnValue(mockWorld)
+      isConnected: mock().mockReturnValue(true),
+      getWorld: mock().mockReturnValue(mockWorld),
     };
-    
-    mockRuntime.getService = vi.fn().mockReturnValue(mockService);
+
+    mockRuntime.getService = mock().mockReturnValue(mockService);
   });
 
   describe('validate', () => {
     it('should return true when service is connected and systems exist', async () => {
       const mockMessage = { id: 'msg-123', content: { text: 'test' } };
       const result = await hyperfyUseItemAction.validate(mockRuntime, mockMessage as any);
-      
+
       expect(result).toBe(true);
       expect(mockService.isConnected).toHaveBeenCalled();
       expect(mockService.getWorld).toHaveBeenCalled();
@@ -54,27 +54,27 @@ describe('HYPERFY_USE_ITEM Action', () => {
     it('should return false when service is not connected', async () => {
       const mockMessage = { id: 'msg-123', content: { text: 'test' } };
       mockService.isConnected.mockReturnValue(false);
-      
+
       const result = await hyperfyUseItemAction.validate(mockRuntime, mockMessage as any);
-      
+
       expect(result).toBe(false);
     });
 
     it('should return false when controls are missing', async () => {
       const mockMessage = { id: 'msg-123', content: { text: 'test' } };
       mockWorld.controls = null;
-      
+
       const result = await hyperfyUseItemAction.validate(mockRuntime, mockMessage as any);
-      
+
       expect(result).toBe(false);
     });
 
     it('should return false when actions are missing', async () => {
       const mockMessage = { id: 'msg-123', content: { text: 'test' } };
       mockWorld.actions = null;
-      
+
       const result = await hyperfyUseItemAction.validate(mockRuntime, mockMessage as any);
-      
+
       expect(result).toBe(false);
     });
   });
@@ -87,26 +87,26 @@ describe('HYPERFY_USE_ITEM Action', () => {
     beforeEach(() => {
       mockMessage = {
         id: 'msg-123',
-        content: { text: 'Pick up the item' }
+        content: { text: 'Pick up the item' },
       };
-      
+
       mockState = {
         values: {},
         data: {},
-        text: 'test state'
+        text: 'test state',
       };
-      
-      mockCallback = vi.fn();
-      
+
+      mockCallback = mock();
+
       // Mock composeState
-      mockRuntime.composeState = vi.fn().mockResolvedValue({
+      mockRuntime.composeState = mock().mockResolvedValue({
         ...mockState,
-        hyperfyWorldState: 'World state with items'
+        hyperfyWorldState: 'World state with items',
       });
-      
+
       // Mock useModel for entity extraction
-      mockRuntime.useModel = vi.fn().mockResolvedValue({
-        entityId: 'item-123'
+      mockRuntime.useModel = mock().mockResolvedValue({
+        entityId: 'item-123',
       });
     });
 
@@ -126,19 +126,13 @@ describe('HYPERFY_USE_ITEM Action', () => {
           text: 'Using item: item-123',
           actions: ['HYPERFY_USE_ITEM'],
           source: 'hyperfy',
-          metadata: { targetEntityId: 'item-123', status: 'triggered' }
+          metadata: { targetEntityId: 'item-123', status: 'triggered' },
         })
       );
     });
 
     it('should extract entityId from LLM when not provided', async () => {
-      await hyperfyUseItemAction.handler(
-        mockRuntime,
-        mockMessage,
-        mockState,
-        {},
-        mockCallback
-      );
+      await hyperfyUseItemAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
       expect(mockRuntime.composeState).toHaveBeenCalledWith(
         mockMessage,
@@ -163,23 +157,17 @@ describe('HYPERFY_USE_ITEM Action', () => {
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           text: 'Could not locate entity non-existent.',
-          metadata: { error: 'entity_not_found' }
+          metadata: { error: 'entity_not_found' },
         })
       );
     });
 
     it('should handle no suitable item found', async () => {
       mockRuntime.useModel.mockResolvedValue({
-        entityId: null
+        entityId: null,
       });
 
-      await hyperfyUseItemAction.handler(
-        mockRuntime,
-        mockMessage,
-        mockState,
-        {},
-        mockCallback
-      );
+      await hyperfyUseItemAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
       expect(mockActions.performAction).not.toHaveBeenCalled();
       expect(mockCallback).not.toHaveBeenCalled();
@@ -188,13 +176,7 @@ describe('HYPERFY_USE_ITEM Action', () => {
     it('should handle LLM extraction errors', async () => {
       mockRuntime.useModel.mockRejectedValue(new Error('LLM error'));
 
-      await hyperfyUseItemAction.handler(
-        mockRuntime,
-        mockMessage,
-        mockState,
-        {},
-        mockCallback
-      );
+      await hyperfyUseItemAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
       expect(mockActions.performAction).not.toHaveBeenCalled();
       expect(mockCallback).not.toHaveBeenCalled();
@@ -202,25 +184,19 @@ describe('HYPERFY_USE_ITEM Action', () => {
 
     it('should handle missing service gracefully', async () => {
       mockRuntime.getService.mockReturnValue(null);
-      
-      await hyperfyUseItemAction.handler(
-        mockRuntime,
-        mockMessage,
-        mockState,
-        {},
-        mockCallback
-      );
+
+      await hyperfyUseItemAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: 'Error: Cannot use item. Agent action system unavailable.'
+          text: 'Error: Cannot use item. Agent action system unavailable.',
         })
       );
     });
 
     it('should handle entity without position', async () => {
       mockWorld.entities.items.set('item-no-pos', {
-        root: null
+        root: null,
       });
 
       await hyperfyUseItemAction.handler(
@@ -235,7 +211,7 @@ describe('HYPERFY_USE_ITEM Action', () => {
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           text: 'Could not locate entity item-no-pos.',
-          metadata: { error: 'entity_not_found' }
+          metadata: { error: 'entity_not_found' },
         })
       );
     });
@@ -249,19 +225,19 @@ describe('HYPERFY_USE_ITEM Action', () => {
     });
 
     it('should have properly formatted examples', () => {
-      hyperfyUseItemAction.examples!.forEach(example => {
+      hyperfyUseItemAction.examples!.forEach((example) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBe(2);
-        
+
         const [user, agent] = example;
         expect(user).toHaveProperty('name');
         expect(user).toHaveProperty('content');
         expect(user.content).toHaveProperty('text');
-        
+
         expect(agent).toHaveProperty('name');
         expect(agent).toHaveProperty('content');
         expect(agent.content).toHaveProperty('text');
-        
+
         // Some examples show successful use, others show no item found
         if (agent.content.actions) {
           expect(agent.content.actions).toContain('HYPERFY_USE_ITEM');
@@ -270,4 +246,4 @@ describe('HYPERFY_USE_ITEM Action', () => {
       });
     });
   });
-}); 
+});

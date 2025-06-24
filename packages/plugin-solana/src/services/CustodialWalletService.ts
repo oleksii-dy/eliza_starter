@@ -129,7 +129,7 @@ export class CustodialWalletService extends Service {
     const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
     let encrypted = cipher.update(Buffer.from(privateKey));
     encrypted = Buffer.concat([encrypted, cipher.final()]);
-    return iv.toString('hex') + ':' + encrypted.toString('hex');
+    return `${iv.toString('hex')}:${encrypted.toString('hex')}`;
   }
 
   private decryptPrivateKey(encryptedKey: string): Uint8Array {

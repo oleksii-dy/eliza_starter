@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, mock, spyOn } from 'bun:test';
 import plugin from '../plugin';
 import { StarterService } from '../plugin';
 import { logger } from '@elizaos/core';
@@ -6,21 +6,21 @@ import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock logger
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
+mock.module('@elizaos/core', async () => {
+  const actual = await import('@elizaos/core');
   return {
     ...actual,
     logger: {
-      info: vi.fn(),
-      error: vi.fn(),
-      warn: vi.fn(),
+      info: mock(),
+      error: mock(),
+      warn: mock(),
     },
   };
 });
 
 describe('Error Handling', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   afterEach(() => {
@@ -34,8 +34,7 @@ describe('Error Handling', () => {
 
       if (action && action.handler) {
         // Force the handler to throw an error
-        const mockError = new Error('Test error in action');
-        vi.spyOn(console, 'error').mockImplementation(() => {});
+        spyOn(console, 'error').mockImplementation(() => {});
 
         // Create a custom mock runtime
         const mockRuntime = {
@@ -57,10 +56,10 @@ describe('Error Handling', () => {
           text: '',
         } as State;
 
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Mock the logger.error to verify it's called
-        vi.spyOn(logger, 'error');
+        spyOn(logger, 'error');
 
         // Test the error handling by observing the behavior
         try {
@@ -69,7 +68,7 @@ describe('Error Handling', () => {
           // If we get here, no error was thrown, which is okay
           // In a real application, error handling might be internal
           expect(mockCallback).toHaveBeenCalled();
-        } catch (error) {
+        } catch (_error) {
           // If error is thrown, ensure it's handled correctly
           expect(logger.error).toHaveBeenCalled();
         }
@@ -80,15 +79,15 @@ describe('Error Handling', () => {
   describe('Service Error Handling', () => {
     it('should throw an error when stopping non-existent service', async () => {
       const mockRuntime = {
-        getService: vi.fn().mockReturnValue(null),
+        getService: mock().mockReturnValue(null),
       } as unknown as IAgentRuntime;
 
       let caughtError = null;
       try {
         await StarterService.stop(mockRuntime);
-      } catch (error: any) {
+      } catch (error) {
         caughtError = error;
-        expect(error.message).toBe('Starter service not found');
+        expect((error as Error).message).toBe('Starter service not found');
       }
 
       expect(caughtError).not.toBeNull();
@@ -97,22 +96,22 @@ describe('Error Handling', () => {
 
     it('should handle service stop errors gracefully', async () => {
       const mockServiceWithError = {
-        stop: vi.fn().mockImplementation(() => {
+        stop: mock().mockImplementation(() => {
           throw new Error('Error stopping service');
         }),
       };
 
       const mockRuntime = {
-        getService: vi.fn().mockReturnValue(mockServiceWithError),
+        getService: mock().mockReturnValue(mockServiceWithError),
       } as unknown as IAgentRuntime;
 
       // The error should be propagated
       let caughtError = null;
       try {
         await StarterService.stop(mockRuntime);
-      } catch (error: any) {
+      } catch (error) {
         caughtError = error;
-        expect(error.message).toBe('Error stopping service');
+        expect((error as Error).message).toBe('Error stopping service');
       }
 
       expect(caughtError).not.toBeNull();
@@ -137,11 +136,11 @@ describe('Error Handling', () => {
         };
 
         // Spy on the logger
-        vi.spyOn(logger, 'error');
+        spyOn(logger, 'error');
 
         // This is a partial test - in a real handler, we'd have more robust error handling
         try {
-          await messageHandler(mockParams as any);
+          await messageHandler(mockParams as Parameters<typeof messageHandler>[0]);
           // If it succeeds without error, that's good too
           expect(true).toBe(true);
         } catch (error) {
@@ -167,7 +166,7 @@ describe('Error Handling', () => {
           await provider.get(mockRuntime, mockMessage, mockState);
           // If we get here, it didn't throw - which is good
           expect(true).toBe(true);
-        } catch (error) {
+        } catch (_error) {
           // If it does throw, at least make sure it's a handled error
           expect(logger.error).toHaveBeenCalled();
         }

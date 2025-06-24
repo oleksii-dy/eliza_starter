@@ -3,9 +3,9 @@ import agentIntegrationTestSuite from '../integration/agent-integration.test.js'
 import realRuntimeTestSuite from '../real-runtime/self-modification-real.test.js';
 
 export const testSuites = [
-  realRuntimeTestSuite,         // REAL runtime tests first (highest priority)
+  realRuntimeTestSuite, // REAL runtime tests first (highest priority)
   selfModificationTestSuite,
-  agentIntegrationTestSuite
+  agentIntegrationTestSuite,
 ];
 
 export default testSuites;

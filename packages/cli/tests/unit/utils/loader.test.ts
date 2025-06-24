@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, afterEach, mock } from 'bun:test';
+import { describe, expect, test, beforeEach, mock } from 'bun:test';
 import fs from 'node:fs';
 import {
   tryLoadFile,
@@ -200,8 +200,8 @@ describe('Character Loader', () => {
   });
 
   describe('loadCharactersFromUrl', () => {
-    const mockFetch = vi.fn();
-    (mockFetch as any).preconnect = vi.fn();
+    const mockFetch = mock();
+    (mockFetch as any).preconnect = mock();
     global.fetch = mockFetch as any;
 
     beforeEach(() => {
@@ -306,7 +306,7 @@ describe('Character Loader', () => {
 
       try {
         await loadCharacter('/path/to/no-name.json');
-        expect.fail('Should have thrown an error');
+        throw new Error('Should have thrown an error');
       } catch (error) {
         const err = error as Error;
         expect(err.message).toContain('Character validation failed');

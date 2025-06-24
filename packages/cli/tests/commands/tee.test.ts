@@ -23,8 +23,8 @@ describe('TEE Command', () => {
 
   beforeAll(() => {
     // Use spyOn to mock childProcess.spawn
-    mockSpawn = spyOn(childProcess, 'spawn').mockImplementation(() => ({ 
-      on: mock(), 
+    mockSpawn = spyOn(childProcess, 'spawn').mockImplementation(() => ({
+      on: mock(),
       kill: mock(),
       stdout: { on: mock() },
       stderr: { on: mock() },

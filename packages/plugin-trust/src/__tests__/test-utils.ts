@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { mock  } from 'bun:test';
 import type { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 
 /**
@@ -43,7 +43,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     },
 
     // Settings
-    getSetting: vi.fn((key: string) => {
+    getSetting: mock((key: string) => {
       const settings: Record<string, string> = {
         API_KEY: 'test-api-key',
         SECRET_KEY: 'test-secret',
@@ -53,28 +53,28 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     }),
 
     // Services
-    getService: vi.fn((name: string) => {
+    getService: mock((name: string) => {
       const services: Record<string, any> = {
         'trust-engine': {
-          evaluateTrust: vi.fn().mockResolvedValue(mockTrustProfile),
-          calculateTrust: vi.fn().mockResolvedValue(mockTrustProfile),
-          getTrustScore: vi.fn().mockResolvedValue(75),
-          updateTrust: vi.fn().mockResolvedValue(true),
-          checkPermission: vi.fn().mockResolvedValue({ allowed: true }),
-          detectThreats: vi.fn().mockResolvedValue({ isThreat: false, threats: [] }),
-          getRole: vi.fn().mockResolvedValue('user'),
-          updateRole: vi.fn().mockResolvedValue(true),
+          evaluateTrust: mock().mockResolvedValue(mockTrustProfile),
+          calculateTrust: mock().mockResolvedValue(mockTrustProfile),
+          getTrustScore: mock().mockResolvedValue(75),
+          updateTrust: mock().mockResolvedValue(true),
+          checkPermission: mock().mockResolvedValue({ allowed: true }),
+          detectThreats: mock().mockResolvedValue({ isThreat: false, threats: [] }),
+          getRole: mock().mockResolvedValue('user'),
+          updateRole: mock().mockResolvedValue(true),
         },
         trust: {
-          evaluateTrust: vi.fn().mockResolvedValue(mockTrustProfile),
-          calculateTrust: vi.fn().mockResolvedValue(mockTrustProfile),
-          getTrustScore: vi.fn().mockResolvedValue(75),
-          updateTrust: vi.fn().mockResolvedValue(true),
-          checkPermission: vi.fn().mockResolvedValue({ allowed: true }),
-          detectThreats: vi.fn().mockResolvedValue({ isThreat: false, threats: [] }),
-          getRole: vi.fn().mockResolvedValue('user'),
-          updateRole: vi.fn().mockResolvedValue(true),
-          analyzeTrustEvidence: vi.fn().mockResolvedValue({
+          evaluateTrust: mock().mockResolvedValue(mockTrustProfile),
+          calculateTrust: mock().mockResolvedValue(mockTrustProfile),
+          getTrustScore: mock().mockResolvedValue(75),
+          updateTrust: mock().mockResolvedValue(true),
+          checkPermission: mock().mockResolvedValue({ allowed: true }),
+          detectThreats: mock().mockResolvedValue({ isThreat: false, threats: [] }),
+          getRole: mock().mockResolvedValue('user'),
+          updateRole: mock().mockResolvedValue(true),
+          analyzeTrustEvidence: mock().mockResolvedValue({
             evidenceType: 'HELPFUL_ACTION',
             impact: 5,
             description: 'Helpful interaction',
@@ -89,40 +89,40 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     }),
 
     // Cache
-    getCache: vi.fn().mockReturnValue({
-      get: vi.fn(),
-      set: vi.fn(),
-      delete: vi.fn(),
-      clear: vi.fn(),
+    getCache: mock().mockReturnValue({
+      get: mock(),
+      set: mock(),
+      delete: mock(),
+      clear: mock(),
     }),
 
     // Room
-    getRoom: vi.fn().mockReturnValue({
+    getRoom: mock().mockReturnValue({
       id: 'room-1',
       name: 'Test Room',
     }),
 
     // Model/LLM
-    useModel: vi.fn().mockResolvedValue('mock model response'),
-    generateText: vi.fn().mockResolvedValue('generated text'),
+    useModel: mock().mockResolvedValue('mock model response'),
+    generateText: mock().mockResolvedValue('generated text'),
 
     // Memory operations
     messageManager: {
-      createMemory: vi.fn().mockResolvedValue(true),
-      getMemories: vi.fn().mockResolvedValue([]),
-      updateMemory: vi.fn().mockResolvedValue(true),
-      deleteMemory: vi.fn().mockResolvedValue(true),
-      searchMemories: vi.fn().mockResolvedValue([]),
-      getLastMessages: vi.fn().mockResolvedValue([]),
+      createMemory: mock().mockResolvedValue(true),
+      getMemories: mock().mockResolvedValue([]),
+      updateMemory: mock().mockResolvedValue(true),
+      deleteMemory: mock().mockResolvedValue(true),
+      searchMemories: mock().mockResolvedValue([]),
+      getLastMessages: mock().mockResolvedValue([]),
     },
 
     // State
-    composeState: vi.fn().mockResolvedValue({
+    composeState: mock().mockResolvedValue({
       values: {},
       data: {},
       text: '',
     }),
-    updateState: vi.fn().mockResolvedValue(true),
+    updateState: mock().mockResolvedValue(true),
 
     // Actions & Providers
     actions: [],
@@ -132,14 +132,14 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     routes: [],
 
     // Components
-    createComponent: vi.fn().mockResolvedValue(true),
-    getComponents: vi.fn().mockResolvedValue([]),
-    updateComponent: vi.fn().mockResolvedValue(true),
+    createComponent: mock().mockResolvedValue(true),
+    getComponents: mock().mockResolvedValue([]),
+    updateComponent: mock().mockResolvedValue(true),
 
     // Database
     db: {
-      query: vi.fn().mockResolvedValue([]),
-      execute: vi.fn((sql: string, params?: any[]) => {
+      query: mock().mockResolvedValue([]),
+      execute: mock((sql: string, params?: any[]) => {
         // Simple mock that returns empty array for SELECT queries
         if (sql.trim().toUpperCase().startsWith('SELECT')) {
           return Promise.resolve({ rows: [] });
@@ -147,16 +147,16 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
         // For INSERT/UPDATE/DELETE, return changes
         return Promise.resolve({ changes: 1 });
       }),
-      getWorlds: vi.fn().mockResolvedValue([]),
-      getWorld: vi.fn().mockResolvedValue(null),
+      getWorlds: mock().mockResolvedValue([]),
+      getWorld: mock().mockResolvedValue(null),
     },
 
     // Logging
     logger: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      debug: mock(),
     },
 
     // Services Map
@@ -166,15 +166,15 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     events: new Map(),
 
     // Other required methods
-    initialize: vi.fn().mockResolvedValue(undefined),
-    registerPlugin: vi.fn().mockResolvedValue(undefined),
-    processActions: vi.fn().mockResolvedValue(undefined),
-    evaluate: vi.fn().mockResolvedValue(null),
-    ensureRoomExists: vi.fn().mockResolvedValue('room-1' as UUID),
-    ensureUserExists: vi.fn().mockResolvedValue('user-1' as UUID),
-    registerTaskWorker: vi.fn(),
-    getTaskWorker: vi.fn(),
-    processMessage: vi.fn().mockResolvedValue(undefined),
+    initialize: mock().mockResolvedValue(undefined),
+    registerPlugin: mock().mockResolvedValue(undefined),
+    processActions: mock().mockResolvedValue(undefined),
+    evaluate: mock().mockResolvedValue(null),
+    ensureRoomExists: mock().mockResolvedValue('room-1' as UUID),
+    ensureUserExists: mock().mockResolvedValue('user-1' as UUID),
+    registerTaskWorker: mock(),
+    getTaskWorker: mock(),
+    processMessage: mock().mockResolvedValue(undefined),
 
     // Apply any overrides
     ...overrides,

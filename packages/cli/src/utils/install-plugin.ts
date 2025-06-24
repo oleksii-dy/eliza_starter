@@ -418,7 +418,7 @@ export async function installPlugin(
 
           try {
             // Install using the temporary package.json
-            logger.debug(`Installing with workspace resolutions...`);
+            logger.debug('Installing with workspace resolutions...');
             await runBunCommand(['install'], cwd);
 
             // Clean up

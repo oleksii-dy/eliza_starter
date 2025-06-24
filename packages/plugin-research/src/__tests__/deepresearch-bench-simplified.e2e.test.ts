@@ -34,7 +34,7 @@ export class DeepResearchBenchSimplifiedTestSuite {
           throw new Error('Research service not available');
         }
 
-        console.log(`\n🔬 Testing Research Project Creation`);
+        console.log('\n🔬 Testing Research Project Creation');
 
         // Test 1: Create a research project with explicit metadata
         const query = DEEPRESEARCH_BENCH_QUERIES[0];
@@ -67,7 +67,7 @@ export class DeepResearchBenchSimplifiedTestSuite {
           throw new Error('Could not retrieve project');
         }
 
-        console.log(`✅ Retrieved project successfully`);
+        console.log('✅ Retrieved project successfully');
 
         // Test 3: Get active projects
         const activeProjects = await service.getActiveProjects();
@@ -98,17 +98,17 @@ export class DeepResearchBenchSimplifiedTestSuite {
           if (paused?.status !== ResearchStatus.PAUSED) {
             throw new Error('Failed to pause research');
           }
-          console.log(`✅ Paused research successfully`);
+          console.log('✅ Paused research successfully');
 
           await service.resumeResearch(project.id);
           const resumed = await service.getProject(project.id);
           if (resumed?.status !== ResearchStatus.ACTIVE) {
             throw new Error('Failed to resume research');
           }
-          console.log(`✅ Resumed research successfully`);
+          console.log('✅ Resumed research successfully');
         }
 
-        console.log(`\n✨ Research service basic operations test passed!`);
+        console.log('\n✨ Research service basic operations test passed!');
       },
     },
 
@@ -121,7 +121,7 @@ export class DeepResearchBenchSimplifiedTestSuite {
           throw new Error('Research service not available');
         }
 
-        console.log(`\n🔬 Testing Research Metadata Handling`);
+        console.log('\n🔬 Testing Research Metadata Handling');
 
         // Test different research configurations
         const configs = [
@@ -172,7 +172,7 @@ export class DeepResearchBenchSimplifiedTestSuite {
           }
         }
 
-        console.log(`\n✨ Metadata handling test passed!`);
+        console.log('\n✨ Metadata handling test passed!');
       },
     },
 
@@ -185,7 +185,7 @@ export class DeepResearchBenchSimplifiedTestSuite {
           throw new Error('Research service not available');
         }
 
-        console.log(`\n🔬 Testing Research Export Functionality`);
+        console.log('\n🔬 Testing Research Export Functionality');
 
         // Create a simple project
         const project = await service.createResearchProject('test export functionality', {
@@ -274,7 +274,7 @@ export class DeepResearchBenchSimplifiedTestSuite {
           }
         }
 
-        console.log(`\n✨ Export functionality test passed!`);
+        console.log('\n✨ Export functionality test passed!');
       },
     },
   ];

@@ -138,17 +138,17 @@ export class RealCrossMintService extends Service {
     if (runtime) {
       this.apiKey = runtime.getSetting('CROSSMINT_API_KEY');
       this.environment = (runtime.getSetting('CROSSMINT_ENVIRONMENT') || 'staging') as 'staging' | 'production';
-      
+
       if (!this.apiKey) {
         throw new CrossMintAuthError('Missing CROSSMINT_API_KEY. Please set this environment variable.');
       }
-      
+
       this.initializeClient();
     }
   }
 
   private initializeClient(): void {
-    const baseURL = this.environment === 'production' 
+    const baseURL = this.environment === 'production'
       ? 'https://www.crossmint.com/api'
       : 'https://staging.crossmint.com/api';
 
@@ -200,7 +200,7 @@ export class RealCrossMintService extends Service {
     } else if (error.request) {
       throw new RealCrossMintError('Network error: No response received', 'NETWORK_ERROR');
     } else {
-      throw new RealCrossMintError('Request setup error: ' + error.message, 'REQUEST_ERROR');
+      throw new RealCrossMintError(`Request setup error: ${error.message}`, 'REQUEST_ERROR');
     }
   }
 
@@ -210,7 +210,7 @@ export class RealCrossMintService extends Service {
     if (linkedUser.includes(':')) {
       return linkedUser;
     }
-    
+
     // Auto-detect format and add appropriate prefix
     if (linkedUser.includes('@')) {
       return `email:${linkedUser}`;
@@ -235,7 +235,7 @@ export class RealCrossMintService extends Service {
 
       // Use the correct versioned endpoint for wallet creation
       const response = await this.client.post<RealCrossMintWallet>('/2022-06-09/wallets', formattedRequest);
-      
+
       logger.info(`CrossMint wallet created: ${response.data.address} (${response.data.type})`);
       return response.data;
     } catch (error) {
@@ -262,12 +262,12 @@ export class RealCrossMintService extends Service {
 
   async getWallet(walletId: string): Promise<RealCrossMintWallet> {
     try {
-      const response = await this.client.get<CrossMintApiResponse<RealCrossMintWallet>>(`/wallets/by-locator`, {
+      const response = await this.client.get<CrossMintApiResponse<RealCrossMintWallet>>('/wallets/by-locator', {
         params: { locator: walletId }
       });
-      
+
       if (response.data.error) {
-        throw new RealCrossMintError('Failed to get wallet: ' + response.data.error.message);
+        throw new RealCrossMintError(`Failed to get wallet: ${response.data.error.message}`);
       }
 
       if (!response.data.data) {
@@ -284,9 +284,9 @@ export class RealCrossMintService extends Service {
   async listWallets(): Promise<RealCrossMintWallet[]> {
     try {
       const response = await this.client.get<CrossMintApiResponse<RealCrossMintWallet[]>>('/wallets');
-      
+
       if (response.data.error) {
-        throw new RealCrossMintError('Failed to list wallets: ' + response.data.error.message);
+        throw new RealCrossMintError(`Failed to list wallets: ${response.data.error.message}`);
       }
 
       return response.data.data || [];
@@ -300,9 +300,9 @@ export class RealCrossMintService extends Service {
   async createTransfer(request: TransferRequest): Promise<CrossMintTransaction> {
     try {
       const response = await this.client.post<CrossMintApiResponse<CrossMintTransaction>>('/wallets/transactions/create', request);
-      
+
       if (response.data.error) {
-        throw new RealCrossMintError('Failed to create transfer: ' + response.data.error.message);
+        throw new RealCrossMintError(`Failed to create transfer: ${response.data.error.message}`);
       }
 
       if (!response.data.data) {
@@ -319,12 +319,12 @@ export class RealCrossMintService extends Service {
 
   async getTransaction(transactionId: string): Promise<CrossMintTransaction> {
     try {
-      const response = await this.client.get<CrossMintApiResponse<CrossMintTransaction>>(`/wallets/transactions`, {
+      const response = await this.client.get<CrossMintApiResponse<CrossMintTransaction>>('/wallets/transactions', {
         params: { id: transactionId }
       });
-      
+
       if (response.data.error) {
-        throw new RealCrossMintError('Failed to get transaction: ' + response.data.error.message);
+        throw new RealCrossMintError(`Failed to get transaction: ${response.data.error.message}`);
       }
 
       if (!response.data.data) {
@@ -342,9 +342,9 @@ export class RealCrossMintService extends Service {
   async mintNFT(request: NFTMintRequest): Promise<CrossMintNFT> {
     try {
       const response = await this.client.post<CrossMintApiResponse<CrossMintNFT>>('/nfts/mint', request);
-      
+
       if (response.data.error) {
-        throw new RealCrossMintError('Failed to mint NFT: ' + response.data.error.message);
+        throw new RealCrossMintError(`Failed to mint NFT: ${response.data.error.message}`);
       }
 
       if (!response.data.data) {
@@ -364,9 +364,9 @@ export class RealCrossMintService extends Service {
       const response = await this.client.get<CrossMintApiResponse<CrossMintNFT>>('/nfts/mint-status', {
         params: { id: mintId }
       });
-      
+
       if (response.data.error) {
-        throw new RealCrossMintError('Failed to get NFT status: ' + response.data.error.message);
+        throw new RealCrossMintError(`Failed to get NFT status: ${response.data.error.message}`);
       }
 
       if (!response.data.data) {
@@ -405,9 +405,9 @@ export class RealCrossMintService extends Service {
   // Service Lifecycle
   static async start(runtime: IAgentRuntime): Promise<RealCrossMintService> {
     logger.info('Starting Real CrossMint service...');
-    
+
     const service = new RealCrossMintService(runtime);
-    
+
     // Validate configuration
     const isValid = await service.validateConfiguration();
     if (!isValid) {

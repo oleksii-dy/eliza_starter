@@ -1,8 +1,7 @@
-import type { TestSuite, IAgentRuntime } from '../../types/core';
-import { AgentKitService } from '../../services/AgentKitService';
+import type { TestSuite } from '../../types/core';
 
 // Helper function to create test messages
-function createTestMessage(id: string, text: string, actions?: string[]) {
+function _createTestMessage(id: string, text: string, actions?: string[]) {
   const baseId = '00000000-0000-0000-0000-';
   return {
     id: baseId + id.padStart(12, '0'),
@@ -18,7 +17,12 @@ function createTestMessage(id: string, text: string, actions?: string[]) {
 }
 
 // Helper function to simulate action execution with timeout
-async function executeActionWithTimeout(action: any, runtime: any, message: any, timeoutMs = 5000) {
+async function _executeActionWithTimeout(
+  action: any,
+  runtime: any,
+  message: any,
+  timeoutMs = 5000
+) {
   return Promise.race([
     action.handler(runtime, message, {}, {}, async () => []),
     new Promise((_, reject) =>

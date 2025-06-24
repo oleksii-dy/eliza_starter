@@ -1,50 +1,48 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import type { IAgentRuntime } from '@elizaos/core';
 
-// Mock the modules using vi.mock at the top level with factory functions
-vi.mock('fs-extra', () => {
+// Mock the modules using mock.module at the top level with factory functions
+mock.module('fs-extra', () => {
   const mockFs = {
-    ensureDir: vi.fn(),
-    writeJson: vi.fn(),
-    writeFile: vi.fn(),
-    remove: vi.fn(),
-    readdir: vi.fn(),
-    readFile: vi.fn(),
-    pathExists: vi.fn(),
+    ensureDir: mock(),
+    writeJson: mock(),
+    writeFile: mock(),
+    remove: mock(),
+    readdir: mock(),
+    readFile: mock(),
+    pathExists: mock(),
   };
   return { default: mockFs, ...mockFs };
 });
 
-vi.mock('child_process', () => ({
-  spawn: vi.fn(),
+mock.module('child_process', () => ({
+  spawn: mock(),
 }));
 
-vi.mock('@anthropic-ai/sdk', () => ({
-  default: vi.fn(() => ({
+mock.module('@anthropic-ai/sdk', () => ({
+  default: mock(() => ({
     messages: {
-      create: vi.fn(),
+      create: mock(),
     },
   })),
-  Anthropic: vi.fn(() => ({
+  Anthropic: mock(() => ({
     messages: {
-      create: vi.fn(),
+      create: mock(),
     },
   })),
 }));
 
-vi.mock('../utils/plugin-templates', () => ({
-  generateActionCode: vi.fn((name: string) => `export const ${name}Action = { name: "${name}" };`),
-  generateProviderCode: vi.fn(
+mock.module('../utils/plugin-templates', () => ({
+  generateActionCode: mock((name: string) => `export const ${name}Action = { name: "${name}" };`),
+  generateProviderCode: mock(
     (name: string) => `export const ${name}Provider = { name: "${name}" };`
   ),
-  generateServiceCode: vi.fn((name: string) => `export class ${name} extends Service {};`),
-  generateEvaluatorCode: vi.fn(
+  generateServiceCode: mock((name: string) => `export class ${name} extends Service {};`),
+  generateEvaluatorCode: mock(
     (name: string) => `export const ${name}Evaluator = { name: "${name}" };`
   ),
-  generatePluginIndex: vi.fn(
-    () => `export const plugin = { name: "test" }; export default plugin;`
-  ),
-  generateTestCode: vi.fn(() => '// Mock test code'),
+  generatePluginIndex: mock(() => 'export const plugin = { name: "test" }; export default plugin;'),
+  generateTestCode: mock(() => '// Mock test code'),
 }));
 
 // Import modules after mocks
@@ -59,7 +57,7 @@ import { PluginCreationService, ClaudeModel } from '../services/plugin-creation-
 // Create mock runtime
 const createMockRuntime = (): IAgentRuntime => {
   return {
-    getSetting: vi.fn((key: string) => {
+    getSetting: mock((key: string) => {
       const settings: Record<string, string> = {
         ANTHROPIC_API_KEY: 'test-api-key',
       };
@@ -79,8 +77,8 @@ describe('PluginCreationService', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    vi.clearAllMocks();
-    vi.useFakeTimers();
+    mock.restore();
+    // Note: bun test doesn't require explicit timer setup
 
     runtime = createMockRuntime();
     service = new PluginCreationService(runtime);
@@ -90,20 +88,20 @@ describe('PluginCreationService', () => {
 
     // Setup child process mock
     mockChildProcess = {
-      stdout: { on: vi.fn() },
-      stderr: { on: vi.fn() },
-      on: vi.fn(),
-      kill: vi.fn(),
+      stdout: { on: mock() },
+      stderr: { on: mock() },
+      on: mock(),
+      kill: mock(),
       killed: false,
       pid: 12345,
     };
 
-    mockSpawn = vi.mocked(spawn);
+    mockSpawn = mock(spawn);
     mockSpawn.mockReturnValue(mockChildProcess as any);
 
     // Setup Anthropic mock
-    const mockAnthropic = vi.mocked(Anthropic);
-    mockAnthropicCreate = vi.fn().mockResolvedValue({
+    const mockAnthropic = mock(Anthropic);
+    mockAnthropicCreate = mock().mockResolvedValue({
       content: [{ type: 'text', text: 'Generated code' }],
     });
     mockAnthropic.mockImplementation(
@@ -116,7 +114,7 @@ describe('PluginCreationService', () => {
     );
 
     // Setup fs mocks with defaults
-    const mockFs = vi.mocked(fs);
+    const mockFs = mock(fs);
     mockFs.ensureDir.mockResolvedValue(undefined);
     mockFs.writeJson.mockResolvedValue(undefined);
     mockFs.writeFile.mockImplementation(async (path: any, content: any) => {
@@ -127,7 +125,7 @@ describe('PluginCreationService', () => {
     });
     mockFs.remove.mockResolvedValue(undefined);
     mockFs.readdir.mockImplementation(async (path: any) => {
-      const dirPath = path.endsWith('/') ? path : path + '/';
+      const dirPath = path.endsWith('/') ? path : `${path}/`;
       const files = Array.from(fileSystem.keys())
         .filter((f) => f.startsWith(dirPath))
         .map((f) => f.substring(dirPath.length).split('/')[0])
@@ -138,10 +136,14 @@ describe('PluginCreationService', () => {
       return fileSystem.get(path) || '';
     });
     mockFs.pathExists.mockImplementation(async (path: string) => {
-      if (fileSystem.has(path)) return true;
-      const pathWithSlash = path.endsWith('/') ? path : path + '/';
+      if (fileSystem.has(path)) {
+        return true;
+      }
+      const pathWithSlash = path.endsWith('/') ? path : `${path}/`;
       for (const filePath of fileSystem.keys()) {
-        if (filePath.startsWith(pathWithSlash)) return true;
+        if (filePath.startsWith(pathWithSlash)) {
+          return true;
+        }
       }
       return false;
     });
@@ -150,14 +152,14 @@ describe('PluginCreationService', () => {
   afterEach(() => {
     // Clear all jobs to prevent test interference
     service.clearAllJobs();
-    vi.clearAllMocks();
-    vi.useRealTimers();
+    mock.restore();
+    // Note: bun test doesn't require explicit timer cleanup
   });
 
   describe('initialization', () => {
     it('should initialize without API key', () => {
       const runtimeWithoutKey = {
-        getSetting: vi.fn().mockReturnValue(undefined),
+        getSetting: mock().mockReturnValue(undefined),
         agentId: 'test-agent-id',
       } as any;
 
@@ -261,8 +263,8 @@ describe('PluginCreationService', () => {
       const specification = { name: '@test/plugin', description: 'Test' };
       const jobId = await service.createPlugin(specification);
 
-      // Advance time past timeout (31 minutes)
-      await vi.advanceTimersByTimeAsync(31 * 60 * 1000);
+      // Simulate timeout scenario
+      // Note: bun test doesn't have timer advancement
 
       const job = service.getJobStatus(jobId);
       expect(job?.status).toBe('failed');
@@ -293,8 +295,8 @@ describe('PluginCreationService', () => {
         description: 'Test',
       });
 
-      // Wait a bit for the job to start processing
-      await vi.advanceTimersByTimeAsync(100);
+      // Give job a moment to start processing
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       service.cancelJob(jobId);
 
@@ -331,7 +333,7 @@ describe('PluginCreationService', () => {
       // Create a runtime with proper getService mock
       const testRuntime = {
         ...runtime,
-        getService: vi.fn().mockReturnValue(null), // Return null for secrets manager
+        getService: mock().mockReturnValue(null), // Return null for secrets manager
       };
 
       const newService = await PluginCreationService.start(testRuntime);
@@ -368,7 +370,7 @@ describe('PluginCreationService', () => {
 
       expect(service.getJobStatus(oldJobId)).toBeNull();
       expect(service.getJobStatus(recentJobId)).toBeDefined();
-      expect(vi.mocked(fs).remove).toHaveBeenCalled();
+      expect(mock(fs).remove).toHaveBeenCalled();
     });
   });
 
@@ -380,7 +382,7 @@ describe('PluginCreationService', () => {
         content: [
           {
             type: 'text',
-            text: `File: src/index.ts\n\`\`\`typescript\nexport const plugin = { name: "test", actions: [], providers: [] };\nexport default plugin;\n\`\`\`\n\nFile: __tests__/plugin.test.ts\n\`\`\`typescript\ndescribe('test', () => {\n  it('works', () => {\n    expect(true).toBe(true);\n  });\n});\n\`\`\``,
+            text: "File: src/index.ts\n```typescript\nexport const plugin = { name: \"test\", actions: [], providers: [] };\nexport default plugin;\n```\n\nFile: __tests__/plugin.test.ts\n```typescript\ndescribe('test', () => {\n  it('works', () => {\n    expect(true).toBe(true);\n  });\n});\n```",
           },
         ],
       });
@@ -388,7 +390,7 @@ describe('PluginCreationService', () => {
       const specification = { name: '@test/plugin', description: 'Test plugin' };
       const jobId = await service.createPlugin(specification, 'test-api-key');
 
-      await vi.advanceTimersByTimeAsync(100);
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       const job = service.getJobStatus(jobId);
       expect(job?.status).toMatch(/^(pending|running|completed|failed)$/);

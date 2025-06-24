@@ -56,7 +56,7 @@ export async function waitForServerReady(options: ServerHealthOptions): Promise<
         await new Promise((resolve) => setTimeout(resolve, 1000));
         return;
       }
-    } catch (error) {
+    } catch (_error) {
       // Server not ready yet, continue polling
     } finally {
       // Ensure cleanup happens even if there's an exception
@@ -106,7 +106,7 @@ export async function pingServer(options: ServerHealthOptions): Promise<boolean>
     }
 
     return response.ok;
-  } catch (error) {
+  } catch (_error) {
     return false;
   } finally {
     // Ensure cleanup happens even if there's an exception

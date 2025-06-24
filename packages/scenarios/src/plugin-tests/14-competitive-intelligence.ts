@@ -1,4 +1,4 @@
-import type { Scenario } from "../types.js"
+import type { Scenario } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const competitiveintelligenceScenario: Scenario = {
@@ -7,7 +7,7 @@ export const competitiveintelligenceScenario: Scenario = {
   description: 'Gather competitive intelligence on rival projects',
   category: 'integration',
   tags: ['github', 'stagehand', 'research', 'rolodex', 'complex-workflow'],
-  
+
   actors: [
     {
       id: uuidv4() as any,
@@ -23,32 +23,33 @@ export const competitiveintelligenceScenario: Scenario = {
         steps: [
           {
             type: 'message',
-            content: 'Analyze the top 5 competitors GitHub repositories for recent activity and contributor patterns.',
-      },
+            content:
+              'Analyze the top 5 competitors GitHub repositories for recent activity and contributor patterns.',
+          },
           {
             type: 'wait',
             waitTime: 8000,
-      },
+          },
           {
             type: 'message',
             content: 'Visit their websites and extract product features and pricing information.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 10000,
-      },
+          },
           {
             type: 'message',
             content: 'Research their funding history and investor relationships.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 12000,
-      },
+          },
           {
             type: 'message',
             content: 'Create entity profiles for key personnel and map their connections.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 14000,
@@ -68,7 +69,7 @@ export const competitiveintelligenceScenario: Scenario = {
       plugins: ['github', 'stagehand', 'research', 'rolodex'],
     },
   },
-  
+
   execution: {
     maxDuration: 300000,
     maxSteps: 25,
@@ -80,7 +81,7 @@ export const competitiveintelligenceScenario: Scenario = {
       },
     ],
   },
-  
+
   verification: {
     rules: [
       {
@@ -88,7 +89,8 @@ export const competitiveintelligenceScenario: Scenario = {
         type: 'llm',
         description: 'All required plugins were utilized',
         config: {
-          criteria: 'The agent successfully used github, stagehand, research, rolodex plugins to complete the workflow',
+          criteria:
+            'The agent successfully used github, stagehand, research, rolodex plugins to complete the workflow',
         },
         weight: 3,
       },
@@ -109,7 +111,7 @@ export const competitiveintelligenceScenario: Scenario = {
           criteria: 'Multiple actions from different plugins were chained together effectively',
         },
         weight: 3,
-      }
+      },
     ],
     expectedOutcomes: [
       {
@@ -134,7 +136,7 @@ export const competitiveintelligenceScenario: Scenario = {
       ],
     },
   },
-  
+
   benchmarks: {
     maxDuration: 300000,
     maxSteps: 25,

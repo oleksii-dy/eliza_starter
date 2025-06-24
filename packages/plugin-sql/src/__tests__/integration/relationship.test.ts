@@ -42,12 +42,12 @@ describe('Relationship Integration Tests', () => {
       // Use unique entities for this test
       const entity1 = uuidv4() as UUID;
       const entity2 = uuidv4() as UUID;
-      
+
       await adapter.createEntities([
         { id: entity1, agentId: testAgentId, names: ['Entity 1'] } as Entity,
         { id: entity2, agentId: testAgentId, names: ['Entity 2'] } as Entity,
       ]);
-      
+
       const relationshipData = {
         sourceEntityId: entity1,
         targetEntityId: entity2,
@@ -68,12 +68,12 @@ describe('Relationship Integration Tests', () => {
       // Use unique entities for this test
       const entity3 = uuidv4() as UUID;
       const entity4 = uuidv4() as UUID;
-      
+
       await adapter.createEntities([
         { id: entity3, agentId: testAgentId, names: ['Entity 3'] } as Entity,
         { id: entity4, agentId: testAgentId, names: ['Entity 4'] } as Entity,
       ]);
-      
+
       const relationshipData = {
         sourceEntityId: entity3,
         targetEntityId: entity4,
@@ -107,13 +107,13 @@ describe('Relationship Integration Tests', () => {
       const entity5 = uuidv4() as UUID;
       const entity6 = uuidv4() as UUID;
       const entity7 = uuidv4() as UUID;
-      
+
       await adapter.createEntities([
         { id: entity5, agentId: testAgentId, names: ['Entity 5'] } as Entity,
         { id: entity6, agentId: testAgentId, names: ['Entity 6'] } as Entity,
         { id: entity7, agentId: testAgentId, names: ['Entity 7'] } as Entity,
       ]);
-      
+
       await adapter.createRelationship({
         sourceEntityId: entity5,
         targetEntityId: entity6,

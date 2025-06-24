@@ -6,9 +6,6 @@ import path from 'node:path';
 import { ComponentTestOptions, TestResult } from '../types';
 import { processFilterName } from '../utils/project-utils';
 import { runTypeCheck } from '@/src/utils/testing/tsc-validator';
-// import { createVitestConfig } from '../utils/vitest-config'; // Available for custom vitest configurations
-import { existsSync } from 'node:fs';
-import fs from 'node:fs';
 
 /**
  * Run component tests using bun test
@@ -40,7 +37,7 @@ export async function runComponentTests(
     try {
       logger.info(`Building ${isPlugin ? 'plugin' : 'project'}...`);
       await buildProject(cwd, isPlugin);
-      logger.success(`Build completed successfully`);
+      logger.success('Build completed successfully');
     } catch (buildError) {
       logger.error(`Build failed: ${buildError}`);
       // Return immediately on build failure
@@ -53,80 +50,20 @@ export async function runComponentTests(
   return new Promise((resolve) => {
     const targetPath = testPath ? path.resolve(process.cwd(), '..', testPath) : process.cwd();
 
-    // Check if vitest is available in the project
-    const packageJsonPath = path.join(targetPath, 'package.json');
-    let hasVitest = false;
-    let testCommand = 'test';
+    // Use bun test for all test execution
+    const args: string[] = ['test'];
 
-    try {
-      if (existsSync(packageJsonPath)) {
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-
-        // Check if vitest is a dependency
-        const deps = {
-          ...packageJson.dependencies,
-          ...packageJson.devDependencies,
-          ...packageJson.peerDependencies,
-        };
-
-        hasVitest = 'vitest' in deps;
-
-        // Check if there's a test script that uses vitest
-        if (packageJson.scripts?.test) {
-          const testScript = packageJson.scripts.test;
-          if (testScript.includes('vitest')) {
-            hasVitest = true;
-            testCommand = 'test';
-          }
-        }
+    // Add filter if specified
+    if (options.name) {
+      const baseName = processFilterName(options.name);
+      if (baseName) {
+        logger.info(`Using test filter: ${baseName}`);
+        args.push('--test-name-pattern', baseName);
       }
-    } catch (error) {
-      logger.warn('Could not read package.json to check for vitest:', error);
     }
 
-    // Build command arguments based on whether vitest is available
-    let args: string[];
-
-    if (hasVitest) {
-      // Use vitest directly
-      args = ['run', 'vitest', 'run', '--passWithNoTests', '--reporter=default'];
-
-      // Add filter if specified
-      if (options.name) {
-        const baseName = processFilterName(options.name);
-        if (baseName) {
-          logger.info(`Using test filter: ${baseName}`);
-          args.push('-t', baseName);
-        }
-      }
-    } else {
-      // Fall back to bun test
-      logger.info('Vitest not found, using bun test');
-      args = ['test'];
-
-      // Add filter if specified
-      if (options.name) {
-        const baseName = processFilterName(options.name);
-        if (baseName) {
-          logger.info(`Using test filter: ${baseName}`);
-          args.push('--test-name-pattern', baseName);
-        }
-      }
-
-      // Add passWithNoTests equivalent for bun
-      args.push('--passWithNoTests');
-    }
-
-    // Check if vitest config exists in the target directory
-    const hasVitestConfig =
-      existsSync(path.join(targetPath, 'vitest.config.ts')) ||
-      existsSync(path.join(targetPath, 'vitest.config.js')) ||
-      existsSync(path.join(targetPath, 'vitest.config.mjs'));
-
-    // Vitest will use its own config file if it exists
-    if (hasVitestConfig && hasVitest) {
-      logger.info('Using vitest configuration from project');
-    }
+    // Add passWithNoTests equivalent for bun
+    args.push('--passWithNoTests');
 
     logger.info(`Executing: bun ${args.join(' ')} in ${targetPath}`);
 

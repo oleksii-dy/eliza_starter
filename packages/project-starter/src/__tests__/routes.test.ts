@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, mock } from 'bun:test';
 import plugin from '../plugin';
 
 describe('Plugin Routes', () => {
@@ -30,10 +30,11 @@ describe('Plugin Routes', () => {
         // Create mock request and response objects
         const mockReq = {};
         const mockRes = {
-          json: vi.fn(),
+          json: mock(),
         };
 
         // Mock runtime object as third parameter
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const mockRuntime = {} as any;
 
         // Call the route handler

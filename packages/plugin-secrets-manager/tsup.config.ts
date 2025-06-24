@@ -10,7 +10,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   format: ['esm'], // ESM format
-  dts: true, // Generate TypeScript declarations
+  dts: false, // Generate TypeScript declarations - temporarily disabled
   treeshake: true, // Enable tree-shaking to exclude unused code
   // Bundle splitting to avoid vitest issues
   splitting: false,

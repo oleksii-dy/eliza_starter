@@ -19,7 +19,7 @@ export class EnvManagerService extends Service {
    */
   static async start(runtime: IAgentRuntime): Promise<EnvManagerService> {
     const service = new EnvManagerService(runtime);
-    await service.initialize();
+    await void service.initialize();
     return service;
   }
 
@@ -86,7 +86,7 @@ export class EnvManagerService extends Service {
       character.settings.secrets.__env_metadata = JSON.stringify(this.envVarCache);
 
       // Save actual values from runtime settings
-      for (const [pluginName, plugin] of Object.entries(this.envVarCache)) {
+      for (const [_pluginName, plugin] of Object.entries(this.envVarCache)) {
         for (const [varName, config] of Object.entries(plugin)) {
           if (config.value) {
             const settingKey = `ENV_${varName}`;
@@ -177,7 +177,9 @@ export class EnvManagerService extends Service {
     }
 
     for (const pluginInstance of this.runtime.plugins) {
-      if (pluginInstance.name === 'plugin-env') continue; // Skip self
+      if (pluginInstance.name === 'plugin-env') {
+        continue;
+      } // Skip self
 
       const declared = (pluginInstance as any).declaredEnvVars as Record<
         string,
@@ -402,7 +404,7 @@ export class EnvManagerService extends Service {
   static async stop(runtime: IAgentRuntime): Promise<void> {
     const service = runtime.getService('ENV_MANAGER') as EnvManagerService;
     if (service) {
-      await service.stop();
+      await void service.stop();
     }
   }
 }

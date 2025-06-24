@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, mock, spyOn } from 'bun:test';
 import { transferAction } from '../actions/transfer';
 import { swapAction } from '../actions/swap';
 import { bridgeAction } from '../actions/bridge';
@@ -28,7 +28,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
   });
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    // No need for mock.restore() in Bun
 
     mockMessage = {
       id: 'test-message-id' as any,
@@ -70,7 +70,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
   describe('Transfer Action Comprehensive Tests', () => {
     describe('Parameter Validation', () => {
       it('should validate required parameters', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Mock LLM response with missing parameters
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
@@ -95,7 +95,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
           // Expected error for invalid parameters
           expect(error.message).toContain('transfer amount');
         }
-        
+
         // Either way, callback should be called with error
         if (mockCallback.mock.calls.length > 0) {
           expect(mockCallback).toHaveBeenCalledWith(
@@ -107,7 +107,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       }, 10000); // Increase timeout to 10 seconds
 
       it('should validate address format', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -135,7 +135,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should validate amount format', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -159,7 +159,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
           // Expected error for invalid amount
           expect(error.message).toContain('transfer amount');
         }
-        
+
         // Either way, callback should be called with error
         if (mockCallback.mock.calls.length > 0) {
           expect(mockCallback).toHaveBeenCalledWith(
@@ -171,7 +171,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should validate supported chains', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -207,7 +207,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('Balance Validation', () => {
       it('should check sufficient balance for native token transfers', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -235,7 +235,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should check sufficient balance for ERC20 transfers', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -265,7 +265,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('Gas Estimation', () => {
       it('should estimate gas for native transfers', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -289,7 +289,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should estimate gas for ERC20 transfers', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -312,10 +312,10 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should handle gas estimation failures', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Mock gas estimation failure
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleSpy = spyOn(console, 'error').mockImplementation(() => {});
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -343,7 +343,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('Token Resolution', () => {
       it('should resolve token symbols to addresses', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -366,7 +366,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should handle unknown tokens', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -394,7 +394,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should validate token addresses', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -419,7 +419,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('Error Handling', () => {
       it('should handle transaction simulation failures', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -431,7 +431,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
         `);
 
         // Mock transaction failure
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleSpy = spyOn(console, 'error').mockImplementation(() => {});
 
         const result = await transferAction.handler(
           mockRuntime,
@@ -445,7 +445,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should handle network connectivity issues', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -461,7 +461,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should handle malformed XML responses', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce('invalid xml response');
 
@@ -481,11 +481,16 @@ describe('EVM Actions Comprehensive Test Suite', () => {
         } catch (error) {
           // Expected error for malformed XML or missing parameters
           errorOccurred = true;
-          const validErrors = ['Failed to parse XML', 'Missing source chain', 'Missing recipient address', 'Missing transfer amount'];
-          const hasValidError = validErrors.some(msg => error.message.includes(msg));
+          const validErrors = [
+            'Failed to parse XML',
+            'Missing source chain',
+            'Missing recipient address',
+            'Missing transfer amount',
+          ];
+          const hasValidError = validErrors.some((msg) => error.message.includes(msg));
           expect(hasValidError).toBe(true);
         }
-        
+
         // Either an error was thrown, result was false, or callback indicates error
         if (!errorOccurred && mockCallback.mock.calls.length > 0) {
           const callbackArg = mockCallback.mock.calls[0][0];
@@ -496,7 +501,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
             errorOccurred = true;
           }
         }
-        
+
         // For malformed XML, we expect some form of error handling
         expect(errorOccurred || mockCallback.mock.calls.length > 0).toBe(true);
       });
@@ -506,7 +511,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
   describe('Swap Action Comprehensive Tests', () => {
     describe('Quote Aggregation', () => {
       it('should aggregate quotes from LiFi', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -530,7 +535,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should aggregate quotes from Bebop', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -554,7 +559,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should compare and select best quote', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -578,7 +583,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should handle quote fetching failures', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -604,7 +609,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('Slippage Protection', () => {
       it('should handle 1% slippage tolerance', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -628,7 +633,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should escalate to 1.5% slippage on failure', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -652,7 +657,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should escalate to 2% slippage as final attempt', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -678,7 +683,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('Token Approval Handling', () => {
       it('should check existing token approvals', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -702,7 +707,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should handle approval transactions', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -726,7 +731,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should handle approval failures', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Test approval failure scenarios
         expect(swapAction).toBeDefined();
@@ -735,7 +740,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('Gas Optimization', () => {
       it('should apply 20% gas limit buffer', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -759,7 +764,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should apply 10% gas price buffer', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -785,7 +790,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('MEV Protection', () => {
       it('should implement MEV protection strategies', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -818,7 +823,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
   describe('Bridge Action Comprehensive Tests', () => {
     describe('Route Discovery', () => {
       it('should discover optimal bridge routes', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -841,7 +846,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should optimize for speed vs cost', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -864,7 +869,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should handle unsupported bridge routes', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -889,7 +894,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('Bridge Execution', () => {
       it('should execute bridge transactions', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -912,14 +917,14 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should monitor bridge progress', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Test bridge progress monitoring
         expect(bridgeAction).toBeDefined();
       });
 
       it('should handle bridge failures and resume', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Test bridge failure and resume functionality
         expect(bridgeAction).toBeDefined();
@@ -928,7 +933,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('Cross-Chain Token Handling', () => {
       it('should handle native token bridging', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -951,7 +956,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should handle ERC20 token bridging', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -974,7 +979,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should resolve token addresses across chains', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Test cross-chain token resolution
         expect(bridgeAction).toBeDefined();
@@ -985,7 +990,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
   describe('Governance Actions Comprehensive Tests', () => {
     describe('Vote Action', () => {
       it('should validate vote parameters', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -1008,7 +1013,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should handle FOR votes (support=1)', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -1031,7 +1036,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should handle AGAINST votes (support=0)', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -1054,7 +1059,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should handle ABSTAIN votes (support=2)', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -1077,7 +1082,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should validate governor contract addresses', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -1102,7 +1107,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('Propose Action', () => {
       it('should validate proposal parameters', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -1126,7 +1131,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should validate array parameter lengths', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -1143,7 +1148,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
           chain: 'sepolia',
           governor: '0x5f3f1dBD7B74C6B46e8c44f98792A1dAf8d69154',
           targets: ['0x742d35Cc6634C0532925a3b844Bc454e4438f44e'],
-          values: ['0', '1'],  // Mismatched length
+          values: ['0', '1'], // Mismatched length
           calldatas: ['0x'],
           description: 'Test proposal',
         };
@@ -1165,7 +1170,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should encode complex proposals', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -1191,7 +1196,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('Queue Action', () => {
       it('should validate queue parameters', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -1216,7 +1221,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should hash descriptions correctly', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -1241,7 +1246,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should integrate with timelock contracts', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Test timelock integration
         expect(queueAction).toBeDefined();
@@ -1250,7 +1255,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
     describe('Execute Action', () => {
       it('should validate execute parameters', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         (mockRuntime.useModel as any).mockResolvedValueOnce(`
           <response>
@@ -1275,14 +1280,14 @@ describe('EVM Actions Comprehensive Test Suite', () => {
       });
 
       it('should check execution requirements', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Test execution requirement validation
         expect(executeAction).toBeDefined();
       });
 
       it('should estimate execution gas costs', async () => {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Test gas cost estimation for execution
         expect(executeAction).toBeDefined();

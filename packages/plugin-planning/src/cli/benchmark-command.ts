@@ -321,7 +321,7 @@ function logBenchmarkSummary(results: any, verbose: boolean): void {
     }
   }
 
-  console.log('\n' + '═'.repeat(50));
+  console.log(`\n${'═'.repeat(50)}`);
   console.log(`🎊 Status: ${summary.status.toUpperCase()}`);
   console.log('');
 }

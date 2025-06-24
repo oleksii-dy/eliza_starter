@@ -109,7 +109,7 @@ export class TestExecutor {
       // Priority order for framework detection
       const frameworks = [
         { name: 'jest', indicators: ['jest', '@types/jest', 'jest-environment-node'] },
-        { name: 'vitest', indicators: ['vitest', '@vitest/ui'] },
+        { name: 'bun:test', indicators: ['bun'] },
         { name: 'mocha', indicators: ['mocha', '@types/mocha', 'chai'] },
         { name: 'karma', indicators: ['karma', 'karma-jasmine', 'karma-chrome-launcher'] },
         { name: 'tape', indicators: ['tape', 'tape-catch'] },
@@ -174,8 +174,8 @@ export class TestExecutor {
             'npm test -- --json --outputFile=test-results.json --passWithNoTests --verbose';
           resultFile = 'test-results.json';
           break;
-        case 'vitest':
-          testCommand = 'npm test -- --reporter=json --outputFile=test-results.json';
+        case 'bun:test':
+          testCommand = 'bun test --reporter=json --outputFile=test-results.json';
           resultFile = 'test-results.json';
           break;
         case 'mocha':
@@ -260,7 +260,7 @@ export class TestExecutor {
       const resultsData = await fs.readFile(resultsPath, 'utf-8');
       const jsonResults = JSON.parse(resultsData);
 
-      let results: TestResults = {
+      const results: TestResults = {
         total: 0,
         passed: 0,
         failed: 0,
@@ -315,8 +315,8 @@ export class TestExecutor {
           }
           break;
 
-        case 'vitest':
-          // Vitest JSON format handling
+        case 'bun:test':
+          // Bun test JSON format handling
           if (jsonResults.numTotalTestSuites !== undefined) {
             results.total = jsonResults.numTotalTests || 0;
             results.passed = jsonResults.numPassedTests || 0;
@@ -354,9 +354,9 @@ export class TestExecutor {
    * Parse text output when JSON results are not available
    */
   private parseTextOutput(stdout: string, stderr: string, framework: string): TestResults {
-    const combinedOutput = stdout + '\n' + stderr;
+    const combinedOutput = `${stdout}\n${stderr}`;
 
-    let results: TestResults = {
+    const results: TestResults = {
       total: 0,
       passed: 0,
       failed: 0,
@@ -384,18 +384,18 @@ export class TestExecutor {
       /(\d+)\s+tests?\s+failed/i,
     ];
 
-    let passMatch =
+    const passMatch =
       combinedOutput.match(/(\d+)\s+passing/i) ||
       combinedOutput.match(/(\d+)\s+passed/i) ||
       combinedOutput.match(/Tests:\s+(\d+)\s+passed/i);
 
-    let failMatch =
+    const failMatch =
       combinedOutput.match(/(\d+)\s+failing/i) ||
       combinedOutput.match(/(\d+)\s+failed/i) ||
       combinedOutput.match(/Tests:\s+(\d+)\s+failed/i);
 
-    if (passMatch) results.passed = parseInt(passMatch[1]);
-    if (failMatch) results.failed = parseInt(failMatch[1]);
+    if (passMatch) {results.passed = parseInt(passMatch[1]);}
+    if (failMatch) {results.failed = parseInt(failMatch[1]);}
     results.total = results.passed + results.failed;
 
     // Check for no tests found
@@ -522,13 +522,13 @@ export class TestExecutor {
     const files: string[] = [];
 
     async function search(dir: string, depth: number = 0) {
-      if (depth > 3) return; // Limit search depth
+      if (depth > 3) {return;} // Limit search depth
 
       try {
         const entries = await fs.readdir(dir, { withFileTypes: true });
 
         for (const entry of entries) {
-          if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+          if (entry.name.startsWith('.') || entry.name === 'node_modules') {continue;}
 
           const fullPath = path.join(dir, entry.name);
 
@@ -551,7 +551,7 @@ export class TestExecutor {
    * Read first test file content for framework detection
    */
   private async readFirstTestFile(repoPath: string, testFiles: string[]): Promise<string | null> {
-    if (testFiles.length === 0) return null;
+    if (testFiles.length === 0) {return null;}
 
     try {
       const firstTestPath = path.join(repoPath, testFiles[0]);

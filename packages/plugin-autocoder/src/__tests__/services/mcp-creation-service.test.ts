@@ -1,31 +1,31 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import type { IAgentRuntime } from '@elizaos/core';
 import * as path from 'path';
 
 // Mock fs/promises with factory function
-vi.mock('fs/promises', () => {
+mock.module('fs/promises', () => {
   return {
-    mkdir: vi.fn(),
-    readdir: vi.fn(),
-    stat: vi.fn(),
-    copyFile: vi.fn(),
-    writeFile: vi.fn(),
-    readFile: vi.fn(),
-    access: vi.fn(),
+    mkdir: mock(),
+    readdir: mock(),
+    stat: mock(),
+    copyFile: mock(),
+    writeFile: mock(),
+    readFile: mock(),
+    access: mock(),
   };
 });
 
 // Mock other modules
-vi.mock('child_process', () => ({
-  exec: vi.fn((cmd, opts, callback) => {
-    if (callback) callback(null, '', '');
-    else return Promise.resolve({ stdout: '', stderr: '' });
+mock.module('child_process', () => ({
+  exec: mock((cmd, opts, callback) => {
+    if (callback) {callback(null, '', '');}
+    else {return Promise.resolve({ stdout: '', stderr: '' });}
   }),
 }));
 
-vi.mock('util', () => ({
-  promisify: vi.fn(() =>
-    vi.fn((cmd: string) => {
+mock.module('util', () => ({
+  promisify: mock(() =>
+    mock((cmd: string) => {
       // Mock successful execution for all commands
       return Promise.resolve({ stdout: '', stderr: '' });
     })
@@ -33,15 +33,15 @@ vi.mock('util', () => ({
 }));
 
 // Mock elizaLogger
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
+mock.module('@elizaos/core', async () => {
+  const actual = await import('@elizaos/core');
   return {
     ...actual,
     elizaLogger: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      debug: mock(),
     },
     Service: class {
       constructor() {}
@@ -75,10 +75,10 @@ describe('MCPCreationService', () => {
     tempDir = path.join(process.cwd(), '.test-mcp-projects');
 
     // Setup mocks with proper typing
-    vi.mocked(fs.mkdir).mockResolvedValue(undefined);
+    mock(fs.mkdir).mockResolvedValue(undefined);
 
     // Mock readdir to return template structure
-    vi.mocked(fs.readdir).mockImplementation(async (dirPath) => {
+    mock(fs.readdir).mockImplementation(async (dirPath) => {
       const dirStr = dirPath.toString();
 
       // Mock template directory structure
@@ -108,7 +108,7 @@ describe('MCPCreationService', () => {
     });
 
     // Mock stat to return directory/file info
-    vi.mocked(fs.stat).mockImplementation(async (filePath) => {
+    mock(fs.stat).mockImplementation(async (filePath) => {
       const pathStr = filePath.toString();
       const isDir =
         pathStr.endsWith('/src') ||
@@ -133,12 +133,12 @@ describe('MCPCreationService', () => {
       } as any;
     });
 
-    vi.mocked(fs.copyFile).mockResolvedValue(undefined);
-    vi.mocked(fs.writeFile).mockResolvedValue(undefined);
-    vi.mocked(fs.readFile).mockResolvedValue('mock content' as any);
+    mock(fs.copyFile).mockResolvedValue(undefined);
+    mock(fs.writeFile).mockResolvedValue(undefined);
+    mock(fs.readFile).mockResolvedValue('mock content' as any);
 
     // Mock access to simulate file existence for required files
-    vi.mocked(fs.access).mockImplementation(async (filePath) => {
+    mock(fs.access).mockImplementation(async (filePath) => {
       const pathStr = filePath.toString();
 
       // These files should exist for production readiness check
@@ -158,7 +158,7 @@ describe('MCPCreationService', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('createMCPProject', () => {
@@ -205,7 +205,7 @@ describe('MCPCreationService', () => {
       };
 
       // Mock template reading
-      vi.mocked(fs.readFile).mockImplementation(async (path) => {
+      mock(fs.readFile).mockImplementation(async (path) => {
         if (path.toString().includes('example-tool.ts.template')) {
           return '// Tool: {{TOOL_NAME}}\n// Description: {{TOOL_DESCRIPTION}}\n// Parameters: {{TOOL_PARAMETERS}}' as any;
         }
@@ -240,7 +240,7 @@ describe('MCPCreationService', () => {
       };
 
       // Mock template reading
-      vi.mocked(fs.readFile).mockImplementation(async (path) => {
+      mock(fs.readFile).mockImplementation(async (path) => {
         if (path.toString().includes('example-resource.ts.template')) {
           return '// Resource: {{RESOURCE_NAME}}\n// Description: {{RESOURCE_DESCRIPTION}}\n// MIME Type: {{RESOURCE_MIME_TYPE}}' as any;
         }
@@ -268,7 +268,7 @@ describe('MCPCreationService', () => {
       expect(result.success).toBe(true);
 
       // Check that package.json was written with dependencies
-      const writeFileCalls = vi.mocked(fs.writeFile).mock.calls;
+      const writeFileCalls = mock(fs.writeFile).mock.calls;
       const packageJsonCall = writeFileCalls.find((call) =>
         call[0].toString().endsWith('package.json')
       );
@@ -288,7 +288,7 @@ describe('MCPCreationService', () => {
       };
 
       // Make mkdir fail
-      vi.mocked(fs.mkdir).mockRejectedValue(new Error('Permission denied'));
+      mock(fs.mkdir).mockRejectedValue(new Error('Permission denied'));
 
       const result = await service.createMCPProject(config);
 
@@ -320,7 +320,7 @@ describe('MCPCreationService', () => {
       };
 
       // Mock the server template to have the placeholders
-      vi.mocked(fs.readFile).mockImplementation(async (path) => {
+      mock(fs.readFile).mockImplementation(async (path) => {
         if (path.toString().includes('index.ts')) {
           return `#!/usr/bin/env node
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -348,7 +348,7 @@ export async function setupServer(server: Server) {
       await service.createMCPProject(config);
 
       // Find the server file write call
-      const writeFileCalls = vi.mocked(fs.writeFile).mock.calls;
+      const writeFileCalls = mock(fs.writeFile).mock.calls;
       const serverFileCall = writeFileCalls.find((call) =>
         call[0].toString().includes('src/mcp-server/index.ts')
       );
@@ -388,7 +388,7 @@ export async function setupServer(server: Server) {
       expect(result.success).toBe(true);
 
       // Check README content
-      const writeFileCalls = vi.mocked(fs.writeFile).mock.calls;
+      const writeFileCalls = mock(fs.writeFile).mock.calls;
       const readmeCall = writeFileCalls.find((call) => call[0].toString().endsWith('README.md'));
       expect(readmeCall).toBeDefined();
 
@@ -414,7 +414,7 @@ export async function setupServer(server: Server) {
       (service as any).templatePath = nonExistentPath;
 
       // Make readdir throw for non-existent template
-      vi.mocked(fs.readdir).mockRejectedValue(new Error('ENOENT: no such file or directory'));
+      mock(fs.readdir).mockRejectedValue(new Error('ENOENT: no such file or directory'));
 
       const result = await service.createMCPProject(config);
 
@@ -435,7 +435,7 @@ export async function setupServer(server: Server) {
       (service as any).templatePath = nonExistentPath;
 
       // Make readdir throw for non-existent template
-      vi.mocked(fs.readdir).mockRejectedValue(new Error('ENOENT: no such file or directory'));
+      mock(fs.readdir).mockRejectedValue(new Error('ENOENT: no such file or directory'));
 
       const result = await service.createMCPProject(config);
 

@@ -27,11 +27,11 @@ export function calculateRelationshipStrength({
   if (lastInteractionAt) {
     const daysSinceLastInteraction =
       (Date.now() - new Date(lastInteractionAt).getTime()) / (1000 * 60 * 60 * 24);
-    if (daysSinceLastInteraction < 1) recencyScore = 30;
-    else if (daysSinceLastInteraction < 7) recencyScore = 25;
-    else if (daysSinceLastInteraction < 30) recencyScore = 20;
-    else if (daysSinceLastInteraction < 90) recencyScore = 10;
-    else recencyScore = 5;
+    if (daysSinceLastInteraction < 1) {recencyScore = 30;}
+    else if (daysSinceLastInteraction < 7) {recencyScore = 25;}
+    else if (daysSinceLastInteraction < 30) {recencyScore = 20;}
+    else if (daysSinceLastInteraction < 90) {recencyScore = 10;}
+    else {recencyScore = 5;}
   }
 
   // Quality score (max 20 points)

@@ -40,10 +40,10 @@ export class TestWorld extends World {
   quest!: QuestSystem;
   skills!: SkillsSystem;
   spawning!: SpawningSystem;
-  
+
   private initialized: boolean = false;
   private cleanupCallbacks: (() => void)[] = [];
-  
+
   constructor() {
     super();
     this.setupSystems();
@@ -71,8 +71,8 @@ export class TestWorld extends World {
    * Initialize all systems
    */
   async init(): Promise<void> {
-    if (this.initialized) return;
-    
+    if (this.initialized) {return;}
+
     try {
       // Initialize with minimal options to avoid physics issues
       await super.init({
@@ -84,17 +84,17 @@ export class TestWorld extends World {
         assetsDir: './world/assets',
         assetsUrl: 'http://localhost/assets'
       });
-      
+
       // Initialize systems that need async setup with timeout
       const initTimeout = (promise: Promise<any>, name: string) => {
         return Promise.race([
           promise,
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error(`${name} init timeout`)), 5000)
           )
         ]);
       };
-      
+
       try {
         if (this.npc && typeof (this.npc as any).init === 'function') {
           await initTimeout((this.npc as any).init(), 'NPC System');
@@ -102,7 +102,7 @@ export class TestWorld extends World {
       } catch (error) {
         console.warn('NPC system init failed:', error);
       }
-      
+
       try {
         if (this.quest && typeof (this.quest as any).init === 'function') {
           await initTimeout((this.quest as any).init(), 'Quest System');
@@ -110,7 +110,7 @@ export class TestWorld extends World {
       } catch (error) {
         console.warn('Quest system init failed:', error);
       }
-      
+
       try {
         if (this.loot && typeof (this.loot as any).init === 'function') {
           await initTimeout((this.loot as any).init(), 'Loot System');
@@ -118,10 +118,10 @@ export class TestWorld extends World {
       } catch (error) {
         console.warn('Loot system init failed:', error);
       }
-      
+
       // Add mock network connection
       this.setupMockNetwork();
-      
+
       this.initialized = true;
     } catch (error) {
       console.error('Failed to initialize TestWorld:', error);
@@ -134,8 +134,8 @@ export class TestWorld extends World {
    * Setup mock network for testing
    */
   private setupMockNetwork(): void {
-    if (!this.network) return;
-    
+    if (!this.network) {return;}
+
     const mockConnection: MockConnection = {
       send: (message: any) => {
         // Mock network send - emit events for testing
@@ -146,7 +146,7 @@ export class TestWorld extends World {
       },
       readyState: 1 // WebSocket.OPEN
     };
-    
+
     // Add connection if method exists
     if (typeof (this.network as any).addConnection === 'function') {
       (this.network as any).addConnection('mock', mockConnection);
@@ -160,36 +160,36 @@ export class TestWorld extends World {
     if (!this.initialized) {
       await this.init();
     }
-    
+
     return new Promise((resolve) => {
       const startTime = Date.now();
-      
+
       // Use a simplified tick loop that won't hang
       const interval = setInterval(() => {
         const elapsed = Date.now() - startTime;
-        
+
         try {
           // Use world's tick method with current time
           this.tick(Date.now());
         } catch (error) {
           console.warn('Error in world tick:', error);
         }
-        
+
         if (elapsed >= duration) {
           clearInterval(interval);
           resolve();
         }
       }, 16);
-      
+
       // Store for cleanup
       this.cleanupCallbacks.push(() => clearInterval(interval));
-      
+
       // Safety timeout
       const safetyTimeout = setTimeout(() => {
         clearInterval(interval);
         resolve();
       }, duration + 1000);
-      
+
       this.cleanupCallbacks.push(() => clearTimeout(safetyTimeout));
     });
   }
@@ -198,8 +198,8 @@ export class TestWorld extends World {
    * Step the world forward by one frame
    */
   step(delta: number = 16): void {
-    if (!this.initialized) return;
-    
+    if (!this.initialized) {return;}
+
     try {
       // Use world's tick method
       this.tick(Date.now());
@@ -222,14 +222,14 @@ export class TestWorld extends World {
         }
       }
       this.cleanupCallbacks = [];
-      
+
       // Call world's destroy method
       try {
         this.destroy();
       } catch (error) {
         console.warn('Error in world destroy:', error);
       }
-      
+
       this.initialized = false;
     } catch (error) {
       console.warn('Error during cleanup:', error);
@@ -244,14 +244,14 @@ export class TestWorld extends World {
       console.warn('Entities system not available');
       return null;
     }
-    
+
     try {
       const player = this.entities.create(playerId);
       if (!player) {
         console.warn('Failed to create player entity');
         return null;
       }
-      
+
       // Add player components
       player.addComponent('stats', {
         hitpoints: { current: 100, max: 100 },
@@ -261,20 +261,20 @@ export class TestWorld extends World {
         speed: { current: 5, max: 5 },
         combatLevel: 1
       });
-      
+
       player.addComponent('inventory', {
         items: new Map(),
         capacity: 28,
         gold: 100
       });
-      
+
       player.addComponent('skills', {
         attack: { level: 1, experience: 0 },
         strength: { level: 1, experience: 0 },
         defence: { level: 1, experience: 0 },
         hitpoints: { level: 10, experience: 0 }
       });
-      
+
       player.addComponent('combat', {
         inCombat: false,
         target: null,
@@ -282,7 +282,7 @@ export class TestWorld extends World {
         attackCooldown: 4000,
         combatStyle: 'melee'
       });
-      
+
       player.addComponent('movement', {
         position: { x: 0, y: 0, z: 0 },
         destination: null,
@@ -290,10 +290,10 @@ export class TestWorld extends World {
         isMoving: false,
         facingDirection: 0
       });
-      
+
       // Set entity position
       player.position = { x: 0, y: 0, z: 0 };
-      
+
       return player;
     } catch (error) {
       console.error('Error creating test player:', error);
@@ -330,4 +330,4 @@ export class TestWorld extends World {
   isInitialized(): boolean {
     return this.initialized;
   }
-} 
+}

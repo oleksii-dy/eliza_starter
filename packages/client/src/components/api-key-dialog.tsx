@@ -32,7 +32,9 @@ export function ApiKeyDialog({ open, onOpenChange, onApiKeySaved }: ApiKeyDialog
     if (open) {
       try {
         const storedKey = localStorage.getItem(storageKey);
-        if (storedKey) setApiKey(storedKey);
+        if (storedKey) {
+          setApiKey(storedKey);
+        }
       } catch (err) {
         console.error('Unable to access localStorage', err);
       }
@@ -50,7 +52,7 @@ export function ApiKeyDialog({ open, onOpenChange, onApiKeySaved }: ApiKeyDialog
     }
     try {
       localStorage.setItem(storageKey, apiKey);
-    } catch (err) {
+    } catch {
       toast({
         title: 'Storage Error',
         description: 'Unable to save the API key (browser storage blocked).',

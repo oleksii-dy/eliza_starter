@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { useEffect, useState } from 'react';
 
 // Component that will redirect the user to the Eliza client
-function ElizaWrapper() {
+export function ElizaWrapper() {
   const [status, setStatus] = useState<'starting' | 'running' | 'error'>('starting');
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -18,7 +18,7 @@ function ElizaWrapper() {
         mode: 'no-cors', // Just checking if we can connect, not actually getting a response
       });
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   };

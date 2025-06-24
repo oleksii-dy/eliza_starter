@@ -6,11 +6,11 @@ import { getSchemaFactory, createLazyTableProxy } from './factory';
  * ensuring the database type is set before schema creation.
  * Foreign key references are removed to avoid circular dependencies.
  * The database constraints will be enforced at the application level.
- 
+
  */
 function createParticipantTable() {
   const factory = getSchemaFactory();
-  
+
   const tableColumns = {
     entityId: factory.uuid('entity_id').notNull(),
     roomId: factory.uuid('room_id').notNull(),

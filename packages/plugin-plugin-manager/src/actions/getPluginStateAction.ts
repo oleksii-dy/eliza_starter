@@ -8,7 +8,7 @@ import {
   logger,
 } from '@elizaos/core';
 import { PluginManagerService } from '../services/pluginManagerService.ts';
-import { PluginManagerServiceType, type PluginState, PluginStatus } from '../types.ts';
+import { PluginManagerServiceType, type PluginState, PluginStatusValues } from '../types.ts';
 
 export const getPluginStateAction: Action = {
   name: 'GET_PLUGIN_STATE',
@@ -62,7 +62,7 @@ export const getPluginStateAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State) => {
     const pluginManager = runtime.getService(PluginManagerServiceType.PLUGIN_MANAGER);
     return !!pluginManager;
   },
@@ -84,10 +84,10 @@ export const getPluginStateAction: Action = {
       }
 
       const plugins = pluginManager.getAllPlugins();
-      const loadedPlugins = plugins.filter((p) => p.status === PluginStatus.LOADED);
-      const errorPlugins = plugins.filter((p) => p.status === PluginStatus.ERROR);
-      const readyPlugins = plugins.filter((p) => p.status === PluginStatus.READY);
-      const buildingPlugins = plugins.filter((p) => p.status === PluginStatus.BUILDING);
+      const loadedPlugins = plugins.filter((p) => p.status === PluginStatusValues.LOADED);
+      const errorPlugins = plugins.filter((p) => p.status === PluginStatusValues.ERROR);
+      const readyPlugins = plugins.filter((p) => p.status === PluginStatusValues.READY);
+      const buildingPlugins = plugins.filter((p) => p.status === PluginStatusValues.BUILDING);
 
       // Format plugin information
       const formatPlugin = (plugin: PluginState) => {
@@ -112,25 +112,25 @@ export const getPluginStateAction: Action = {
 
       if (loadedPlugins.length > 0) {
         sections.push(
-          '**Loaded Plugins:**\n' + loadedPlugins.map((p) => `- ${formatPlugin(p)}`).join('\n')
+          `**Loaded Plugins:**\n${loadedPlugins.map((p) => `- ${formatPlugin(p)}`).join('\n')}`
         );
       }
 
       if (errorPlugins.length > 0) {
         sections.push(
-          '**Plugins with Errors:**\n' + errorPlugins.map((p) => `- ${formatPlugin(p)}`).join('\n')
+          `**Plugins with Errors:**\n${errorPlugins.map((p) => `- ${formatPlugin(p)}`).join('\n')}`
         );
       }
 
       if (readyPlugins.length > 0) {
         sections.push(
-          '**Ready to Load:**\n' + readyPlugins.map((p) => `- ${formatPlugin(p)}`).join('\n')
+          `**Ready to Load:**\n${readyPlugins.map((p) => `- ${formatPlugin(p)}`).join('\n')}`
         );
       }
 
       if (buildingPlugins.length > 0) {
         sections.push(
-          '**Building:**\n' + buildingPlugins.map((p) => `- ${formatPlugin(p)}`).join('\n')
+          `**Building:**\n${buildingPlugins.map((p) => `- ${formatPlugin(p)}`).join('\n')}`
         );
       }
 
@@ -155,11 +155,11 @@ export const getPluginStateAction: Action = {
 
       // Check permissions for various actions
       const trustService = runtime.getService('TRUST') as any;
-      const canLoad = trustService ? 
-        await trustService.checkPermission(message.entityId, 'plugin:load') : 
+      const canLoad = trustService ?
+        await trustService.checkPermission(message.entityId, 'plugin:load') :
         true;
-      const canUnload = trustService ? 
-        await trustService.checkPermission(message.entityId, 'plugin:unload') : 
+      const canUnload = trustService ?
+        await trustService.checkPermission(message.entityId, 'plugin:unload') :
         true;
 
       let actionText = text;
@@ -175,11 +175,11 @@ export const getPluginStateAction: Action = {
         suggestions.push('Use START_PLUGIN_CONFIGURATION to configure missing environment variables');
       }
       if (errorPlugins.length > 0) {
-        suggestions.push('Use CHECK_PLUGIN_HEALTH for detailed error information');
+        suggestions.push('Use CHECK_PLUGIN_HEALTH for detailed _error information');
       }
 
       if (suggestions.length > 0) {
-        actionText += '\n\n**Available Actions:**\n' + suggestions.map(s => `- ${s}`).join('\n');
+        actionText += `\n\n**Available Actions:**\n${suggestions.map(s => `- ${s}`).join('\n')}`;
       }
 
       await callback?.({
@@ -218,15 +218,15 @@ export const getPluginStateAction: Action = {
           missingEnvVars: Array.from(allMissingEnvVars),
         },
       };
-    } catch (error) {
-      logger.error('[GET_PLUGIN_STATE] Error:', error);
-      
+    } catch (_error) {
+      logger.error('[GET_PLUGIN_STATE] Error:', _error);
+
       await callback?.({
-        text: `Error getting plugin state: ${error instanceof Error ? error.message : String(error)}`,
+        text: `Error getting plugin state: ${_error instanceof Error ? _error.message : String(_error)}`,
         actions: ['GET_PLUGIN_STATE'],
       });
 
-      throw error;
+      throw _error;
     }
   },
-}; 
+};

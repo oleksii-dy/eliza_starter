@@ -8,7 +8,7 @@ import path from 'path';
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 import { ResearchService } from '../service';
-import { elizaLogger, IAgentRuntime, ModelType, Character, asUUID } from '@elizaos/core';
+import { logger, IAgentRuntime, ModelType, Character, asUUID } from '@elizaos/core';
 import { ResearchConfig, ResearchStatus } from '../types';
 import fs from 'fs/promises';
 import OpenAI from 'openai';
@@ -55,7 +55,7 @@ const createRealLLMRuntime = (): IAgentRuntime => {
     getSetting: (key: string) => {
       const value = process.env[key];
       if (key.includes('API_KEY') && value) {
-        elizaLogger.debug(`[Runtime] Found ${key}`);
+        logger.debug(`[Runtime] Found ${key}`);
       }
       return value || null;
     },
@@ -75,7 +75,7 @@ const createRealLLMRuntime = (): IAgentRuntime => {
         return { content: 'No message provided' };
       }
 
-      elizaLogger.debug(`[LLM] Processing request with ${modelType}`);
+      logger.debug(`[LLM] Processing request with ${modelType}`);
 
       try {
         // Prefer Claude for research tasks
@@ -95,7 +95,7 @@ const createRealLLMRuntime = (): IAgentRuntime => {
         else if (openai) {
           const response = await openai.chat.completions.create({
             model: 'gpt-4-turbo-preview',
-            messages: messages,
+            messages,
             max_tokens: 4096,
           });
 
@@ -103,11 +103,11 @@ const createRealLLMRuntime = (): IAgentRuntime => {
         }
         // Last resort: return a simple response
         else {
-          elizaLogger.warn('[LLM] No LLM API available, using fallback');
+          logger.warn('[LLM] No LLM API available, using fallback');
           return { content: 'Analysis complete.' };
         }
       } catch (error) {
-        elizaLogger.error('[LLM] Error:', error);
+        logger.error('[LLM] Error:', error);
         return {
           content: `LLM Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         };
@@ -156,7 +156,7 @@ const createRealLLMRuntime = (): IAgentRuntime => {
 };
 
 async function runCompleteResearch() {
-  elizaLogger.info('=== Running Complete Renewable Energy Research ===');
+  logger.info('=== Running Complete Renewable Energy Research ===');
 
   const runtime = createRealLLMRuntime();
   const service = new ResearchService(runtime);
@@ -164,7 +164,7 @@ async function runCompleteResearch() {
   const query =
     'Compare the environmental and economic impacts of different renewable energy storage technologies for grid-scale deployment';
 
-  elizaLogger.info(`📋 Research Query: "${query}"`);
+  logger.info(`📋 Research Query: "${query}"`);
 
   try {
     // Create research project with comprehensive configuration
@@ -185,8 +185,8 @@ async function runCompleteResearch() {
 
     const project = await service.createResearchProject(query, config);
 
-    elizaLogger.info(`✅ Project created: ${project.id}`);
-    elizaLogger.info(`📊 Status: ${project.status}, Phase: ${project.phase}`);
+    logger.info(`✅ Project created: ${project.id}`);
+    logger.info(`📊 Status: ${project.status}, Phase: ${project.phase}`);
 
     // Monitor progress
     let lastSourceCount = 0;
@@ -198,7 +198,7 @@ async function runCompleteResearch() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const current = await service.getProject(project.id);
-      if (!current) break;
+      if (!current) {break;}
 
       // Log progress every 5 seconds or when counts change
       if (
@@ -206,7 +206,7 @@ async function runCompleteResearch() {
         current.sources.length !== lastSourceCount ||
         current.findings.length !== lastFindingCount
       ) {
-        elizaLogger.info(
+        logger.info(
           `⏳ Progress: ${current.phase} | Sources: ${current.sources.length} | Findings: ${current.findings.length}`
         );
 
@@ -214,7 +214,7 @@ async function runCompleteResearch() {
         if (current.sources.length > lastSourceCount) {
           const newSources = current.sources.slice(lastSourceCount);
           newSources.forEach((s) => {
-            elizaLogger.info(`  📄 New source: ${s.title.substring(0, 80)}...`);
+            logger.info(`  📄 New source: ${s.title.substring(0, 80)}...`);
           });
           lastSourceCount = current.sources.length;
         }
@@ -222,14 +222,14 @@ async function runCompleteResearch() {
         // Log new findings
         if (current.findings.length > lastFindingCount) {
           const newFindings = current.findings.slice(lastFindingCount);
-          elizaLogger.info(`  💡 ${newFindings.length} new findings extracted`);
+          logger.info(`  💡 ${newFindings.length} new findings extracted`);
           lastFindingCount = current.findings.length;
         }
       }
 
       // Check if completed
       if (current.status === ResearchStatus.COMPLETED) {
-        elizaLogger.info(`\n✅ Research COMPLETED!`);
+        logger.info('\n✅ Research COMPLETED!');
 
         if (current.report) {
           // Export and save the report
@@ -237,7 +237,7 @@ async function runCompleteResearch() {
           const reportPath = path.join(__dirname, '../../renewable-energy-research-report.md');
           await fs.writeFile(reportPath, markdown);
 
-          elizaLogger.info(`📄 Report saved to: ${reportPath}`);
+          logger.info(`📄 Report saved to: ${reportPath}`);
 
           // Analyze report content
           const contentAnalysis = {
@@ -255,51 +255,51 @@ async function runCompleteResearch() {
             findingCount: current.findings.length,
           };
 
-          elizaLogger.info('\n📊 Report Analysis:');
-          elizaLogger.info(`  - Word count: ${contentAnalysis.wordCount}`);
-          elizaLogger.info(`  - Sources: ${contentAnalysis.sourceCount}`);
-          elizaLogger.info(`  - Findings: ${contentAnalysis.findingCount}`);
-          elizaLogger.info(`  - Contains key terms:`);
-          elizaLogger.info(`    • Energy: ${contentAnalysis.hasEnergy ? '✅' : '❌'}`);
-          elizaLogger.info(`    • Storage: ${contentAnalysis.hasStorage ? '✅' : '❌'}`);
-          elizaLogger.info(`    • Battery: ${contentAnalysis.hasBattery ? '✅' : '❌'}`);
-          elizaLogger.info(`    • Renewable: ${contentAnalysis.hasRenewable ? '✅' : '❌'}`);
-          elizaLogger.info(
+          logger.info('\n📊 Report Analysis:');
+          logger.info(`  - Word count: ${contentAnalysis.wordCount}`);
+          logger.info(`  - Sources: ${contentAnalysis.sourceCount}`);
+          logger.info(`  - Findings: ${contentAnalysis.findingCount}`);
+          logger.info('  - Contains key terms:');
+          logger.info(`    • Energy: ${contentAnalysis.hasEnergy ? '✅' : '❌'}`);
+          logger.info(`    • Storage: ${contentAnalysis.hasStorage ? '✅' : '❌'}`);
+          logger.info(`    • Battery: ${contentAnalysis.hasBattery ? '✅' : '❌'}`);
+          logger.info(`    • Renewable: ${contentAnalysis.hasRenewable ? '✅' : '❌'}`);
+          logger.info(
             `    • Environmental: ${contentAnalysis.hasEnvironmental ? '✅' : '❌'}`
           );
-          elizaLogger.info(`    • Economic: ${contentAnalysis.hasEconomic ? '✅' : '❌'}`);
-          elizaLogger.info(`    • Grid: ${contentAnalysis.hasGrid ? '✅' : '❌'}`);
+          logger.info(`    • Economic: ${contentAnalysis.hasEconomic ? '✅' : '❌'}`);
+          logger.info(`    • Grid: ${contentAnalysis.hasGrid ? '✅' : '❌'}`);
 
           // Show preview
-          elizaLogger.info('\n📖 Report Preview:');
-          elizaLogger.info('─'.repeat(80));
-          elizaLogger.info(markdown.substring(0, 1500) + '...');
-          elizaLogger.info('─'.repeat(80));
+          logger.info('\n📖 Report Preview:');
+          logger.info('─'.repeat(80));
+          logger.info(`${markdown.substring(0, 1500)}...`);
+          logger.info('─'.repeat(80));
 
           // Final verdict
           const relevantTermsCount = Object.values(contentAnalysis).filter(
             (v) => v === true
           ).length;
           if (relevantTermsCount >= 5) {
-            elizaLogger.info(
+            logger.info(
               '\n🎉 SUCCESS: Report contains highly relevant renewable energy storage content!'
             );
           } else if (relevantTermsCount >= 3) {
-            elizaLogger.info(
+            logger.info(
               '\n⚠️  PARTIAL: Report contains some relevant content but may be incomplete'
             );
           } else {
-            elizaLogger.error(
+            logger.error(
               '\n❌ FAIL: Report does NOT contain relevant renewable energy content'
             );
           }
         } else {
-          elizaLogger.warn('⚠️  Research completed but no report generated');
+          logger.warn('⚠️  Research completed but no report generated');
         }
 
         break;
       } else if (current.status === ResearchStatus.FAILED) {
-        elizaLogger.error(`❌ Research FAILED: ${current.error}`);
+        logger.error(`❌ Research FAILED: ${current.error}`);
         break;
       }
 
@@ -307,21 +307,21 @@ async function runCompleteResearch() {
     }
 
     if (attempts >= maxAttempts) {
-      elizaLogger.warn('⏱️  Research timed out after 2 minutes');
+      logger.warn('⏱️  Research timed out after 2 minutes');
     }
 
     // Export project data
     const exportData = await service.exportProject(project.id, 'json');
     const exportPath = path.join(__dirname, '../../renewable-energy-research-export.json');
     await fs.writeFile(exportPath, exportData);
-    elizaLogger.info(`💾 Full project data exported to: ${exportPath}`);
+    logger.info(`💾 Full project data exported to: ${exportPath}`);
 
     await service.stop();
   } catch (error) {
-    elizaLogger.error('❌ Research failed with error:', error);
+    logger.error('❌ Research failed with error:', error);
   }
 
-  elizaLogger.info('\n=== Research Complete ===');
+  logger.info('\n=== Research Complete ===');
 }
 
 // Run the research

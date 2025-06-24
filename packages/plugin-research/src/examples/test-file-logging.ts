@@ -15,8 +15,8 @@ process.env.FILE_LOGGING = 'true';
 // Create a simple runtime
 const runtime = {
   getSetting: (key: string) => {
-    if (key === 'FILE_LOGGING') return 'true';
-    if (key === 'TAVILY_API_KEY') return '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';
+    if (key === 'FILE_LOGGING') {return 'true';}
+    if (key === 'TAVILY_API_KEY') {return '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';}
     return null;
   },
   useModel: async () => 'Mock response',
@@ -152,19 +152,19 @@ async function testFileLogging() {
 
   // Check if files were created
   const logsDir = path.join(process.cwd(), 'research_logs');
-  
+
   try {
     const files = await fs.readdir(logsDir);
     console.log('📁 Files created in research_logs/:');
-    
+
     const mdFiles = files.filter(f => f.endsWith('.md'));
     const jsonFiles = files.filter(f => f.endsWith('.json'));
-    
+
     if (mdFiles.length > 0) {
       console.log('\nMarkdown files:');
       mdFiles.forEach(file => console.log(`  📄 ${file}`));
     }
-    
+
     if (jsonFiles.length > 0) {
       console.log('\nJSON files:');
       jsonFiles.forEach(file => console.log(`  📊 ${file}`));
@@ -174,26 +174,26 @@ async function testFileLogging() {
     if (mdFiles.length > 0) {
       console.log('\n📖 Preview of the first report:\n');
       console.log('─'.repeat(80));
-      
+
       const content = await fs.readFile(path.join(logsDir, mdFiles[0]), 'utf-8');
       // Show first 50 lines
       const lines = content.split('\n');
       const preview = lines.slice(0, 50).join('\n');
       console.log(preview);
-      
+
       if (lines.length > 50) {
         console.log(`\n... (${lines.length - 50} more lines)`);
       }
       console.log('─'.repeat(80));
-      
-      console.log(`\n💡 To view the full report, run:`);
+
+      console.log('\n💡 To view the full report, run:');
       console.log(`   cat research_logs/${mdFiles[0]}`);
     }
-    
+
   } catch (error) {
     console.error('❌ Error checking files:', error);
   }
 }
 
 // Run the test
-testFileLogging().catch(console.error); 
+testFileLogging().catch(console.error);

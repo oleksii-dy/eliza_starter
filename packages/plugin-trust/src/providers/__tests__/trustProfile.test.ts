@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, mock, beforeEach, type Mock } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
 import { trustProfileProvider } from '../trustProfile';
@@ -7,7 +7,7 @@ import type { TrustProfile } from '../../types/trust';
 const createMockRuntime = (): IAgentRuntime =>
   ({
     agentId: 'test-agent' as UUID,
-    getService: vi.fn()
+    getService: mock()
   } as any);
 
 const createMockMemory = (text: string, entityId: UUID): Memory =>
@@ -50,15 +50,15 @@ describe('trustProfileProvider', () => {
   beforeEach(() => {
     runtime = createMockRuntime();
     trustEngine = {
-      evaluateTrust: vi.fn().mockResolvedValue(mockTrustProfile),
-      getRecentInteractions: vi.fn().mockResolvedValue([
+      evaluateTrust: mock().mockResolvedValue(mockTrustProfile),
+      getRecentInteractions: mock().mockResolvedValue([
         { impact: 5, type: 'HELPFUL_ACTION' },
         { impact: -2, type: 'MINOR_VIOLATION' },
         { impact: 3, type: 'COMMUNITY_CONTRIBUTION' }
       ])
     };
     (runtime.getService as unknown as Mock).mockImplementation((name: string) => {
-      if (name === 'trust-engine') return trustEngine;
+      if (name === 'trust-engine') {return trustEngine;}
       return null;
     });
   });
@@ -70,9 +70,9 @@ describe('trustProfileProvider', () => {
       data: {},
       text: ''
     } as State;
-    
+
     const result = await trustProfileProvider.get(runtime, memory, state);
-    
+
     expect(result).toBeDefined();
     expect(result.text).toContain('The user has good trust (75/100)');
     expect(result.text).toContain('stable trust trend');
@@ -101,47 +101,47 @@ describe('trustProfileProvider', () => {
         ...mockTrustProfile,
         overallTrust: score
       });
-      
+
       const memory = createMockMemory('test', testEntityId);
       const state = {
         values: {},
         data: {},
         text: ''
       } as State;
-      
+
       const result = await trustProfileProvider.get(runtime, memory, state);
-      
+
       expect(result.values?.trustLevel).toBe(level);
     }
   });
 
   it('should handle missing trust engine', async () => {
     (runtime.getService as unknown as Mock).mockReturnValue(null);
-    
+
     const memory = createMockMemory('test', testEntityId);
     const state = {
       values: {},
       data: {},
       text: ''
     } as State;
-    
+
     const result = await trustProfileProvider.get(runtime, memory, state);
-    
+
     expect(result.text).toContain('Trust engine not available');
   });
 
   it('should handle errors gracefully', async () => {
     trustEngine.evaluateTrust.mockRejectedValue(new Error('Database error'));
-    
+
     const memory = createMockMemory('test', testEntityId);
     const state = {
       values: {},
       data: {},
       text: ''
     } as State;
-    
+
     const result = await trustProfileProvider.get(runtime, memory, state);
-    
+
     expect(result.text).toContain('Unable to fetch trust profile');
   });
 });

@@ -53,7 +53,9 @@ function findMonorepoRoot(): string | null {
         }
       }
       const parent = path.dirname(currentDir);
-      if (parent === currentDir) break; // Reached root
+      if (parent === currentDir) {
+        break;
+      } // Reached root
       currentDir = parent;
     }
     return null;
@@ -208,7 +210,9 @@ const importStrategies: ImportStrategy[] = [
           `local node_modules (${entryPoint})`,
           repository
         );
-        if (result) return result;
+        if (result) {
+          return result;
+        }
       }
 
       // Try default location
@@ -328,7 +332,9 @@ export async function loadPluginModule(repository: string): Promise<any | null> 
   for (const strategy of strategies) {
     logger.debug(`Trying strategy: ${strategy.name} for ${repository}`);
     const result = await strategy.tryImport(repository);
-    if (result) return result;
+    if (result) {
+      return result;
+    }
   }
 
   logger.warn(`Failed to load plugin module '${repository}' using all relevant strategies.`);

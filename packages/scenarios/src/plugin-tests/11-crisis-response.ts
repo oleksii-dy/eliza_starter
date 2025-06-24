@@ -1,4 +1,4 @@
-import type { Scenario } from "../types.js"
+import type { Scenario } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const crisisResponseScenario: Scenario = {
@@ -26,29 +26,29 @@ export const crisisResponseScenario: Scenario = {
             type: 'message',
             content:
               'URGENT: We have a cybersecurity breach. I need immediate action. Research the latest ransomware attack patterns, create an incident response plan, and set up tasks for the response team.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 5000,
-      },
+          },
           {
             type: 'message',
             content:
               'Search your knowledge base for our incident response procedures and compliance requirements. We need to follow proper protocols.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 3000,
-      },
+          },
           {
             type: 'message',
             content:
               'Create high-priority todos for: 1) Isolate affected systems, 2) Notify legal team, 3) Prepare stakeholder communications, 4) Begin forensic analysis',
-      },
+          },
           {
             type: 'wait',
             waitTime: 5000,
-      },
+          },
           {
             type: 'message',
             content:
@@ -131,7 +131,7 @@ export const crisisResponseScenario: Scenario = {
             'The agent responded quickly to the crisis, gathering information, creating plans, and coordinating tasks within minutes',
         },
         weight: 4,
-      }
+      },
     ],
     expectedOutcomes: [
       {
@@ -165,7 +165,11 @@ export const crisisResponseScenario: Scenario = {
     maxSteps: 20,
     maxTokens: 10000,
     targetAccuracy: 0.95,
-    customMetrics: [{ name: 'response_time' }, { name: 'coordination_quality' }, { name: 'protocol_compliance' }],
+    customMetrics: [
+      { name: 'response_time' },
+      { name: 'coordination_quality' },
+      { name: 'protocol_compliance' },
+    ],
   },
 };
 

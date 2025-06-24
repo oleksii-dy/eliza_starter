@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, mock } from 'bun:test';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { mainnet, sepolia, type Chain } from 'viem/chains';
 
@@ -15,8 +15,8 @@ const TEST_RPC_URLS = {
 
 // Mock the ICacheManager
 const mockCacheManager = {
-  getCache: vi.fn().mockResolvedValue(null),
-  setCache: vi.fn().mockResolvedValue(undefined),
+  getCache: mock().mockResolvedValue(null),
+  setCache: mock().mockResolvedValue(undefined),
 };
 
 describe('Wallet Provider', () => {
@@ -28,11 +28,11 @@ describe('Wallet Provider', () => {
   });
 
   afterEach(() => {
-    // Remove vi.clearAllTimers() as it's not needed in Bun test runner
+    mock.restore();
   });
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockCacheManager.getCache.mockResolvedValue(null);
   });
 
@@ -40,7 +40,7 @@ describe('Wallet Provider', () => {
     it('should set wallet address correctly', () => {
       const account = privateKeyToAccount(pk);
       const expectedAddress = account.address;
-      
+
       walletProvider = new WalletProvider(pk, mockCacheManager as any);
 
       expect(walletProvider.getAddress()).toBe(expectedAddress);
@@ -52,7 +52,7 @@ describe('Wallet Provider', () => {
       // WalletProvider constructor with no chains should result in empty chains
       const supportedChains = walletProvider.getSupportedChains();
       expect(supportedChains.length).toBe(0);
-      
+
       // This is expected behavior - no chains configured means no chains
       expect(supportedChains.includes('mainnet' as any)).toBe(false);
     });
@@ -139,7 +139,7 @@ describe('Wallet Provider', () => {
 
     it('should fetch balance for Sepolia testnet', async () => {
       const balance = await walletProvider.getWalletBalanceForChain('sepolia');
-      
+
       // Balance should be a string representing ETH amount
       expect(typeof balance).toBe('string');
       expect(balance).toMatch(/^\d+(\.\d+)?$/); // Should be a valid number string
@@ -147,7 +147,7 @@ describe('Wallet Provider', () => {
 
     it('should fetch balance for Base Sepolia testnet', async () => {
       const balance = await walletProvider.getWalletBalanceForChain('baseSepolia');
-      
+
       expect(typeof balance).toBe('string');
       expect(balance).toMatch(/^\d+(\.\d+)?$/);
     });
@@ -159,7 +159,7 @@ describe('Wallet Provider', () => {
 
     it('should fetch all wallet balances', async () => {
       const balances = await walletProvider.getWalletBalances();
-      
+
       expect(typeof balances).toBe('object');
       expect(balances.sepolia).toBeDefined();
       expect(balances.baseSepolia).toBeDefined();
@@ -194,7 +194,7 @@ describe('Wallet Provider', () => {
       expect(initialChains).not.toContain('sepolia');
 
       walletProvider.addChain({ sepolia: testnetChains.sepolia });
-      
+
       const newChains = Object.keys(walletProvider.chains);
       expect(newChains).toContain('sepolia');
     });
@@ -208,11 +208,11 @@ describe('Wallet Provider', () => {
     });
 
     it('should get supported chains list', () => {
-      walletProvider.addChain({ 
+      walletProvider.addChain({
         sepolia: testnetChains.sepolia,
-        baseSepolia: testnetChains.baseSepolia 
+        baseSepolia: testnetChains.baseSepolia,
       });
-      
+
       const supportedChains = walletProvider.getSupportedChains();
       expect(supportedChains).toContain('sepolia');
       expect(supportedChains).toContain('baseSepolia');
@@ -237,7 +237,7 @@ describe('Wallet Provider', () => {
 
     it('should be able to connect to Sepolia network', async () => {
       const publicClient = walletProvider.getPublicClient('sepolia');
-      
+
       try {
         const blockNumber = await publicClient.getBlockNumber();
         expect(typeof blockNumber).toBe('bigint');
@@ -250,7 +250,7 @@ describe('Wallet Provider', () => {
 
     it('should be able to get chain ID from network', async () => {
       const publicClient = walletProvider.getPublicClient('sepolia');
-      
+
       try {
         const chainId = await publicClient.getChainId();
         expect(chainId).toEqual(sepolia.id);

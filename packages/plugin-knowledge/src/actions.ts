@@ -21,11 +21,43 @@ import { fetchUrlContent } from './utils.ts';
 export const processKnowledgeAction: Action = {
   name: 'PROCESS_KNOWLEDGE',
   description:
-    'Process and store knowledge from a file path or text content into the knowledge base',
+    'Process and store knowledge from a file path or text content into the knowledge base. Can be chained with SEARCH_KNOWLEDGE to verify ingestion or KNOWLEDGE_ANALYTICS to see updated stats',
 
   similes: [],
 
   examples: [
+    // Multi-action: Process then search
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'Process the document at /path/to/document.pdf and then search for key terms',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: "I'll process the document and then search for key terms to verify the ingestion.",
+          actions: ['PROCESS_KNOWLEDGE', 'SEARCH_KNOWLEDGE'],
+        },
+      },
+    ],
+    // Multi-action: Process then analyze
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'Add this to your knowledge: The capital of France is Paris. Then show me analytics.',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: "I'll add that information to my knowledge base and then show you the updated analytics.",
+          actions: ['PROCESS_KNOWLEDGE', 'KNOWLEDGE_ANALYTICS'],
+        },
+      },
+    ],
     [
       {
         name: 'user',
@@ -37,21 +69,6 @@ export const processKnowledgeAction: Action = {
         name: 'assistant',
         content: {
           text: "I'll process the document at /path/to/document.pdf and add it to my knowledge base.",
-          actions: ['PROCESS_KNOWLEDGE'],
-        },
-      },
-    ],
-    [
-      {
-        name: 'user',
-        content: {
-          text: 'Add this to your knowledge: The capital of France is Paris.',
-        },
-      },
-      {
-        name: 'assistant',
-        content: {
-          text: "I'll add that information to my knowledge base.",
           actions: ['PROCESS_KNOWLEDGE'],
         },
       },
@@ -176,7 +193,7 @@ export const processKnowledgeAction: Action = {
               fragmentCount: result.fragmentCount,
             });
           } catch (error: any) {
-            logger.error(`Error processing attachment:`, error);
+            logger.error('Error processing attachment:', error);
             results.push({
               filename: attachment.title || 'unknown',
               success: false,
@@ -199,7 +216,7 @@ export const processKnowledgeAction: Action = {
           };
         } else {
           response = {
-            text: `I couldn't process any of the attachments. Please check the files and try again.`,
+            text: "I couldn't process any of the attachments. Please check the files and try again.",
           };
         }
       } else {
@@ -221,7 +238,17 @@ export const processKnowledgeAction: Action = {
             if (callback) {
               await callback(response);
             }
-            return {};
+            return {
+              data: {
+                actionName: 'PROCESS_KNOWLEDGE',
+                error: 'File not found',
+                attemptedPath: filePath,
+              },
+              values: {
+                success: false,
+                error: 'File not found',
+              },
+            };
           }
 
           // Read file
@@ -231,12 +258,15 @@ export const processKnowledgeAction: Action = {
 
           // Determine content type
           let contentType = 'text/plain';
-          if (fileExt === '.pdf') contentType = 'application/pdf';
-          else if (fileExt === '.docx')
+          if (fileExt === '.pdf') {
+            contentType = 'application/pdf';
+          } else if (fileExt === '.docx') {
             contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-          else if (fileExt === '.doc') contentType = 'application/msword';
-          else if (['.txt', '.md', '.tson', '.xml', '.csv'].includes(fileExt))
+          } else if (fileExt === '.doc') {
+            contentType = 'application/msword';
+          } else if (['.txt', '.md', '.tson', '.xml', '.csv'].includes(fileExt)) {
             contentType = 'text/plain';
+          }
 
           // Prepare knowledge options
           const knowledgeOptions: AddKnowledgeOptions = {
@@ -269,14 +299,21 @@ export const processKnowledgeAction: Action = {
             if (callback) {
               await callback(response);
             }
-            return {};
+            return {
+              data: {
+                actionName: 'PROCESS_KNOWLEDGE',
+                error: 'No content provided',
+              },
+              values: {
+                success: false,
+                error: 'No content provided',
+              },
+            };
           }
 
           // Prepare knowledge options for text
           const knowledgeOptions: AddKnowledgeOptions = {
-            clientDocumentId: stringToUuid(
-              runtime.agentId + 'text' + Date.now() + 'user-knowledge'
-            ),
+            clientDocumentId: stringToUuid(`${runtime.agentId}text${Date.now()}user-knowledge`),
             contentType: 'text/plain',
             originalFilename: 'user-knowledge.txt',
             worldId: runtime.agentId,
@@ -287,9 +324,15 @@ export const processKnowledgeAction: Action = {
 
           // Process the text
           const result = await service.addKnowledge(knowledgeOptions);
+          processedCount = 1;
+          results.push({
+            filename: 'user-knowledge.txt',
+            success: true,
+            fragmentCount: result.fragmentCount,
+          });
 
           response = {
-            text: `I've added that information to my knowledge base. It has been stored and indexed for future reference.`,
+            text: "I've added that information to my knowledge base. It has been stored and indexed for future reference.",
           };
         }
       }
@@ -300,11 +343,16 @@ export const processKnowledgeAction: Action = {
 
       return {
         data: {
-          processedCount: results.length,
+          actionName: 'PROCESS_KNOWLEDGE',
+          processedCount: processedCount,
           successCount: results.filter((r) => r.success).length,
           results,
         },
-        text: response.text,
+        values: {
+          success: true,
+          processedCount: processedCount,
+          successCount: results.filter((r) => r.success).length,
+        },
       };
     } catch (error) {
       logger.error('Error in PROCESS_KNOWLEDGE action:', error);
@@ -318,8 +366,14 @@ export const processKnowledgeAction: Action = {
       }
 
       return {
-        data: { error: error instanceof Error ? error.message : String(error) },
-        text: errorResponse.text,
+        data: {
+          actionName: 'PROCESS_KNOWLEDGE',
+          error: error instanceof Error ? error.message : String(error),
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
       };
     }
   },
@@ -330,7 +384,7 @@ export const processKnowledgeAction: Action = {
  */
 export const searchKnowledgeAction: Action = {
   name: 'SEARCH_KNOWLEDGE',
-  description: 'Search the knowledge base for specific information',
+  description: 'Search the knowledge base for specific information. Can be chained with ADVANCED_KNOWLEDGE_SEARCH for more detailed results or EXPORT_KNOWLEDGE to export search results',
 
   similes: [
     'search knowledge',
@@ -342,6 +396,38 @@ export const searchKnowledgeAction: Action = {
   ],
 
   examples: [
+    // Multi-action: Search then advanced search
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'Search for quantum computing and then do an advanced search for recent PDFs',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: "I'll search for quantum computing and then perform an advanced search for recent PDF documents.",
+          actions: ['SEARCH_KNOWLEDGE', 'ADVANCED_KNOWLEDGE_SEARCH'],
+        },
+      },
+    ],
+    // Multi-action: Search then export
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'Search for AI research and export the results',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: "I'll search for AI research in my knowledge base and then export the results for you.",
+          actions: ['SEARCH_KNOWLEDGE', 'EXPORT_KNOWLEDGE'],
+        },
+      },
+    ],
     [
       {
         name: 'user',
@@ -410,7 +496,16 @@ export const searchKnowledgeAction: Action = {
         if (callback) {
           await callback(response);
         }
-        return {};
+        return {
+          data: {
+            actionName: 'SEARCH_KNOWLEDGE',
+            error: 'No search query provided',
+          },
+          values: {
+            success: false,
+            error: 'No search query provided',
+          },
+        };
       }
 
       // Create search message
@@ -446,11 +541,16 @@ export const searchKnowledgeAction: Action = {
 
       return {
         data: {
+          actionName: 'SEARCH_KNOWLEDGE',
           query,
           results,
           count: results.length,
         },
-        text: response.text,
+        values: {
+          success: true,
+          query,
+          resultCount: results.length,
+        },
       };
     } catch (error) {
       logger.error('Error in SEARCH_KNOWLEDGE action:', error);
@@ -464,8 +564,14 @@ export const searchKnowledgeAction: Action = {
       }
 
       return {
-        data: { error: error instanceof Error ? error.message : String(error) },
-        text: errorResponse.text,
+        data: {
+          actionName: 'SEARCH_KNOWLEDGE',
+          error: error instanceof Error ? error.message : String(error),
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
       };
     }
   },
@@ -476,7 +582,7 @@ export const searchKnowledgeAction: Action = {
  */
 export const advancedSearchAction: Action = {
   name: 'ADVANCED_KNOWLEDGE_SEARCH',
-  description: 'Perform advanced search with filters, sorting, and pagination',
+  description: 'Perform advanced search with filters, sorting, and pagination. Can be chained with EXPORT_KNOWLEDGE to export filtered results or KNOWLEDGE_ANALYTICS to analyze search patterns',
 
   similes: [
     'advanced search',
@@ -487,6 +593,22 @@ export const advancedSearchAction: Action = {
   ],
 
   examples: [
+    // Multi-action: Advanced search then export
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'Search for PDF documents about AI from last week and export them',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: "I'll search for PDF documents about AI from last week and then export the results.",
+          actions: ['ADVANCED_KNOWLEDGE_SEARCH', 'EXPORT_KNOWLEDGE'],
+        },
+      },
+    ],
     [
       {
         name: 'user',
@@ -538,9 +660,15 @@ export const advancedSearchAction: Action = {
       };
 
       // Detect content type filters
-      if (text.includes('pdf')) searchOptions.filters.contentType = ['application/pdf'];
-      if (text.includes('text')) searchOptions.filters.contentType = ['text/plain'];
-      if (text.includes('markdown')) searchOptions.filters.contentType = ['text/markdown'];
+      if (text.includes('pdf')) {
+        searchOptions.filters.contentType = ['application/pdf'];
+      }
+      if (text.includes('text')) {
+        searchOptions.filters.contentType = ['text/plain'];
+      }
+      if (text.includes('markdown')) {
+        searchOptions.filters.contentType = ['text/markdown'];
+      }
 
       // Detect date filters
       if (text.includes('today')) {
@@ -586,8 +714,17 @@ export const advancedSearchAction: Action = {
       }
 
       return {
-        data: results,
-        text: response.text,
+        data: {
+          actionName: 'ADVANCED_KNOWLEDGE_SEARCH',
+          results: results.results,
+          totalCount: results.totalCount,
+          filters: searchOptions.filters,
+        },
+        values: {
+          success: true,
+          totalCount: results.totalCount,
+          resultCount: results.results.length,
+        },
       };
     } catch (error) {
       logger.error('Error in ADVANCED_KNOWLEDGE_SEARCH:', error);
@@ -597,7 +734,16 @@ export const advancedSearchAction: Action = {
       if (callback) {
         await callback(errorResponse);
       }
-      return { data: { error: String(error) }, text: errorResponse.text };
+      return {
+        data: {
+          actionName: 'ADVANCED_KNOWLEDGE_SEARCH',
+          error: String(error),
+        },
+        values: {
+          success: false,
+          error: String(error),
+        },
+      };
     }
   },
 };
@@ -607,7 +753,7 @@ export const advancedSearchAction: Action = {
  */
 export const knowledgeAnalyticsAction: Action = {
   name: 'KNOWLEDGE_ANALYTICS',
-  description: 'Get analytics and insights about the knowledge base',
+  description: 'Get analytics and insights about the knowledge base. Can be chained with PROCESS_KNOWLEDGE to see updated stats after ingestion or EXPORT_KNOWLEDGE to export analytics data',
 
   similes: [
     'knowledge stats',
@@ -618,6 +764,22 @@ export const knowledgeAnalyticsAction: Action = {
   ],
 
   examples: [
+    // Multi-action: Analytics then export
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'Show me knowledge base analytics and export the data',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: "I'll generate analytics for the knowledge base and export the data for you.",
+          actions: ['KNOWLEDGE_ANALYTICS', 'EXPORT_KNOWLEDGE'],
+        },
+      },
+    ],
     [
       {
         name: 'user',
@@ -670,8 +832,8 @@ export const knowledgeAnalyticsAction: Action = {
 
 📁 Content Types:
 ${Object.entries(analytics.contentTypes)
-  .map(([type, count]) => `  • ${type}: ${count} documents`)
-  .join('\n')}
+    .map(([type, count]) => `  • ${type}: ${count} documents`)
+    .join('\n')}
 
 ${
   analytics.queryStats.totalQueries > 0
@@ -689,8 +851,16 @@ ${
       }
 
       return {
-        data: analytics,
-        text: response.text,
+        data: {
+          actionName: 'KNOWLEDGE_ANALYTICS',
+          analytics,
+        },
+        values: {
+          success: true,
+          totalDocuments: analytics.totalDocuments,
+          totalFragments: analytics.totalFragments,
+          storageSizeMB: analytics.storageSize / 1024 / 1024,
+        },
       };
     } catch (error) {
       logger.error('Error in KNOWLEDGE_ANALYTICS:', error);
@@ -700,7 +870,16 @@ ${
       if (callback) {
         await callback(errorResponse);
       }
-      return { data: { error: String(error) }, text: errorResponse.text };
+      return {
+        data: {
+          actionName: 'KNOWLEDGE_ANALYTICS',
+          error: String(error),
+        },
+        values: {
+          success: false,
+          error: String(error),
+        },
+      };
     }
   },
 };
@@ -710,7 +889,7 @@ ${
  */
 export const exportKnowledgeAction: Action = {
   name: 'EXPORT_KNOWLEDGE',
-  description: 'Export knowledge base to various formats',
+  description: 'Export knowledge base to various formats. Can be chained with SEARCH_KNOWLEDGE or ADVANCED_KNOWLEDGE_SEARCH to export filtered results',
 
   similes: ['export knowledge', 'download knowledge', 'backup knowledge', 'save knowledge to file'],
 
@@ -760,8 +939,11 @@ export const exportKnowledgeAction: Action = {
 
       // Detect format
       let format: 'json' | 'csv' | 'markdown' = 'json';
-      if (text.includes('csv')) format = 'csv';
-      else if (text.includes('markdown') || text.includes('md')) format = 'markdown';
+      if (text.includes('csv')) {
+        format = 'csv';
+      } else if (text.includes('markdown') || text.includes('md')) {
+        format = 'markdown';
+      }
 
       const exportData = await service.exportKnowledge({
         format,
@@ -783,11 +965,17 @@ export const exportKnowledgeAction: Action = {
 
       return {
         data: {
+          actionName: 'EXPORT_KNOWLEDGE',
           format,
           size: exportData.length,
           content: exportData,
         },
-        text: response.text,
+        values: {
+          success: true,
+          format,
+          sizeInBytes: exportData.length,
+          sizeInKB: exportData.length / 1024,
+        },
       };
     } catch (error) {
       logger.error('Error in EXPORT_KNOWLEDGE:', error);
@@ -797,7 +985,16 @@ export const exportKnowledgeAction: Action = {
       if (callback) {
         await callback(errorResponse);
       }
-      return { data: { error: String(error) }, text: errorResponse.text };
+      return {
+        data: {
+          actionName: 'EXPORT_KNOWLEDGE',
+          error: String(error),
+        },
+        values: {
+          success: false,
+          error: String(error),
+        },
+      };
     }
   },
 };
@@ -807,7 +1004,7 @@ export const exportKnowledgeAction: Action = {
  */
 export const ingestGitHubAction: Action = {
   name: 'INGEST_GITHUB_REPO',
-  description: 'Ingest knowledge from a GitHub repository with optional subdirectory filtering',
+  description: 'Ingest knowledge from a GitHub repository with optional subdirectory filtering. Can be chained with SEARCH_KNOWLEDGE to verify ingestion or KNOWLEDGE_ANALYTICS to see updated repository stats',
 
   similes: [
     'ingest github',
@@ -818,18 +1015,19 @@ export const ingestGitHubAction: Action = {
   ],
 
   examples: [
+    // Multi-action: Ingest GitHub then search
     [
       {
         name: 'user',
         content: {
-          text: 'Ingest the knowledge from https://github.com/elizaOS/knowledge',
+          text: 'Ingest the knowledge from https://github.com/elizaOS/knowledge and search for key concepts',
         },
       },
       {
         name: 'assistant',
         content: {
-          text: "I'll ingest the knowledge from that GitHub repository.",
-          actions: ['INGEST_GITHUB_REPO'],
+          text: "I'll ingest the knowledge from that GitHub repository and then search for key concepts.",
+          actions: ['INGEST_GITHUB_REPO', 'SEARCH_KNOWLEDGE'],
         },
       },
     ],
@@ -852,9 +1050,11 @@ export const ingestGitHubAction: Action = {
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const text = message.content.text?.toLowerCase() || '';
-    
+
     const hasGitHubKeywords = ['github', 'repo', 'repository'].some((k) => text.includes(k));
-    const hasIngestionKeywords = ['ingest', 'import', 'load', 'process', 'add'].some((k) => text.includes(k));
+    const hasIngestionKeywords = ['ingest', 'import', 'load', 'process', 'add'].some((k) =>
+      text.includes(k)
+    );
     const hasGitHubUrl = /github\.com\/[^\/]+\/[^\/]+/.test(text);
 
     const service = runtime.getService(KnowledgeService.serviceType);
@@ -875,15 +1075,28 @@ export const ingestGitHubAction: Action = {
       }
 
       const text = message.content.text || '';
-      
+
       // Extract GitHub URL
-      const githubUrlMatch = text.match(/https:\/\/github\.com\/[^\/\s]+\/[^\/\s]+(?:\/tree\/[^\/\s]+\/(.+))?/);
+      const githubUrlMatch = text.match(
+        /https:\/\/github\.com\/[^\/\s]+\/[^\/\s]+(?:\/tree\/[^\/\s]+\/(.+))?/
+      );
       if (!githubUrlMatch) {
         const errorResponse: Content = {
           text: 'Please provide a valid GitHub repository URL.',
         };
-        if (callback) await callback(errorResponse);
-        return { data: { error: 'No valid GitHub URL found' }, text: errorResponse.text };
+        if (callback) {
+          await callback(errorResponse);
+        }
+        return {
+          data: {
+            actionName: 'INGEST_GITHUB_REPO',
+            error: 'No valid GitHub URL found',
+          },
+          values: {
+            success: false,
+            error: 'No valid GitHub URL found',
+          },
+        };
       }
 
       const repoUrl = githubUrlMatch[0];
@@ -911,45 +1124,74 @@ export const ingestGitHubAction: Action = {
       };
 
       let response: Content;
-      
+
       try {
         const result = await service.ingestGitHubRepository(ingestionOptions);
-        
+
         if (result.processedFiles > 0) {
           response = {
             text: `✅ Successfully ingested ${result.processedFiles} files from the GitHub repository. ${result.errors.length > 0 ? `${result.errors.length} files failed to process.` : 'All files processed successfully.'}`,
           };
         } else {
           response = {
-            text: `⚠️ No files were processed from the repository. This might be due to file type filters or repository access issues.`,
+            text: '⚠️ No files were processed from the repository. This might be due to file type filters or repository access issues.',
           };
         }
 
-        if (callback) await callback(response);
-        
+        if (callback) {
+          await callback(response);
+        }
+
         return {
           data: {
+            actionName: 'INGEST_GITHUB_REPO',
             repoUrl: ingestionOptions.repoUrl,
             subdirectories: ingestionOptions.subdirectories,
             result,
           },
-          text: response.text,
+          values: {
+            success: true,
+            processedFiles: result.processedFiles,
+            failedFiles: result.errors.length,
+          },
         };
       } catch (ingestionError: any) {
         logger.error('GitHub ingestion error:', ingestionError);
         response = {
           text: `❌ Failed to ingest from GitHub repository: ${ingestionError.message}. Please check the repository URL and try again.`,
         };
-        if (callback) await callback(response);
-        return { data: { error: ingestionError.message }, text: response.text };
+        if (callback) {
+          await callback(response);
+        }
+        return {
+          data: {
+            actionName: 'INGEST_GITHUB_REPO',
+            error: ingestionError.message,
+          },
+          values: {
+            success: false,
+            error: ingestionError.message,
+          },
+        };
       }
     } catch (error: any) {
       logger.error('Error in INGEST_GITHUB_REPO action:', error);
       const errorResponse: Content = {
         text: `Error processing GitHub repository: ${error.message}`,
       };
-      if (callback) await callback(errorResponse);
-      return { data: { error: error.message }, text: errorResponse.text };
+      if (callback) {
+        await callback(errorResponse);
+      }
+      return {
+        data: {
+          actionName: 'INGEST_GITHUB_REPO',
+          error: error.message,
+        },
+        values: {
+          success: false,
+          error: error.message,
+        },
+      };
     }
   },
 };
@@ -959,7 +1201,7 @@ export const ingestGitHubAction: Action = {
  */
 export const ingestWebPageAction: Action = {
   name: 'INGEST_WEB_PAGE',
-  description: 'Extract and ingest knowledge from a web page URL',
+  description: 'Extract and ingest knowledge from a web page URL. Can be chained with SEARCH_KNOWLEDGE to find ingested content or KNOWLEDGE_ANALYTICS to see updated stats',
 
   similes: [
     'ingest web page',
@@ -970,6 +1212,22 @@ export const ingestWebPageAction: Action = {
   ],
 
   examples: [
+    // Multi-action: Ingest web page then search
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'Extract knowledge from https://eliza.how/docs/intro and search for key points',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: "I'll extract the knowledge from that web page and then search for key points.",
+          actions: ['INGEST_WEB_PAGE', 'SEARCH_KNOWLEDGE'],
+        },
+      },
+    ],
     [
       {
         name: 'user',
@@ -989,9 +1247,11 @@ export const ingestWebPageAction: Action = {
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const text = message.content.text?.toLowerCase() || '';
-    
+
     const hasWebKeywords = ['web', 'page', 'url', 'website', 'site'].some((k) => text.includes(k));
-    const hasIngestionKeywords = ['extract', 'ingest', 'import', 'process', 'add'].some((k) => text.includes(k));
+    const hasIngestionKeywords = ['extract', 'ingest', 'import', 'process', 'add'].some((k) =>
+      text.includes(k)
+    );
     const hasUrl = /https?:\/\/[^\s]+/.test(text);
 
     const service = runtime.getService(KnowledgeService.serviceType);
@@ -1012,15 +1272,26 @@ export const ingestWebPageAction: Action = {
       }
 
       const text = message.content.text || '';
-      
+
       // Extract URL
       const urlMatch = text.match(/https?:\/\/[^\s]+/);
       if (!urlMatch) {
         const errorResponse: Content = {
           text: 'Please provide a valid web page URL.',
         };
-        if (callback) await callback(errorResponse);
-        return { data: { error: 'No valid URL found' }, text: errorResponse.text };
+        if (callback) {
+          await callback(errorResponse);
+        }
+        return {
+          data: {
+            actionName: 'INGEST_WEB_PAGE',
+            error: 'No valid URL found',
+          },
+          values: {
+            success: false,
+            error: 'No valid URL found',
+          },
+        };
       }
 
       const url = urlMatch[0];
@@ -1038,10 +1309,10 @@ export const ingestWebPageAction: Action = {
       };
 
       let response: Content;
-      
+
       try {
         const result = await service.ingestWebPage(ingestionOptions);
-        
+
         if (result.error) {
           response = {
             text: `⚠️ Failed to extract content from the web page: ${result.error}. Please try adding the knowledge from a file instead.`,
@@ -1052,34 +1323,63 @@ export const ingestWebPageAction: Action = {
           };
         } else {
           response = {
-            text: `⚠️ No meaningful content could be extracted from the web page. Please check the URL or try a different page.`,
+            text: '⚠️ No meaningful content could be extracted from the web page. Please check the URL or try a different page.',
           };
         }
 
-        if (callback) await callback(response);
-        
+        if (callback) {
+          await callback(response);
+        }
+
         return {
           data: {
+            actionName: 'INGEST_WEB_PAGE',
             url: ingestionOptions.url,
             result,
           },
-          text: response.text,
+          values: {
+            success: true,
+            textLength: result.textLength,
+            title: result.title || 'Untitled',
+          },
         };
       } catch (ingestionError: any) {
         logger.error('Web page ingestion error:', ingestionError);
         response = {
           text: `❌ Failed to extract from web page: ${ingestionError.message}. Please try adding the knowledge from a file instead.`,
         };
-        if (callback) await callback(response);
-        return { data: { error: ingestionError.message }, text: response.text };
+        if (callback) {
+          await callback(response);
+        }
+        return {
+          data: {
+            actionName: 'INGEST_WEB_PAGE',
+            error: ingestionError.message,
+          },
+          values: {
+            success: false,
+            error: ingestionError.message,
+          },
+        };
       }
     } catch (error: any) {
       logger.error('Error in INGEST_WEB_PAGE action:', error);
       const errorResponse: Content = {
         text: `Error processing web page: ${error.message}`,
       };
-      if (callback) await callback(errorResponse);
-      return { data: { error: error.message }, text: errorResponse.text };
+      if (callback) {
+        await callback(errorResponse);
+      }
+      return {
+        data: {
+          actionName: 'INGEST_WEB_PAGE',
+          error: error.message,
+        },
+        values: {
+          success: false,
+          error: error.message,
+        },
+      };
     }
   },
 };

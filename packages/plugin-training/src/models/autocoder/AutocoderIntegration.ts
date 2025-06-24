@@ -1,10 +1,20 @@
-import { elizaLogger, type IAgentRuntime, type Memory, type Action, type HandlerCallback } from '@elizaos/core';
-import { TrajectoryRecorder, type CodeTrajectory, type CodeTrajectoryStep } from './TrajectoryRecorder';
+import {
+  elizaLogger,
+  type IAgentRuntime,
+  type Memory,
+  type Action,
+  type HandlerCallback,
+} from '@elizaos/core';
+import {
+  TrajectoryRecorder,
+  type CodeTrajectory,
+  type CodeTrajectoryStep,
+} from './TrajectoryRecorder';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
  * AutocoderIntegration - Integrates trajectory recording with autocoder and MCP plugin creation
- * 
+ *
  * This integration automatically captures trajectories during code generation sessions,
  * including MCP plugin creation, self-generated code plugins, and debugging workflows.
  * It hooks into the autocoder process to record every step and decision.
@@ -54,25 +64,32 @@ export class AutocoderIntegration {
    * Register actions that trigger trajectory recording
    */
   private async registerAutocoderActions(): Promise<void> {
-    if (!this.runtime) return;
+    if (!this.runtime) {
+      return;
+    }
 
     // Action to start a new coding session with trajectory recording
     const startCodingSessionAction: Action = {
       name: 'START_CODING_SESSION',
       similes: ['BEGIN_CODING', 'START_DEVELOPMENT', 'CREATE_CODE'],
       description: 'Start a new coding session with trajectory recording',
-      
+
       validate: async (runtime, message) => {
         // Validate that this is a coding request
         const text = message.content.text?.toLowerCase() || '';
-        return text.includes('code') || text.includes('plugin') || text.includes('implement') || text.includes('create');
+        return (
+          text.includes('code') ||
+          text.includes('plugin') ||
+          text.includes('implement') ||
+          text.includes('create')
+        );
       },
 
       handler: async (runtime, message, state, options, callback) => {
         try {
           const userRequest = message.content.text || '';
           const projectType = this.detectProjectType(userRequest);
-          
+
           const sessionId = await this.startCodingSession(userRequest, projectType, {
             user_id: message.entityId,
             room_id: message.roomId,
@@ -82,7 +99,8 @@ export class AutocoderIntegration {
 
           await callback?.({
             text: `🚀 Started coding session: ${sessionId}\nProject type: ${projectType}\nI'll record every step of the development process for training.`,
-            thought: `Starting trajectory recording for coding session. This will help train future autocoder models.`,
+            thought:
+              'Starting trajectory recording for coding session. This will help train future autocoder models.',
             actions: ['START_CODING_SESSION'],
           });
 
@@ -94,7 +112,6 @@ export class AutocoderIntegration {
               recording_active: true,
             },
           };
-
         } catch (error) {
           elizaLogger.error('Failed to start coding session:', error);
           await callback?.({
@@ -107,14 +124,17 @@ export class AutocoderIntegration {
 
       examples: [
         [
-          { name: 'User', content: { text: 'Can you help me create an MCP plugin for weather data?' } },
-          { 
-            name: 'Agent', 
-            content: { 
-              text: '🚀 Started coding session: session-123\nProject type: mcp_plugin\nI\'ll record every step of the development process for training.',
+          {
+            name: 'User',
+            content: { text: 'Can you help me create an MCP plugin for weather data?' },
+          },
+          {
+            name: 'Agent',
+            content: {
+              text: "🚀 Started coding session: session-123\nProject type: mcp_plugin\nI'll record every step of the development process for training.",
               thought: 'Starting trajectory recording for MCP plugin creation.',
               actions: ['START_CODING_SESSION'],
-            } 
+            },
           },
         ],
       ],
@@ -125,7 +145,7 @@ export class AutocoderIntegration {
       name: 'RECORD_CODING_STEP',
       similes: ['LOG_STEP', 'TRACK_PROGRESS'],
       description: 'Record a step in the coding process',
-      
+
       validate: async (runtime, message) => {
         // Check if there's an active coding session
         const sessionId = this.findActiveSession(message.entityId);
@@ -146,7 +166,7 @@ export class AutocoderIntegration {
 
           // Extract step information from message/state
           const stepInfo = this.extractStepInfo(message, state, options);
-          
+
           await this.trajectoryRecorder.recordStep(
             session.current_trajectory,
             stepInfo.step_type,
@@ -169,7 +189,6 @@ export class AutocoderIntegration {
               step_type: stepInfo.step_type,
             },
           };
-
         } catch (error) {
           elizaLogger.error('Failed to record coding step:', error);
           return null;
@@ -178,13 +197,16 @@ export class AutocoderIntegration {
 
       examples: [
         [
-          { name: 'User', content: { text: 'I\'ve analyzed the requirements and planned the plugin structure' } },
-          { 
-            name: 'Agent', 
-            content: { 
+          {
+            name: 'User',
+            content: { text: "I've analyzed the requirements and planned the plugin structure" },
+          },
+          {
+            name: 'Agent',
+            content: {
               text: '📝 Recorded planning step in trajectory',
               thought: 'Captured step: Plugin structure planning completed',
-            } 
+            },
           },
         ],
       ],
@@ -195,7 +217,7 @@ export class AutocoderIntegration {
       name: 'COMPLETE_CODING_SESSION',
       similes: ['FINISH_CODING', 'END_SESSION'],
       description: 'Complete a coding session and finalize trajectory',
-      
+
       validate: async (runtime, message) => {
         const sessionId = this.findActiveSession(message.entityId);
         return !!sessionId;
@@ -213,12 +235,12 @@ export class AutocoderIntegration {
 
           await callback?.({
             text: `✅ Coding session completed!\n📊 Trajectory: ${trajectory.trajectory.length} steps recorded\n🎯 Success: ${finalResult.success ? 'Yes' : 'No'}\n📚 Training data generated for future autocoder improvements`,
-            thought: `Completed trajectory recording. Generated training data for autocoder model.`,
+            thought: 'Completed trajectory recording. Generated training data for autocoder model.',
             actions: ['COMPLETE_CODING_SESSION'],
           });
 
           return {
-            text: `Coding session completed successfully`,
+            text: 'Coding session completed successfully',
             data: {
               session_completed: true,
               trajectory_id: trajectory.trajectory_id,
@@ -226,7 +248,6 @@ export class AutocoderIntegration {
               success: finalResult.success,
             },
           };
-
         } catch (error) {
           elizaLogger.error('Failed to complete coding session:', error);
           await callback?.({
@@ -240,13 +261,13 @@ export class AutocoderIntegration {
       examples: [
         [
           { name: 'User', content: { text: 'The plugin is working perfectly! All tests pass.' } },
-          { 
-            name: 'Agent', 
-            content: { 
+          {
+            name: 'Agent',
+            content: {
               text: '✅ Coding session completed!\n📊 Trajectory: 8 steps recorded\n🎯 Success: Yes\n📚 Training data generated for future autocoder improvements',
               thought: 'Completed trajectory recording successfully.',
               actions: ['COMPLETE_CODING_SESSION'],
-            } 
+            },
           },
         ],
       ],
@@ -264,7 +285,9 @@ export class AutocoderIntegration {
    * Hook into existing autocoder events
    */
   private async hookIntoAutocoderEvents(): Promise<void> {
-    if (!this.runtime) return;
+    if (!this.runtime) {
+      return;
+    }
 
     // Listen for autocoder-related events
     const autocoderEvents = [
@@ -326,7 +349,7 @@ export class AutocoderIntegration {
     context: any
   ): Promise<string> {
     const sessionId = uuidv4();
-    
+
     const session: AutocoderSession = {
       session_id: sessionId,
       start_time: Date.now(),
@@ -361,10 +384,7 @@ export class AutocoderIntegration {
   /**
    * Complete a coding session and finalize trajectory
    */
-  async completeCodingSession(
-    sessionId: string,
-    finalResult: any
-  ): Promise<CodeTrajectory> {
+  async completeCodingSession(sessionId: string, finalResult: any): Promise<CodeTrajectory> {
     const session = this.activeSessions.get(sessionId);
     if (!session) {
       throw new Error(`Session ${sessionId} not found`);
@@ -393,7 +413,7 @@ export class AutocoderIntegration {
    */
   private detectProjectType(userRequest: string): AutocoderSession['project_type'] {
     const text = userRequest.toLowerCase();
-    
+
     if (text.includes('mcp') || text.includes('model context protocol')) {
       return 'mcp_plugin';
     }
@@ -406,7 +426,7 @@ export class AutocoderIntegration {
     if (text.includes('refactor') || text.includes('improve') || text.includes('optimize')) {
       return 'refactoring';
     }
-    
+
     return 'code_generation';
   }
 
@@ -427,7 +447,11 @@ export class AutocoderIntegration {
   /**
    * Extract step information from message and context
    */
-  private extractStepInfo(message: Memory, state: any, options: any): {
+  private extractStepInfo(
+    message: Memory,
+    state: any,
+    options: any
+  ): {
     step_type: CodeTrajectoryStep['step_type'];
     input: CodeTrajectoryStep['input'];
     reasoning: CodeTrajectoryStep['reasoning'];
@@ -436,10 +460,10 @@ export class AutocoderIntegration {
     metadata: CodeTrajectoryStep['metadata'];
   } {
     const text = message.content.text || '';
-    
+
     // Determine step type based on content
     const step_type = this.determineStepType(text, options);
-    
+
     return {
       step_type,
       input: {
@@ -482,10 +506,14 @@ export class AutocoderIntegration {
   /**
    * Extract final result from session completion
    */
-  private extractFinalResult(message: Memory, state: any, options: any): CodeTrajectory['final_result'] {
+  private extractFinalResult(
+    message: Memory,
+    state: any,
+    options: any
+  ): CodeTrajectory['final_result'] {
     const text = message.content.text || '';
     const success = this.determineSuccess(text, options);
-    
+
     return {
       success,
       final_code: options?.final_code || '',
@@ -510,7 +538,7 @@ export class AutocoderIntegration {
   private async handleAutocoderStep(payload: any): Promise<void> {
     const sessionId = payload.session_id;
     const session = this.activeSessions.get(sessionId);
-    
+
     if (session?.current_trajectory) {
       const stepInfo = this.convertPayloadToStepInfo(payload);
       await this.trajectoryRecorder.recordStep(
@@ -537,13 +565,13 @@ export class AutocoderIntegration {
     // Record error step in trajectory
     const sessionId = payload.session_id;
     const session = this.activeSessions.get(sessionId);
-    
+
     if (session?.current_trajectory) {
       await this.trajectoryRecorder.recordStep(
         session.current_trajectory,
         'implementation',
         { context: payload.context },
-        { 
+        {
           thinking: 'Error occurred during implementation',
           approach: 'error_handling',
           alternatives_considered: [],
@@ -597,12 +625,20 @@ export class AutocoderIntegration {
   private extractRequirements(userRequest: string): string[] {
     // Simple keyword extraction - in practice, this would use NLP
     const requirements: string[] = [];
-    
-    if (userRequest.includes('plugin')) requirements.push('Create plugin structure');
-    if (userRequest.includes('test')) requirements.push('Include comprehensive tests');
-    if (userRequest.includes('document')) requirements.push('Provide documentation');
-    if (userRequest.includes('mcp')) requirements.push('Implement MCP protocol');
-    
+
+    if (userRequest.includes('plugin')) {
+      requirements.push('Create plugin structure');
+    }
+    if (userRequest.includes('test')) {
+      requirements.push('Include comprehensive tests');
+    }
+    if (userRequest.includes('document')) {
+      requirements.push('Provide documentation');
+    }
+    if (userRequest.includes('mcp')) {
+      requirements.push('Implement MCP protocol');
+    }
+
     return requirements.length > 0 ? requirements : ['Implement requested functionality'];
   }
 
@@ -617,14 +653,14 @@ export class AutocoderIntegration {
 
   private extractSuccessCriteria(userRequest: string, projectType: string): string[] {
     const criteria = ['Code compiles without errors', 'Basic functionality works'];
-    
+
     if (projectType === 'mcp_plugin') {
       criteria.push('MCP protocol compliance', 'Plugin loads correctly');
     }
     if (userRequest.includes('test')) {
       criteria.push('All tests pass');
     }
-    
+
     return criteria;
   }
 
@@ -640,22 +676,40 @@ export class AutocoderIntegration {
   }
 
   private determineStepType(text: string, options: any): CodeTrajectoryStep['step_type'] {
-    if (text.includes('analyz') || text.includes('understand')) return 'analysis';
-    if (text.includes('plan') || text.includes('design')) return 'planning';
-    if (text.includes('implement') || text.includes('code') || text.includes('create')) return 'implementation';
-    if (text.includes('test') || text.includes('verify')) return 'testing';
-    if (text.includes('refine') || text.includes('improve')) return 'refinement';
-    if (text.includes('document') || text.includes('readme')) return 'documentation';
-    
+    if (text.includes('analyz') || text.includes('understand')) {
+      return 'analysis';
+    }
+    if (text.includes('plan') || text.includes('design')) {
+      return 'planning';
+    }
+    if (text.includes('implement') || text.includes('code') || text.includes('create')) {
+      return 'implementation';
+    }
+    if (text.includes('test') || text.includes('verify')) {
+      return 'testing';
+    }
+    if (text.includes('refine') || text.includes('improve')) {
+      return 'refinement';
+    }
+    if (text.includes('document') || text.includes('readme')) {
+      return 'documentation';
+    }
+
     return 'implementation'; // Default
   }
 
   private extractApproach(text: string): string {
     // Extract approach from text - simplified implementation
-    if (text.includes('step by step')) return 'incremental_development';
-    if (text.includes('test')) return 'test_driven_development';
-    if (text.includes('prototype')) return 'prototyping';
-    
+    if (text.includes('step by step')) {
+      return 'incremental_development';
+    }
+    if (text.includes('test')) {
+      return 'test_driven_development';
+    }
+    if (text.includes('prototype')) {
+      return 'prototyping';
+    }
+
     return 'standard_development';
   }
 
@@ -666,66 +720,102 @@ export class AutocoderIntegration {
 
   private estimateComplexity(text: string, options: any): number {
     let complexity = 3; // Base complexity
-    
-    if (text.length > 200) complexity += 1;
-    if (text.includes('complex') || text.includes('advanced')) complexity += 2;
-    if (options?.code_generated && options.code_generated.length > 500) complexity += 2;
-    if (options?.files_created && options.files_created.length > 3) complexity += 1;
-    
+
+    if (text.length > 200) {
+      complexity += 1;
+    }
+    if (text.includes('complex') || text.includes('advanced')) {
+      complexity += 2;
+    }
+    if (options?.code_generated && options.code_generated.length > 500) {
+      complexity += 2;
+    }
+    if (options?.files_created && options.files_created.length > 3) {
+      complexity += 1;
+    }
+
     return Math.min(complexity, 10);
   }
 
   private extractToolsUsed(text: string, options: any): string[] {
     const tools: string[] = [];
-    
-    if (text.includes('code') || options?.code_generated) tools.push('code_editor');
-    if (text.includes('test') || options?.test_results) tools.push('test_runner');
-    if (text.includes('file') || options?.files_created) tools.push('file_system');
-    if (text.includes('npm') || text.includes('package')) tools.push('npm_package_manager');
-    
+
+    if (text.includes('code') || options?.code_generated) {
+      tools.push('code_editor');
+    }
+    if (text.includes('test') || options?.test_results) {
+      tools.push('test_runner');
+    }
+    if (text.includes('file') || options?.files_created) {
+      tools.push('file_system');
+    }
+    if (text.includes('npm') || text.includes('package')) {
+      tools.push('npm_package_manager');
+    }
+
     return tools.length > 0 ? tools : ['code_editor'];
   }
 
   private extractKnowledgeDomains(text: string): string[] {
     const domains: string[] = [];
-    
-    if (text.includes('typescript') || text.includes('ts')) domains.push('typescript');
-    if (text.includes('mcp')) domains.push('mcp_protocol');
-    if (text.includes('plugin')) domains.push('plugin_development');
-    if (text.includes('test')) domains.push('testing');
-    if (text.includes('eliza')) domains.push('eliza_core');
-    
+
+    if (text.includes('typescript') || text.includes('ts')) {
+      domains.push('typescript');
+    }
+    if (text.includes('mcp')) {
+      domains.push('mcp_protocol');
+    }
+    if (text.includes('plugin')) {
+      domains.push('plugin_development');
+    }
+    if (text.includes('test')) {
+      domains.push('testing');
+    }
+    if (text.includes('eliza')) {
+      domains.push('eliza_core');
+    }
+
     return domains.length > 0 ? domains : ['general_programming'];
   }
 
   private determineSuccess(text: string, options: any): boolean {
     const successIndicators = ['success', 'working', 'complete', 'done', 'finished'];
     const failureIndicators = ['error', 'failed', 'broken', 'issue', 'problem'];
-    
-    const hasSuccess = successIndicators.some(word => text.toLowerCase().includes(word));
-    const hasFailure = failureIndicators.some(word => text.toLowerCase().includes(word));
-    
-    if (options?.success !== undefined) return options.success;
-    if (hasSuccess && !hasFailure) return true;
-    if (hasFailure && !hasSuccess) return false;
-    
+
+    const hasSuccess = successIndicators.some((word) => text.toLowerCase().includes(word));
+    const hasFailure = failureIndicators.some((word) => text.toLowerCase().includes(word));
+
+    if (options?.success !== undefined) {
+      return options.success;
+    }
+    if (hasSuccess && !hasFailure) {
+      return true;
+    }
+    if (hasFailure && !hasSuccess) {
+      return false;
+    }
+
     return true; // Default to success if unclear
   }
 
   private estimateUserSatisfaction(text: string, success: boolean): number {
     let satisfaction = success ? 0.8 : 0.4;
-    
+
     const positiveWords = ['great', 'excellent', 'perfect', 'amazing', 'love'];
     const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'disappointed'];
-    
+
     for (const word of positiveWords) {
-      if (text.toLowerCase().includes(word)) satisfaction += 0.1;
+      if (text.toLowerCase().includes(word)) {
+        satisfaction += 0.1;
+      }
     }
-    
+
     for (const word of negativeWords) {
-      if (text.toLowerCase().includes(word)) satisfaction -= 0.2;
+      if (text.toLowerCase().includes(word)) {
+        satisfaction -= 0.2;
+      }
     }
-    
+
     return Math.max(0, Math.min(1, satisfaction));
   }
 
@@ -737,7 +827,12 @@ export class AutocoderIntegration {
       reasoning: payload.reasoning || { thinking: 'Processing...', approach: 'standard' },
       action: payload.action || { action_type: 'process', description: 'Processing step' },
       output: payload.output || { result: {}, success: true },
-      metadata: payload.metadata || { complexity_level: 3, confidence: 0.8, tools_used: [] knowledge_domains: [] },
+      metadata: payload.metadata || {
+        complexity_level: 3,
+        confidence: 0.8,
+        tools_used: [],
+        knowledge_domains: [],
+      },
     };
   }
 
@@ -763,17 +858,22 @@ export class AutocoderIntegration {
       name: 'START_CODING_SESSION',
       similes: ['BEGIN_CODING', 'START_DEVELOPMENT', 'CREATE_CODE'],
       description: 'Start a new coding session with trajectory recording',
-      
+
       validate: async (runtime, message) => {
         const text = message.content.text?.toLowerCase() || '';
-        return text.includes('code') || text.includes('plugin') || text.includes('implement') || text.includes('create');
+        return (
+          text.includes('code') ||
+          text.includes('plugin') ||
+          text.includes('implement') ||
+          text.includes('create')
+        );
       },
 
       handler: async (runtime, message, state, options, callback) => {
         try {
           const userRequest = message.content.text || '';
           const projectType = this.detectProjectType(userRequest);
-          
+
           const sessionId = await this.startCodingSession(userRequest, projectType, {
             user_id: message.entityId,
             room_id: message.roomId,
@@ -783,7 +883,8 @@ export class AutocoderIntegration {
 
           await callback?.({
             text: `🚀 Started coding session: ${sessionId}\nProject type: ${projectType}\nI'll record every step of the development process for training.`,
-            thought: `Starting trajectory recording for coding session. This will help train future autocoder models.`,
+            thought:
+              'Starting trajectory recording for coding session. This will help train future autocoder models.',
             actions: ['START_CODING_SESSION'],
           });
 
@@ -795,7 +896,6 @@ export class AutocoderIntegration {
               recording_active: true,
             },
           };
-
         } catch (error) {
           elizaLogger.error('Failed to start coding session:', error);
           await callback?.({
@@ -808,14 +908,17 @@ export class AutocoderIntegration {
 
       examples: [
         [
-          { name: 'User', content: { text: 'Can you help me create an MCP plugin for weather data?' } },
-          { 
-            name: 'Agent', 
-            content: { 
-              text: '🚀 Started coding session: session-123\nProject type: mcp_plugin\nI\'ll record every step of the development process for training.',
+          {
+            name: 'User',
+            content: { text: 'Can you help me create an MCP plugin for weather data?' },
+          },
+          {
+            name: 'Agent',
+            content: {
+              text: "🚀 Started coding session: session-123\nProject type: mcp_plugin\nI'll record every step of the development process for training.",
               thought: 'Starting trajectory recording for MCP plugin creation.',
               actions: ['START_CODING_SESSION'],
-            } 
+            },
           },
         ],
       ],

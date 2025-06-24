@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it  } from 'bun:test';
 import { execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
@@ -18,16 +18,16 @@ describe('ElizaOS Dev Commands', () => {
 
     const scriptDir = join(__dirname, '..');
     cliPath = join(scriptDir, '../dist/index.js');
-    
+
     if (!existsSync(cliPath)) {
       console.log('CLI not built, building now...');
       const cliPackageDir = join(scriptDir, '..');
-      execSync('bun run build', { 
+      execSync('bun run build', {
         cwd: cliPackageDir,
         stdio: 'inherit'
       });
     }
-    
+
     elizaosCmd = `bun "${cliPath}"`;
     projectDir = join(testTmpDir, 'test-project');
     process.chdir(testTmpDir);

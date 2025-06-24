@@ -1,12 +1,5 @@
-import {
-  type Action,
-  type IAgentRuntime,
-  type Memory,
-  type State,
-  type HandlerCallback,
-  type ActionExample,
-  elizaLogger,
-} from '@elizaos/core';
+import type { Action, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';
+import { elizaLogger } from '@elizaos/core';
 import { z } from 'zod';
 import { N8nToPluginService, PluginGenerationSpec } from '../services/n8n-to-plugin-service.js';
 import { N8nWorkflowService } from '../services/n8n-workflow-service.js';
@@ -15,77 +8,281 @@ import { N8nWorkflowService } from '../services/n8n-workflow-service.js';
 const PluginGenerationSchema = z.object({
   pluginName: z.string().describe('Name of the plugin to generate'),
   pluginDescription: z.string().describe('Description of the plugin'),
-  workflows: z
-    .array(
-      z.object({
-        name: z.string(),
-        description: z.string(),
-        nodes: z.array(z.any()).optional(),
-        triggers: z.array(z.any()).optional(),
-        connections: z.array(z.any()).optional(),
-      })
-    )
-    .optional(),
+  workflows: z.array(z.object({
+    name: z.string(),
+    description: z.string(),
+    nodes: z.array(z.any()).optional(),
+    triggers: z.array(z.any()).optional(),
+    connections: z.array(z.any()).optional(),
+  })).optional(),
   workflowIds: z.array(z.string()).optional().describe('IDs of existing workflows to convert'),
-  config: z
-    .object({
-      enableCaching: z.boolean().optional().default(true),
-      enableStateManagement: z.boolean().optional().default(true),
-      cacheTTL: z.number().optional().default(300),
-      generateTests: z.boolean().optional().default(true),
-      generateDocs: z.boolean().optional().default(true),
-    })
-    .optional(),
+  config: z.object({
+    enableCaching: z.boolean().optional().default(true),
+    enableStateManagement: z.boolean().optional().default(true),
+    cacheTTL: z.number().optional().default(300),
+    generateTests: z.boolean().optional().default(true),
+    generateDocs: z.boolean().optional().default(true),
+  }).optional(),
 });
 
-// Helper functions
-function extractPluginDescription(text: string): string {
-  return text.replace(/create|make|build|generate|plugin|elizaos|I need a?/gi, '').trim();
-}
+/**
+ * Action to convert n8n workflows into ElizaOS plugin
+ */
+export const convertN8nToPluginAction: Action = {
+  name: 'convertN8nToPlugin',
+  description: 'Convert n8n workflows into a complete ElizaOS plugin with actions, providers, and services',
+  similes: [
+    'convert n8n to plugin',
+    'generate plugin from n8n',
+    'create plugin from workflows',
+    'transform workflows to plugin',
+    'n8n workflow to elizaos',
+  ],
 
-function extractProjectId(text: string): string | null {
-  // Extract UUID pattern from text
-  const match = text.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
-  return match ? match[0] : null;
-}
-
-// Helper to generate workflow specifications
-async function generateWorkflowSpecs(runtime: IAgentRuntime, description: string): Promise<any[]> {
-  const anthropic = runtime.getSetting('ANTHROPIC_API_KEY')
-    ? new (await import('@anthropic-ai/sdk')).default({
-        apiKey: runtime.getSetting('ANTHROPIC_API_KEY'),
-      })
-    : null;
-
-  if (!anthropic) {
-    // Fallback: create basic workflow specs
-    return [
+  examples: [
+    [
       {
-        name: 'Main Workflow',
-        description: description,
-        nodes: [{ type: 'n8n-nodes-base.webhook', name: 'Webhook' }],
+        name: '{{user}}',
+        content: {
+          text: 'Convert my weather monitoring n8n workflow into an ElizaOS plugin',
+        },
       },
-    ];
-  }
+      {
+        name: '{{agent}}',
+        content: {
+          text: `I'll convert your weather monitoring workflow into an ElizaOS plugin. This will create appropriate actions, providers, or services based on the workflow characteristics.
 
-  const prompt = `Design n8n workflows for this plugin requirement:
+The conversion will analyze your workflow and:
+- Map webhook triggers to actions
+- Convert data fetching nodes to providers  
+- Transform scheduled/long-running workflows to services
+- Add caching and state management where appropriate
+
+Let me start the conversion process...`,
+          actions: ['CONVERT_N8N_TO_PLUGIN'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Create a plugin from these n8n workflows with caching enabled',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: `I'll create a plugin from your n8n workflows with caching enabled. Each workflow will be analyzed and converted to the most appropriate ElizaOS component type.
+
+The plugin will include:
+- Proper component mapping based on workflow characteristics
+- Caching for data providers and services
+- State management for persistent data
+- Generated tests for all components
+
+Starting the plugin generation now...`,
+          actions: ['CONVERT_N8N_TO_PLUGIN'],
+        },
+      },
+    ],
+  ],
+
+  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+    const n8nToPluginService = runtime.getService('n8n-to-plugin');
+    return !!n8nToPluginService;
+  },
+
+  handler: async (
+    runtime: IAgentRuntime,
+    message: Memory,
+    state?: State,
+    options?: Record<string, any>,
+    callback?: HandlerCallback
+  ): Promise<void> => {
+    try {
+      const n8nToPluginService = runtime.getService('n8n-to-plugin') as N8nToPluginService;
+      const n8nWorkflowService = runtime.getService('n8n-workflow') as N8nWorkflowService;
+
+      if (!n8nToPluginService) {
+        throw new Error('N8n to Plugin service not available');
+      }
+
+      let spec: PluginGenerationSpec;
+
+      // Check if user provided a specification
+      const content = message.content?.text || '';
+      const specMatch = content.match(/\{[\s\S]*\}/);
+
+      if (specMatch) {
+        // Parse provided specification
+        const parsedSpec = JSON.parse(specMatch[0]);
+        PluginGenerationSchema.parse(parsedSpec);
+
+        // If workflowIds provided, fetch the workflows
+        if (parsedSpec.workflowIds && parsedSpec.workflowIds.length > 0) {
+          const workflows = [];
+          for (const id of parsedSpec.workflowIds) {
+            const job = n8nWorkflowService?.getJobStatus(id);
+            if (job?.result?.workflowJson) {
+              workflows.push({
+                name: job.specification.name,
+                description: job.specification.description,
+                ...job.specification,
+              });
+            }
+          }
+          parsedSpec.workflows = workflows;
+        }
+
+        spec = {
+          name: parsedSpec.pluginName,
+          description: parsedSpec.pluginDescription,
+          workflows: parsedSpec.workflows || [],
+          config: parsedSpec.config,
+        };
+      } else {
+        // Generate from natural language
+        const description = content
+          .replace(/convert|create|generate|plugin|n8n|workflow|elizaos/gi, '')
+          .trim();
+
+        spec = await generateSpecFromDescription(runtime, description);
+      }
+
+      // Start conversion
+      const jobId = await n8nToPluginService.convertWorkflowsToPlugin(spec);
+
+      const response = `🚀 Plugin generation from n8n workflows started!
+
+📋 Job ID: ${jobId}
+📦 Plugin Name: ${spec.name}
+📝 Description: ${spec.description}
+🔄 Workflows to convert: ${spec.workflows.length}
+
+Configuration:
+${spec.config?.enableCaching ? '✅ Caching enabled' : '❌ Caching disabled'}
+${spec.config?.enableStateManagement ? '✅ State management enabled' : '❌ State management disabled'}
+${spec.config?.generateTests ? '✅ Tests will be generated' : '❌ No tests'}
+${spec.config?.generateDocs ? '✅ Documentation will be generated' : '❌ No docs'}
+
+The workflows will be analyzed and converted to appropriate ElizaOS components:
+• Webhook triggers → Actions
+• Data fetching workflows → Providers
+• Long-running/scheduled workflows → Services
+
+Use 'checkN8nPluginStatus' to monitor the generation progress.`;
+
+      if (callback) {
+        await callback({
+          text: response,
+          action: 'N8N_PLUGIN_GENERATION_STARTED',
+          data: { jobId, spec },
+        });
+      }
+    } catch (error) {
+      const errorMessage = `Failed to convert n8n workflows to plugin: ${error instanceof Error ? error.message : String(error)}`;
+      elizaLogger.error('[ConvertN8nToPlugin]', error);
+
+      if (callback) {
+        await callback({
+          text: errorMessage,
+          error: true,
+        });
+      }
+    }
+  },
+
+  // Helper method to generate spec from description
+  async generateSpecFromDescription(
+    runtime: IAgentRuntime,
+    description: string
+  ): Promise<PluginGenerationSpec> {
+    const anthropic = runtime.getSetting('ANTHROPIC_API_KEY') ?
+      new (await import('@anthropic-ai/sdk')).default({
+        apiKey: runtime.getSetting('ANTHROPIC_API_KEY')
+      }) : null;
+
+    if (!anthropic) {
+      throw new Error('Anthropic API key required for natural language conversion');
+    }
+
+    const prompt = `Convert this description into a plugin generation specification:
 
 "${description}"
 
-Create an array of workflow specifications. Consider:
-- User-triggered actions (webhook workflows)
-- Data fetching operations (HTTP request workflows)  
-- Scheduled/background tasks (cron workflows)
-- Integration points with external services
+Generate a JSON object with:
+- pluginName: A valid npm package name (e.g., "@elizaos/plugin-weather")
+- pluginDescription: Clear description of what the plugin does
+- workflows: Array of n8n workflow specifications that would implement this functionality
 
-Each workflow should have:
-- name: Clear workflow name
-- description: What it does
-- nodes: Array of n8n nodes needed
-- triggers: Any trigger configurations
-- connections: How nodes connect
+Consider what types of workflows would be needed:
+- Webhook-triggered workflows for user actions
+- Data fetching workflows for information providers
+- Scheduled workflows for background services
 
-Return ONLY a JSON array of workflow specifications.`;
+Return ONLY valid JSON.`;
+
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 4000,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const content = response.content[0];
+    if (content.type !== 'text') {
+      throw new Error('Unexpected response from Claude');
+    }
+
+    const jsonMatch = content.text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No valid JSON found in response');
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    return {
+      name: parsed.pluginName,
+      description: parsed.pluginDescription,
+      workflows: parsed.workflows || [],
+      config: {
+        enableCaching: true,
+        enableStateManagement: true,
+        generateTests: true,
+        generateDocs: true,
+      },
+    };
+  },
+};
+
+// Helper method to generate spec from description
+async function generateSpecFromDescription(
+  runtime: IAgentRuntime,
+  description: string
+): Promise<PluginGenerationSpec> {
+  const anthropic = runtime.getSetting('ANTHROPIC_API_KEY') ?
+    new (await import('@anthropic-ai/sdk')).default({
+      apiKey: runtime.getSetting('ANTHROPIC_API_KEY')
+    }) : null;
+
+  if (!anthropic) {
+    throw new Error('Anthropic API key required for natural language conversion');
+  }
+
+  const prompt = `Convert this description into a plugin generation specification:
+
+"${description}"
+
+Generate a JSON object with:
+- pluginName: A valid npm package name (e.g., "@elizaos/plugin-weather")
+- pluginDescription: Clear description of what the plugin does
+- workflows: Array of n8n workflow specifications that would implement this functionality
+
+Consider what types of workflows would be needed:
+- Webhook-triggered workflows for user actions
+- Data fetching workflows for information providers
+- Scheduled workflows for background services
+
+Return ONLY valid JSON.`;
 
   const response = await anthropic.messages.create({
     model: 'claude-3-5-sonnet-20241022',
@@ -98,97 +295,34 @@ Return ONLY a JSON array of workflow specifications.`;
     throw new Error('Unexpected response from Claude');
   }
 
-  const jsonMatch = content.text.match(/\[[\s\S]*\]/);
+  const jsonMatch = content.text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    throw new Error('No valid JSON array found in response');
+    throw new Error('No valid JSON found in response');
   }
 
-  return JSON.parse(jsonMatch[0]);
-}
-
-// Helper to generate plugin name
-function generatePluginName(description: string): string {
-  const words = description.toLowerCase().split(/\s+/);
-  const mainWord = words.find((w) => w.length > 4) || words[0] || 'plugin';
-  return `@elizaos/plugin-${mainWord.replace(/[^a-z0-9]/g, '')}`;
-}
-
-// Helper to wait for workflows to complete
-async function waitForWorkflows(
-  service: N8nWorkflowService,
-  jobIds: string[],
-  timeout: number
-): Promise<void> {
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < timeout) {
-    const allCompleted = jobIds.every((id) => {
-      const job = service.getJobStatus(id);
-      return job && (job.status === 'completed' || job.status === 'failed');
-    });
-
-    if (allCompleted) {
-      return;
-    }
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
-
-  elizaLogger.warn('[CreatePlugin] Workflow generation timeout - proceeding anyway');
+  const parsed = JSON.parse(jsonMatch[0]);
+  return {
+    name: parsed.pluginName,
+    description: parsed.pluginDescription,
+    workflows: parsed.workflows || [],
+    config: {
+      enableCaching: true,
+      enableStateManagement: true,
+      generateTests: true,
+      generateDocs: true,
+    },
+  };
 }
 
 /**
- * @description Action to create ElizaOS plugins from natural language descriptions.
- * Users can describe what they want the plugin to do, and the system will
- * automatically generate n8n workflows and convert them to plugin components.
+ * Action to check plugin generation status
  */
-export const createPluginAction: Action = {
-  name: 'createPlugin',
-  similes: [
-    'create a plugin',
-    'make a plugin',
-    'build a plugin',
-    'generate a plugin',
-    'plugin for',
-    'plugin that',
-    'I need a plugin',
-    'create elizaos plugin',
-  ],
-  description: 'Create a new ElizaOS plugin from a natural language description',
-  examples: [
-    [
-      {
-        name: '{{userName}}',
-        content: {
-          text: 'Create a plugin that monitors GitHub repositories for new issues',
-        },
-      },
-      {
-        name: 'assistant',
-        content: {
-          text: "I'll create a GitHub monitoring plugin for you. The plugin will check for new issues and notify you when they appear.",
-          actions: ['createPlugin'],
-        },
-      },
-    ],
-    [
-      {
-        name: '{{userName}}',
-        content: {
-          text: 'I need a plugin to analyze social media sentiment',
-        },
-      },
-      {
-        name: 'assistant',
-        content: {
-          text: "I'll create a social media sentiment analysis plugin. It will fetch posts and analyze their sentiment.",
-          actions: ['createPlugin'],
-        },
-      },
-    ],
-  ] as ActionExample[][],
+export const checkN8nPluginStatusAction: Action = {
+  name: 'checkN8nPluginStatus',
+  description: 'Check the status of n8n to plugin conversion job',
+  similes: ['plugin status', 'conversion progress', 'check plugin generation'],
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+  validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const service = runtime.getService('n8n-to-plugin');
     return !!service;
   },
@@ -197,223 +331,302 @@ export const createPluginAction: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     state?: State,
-    options?: { [key: string]: unknown },
+    options?: Record<string, any>,
     callback?: HandlerCallback
   ): Promise<void> => {
-    try {
-      elizaLogger.info('[CreatePlugin] Designing plugin architecture from description');
+    const service = runtime.getService('n8n-to-plugin') as N8nToPluginService;
 
-      // Extract plugin description from message
-      const description = extractPluginDescription(message.content?.text || '');
+    if (!service) {
+      throw new Error('N8n to Plugin service not available');
+    }
 
-      if (!description) {
-        await callback?.({
-          text: 'Please describe what you want the plugin to do. For example: "Create a plugin that monitors weather and sends alerts"',
-          content: { error: 'No plugin description provided' },
+    const jobs = service.getAllJobs();
+
+    if (jobs.length === 0) {
+      if (callback) {
+        await callback({
+          text: 'No plugin generation jobs found.',
         });
+      }
+      return;
+    }
+
+    // Get specific job if ID provided
+    const jobIdMatch = message.content.text.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
+
+    if (jobIdMatch) {
+      const job = service.getJobStatus(jobIdMatch[0]);
+      if (!job) {
+        if (callback) {
+          await callback({
+            text: `Job ${jobIdMatch[0]} not found.`,
+          });
+        }
         return;
       }
 
-      // Get the N8nToPluginService
-      const service = runtime.getService('n8n-to-plugin') as any;
-      if (!service) {
-        throw new Error('N8n to plugin service not available');
-      }
+      jobs.length = 0;
+      jobs.push(job);
+    }
 
-      // Create plugin from description
-      const result = await service.createPluginFromDescription(description);
+    const response = `📊 Plugin Generation Status
 
-      await callback?.({
-        text: `Creating plugin from description: "${description}"\n\nProject ID: ${result.projectId}\nStatus: ${result.status}`,
-        content: result,
-      });
-    } catch (error) {
-      elizaLogger.error('[CreatePlugin]', { error });
-      await callback?.({
-        text: `Failed to create plugin: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        content: { error: error instanceof Error ? error.message : 'Unknown error' },
+${jobs.map(job => {
+    const statusEmoji = {
+      pending: '⏳',
+      analyzing: '🔍',
+      generating: '⚙️',
+      building: '🔨',
+      testing: '🧪',
+      completed: '✅',
+      failed: '❌',
+    }[job.status] || '❓';
+
+    let details = `${statusEmoji} Job: ${job.id}
+├─ Plugin: ${job.spec.name}
+├─ Status: ${job.status}
+├─ Progress: ${job.progress}%
+├─ Workflows: ${job.spec.workflows.length}
+├─ Mappings: ${job.mappings.length} components`;
+
+    if (job.mappings.length > 0) {
+      details += '\n├─ Components:';
+      const actionCount = job.mappings.filter(m => m.componentType === 'action').length;
+      const providerCount = job.mappings.filter(m => m.componentType === 'provider').length;
+      const serviceCount = job.mappings.filter(m => m.componentType === 'service').length;
+
+      if (actionCount > 0) {details += `\n│  ├─ Actions: ${actionCount}`;}
+      if (providerCount > 0) {details += `\n│  ├─ Providers: ${providerCount}`;}
+      if (serviceCount > 0) {details += `\n│  └─ Services: ${serviceCount}`;}
+    }
+
+    if (job.status === 'completed' && job.outputPath) {
+      details += `\n├─ Output: ${job.outputPath}`;
+      details += '\n└─ ✅ Plugin ready for use!';
+    } else if (job.status === 'failed' && job.error) {
+      details += `\n└─ ❌ Error: ${job.error}`;
+    } else {
+      details += `\n└─ ⏳ Started: ${new Date(job.startedAt).toLocaleString()}`;
+    }
+
+    return details;
+  }).join('\n\n')}`;
+
+    if (callback) {
+      await callback({
+        text: response,
+        data: { jobs },
       });
     }
   },
 };
 
 /**
- * @description Action to check the status of plugin generation
+ * Action to create a complete ElizaOS plugin from n8n workflow description
  */
-export const checkPluginStatusAction: Action = {
-  name: 'checkPluginStatus',
+export const createN8nPluginFromDescriptionAction: Action = {
+  name: 'createN8nPluginFromDescription',
+  description: 'Create a complete ElizaOS plugin by first generating n8n workflows then converting them',
   similes: [
-    'check plugin status',
-    'plugin status',
-    'check plugin',
-    'plugin progress',
-    'generation status',
+    'create plugin with n8n',
+    'generate elizaos plugin using workflows',
+    'build plugin from workflow description',
   ],
-  description: 'Check the status of a plugin generation job',
+
   examples: [
     [
       {
-        name: '{{userName}}',
-        content: {
-          text: 'Check the status of my plugin generation',
-        },
-      },
-      {
-        name: 'assistant',
-        content: {
-          text: "I'll check the status of your plugin generation.",
-          actions: ['checkPluginStatus'],
-        },
+        user: 'Create a weather monitoring plugin that checks temperature every hour and alerts on extreme conditions',
+        assistant: `I'll create a weather monitoring plugin for you. First, I'll design the n8n workflows needed, then convert them into an ElizaOS plugin.
+
+This will include:
+1. A scheduled workflow to check weather every hour (→ Service)
+2. A webhook workflow for manual weather checks (→ Action)
+3. A data fetching workflow for weather providers (→ Provider)
+
+The plugin will have caching, state management, and alert functionality built-in.`,
       },
     ],
-  ] as ActionExample[][],
+  ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
-    const service = runtime.getService('n8n-to-plugin');
-    return !!service;
+  validate: async (runtime: IAgentRuntime): Promise<boolean> => {
+    const n8nService = runtime.getService('n8n-workflow');
+    const n8nToPluginService = runtime.getService('n8n-to-plugin');
+    return !!(n8nService && n8nToPluginService);
   },
 
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
     state?: State,
-    options?: { [key: string]: unknown },
-    callback?: HandlerCallback
-  ): Promise<void> => {
-    const service = runtime.getService('n8n-to-plugin') as any;
-
-    if (!service) {
-      throw new Error('Plugin generation service not available');
-    }
-
-    // Extract project ID from message
-    const projectId = extractProjectId(message.content?.text || '');
-
-    if (!projectId) {
-      await callback?.({
-        text: 'Please provide the project ID to check status. You can find it in the response when you created the plugin.',
-        content: { error: 'No project ID provided' },
-      });
-      return;
-    }
-
-    try {
-      const status = await service.checkPluginStatus(projectId);
-
-      let statusText = '';
-      if (status.status === 'completed') {
-        statusText = `Plugin generation completed!\n\nPlugin Path: ${status.result?.pluginPath}\n\nComponents created:\n`;
-        if (status.result?.components) {
-          statusText += `- Actions: ${status.result.components.actions?.join(', ') || 'None'}\n`;
-          statusText += `- Providers: ${status.result.components.providers?.join(', ') || 'None'}\n`;
-          statusText += `- Services: ${status.result.components.services?.join(', ') || 'None'}`;
-        }
-      } else if (status.status === 'failed') {
-        statusText = `Plugin generation failed: ${status.error || 'Unknown error'}`;
-      } else {
-        statusText = `Plugin generation is ${status.status}`;
-        if (status.progress) {
-          statusText += ` (${status.progress}% complete)`;
-        }
-      }
-
-      await callback?.({
-        text: statusText,
-        content: status,
-      });
-    } catch (error) {
-      await callback?.({
-        text: `Failed to check plugin status: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        content: { error: error instanceof Error ? error.message : 'Unknown error' },
-      });
-    }
-  },
-};
-
-/**
- * @description Advanced action for creating plugins with custom n8n workflows
- */
-export const createPluginWithWorkflowsAction: Action = {
-  name: 'createPluginWithWorkflows',
-  similes: [
-    'create plugin with workflows',
-    'design plugin workflows',
-    'create plugin with custom workflows',
-    'advanced plugin creation',
-  ],
-  description: 'Create a plugin with custom n8n workflow designs',
-  examples: [
-    [
-      {
-        name: '{{userName}}',
-        content: {
-          text: 'Create a plugin with custom workflows for data processing',
-        },
-      },
-      {
-        name: 'assistant',
-        content: {
-          text: "I'll create a plugin with custom workflow designs for data processing.",
-          actions: ['createPluginWithWorkflows'],
-        },
-      },
-    ],
-  ] as ActionExample[][],
-
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
-    const service = runtime.getService('n8n-to-plugin');
-    return !!service;
-  },
-
-  handler: async (
-    runtime: IAgentRuntime,
-    message: Memory,
-    state?: State,
-    options?: { [key: string]: unknown },
+    options?: Record<string, any>,
     callback?: HandlerCallback
   ): Promise<void> => {
     try {
-      elizaLogger.info('[CreatePluginWithWorkflows] Designing custom workflows');
+      const n8nService = runtime.getService('n8n-workflow') as N8nWorkflowService;
+      const n8nToPluginService = runtime.getService('n8n-to-plugin') as N8nToPluginService;
 
-      const service = runtime.getService('n8n-to-plugin') as any;
-      if (!service) {
-        throw new Error('N8n to plugin service not available');
+      if (!n8nService || !n8nToPluginService) {
+        throw new Error('Required services not available');
       }
 
-      // Extract description and workflows
-      const description = extractPluginDescription(message.content?.text || '');
-      const workflows = (message.content as any)?.workflows || [];
+      // Extract plugin details from message
+      const description = message.content.text
+        .replace(/create|plugin|n8n|workflow|elizaos/gi, '')
+        .trim();
 
-      const result = await service.createPluginWithWorkflows(
+      // Step 1: Generate workflow specifications
+      elizaLogger.info('[CreateN8nPlugin] Generating workflow specifications from description');
+
+      const workflowSpecs = await this.generateWorkflowSpecs(runtime, description);
+
+      // Step 2: Create n8n workflows
+      const workflowJobIds: string[] = [];
+      for (const spec of workflowSpecs) {
+        const jobId = await n8nService.createWorkflow(spec);
+        workflowJobIds.push(jobId);
+      }
+
+      // Wait for workflows to complete (with timeout)
+      await this.waitForWorkflows(n8nService, workflowJobIds, 30000); // 30 second timeout
+
+      // Step 3: Convert workflows to plugin
+      const pluginSpec: PluginGenerationSpec = {
+        name: this.generatePluginName(description),
         description,
-        workflows.length > 0 ? workflows : undefined
-      );
+        workflows: workflowSpecs,
+        config: {
+          enableCaching: true,
+          enableStateManagement: true,
+          generateTests: true,
+          generateDocs: true,
+        },
+      };
 
-      await callback?.({
-        text: `Creating plugin with custom workflows\n\nProject ID: ${result.projectId}\nStatus: ${result.status}`,
-        content: result,
-      });
+      const pluginJobId = await n8nToPluginService.convertWorkflowsToPlugin(pluginSpec);
+
+      const response = `🎉 Full plugin creation pipeline started!
+
+📋 Workflow Generation:
+${workflowSpecs.map((spec, i) => `  ${i + 1}. ${spec.name} - ${spec.description}`).join('\n')}
+
+🔄 Workflow Job IDs: ${workflowJobIds.join(', ')}
+
+📦 Plugin Generation:
+  • Job ID: ${pluginJobId}
+  • Name: ${pluginSpec.name}
+  • Components: Will be determined based on workflow analysis
+
+The system will:
+1. Generate ${workflowSpecs.length} n8n workflows
+2. Analyze each workflow's characteristics
+3. Map workflows to appropriate ElizaOS components
+4. Generate complete plugin code with tests
+
+Use 'checkN8nPluginStatus ${pluginJobId}' to monitor progress.`;
+
+      if (callback) {
+        await callback({
+          text: response,
+          action: 'FULL_PLUGIN_PIPELINE_STARTED',
+          data: { workflowJobIds, pluginJobId, pluginSpec },
+        });
+      }
     } catch (error) {
-      elizaLogger.error('[CreatePluginWithWorkflows]', { error });
-      await callback?.({
-        text: `Failed to create plugin with workflows: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        content: { error: error instanceof Error ? error.message : 'Unknown error' },
-      });
+      const errorMessage = `Failed to create plugin from description: ${error instanceof Error ? error.message : String(error)}`;
+      elizaLogger.error('[CreateN8nPluginFromDescription]', error);
+
+      if (callback) {
+        await callback({
+          text: errorMessage,
+          error: true,
+        });
+      }
     }
   },
+
+  // Helper to generate workflow specifications
+  async generateWorkflowSpecs(runtime: IAgentRuntime, description: string): Promise<any[]> {
+    const anthropic = runtime.getSetting('ANTHROPIC_API_KEY') ?
+      new (await import('@anthropic-ai/sdk')).default({
+        apiKey: runtime.getSetting('ANTHROPIC_API_KEY')
+      }) : null;
+
+    if (!anthropic) {
+      // Fallback: create basic workflow specs
+      return [{
+        name: 'Main Workflow',
+        description,
+        nodes: [{ type: 'n8n-nodes-base.webhook', name: 'Webhook' }],
+      }];
+    }
+
+    const prompt = `Design n8n workflows for this plugin requirement:
+
+"${description}"
+
+Create an array of workflow specifications. Consider:
+- User-triggered actions (webhook workflows)
+- Data fetching operations (HTTP request workflows)
+- Scheduled/background tasks (cron workflows)
+- Integration points with external services
+
+Each workflow should have:
+- name: Clear workflow name
+- description: What it does
+- nodes: Array of n8n nodes needed
+- triggers: Any trigger configurations
+- connections: How nodes connect
+
+Return ONLY a JSON array of workflow specifications.`;
+
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 4000,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const content = response.content[0];
+    if (content.type !== 'text') {
+      throw new Error('Unexpected response from Claude');
+    }
+
+    const jsonMatch = content.text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      throw new Error('No valid JSON array found in response');
+    }
+
+    return JSON.parse(jsonMatch[0]);
+  },
+
+  // Helper to generate plugin name
+  generatePluginName(description: string): string {
+    const words = description.toLowerCase().split(/\s+/);
+    const mainWord = words.find(w => w.length > 4) || words[0] || 'plugin';
+    return `@elizaos/plugin-${mainWord.replace(/[^a-z0-9]/g, '')}`;
+  },
+
+  // Helper to wait for workflows to complete
+  async waitForWorkflows(
+    service: N8nWorkflowService,
+    jobIds: string[],
+    timeout: number
+  ): Promise<void> {
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < timeout) {
+      const allCompleted = jobIds.every(id => {
+        const job = service.getJobStatus(id);
+        return job && (job.status === 'completed' || job.status === 'failed');
+      });
+
+      if (allCompleted) {
+        return;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    elizaLogger.warn('[CreateN8nPlugin] Workflow generation timeout - proceeding anyway');
+  },
 };
-
-/**
- * Legacy action name for backward compatibility
- */
-export const convertN8nToPluginAction = createPluginAction;
-
-/**
- * Legacy action names for backward compatibility
- */
-export const checkN8nPluginStatusAction = checkPluginStatusAction;
-
-/**
- * Legacy action name for backward compatibility
- */
-export const createN8nPluginFromDescriptionAction = createPluginWithWorkflowsAction;

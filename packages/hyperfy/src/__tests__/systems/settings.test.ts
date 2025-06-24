@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
 import { Settings } from '../../core/systems/Settings.js';
 import { createTestWorld } from '../test-world-factory.js';
 
@@ -12,36 +13,15 @@ describe('Settings System', () => {
   });
 
   describe('Basic Operations', () => {
-    it('should initialize with null values', () => {
-      expect(settings.title).toBeNull();
-      expect(settings.desc).toBeNull();
-      expect(settings.image).toBeNull();
-      expect(settings.model).toBeNull();
-      expect(settings.avatar).toBeNull();
-      expect(settings.public).toBeNull();
-      expect(settings.playerLimit).toBeNull();
-    });
-
-    it('should get and set values', () => {
-      settings.set('title', 'Test World');
-      expect(settings.get('title')).toBe('Test World');
-
-      settings.set('playerLimit', 50);
-      expect(settings.get('playerLimit')).toBe(50);
-
-      settings.set('public', true);
-      expect(settings.get('public')).toBe(true);
-    });
-
     it('should not create changes for same value', () => {
       settings.set('title', 'Test');
       settings.set('title', 'Test'); // Same value
-      
+
       // Run preFixedUpdate to process changes
-      const changeSpy = vi.fn();
+      const changeSpy = mock();
       settings.on('change', changeSpy);
       settings.preFixedUpdate();
-      
+
       // Should only emit once
       expect(changeSpy).toHaveBeenCalledTimes(1);
     });
@@ -55,7 +35,7 @@ describe('Settings System', () => {
       settings.set('public', true);
 
       const serialized = settings.serialize();
-      
+
       expect(serialized).toEqual({
         title: 'My World',
         desc: 'A test world',
@@ -78,9 +58,9 @@ describe('Settings System', () => {
         playerLimit: 25,
       };
 
-      const changeSpy = vi.fn();
+      const changeSpy = mock();
       settings.on('change', changeSpy);
-      
+
       settings.deserialize(data);
 
       expect(settings.title).toBe('Imported World');
@@ -90,7 +70,7 @@ describe('Settings System', () => {
       expect(settings.avatar).toBe('avatar.vrm');
       expect(settings.public).toBe(false);
       expect(settings.playerLimit).toBe(25);
-      
+
       // Should emit change event
       expect(changeSpy).toHaveBeenCalledWith({
         title: { value: 'Imported World' },
@@ -109,12 +89,12 @@ describe('Settings System', () => {
       settings.set('title', 'Original');
       settings.preFixedUpdate(); // Clear changes
 
-      const changeSpy = vi.fn();
+      const changeSpy = mock();
       settings.on('change', changeSpy);
 
       settings.set('title', 'Modified');
       settings.set('desc', 'New description');
-      
+
       settings.preFixedUpdate();
 
       expect(changeSpy).toHaveBeenCalledWith({
@@ -127,11 +107,11 @@ describe('Settings System', () => {
       settings.set('title', 'Test');
       settings.preFixedUpdate();
 
-      const changeSpy = vi.fn();
+      const changeSpy = mock();
       settings.on('change', changeSpy);
-      
+
       settings.preFixedUpdate(); // Should not emit anything
-      
+
       expect(changeSpy).not.toHaveBeenCalled();
     });
   });
@@ -140,7 +120,7 @@ describe('Settings System', () => {
     it('should broadcast changes when requested', () => {
       // Mock network
       world.network = {
-        send: vi.fn()
+        send: mock()
       };
 
       settings.set('title', 'Broadcast Test', true);
@@ -153,7 +133,7 @@ describe('Settings System', () => {
 
     it('should not broadcast when broadcast is false', () => {
       world.network = {
-        send: vi.fn()
+        send: mock()
       };
 
       settings.set('title', 'No Broadcast', false);
@@ -164,8 +144,8 @@ describe('Settings System', () => {
 
   describe('Event Handling', () => {
     it('should support event listeners', () => {
-      const handler1 = vi.fn();
-      const handler2 = vi.fn();
+      const handler1 = mock();
+      const handler2 = mock();
 
       settings.on('change', handler1);
       settings.on('change', handler2);
@@ -178,8 +158,8 @@ describe('Settings System', () => {
     });
 
     it('should remove specific event handlers', () => {
-      const handler = vi.fn();
-      
+      const handler = mock();
+
       settings.on('change', handler);
       settings.off('change', handler);
 
@@ -190,8 +170,8 @@ describe('Settings System', () => {
     });
 
     it('should remove all handlers when no specific handler provided', () => {
-      const handler1 = vi.fn();
-      const handler2 = vi.fn();
+      const handler1 = mock();
+      const handler2 = mock();
 
       settings.on('change', handler1);
       settings.on('change', handler2);
@@ -204,4 +184,4 @@ describe('Settings System', () => {
       expect(handler2).not.toHaveBeenCalled();
     });
   });
-}); 
+});

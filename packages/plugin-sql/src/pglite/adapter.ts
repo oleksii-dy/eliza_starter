@@ -72,7 +72,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
    * @returns {Promise<void>}
    */
   async runMigrations(): Promise<void> {
-    logger.info(`[PgliteDatabaseAdapter] Starting unified migration process`);
+    logger.info('[PgliteDatabaseAdapter] Starting unified migration process');
 
     // Ensure db instance is properly initialized before creating migrator
     if (!this.db) {
@@ -89,12 +89,12 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
     // Verify tables were actually created before marking complete
     try {
       // Use raw SQL queries for verification to avoid any schema-related issues
-      await this.db.execute(sql.raw(`SELECT 1 FROM agents WHERE 1=0`));
-      await this.db.execute(sql.raw(`SELECT 1 FROM entities WHERE 1=0`));
+      await this.db.execute(sql.raw('SELECT 1 FROM agents WHERE 1=0'));
+      await this.db.execute(sql.raw('SELECT 1 FROM entities WHERE 1=0'));
       this.migrationsComplete = true;
-      logger.info(`[PgliteDatabaseAdapter] Unified migration completed and verified`);
+      logger.info('[PgliteDatabaseAdapter] Unified migration completed and verified');
     } catch (error) {
-      logger.error(`[PgliteDatabaseAdapter] Migration verification failed:`, error);
+      logger.error('[PgliteDatabaseAdapter] Migration verification failed:', error);
       this.migrationsComplete = false;
       throw new Error('Migration completed but table verification failed');
     }
@@ -139,7 +139,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
   async init(): Promise<void> {
     logger.info('PgliteDatabaseAdapter: Initializing');
     logger.debug(`Adapter init() called for agent ${this.agentId}`);
-    logger.debug(`Migrations complete flag:`, this.migrationsComplete);
+    logger.debug('Migrations complete flag:', this.migrationsComplete);
     // Don't check connection status yet - manager might not be initialized
 
     // If already initialized and migrations complete, skip
@@ -311,7 +311,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
     try {
       // PGLite uses PostgreSQL's information_schema
       const result = await this.db.execute(
-        sql.raw(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`)
+        sql.raw('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\'')
       );
 
       // Handle different result formats from different database adapters

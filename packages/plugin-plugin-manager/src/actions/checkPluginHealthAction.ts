@@ -117,7 +117,7 @@ export const checkPluginHealthAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State) => {
     const pluginManager = runtime.getService(PluginManagerServiceType.PLUGIN_MANAGER);
     return !!pluginManager;
   },
@@ -149,10 +149,10 @@ export const checkPluginHealthAction: Action = {
         const pluginName = pluginMatch[1] || pluginMatch[2];
         // Try to find plugin ID by name
         const allPlugins = pluginManager.getAllPlugins();
-        const matchingPlugin = allPlugins.find(p => 
+        const matchingPlugin = allPlugins.find(p =>
           p.name.toLowerCase().includes(pluginName.toLowerCase())
         );
-        
+
         if (matchingPlugin) {
           metrics = await pluginManager.getPluginHealthMetrics(matchingPlugin.id);
         } else {
@@ -197,8 +197,8 @@ export const checkPluginHealthAction: Action = {
 
       // Check if user has permission to recover plugins
       const trustService = runtime.getService('TRUST') as any;
-      const canRecover = trustService ? 
-        await trustService.checkPermission(message.entityId, 'plugin:recover') : 
+      const canRecover = trustService ?
+        await trustService.checkPermission(message.entityId, 'plugin:recover') :
         true; // Default to true if trust service not available
 
       let actionText = statusText;
@@ -238,15 +238,15 @@ export const checkPluginHealthAction: Action = {
           lastCheck: new Date().toISOString(),
         },
       };
-    } catch (error) {
+    } catch (_error) {
       logger.error('[CHECK_PLUGIN_HEALTH] Error:', error);
-      
+
       await callback?.({
-        text: `Error checking plugin health: ${error instanceof Error ? error.message : String(error)}`,
+        text: `Error checking plugin health: ${_error instanceof Error ? _error.message : String(_error)}`,
         actions: ['CHECK_PLUGIN_HEALTH'],
       });
 
       throw error;
     }
   },
-}; 
+};

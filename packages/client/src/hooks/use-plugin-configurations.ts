@@ -6,7 +6,7 @@ import clientLogger from '@/lib/logger';
 
 interface PluginComponentConfig {
   enabled: boolean;
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
 }
 
 interface PluginConfiguration {
@@ -15,7 +15,7 @@ interface PluginConfiguration {
   actions?: Record<string, PluginComponentConfig>;
   providers?: Record<string, PluginComponentConfig>;
   evaluators?: Record<string, PluginComponentConfig>;
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
 }
 
 /**
@@ -28,19 +28,19 @@ export function usePluginConfigurations(agentId: string) {
       if (!agentId) {
         throw new Error('Agent ID is required');
       }
-      
+
       try {
         const response = await apiClient.getAgentConfigurations(agentId);
-        
+
         if (!response.success) {
           throw new Error('Failed to fetch plugin configurations');
         }
-        
+
         const configMap: Record<string, PluginConfiguration> = {};
         response.data.configurations.forEach((config: PluginConfiguration) => {
           configMap[config.pluginName] = config;
         });
-        
+
         return configMap;
       } catch (error) {
         clientLogger.error('Failed to fetch plugin configurations:', error);
@@ -63,14 +63,14 @@ export function usePluginConfiguration(agentId: string, pluginName: string) {
       if (!agentId || !pluginName) {
         throw new Error('Agent ID and plugin name are required');
       }
-      
+
       try {
         const response = await apiClient.getPluginConfiguration(agentId, pluginName);
-        
+
         if (!response.success) {
           throw new Error(`Failed to fetch configuration for plugin: ${pluginName}`);
         }
-        
+
         return response.data.configuration;
       } catch (error) {
         clientLogger.error(`Failed to fetch configuration for plugin ${pluginName}:`, error);
@@ -88,7 +88,7 @@ export function usePluginConfiguration(agentId: string, pluginName: string) {
  */
 export function useUpdateComponentConfiguration() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({
       agentId,
@@ -96,13 +96,13 @@ export function useUpdateComponentConfiguration() {
       componentType,
       componentName,
       config,
-      dependencies = []
+      dependencies = [],
     }: {
       agentId: string;
       pluginName: string;
       componentType: 'action' | 'provider' | 'evaluator';
       componentName: string;
-      config: any;
+      config: Record<string, unknown>;
       dependencies?: string[];
     }) => {
       const response = await apiClient.updateComponentConfiguration(
@@ -113,29 +113,29 @@ export function useUpdateComponentConfiguration() {
         config,
         dependencies
       );
-      
+
       if (!response.success) {
         throw new Error('Failed to update component configuration');
       }
-      
+
       return response.data;
     },
     onSuccess: (data, variables) => {
       // Invalidate and refetch the plugin configurations cache
       queryClient.invalidateQueries({
-        queryKey: ['plugin-configurations', variables.agentId]
+        queryKey: ['plugin-configurations', variables.agentId],
       });
-      
+
       // Invalidate the specific plugin configuration cache
       queryClient.invalidateQueries({
-        queryKey: ['plugin-configuration', variables.agentId, variables.pluginName]
+        queryKey: ['plugin-configuration', variables.agentId, variables.pluginName],
       });
-      
+
       clientLogger.info(`Updated ${variables.componentName} configuration`);
     },
     onError: (error, variables) => {
       clientLogger.error(`Failed to update ${variables.componentName} configuration:`, error);
-    }
+    },
   });
 }
 
@@ -144,41 +144,45 @@ export function useUpdateComponentConfiguration() {
  */
 export function useUpdatePluginConfiguration() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({
       agentId,
       pluginName,
-      configuration
+      configuration,
     }: {
       agentId: string;
       pluginName: string;
-      configuration: any;
+      configuration: Record<string, unknown>;
     }) => {
-      const response = await apiClient.updatePluginConfiguration(agentId, pluginName, configuration);
-      
+      const response = await apiClient.updatePluginConfiguration(
+        agentId,
+        pluginName,
+        configuration
+      );
+
       if (!response.success) {
         throw new Error('Failed to update plugin configuration');
       }
-      
+
       return response.data;
     },
     onSuccess: (data, variables) => {
       // Invalidate and refetch the plugin configurations cache
       queryClient.invalidateQueries({
-        queryKey: ['plugin-configurations', variables.agentId]
+        queryKey: ['plugin-configurations', variables.agentId],
       });
-      
+
       // Invalidate the specific plugin configuration cache
       queryClient.invalidateQueries({
-        queryKey: ['plugin-configuration', variables.agentId, variables.pluginName]
+        queryKey: ['plugin-configuration', variables.agentId, variables.pluginName],
       });
-      
+
       clientLogger.info(`Updated ${variables.pluginName} plugin configuration`);
     },
     onError: (error, variables) => {
       clientLogger.error(`Failed to update ${variables.pluginName} plugin configuration:`, error);
-    }
+    },
   });
 }
 
@@ -187,20 +191,20 @@ export function useUpdatePluginConfiguration() {
  */
 export function useEnableComponent() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({
       agentId,
       pluginName,
       componentType,
       componentName,
-      options = {}
+      options = {},
     }: {
       agentId: string;
       pluginName: string;
       componentType: 'action' | 'provider' | 'evaluator' | 'service';
       componentName: string;
-      options?: { overrideReason?: string; settings?: any };
+      options?: { overrideReason?: string; settings?: Record<string, unknown> };
     }) => {
       const response = await apiClient.enableComponent(
         agentId,
@@ -209,30 +213,30 @@ export function useEnableComponent() {
         componentName,
         options
       );
-      
+
       if (!response.success) {
         throw new Error('Failed to enable component');
       }
-      
+
       return response.data;
     },
     onSuccess: (data, variables) => {
       // Invalidate and refetch caches
       queryClient.invalidateQueries({
-        queryKey: ['plugin-configurations', variables.agentId]
+        queryKey: ['plugin-configurations', variables.agentId],
       });
       queryClient.invalidateQueries({
-        queryKey: ['plugin-configuration', variables.agentId, variables.pluginName]
+        queryKey: ['plugin-configuration', variables.agentId, variables.pluginName],
       });
       queryClient.invalidateQueries({
-        queryKey: ['runtime-status', variables.agentId, variables.pluginName]
+        queryKey: ['runtime-status', variables.agentId, variables.pluginName],
       });
-      
+
       clientLogger.info(`Enabled ${variables.componentName} component`);
     },
     onError: (error, variables) => {
       clientLogger.error(`Failed to enable ${variables.componentName} component:`, error);
-    }
+    },
   });
 }
 
@@ -241,14 +245,14 @@ export function useEnableComponent() {
  */
 export function useDisableComponent() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({
       agentId,
       pluginName,
       componentType,
       componentName,
-      options = {}
+      options = {},
     }: {
       agentId: string;
       pluginName: string;
@@ -263,30 +267,30 @@ export function useDisableComponent() {
         componentName,
         options
       );
-      
+
       if (!response.success) {
         throw new Error('Failed to disable component');
       }
-      
+
       return response.data;
     },
     onSuccess: (data, variables) => {
       // Invalidate and refetch caches
       queryClient.invalidateQueries({
-        queryKey: ['plugin-configurations', variables.agentId]
+        queryKey: ['plugin-configurations', variables.agentId],
       });
       queryClient.invalidateQueries({
-        queryKey: ['plugin-configuration', variables.agentId, variables.pluginName]
+        queryKey: ['plugin-configuration', variables.agentId, variables.pluginName],
       });
       queryClient.invalidateQueries({
-        queryKey: ['runtime-status', variables.agentId, variables.pluginName]
+        queryKey: ['runtime-status', variables.agentId, variables.pluginName],
       });
-      
+
       clientLogger.info(`Disabled ${variables.componentName} component`);
     },
     onError: (error, variables) => {
       clientLogger.error(`Failed to disable ${variables.componentName} component:`, error);
-    }
+    },
   });
 }
 
@@ -295,14 +299,14 @@ export function useDisableComponent() {
  */
 export function useToggleComponent() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({
       agentId,
       pluginName,
       componentType,
       componentName,
-      options = {}
+      options = {},
     }: {
       agentId: string;
       pluginName: string;
@@ -317,30 +321,32 @@ export function useToggleComponent() {
         componentName,
         options
       );
-      
+
       if (!response.success) {
         throw new Error('Failed to toggle component');
       }
-      
+
       return response.data;
     },
     onSuccess: (data, variables) => {
       // Invalidate and refetch caches
       queryClient.invalidateQueries({
-        queryKey: ['plugin-configurations', variables.agentId]
+        queryKey: ['plugin-configurations', variables.agentId],
       });
       queryClient.invalidateQueries({
-        queryKey: ['plugin-configuration', variables.agentId, variables.pluginName]
+        queryKey: ['plugin-configuration', variables.agentId, variables.pluginName],
       });
       queryClient.invalidateQueries({
-        queryKey: ['runtime-status', variables.agentId, variables.pluginName]
+        queryKey: ['runtime-status', variables.agentId, variables.pluginName],
       });
-      
-      clientLogger.info(`Toggled ${variables.componentName} component: ${data.previousState} → ${data.newState}`);
+
+      clientLogger.info(
+        `Toggled ${variables.componentName} component: ${data.previousState} → ${data.newState}`
+      );
     },
     onError: (error, variables) => {
       clientLogger.error(`Failed to toggle ${variables.componentName} component:`, error);
-    }
+    },
   });
 }
 
@@ -354,14 +360,14 @@ export function useRuntimeStatus(agentId: string, pluginName: string) {
       if (!agentId || !pluginName) {
         throw new Error('Agent ID and plugin name are required');
       }
-      
+
       try {
         const response = await apiClient.getRuntimeStatus(agentId, pluginName);
-        
+
         if (!response.success) {
           throw new Error(`Failed to fetch runtime status for plugin: ${pluginName}`);
         }
-        
+
         return response.data;
       } catch (error) {
         clientLogger.error(`Failed to fetch runtime status for plugin ${pluginName}:`, error);
@@ -379,52 +385,54 @@ export function useRuntimeStatus(agentId: string, pluginName: string) {
  */
 export function usePluginConfigurationRealtime(agentId: string) {
   const queryClient = useQueryClient();
-  
+
   useEffect(() => {
-    if (!agentId) return;
-    
+    if (!agentId) {
+      return;
+    }
+
     const socketManager = SocketIOManager.getInstance();
-    
+
     // Listen for component enabled events
-    const handleComponentEnabled = (data: any) => {
+    const handleComponentEnabled = (data: Record<string, unknown>) => {
       if (data.agentId === agentId) {
         clientLogger.info(`Component enabled: ${data.pluginName}.${data.componentName}`);
-        
+
         // Invalidate caches to trigger refetch
         queryClient.invalidateQueries({
-          queryKey: ['plugin-configurations', agentId]
+          queryKey: ['plugin-configurations', agentId],
         });
         queryClient.invalidateQueries({
-          queryKey: ['plugin-configuration', agentId, data.pluginName]
+          queryKey: ['plugin-configuration', agentId, data.pluginName],
         });
         queryClient.invalidateQueries({
-          queryKey: ['runtime-status', agentId, data.pluginName]
+          queryKey: ['runtime-status', agentId, data.pluginName],
         });
       }
     };
-    
+
     // Listen for component disabled events
-    const handleComponentDisabled = (data: any) => {
+    const handleComponentDisabled = (data: Record<string, unknown>) => {
       if (data.agentId === agentId) {
         clientLogger.info(`Component disabled: ${data.pluginName}.${data.componentName}`);
-        
+
         // Invalidate caches to trigger refetch
         queryClient.invalidateQueries({
-          queryKey: ['plugin-configurations', agentId]
+          queryKey: ['plugin-configurations', agentId],
         });
         queryClient.invalidateQueries({
-          queryKey: ['plugin-configuration', agentId, data.pluginName]
+          queryKey: ['plugin-configuration', agentId, data.pluginName],
         });
         queryClient.invalidateQueries({
-          queryKey: ['runtime-status', agentId, data.pluginName]
+          queryKey: ['runtime-status', agentId, data.pluginName],
         });
       }
     };
-    
+
     // Register event listeners
     socketManager.on('component_enabled', handleComponentEnabled);
     socketManager.on('component_disabled', handleComponentDisabled);
-    
+
     // Cleanup on unmount
     return () => {
       socketManager.off('component_enabled', handleComponentEnabled);

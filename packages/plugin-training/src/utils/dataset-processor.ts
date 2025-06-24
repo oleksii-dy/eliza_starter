@@ -1,7 +1,4 @@
-import {
-  type IAgentRuntime,
-  elizaLogger,
-} from '@elizaos/core';
+import { type IAgentRuntime, elizaLogger } from '@elizaos/core';
 import {
   type TrainingConfig,
   type TrainingConversation,
@@ -24,10 +21,10 @@ export class DatasetProcessor {
 
   async initialize(): Promise<void> {
     elizaLogger.info('Initializing Dataset Processor');
-    
+
     // Create output directory
     await fs.mkdir(this.outputDir, { recursive: true });
-    
+
     elizaLogger.info(`Dataset output directory: ${this.outputDir}`);
   }
 
@@ -72,21 +69,21 @@ export class DatasetProcessor {
 
     // Filter by quality if specified
     if (config.datasetConfig.minQuality) {
-      prepared = prepared.filter(conv => 
-        (conv.metadata.quality || 0) >= config.datasetConfig.minQuality!
+      prepared = prepared.filter(
+        (conv) => (conv.metadata.quality || 0) >= config.datasetConfig.minQuality!
       );
     }
 
     // Filter by message length
     if (config.extractionConfig.minConversationLength) {
-      prepared = prepared.filter(conv => 
-        conv.messages.length >= config.extractionConfig.minConversationLength!
+      prepared = prepared.filter(
+        (conv) => conv.messages.length >= config.extractionConfig.minConversationLength!
       );
     }
 
     if (config.extractionConfig.maxConversationLength) {
-      prepared = prepared.filter(conv => 
-        conv.messages.length <= config.extractionConfig.maxConversationLength!
+      prepared = prepared.filter(
+        (conv) => conv.messages.length <= config.extractionConfig.maxConversationLength!
       );
     }
 
@@ -105,7 +102,7 @@ export class DatasetProcessor {
 
     for (const conversation of conversations) {
       // Create hash of conversation content
-      const content = conversation.messages.map(m => m.content).join('\\n');
+      const content = conversation.messages.map((m) => m.content).join('\\n');
       const hash = crypto.createHash('sha256').update(content).digest('hex');
 
       if (!seen.has(hash)) {
@@ -144,11 +141,11 @@ export class DatasetProcessor {
 
   private extractUserAssistantPairs(conversation: TrainingConversation) {
     const pairs: { user: string; assistant: string; metadata: any }[] = [];
-    
+
     for (let i = 0; i < conversation.messages.length - 1; i++) {
       const userMsg = conversation.messages[i];
       const assistantMsg = conversation.messages[i + 1];
-      
+
       if (userMsg.role === 'user' && assistantMsg.role === 'assistant') {
         pairs.push({
           user: userMsg.content,
@@ -162,7 +159,7 @@ export class DatasetProcessor {
         });
       }
     }
-    
+
     return pairs;
   }
 
@@ -172,11 +169,7 @@ export class DatasetProcessor {
   ): Promise<TrainingTrajectory | null> {
     try {
       // Generate alternative responses for RLAIF
-      const responses = await this.generateAlternativeResponses(
-        pair.user,
-        pair.assistant,
-        config
-      );
+      const responses = await this.generateAlternativeResponses(pair.user, pair.assistant, config);
 
       if (responses.length < 2) {
         return null; // Need at least 2 responses for comparison
@@ -222,30 +215,34 @@ export class DatasetProcessor {
 
     // Generate alternative responses using the model
     const maxVariants = Math.min(config.rlaifConfig.maxResponseVariants - 1, 3);
-    
+
     for (let i = 0; i < maxVariants; i++) {
       try {
         const alternativeResponse = await this.runtime.useModel('TEXT_LARGE', {
           messages: [
             {
               role: 'system',
-              content: 'You are a helpful AI assistant. Provide a different but equally helpful response to the user query.',
+              content:
+                'You are a helpful AI assistant. Provide a different but equally helpful response to the user query.',
             },
             {
               role: 'user',
               content: prompt,
             },
           ],
-          temperature: 0.7 + (i * 0.1), // Increase temperature for variety
+          temperature: 0.7 + i * 0.1, // Increase temperature for variety
           max_tokens: config.datasetConfig.maxTokens || 512,
         });
 
         responses.push({
-          text: typeof alternativeResponse === 'string' ? alternativeResponse : (alternativeResponse as any).content || '',
+          text:
+            typeof alternativeResponse === 'string'
+              ? alternativeResponse
+              : (alternativeResponse as any).content || '',
           metadata: {
             responseTime: 0,
             tokenCount: this.estimateTokenCount(alternativeResponse),
-            confidence: 0.8 - (i * 0.1),
+            confidence: 0.8 - i * 0.1,
           },
         });
       } catch (error) {
@@ -258,43 +255,73 @@ export class DatasetProcessor {
 
   private inferDomain(prompt: string): string {
     const lowerPrompt = prompt.toLowerCase();
-    
-    if (lowerPrompt.includes('code') || lowerPrompt.includes('program')) return 'programming';
-    if (lowerPrompt.includes('data') || lowerPrompt.includes('analysis')) return 'data-science';
-    if (lowerPrompt.includes('math') || lowerPrompt.includes('calculate')) return 'mathematics';
-    if (lowerPrompt.includes('write') || lowerPrompt.includes('essay')) return 'writing';
-    if (lowerPrompt.includes('explain') || lowerPrompt.includes('what is')) return 'explanation';
-    if (lowerPrompt.includes('how to') || lowerPrompt.includes('step')) return 'instruction';
-    
+
+    if (lowerPrompt.includes('code') || lowerPrompt.includes('program')) {
+      return 'programming';
+    }
+    if (lowerPrompt.includes('data') || lowerPrompt.includes('analysis')) {
+      return 'data-science';
+    }
+    if (lowerPrompt.includes('math') || lowerPrompt.includes('calculate')) {
+      return 'mathematics';
+    }
+    if (lowerPrompt.includes('write') || lowerPrompt.includes('essay')) {
+      return 'writing';
+    }
+    if (lowerPrompt.includes('explain') || lowerPrompt.includes('what is')) {
+      return 'explanation';
+    }
+    if (lowerPrompt.includes('how to') || lowerPrompt.includes('step')) {
+      return 'instruction';
+    }
+
     return 'general';
   }
 
   private estimateDifficulty(prompt: string): number {
     // Simple heuristic based on prompt complexity
     const length = prompt.length;
-    const questionWords = ['how', 'what', 'why', 'when', 'where', 'which'].filter(word => 
+    const questionWords = ['how', 'what', 'why', 'when', 'where', 'which'].filter((word) =>
       prompt.toLowerCase().includes(word)
     ).length;
-    
+
     let difficulty = 0.3; // Base difficulty
-    
-    if (length > 200) difficulty += 0.2;
-    if (questionWords > 2) difficulty += 0.2;
-    if (prompt.includes('complex') || prompt.includes('detailed')) difficulty += 0.3;
-    
+
+    if (length > 200) {
+      difficulty += 0.2;
+    }
+    if (questionWords > 2) {
+      difficulty += 0.2;
+    }
+    if (prompt.includes('complex') || prompt.includes('detailed')) {
+      difficulty += 0.3;
+    }
+
     return Math.min(1.0, difficulty);
   }
 
   private inferTaskType(prompt: string): string {
     const lowerPrompt = prompt.toLowerCase();
-    
-    if (lowerPrompt.includes('explain') || lowerPrompt.includes('describe')) return 'explanation';
-    if (lowerPrompt.includes('compare') || lowerPrompt.includes('difference')) return 'comparison';
-    if (lowerPrompt.includes('analyze') || lowerPrompt.includes('evaluate')) return 'analysis';
-    if (lowerPrompt.includes('create') || lowerPrompt.includes('generate')) return 'generation';
-    if (lowerPrompt.includes('solve') || lowerPrompt.includes('calculate')) return 'problem-solving';
-    if (lowerPrompt.includes('summarize') || lowerPrompt.includes('summary')) return 'summarization';
-    
+
+    if (lowerPrompt.includes('explain') || lowerPrompt.includes('describe')) {
+      return 'explanation';
+    }
+    if (lowerPrompt.includes('compare') || lowerPrompt.includes('difference')) {
+      return 'comparison';
+    }
+    if (lowerPrompt.includes('analyze') || lowerPrompt.includes('evaluate')) {
+      return 'analysis';
+    }
+    if (lowerPrompt.includes('create') || lowerPrompt.includes('generate')) {
+      return 'generation';
+    }
+    if (lowerPrompt.includes('solve') || lowerPrompt.includes('calculate')) {
+      return 'problem-solving';
+    }
+    if (lowerPrompt.includes('summarize') || lowerPrompt.includes('summary')) {
+      return 'summarization';
+    }
+
     return 'question-answering';
   }
 
@@ -309,11 +336,11 @@ export class DatasetProcessor {
   ) {
     // Shuffle trajectories
     const shuffled = [...trajectories].sort(() => Math.random() - 0.5);
-    
+
     const total = shuffled.length;
     const trainSize = Math.floor(total * splitRatio.train);
     const validationSize = Math.floor(total * splitRatio.validation);
-    
+
     return {
       train: shuffled.slice(0, trainSize),
       validation: shuffled.slice(trainSize, trainSize + validationSize),
@@ -331,14 +358,14 @@ export class DatasetProcessor {
   ): Promise<string> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const datasetDir = path.join(this.outputDir, `dataset-${timestamp}`);
-    
+
     await fs.mkdir(datasetDir, { recursive: true });
 
     // Save each split
     for (const [splitName, data] of Object.entries(splits)) {
       const filename = `${splitName}.${config.datasetConfig.outputFormat}`;
       const filepath = path.join(datasetDir, filename);
-      
+
       switch (config.datasetConfig.outputFormat) {
         case 'jsonl':
           await this.saveAsJSONL(data, filepath);
@@ -352,7 +379,7 @@ export class DatasetProcessor {
         default:
           throw new Error(`Unsupported output format: ${config.datasetConfig.outputFormat}`);
       }
-      
+
       elizaLogger.info(`Saved ${splitName} split (${data.length} samples) to ${filepath}`);
     }
 
@@ -360,13 +387,13 @@ export class DatasetProcessor {
   }
 
   private async saveAsJSONL(data: TrainingTrajectory[], filepath: string): Promise<void> {
-    const lines = data.map(item => JSON.stringify(item)).join('\\n');
+    const lines = data.map((item) => JSON.stringify(item)).join('\\n');
     await fs.writeFile(filepath, lines, 'utf-8');
   }
 
   private async saveAsCSV(data: TrainingTrajectory[], filepath: string): Promise<void> {
     // Convert to flat structure for CSV
-    const csvData = data.map(trajectory => ({
+    const csvData = data.map((trajectory) => ({
       id: trajectory.id,
       prompt: trajectory.prompt,
       responses: JSON.stringify(trajectory.responses),
@@ -378,12 +405,14 @@ export class DatasetProcessor {
       timestamp: trajectory.metadata.timestamp,
     }));
 
-    const header = Object.keys(csvData[0]).join(',') + '\\n';
-    const rows = csvData.map(row => 
-      Object.values(row).map(value => 
-        typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value
-      ).join(',')
-    ).join('\\n');
+    const header = `${Object.keys(csvData[0]).join(',')}\\n`;
+    const rows = csvData
+      .map((row) =>
+        Object.values(row)
+          .map((value) => (typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value))
+          .join(',')
+      )
+      .join('\\n');
 
     await fs.writeFile(filepath, header + rows, 'utf-8');
   }
@@ -411,7 +440,10 @@ export class DatasetProcessor {
       dataset_config: config.datasetConfig,
       rlaif_config: config.rlaifConfig,
       statistics: {
-        total_trajectories: Object.values(splits).reduce((sum: number, split: any) => sum + split.length, 0),
+        total_trajectories: Object.values(splits).reduce(
+          (sum: number, split: any) => sum + split.length,
+          0
+        ),
         train_size: splits.train.length,
         validation_size: splits.validation.length,
         test_size: splits.test.length,
@@ -423,48 +455,52 @@ export class DatasetProcessor {
 
     const metadataPath = path.join(datasetPath, 'metadata.json');
     await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2), 'utf-8');
-    
+
     elizaLogger.info(`Generated dataset metadata: ${metadataPath}`);
   }
 
   private calculateDomainDistribution(splits: any): Record<string, number> {
     const domains: Record<string, number> = {};
-    
+
     for (const split of Object.values(splits)) {
       for (const trajectory of split as TrainingTrajectory[]) {
         const domain = trajectory.metadata.domain;
         domains[domain] = (domains[domain] || 0) + 1;
       }
     }
-    
+
     return domains;
   }
 
   private calculateDifficultyDistribution(splits: any): Record<string, number> {
     const difficulties: Record<string, number> = { easy: 0, medium: 0, hard: 0 };
-    
+
     for (const split of Object.values(splits)) {
       for (const trajectory of split as TrainingTrajectory[]) {
         const difficulty = trajectory.metadata.difficulty;
-        if (difficulty < 0.4) difficulties.easy++;
-        else if (difficulty < 0.7) difficulties.medium++;
-        else difficulties.hard++;
+        if (difficulty < 0.4) {
+          difficulties.easy++;
+        } else if (difficulty < 0.7) {
+          difficulties.medium++;
+        } else {
+          difficulties.hard++;
+        }
       }
     }
-    
+
     return difficulties;
   }
 
   private calculateTaskTypeDistribution(splits: any): Record<string, number> {
     const taskTypes: Record<string, number> = {};
-    
+
     for (const split of Object.values(splits)) {
       for (const trajectory of split as TrainingTrajectory[]) {
         const taskType = trajectory.metadata.taskType;
         taskTypes[taskType] = (taskTypes[taskType] || 0) + 1;
       }
     }
-    
+
     return taskTypes;
   }
 }

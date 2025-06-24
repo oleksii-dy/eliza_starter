@@ -1,4 +1,13 @@
-import type { Action, IAgentRuntime, Memory, State, HandlerCallback, UUID } from '@elizaos/core';
+import type {
+  Action,
+  ActionResult,
+  ActionExample,
+  IAgentRuntime,
+  Memory,
+  State,
+  HandlerCallback,
+  UUID,
+} from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
 import type { ContainerOrchestrator } from '../services/ContainerOrchestrator';
 import type { TaskManager } from '../services/TaskManager';
@@ -8,7 +17,8 @@ import type { CommunicationBridge } from '../services/CommunicationBridge';
 export const spawnSubAgentAction: Action = {
   name: 'SPAWN_SUB_AGENT',
   similes: ['CREATE_SUB_AGENT', 'DEPLOY_AGENT', 'START_CONTAINER_AGENT'],
-  description: 'Spawns a containerized sub-agent for auto-coding tasks',
+  description:
+    'Spawns a containerized sub-agent for auto-coding tasks. Returns task and container information for action chaining.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     // Check if required services are available
@@ -38,7 +48,7 @@ export const spawnSubAgentAction: Action = {
     state?: State,
     options?: any,
     callback?: HandlerCallback
-  ) => {
+  ): Promise<ActionResult> => {
     try {
       elizaLogger.info('Spawning sub-agent for auto-coding task');
 
@@ -92,21 +102,32 @@ export const spawnSubAgentAction: Action = {
 
       await callback?.({
         text:
-          `✅ Auto-coding task created successfully!\n\n` +
+          '✅ Auto-coding task created successfully!\n\n' +
           `**Task ID**: ${taskId}\n` +
           `**Title**: ${taskDetails.title}\n` +
           `**Agents**: ${taskDetails.requiredRoles.join(', ')}\n` +
           `**Containers**: ${containerIds.length} spawned\n\n` +
-          `The sub-agents are now working on your task. I'll monitor their progress and provide updates.`,
+          "The sub-agents are now working on your task. I'll monitor their progress and provide updates.",
         thought: `Successfully created auto-coding task with ${containerIds.length} sub-agents. Task involves ${taskDetails.requiredRoles.join(', ')} roles.`,
         actions: ['SPAWN_SUB_AGENT'],
       });
 
       return {
-        text: 'Sub-agents spawned successfully',
+        text: `✅ Auto-coding task created successfully!\n\n**Task ID**: ${taskId}\n**Title**: ${taskDetails.title}\n**Agents**: ${taskDetails.requiredRoles.join(', ')}\n**Containers**: ${containerIds.length} spawned\n\nThe sub-agents are now working on your task.`,
+        values: {
+          success: true,
+          taskCreated: true,
+          taskId,
+          containersSpawned: containerIds.length,
+          agentRoles: taskDetails.requiredRoles,
+          taskPriority: taskDetails.priority,
+        },
         data: {
+          actionName: 'SPAWN_SUB_AGENT',
           taskId,
           containerIds,
+          taskDetails,
+          secureEnvironment,
           roles: taskDetails.requiredRoles,
         },
       };
@@ -119,18 +140,30 @@ export const spawnSubAgentAction: Action = {
         actions: [],
       });
 
-      throw error;
+      return {
+        text: `❌ Failed to spawn sub-agent: ${error instanceof Error ? error.message : String(error)}`,
+        values: {
+          success: false,
+          error: true,
+          errorMessage: error instanceof Error ? error.message : String(error),
+        },
+        data: {
+          actionName: 'SPAWN_SUB_AGENT',
+          error: error instanceof Error ? error.message : String(error),
+          errorType: 'spawn_error',
+        },
+      };
     }
   },
 
   examples: [
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: { text: 'I need to implement a new user authentication feature with JWT tokens' },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: '✅ Auto-coding task created successfully!\n\n**Task ID**: task_auth_jwt\n**Title**: Implement JWT Authentication\n**Agents**: coder, reviewer, tester\n**Containers**: 3 spawned\n\nThe sub-agents are now working on your task.',
           thought: 'Created authentication task with three specialized agents',
@@ -138,17 +171,35 @@ export const spawnSubAgentAction: Action = {
         },
       },
     ],
-  ],
+    [
+      {
+        name: '{{user}}',
+        content: { text: 'Create a payment processing system and then set up monitoring for it' },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll spawn sub-agents to implement the payment system first, then set up monitoring.",
+          thought:
+            'User wants payment system with monitoring - a multi-stage development workflow.',
+          actions: ['SPAWN_SUB_AGENT', 'MONITOR_TASK'],
+        },
+      },
+    ],
+  ] as ActionExample[][],
 };
 
 export const monitorTaskAction: Action = {
   name: 'MONITOR_TASK',
   similes: ['CHECK_TASK_STATUS', 'TASK_PROGRESS', 'AGENT_STATUS'],
-  description: 'Monitors the progress of auto-coding tasks and sub-agents',
+  description:
+    'Monitors the progress of auto-coding tasks and sub-agents. Returns status reports and metrics for action chaining.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const taskManager = runtime.getService('task-manager');
-    if (!taskManager) return false;
+    if (!taskManager) {
+      return false;
+    }
 
     const content = message.content.text?.toLowerCase() || '';
     return (
@@ -166,7 +217,7 @@ export const monitorTaskAction: Action = {
     state?: State,
     options?: any,
     callback?: HandlerCallback
-  ) => {
+  ): Promise<ActionResult> => {
     try {
       const taskManager = runtime.getService('task-manager') as TaskManager;
       const orchestrator = runtime.getService('container-orchestrator') as ContainerOrchestrator;
@@ -177,12 +228,26 @@ export const monitorTaskAction: Action = {
       });
 
       if (tasks.length === 0) {
+        const text =
+          "📊 **Task Status**: No active auto-coding tasks currently running.\n\nYou can create a new task by describing what you'd like me to implement!";
         await callback?.({
-          text: "📊 **Task Status**: No active auto-coding tasks currently running.\n\nYou can create a new task by describing what you'd like me to implement!",
+          text,
           thought: 'No active tasks to monitor',
           actions: ['MONITOR_TASK'],
         });
-        return;
+        return {
+          text,
+          values: {
+            success: true,
+            activeTasks: 0,
+            noTasksRunning: true,
+          },
+          data: {
+            actionName: 'MONITOR_TASK',
+            activeTasks: 0,
+            status: 'no_active_tasks',
+          },
+        };
       }
 
       let statusReport = '📊 **Auto-Coding Task Status Report**\n\n';
@@ -209,7 +274,7 @@ export const monitorTaskAction: Action = {
 
       // Get task metrics
       const metrics = await taskManager.getTaskMetrics();
-      statusReport += `**Overall Metrics**\n`;
+      statusReport += '**Overall Metrics**\n';
       statusReport += `├ Total Tasks: ${metrics.total}\n`;
       statusReport += `├ Success Rate: ${(metrics.successRate * 100).toFixed(1)}%\n`;
       statusReport += `└ Avg Duration: ${Math.round(metrics.averageDuration / 1000 / 60)} minutes\n`;
@@ -219,25 +284,60 @@ export const monitorTaskAction: Action = {
         thought: `Monitoring ${tasks.length} active tasks with overall ${(metrics.successRate * 100).toFixed(1)}% success rate`,
         actions: ['MONITOR_TASK'],
       });
+
+      return {
+        text: statusReport,
+        values: {
+          success: true,
+          activeTasks: tasks.length,
+          totalTasks: metrics.total,
+          successRate: parseFloat((metrics.successRate * 100).toFixed(1)),
+          avgDuration: Math.round(metrics.averageDuration / 1000 / 60),
+        },
+        data: {
+          actionName: 'MONITOR_TASK',
+          tasks,
+          metrics,
+          statusReport,
+          containers: await Promise.all(
+            tasks.map(async (task) => await orchestrator.getTaskContainers(task.id))
+          ),
+        },
+      };
     } catch (error) {
       elizaLogger.error('Failed to monitor tasks:', error);
 
+      const errorText = `❌ Failed to retrieve task status: ${error instanceof Error ? error.message : String(error)}`;
       await callback?.({
-        text: `❌ Failed to retrieve task status: ${error instanceof Error ? error.message : String(error)}`,
+        text: errorText,
         thought: `Task monitoring failed: ${error instanceof Error ? error.message : String(error)}`,
         actions: [],
       });
+
+      return {
+        text: errorText,
+        values: {
+          success: false,
+          error: true,
+          errorMessage: error instanceof Error ? error.message : String(error),
+        },
+        data: {
+          actionName: 'MONITOR_TASK',
+          error: error instanceof Error ? error.message : String(error),
+          errorType: 'monitoring_error',
+        },
+      };
     }
   },
 
   examples: [
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: { text: "What's the status of my coding tasks?" },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: '📊 **Auto-Coding Task Status Report**\n\n**JWT Authentication** (task_auth_jwt)\n├ Status: IN_PROGRESS\n├ Priority: HIGH\n├ Agents: 3 active\n│  └ coder: running\n│  └ reviewer: running\n│  └ tester: running\n└ Created: 2024-01-15 10:30:00',
           thought: 'Monitoring 1 active task with 3 sub-agents working',
@@ -245,7 +345,21 @@ export const monitorTaskAction: Action = {
         },
       },
     ],
-  ],
+    [
+      {
+        name: '{{user}}',
+        content: { text: 'Check task progress and update me with a summary report' },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll check the current task status first, then generate a detailed summary report.",
+          thought: 'User wants monitoring followed by report generation - a two-step workflow.',
+          actions: ['MONITOR_TASK', 'GENERATE_SUMMARY'],
+        },
+      },
+    ],
+  ] as ActionExample[][],
 };
 
 export const terminateTaskAction: Action = {
@@ -255,7 +369,9 @@ export const terminateTaskAction: Action = {
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const taskManager = runtime.getService('task-manager');
-    if (!taskManager) return false;
+    if (!taskManager) {
+      return false;
+    }
 
     const content = message.content.text?.toLowerCase() || '';
     return (
@@ -311,12 +427,25 @@ export const terminateTaskAction: Action = {
       // Terminate specific task
       const task = await taskManager.getTask(taskId as UUID);
       if (!task) {
+        const notFoundText = `❌ Task not found: ${taskId}`;
         await callback?.({
-          text: `❌ Task not found: ${taskId}`,
+          text: notFoundText,
           thought: `Task ${taskId} not found`,
           actions: [],
         });
-        return;
+        return {
+          text: notFoundText,
+          values: {
+            success: false,
+            taskNotFound: true,
+            taskId,
+          },
+          data: {
+            actionName: 'TERMINATE_TASK',
+            error: `Task ${taskId} not found`,
+            errorType: 'task_not_found',
+          },
+        };
       }
 
       await taskManager.cancelTask(taskId as UUID, 'User requested cancellation');
@@ -325,8 +454,8 @@ export const terminateTaskAction: Action = {
       await callback?.({
         text:
           `✅ Task terminated: **${task.title}**\n\n` +
-          `All sub-agents have been stopped and resources cleaned up.\n` +
-          `Reason: User requested cancellation`,
+          'All sub-agents have been stopped and resources cleaned up.\n' +
+          'Reason: User requested cancellation',
         thought: `Successfully terminated task: ${task.title}`,
         actions: ['TERMINATE_TASK'],
       });
@@ -344,11 +473,11 @@ export const terminateTaskAction: Action = {
   examples: [
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: { text: 'Cancel the authentication task, I want to change the approach' },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: '✅ Task terminated: **JWT Authentication**\n\nAll sub-agents have been stopped and resources cleaned up.\nReason: User requested cancellation',
           thought: 'Successfully terminated authentication task per user request',
@@ -356,7 +485,24 @@ export const terminateTaskAction: Action = {
         },
       },
     ],
-  ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Stop the current task and then start a new one for database optimization',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll terminate the current task first, then spawn new agents for database optimization.",
+          thought:
+            'User wants to cancel current work and start a new optimization task - sequential workflow.',
+          actions: ['TERMINATE_TASK', 'SPAWN_SUB_AGENT'],
+        },
+      },
+    ],
+  ] as ActionExample[][],
 };
 
 // Helper functions
@@ -460,20 +606,31 @@ function fallbackTaskExtraction(text: string, taskId: string) {
   const isDatabaseRelated = /\b(database|db|sql|mongo|postgres|mysql)\b/i.test(text);
 
   const roles: ('coder' | 'reviewer' | 'tester')[] = ['coder', 'reviewer'];
-  if (needsTesting) roles.push('tester');
+  if (needsTesting) {
+    roles.push('tester');
+  }
 
   const secrets: string[] = ['GITHUB_TOKEN'];
-  if (isSecurityRelated) secrets.push('JWT_SECRET');
-  if (isDatabaseRelated) secrets.push('DATABASE_URL');
-  if (isApiRelated) secrets.push('API_KEY');
+  if (isSecurityRelated) {
+    secrets.push('JWT_SECRET');
+  }
+  if (isDatabaseRelated) {
+    secrets.push('DATABASE_URL');
+  }
+  if (isApiRelated) {
+    secrets.push('API_KEY');
+  }
 
   // Extract potential file paths from text
   const filePathRegex = /\b[\w-]+\/[\w-]+\.[\w]+\b/g;
   const files = text.match(filePathRegex) || [];
 
   let priority: 'low' | 'medium' | 'high' | 'critical' = 'medium';
-  if (isCritical) priority = 'critical';
-  else if (isHighPriority) priority = 'high';
+  if (isCritical) {
+    priority = 'critical';
+  } else if (isHighPriority) {
+    priority = 'high';
+  }
 
   return {
     taskId,

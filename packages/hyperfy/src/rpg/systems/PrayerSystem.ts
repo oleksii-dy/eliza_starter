@@ -41,13 +41,13 @@ export class PrayerSystem extends System {
   private prayers: Map<string, Prayer> = new Map();
   private activePrayers: Map<string, Set<string>> = new Map(); // entityId -> Set of prayer IDs
   private prayerDrainTimers: Map<string, number> = new Map();
-  
+
   // Configuration
   private readonly PRAYER_TICK_RATE = 600; // milliseconds (game tick)
   private readonly BASE_DRAIN_RESISTANCE = 120; // Base time in seconds per prayer point
-  
+
   private originalStats: Map<string, any> = new Map();
-  
+
   constructor(world: World) {
     super(world);
     this.registerDefaultPrayers();
@@ -284,13 +284,13 @@ export class PrayerSystem extends System {
    */
   public activatePrayer(entityId: string, prayerId: string): boolean {
     const entity = this.world.entities.get(entityId);
-    if (!entity) return false;
+    if (!entity) {return false;}
 
     const stats = entity.getComponent<StatsComponent>('stats');
-    if (!stats) return false;
+    if (!stats) {return false;}
 
     const prayer = this.prayers.get(prayerId);
-    if (!prayer) return false;
+    if (!prayer) {return false;}
 
     // Check prayer level requirement
     if (stats.prayer.level < prayer.level) {
@@ -300,7 +300,7 @@ export class PrayerSystem extends System {
 
     // Check if player has prayer points
     if (stats.prayer.points <= 0) {
-      this.sendMessage(entityId, "You have run out of Prayer points.");
+      this.sendMessage(entityId, 'You have run out of Prayer points.');
       return false;
     }
 
@@ -348,10 +348,10 @@ export class PrayerSystem extends System {
     }
 
     const entity = this.world.entities.get(entityId);
-    if (!entity) return false;
+    if (!entity) {return false;}
 
     const prayer = this.prayers.get(prayerId);
-    if (!prayer) return false;
+    if (!prayer) {return false;}
 
     // Remove prayer
     entityPrayers.delete(prayerId);
@@ -382,7 +382,7 @@ export class PrayerSystem extends System {
    */
   public deactivateAllPrayers(entityId: string): void {
     const entityPrayers = this.activePrayers.get(entityId);
-    if (!entityPrayers) return;
+    if (!entityPrayers) {return;}
 
     for (const prayerId of Array.from(entityPrayers)) {
       this.deactivatePrayer(entityId, prayerId);
@@ -396,13 +396,13 @@ export class PrayerSystem extends System {
     const tickTime = Date.now();
 
     for (const [entityId, prayerSet] of this.activePrayers) {
-      if (prayerSet.size === 0) continue;
+      if (prayerSet.size === 0) {continue;}
 
       const entity = this.world.entities.get(entityId);
-      if (!entity) continue;
+      if (!entity) {continue;}
 
       const stats = entity.getComponent<StatsComponent>('stats');
-      if (!stats) continue;
+      if (!stats) {continue;}
 
       // Check if it's time to drain
       const lastDrain = this.prayerDrainTimers.get(entityId) || 0;
@@ -421,17 +421,17 @@ export class PrayerSystem extends System {
         // Apply prayer bonus from equipment
         const prayerBonus = stats.combatBonuses.prayerBonus || 0;
         const drainResistance = this.BASE_DRAIN_RESISTANCE + (prayerBonus * 2);
-        
+
         // Calculate drain amount
         const drainPerTick = totalDrainRate / (drainResistance / (this.PRAYER_TICK_RATE / 1000));
-        
+
         // Drain prayer points
         stats.prayer.points = Math.max(0, stats.prayer.points - drainPerTick);
 
         // If out of prayer points, deactivate all prayers
         if (stats.prayer.points <= 0) {
           this.deactivateAllPrayers(entityId);
-          this.sendMessage(entityId, "You have run out of Prayer points.");
+          this.sendMessage(entityId, 'You have run out of Prayer points.');
         }
       }
     }
@@ -442,14 +442,14 @@ export class PrayerSystem extends System {
    */
   public restorePrayer(entityId: string, amount: number): void {
     const entity = this.world.entities.get(entityId);
-    if (!entity) return;
+    if (!entity) {return;}
 
     const stats = entity.getComponent<StatsComponent>('stats');
-    if (!stats) return;
+    if (!stats) {return;}
 
     const previousPoints = stats.prayer.points;
     stats.prayer.points = Math.min(stats.prayer.maxPoints, stats.prayer.points + amount);
-    
+
     const restored = stats.prayer.points - previousPoints;
     if (restored > 0) {
       this.world.events.emit('prayer:restored', {
@@ -503,7 +503,7 @@ export class PrayerSystem extends System {
    */
   private applyPrayerEffects(entity: RPGEntity, prayer: Prayer): void {
     const stats = entity.getComponent<StatsComponent>('stats');
-    if (!stats) return;
+    if (!stats) {return;}
 
     // Store original stats if not already stored
     let originalStats = this.originalStats.get(entity.id);
@@ -553,14 +553,14 @@ export class PrayerSystem extends System {
    */
   private removePrayerEffects(entity: RPGEntity, prayer: Prayer): void {
     const stats = entity.getComponent<StatsComponent>('stats');
-    if (!stats) return;
+    if (!stats) {return;}
 
     const originalStats = this.originalStats.get(entity.id);
-    if (!originalStats) return;
+    if (!originalStats) {return;}
 
     // Recalculate stats from base values considering all active prayers
     const entityPrayers = this.activePrayers.get(entity.id);
-    if (!entityPrayers) return;
+    if (!entityPrayers) {return;}
 
     // Reset to original values
     stats.attack.level = originalStats.attack.level;
@@ -571,8 +571,8 @@ export class PrayerSystem extends System {
 
     // Reapply effects from remaining active prayers
     for (const prayerId of entityPrayers) {
-      if (prayerId === prayer.id) continue; // Skip the prayer we're removing
-      
+      if (prayerId === prayer.id) {continue;} // Skip the prayer we're removing
+
       const activePrayer = this.prayers.get(prayerId);
       if (activePrayer) {
         for (const effect of activePrayer.effects) {
@@ -610,7 +610,7 @@ export class PrayerSystem extends System {
    */
   private updateProtectionPrayers(combat: CombatComponent, prayer: Prayer, active: boolean): void {
     const protectionEffect = prayer.effects.find(e => e.type === 'protection');
-    if (!protectionEffect) return;
+    if (!protectionEffect) {return;}
 
     switch (protectionEffect.stat) {
       case 'melee':
@@ -630,7 +630,7 @@ export class PrayerSystem extends System {
    */
   private deactivateConflictingPrayers(entityId: string, newPrayer: Prayer): void {
     const entityPrayers = this.activePrayers.get(entityId);
-    if (!entityPrayers) return;
+    if (!entityPrayers) {return;}
 
     // Overhead prayers conflict with each other
     if (newPrayer.overhead) {
@@ -648,7 +648,7 @@ export class PrayerSystem extends System {
         for (const prayerId of Array.from(entityPrayers)) {
           const prayer = this.prayers.get(prayerId);
           if (prayer && prayer.id !== newPrayer.id) {
-            const hasConflict = prayer.effects.some(e => 
+            const hasConflict = prayer.effects.some(e =>
               e.type === 'stat_boost' && e.stat === effect.stat
             );
             if (hasConflict) {
@@ -682,18 +682,18 @@ export class PrayerSystem extends System {
    */
   public hasProtectionPrayer(entityId: string, damageType: 'melee' | 'ranged' | 'magic'): boolean {
     const entityPrayers = this.activePrayers.get(entityId);
-    if (!entityPrayers) return false;
+    if (!entityPrayers) {return false;}
 
     for (const prayerId of entityPrayers) {
       const prayer = this.prayers.get(prayerId);
       if (prayer) {
-        const hasProtection = prayer.effects.some(e => 
+        const hasProtection = prayer.effects.some(e =>
           e.type === 'protection' && e.stat === damageType
         );
-        if (hasProtection) return true;
+        if (hasProtection) {return true;}
       }
     }
 
     return false;
   }
-} 
+}

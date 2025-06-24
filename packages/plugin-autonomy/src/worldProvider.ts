@@ -70,18 +70,18 @@ export const autonomousWorldProvider: Provider = {
         : null;
 
       const statusText = [
-        `# Autonomous World Status`,
-        ``,
+        '# Autonomous World Status',
+        '',
         `**World ID:** ${worldId}`,
         `**World Status:** ${world ? 'Found' : 'Not Found'}`,
         world ? `**World Name:** ${world.name}` : '',
-        ``,
+        '',
         `**Autonomous Room ID:** ${autonomousRoomId}`,
         `**Room Status:** ${room ? 'Found' : 'Not Found'}`,
         room ? `**Room Name:** ${room.name}` : '',
         room ? `**Room Type:** ${room.type}` : '',
         room ? `**Room World ID:** ${room.worldId}` : '',
-        ``,
+        '',
         `**Agent ID:** ${runtime.agentId}`,
         `**Character Name:** ${runtime.character.name}`,
       ]
@@ -265,8 +265,14 @@ export const worldProvider: Provider = {
 };
 
 function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
-  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-  if (ms < 3600000) return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
+  if (ms < 1000) {
+    return `${ms}ms`;
+  }
+  if (ms < 60000) {
+    return `${(ms / 1000).toFixed(1)}s`;
+  }
+  if (ms < 3600000) {
+    return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
+  }
   return `${Math.floor(ms / 3600000)}h ${Math.floor((ms % 3600000) / 60000)}m`;
 }

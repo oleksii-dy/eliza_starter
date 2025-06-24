@@ -45,7 +45,7 @@ export async function updateRegistryIndex(
     let indexContent;
     try {
       indexContent = await fs.readFile(indexPath, 'utf-8');
-    } catch (error) {
+    } catch {
       // Create default index if it doesn't exist
       indexContent = JSON.stringify({
         v1: { packages: {} },

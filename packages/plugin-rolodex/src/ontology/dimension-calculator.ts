@@ -1,6 +1,6 @@
 /**
  * Multi-dimensional relationship strength calculator
- * 
+ *
  * This module handles the computation of relationship strengths across
  * multiple dimensions based on evidence, interactions, and patterns.
  */
@@ -32,30 +32,30 @@ export function calculateDimensionStrength(
   // Base strength from evidence
   let evidenceStrength = 0;
   const now = Date.now();
-  
+
   for (const evidence of dimension.evidence) {
     // Apply time decay
     const ageInDays = (now - evidence.timestamp.getTime()) / (1000 * 60 * 60 * 24);
     const decayFactor = Math.exp(-config.evidenceDecayRate * ageInDays / 30); // Monthly decay
-    
+
     // Weight by evidence type
     const typeWeight = getEvidenceTypeWeight(evidence.type);
-    
+
     evidenceStrength += evidence.weight * typeWeight * decayFactor;
   }
-  
+
   // Normalize evidence strength (cap at 1.0)
   evidenceStrength = Math.min(1.0, evidenceStrength / Math.max(1, dimension.evidence.length));
-  
+
   // Factor-based adjustments
   const factorMultiplier = calculateFactorMultiplier(factors, dimension.category);
-  
+
   // Confidence adjustment
   const confidenceAdjustment = dimension.confidence;
-  
+
   // Calculate final strength
   const strength = evidenceStrength * factorMultiplier * confidenceAdjustment;
-  
+
   return Math.max(0, Math.min(1, strength));
 }
 
@@ -72,7 +72,7 @@ function getEvidenceTypeWeight(type: EvidenceType): number {
     [EvidenceType.HISTORICAL]: 0.4,             // Past evidence
     [EvidenceType.INFERRED]: 0.3                // System inference
   };
-  
+
   return weights[type] || 0.5;
 }
 
@@ -128,17 +128,17 @@ function calculateFactorMultiplier(
       sentiment: 0.3
     }
   };
-  
+
   const weights = categoryWeights[category] || {};
   let totalWeight = 0;
   let weightedSum = 0;
-  
+
   for (const [factor, value] of Object.entries(factors)) {
     const weight = (weights as any)[factor] || 0.1;
     totalWeight += Math.abs(weight);
     weightedSum += value * weight;
   }
-  
+
   return totalWeight > 0 ? weightedSum / totalWeight : 0.5;
 }
 
@@ -152,10 +152,10 @@ export async function extractRelationshipEvidence(
   messages: Memory[]
 ): Promise<RelationshipEvidence[]> {
   const evidence: RelationshipEvidence[] = [];
-  
+
   for (const message of messages) {
     const text = message.content?.text || '';
-    
+
     // Direct statements about relationships
     const patterns = matchRelationshipPattern(text);
     for (const pattern of patterns) {
@@ -172,7 +172,7 @@ export async function extractRelationshipEvidence(
         timestamp: new Date(message.createdAt || Date.now())
       });
     }
-    
+
     // Behavioral indicators from interaction patterns
     if (text.includes('thank') || text.includes('appreciate') || text.includes('help')) {
       evidence.push({
@@ -188,7 +188,7 @@ export async function extractRelationshipEvidence(
         timestamp: new Date(message.createdAt || Date.now())
       });
     }
-    
+
     // Contextual clues
     if (text.includes('work') || text.includes('project') || text.includes('meeting')) {
       evidence.push({
@@ -205,7 +205,7 @@ export async function extractRelationshipEvidence(
       });
     }
   }
-  
+
   // Add interaction pattern evidence
   if (messages.length > 5) {
     evidence.push({
@@ -221,7 +221,7 @@ export async function extractRelationshipEvidence(
       timestamp: new Date()
     });
   }
-  
+
   return evidence;
 }
 
@@ -233,10 +233,10 @@ export function calculateStrengthFactors(
   relationshipMetadata?: RelationshipMetadata
 ): StrengthFactors {
   const now = Date.now();
-  const sortedMessages = [...messages].sort((a, b) => 
+  const sortedMessages = [...messages].sort((a, b) =>
     (a.createdAt || 0) - (b.createdAt || 0)
   );
-  
+
   // Interaction frequency (messages per day over relationship duration)
   const firstMessage = sortedMessages[0];
   const lastMessage = sortedMessages[sortedMessages.length - 1];
@@ -244,77 +244,77 @@ export function calculateStrengthFactors(
     ? Math.max(1, (lastMessage.createdAt! - firstMessage.createdAt!) / (1000 * 60 * 60 * 24))
     : 1;
   const frequency = Math.min(1.0, messages.length / (durationDays * 2)); // Normalize to 2 messages/day max
-  
+
   // Interaction quality (based on message length and content)
-  const avgMessageLength = messages.reduce((sum, m) => 
+  const avgMessageLength = messages.reduce((sum, m) =>
     sum + (m.content?.text?.length || 0), 0
   ) / Math.max(1, messages.length);
   const quality = Math.min(1.0, avgMessageLength / 200); // Normalize to 200 chars
-  
+
   // Reciprocity (how balanced the conversation is)
   // This would need entity IDs on messages to calculate properly
   const reciprocity = 0.7; // Default to fairly balanced
-  
+
   // Consistency (regularity of interactions)
   const gaps: number[] = [];
   for (let i = 1; i < sortedMessages.length; i++) {
     const gap = (sortedMessages[i].createdAt || 0) - (sortedMessages[i-1].createdAt || 0);
     gaps.push(gap);
   }
-  const avgGap = gaps.length > 0 
+  const avgGap = gaps.length > 0
     ? gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length
     : 0;
-  const consistency = avgGap > 0 
+  const consistency = avgGap > 0
     ? Math.max(0, 1.0 - (Math.sqrt(
-        gaps.reduce((sum, gap) => sum + Math.pow(gap - avgGap, 2), 0) / gaps.length
-      ) / avgGap))
+      gaps.reduce((sum, gap) => sum + Math.pow(gap - avgGap, 2), 0) / gaps.length
+    ) / avgGap))
     : 0.5;
-  
+
   // Duration (how long the relationship has existed)
   const relationshipAgeDays = firstMessage
     ? (now - firstMessage.createdAt!) / (1000 * 60 * 60 * 24)
     : 0;
   const duration = Math.min(1.0, relationshipAgeDays / 365); // Normalize to 1 year
-  
+
   // Recent activity (weight recent interactions higher)
-  const recentMessages = messages.filter(m => 
+  const recentMessages = messages.filter(m =>
     (now - (m.createdAt || 0)) < 30 * 24 * 60 * 60 * 1000 // Last 30 days
   );
   const recentActivity = Math.min(1.0, recentMessages.length / 10); // Normalize to 10 recent messages
-  
+
   // Sentiment analysis (simple positive/negative word detection)
   let positiveCount = 0;
   let negativeCount = 0;
   const positiveWords = ['thanks', 'great', 'good', 'appreciate', 'love', 'excellent', 'wonderful'];
   const negativeWords = ['sorry', 'bad', 'wrong', 'hate', 'terrible', 'awful', 'disappointed'];
-  
+
   for (const message of messages) {
     const text = (message.content?.text || '').toLowerCase();
     positiveCount += positiveWords.filter(word => text.includes(word)).length;
     negativeCount += negativeWords.filter(word => text.includes(word)).length;
   }
-  
+
   const sentiment = messages.length > 0
     ? Math.max(-1, Math.min(1, (positiveCount - negativeCount) / messages.length))
     : 0;
-  
+
   // Context alignment (professional vs personal contexts)
   const professionalWords = ['work', 'project', 'meeting', 'deadline', 'business'];
   const personalWords = ['friend', 'family', 'weekend', 'fun', 'personal'];
   let professionalCount = 0;
   let personalCount = 0;
-  
+
   for (const message of messages) {
     const text = (message.content?.text || '').toLowerCase();
     professionalCount += professionalWords.filter(word => text.includes(word)).length;
     personalCount += personalWords.filter(word => text.includes(word)).length;
   }
-  
+
   const totalContextWords = professionalCount + personalCount;
   const contextAlignment = totalContextWords > 0
     ? Math.abs(professionalCount - personalCount) / totalContextWords
     : 0.5;
-  
+
   return {
     interactionFrequency: frequency,
     interactionQuality: quality,
@@ -334,23 +334,23 @@ export function determineTrajectory(
   dimension: RelationshipDimension,
   historicalStrengths: number[]
 ): 'strengthening' | 'weakening' | 'stable' | 'volatile' {
-  if (historicalStrengths.length < 2) return 'stable';
-  
+  if (historicalStrengths.length < 2) {return 'stable';}
+
   // Calculate trend
   const recentStrengths = historicalStrengths.slice(-5); // Last 5 data points
   const avgRecent = recentStrengths.reduce((sum, s) => sum + s, 0) / recentStrengths.length;
   const avgHistorical = historicalStrengths.reduce((sum, s) => sum + s, 0) / historicalStrengths.length;
-  
+
   // Calculate volatility
-  const variance = historicalStrengths.reduce((sum, s) => 
+  const variance = historicalStrengths.reduce((sum, s) =>
     sum + Math.pow(s - avgHistorical, 2), 0
   ) / historicalStrengths.length;
   const volatility = Math.sqrt(variance);
-  
+
   // Determine trajectory
-  if (volatility > 0.3) return 'volatile';
-  if (avgRecent > avgHistorical + 0.1) return 'strengthening';
-  if (avgRecent < avgHistorical - 0.1) return 'weakening';
+  if (volatility > 0.3) {return 'volatile';}
+  if (avgRecent > avgHistorical + 0.1) {return 'strengthening';}
+  if (avgRecent < avgHistorical - 0.1) {return 'weakening';}
   return 'stable';
 }
 
@@ -371,26 +371,26 @@ export function calculateCompositeRelationship(
       narrativeSummary: 'No established relationship dimensions.'
     };
   }
-  
+
   // Sort dimensions by strength
   const sortedDimensions = [...dimensions].sort((a, b) => b.strength - a.strength);
   const primaryDimension = sortedDimensions[0];
   const secondaryDimensions = sortedDimensions.slice(1).filter(d => d.strength > 0.2);
-  
+
   // Calculate weighted average strength
   const totalWeight = dimensions.reduce((sum, d) => sum + d.confidence, 0);
   const overallStrength = totalWeight > 0
     ? dimensions.reduce((sum, d) => sum + d.strength * d.confidence, 0) / totalWeight
     : 0;
-  
+
   // Calculate complexity (number of significant dimensions)
   const significantDimensions = dimensions.filter(d => d.strength > 0.3);
   const complexity = significantDimensions.length / Math.max(1, dimensions.length);
-  
+
   // Determine overall trajectory
   const trajectories = dimensions.map(d => d.trajectory);
   let trajectory: 'improving' | 'declining' | 'stable' | 'turbulent';
-  
+
   if (trajectories.includes('volatile') || trajectories.filter(t => t === 'volatile').length > 1) {
     trajectory = 'turbulent';
   } else if (trajectories.filter(t => t === 'strengthening').length > trajectories.length / 2) {
@@ -400,7 +400,7 @@ export function calculateCompositeRelationship(
   } else {
     trajectory = 'stable';
   }
-  
+
   // Generate narrative summary
   const narrativeSummary = generateRelationshipNarrative(
     primaryDimension,
@@ -410,7 +410,7 @@ export function calculateCompositeRelationship(
     trajectory,
     metadata
   );
-  
+
   return {
     overallStrength,
     primaryDimension,
@@ -433,14 +433,14 @@ function generateRelationshipNarrative(
   metadata: RelationshipMetadata
 ): string {
   const parts: string[] = [];
-  
+
   // Primary relationship
   const primaryType = getPrimaryType(primary);
   if (primaryType) {
     const strengthWord = getStrengthWord(primary.strength);
     parts.push(`I see them primarily as ${getArticle(primaryType.label)} ${strengthWord} ${primaryType.label.toLowerCase()}`);
   }
-  
+
   // Secondary relationships
   if (secondary.length > 0) {
     const secondaryDescriptions = secondary
@@ -449,19 +449,19 @@ function generateRelationshipNarrative(
         const type = getPrimaryType(dim);
         return type ? type.label.toLowerCase() : 'connection';
       });
-    
+
     if (secondaryDescriptions.length === 1) {
       parts.push(`but also as a ${secondaryDescriptions[0]}`);
     } else {
       parts.push(`but also as a ${secondaryDescriptions.join(' and ')}`);
     }
   }
-  
+
   // Complexity note
   if (complexity > 0.6) {
     parts.push('(it\'s a complex, multi-faceted relationship)');
   }
-  
+
   // Trajectory
   if (trajectory === 'improving') {
     parts.push('and our connection has been growing stronger');
@@ -470,7 +470,7 @@ function generateRelationshipNarrative(
   } else if (trajectory === 'turbulent') {
     parts.push('with some ups and downs along the way');
   }
-  
+
   // Recent interaction
   if (metadata.lastInteractionAt) {
     const daysSince = (Date.now() - metadata.lastInteractionAt.getTime()) / (1000 * 60 * 60 * 24);
@@ -484,8 +484,8 @@ function generateRelationshipNarrative(
       parts.push('- we haven\'t connected in a while');
     }
   }
-  
-  return parts.join(' ') + '.';
+
+  return `${parts.join(' ')}.`;
 }
 
 /**
@@ -493,14 +493,14 @@ function generateRelationshipNarrative(
  */
 function getPrimaryType(dimension: RelationshipDimension) {
   const categoryTypes = RELATIONSHIP_TYPES[dimension.category];
-  if (!categoryTypes) return null;
-  
+  if (!categoryTypes) {return null;}
+
   for (const typeInfo of Object.values(categoryTypes)) {
     if (typeInfo.id === dimension.type) {
       return typeInfo;
     }
   }
-  
+
   return null;
 }
 
@@ -508,10 +508,10 @@ function getPrimaryType(dimension: RelationshipDimension) {
  * Get strength descriptor word
  */
 function getStrengthWord(strength: number): string {
-  if (strength > 0.8) return 'very close';
-  if (strength > 0.6) return 'good';
-  if (strength > 0.4) return '';
-  if (strength > 0.2) return 'casual';
+  if (strength > 0.8) {return 'very close';}
+  if (strength > 0.6) {return 'good';}
+  if (strength > 0.4) {return '';}
+  if (strength > 0.2) {return 'casual';}
   return 'distant';
 }
 
@@ -534,30 +534,30 @@ export function updateDimension(
 ): RelationshipDimension {
   // Add new evidence
   const updatedEvidence = [...dimension.evidence, ...newEvidence];
-  
+
   // Remove old/weak evidence if over limit
   if (updatedEvidence.length > 50) {
-    updatedEvidence.sort((a, b) => 
+    updatedEvidence.sort((a, b) =>
       b.weight * b.source.confidence - a.weight * a.source.confidence
     );
     updatedEvidence.splice(50);
   }
-  
+
   // Recalculate strength
   const updatedDimension: RelationshipDimension = {
     ...dimension,
     evidence: updatedEvidence,
     lastUpdated: new Date()
   };
-  
+
   updatedDimension.strength = calculateDimensionStrength(updatedDimension, factors, config);
-  
+
   // Update confidence based on evidence quality
-  const avgConfidence = updatedEvidence.reduce((sum, e) => 
+  const avgConfidence = updatedEvidence.reduce((sum, e) =>
     sum + e.source.confidence, 0
   ) / Math.max(1, updatedEvidence.length);
   updatedDimension.confidence = Math.min(1.0, avgConfidence * 1.2); // Slight boost
-  
+
   return updatedDimension;
 }
 
@@ -571,7 +571,7 @@ export function createRelationshipMatrix(
   metadata: RelationshipMetadata
 ): RelationshipMatrix {
   const composite = calculateCompositeRelationship(dimensions, metadata);
-  
+
   return {
     id: asUUID(`rel-${sourceEntityId}-${targetEntityId}-${Date.now()}`),
     sourceEntityId: asUUID(sourceEntityId),

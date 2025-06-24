@@ -130,7 +130,7 @@ export const autoPlugin: Plugin = {
   // Start API server if enabled
   init: async (config: Record<string, string>, runtime: any) => {
     if (process.env.AUTONOMOUS_API_PORT) {
-      const port = parseInt(process.env.AUTONOMOUS_API_PORT);
+      const port = parseInt(process.env.AUTONOMOUS_API_PORT, 10);
       const apiServer = new AutonomyAPIServer(runtime, port);
 
       // Hook into OODA service when it starts

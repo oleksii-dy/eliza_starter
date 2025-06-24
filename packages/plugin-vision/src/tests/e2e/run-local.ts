@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { AgentRuntime, createUniqueUuid } from '@elizaos/core';
 import { VisionService } from '../../service';
 import visionBasicE2ETests from './vision-basic';
 import visionAutonomyE2ETests from './vision-autonomy';
@@ -22,21 +21,21 @@ async function runE2ETests() {
       return settings[key] || null;
     },
     getService: (name: string) => {
-      if (name === 'VISION') return visionService;
+      if (name === 'VISION') {return visionService;}
       return null;
     },
     createMemory: async () => {},
     getMemories: async () => [],
-    composeState: async () => ({ 
+    composeState: async () => ({
       values: {
         visionAvailable: visionService?.isActive() || false,
         cameraStatus: visionService?.isActive() ? 'connected' : 'not connected',
         sceneDescription: 'Test scene'
-      }, 
-      data: {}, 
-      text: 'Visual Perception: Available' 
+      },
+      data: {},
+      text: 'Visual Perception: Available'
     }),
-    useModel: async (type: string, params: any) => {
+    useModel: async (type: string, _params: any) => {
       if (type === 'IMAGE_DESCRIPTION') {
         return { description: 'A test scene with various objects' };
       }
@@ -80,12 +79,12 @@ async function runE2ETests() {
   }
 
   // Summary
-  console.log('\n' + '='.repeat(60));
+  console.log(`\n${'='.repeat(60)}`);
   console.log('📊 Test Summary:');
   console.log(`   Total:  ${totalTests} tests`);
   console.log(`   ✅ Passed: ${passedTests} tests`);
   console.log(`   ❌ Failed: ${failedTests} tests`);
-  console.log('='.repeat(60) + '\n');
+  console.log(`${'='.repeat(60)}\n`);
 
   // Cleanup
   await visionService.stop();

@@ -1,6 +1,6 @@
 /**
  * Custom Error Types for Training Plugin
- * 
+ *
  * Provides specific error types for different failure scenarios with proper categorization,
  * context information, and retry guidance.
  */
@@ -13,7 +13,7 @@ import { elizaLogger } from '@elizaos/core';
 export abstract class TrainingError extends Error {
   abstract readonly code: string;
   abstract readonly category: ErrorCategory;
-  
+
   public readonly timestamp: number;
   public readonly context: Record<string, any>;
   public readonly retryable: boolean;
@@ -31,7 +31,7 @@ export abstract class TrainingError extends Error {
     this.context = context;
     this.retryable = retryable;
     (this as any).retryAfter = retryAfter;
-    
+
     // Ensure proper stack trace
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
@@ -90,11 +90,7 @@ export class MissingConfigurationError extends ConfigurationError {
   readonly code = 'CONFIGURATION_ERROR';
 
   constructor(configKey: string, context: Record<string, any> = {}) {
-    super(
-      `Required configuration missing: ${configKey}`,
-      configKey,
-      context
-    );
+    super(`Required configuration missing: ${configKey}`, configKey, context);
   }
 
   getUserMessage(): string {
@@ -105,7 +101,12 @@ export class MissingConfigurationError extends ConfigurationError {
 export class InvalidConfigurationError extends ConfigurationError {
   readonly code = 'CONFIGURATION_ERROR';
 
-  constructor(configKey: string, value: any, expectedFormat: string, context: Record<string, any> = {}) {
+  constructor(
+    configKey: string,
+    value: any,
+    expectedFormat: string,
+    context: Record<string, any> = {}
+  ) {
     super(
       `Invalid configuration for ${configKey}: expected ${expectedFormat}, got ${typeof value}`,
       configKey,
@@ -121,10 +122,16 @@ export class NetworkError extends TrainingError {
   readonly code = 'NETWORK_ERROR';
   readonly category = ErrorCategory.NETWORK;
 
-  constructor(message: string, url?: string, statusCode?: number, context: Record<string, any> = {}) {
+  constructor(
+    message: string,
+    url?: string,
+    statusCode?: number,
+    context: Record<string, any> = {}
+  ) {
     const retryable = statusCode ? statusCode >= 500 || statusCode === 429 : true;
-    const retryAfter = statusCode === 429 ? 30000 : statusCode && statusCode >= 500 ? 5000 : undefined;
-    
+    const retryAfter =
+      statusCode === 429 ? 30000 : statusCode && statusCode >= 500 ? 5000 : undefined;
+
     super(message, { url, statusCode, ...context }, retryable, retryAfter);
   }
 }
@@ -132,13 +139,13 @@ export class NetworkError extends TrainingError {
 export class APIError extends NetworkError {
   readonly code = 'NETWORK_ERROR';
 
-  constructor(service: string, message: string, statusCode?: number, context: Record<string, any> = {}) {
-    super(
-      `${service} API error: ${message}`,
-      undefined,
-      statusCode,
-      { service, ...context }
-    );
+  constructor(
+    service: string,
+    message: string,
+    statusCode?: number,
+    context: Record<string, any> = {}
+  ) {
+    super(`${service} API error: ${message}`, undefined, statusCode, { service, ...context });
   }
 }
 
@@ -147,12 +154,7 @@ export class RateLimitError extends NetworkError {
 
   constructor(service: string, resetTime?: number, context: Record<string, any> = {}) {
     const retryAfter = resetTime ? Math.max(resetTime - Date.now(), 1000) : 60000;
-    super(
-      `Rate limit exceeded for ${service}`,
-      undefined,
-      429,
-      { service, resetTime, ...context }
-    );
+    super(`Rate limit exceeded for ${service}`, undefined, 429, { service, resetTime, ...context });
     (this as any).retryAfter = retryAfter;
   }
 
@@ -198,12 +200,11 @@ export class DataValidationError extends ValidationError {
   readonly code = 'VALIDATION_ERROR';
 
   constructor(dataType: string, issues: string[], context: Record<string, any> = {}) {
-    super(
-      'data',
+    super('data', dataType, `${dataType} validation failed: ${issues.join(', ')}`, {
       dataType,
-      `${dataType} validation failed: ${issues.join(', ')}`,
-      { dataType, issues, ...context }
-    );
+      issues,
+      ...context,
+    });
   }
 }
 
@@ -214,7 +215,12 @@ export class ResourceError extends TrainingError {
   readonly code = 'RESOURCE_ERROR';
   readonly category = ErrorCategory.RESOURCE;
 
-  constructor(resource: string, operation: string, message: string, context: Record<string, any> = {}) {
+  constructor(
+    resource: string,
+    operation: string,
+    message: string,
+    context: Record<string, any> = {}
+  ) {
     super(
       `Resource operation failed: ${operation} on ${resource} - ${message}`,
       { resource, operation, ...context },
@@ -228,12 +234,11 @@ export class ResourceNotFoundError extends ResourceError {
   readonly code = 'RESOURCE_ERROR';
 
   constructor(resourceType: string, identifier: string, context: Record<string, any> = {}) {
-    super(
+    super(resourceType, 'find', `${resourceType} not found: ${identifier}`, {
       resourceType,
-      'find',
-      `${resourceType} not found: ${identifier}`,
-      { resourceType, identifier, ...context }
-    );
+      identifier,
+      ...context,
+    });
     (this as any).retryable = false;
   }
 }
@@ -242,12 +247,12 @@ export class ResourceExhaustedError extends ResourceError {
   readonly code = 'RESOURCE_ERROR';
 
   constructor(resource: string, limit: number, current: number, context: Record<string, any> = {}) {
-    super(
+    super(resource, 'allocate', `${resource} exhausted: ${current}/${limit}`, {
       resource,
-      'allocate',
-      `${resource} exhausted: ${current}/${limit}`,
-      { resource, limit, current, ...context }
-    );
+      limit,
+      current,
+      ...context,
+    });
     (this as any).retryAfter = 60000; // 1 minute
   }
 }
@@ -260,12 +265,7 @@ export class ProcessingError extends TrainingError {
   readonly category = ErrorCategory.PROCESSING;
 
   constructor(operation: string, message: string, context: Record<string, any> = {}) {
-    super(
-      `Processing failed: ${operation} - ${message}`,
-      { operation, ...context },
-      true,
-      2000
-    );
+    super(`Processing failed: ${operation} - ${message}`, { operation, ...context }, true, 2000);
   }
 }
 
@@ -273,11 +273,12 @@ export class DataProcessingError extends ProcessingError {
   readonly code = 'PROCESSING_ERROR';
 
   constructor(stage: string, dataType: string, reason: string, context: Record<string, any> = {}) {
-    super(
-      `data processing (${stage})`,
-      `Failed to process ${dataType}: ${reason}`,
-      { stage, dataType, reason, ...context }
-    );
+    super(`data processing (${stage})`, `Failed to process ${dataType}: ${reason}`, {
+      stage,
+      dataType,
+      reason,
+      ...context,
+    });
   }
 }
 
@@ -288,7 +289,12 @@ export class ExternalServiceError extends TrainingError {
   readonly code = 'EXTERNAL_SERVICE_ERROR';
   readonly category = ErrorCategory.EXTERNAL_SERVICE;
 
-  constructor(service: string, operation: string, message: string, context: Record<string, any> = {}) {
+  constructor(
+    service: string,
+    operation: string,
+    message: string,
+    context: Record<string, any> = {}
+  ) {
     super(
       `External service error: ${service} ${operation} - ${message}`,
       { service, operation, ...context },
@@ -315,12 +321,7 @@ export class DatabaseError extends TrainingError {
   readonly category = ErrorCategory.DATABASE;
 
   constructor(operation: string, message: string, context: Record<string, any> = {}) {
-    super(
-      `Database error: ${operation} - ${message}`,
-      { operation, ...context },
-      true,
-      1000
-    );
+    super(`Database error: ${operation} - ${message}`, { operation, ...context }, true, 1000);
   }
 }
 
@@ -328,11 +329,7 @@ export class DatabaseConnectionError extends DatabaseError {
   readonly code = 'DATABASE_ERROR';
 
   constructor(database: string, context: Record<string, any> = {}) {
-    super(
-      'connect',
-      `Failed to connect to ${database} database`,
-      { database, ...context }
-    );
+    super('connect', `Failed to connect to ${database} database`, { database, ...context });
     (this as any).retryAfter = 5000; // 5 seconds
   }
 }
@@ -380,11 +377,7 @@ export class RuntimeError extends TrainingError {
   readonly category = ErrorCategory.RUNTIME;
 
   constructor(component: string, message: string, context: Record<string, any> = {}) {
-    super(
-      `Runtime error in ${component}: ${message}`,
-      { component, ...context },
-      false
-    );
+    super(`Runtime error in ${component}: ${message}`, { component, ...context }, false);
   }
 }
 
@@ -405,7 +398,7 @@ export class ErrorHandler {
     retryCallback?: () => Promise<T>
   ): Promise<T | null> {
     const trainingError = this.normalizeError(error, operation, context);
-    
+
     // Log the error with full context
     elizaLogger.error(`Training plugin error: ${operation}`, trainingError.toLogContext());
 
@@ -416,11 +409,13 @@ export class ErrorHandler {
 
       if (currentRetries < this.maxRetries) {
         this.retryHistory.set(retryKey, currentRetries + 1);
-        
+
         // Wait before retrying
         if (trainingError.retryAfter) {
-          elizaLogger.info(`Retrying ${operation} in ${trainingError.retryAfter}ms (attempt ${currentRetries + 1}/${this.maxRetries})`);
-          await new Promise(resolve => setTimeout(resolve, trainingError.retryAfter));
+          elizaLogger.info(
+            `Retrying ${operation} in ${trainingError.retryAfter}ms (attempt ${currentRetries + 1}/${this.maxRetries})`
+          );
+          await new Promise((resolve) => setTimeout(resolve, trainingError.retryAfter));
         }
 
         try {
@@ -443,7 +438,11 @@ export class ErrorHandler {
   /**
    * Convert any error to a TrainingError
    */
-  static normalizeError(error: unknown, operation: string, context: Record<string, any> = {}): TrainingError {
+  static normalizeError(
+    error: unknown,
+    operation: string,
+    context: Record<string, any> = {}
+  ): TrainingError {
     if (error instanceof TrainingError) {
       return error;
     }
@@ -451,27 +450,46 @@ export class ErrorHandler {
     if (error instanceof Error) {
       // Try to categorize based on error message and type
       const message = error.message.toLowerCase();
-      
-      if (message.includes('fetch') || message.includes('network') || message.includes('timeout') || message.includes('connection')) {
+
+      if (
+        message.includes('fetch') ||
+        message.includes('network') ||
+        message.includes('timeout') ||
+        message.includes('connection')
+      ) {
         return new NetworkError(error.message, context.url, context.statusCode, context);
       }
-      
-      if (message.includes('unauthorized') || message.includes('forbidden') || message.includes('api key') || message.includes('credentials') || message.includes('authentication')) {
+
+      if (
+        message.includes('unauthorized') ||
+        message.includes('forbidden') ||
+        message.includes('api key') ||
+        message.includes('credentials') ||
+        message.includes('authentication')
+      ) {
         return new AuthenticationError(context.service || 'unknown', error.message, context);
       }
-      
+
       if (message.includes('not found') || message.includes('enoent')) {
-        return new ResourceNotFoundError(context.resourceType || 'resource', context.identifier || 'unknown', context);
+        return new ResourceNotFoundError(
+          context.resourceType || 'resource',
+          context.identifier || 'unknown',
+          context
+        );
       }
-      
+
       if (message.includes('permission') || message.includes('access denied')) {
-        return new PermissionError(context.operation || 'unknown', context.path || 'unknown', context);
+        return new PermissionError(
+          context.operation || 'unknown',
+          context.path || 'unknown',
+          context
+        );
       }
-      
+
       if (message.includes('rate limit') || message.includes('too many requests')) {
         return new RateLimitError(context.service || 'unknown', context.resetTime, context);
       }
-      
+
       if (message.includes('database') || message.includes('sql')) {
         return new DatabaseError(context.operation || 'unknown', error.message, context);
       }
@@ -512,11 +530,7 @@ export class ErrorHandler {
    */
   static validateNumericRange(value: number, min: number, max: number, configKey: string): void {
     if (value < min || value > max) {
-      throw new InvalidConfigurationError(
-        configKey,
-        value,
-        `number between ${min} and ${max}`
-      );
+      throw new InvalidConfigurationError(configKey, value, `number between ${min} and ${max}`);
     }
   }
 
@@ -548,7 +562,7 @@ export function withErrorHandling(operation: string) {
       } catch (error) {
         return ErrorHandler.handleError(error, `${target.constructor.name}.${propertyKey}`, {
           operation,
-          args: args.length > 0 ? args.slice(0, 2) : [] // Limit args to avoid circular refs
+          args: args.length > 0 ? args.slice(0, 2) : [], // Limit args to avoid circular refs
         });
       }
     };
@@ -568,19 +582,14 @@ export async function withRetry<T>(
 ): Promise<T> {
   const originalMaxRetries = ErrorHandler['maxRetries'];
   ErrorHandler.setMaxRetries(maxRetries);
-  
+
   try {
     // Try the operation first
     try {
       return await operation();
     } catch (error) {
       // If it fails, use error handler with retry logic
-      return await ErrorHandler.handleError(
-        error,
-        operationName,
-        context,
-        operation
-      ) as T;
+      return (await ErrorHandler.handleError(error, operationName, context, operation)) as T;
     }
   } finally {
     ErrorHandler.setMaxRetries(originalMaxRetries);

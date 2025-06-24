@@ -3,51 +3,7 @@ import type { TypeScriptParser } from './TypeScriptParser.js';
 import type { ASTQueueItem, EnvUsage, TodoItem } from './types/index.js';
 
 /**
- * Defines a type representing various AST node types in a JavaScript abstract syntax tree.
- * @typedef {Object} AST_NODE_TYPES
- * @property {string} ClassDeclaration - Represents a class declaration node.
- * @property {string} FunctionDeclaration - Represents a function declaration node.
- * @property {string} TSTypeAliasDeclaration - Represents a TypeScript type alias declaration node.
- * @property {string} TSEnumDeclaration - Represents a TypeScript enum declaration node.
- * @property {string} MethodDefinition - Represents a method definition node.
- * @property {string} TSMethodSignature - Represents a TypeScript method signature node.
- * @property {string} TSInterfaceDeclaration - Represents a TypeScript interface declaration node.
- * @property {string} TSPropertySignature - Represents a TypeScript property signature node.
- * @property {string} ExportNamedDeclaration - Represents an export named declaration node.
- * @property {string} Identifier - Represents an identifier node.
- * @property {string} VariableDeclaration - Represents a variable declaration node.
- */
-
-type AST_NODE_TYPES = {
-  ClassDeclaration: 'ClassDeclaration';
-  FunctionDeclaration: 'FunctionDeclaration';
-  TSTypeAliasDeclaration: 'TSTypeAliasDeclaration';
-  TSEnumDeclaration: 'TSEnumDeclaration';
-  MethodDefinition: 'MethodDefinition';
-  TSMethodSignature: 'TSMethodSignature';
-  TSInterfaceDeclaration: 'TSInterfaceDeclaration';
-  TSPropertySignature: 'TSPropertySignature';
-  ExportNamedDeclaration: 'ExportNamedDeclaration';
-  Identifier: 'Identifier';
-  VariableDeclaration: 'VariableDeclaration';
-};
-
-/**
  * Constant object representing AST node types.
- * @constant
- * @readonly
- * @type {Object}
- * @property {string} ClassDeclaration - Represents a class declaration.
- * @property {string} FunctionDeclaration - Represents a function declaration.
- * @property {string} TSTypeAliasDeclaration - Represents a type alias declaration in TypeScript.
- * @property {string} TSEnumDeclaration - Represents an enum declaration in TypeScript.
- * @property {string} MethodDefinition - Represents a method definition.
- * @property {string} TSMethodSignature - Represents a method signature in TypeScript.
- * @property {string} TSInterfaceDeclaration - Represents an interface declaration in TypeScript.
- * @property {string} TSPropertySignature - Represents a property signature in TypeScript.
- * @property {string} ExportNamedDeclaration - Represents an export named declaration.
- * @property {string} Identifier - Represents an identifier.
- * @property {string} VariableDeclaration - Represents a variable declaration.
  */
 const AST_NODE_TYPES = {
   ClassDeclaration: 'ClassDeclaration',
@@ -127,7 +83,9 @@ export class JsDocAnalyzer {
    * Checks if a node spans more than the specified number of lines
    */
   private isLongEnough(node: TSESTree.Node, minLines = 10): boolean {
-    if (!node.loc) return false;
+    if (!node.loc) {
+      return false;
+    }
     return node.loc.end.line - node.loc.start.line > minLines;
   }
 
@@ -145,14 +103,20 @@ export class JsDocAnalyzer {
    */
   private isSignificantConstant(node: TSESTree.VariableDeclaration): boolean {
     // Must be const declaration
-    if (node.kind !== 'const') return false;
+    if (node.kind !== 'const') {
+      return false;
+    }
 
     // Must be exported
     const parent = node.parent;
-    if (!parent || !this.isExportNamedDeclaration(parent)) return false;
+    if (!parent || !this.isExportNamedDeclaration(parent)) {
+      return false;
+    }
 
     // Must span multiple lines (at least 10)
-    if (!node.loc) return false;
+    if (!node.loc) {
+      return false;
+    }
     const lineCount = node.loc.end.line - node.loc.start.line;
     return lineCount >= 10;
   }
@@ -383,7 +347,7 @@ export class JsDocAnalyzer {
           ? nodeName
           : undefined,
       name: nodeName!,
-      code: code,
+      code,
     };
   }
 
@@ -485,7 +449,9 @@ export class JsDocAnalyzer {
    */
   public getClassMethods(filePath: string, className?: string): TSESTree.MethodDefinition[] {
     const ast = this.typeScriptParser.parse(filePath);
-    if (!ast) return [];
+    if (!ast) {
+      return [];
+    }
 
     // Find all class declarations in the file
     const classNodes = ast.body.filter(
@@ -521,7 +487,9 @@ export class JsDocAnalyzer {
     this.todoItems = [];
 
     comments.forEach((comment) => {
-      if (!comment.loc) return;
+      if (!comment.loc) {
+        return;
+      }
 
       const commentText = comment.value.toLowerCase();
       if (commentText.includes('todo')) {
@@ -587,7 +555,9 @@ export class JsDocAnalyzer {
     this.envUsages = [];
 
     const findEnvReferences = (node: TSESTree.Node) => {
-      if (!node.loc) return;
+      if (!node.loc) {
+        return;
+      }
 
       // Check for process.env
       if (
@@ -684,7 +654,9 @@ export class JsDocAnalyzer {
    * Extracts the full context including any variable declarations and surrounding code
    */
   private extractFullContext(sourceCode: string, node: TSESTree.Node): string {
-    if (!node.loc) return '';
+    if (!node.loc) {
+      return '';
+    }
 
     const lines = sourceCode.split('\n');
     const startLine = node.loc.start.line - 1;
@@ -735,7 +707,9 @@ export class JsDocAnalyzer {
     let smallestDistance = Number.POSITIVE_INFINITY;
 
     const traverse = (node: TSESTree.Node | null) => {
-      if (!node) return;
+      if (!node) {
+        return;
+      }
 
       // Check if the node has a location
       if (node.loc) {

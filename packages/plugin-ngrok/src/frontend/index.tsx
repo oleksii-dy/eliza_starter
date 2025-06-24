@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   QueryClient,
@@ -11,14 +11,12 @@ import './index.css';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from './ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import Loader from './loader';
-import { cn } from './utils';
 import {
   Globe,
-  Link2,
   Activity,
   Clock,
   Play,
@@ -140,6 +138,7 @@ const CopyButton = ({ text }: { text: string }) => {
 
   const handleCopy = async () => {
     try {
+      // eslint-disable-next-line no-undef
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -230,8 +229,12 @@ const StartTunnelForm = () => {
       port: parseInt(port, 10),
     };
 
-    if (region) config.region = region;
-    if (subdomain) config.subdomain = subdomain;
+    if (region) {
+      config.region = region;
+    }
+    if (subdomain) {
+      config.subdomain = subdomain;
+    }
 
     startMutation.mutate(config);
   };
@@ -314,6 +317,7 @@ function App() {
   const stopMutation = useStopTunnel();
 
   const handleStop = () => {
+    // eslint-disable-next-line no-alert
     if (window.confirm('Are you sure you want to stop the tunnel?')) {
       stopMutation.mutate();
     }

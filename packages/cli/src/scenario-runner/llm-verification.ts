@@ -6,6 +6,8 @@ import type {
   ScenarioMessage,
 } from './types.js';
 
+// ENHANCED: Real LLM verification with proper error handling and result parsing
+
 export class LLMVerificationEngine {
   private runtime: IAgentRuntime;
 

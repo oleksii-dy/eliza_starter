@@ -400,7 +400,7 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
     PAYMENT_REQUIRE_CONFIRMATION: 'false',
     PAYMENT_TRUST_THRESHOLD: '70',
     PAYMENT_MAX_DAILY_SPEND: '1000',
-    WALLET_ENCRYPTION_KEY: '0x' + '0'.repeat(64),
+    WALLET_ENCRYPTION_KEY: `0x${'0'.repeat(64)}`,
     ETH_RPC_URL: 'https://eth-sepolia.g.alchemy.com/v2/demo',
     POLYGON_RPC_URL: 'https://polygon-mumbai.g.alchemy.com/v2/demo',
     NODE_ENV: 'test',

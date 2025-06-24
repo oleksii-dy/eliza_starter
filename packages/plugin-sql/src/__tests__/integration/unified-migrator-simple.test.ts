@@ -145,8 +145,8 @@ describe('Unified Migrator - Simple Hello World Test', () => {
       // Create migrator and add plugin tables
       const migrator = new UnifiedMigrator(db, 'postgres', testAgentId);
       await migrator.registerPluginTables(HELLO_WORLD_TABLES);
-      
-      // Re-initialize to create plugin tables  
+
+      // Re-initialize to create plugin tables
       await migrator.reinitialize();
 
       // Test plugin tables work
@@ -159,7 +159,7 @@ describe('Unified Migrator - Simple Hello World Test', () => {
       // Test core and plugin tables can be queried together
       const coreCount = await db.execute(sql`SELECT COUNT(*) as count FROM entities`);
       const pluginCount = await db.execute(sql`SELECT COUNT(*) as count FROM hello_world`);
-      
+
       expect(Number(coreCount.rows[0].count)).toBeGreaterThanOrEqual(0);
       expect(Number(pluginCount.rows[0].count)).toBeGreaterThanOrEqual(1);
 
@@ -168,4 +168,4 @@ describe('Unified Migrator - Simple Hello World Test', () => {
       await cleanup();
     }
   });
-}); 
+});

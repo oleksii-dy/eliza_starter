@@ -1,33 +1,42 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { browseWebAction } from '../../actions/browser-action';
 import { createMockRuntime, createMockMemory, createMockState } from '../utils/mock-runtime';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
-// Mock Puppeteer
-vi.mock('puppeteer', () => ({
+// Create mock puppeteer module
+const mockPuppeteer = {
   default: {
-    launch: vi.fn(() => Promise.resolve({
-      newPage: vi.fn(() => Promise.resolve({
-        goto: vi.fn(() => Promise.resolve()),
-        content: vi.fn(() => Promise.resolve('<html><body><h1>Test Page</h1></body></html>')),
-        title: vi.fn(() => Promise.resolve('Test Title')),
-        evaluate: vi.fn(() => Promise.resolve([
-          { text: 'Link 1', href: 'http://example.com/1' },
-          { text: 'Link 2', href: 'http://example.com/2' }
-        ])),
-        setUserAgent: vi.fn(() => Promise.resolve()),
-        setViewport: vi.fn(() => Promise.resolve()),
-        close: vi.fn(() => Promise.resolve()),
-        waitForSelector: vi.fn(() => Promise.resolve({})),
-        $: vi.fn(() => Promise.resolve({})),
-        $$: vi.fn(() => Promise.resolve([])),
-        $eval: vi.fn(() => Promise.resolve('Test content')),
-        $$eval: vi.fn(() => Promise.resolve(['Test results'])),
-      })),
-      close: vi.fn(() => Promise.resolve()),
-    })),
+    launch: mock(() =>
+      Promise.resolve({
+        newPage: mock(() =>
+          Promise.resolve({
+            goto: mock(() => Promise.resolve()),
+            content: mock(() => Promise.resolve('<html><body><h1>Test Page</h1></body></html>')),
+            title: mock(() => Promise.resolve('Test Title')),
+            evaluate: mock(() =>
+              Promise.resolve([
+                { text: 'Link 1', href: 'http://example.com/1' },
+                { text: 'Link 2', href: 'http://example.com/2' },
+              ])
+            ),
+            setUserAgent: mock(() => Promise.resolve()),
+            setViewport: mock(() => Promise.resolve()),
+            close: mock(() => Promise.resolve()),
+            waitForSelector: mock(() => Promise.resolve({})),
+            $: mock(() => Promise.resolve({})),
+            $$: mock(() => Promise.resolve([])),
+            $eval: mock(() => Promise.resolve('Test content')),
+            $$eval: mock(() => Promise.resolve(['Test results'])),
+          })
+        ),
+        close: mock(() => Promise.resolve()),
+      })
+    ),
   },
-}));
+};
+
+// Mock the puppeteer module
+mock.module('puppeteer', () => mockPuppeteer);
 
 describe('browseWebAction', () => {
   let mockRuntime: IAgentRuntime;
@@ -36,18 +45,18 @@ describe('browseWebAction', () => {
   let mockCallback: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime({
       settings: {
         PUPPETEER_HEADLESS: 'true',
         PUPPETEER_TIMEOUT: '30000',
       },
     });
-    mockCallback = vi.fn();
+    mockCallback = mock();
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('validate', () => {
@@ -117,13 +126,7 @@ describe('browseWebAction', () => {
         },
       });
 
-      await browseWebAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await browseWebAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -142,13 +145,7 @@ describe('browseWebAction', () => {
         },
       });
 
-      await browseWebAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await browseWebAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -167,13 +164,7 @@ describe('browseWebAction', () => {
         },
       });
 
-      await browseWebAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await browseWebAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -187,9 +178,7 @@ describe('browseWebAction', () => {
     it('should handle browser launch failures', async () => {
       // Mock Puppeteer to throw error on launch
       const puppeteer = await import('puppeteer');
-      vi.mocked(puppeteer.default.launch).mockRejectedValueOnce(
-        new Error('Browser launch failed')
-      );
+      mock(puppeteer.default.launch).mockRejectedValueOnce(new Error('Browser launch failed'));
 
       mockMemory = createMockMemory({
         content: {
@@ -198,13 +187,7 @@ describe('browseWebAction', () => {
         },
       });
 
-      await browseWebAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await browseWebAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -219,16 +202,16 @@ describe('browseWebAction', () => {
       // Mock page.goto to throw timeout error
       const puppeteer = await import('puppeteer');
       const mockPage = {
-        goto: vi.fn().mockRejectedValue(new Error('Navigation timeout')),
-        setUserAgent: vi.fn(),
-        setViewport: vi.fn(),
-        close: vi.fn(),
+        goto: mock().mockRejectedValue(new Error('Navigation timeout')),
+        setUserAgent: mock(),
+        setViewport: mock(),
+        close: mock(),
       };
       const mockBrowser = {
-        newPage: vi.fn().mockResolvedValue(mockPage),
-        close: vi.fn(),
+        newPage: mock().mockResolvedValue(mockPage),
+        close: mock(),
       };
-      vi.mocked(puppeteer.default.launch).mockResolvedValueOnce(mockBrowser as any);
+      mock(puppeteer.default.launch).mockResolvedValueOnce(mockBrowser as any);
 
       mockMemory = createMockMemory({
         content: {
@@ -237,13 +220,7 @@ describe('browseWebAction', () => {
         },
       });
 
-      await browseWebAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await browseWebAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -261,13 +238,7 @@ describe('browseWebAction', () => {
         },
       });
 
-      await browseWebAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await browseWebAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -287,13 +258,7 @@ describe('browseWebAction', () => {
           },
         });
 
-        await browseWebAction.handler(
-          mockRuntime,
-          mockMemory,
-          mockState,
-          {},
-          mockCallback
-        );
+        await browseWebAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
       }
 
       // Should have been called 3 times (no rate limiting errors expected in this simple test)
@@ -303,19 +268,19 @@ describe('browseWebAction', () => {
     it('should clean up browser resources', async () => {
       const puppeteer = await import('puppeteer');
       const mockPage = {
-        goto: vi.fn().mockResolvedValue(undefined),
-        content: vi.fn().mockResolvedValue('<html><body>Test</body></html>'),
-        title: vi.fn().mockResolvedValue('Test'),
-        evaluate: vi.fn().mockResolvedValue([]),
-        setUserAgent: vi.fn(),
-        setViewport: vi.fn(),
-        close: vi.fn(),
+        goto: mock().mockResolvedValue(undefined),
+        content: mock().mockResolvedValue('<html><body>Test</body></html>'),
+        title: mock().mockResolvedValue('Test'),
+        evaluate: mock().mockResolvedValue([]),
+        setUserAgent: mock(),
+        setViewport: mock(),
+        close: mock(),
       };
       const mockBrowser = {
-        newPage: vi.fn().mockResolvedValue(mockPage),
-        close: vi.fn(),
+        newPage: mock().mockResolvedValue(mockPage),
+        close: mock(),
       };
-      vi.mocked(puppeteer.default.launch).mockResolvedValueOnce(mockBrowser as any);
+      mock(puppeteer.default.launch).mockResolvedValueOnce(mockBrowser as any);
 
       mockMemory = createMockMemory({
         content: {
@@ -324,13 +289,7 @@ describe('browseWebAction', () => {
         },
       });
 
-      await browseWebAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await browseWebAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       // Verify cleanup was called
       expect(mockPage.close).toHaveBeenCalled();
@@ -340,22 +299,22 @@ describe('browseWebAction', () => {
     it('should extract links and content correctly', async () => {
       const puppeteer = await import('puppeteer');
       const mockPage = {
-        goto: vi.fn().mockResolvedValue(undefined),
-        content: vi.fn().mockResolvedValue('<html><body><h1>Test Content</h1></body></html>'),
-        title: vi.fn().mockResolvedValue('Test Page'),
-        evaluate: vi.fn().mockResolvedValue([
+        goto: mock().mockResolvedValue(undefined),
+        content: mock().mockResolvedValue('<html><body><h1>Test Content</h1></body></html>'),
+        title: mock().mockResolvedValue('Test Page'),
+        evaluate: mock().mockResolvedValue([
           { text: 'Important Link', href: 'https://important.com' },
           { text: 'Another Link', href: 'https://another.com' },
         ]),
-        setUserAgent: vi.fn(),
-        setViewport: vi.fn(),
-        close: vi.fn(),
+        setUserAgent: mock(),
+        setViewport: mock(),
+        close: mock(),
       };
       const mockBrowser = {
-        newPage: vi.fn().mockResolvedValue(mockPage),
-        close: vi.fn(),
+        newPage: mock().mockResolvedValue(mockPage),
+        close: mock(),
       };
-      vi.mocked(puppeteer.default.launch).mockResolvedValueOnce(mockBrowser as any);
+      mock(puppeteer.default.launch).mockResolvedValueOnce(mockBrowser as any);
 
       mockMemory = createMockMemory({
         content: {
@@ -364,13 +323,7 @@ describe('browseWebAction', () => {
         },
       });
 
-      await browseWebAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await browseWebAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -394,11 +347,11 @@ describe('browseWebAction', () => {
 
     it('should have valid examples', () => {
       expect(browseWebAction.examples!.length).toBeGreaterThan(0);
-      
+
       browseWebAction.examples!.forEach((example) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBeGreaterThanOrEqual(2);
-        
+
         example.forEach((turn) => {
           expect(turn).toHaveProperty('name');
           expect(turn).toHaveProperty('content');

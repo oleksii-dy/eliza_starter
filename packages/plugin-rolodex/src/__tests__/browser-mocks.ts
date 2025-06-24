@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { mock  } from 'bun:test';
 
 /**
  * Browser mocks for testing
@@ -11,9 +11,9 @@ if (typeof window === 'undefined') {
   const mockWindow = {
     innerWidth: 1024,
     innerHeight: 768,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
+    addEventListener: mock(),
+    removeEventListener: mock(),
+    dispatchEvent: mock(),
     location: {
       href: 'http://localhost',
       origin: 'http://localhost',
@@ -28,39 +28,39 @@ if (typeof window === 'undefined') {
 
   // Create minimal document mock
   const mockHead = {
-    appendChild: vi.fn(),
-    removeChild: vi.fn(),
+    appendChild: mock(),
+    removeChild: mock(),
     style: {},
   };
 
   (global as any).document = {
-    createElement: vi.fn(() => ({
+    createElement: mock(() => ({
       style: {},
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      appendChild: vi.fn(),
-      removeChild: vi.fn(),
-      setAttribute: vi.fn(),
-      getAttribute: vi.fn(),
-      querySelector: vi.fn(),
-      querySelectorAll: vi.fn(() => []),
+      addEventListener: mock(),
+      removeEventListener: mock(),
+      appendChild: mock(),
+      removeChild: mock(),
+      setAttribute: mock(),
+      getAttribute: mock(),
+      querySelector: mock(),
+      querySelectorAll: mock(() => []),
     })),
-    createTextNode: vi.fn((text: string) => ({
+    createTextNode: mock((text: string) => ({
       nodeValue: text,
       textContent: text,
     })),
     head: mockHead,
     body: {
-      appendChild: vi.fn(),
-      removeChild: vi.fn(),
+      appendChild: mock(),
+      removeChild: mock(),
       style: {},
     },
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    querySelector: vi.fn(),
-    querySelectorAll: vi.fn(() => []),
-    getElementsByTagName: vi.fn((tagName: string) => {
-      if (tagName === 'head') return [mockHead];
+    addEventListener: mock(),
+    removeEventListener: mock(),
+    querySelector: mock(),
+    querySelectorAll: mock(() => []),
+    getElementsByTagName: mock((tagName: string) => {
+      if (tagName === 'head') {return [mockHead];}
       return [];
     }),
   };
@@ -72,7 +72,7 @@ if (typeof window === 'undefined') {
     writable: true,
     configurable: true
   });
-  
+
   Object.defineProperty(global, 'location', {
     value: mockWindow.location,
     writable: true,
@@ -81,25 +81,25 @@ if (typeof window === 'undefined') {
 }
 
 // Mock ResizeObserver
-(global as any).ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
+(global as any).ResizeObserver = mock().mockImplementation(() => ({
+  observe: mock(),
+  unobserve: mock(),
+  disconnect: mock(),
 }));
 
 // Mock IntersectionObserver
-(global as any).IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
+(global as any).IntersectionObserver = mock().mockImplementation(() => ({
+  observe: mock(),
+  unobserve: mock(),
+  disconnect: mock(),
 }));
 
 // Mock requestAnimationFrame
-(global as any).requestAnimationFrame = vi.fn((cb) => {
+(global as any).requestAnimationFrame = mock((cb) => {
   setTimeout(cb, 0);
   return 0;
 });
 
-(global as any).cancelAnimationFrame = vi.fn();
+(global as any).cancelAnimationFrame = mock();
 
 export {};

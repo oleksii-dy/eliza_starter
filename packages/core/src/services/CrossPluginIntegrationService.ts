@@ -10,7 +10,6 @@ import {
   type UUID,
   type VerificationProof,
   VerificationStatus,
-  type PaymentRequest,
   PaymentMethod,
   type TrustScore,
   type IdentityProfile,
@@ -21,7 +20,6 @@ import {
   type ITrustProvider,
   type IIdentityManager,
   type IPaymentProvider,
-  type MergeProposal,
 } from '../types/index';
 import { logger } from '../logger';
 
@@ -152,7 +150,7 @@ export class CrossPluginIntegrationService {
       workflowSteps.push('prerequisites-validated');
 
       // Step 2: Get OAuth challenge URL (for user-facing workflows)
-      let platformData: any = {};
+      const platformData: any = {};
       try {
         const authUrl = await this.oauthService.createAuthUrl(
           request.platform,
@@ -307,7 +305,7 @@ export class CrossPluginIntegrationService {
             evidenceCount: trust.evidenceCount,
             lastUpdated: trust.lastUpdated,
           });
-        } catch (error) {
+        } catch (_error) {
           riskFactors.push({ type: 'trust-unavailable', impact: 'medium' });
         }
       }
@@ -330,7 +328,7 @@ export class CrossPluginIntegrationService {
               verifiedPlatforms,
             });
           }
-        } catch (error) {
+        } catch (_error) {
           riskFactors.push({ type: 'identity-unavailable', impact: 'high' });
         }
       }
@@ -356,7 +354,7 @@ export class CrossPluginIntegrationService {
             value: pluginRiskLevel,
             transactionCount: profile.totalTransactions,
           });
-        } catch (error) {
+        } catch (_error) {
           riskFactors.push({ type: 'payment-history-unavailable', impact: 'medium' });
         }
       }
@@ -624,9 +622,15 @@ export class CrossPluginIntegrationService {
     }
 
     // Convert risk score to level
-    if (riskScore >= 0.8) return 'critical';
-    if (riskScore >= 0.6) return 'high';
-    if (riskScore >= 0.4) return 'medium';
+    if (riskScore >= 0.8) {
+      return 'critical';
+    }
+    if (riskScore >= 0.6) {
+      return 'high';
+    }
+    if (riskScore >= 0.4) {
+      return 'medium';
+    }
     return 'low';
   }
 
@@ -646,24 +650,44 @@ export class CrossPluginIntegrationService {
   }
 
   private getAmountRiskImpact(amount: number): number {
-    if (amount <= 100) return 0.0;
-    if (amount <= 1000) return 0.2;
-    if (amount <= 5000) return 0.5;
-    if (amount <= 10000) return 0.7;
+    if (amount <= 100) {
+      return 0.0;
+    }
+    if (amount <= 1000) {
+      return 0.2;
+    }
+    if (amount <= 5000) {
+      return 0.5;
+    }
+    if (amount <= 10000) {
+      return 0.7;
+    }
     return 1.0;
   }
 
   private getHistoryRiskImpact(history: PaymentTransaction[]): number {
-    if (history.length >= 10) return 0.0;
-    if (history.length >= 5) return 0.2;
-    if (history.length >= 1) return 0.5;
+    if (history.length >= 10) {
+      return 0.0;
+    }
+    if (history.length >= 5) {
+      return 0.2;
+    }
+    if (history.length >= 1) {
+      return 0.5;
+    }
     return 0.8; // No payment history
   }
 
   private shouldApprovePayment(riskLevel: string, request: PaymentRiskAssessmentRequest): boolean {
-    if (riskLevel === 'critical') return false;
-    if (riskLevel === 'high' && parseFloat(request.amount) > 1000) return false;
-    if (riskLevel === 'medium' && parseFloat(request.amount) > 5000) return false;
+    if (riskLevel === 'critical') {
+      return false;
+    }
+    if (riskLevel === 'high' && parseFloat(request.amount) > 1000) {
+      return false;
+    }
+    if (riskLevel === 'medium' && parseFloat(request.amount) > 5000) {
+      return false;
+    }
     return true;
   }
 

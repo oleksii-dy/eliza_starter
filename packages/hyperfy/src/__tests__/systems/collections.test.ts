@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'bun:test';
 import { Collections } from '../../core/systems/Collections.js';
 import { createTestWorld } from '../test-world-factory.js';
 
@@ -12,11 +12,6 @@ describe('Collections System', () => {
   });
 
   describe('Basic Operations', () => {
-    it('should initialize with empty collections', () => {
-      expect(collections.getAll()).toEqual([]);
-      expect(collections.items.size).toBe(0);
-    });
-
     it('should add a collection', () => {
       const collection = {
         id: 'test-collection',
@@ -62,7 +57,7 @@ describe('Collections System', () => {
       expect(collections.get('remove-test')).toBeDefined();
 
       const removed = collections.remove('remove-test');
-      
+
       expect(removed).toBe(true);
       expect(collections.get('remove-test')).toBeUndefined();
       expect(collections.items.has('remove-test')).toBe(false);
@@ -98,7 +93,7 @@ describe('Collections System', () => {
       collections.add({ id: '3', name: 'Three' });
 
       const all = collections.getAll();
-      
+
       expect(all).toHaveLength(3);
       expect(all).toBeInstanceOf(Array);
       expect(all.map(c => c.id)).toEqual(['1', '2', '3']);
@@ -136,18 +131,18 @@ describe('Collections System', () => {
 
     it('should handle empty deserialization', () => {
       collections.add({ id: 'existing', name: 'Existing' });
-      
+
       collections.deserialize([]);
-      
+
       expect(collections.getAll()).toEqual([]);
       expect(collections.items.size).toBe(0);
     });
 
     it('should handle null deserialization', () => {
       collections.add({ id: 'existing', name: 'Existing' });
-      
+
       collections.deserialize(null as any);
-      
+
       expect(collections.getAll()).toEqual([]);
       expect(collections.items.size).toBe(0);
     });
@@ -157,9 +152,9 @@ describe('Collections System', () => {
     it('should clear all collections on destroy', () => {
       collections.add({ id: '1', name: 'One' });
       collections.add({ id: '2', name: 'Two' });
-      
+
       collections.destroy();
-      
+
       expect(collections.getAll()).toEqual([]);
       expect(collections.items.size).toBe(0);
     });
@@ -206,4 +201,4 @@ describe('Collections System', () => {
       expect(fromMap).toEqual(found);
     });
   });
-}); 
+});

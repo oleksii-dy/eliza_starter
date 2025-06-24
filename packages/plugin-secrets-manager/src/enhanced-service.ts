@@ -1,25 +1,6 @@
-import {
-  logger,
-  Service,
-  type IAgentRuntime,
-  type UUID,
-  type Component,
-  Role,
-  createUniqueUuid,
-} from '@elizaos/core';
-import { EnvManagerService } from './service';
-import type {
-  SecretConfig,
-  SecretContext,
-  SecretMetadata,
-  SecretPermission,
-  EncryptedSecret,
-  SecretAccessLog,
-  ValidationResult,
-  EnvVarConfig,
-} from './types';
-import { validateEnvVar } from './validation';
 import { secureCrypto } from './security/crypto';
+import { EnvManagerService } from './service';
+import { validateEnvVar } from './validation';
 
 /**
  * Enhanced Secret Manager Service for multi-level secret management
@@ -40,7 +21,7 @@ export class EnhancedSecretManager extends EnvManagerService {
    */
   static async start(runtime: IAgentRuntime): Promise<EnhancedSecretManager> {
     const service = new EnhancedSecretManager(runtime);
-    await service.initialize();
+    await void service.initialize();
     return service;
   }
 
@@ -67,13 +48,15 @@ export class EnhancedSecretManager extends EnvManagerService {
     // In production, use a proper key management service
     // For now, derive from agent ID + salt
     const salt = this.runtime.getSetting('ENCRYPTION_SALT') || secureCrypto.generateToken(32);
-    
+
     // Use agent ID + salt as password for key derivation
     this.encryptionPassword = this.runtime.agentId + salt;
-    
+
     // Store salt if not already set
     if (!this.runtime.getSetting('ENCRYPTION_SALT')) {
-      logger.warn('[SecretManager] Generated new encryption salt. Store ENCRYPTION_SALT in environment for persistence.');
+      logger.warn(
+        '[SecretManager] Generated new encryption salt. Store ENCRYPTION_SALT in environment for persistence.'
+      );
     }
   }
 
@@ -125,7 +108,7 @@ export class EnhancedSecretManager extends EnvManagerService {
       // Get all worlds for this agent
       const worlds = await this.runtime.db.getWorlds(this.runtime.agentId);
 
-      for (const world of worlds) {
+      for (const _world of worlds) {
         if (world.metadata?.secrets) {
           const worldMeta: SecretMetadata = {};
 
@@ -157,23 +140,36 @@ export class EnhancedSecretManager extends EnvManagerService {
 
       // Get secret based on context level
       switch (context.level) {
-        case 'global':
+        case 'global': {
           return await this.getGlobalSecret(key);
+        }
 
-        case 'world':
-          if (!context.worldId) throw new Error('World ID required for world-level secrets');
+        case 'world': {
+          if (!context.worldId) {
+            throw new Error('World ID required for world-level secrets');
+          }
           return await this.getWorldSecret(key, context.worldId);
+        }
 
-        case 'user':
-          if (!context.userId) throw new Error('User ID required for user-level secrets');
+        case 'user': {
+          if (!context.userId) {
+            throw new Error('User ID required for user-level secrets');
+          }
           return await this.getUserSecret(key, context.userId);
+        }
 
         default:
           throw new Error(`Invalid secret level: ${context.level}`);
       }
     } catch (error) {
       logger.error(`[SecretManager] Error getting secret ${key}:`, error);
-      await this.logAccess(key, 'read', context, false, error instanceof Error ? error.message : String(error));
+      await this.logAccess(
+        key,
+        'read',
+        context,
+        false,
+        error instanceof Error ? error.message : String(error)
+      );
       return null;
     }
   }
@@ -232,23 +228,36 @@ export class EnhancedSecretManager extends EnvManagerService {
 
       // Set secret based on context level
       switch (context.level) {
-        case 'global':
+        case 'global': {
           return await this.setGlobalSecret(key, value, fullConfig);
+        }
 
-        case 'world':
-          if (!context.worldId) throw new Error('World ID required for world-level secrets');
+        case 'world': {
+          if (!context.worldId) {
+            throw new Error('World ID required for world-level secrets');
+          }
           return await this.setWorldSecret(key, value, context.worldId, fullConfig);
+        }
 
-        case 'user':
-          if (!context.userId) throw new Error('User ID required for user-level secrets');
+        case 'user': {
+          if (!context.userId) {
+            throw new Error('User ID required for user-level secrets');
+          }
           return await this.setUserSecret(key, value, context.userId, fullConfig);
+        }
 
         default:
           throw new Error(`Invalid secret level: ${context.level}`);
       }
     } catch (error) {
       logger.error(`[SecretManager] Error setting secret ${key}:`, error);
-      await this.logAccess(key, 'write', context, false, error instanceof Error ? error.message : String(error));
+      await this.logAccess(
+        key,
+        'write',
+        context,
+        false,
+        error instanceof Error ? error.message : String(error)
+      );
       return false;
     }
   }
@@ -259,11 +268,13 @@ export class EnhancedSecretManager extends EnvManagerService {
   private async getGlobalSecret(key: string): Promise<string | null> {
     // First try the env var approach for backward compatibility
     const envValue = this.getEnvVar(key);
-    if (envValue) return envValue;
+    if (envValue) {
+      return envValue;
+    }
 
     // Then check our cache
     const globalSecrets = this.secretCache.get('global');
-    const config = globalSecrets?.[key];
+    const _config = globalSecrets?.[key];
 
     return config?.value || null;
   }
@@ -291,7 +302,7 @@ export class EnhancedSecretManager extends EnvManagerService {
     // Check cache first
     const worldSecrets = this.secretCache.get(`world:${worldId}`);
     if (worldSecrets?.[key]) {
-      const config = worldSecrets[key];
+      const _config = worldSecrets[key];
       if (config.encrypted && config.value) {
         return await this.decrypt(config.value);
       }
@@ -299,7 +310,7 @@ export class EnhancedSecretManager extends EnvManagerService {
     }
 
     // Load from world metadata
-    const world = await this.runtime.getWorld(worldId as UUID);
+    const _world = await this.runtime.getWorld(worldId as UUID);
     if (world?.metadata?.secrets?.[key]) {
       const secretData = world.metadata.secrets[key];
       if (typeof secretData === 'object' && secretData.encrypted) {
@@ -320,14 +331,18 @@ export class EnhancedSecretManager extends EnvManagerService {
     worldId: string,
     config: SecretConfig
   ): Promise<boolean> {
-    const world = await this.runtime.getWorld(worldId as UUID);
+    const _world = await this.runtime.getWorld(worldId as UUID);
     if (!world) {
       throw new Error(`World ${worldId} not found`);
     }
 
     // Initialize metadata structures
-    if (!world.metadata) world.metadata = {};
-    if (!world.metadata.secrets) world.metadata.secrets = {};
+    if (!world.metadata) {
+      world.metadata = {};
+    }
+    if (!world.metadata.secrets) {
+      world.metadata.secrets = {};
+    }
 
     // Encrypt if needed
     const finalValue = config.encrypted ? await this.encrypt(value) : value;
@@ -365,7 +380,7 @@ export class EnhancedSecretManager extends EnvManagerService {
       return null;
     }
 
-    logger.debug(`[SecretManager] getUserSecret: Found component with data:`, secretComponent.data);
+    logger.debug('[SecretManager] getUserSecret: Found component with data:', secretComponent.data);
 
     const secretData = secretComponent.data as any;
 
@@ -413,7 +428,7 @@ export class EnhancedSecretManager extends EnvManagerService {
       updatedAt: Date.now(),
     };
 
-    logger.debug(`[SecretManager] setUserSecret: Component data:`, componentData);
+    logger.debug('[SecretManager] setUserSecret: Component data:', componentData);
 
     if (existingComponent) {
       await this.runtime.updateComponent({
@@ -432,7 +447,7 @@ export class EnhancedSecretManager extends EnvManagerService {
         type: 'secret',
         data: componentData,
       };
-      logger.debug(`[SecretManager] setUserSecret: Creating new component:`, newComponent);
+      logger.debug('[SecretManager] setUserSecret: Creating new component:', newComponent);
       await this.runtime.createComponent(newComponent);
     }
 
@@ -442,23 +457,25 @@ export class EnhancedSecretManager extends EnvManagerService {
   /**
    * Get missing environment variables based on registered metadata
    */
-  async getMissingEnvVars(): Promise<Array<{ plugin: string; varName: string; config: EnvVarConfig }>> {
+  async getMissingEnvVars(): Promise<
+    Array<{ plugin: string; varName: string; config: EnvVarConfig }>
+  > {
     // Get missing from base class first
     const baseMissing = await super.getMissingEnvVars();
     const missing = [...baseMissing];
-    
+
     // Also check for missing secrets stored at global level
     const globalContext: SecretContext = {
       level: 'global',
       agentId: this.runtime.agentId,
-      requesterId: this.runtime.agentId
+      requesterId: this.runtime.agentId,
     };
     const globalSecrets = await this.list(globalContext);
-    
+
     for (const [key, secretConfig] of Object.entries(globalSecrets)) {
       if (secretConfig.required && !secretConfig.value) {
         // Check if it's already in the missing list
-        const exists = missing.some(m => m.varName === key);
+        const exists = missing.some((m) => m.varName === key);
         if (!exists) {
           missing.push({
             plugin: secretConfig.plugin || 'global',
@@ -466,7 +483,8 @@ export class EnhancedSecretManager extends EnvManagerService {
             config: {
               type: secretConfig.type,
               required: secretConfig.required,
-              description: secretConfig.description || `${key} for ${secretConfig.plugin || 'global'}`,
+              description:
+                secretConfig.description || `${key} for ${secretConfig.plugin || 'global'}`,
               canGenerate: secretConfig.canGenerate || false,
               status: secretConfig.status,
               attempts: secretConfig.attempts || 0,
@@ -476,12 +494,12 @@ export class EnhancedSecretManager extends EnvManagerService {
               validatedAt: secretConfig.validatedAt,
               validationMethod: secretConfig.validationMethod,
               lastError: secretConfig.lastError,
-            } as EnvVarConfig
+            } as EnvVarConfig,
           });
         }
       }
     }
-    
+
     return missing;
   }
 
@@ -492,24 +510,30 @@ export class EnhancedSecretManager extends EnvManagerService {
     const filteredSecrets: SecretMetadata = {};
 
     switch (context.level) {
-      case 'global':
+      case 'global': {
         const globalSecrets = this.secretCache.get('global') || {};
         // Filter out sensitive values
         for (const [key, config] of Object.entries(globalSecrets)) {
           filteredSecrets[key] = { ...config, value: undefined };
         }
         break;
+      }
 
-      case 'world':
-        if (!context.worldId) throw new Error('World ID required');
+      case 'world': {
+        if (!context.worldId) {
+          throw new Error('World ID required');
+        }
         const worldSecrets = this.secretCache.get(`world:${context.worldId}`) || {};
         for (const [key, config] of Object.entries(worldSecrets)) {
           filteredSecrets[key] = { ...config, value: undefined };
         }
         break;
+      }
 
-      case 'user':
-        if (!context.userId) throw new Error('User ID required');
+      case 'user': {
+        if (!context.userId) {
+          throw new Error('User ID required');
+        }
         const components = await this.runtime.getComponents(context.userId as UUID);
 
         for (const component of components) {
@@ -519,6 +543,7 @@ export class EnhancedSecretManager extends EnvManagerService {
           }
         }
         break;
+      }
     }
 
     return filteredSecrets;
@@ -534,14 +559,18 @@ export class EnhancedSecretManager extends EnvManagerService {
   ): Promise<boolean> {
     // Global secrets - only agent admin can write
     if (context.level === 'global') {
-      if (action === 'read') return true; // All can read global secrets
+      if (action === 'read') {
+        return true;
+      } // All can read global secrets
       return context.requesterId === this.runtime.agentId; // Only agent can write
     }
 
     // World secrets - check world roles
     if (context.level === 'world' && context.worldId) {
-      const world = await this.runtime.getWorld(context.worldId as UUID);
-      if (!world) return false;
+      const _world = await this.runtime.getWorld(context.worldId as UUID);
+      if (!world) {
+        return false;
+      }
 
       const requesterRole = world.metadata?.roles?.[context.requesterId || ''] || Role.NONE;
 
@@ -575,8 +604,10 @@ export class EnhancedSecretManager extends EnvManagerService {
     }
 
     // Get current config
-    const config = await this.getSecretConfig(key, context);
-    if (!config) return false;
+    const _config = await this.getSecretConfig(key, context);
+    if (!config) {
+      return false;
+    }
 
     // Add permission
     const newPermission: SecretPermission = {
@@ -606,8 +637,10 @@ export class EnhancedSecretManager extends EnvManagerService {
     }
 
     // Get current config
-    const config = await this.getSecretConfig(key, context);
-    if (!config) return false;
+    const _config = await this.getSecretConfig(key, context);
+    if (!config) {
+      return false;
+    }
 
     // Remove permissions
     config.permissions = (config.permissions || []).filter((p) => p.entityId !== grantee);
@@ -635,7 +668,9 @@ export class EnhancedSecretManager extends EnvManagerService {
   ): Promise<boolean> {
     // Get current value
     const currentValue = await this.get(key, context);
-    if (currentValue === null) return false;
+    if (currentValue === null) {
+      return false;
+    }
 
     // Set with updated config
     return await this.set(key, currentValue, context, config);
@@ -685,9 +720,11 @@ export class EnhancedSecretManager extends EnvManagerService {
       if (encryptedData.algorithm === 'aes-256-gcm-pbkdf2') {
         return await secureCrypto.decrypt(encryptedData.value, this.encryptionPassword);
       }
-      
+
       // Handle legacy encryption format (will be migrated on next write)
-      logger.warn('[SecretManager] Decrypting legacy format secret. Will be re-encrypted on next update.');
+      logger.warn(
+        '[SecretManager] Decrypting legacy format secret. Will be re-encrypted on next update.'
+      );
       return encryptedData.value; // Return as-is for now
     } catch (error) {
       logger.error('[SecretManager] Decryption failed:', error);
@@ -733,11 +770,19 @@ export class EnhancedSecretManager extends EnvManagerService {
    */
   async getAccessLogs(key: string, context?: SecretContext): Promise<SecretAccessLog[]> {
     return this.accessLogs.filter((log) => {
-      if (log.secretKey !== key) return false;
+      if (log.secretKey !== key) {
+        return false;
+      }
       if (context && log.context) {
-        if (context.level && log.context.level !== context.level) return false;
-        if (context.worldId && log.context.worldId !== context.worldId) return false;
-        if (context.userId && log.context.userId !== context.userId) return false;
+        if (context.level && log.context.level !== context.level) {
+          return false;
+        }
+        if (context.worldId && log.context.worldId !== context.worldId) {
+          return false;
+        }
+        if (context.userId && log.context.userId !== context.userId) {
+          return false;
+        }
       }
       return true;
     });
@@ -750,7 +795,9 @@ export class EnhancedSecretManager extends EnvManagerService {
     logger.info(`[SecretManager] Migrating world settings for ${worldId}`);
 
     const world = await this.runtime.getWorld(worldId as UUID);
-    if (!world?.metadata?.settings) return;
+    if (!world?.metadata?.settings) {
+      return;
+    }
 
     const settings = world.metadata.settings;
     let migrated = 0;
@@ -800,15 +847,21 @@ export class EnhancedSecretManager extends EnvManagerService {
     }
   ): Promise<boolean> {
     // Get secret config to check permissions
-    const config = await this.getSecretConfig(key, context);
-    if (!config || !config.permissions) return false;
+    const _config = await this.getSecretConfig(key, context);
+    if (!config || !config.permissions) {
+      return false;
+    }
 
     // Check if the entity has the required permission
     const entityId = accessCheck.entityId || accessCheck.actionId;
-    if (!entityId) return false;
+    if (!entityId) {
+      return false;
+    }
 
     const entityPermission = config.permissions.find((p) => p.entityId === entityId);
-    if (!entityPermission) return false;
+    if (!entityPermission) {
+      return false;
+    }
 
     return entityPermission.permissions.includes(accessCheck.permission as any);
   }

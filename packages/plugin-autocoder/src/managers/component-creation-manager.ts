@@ -144,7 +144,7 @@ export class ComponentCreationManager {
     dependencyContext: string
   ): ComponentTemplate {
     const actionName = this.toConstantCase(options.name);
-    const handlerName = this.toCamelCase(options.name) + 'Handler';
+    const handlerName = `${this.toCamelCase(options.name)}Handler`;
 
     const content = `import { type Action, type IAgentRuntime, type Memory, type State, type HandlerCallback, elizaLogger } from '@elizaos/core';
 ${dependencyContext}
@@ -213,7 +213,7 @@ export const ${actionName}: Action = {
 export default ${actionName};
 `;
 
-    const testContent = `import { describe, it, expect, vi, beforeEach } from 'vitest';
+    const testContent = `import { describe, it, expect, mock, beforeEach  } from 'bun:test';
 import { ${actionName} } from '../${path.basename(options.name)}';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
@@ -226,7 +226,7 @@ describe('${options.name} Action', () => {
   beforeEach(() => {
     mockRuntime = {
       agentId: 'test-agent',
-      getSetting: vi.fn(),
+      getSetting: mock(),
       // Add other required runtime methods
     } as any;
 
@@ -239,7 +239,7 @@ describe('${options.name} Action', () => {
     } as Memory;
 
     mockState = {} as State;
-    mockCallback = vi.fn();
+    mockCallback = mock();
   });
 
   it('should validate correctly', async () => {
@@ -267,7 +267,7 @@ describe('${options.name} Action', () => {
 
   it('should handle errors gracefully', async () => {
     // Mock an error condition
-    mockRuntime.getSetting = vi.fn().mockImplementation(() => {
+    mockRuntime.getSetting = mock().mockImplementation(() => {
       throw new Error('Test error');
     });
 
@@ -305,7 +305,7 @@ describe('${options.name} Action', () => {
     options: ComponentCreationOptions,
     dependencyContext: string
   ): ComponentTemplate {
-    const providerName = this.toCamelCase(options.name) + 'Provider';
+    const providerName = `${this.toCamelCase(options.name)}Provider`;
 
     const content = `import { type Provider, type IAgentRuntime, type Memory, type State, elizaLogger } from '@elizaos/core';
 ${dependencyContext}
@@ -353,7 +353,7 @@ function format${this.toPascalCase(options.name)}Context(data: any): string {
 export default ${providerName};
 `;
 
-    const testContent = `import { describe, it, expect, vi, beforeEach } from 'vitest';
+    const testContent = `import { describe, it, expect, mock, beforeEach  } from 'bun:test';
 import { ${providerName} } from '../${path.basename(options.name)}';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
@@ -365,7 +365,7 @@ describe('${options.name} Provider', () => {
   beforeEach(() => {
     mockRuntime = {
       agentId: 'test-agent',
-      getSetting: vi.fn(),
+      getSetting: mock(),
       // Add other required runtime methods
     } as any;
 
@@ -390,7 +390,7 @@ describe('${options.name} Provider', () => {
 
   it('should handle errors gracefully', async () => {
     // Mock an error condition
-    mockRuntime.getSetting = vi.fn().mockImplementation(() => {
+    mockRuntime.getSetting = mock().mockImplementation(() => {
       throw new Error('Test error');
     });
 
@@ -416,7 +416,7 @@ describe('${options.name} Provider', () => {
     options: ComponentCreationOptions,
     dependencyContext: string
   ): ComponentTemplate {
-    const evaluatorName = this.toCamelCase(options.name) + 'Evaluator';
+    const evaluatorName = `${this.toCamelCase(options.name)}Evaluator`;
 
     const content = `import { type Evaluator, type IAgentRuntime, type Memory, type State, elizaLogger } from '@elizaos/core';
 ${dependencyContext}
@@ -488,7 +488,7 @@ async function analyze${this.toPascalCase(options.name)}(
 export default ${evaluatorName};
 `;
 
-    const testContent = `import { describe, it, expect, vi, beforeEach } from 'vitest';
+    const testContent = `import { describe, it, expect, mock, beforeEach  } from 'bun:test';
 import { ${evaluatorName} } from '../${path.basename(options.name)}';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
@@ -500,8 +500,8 @@ describe('${options.name} Evaluator', () => {
   beforeEach(() => {
     mockRuntime = {
       agentId: 'test-agent',
-      getSetting: vi.fn(),
-      processActions: vi.fn(),
+      getSetting: mock(),
+      processActions: mock(),
       // Add other required runtime methods
     } as any;
 
@@ -535,7 +535,7 @@ describe('${options.name} Evaluator', () => {
 
   it('should handle errors gracefully', async () => {
     // Mock an error condition
-    mockRuntime.getSetting = vi.fn().mockImplementation(() => {
+    mockRuntime.getSetting = mock().mockImplementation(() => {
       throw new Error('Test error');
     });
 
@@ -567,7 +567,7 @@ describe('${options.name} Evaluator', () => {
     options: ComponentCreationOptions,
     dependencyContext: string
   ): ComponentTemplate {
-    const serviceName = this.toPascalCase(options.name) + 'Service';
+    const serviceName = `${this.toPascalCase(options.name)}Service`;
     const serviceType = this.toConstantCase(options.name);
 
     const content = `import { Service, type IAgentRuntime, elizaLogger } from '@elizaos/core';
@@ -626,7 +626,7 @@ export class ${serviceName} extends Service {
 export default ${serviceName};
 `;
 
-    const testContent = `import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+    const testContent = `import { describe, it, expect, mock, beforeEach, afterEach  } from 'bun:test';
 import { ${serviceName} } from '../${path.basename(options.name)}';
 import type { IAgentRuntime } from '@elizaos/core';
 
@@ -637,8 +637,8 @@ describe('${serviceName}', () => {
   beforeEach(() => {
     mockRuntime = {
       agentId: 'test-agent',
-      getSetting: vi.fn(),
-      registerService: vi.fn(),
+      getSetting: mock(),
+      registerService: mock(),
       // Add other required runtime methods
     } as any;
   });
@@ -688,7 +688,7 @@ describe('${serviceName}', () => {
     options: ComponentCreationOptions,
     dependencyContext: string
   ): ComponentTemplate {
-    const pluginName = this.toCamelCase(options.name) + 'Plugin';
+    const pluginName = `${this.toCamelCase(options.name)}Plugin`;
 
     const content = `import { type Plugin } from '@elizaos/core';
 ${dependencyContext}
@@ -723,7 +723,7 @@ export const ${pluginName}: Plugin = {
 export default ${pluginName};
 `;
 
-    const testContent = `import { describe, it, expect } from 'vitest';
+    const testContent = `import { describe, it, expect  } from 'bun:test';
 import { ${pluginName} } from '../index';
 
 describe('${pluginName}', () => {
@@ -784,7 +784,7 @@ describe('${pluginName}', () => {
 
     const basePath = options.targetPlugin || 'src';
     const componentDir = this.getComponentDirectory(options.type);
-    const fileName = this.toKebabCase(options.name) + '.ts';
+    const fileName = `${this.toKebabCase(options.name)}.ts`;
 
     const filePath = path.join(basePath, componentDir, fileName);
     const testFilePath = path.join(
@@ -888,10 +888,10 @@ describe('${pluginName}', () => {
       const lastImportIndex = content.lastIndexOf(lastImport);
       const insertIndex = lastImportIndex + lastImport.length;
 
-      return content.slice(0, insertIndex) + '\n' + importStatement + content.slice(insertIndex);
+      return `${content.slice(0, insertIndex)}\n${importStatement}${content.slice(insertIndex)}`;
     } else {
       // No imports found, add at the beginning
-      return importStatement + '\n\n' + content;
+      return `${importStatement}\n\n${content}`;
     }
   }
 

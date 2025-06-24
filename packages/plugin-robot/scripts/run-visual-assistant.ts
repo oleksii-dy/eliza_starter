@@ -69,4 +69,4 @@ process.on('SIGTERM', () => {
 main().catch((error) => {
   console.error('❌ Failed to start Visual Assistant:', error);
   process.exit(1);
-}); 
+});

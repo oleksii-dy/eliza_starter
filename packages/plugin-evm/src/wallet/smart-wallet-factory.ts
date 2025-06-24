@@ -1,5 +1,5 @@
-import { 
-  createWalletClient, 
+import {
+  createWalletClient,
   createPublicClient,
   http,
   type Address,
@@ -14,7 +14,7 @@ import {
   decodeFunctionResult,
   type Hash,
   parseUnits,
-  formatUnits
+  formatUnits,
 } from 'viem';
 import type {
   WalletInstance,
@@ -26,14 +26,8 @@ import { getChainConfig } from '../core/chains/config';
 import type { WalletDatabaseService } from '../core/database/service';
 
 // Alchemy AA imports
-import { 
-  LocalAccountSigner,
-  type SmartAccountSigner
-} from '@alchemy/aa-core';
-import {
-  createSmartAccountClient,
-  type SmartAccountClient
-} from '@alchemy/aa-core';
+import { LocalAccountSigner, type SmartAccountSigner } from '@alchemy/aa-core';
+import { createSmartAccountClient, type SmartAccountClient } from '@alchemy/aa-core';
 import { arbitrum, mainnet, polygon, optimism, base } from 'viem/chains';
 import * as ethers from 'ethers';
 import { elizaLogger as logger } from '@elizaos/core';
@@ -62,7 +56,7 @@ const SAFE_PROXY_FACTORY_ABI = [
     outputs: [{ name: '', type: 'bytes' }],
     stateMutability: 'pure',
     type: 'function',
-  }
+  },
 ] as const;
 
 const SAFE_SINGLETON_ABI = [
@@ -148,7 +142,7 @@ const SAFE_SINGLETON_ABI = [
     name: 'approveHash',
     outputs: [],
     stateMutability: 'nonpayable',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [
@@ -161,20 +155,20 @@ const SAFE_SINGLETON_ABI = [
       { name: 'gasPrice', type: 'uint256' },
       { name: 'gasToken', type: 'address' },
       { name: 'refundReceiver', type: 'address' },
-      { name: '_nonce', type: 'uint256' }
+      { name: '_nonce', type: 'uint256' },
     ],
     name: 'getTransactionHash',
     outputs: [{ name: '', type: 'bytes32' }],
     stateMutability: 'view',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [],
     name: 'nonce',
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
-    type: 'function'
-  }
+    type: 'function',
+  },
 ] as const;
 
 // Contract addresses by chain
@@ -225,30 +219,38 @@ const SAFE_CONTRACTS: Record<
 };
 
 // AA contract addresses
-const AA_CONTRACTS: Record<number, {
-  entryPoint: Address;
-  simpleAccountFactory: Address;
-}> = {
-  1: { // Mainnet
-    entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
-    simpleAccountFactory: '0x9406Cc6185a346906296840746125a0E44976454'
-  },
-  137: { // Polygon
-    entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
-    simpleAccountFactory: '0x9406Cc6185a346906296840746125a0E44976454'
-  },
-  42161: { // Arbitrum
-    entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
-    simpleAccountFactory: '0x9406Cc6185a346906296840746125a0E44976454'
-  },
-  10: { // Optimism
-    entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
-    simpleAccountFactory: '0x9406Cc6185a346906296840746125a0E44976454'
-  },
-  8453: { // Base
-    entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
-    simpleAccountFactory: '0x9406Cc6185a346906296840746125a0E44976454'
+const AA_CONTRACTS: Record<
+  number,
+  {
+    entryPoint: Address;
+    simpleAccountFactory: Address;
   }
+> = {
+  1: {
+    // Mainnet
+    entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
+    simpleAccountFactory: '0x9406Cc6185a346906296840746125a0E44976454',
+  },
+  137: {
+    // Polygon
+    entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
+    simpleAccountFactory: '0x9406Cc6185a346906296840746125a0E44976454',
+  },
+  42161: {
+    // Arbitrum
+    entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
+    simpleAccountFactory: '0x9406Cc6185a346906296840746125a0E44976454',
+  },
+  10: {
+    // Optimism
+    entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
+    simpleAccountFactory: '0x9406Cc6185a346906296840746125a0E44976454',
+  },
+  8453: {
+    // Base
+    entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
+    simpleAccountFactory: '0x9406Cc6185a346906296840746125a0E44976454',
+  },
 };
 
 export interface SmartWalletDeploymentConfig {
@@ -288,20 +290,20 @@ export class SmartWalletFactory {
   }) {
     this.runtime = params.runtime;
     this.chainId = params.chainId;
-    
+
     const chainConfig = getChainConfig(params.chainId);
     this.rpcUrl = params.rpcUrl || chainConfig.rpcUrl;
-    
+
     this.publicClient = createPublicClient({
       chain: this.getViemChain(),
       transport: http(this.rpcUrl),
     });
-    
+
     this.walletClient = createWalletClient({
       chain: this.getViemChain(),
       transport: http(this.rpcUrl),
     });
-    
+
     this.dbService = params.dbService;
   }
 
@@ -331,7 +333,7 @@ export class SmartWalletFactory {
     };
 
     const result = await this.deploy(config);
-    
+
     // Create wallet instance
     const walletInstance: WalletInstance = {
       id: `wallet-${Date.now()}` as any,
@@ -408,7 +410,7 @@ export class SmartWalletFactory {
         contracts.proxyFactory,
         contracts.singleton,
         setupData,
-        saltNonce
+        saltNonce,
       );
 
       // Check if already deployed
@@ -424,7 +426,7 @@ export class SmartWalletFactory {
       // Deploy if requested
       if (config.deploy) {
         const account = await this.getPrivateKeyAccount(config.ownerPrivateKey);
-        
+
         const hash = await this.walletClient.writeContract({
           account: account as any,
           address: contracts.proxyFactory,
@@ -435,9 +437,9 @@ export class SmartWalletFactory {
         });
 
         const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
-        
+
         logger.info(`Safe wallet deployed at ${predictedAddress}, tx: ${receipt.transactionHash}`);
-        
+
         return {
           address: predictedAddress,
           deploymentTx: receipt.transactionHash,
@@ -452,7 +454,7 @@ export class SmartWalletFactory {
     } catch (error) {
       logger.error('Error deploying Safe wallet:', error);
       throw new Error(
-        `Failed to deploy Safe wallet: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to deploy Safe wallet: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -461,13 +463,12 @@ export class SmartWalletFactory {
     factoryAddress: Address,
     singleton: Address,
     setupData: `0x${string}`,
-    saltNonce: number
+    saltNonce: number,
   ): Promise<Address> {
     // Use CREATE2 to predict the address
-    const salt = encodeAbiParameters(
-      parseAbiParameters('bytes32'),
-      [`0x${saltNonce.toString(16).padStart(64, '0')}` as `0x${string}`]
-    );
+    const salt = encodeAbiParameters(parseAbiParameters('bytes32'), [
+      `0x${saltNonce.toString(16).padStart(64, '0')}` as `0x${string}`,
+    ]);
 
     // Get proxy creation code
     const proxyCreationCode = await this.publicClient.readContract({
@@ -501,14 +502,16 @@ export class SmartWalletFactory {
 
       // For AA wallets, we need to create a different implementation
       // Using viem's built-in account abstraction support
-      const owner = LocalAccountSigner.privateKeyToAccountSigner(config.ownerPrivateKey as `0x${string}`);
-      
+      const owner = LocalAccountSigner.privateKeyToAccountSigner(
+        config.ownerPrivateKey as `0x${string}`,
+      );
+
       // Get the predicted address
-      const address = '0x' + Date.now().toString(16).padStart(40, '0') as Address;
+      const address = `0x${Date.now().toString(16).padStart(40, '0')}` as Address;
 
       // Check if already deployed
       const isDeployed = await this.isContractDeployed(address);
-      
+
       if (isDeployed || !config.deploy) {
         return {
           address,
@@ -519,16 +522,16 @@ export class SmartWalletFactory {
       // For now, return a mock deployment
       // Real AA deployment requires more complex setup
       logger.warn('AA wallet deployment not fully implemented');
-      
+
       return {
         address,
-        deploymentTx: '0x' + Date.now().toString(16).padStart(64, '0'),
+        deploymentTx: `0x${Date.now().toString(16).padStart(64, '0')}`,
         isDeployed: true,
       };
     } catch (error) {
       logger.error('Error deploying AA wallet:', error);
       throw new Error(
-        `Failed to deploy AA wallet: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to deploy AA wallet: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -584,9 +587,7 @@ export class SmartWalletFactory {
     return !!code && code !== '0x';
   }
 
-  async estimateDeploymentCost(
-    config: SmartWalletDeploymentConfig
-  ): Promise<{
+  async estimateDeploymentCost(config: SmartWalletDeploymentConfig): Promise<{
     estimatedGas: bigint;
     estimatedCost: string;
     gasPrice: bigint;
@@ -613,7 +614,7 @@ export class SmartWalletFactory {
     } catch (error) {
       logger.error('Error estimating deployment cost:', error);
       throw new Error(
-        `Failed to estimate deployment cost: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to estimate deployment cost: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -621,21 +622,23 @@ export class SmartWalletFactory {
 
 // Safe Wallet implementation
 class SafeWallet {
-  constructor(private config: {
-    address: Address;
-    chainId: number;
-    publicClient: PublicClient;
-    walletClient: WalletClient;
-    account: any;
-    contracts: typeof SAFE_CONTRACTS[number];
-  }) {}
+  constructor(
+    private config: {
+      address: Address;
+      chainId: number;
+      publicClient: PublicClient;
+      walletClient: WalletClient;
+      account: any;
+      contracts: (typeof SAFE_CONTRACTS)[number];
+    },
+  ) {}
 
   async getOwners(): Promise<Address[]> {
-    const owners = await this.config.publicClient.readContract({
+    const owners = (await this.config.publicClient.readContract({
       address: this.config.address,
       abi: SAFE_SINGLETON_ABI,
       functionName: 'getOwners',
-    }) as Address[];
+    })) as Address[];
     return owners;
   }
 
@@ -736,7 +739,10 @@ class SafeWallet {
     });
   }
 
-  async removeOwner(ownerToRemove: Address, threshold?: number): Promise<SmartWalletOperationResult> {
+  async removeOwner(
+    ownerToRemove: Address,
+    threshold?: number,
+  ): Promise<SmartWalletOperationResult> {
     const owners = await this.getOwners();
     const currentThreshold = await this.getThreshold();
     const newThreshold = threshold || Math.max(1, currentThreshold - 1);
@@ -748,7 +754,10 @@ class SafeWallet {
     }
 
     // Get previous owner
-    const prevOwner = ownerIndex === 0 ? '0x0000000000000000000000000000000000000001' as Address : owners[ownerIndex - 1];
+    const prevOwner =
+      ownerIndex === 0
+        ? ('0x0000000000000000000000000000000000000001' as Address)
+        : owners[ownerIndex - 1];
 
     return await this.executeTransaction({
       to: this.config.address,
@@ -763,13 +772,15 @@ class SafeWallet {
 
 // AA Wallet implementation
 class AAWallet {
-  constructor(private config: {
-    address: Address;
-    chainId: number;
-    publicClient: PublicClient;
-    walletClient: WalletClient;
-    owner: SmartAccountSigner;
-  }) {}
+  constructor(
+    private config: {
+      address: Address;
+      chainId: number;
+      publicClient: PublicClient;
+      walletClient: WalletClient;
+      owner: SmartAccountSigner;
+    },
+  ) {}
 
   async executeTransaction(tx: TransactionRequest): Promise<SmartWalletOperationResult> {
     try {
@@ -803,7 +814,7 @@ class AAWallet {
     try {
       // Execute transactions sequentially for now
       let lastHash: Hash | undefined;
-      
+
       for (const tx of transactions) {
         const hash = await this.config.walletClient.sendTransaction({
           account: this.config.owner as any,
@@ -816,7 +827,9 @@ class AAWallet {
       }
 
       if (lastHash) {
-        const receipt = await this.config.publicClient.waitForTransactionReceipt({ hash: lastHash });
+        const receipt = await this.config.publicClient.waitForTransactionReceipt({
+          hash: lastHash,
+        });
         return {
           success: receipt.status === 'success',
           transactionHash: receipt.transactionHash,
@@ -842,7 +855,7 @@ class AAWallet {
 // Factory function
 export function createSmartWalletFactory(
   runtime: IAgentRuntime,
-  chainService: ChainConfigService
+  chainService: ChainConfigService,
 ): SmartWalletFactory {
   const chainIds = chainService.getSupportedChainIds();
   const chainId = chainIds.length > 0 ? chainIds[0] : 1;

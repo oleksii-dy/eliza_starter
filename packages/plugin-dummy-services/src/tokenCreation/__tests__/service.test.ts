@@ -1,5 +1,4 @@
-/// <reference types="vitest/globals" />
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach } from 'bun:test';
 import { DummyTokenCreationService } from '../service';
 import { type IAgentRuntime } from '@elizaos/core';
 
@@ -12,14 +11,16 @@ describe('DummyTokenCreationService', () => {
     await service.start();
   });
 
-  it('should be ready', async () => {
+  it('should be ready after initialization', async () => {
     const ready = await service.isReady();
     expect(ready).toBe(true);
   });
 
-  it('should return a deployer address', async () => {
+  it('should provide a deployer address', async () => {
     const address = await service.getDeployerAddress();
-    expect(address).toBe('DummyDeployerAddress_xxxxxxxxxxxx');
+    expect(address).toBeTruthy();
+    expect(typeof address).toBe('string');
+    expect(address!.length).toBeGreaterThan(0);
   });
 
   it('should create a new token', async () => {

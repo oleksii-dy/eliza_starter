@@ -3,12 +3,12 @@ import type { UUID } from '@elizaos/core';
 /**
  * Environment types for role-based access control
  */
-export type Environment = 
-  | 'development' 
-  | 'staging' 
-  | 'production' 
-  | 'testing' 
-  | 'sandbox' 
+export type Environment =
+  | 'development'
+  | 'staging'
+  | 'production'
+  | 'testing'
+  | 'sandbox'
   | 'local'
   | 'demo'
   | 'experimental';

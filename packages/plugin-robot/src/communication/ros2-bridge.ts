@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { JointState, RobotState, RobotMode, RobotStatus, IMUData } from '../types';
+import { JointState, RobotState, IMUData } from '../types';
 import { logger } from '@elizaos/core';
 
 // Mock ROSLIB implementation for when real roslib is not available
@@ -9,20 +9,20 @@ class MockRos extends EventEmitter {
     logger.info('[MockROS] Creating mock ROS connection:', options);
     setTimeout(() => this.emit('connection'), 100);
   }
-  
+
   connect() {
     setTimeout(() => this.emit('connection'), 100);
   }
-  
+
   close() {
     this.emit('close');
   }
-  
-  getTopics(callback: Function, errorCallback: Function) {
+
+  getTopics(callback: Function, _errorCallback: Function) {
     callback({ topics: ['mock_topic_1', 'mock_topic_2'] });
   }
-  
-  getServices(callback: Function, errorCallback: Function) {
+
+  getServices(callback: Function, _errorCallback: Function) {
     callback(['mock_service_1', 'mock_service_2']);
   }
 }
@@ -31,7 +31,7 @@ class MockTopic {
   constructor(options: any) {
     logger.debug('[MockROS] Creating mock topic:', options);
   }
-  
+
   subscribe(callback: Function) {
     logger.debug('[MockROS] Mock subscribe');
     // Simulate some joint state data
@@ -41,16 +41,16 @@ class MockTopic {
           name: ['joint1', 'joint2'],
           position: [0, 0],
           velocity: [0, 0],
-          effort: [0, 0]
+          effort: [0, 0],
         });
       }, 1000);
     }
   }
-  
+
   publish(message: any) {
     logger.debug('[MockROS] Mock publish:', message);
   }
-  
+
   unsubscribe() {
     logger.debug('[MockROS] Mock unsubscribe');
   }
@@ -60,8 +60,8 @@ class MockService {
   constructor(options: any) {
     logger.debug('[MockROS] Creating mock service:', options);
   }
-  
-  callService(request: any, successCallback: Function, errorCallback: Function) {
+
+  callService(request: any, successCallback: Function, _errorCallback: Function) {
     logger.debug('[MockROS] Mock service call:', request);
     successCallback({ success: true });
   }
@@ -94,7 +94,7 @@ let ROSLIB: ROSLIB_Interface = {
   Topic: MockTopic,
   Service: MockService,
   Message: MockMessage,
-  ServiceRequest: MockServiceRequest
+  ServiceRequest: MockServiceRequest,
 };
 
 // Flag to track if real roslib has been loaded
@@ -110,11 +110,11 @@ async function loadRoslib(): Promise<void> {
   roslibLoadPromise = (async () => {
     try {
       const roslib = await import('roslib');
-      // @ts-ignore - Real roslib has compatible interface
+      // @ts-expect-error - Real roslib has compatible interface
       ROSLIB = roslib.default || roslib;
       roslibLoaded = true;
       logger.info('[ROS2Bridge] Using real roslib implementation');
-    } catch (error) {
+    } catch (_error) {
       logger.warn('[ROS2Bridge] roslib not available, using mock implementation');
     }
   })();
@@ -137,7 +137,7 @@ export class ROS2Bridge extends EventEmitter {
   private topics: Map<string, any> = new Map();
   private subscribers: Map<string, any> = new Map();
   private services: Map<string, any> = new Map();
-  
+
   constructor(private config: ROS2Config) {
     super();
   }
@@ -178,7 +178,7 @@ export class ROS2Bridge extends EventEmitter {
         topic.unsubscribe();
       });
       this.subscribers.clear();
-      
+
       // Close connection
       this.ros.close();
       this.ros = null;
@@ -269,7 +269,10 @@ export class ROS2Bridge extends EventEmitter {
   }
 
   // Send joint commands
-  async sendJointCommand(joints: { [name: string]: number }, duration: number = 1.0): Promise<void> {
+  async sendJointCommand(
+    joints: { [name: string]: number },
+    duration: number = 1.0
+  ): Promise<void> {
     if (!this.connected || !this.topics.has('jointCommand')) {
       throw new Error('Not connected or joint command topic not configured');
     }
@@ -286,16 +289,18 @@ export class ROS2Bridge extends EventEmitter {
         frame_id: 'base_link',
       },
       joint_names: jointNames,
-      points: [{
-        positions: positions,
-        velocities: new Array(positions.length).fill(0),
-        accelerations: new Array(positions.length).fill(0),
-        effort: new Array(positions.length).fill(0),
-        time_from_start: {
-          secs: Math.floor(duration),
-          nsecs: (duration % 1) * 1e9,
+      points: [
+        {
+          positions,
+          velocities: new Array(positions.length).fill(0),
+          accelerations: new Array(positions.length).fill(0),
+          effort: new Array(positions.length).fill(0),
+          time_from_start: {
+            secs: Math.floor(duration),
+            nsecs: (duration % 1) * 1e9,
+          },
         },
-      }],
+      ],
     });
 
     this.topics.get('jointCommand')!.publish(trajectory);
@@ -325,7 +330,7 @@ export class ROS2Bridge extends EventEmitter {
     const service = new ROSLIB.Service({
       ros: this.ros!,
       name: serviceName,
-      serviceType: serviceType,
+      serviceType,
     });
 
     return new Promise((resolve, reject) => {
@@ -350,7 +355,7 @@ export class ROS2Bridge extends EventEmitter {
     const topic = new ROSLIB.Topic({
       ros: this.ros!,
       name: topicName,
-      messageType: messageType,
+      messageType,
     });
 
     topic.subscribe(callback);
@@ -368,7 +373,7 @@ export class ROS2Bridge extends EventEmitter {
       topic = new ROSLIB.Topic({
         ros: this.ros!,
         name: topicName,
-        messageType: messageType,
+        messageType,
       });
       this.topics.set(topicName, topic);
     }
@@ -422,4 +427,4 @@ export class ROS2Bridge extends EventEmitter {
       );
     });
   }
-} 
+}

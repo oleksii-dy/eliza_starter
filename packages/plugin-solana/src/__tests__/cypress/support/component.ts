@@ -34,7 +34,6 @@ Cypress.Commands.add('mount', (component: React.ReactNode, options?: any) => {
 
 // Add custom commands to the global Cypress object
 declare global {
-   
   namespace Cypress {
     interface Chainable {
       /**
@@ -44,4 +43,4 @@ declare global {
       mount(component: React.ReactNode, options?: any): Chainable<any>;
     }
   }
-} 
+}

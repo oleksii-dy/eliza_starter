@@ -1,5 +1,6 @@
 import type {
   Action,
+  ActionResult,
   IAgentRuntime,
   Memory,
   State,
@@ -17,32 +18,50 @@ import * as path from 'path';
 export const runBenchmarkAction: Action = {
   name: 'RUN_BENCHMARK',
   similes: ['benchmark', 'test performance', 'measure autocoder', 'run benchmarks'],
-  description: 'Run performance benchmarks for the AutoCoder plugin',
+  description:
+    'Run performance benchmarks for the AutoCoder plugin. Returns benchmark results and metrics for action chaining.',
 
   examples: [
     [
       {
-        name: '{{user1}}',
+        name: '{{user}}',
         content: { text: 'Run benchmarks for the autocoder' },
       },
       {
-        name: '{{agentName}}',
+        name: '{{agent}}',
         content: {
           text: "I'll run the AutoCoder benchmarks to measure performance and quality.",
+          thought: 'User wants to run performance benchmarks to evaluate the AutoCoder plugin.',
           actions: ['RUN_BENCHMARK'],
         },
       },
     ],
     [
       {
-        name: '{{user1}}',
-        content: { text: 'Test the autocoder performance on the simple action scenario' },
+        name: '{{user}}',
+        content: { text: 'Benchmark the autocoder performance and then generate a report' },
       },
       {
-        name: '{{agentName}}',
+        name: '{{agent}}',
         content: {
-          text: "I'll run the benchmark for the simple action scenario.",
-          actions: ['RUN_BENCHMARK'],
+          text: "I'll run the benchmarks first, then generate a detailed performance report.",
+          thought:
+            'User wants benchmarking followed by report generation - a multi-action workflow.',
+          actions: ['RUN_BENCHMARK', 'GENERATE_REPORT'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: { text: 'Test autocoder performance and compare with previous results' },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll run the benchmarks and then compare with historical performance data.",
+          thought: 'User wants current benchmarking with historical comparison analysis.',
+          actions: ['RUN_BENCHMARK', 'COMPARE_RESULTS'],
         },
       },
     ],
@@ -75,7 +94,7 @@ export const runBenchmarkAction: Action = {
     state?: State,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
-  ) => {
+  ): Promise<ActionResult> => {
     try {
       elizaLogger.info('[BENCHMARK] Starting benchmark execution');
 
@@ -138,13 +157,13 @@ export const runBenchmarkAction: Action = {
       const totalTokens = results.reduce((sum, r) => sum + r.metrics.tokenUsage.total, 0);
       const totalCost = results.reduce((sum, r) => sum + r.metrics.tokenUsage.cost, 0);
 
-      let summary = `## Benchmark Results\n\n`;
+      let summary = '## Benchmark Results\n\n';
       summary += `✅ **Success Rate**: ${passed}/${total} (${successRate}%)\n`;
       summary += `⏱️ **Total Duration**: ${formatDuration(totalDuration)}\n`;
       summary += `🔤 **Total Tokens**: ${totalTokens.toLocaleString()}\n`;
       summary += `💰 **Total Cost**: $${totalCost.toFixed(2)}\n\n`;
 
-      summary += `### Scenario Results:\n`;
+      summary += '### Scenario Results:\n';
       for (const result of results) {
         const status = result.success ? '✅' : '❌';
         summary += `\n**${result.scenarioId}**: ${status}\n`;
@@ -179,10 +198,30 @@ export const runBenchmarkAction: Action = {
       }
 
       return {
-        success: true,
+        text: summary,
+        values: {
+          success: true,
+          benchmarksPassed: passed,
+          benchmarksTotal: total,
+          successRate: parseFloat(successRate),
+          totalDuration,
+          totalTokens,
+          totalCost,
+          scenariosRun: selectedScenarios,
+        },
         data: {
+          actionName: 'RUN_BENCHMARK',
           results,
           outputDir,
+          metrics: {
+            passed,
+            total,
+            successRate: parseFloat(successRate),
+            totalDuration,
+            totalTokens,
+            totalCost,
+          },
+          scenarios: selectedScenarios,
         },
       };
     } catch (error) {
@@ -196,8 +235,17 @@ export const runBenchmarkAction: Action = {
       }
 
       return {
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
+        text: `❌ Benchmark execution failed: ${error instanceof Error ? error.message : String(error)}`,
+        values: {
+          success: false,
+          error: true,
+          errorMessage: error instanceof Error ? error.message : String(error),
+        },
+        data: {
+          actionName: 'RUN_BENCHMARK',
+          error: error instanceof Error ? error.message : String(error),
+          errorType: 'execution_error',
+        },
       };
     }
   },

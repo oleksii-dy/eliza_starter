@@ -1,7 +1,6 @@
 import PageTitle from '@/components/page-title';
 import ProfileOverlay from '@/components/profile-overlay';
 import { useAgentsWithDetails, useChannels, useServers } from '@/hooks/use-query-hooks';
-import { getEntityId } from '@/lib/utils';
 import { type Agent, type UUID, ChannelType as CoreChannelType } from '@elizaos/core';
 import { Plus } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
@@ -10,7 +9,6 @@ import AddAgentCard from '@/components/add-agent-card';
 import AgentCard from '@/components/agent-card';
 import GroupCard from '@/components/group-card';
 import GroupPanel from '@/components/group-panel';
-import { apiClient } from '@/lib/api';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 import clientLogger from '@/lib/logger';
@@ -23,12 +21,11 @@ import clientLogger from '@/lib/logger';
 export default function Home() {
   const { data: agentsData, isLoading, isError, error } = useAgentsWithDetails();
   const navigate = useNavigate();
-  const currentClientEntityId = getEntityId();
 
   // Extract agents properly from the response
   const agents = agentsData?.agents || [];
 
-  const { data: serversData, isLoading: isLoadingServers } = useServers();
+  const { data: serversData } = useServers();
   const servers = serversData?.data?.servers || [];
 
   const [isOverlayOpen, setOverlayOpen] = useState(false);
@@ -36,18 +33,15 @@ export default function Home() {
   const [selectedAgent, setSelectedAgent] = useState<Partial<Agent> | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<UUID | null>(null);
 
-  const openOverlay = (agent: Partial<Agent>) => {
-    setSelectedAgent(agent);
-    setOverlayOpen(true);
-  };
-
   const closeOverlay = () => {
     setSelectedAgent(null);
     setOverlayOpen(false);
   };
 
   const handleNavigateToDm = async (agent: Agent) => {
-    if (!agent.id) return;
+    if (!agent.id) {
+      return;
+    }
     // Navigate directly to agent chat - DM channel will be created automatically with default server
     navigate(`/chat/${agent.id}`);
   };
@@ -153,9 +147,12 @@ const ServerChannels = ({ serverId }: { serverId: UUID }) => {
     [channelsData]
   );
 
-  if (isLoadingChannels) return <p>Loading channels for server...</p>;
-  if (!groupChannels || groupChannels.length === 0)
+  if (isLoadingChannels) {
+    return <p>Loading channels for server...</p>;
+  }
+  if (!groupChannels || groupChannels.length === 0) {
     return <p className="text-sm text-muted-foreground">No group channels in this server.</p>;
+  }
 
   return (
     <>

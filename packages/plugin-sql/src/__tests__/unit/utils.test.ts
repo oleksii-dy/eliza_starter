@@ -46,7 +46,7 @@ describe('Utils', () => {
     beforeEach(() => {
       originalEnv = process.env.PGLITE_DATA_DIR;
       delete process.env.PGLITE_DATA_DIR;
-      vi.clearAllMocks();
+      mock.restore();
     });
 
     afterEach(() => {

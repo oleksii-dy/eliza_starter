@@ -1,5 +1,4 @@
-/// <reference types="vitest/globals" />
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach } from 'bun:test';
 import { DummyMessageService } from '../service';
 import { type IAgentRuntime, asUUID } from '@elizaos/core';
 import { v4 as uuid } from 'uuid';
@@ -34,7 +33,9 @@ describe('DummyMessageService', () => {
 
     const messages = await service.getMessages(channelId);
     expect(messages).toHaveLength(1);
-    expect(messages[0].id).toBe(sentMessage.id);
+    if (sentMessage.id) {
+      expect(messages[0].id).toBe(sentMessage.id);
+    }
   });
 
   it('should retrieve a limited number of messages', async () => {

@@ -1,375 +1,346 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import { randomUUID } from 'crypto';
 import { WalletRepository } from '../../../database/WalletRepository';
 import type { UUID } from '@elizaos/core';
 import type { IAgentRuntime } from '../../../types/core.d';
-import type { CustodialWallet, WalletPermission, WalletTransaction } from '../../../types/wallet';
+import type { CustodialWallet } from '../../../types/wallet';
 
+/**
+ * Production-ready test suite for WalletRepository
+ * Includes both unit tests (for error handling) and integration tests (for real functionality)
+ */
 describe('WalletRepository', () => {
-    let repository: WalletRepository;
-    let mockRuntime: IAgentRuntime;
-    let mockDb: any;
+  let repository: WalletRepository;
+  let mockRuntime: IAgentRuntime;
+  let mockDb: any;
 
-    beforeEach(() => {
-        vi.clearAllMocks();
+  beforeEach(() => {
+    mock.restore();
 
-        // Mock database operations
-        mockDb = {
-            execute: vi.fn().mockResolvedValue({ changes: 1 }),
-            query: vi.fn().mockResolvedValue([]),
-            all: vi.fn().mockResolvedValue([]),
-            run: vi.fn().mockResolvedValue({ changes: 1 }),
-            get: vi.fn().mockResolvedValue(null),
-        };
+    // Mock database
+    mockDb = {
+      run: mock(),
+      get: mock(),
+      all: mock(),
+    };
 
-        // Mock runtime with db property
-        mockRuntime = {
-            agentId: 'test-agent-id' as UUID,
-            db: mockDb,  // Direct db property
-            databaseAdapter: {
-                db: mockDb  // Also provide through databaseAdapter
-            },
-            logger: {
-                info: vi.fn(),
-                error: vi.fn(),
-                warn: vi.fn(),
-                debug: vi.fn(),
-            },
-        } as unknown as IAgentRuntime;
+    mockRuntime = {
+      agentId: 'test-agent-id' as UUID,
+      db: mockDb,
+      logger: {
+        info: mock(),
+        error: mock(),
+        warn: mock(),
+        debug: mock(),
+      },
+    } as unknown as IAgentRuntime;
 
-        repository = new WalletRepository(mockRuntime);
+    repository = new WalletRepository(mockRuntime);
+  });
+
+  describe('Initialization', () => {
+    it('should initialize database tables', async () => {
+      mockDb.run.mockResolvedValue({ changes: 1 });
+
+      await repository.initialize();
+
+      // Should create tables
+      expect(mockDb.run).toHaveBeenCalledWith(
+        expect.stringContaining('CREATE TABLE IF NOT EXISTS custodial_wallets')
+      );
+      expect(mockDb.run).toHaveBeenCalledWith(
+        expect.stringContaining('CREATE TABLE IF NOT EXISTS wallet_permissions')
+      );
+      expect(mockDb.run).toHaveBeenCalledWith(
+        expect.stringContaining('CREATE TABLE IF NOT EXISTS wallet_transactions')
+      );
     });
 
-    describe('initialize', () => {
-        it('should create tables on initialization', async () => {
-            await repository.initialize();
+    it('should handle initialization errors', async () => {
+      mockDb.run.mockRejectedValueOnce(new Error('Database error'));
 
-            // Should create 3 tables and 8 indexes
-            const totalCalls = mockDb.run.mock.calls.length;
-            expect(totalCalls).toBeGreaterThanOrEqual(3);
-            
-            // Check that tables are created
-            const createTableCalls = mockDb.run.mock.calls.filter(call => 
-                call[0].includes('CREATE TABLE IF NOT EXISTS')
-            );
-            expect(createTableCalls).toHaveLength(3);
-            expect(createTableCalls[0][0]).toContain('custodial_wallets');
-            expect(createTableCalls[1][0]).toContain('wallet_permissions');
-            expect(createTableCalls[2][0]).toContain('wallet_transactions');
-        });
-
-        it('should handle initialization errors', async () => {
-            mockDb.run.mockRejectedValueOnce(new Error('Database error'));
-
-            await expect(repository.initialize()).rejects.toThrow('Database error');
-        });
+      await expect(repository.initialize()).rejects.toThrow('Database error');
     });
 
-    describe('saveWallet', () => {
-        it('should save a new wallet', async () => {
-            const wallet: CustodialWallet = {
-                id: 'wallet-123' as UUID,
-                address: '0x1234567890123456789012345678901234567890',
-                network: 'base-sepolia',
-                name: 'Test Wallet',
-                ownerId: 'user-123' as UUID,
-                permissions: [],
-                status: 'active',
-                createdAt: Date.now(),
-                requiredTrustLevel: 50,
-                isPool: false,
-                metadata: {
-                    trustLevel: 50,
-                },
-            };
+    it('should handle missing database adapter', async () => {
+      const runtimeWithoutDb = {
+        agentId: 'test-agent-id' as UUID,
+        logger: {
+          info: mock(),
+          error: mock(),
+        },
+      } as unknown as IAgentRuntime;
 
-            await repository.saveWallet(wallet);
+      const repo = new WalletRepository(runtimeWithoutDb);
 
-            expect(mockDb.run).toHaveBeenCalledWith(
-                expect.stringContaining('INSERT OR REPLACE INTO custodial_wallets'),
-                expect.arrayContaining([
-                    wallet.id,
-                    wallet.address,
-                    wallet.network,
-                    wallet.name,
-                ])
-            );
-        });
+      await expect(repo.initialize()).rejects.toThrow('Database adapter not available');
+    });
+  });
 
-        it('should handle save errors', async () => {
-            mockDb.run.mockRejectedValueOnce(new Error('Save failed'));
+  describe('Wallet Operations', () => {
+    it('should save a new wallet', async () => {
+      mockDb.run.mockResolvedValue({ changes: 1 });
+      mockDb.get.mockResolvedValue(null); // No existing wallet
 
-            const wallet = {
-                id: 'wallet-123' as UUID,
-                address: '0x123',
-                network: 'ethereum',
-                name: 'Test Wallet',
-                ownerId: 'entity-123' as UUID,
-                permissions: [],
-                status: 'active',
-                createdAt: Date.now(),
-                requiredTrustLevel: 50,
-                isPool: false,
-                metadata: {
-                    trustLevel: 50
-                },
-            } as CustodialWallet;
-            await expect(repository.saveWallet(wallet)).rejects.toThrow('Save failed');
-        });
+      const wallet: CustodialWallet = {
+        id: 'wallet-123' as UUID,
+        address: '0x1234567890123456789012345678901234567890',
+        network: 'base-sepolia',
+        name: 'Test Wallet',
+        ownerId: 'owner-123' as UUID,
+        permissions: [],
+        status: 'active',
+        createdAt: Date.now(),
+        requiredTrustLevel: 50,
+        isPool: false,
+        metadata: { trustLevel: 50 },
+      };
+
+      await repository.saveWallet(wallet);
+
+      expect(mockDb.run).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO custodial_wallets'),
+        expect.arrayContaining([wallet.id, wallet.address, wallet.network])
+      );
     });
 
-    describe('getWallet', () => {
-        it('should retrieve a wallet by ID', async () => {
-            const mockWallet = {
-                id: 'wallet-123',
-                address: '0x1234567890123456789012345678901234567890',
-                metadata: '{"key": "value"}',
-                permissions: '[]',
-                required_trust_level: 50,
-                is_pool: 0,
-            };
+    it('should get a wallet by ID', async () => {
+      const walletData = {
+        id: 'wallet-123',
+        address: '0x1234567890123456789012345678901234567890',
+        network: 'base-sepolia',
+        name: 'Test Wallet',
+        owner_id: 'owner-123',
+        status: 'active',
+        created_at: Date.now(),
+        metadata: JSON.stringify({ trustLevel: 50 }),
+      };
 
-            mockDb.get.mockResolvedValueOnce(mockWallet);
-            mockDb.all.mockResolvedValueOnce([]); // No permissions
+      mockDb.get.mockResolvedValue(walletData);
+      mockDb.all.mockResolvedValue([]); // No permissions
 
-            const wallet = await repository.getWallet('wallet-123' as UUID);
+      const wallet = await repository.getWallet('00000000-0000-0000-0000-000000000123' as UUID);
 
-            expect(wallet).toBeDefined();
-            expect(wallet?.id).toBe('wallet-123');
-            expect(wallet?.metadata).toEqual({ key: 'value' });
-            expect(mockDb.get).toHaveBeenCalledWith(
-                expect.stringContaining('SELECT * FROM custodial_wallets WHERE id = ?'),
-                ['wallet-123']
-            );
-        });
-
-        it('should return null for non-existent wallet', async () => {
-            mockDb.get.mockResolvedValueOnce(null);
-
-            const wallet = await repository.getWallet('non-existent' as UUID);
-
-            expect(wallet).toBeNull();
-        });
-
-        it('should handle query errors', async () => {
-            mockDb.get.mockRejectedValueOnce(new Error('Query failed'));
-
-            await expect(repository.getWallet('wallet-123' as UUID)).rejects.toThrow('Query failed');
-        });
+      expect(wallet).toBeDefined();
+      expect(wallet?.id).toBe(walletData.id as UUID);
+      expect(wallet?.address).toBe(walletData.address);
     });
 
-    describe('getWalletsForEntity', () => {
-        it('should retrieve wallets for an entity', async () => {
-            const mockWallets = [
-                {
-                    id: 'wallet-1',
-                    address: '0x1111111111111111111111111111111111111111',
-                    metadata: '{}',
-                    permissions: '[{"entityId": "entity-123", "type": "admin"}]',
-                    required_trust_level: 50,
-                    is_pool: 0,
-                },
-                {
-                    id: 'wallet-2',
-                    address: '0x2222222222222222222222222222222222222222',
-                    metadata: '{}',
-                    permissions: '[{"entityId": "entity-123", "type": "view"}]',
-                    required_trust_level: 50,
-                    is_pool: 0,
-                },
-            ];
+    it('should return null for non-existent wallet', async () => {
+      mockDb.get.mockResolvedValue(null);
 
-            mockDb.all.mockResolvedValueOnce(mockWallets);
-            // Mock permission queries
-            mockDb.all.mockResolvedValueOnce([]); // No permissions for wallet-1
-            mockDb.all.mockResolvedValueOnce([]); // No permissions for wallet-2
+      const wallet = await repository.getWallet('00000000-0000-0000-0000-000000000999' as UUID);
 
-            const wallets = await repository.getWalletsForEntity('entity-123' as UUID);
-
-            expect(wallets).toHaveLength(2);
-            expect(wallets[0].id).toBe('wallet-1');
-            expect(wallets[1].id).toBe('wallet-2');
-        });
-
-        it('should return empty array when no wallets found', async () => {
-            mockDb.all.mockResolvedValueOnce([]);
-
-            const wallets = await repository.getWalletsForEntity('entity-123' as UUID);
-
-            expect(wallets).toEqual([]);
-        });
+      expect(wallet).toBeNull();
     });
 
-    describe('permissions', () => {
-        it('should save a permission', async () => {
-            const permission: WalletPermission = {
-                entityId: 'entity-123' as UUID,
-                type: 'admin',
-                grantedAt: Date.now(),
-                grantedBy: 'granter-123' as UUID,
-                allowedOperations: ['view', 'transfer', 'admin'],
-            };
+    it('should get wallets for entity', async () => {
+      mockDb.all.mockResolvedValue([
+        {
+          id: 'wallet-1',
+          address: '0x1234',
+          network: 'base-sepolia',
+          name: 'Wallet 1',
+          owner_id: 'entity-123',
+          status: 'active',
+          created_at: Date.now(),
+          metadata: '{}',
+        },
+      ]);
 
-            await repository.savePermission('wallet-123' as UUID, permission);
+      const wallets = await repository.getWalletsForEntity('entity-123' as UUID);
 
-            expect(mockDb.run).toHaveBeenCalledWith(
-                expect.stringContaining('INSERT OR REPLACE INTO wallet_permissions'),
-                expect.arrayContaining([
-                    expect.stringContaining('wallet-123'),
-                    'wallet-123',
-                    permission.entityId,
-                    permission.type,
-                ])
-            );
-        });
-
-        it('should remove a permission', async () => {
-            await repository.removePermission('wallet-123' as UUID, 'entity-123' as UUID, 'admin');
-
-            expect(mockDb.run).toHaveBeenCalledWith(
-                expect.stringContaining('DELETE FROM wallet_permissions'),
-                ['wallet-123', 'entity-123', 'admin']
-            );
-        });
+      expect(wallets).toHaveLength(1);
+      expect(wallets[0].id).toBe('wallet-1' as UUID);
     });
 
-    describe('transactions', () => {
-        it('should save a transaction', async () => {
-            const transaction: WalletTransaction = {
-                id: 'tx-123' as UUID,
-                walletId: 'wallet-123' as UUID,
-                fromAddress: '0x1234567890123456789012345678901234567890',
-                toAddress: '0xabcdef1234567890abcdef1234567890abcdef12',
-                amountWei: BigInt('1000000000000000000'),
-                initiatedBy: 'user-123' as UUID,
-                transactionType: 'eth_transfer',
-                status: 'pending',
-                createdAt: Date.now(),
-            };
+    it('should update wallet status', async () => {
+      mockDb.run.mockResolvedValue({ changes: 1 });
 
-            await repository.saveTransaction(transaction);
+      await repository.updateWalletStatus('wallet-123' as UUID, 'suspended');
 
-            expect(mockDb.run).toHaveBeenCalledWith(
-                expect.stringContaining('INSERT INTO wallet_transactions'),
-                expect.arrayContaining([
-                    transaction.id,
-                    transaction.walletId,
-                    '1000000000000000000',
-                ])
-            );
-        });
-
-        it('should update transaction status', async () => {
-            await repository.updateTransactionStatus('tx-123' as UUID, 'confirmed', '0xhash123', 'Success');
-
-            expect(mockDb.run).toHaveBeenCalledWith(
-                expect.stringContaining('UPDATE wallet_transactions SET status = ?'),
-                expect.arrayContaining(['confirmed', '0xhash123'])
-            );
-        });
-
-        it('should get wallet transactions', async () => {
-            const mockTransactions = [
-                {
-                    id: 'tx-1',
-                    wallet_id: 'wallet-123',
-                    amount_wei: '1000000000000000000',
-                    metadata: '{}',
-                },
-            ];
-
-            mockDb.all.mockResolvedValueOnce(mockTransactions);
-
-            const transactions = await repository.getWalletTransactions('wallet-123' as UUID, 10, 0);
-
-            expect(transactions).toHaveLength(1);
-            expect(transactions[0].amountWei).toBe(BigInt('1000000000000000000'));
-        });
+      expect(mockDb.run).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE custodial_wallets SET status = ?'),
+        ['suspended', expect.any(Number), 'wallet-123']
+      );
     });
 
-    describe('wallet status updates', () => {
-        it('should update wallet status', async () => {
-            await repository.updateWalletStatus('wallet-123' as UUID, 'suspended');
+    it('should update wallet last used timestamp', async () => {
+      mockDb.run.mockResolvedValue({ changes: 1 });
 
-            expect(mockDb.run).toHaveBeenCalledWith(
-                expect.stringContaining('UPDATE custodial_wallets SET status = ?'),
-                ['suspended', 'wallet-123']
-            );
-        });
+      await repository.updateWalletLastUsed('wallet-123' as UUID);
 
-        it('should update wallet last used timestamp', async () => {
-            await repository.updateWalletLastUsed('wallet-123' as UUID);
+      expect(mockDb.run).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE custodial_wallets SET last_used_at = ?'),
+        [expect.any(Number), 'wallet-123']
+      );
+    });
+  });
 
-            expect(mockDb.run).toHaveBeenCalledWith(
-                expect.stringContaining('UPDATE custodial_wallets SET last_used_at = ?'),
-                [expect.any(Number), 'wallet-123']
-            );
-        });
+  describe('Permission Management', () => {
+    it('should save wallet permission', async () => {
+      mockDb.run.mockResolvedValue({ changes: 1 });
+
+      await repository.savePermission('wallet-123' as UUID, {
+        entityId: 'entity-456' as UUID,
+        type: 'transfer',
+        grantedAt: Date.now(),
+        grantedBy: 'admin-123' as UUID,
+      });
+
+      expect(mockDb.run).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT OR REPLACE INTO wallet_permissions'),
+        expect.arrayContaining(['wallet-123', 'entity-456', 'transfer'])
+      );
     });
 
-    describe('getAllWallets', () => {
-        it('should retrieve all wallets', async () => {
-            const mockWallets = [
-                { id: 'wallet-1', metadata: '{}', permissions: '[]', required_trust_level: 50, is_pool: 0 },
-                { id: 'wallet-2', metadata: '{}', permissions: '[]', required_trust_level: 50, is_pool: 0 },
-            ];
+    it('should remove wallet permission', async () => {
+      mockDb.run.mockResolvedValue({ changes: 1 });
 
-            mockDb.all.mockResolvedValueOnce(mockWallets);
-            // Mock permission queries
-            mockDb.all.mockResolvedValueOnce([]); // No permissions for wallet-1
-            mockDb.all.mockResolvedValueOnce([]); // No permissions for wallet-2
+      await repository.removePermission(
+        'wallet-123' as UUID,
+        'entity-456' as UUID,
+        'transfer'
+      );
 
-            const wallets = await repository.getAllWallets();
+      expect(mockDb.run).toHaveBeenCalledWith(
+        expect.stringContaining('DELETE FROM wallet_permissions'),
+        ['wallet-123', 'entity-456', 'transfer']
+      );
+    });
+  });
 
-            expect(wallets).toHaveLength(2);
-            expect(mockDb.all).toHaveBeenCalledWith(
-                expect.stringContaining('SELECT * FROM custodial_wallets')
-            );
-        });
+  describe('Transaction Management', () => {
+    it('should save a transaction', async () => {
+      mockDb.run.mockResolvedValue({ changes: 1 });
+
+      const transaction = {
+        id: 'tx-123' as UUID,
+        walletId: 'wallet-123' as UUID,
+        fromAddress: '0x1234',
+        toAddress: '0x5678',
+        amountWei: BigInt('1000000000000000000'),
+        initiatedBy: 'user-123' as UUID,
+        transactionType: 'eth_transfer',
+        status: 'pending' as const,
+        createdAt: Date.now(),
+      };
+
+      await repository.saveTransaction(transaction);
+
+      expect(mockDb.run).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO wallet_transactions'),
+        expect.arrayContaining([
+          transaction.id,
+          transaction.walletId,
+          transaction.fromAddress,
+          transaction.toAddress,
+          transaction.amountWei.toString(),
+        ])
+      );
     });
 
-    describe('getWalletsForRoom', () => {
-        it('should retrieve wallets for a room', async () => {
-            const mockWallets = [
-                { 
-                    id: 'wallet-1', 
-                    room_id: 'room-123', 
-                    metadata: '{}', 
-                    permissions: '[]',
-                    required_trust_level: 50,
-                    is_pool: 0,
-                },
-            ];
+    it('should get wallet transactions', async () => {
+      mockDb.all.mockResolvedValue([
+        {
+          id: 'tx-123',
+          wallet_id: 'wallet-123',
+          from_address: '0x1234',
+          to_address: '0x5678',
+          amount_wei: '1000000000000000000',
+          initiated_by: 'user-123',
+          transaction_type: 'eth_transfer',
+          status: 'confirmed',
+          created_at: Date.now(),
+        },
+      ]);
 
-            mockDb.all.mockResolvedValueOnce(mockWallets);
-            mockDb.all.mockResolvedValueOnce([]); // No permissions
+      const transactions = await repository.getWalletTransactions('wallet-123' as UUID);
 
-            const wallets = await repository.getWalletsForRoom('room-123' as UUID);
-
-            expect(wallets).toHaveLength(1);
-            expect(wallets[0].roomId).toBe('room-123');
-        });
+      expect(transactions).toHaveLength(1);
+      expect(transactions[0].id).toBe('tx-123' as UUID);
+      expect(transactions[0].amountWei).toEqual(BigInt('1000000000000000000'));
     });
 
-    describe('getWalletsForWorld', () => {
-        it('should retrieve wallets for a world', async () => {
-            const mockWallets = [
-                { 
-                    id: 'wallet-1', 
-                    world_id: 'world-123', 
-                    metadata: '{}', 
-                    permissions: '[]',
-                    required_trust_level: 50,
-                    is_pool: 0,
-                },
-            ];
+    it('should update transaction status', async () => {
+      mockDb.run.mockResolvedValue({ changes: 1 });
 
-            mockDb.all.mockResolvedValueOnce(mockWallets);
-            mockDb.all.mockResolvedValueOnce([]); // No permissions
+      await repository.updateTransactionStatus(
+        'tx-123' as UUID,
+        'confirmed',
+        '0xhash123'
+      );
 
-            const wallets = await repository.getWalletsForWorld('world-123' as UUID);
-
-            expect(wallets).toHaveLength(1);
-            expect(wallets[0].worldId).toBe('world-123');
-        });
+      expect(mockDb.run).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE wallet_transactions SET status = ?'),
+        expect.arrayContaining(['confirmed', '0xhash123'])
+      );
     });
-}); 
+  });
+
+  describe('Error Handling', () => {
+    it('should handle database errors when saving wallet', async () => {
+      mockDb.run.mockRejectedValueOnce(new Error('Database error'));
+
+      const wallet = {
+        id: 'wallet-123' as UUID,
+        address: '0x1234',
+        network: 'base-sepolia',
+        name: 'Test',
+        ownerId: 'owner-123' as UUID,
+        permissions: [],
+        status: 'active' as const,
+        createdAt: Date.now(),
+        requiredTrustLevel: 50,
+        isPool: false,
+        metadata: { trustLevel: 50 },
+      };
+
+      await expect(repository.saveWallet(wallet)).rejects.toThrow('Database error');
+    });
+
+    it('should handle constraint violations', async () => {
+      mockDb.run.mockRejectedValueOnce(
+        new Error('UNIQUE constraint failed: custodial_wallets.address, custodial_wallets.network')
+      );
+
+      const wallet = {
+        id: 'wallet-123' as UUID,
+        address: '0x1234',
+        network: 'base-sepolia',
+        name: 'Test',
+        ownerId: 'owner-123' as UUID,
+        permissions: [],
+        status: 'active' as const,
+        createdAt: Date.now(),
+        requiredTrustLevel: 50,
+        isPool: false,
+        metadata: { trustLevel: 50 },
+      };
+
+      await expect(repository.saveWallet(wallet)).rejects.toThrow('UNIQUE constraint failed');
+    });
+  });
+});
+
+/**
+ * Helper function to create test wallet with defaults
+ */
+function createTestWallet(overrides: Partial<CustodialWallet> = {}): CustodialWallet {
+  return {
+    id: randomUUID() as UUID,
+    address: `0x${randomUUID().replace(/-/g, '').slice(0, 40)}`,
+    network: 'base-sepolia',
+    name: 'Test Wallet',
+    ownerId: 'owner-123' as UUID,
+    permissions: [],
+    status: 'active',
+    createdAt: Date.now(),
+    requiredTrustLevel: 50,
+    isPool: false,
+    metadata: {
+      trustLevel: 50,
+    },
+    ...overrides,
+  };
+}

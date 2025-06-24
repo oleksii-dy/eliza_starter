@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { promises as fs } from 'fs';
 import { DatasetBuilder } from '../lib/dataset-builder.js';
 import { TogetherAIClient } from '../lib/together-client.js';
@@ -33,19 +33,19 @@ describe('Complete Workflow Tests', () => {
     const examples = [
       {
         request: 'Create a Discord plugin for ElizaOS',
-        response: 'I\'ll create a comprehensive Discord plugin...',
+        response: "I'll create a comprehensive Discord plugin...",
         thinking: 'First, I need to understand Discord API integration...',
         quality: 0.9,
       },
       {
         request: 'Create a weather API integration',
-        response: 'Here\'s a weather plugin implementation...',
+        response: "Here's a weather plugin implementation...",
         thinking: 'This requires API key management and error handling...',
         quality: 0.8,
       },
       {
         request: 'Build a blockchain price tracker',
-        response: 'I\'ll implement a real-time price tracking system...',
+        response: "I'll implement a real-time price tracking system...",
         thinking: 'This needs WebSocket connections and state management...',
         quality: 0.95,
       },
@@ -128,7 +128,7 @@ describe('Complete Workflow Tests', () => {
   it('should create TogetherAI client with proper configuration', () => {
     // Test client creation
     expect(() => new TogetherAIClient('')).toThrow();
-    
+
     const client = new TogetherAIClient('test-key');
     expect(client).toBeDefined();
   });
@@ -145,12 +145,14 @@ describe('Complete Workflow Tests', () => {
     });
 
     const datasetPath = `${testDataDir}/token-limited-dataset.jsonl`;
-    
+
     // Should throw error when no examples pass token limit
-    await expect(builder.generateJSONL({
-      outputPath: datasetPath,
-      maxTokens: 100, // Very low limit
-    })).rejects.toThrow('No examples passed token limit filter');
+    await expect(
+      builder.generateJSONL({
+        outputPath: datasetPath,
+        maxTokens: 100, // Very low limit
+      })
+    ).rejects.toThrow('No examples passed token limit filter');
   });
 
   it('should persist data across sessions', async () => {
@@ -165,7 +167,7 @@ describe('Complete Workflow Tests', () => {
     // Session 2: Create new builder and load
     const builder2 = new DatasetBuilder(testDataDir);
     await builder2.loadExamples();
-    
+
     const examples = builder2.listExamples();
     expect(examples).toHaveLength(1);
     expect(examples[0].request).toBe('Persistent example');

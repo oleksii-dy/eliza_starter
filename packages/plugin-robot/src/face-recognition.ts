@@ -2,7 +2,7 @@ import * as faceapi from 'face-api.js';
 import { logger } from '@elizaos/core';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import type { FaceProfile, FaceLibrary, TrackedEntity, EntityAppearance } from './types';
+import type { FaceProfile, FaceLibrary } from './types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,7 +40,9 @@ export class FaceRecognition {
   private readonly MIN_FACE_SIZE = 50; // Minimum face size in pixels
 
   async initialize(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {
+      return;
+    }
 
     try {
       logger.info('[FaceRecognition] Loading face detection models...');

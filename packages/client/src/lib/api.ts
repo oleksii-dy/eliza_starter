@@ -10,9 +10,7 @@ import {
 } from '../types';
 
 // Interface for Memory from @elizaos/core, potentially extended for client needs
-interface ClientMemory extends CoreMemory {
-  // any client-specific extensions to Memory if needed
-}
+type ClientMemory = CoreMemory;
 
 /**
  * Represents a log entry with specific properties.
@@ -47,8 +45,8 @@ type AgentLog = {
   body?: {
     modelType?: string;
     modelKey?: string;
-    params?: any;
-    response?: any;
+    params?: Record<string, unknown>;
+    response?: Record<string, unknown>;
     usage?: {
       prompt_tokens?: number;
       completion_tokens?: number;
@@ -56,7 +54,7 @@ type AgentLog = {
     };
   };
   createdAt?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 const API_PREFIX = '/api';
@@ -122,7 +120,7 @@ const fetcher = async ({
       });
       clientLogger.error('Response:', errorText);
       let errorMessage = `${response.status}: ${response.statusText}`;
-      let errorObj: any = {};
+      let errorObj: Record<string, unknown> = {};
       try {
         errorObj = JSON.parse(errorText);
         errorMessage = errorObj.error?.message || errorObj.message || errorMessage;
@@ -153,8 +151,12 @@ const fetcher = async ({
         errorMessage = `${errorMessage} - Server error, please check server logs`;
       }
       const error = new Error(errorMessage);
-      (error as any).statusCode = response.status;
-      (error as any).responseBody = errorObj; // Attach parsed error body if available
+      (
+        error as Error & { statusCode?: number; responseBody?: Record<string, unknown> }
+      ).statusCode = response.status;
+      (
+        error as Error & { statusCode?: number; responseBody?: Record<string, unknown> }
+      ).responseBody = errorObj; // Attach parsed error body if available
       throw error;
     }
     if (contentType?.includes('application/json')) {
@@ -217,32 +219,50 @@ export const apiClient = {
     fetcher({ url: `/agents/${agentId}/panels`, method: 'GET' }),
 
   // Plugin Configuration Management
-  getAgentConfigurations: (agentId: string): Promise<{ success: boolean; data: { configurations: any[] } }> =>
+  getAgentConfigurations: (
+    agentId: string
+  ): Promise<{ success: boolean; data: { configurations: Record<string, unknown>[] } }> =>
     fetcher({ url: `/agents/${agentId}/configurations` }),
-  getPluginConfiguration: (agentId: string, pluginName: string): Promise<{ success: boolean; data: { configuration: any } }> =>
+  getPluginConfiguration: (
+    agentId: string,
+    pluginName: string
+  ): Promise<{ success: boolean; data: { configuration: Record<string, unknown> } }> =>
     fetcher({ url: `/agents/${agentId}/configurations/${pluginName}` }),
-  updatePluginConfiguration: (agentId: string, pluginName: string, configuration: any): Promise<{ success: boolean; data: { configuration: any } }> =>
-    fetcher({ url: `/agents/${agentId}/configurations/${pluginName}`, method: 'PATCH', body: { configuration } }),
+  updatePluginConfiguration: (
+    agentId: string,
+    pluginName: string,
+    configuration: Record<string, unknown>
+  ): Promise<{ success: boolean; data: { configuration: Record<string, unknown> } }> =>
+    fetcher({
+      url: `/agents/${agentId}/configurations/${pluginName}`,
+      method: 'PATCH',
+      body: { configuration },
+    }),
   updateComponentConfiguration: (
     agentId: string,
     pluginName: string,
     componentType: 'action' | 'provider' | 'evaluator',
     componentName: string,
-    config: any,
+    config: Record<string, unknown>,
     dependencies: string[] = []
-  ): Promise<{ success: boolean; data: { componentConfig: any; validationResult: any } }> =>
+  ): Promise<{
+    success: boolean;
+    data: { componentConfig: Record<string, unknown>; validationResult: Record<string, unknown> };
+  }> =>
     fetcher({
       url: `/agents/${agentId}/configurations/${pluginName}/components/${componentType}/${componentName}`,
       method: 'PATCH',
-      body: { config, dependencies }
+      body: { config, dependencies },
     }),
   getComponentConfiguration: (
     agentId: string,
     pluginName: string,
     componentType: 'action' | 'provider' | 'evaluator',
     componentName: string
-  ): Promise<{ success: boolean; data: { componentConfig: any } }> =>
-    fetcher({ url: `/agents/${agentId}/configurations/${pluginName}/components/${componentType}/${componentName}` }),
+  ): Promise<{ success: boolean; data: { componentConfig: Record<string, unknown> } }> =>
+    fetcher({
+      url: `/agents/${agentId}/configurations/${pluginName}/components/${componentType}/${componentName}`,
+    }),
 
   // Agent-perspective rooms and memories
   getAgentPerspectiveRooms: (agentId: string): Promise<{ data: { rooms: CoreRoom[] } }> =>
@@ -254,9 +274,15 @@ export const apiClient = {
     options?: { limit?: number; before?: number; includeEmbedding?: boolean }
   ): Promise<{ data: { memories: CoreMemory[] } }> => {
     const queryParams = new URLSearchParams({ tableName });
-    if (options?.limit) queryParams.append('limit', String(options.limit));
-    if (options?.before) queryParams.append('before', String(options.before));
-    if (options?.includeEmbedding) queryParams.append('includeEmbedding', 'true');
+    if (options?.limit) {
+      queryParams.append('limit', String(options.limit));
+    }
+    if (options?.before) {
+      queryParams.append('before', String(options.before));
+    }
+    if (options?.includeEmbedding) {
+      queryParams.append('includeEmbedding', 'true');
+    }
     return fetcher({
       url: `/agents/${agentId}/rooms/${agentPerspectiveRoomId}/memories?${queryParams.toString()}`,
     });
@@ -279,7 +305,7 @@ export const apiClient = {
     name: string;
     sourceType: string;
     sourceId?: string;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
   }): Promise<{ data: { server: MessageServer } }> =>
     fetcher({ url: '/messaging/servers', method: 'POST', body: payload }),
   getChannelsForServer: (serverId: UUID): Promise<{ data: { channels: MessageChannel[] } }> =>
@@ -292,8 +318,12 @@ export const apiClient = {
     }
   ): Promise<{ data: { messages: ServerMessage[] } }> => {
     const queryParams = new URLSearchParams();
-    if (options?.limit) queryParams.append('limit', String(options.limit));
-    if (options?.before) queryParams.append('before', String(options.before));
+    if (options?.limit) {
+      queryParams.append('limit', String(options.limit));
+    }
+    if (options?.before) {
+      queryParams.append('before', String(options.before));
+    }
     return fetcher({
       url: `/messaging/central-channels/${channelId}/messages?${queryParams.toString()}`,
     });
@@ -305,8 +335,8 @@ export const apiClient = {
       content: string;
       server_id: UUID;
       in_reply_to_message_id?: UUID;
-      raw_message?: any;
-      metadata?: any;
+      raw_message?: Record<string, unknown>;
+      metadata?: Record<string, unknown>;
       source_type?: string;
     }
   ): Promise<{ success: boolean; data: ServerMessage }> =>
@@ -327,7 +357,7 @@ export const apiClient = {
     participantCentralUserIds: UUID[];
     type?: string;
     server_id?: UUID;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
   }): Promise<{ data: MessageChannel }> =>
     fetcher({ url: '/messaging/central-channels', method: 'POST', body: payload }),
 
@@ -363,9 +393,14 @@ export const apiClient = {
       body: formData,
     });
   },
-  uploadKnowledgeDocuments: async (agentId: string, files: File[]): Promise<any> => {
+  uploadKnowledgeDocuments: async (
+    agentId: string,
+    files: File[]
+  ): Promise<{ success: boolean; data?: unknown; error?: string }> => {
     const formData = new FormData();
-    for (const file of files) formData.append('files', file);
+    for (const file of files) {
+      formData.append('files', file);
+    }
     return fetcher({
       url: `/agents/${agentId}/plugins/knowledge/upload`,
       method: 'POST',
@@ -375,7 +410,8 @@ export const apiClient = {
   getKnowledgeDocuments: (
     agentId: string,
     _options?: { limit?: number; before?: number; includeEmbedding?: boolean }
-  ): Promise<any> => fetcher({ url: `/agents/${agentId}/plugins/knowledge/documents` }),
+  ): Promise<{ success: boolean; data?: unknown; error?: string }> =>
+    fetcher({ url: `/agents/${agentId}/plugins/knowledge/documents` }),
   deleteKnowledgeDocument: (agentId: string, knowledgeId: string): Promise<void> =>
     fetcher({
       url: `/agents/${agentId}/plugins/knowledge/documents/${knowledgeId}`,
@@ -387,9 +423,15 @@ export const apiClient = {
     params: { level?: string; agentName?: string; agentId?: string } = {}
   ): Promise<LogResponse> => {
     const queryParams = new URLSearchParams();
-    if (params.level) queryParams.append('level', params.level);
-    if (params.agentName) queryParams.append('agentName', params.agentName);
-    if (params.agentId) queryParams.append('agentId', params.agentId);
+    if (params.level) {
+      queryParams.append('level', params.level);
+    }
+    if (params.agentName) {
+      queryParams.append('agentName', params.agentName);
+    }
+    if (params.agentId) {
+      queryParams.append('agentId', params.agentId);
+    }
     return fetcher({
       url: `/server/logs${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
     });
@@ -409,10 +451,18 @@ export const apiClient = {
     }
   ): Promise<{ success: boolean; data: AgentLog[] }> => {
     const queryParams = new URLSearchParams();
-    if (options?.roomId) queryParams.append('roomId', options.roomId);
-    if (options?.type) queryParams.append('type', options.type);
-    if (options?.count) queryParams.append('count', String(options.count));
-    if (options?.offset) queryParams.append('offset', String(options.offset));
+    if (options?.roomId) {
+      queryParams.append('roomId', options.roomId);
+    }
+    if (options?.type) {
+      queryParams.append('type', options.type);
+    }
+    if (options?.count) {
+      queryParams.append('count', String(options.count));
+    }
+    if (options?.offset) {
+      queryParams.append('offset', String(options.offset));
+    }
     if (options?.excludeTypes) {
       options.excludeTypes.forEach((excludeType) => {
         queryParams.append('excludeTypes', excludeType);
@@ -427,11 +477,11 @@ export const apiClient = {
 
   // ENV vars
   getLocalEnvs: (): Promise<{ success: boolean; data: Record<string, string> }> =>
-    fetcher({ url: `/system/env/local` }),
+    fetcher({ url: '/system/env/local' }),
   updateLocalEnvs: (envs: Record<string, string>): Promise<{ success: boolean; message: string }> =>
-    fetcher({ url: `/system/env/local`, method: 'POST', body: { content: envs } }),
+    fetcher({ url: '/system/env/local', method: 'POST', body: { content: envs } }),
 
-  testEndpoint: (endpoint: string): Promise<any> => fetcher({ url: endpoint }),
+  testEndpoint: (endpoint: string): Promise<unknown> => fetcher({ url: endpoint }),
 
   // PLACEHOLDER - Implement actual backend and uncomment
   deleteChannelMessage: async (channelId: UUID, messageId: UUID): Promise<void> => {
@@ -458,7 +508,11 @@ export const apiClient = {
 
   updateChannel: async (
     channelId: UUID,
-    updates: { name?: string; participantCentralUserIds?: UUID[]; metadata?: any }
+    updates: {
+      name?: string;
+      participantCentralUserIds?: UUID[];
+      metadata?: Record<string, unknown>;
+    }
   ): Promise<{ success: boolean; data: MessageChannel }> =>
     fetcher({
       url: `/messaging/central-channels/${channelId}`,
@@ -466,9 +520,9 @@ export const apiClient = {
       body: updates,
     }),
 
-  createCentralGroupChannel: (payload: {
-    /* ... */
-  }): Promise<{ success: boolean; data: MessageChannel }> =>
+  createCentralGroupChannel: (
+    payload: object
+  ): Promise<{ success: boolean; data: MessageChannel }> =>
     fetcher({ url: '/messaging/central-channels', method: 'POST', body: payload }),
 
   getChannelDetails: (
@@ -547,9 +601,15 @@ export const apiClient = {
     includeEmbedding = false
   ): Promise<{ data: { memories: ClientMemory[] } }> => {
     const queryParams = new URLSearchParams();
-    if (tableName) queryParams.append('tableName', tableName);
-    if (channelId) queryParams.append('channelId', channelId);
-    if (includeEmbedding) queryParams.append('includeEmbedding', 'true');
+    if (tableName) {
+      queryParams.append('tableName', tableName);
+    }
+    if (channelId) {
+      queryParams.append('channelId', channelId);
+    }
+    if (includeEmbedding) {
+      queryParams.append('includeEmbedding', 'true');
+    }
     return fetcher({
       url: `/agents/${agentId}/memories?${queryParams.toString()}`,
     });
@@ -635,50 +695,21 @@ export const apiClient = {
   ): Promise<{ success: boolean; data: { channelId: UUID; participants: UUID[] } }> =>
     fetcher({ url: `/messaging/central-channels/${channelId}/agents` }),
 
-  // Plugin Configuration Management
-  getAgentConfigurations: (agentId: string): Promise<{ success: boolean; data: { configurations: any[] } }> =>
-    fetcher({ url: `/agents/${agentId}/configurations` }),
-
-  getPluginConfiguration: (agentId: string, pluginName: string): Promise<{ success: boolean; data: { configuration: any } }> =>
-    fetcher({ url: `/agents/${agentId}/configurations/${pluginName}` }),
-
-  updatePluginConfiguration: (agentId: string, pluginName: string, configuration: any): Promise<{ success: boolean; data: { configuration: any } }> =>
-    fetcher({ url: `/agents/${agentId}/configurations/${pluginName}`, method: 'PATCH', body: { configuration } }),
-
-  updateComponentConfiguration: (
-    agentId: string,
-    pluginName: string,
-    componentType: 'action' | 'provider' | 'evaluator',
-    componentName: string,
-    config: any,
-    dependencies: string[] = []
-  ): Promise<{ success: boolean; data: { componentConfig: any; validationResult: any } }> =>
-    fetcher({
-      url: `/agents/${agentId}/configurations/${pluginName}/components/${componentType}/${componentName}`,
-      method: 'PATCH',
-      body: { config, dependencies }
-    }),
-
-  getComponentConfiguration: (
-    agentId: string,
-    pluginName: string,
-    componentType: 'action' | 'provider' | 'evaluator',
-    componentName: string
-  ): Promise<{ success: boolean; data: { componentConfig: any } }> =>
-    fetcher({ url: `/agents/${agentId}/configurations/${pluginName}/components/${componentType}/${componentName}` }),
-
   // Hot-swap component management
   enableComponent: (
     agentId: string,
     pluginName: string,
     componentType: 'action' | 'provider' | 'evaluator' | 'service',
     componentName: string,
-    options?: { overrideReason?: string; settings?: any }
-  ): Promise<{ success: boolean; data: { message: string; componentConfig: any } }> =>
+    options?: { overrideReason?: string; settings?: Record<string, unknown> }
+  ): Promise<{
+    success: boolean;
+    data: { message: string; componentConfig: Record<string, unknown> };
+  }> =>
     fetcher({
       url: `/agents/${agentId}/configurations/${pluginName}/components/${componentType}/${componentName}/enable`,
       method: 'POST',
-      body: options || {}
+      body: options || {},
     }),
 
   disableComponent: (
@@ -687,11 +718,14 @@ export const apiClient = {
     componentType: 'action' | 'provider' | 'evaluator' | 'service',
     componentName: string,
     options?: { overrideReason?: string }
-  ): Promise<{ success: boolean; data: { message: string; componentConfig: any } }> =>
+  ): Promise<{
+    success: boolean;
+    data: { message: string; componentConfig: Record<string, unknown> };
+  }> =>
     fetcher({
       url: `/agents/${agentId}/configurations/${pluginName}/components/${componentType}/${componentName}/disable`,
       method: 'POST',
-      body: options || {}
+      body: options || {},
     }),
 
   toggleComponent: (
@@ -700,16 +734,32 @@ export const apiClient = {
     componentType: 'action' | 'provider' | 'evaluator' | 'service',
     componentName: string,
     options?: { overrideReason?: string }
-  ): Promise<{ success: boolean; data: { message: string; componentConfig: any; previousState: boolean; newState: boolean } }> =>
+  ): Promise<{
+    success: boolean;
+    data: {
+      message: string;
+      componentConfig: Record<string, unknown>;
+      previousState: boolean;
+      newState: boolean;
+    };
+  }> =>
     fetcher({
       url: `/agents/${agentId}/configurations/${pluginName}/components/${componentType}/${componentName}/toggle`,
       method: 'POST',
-      body: options || {}
+      body: options || {},
     }),
 
   getRuntimeStatus: (
     agentId: string,
     pluginName: string
-  ): Promise<{ success: boolean; data: { pluginName: string; configuration: any; runtime: any; comparison: any; inSync: boolean } }> =>
-    fetcher({ url: `/agents/${agentId}/configurations/${pluginName}/runtime-status` }),
+  ): Promise<{
+    success: boolean;
+    data: {
+      pluginName: string;
+      configuration: Record<string, unknown>;
+      runtime: Record<string, unknown>;
+      comparison: Record<string, unknown>;
+      inSync: boolean;
+    };
+  }> => fetcher({ url: `/agents/${agentId}/configurations/${pluginName}/runtime-status` }),
 };

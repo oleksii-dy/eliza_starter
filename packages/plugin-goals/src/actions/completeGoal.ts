@@ -5,12 +5,11 @@ import {
   type IAgentRuntime,
   type Memory,
   type State,
-  type UUID,
   asUUID,
   ModelType,
   logger,
 } from '@elizaos/core';
-import { createGoalDataService, type GoalData } from '../services/goalDataService.js';
+import { createGoalDataService } from '../services/goalDataService.js';
 
 /**
  * The COMPLETE_GOAL action allows users to mark a goal as achieved.
@@ -19,7 +18,7 @@ export const completeGoalAction: Action = {
   name: 'COMPLETE_GOAL',
   similes: ['ACHIEVE_GOAL', 'FINISH_GOAL', 'CHECK_OFF_GOAL', 'ACCOMPLISH_GOAL'],
   description: 'Marks a goal as completed/achieved.',
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     if (!message.roomId) {
       logger.warn('No roomId provided for complete goal validation');
       return false;
@@ -44,8 +43,8 @@ export const completeGoalAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state?: State,
-    options?: { [key: string]: unknown },
+    _state?: State,
+    _options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
@@ -71,7 +70,6 @@ export const completeGoalAction: Action = {
 
       // Extract goal information from the message
       const messageText = message.content?.text || '';
-      const lowerText = messageText.toLowerCase();
 
       // Try to find which goal to complete
       const activeGoals = await dataService.getGoals({
@@ -105,7 +103,7 @@ If none match well, return 0.`;
         temperature: 0.1,
       });
 
-      const matchIndex = parseInt(matchResult.trim()) - 1;
+      const matchIndex = parseInt(matchResult.trim(), 10) - 1;
 
       if (matchIndex < 0 || matchIndex >= activeGoals.length) {
         const responseText = `I couldn't determine which goal you want to complete. ${ownerText} have these active goals:\n\n${activeGoals
@@ -164,16 +162,50 @@ If none match well, return 0.`;
     }
   },
   examples: [
+    // Multi-action: Complete goal then create new one to show goal lifecycle transition
     [
       {
-        name: 'Alice',
+        name: '{{user}}',
+        content: {
+          text: "I've completed my French learning goal! Now I want to start learning Spanish.",
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: '🎉 Congratulations! Goal achieved: "Learn French fluently"! Now I\'ll create your new Spanish learning goal.',
+          thought: "The user has completed one goal and wants to start another. I need to chain COMPLETE_GOAL with CREATE_GOAL to mark the achievement and seamlessly transition to the new learning objective.",
+          actions: ['COMPLETE_GOAL', 'CREATE_GOAL'],
+        },
+      },
+    ],
+    // Multi-action: Complete goal then list remaining goals to show progress
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'I finally finished my marathon goal! Show me what other goals I have left.',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: '🎉 Amazing achievement! Now let me show you your remaining active goals.',
+          thought: "The user completed a major goal and wants to see their remaining objectives. I\'ll chain COMPLETE_GOAL with LIST_GOALS to celebrate the achievement and help them see what\'s next.",
+          actions: ['COMPLETE_GOAL', 'LIST_GOALS'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
         content: {
           text: "I've completed my goal of learning French fluently!",
           source: 'user',
         },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: '🎉 Congratulations! User goal achieved: "Learn French fluently"!',
           actions: ['COMPLETE_GOAL'],
@@ -182,14 +214,14 @@ If none match well, return 0.`;
     ],
     [
       {
-        name: 'Bob',
+        name: '{{user}}',
         content: {
           text: 'I finally achieved my marathon goal!',
           source: 'user',
         },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: '🎉 Congratulations! User goal achieved: "Run a marathon"!',
           actions: ['COMPLETE_GOAL'],
@@ -198,14 +230,14 @@ If none match well, return 0.`;
     ],
     [
       {
-        name: 'Carol',
+        name: '{{user}}',
         content: {
           text: 'Mark my cooking goal as done',
           source: 'user',
         },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: '🎉 Congratulations! User goal achieved: "Get better at cooking"!',
           actions: ['COMPLETE_GOAL'],

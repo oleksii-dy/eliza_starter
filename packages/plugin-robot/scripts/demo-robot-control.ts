@@ -15,19 +15,19 @@ console.log('===========================================\n');
 const robotPlugin = {
   name: 'robot',
   description: 'Comprehensive robot control for AiNex humanoid',
-  
+
   services: [
     'RobotService - 24 DOF control, teaching, safety features',
     'VisionService - Camera integration with robot control'
   ],
-  
+
   actions: [
     'ROBOT_COMMAND - Direct joint control',
     'ROBOT_TEACH - Teaching by demonstration',
     'DESCRIBE_SCENE - Vision analysis',
     'CAPTURE_IMAGE - Camera capture'
   ],
-  
+
   providers: [
     'ROBOT_STATE - Real-time robot state information'
   ]
@@ -144,4 +144,4 @@ console.log('   - Run ElizaOS: USE_SIMULATION=false npm start');
 
 console.log('\n===========================================');
 console.log('Demo Complete!');
-console.log('==========================================='); 
+console.log('===========================================');

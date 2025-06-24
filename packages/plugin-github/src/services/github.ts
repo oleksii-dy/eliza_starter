@@ -48,11 +48,7 @@ export class GitHubRateLimitError extends GitHubAPIError {
   }
 }
 
-type Repository = RestEndpointMethodTypes['repos']['get']['response']['data'];
-type Issue = RestEndpointMethodTypes['issues']['get']['response']['data'];
-type PullRequest = RestEndpointMethodTypes['pulls']['get']['response']['data'];
-type User = RestEndpointMethodTypes['users']['getByUsername']['response']['data'];
-type IssueComment = RestEndpointMethodTypes['issues']['createComment']['response']['data'];
+// Removed unused type imports
 
 export class GitHubService extends Service {
   static serviceName = 'github';
@@ -150,10 +146,10 @@ export class GitHubService extends Service {
    */
   private updateRateLimit(headers: any): void {
     if (headers['x-ratelimit-remaining']) {
-      this.rateLimitRemaining = parseInt(headers['x-ratelimit-remaining']);
+      this.rateLimitRemaining = parseInt(headers['x-ratelimit-remaining'], 10);
     }
     if (headers['x-ratelimit-reset']) {
-      this.rateLimitReset = parseInt(headers['x-ratelimit-reset']);
+      this.rateLimitReset = parseInt(headers['x-ratelimit-reset'], 10);
     }
   }
 
@@ -1010,13 +1006,13 @@ export class GitHubService extends Service {
     limit: number;
     used: number;
     resource: string;
-  } {
+    } {
     const used = 5000 - this.rateLimitRemaining;
     return {
       remaining: this.rateLimitRemaining,
       reset: this.rateLimitReset,
       limit: 5000,
-      used: used,
+      used,
       resource: 'core',
     };
   }
@@ -1030,7 +1026,7 @@ export class GitHubService extends Service {
     limit: number;
     used: number;
     resource: string;
-  } {
+    } {
     return this.getRateLimitStatus();
   }
 
@@ -1885,7 +1881,7 @@ export class GitHubService extends Service {
     }
 
     if (error.status === 403 && error.response?.headers?.['x-ratelimit-remaining'] === '0') {
-      const resetTime = parseInt(error.response.headers['x-ratelimit-reset'] || '0');
+      const resetTime = parseInt(error.response.headers['x-ratelimit-reset'] || '0', 10);
       return new GitHubRateLimitError('GitHub API rate limit exceeded', resetTime);
     }
 

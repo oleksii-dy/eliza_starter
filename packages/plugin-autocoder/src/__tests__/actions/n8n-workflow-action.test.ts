@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { n8nWorkflowAction, checkN8nWorkflowStatusAction } from '../../actions/n8n-workflow-action';
 import { N8nWorkflowService } from '../../services/n8n-workflow-service';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
 // Mock the N8nWorkflowService
-vi.mock('../../services/n8n-workflow-service');
+mock.module('../../services/n8n-workflow-service');
 
 describe('N8n Workflow Actions', () => {
   let mockRuntime: IAgentRuntime;
@@ -14,24 +14,24 @@ describe('N8n Workflow Actions', () => {
   let mockCallback: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     mockService = {
-      getActiveJobs: vi.fn().mockReturnValue([]),
-      createWorkflow: vi.fn().mockResolvedValue('test-job-id'),
-      getJobStatus: vi.fn().mockReturnValue({
+      getActiveJobs: mock().mockReturnValue([]),
+      createWorkflow: mock().mockResolvedValue('test-job-id'),
+      getJobStatus: mock().mockReturnValue({
         id: 'test-job-id',
         specification: { name: 'test-workflow', description: 'Test workflow' },
         status: 'pending',
         progress: 0,
         startedAt: new Date(),
       }),
-      getAllJobs: vi.fn().mockReturnValue([]),
+      getAllJobs: mock().mockReturnValue([]),
     } as any;
 
     mockRuntime = {
-      getService: vi.fn().mockReturnValue(mockService),
-      useModel: vi.fn().mockResolvedValue('{"name":"generated-workflow","description":"Test"}'),
+      getService: mock().mockReturnValue(mockService),
+      useModel: mock().mockResolvedValue('{"name":"generated-workflow","description":"Test"}'),
     } as any;
 
     mockMemory = {
@@ -47,7 +47,7 @@ describe('N8n Workflow Actions', () => {
       text: '',
     } as State;
 
-    mockCallback = vi.fn();
+    mockCallback = mock();
   });
 
   describe('n8nWorkflowAction', () => {
@@ -57,13 +57,13 @@ describe('N8n Workflow Actions', () => {
     });
 
     it('should not validate when service is not available', async () => {
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
+      mockRuntime.getService = mock().mockReturnValue(null);
       const isValid = await n8nWorkflowAction.validate(mockRuntime, mockMemory, mockState);
       expect(isValid).toBe(false);
     });
 
     it('should not validate when there are active jobs', async () => {
-      mockService.getActiveJobs = vi.fn().mockReturnValue([{ id: 'active-job' }]);
+      mockService.getActiveJobs = mock().mockReturnValue([{ id: 'active-job' }]);
       const isValid = await n8nWorkflowAction.validate(mockRuntime, mockMemory, mockState);
       expect(isValid).toBe(false);
     });
@@ -92,7 +92,7 @@ describe('N8n Workflow Actions', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      mockService.createWorkflow = vi.fn().mockRejectedValue(new Error('Creation failed'));
+      mockService.createWorkflow = mock().mockRejectedValue(new Error('Creation failed'));
 
       const result = await n8nWorkflowAction.handler(
         mockRuntime,
@@ -134,7 +134,7 @@ describe('N8n Workflow Actions', () => {
 
   describe('checkN8nWorkflowStatusAction', () => {
     it('should validate when service has active jobs', async () => {
-      mockService.getActiveJobs = vi.fn().mockReturnValue([{ id: 'active-job' }]);
+      mockService.getActiveJobs = mock().mockReturnValue([{ id: 'active-job' }]);
       const isValid = await checkN8nWorkflowStatusAction.validate(
         mockRuntime,
         mockMemory,
@@ -162,8 +162,8 @@ describe('N8n Workflow Actions', () => {
         completedAt: new Date(),
       };
 
-      mockService.getAllJobs = vi.fn().mockReturnValue([mockJob]);
-      mockService.getJobStatus = vi.fn().mockReturnValue(mockJob);
+      mockService.getAllJobs = mock().mockReturnValue([mockJob]);
+      mockService.getJobStatus = mock().mockReturnValue(mockJob);
 
       const result = await checkN8nWorkflowStatusAction.handler(mockRuntime, mockMemory, mockState);
 
@@ -199,8 +199,8 @@ describe('N8n Workflow Actions', () => {
         completedAt: new Date(),
       };
 
-      mockService.getAllJobs = vi.fn().mockReturnValue([mockJob]);
-      mockService.getJobStatus = vi.fn().mockReturnValue(mockJob);
+      mockService.getAllJobs = mock().mockReturnValue([mockJob]);
+      mockService.getJobStatus = mock().mockReturnValue(mockJob);
 
       const result = await checkN8nWorkflowStatusAction.handler(mockRuntime, mockMemory, mockState);
 

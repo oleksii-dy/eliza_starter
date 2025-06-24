@@ -1,11 +1,11 @@
-import { describe, it, expect, mock, beforeEach, afterEach, spyOn } from 'bun:test';
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import { handleError } from '../../../src/utils/handle-error';
 import { logger } from '@elizaos/core';
 
 // Mock logger
 mock.module('@elizaos/core', () => ({
   logger: {
-    error: vi.fn(),
+    error: mock(),
   },
 }));
 
@@ -13,9 +13,9 @@ describe('handleError', () => {
   let mockExit: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     // Mock process.exit for each test
-    mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
+    mockExit = mock(process.exit as any).mockImplementation(() => {
       // Don't actually exit, just return undefined
       return undefined as never;
     });
@@ -23,7 +23,7 @@ describe('handleError', () => {
 
   afterEach(() => {
     mockExit.mockRestore();
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   it('should handle Error objects with message', () => {

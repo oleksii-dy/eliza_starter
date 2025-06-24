@@ -28,6 +28,7 @@ import type {
   LoadResult,
   AddKnowledgeOptions,
   KnowledgeSearchOptions,
+  KnowledgeSearchResult,
   BatchKnowledgeOperation,
   BatchOperationResult,
   KnowledgeAnalytics,
@@ -49,7 +50,7 @@ const logger = createLogger({ agentName: 'KnowledgeService' });
 export class KnowledgeService extends Service {
   static readonly serviceType = 'knowledge';
   static readonly serviceName = 'knowledge';
-  public override config: Metadata;
+  public config: Metadata;
   private knowledgeConfig: KnowledgeConfig;
   capabilityDescription =
     'Provides Retrieval Augmented Generation capabilities, including knowledge upload and querying.';
@@ -65,11 +66,16 @@ export class KnowledgeService extends Service {
    */
   constructor(runtime?: IAgentRuntime, config?: Partial<KnowledgeConfig>) {
     super(runtime);
+
     this.knowledgeProcessingSemaphore = new Semaphore(10);
 
     const parseBooleanEnv = (value: any): boolean => {
-      if (typeof value === 'boolean') return value;
-      if (typeof value === 'string') return value.toLowerCase() === 'true';
+      if (typeof value === 'boolean') {
+        return value;
+      }
+      if (typeof value === 'string') {
+        return value.toLowerCase() === 'true';
+      }
       return false; // Default to false if undefined or other type
     };
 
@@ -87,18 +93,20 @@ export class KnowledgeService extends Service {
     this.config = { ...this.knowledgeConfig } as Metadata;
 
     // Check if we should use new tables (feature flag)
-    this.useNewTables = parseBooleanEnv(runtime?.getSetting('KNOWLEDGE_USE_NEW_TABLES'));
+    this.useNewTables = parseBooleanEnv(this.runtime?.getSetting('KNOWLEDGE_USE_NEW_TABLES'));
 
-    logger.info(
-      `KnowledgeService initialized for agent ${this.runtime.agentId} with config:`,
-      this.knowledgeConfig,
-      `useNewTables: ${this.useNewTables}`
-    );
+    if (this.runtime) {
+      logger.info(
+        `KnowledgeService initialized for agent ${this.runtime.agentId} with config:`,
+        this.knowledgeConfig,
+        `useNewTables: ${this.useNewTables}`
+      );
 
-    if (this.knowledgeConfig.LOAD_DOCS_ON_STARTUP) {
-      this.loadInitialDocuments().catch((error) => {
-        logger.error('Error during initial document loading in KnowledgeService:', error);
-      });
+      if (this.knowledgeConfig.LOAD_DOCS_ON_STARTUP) {
+        this.loadInitialDocuments().catch((error) => {
+          logger.error('Error during initial document loading in KnowledgeService:', error);
+        });
+      }
     }
   }
 
@@ -363,7 +371,7 @@ export class KnowledgeService extends Service {
       const memoryWithScope = {
         ...documentMemory,
         id: clientDocumentId, // Ensure the ID of the memory is the clientDocumentId
-        agentId: agentId,
+        agentId,
         roomId: roomId || agentId,
         entityId: entityId || agentId,
       };
@@ -428,7 +436,7 @@ export class KnowledgeService extends Service {
     message: Memory,
     scope?: { roomId?: UUID; worldId?: UUID; entityId?: UUID }
   ): Promise<KnowledgeItem[]> {
-    logger.debug('KnowledgeService: getKnowledge called for message id: ' + message.id);
+    logger.debug(`KnowledgeService: getKnowledge called for message id: ${message.id}`);
     if (!message?.content?.text || message?.content?.text.trim().length === 0) {
       logger.warn('KnowledgeService: Invalid or empty message content for knowledge query.');
       return [];
@@ -439,9 +447,15 @@ export class KnowledgeService extends Service {
     });
 
     const filterScope: { roomId?: UUID; worldId?: UUID; entityId?: UUID } = {};
-    if (scope?.roomId) filterScope.roomId = scope.roomId;
-    if (scope?.worldId) filterScope.worldId = scope.worldId;
-    if (scope?.entityId) filterScope.entityId = scope.entityId;
+    if (scope?.roomId) {
+      filterScope.roomId = scope.roomId;
+    }
+    if (scope?.worldId) {
+      filterScope.worldId = scope.worldId;
+    }
+    if (scope?.entityId) {
+      filterScope.entityId = scope.entityId;
+    }
 
     // Use configurable search parameters
     const matchThreshold = this.knowledgeConfig.SEARCH_MATCH_THRESHOLD
@@ -511,9 +525,9 @@ export class KnowledgeService extends Service {
           metadata = {
             ...metadata,
             path: filePath,
-            filename: filename,
+            filename,
             fileExt: extension,
-            title: title,
+            title,
             fileType: `text/${extension || 'plain'}`, // Assume text if not specified
             fileSize: item.length,
           };
@@ -727,7 +741,7 @@ export class KnowledgeService extends Service {
    * Advanced search with filtering and sorting capabilities
    */
   async advancedSearch(options: KnowledgeSearchOptions): Promise<{
-    results: KnowledgeItem[];
+    results: KnowledgeSearchResult[];
     totalCount: number;
     hasMore: boolean;
   }> {
@@ -786,7 +800,7 @@ export class KnowledgeService extends Service {
     const fragments = await this.runtime.searchMemories(filterConditions);
 
     // Apply sorting if specified
-    let sortedFragments = [...fragments];
+    const sortedFragments = [...fragments];
     if (options.sort) {
       sortedFragments.sort((a, b) => {
         const field = options.sort!.field;
@@ -850,12 +864,16 @@ export class KnowledgeService extends Service {
 
           switch (operation.operation) {
             case 'add':
-              if (!item.data) throw new Error('Missing data for add operation');
+              if (!item.data) {
+                throw new Error('Missing data for add operation');
+              }
               result = await this.addKnowledge(item.data);
               break;
 
             case 'update':
-              if (!item.id || !item.metadata) throw new Error('Missing id or metadata for update');
+              if (!item.id || !item.metadata) {
+                throw new Error('Missing id or metadata for update');
+              }
               // Update document metadata
               const memory = await this.runtime.getMemoryById(item.id as UUID);
               if (memory) {
@@ -871,7 +889,9 @@ export class KnowledgeService extends Service {
               break;
 
             case 'delete':
-              if (!item.id) throw new Error('Missing id for delete operation');
+              if (!item.id) {
+                throw new Error('Missing id for delete operation');
+              }
               await this.deleteMemory(item.id as UUID);
               result = { deleted: true };
               break;

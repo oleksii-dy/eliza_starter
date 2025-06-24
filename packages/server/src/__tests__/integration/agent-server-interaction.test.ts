@@ -39,7 +39,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       },
     } as Character;
 
-    const db1 = createDatabaseAdapter(
+    const db1 = await createDatabaseAdapter(
       {
         dataDir: testDbPath,
       },
@@ -68,7 +68,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       },
     } as Character;
 
-    const db2 = createDatabaseAdapter(
+    const db2 = await createDatabaseAdapter(
       {
         dataDir: testDbPath,
       },
@@ -208,7 +208,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Test Channel',
         type: ChannelType.GROUP,
-        serverId: serverId,
+        serverId,
         metadata: {},
       });
 
@@ -231,7 +231,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
         {
           name: 'Group Chat',
           type: ChannelType.GROUP,
-          serverId: serverId,
+          serverId,
           metadata: {},
         },
         [userId1, userId2]
@@ -247,7 +247,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Empty Channel',
         type: ChannelType.GROUP,
-        serverId: serverId,
+        serverId,
         metadata: {},
       });
 
@@ -262,7 +262,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Original Name',
         type: ChannelType.GROUP,
-        serverId: serverId,
+        serverId,
         metadata: { original: true },
       });
 
@@ -279,7 +279,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'To Be Deleted',
         type: ChannelType.GROUP,
-        serverId: serverId,
+        serverId,
         metadata: {},
       });
 
@@ -316,7 +316,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Message Test Channel',
         type: ChannelType.GROUP,
-        serverId: serverId,
+        serverId,
         metadata: {},
       });
       channelId = channel.id;

@@ -47,7 +47,7 @@ export async function generatePlugin(opts: GeneratePluginOptions): Promise<void>
       skipTests: opts.skipTests,
       skipValidation: opts.skipValidation,
       skipPrompts: opts.skipPrompts,
-      spec: spec,
+      spec,
     });
 
     // Run generation
@@ -58,12 +58,12 @@ export async function generatePlugin(opts: GeneratePluginOptions): Promise<void>
       console.log(`\n${emoji.success('Plugin successfully generated!')}`);
       console.log(`   Name: ${result.pluginName}`);
       console.log(`   Location: ${result.pluginPath}`);
-      console.log(`\nThe plugin has been created in your current directory.`);
-      console.log(`\nNext steps:`);
+      console.log('\nThe plugin has been created in your current directory.');
+      console.log('\nNext steps:');
       console.log(`1. cd ${path.basename(result.pluginPath ?? '')}`);
-      console.log(`2. Review the generated code`);
-      console.log(`3. Test the plugin: bun test`);
-      console.log(`4. Add to your ElizaOS project`);
+      console.log('2. Review the generated code');
+      console.log('3. Test the plugin: bun test');
+      console.log('4. Add to your ElizaOS project');
     } else {
       logger.error(`Plugin generation failed: ${result.error?.message}`);
       process.exit(1);

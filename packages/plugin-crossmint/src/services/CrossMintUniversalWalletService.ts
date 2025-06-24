@@ -25,12 +25,6 @@ import {
 } from '@elizaos/core';
 import { RealCrossMintService } from './RealCrossMintService';
 import {
-  CrossMintWallet,
-  CrossMintTransaction,
-  X402PaymentRequest,
-  X402PaymentResponse,
-  CROSSMINT_NETWORKS,
-  CROSSMINT_CURRENCIES,
   CrossMintError,
 } from '../types/crossmint';
 
@@ -69,12 +63,12 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
   }
 
   // Portfolio management
-  async getPortfolio(owner?: string): Promise<UniversalPortfolio> {
+  async getPortfolio(_owner?: string): Promise<UniversalPortfolio> {
     try {
       // Get all CrossMint wallets for the user
       const wallets = await this.crossMintService.listWallets();
       const assets: UniversalTokenBalance[] = [];
-      let totalValueUsd = 0;
+      const totalValueUsd = 0;
 
       for (const wallet of wallets) {
         // CrossMint doesn't provide a direct balance API endpoint
@@ -93,7 +87,7 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
           balanceFormatted: '0.000000',
           valueUsd: 0, // Would need price feed integration
           priceUsd: undefined,
-          chain: chain,
+          chain,
           isNative: true,
         };
         assets.push(tokenBalance);
@@ -116,8 +110,8 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
     }
   }
 
-  async getBalances(owner?: string): Promise<UniversalTokenBalance[]> {
-    const portfolio = await this.getPortfolio(owner);
+  async getBalances(_owner?: string): Promise<UniversalTokenBalance[]> {
+    const portfolio = await this.getPortfolio(_owner);
     return portfolio.assets;
   }
 
@@ -176,11 +170,11 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
     );
   }
 
-  async swap(params: SwapParams): Promise<UniversalTransactionResult> {
+  async swap(_params: SwapParams): Promise<UniversalTransactionResult> {
     throw new CrossMintError('Swap operations not yet implemented for CrossMint');
   }
 
-  async bridge(params: BridgeParams): Promise<UniversalTransactionResult> {
+  async bridge(_params: BridgeParams): Promise<UniversalTransactionResult> {
     throw new CrossMintError('Bridge operations not yet implemented for CrossMint');
   }
 
@@ -278,7 +272,7 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
     }
   }
 
-  async getTransaction(hash: string, chain?: string): Promise<UniversalTransactionResult> {
+  async getTransaction(hash: string, _chain?: string): Promise<UniversalTransactionResult> {
     try {
       const transaction = await this.crossMintService.getTransaction(hash);
 
@@ -375,7 +369,7 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
   }
 
   // Payment protocol support (X.402)
-  async createPaymentRequest(params: PaymentRequestParams): Promise<UniversalPaymentRequest> {
+  async createPaymentRequest(_params: PaymentRequestParams): Promise<UniversalPaymentRequest> {
     // Payment requests are not supported by the basic CrossMint service
     // This would need to be implemented via X402Service or another payment provider
     throw new Error(
@@ -383,14 +377,14 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
     );
   }
 
-  async processPayment(request: UniversalPaymentRequest): Promise<PaymentResult> {
+  async processPayment(_request: UniversalPaymentRequest): Promise<PaymentResult> {
     // Payment processing is not supported by the basic CrossMint service
     throw new Error(
       'Payment processing not supported by CrossMint service. Use HybridCrossMintUniversalWalletService for X402 payment protocol support.'
     );
   }
 
-  async verifyPayment(paymentId: string): Promise<PaymentVerification> {
+  async verifyPayment(_paymentId: string): Promise<PaymentVerification> {
     // Payment verification is not supported by the basic CrossMint service
     throw new Error(
       'Payment verification not supported by CrossMint service. Use HybridCrossMintUniversalWalletService for X402 payment protocol support.'
@@ -421,7 +415,7 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
     }
   }
 
-  async importWallet(params: WalletImportParams): Promise<WalletInstance> {
+  async importWallet(_params: WalletImportParams): Promise<WalletInstance> {
     throw new CrossMintError(
       'Wallet import not supported by CrossMint (MPC wallets are generated, not imported)'
     );
@@ -434,9 +428,9 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
       return wallets
         .filter((wallet) => {
           const walletChain = this.getChainFromWalletType(wallet.type);
-          if (filter?.chain && walletChain !== filter.chain) return false;
-          if (filter?.isActive !== undefined && true !== filter.isActive) return false;
-          if (filter?.type && this.mapWalletType(wallet.type) !== filter.type) return false;
+          if (filter?.chain && walletChain !== filter.chain) {return false;}
+          if (filter?.isActive !== undefined && filter.isActive !== true) {return false;}
+          if (filter?.type && this.mapWalletType(wallet.type) !== filter.type) {return false;}
           return true;
         })
         .map((wallet) => ({
@@ -454,24 +448,24 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
     }
   }
 
-  async deleteWallet(walletId: UUID): Promise<boolean> {
+  async deleteWallet(_walletId: UUID): Promise<boolean> {
     throw new CrossMintError('Wallet deletion not supported by CrossMint (security policy)');
   }
 
   // Session management (not implemented for CrossMint)
-  async createSession(params: SessionParams): Promise<SessionKey> {
+  async createSession(_params: SessionParams): Promise<SessionKey> {
     throw new CrossMintError('Session management not implemented for CrossMint');
   }
 
-  async validateSession(sessionId: string, operation: string): Promise<boolean> {
+  async validateSession(_sessionId: string, _operation: string): Promise<boolean> {
     return false;
   }
 
-  async revokeSession(sessionId: string): Promise<void> {
+  async revokeSession(_sessionId: string): Promise<void> {
     throw new CrossMintError('Session management not implemented for CrossMint');
   }
 
-  async listSessions(walletId?: string): Promise<SessionKey[]> {
+  async listSessions(_walletId?: string): Promise<SessionKey[]> {
     return [];
   }
 

@@ -5,4 +5,4 @@ export { default as VisionCaptureLogTestSuite } from './tests/e2e/vision-capture
 export { default as ScreenVisionE2ETestSuite } from './tests/e2e/screen-vision';
 export { default as VisionRuntimeTestSuite } from './tests/e2e/vision-runtime';
 export { default as RobotControlTestSuite } from './tests/e2e/robot-control';
-export { testSuites, default } from './tests/e2e/index'; 
+export { testSuites, default } from './tests/e2e/index';

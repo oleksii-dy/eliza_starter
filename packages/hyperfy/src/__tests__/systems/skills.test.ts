@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
 import { SkillsSystem } from '../../rpg/systems/SkillsSystem';
 import { createTestWorld } from '../test-world-factory';
 import type { World, Entity } from '../../types';
@@ -19,7 +20,7 @@ describe('SkillsSystem', () => {
       type: 'player',
       position: { x: 0, y: 0, z: 0 },
       data: { type: 'player', id: 'player_1' },
-      getComponent: vi.fn((type: string) => {
+      getComponent: mock((type: string) => {
         if (type === 'stats') {
           return {
             type: 'stats',
@@ -102,13 +103,13 @@ describe('SkillsSystem', () => {
 
   describe('XP Granting', () => {
     it('should grant XP to a skill', () => {
-      const emitSpy = vi.spyOn(world.events, 'emit');
-      
+      const emitSpy = spyOn(world.events, 'emit');
+
       skillsSystem.grantXP(mockPlayer.id, 'attack', 100);
 
       const stats = mockPlayer.getComponent('stats') as unknown as StatsComponent;
       expect(stats.attack.xp).toBe(100);
-      
+
       expect(emitSpy).toHaveBeenCalledWith('xp:gained', expect.objectContaining({
         entityId: mockPlayer.id,
         skill: 'attack',
@@ -118,9 +119,9 @@ describe('SkillsSystem', () => {
     });
 
     it('should handle level up when XP threshold reached', () => {
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
       const stats = mockPlayer.getComponent('stats') as unknown as StatsComponent;
-      
+
       // Grant enough XP to reach level 2 (83 XP)
       skillsSystem.grantXP(mockPlayer.id, 'attack', 83);
 
@@ -146,7 +147,7 @@ describe('SkillsSystem', () => {
       const stats = mockPlayer.getComponent('stats') as unknown as StatsComponent;
       stats.attack.xp = 200_000_000;
 
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
       skillsSystem.grantXP(mockPlayer.id, 'attack', 100);
 
       expect(stats.attack.xp).toBe(200_000_000);
@@ -190,9 +191,9 @@ describe('SkillsSystem', () => {
     });
 
     it('should update combat level when combat skill levels up', () => {
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
       const stats = mockPlayer.getComponent('stats') as unknown as StatsComponent;
-      
+
       // Level up attack significantly
       skillsSystem.setSkillLevel(mockPlayer.id, 'attack', 40);
 
@@ -204,14 +205,14 @@ describe('SkillsSystem', () => {
     it('should calculate total level correctly', () => {
       const stats = mockPlayer.getComponent('stats') as unknown as StatsComponent;
       const totalLevel = skillsSystem.getTotalLevel(stats);
-      
+
       // Sum of all skill levels (1 for most skills, 10 for HP)
       expect(totalLevel).toBe(32);
     });
 
     it('should update total level when any skill levels up', () => {
-      const emitSpy = vi.spyOn(world.events, 'emit');
-      
+      const emitSpy = spyOn(world.events, 'emit');
+
       skillsSystem.grantXP(mockPlayer.id, 'mining', 83); // Level up to 2
 
       expect(emitSpy).toHaveBeenCalledWith('total:levelChanged', expect.objectContaining({
@@ -224,8 +225,8 @@ describe('SkillsSystem', () => {
 
   describe('Skill Milestones', () => {
     it('should emit milestone event at level 50', () => {
-      const emitSpy = vi.spyOn(world.events, 'emit');
-      
+      const emitSpy = spyOn(world.events, 'emit');
+
       skillsSystem.setSkillLevel(mockPlayer.id, 'attack', 50);
 
       expect(emitSpy).toHaveBeenCalledWith('skill:milestone', expect.objectContaining({
@@ -239,8 +240,8 @@ describe('SkillsSystem', () => {
     });
 
     it('should emit milestone event at level 99', () => {
-      const emitSpy = vi.spyOn(world.events, 'emit');
-      
+      const emitSpy = spyOn(world.events, 'emit');
+
       skillsSystem.setSkillLevel(mockPlayer.id, 'strength', 99);
 
       expect(emitSpy).toHaveBeenCalledWith('skill:milestone', expect.objectContaining({
@@ -312,7 +313,7 @@ describe('SkillsSystem', () => {
   describe('Special Skill Handling', () => {
     it('should update max hitpoints on HP level up', () => {
       const stats = mockPlayer.getComponent('stats') as unknown as StatsComponent;
-      
+
       skillsSystem.setSkillLevel(mockPlayer.id, 'hitpoints', 50);
 
       expect(stats.hitpoints.max).toBe(60); // 10 + level
@@ -321,7 +322,7 @@ describe('SkillsSystem', () => {
 
     it('should update max prayer points on Prayer level up', () => {
       const stats = mockPlayer.getComponent('stats') as unknown as StatsComponent;
-      
+
       skillsSystem.setSkillLevel(mockPlayer.id, 'prayer', 43);
 
       expect(stats.prayer.maxPoints).toBe(43);
@@ -343,18 +344,18 @@ describe('SkillsSystem', () => {
     it('should apply double XP event', () => {
       // Skip this test as it requires getSystem which doesn't exist
       // This functionality would need to be tested differently
-      return;
+
     });
   });
 
   describe('Combat XP Distribution', () => {
     it('should grant XP based on attack style - accurate', () => {
-      const emitSpy = vi.spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit');
 
       // Create target
       const target = {
         id: 'npc_1',
-        getComponent: vi.fn(() => ({
+        getComponent: mock(() => ({
           hitpoints: { max: 50 }
         }))
       } as any;
@@ -376,7 +377,7 @@ describe('SkillsSystem', () => {
       // Create target
       const target = {
         id: 'npc_2',
-        getComponent: vi.fn(() => ({
+        getComponent: mock(() => ({
           hitpoints: { max: 60 }
         }))
       } as any;
@@ -439,7 +440,7 @@ describe('SkillsSystem', () => {
 
       // Mock timestamp to be 4 seconds later
       const originalNow = Date.now;
-      Date.now = vi.fn(() => originalNow() + 4000);
+      Date.now = mock(() => originalNow() + 4000);
 
       // Update system to clean old drops
       skillsSystem.update(0.1);
@@ -479,7 +480,7 @@ describe('SkillsSystem', () => {
     });
 
     it('should handle missing stats component', () => {
-      mockPlayer.getComponent = vi.fn(() => null) as any;
+      mockPlayer.getComponent = mock(() => null) as any;
 
       expect(() => {
         skillsSystem.grantXP(mockPlayer.id, 'attack', 100);
@@ -496,20 +497,20 @@ describe('SkillsSystem', () => {
     });
 
     it('should handle invalid level in setSkillLevel', () => {
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleWarnSpy = spyOn(console, 'warn').mockImplementation(() => {});
 
       skillsSystem.setSkillLevel(mockPlayer.id, 'attack', 150); // Above max
       skillsSystem.setSkillLevel(mockPlayer.id, 'attack', 0); // Below min
 
       expect(consoleWarnSpy).toHaveBeenCalledTimes(2);
-      consoleWarnSpy.mockRestore();
+      consoleWarnSpy.mockReset();
     });
   });
 
   describe('Public API', () => {
     it('should get skill data for entity', () => {
       const skillData = skillsSystem.getSkillData(mockPlayer.id, 'attack');
-      
+
       expect(skillData).toBeDefined();
       expect(skillData?.level).toBe(1);
       expect(skillData?.xp).toBe(0);
@@ -530,4 +531,4 @@ describe('SkillsSystem', () => {
       expect(totalXP).toBeGreaterThan(3000); // At least attack + strength + HP starting XP
     });
   });
-}); 
+});

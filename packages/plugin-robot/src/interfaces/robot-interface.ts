@@ -1,16 +1,16 @@
 import { EventEmitter } from 'events';
 import { logger } from '@elizaos/core';
-import { 
-  RobotState, 
-  RobotMode, 
-  JointState, 
-  Pose, 
+import {
+  RobotState,
+  RobotMode,
+  JointState,
+  Pose,
   Motion,
   IMUData,
   RobotCapabilities,
   RobotCommand,
   RobotCommandType,
-  ExecutionResult
+  ExecutionResult,
 } from '../types';
 
 // Re-export for convenience
@@ -25,34 +25,32 @@ export interface IRobotInterface extends EventEmitter {
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   isConnected(): boolean;
-  
+
   // State
   getState(): RobotState;
   getCapabilities(): RobotCapabilities;
-  
+
   // Control
   executeCommand(command: RobotCommand): Promise<ExecutionResult>;
   setMode(mode: RobotMode): Promise<void>;
   emergencyStop(): Promise<void>;
   reset(): Promise<void>;
-  
+
   // Motion
   moveToPose(pose: Pose, duration?: number): Promise<ExecutionResult>;
   executeMotion(motion: Motion): Promise<ExecutionResult>;
   stopMotion(): Promise<void>;
-  
+
   // Teaching
   startTeaching(): Promise<void>;
   stopTeaching(): Promise<void>;
   recordPose(name: string): Promise<Pose>;
-  
+
   // Queries
   getJointLimits(): { [jointName: string]: { min: number; max: number } };
   getStoredMotions(): string[];
   getIMUData(): IMUData | null;
 }
-
-
 
 /**
  * Base implementation with common functionality
@@ -61,35 +59,35 @@ export abstract class BaseRobotInterface extends EventEmitter implements IRobotI
   protected connected = false;
   protected currentState: RobotState;
   protected capabilities: RobotCapabilities;
-  
+
   constructor() {
     super();
     this.currentState = this.getInitialState();
     this.capabilities = this.getDefaultCapabilities();
   }
-  
+
   abstract connect(): Promise<void>;
   abstract disconnect(): Promise<void>;
   abstract executeCommand(command: RobotCommand): Promise<ExecutionResult>;
-  
+
   isConnected(): boolean {
     return this.connected;
   }
-  
+
   getState(): RobotState {
     return { ...this.currentState };
   }
-  
+
   getCapabilities(): RobotCapabilities {
     return { ...this.capabilities };
   }
-  
+
   async setMode(mode: RobotMode): Promise<void> {
     logger.info(`[RobotInterface] Setting mode to ${mode}`);
     this.currentState.mode = mode;
     this.emit('modeChanged', mode);
   }
-  
+
   async emergencyStop(): Promise<void> {
     logger.warn('[RobotInterface] EMERGENCY STOP');
     this.currentState.isEmergencyStopped = true;
@@ -97,7 +95,7 @@ export abstract class BaseRobotInterface extends EventEmitter implements IRobotI
     await this.executeEmergencyStop();
     this.emit('emergencyStop');
   }
-  
+
   async reset(): Promise<void> {
     logger.info('[RobotInterface] Resetting robot');
     this.currentState.isEmergencyStopped = false;
@@ -105,7 +103,7 @@ export abstract class BaseRobotInterface extends EventEmitter implements IRobotI
     await this.executeReset();
     this.emit('reset');
   }
-  
+
   async moveToPose(pose: Pose, duration?: number): Promise<ExecutionResult> {
     const command: RobotCommand = {
       id: `pose-${Date.now()}`,
@@ -113,34 +111,34 @@ export abstract class BaseRobotInterface extends EventEmitter implements IRobotI
       natural_language: `Move to pose ${pose.name}`,
       parameters: {
         pose: pose.name,
-        duration
+        duration,
       },
       metadata: {
         timestamp: Date.now(),
-        source: 'moveToPose'
-      }
+        source: 'moveToPose',
+      },
     };
-    
+
     return this.executeCommand(command);
   }
-  
+
   async executeMotion(motion: Motion): Promise<ExecutionResult> {
     const command: RobotCommand = {
       id: `motion-${Date.now()}`,
       type: RobotCommandType.EXECUTE_MOTION,
       natural_language: `Execute motion ${motion.name}`,
       parameters: {
-        motion: motion.name
+        motion: motion.name,
       },
       metadata: {
         timestamp: Date.now(),
-        source: 'executeMotion'
-      }
+        source: 'executeMotion',
+      },
     };
-    
+
     return this.executeCommand(command);
   }
-  
+
   async stopMotion(): Promise<void> {
     const command: RobotCommand = {
       id: `stop-${Date.now()}`,
@@ -148,13 +146,13 @@ export abstract class BaseRobotInterface extends EventEmitter implements IRobotI
       natural_language: 'Stop all motion',
       metadata: {
         timestamp: Date.now(),
-        source: 'stopMotion'
-      }
+        source: 'stopMotion',
+      },
     };
-    
+
     await this.executeCommand(command);
   }
-  
+
   // Abstract methods for implementation
   abstract startTeaching(): Promise<void>;
   abstract stopTeaching(): Promise<void>;
@@ -162,18 +160,18 @@ export abstract class BaseRobotInterface extends EventEmitter implements IRobotI
   abstract getJointLimits(): { [jointName: string]: { min: number; max: number } };
   abstract getStoredMotions(): string[];
   abstract getIMUData(): IMUData | null;
-  
+
   // Protected methods for implementations
   protected abstract executeEmergencyStop(): Promise<void>;
   protected abstract executeReset(): Promise<void>;
   protected abstract getInitialState(): RobotState;
   protected abstract getDefaultCapabilities(): RobotCapabilities;
-  
+
   // Helper method for natural language parsing
   protected parseNaturalLanguage(text: string): Partial<RobotCommand> {
     // This will be enhanced with NLP
     const lower = text.toLowerCase();
-    
+
     // Detect command type
     let type = RobotCommandType.UNKNOWN;
     if (lower.includes('move') || lower.includes('go')) {
@@ -185,30 +183,50 @@ export abstract class BaseRobotInterface extends EventEmitter implements IRobotI
     } else if (lower.includes('look')) {
       type = RobotCommandType.LOOK_AT;
     }
-    
+
     // Extract parameters
     const parameters: any = {};
-    
+
     // Target detection
-    if (lower.includes('arm')) parameters.target = 'arm';
-    if (lower.includes('left')) parameters.target = 'left_' + (parameters.target || 'arm');
-    if (lower.includes('right')) parameters.target = 'right_' + (parameters.target || 'arm');
-    if (lower.includes('head')) parameters.target = 'head';
-    
+    if (lower.includes('arm')) {
+      parameters.target = 'arm';
+    }
+    if (lower.includes('left')) {
+      parameters.target = `left_${parameters.target || 'arm'}`;
+    }
+    if (lower.includes('right')) {
+      parameters.target = `right_${parameters.target || 'arm'}`;
+    }
+    if (lower.includes('head')) {
+      parameters.target = 'head';
+    }
+
     // Direction detection
-    if (lower.includes('up')) parameters.direction = 'up';
-    if (lower.includes('down')) parameters.direction = 'down';
-    if (lower.includes('left')) parameters.direction = 'left';
-    if (lower.includes('right')) parameters.direction = 'right';
-    if (lower.includes('forward')) parameters.direction = 'forward';
-    if (lower.includes('back')) parameters.direction = 'back';
-    
+    if (lower.includes('up')) {
+      parameters.direction = 'up';
+    }
+    if (lower.includes('down')) {
+      parameters.direction = 'down';
+    }
+    if (lower.includes('left')) {
+      parameters.direction = 'left';
+    }
+    if (lower.includes('right')) {
+      parameters.direction = 'right';
+    }
+    if (lower.includes('forward')) {
+      parameters.direction = 'forward';
+    }
+    if (lower.includes('back')) {
+      parameters.direction = 'back';
+    }
+
     // Amount detection (simple regex for now)
     const degreeMatch = lower.match(/(\d+)\s*degree/);
     if (degreeMatch) {
-      parameters.amount = parseInt(degreeMatch[1]);
+      parameters.amount = parseInt(degreeMatch[1], 10);
     }
-    
+
     return { type, parameters };
   }
-} 
+}

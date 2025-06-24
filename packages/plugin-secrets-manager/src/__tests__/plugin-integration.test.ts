@@ -1,15 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import envPlugin from '../index';
-import type { IAgentRuntime, Plugin, Service, World, UUID } from '@elizaos/core';
-import { Role } from '@elizaos/core';
-import { UnifiedSecretManager } from '../services/unified-secret-manager';
+import { Role, type IAgentRuntime, type UUID, type World } from '@elizaos/core';
+import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test';
 import { EnhancedSecretManager } from '../enhanced-service';
-import { SecretFormService } from '../services/secret-form-service';
+import envPlugin from '../index';
 import { ActionChainService } from '../services/action-chain-service';
+import { SecretFormService } from '../services/secret-form-service';
+import { UnifiedSecretManager } from '../services/unified-secret-manager';
 
 // Helper to generate a UUID
 const uuidv4 = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
@@ -33,10 +32,10 @@ const createMockRuntime = (): IAgentRuntime => {
         secrets: {},
       },
     },
-    getSetting: vi.fn((key: string) => {
+    getSetting: mock((key: string) => {
       return settings.get(key) || null;
     }),
-    setSetting: vi.fn((key: string, value: any) => {
+    setSetting: mock((key: string, value: any) => {
       settings.set(key, value);
       if (key.startsWith('ENV_')) {
         if (!runtime.character.settings) {
@@ -48,27 +47,27 @@ const createMockRuntime = (): IAgentRuntime => {
         runtime.character.settings.secrets[key] = value;
       }
     }),
-    getComponents: vi.fn(async (entityId: any) => components.get(entityId) || []),
-    createComponent: vi.fn(async (component: any) => {
+    getComponents: mock(async (entityId: any) => components.get(entityId) || []),
+    createComponent: mock(async (component: any) => {
       const userComponents = components.get(component.entityId) || [];
       userComponents.push(component);
       components.set(component.entityId, userComponents);
       return component;
     }),
-    updateWorld: vi.fn(async (world: any) => worlds.set(world.id, world)),
-    getWorld: vi.fn(async (id: any) => worlds.get(id) || null),
+    updateWorld: mock(async (world: any) => worlds.set(world.id, world)),
+    getWorld: mock(async (id: any) => worlds.get(id) || null),
     db: {
-      getWorlds: vi.fn(async () => Array.from(worlds.values())),
-      createWorld: vi.fn(async (world: any) => worlds.set(world.id, world)),
-      updateWorld: vi.fn(async (world: any) => worlds.set(world.id, world)),
-      getWorld: vi.fn(async (id: any) => worlds.get(id) || null),
-      getComponents: vi.fn(async (entityId: any) => components.get(entityId) || []),
-      createComponent: vi.fn(async (component: any) => {
+      getWorlds: mock(async () => Array.from(worlds.values())),
+      createWorld: mock(async (world: any) => worlds.set(world.id, world)),
+      updateWorld: mock(async (world: any) => worlds.set(world.id, world)),
+      getWorld: mock(async (id: any) => worlds.get(id) || null),
+      getComponents: mock(async (entityId: any) => components.get(entityId) || []),
+      createComponent: mock(async (component: any) => {
         const userComponents = components.get(component.entityId) || [];
         userComponents.push(component);
         components.set(component.entityId, userComponents);
       }),
-      updateComponent: vi.fn(async (component: any) => {
+      updateComponent: mock(async (component: any) => {
         const userComponents = components.get(component.entityId) || [];
         const index = userComponents.findIndex((c: any) => c.id === component.id);
         if (index !== -1) {
@@ -87,11 +86,11 @@ const createMockRuntime = (): IAgentRuntime => {
 };
 
 // Mock logger
-const mockLogger = {
-  info: vi.fn((...args) => console.log('[INFO]', ...args)),
-  warn: vi.fn((...args) => console.warn('[WARN]', ...args)),
-  error: vi.fn((...args) => console.error('[ERROR]', ...args)),
-  debug: vi.fn((...args) => console.log('[DEBUG]', ...args)),
+const _mockLogger = {
+  info: mock((...args) => console.log('[INFO]', ...args)),
+  warn: mock((...args) => console.warn('[WARN]', ...args)),
+  error: mock((...args) => console.error('[ERROR]', ...args)),
+  debug: mock((...args) => console.log('[DEBUG]', ...args)),
 };
 
 describe('Secrets Manager Plugin Integration', () => {
@@ -99,10 +98,10 @@ describe('Secrets Manager Plugin Integration', () => {
   let registeredServices: Map<string, any>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
     registeredServices = new Map();
-    mockRuntime.registerService = vi.fn(async (ServiceClass: any) => {
+    mockRuntime.registerService = mock(async (ServiceClass: any) => {
       const identifier = ServiceClass.serviceName || ServiceClass.serviceType;
       let instance;
 
@@ -116,7 +115,7 @@ describe('Secrets Manager Plugin Integration', () => {
 
       registeredServices.set(ServiceClass.serviceType, instance);
     });
-    mockRuntime.getService = vi.fn((type: string) => registeredServices.get(type));
+    mockRuntime.getService = mock((type: string) => registeredServices.get(type));
   });
 
   describe('Plugin Structure', () => {
@@ -152,7 +151,7 @@ describe('Secrets Manager Plugin Integration', () => {
     it('should initialize all services', async () => {
       // Mock the register service to accept classes
       const registeredClasses: string[] = [];
-      mockRuntime.registerService = vi.fn(async (ServiceClass: any) => {
+      mockRuntime.registerService = mock(async (ServiceClass: any) => {
         registeredClasses.push(ServiceClass.serviceType);
         const identifier = ServiceClass.serviceName || ServiceClass.serviceType;
         let instance;
@@ -182,11 +181,11 @@ describe('Secrets Manager Plugin Integration', () => {
       expect(registeredClasses).toContain('ACTION_CHAIN');
 
       // Check services can be retrieved
-      const secretsManager = mockRuntime.getService('SECRETS');
+      const _secretsManager = mockRuntime.getService('SECRETS');
       const formService = mockRuntime.getService('SECRET_FORMS');
       const actionChainService = mockRuntime.getService('ACTION_CHAIN');
 
-      expect(secretsManager).toBeInstanceOf(EnhancedSecretManager);
+      expect(_secretsManager).toBeInstanceOf(EnhancedSecretManager);
       expect(formService).toBeInstanceOf(SecretFormService);
       expect(actionChainService).toBeInstanceOf(ActionChainService);
     });
@@ -199,12 +198,12 @@ describe('Secrets Manager Plugin Integration', () => {
       const mockForms = new SecretFormService(mockRuntime);
 
       // Mock start methods
-      vi.spyOn(mockSecrets, 'initialize').mockImplementation(async () => {
+      spyOn(mockSecrets, 'initialize').mockImplementation(async () => {
         startOrder.push('SECRETS');
       });
 
       // SecretFormService has initialize as an instance method
-      vi.spyOn(mockForms, 'initialize').mockImplementation(async () => {
+      spyOn(mockForms, 'initialize').mockImplementation(async () => {
         startOrder.push('SECRET_FORMS');
       });
 
@@ -225,19 +224,19 @@ describe('Secrets Manager Plugin Integration', () => {
     beforeEach(async () => {
       // Mock ngrok service from external plugin
       mockNgrokService = {
-        startTunnel: vi.fn().mockResolvedValue('https://test.ngrok.io'),
-        stopTunnel: vi.fn().mockResolvedValue(undefined),
-        getUrl: vi.fn().mockReturnValue('https://test.ngrok.io'),
-        isActive: vi.fn().mockReturnValue(true),
-        getStatus: vi.fn().mockReturnValue({ active: true, url: 'https://test.ngrok.io' }),
+        startTunnel: mock().mockResolvedValue('https://test.ngrok.io'),
+        stopTunnel: mock().mockResolvedValue(undefined),
+        getUrl: mock().mockReturnValue('https://test.ngrok.io'),
+        isActive: mock().mockReturnValue(true),
+        getStatus: mock().mockReturnValue({ active: true, url: 'https://test.ngrok.io' }),
       };
 
       // Register ngrok service as it would be from external plugin
       registeredServices.set('tunnel', mockNgrokService);
 
       // Register services before starting
-      mockRuntime.registerService(UnifiedSecretManager);
-      mockRuntime.registerService(SecretFormService);
+      await mockRuntime.registerService(UnifiedSecretManager);
+      await mockRuntime.registerService(SecretFormService);
 
       // Create and start enhanced secret manager
       secretsManager = await UnifiedSecretManager.start(mockRuntime);
@@ -349,19 +348,19 @@ describe('Secrets Manager Plugin Integration', () => {
     beforeEach(async () => {
       // Mock ngrok service from external plugin
       mockNgrokService = {
-        startTunnel: vi.fn().mockResolvedValue('https://test.ngrok.io'),
-        stopTunnel: vi.fn().mockResolvedValue(undefined),
-        getUrl: vi.fn().mockReturnValue('https://test.ngrok.io'),
-        isActive: vi.fn().mockReturnValue(true),
-        getStatus: vi.fn().mockReturnValue({ active: true, url: 'https://test.ngrok.io' }),
+        startTunnel: mock().mockResolvedValue('https://test.ngrok.io'),
+        stopTunnel: mock().mockResolvedValue(undefined),
+        getUrl: mock().mockReturnValue('https://test.ngrok.io'),
+        isActive: mock().mockReturnValue(true),
+        getStatus: mock().mockReturnValue({ active: true, url: 'https://test.ngrok.io' }),
       };
 
       // Register ngrok service as it would be from external plugin
       registeredServices.set('tunnel', mockNgrokService);
 
       // Register services before starting
-      mockRuntime.registerService(UnifiedSecretManager);
-      mockRuntime.registerService(SecretFormService);
+      await mockRuntime.registerService(UnifiedSecretManager);
+      await mockRuntime.registerService(SecretFormService);
 
       // Create and start enhanced secret manager
       secretsManager = await UnifiedSecretManager.start(mockRuntime);
@@ -376,8 +375,10 @@ describe('Secrets Manager Plugin Integration', () => {
     it('should handle missing encryption key gracefully', async () => {
       // Create a new runtime with no encryption salt but with character settings
       const newRuntime = createMockRuntime();
-      newRuntime.getSetting = vi.fn((key: string) => {
-        if (key === 'ENCRYPTION_SALT') return null; // No salt provided
+      newRuntime.getSetting = mock((key: string) => {
+        if (key === 'ENCRYPTION_SALT') {
+          return null;
+        } // No salt provided
         return null;
       });
 
@@ -427,7 +428,7 @@ describe('Secrets Manager Plugin Integration', () => {
 
     beforeEach(async () => {
       // Register service first
-      mockRuntime.registerService(UnifiedSecretManager);
+      await mockRuntime.registerService(UnifiedSecretManager);
 
       // Use the static start method which creates and initializes the instance
       secretsManager = await UnifiedSecretManager.start(mockRuntime);
@@ -494,16 +495,16 @@ describe('Secrets Manager Plugin Integration', () => {
       const services = [mockSecrets, mockForms];
 
       // Add stop methods if they don't exist
-      mockSecrets.stop = vi.fn();
+      mockSecrets.stop = mock();
 
       // Spy on stop methods
       const stopSpies = services.map((service) =>
-        vi.spyOn(service, 'stop').mockResolvedValue(undefined)
+        spyOn(service, 'stop').mockResolvedValue(undefined)
       );
 
       // Stop all services
       for (const service of services) {
-        await service.stop();
+        await void service.stop();
       }
 
       // Verify all were stopped
@@ -521,19 +522,19 @@ describe('Secrets Manager Plugin Integration', () => {
     beforeEach(async () => {
       // Mock ngrok service from external plugin
       mockNgrokService = {
-        startTunnel: vi.fn().mockResolvedValue('https://test.ngrok.io'),
-        stopTunnel: vi.fn().mockResolvedValue(undefined),
-        getUrl: vi.fn().mockReturnValue('https://test.ngrok.io'),
-        isActive: vi.fn().mockReturnValue(true),
-        getStatus: vi.fn().mockReturnValue({ active: true, url: 'https://test.ngrok.io' }),
+        startTunnel: mock().mockResolvedValue('https://test.ngrok.io'),
+        stopTunnel: mock().mockResolvedValue(undefined),
+        getUrl: mock().mockReturnValue('https://test.ngrok.io'),
+        isActive: mock().mockReturnValue(true),
+        getStatus: mock().mockReturnValue({ active: true, url: 'https://test.ngrok.io' }),
       };
 
       // Register ngrok service as it would be from external plugin
       registeredServices.set('tunnel', mockNgrokService);
 
       // Register services before starting
-      mockRuntime.registerService(UnifiedSecretManager);
-      mockRuntime.registerService(SecretFormService);
+      await mockRuntime.registerService(UnifiedSecretManager);
+      await mockRuntime.registerService(SecretFormService);
 
       // Create and start enhanced secret manager
       secretsManager = await UnifiedSecretManager.start(mockRuntime);
@@ -585,14 +586,14 @@ describe('Secrets Manager Plugin Integration', () => {
       );
 
       // Mock the form server creation to avoid actual servers
-      vi.spyOn(formService as any, 'createFormServer').mockReturnValue({
+      spyOn(formService as any, 'createFormServer').mockReturnValue({
         app: {
-          get: vi.fn(),
-          post: vi.fn(),
-          use: vi.fn(),
+          get: mock(),
+          post: mock(),
+          use: mock(),
         } as any,
         server: {
-          listen: vi.fn((port, cb) => cb()),
+          listen: mock((port, cb) => cb()),
         } as any,
       });
 

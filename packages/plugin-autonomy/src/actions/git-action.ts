@@ -1,5 +1,6 @@
 import {
   type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
@@ -10,7 +11,7 @@ import {
 } from '@elizaos/core';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import * as path from 'path';
+import * as path from 'node:path';
 import * as fs from 'fs/promises';
 
 const execAsync = promisify(exec);
@@ -22,7 +23,8 @@ const execAsync = promisify(exec);
 export const gitOperationAction: Action = {
   name: 'GIT_OPERATION',
   similes: ['GIT_CLONE', 'GIT_COMMIT', 'GIT_PUSH', 'GIT_PULL', 'GIT_STATUS'],
-  description: 'Performs real git operations - clone, commit, push, pull, etc',
+  description:
+    'Performs git operations - clone, commit, push, pull, etc. Can be chained with file operations to commit changes or with analysis actions to examine repository structure',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
@@ -41,8 +43,19 @@ export const gitOperationAction: Action = {
     state?: State,
     options?: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
-    if (!callback) return;
+  ): Promise<ActionResult> => {
+    if (!callback) {
+      return {
+        data: {
+          actionName: 'GIT_OPERATION',
+          error: 'No callback provided',
+        },
+        values: {
+          success: false,
+          error: 'No callback provided',
+        },
+      };
+    }
 
     try {
       const text = message.content.text || '';
@@ -120,14 +133,19 @@ export const gitOperationAction: Action = {
 
           if (statusOut.trim()) {
             const lines = statusOut.trim().split('\n');
-            output = `Git Status:\n\n`;
+            output = 'Git Status:\n\n';
             lines.forEach((line) => {
               const [status, file] = line.split(/\s+/, 2);
               let statusText = '';
-              if (status.includes('M')) statusText = 'Modified';
-              else if (status.includes('A')) statusText = 'Added';
-              else if (status.includes('D')) statusText = 'Deleted';
-              else if (status.includes('?')) statusText = 'Untracked';
+              if (status.includes('M')) {
+                statusText = 'Modified';
+              } else if (status.includes('A')) {
+                statusText = 'Added';
+              } else if (status.includes('D')) {
+                statusText = 'Deleted';
+              } else if (status.includes('?')) {
+                statusText = 'Untracked';
+              }
               output += `${statusText}: ${file}\n`;
             });
           } else {
@@ -215,6 +233,24 @@ ${operation === 'clone' ? `Repository is now available at: ${targetPath}` : ''}`
           targetPath,
         },
       });
+
+      return {
+        data: {
+          actionName: 'GIT_OPERATION',
+          operation,
+          command,
+          output,
+          repoUrl,
+          targetPath,
+          executedAt: new Date().toISOString(),
+        },
+        values: {
+          success: true,
+          gitOperation: operation,
+          repository: repoUrl || 'local',
+          path: targetPath || process.cwd(),
+        },
+      };
     } catch (error) {
       logger.error('Error in gitOperation handler:', error);
       await callback({
@@ -222,6 +258,17 @@ ${operation === 'clone' ? `Repository is now available at: ${targetPath}` : ''}`
         actions: ['GIT_OPERATION_ERROR'],
         source: message.content.source,
       });
+
+      return {
+        data: {
+          actionName: 'GIT_OPERATION',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
     }
   },
 
@@ -238,6 +285,36 @@ ${operation === 'clone' ? `Repository is now available at: ${targetPath}` : ''}`
         content: {
           text: "Git clone completed:\n\n```\nCloning into 'eliza'...\nRepository cloned successfully to: /Users/username/autonomy-repos/eliza\n```",
           actions: ['GIT_OPERATION'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Clone the repo and analyze its structure',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll clone the repository first and then analyze its structure to understand the codebase.",
+          actions: ['GIT_OPERATION', 'ANALYZE_DATA'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Create a new file with our findings and commit it to git',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll create a file with our findings and then commit it to the git repository.",
+          actions: ['FILE_OPERATION', 'GIT_OPERATION'],
         },
       },
     ],

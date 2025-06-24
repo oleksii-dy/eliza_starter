@@ -1,158 +1,38 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, mock, beforeEach, afterEach } from 'bun:test';
 import { messageHandlingPlugin } from '../index';
-import { IAgentRuntime, UUID, EventType, Memory, Content, Character } from '@elizaos/core';
+import { IAgentRuntime, EventType, Memory, Content, UUID } from '@elizaos/core';
 import { MockRuntime, createMockRuntime } from './test-utils';
 
-// Create a mock function for messageHandlingPlugin.init since it might not actually exist on the plugin
-// Define mockInit as a vi.fn() once. Its implementation will be set in beforeEach.
-const mockInit = vi.fn();
-
-describe('Message Handling Plugin', () => {
+describe('Message Handling Plugin Integration', () => {
   let mockRuntime: MockRuntime;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
+    mock.restore();
     mockRuntime = createMockRuntime({
-      getSetting: vi.fn().mockReturnValue('medium'),
-      getParticipantUserState: vi.fn().mockResolvedValue('ACTIVE'),
-      composeState: vi.fn().mockResolvedValue({}),
-    });
-
-    // Set or reset mockInit's implementation for each test
-    mockInit.mockImplementation(async (config, runtime) => {
-      if (messageHandlingPlugin.providers) {
-        messageHandlingPlugin.providers.forEach((provider) => {
-          try {
-            runtime.registerProvider(provider);
-          } catch (error) {
-            // Log or handle error if necessary for debugging, but don't rethrow for this test
-            console.error(`Failed to register provider ${provider.name}:`, error);
-          }
-        });
-      }
-      if (messageHandlingPlugin.actions) {
-        messageHandlingPlugin.actions.forEach((action) => {
-          try {
-            runtime.registerAction(action);
-          } catch (error) {
-            console.error(`Failed to register action ${action.name}:`, error);
-          }
-        });
-      }
-      if (messageHandlingPlugin.events) {
-        Object.entries(messageHandlingPlugin.events).forEach(([eventType, handlers]) => {
-          handlers.forEach((handler) => {
-            try {
-              runtime.registerEvent(eventType, handler);
-            } catch (error) {
-              console.error(`Failed to register event handler for ${eventType}:`, error);
-            }
-          });
-        });
-      }
+      getSetting: mock().mockReturnValue('medium'),
+      getParticipantUserState: mock().mockResolvedValue('ACTIVE'),
+      composeState: mock().mockResolvedValue({}),
     });
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
-  it('should have the correct name and description', () => {
-    expect(messageHandlingPlugin.name).toBe('message-handling');
-    expect(messageHandlingPlugin.description).toBeDefined();
-    expect(typeof messageHandlingPlugin.description).toBe('string');
-  });
+  it('should process message events through the plugin pipeline', async () => {
+    const events = messageHandlingPlugin.events;
+    expect(events).toBeDefined();
 
-  it('should register all providers during initialization', async () => {
-    // Execute the mocked initialization function
-    await mockInit({}, mockRuntime as unknown as IAgentRuntime);
+    // Verify critical event handlers exist
+    expect(events?.[EventType.MESSAGE_RECEIVED]).toBeDefined();
+    expect(events?.[EventType.MESSAGE_RECEIVED]?.length).toBeGreaterThan(0);
 
-    // Check that all providers were registered
-    if (messageHandlingPlugin.providers) {
-      expect(mockRuntime.registerProvider).toHaveBeenCalledTimes(
-        messageHandlingPlugin.providers.length
-      );
-
-      // Verify each provider was registered
-      messageHandlingPlugin.providers.forEach((provider) => {
-        expect(mockRuntime.registerProvider).toHaveBeenCalledWith(provider);
-      });
+    const messageHandler = events?.[EventType.MESSAGE_RECEIVED]?.[0];
+    if (!messageHandler) {
+      throw new Error('MESSAGE_RECEIVED handler not found');
     }
-  });
 
-  it('should register all actions during initialization', async () => {
-    // Execute the mocked initialization function
-    await mockInit({}, mockRuntime as unknown as IAgentRuntime);
-
-    // Check that all actions were registered
-    if (messageHandlingPlugin.actions) {
-      expect(mockRuntime.registerAction).toHaveBeenCalledTimes(
-        messageHandlingPlugin.actions.length
-      );
-
-      // Verify each action was registered
-      messageHandlingPlugin.actions.forEach((action) => {
-        expect(mockRuntime.registerAction).toHaveBeenCalledWith(action);
-      });
-    }
-  });
-
-  it('should register all events during initialization', async () => {
-    // Execute the mocked initialization function
-    await mockInit({}, mockRuntime as unknown as IAgentRuntime);
-
-    // Count the number of event registrations expected
-    let expectedEventCount = 0;
-    if (messageHandlingPlugin.events) {
-      Object.values(messageHandlingPlugin.events).forEach((handlers) => {
-        expectedEventCount += handlers.length;
-      });
-
-      // Check that all events were registered
-      expect(mockRuntime.registerEvent).toHaveBeenCalledTimes(expectedEventCount);
-    }
-  });
-
-  it('should handle initialization errors gracefully', async () => {
-    // Setup runtime to fail during registration
-    mockRuntime.registerProvider = vi.fn().mockImplementation(() => {
-      throw new Error('Registration failed');
-    });
-
-    // Create a spy for console.error
-    const originalConsoleError = console.error;
-    const consoleErrorSpy = vi.fn();
-    console.error = consoleErrorSpy;
-
-    // Should not throw error during initialization
-    await expect(mockInit({}, mockRuntime as unknown as IAgentRuntime)).resolves.toBeUndefined();
-
-    // Ensure console.error was called (as the mockInit is expected to log errors)
-    expect(consoleErrorSpy).toHaveBeenCalled();
-
-    // Restore console.error
-    console.error = originalConsoleError;
-  });
-});
-
-describe('Message Event Handlers', () => {
-  let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
-  let mockCallback: any;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-
-    mockCallback = vi.fn();
-
-    mockRuntime = createMockRuntime({
-      getSetting: vi.fn().mockReturnValue('medium'),
-      getParticipantUserState: vi.fn().mockResolvedValue('ACTIVE'),
-      composeState: vi.fn().mockResolvedValue({}),
-    });
-
-    mockMessage = {
+    const mockMessage: Partial<Memory> = {
       id: 'msg-id' as UUID,
       roomId: 'room-id' as UUID,
       entityId: 'user-id' as UUID,
@@ -161,142 +41,112 @@ describe('Message Event Handlers', () => {
       } as Content,
       createdAt: Date.now(),
     };
+
+    const mockCallback = mock();
+
+    // Test that the handler processes messages without throwing
+    await expect(
+      messageHandler({
+        runtime: mockRuntime as unknown as IAgentRuntime,
+        message: mockMessage as Memory,
+        callback: mockCallback,
+        source: 'test',
+      })
+    ).resolves.toBeUndefined();
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+  it('should have all required actions registered', () => {
+    const actions = messageHandlingPlugin.actions;
+    expect(actions).toBeDefined();
+    expect(actions?.length).toBeGreaterThan(0);
 
-  it('should have message received event handlers', () => {
-    expect(messageHandlingPlugin.events).toBeDefined();
-    const events = messageHandlingPlugin.events;
-    if (events && EventType.MESSAGE_RECEIVED in events) {
-      const handlers = events[EventType.MESSAGE_RECEIVED];
-      if (handlers) {
-        expect(handlers).toBeDefined();
-        expect(handlers.length).toBeGreaterThan(0);
-      }
+    if (!actions) {
+      return;
     }
+
+    // Verify core actions exist and have required properties
+    const actionNames = actions.map((a) => a.name);
+    expect(actionNames).toContain('REPLY');
+    expect(actionNames).toContain('NONE');
+    expect(actionNames).toContain('FOLLOW_ROOM');
+    expect(actionNames).toContain('UNFOLLOW_ROOM');
+    expect(actionNames).toContain('MUTE_ROOM');
+    expect(actionNames).toContain('UNMUTE_ROOM');
+
+    // Verify each action has required handler and validate functions
+    actions.forEach((action) => {
+      expect(typeof action.handler).toBe('function');
+      expect(typeof action.validate).toBe('function');
+    });
   });
 
-  it('should have handlers for other event types', () => {
-    expect(messageHandlingPlugin.events).toBeDefined();
+  it('should have all required providers registered', () => {
+    const providers = messageHandlingPlugin.providers;
+    expect(providers).toBeDefined();
+    expect(providers?.length).toBeGreaterThan(0);
 
-    const events = messageHandlingPlugin.events;
-    if (events) {
-      // Check for various event types presence
-      const eventTypes = Object.keys(events);
-
-      // Check for event types that actually exist in the messageHandlingPlugin.events
-      expect(eventTypes).toContain(EventType.MESSAGE_RECEIVED);
-      expect(eventTypes).toContain(EventType.WORLD_JOINED);
-      expect(eventTypes).toContain(EventType.ENTITY_JOINED);
-
-      // Verify we have comprehensive coverage of event handlers
-      const commonEventTypes = [
-        EventType.MESSAGE_RECEIVED,
-        EventType.WORLD_JOINED,
-        EventType.ENTITY_JOINED,
-        EventType.ENTITY_LEFT,
-        EventType.ACTION_STARTED,
-        EventType.ACTION_COMPLETED,
-      ];
-
-      commonEventTypes.forEach((eventType) => {
-        if (eventType in events) {
-          const handlers = events[eventType];
-          if (handlers) {
-            expect(handlers.length).toBeGreaterThan(0);
-            expect(typeof handlers[0]).toBe('function');
-          }
-        }
-      });
+    if (!providers) {
+      return;
     }
-  });
 
-  it('should skip message handling with mock runtime', async () => {
-    const events = messageHandlingPlugin.events;
-    if (events && EventType.MESSAGE_RECEIVED in events) {
-      const handlers = events[EventType.MESSAGE_RECEIVED];
-      if (handlers && handlers.length > 0) {
-        // Get the message handler
-        const messageHandler = handlers[0];
-        expect(messageHandler).toBeDefined();
-
-        // Mock the message handling to skip actual processing
-        mockRuntime.emitEvent.mockResolvedValue(undefined);
-
-        // Call the message handler with our mocked runtime
-        // This test only verifies the handler doesn't throw with our mock
-        await expect(
-          messageHandler({
-            runtime: mockRuntime as unknown as IAgentRuntime,
-            message: mockMessage as Memory,
-            callback: mockCallback,
-            source: 'test',
-          })
-        ).resolves.toBeUndefined();
-      }
-    }
-  });
-});
-
-describe('Plugin Module Structure', () => {
-  it('should export all required plugin components', () => {
-    // Check that the plugin exports all required components
-    expect(messageHandlingPlugin).toHaveProperty('name');
-    expect(messageHandlingPlugin).toHaveProperty('description');
-    // The init function is optional in this plugin
-    expect(messageHandlingPlugin).toHaveProperty('providers');
-    expect(messageHandlingPlugin).toHaveProperty('actions');
-    expect(messageHandlingPlugin).toHaveProperty('events');
-    // Note: This plugin doesn't export services or evaluators
-  });
-
-  it('should have properly structured providers', () => {
-    // Check that providers have the required structure
-    if (messageHandlingPlugin.providers) {
-      const validProviders = messageHandlingPlugin.providers.filter(
-        (p) => p && typeof p === 'object'
-      );
-      validProviders.forEach((provider) => {
-        expect(provider).toHaveProperty('name');
-        expect(provider).toHaveProperty('get');
-        expect(typeof provider.get).toBe('function');
-      });
-    }
-  });
-
-  it('should have properly structured actions', () => {
-    // Check that actions have the required structure
-    if (messageHandlingPlugin.actions) {
-      messageHandlingPlugin.actions.forEach((action) => {
-        expect(action).toHaveProperty('name');
-        expect(action).toHaveProperty('description');
-        expect(action).toHaveProperty('handler');
-        expect(action).toHaveProperty('validate');
-        expect(typeof action.handler).toBe('function');
-        expect(typeof action.validate).toBe('function');
-      });
-    }
-  });
-
-  it('should have correct folder structure', () => {
-    // Verify that the exported providers match expected naming conventions
-    const validProviders = (messageHandlingPlugin.providers || []).filter(
-      (p) => p && typeof p === 'object'
-    );
-    const providerNames = validProviders.map((p) => p.name);
-
-    // Check for some core providers that should exist
+    // Verify core providers exist
+    const providerNames = providers.map((p) => p.name);
     expect(providerNames).toContain('TIME');
     expect(providerNames).toContain('RECENT_MESSAGES');
     expect(providerNames).toContain('CHARACTER');
     expect(providerNames).toContain('ACTIONS');
+    expect(providerNames).toContain('ATTACHMENTS');
 
-    // Verify that the exported actions match expected naming conventions
-    const actionNames = (messageHandlingPlugin.actions || []).map((a) => a.name);
-    expect(actionNames).toContain('REPLY');
-    expect(actionNames).toContain('NONE');
+    // Verify each provider has required get function
+    providers.forEach((provider) => {
+      expect(typeof provider.get).toBe('function');
+    });
+  });
+
+  it('should integrate with runtime event system', async () => {
+    // Test that plugin events can be registered with runtime
+    const events = messageHandlingPlugin.events;
+    let registeredCount = 0;
+
+    // Mock registerEvent to count registrations
+    mockRuntime.registerEvent = mock().mockImplementation(() => {
+      registeredCount++;
+    });
+
+    // Simulate plugin initialization
+    if (events) {
+      Object.entries(events).forEach(([eventType, handlers]) => {
+        handlers.forEach((handler) => {
+          mockRuntime.registerEvent(eventType, handler);
+        });
+      });
+    }
+
+    expect(registeredCount).toBeGreaterThan(0);
+    expect(mockRuntime.registerEvent).toHaveBeenCalled();
+  });
+
+  it('should handle plugin lifecycle correctly', async () => {
+    // Test that plugin can be initialized and used
+    const runtime = mockRuntime as unknown as IAgentRuntime;
+
+    // Register providers
+    if (messageHandlingPlugin.providers) {
+      for (const provider of messageHandlingPlugin.providers) {
+        // Mock functions don't return promises, so we just call them
+        runtime.registerProvider(provider);
+      }
+    }
+
+    // Register actions
+    if (messageHandlingPlugin.actions) {
+      for (const action of messageHandlingPlugin.actions) {
+        // Mock functions don't return promises, so we just call them
+        runtime.registerAction(action);
+      }
+    }
+
+    expect(mockRuntime.registerProvider).toHaveBeenCalled();
+    expect(mockRuntime.registerAction).toHaveBeenCalled();
   });
 });

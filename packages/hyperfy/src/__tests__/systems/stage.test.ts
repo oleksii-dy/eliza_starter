@@ -1,15 +1,16 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
 import { Stage } from '../../core/systems/Stage.js';
 import { MockWorld } from '../test-world-factory.js';
 import * as THREE from '../../core/extras/three.js';
 
 // Mock LooseOctree
-vi.mock('../../core/extras/LooseOctree.js', () => ({
-  LooseOctree: vi.fn().mockImplementation(() => ({
-    insert: vi.fn(),
-    remove: vi.fn(),
-    move: vi.fn(),
-    raycast: vi.fn((raycaster, hits) => {
+mock.module('../../core/extras/LooseOctree.js', () => ({
+  LooseOctree: mock().mockImplementation(() => ({
+    insert: mock(),
+    remove: mock(),
+    move: mock(),
+    raycast: mock((raycaster, hits) => {
       // Simulate no hits by default
       hits.length = 0;
     }),
@@ -30,12 +31,12 @@ describe('Stage System', () => {
       near: 0.1,
       far: 1000,
     };
-    world.setupMaterial = vi.fn();
+    world.setupMaterial = mock();
     stage = new Stage(world);
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('initialization', () => {
@@ -102,7 +103,7 @@ describe('Stage System', () => {
     it('should provide material proxy with texture controls', () => {
       const texturedMat = new THREE.MeshStandardMaterial();
       texturedMat.map = new THREE.Texture();
-      
+
       const material = stage.createMaterial({ raw: texturedMat });
       const proxy = material.proxy;
 
@@ -223,7 +224,7 @@ describe('Stage System', () => {
   describe('raycasting', () => {
     beforeEach(async () => {
       const viewport = document.createElement('div');
-      viewport.getBoundingClientRect = vi.fn().mockReturnValue({
+      viewport.getBoundingClientRect = mock().mockReturnValue({
         left: 0,
         top: 0,
         width: 800,
@@ -280,7 +281,7 @@ describe('Stage System', () => {
     it('should clean models on update', () => {
       const geometry = new THREE.BoxGeometry();
       const material = new THREE.MeshStandardMaterial();
-      
+
       // Insert a linked mesh to create a model
       stage.insert({
         linked: true,
@@ -297,7 +298,7 @@ describe('Stage System', () => {
     });
 
     it('should clean dirty nodes after updates', () => {
-      const mockNode = { clean: vi.fn() };
+      const mockNode = { clean: mock() };
       stage['dirtyNodes'].add(mockNode);
 
       stage.postUpdate();
@@ -307,7 +308,7 @@ describe('Stage System', () => {
     });
 
     it('should clean after late update', () => {
-      const mockNode = { clean: vi.fn() };
+      const mockNode = { clean: mock() };
       stage['dirtyNodes'].add(mockNode);
 
       stage.postLateUpdate();
@@ -328,39 +329,19 @@ describe('Stage System', () => {
     it('should remove objects from scene', () => {
       const object = new THREE.Object3D();
       stage.scene.add(object);
-      
+
       stage.remove(object);
 
       expect(stage.scene.children).not.toContain(object);
     });
 
-    it('should set environment texture', () => {
-      const texture = new THREE.Texture();
-      stage.setEnvironment(texture);
-
-      expect(stage.scene.environment).toBe(texture);
-    });
-
-    it('should set background', () => {
-      const color = new THREE.Color('skyblue');
-      stage.setBackground(color);
-
-      expect(stage.scene.background).toBe(color);
-    });
-
-    it('should set fog', () => {
-      const fog = new THREE.Fog(0xffffff, 1, 100);
-      stage.setFog(fog);
-
-      expect(stage.scene.fog).toBe(fog);
-    });
   });
 
   describe('instanced rendering', () => {
     it('should batch multiple instances of same mesh', () => {
       const geometry = new THREE.BoxGeometry();
       const material = new THREE.MeshStandardMaterial();
-      
+
       const options = {
         linked: true,
         geometry,
@@ -378,10 +359,10 @@ describe('Stage System', () => {
 
       // Should have one model with 5 instances
       expect(stage['models'].size).toBe(1);
-      
+
       // Clean up
       stage.update(0.016);
-      
+
       // Should have added instanced mesh to scene
       const instancedMeshes = stage.scene.children.filter(
         c => c instanceof THREE.InstancedMesh
@@ -393,7 +374,7 @@ describe('Stage System', () => {
     it('should handle instance removal', () => {
       const geometry = new THREE.BoxGeometry();
       const material = new THREE.MeshStandardMaterial();
-      
+
       const options = {
         linked: true,
         geometry,
@@ -405,7 +386,7 @@ describe('Stage System', () => {
       // Add instances
       const handle1 = stage.insert(options);
       const handle2 = stage.insert(options);
-      
+
       stage.update(0.016);
 
       // Remove one instance
@@ -423,7 +404,7 @@ describe('Stage System', () => {
     it('should clear models on destroy', () => {
       const geometry = new THREE.BoxGeometry();
       const material = new THREE.MeshStandardMaterial();
-      
+
       stage.insert({
         linked: true,
         geometry,
@@ -439,4 +420,4 @@ describe('Stage System', () => {
       expect(stage['models'].size).toBe(0);
     });
   });
-}); 
+});

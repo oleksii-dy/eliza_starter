@@ -82,10 +82,10 @@ describe('Schema Registry Basic Tests', () => {
       };
 
       schemaRegistry.registerTable(basicSchema);
-      
+
       const db = adapter.getDatabase();
       const dbType = adapter instanceof PgliteDatabaseAdapter ? 'pglite' : 'postgres';
-      
+
       // Should create table without throwing
       await expect(async () => {
         await schemaRegistry.createTables(db, dbType);
@@ -136,10 +136,10 @@ describe('Schema Registry Basic Tests', () => {
       };
 
       schemaRegistry.registerTable(vectorSchema);
-      
+
       const db = adapter.getDatabase();
       const dbType = adapter instanceof PgliteDatabaseAdapter ? 'pglite' : 'postgres';
-      
+
       // Should create table regardless of vector support
       await expect(async () => {
         await schemaRegistry.createTables(db, dbType);

@@ -241,4 +241,9 @@ export interface IAgentRuntime extends IDatabaseAdapter {
     componentName: string,
     componentType: 'action' | 'provider' | 'evaluator' | 'service'
   ): Promise<void>;
+
+  /**
+   * Process a message through the agent's message handling system
+   */
+  processMessage(message: Memory, callback?: HandlerCallback): Promise<void>;
 }

@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { SearchResult } from '../../types';
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { z } from 'zod';
 
 // NPM Registry API response schema validation
@@ -133,12 +133,12 @@ export class NPMSearchProvider {
 
     // Handle empty query
     if (!query || query.trim().length === 0) {
-      elizaLogger.debug('[NPM] Empty query, returning no results');
+      logger.debug('[NPM] Empty query, returning no results');
       return [];
     }
 
     try {
-      elizaLogger.info(`[NPM] Searching for: ${query}`);
+      logger.info(`[NPM] Searching for: ${query}`);
 
       const searchResponse = await axios.get(this.searchUrl, {
         params: {
@@ -176,12 +176,12 @@ export class NPMSearchProvider {
       }
 
       const duration = Date.now() - startTime;
-      elizaLogger.info(`[NPM] Found ${results.length} results in ${duration}ms`);
+      logger.info(`[NPM] Found ${results.length} results in ${duration}ms`);
 
       return results;
     } catch (error) {
       const duration = Date.now() - startTime;
-      elizaLogger.error(`[NPM] Search failed after ${duration}ms:`, error);
+      logger.error(`[NPM] Search failed after ${duration}ms:`, error);
 
       // Wrap the error to prevent serialization issues
       if (axios.isAxiosError(error)) {
@@ -207,9 +207,9 @@ export class NPMSearchProvider {
       return NPMPackageSchema.parse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
-        elizaLogger.debug(`[NPM] Package ${packageName} not found`);
+        logger.debug(`[NPM] Package ${packageName} not found`);
       } else {
-        elizaLogger.warn(
+        logger.warn(
           `[NPM] Failed to get details for ${packageName}:`,
           error instanceof Error ? error.message : String(error)
         );
@@ -292,7 +292,7 @@ export class NPMSearchProvider {
   async getPackage(packageName: string): Promise<SearchResult | null> {
     try {
       const pkg = await this.getPackageDetails(packageName);
-      if (!pkg) return null;
+      if (!pkg) {return null;}
 
       // Create a mock search item for conversion
       const mockSearchItem = {
@@ -319,7 +319,7 @@ export class NPMSearchProvider {
 
       return this.convertToSearchResult(mockSearchItem, pkg);
     } catch (error) {
-      elizaLogger.error(`[NPM] Failed to get package ${packageName}:`, error);
+      logger.error(`[NPM] Failed to get package ${packageName}:`, error);
       return null;
     }
   }

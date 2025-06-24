@@ -1,4 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
+import { logger } from '@elizaos/core';
+import { describe, it, expect } from 'bun:test';
 import {
   canGenerateEnvVar,
   generateScript,
@@ -6,7 +7,6 @@ import {
   generationTemplates,
   generationDependencies,
 } from './generation';
-import { logger } from '@elizaos/core';
 
 describe('generation', () => {
   describe('canGenerateEnvVar', () => {
@@ -132,11 +132,11 @@ describe('generation', () => {
     });
 
     it('should return null for unsupported variables', () => {
-      const loggerSpy = vi.spyOn(logger, 'warn');
+      const loggerSpy = mock.spyOn(logger, 'warn');
       const script = generateScript('API_URL', 'url', 'test-plugin');
       expect(script).toBeNull();
       expect(loggerSpy).toHaveBeenCalledWith(
-        `No generation script available for API_URL of type url`
+        'No generation script available for API_URL of type url'
       );
       loggerSpy.mockRestore();
     });

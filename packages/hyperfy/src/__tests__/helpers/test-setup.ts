@@ -1,17 +1,17 @@
-import type { World } from '../../types';
-import { ENV } from '../../core/env';
+import type { World } from '../../types'
+import { ENV } from '../../core/env'
 
 /**
  * Remove systems that have Three.js/WebGL dependencies for testing
  */
 export function removeGraphicsSystemsForTesting(world: World): void {
-  const systemsToRemove = ['Physics', 'Stage', 'Graphics', 'Environment', 'Loader'];
-  
+  const systemsToRemove = ['Physics', 'Stage', 'Graphics', 'Environment', 'Loader']
+
   for (const systemName of systemsToRemove) {
-    const index = world.systems.findIndex(s => s.constructor.name === systemName);
+    const index = world.systems.findIndex(s => s.constructor.name === systemName)
     if (index >= 0) {
-      world.systems.splice(index, 1);
-      delete (world as any)[systemName.toLowerCase()];
+      world.systems.splice(index, 1)
+      delete (world as any)[systemName.toLowerCase()]
     }
   }
 }
@@ -22,39 +22,39 @@ export function removeGraphicsSystemsForTesting(world: World): void {
 export function setupTestEnvironment(): void {
   // Set process.env for compatibility with libraries that check it directly
   // Our ENV module will also pick these up
-  process.env.NODE_ENV = 'test';
-  process.env.VITEST = 'true';
-  
+  process.env.NODE_ENV = 'test'
+  process.env.BUN_TEST = 'true'
+
   // Mock browser globals that Three.js might expect
   if (typeof globalThis.window === 'undefined') {
-    (globalThis as any).window = {
+    ;(globalThis as any).window = {
       innerWidth: 1024,
       innerHeight: 768,
       devicePixelRatio: 1,
       addEventListener: () => {},
       removeEventListener: () => {},
       requestAnimationFrame: (cb: Function) => setTimeout(cb, 16),
-      cancelAnimationFrame: (id: number) => clearTimeout(id)
-    };
+      cancelAnimationFrame: (id: number) => clearTimeout(id),
+    }
   }
-  
+
   if (typeof globalThis.document === 'undefined') {
-    (globalThis as any).document = {
+    ;(globalThis as any).document = {
       createElement: () => ({
         style: {},
         addEventListener: () => {},
         removeEventListener: () => {},
-        getContext: () => null
+        getContext: () => null,
       }),
       body: {
         appendChild: () => {},
-        removeChild: () => {}
-      }
-    };
+        removeChild: () => {},
+      },
+    }
   }
-  
+
   // Mock WebGL context
   if (typeof globalThis.WebGLRenderingContext === 'undefined') {
-    (globalThis as any).WebGLRenderingContext = class {};
+    ;(globalThis as any).WebGLRenderingContext = class {}
   }
-} 
+}

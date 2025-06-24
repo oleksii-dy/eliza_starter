@@ -38,7 +38,7 @@ export class MessageFlowTestSuite implements TestSuite {
           name: 'DM Test Room',
           channelId: `dm-${userId}`,
           serverId: 'test-server',
-          worldId: worldId,
+          worldId,
           type: ChannelType.DM,
           source: 'test',
         });
@@ -58,7 +58,7 @@ export class MessageFlowTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: 'hello world',
             type: 'text',
@@ -96,7 +96,7 @@ export class MessageFlowTestSuite implements TestSuite {
         }
 
         console.log('✓ Agent responded to DM');
-        console.log('✓ Response text:', responseText.substring(0, 50) + '...');
+        console.log('✓ Response text:', `${responseText.substring(0, 50)}...`);
         console.log('✅ DM channel response test PASSED');
       },
     },
@@ -124,7 +124,7 @@ export class MessageFlowTestSuite implements TestSuite {
           name: 'Group Test Room',
           channelId: 'group-test',
           serverId: 'test-server',
-          worldId: worldId,
+          worldId,
           type: ChannelType.GROUP,
           source: 'test',
         });
@@ -145,7 +145,7 @@ export class MessageFlowTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: 'anyone know what time it is?',
             type: 'text',
@@ -178,7 +178,7 @@ export class MessageFlowTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: `@${runtime.character.name} what is your name?`,
             type: 'text',
@@ -243,7 +243,7 @@ export class MessageFlowTestSuite implements TestSuite {
           name: 'Action Test Room',
           channelId: 'action-test',
           serverId: 'test-server',
-          worldId: worldId,
+          worldId,
           type: ChannelType.DM,
           source: 'test',
         });
@@ -264,7 +264,7 @@ export class MessageFlowTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: `${runtime.character.name}, can you tell me a joke?`,
             type: 'text',
@@ -338,7 +338,7 @@ export class MessageFlowTestSuite implements TestSuite {
           name: 'Attachment Test Room',
           channelId: 'attachment-test',
           serverId: 'test-server',
-          worldId: worldId,
+          worldId,
           type: ChannelType.DM,
           source: 'test',
         });
@@ -359,7 +359,7 @@ export class MessageFlowTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: 'Check out this image',
             type: 'text',
@@ -445,7 +445,7 @@ export class MessageFlowTestSuite implements TestSuite {
           name: 'Context Test Room',
           channelId: 'context-test',
           serverId: 'test-server',
-          worldId: worldId,
+          worldId,
           type: ChannelType.DM,
           source: 'test',
         });
@@ -466,7 +466,7 @@ export class MessageFlowTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: 'My favorite color is blue',
             type: 'text',
@@ -500,7 +500,7 @@ export class MessageFlowTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: 'What color did I just mention?',
             type: 'text',

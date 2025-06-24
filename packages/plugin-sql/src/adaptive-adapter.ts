@@ -9,11 +9,11 @@ export interface AdaptiveConfig {
   // Primary configuration (will try PGLite first if no postgresUrl)
   postgresUrl?: string;
   dataDir?: string;
-  
+
   // Fallback configuration
   fallbackToPostgres?: boolean;
   fallbackPostgresUrl?: string;
-  
+
   // Testing configuration
   skipCompatibilityTest?: boolean;
   forceAdapter?: 'pglite' | 'postgres';
@@ -21,10 +21,10 @@ export interface AdaptiveConfig {
 
 /**
  * Adaptive Database Adapter Factory
- * 
+ *
  * This factory automatically selects the best available database adapter
  * based on environment compatibility and configuration.
- * 
+ *
  * Selection priority:
  * 1. If postgresUrl is provided -> PostgreSQL
  * 2. If forceAdapter is specified -> Use forced adapter
@@ -37,6 +37,15 @@ export async function createAdaptiveDatabaseAdapter(
   agentId: string
 ): Promise<IDatabaseAdapter> {
   const uuid = asUUID(agentId);
+
+  // Check for forced PGLite usage (for E2E tests)
+  if (process.env.FORCE_PGLITE === 'true') {
+    logger.info('[Adaptive Database] FORCE_PGLITE detected, using PGLite adapter for testing');
+    const dataDir = config.dataDir || getDefaultDataDir();
+    const connectionManager = connectionRegistry.getPGLiteManager(dataDir);
+    return new PgliteDatabaseAdapter(uuid, connectionManager, dataDir);
+  }
+
   logger.info('[Adaptive Database] Starting adaptive adapter selection', {
     hasPostgresUrl: !!config.postgresUrl,
     hasDataDir: !!config.dataDir,
@@ -45,7 +54,8 @@ export async function createAdaptiveDatabaseAdapter(
   });
 
   // 1. If PostgreSQL URL is explicitly provided, use PostgreSQL
-  if (config.postgresUrl) {
+  // But skip if FORCE_PGLITE is set for testing
+  if (config.postgresUrl && process.env.FORCE_PGLITE !== 'true') {
     logger.info('[Adaptive Database] Using PostgreSQL (explicit URL provided)');
     const connectionManager = connectionRegistry.getPostgresManager(config.postgresUrl);
     return new PgDatabaseAdapter(uuid, connectionManager, config.postgresUrl);
@@ -54,7 +64,7 @@ export async function createAdaptiveDatabaseAdapter(
   // 2. If adapter is forced, use forced adapter
   if (config.forceAdapter) {
     logger.info(`[Adaptive Database] Using forced adapter: ${config.forceAdapter}`);
-    
+
     if (config.forceAdapter === 'postgres') {
       const url = config.fallbackPostgresUrl || getDefaultPostgresUrl();
       const connectionManager = connectionRegistry.getPostgresManager(url);
@@ -69,10 +79,10 @@ export async function createAdaptiveDatabaseAdapter(
   // 3. Test PGLite compatibility (unless skipped)
   if (!config.skipCompatibilityTest) {
     logger.info('[Adaptive Database] Testing PGLite compatibility...');
-    
+
     try {
       const compatibility = await testPGLiteCompatibility();
-      
+
       if (compatibility.compatible) {
         logger.info('[Adaptive Database] PGLite is compatible, using PGLite adapter', {
           extensions: compatibility.extensions,
@@ -95,17 +105,16 @@ export async function createAdaptiveDatabaseAdapter(
   // 4. Try PGLite without compatibility test (in case test is unreliable)
   if (!config.skipCompatibilityTest) {
     logger.info('[Adaptive Database] Attempting PGLite without compatibility test...');
-    
+
     try {
       const dataDir = config.dataDir || getDefaultDataDir();
       const connectionManager = connectionRegistry.getPGLiteManager(dataDir);
       const adapter = new PgliteDatabaseAdapter(uuid, connectionManager, dataDir);
-      
+
       // Try to initialize to verify it works
       await adapter.init();
       logger.info('[Adaptive Database] PGLite adapter initialized successfully');
       return adapter;
-      
     } catch (error) {
       logger.warn('[Adaptive Database] PGLite adapter initialization failed:', error);
     }
@@ -114,23 +123,22 @@ export async function createAdaptiveDatabaseAdapter(
   // 5. Fallback to PostgreSQL if enabled
   if (config.fallbackToPostgres) {
     const postgresUrl = config.fallbackPostgresUrl || getDefaultPostgresUrl();
-    
+
     logger.info('[Adaptive Database] Falling back to PostgreSQL', {
       url: postgresUrl.replace(/:[^@]*@/, ':***@'), // Hide password in logs
     });
-    
+
     try {
       const connectionManager = connectionRegistry.getPostgresManager(postgresUrl);
       const adapter = new PgDatabaseAdapter(uuid, connectionManager, postgresUrl);
       await adapter.init();
       logger.info('[Adaptive Database] PostgreSQL fallback adapter initialized successfully');
       return adapter;
-      
     } catch (error) {
       logger.error('[Adaptive Database] PostgreSQL fallback failed:', error);
       throw new Error(
         'Both PGLite and PostgreSQL adapters failed to initialize. ' +
-        'Please check your database configuration and ensure PostgreSQL is available.'
+          'Please check your database configuration and ensure PostgreSQL is available.'
       );
     }
   }
@@ -138,12 +146,12 @@ export async function createAdaptiveDatabaseAdapter(
   // 6. No fallback available, fail with helpful message
   throw new Error(
     'No compatible database adapter available. ' +
-    'PGLite failed to initialize due to WebAssembly compatibility issues, ' +
-    'and PostgreSQL fallback is not configured. ' +
-    'Please either:\n' +
-    '1. Provide a POSTGRES_URL environment variable, or\n' +
-    '2. Set fallbackToPostgres: true with a fallbackPostgresUrl, or\n' +
-    '3. Fix the WebAssembly compatibility issue in your runtime environment.'
+      'PGLite failed to initialize due to WebAssembly compatibility issues, ' +
+      'and PostgreSQL fallback is not configured. ' +
+      'Please either:\n' +
+      '1. Provide a POSTGRES_URL environment variable, or\n' +
+      '2. Set fallbackToPostgres: true with a fallbackPostgresUrl, or\n' +
+      '3. Fix the WebAssembly compatibility issue in your runtime environment.'
   );
 }
 
@@ -152,16 +160,28 @@ export async function createAdaptiveDatabaseAdapter(
  */
 function getDefaultPostgresUrl(): string {
   // Try common environment variables
-  return process.env.POSTGRES_URL || 
-         process.env.DATABASE_URL || 
-         'postgresql://localhost:5432/eliza';
+  return (
+    process.env.POSTGRES_URL || process.env.DATABASE_URL || 'postgresql://localhost:5432/eliza'
+  );
 }
 
 /**
  * Get default data directory for PGLite
  */
 function getDefaultDataDir(): string {
-  return process.env.PGLITE_DATA_DIR || ':memory:';
+  // Use centralized path management for database files
+  if (process.env.PGLITE_DATA_DIR) {
+    return process.env.PGLITE_DATA_DIR;
+  }
+
+  try {
+    // Dynamic import of path-manager utility
+    const pathManagerModule = await import('@elizaos/core/utils/path-manager');
+    return pathManagerModule.getDatabasePath();
+  } catch {
+    // Fallback to in-memory if path-manager is not available
+    return ':memory:';
+  }
 }
 
 /**
@@ -170,7 +190,7 @@ function getDefaultDataDir(): string {
 export function getRecommendedAdaptiveConfig(): AdaptiveConfig {
   const isProduction = process.env.NODE_ENV === 'production';
   const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
-  
+
   if (isProduction) {
     return {
       fallbackToPostgres: true,
@@ -178,7 +198,7 @@ export function getRecommendedAdaptiveConfig(): AdaptiveConfig {
       skipCompatibilityTest: false,
     };
   }
-  
+
   if (isTest) {
     return {
       fallbackToPostgres: true,
@@ -186,7 +206,7 @@ export function getRecommendedAdaptiveConfig(): AdaptiveConfig {
       skipCompatibilityTest: true, // Skip in test environment where WebAssembly often fails
     };
   }
-  
+
   // Development
   return {
     fallbackToPostgres: true,

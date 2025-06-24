@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { type IAgentRuntime, type UUID, asUUID, ServiceType } from '@elizaos/core';
 import { CrossmintAdapter, CrossmintAdapterError } from '../../adapters/CrossmintAdapter';
 import { PaymentMethod, PaymentStatus } from '../../types';
@@ -36,12 +36,12 @@ class MockRealCrossMintService {
       ...params,
     };
     this.transactions.set(transaction.hash, transaction);
-    
+
     // Simulate async processing
     setTimeout(() => {
       transaction.status = 'success';
     }, 1000);
-    
+
     return transaction;
   }
 
@@ -89,7 +89,7 @@ class MockCrossMintUniversalWalletService {
         isNative: false,
       },
     ];
-    
+
     return this.balances.get(owner || 'default') || defaultBalances;
   }
 
@@ -164,7 +164,7 @@ describe('CrossmintAdapter Integration Tests', () => {
     // Mock runtime
     runtime = {
       agentId: asUUID('00000000-0000-0000-0000-000000000123'),
-      getSetting: vi.fn((key: string) => {
+      getSetting: mock((key: string) => {
         const settings: Record<string, string> = {
           CROSSMINT_API_KEY: 'test-api-key',
           CROSSMINT_PROJECT_ID: 'test-project-id',
@@ -172,9 +172,13 @@ describe('CrossmintAdapter Integration Tests', () => {
         };
         return settings[key];
       }),
-      getService: vi.fn((name: string) => {
-        if (name === 'real-crossmint') return mockCrossmintService;
-        if (name === 'crossmint-universal-wallet') return mockWalletService;
+      getService: mock((name: string) => {
+        if (name === 'real-crossmint') {
+          return mockCrossmintService;
+        }
+        if (name === 'crossmint-universal-wallet') {
+          return mockWalletService;
+        }
         return null;
       }),
     } as any;
@@ -183,7 +187,7 @@ describe('CrossmintAdapter Integration Tests', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('Initialization', () => {
@@ -192,15 +196,15 @@ describe('CrossmintAdapter Integration Tests', () => {
     });
 
     it('should throw error if required configuration is missing', async () => {
-      runtime.getSetting = vi.fn(() => undefined);
-      
+      runtime.getSetting = mock(() => undefined);
+
       await expect(adapter.initialize()).rejects.toThrow(CrossmintAdapterError);
       await expect(adapter.initialize()).rejects.toThrow('Missing required settings');
     });
 
     it('should throw error if services are not available', async () => {
-      runtime.getService = vi.fn(() => null);
-      
+      runtime.getService = mock(() => null);
+
       await expect(adapter.initialize()).rejects.toThrow(CrossmintAdapterError);
       await expect(adapter.initialize()).rejects.toThrow('No Crossmint services found');
     });
@@ -208,8 +212,10 @@ describe('CrossmintAdapter Integration Tests', () => {
     it('should validate service interfaces correctly', async () => {
       // Test with incomplete service
       const incompleteService = { listWallets: () => {} };
-      runtime.getService = vi.fn((name: string) => {
-        if (name === 'real-crossmint') return incompleteService;
+      runtime.getService = mock((name: string) => {
+        if (name === 'real-crossmint') {
+          return incompleteService;
+        }
         return null;
       });
 
@@ -225,52 +231,55 @@ describe('CrossmintAdapter Integration Tests', () => {
     it('should get ETH balance correctly', async () => {
       const address = '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e';
       const balance = await adapter.getBalance(address, PaymentMethod.ETH);
-      
+
       expect(balance).toBe(BigInt('1500000000000000000')); // 1.5 ETH
     });
 
     it('should get USDC balance correctly', async () => {
       const address = '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e';
       const balance = await adapter.getBalance(address, PaymentMethod.USDC_ETH);
-      
+
       expect(balance).toBe(BigInt('1000000000')); // 1000 USDC (6 decimals)
     });
 
     it('should throw error for invalid address', async () => {
       const invalidAddress = 'invalid-address';
-      
-      await expect(adapter.getBalance(invalidAddress, PaymentMethod.ETH))
-        .rejects.toThrow('Invalid address format');
+
+      await expect(adapter.getBalance(invalidAddress, PaymentMethod.ETH)).rejects.toThrow(
+        'Invalid address format'
+      );
     });
 
     it('should return zero balance for unknown token', async () => {
       const address = '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e';
-      
+
       // Mock empty balances
-      mockWalletService.getBalances = vi.fn().mockResolvedValue([]);
-      
+      mockWalletService.getBalances = mock().mockResolvedValue([]);
+
       const balance = await adapter.getBalance(address, PaymentMethod.ETH);
       expect(balance).toBe(BigInt(0));
     });
 
     it('should handle decimal balance parsing correctly', async () => {
       // Mock balance with many decimals
-      mockWalletService.getBalances = vi.fn().mockResolvedValue([{
-        address: 'native',
-        symbol: 'ETH',
-        name: 'Ethereum',
-        decimals: 18,
-        balance: '0.123456789012345678',
-        balanceFormatted: '0.123456789012345678',
-        valueUsd: 308.64,
-        priceUsd: 2500,
-        chain: 'ethereum',
-        isNative: true,
-      }]);
+      mockWalletService.getBalances = mock().mockResolvedValue([
+        {
+          address: 'native',
+          symbol: 'ETH',
+          name: 'Ethereum',
+          decimals: 18,
+          balance: '0.123456789012345678',
+          balanceFormatted: '0.123456789012345678',
+          valueUsd: 308.64,
+          priceUsd: 2500,
+          chain: 'ethereum',
+          isNative: true,
+        },
+      ]);
 
       const address = '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e';
       const balance = await adapter.getBalance(address, PaymentMethod.ETH);
-      
+
       expect(balance).toBe(BigInt('123456789012345678')); // Correct wei amount
     });
   });
@@ -350,24 +359,24 @@ describe('CrossmintAdapter Integration Tests', () => {
 
       // Get transaction status
       const txStatus = await adapter.getTransaction(sendResult.hash);
-      
+
       expect(txStatus).toBeDefined();
       expect(txStatus.hash).toBe(sendResult.hash);
       expect(txStatus.status).toBe(PaymentStatus.PROCESSING);
 
       // Wait for confirmation and check again
-      await new Promise(resolve => setTimeout(resolve, 1100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+
       const confirmedStatus = await adapter.getTransaction(sendResult.hash);
       expect(confirmedStatus.status).toBe(PaymentStatus.COMPLETED);
       expect(confirmedStatus.confirmations).toBe(1);
     });
 
     it('should handle transaction not found gracefully', async () => {
-      const unknownHash = '0x' + '0'.repeat(64);
-      
+      const unknownHash = `0x${'0'.repeat(64)}`;
+
       const result = await adapter.getTransaction(unknownHash);
-      
+
       expect(result.hash).toBe(unknownHash);
       expect(result.status).toBe(PaymentStatus.PROCESSING);
       expect(result.confirmations).toBe(0);
@@ -381,17 +390,17 @@ describe('CrossmintAdapter Integration Tests', () => {
 
     it('should create MPC wallet successfully', async () => {
       const wallet = await adapter.createWallet();
-      
+
       expect(wallet).toBeDefined();
       expect(wallet.address).toMatch(/^0x[a-fA-F0-9]{40}$/);
       expect(wallet.privateKey).toBe(''); // MPC wallets don't expose private keys
     });
 
     it('should create wallet with proper metadata', async () => {
-      const spy = vi.spyOn(mockWalletService, 'createWallet');
-      
+      const spy = mock.spyOn(mockWalletService, 'createWallet');
+
       await adapter.createWallet();
-      
+
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'mpc',
@@ -418,7 +427,7 @@ describe('CrossmintAdapter Integration Tests', () => {
         '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
       ];
 
-      validAddresses.forEach(address => {
+      validAddresses.forEach((address) => {
         expect(adapter.validateAddress(address, PaymentMethod.ETH)).toBe(true);
         expect(adapter.validateAddress(address, PaymentMethod.USDC_ETH)).toBe(true);
       });
@@ -434,7 +443,7 @@ describe('CrossmintAdapter Integration Tests', () => {
         '0xZZZZ35Cc6634C0532925a3b844Bc9e7595f2bD3e', // Invalid hex
       ];
 
-      invalidAddresses.forEach(address => {
+      invalidAddresses.forEach((address) => {
         expect(adapter.validateAddress(address, PaymentMethod.ETH)).toBe(false);
       });
     });
@@ -453,7 +462,7 @@ describe('CrossmintAdapter Integration Tests', () => {
         '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZjDpNqYV4N7xKXtg2CW87d97', // Too long
       ];
 
-      invalidAddresses.forEach(address => {
+      invalidAddresses.forEach((address) => {
         const isValid = adapter.validateAddress(address, PaymentMethod.SOL);
         expect(isValid).toBe(false);
       });
@@ -472,15 +481,18 @@ describe('CrossmintAdapter Integration Tests', () => {
 
     it('should throw specific error when adapter not initialized', async () => {
       const uninitializedAdapter = new CrossmintAdapter(runtime);
-      
+
       await expect(
-        uninitializedAdapter.getBalance('0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e', PaymentMethod.ETH)
+        uninitializedAdapter.getBalance(
+          '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e',
+          PaymentMethod.ETH
+        )
       ).rejects.toThrow('Adapter not initialized');
     });
 
     it('should handle service errors gracefully', async () => {
       // Mock service error
-      mockWalletService.transfer = vi.fn().mockRejectedValue(new Error('Network error'));
+      mockWalletService.transfer = mock().mockRejectedValue(new Error('Network error'));
 
       const fromAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e';
       const toAddress = '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199';
@@ -493,7 +505,7 @@ describe('CrossmintAdapter Integration Tests', () => {
 
     it('should preserve error details in CrossmintAdapterError', async () => {
       const originalError = new Error('Original error message');
-      mockWalletService.getBalances = vi.fn().mockRejectedValue(originalError);
+      mockWalletService.getBalances = mock().mockRejectedValue(originalError);
 
       try {
         await adapter.getBalance('0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e', PaymentMethod.ETH);
@@ -512,7 +524,7 @@ describe('CrossmintAdapter Integration Tests', () => {
 
     it('should handle different chains correctly', async () => {
       const address = '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e';
-      
+
       // Test different chain methods
       const methods = [
         PaymentMethod.ETH,
@@ -529,8 +541,10 @@ describe('CrossmintAdapter Integration Tests', () => {
 
     it('should use correct token addresses for different networks', async () => {
       // Test mainnet
-      runtime.getSetting = vi.fn((key: string) => {
-        if (key === 'CROSSMINT_ENVIRONMENT') return 'production';
+      runtime.getSetting = mock((key: string) => {
+        if (key === 'CROSSMINT_ENVIRONMENT') {
+          return 'production';
+        }
         return 'test-value';
       });
 
@@ -538,10 +552,10 @@ describe('CrossmintAdapter Integration Tests', () => {
       const toAddress = '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199';
       const amount = BigInt('1000000');
 
-      const spy = vi.spyOn(mockWalletService, 'transfer');
-      
+      const spy = mock.spyOn(mockWalletService, 'transfer');
+
       await adapter.sendTransaction(fromAddress, toAddress, amount, PaymentMethod.USDC_ETH);
-      
+
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
           tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // Mainnet USDC
@@ -554,10 +568,10 @@ describe('CrossmintAdapter Integration Tests', () => {
       const toAddress = '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199';
       const amount = BigInt('1000000');
 
-      const spy = vi.spyOn(mockWalletService, 'transfer');
-      
+      const spy = mock.spyOn(mockWalletService, 'transfer');
+
       await adapter.sendTransaction(fromAddress, toAddress, amount, PaymentMethod.USDC_ETH);
-      
+
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
           tokenAddress: '0x07865c6E87B9F70255377e024ace6630C1Eaa37F', // Goerli USDC
@@ -565,4 +579,4 @@ describe('CrossmintAdapter Integration Tests', () => {
       );
     });
   });
-}); 
+});

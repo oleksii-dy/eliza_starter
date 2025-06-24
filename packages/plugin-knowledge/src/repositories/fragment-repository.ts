@@ -91,10 +91,18 @@ export class FragmentRepository {
 
     // Build WHERE conditions
     const conditions = [];
-    if (agentId) conditions.push(eq(knowledgeFragmentsTable.agentId, agentId));
-    if (roomId) conditions.push(eq(knowledgeFragmentsTable.roomId, roomId));
-    if (worldId) conditions.push(eq(knowledgeFragmentsTable.worldId, worldId));
-    if (entityId) conditions.push(eq(knowledgeFragmentsTable.entityId, entityId));
+    if (agentId) {
+      conditions.push(eq(knowledgeFragmentsTable.agentId, agentId));
+    }
+    if (roomId) {
+      conditions.push(eq(knowledgeFragmentsTable.roomId, roomId));
+    }
+    if (worldId) {
+      conditions.push(eq(knowledgeFragmentsTable.worldId, worldId));
+    }
+    if (entityId) {
+      conditions.push(eq(knowledgeFragmentsTable.entityId, entityId));
+    }
 
     // Add similarity threshold condition
     conditions.push(
@@ -126,7 +134,9 @@ export class FragmentRepository {
    * Calculate cosine similarity between two embeddings
    */
   private calculateCosineSimilarity(a: number[], b: number[]): number {
-    if (a.length !== b.length) return 0;
+    if (a.length !== b.length) {
+      return 0;
+    }
 
     let dotProduct = 0;
     let normA = 0;

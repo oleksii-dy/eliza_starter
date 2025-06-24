@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { DockerService } from '../../services/DockerService.js';
 import { createMockRuntime } from '../test-utils.js';
 
 // Mock dockerode
 const mockContainer = {
   id: 'mock-container-id',
-  start: vi.fn().mockResolvedValue({}),
-  stop: vi.fn().mockResolvedValue({}),
-  remove: vi.fn().mockResolvedValue({}),
-  inspect: vi.fn().mockResolvedValue({
+  start: mock().mockResolvedValue({}),
+  stop: mock().mockResolvedValue({}),
+  remove: mock().mockResolvedValue({}),
+  inspect: mock().mockResolvedValue({
     Id: 'mock-container-id',
     Name: '/test-container',
     State: {
@@ -21,45 +21,45 @@ const mockContainer = {
     Config: { Labels: {} },
     NetworkSettings: { Ports: {} },
   }),
-  logs: vi.fn().mockResolvedValue('mock logs'),
-  exec: vi.fn().mockResolvedValue({
-    start: vi.fn().mockResolvedValue({}),
+  logs: mock().mockResolvedValue('mock logs'),
+  exec: mock().mockResolvedValue({
+    start: mock().mockResolvedValue({}),
   }),
 };
 
 const mockNetwork = {
   id: 'network-id',
-  inspect: vi.fn().mockResolvedValue({
+  inspect: mock().mockResolvedValue({
     Name: 'eliza-network',
     Id: 'network-id',
   }),
-  remove: vi.fn().mockResolvedValue({}),
+  remove: mock().mockResolvedValue({}),
 };
 
 // Create a comprehensive Docker mock that will be reused
 const createDockerMock = () => ({
-  ping: vi.fn().mockResolvedValue({}),
-  version: vi.fn().mockResolvedValue({ Version: '20.10.0' }),
-  createContainer: vi.fn().mockResolvedValue(mockContainer),
-  getContainer: vi.fn().mockReturnValue(mockContainer),
-  listContainers: vi.fn().mockResolvedValue([]),
-  listNetworks: vi.fn().mockResolvedValue([{ Name: 'eliza-network', Id: 'network-id' }]),
-  createNetwork: vi.fn().mockResolvedValue(mockNetwork),
-  getNetwork: vi.fn().mockReturnValue(mockNetwork),
-  getEvents: vi.fn().mockResolvedValue({
-    on: vi.fn(),
-    removeListener: vi.fn(),
+  ping: mock().mockResolvedValue({}),
+  version: mock().mockResolvedValue({ Version: '20.10.0' }),
+  createContainer: mock().mockResolvedValue(mockContainer),
+  getContainer: mock().mockReturnValue(mockContainer),
+  listContainers: mock().mockResolvedValue([]),
+  listNetworks: mock().mockResolvedValue([{ Name: 'eliza-network', Id: 'network-id' }]),
+  createNetwork: mock().mockResolvedValue(mockNetwork),
+  getNetwork: mock().mockReturnValue(mockNetwork),
+  getEvents: mock().mockResolvedValue({
+    on: mock(),
+    removeListener: mock(),
   }),
   // Add modem for some advanced operations
   modem: {
-    demuxStream: vi.fn(),
-    followProgress: vi.fn(),
+    demuxStream: mock(),
+    followProgress: mock(),
   },
 });
 
-vi.mock('dockerode', () => {
+mock.module('dockerode', () => {
   return {
-    default: vi.fn().mockImplementation(() => createDockerMock()),
+    default: mock().mockImplementation(() => createDockerMock()),
   };
 });
 
@@ -68,7 +68,7 @@ describe('DockerService', () => {
   let dockerService: DockerService;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
   });
 

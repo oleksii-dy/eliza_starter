@@ -9,7 +9,7 @@ import { useConnection } from '../context/ConnectionContext';
 
 export interface ConnectionStatusProps {
   // Allow standard HTML attributes like className
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export default function ConnectionStatus() {
@@ -62,26 +62,40 @@ export default function ConnectionStatus() {
   }, [isUnauthorized, prevStatus, openApiKeyDialog]);
 
   const getStatusColor = () => {
-    if (isUnauthorized) return 'bg-yellow-500';
-    if (isLoading) return 'bg-muted-foreground';
+    if (isUnauthorized) {
+      return 'bg-yellow-500';
+    }
+    if (isLoading) {
+      return 'bg-muted-foreground';
+    }
     return isConnected ? 'bg-green-600' : 'bg-red-600'; // Treat error/disconnected as red
   };
 
   const getStatusText = () => {
-    if (isUnauthorized) return 'Unauthorized';
-    if (isLoading) return 'Connecting...';
+    if (isUnauthorized) {
+      return 'Unauthorized';
+    }
+    if (isLoading) {
+      return 'Connecting...';
+    }
     return isConnected ? 'Connected' : 'Disconnected';
   };
 
   const getTextColor = () => {
-    if (isUnauthorized) return 'text-yellow-500';
-    if (isLoading) return 'text-muted-foreground';
+    if (isUnauthorized) {
+      return 'text-yellow-500';
+    }
+    if (isLoading) {
+      return 'text-muted-foreground';
+    }
     return isConnected ? 'text-green-600' : 'text-red-600';
   };
 
   // Get a specific error message based on the error
   const getErrorMessage = () => {
-    if (!error) return 'Connection failed'; // Use error from context
+    if (!error) {
+      return 'Connection failed';
+    } // Use error from context
 
     // Specific check for Unauthorized first
     if (isUnauthorized) {

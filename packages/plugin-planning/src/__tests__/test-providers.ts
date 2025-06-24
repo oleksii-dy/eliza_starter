@@ -7,10 +7,10 @@ export const priorityDetectorProvider: Provider = {
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     const text = message.content.text?.toLowerCase() || '';
-    
+
     let priority: string;
     let urgencyScore: number;
-    
+
     if (text.includes('urgent') || text.includes('critical') || text.includes('emergency') || text.includes('server is down')) {
       priority = 'critical';
       urgencyScore = 10;
@@ -132,22 +132,22 @@ export const resourceAvailabilityProvider: Provider = {
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     const text = message.content.text?.toLowerCase() || '';
     const currentTime = Date.now();
-    
+
     // Determine what resources are needed based on the message
     const resourcesNeeded: string[] = [];
-    
+
     if (text.includes('data') || text.includes('pipeline') || text.includes('etl')) {
       resourcesNeeded.push('data_processing');
     }
-    
+
     if (text.includes('cloud') || text.includes('infrastructure') || text.includes('server')) {
       resourcesNeeded.push('cloud_infrastructure');
     }
-    
+
     if (text.includes('api') || text.includes('integration')) {
       resourcesNeeded.push('api_integration');
     }
-    
+
     if (text.includes('analyze') || text.includes('research')) {
       resourcesNeeded.push('analytics');
     }
@@ -177,9 +177,9 @@ export const resourceAvailabilityProvider: Provider = {
       estimatedProcessingTime: resourcesNeeded.length * 2000, // 2 seconds per resource type
     };
 
-    const canExecute = 
-      resources.cpu.available && 
-      resources.memory.available && 
+    const canExecute =
+      resources.cpu.available &&
+      resources.memory.available &&
       resources.apiQuota.available &&
       resources.concurrentTasks.available;
 
@@ -260,7 +260,7 @@ export const taskComplexityProvider: Provider = {
     const text = message.content.text?.toLowerCase() || '';
     const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0);
     const wordCount = text.split(/\s+/).filter((word) => word.length > 0).length;
-    
+
     // Check for multiple data sources
     const dataSources = [
       'quarterly reports',
@@ -270,38 +270,38 @@ export const taskComplexityProvider: Provider = {
       'data warehouse',
       'database'
     ].filter(source => text.includes(source)).length;
-    
+
     const factors = {
-      hasMultipleSteps: 
-        text.includes('first') || 
-        text.includes('then') || 
+      hasMultipleSteps:
+        text.includes('first') ||
+        text.includes('then') ||
         text.includes('after') ||
         text.includes('milestones') ||
         text.includes('phases') ||
         text.includes('including') ||
         sentences.length > 2,
-      hasConditions: 
-        text.includes('if') || 
-        text.includes('when') || 
+      hasConditions:
+        text.includes('if') ||
+        text.includes('when') ||
         text.includes('unless') ||
         text.includes('conditional') ||
         text.includes('while'),
-      hasTechnicalTerms: 
-        text.includes('api') || 
-        text.includes('database') || 
+      hasTechnicalTerms:
+        text.includes('api') ||
+        text.includes('database') ||
         text.includes('algorithm') ||
         text.includes('infrastructure') ||
         text.includes('pipeline') ||
         text.includes('production'),
-      hasTimeConstraints: 
-        text.includes('deadline') || 
-        text.includes('by') || 
+      hasTimeConstraints:
+        text.includes('deadline') ||
+        text.includes('by') ||
         text.includes('before') ||
         text.includes('daily') ||
         text.includes('weekly'),
-      requiresCoordination: 
-        text.includes('team') || 
-        text.includes('coordinate') || 
+      requiresCoordination:
+        text.includes('team') ||
+        text.includes('coordinate') ||
         text.includes('collaborate'),
       requiresAutomation:
         text.includes('automate') ||
@@ -315,7 +315,7 @@ export const taskComplexityProvider: Provider = {
     const complexityScore = Object.values(factors).filter(Boolean).length;
     let complexity: string;
     let estimatedSteps: number;
-    
+
     // Lower the threshold for high complexity to match test expectations
     if (complexityScore >= 3 || wordCount > 30 || dataSources > 1) {
       complexity = 'high';
@@ -364,8 +364,8 @@ export const messageClassifierProvider: Provider = {
 
     // Advanced classification logic
     if (
-      text.includes('strategy') || 
-      text.includes('plan') || 
+      text.includes('strategy') ||
+      text.includes('plan') ||
       text.includes('roadmap') ||
       text.includes('project plan') ||
       text.includes('automated workflow') ||
@@ -375,8 +375,8 @@ export const messageClassifierProvider: Provider = {
       confidence = 0.8;
       requiredCapabilities = ['planning', 'strategic_analysis'];
     } else if (
-      text.includes('analyze') || 
-      text.includes('analysis') || 
+      text.includes('analyze') ||
+      text.includes('analysis') ||
       text.includes('research') ||
       text.includes('trends') ||
       text.includes('optimize') ||
@@ -390,8 +390,8 @@ export const messageClassifierProvider: Provider = {
         requiredCapabilities.push('research');
       }
     } else if (
-      text.includes('process') || 
-      text.includes('transform') || 
+      text.includes('process') ||
+      text.includes('transform') ||
       text.includes('pipeline') ||
       text.includes('extract') ||
       text.includes('etl') ||
@@ -401,8 +401,8 @@ export const messageClassifierProvider: Provider = {
       confidence = 0.75;
       requiredCapabilities = ['data_processing'];
     } else if (
-      text.includes('execute') || 
-      text.includes('deploy') || 
+      text.includes('execute') ||
+      text.includes('deploy') ||
       text.includes('implement') ||
       text.includes('urgent') ||
       text.includes('emergency') ||

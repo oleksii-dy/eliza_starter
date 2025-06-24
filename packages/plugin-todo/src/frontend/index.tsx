@@ -1,3 +1,5 @@
+/* eslint-disable no-alert */
+/* eslint-disable no-undef */
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
@@ -13,7 +15,7 @@ import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from './ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Separator } from './ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import Loader from './loader';
@@ -64,7 +66,7 @@ interface TaskIdentifier {
 const queryClient = new QueryClient();
 
 // Helper to extract context from URL
-const getContextFromUrl = () => {
+const _getContextFromUrl = () => {
   const params = new URLSearchParams(window.location.search);
   return {
     roomId: params.get('roomId'),
@@ -76,7 +78,7 @@ const getContextFromUrl = () => {
 // --- API Interaction Hooks ---
 
 const useTodos = () => {
-  return useQuery<WorldWithRooms[] Error>({
+  return useQuery<WorldWithRooms[], Error>({
     queryKey: ['todosStructured'],
     queryFn: async () => {
       const response = await fetch('/api/todos');
@@ -90,7 +92,7 @@ const useTodos = () => {
 
 // --- Hook to fetch tags ---
 const useTags = () => {
-  return useQuery<string[] Error>({
+  return useQuery<string[], Error>({
     queryKey: ['taskTags'],
     queryFn: async () => {
       const response = await fetch('/api/tags');
@@ -105,7 +107,7 @@ const useTags = () => {
 
 // --- Hook to fetch ALL tasks (for debugging) ---
 const useAllTasks = () => {
-  return useQuery<TaskIdentifier[] Error>({
+  return useQuery<TaskIdentifier[], Error>({
     queryKey: ['allTasks'],
     queryFn: async () => {
       const response = await fetch('/api/all-tasks'); // Use new endpoint
@@ -260,7 +262,7 @@ const useCreateRoom = () => {
       return response.json();
     },
     onSuccess: (newRoomData) => {
-      console.log(`Room created successfully:`, newRoomData);
+      console.log('Room created successfully:', newRoomData);
       queryClient.invalidateQueries({ queryKey: ['todosStructured'] });
     },
     onError: (error) => {
@@ -297,7 +299,7 @@ const AddTaskForm = ({ worlds }: { worlds: WorldWithRooms[] }) => {
     const taskData: any = { name: name.trim(), type, roomId: selectedRoomId };
     if (type === 'one-off') {
       taskData.priority = parseInt(priority, 10);
-      if (dueDate) taskData.dueDate = dueDate;
+      if (dueDate) {taskData.dueDate = dueDate;}
       taskData.isUrgent = isUrgent;
     }
     addTaskMutation.mutate(taskData, {
@@ -484,7 +486,7 @@ const TaskItem = ({ task }: { task: Task }) => {
 
   let details = '';
   if (task.tags?.includes('daily')) {
-    details = `(Daily)`;
+    details = '(Daily)';
   } else if (task.tags?.includes('one-off')) {
     const priority = task.tags?.find((t) => t.startsWith('priority-'))?.split('-')[1] ?? '4';
     const urgent = task.tags?.includes('urgent') ? ' 🔴 Urgent' : '';
@@ -728,14 +730,14 @@ function App() {
                       <CardContent className="space-y-1 p-2 pt-1">
                         {room.tasks.filter((task) => !task.tags?.includes('completed')).length >
                         0 ? (
-                          room.tasks
-                            .filter((task) => !task.tags?.includes('completed'))
-                            .map((task) => <TaskItem key={task.id} task={task} />)
-                        ) : (
-                          <p className="text-muted-foreground text-xs px-2 py-1">
+                            room.tasks
+                              .filter((task) => !task.tags?.includes('completed'))
+                              .map((task) => <TaskItem key={task.id} task={task} />)
+                          ) : (
+                            <p className="text-muted-foreground text-xs px-2 py-1">
                             No pending tasks in this room.
-                          </p>
-                        )}
+                            </p>
+                          )}
                         {room.tasks.some((task) => task.tags?.includes('completed')) && (
                           <>
                             <Separator className="my-2" />

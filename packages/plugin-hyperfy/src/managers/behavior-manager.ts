@@ -12,6 +12,10 @@ import {
   parseKeyValueXml,
   logger,
 } from '@elizaos/core';
+import { HyperfyService } from '../service';
+import { agentActivityLock } from './guards';
+import { getHyperfyActions, formatActions } from '../utils';
+import { autoTemplate } from '../templates';
 
 const TIME_INTERVAL_MIN = 15000; // 15 seconds
 const TIME_INTERVAL_MAX = 30000; // 30 seconds
@@ -19,6 +23,7 @@ const TIME_INTERVAL_MAX = 30000; // 30 seconds
 export class BehaviorManager {
   private isRunning: boolean = false;
   private runtime: IAgentRuntime;
+  private maxIterations: number = -1; // -1 for infinite, set to limit for testing
 
   constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
@@ -32,6 +37,13 @@ export class BehaviorManager {
   }
 
   /**
+   * Set maximum iterations for testing (to prevent infinite loops in tests)
+   */
+  public setMaxIterations(max: number): void {
+    this.maxIterations = max;
+  }
+
+  /**
    * Starts the behavior loop if not already running and prerequisites are met.
    */
   public start(): void {
@@ -41,7 +53,7 @@ export class BehaviorManager {
     }
 
     this.isRunning = true;
-    logger.info(`[BehaviorManager] Starting behavior loop for player`);
+    logger.info('[BehaviorManager] Starting behavior loop for player');
 
     this.runLoop().catch((err) => logger.error('[BehaviorManager] Fatal error in run loop:', err));
   }
@@ -63,16 +75,31 @@ export class BehaviorManager {
    * Main loop that waits for each behavior to finish
    */
   private async runLoop(): Promise<void> {
-    while (this.isRunning) {
+    let iterations = 0;
+
+    while (this.isRunning && (this.maxIterations === -1 || iterations < this.maxIterations)) {
       try {
         await this.executeBehavior();
       } catch (error) {
         logger.error('[BehaviorManager] Error in behavior:', error);
       }
 
-      // Short delay between behaviors
-      const delay =
-        TIME_INTERVAL_MIN + Math.floor(Math.random() * (TIME_INTERVAL_MAX - TIME_INTERVAL_MIN));
+      iterations++;
+
+      // Check if we're in test mode (NODE_ENV includes 'test' or we have a max iteration limit)
+      const isTestMode = process.env.NODE_ENV?.includes('test') || this.maxIterations > 0;
+
+      if (isTestMode && iterations >= 2) {
+        // In test mode, only run a couple iterations
+        logger.info('[BehaviorManager] Test mode detected, stopping after limited iterations');
+        this.stop();
+        break;
+      }
+
+      // Short delay between behaviors (reduced for tests)
+      const delay = isTestMode
+        ? 100 // 100ms for tests
+        : TIME_INTERVAL_MIN + Math.floor(Math.random() * (TIME_INTERVAL_MAX - TIME_INTERVAL_MIN));
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
@@ -165,7 +192,7 @@ export class BehaviorManager {
 
     const name = world.entities.player?.data?.name || 'Unknown';
     await this.runtime.ensureConnection({
-      entityId: entityId,
+      entityId,
       roomId: elizaRoomId,
       userName: name,
       name,

@@ -1,13 +1,5 @@
-import type { Agent, Character } from './agent';
-import type {
-  Component,
-  Entity,
-  Participant,
-  Relationship,
-  Room,
-  World,
-  GetWorldsOptions,
-} from './environment';
+import type { Agent } from './agent';
+import type { Component, Entity, Participant, Relationship, Room, World } from './environment';
 import type { Memory, MemoryMetadata } from './memory';
 import type { Metadata, UUID } from './primitives';
 import type { Task } from './task';

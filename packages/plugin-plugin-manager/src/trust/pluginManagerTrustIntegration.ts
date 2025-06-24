@@ -134,11 +134,11 @@ export async function validatePluginManagerTrust(
     );
 
     return { allowed: true, trustScore };
-  } catch (error) {
-    elizaLogger.error(`Trust validation error for plugin manager action ${actionName}:`, error);
+  } catch (_error) {
+    elizaLogger.error(`Trust validation _error for plugin manager action ${actionName}:`, error);
     return {
       allowed: false,
-      reason: `Trust validation error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      reason: `Trust validation error: ${_error instanceof Error ? _error.message : 'Unknown error'}`,
     };
   }
 }
@@ -199,11 +199,11 @@ async function validatePluginSecurityContext(
     }
 
     return { allowed: true };
-  } catch (error) {
+  } catch (_error) {
     elizaLogger.error('Plugin security context validation error:', error);
     return {
       allowed: false,
-      reason: `Plugin security validation error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      reason: `Plugin security validation error: ${_error instanceof Error ? _error.message : 'Unknown error'}`,
     };
   }
 }
@@ -241,10 +241,10 @@ export async function recordPluginManagerAction(
 ): Promise<void> {
   try {
     const trustService = runtime.getService('trust-engine');
-    if (!trustService) return;
+    if (!trustService) {return;}
 
     const entityId = message.entityId;
-    if (!entityId) return;
+    if (!entityId) {return;}
 
     // Calculate trust impact based on action type and outcome
     let trustChange = 0;
@@ -282,7 +282,7 @@ export async function recordPluginManagerAction(
     elizaLogger.debug(
       `Recorded trust change ${trustChange} for plugin manager action ${actionName} (${success ? 'success' : 'failure'})`
     );
-  } catch (error) {
+  } catch (_error) {
     elizaLogger.error('Failed to record plugin manager action trust impact:', error);
   }
 }
@@ -299,17 +299,17 @@ export function wrapPluginManagerActionWithTrust(
 
   return {
     ...action,
-    validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+    validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State) => {
       // First run original validation
       if (originalValidate) {
-        const originalValid = await originalValidate(runtime, message, state);
-        if (!originalValid) return false;
+        const originalValid = await originalValidate(runtime, _message, _state);
+        if (!originalValid) {return false;}
       }
 
       // Then check trust requirements
       const trustCheck = await validatePluginManagerTrust(
         runtime,
-        message,
+        _message,
         action.name,
         trustRequirements
       );
@@ -337,7 +337,7 @@ export function wrapPluginManagerActionWithTrust(
 
         if (callback) {
           callback({
-            text: errorMessage,
+            text: _errorMessage,
             content: {
               error: trustCheck.reason,
               requiredTrustScore: trustRequirements.minTrustScore,
@@ -357,10 +357,10 @@ export function wrapPluginManagerActionWithTrust(
         await recordPluginManagerAction(runtime, message, action.name, true, { result });
 
         return result;
-      } catch (error) {
+      } catch (_error) {
         // Record failed execution
         await recordPluginManagerAction(runtime, message, action.name, false, {
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: _error instanceof Error ? _error.message : 'Unknown error',
         });
         throw error;
       }
@@ -432,11 +432,11 @@ export async function validatePluginPublishingSecurity(
     }
 
     return { allowed: true };
-  } catch (error) {
+  } catch (_error) {
     elizaLogger.error('Plugin publishing security validation error:', error);
     return {
       allowed: false,
-      reason: `Security validation error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      reason: `Security validation error: ${_error instanceof Error ? _error.message : 'Unknown error'}`,
     };
   }
 }

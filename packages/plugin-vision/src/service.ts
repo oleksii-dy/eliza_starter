@@ -199,7 +199,7 @@ export class VisionService extends Service {
         return { available: true, tool: 'ffmpeg' };
       }
       return { available: false, tool: 'none' };
-    } catch (error) {
+    } catch (_error) {
       // Tool not found
       return { available: false, tool: 'none' };
     }
@@ -219,7 +219,7 @@ export class VisionService extends Service {
             enablePoseDetection: this.visionConfig.enablePoseDetection || false,
           });
           logger.info('[VisionService] Using TensorFlow.js models for advanced detection');
-        } catch (tfError) {
+        } catch (_tfError) {
           logger.warn(
             '[VisionService] TensorFlow.js not available, falling back to enhanced heuristics'
           );
@@ -307,9 +307,9 @@ export class VisionService extends Service {
       logger.warn(
         `[VisionService] Camera capture tool '${toolName}' not found. Install it to enable camera functionality.`
       );
-      logger.warn(`[VisionService] For macOS: brew install imagesnap`);
-      logger.warn(`[VisionService] For Linux: sudo apt-get install fswebcam`);
-      logger.warn(`[VisionService] For Windows: Install ffmpeg and add to PATH`);
+      logger.warn('[VisionService] For macOS: brew install imagesnap');
+      logger.warn('[VisionService] For Linux: sudo apt-get install fswebcam');
+      logger.warn('[VisionService] For Windows: Install ffmpeg and add to PATH');
       return;
     }
 
@@ -446,7 +446,7 @@ export class VisionService extends Service {
   }
 
   private async captureAndProcessFrame(): Promise<void> {
-    if (!this.camera) return;
+    if (!this.camera) {return;}
 
     try {
       // Capture frame from camera
@@ -708,7 +708,7 @@ export class VisionService extends Service {
       }
 
       // Update entity tracker
-      const trackedEntities = await this.entityTracker.updateEntities(
+      const _trackedEntities = await this.entityTracker.updateEntities(
         detectedObjects,
         people,
         faceProfiles,
@@ -720,7 +720,7 @@ export class VisionService extends Service {
         timestamp: frame.timestamp,
         description,
         objects: detectedObjects,
-        people: people,
+        people,
         sceneChanged: shouldUpdateVlm || shouldUpdateTf,
         changePercentage,
       };
@@ -854,7 +854,7 @@ export class VisionService extends Service {
   }
 
   private async detectMotionObjects(frame: VisionFrame): Promise<DetectedObject[]> {
-    if (!this.lastFrame) return [];
+    if (!this.lastFrame) {return [];}
 
     const objects: DetectedObject[] = [];
     const blockSize = 64; // Larger blocks for less noise
@@ -924,14 +924,14 @@ export class VisionService extends Service {
   }
 
   private mergeAdjacentObjects(objects: DetectedObject[]): DetectedObject[] {
-    if (objects.length === 0) return [];
+    if (objects.length === 0) {return [];}
 
     const merged: DetectedObject[] = [];
     const used = new Set<number>();
     const mergeDistance = 80; // Distance to consider objects adjacent
 
     for (let i = 0; i < objects.length; i++) {
-      if (used.has(i)) continue;
+      if (used.has(i)) {continue;}
 
       const current = objects[i];
       const cluster: DetectedObject[] = [current];
@@ -942,7 +942,7 @@ export class VisionService extends Service {
       while (foundNew) {
         foundNew = false;
         for (let j = 0; j < objects.length; j++) {
-          if (used.has(j)) continue;
+          if (used.has(j)) {continue;}
 
           const other = objects[j];
 
@@ -1122,7 +1122,7 @@ export class VisionService extends Service {
   }
 
   private async updateEnhancedSceneDescription(): Promise<void> {
-    if (!this.lastScreenCapture) return;
+    if (!this.lastScreenCapture) {return;}
 
     const enhancedScene: EnhancedSceneDescription = {
       ...(this.lastSceneDescription || {
@@ -1244,7 +1244,7 @@ export class VisionService extends Service {
   }
 
   public getCameraInfo(): CameraInfo | null {
-    if (!this.camera) return null;
+    if (!this.camera) {return null;}
 
     return {
       id: this.camera.id,
@@ -1264,7 +1264,7 @@ export class VisionService extends Service {
     const x2 = Math.min(box1.x + box1.width, box2.x + box2.width);
     const y2 = Math.min(box1.y + box1.height, box2.y + box2.height);
 
-    if (x2 < x1 || y2 < y1) return 0;
+    if (x2 < x1 || y2 < y1) {return 0;}
 
     const intersection = (x2 - x1) * (y2 - y1);
     const area1 = box1.width * box1.height;

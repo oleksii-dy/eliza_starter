@@ -7,14 +7,14 @@ import {
   logger,
 } from '@elizaos/core';
 import { RobotService } from '../services/robot-service';
-import { RobotServiceType, RobotMode, RobotStatus } from '../types';
 
 export const robotStateProvider: Provider = {
   name: 'ROBOT_STATE',
-  description: 'Provides real-time robot hardware status including joint positions, operational mode, battery level, and safety warnings when agent needs to understand physical robot state for movement or troubleshooting decisions',
+  description:
+    'Provides real-time robot hardware status including joint positions, operational mode, battery level, and safety warnings when agent needs to understand physical robot state for movement or troubleshooting decisions',
   dynamic: false, // Always include robot state for context
 
-  get: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<ProviderResult> => {
+  get: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<ProviderResult> => {
     try {
       const robotService = runtime.getService<RobotService>(RobotServiceType.ROBOT);
 
@@ -83,7 +83,7 @@ export const robotStateProvider: Provider = {
           batteryLevel: robotState.batteryLevel,
           jointCount: robotState.joints.length,
           hasIMU: !!robotState.imuData,
-          warnings: warnings,
+          warnings,
         },
         data: {
           fullState: robotState,

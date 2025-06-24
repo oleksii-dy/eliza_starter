@@ -20,8 +20,7 @@ export const character: Character = {
     ...(process.env.OPENAI_API_KEY ? ['@elizaos/plugin-openai'] : []),
     ...(!process.env.OPENAI_API_KEY ? ['@elizaos/plugin-local-ai'] : []),
     // Testing plugins for runtime validation
-    // '@elizaos/plugin-dummy-services', // Required for lowlevel testing
-    // '@elizaos/plugin-lowlevel-testing', // Runtime service testing
+    // '@elizaos/plugin-dummy-services', // Comprehensive service testing
     // ...(process.env.DISCORD_API_TOKEN ? ['@elizaos/plugin-discord'] : []),
     // ...(process.env.TELEGRAM_BOT_TOKEN ? ['@elizaos/plugin-telegram'] : []),
     // '@elizaos/plugin-autonomy', // Temporarily disabled due to dependency issues
@@ -215,7 +214,7 @@ export const character: Character = {
   },
 };
 
-const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
+const initCharacter = ({ runtime: _runtime }: { runtime: IAgentRuntime }) => {
   logger.info('Initializing character');
   logger.info('Name: ', character.name);
 };

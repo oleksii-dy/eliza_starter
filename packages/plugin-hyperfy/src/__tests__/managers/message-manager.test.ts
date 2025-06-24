@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'bun:test';
 import { MessageManager } from '../../managers/message-manager';
 import { createMockRuntime } from '../test-utils';
 import { createMockWorld } from '../helpers/mock-world';
@@ -9,7 +9,7 @@ describe('MessageManager', () => {
   let mockWorld: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
     mockWorld = createMockWorld();
     messageManager = new MessageManager(mockRuntime);
@@ -17,8 +17,8 @@ describe('MessageManager', () => {
 
   describe('sendMessage', () => {
     it('should send a message to the world chat', () => {
-      mockRuntime.getService = vi.fn().mockReturnValue({
-        getWorld: vi.fn().mockReturnValue(mockWorld)
+      mockRuntime.getService = mock().mockReturnValue({
+        getWorld: mock().mockReturnValue(mockWorld),
       });
 
       messageManager.sendMessage('Hello world!');
@@ -29,29 +29,29 @@ describe('MessageManager', () => {
           text: 'Hello world!',
           entityId: 'test-player-id',
           from: 'TestAgent',
-          timestamp: expect.any(Number)
+          timestamp: expect.any(Number),
         }),
         true
       );
     });
 
     it('should handle missing world gracefully', () => {
-      mockRuntime.getService = vi.fn().mockReturnValue({
-        getWorld: vi.fn().mockReturnValue(null)
+      mockRuntime.getService = mock().mockReturnValue({
+        getWorld: mock().mockReturnValue(null),
       });
 
       expect(() => messageManager.sendMessage('Test')).not.toThrow();
     });
 
     it('should handle missing service gracefully', () => {
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
+      mockRuntime.getService = mock().mockReturnValue(null);
 
       expect(() => messageManager.sendMessage('Test')).not.toThrow();
     });
 
     it('should handle empty messages', () => {
-      mockRuntime.getService = vi.fn().mockReturnValue({
-        getWorld: vi.fn().mockReturnValue(mockWorld)
+      mockRuntime.getService = mock().mockReturnValue({
+        getWorld: mock().mockReturnValue(mockWorld),
       });
 
       messageManager.sendMessage('');
@@ -62,15 +62,15 @@ describe('MessageManager', () => {
           text: '',
           entityId: 'test-player-id',
           from: 'TestAgent',
-          timestamp: expect.any(Number)
+          timestamp: expect.any(Number),
         }),
         true
       );
     });
 
     it('should include timestamp in message', () => {
-      mockRuntime.getService = vi.fn().mockReturnValue({
-        getWorld: vi.fn().mockReturnValue(mockWorld)
+      mockRuntime.getService = mock().mockReturnValue({
+        getWorld: mock().mockReturnValue(mockWorld),
       });
 
       const beforeTime = Date.now();
@@ -83,7 +83,7 @@ describe('MessageManager', () => {
           text: 'Test message',
           entityId: 'test-player-id',
           from: 'TestAgent',
-          timestamp: expect.any(Number)
+          timestamp: expect.any(Number),
         }),
         true
       );
@@ -101,17 +101,17 @@ describe('MessageManager', () => {
         body: 'Hello agent!',
         fromId: 'user-123',
         from: 'Alice',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const mockService = {
-        getWorld: vi.fn().mockReturnValue(mockWorld),
+        getWorld: mock().mockReturnValue(mockWorld),
         currentWorldId: 'world-123',
-        getEmoteManager: vi.fn().mockReturnValue({
-          playEmote: vi.fn()
-        })
+        getEmoteManager: mock().mockReturnValue({
+          playEmote: mock(),
+        }),
       };
-      mockRuntime.getService = vi.fn().mockReturnValue(mockService);
+      mockRuntime.getService = mock().mockReturnValue(mockService);
 
       await messageManager.handleMessage(mockMessage);
 
@@ -119,7 +119,7 @@ describe('MessageManager', () => {
         expect.objectContaining({
           roomId: expect.any(String),
           userName: 'Alice',
-          source: 'hyperfy'
+          source: 'hyperfy',
         })
       );
 
@@ -128,9 +128,9 @@ describe('MessageManager', () => {
         expect.objectContaining({
           message: expect.objectContaining({
             content: expect.objectContaining({
-              text: 'Hello agent!'
-            })
-          })
+              text: 'Hello agent!',
+            }),
+          }),
         })
       );
     });
@@ -141,12 +141,12 @@ describe('MessageManager', () => {
         body: 'My own message',
         fromId: 'test-player-id', // Same as agent's player ID
         from: 'TestAgent',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
-      mockRuntime.getService = vi.fn().mockReturnValue({
-        getWorld: vi.fn().mockReturnValue(mockWorld),
-        currentWorldId: 'world-123'
+      mockRuntime.getService = mock().mockReturnValue({
+        getWorld: mock().mockReturnValue(mockWorld),
+        currentWorldId: 'world-123',
       });
 
       await messageManager.handleMessage(mockMessage);
@@ -161,12 +161,12 @@ describe('MessageManager', () => {
         body: 'System message',
         // No fromId
         from: 'System',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
-      mockRuntime.getService = vi.fn().mockReturnValue({
-        getWorld: vi.fn().mockReturnValue(mockWorld),
-        currentWorldId: 'world-123'
+      mockRuntime.getService = mock().mockReturnValue({
+        getWorld: mock().mockReturnValue(mockWorld),
+        currentWorldId: 'world-123',
       });
 
       await messageManager.handleMessage(mockMessage);
@@ -180,16 +180,16 @@ describe('MessageManager', () => {
         body: 'Tell me a joke!',
         fromId: 'user-123',
         from: 'Alice',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
-      const mockEmoteManager = { playEmote: vi.fn() };
+      const mockEmoteManager = { playEmote: mock() };
       const mockService = {
-        getWorld: vi.fn().mockReturnValue(mockWorld),
+        getWorld: mock().mockReturnValue(mockWorld),
         currentWorldId: 'world-123',
-        getEmoteManager: vi.fn().mockReturnValue(mockEmoteManager)
+        getEmoteManager: mock().mockReturnValue(mockEmoteManager),
       };
-      mockRuntime.getService = vi.fn().mockReturnValue(mockService);
+      mockRuntime.getService = mock().mockReturnValue(mockService);
 
       await messageManager.handleMessage(mockMessage);
 
@@ -200,7 +200,7 @@ describe('MessageManager', () => {
       // Call the callback with a response containing an emote
       await callback({
         text: 'Here is a joke!',
-        emote: 'laugh'
+        emote: 'laugh',
       });
 
       expect(mockEmoteManager.playEmote).toHaveBeenCalledWith('laugh');
@@ -210,7 +210,7 @@ describe('MessageManager', () => {
           text: 'Here is a joke!',
           entityId: 'test-player-id',
           from: 'TestAgent',
-          timestamp: expect.any(Number)
+          timestamp: expect.any(Number),
         }),
         true
       );
@@ -221,7 +221,7 @@ describe('MessageManager', () => {
     it('should handle getRecentMessages method', async () => {
       // Test that the method exists and can be called
       const result = await messageManager.getRecentMessages('room-123' as any);
-      
+
       expect(result).toBeDefined();
       expect(result).toHaveProperty('formattedHistory');
       expect(result).toHaveProperty('lastResponseText');
@@ -236,16 +236,16 @@ describe('MessageManager', () => {
           id: '1',
           entityId: 'entity-1',
           content: { text: 'Hello!' },
-          createdAt: new Date('2024-01-01T10:30:00').getTime()
-        }
+          createdAt: new Date('2024-01-01T10:30:00').getTime(),
+        },
       ];
 
       const entities = [
         {
           id: 'entity-1',
           names: ['Alice'],
-          data: JSON.stringify({ hyperfy: { id: 'user-1', userName: 'Alice' } })
-        }
+          data: JSON.stringify({ hyperfy: { id: 'user-1', userName: 'Alice' } }),
+        },
       ];
 
       const formatted = messageManager.formatMessages({ messages, entities } as any);
@@ -261,16 +261,16 @@ describe('MessageManager', () => {
           id: '1',
           entityId: 'entity-1',
           content: { text: 'Test' },
-          createdAt: Date.now()
-        }
+          createdAt: Date.now(),
+        },
       ];
 
       const entities = [
         {
           id: 'entity-1',
           names: ['Fallback Name'],
-          data: null
-        }
+          data: null,
+        },
       ];
 
       const formatted = messageManager.formatMessages({ messages, entities } as any);
@@ -279,4 +279,4 @@ describe('MessageManager', () => {
       expect(formatted).toContain('Test');
     });
   });
-}); 
+});

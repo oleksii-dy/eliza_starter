@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test';
 import {
   createSettingFromConfig,
   getSalt,
@@ -37,21 +37,20 @@ describe('settings utilities', () => {
   let mockWorld: World;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     // Set up scoped mocks for this test
-    vi.spyOn(entities, 'createUniqueUuid').mockImplementation(
-      (_runtime: any, serverId: any) => `world-${serverId}` as UUID
-    );
+    spyOn(entities, 'createUniqueUuid')
+      .mockImplementation((_runtime: any, serverId: any) => `world-${serverId}` as UUID);
 
     // Mock logger if it doesn't have the methods
     if (logger_module.logger) {
       const methods = ['error', 'info', 'warn', 'debug'];
       methods.forEach((method) => {
         if (typeof logger_module.logger[method] === 'function') {
-          vi.spyOn(logger_module.logger, method).mockImplementation(() => {});
+          spyOn(logger_module.logger, method).mockImplementation(() => {});
         } else {
-          logger_module.logger[method] = vi.fn(() => {});
+          logger_module.logger[method] = mock(() => {});
         }
       });
     }
@@ -61,8 +60,8 @@ describe('settings utilities', () => {
 
     mockRuntime = {
       agentId: 'agent-123' as any,
-      getWorld: vi.fn(),
-      updateWorld: vi.fn(),
+      getWorld: mock(),
+      updateWorld: mock(),
     } as unknown as IAgentRuntime;
 
     mockWorld = {
@@ -162,12 +161,6 @@ describe('settings utilities', () => {
       delete process.env.SECRET_SALT;
       const salt = getSalt();
       expect(salt).toBe('secretsalt');
-    });
-
-    it('should handle import.meta.env in non-node environments', () => {
-      // This test is skipped as it's difficult to properly simulate non-node environment
-      // without breaking other tests. The getSalt function is tested in other scenarios.
-      expect(true).toBe(true);
     });
   });
 

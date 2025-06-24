@@ -1,4 +1,4 @@
-import { describe, expect, beforeEach, it, vi } from 'vitest';
+import { describe, expect, beforeEach, it, mock } from 'bun:test';
 import { AgentRuntime } from '../runtime';
 import type { Character, IDatabaseAdapter, World, UUID, GetWorldsOptions } from '../types';
 
@@ -311,7 +311,10 @@ describe('getWorlds functionality', () => {
 
   describe('Database adapter integration', () => {
     it('should call adapter.getWorlds with correct parameters', async () => {
-      const getWorldsSpy = vi.spyOn(mockAdapter, 'getWorlds');
+      const originalGetWorlds = mockAdapter.getWorlds;
+      const getWorldsSpy = mock();
+      getWorldsSpy.mockResolvedValue([]);
+      mockAdapter.getWorlds = getWorldsSpy;
 
       const options: GetWorldsOptions = {
         serverId: 'test-server',
@@ -325,16 +328,23 @@ describe('getWorlds functionality', () => {
         serverId: 'test-server',
         limit: 5,
       });
+
+      mockAdapter.getWorlds = originalGetWorlds;
     });
 
     it('should include agentId from runtime', async () => {
-      const getWorldsSpy = vi.spyOn(mockAdapter, 'getWorlds');
+      const originalGetWorlds = mockAdapter.getWorlds;
+      const getWorldsSpy = mock();
+      getWorldsSpy.mockResolvedValue([]);
+      mockAdapter.getWorlds = getWorldsSpy;
 
       await runtime.getWorlds({});
 
       expect(getWorldsSpy).toHaveBeenCalledWith({
         agentId: 'agent-1',
       });
+
+      mockAdapter.getWorlds = originalGetWorlds;
     });
   });
 });

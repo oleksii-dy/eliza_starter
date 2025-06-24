@@ -61,7 +61,7 @@ export const checkPluginConfigurationAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State) => {
     const pluginManager = runtime.getService(PluginManagerServiceType.PLUGIN_MANAGER);
     return !!pluginManager;
   },
@@ -118,13 +118,13 @@ export const checkPluginConfigurationAction: Action = {
       if (statusData.totalPlugins === 0) {
         statusText = 'No plugins are currently installed.';
       } else {
-        statusText += `Plugin Configuration Status:\n`;
+        statusText += 'Plugin Configuration Status:\n';
         statusText += `• Total plugins: ${statusData.totalPlugins}\n`;
         statusText += `• Fully configured: ${statusData.configuredPlugins}\n`;
         statusText += `• Need configuration: ${statusData.needsConfiguration}\n`;
 
         if (statusData.needsConfiguration > 0) {
-          statusText += `\nPlugins needing configuration:\n`;
+          statusText += '\nPlugins needing configuration:\n';
           statusData.plugins
             .filter((p: any) => !p.configured)
             .forEach((plugin: any) => {
@@ -135,8 +135,8 @@ export const checkPluginConfigurationAction: Action = {
 
       // Check if user has permission to configure plugins
       const trustService = runtime.getService('TRUST') as any;
-      const canConfigure = trustService ? 
-        await trustService.checkPermission(message.entityId, 'plugin:configure') : 
+      const canConfigure = trustService ?
+        await trustService.checkPermission(message.entityId, 'plugin:configure') :
         true; // Default to true if trust service not available
 
       if (statusData.needsConfiguration > 0 && canConfigure) {
@@ -161,15 +161,15 @@ export const checkPluginConfigurationAction: Action = {
           hasUnconfiguredPlugins: statusData.needsConfiguration > 0,
         },
       };
-    } catch (error) {
+    } catch (_error) {
       logger.error('[CHECK_PLUGIN_CONFIGURATION] Error:', error);
-      
+
       await callback?.({
-        text: `Error checking plugin configuration: ${error instanceof Error ? error.message : String(error)}`,
+        text: `Error checking plugin configuration: ${_error instanceof Error ? _error.message : String(_error)}`,
         actions: ['CHECK_PLUGIN_CONFIGURATION'],
       });
 
       throw error;
     }
   },
-}; 
+};

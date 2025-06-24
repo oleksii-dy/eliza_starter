@@ -312,4 +312,4 @@ export const multiAgentAutonomyScenario: Scenario = {
       }
     ]
   }
-}; 
+};

@@ -1,7 +1,6 @@
 import type { Entity, Relationship, UUID } from '@elizaos/core';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-// @ts-ignore - react-force-graph-2d doesn't have type declarations
-import ForceGraph2D, { ForceGraphMethods, LinkObject, NodeObject } from 'react-force-graph-2d';
+import ForceGraph2D from 'react-force-graph-2d';
 
 // Type definitions for react-force-graph-2d
 interface NodeObject {
@@ -56,7 +55,7 @@ interface EntityGraphProps {
 }
 
 // Process graph data
-const processGraphData = (entities: Entity[] relationships: Relationship[]) => {
+const processGraphData = (entities: Entity[], relationships: Relationship[]) => {
   const nodes: EntityNode[] = entities.map((entity) => {
     const metadata = entity.metadata || {};
     const trustMetrics = (metadata.trustMetrics as any) || {};
@@ -64,7 +63,7 @@ const processGraphData = (entities: Entity[] relationships: Relationship[]) => {
     return {
       id: entity.id!,
       name: entity.names[0] || entity.id!.substring(0, 8),
-      entity: entity,
+      entity,
       val: 5 + (trustMetrics.engagement || 0) / 2, // Size based on engagement
       type: (metadata.type || 'person') as 'person' | 'bot' | 'organization',
       trustLevel: trustMetrics.helpfulness - trustMetrics.suspicionLevel,
@@ -100,7 +99,7 @@ export function EntityGraph({
   const graphRef = useRef<any>(undefined);
   const [initialized, setInitialized] = useState(false);
   const [graphData, setGraphData] = useState<{ nodes: EntityNode[]; links: RelationshipLink[] }>({
-    nodes: []
+    nodes: [],
     links: []
   });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -123,20 +122,20 @@ export function EntityGraph({
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         const matchesName = entity.names.some((name) => name.toLowerCase().includes(searchLower));
-        if (!matchesName) return false;
+        if (!matchesName) {return false;}
       }
 
       // Entity type filter
       if (entityTypeFilter) {
         const entityType = (entity.metadata?.type || 'person') as string;
-        if (entityType !== entityTypeFilter) return false;
+        if (entityType !== entityTypeFilter) {return false;}
       }
 
       // Trust level filter
       const metadata = entity.metadata || {};
       const trustMetrics = (metadata.trustMetrics as any) || {};
       const trustLevel = trustMetrics.helpfulness - trustMetrics.suspicionLevel;
-      if (trustLevel < trustLevelRange[0] || trustLevel > trustLevelRange[1]) return false;
+      if (trustLevel < trustLevelRange[0] || trustLevel > trustLevelRange[1]) {return false;}
 
       return true;
     });
@@ -144,7 +143,7 @@ export function EntityGraph({
     const filteredRelationships = relationships.filter((rel) => {
       // Connection strength filter
       const strength = rel.strength || 0.5;
-      if (strength < strengthThreshold) return false;
+      if (strength < strengthThreshold) {return false;}
 
       // Only include relationships between filtered entities
       const sourceInFiltered = filteredEntities.some((e) => e.id === rel.sourceEntityId);
@@ -227,8 +226,8 @@ export function EntityGraph({
   // Get node color based on trust level
   const getNodeColor = (node: EntityNode) => {
     const trustLevel = node.trustLevel || 0;
-    if (trustLevel > 0.5) return 'hsl(120, 70%, 50%)'; // Green - trusted
-    if (trustLevel < -0.5) return 'hsl(0, 70%, 50%)'; // Red - suspicious
+    if (trustLevel > 0.5) {return 'hsl(120, 70%, 50%)';} // Green - trusted
+    if (trustLevel < -0.5) {return 'hsl(0, 70%, 50%)';} // Red - suspicious
     return 'hsl(210, 70%, 50%)'; // Blue - neutral
   };
 

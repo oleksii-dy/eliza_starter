@@ -38,13 +38,13 @@ Add the plugin to your character file:
 
 ```json
 {
-    "name": "Your Agent",
-    "plugins": ["@elizaos/plugin-agentkit"],
-    "settings": {
-        "CDP_API_KEY_NAME": "your_api_key_name",
-        "CDP_API_KEY_PRIVATE_KEY": "your_api_key_private_key",
-        "CDP_NETWORK_ID": "base-mainnet"
-    }
+  "name": "Your Agent",
+  "plugins": ["@elizaos/plugin-agentkit"],
+  "settings": {
+    "CDP_API_KEY_NAME": "your_api_key_name",
+    "CDP_API_KEY_PRIVATE_KEY": "your_api_key_private_key",
+    "CDP_NETWORK_ID": "base-mainnet"
+  }
 }
 ```
 
@@ -66,7 +66,9 @@ The plugin provides wallet context to the agent:
 
 ```typescript
 // The wallet provider adds wallet information to the agent's context
-const walletInfo = await runtime.providers.find(p => p.name === 'agentKitWallet').get(runtime, message, state);
+const walletInfo = await runtime.providers
+  .find((p) => p.name === 'agentKitWallet')
+  .get(runtime, message, state);
 // Returns: { walletAddress: "0x...", balance: { ETH: "1.5", USDC: "1000" } }
 ```
 
@@ -75,6 +77,7 @@ const walletInfo = await runtime.providers.find(p => p.name === 'agentKitWallet'
 Access the admin panel at: `/api/agents/{agentId}/plugins/agentkit/admin`
 
 Features:
+
 - View wallet address and balances
 - Execute actions with parameters
 - Real-time transaction status
@@ -86,16 +89,16 @@ Features:
 
 ```typescript
 export class AgentKitService extends Service {
-    static serviceName = "agentkit";
-    static serviceType = ServiceType.WALLET;
-    
-    // Lifecycle management
-    static async start(runtime: IAgentRuntime): Promise<AgentKitService>
-    async stop(): Promise<void>
-    
-    // AgentKit access
-    getAgentKit(): CdpAgentkit | null
-    isReady(): boolean
+  static serviceName = 'agentkit';
+  static serviceType = ServiceType.WALLET;
+
+  // Lifecycle management
+  static async start(runtime: IAgentRuntime): Promise<AgentKitService>;
+  async stop(): Promise<void>;
+
+  // AgentKit access
+  getAgentKit(): CdpAgentkit | null;
+  isReady(): boolean;
 }
 ```
 
@@ -105,13 +108,13 @@ Actions return `ActionResult` for chaining:
 
 ```typescript
 interface ActionResult {
-    success: boolean;
-    data?: any;
-    error?: string;
-    metadata: {
-        toolName: string;
-        [key: string]: any;
-    };
+  success: boolean;
+  data?: any;
+  error?: string;
+  metadata: {
+    toolName: string;
+    [key: string]: any;
+  };
 }
 ```
 
@@ -203,5 +206,6 @@ Contributions are welcome! Please read the ElizaOS development workflow document
 ## Support
 
 For issues and questions:
+
 - GitHub Issues: [elizaos/elizaos](https://github.com/elizaos/elizaos/issues)
 - Discord: [ElizaOS Community](https://discord.gg/elizaos)

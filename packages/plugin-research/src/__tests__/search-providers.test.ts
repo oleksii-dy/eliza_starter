@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { TavilySearchProvider } from '../integrations/search-providers/tavily';
 import { SerperSearchProvider } from '../integrations/search-providers/serper';
 import { AcademicSearchProvider } from '../integrations/search-providers/academic';
@@ -12,27 +12,27 @@ describe('Search Providers - Real Implementation Tests', () => {
     const provider = new TavilySearchProvider({ apiKey: 'test-key' });
     expect(provider).toBeDefined();
   });
-  
+
   it('should initialize Serper provider', () => {
     const provider = new SerperSearchProvider({ apiKey: 'test-key' });
     expect(provider).toBeDefined();
   });
-  
+
   it('should initialize Academic provider', () => {
     const provider = new AcademicSearchProvider({ semanticScholarApiKey: 'test-key' });
     expect(provider).toBeDefined();
   });
-  
+
   it('should initialize Exa provider', () => {
     const provider = new ExaSearchProvider({ apiKey: 'test-key' });
     expect(provider).toBeDefined();
   });
-  
+
   it('should initialize SerpAPI provider', () => {
     const provider = new SerpAPISearchProvider({ apiKey: 'test-key' });
     expect(provider).toBeDefined();
   });
-  
+
   it('should handle missing API key gracefully', () => {
     // Academic provider works without API key (falls back to public access)
     const provider = new AcademicSearchProvider({});
@@ -69,7 +69,7 @@ describe('Search Providers - Real Implementation Tests', () => {
       try {
         const results = await provider.search('react', 3);
         expect(Array.isArray(results)).toBe(true);
-        
+
         if (results.length > 0) {
           const result = results[0];
           expect(result).toHaveProperty('title');
@@ -118,7 +118,7 @@ describe('Search Providers - Real Implementation Tests', () => {
       try {
         const results = await provider.search('numpy', 3);
         expect(Array.isArray(results)).toBe(true);
-        
+
         if (results.length > 0) {
           const result = results[0];
           expect(result).toHaveProperty('title');
@@ -154,12 +154,12 @@ describe('Search Providers - Real Implementation Tests', () => {
         if (npmResults.length > 0 && pypiResults.length > 0) {
           const npmResult = npmResults[0];
           const pypiResult = pypiResults[0];
-          
+
           // Both should have required fields
           expect(npmResult).toHaveProperty('title');
           expect(npmResult).toHaveProperty('url');
           expect(npmResult).toHaveProperty('content');
-          
+
           expect(pypiResult).toHaveProperty('title');
           expect(pypiResult).toHaveProperty('url');
           expect(pypiResult).toHaveProperty('content');
@@ -171,4 +171,4 @@ describe('Search Providers - Real Implementation Tests', () => {
       }
     }, 15000);
   });
-}); 
+});

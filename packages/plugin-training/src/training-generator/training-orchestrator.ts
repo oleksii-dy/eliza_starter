@@ -1,6 +1,6 @@
 /**
  * Training Orchestrator - Main Controller for Training Data Generation
- * 
+ *
  * Orchestrates the complete training data generation pipeline:
  * 1. Repository cloning and processing
  * 2. File extraction and analysis
@@ -12,7 +12,11 @@ import type { IAgentRuntime } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
 import { RepositoryCloner, type RepositoryInfo } from './core/repo-cloner';
 import { FileExtractor, type ExtractedFile, type ExtractionResult } from './core/file-extractor';
-import { ScenarioGenerator, type TrainingScenario, type ScenarioGenerationOptions } from './core/scenario-generator';
+import {
+  ScenarioGenerator,
+  type TrainingScenario,
+  type ScenarioGenerationOptions,
+} from './core/scenario-generator';
 
 // Re-export for convenience
 export type { TrainingScenario } from './core/scenario-generator';
@@ -87,7 +91,7 @@ export class TrainingOrchestrator {
     includeTests: false,
     includeConfig: false,
     includeComplex: true,
-    temperature: 0.7
+    temperature: 0.7,
   };
 
   private repoCloner: RepositoryCloner;
@@ -103,7 +107,7 @@ export class TrainingOrchestrator {
     private config: Partial<TrainingGenerationConfig> = {}
   ) {
     const finalConfig = { ...this.DEFAULT_CONFIG, ...config };
-    
+
     this.repoCloner = new RepositoryCloner(finalConfig.workspaceDir);
     this.fileExtractor = new FileExtractor();
     this.scenarioGenerator = new ScenarioGenerator(runtime);
@@ -114,12 +118,14 @@ export class TrainingOrchestrator {
   /**
    * Generate complete training dataset
    */
-  async generateTrainingDataset(progressCallback?: (progress: GenerationProgress) => void): Promise<GenerationResult> {
+  async generateTrainingDataset(
+    progressCallback?: (progress: GenerationProgress) => void
+  ): Promise<GenerationResult> {
     const startTime = Date.now();
     this.progressCallback = progressCallback;
 
     elizaLogger.info('🚀 Starting comprehensive training data generation...');
-    
+
     try {
       // Ensure output directory exists
       await this.ensureDirectories();
@@ -128,7 +134,7 @@ export class TrainingOrchestrator {
       this.reportProgress('Repository Cloning', 0, 100, 'Cloning ElizaOS repositories...');
       const repositories = await this.cloneAllRepositories();
 
-      // Phase 2: File Extraction  
+      // Phase 2: File Extraction
       this.reportProgress('File Extraction', 20, 100, 'Extracting and analyzing files...');
       const extractedData = await this.extractAllFiles(repositories);
 
@@ -141,7 +147,12 @@ export class TrainingOrchestrator {
       const pluginScenarios = await this.generatePluginScenarios(extractedData.plugins);
 
       // Phase 5: Documentation Scenarios
-      this.reportProgress('Documentation Scenarios', 80, 100, 'Generating documentation scenarios...');
+      this.reportProgress(
+        'Documentation Scenarios',
+        80,
+        100,
+        'Generating documentation scenarios...'
+      );
       const docScenarios = await this.generateDocumentationScenarios(extractedData.docs);
 
       // Phase 6: Dataset Building
@@ -152,7 +163,7 @@ export class TrainingOrchestrator {
       // Phase 7: Statistics and Cleanup
       this.reportProgress('Finalizing', 95, 100, 'Generating statistics and cleaning up...');
       const statistics = await this.generateStatistics(repositories, extractedData, allScenarios);
-      
+
       // Save comprehensive report
       await this.saveGenerationReport({
         totalScenarios: allScenarios.length,
@@ -162,10 +173,15 @@ export class TrainingOrchestrator {
         totalTokens: allScenarios.reduce((sum, s) => sum + s.metadata.estimatedTokens, 0),
         processingTime: Date.now() - startTime,
         outputPaths,
-        statistics
+        statistics,
       });
 
-      this.reportProgress('Complete', 100, 100, `Generated ${allScenarios.length} training scenarios successfully!`);
+      this.reportProgress(
+        'Complete',
+        100,
+        100,
+        `Generated ${allScenarios.length} training scenarios successfully!`
+      );
 
       elizaLogger.info('🎉 Training data generation completed successfully!');
       elizaLogger.info(`📊 Generated ${allScenarios.length} total scenarios`);
@@ -179,9 +195,8 @@ export class TrainingOrchestrator {
         totalTokens: allScenarios.reduce((sum, s) => sum + s.metadata.estimatedTokens, 0),
         processingTime: Date.now() - startTime,
         outputPaths,
-        statistics
+        statistics,
       };
-
     } catch (error) {
       elizaLogger.error('❌ Training data generation failed:', error);
       throw error;
@@ -197,7 +212,7 @@ export class TrainingOrchestrator {
   }> {
     // Clone main ElizaOS repository
     const coreRepo = await this.repoCloner.cloneMainRepository();
-    
+
     // Clone all plugin repositories
     const pluginRepos = await this.repoCloner.cloneAllPluginRepositories();
 
@@ -207,7 +222,7 @@ export class TrainingOrchestrator {
 
     return {
       core: coreRepo,
-      plugins: pluginRepos
+      plugins: pluginRepos,
     };
   }
 
@@ -224,9 +239,11 @@ export class TrainingOrchestrator {
   }> {
     // Extract core files
     const coreResult = await this.fileExtractor.extractAllFiles(repositories.core.localPath);
-    
+
     // Extract plugin files in parallel for better performance
-    elizaLogger.info(`📁 Extracting files from ${repositories.plugins.length} plugins in parallel...`);
+    elizaLogger.info(
+      `📁 Extracting files from ${repositories.plugins.length} plugins in parallel...`
+    );
     const pluginExtractionPromises = repositories.plugins.map(async (plugin) => {
       try {
         const result = await this.fileExtractor.extractAllFiles(plugin.localPath);
@@ -239,7 +256,7 @@ export class TrainingOrchestrator {
 
     const pluginExtractions = await Promise.all(pluginExtractionPromises);
     const pluginResults = new Map<string, ExtractionResult>();
-    
+
     for (const extraction of pluginExtractions) {
       if (extraction) {
         pluginResults.set(extraction.name, extraction.result);
@@ -259,23 +276,26 @@ export class TrainingOrchestrator {
         totalSize: 0,
         languages: {},
         fileTypes: {},
-        extractionTime: 0
+        extractionTime: 0,
       };
     }
 
-    const totalFiles = coreResult.totalFiles + 
+    const totalFiles =
+      coreResult.totalFiles +
       Array.from(pluginResults.values()).reduce((sum, r) => sum + r.totalFiles, 0) +
       docsResult.totalFiles;
 
     elizaLogger.info(`📁 Extracted ${totalFiles} total files`);
     elizaLogger.info(`   Core: ${coreResult.totalFiles} files`);
-    elizaLogger.info(`   Plugins: ${Array.from(pluginResults.values()).reduce((sum, r) => sum + r.totalFiles, 0)} files`);
+    elizaLogger.info(
+      `   Plugins: ${Array.from(pluginResults.values()).reduce((sum, r) => sum + r.totalFiles, 0)} files`
+    );
     elizaLogger.info(`   Docs: ${docsResult.totalFiles} files`);
 
     return {
       core: coreResult,
       plugins: pluginResults,
-      docs: docsResult
+      docs: docsResult,
     };
   }
 
@@ -284,13 +304,13 @@ export class TrainingOrchestrator {
    */
   private async generateCoreScenarios(coreResult: ExtractionResult): Promise<TrainingScenario[]> {
     const config = { ...this.DEFAULT_CONFIG, ...this.config };
-    
+
     const options: Partial<ScenarioGenerationOptions> = {
       maxScenariosPerType: config.maxScenariosPerCore,
       includeComplexFiles: config.includeComplex,
       includeTestFiles: config.includeTests,
       includeConfigFiles: config.includeConfig,
-      temperature: config.temperature
+      temperature: config.temperature,
     };
 
     return await this.scenarioGenerator.generateFileCreationScenarios(
@@ -303,19 +323,20 @@ export class TrainingOrchestrator {
   /**
    * Generate scenarios for all plugins
    */
-  private async generatePluginScenarios(pluginResults: Map<string, ExtractionResult>): Promise<TrainingScenario[]> {
+  private async generatePluginScenarios(
+    pluginResults: Map<string, ExtractionResult>
+  ): Promise<TrainingScenario[]> {
     elizaLogger.info(`🔌 Processing ${pluginResults.size} plugins in parallel...`);
-    
+
     // Process plugins in parallel for better performance
     const pluginPromises = Array.from(pluginResults.entries()).map(async ([pluginName, result]) => {
       try {
         elizaLogger.info(`🔌 Processing plugin: ${pluginName}`);
-        
+
         const scenarios = await this.pluginProcessor.processPlugin('', result.files);
-        
+
         elizaLogger.info(`✅ Generated ${scenarios.length} scenarios for ${pluginName}`);
         return scenarios;
-        
       } catch (error) {
         elizaLogger.warn(`⚠️  Failed to process plugin ${pluginName}:`, error);
         return []; // Return empty array on error
@@ -324,23 +345,25 @@ export class TrainingOrchestrator {
 
     // Wait for all plugins to be processed
     const pluginScenarios = await Promise.all(pluginPromises);
-    
+
     // Flatten results
     const allScenarios = pluginScenarios.flat();
     elizaLogger.info(`🎉 Generated ${allScenarios.length} total plugin scenarios`);
-    
+
     return allScenarios;
   }
 
   /**
    * Generate scenarios for documentation
    */
-  private async generateDocumentationScenarios(docsResult: ExtractionResult): Promise<TrainingScenario[]> {
+  private async generateDocumentationScenarios(
+    docsResult: ExtractionResult
+  ): Promise<TrainingScenario[]> {
     // Filter to markdown files only
-    const docFiles = docsResult.files.filter(f => f.language === 'markdown');
-    
+    const docFiles = docsResult.files.filter((f) => f.language === 'markdown');
+
     elizaLogger.info(`📚 Processing ${docFiles.length} documentation files in parallel...`);
-    
+
     // Process documentation files in parallel for better performance
     const docPromises = docFiles.map(async (docFile) => {
       try {
@@ -353,7 +376,9 @@ export class TrainingOrchestrator {
 
     // Wait for all docs to be processed and filter out null results
     const docScenarios = await Promise.all(docPromises);
-    const scenarios = docScenarios.filter((scenario): scenario is TrainingScenario => scenario !== null);
+    const scenarios = docScenarios.filter(
+      (scenario): scenario is TrainingScenario => scenario !== null
+    );
 
     elizaLogger.info(`📚 Generated ${scenarios.length} documentation scenarios`);
     return scenarios;
@@ -365,10 +390,10 @@ export class TrainingOrchestrator {
   private async generateDocScenario(docFile: ExtractedFile): Promise<TrainingScenario> {
     // Generate question about the documentation
     const userQuery = await this.generateDocQuestion(docFile);
-    
+
     // Generate thinking process for documentation
     const thinkingProcess = await this.generateDocThinking(docFile, userQuery);
-    
+
     return {
       id: `doc-${docFile.relativePath.replace(/[^a-zA-Z0-9]/g, '-')}`,
       type: 'documentation',
@@ -377,7 +402,7 @@ export class TrainingOrchestrator {
         fileTree: docFile.relativePath,
         relatedFiles: [],
         targetFile: docFile,
-        repositoryContext: 'ElizaOS Documentation'
+        repositoryContext: 'ElizaOS Documentation',
       },
       thinkingProcess,
       expectedOutput: docFile.content,
@@ -386,8 +411,8 @@ export class TrainingOrchestrator {
         estimatedTokens: this.estimateTokens(userQuery + thinkingProcess + docFile.content),
         language: 'markdown',
         purpose: 'documentation',
-        generationTime: Date.now()
-      }
+        generationTime: Date.now(),
+      },
     };
   }
 
@@ -407,7 +432,7 @@ Make it natural and specific.`;
     const response = await this.runtime.useModel('TEXT_LARGE', {
       prompt,
       temperature: 0.7,
-      max_tokens: 100
+      max_tokens: 100,
     });
 
     return (response as string).trim();
@@ -434,7 +459,7 @@ Keep it concise but thorough.`;
     const response = await this.runtime.useModel('TEXT_LARGE', {
       prompt,
       temperature: 0.5,
-      max_tokens: 300
+      max_tokens: 300,
     });
 
     return `<thinking>\n${response}\n</thinking>`;
@@ -482,14 +507,14 @@ Keep it concise but thorough.`;
     const repoStats = {
       core: 1,
       plugins: repositories.plugins.length,
-      failed: 0 // Would track failed repos in real implementation
+      failed: 0, // Would track failed repos in real implementation
     };
 
     // File statistics
     const allFiles = [
       ...extractedData.core.files,
       ...Array.from(extractedData.plugins.values()).flatMap((r: any) => r.files),
-      ...extractedData.docs.files
+      ...extractedData.docs.files,
     ];
 
     const fileStats = {
@@ -497,29 +522,29 @@ Keep it concise but thorough.`;
       typescript: allFiles.filter((f: any) => f.language.includes('typescript')).length,
       javascript: allFiles.filter((f: any) => f.language.includes('javascript')).length,
       markdown: allFiles.filter((f: any) => f.language === 'markdown').length,
-      config: allFiles.filter((f: any) => f.isConfigFile).length
+      config: allFiles.filter((f: any) => f.isConfigFile).length,
     };
 
     // Scenario statistics
     const scenarioStats = {
-      simple: scenarios.filter(s => s.metadata.complexity === 'simple').length,
-      medium: scenarios.filter(s => s.metadata.complexity === 'medium').length,
-      complex: scenarios.filter(s => s.metadata.complexity === 'complex').length
+      simple: scenarios.filter((s) => s.metadata.complexity === 'simple').length,
+      medium: scenarios.filter((s) => s.metadata.complexity === 'medium').length,
+      complex: scenarios.filter((s) => s.metadata.complexity === 'complex').length,
     };
 
     // Component statistics
     const componentStats = {
-      actions: scenarios.filter(s => s.metadata.purpose.includes('action')).length,
-      providers: scenarios.filter(s => s.metadata.purpose.includes('provider')).length,
-      evaluators: scenarios.filter(s => s.metadata.purpose.includes('evaluator')).length,
-      services: scenarios.filter(s => s.metadata.purpose.includes('service')).length
+      actions: scenarios.filter((s) => s.metadata.purpose.includes('action')).length,
+      providers: scenarios.filter((s) => s.metadata.purpose.includes('provider')).length,
+      evaluators: scenarios.filter((s) => s.metadata.purpose.includes('evaluator')).length,
+      services: scenarios.filter((s) => s.metadata.purpose.includes('service')).length,
     };
 
     return {
       repositories: repoStats,
       files: fileStats,
       scenarios: scenarioStats,
-      components: componentStats
+      components: componentStats,
     };
   }
 
@@ -529,11 +554,11 @@ Keep it concise but thorough.`;
   private async saveGenerationReport(result: GenerationResult): Promise<void> {
     const config = { ...this.DEFAULT_CONFIG, ...this.config };
     const reportPath = path.join(config.outputDir, 'generation-report.json');
-    
+
     const report = {
       ...result,
       timestamp: new Date().toISOString(),
-      config: config
+      config,
     };
 
     await fs.writeFile(reportPath, JSON.stringify(report, null, 2), 'utf-8');

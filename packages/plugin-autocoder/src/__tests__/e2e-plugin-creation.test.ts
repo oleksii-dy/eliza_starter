@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import {
   PluginCreationService,
   type PluginSpecification,
@@ -68,13 +68,19 @@ describe('E2E Plugin Creation Tests', () => {
     testOutputDir = path.join(process.cwd(), 'test-output', 'plugins', Date.now().toString());
 
     runtime = {
-      getSetting: vi.fn().mockImplementation((key: string) => {
-        if (key === 'PLUGIN_DATA_DIR') return testOutputDir;
-        if (key === 'ANTHROPIC_API_KEY') return process.env.ANTHROPIC_API_KEY || 'test-api-key';
-        if (key === 'CLAUDE_MODEL') return ClaudeModel.SONNET_3_5;
+      getSetting: mock().mockImplementation((key: string) => {
+        if (key === 'PLUGIN_DATA_DIR') {
+          return testOutputDir;
+        }
+        if (key === 'ANTHROPIC_API_KEY') {
+          return process.env.ANTHROPIC_API_KEY || 'test-api-key';
+        }
+        if (key === 'CLAUDE_MODEL') {
+          return ClaudeModel.SONNET_3_5;
+        }
         return null;
       }),
-      getService: vi.fn().mockReturnValue(null),
+      getService: mock().mockReturnValue(null),
       services: new Map(),
     } as any;
 

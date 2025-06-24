@@ -103,15 +103,16 @@ export class ResourceMonitorService extends Service {
     try {
       // Try to get disk usage for the current working directory
       const cwd = process.cwd();
-      
+
       // On Unix-like systems, check disk usage via statvfs
       if (process.platform !== 'win32') {
         try {
           // Try to read /proc/mounts to find the filesystem for cwd
           const mountsContent = await fs.readFile('/proc/mounts', 'utf8');
-          const mounts = mountsContent.split('\n')
-            .filter(line => line.includes('/'))
-            .map(line => {
+          const mounts = mountsContent
+            .split('\n')
+            .filter((line) => line.includes('/'))
+            .map((line) => {
               const parts = line.split(' ');
               return { device: parts[0], mountpoint: parts[1] };
             })
@@ -142,7 +143,7 @@ export class ResourceMonitorService extends Service {
                 if (lines.length >= 2) {
                   const parts = lines[1].split(/\s+/);
                   if (parts.length >= 5) {
-                    const usedPercentage = parseInt(parts[4].replace('%', ''));
+                    const usedPercentage = parseInt(parts[4].replace('%', ''), 10);
                     if (!isNaN(usedPercentage)) {
                       resolve(usedPercentage);
                       return;
@@ -186,7 +187,7 @@ export class ResourceMonitorService extends Service {
           `Caption="${driveLetter}:"`,
           'get',
           'Size,FreeSpace',
-          '/format:csv'
+          '/format:csv',
         ]);
 
         let output = '';
@@ -196,12 +197,12 @@ export class ResourceMonitorService extends Service {
 
         wmicProcess.on('close', (code: number) => {
           if (code === 0) {
-            const lines = output.split('\n').filter(line => line.includes(','));
+            const lines = output.split('\n').filter((line) => line.includes(','));
             if (lines.length > 0) {
               const parts = lines[0].split(',');
               if (parts.length >= 3) {
-                const freeSpace = parseInt(parts[1]);
-                const totalSpace = parseInt(parts[2]);
+                const freeSpace = parseInt(parts[1], 10);
+                const totalSpace = parseInt(parts[2], 10);
                 if (!isNaN(freeSpace) && !isNaN(totalSpace) && totalSpace > 0) {
                   const usedSpace = totalSpace - freeSpace;
                   const usagePercentage = Math.round((usedSpace / totalSpace) * 100);
@@ -231,17 +232,17 @@ export class ResourceMonitorService extends Service {
       const memUsage = process.memoryUsage();
       const totalMemory = os.totalmem();
       const memoryUsageRatio = memUsage.heapUsed / totalMemory;
-      
+
       // Estimate disk usage based on memory usage (very rough heuristic)
       // Assume disk usage correlates somewhat with memory usage
       const estimatedUsage = Math.min(90, Math.max(10, memoryUsageRatio * 100 + 20));
-      
+
       this.logger.debug('Using fallback disk usage estimation', {
         tmpDir,
         memoryUsageRatio,
-        estimatedUsage
+        estimatedUsage,
       });
-      
+
       return Math.round(estimatedUsage);
     } catch {
       // Ultimate fallback: return a conservative estimate

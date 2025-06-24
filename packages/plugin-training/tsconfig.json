@@ -14,15 +14,6 @@
     "sourceMap": true,
     "resolveJsonModule": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "scripts",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "atropos/**/*.py"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules", "scripts", "**/*.test.ts", "**/*.spec.ts", "atropos/**/*.py"]
 }

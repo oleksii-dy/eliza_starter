@@ -6,17 +6,7 @@ import { Badge } from './components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
 import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
-import { 
-  Globe, 
-  User, 
-  MapPin, 
-  Activity, 
-  Upload, 
-  Link,
-  Eye,
-  Move,
-  Hammer
-} from 'lucide-react';
+import { Globe, User, MapPin, Activity, Upload, Link, Eye, Move, Hammer } from 'lucide-react';
 
 interface WorldStatus {
   connected: boolean;
@@ -55,7 +45,7 @@ export function HyperfyDashboard() {
       const response = await fetch('/api/hyperfy/world-status');
       return response.json();
     },
-    refetchInterval: 5000
+    refetchInterval: 5000,
   });
 
   // Fetch agent status
@@ -65,7 +55,7 @@ export function HyperfyDashboard() {
       const response = await fetch('/api/hyperfy/agent-status');
       return response.json();
     },
-    refetchInterval: 1000
+    refetchInterval: 1000,
   });
 
   // Fetch avatar info
@@ -74,35 +64,45 @@ export function HyperfyDashboard() {
     queryFn: async () => {
       const response = await fetch('/api/hyperfy/avatar-info');
       return response.json();
-    }
+    },
   });
 
   const handleJoinWorld = async () => {
-    if (!worldUrl) return;
-    
+    if (!worldUrl) {
+      return;
+    }
+
     await fetch('/api/hyperfy/join-world', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: worldUrl })
+      body: JSON.stringify({ url: worldUrl }),
     });
   };
 
   const handleUploadAvatar = async () => {
-    if (!avatarFile) return;
+    if (!avatarFile) {
+      return;
+    }
 
     const formData = new FormData();
     formData.append('avatar', avatarFile);
 
     await fetch('/api/hyperfy/upload-avatar', {
       method: 'POST',
-      body: formData
+      body: formData,
     });
   };
 
   const getActionIcon = (action: string) => {
-    if (action.includes('PERCEPTION')) return <Eye className="w-4 h-4" />;
-    if (action.includes('GOTO') || action.includes('WALK')) return <Move className="w-4 h-4" />;
-    if (action.includes('EDIT') || action.includes('BUILD')) return <Hammer className="w-4 h-4" />;
+    if (action.includes('PERCEPTION')) {
+      return <Eye className="w-4 h-4" />;
+    }
+    if (action.includes('GOTO') || action.includes('WALK')) {
+      return <Move className="w-4 h-4" />;
+    }
+    if (action.includes('EDIT') || action.includes('BUILD')) {
+      return <Hammer className="w-4 h-4" />;
+    }
     return <Activity className="w-4 h-4" />;
   };
 
@@ -110,7 +110,7 @@ export function HyperfyDashboard() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Hyperfy Plugin Dashboard</h1>
-        <Badge variant={worldStatus?.connected ? 'default' : 'secondary'}>
+        <Badge variant={worldStatus?.connected ? 'success' : 'default'}>
           {worldStatus?.connected ? 'Connected' : 'Disconnected'}
         </Badge>
       </div>
@@ -139,9 +139,7 @@ export function HyperfyDashboard() {
                 <p className="text-sm">
                   <span className="font-medium">Players:</span> {worldStatus.playerCount}
                 </p>
-                <p className="text-sm text-muted-foreground truncate">
-                  {worldStatus.wsUrl}
-                </p>
+                <p className="text-sm text-muted-foreground truncate">{worldStatus.wsUrl}</p>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">Not connected to any world</p>
@@ -164,17 +162,11 @@ export function HyperfyDashboard() {
                 <div className="h-4 bg-gray-200 rounded w-full"></div>
                 <div className="h-4 bg-gray-200 rounded w-3/4"></div>
               </div>
-            ) : agentStatus ? (
+            ) : agentStatus && agentStatus.position ? (
               <div className="space-y-2">
-                <div className="font-mono text-sm">
-                  X: {agentStatus.position.x.toFixed(2)}
-                </div>
-                <div className="font-mono text-sm">
-                  Y: {agentStatus.position.y.toFixed(2)}
-                </div>
-                <div className="font-mono text-sm">
-                  Z: {agentStatus.position.z.toFixed(2)}
-                </div>
+                <div className="font-mono text-sm">X: {agentStatus.position.x.toFixed(2)}</div>
+                <div className="font-mono text-sm">Y: {agentStatus.position.y.toFixed(2)}</div>
+                <div className="font-mono text-sm">Z: {agentStatus.position.z.toFixed(2)}</div>
                 {agentStatus.currentAction && (
                   <div className="flex items-center gap-2 mt-3 pt-3 border-t">
                     {getActionIcon(agentStatus.currentAction)}
@@ -209,7 +201,7 @@ export function HyperfyDashboard() {
                   <p className="text-sm text-muted-foreground">Current avatar</p>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="avatar-upload">Upload new avatar</Label>
                 <div className="flex gap-2">
@@ -220,11 +212,7 @@ export function HyperfyDashboard() {
                     onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
                     className="flex-1"
                   />
-                  <Button 
-                    size="sm" 
-                    onClick={handleUploadAvatar}
-                    disabled={!avatarFile}
-                  >
+                  <Button size="sm" onClick={handleUploadAvatar} disabled={!avatarFile}>
                     <Upload className="w-4 h-4" />
                   </Button>
                 </div>
@@ -278,7 +266,7 @@ export function HyperfyDashboard() {
                   onChange={(e) => setWorldUrl(e.target.value)}
                 />
               </div>
-              <Button 
+              <Button
                 className="w-full"
                 onClick={handleJoinWorld}
                 disabled={!worldUrl || worldStatus?.connected}
@@ -289,7 +277,9 @@ export function HyperfyDashboard() {
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => window.open(`https://hyperfy.xyz/world/${worldStatus.worldId}`, '_blank')}
+                  onClick={() =>
+                    window.open(`https://hyperfy.xyz/world/${worldStatus.worldId}`, '_blank')
+                  }
                 >
                   Open in Browser
                 </Button>
@@ -300,4 +290,4 @@ export function HyperfyDashboard() {
       </div>
     </div>
   );
-} 
+}

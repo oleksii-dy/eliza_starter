@@ -291,4 +291,4 @@ export const hyperfyMultiAgentAdvancedScenario: Scenario = {
       }
     ]
   }
-}; 
+};

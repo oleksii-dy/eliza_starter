@@ -1,18 +1,18 @@
 import { type IAgentRuntime, type Plugin } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import { loadPluginAction } from '../../actions/loadPlugin.ts';
 import { unloadPluginAction } from '../../actions/unloadPlugin.ts';
 import { getPluginStateAction } from '../../actions/getPluginStateAction.ts';
 import { PluginManagerService } from '../../services/pluginManagerService.ts';
-import { PluginStatus } from '../../types.ts';
+import { PluginStatusValues } from '../../types.ts';
 
 // Mocks
 const createMockPlugin = (name: string): Plugin => ({
   name,
   description: `Mock ${name} plugin`,
-  actions: [{ name: `${name.toUpperCase()}_ACTION`, handler: vi.fn() } as any],
-  providers: [{ name: `${name}Provider`, get: vi.fn() } as any],
+  actions: [{ name: `${name.toUpperCase()}_ACTION`, handler: mock() } as any],
+  providers: [{ name: `${name}Provider`, get: mock() } as any],
 });
 
 const createMockRuntime = (): IAgentRuntime =>
@@ -23,13 +23,13 @@ const createMockRuntime = (): IAgentRuntime =>
     providers: [],
     evaluators: [],
     services: new Map(),
-    registerAction: vi.fn(),
-    registerProvider: vi.fn(),
-    registerEvaluator: vi.fn(),
-    getService: vi.fn(),
-    emitEvent: vi.fn(),
-    getSetting: vi.fn(),
-    useModel: vi.fn().mockResolvedValue('mock model response'),
+    registerAction: mock(),
+    registerProvider: mock(),
+    registerEvaluator: mock(),
+    getService: mock(),
+    emitEvent: mock(),
+    getSetting: mock(),
+    useModel: mock().mockResolvedValue('mock model response'),
   }) as any;
 
 describe('PluginManagerService (Consolidated)', () => {
@@ -39,8 +39,8 @@ describe('PluginManagerService (Consolidated)', () => {
   beforeEach(() => {
     runtime = createMockRuntime();
     pluginManager = new PluginManagerService(runtime);
-    vi.spyOn(runtime, 'getService').mockImplementation((name) => {
-      if (name === 'plugin_manager') return pluginManager as any;
+    spyOn(runtime, 'getService').mockImplementation((name) => {
+      if (name === 'plugin_manager') {return pluginManager as any;}
       return undefined;
     });
   });
@@ -57,7 +57,7 @@ describe('PluginManagerService (Consolidated)', () => {
       const plugins = newPluginManager.getAllPlugins();
       expect(plugins).toHaveLength(1);
       expect(plugins[0].name).toBe('existing');
-      expect(plugins[0].status).toBe(PluginStatus.LOADED);
+      expect(plugins[0].status).toBe(PluginStatusValues.LOADED);
     });
   });
 
@@ -67,8 +67,7 @@ describe('PluginManagerService (Consolidated)', () => {
   describe('GitHub Operations (Consolidated)', () => {
     it('should clone a repository using the consolidated method', async () => {
       // Mock the underlying implementation if needed, or let it run if it's simple
-      const cloneSpy = vi
-        .spyOn(pluginManager, 'cloneRepository')
+      const cloneSpy = spyOn(pluginManager, 'cloneRepository')
         .mockResolvedValue({ success: true, path: '/tmp/test' });
 
       const result = await pluginManager.cloneRepository(

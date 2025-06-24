@@ -4,7 +4,7 @@
  */
 
 import { logger } from '@elizaos/core';
-import type { IAgentRuntime, Memory, Content, UUID } from '@elizaos/core';
+import type { Memory, Content, UUID } from '@elizaos/core';
 import { EventEmitter } from 'events';
 
 export interface MessagePlatform {
@@ -289,6 +289,7 @@ export class LiveMessageBus extends EventEmitter {
       content: message.content,
       createdAt: message.timestamp,
       metadata: {
+        type: 'message' as const,
         platform: message.platform,
         originalMessageId: message.id,
         routedFrom: route.fromAgent,
@@ -311,7 +312,9 @@ export class LiveMessageBus extends EventEmitter {
     message: PlatformMessage,
     filters?: MessageRoute['filters']
   ): boolean {
-    if (!filters) return true;
+    if (!filters) {
+      return true;
+    }
 
     // Check message types
     if (filters.messageTypes && filters.messageTypes.length > 0) {
@@ -331,7 +334,9 @@ export class LiveMessageBus extends EventEmitter {
           return text.toLowerCase().includes(pattern.toLowerCase());
         }
       });
-      if (!hasMatch) return false;
+      if (!hasMatch) {
+        return false;
+      }
     }
 
     // Check time restrictions
@@ -407,7 +412,9 @@ export class LiveMessageBus extends EventEmitter {
    * Stop the message bus and clean up
    */
   async stop(): Promise<void> {
-    if (!this.isRunning) return;
+    if (!this.isRunning) {
+      return;
+    }
 
     this.isRunning = false;
 
@@ -497,7 +504,7 @@ export class MessageAnalytics {
   private platformStats: Map<string, PlatformStats> = new Map();
   private responseLatencies: number[] = [];
 
-  recordMessage(platform: string, channelId: string, senderId: string, content: Content): void {
+  recordMessage(platform: string, channelId: string, senderId: string, _content: Content): void {
     // Update message count
     const key = `${platform}:${channelId}:${senderId}`;
     this.messageStats.set(key, (this.messageStats.get(key) || 0) + 1);

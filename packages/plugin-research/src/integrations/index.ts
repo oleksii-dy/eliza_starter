@@ -15,4 +15,4 @@ export * from './rate-limiter';
 export * from './cache';
 
 // Factory for creating providers
-export * from './factory'; 
+export * from './factory';

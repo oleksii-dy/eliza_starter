@@ -74,13 +74,13 @@ CONFIDENCE: [0.0-1.0]`;
 
       const parseField = (prefix: string): string[] => {
         const line = lines.find((l) => l.startsWith(prefix));
-        if (!line) return [];
+        if (!line) {return [];}
         const value = line.substring(prefix.length).trim();
         return value
           ? value
-              .split(',')
-              .map((s) => s.trim())
-              .filter((s) => s.length > 0)
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0)
           : [];
       };
 

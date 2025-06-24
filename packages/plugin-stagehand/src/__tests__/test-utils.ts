@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { mock, spyOn } from 'bun:test';
 import {
   Content,
   IAgentRuntime,
@@ -9,11 +9,9 @@ import {
   UUID,
   logger,
 } from '@elizaos/core';
-import {
-  createMockRuntime as baseMockRuntime,
-  createMockMemory as baseMockMemory,
-  createMockState as baseMockState,
-} from '../../../core/src/test-utils/mocks/runtime';
+import { createMockRuntime as baseMockRuntime } from '../../../core/src/test-utils/mocks/runtime';
+import { createMockMemory as baseMockMemory } from '../../../core/src/test-utils/mocks/memory';
+import { createMockState as baseMockState } from '../../../core/src/test-utils/mocks/state';
 
 /**
  * Creates a mock runtime for testing stagehand components
@@ -37,7 +35,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     },
 
     // Model methods with stagehand-specific responses
-    useModel: vi.fn().mockImplementation((modelType, params) => {
+    useModel: mock().mockImplementation((modelType, params) => {
       if (modelType === ModelType.TEXT_SMALL) {
         return Promise.resolve('Never gonna give you up, never gonna let you down');
       } else if (modelType === ModelType.TEXT_LARGE) {
@@ -52,7 +50,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     }),
 
     // Additional methods for stagehand testing
-    init: vi.fn().mockResolvedValue(undefined),
+    init: mock().mockResolvedValue(undefined),
 
     ...overrides,
   });
@@ -100,7 +98,7 @@ export function setupTest(
   } = {}
 ) {
   // Create mock callback function
-  const callbackFn = vi.fn();
+  const callbackFn = mock();
 
   // Create a message
   const mockMessage = createMockMemory(overrides.messageOverrides);
@@ -126,9 +124,9 @@ export function setupTest(
  */
 export const createMockService = (overrides: Partial<Service> = {}): Service => {
   const mockService = {
-    start: vi.fn().mockResolvedValue(undefined),
-    stop: vi.fn().mockResolvedValue(undefined),
-    getCapabilities: vi.fn().mockReturnValue([]),
+    start: mock().mockResolvedValue(undefined),
+    stop: mock().mockResolvedValue(undefined),
+    getCapabilities: mock().mockReturnValue([]),
     ...overrides,
   } as unknown as Service;
 
@@ -145,11 +143,11 @@ export const createMockContent = (overrides: Partial<Content> = {}): Content => 
 
 // Add spy on logger for common usage in tests
 export function setupLoggerSpies() {
-  vi.spyOn(logger, 'info').mockImplementation(() => {});
-  vi.spyOn(logger, 'error').mockImplementation(() => {});
-  vi.spyOn(logger, 'warn').mockImplementation(() => {});
-  vi.spyOn(logger, 'debug').mockImplementation(() => {});
+  spyOn(logger, 'info').mockImplementation(() => {});
+  spyOn(logger, 'error').mockImplementation(() => {});
+  spyOn(logger, 'warn').mockImplementation(() => {});
+  spyOn(logger, 'debug').mockImplementation(() => {});
 
   // allow tests to restore originals
-  return () => vi.restoreAllMocks();
+  return () => mock.restore();
 }

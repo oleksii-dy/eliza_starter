@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test';
 import { AgentRuntime } from '../runtime';
 import {
   type Action,
@@ -22,34 +22,34 @@ describe('Runtime - Legacy Action Return Values', () => {
   beforeEach(() => {
     // Create mock adapter with all required methods
     mockAdapter = {
-      init: vi.fn().mockResolvedValue(undefined),
-      close: vi.fn().mockResolvedValue(undefined),
-      getAgent: vi.fn().mockResolvedValue(null),
-      getAgents: vi.fn().mockResolvedValue([]),
-      createAgent: vi.fn().mockResolvedValue(true),
-      updateAgent: vi.fn().mockResolvedValue(true),
-      deleteAgent: vi.fn().mockResolvedValue(true),
-      getEntityById: vi.fn().mockResolvedValue(null),
-      getEntitiesByIds: vi.fn().mockResolvedValue([]),
-      createEntity: vi.fn().mockResolvedValue(true),
-      createEntities: vi.fn().mockResolvedValue(true),
-      updateEntity: vi.fn().mockResolvedValue(undefined),
-      getParticipantsForRoom: vi.fn().mockResolvedValue([]),
-      addParticipantsRoom: vi.fn().mockResolvedValue(true),
-      removeParticipant: vi.fn().mockResolvedValue(true),
-      getRoom: vi.fn().mockResolvedValue(null),
-      getRoomsByIds: vi.fn().mockResolvedValue([]),
-      createRoom: vi.fn().mockResolvedValue(uuidv4()),
-      createRooms: vi.fn().mockResolvedValue([uuidv4()]),
-      deleteRoom: vi.fn().mockResolvedValue(undefined),
-      updateRoom: vi.fn().mockResolvedValue(undefined),
-      createMemory: vi.fn().mockResolvedValue(uuidv4()),
-      getMemories: vi.fn().mockResolvedValue([]),
-      searchMemories: vi.fn().mockResolvedValue([]),
-      log: vi.fn().mockResolvedValue(undefined),
-      getCache: vi.fn().mockResolvedValue(undefined),
-      setCache: vi.fn().mockResolvedValue(true),
-      deleteCache: vi.fn().mockResolvedValue(true),
+      init: mock().mockResolvedValue(undefined),
+      close: mock().mockResolvedValue(undefined),
+      getAgent: mock().mockResolvedValue(null),
+      getAgents: mock().mockResolvedValue([]),
+      createAgent: mock().mockResolvedValue(true),
+      updateAgent: mock().mockResolvedValue(true),
+      deleteAgent: mock().mockResolvedValue(true),
+      getEntityById: mock().mockResolvedValue(null),
+      getEntitiesByIds: mock().mockResolvedValue([]),
+      createEntity: mock().mockResolvedValue(true),
+      createEntities: mock().mockResolvedValue(true),
+      updateEntity: mock().mockResolvedValue(undefined),
+      getParticipantsForRoom: mock().mockResolvedValue([]),
+      addParticipantsRoom: mock().mockResolvedValue(true),
+      removeParticipant: mock().mockResolvedValue(true),
+      getRoom: mock().mockResolvedValue(null),
+      getRoomsByIds: mock().mockResolvedValue([]),
+      createRoom: mock().mockResolvedValue(uuidv4()),
+      createRooms: mock().mockResolvedValue([uuidv4()]),
+      deleteRoom: mock().mockResolvedValue(undefined),
+      updateRoom: mock().mockResolvedValue(undefined),
+      createMemory: mock().mockResolvedValue(uuidv4()),
+      getMemories: mock().mockResolvedValue([]),
+      searchMemories: mock().mockResolvedValue([]),
+      log: mock().mockResolvedValue(undefined),
+      getCache: mock().mockResolvedValue(undefined),
+      setCache: mock().mockResolvedValue(true),
+      deleteCache: mock().mockResolvedValue(true),
     };
 
     // Create runtime with mock character
@@ -80,7 +80,7 @@ describe('Runtime - Legacy Action Return Values', () => {
     };
 
     // Create mock callback
-    mockCallback = vi.fn().mockResolvedValue(undefined);
+    mockCallback = mock().mockResolvedValue(undefined);
   });
 
   describe('Void return handling', () => {
@@ -88,8 +88,8 @@ describe('Runtime - Legacy Action Return Values', () => {
       const voidAction: Action = {
         name: 'VOID_ACTION',
         description: 'Test action that returns void',
-        handler: vi.fn().mockResolvedValue(undefined),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockResolvedValue(undefined),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
@@ -127,13 +127,13 @@ describe('Runtime - Legacy Action Return Values', () => {
       const voidAction: Action = {
         name: 'VOID_ACTION',
         description: 'Test action that returns void',
-        handler: vi
-          .fn()
-          .mockImplementation(async (_runtime: IAgentRuntime, _message: Memory, state?: State) => {
+        handler: mock().mockImplementation(
+          async (_runtime: IAgentRuntime, _message: Memory, state?: State) => {
             capturedState = state;
             return undefined;
-          }),
-        validate: vi.fn().mockResolvedValue(true),
+          }
+        ),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
@@ -161,8 +161,8 @@ describe('Runtime - Legacy Action Return Values', () => {
       const nullAction: Action = {
         name: 'NULL_ACTION',
         description: 'Test action that returns null',
-        handler: vi.fn().mockResolvedValue(null),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockResolvedValue(null),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
@@ -200,8 +200,8 @@ describe('Runtime - Legacy Action Return Values', () => {
       const trueAction: Action = {
         name: 'TRUE_ACTION',
         description: 'Test action that returns true',
-        handler: vi.fn().mockResolvedValue(true),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockResolvedValue(true),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
@@ -237,8 +237,8 @@ describe('Runtime - Legacy Action Return Values', () => {
       const falseAction: Action = {
         name: 'FALSE_ACTION',
         description: 'Test action that returns false',
-        handler: vi.fn().mockResolvedValue(false),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockResolvedValue(false),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
@@ -278,28 +278,28 @@ describe('Runtime - Legacy Action Return Values', () => {
       const properAction: Action = {
         name: 'PROPER_ACTION',
         description: 'Test action that returns ActionResult',
-        handler: vi.fn().mockResolvedValue({
+        handler: mock().mockResolvedValue({
           values: { success: true },
           data: { processed: true },
           text: 'Action completed',
         } as ActionResult),
-        validate: vi.fn().mockResolvedValue(true),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
       const voidAction: Action = {
         name: 'VOID_ACTION',
         description: 'Test action that returns void',
-        handler: vi.fn().mockResolvedValue(undefined),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockResolvedValue(undefined),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
       const boolAction: Action = {
         name: 'BOOL_ACTION',
         description: 'Test action that returns boolean',
-        handler: vi.fn().mockResolvedValue(true),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockResolvedValue(true),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
@@ -359,13 +359,13 @@ describe('Runtime - Legacy Action Return Values', () => {
 
   describe('Working memory updates', () => {
     it('should not update working memory for legacy returns', async () => {
-      const updateWorkingMemorySpy = vi.spyOn(runtime as any, 'updateWorkingMemory');
+      const updateWorkingMemorySpy = spyOn(runtime as any, 'updateWorkingMemory');
 
       const voidAction: Action = {
         name: 'VOID_ACTION',
         description: 'Test action that returns void',
-        handler: vi.fn().mockResolvedValue(undefined),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockResolvedValue(undefined),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
@@ -388,16 +388,16 @@ describe('Runtime - Legacy Action Return Values', () => {
     });
 
     it('should update working memory for proper ActionResult returns', async () => {
-      const updateWorkingMemorySpy = vi.spyOn(runtime as any, 'updateWorkingMemory');
+      const updateWorkingMemorySpy = spyOn(runtime as any, 'updateWorkingMemory');
 
       const properAction: Action = {
         name: 'PROPER_ACTION',
         description: 'Test action that returns ActionResult',
-        handler: vi.fn().mockResolvedValue({
+        handler: mock().mockResolvedValue({
           values: { test: true },
           data: { result: 'success' },
         } as ActionResult),
-        validate: vi.fn().mockResolvedValue(true),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
@@ -432,8 +432,8 @@ describe('Runtime - Legacy Action Return Values', () => {
       const errorAction: Action = {
         name: 'ERROR_ACTION',
         description: 'Test action that throws',
-        handler: vi.fn().mockRejectedValue(new Error('Test error')),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockRejectedValue(new Error('Test error')),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
@@ -469,36 +469,36 @@ describe('Runtime - Legacy Action Return Values', () => {
       const action1: Action = {
         name: 'ACTION_1',
         description: 'Returns proper ActionResult',
-        handler: vi.fn().mockResolvedValue({
+        handler: mock().mockResolvedValue({
           values: { step1: 'completed' },
           data: { result1: true },
         } as ActionResult),
-        validate: vi.fn().mockResolvedValue(true),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
       const action2: Action = {
         name: 'ACTION_2',
         description: 'Returns void',
-        handler: vi.fn().mockResolvedValue(undefined),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockResolvedValue(undefined),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 
       const action3: Action = {
         name: 'ACTION_3',
         description: 'Returns proper ActionResult',
-        handler: vi
-          .fn()
-          .mockImplementation(async (_runtime: IAgentRuntime, _message: Memory, state?: State) => {
+        handler: mock().mockImplementation(
+          async (_runtime: IAgentRuntime, _message: Memory, state?: State) => {
             finalState = state;
 
             return {
               values: { step3: 'completed' },
               data: { result3: true },
             } as ActionResult;
-          }),
-        validate: vi.fn().mockResolvedValue(true),
+          }
+        ),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       };
 

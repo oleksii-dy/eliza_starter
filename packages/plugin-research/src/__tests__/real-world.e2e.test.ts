@@ -1,5 +1,5 @@
 import './test-setup'; // Load environment variables
-import { IAgentRuntime, Memory, elizaLogger } from '@elizaos/core';
+import { IAgentRuntime, Memory, logger } from '@elizaos/core';
 import { ResearchService } from '../service';
 import { ResearchProject, ResearchStatus, ResearchPhase } from '../types';
 
@@ -37,11 +37,11 @@ async function monitorResearch(
 
   while (Date.now() - startTime < timeout) {
     const project = await service.getProject(projectId);
-    if (!project) return null;
+    if (!project) {return null;}
 
     // Log phase changes
     if (project.phase !== lastPhase) {
-      elizaLogger.info(`Research phase: ${lastPhase || 'START'} → ${project.phase}`);
+      logger.info(`Research phase: ${lastPhase || 'START'} → ${project.phase}`);
       lastPhase = project.phase;
     }
 
@@ -65,10 +65,10 @@ async function monitorResearch(
 
 // Test 1: Research for Building a New Feature (Real Developer Workflow)
 export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Promise<void> {
-  elizaLogger.info('🔨 Starting Real-World Test: Feature Development Research');
+  logger.info('🔨 Starting Real-World Test: Feature Development Research');
 
   const service = runtime.getService<ResearchService>('research');
-  if (!service) throw new Error('Research service not available');
+  if (!service) {throw new Error('Research service not available');}
 
   // Scenario: Developer needs to implement WebSocket real-time features
   const queries = [
@@ -77,28 +77,24 @@ export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Pr
     'WebSocket authentication JWT security implementation examples',
   ];
 
-  elizaLogger.info('Researching WebSocket implementation across multiple aspects...');
+  logger.info('Researching WebSocket implementation across multiple aspects...');
 
   const projects = await Promise.all(
     queries.map((query, index) =>
       service.createResearchProject(query, {
         maxSearchResults: 3,
-        metadata: {
-          aspect: ['implementation', 'comparison', 'security'][index],
-          featureType: 'websocket',
-        },
       })
     )
   );
 
   // Monitor all projects
   const results = await Promise.all(
-    projects.map((project) =>
+    projects.map((project: any) =>
       monitorResearch(service, project.id, {
         timeout: 120000,
         onProgress: (p) => {
           if (p.findings.length > 0 && p.findings.length % 3 === 0) {
-            elizaLogger.info(
+            logger.info(
               `Project ${project.query.substring(0, 30)}... has ${p.findings.length} findings`
             );
           }
@@ -108,11 +104,11 @@ export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Pr
   );
 
   // Analyze combined results
-  const allFindings = results.flatMap((r) => r?.findings || []);
-  const allSources = results.flatMap((r) => r?.sources || []);
+  const allFindings = results.flatMap((r: any) => r?.findings || []);
+  const allSources = results.flatMap((r: any) => r?.sources || []);
 
   // Check for implementation details
-  const hasImplementationDetails = allFindings.some((f) => {
+  const hasImplementationDetails = allFindings.some((f: any) => {
     const content = f.content.toLowerCase();
     return (
       content.includes('const') ||
@@ -123,7 +119,7 @@ export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Pr
   });
 
   // Check for security considerations
-  const hasSecurityInfo = allFindings.some((f) => {
+  const hasSecurityInfo = allFindings.some((f: any) => {
     const content = f.content.toLowerCase();
     return (
       content.includes('auth') ||
@@ -134,7 +130,7 @@ export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Pr
   });
 
   // Check for performance insights
-  const hasPerformanceInfo = allFindings.some((f) => {
+  const hasPerformanceInfo = allFindings.some((f: any) => {
     const content = f.content.toLowerCase();
     return (
       content.includes('performance') ||
@@ -153,48 +149,44 @@ export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Pr
       s.url.includes('medium.com')
   );
 
-  elizaLogger.info('📊 Feature Development Research Results:');
-  elizaLogger.info(`- Total findings across aspects: ${allFindings.length}`);
-  elizaLogger.info(`- Implementation details found: ${hasImplementationDetails}`);
-  elizaLogger.info(`- Security considerations found: ${hasSecurityInfo}`);
-  elizaLogger.info(`- Performance insights found: ${hasPerformanceInfo}`);
-  elizaLogger.info(`- Developer-focused sources: ${devSources.length}/${allSources.length}`);
+  logger.info('📊 Feature Development Research Results:');
+  logger.info(`- Total findings across aspects: ${allFindings.length}`);
+  logger.info(`- Implementation details found: ${hasImplementationDetails}`);
+  logger.info(`- Security considerations found: ${hasSecurityInfo}`);
+  logger.info(`- Performance insights found: ${hasPerformanceInfo}`);
+  logger.info(`- Developer-focused sources: ${devSources.length}/${allSources.length}`);
 
   if (devSources.length > 0) {
-    elizaLogger.info(`- Sample dev source: ${devSources[0].title}`);
+    logger.info(`- Sample dev source: ${devSources[0].title}`);
   }
 
   // Simulate decision-making based on research
   if (hasImplementationDetails && hasSecurityInfo && hasPerformanceInfo) {
-    elizaLogger.success(
+    logger.success(
       '✅ Research provides comprehensive information for feature implementation'
     );
   } else {
-    elizaLogger.warn('⚠️  Some aspects missing - may need additional research');
+    logger.warn('⚠️  Some aspects missing - may need additional research');
   }
 
-  elizaLogger.success('✅ Real-World Test Passed: Feature Development Research');
+  logger.success('✅ Real-World Test Passed: Feature Development Research');
 }
 
 // Test 2: Research a Person for Hiring/Partnership (Real HR/Business Workflow)
 export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Promise<void> {
-  elizaLogger.info('👤 Starting Real-World Test: Person Background Research');
+  logger.info('👤 Starting Real-World Test: Person Background Research');
 
   const service = runtime.getService<ResearchService>('research');
-  if (!service) throw new Error('Research service not available');
+  if (!service) {throw new Error('Research service not available');}
 
   // Scenario: Researching a potential technical advisor or hire
   const personQuery = 'Andrej Karpathy AI research contributions Tesla OpenAI recent projects 2024';
 
   const project = await service.createResearchProject(personQuery, {
     maxSearchResults: 5,
-    metadata: {
-      researchType: 'person_background',
-      purpose: 'professional_evaluation',
-    },
   });
 
-  elizaLogger.info('Researching professional background...');
+  logger.info('Researching professional background...');
 
   const result = await monitorResearch(service, project.id, {
     timeout: 150000,
@@ -206,14 +198,14 @@ export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Prom
       const hasGitHub = sources.some((s) => s.includes('github'));
 
       if ((hasLinkedIn || hasTwitter || hasGitHub) && p.phase === ResearchPhase.SEARCHING) {
-        elizaLogger.info(
+        logger.info(
           `Found professional profiles: LinkedIn=${hasLinkedIn}, Twitter=${hasTwitter}, GitHub=${hasGitHub}`
         );
       }
     },
   });
 
-  if (!result) throw new Error('Person research failed to complete');
+  if (!result) {throw new Error('Person research failed to complete');}
 
   // Analyze findings for key information
   const findings = result.findings;
@@ -263,18 +255,18 @@ export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Prom
     );
   });
 
-  elizaLogger.info('📋 Person Background Research Results:');
-  elizaLogger.info(
+  logger.info('📋 Person Background Research Results:');
+  logger.info(
     `- Professional history coverage: Tesla=${hasTeslaInfo}, OpenAI=${hasOpenAIInfo}`
   );
-  elizaLogger.info(`- Education info found: ${hasEducation}`);
-  elizaLogger.info(`- Recent activity (2023-2024): ${hasRecentActivity}`);
-  elizaLogger.info(`- Technical contributions: ${hasTechnicalWork}`);
-  elizaLogger.info(`- Key achievements identified: ${achievements.length}`);
+  logger.info(`- Education info found: ${hasEducation}`);
+  logger.info(`- Recent activity (2023-2024): ${hasRecentActivity}`);
+  logger.info(`- Technical contributions: ${hasTechnicalWork}`);
+  logger.info(`- Key achievements identified: ${achievements.length}`);
 
   if (achievements.length > 0) {
     const sample = achievements[0].content.substring(0, 150);
-    elizaLogger.info(`- Sample achievement: "${sample}..."`);
+    logger.info(`- Sample achievement: "${sample}..."`);
   }
 
   // Professional assessment
@@ -287,22 +279,22 @@ export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Prom
   ].filter(Boolean).length;
 
   if (professionalScore >= 4) {
-    elizaLogger.success('✅ Comprehensive professional profile assembled');
+    logger.success('✅ Comprehensive professional profile assembled');
   } else if (professionalScore >= 2) {
-    elizaLogger.info('ℹ️  Partial professional profile - may need additional sources');
+    logger.info('ℹ️  Partial professional profile - may need additional sources');
   } else {
-    elizaLogger.warn('⚠️  Limited professional information found');
+    logger.warn('⚠️  Limited professional information found');
   }
 
-  elizaLogger.success('✅ Real-World Test Passed: Person Background Research');
+  logger.success('✅ Real-World Test Passed: Person Background Research');
 }
 
 // Test 3: Breaking News Research (Real Journalist/Analyst Workflow)
 export async function testBreakingNewsResearch(runtime: IAgentRuntime): Promise<void> {
-  elizaLogger.info('📰 Starting Real-World Test: Breaking News Research');
+  logger.info('📰 Starting Real-World Test: Breaking News Research');
 
   const service = runtime.getService<ResearchService>('research');
-  if (!service) throw new Error('Research service not available');
+  if (!service) {throw new Error('Research service not available');}
 
   // Scenario: Researching breaking AI news
   const newsQuery =
@@ -310,14 +302,9 @@ export async function testBreakingNewsResearch(runtime: IAgentRuntime): Promise<
 
   const project = await service.createResearchProject(newsQuery, {
     maxSearchResults: 6,
-    metadata: {
-      researchType: 'breaking_news',
-      timeframe: 'current',
-      industry: 'AI/ML',
-    },
   });
 
-  elizaLogger.info('Scanning for breaking AI news...');
+  logger.info('Scanning for breaking AI news...');
 
   const result = await monitorResearch(service, project.id, {
     timeout: 150000,
@@ -336,13 +323,13 @@ export async function testBreakingNewsResearch(runtime: IAgentRuntime): Promise<
         });
 
         if (newsSources.length > 0) {
-          elizaLogger.info(`Found ${newsSources.length} news sources`);
+          logger.info(`Found ${newsSources.length} news sources`);
         }
       }
     },
   });
 
-  if (!result) throw new Error('News research failed to complete');
+  if (!result) {throw new Error('News research failed to complete');}
 
   // Analyze news findings
   const findings = result.findings;
@@ -414,18 +401,18 @@ export async function testBreakingNewsResearch(runtime: IAgentRuntime): Promise<
     companyMentions[company] = findings.filter((f) => f.content.includes(company)).length;
   });
 
-  elizaLogger.info('📊 Breaking News Research Results:');
-  elizaLogger.info(`- Source distribution:`);
-  elizaLogger.info(`  * Mainstream media: ${newsSourceTypes.mainstream.length}`);
-  elizaLogger.info(`  * Tech media: ${newsSourceTypes.tech.length}`);
-  elizaLogger.info(`  * AI companies: ${newsSourceTypes.ai_specific.length}`);
-  elizaLogger.info(`  * Social media: ${newsSourceTypes.social.length}`);
-  elizaLogger.info(`- Timeliness indicators:`);
-  elizaLogger.info(`  * Current month mentioned: ${hasCurrentMonth}`);
-  elizaLogger.info(`  * Current year mentioned: ${hasCurrentYear}`);
-  elizaLogger.info(`  * Time-sensitive words: ${hasTimeWords}`);
-  elizaLogger.info(`- Announcements found: ${announcements.length}`);
-  elizaLogger.info(
+  logger.info('📊 Breaking News Research Results:');
+  logger.info('- Source distribution:');
+  logger.info(`  * Mainstream media: ${newsSourceTypes.mainstream.length}`);
+  logger.info(`  * Tech media: ${newsSourceTypes.tech.length}`);
+  logger.info(`  * AI companies: ${newsSourceTypes.ai_specific.length}`);
+  logger.info(`  * Social media: ${newsSourceTypes.social.length}`);
+  logger.info('- Timeliness indicators:');
+  logger.info(`  * Current month mentioned: ${hasCurrentMonth}`);
+  logger.info(`  * Current year mentioned: ${hasCurrentYear}`);
+  logger.info(`  * Time-sensitive words: ${hasTimeWords}`);
+  logger.info(`- Announcements found: ${announcements.length}`);
+  logger.info(
     `- Company mentions: ${Object.entries(companyMentions)
       .filter(([_, count]) => count > 0)
       .map(([company, count]) => `${company}=${count}`)
@@ -434,7 +421,7 @@ export async function testBreakingNewsResearch(runtime: IAgentRuntime): Promise<
 
   if (announcements.length > 0) {
     const latestAnnouncement = announcements[0].content.substring(0, 200);
-    elizaLogger.info(`- Latest announcement: "${latestAnnouncement}..."`);
+    logger.info(`- Latest announcement: "${latestAnnouncement}..."`);
   }
 
   // News quality assessment
@@ -444,22 +431,22 @@ export async function testBreakingNewsResearch(runtime: IAgentRuntime): Promise<
   const hasAnnouncements = announcements.length > 0;
 
   if (hasRecentNews && hasDiverseSources && hasAnnouncements) {
-    elizaLogger.success('✅ High-quality breaking news coverage achieved');
+    logger.success('✅ High-quality breaking news coverage achieved');
   } else {
-    elizaLogger.info(
+    logger.info(
       `ℹ️  News coverage: Recent=${hasRecentNews}, Diverse=${hasDiverseSources}, Announcements=${hasAnnouncements}`
     );
   }
 
-  elizaLogger.success('✅ Real-World Test Passed: Breaking News Research');
+  logger.success('✅ Real-World Test Passed: Breaking News Research');
 }
 
 // Test 4: Market/Competitive Intelligence (Real Business Strategy Workflow)
 export async function testMarketIntelligenceResearch(runtime: IAgentRuntime): Promise<void> {
-  elizaLogger.info('📈 Starting Real-World Test: Market Intelligence Research');
+  logger.info('📈 Starting Real-World Test: Market Intelligence Research');
 
   const service = runtime.getService<ResearchService>('research');
-  if (!service) throw new Error('Research service not available');
+  if (!service) {throw new Error('Research service not available');}
 
   // Scenario: Analyzing the AI agent framework market
   const marketQuery =
@@ -467,25 +454,20 @@ export async function testMarketIntelligenceResearch(runtime: IAgentRuntime): Pr
 
   const project = await service.createResearchProject(marketQuery, {
     maxSearchResults: 5,
-    metadata: {
-      researchType: 'market_intelligence',
-      competitors: ['LangChain', 'AutoGPT', 'CrewAI'],
-      analysisType: 'competitive',
-    },
   });
 
-  elizaLogger.info('Conducting market intelligence analysis...');
+  logger.info('Conducting market intelligence analysis...');
 
   const result = await monitorResearch(service, project.id, {
     timeout: 180000,
     onProgress: (p) => {
       if (p.phase === ResearchPhase.ANALYZING && p.findings.length > 5) {
-        elizaLogger.info(`Analyzing ${p.findings.length} market data points...`);
+        logger.info(`Analyzing ${p.findings.length} market data points...`);
       }
     },
   });
 
-  if (!result) throw new Error('Market research failed to complete');
+  if (!result) {throw new Error('Market research failed to complete');}
 
   // Market analysis
   const findings = result.findings;
@@ -516,10 +498,10 @@ export async function testMarketIntelligenceResearch(runtime: IAgentRuntime): Pr
 
       // Extract features
       if (content.includes('feature') || content.includes('capability')) {
-        if (content.includes('memory')) features.push('memory');
-        if (content.includes('tool') || content.includes('function')) features.push('tools');
-        if (content.includes('chain') || content.includes('workflow')) features.push('workflow');
-        if (content.includes('llm') || content.includes('model')) features.push('multi-llm');
+        if (content.includes('memory')) {features.push('memory');}
+        if (content.includes('tool') || content.includes('function')) {features.push('tools');}
+        if (content.includes('chain') || content.includes('workflow')) {features.push('workflow');}
+        if (content.includes('llm') || content.includes('model')) {features.push('multi-llm');}
       }
 
       // Check for pricing info
@@ -580,18 +562,18 @@ export async function testMarketIntelligenceResearch(runtime: IAgentRuntime): Pr
     );
   });
 
-  elizaLogger.info('📊 Market Intelligence Results:');
-  elizaLogger.info('- Competitor Analysis:');
+  logger.info('📊 Market Intelligence Results:');
+  logger.info('- Competitor Analysis:');
   Object.entries(competitorData).forEach(([competitor, data]) => {
     if (data.mentions > 0) {
-      elizaLogger.info(
+      logger.info(
         `  * ${competitor}: ${data.mentions} mentions, features=[${data.features.join(',')}], pricing=${data.pricing}, adoption=${data.adoption}`
       );
     }
   });
-  elizaLogger.info(`- Market trends identified: ${trendsFound.join(', ')}`);
-  elizaLogger.info(`- Comparative analysis found: ${hasComparisons}`);
-  elizaLogger.info(`- Use cases documented: ${useCases.length}`);
+  logger.info(`- Market trends identified: ${trendsFound.join(', ')}`);
+  logger.info(`- Comparative analysis found: ${hasComparisons}`);
+  logger.info(`- Use cases documented: ${useCases.length}`);
 
   // Strategic insights
   const wellCoveredCompetitors = Object.entries(competitorData)
@@ -602,21 +584,21 @@ export async function testMarketIntelligenceResearch(runtime: IAgentRuntime): Pr
     wellCoveredCompetitors.length >= 2 && hasComparisons && useCases.length > 0;
 
   if (hasComprehensiveData) {
-    elizaLogger.success('✅ Comprehensive market intelligence gathered');
-    elizaLogger.info(`Key competitors analyzed: ${wellCoveredCompetitors.join(', ')}`);
+    logger.success('✅ Comprehensive market intelligence gathered');
+    logger.info(`Key competitors analyzed: ${wellCoveredCompetitors.join(', ')}`);
   } else {
-    elizaLogger.info('ℹ️  Partial market intelligence - consider additional research');
+    logger.info('ℹ️  Partial market intelligence - consider additional research');
   }
 
-  elizaLogger.success('✅ Real-World Test Passed: Market Intelligence Research');
+  logger.success('✅ Real-World Test Passed: Market Intelligence Research');
 }
 
 // Test 5: Technical Problem Solving Research (Real Developer Debug Workflow)
 export async function testProblemSolvingResearch(runtime: IAgentRuntime): Promise<void> {
-  elizaLogger.info('🔧 Starting Real-World Test: Technical Problem Solving Research');
+  logger.info('🔧 Starting Real-World Test: Technical Problem Solving Research');
 
   const service = runtime.getService<ResearchService>('research');
-  if (!service) throw new Error('Research service not available');
+  if (!service) {throw new Error('Research service not available');}
 
   // Scenario: Debugging a complex technical issue
   const problemQuery =
@@ -624,14 +606,9 @@ export async function testProblemSolvingResearch(runtime: IAgentRuntime): Promis
 
   const project = await service.createResearchProject(problemQuery, {
     maxSearchResults: 4,
-    metadata: {
-      researchType: 'debugging',
-      problemType: 'runtime_error',
-      technology: 'JavaScript',
-    },
   });
 
-  elizaLogger.info('Researching technical problem solutions...');
+  logger.info('Researching technical problem solutions...');
 
   const result = await monitorResearch(service, project.id, {
     timeout: 120000,
@@ -639,12 +616,12 @@ export async function testProblemSolvingResearch(runtime: IAgentRuntime): Promis
       // Look for Stack Overflow as it appears
       const hasStackOverflow = p.sources.some((s) => s.url.includes('stackoverflow.com'));
       if (hasStackOverflow && p.sources.length === 1) {
-        elizaLogger.info('Found Stack Overflow - good sign for debugging!');
+        logger.info('Found Stack Overflow - good sign for debugging!');
       }
     },
   });
 
-  if (!result) throw new Error('Problem solving research failed to complete');
+  if (!result) {throw new Error('Problem solving research failed to complete');}
 
   // Analyze debugging findings
   const findings = result.findings;
@@ -715,25 +692,25 @@ export async function testProblemSolvingResearch(runtime: IAgentRuntime): Promis
     );
   });
 
-  elizaLogger.info('🔍 Problem Solving Research Results:');
-  elizaLogger.info('- Source distribution:');
-  elizaLogger.info(`  * Stack Overflow: ${debuggingSources.stackoverflow.length}`);
-  elizaLogger.info(`  * GitHub Issues: ${debuggingSources.github.length}`);
-  elizaLogger.info(`  * Documentation: ${debuggingSources.documentation.length}`);
-  elizaLogger.info(`  * Technical Blogs: ${debuggingSources.blogs.length}`);
-  elizaLogger.info(`- Solutions found: ${hasSolutions.length}`);
-  elizaLogger.info(`- Code examples: ${hasCodeExamples.length}`);
-  elizaLogger.info(`- Explanations: ${hasExplanations.length}`);
-  elizaLogger.info(`- Similar issues: ${similarIssues.length}`);
+  logger.info('🔍 Problem Solving Research Results:');
+  logger.info('- Source distribution:');
+  logger.info(`  * Stack Overflow: ${debuggingSources.stackoverflow.length}`);
+  logger.info(`  * GitHub Issues: ${debuggingSources.github.length}`);
+  logger.info(`  * Documentation: ${debuggingSources.documentation.length}`);
+  logger.info(`  * Technical Blogs: ${debuggingSources.blogs.length}`);
+  logger.info(`- Solutions found: ${hasSolutions.length}`);
+  logger.info(`- Code examples: ${hasCodeExamples.length}`);
+  logger.info(`- Explanations: ${hasExplanations.length}`);
+  logger.info(`- Similar issues: ${similarIssues.length}`);
 
   // Extract a solution if found
   if (hasSolutions.length > 0 && hasCodeExamples.length > 0) {
-    elizaLogger.success('✅ Found solutions with code examples!');
+    logger.success('✅ Found solutions with code examples!');
 
     // Find the most relevant solution
     const bestSolution = hasSolutions.sort((a, b) => b.relevance - a.relevance)[0];
     const preview = bestSolution.content.substring(0, 250);
-    elizaLogger.info(`Top solution preview: "${preview}..."`);
+    logger.info(`Top solution preview: "${preview}..."`);
   }
 
   // Problem solving quality
@@ -743,14 +720,14 @@ export async function testProblemSolvingResearch(runtime: IAgentRuntime): Promis
   const hasContext = hasExplanations.length > 0;
 
   if (hasGoodSources && hasGoodContent && hasContext) {
-    elizaLogger.success('✅ Comprehensive debugging information found');
+    logger.success('✅ Comprehensive debugging information found');
   } else {
-    elizaLogger.info(
+    logger.info(
       `ℹ️  Debugging info: Sources=${hasGoodSources}, Solutions=${hasGoodContent}, Context=${hasContext}`
     );
   }
 
-  elizaLogger.success('✅ Real-World Test Passed: Technical Problem Solving Research');
+  logger.success('✅ Real-World Test Passed: Technical Problem Solving Research');
 }
 
 // Export all tests as a TestSuite for the ElizaOS test runner

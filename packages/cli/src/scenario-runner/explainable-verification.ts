@@ -128,7 +128,7 @@ export class ExplainableVerificationEngine {
       stage,
       input: `${context.transcript.length} messages`,
       transformations,
-      output: `Processed conversation data`,
+      output: 'Processed conversation data',
     });
   }
 
@@ -341,7 +341,7 @@ export class ExplainableVerificationEngine {
   // Helper methods
   private summarizeInput(input: any): string {
     if (typeof input === 'object') {
-      return JSON.stringify(input, null, 2).substring(0, 200) + '...';
+      return `${JSON.stringify(input, null, 2).substring(0, 200)}...`;
     }
     return String(input).substring(0, 200);
   }
@@ -352,27 +352,40 @@ export class ExplainableVerificationEngine {
 
   private extractRequirements(rule: any): string[] {
     const requirements: string[] = [];
-    if (rule.config?.minMessages) requirements.push(`At least ${rule.config.minMessages} messages`);
-    if (rule.config?.maxMessages) requirements.push(`At most ${rule.config.maxMessages} messages`);
-    if (rule.config?.requiredKeywords)
+    if (rule.config?.minMessages) {
+      requirements.push(`At least ${rule.config.minMessages} messages`);
+    }
+    if (rule.config?.maxMessages) {
+      requirements.push(`At most ${rule.config.maxMessages} messages`);
+    }
+    if (rule.config?.requiredKeywords) {
       requirements.push(`Contains keywords: ${rule.config.requiredKeywords.join(', ')}`);
+    }
     return requirements;
   }
 
   private extractConstraints(rule: any): string[] {
     const constraints: string[] = [];
-    if (rule.config?.maxResponseTimeMs)
+    if (rule.config?.maxResponseTimeMs) {
       constraints.push(`Response time under ${rule.config.maxResponseTimeMs}ms`);
-    if (rule.config?.forbiddenKeywords)
+    }
+    if (rule.config?.forbiddenKeywords) {
       constraints.push(`Must not contain: ${rule.config.forbiddenKeywords.join(', ')}`);
+    }
     return constraints;
   }
 
   private calculateRuleComplexity(rule: any): number {
     let complexity = 0;
-    if (rule.config?.minMessages || rule.config?.maxMessages) complexity += 1;
-    if (rule.config?.requiredKeywords?.length) complexity += rule.config.requiredKeywords.length;
-    if (rule.config?.forbiddenKeywords?.length) complexity += rule.config.forbiddenKeywords.length;
+    if (rule.config?.minMessages || rule.config?.maxMessages) {
+      complexity += 1;
+    }
+    if (rule.config?.requiredKeywords?.length) {
+      complexity += rule.config.requiredKeywords.length;
+    }
+    if (rule.config?.forbiddenKeywords?.length) {
+      complexity += rule.config.forbiddenKeywords.length;
+    }
     return complexity;
   }
 
@@ -393,9 +406,15 @@ export class ExplainableVerificationEngine {
   }
 
   private analyzeConversationFlow(context: ScenarioContext): string {
-    if (context.transcript.length < 2) return 'insufficient_data';
-    if (context.transcript.length < 5) return 'brief_exchange';
-    if (context.transcript.length < 15) return 'moderate_conversation';
+    if (context.transcript.length < 2) {
+      return 'insufficient_data';
+    }
+    if (context.transcript.length < 5) {
+      return 'brief_exchange';
+    }
+    if (context.transcript.length < 15) {
+      return 'moderate_conversation';
+    }
     return 'extended_conversation';
   }
 

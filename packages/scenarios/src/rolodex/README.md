@@ -9,15 +9,17 @@ These scenarios use the ElizaOS CLI scenario runner to spin up multiple agents (
 ## Scenarios
 
 ### 1. Entity Introduction and Extraction (`entity-introduction.ts`)
+
 - **Agents**: 5 (4 professionals + 1 tracker)
 - **Duration**: 20 seconds
-- **Tests**: 
+- **Tests**:
   - Basic entity extraction from introductions
   - Professional information capture (roles, companies, social media)
   - Entity search functionality
   - Metadata extraction
 
 ### 2. Relationship Building and Evolution (`relationship-building.ts`)
+
 - **Agents**: 6 (5 team members + 1 tracker)
 - **Duration**: 25 seconds
 - **Tests**:
@@ -27,6 +29,7 @@ These scenarios use the ElizaOS CLI scenario runner to spin up multiple agents (
   - Complex relationship queries
 
 ### 3. Trust Evolution and Security (`trust-evolution.ts`)
+
 - **Agents**: 7 (4 trusted + 2 adversaries + 1 monitor)
 - **Duration**: 20 seconds
 - **Tests**:
@@ -36,6 +39,7 @@ These scenarios use the ElizaOS CLI scenario runner to spin up multiple agents (
   - Phishing and credential request detection
 
 ### 4. Complex Professional Network (`complex-network.ts`)
+
 - **Agents**: 10 professionals + 1 analyzer
 - **Duration**: 20 seconds
 - **Tests**:
@@ -45,6 +49,7 @@ These scenarios use the ElizaOS CLI scenario runner to spin up multiple agents (
   - Network analysis and connectivity queries
 
 ### 5. Follow-up Scheduling and Management (`follow-up-management.ts`)
+
 - **Agents**: 8 (7 team members + 1 tracker)
 - **Duration**: 20 seconds
 - **Tests**:
@@ -84,30 +89,35 @@ Each scenario includes LLM-based verification rules that check:
 ## Expected Outcomes
 
 ### Entity Introduction
+
 - All 4 professionals tracked with metadata
 - Companies and roles extracted
 - Social media handles captured
 - Search queries work correctly
 
 ### Relationship Building
+
 - 8+ relationships identified
 - Different relationship types recognized
 - Strength varies by interaction frequency
 - Mentor-mentee relationship for Bob-Eve
 
 ### Trust Evolution
+
 - Alice, Bob, Carol have high trust (>0.7)
 - Eve, Grace have low trust (<0.3)
 - Frank has neutral trust (~0.5)
 - Suspicious behaviors flagged
 
 ### Complex Network
+
 - 10 entities tracked
 - 15+ relationships mapped
 - Entity resolution handles @mentions
 - Network hubs identified (Alice, Bob, Carol)
 
 ### Follow-up Management
+
 - 5+ follow-ups scheduled
 - Different priority levels assigned
 - Time-based scheduling captured
@@ -173,4 +183,4 @@ If scenarios fail:
 - Cross-room entity tracking
 - Long-term relationship evolution
 - Group dynamics and team formation
-- Conflict resolution and trust recovery 
+- Conflict resolution and trust recovery

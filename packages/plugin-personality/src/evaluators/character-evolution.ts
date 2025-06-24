@@ -3,7 +3,6 @@ import {
   type IAgentRuntime,
   type Memory,
   type State,
-  type Character,
   ModelType,
   logger,
   EvaluationExample,
@@ -65,7 +64,7 @@ export const characterEvolutionEvaluator: Evaluator = {
     const now = Date.now();
     const cooldownMs = 5 * 60 * 1000; // 5 minutes between evaluations
 
-    if (lastEvolution && now - parseInt(lastEvolution) < cooldownMs) {
+    if (lastEvolution && now - parseInt(lastEvolution, 10) < cooldownMs) {
       return false;
     }
 
@@ -137,7 +136,7 @@ Return JSON: {"hasEvolutionTrigger": boolean, "triggerType": string, "reasoning"
           confidence: triggerAnalysis.confidence,
         });
       }
-    } catch (error) {
+    } catch {
       // Fallback to basic pattern matching if LLM analysis fails
       hasEvolutionTriggers = recentMessages.some((msg) => {
         const text = msg.content.text?.toLowerCase() || '';
@@ -156,7 +155,7 @@ Return JSON: {"hasEvolutionTrigger": boolean, "triggerType": string, "reasoning"
     return hasEvolutionTriggers;
   },
 
-  handler: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<void> => {
+  handler: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<void> => {
     try {
       await runtime.setCache('character-evolution:last-check', Date.now().toString());
 

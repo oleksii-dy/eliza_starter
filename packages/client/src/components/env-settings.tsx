@@ -73,7 +73,9 @@ export default function EnvSettings() {
   };
 
   const addEnv = () => {
-    if (!name || !value) return;
+    if (!name || !value) {
+      return;
+    }
 
     setLocalEnvs({
       ...localEnvs,
@@ -162,7 +164,7 @@ export default function EnvSettings() {
               )}
 
               <div className="mt-2">
-                {Object.entries(localEnvs).map(([key, value], index) => (
+                {Object.entries(localEnvs).map(([key, _value], index) => (
                   <div
                     key={index}
                     className="grid grid-cols-[1fr_2fr_auto] gap-4 items-center border-b py-2 ml-1 relative"
@@ -230,29 +232,29 @@ export default function EnvSettings() {
           Reset
         </Button>
         <Button
-            type="submit"
-            disabled={isUpdating}
-            onClick={async () => {
-              setIsUpdating(true);
-              try {
-                await apiClient.updateLocalEnvs(localEnvs);
-                toast({
-                  title: 'Success',
-                  description: 'Environment variables updated successfully!',
-                });
-              } catch (error) {
-                toast({
-                  title: 'Error',
-                  description: 'Failed to update environment variables.',
-                  variant: 'destructive',
-                });
-              } finally {
-                setIsUpdating(false);
-              }
-            }}            
-          >
-            Save Changes
-          </Button>
+          type="submit"
+          disabled={isUpdating}
+          onClick={async () => {
+            setIsUpdating(true);
+            try {
+              await apiClient.updateLocalEnvs(localEnvs);
+              toast({
+                title: 'Success',
+                description: 'Environment variables updated successfully!',
+              });
+            } catch {
+              toast({
+                title: 'Error',
+                description: 'Failed to update environment variables.',
+                variant: 'destructive',
+              });
+            } finally {
+              setIsUpdating(false);
+            }
+          }}
+        >
+          Save Changes
+        </Button>
       </div>
     </div>
   );

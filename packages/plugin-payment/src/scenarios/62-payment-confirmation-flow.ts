@@ -35,17 +35,17 @@ const paymentConfirmationFlowScenario: Scenario = {
 
   // Add evaluator function for test compatibility
   evaluator: (response: string) => {
-    const hasVerificationMention = 
+    const hasVerificationMention =
       response.toLowerCase().includes('verification') ||
       response.toLowerCase().includes('confirm') ||
       response.toLowerCase().includes('code') ||
       response.toLowerCase().includes('security');
-    
-    const hasPaymentMention = 
+
+    const hasPaymentMention =
       response.toLowerCase().includes('payment') ||
       response.toLowerCase().includes('transaction') ||
       response.toLowerCase().includes('usdc');
-    
+
     return hasVerificationMention || hasPaymentMention;
   },
 

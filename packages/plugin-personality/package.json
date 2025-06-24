@@ -8,8 +8,9 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "bun test",
-    "test:e2e": "elizaos test --type e2e"
+    "test": "elizaos test",
+    "lint": "eslint src --ext .ts,.js",
+    "lint:fix": "eslint src --ext .ts,.js --fix"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",
@@ -20,8 +21,7 @@
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^20.11.5",
     "tsup": "^8.0.1",
-    "typescript": "^5.3.3",
-    "vitest": "^1.2.0"
+    "typescript": "5.8.3"
   },
   "keywords": [
     "elizaos",

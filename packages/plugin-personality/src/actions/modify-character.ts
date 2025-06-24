@@ -1,5 +1,7 @@
 import {
   type Action,
+  type ActionExample,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
@@ -17,9 +19,9 @@ export const modifyCharacterAction: Action = {
   name: 'MODIFY_CHARACTER',
   similes: ['UPDATE_PERSONALITY', 'CHANGE_BEHAVIOR', 'EVOLVE_CHARACTER', 'SELF_MODIFY'],
   description:
-    "Modifies the agent's character file to evolve personality, knowledge, and behavior patterns",
+    "Modifies the agent's character file to evolve personality, knowledge, and behavior patterns. Supports action chaining by providing modification metadata for audit trails, backup creation, or notification workflows.",
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     // Check if character file manager service is available
     const fileManager = runtime.getService<CharacterFileManager>('character-file-manager');
     if (!fileManager) {
@@ -137,7 +139,7 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
     state?: State,
     options?: any,
     callback?: HandlerCallback
-  ): Promise<any> => {
+  ): Promise<ActionResult> => {
     try {
       const fileManager = runtime.getService<CharacterFileManager>('character-file-manager');
       if (!fileManager) {
@@ -180,7 +182,11 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
           text: "I don't see any clear modification instructions. Could you be more specific about how you'd like me to change?",
           thought: 'No valid modification found',
         });
-        return { success: false, reason: 'No modification instructions found' };
+        return {
+          text: "I don't see any clear modification instructions. Could you be more specific about how you'd like me to change?",
+          values: { success: false, error: 'no_modification_found' },
+          data: { action: 'MODIFY_CHARACTER' }
+        };
       }
 
       // Evaluate modification safety and appropriateness
@@ -214,7 +220,7 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
           await callback?.({
             text: responseText,
             thought: `Rejected modification due to safety concerns: ${safetyEvaluation.concerns.join(', ')}`,
-            actions: [] // Explicitly no actions to show rejection
+            actions: [], // Explicitly no actions to show rejection
           });
 
           logger.warn('Modification completely rejected by safety evaluation', {
@@ -225,9 +231,17 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
 
           return {
             text: responseText,
-            success: false,
-            reason: 'Modification rejected for safety reasons',
-            concerns: safetyEvaluation.concerns,
+            values: {
+              success: false,
+              error: 'safety_rejection',
+              concerns: safetyEvaluation.concerns
+            },
+            data: {
+              action: 'MODIFY_CHARACTER',
+              rejectionReason: 'safety_concerns',
+              concerns: safetyEvaluation.concerns,
+              reasoning: safetyEvaluation.reasoning
+            }
           };
         }
       } else {
@@ -244,7 +258,19 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
           text: `I can't make those changes because: ${validation.errors.join(', ')}`,
           thought: 'Modification validation failed',
         });
-        return { success: false, errors: validation.errors };
+        return {
+          text: `I can't make those changes because: ${validation.errors.join(', ')}`,
+          values: {
+            success: false,
+            error: 'validation_failed',
+            validationErrors: validation.errors
+          },
+          data: {
+            action: 'MODIFY_CHARACTER',
+            errorType: 'validation_error',
+            validationErrors: validation.errors
+          }
+        };
       }
 
       // Apply the modification
@@ -283,16 +309,41 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
         );
 
         return {
-          success: true,
-          modification,
-          summary: modificationSummary,
+          text: `I've successfully updated my character. ${modificationSummary}`,
+          values: {
+            success: true,
+            modificationsApplied: true,
+            summary: modificationSummary,
+            fieldsModified: Object.keys(modification)
+          },
+          data: {
+            action: 'MODIFY_CHARACTER',
+            modificationData: {
+              modification,
+              summary: modificationSummary,
+              isUserRequested,
+              timestamp: Date.now(),
+              requesterId: message.entityId
+            }
+          }
         };
       } else {
         await callback?.({
           text: `I couldn't update my character: ${result.error}`,
           thought: 'Character modification failed',
         });
-        return { success: false, error: result.error };
+        return {
+          text: `I couldn't update my character: ${result.error}`,
+          values: {
+            success: false,
+            error: result.error
+          },
+          data: {
+            action: 'MODIFY_CHARACTER',
+            errorType: 'file_modification_failed',
+            errorDetails: result.error
+          }
+        };
       }
     } catch (error) {
       logger.error('Error in modify character action', error);
@@ -302,18 +353,29 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
         thought: `Error in character modification: ${(error as Error).message}`,
       });
 
-      return { success: false, error: (error as Error).message };
+      return {
+        text: 'I encountered an error while trying to modify my character. Please try again.',
+        values: {
+          success: false,
+          error: (error as Error).message
+        },
+        data: {
+          action: 'MODIFY_CHARACTER',
+          errorType: 'character_modification_error',
+          errorDetails: (error as Error).stack
+        }
+      };
     }
   },
 
   examples: [
     [
       {
-        name: 'User',
+        name: '{{user}}',
         content: { text: 'You should be more encouraging when helping people learn' },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
           text: "I've successfully updated my character. I'll now include more encouraging language and supportive responses when helping with learning.",
           actions: ['MODIFY_CHARACTER'],
@@ -322,31 +384,49 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
     ],
     [
       {
-        name: 'User',
-        content: { text: 'Add machine learning to your list of topics you know about' },
+        name: '{{user}}',
+        content: { text: 'Add machine learning expertise and then create a study guide for beginners' },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
-          text: "I've successfully updated my character. I've added machine learning to my topics of expertise.",
+          text: 'I\'ll add machine learning to my expertise and then create a beginner-friendly study guide.',
+          thought: 'User wants me to expand my knowledge base and then use that new expertise to create educational content.',
           actions: ['MODIFY_CHARACTER'],
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I've successfully updated my character. I've added machine learning to my topics of expertise. Now creating a comprehensive study guide...",
+          thought: 'Character modification complete with ML expertise added. I can now create an authoritative study guide using my updated knowledge base.',
+          actions: ['CREATE_STUDY_GUIDE'],
         },
       },
     ],
     [
       {
-        name: 'User',
-        content: { text: 'Remember that you prefer to give step-by-step explanations' },
+        name: '{{user}}',
+        content: { text: 'Make yourself more patient with explanations, then help me understand quantum computing' },
       },
       {
-        name: 'Agent',
+        name: '{{agent}}',
         content: {
-          text: "I've successfully updated my character. I'll now include a preference for step-by-step explanations in my response style.",
+          text: 'I\'ll update my character to be more patient with explanations, then help you understand quantum computing.',
+          thought: 'User wants me to modify my communication style first, then apply that improved approach to teaching quantum computing.',
           actions: ['MODIFY_CHARACTER'],
         },
       },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I've successfully updated my character. I'll now include a preference for patient, detailed explanations. Let me help you understand quantum computing with this more thoughtful approach...",
+          thought: 'Character updated with improved patience for explanations. I can now teach quantum computing using my enhanced communication style.',
+          actions: ['EXPLAIN_CONCEPT'],
+        },
+      },
     ],
-  ],
+  ] as ActionExample[][],
 };
 
 /**

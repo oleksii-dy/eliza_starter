@@ -9,8 +9,8 @@ declare module 'lodash-es' {
   export function isArray(value: any): value is any[];
   export function every<T>(collection: T[], predicate: (value: T) => boolean): boolean;
   export function throttle<T extends (...args: any[]) => any>(
-    func: T, 
+    func: T,
     wait?: number,
     options?: { leading?: boolean; trailing?: boolean }
   ): T;
-} 
+}

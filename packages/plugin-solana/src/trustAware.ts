@@ -21,36 +21,36 @@ export class TrustAwareSolanaPlugin {
 
   // Define trust requirements for each action
   protected trustRequirements = {
-    'TRANSFER_SOLANA': 80,   // High trust for transfers
-    'SWAP_SOLANA': 60,       // Medium trust for swaps  
-    'STAKE_SOL': 70,         // High trust for staking
+    TRANSFER_SOLANA: 80, // High trust for transfers
+    SWAP_SOLANA: 60, // Medium trust for swaps
+    STAKE_SOL: 70, // High trust for staking
   };
 
   // Define permission requirements
   // protected permissions: Record<string, ActionPermission> = {
   protected permissions: Record<string, any> = {
-    'TRANSFER_SOLANA': {
+    TRANSFER_SOLANA: {
       action: 'TRANSFER_SOLANA',
       unix: 0o750, // Owner and group can execute
-      description: 'Transfer Solana tokens'
+      description: 'Transfer Solana tokens',
     },
-    'SWAP_SOLANA': {
-      action: 'SWAP_SOLANA', 
+    SWAP_SOLANA: {
+      action: 'SWAP_SOLANA',
       unix: 0o644, // Owner can execute, others read
-      description: 'Swap Solana tokens'
+      description: 'Swap Solana tokens',
     },
-    'STAKE_SOL': {
+    STAKE_SOL: {
       action: 'STAKE_SOL',
       unix: 0o700, // Owner only
-      description: 'Stake SOL tokens'
-    }
+      description: 'Stake SOL tokens',
+    },
   };
 
   actions = [executeSwap, transferAction, stakeSOL];
   providers = [walletProvider];
   services = [
     RpcService,
-    TokenService, 
+    TokenService,
     TransactionService,
     PriceOracleService,
     WalletBalanceService,

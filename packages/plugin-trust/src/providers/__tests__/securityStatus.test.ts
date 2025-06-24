@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, mock, beforeEach, type Mock } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
 import { securityStatusProvider } from '../securityStatus';
@@ -6,7 +6,7 @@ import { securityStatusProvider } from '../securityStatus';
 const createMockRuntime = (): IAgentRuntime =>
   ({
     agentId: 'test-agent' as UUID,
-    getService: vi.fn()
+    getService: mock()
   } as any);
 
 const createMockMemory = (text: string, entityId: UUID): Memory =>
@@ -26,16 +26,16 @@ describe('securityStatusProvider', () => {
   beforeEach(() => {
     runtime = createMockRuntime();
     securityModule = {
-      getRecentSecurityIncidents: vi.fn().mockResolvedValue([]),
-      assessThreatLevel: vi.fn().mockResolvedValue(0.2),
-      analyzeMessage: vi.fn().mockResolvedValue({
+      getRecentSecurityIncidents: mock().mockResolvedValue([]),
+      assessThreatLevel: mock().mockResolvedValue(0.2),
+      analyzeMessage: mock().mockResolvedValue({
         detected: false,
         type: null
       }),
-      getSecurityRecommendations: vi.fn().mockReturnValue([])
+      getSecurityRecommendations: mock().mockReturnValue([])
     };
     (runtime.getService as unknown as Mock).mockImplementation((name: string) => {
-      if (name === 'security-module') return securityModule;
+      if (name === 'security-module') {return securityModule;}
       return null;
     });
   });
@@ -43,9 +43,9 @@ describe('securityStatusProvider', () => {
   it('should provide security status', async () => {
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
-    
+
     const result = await securityStatusProvider.get(runtime, memory, state);
-    
+
     expect(result).toBeDefined();
     expect(result.text).toContain('Security Status: NORMAL');
     expect(result.text).toContain('No security incidents in the last 24 hours');
@@ -68,12 +68,12 @@ describe('securityStatusProvider', () => {
       detected: true,
       type: 'suspicious_link'
     });
-    
+
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
-    
+
     const result = await securityStatusProvider.get(runtime, memory, state);
-    
+
     expect(result.text).toContain('Security Status: HIGH ALERT');
     expect(result.text).toContain('2 security incident(s) detected');
     expect(result.text).toContain('Current message flagged: suspicious_link');
@@ -82,23 +82,23 @@ describe('securityStatusProvider', () => {
 
   it('should handle missing security module', async () => {
     (runtime.getService as unknown as Mock).mockReturnValue(null);
-    
+
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
-    
+
     const result = await securityStatusProvider.get(runtime, memory, state);
-    
+
     expect(result.text).toContain('Security module not available');
   });
 
   it('should handle errors gracefully', async () => {
     securityModule.assessThreatLevel.mockRejectedValue(new Error('Service error'));
-    
+
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
-    
+
     const result = await securityStatusProvider.get(runtime, memory, state);
-    
+
     expect(result.text).toContain('Unable to fetch security status');
   });
 });

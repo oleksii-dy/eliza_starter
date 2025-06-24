@@ -182,7 +182,7 @@ function extractPlatformIdentities(text: string): PlatformIdentity[] {
         // Skip Discord mentions
         identities.push({
           platform: 'twitter',
-          handle: handle,
+          handle,
           verified: false,
           confidence: 0.7,
           timestamp: Date.now(),
@@ -225,7 +225,7 @@ async function storePlatformIdentities(
   identities: PlatformIdentity[]
 ) {
   const entity = await runtime.getEntityById(entityId);
-  if (!entity) return;
+  if (!entity) {return;}
 
   const metadata = entity.metadata || {};
   const platformIdentities = (metadata.platformIdentities || []) as PlatformIdentity[];
@@ -291,7 +291,7 @@ async function handleDispute(runtime: IAgentRuntime, dispute: DisputeInfo, messa
     agentId: runtime.agentId,
     entityId: message.entityId,
     roomId: message.roomId,
-    worldId: asUUID(stringToUuid('rolodex-world-' + runtime.agentId)),
+    worldId: asUUID(stringToUuid(`rolodex-world-${runtime.agentId}`)),
     sourceEntityId: message.entityId,
     data: dispute as any,
     createdAt: Date.now(),
@@ -378,7 +378,7 @@ function analyzeInteraction(messagesA: Memory[], messagesB: Memory[]): Relations
 
   for (const msg of allMessages) {
     const text = msg.content?.text;
-    if (!text) continue;
+    if (!text) {continue;}
 
     for (const pattern of friendPhrases) {
       if (pattern.test(text)) {
@@ -435,15 +435,15 @@ function determineSentiment(text: string): 'positive' | 'negative' | 'neutral' {
   let negativeCount = 0;
 
   for (const word of positiveWords) {
-    if (lowerText.includes(word)) positiveCount++;
+    if (lowerText.includes(word)) {positiveCount++;}
   }
 
   for (const word of negativeWords) {
-    if (lowerText.includes(word)) negativeCount++;
+    if (lowerText.includes(word)) {negativeCount++;}
   }
 
-  if (positiveCount > negativeCount) return 'positive';
-  if (negativeCount > positiveCount) return 'negative';
+  if (positiveCount > negativeCount) {return 'positive';}
+  if (negativeCount > positiveCount) {return 'negative';}
   return 'neutral';
 }
 
@@ -455,7 +455,7 @@ async function updateRelationship(
 ) {
   // Get existing relationships
   const relationships = await runtime.getRelationships({ entityId: entityA });
-  let relationship = relationships.find(
+  const relationship = relationships.find(
     (r) =>
       (r.sourceEntityId === entityA && r.targetEntityId === entityB) ||
       (r.sourceEntityId === entityB && r.targetEntityId === entityA)
@@ -668,10 +668,10 @@ async function createOrUpdateMentionedEntity(
 
 async function assessTrustIndicators(runtime: IAgentRuntime, entityId: UUID, messages: Memory[]) {
   const userMessages = messages.filter((m) => m.entityId === entityId);
-  if (userMessages.length === 0) return;
+  if (userMessages.length === 0) {return;}
 
   const entity = await runtime.getEntityById(entityId);
-  if (!entity) return;
+  if (!entity) {return;}
 
   const metadata = entity.metadata || {};
   const trustMetrics = (metadata.trustMetrics || {
@@ -687,7 +687,7 @@ async function assessTrustIndicators(runtime: IAgentRuntime, entityId: UUID, mes
 
   for (const msg of userMessages) {
     const text = msg.content?.text?.toLowerCase();
-    if (!text) continue;
+    if (!text) {continue;}
 
     // Helpful indicators
     if (text.match(/here'?s|let me help|i can help|try this|solution|answer/)) {
@@ -757,7 +757,7 @@ async function handlePrivacyBoundary(
   message: Memory
 ) {
   const entity = await runtime.getEntityById(message.entityId);
-  if (!entity) return;
+  if (!entity) {return;}
 
   const metadata = entity.metadata || {};
   metadata.privateData = true;
@@ -772,7 +772,7 @@ async function handlePrivacyBoundary(
     agentId: runtime.agentId,
     entityId: message.entityId,
     roomId: message.roomId,
-    worldId: asUUID(stringToUuid('rolodex-world-' + runtime.agentId)),
+    worldId: asUUID(stringToUuid(`rolodex-world-${runtime.agentId}`)),
     sourceEntityId: message.entityId,
     data: {
       privacyInfo,
@@ -791,11 +791,11 @@ async function handleAdminUpdates(
 ) {
   // Check if user has admin role
   const entity = await runtime.getEntityById(message.entityId);
-  if (!entity || !entity.metadata?.isAdmin) return;
+  if (!entity || !entity.metadata?.isAdmin) {return;}
 
   // Look for admin update patterns
   const text = message.content?.text;
-  if (!text) return;
+  if (!text) {return;}
 
   const updatePattern =
     /(?:update|set|change)\s+(\w+(?:\s+\w+)*)'?s?\s+(\w+)\s+(?:to|is|=)\s+(.+)/i;

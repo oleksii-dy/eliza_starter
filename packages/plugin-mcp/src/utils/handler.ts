@@ -1,4 +1,4 @@
-import type { HandlerCallback } from "@elizaos/core";
+import type { HandlerCallback } from '@elizaos/core';
 
 export function handleNoToolAvailable(
   callback?: HandlerCallback,
@@ -9,8 +9,8 @@ export function handleNoToolAvailable(
     callback({
       text: "I don't have a specific tool that can help with that request. Let me try to assist you directly instead.",
       thought:
-        "No appropriate MCP tool available for this request. Falling back to direct assistance.",
-      actions: ["REPLY"],
+        'No appropriate MCP tool available for this request. Falling back to direct assistance.',
+      actions: ['REPLY'],
     });
   }
 

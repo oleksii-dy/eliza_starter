@@ -9,7 +9,7 @@ import { getSchemaFactory, createLazyTableProxy } from './factory';
  */
 function createMessageTable() {
   const factory = getSchemaFactory();
-  
+
   const tableColumns = {
     id: factory.uuid('id').primaryKey(),
     channelId: factory.uuid('channel_id').notNull(),

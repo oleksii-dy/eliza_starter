@@ -1,4 +1,4 @@
-import { beforeAll, afterAll, beforeEach } from 'vitest';
+import { beforeAll, afterAll, beforeEach, jest } from 'bun:test';
 import { spawn } from 'child_process';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
@@ -11,7 +11,7 @@ const originalNgrokDomain = process.env.NGROK_DOMAIN;
 const originalNgrokAuthToken = process.env.NGROK_AUTH_TOKEN;
 
 // Global test state
-let activeNgrokProcesses: Set<number> = new Set();
+const activeNgrokProcesses: Set<number> = new Set();
 
 // Kill all ngrok processes before tests start
 async function killAllNgrokProcesses(): Promise<void> {
@@ -35,7 +35,7 @@ async function checkNgrokProcesses(): Promise<boolean> {
     // Use more specific pattern to only find actual ngrok processes
     const checkProcess = spawn('pgrep', ['-x', 'ngrok']);
     let hasProcesses = false;
-    
+
     checkProcess.stdout.on('data', (data) => {
       const pids = data.toString().trim().split('\n').filter(Boolean);
       if (pids.length > 0) {
@@ -48,11 +48,11 @@ async function checkNgrokProcesses(): Promise<boolean> {
         });
       }
     });
-    
+
     checkProcess.on('exit', () => {
       resolve(hasProcesses);
     });
-    
+
     checkProcess.on('error', () => {
       resolve(false);
     });
@@ -61,28 +61,30 @@ async function checkNgrokProcesses(): Promise<boolean> {
 
 // Check if this is a pay-as-you-go account by trying to start without domain
 async function checkIfPayAsYouGo(): Promise<boolean> {
-  if (!originalNgrokAuthToken) return false;
-  
+  if (!originalNgrokAuthToken) {
+    return false;
+  }
+
   return new Promise((resolve) => {
-    const checkProcess = spawn('ngrok', ['http', '8080'], { 
+    const checkProcess = spawn('ngrok', ['http', '8080'], {
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, NGROK_DOMAIN: undefined }
+      env: { ...process.env, NGROK_DOMAIN: undefined as any } as any,
     });
-    
+
     let isPayAsYouGo = false;
-    
-    checkProcess.stderr?.on('data', (data) => {
+
+    checkProcess.stderr?.on('data', (data: Buffer) => {
       const message = data.toString();
       if (message.includes('ERR_NGROK_15002') || message.includes('Pay-as-you-go')) {
         isPayAsYouGo = true;
         checkProcess.kill();
       }
     });
-    
+
     checkProcess.on('exit', () => {
       resolve(isPayAsYouGo);
     });
-    
+
     // Give it a few seconds then kill it
     setTimeout(() => {
       if (!checkProcess.killed) {
@@ -94,15 +96,17 @@ async function checkIfPayAsYouGo(): Promise<boolean> {
 
 beforeAll(async () => {
   // Only run setup for test files, not for the main process
-  const isTestFile = process.argv.some(arg => arg.includes('.test.') || arg.includes('.spec.'));
-  if (!isTestFile) return;
-  
+  const isTestFile = process.argv.some((arg) => arg.includes('.test.') || arg.includes('.spec.'));
+  if (!isTestFile) {
+    return;
+  }
+
   console.log('\n🧹 Cleaning up any existing ngrok processes...');
   await killAllNgrokProcesses();
-  
+
   // Check if this is a pay-as-you-go account
   const isPayAsYouGo = await checkIfPayAsYouGo();
-  
+
   if (isPayAsYouGo && originalNgrokDomain) {
     // For pay-as-you-go accounts, we MUST use the domain
     console.log('📌 Pay-as-you-go account detected, using domain:', originalNgrokDomain);
@@ -112,41 +116,45 @@ beforeAll(async () => {
     console.log('🆓 Free account detected, using random URLs for tests');
     delete process.env.NGROK_DOMAIN;
   }
-  
+
   console.log('✅ Test environment ready\n');
 });
 
 beforeEach(async () => {
   // Only run for test files
-  const isTestFile = process.argv.some(arg => arg.includes('.test.') || arg.includes('.spec.'));
-  if (!isTestFile) return;
-  
+  const isTestFile = process.argv.some((arg) => arg.includes('.test.') || arg.includes('.spec.'));
+  if (!isTestFile) {
+    return;
+  }
+
   // Check for lingering ngrok processes between tests
   const hasProcesses = await checkNgrokProcesses();
   if (hasProcesses) {
     console.log('⚠️  Found lingering ngrok processes, cleaning up...');
     await killAllNgrokProcesses();
   }
-  
+
   // Clear the active processes set
   activeNgrokProcesses.clear();
 });
 
 afterAll(async () => {
   // Only run for test files
-  const isTestFile = process.argv.some(arg => arg.includes('.test.') || arg.includes('.spec.'));
-  if (!isTestFile) return;
-  
+  const isTestFile = process.argv.some((arg) => arg.includes('.test.') || arg.includes('.spec.'));
+  if (!isTestFile) {
+    return;
+  }
+
   console.log('\n🧹 Final cleanup...');
-  
+
   // Kill any remaining ngrok processes
   await killAllNgrokProcesses();
-  
+
   // Restore original environment
   if (originalNgrokDomain) {
     process.env.NGROK_DOMAIN = originalNgrokDomain;
   }
-  
+
   console.log('✅ Cleanup complete\n');
 });
 
@@ -160,4 +168,4 @@ export function untrackNgrokProcess(pid: number): void {
 }
 
 // Export the original domain for tests that need it
-export const ORIGINAL_NGROK_DOMAIN = originalNgrokDomain; 
+export const ORIGINAL_NGROK_DOMAIN = originalNgrokDomain;

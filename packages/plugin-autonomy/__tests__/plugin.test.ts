@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, mock, beforeEach, afterEach } from 'bun:test';
 import { autoPlugin } from '../src/index';
 import {
   createMockRuntime,
@@ -13,7 +13,7 @@ describe('Auto Plugin Functional Integration', () => {
   let mockState: State;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime({
       settings: {
         AUTONOMOUS_ENABLED: 'true',
@@ -30,7 +30,7 @@ describe('Auto Plugin Functional Integration', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   describe('Plugin Initialization', () => {
@@ -83,7 +83,7 @@ describe('Auto Plugin Functional Integration', () => {
       expect(reflectAction).toBeDefined();
 
       if (reflectAction) {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Test that reflection action executes without error
         await expect(async () => {
@@ -150,14 +150,14 @@ describe('Auto Plugin Functional Integration', () => {
         // Mock OODA service for context
         const mockOODAService = {
           serviceType: 'autonomous',
-          getContext: vi.fn().mockReturnValue({
+          getContext: mock().mockReturnValue({
             phase: 'DECIDING',
             goals: [],
             observations: [],
             decisions: [],
           }),
-          getCurrentPhase: vi.fn().mockReturnValue('DECIDING'),
-          isRunning: vi.fn().mockReturnValue(true),
+          getCurrentPhase: mock().mockReturnValue('DECIDING'),
+          isRunning: mock().mockReturnValue(true),
         };
 
         const runtimeWithOODA = createMockRuntime({
@@ -287,7 +287,7 @@ describe('Auto Plugin Functional Integration', () => {
           const isValid = await reflectAction.validate(fullRuntime, mockMessage, mockState);
           expect(isValid).toBe(true);
 
-          const mockCallback = vi.fn();
+          const mockCallback = mock();
           await reflectAction.handler(fullRuntime, mockMessage, mockState, {}, mockCallback);
           expect(mockCallback).toHaveBeenCalled();
         }
@@ -303,12 +303,12 @@ describe('Auto Plugin Functional Integration', () => {
           autonomous: {
             serviceType: 'autonomous',
             isRunning: () => true,
-            getContext: vi.fn().mockReturnValue({
+            getContext: mock().mockReturnValue({
               phase: 'DECIDING',
               goals: [{ id: '1', description: 'Test goal', priority: 1 }],
               observations: [{ type: 'system', data: 'test observation' }],
             }),
-            getCurrentPhase: vi.fn().mockReturnValue('DECIDING'),
+            getCurrentPhase: mock().mockReturnValue('DECIDING'),
             currentContext: {
               phase: 'DECIDING',
               runId: 'test-run',
@@ -363,7 +363,7 @@ describe('Auto Plugin Functional Integration', () => {
       const browseAction = actions.find((a) => a.name === 'BROWSE_WEB');
 
       if (browseAction) {
-        const mockCallback = vi.fn();
+        const mockCallback = mock();
 
         // Should handle network errors gracefully
         await browseAction.handler(

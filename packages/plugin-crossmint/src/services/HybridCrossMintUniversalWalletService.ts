@@ -72,11 +72,11 @@ export class HybridCrossMintUniversalWalletService
   }
 
   // Portfolio management (Real CrossMint API)
-  async getPortfolio(owner?: string): Promise<UniversalPortfolio> {
+  async getPortfolio(_owner?: string): Promise<UniversalPortfolio> {
     try {
       const wallets = await this.crossMintService.listWallets();
       const assets: UniversalTokenBalance[] = [];
-      let totalValueUsd = 0;
+      const totalValueUsd = 0;
 
       // For each wallet, we would need to call real balance APIs
       // Note: This is a limitation - CrossMint may not have direct balance APIs
@@ -113,8 +113,8 @@ export class HybridCrossMintUniversalWalletService
     }
   }
 
-  async getBalances(owner?: string): Promise<UniversalTokenBalance[]> {
-    const portfolio = await this.getPortfolio(owner);
+  async getBalances(_owner?: string): Promise<UniversalTokenBalance[]> {
+    const portfolio = await this.getPortfolio(_owner);
     return portfolio.assets;
   }
 
@@ -167,16 +167,16 @@ export class HybridCrossMintUniversalWalletService
     throw new RealCrossMintError('Raw transaction sending requires to/value parameters');
   }
 
-  async swap(params: SwapParams): Promise<UniversalTransactionResult> {
+  async swap(_params: SwapParams): Promise<UniversalTransactionResult> {
     throw new RealCrossMintError('Swap operations not supported by CrossMint API');
   }
 
-  async bridge(params: BridgeParams): Promise<UniversalTransactionResult> {
+  async bridge(_params: BridgeParams): Promise<UniversalTransactionResult> {
     throw new RealCrossMintError('Bridge operations not supported by CrossMint API');
   }
 
   // Transaction utilities
-  async simulateTransaction(params: UniversalTransactionParams): Promise<SimulationResult> {
+  async simulateTransaction(_params: UniversalTransactionParams): Promise<SimulationResult> {
     return {
       success: true,
       gasUsed: '21000',
@@ -186,7 +186,7 @@ export class HybridCrossMintUniversalWalletService
     };
   }
 
-  async estimateGas(params: UniversalTransactionParams): Promise<GasEstimate> {
+  async estimateGas(_params: UniversalTransactionParams): Promise<GasEstimate> {
     return {
       gasLimit: '21000',
       gasPrice: '0',
@@ -196,7 +196,7 @@ export class HybridCrossMintUniversalWalletService
     };
   }
 
-  async getTransaction(hash: string, chain?: string): Promise<UniversalTransactionResult> {
+  async getTransaction(hash: string, _chain?: string): Promise<UniversalTransactionResult> {
     try {
       const transaction = await this.crossMintService.getTransaction(hash);
 
@@ -269,7 +269,7 @@ export class HybridCrossMintUniversalWalletService
     }
   }
 
-  async processPayment(request: UniversalPaymentRequest): Promise<PaymentResult> {
+  async processPayment(_request: UniversalPaymentRequest): Promise<PaymentResult> {
     try {
       // This would require wallet integration for actual payment processing
       throw new X402Error('Payment processing requires wallet integration');
@@ -326,7 +326,7 @@ export class HybridCrossMintUniversalWalletService
     }
   }
 
-  async importWallet(params: WalletImportParams): Promise<WalletInstance> {
+  async importWallet(_params: WalletImportParams): Promise<WalletInstance> {
     throw new RealCrossMintError(
       'Wallet import not supported by CrossMint (MPC wallets are generated)'
     );
@@ -339,9 +339,9 @@ export class HybridCrossMintUniversalWalletService
       return wallets
         .filter((wallet) => {
           if (filter?.chain && this.getChainFromWalletType(wallet.type) !== filter.chain)
-            return false;
-          if (filter?.isActive !== undefined && true !== filter.isActive) return false;
-          if (filter?.type && this.mapWalletType(wallet.type) !== filter.type) return false;
+          {return false;}
+          if (filter?.isActive !== undefined && filter.isActive !== true) {return false;}
+          if (filter?.type && this.mapWalletType(wallet.type) !== filter.type) {return false;}
           return true;
         })
         .map((wallet) => ({
@@ -359,24 +359,24 @@ export class HybridCrossMintUniversalWalletService
     }
   }
 
-  async deleteWallet(walletId: UUID): Promise<boolean> {
+  async deleteWallet(_walletId: UUID): Promise<boolean> {
     throw new RealCrossMintError('Wallet deletion not supported by CrossMint (security policy)');
   }
 
   // Session management (not implemented)
-  async createSession(params: SessionParams): Promise<SessionKey> {
+  async createSession(_params: SessionParams): Promise<SessionKey> {
     throw new RealCrossMintError('Session management not implemented');
   }
 
-  async validateSession(sessionId: string, operation: string): Promise<boolean> {
+  async validateSession(_sessionId: string, _operation: string): Promise<boolean> {
     return false;
   }
 
-  async revokeSession(sessionId: string): Promise<void> {
+  async revokeSession(_sessionId: string): Promise<void> {
     throw new RealCrossMintError('Session management not implemented');
   }
 
-  async listSessions(walletId?: string): Promise<SessionKey[]> {
+  async listSessions(_walletId?: string): Promise<SessionKey[]> {
     return [];
   }
 

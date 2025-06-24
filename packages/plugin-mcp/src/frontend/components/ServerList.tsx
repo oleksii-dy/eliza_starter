@@ -12,7 +12,7 @@ export const ServerList: React.FC<ServerListProps> = ({
   servers,
   selectedServer,
   onSelectServer,
-  onReconnect
+  onReconnect,
 }) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -65,7 +65,7 @@ export const ServerList: React.FC<ServerListProps> = ({
                 </span>
                 <span className="server-name">{server.name}</span>
               </div>
-              
+
               <div className="server-details">
                 <div className="server-counts">
                   <span className="count">
@@ -77,13 +77,13 @@ export const ServerList: React.FC<ServerListProps> = ({
                     {server.resourceCount} resources
                   </span>
                 </div>
-                
+
                 {server.status === 'error' && server.error && (
                   <div className="server-error">
                     <small>{server.error}</small>
                   </div>
                 )}
-                
+
                 {(server.status === 'disconnected' || server.status === 'error') && (
                   <button
                     className="reconnect-btn"
@@ -102,4 +102,4 @@ export const ServerList: React.FC<ServerListProps> = ({
       )}
     </div>
   );
-}; 
+};

@@ -54,10 +54,10 @@ export async function createPlugin(
   await installDependencies(pluginTargetDir);
 
   console.info(`\n${colors.green('✓')} Plugin "${pluginDirName}" created successfully!`);
-  console.info(`\nNext steps:`);
+  console.info('\nNext steps:');
   console.info(`  cd ${pluginDirName}`);
-  console.info(`  bun run build`);
-  console.info(`  bun run test\n`);
+  console.info('  bun run build');
+  console.info('  bun run test\n');
 }
 
 /**
@@ -108,7 +108,7 @@ export async function createAgent(
     console.info(`\n${colors.green('✓')} Agent "${agentName}" created successfully!`);
   }
   console.info(`Agent character created successfully at: ${agentFilePath}`);
-  console.info(`\nTo use this agent:`);
+  console.info('\nTo use this agent:');
   console.info(`  elizaos agent start --path ${agentFilePath}\n`);
 }
 
@@ -168,9 +168,9 @@ export async function createTEEProject(
       });
 
       if (clack.isCancel(shouldStart) || !shouldStart) {
-        console.info(`\nTo start your TEE project later:`);
+        console.info('\nTo start your TEE project later:');
         console.info(`  cd ${projectName}`);
-        console.info(`  bun run dev\n`);
+        console.info('  bun run dev\n');
         return;
       }
     }
@@ -187,17 +187,17 @@ export async function createTEEProject(
     startProcess.on('error', (error) => {
       console.error(`\n${colors.red('Failed to start the TEE project:')}`);
       console.error(error.message);
-      console.info(`\nYou can start it manually:`);
+      console.info('\nYou can start it manually:');
       console.info(`  cd ${projectName}`);
-      console.info(`  bun run dev\n`);
+      console.info('  bun run dev\n');
     });
 
     // The process will continue running, so we don't need to wait for it
   } else {
     // In test mode, just show the manual start instructions
-    console.info(`\nTo start your TEE project:`);
+    console.info('\nTo start your TEE project:');
     console.info(`  cd ${projectName}`);
-    console.info(`  bun run dev\n`);
+    console.info('  bun run dev\n');
   }
 }
 
@@ -259,9 +259,9 @@ export async function createProject(
       });
 
       if (clack.isCancel(shouldStart) || !shouldStart) {
-        console.info(`\nTo start your project later:`);
+        console.info('\nTo start your project later:');
         console.info(`  cd ${projectName}`);
-        console.info(`  bun run dev\n`);
+        console.info('  bun run dev\n');
         return;
       }
     }
@@ -278,16 +278,16 @@ export async function createProject(
     startProcess.on('error', (error) => {
       console.error(`\n${colors.red('Failed to start the project:')}`);
       console.error(error.message);
-      console.info(`\nYou can start it manually:`);
+      console.info('\nYou can start it manually:');
       console.info(`  cd ${projectName}`);
-      console.info(`  bun run dev\n`);
+      console.info('  bun run dev\n');
     });
 
     // The process will continue running, so we don't need to wait for it
   } else {
     // In test mode, just show the manual start instructions
-    console.info(`\nTo start your project:`);
+    console.info('\nTo start your project:');
     console.info(`  cd ${projectName}`);
-    console.info(`  bun run dev\n`);
+    console.info('  bun run dev\n');
   }
 }

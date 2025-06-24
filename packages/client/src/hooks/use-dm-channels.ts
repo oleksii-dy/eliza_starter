@@ -62,7 +62,9 @@ export function useDmChannelsForAgent(
   return useQuery<MessageChannel[]>({
     queryKey: ['dmChannels', agentId, currentUserId], // This key will be invalidated by useCreateDmChannel
     queryFn: async () => {
-      if (!agentId) return [];
+      if (!agentId) {
+        return [];
+      }
       clientLogger.info(
         '[useDmChannelsForAgent] Fetching distinct DM channels for agent:',
         agentId

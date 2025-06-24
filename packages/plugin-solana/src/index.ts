@@ -142,17 +142,17 @@ const solanaPlugin: Plugin = {
   ],
 
   init: async (config: Record<string, string>, runtime: IAgentRuntime): Promise<void> => {
-    logger.info(`\n┌════════════════════════════════════════┐`);
-    logger.info(`│           SOLANA PLUGIN               │`);
-    logger.info(`├────────────────────────────────────────┤`);
-    logger.info(`│  Initializing Solana Plugin...         │`);
-    logger.info(`└════════════════════════════════════════┘`);
+    logger.info('\n┌════════════════════════════════════════┐');
+    logger.info('│           SOLANA PLUGIN               │');
+    logger.info('├────────────────────────────────────────┤');
+    logger.info('│  Initializing Solana Plugin...         │');
+    logger.info('└════════════════════════════════════════┘');
 
     // Validate configuration
     const configValidation = validateSolanaConfig(runtime);
     if (!configValidation.valid) {
       logger.error('Invalid Solana plugin configuration!');
-      logger.info('Configuration template:\n' + generateConfigTemplate());
+      logger.info(`Configuration template:\n${generateConfigTemplate()}`);
       throw new Error('Solana plugin configuration is invalid. Check the logs for details.');
     }
 

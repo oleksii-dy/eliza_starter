@@ -1,15 +1,15 @@
 /**
  * ShouldRespond Model - Smallest possible model for binary response decisions
- * 
+ *
  * This model handles the fundamental question: "Should the agent respond to this message?"
- * 
+ *
  * Key features:
  * - Minimal model size (target: 1B-3B parameters)
  * - Binary classification (RESPOND/IGNORE)
  * - Real-time inference capability
  * - Comprehensive training data collection
  * - Feedback loop for continuous improvement
- * 
+ *
  * Model Training:
  * - Input: Message text, context, channel info, mention status
  * - Output: Binary decision + confidence + reasoning
@@ -82,7 +82,7 @@ Ignore when:
 - Message is not directed at agent
 - Message is purely conversational between others
 - Message is a reaction or emoji only`,
-  
+
   fine_tuning_config: {
     learning_rate: 1e-5,
     batch_size: 16,

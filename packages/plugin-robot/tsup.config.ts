@@ -18,7 +18,5 @@ export default defineConfig({
     'zod',
     'serialport',
     'roslib',
-    'pino',
-    'pino-pretty',
   ],
 });

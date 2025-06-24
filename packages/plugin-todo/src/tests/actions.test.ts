@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { createTodoAction } from '../actions/createTodo';
 import { completeTodoAction } from '../actions/completeTodo';
 import { confirmTodoAction } from '../actions/confirmTodo';
@@ -24,7 +24,7 @@ describe('Todo Actions', () => {
   describe('Action Properties', () => {
     it('should have all actions with required properties', () => {
       const actions = [createTodoAction, completeTodoAction, confirmTodoAction, updateTodoAction, cancelTodoAction];
-      
+
       actions.forEach(action => {
         expect(action.name).toBeDefined();
         expect(typeof action.name).toBe('string');
@@ -133,15 +133,15 @@ describe('Todo Actions', () => {
   describe('Action Examples', () => {
     it('should have proper example structures', () => {
       const actions = [createTodoAction, completeTodoAction, confirmTodoAction, updateTodoAction, cancelTodoAction];
-      
+
       actions.forEach(action => {
         expect(action.examples).toBeDefined();
         expect(Array.isArray(action.examples)).toBe(true);
-        
+
         if (action.examples && action.examples.length > 0) {
           action.examples.forEach(example => {
             expect(Array.isArray(example)).toBe(true);
-            
+
             example.forEach(message => {
               expect(message).toHaveProperty('name');
               expect(message).toHaveProperty('content');

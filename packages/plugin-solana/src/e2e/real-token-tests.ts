@@ -22,7 +22,7 @@ export const realTokenTestsSuite: TestSuite = {
   name: 'Solana Plugin Real Token Integration Tests',
   tests: [
     {
-      name: "Test 1: Discover ai16z/SOL pools across DEXs",
+      name: 'Test 1: Discover ai16z/SOL pools across DEXs',
       fn: async (runtime: IAgentRuntime) => {
         // Get the Jupiter DEX service
         const jupiterService = runtime.getService<JupiterDexService>('jupiter-dex');
@@ -31,19 +31,16 @@ export const realTokenTestsSuite: TestSuite = {
         // Get available routes for ai16z
         console.log('Getting available routes for ai16z...');
         const routes = await jupiterService.getAvailableRoutes(TOKEN_ADDRESSES.AI16Z);
-        
+
         console.log(`Available routes for ai16z: ${routes.join(', ')}`);
 
         // Assert that we found routes
-        assert(
-          routes.length > 0,
-          'Should find available routes for ai16z'
-        );
+        assert(routes.length > 0, 'Should find available routes for ai16z');
       },
     },
 
     {
-      name: "Test 2: Get swap quote for ai16z/SOL",
+      name: 'Test 2: Get swap quote for ai16z/SOL',
       fn: async (runtime: IAgentRuntime) => {
         const jupiterService = runtime.getService<JupiterDexService>('jupiter-dex');
         assert(jupiterService, 'JupiterDexService should be available');
@@ -57,7 +54,7 @@ export const realTokenTestsSuite: TestSuite = {
             0.1,
             50 // 0.5% slippage
           );
-          
+
           console.log('Swap quote received:');
           console.log(`- Input: ${quote.inAmount}`);
           console.log(`- Expected output: ${quote.outAmount}`);
@@ -74,7 +71,7 @@ export const realTokenTestsSuite: TestSuite = {
     },
 
     {
-      name: "Test 3: Compare rates for different token pairs",
+      name: 'Test 3: Compare rates for different token pairs',
       fn: async (runtime: IAgentRuntime) => {
         const jupiterService = runtime.getService<JupiterDexService>('jupiter-dex');
         assert(jupiterService, 'JupiterDexService should be available');
@@ -92,11 +89,11 @@ export const realTokenTestsSuite: TestSuite = {
               pair.to,
               1 // 1 unit
             );
-            
+
             console.log(`Rate: 1 ${pair.from} = ${priceImpact.rate} ${pair.to}`);
             console.log(`Price impact: ${priceImpact.priceImpactPct}%`);
             console.log(`Minimum received: ${priceImpact.minimumReceived}`);
-            
+
             assert(priceImpact.rate > 0, 'Rate should be positive');
           } catch (error) {
             console.log(`Failed to get price impact for ${pair.from}/${pair.to}:`, error);
@@ -106,7 +103,7 @@ export const realTokenTestsSuite: TestSuite = {
     },
 
     {
-      name: "Test 4: Token service functionality",
+      name: 'Test 4: Token service functionality',
       fn: async (runtime: IAgentRuntime) => {
         const tokenService = runtime.getService<TokenService>('token-service');
         assert(tokenService, 'TokenService should be available');
@@ -114,13 +111,13 @@ export const realTokenTestsSuite: TestSuite = {
         // Test getting token info
         console.log('Getting SOL token info...');
         const solInfo = await tokenService.getTokenInfo('SOL');
-        
+
         if (solInfo) {
           console.log('SOL token info:');
           console.log(`- Address: ${solInfo.address}`);
           console.log(`- Symbol: ${solInfo.symbol}`);
           console.log(`- Decimals: ${solInfo.decimals}`);
-          
+
           assert(solInfo.address === TOKEN_ADDRESSES.SOL, 'SOL address should match');
           assert(solInfo.decimals === 9, 'SOL should have 9 decimals');
         }
@@ -130,14 +127,14 @@ export const realTokenTestsSuite: TestSuite = {
           TOKEN_ADDRESSES.SOL,
           'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
         ]);
-        
+
         console.log(`\nFetched info for ${tokens.size} tokens`);
         assert(tokens.size > 0, 'Should fetch token info');
       },
     },
 
     {
-      name: "Test 5: Price oracle service",
+      name: 'Test 5: Price oracle service',
       fn: async (runtime: IAgentRuntime) => {
         const priceService = runtime.getService<PriceOracleService>('price-oracle-service');
         assert(priceService, 'PriceOracleService should be available');
@@ -145,7 +142,7 @@ export const realTokenTestsSuite: TestSuite = {
         // Get token price
         console.log('Getting SOL price...');
         const solPrice = await priceService.getTokenPrice(TOKEN_ADDRESSES.SOL);
-        
+
         if (solPrice !== null) {
           console.log(`SOL price: $${solPrice.price}`);
           assert(solPrice.price > 0, 'SOL price should be positive');
@@ -158,60 +155,62 @@ export const realTokenTestsSuite: TestSuite = {
           TOKEN_ADDRESSES.SOL,
           'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
         ]);
-        
+
         console.log('\nToken prices:');
         prices.forEach((price: any, address: string) => {
           console.log(`- ${address.slice(0, 8)}...: $${price?.price || 'N/A'}`);
         });
-        
+
         assert(prices.size > 0, 'Should fetch multiple prices');
       },
     },
 
     {
-      name: "Test 6: RPC service health check",
+      name: 'Test 6: RPC service health check',
       fn: async (runtime: IAgentRuntime) => {
         const rpcService = runtime.getService<RpcService>('rpc-service');
         assert(rpcService, 'RpcService should be available');
 
         // Get RPC status
         const status = rpcService.getStatus();
-        
+
         console.log('RPC Service Status:');
         console.log(`- Healthy: ${status.healthy}`);
         console.log(`- Endpoint count: ${status.endpointCount}`);
         console.log(`- Current endpoint: ${status.currentEndpoint}`);
-        
+
         console.log('\nEndpoint details:');
-        status.endpoints.forEach(endpoint => {
-          console.log(`- ${endpoint.url}: ${endpoint.healthy ? 'Healthy' : 'Unhealthy'} (failures: ${endpoint.failureCount})`);
+        status.endpoints.forEach((endpoint) => {
+          console.log(
+            `- ${endpoint.url}: ${endpoint.healthy ? 'Healthy' : 'Unhealthy'} (failures: ${endpoint.failureCount})`
+          );
         });
-        
+
         assert(status.healthy, 'At least one RPC endpoint should be healthy');
       },
     },
 
     {
-      name: "Test 7: Wallet balance check",
+      name: 'Test 7: Wallet balance check',
       fn: async (runtime: IAgentRuntime) => {
         const walletService = runtime.getService<WalletBalanceService>('wallet-balance');
         assert(walletService, 'WalletBalanceService should be available');
 
         // Get a sample wallet balance (Solana Labs wallet)
         const testWallet = '11111111111111111111111111111111';
-        
+
         try {
           console.log(`Getting balance for ${testWallet}...`);
           const balance = await walletService.getWalletBalance(testWallet);
-          
+
           console.log('Wallet balance:');
           console.log(`- SOL: ${balance.sol.uiAmount} (${balance.sol.balance} lamports)`);
           console.log(`- Token count: ${balance.tokens.length}`);
-          
+
           if (balance.totalValueUSD) {
             console.log(`- Total value: $${balance.totalValueUSD}`);
           }
-          
+
           assert(balance.sol.balance !== undefined, 'Should have SOL balance');
         } catch (error) {
           console.log('Failed to get wallet balance:', error);
@@ -221,23 +220,23 @@ export const realTokenTestsSuite: TestSuite = {
     },
 
     {
-      name: "Test 9: Check supported tokens",
+      name: 'Test 9: Check supported tokens',
       fn: async (runtime: IAgentRuntime) => {
         const jupiterService = runtime.getService<JupiterDexService>('jupiter-dex');
         assert(jupiterService, 'JupiterDexService should be available');
 
         // Get available routes (common tokens)
         const routes = await jupiterService.getAvailableRoutes();
-        
+
         console.log('Common supported tokens:');
-        routes.forEach(token => {
+        routes.forEach((token) => {
           console.log(`- ${token}`);
         });
-        
+
         assert(routes.length > 0, 'Should have supported tokens');
         assert(routes.includes('SOL'), 'Should support SOL');
         assert(routes.includes('USDC'), 'Should support USDC');
       },
     },
   ],
-}; 
+};

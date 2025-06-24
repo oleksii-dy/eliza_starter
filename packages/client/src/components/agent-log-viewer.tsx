@@ -58,9 +58,15 @@ function getLevelName(level: number): string {
 }
 
 function getLevelColor(level: number): string {
-  if (level >= 50) return 'bg-red-600/80'; // ERROR/FATAL - more muted red
-  if (level >= 40) return 'bg-amber-600/80'; // WARN - more muted amber
-  if (level >= 27) return 'bg-emerald-600/80'; // SUCCESS - more muted green
+  if (level >= 50) {
+    return 'bg-red-600/80';
+  } // ERROR/FATAL - more muted red
+  if (level >= 40) {
+    return 'bg-amber-600/80';
+  } // WARN - more muted amber
+  if (level >= 27) {
+    return 'bg-emerald-600/80';
+  } // SUCCESS - more muted green
   return 'bg-slate-500'; // INFO/DEBUG/TRACE - neutral gray instead of blue
 }
 
@@ -470,7 +476,7 @@ export function AgentLogViewer({ agentName, level }: AgentLogViewerProps) {
             <SelectContent>
               <SelectItem value="all">ALL AGENTS</SelectItem>
               {agentNames?.map((name) => (
-                <SelectItem key={name} value={name!}>
+                <SelectItem key={name} value={name}>
                   {name}
                 </SelectItem>
               ))}

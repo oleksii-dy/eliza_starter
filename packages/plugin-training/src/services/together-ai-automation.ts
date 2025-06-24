@@ -1,8 +1,4 @@
-import {
-  Service,
-  type IAgentRuntime,
-  elizaLogger,
-} from '@elizaos/core';
+import { Service, type IAgentRuntime, elizaLogger } from '@elizaos/core';
 import {
   type TogetherAIConfig,
   type TogetherAIJob,
@@ -74,7 +70,7 @@ export class TogetherAIAutomationService extends Service {
     };
   }): Promise<string> {
     const pipelineId = `pipeline-${Date.now()}`;
-    
+
     elizaLogger.info(`Starting automation pipeline: ${config.name} (${pipelineId})`);
 
     const pipeline: AutomationPipeline = {
@@ -82,10 +78,34 @@ export class TogetherAIAutomationService extends Service {
       name: config.name,
       status: 'collecting-data',
       steps: [
-        { id: 'data-collection', name: 'Data Collection', type: 'collection', status: 'pending', config: {} },
-        { id: 'dataset-prep', name: 'Dataset Preparation', type: 'preparation', status: 'pending', config: {} },
-        { id: 'small-training', name: 'Small Model Training', type: 'training', status: 'pending', config: {} },
-        { id: 'large-training', name: 'Large Model Training', type: 'training', status: 'pending', config: {} },
+        {
+          id: 'data-collection',
+          name: 'Data Collection',
+          type: 'collection',
+          status: 'pending',
+          config: {},
+        },
+        {
+          id: 'dataset-prep',
+          name: 'Dataset Preparation',
+          type: 'preparation',
+          status: 'pending',
+          config: {},
+        },
+        {
+          id: 'small-training',
+          name: 'Small Model Training',
+          type: 'training',
+          status: 'pending',
+          config: {},
+        },
+        {
+          id: 'large-training',
+          name: 'Large Model Training',
+          type: 'training',
+          status: 'pending',
+          config: {},
+        },
         { id: 'deployment', name: 'Deployment', type: 'deployment', status: 'pending', config: {} },
       ],
       startedAt: Date.now(),
@@ -106,7 +126,7 @@ export class TogetherAIAutomationService extends Service {
     this.activePipelines.set(pipelineId, pipeline);
 
     // Start the pipeline
-    this.runPipeline(pipelineId).catch(error => {
+    this.runPipeline(pipelineId).catch((error) => {
       elizaLogger.error(`Pipeline ${pipelineId} failed:`, error);
       this.updatePipelineStatus(pipelineId, 'failed', error.message);
     });
@@ -119,7 +139,9 @@ export class TogetherAIAutomationService extends Service {
    */
   private async runPipeline(pipelineId: string): Promise<void> {
     const pipeline = this.activePipelines.get(pipelineId);
-    if (!pipeline) throw new Error(`Pipeline ${pipelineId} not found`);
+    if (!pipeline) {
+      throw new Error(`Pipeline ${pipelineId} not found`);
+    }
 
     try {
       // Phase 1: Data Collection
@@ -139,9 +161,12 @@ export class TogetherAIAutomationService extends Service {
 
       this.updatePipelineStatus(pipelineId, 'completed');
       elizaLogger.info(`Pipeline ${pipelineId} completed successfully`);
-
     } catch (error) {
-      this.updatePipelineStatus(pipelineId, 'failed', error instanceof Error ? error.message : String(error));
+      this.updatePipelineStatus(
+        pipelineId,
+        'failed',
+        error instanceof Error ? error.message : String(error)
+      );
       throw error;
     }
   }
@@ -153,20 +178,26 @@ export class TogetherAIAutomationService extends Service {
     elizaLogger.info(`Pipeline ${pipeline.id}: Starting data collection`);
     this.updatePhaseStatus(pipeline.id, 'dataCollection', 'in-progress');
 
-    const { minDataPoints, minQuality, collectFor } = pipeline.config?.dataCollection || { minDataPoints: 100, minQuality: 0.7, collectFor: 3600000 };
+    const { minDataPoints, minQuality, collectFor } = pipeline.config?.dataCollection || {
+      minDataPoints: 100,
+      minQuality: 0.7,
+      collectFor: 3600000,
+    };
 
     // Wait for sufficient data collection
     const startTime = Date.now();
     while (Date.now() - startTime < collectFor) {
       const stats = this.dataCollector.getCollectionStats();
-      
+
       if (stats.totalDataPoints >= minDataPoints && stats.averageQuality >= minQuality) {
-        elizaLogger.info(`Pipeline ${pipeline.id}: Sufficient data collected (${stats.totalDataPoints} points)`);
+        elizaLogger.info(
+          `Pipeline ${pipeline.id}: Sufficient data collected (${stats.totalDataPoints} points)`
+        );
         break;
       }
 
       // Wait and check again
-      await new Promise(resolve => setTimeout(resolve, 60000)); // Check every minute
+      await new Promise((resolve) => setTimeout(resolve, 60000)); // Check every minute
     }
 
     this.updatePhaseStatus(pipeline.id, 'dataCollection', 'completed');
@@ -182,7 +213,7 @@ export class TogetherAIAutomationService extends Service {
     // Export collected data
     const dataFile = await this.dataCollector.exportData('json');
     const stats = this.dataCollector.getCollectionStats();
-    
+
     // Load and filter data
     const rawData = await this.loadCollectedData(dataFile);
     const filteredData = this.datasetProcessor.filterDataset(rawData, {
@@ -191,13 +222,11 @@ export class TogetherAIAutomationService extends Service {
     });
 
     // Create model-specific datasets
-    const { smallModelDataset, largeModelDataset } = await this.datasetProcessor.createModelSpecificDatasets(
-      filteredData,
-      {
+    const { smallModelDataset, largeModelDataset } =
+      await this.datasetProcessor.createModelSpecificDatasets(filteredData, {
         small: pipeline.config?.smallModel || { baseModel: 'small-model' },
         large: pipeline.config?.largeModel || { baseModel: 'large-model' },
-      }
-    );
+      });
 
     // Validate datasets
     const smallValidation = await this.datasetProcessor.validateJSONLFormat(smallModelDataset);
@@ -236,7 +265,7 @@ export class TogetherAIAutomationService extends Service {
 
     // Upload dataset
     const fileId = await this.togetherClient.uploadDataset((pipeline.datasets as any).small.path);
-    
+
     // Start training
     const trainingConfig: TogetherAIConfig = {
       ...pipeline.config?.smallModel,
@@ -265,7 +294,7 @@ export class TogetherAIAutomationService extends Service {
 
     // Upload dataset
     const fileId = await this.togetherClient.uploadDataset((pipeline.datasets as any).large.path);
-    
+
     // Start training
     const trainingConfig: TogetherAIConfig = {
       ...pipeline.config?.largeModel,
@@ -288,7 +317,11 @@ export class TogetherAIAutomationService extends Service {
     elizaLogger.info(`Pipeline ${pipeline.id}: Deploying models`);
     this.updatePhaseStatus(pipeline.id, 'deployment', 'in-progress');
 
-    const { autoDecision, budget, expectedUsage } = pipeline.config?.deployment || { autoDecision: true, budget: 100, expectedUsage: 1000 };
+    const { autoDecision, budget, expectedUsage } = pipeline.config?.deployment || {
+      autoDecision: true,
+      budget: 100,
+      expectedUsage: 1000,
+    };
 
     // Make deployment decisions for both models
     const smallDecision = this.togetherClient.makeDeploymentDecision(
@@ -320,24 +353,29 @@ export class TogetherAIAutomationService extends Service {
   /**
    * Monitor training job until completion
    */
-  private async monitorTrainingJob(jobId: string, modelSize: 'small' | 'large', pipelineId: string): Promise<void> {
+  private async monitorTrainingJob(
+    jobId: string,
+    modelSize: 'small' | 'large',
+    pipelineId: string
+  ): Promise<void> {
     elizaLogger.info(`Monitoring ${modelSize} model training job: ${jobId}`);
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const job = await this.togetherClient.getJobStatus(jobId);
-      
+
       elizaLogger.info(`Job ${jobId} status: ${job.status}`);
 
       if (job.status === 'completed') {
         elizaLogger.info(`Training job ${jobId} completed successfully`);
-        
+
         // Update pipeline with trained model info
         const pipeline = this.activePipelines.get(pipelineId);
         if (pipeline) {
           (pipeline.models as any)[modelSize].fineTunedModel = job.fineTunedModel;
           (pipeline.models as any)[modelSize].completedAt = new Date();
         }
-        
+
         break;
       } else if (job.status === 'failed') {
         throw new Error(`Training job ${jobId} failed: ${job.error}`);
@@ -346,7 +384,7 @@ export class TogetherAIAutomationService extends Service {
       }
 
       // Wait before next check
-      await new Promise(resolve => setTimeout(resolve, 30000)); // Check every 30 seconds
+      await new Promise((resolve) => setTimeout(resolve, 30000)); // Check every 30 seconds
     }
   }
 
@@ -373,7 +411,11 @@ export class TogetherAIAutomationService extends Service {
       };
     } else {
       // Download and set up for local inference
-      await this.setupLocalInference((pipeline.models as any).small.fineTunedModel!, 'small', pipeline.id);
+      await this.setupLocalInference(
+        (pipeline.models as any).small.fineTunedModel!,
+        'small',
+        pipeline.id
+      );
     }
 
     if (largeDecision.platform === 'together-ai') {
@@ -388,14 +430,22 @@ export class TogetherAIAutomationService extends Service {
       };
     } else {
       // Set up local infrastructure
-      await this.setupLocalInference((pipeline.models as any).large.fineTunedModel!, 'large', pipeline.id);
+      await this.setupLocalInference(
+        (pipeline.models as any).large.fineTunedModel!,
+        'large',
+        pipeline.id
+      );
     }
   }
 
   /**
    * Set up local inference
    */
-  private async setupLocalInference(modelName: string, size: 'small' | 'large', pipelineId: string): Promise<void> {
+  private async setupLocalInference(
+    modelName: string,
+    size: 'small' | 'large',
+    pipelineId: string
+  ): Promise<void> {
     elizaLogger.info(`Setting up local inference for ${size} model: ${modelName}`);
 
     // This would implement:
@@ -427,7 +477,9 @@ export class TogetherAIAutomationService extends Service {
    */
   async cancelPipeline(pipelineId: string): Promise<boolean> {
     const pipeline = this.activePipelines.get(pipelineId);
-    if (!pipeline) return false;
+    if (!pipeline) {
+      return false;
+    }
 
     elizaLogger.info(`Cancelling pipeline ${pipelineId}`);
 
@@ -443,11 +495,17 @@ export class TogetherAIAutomationService extends Service {
     return true;
   }
 
-  private updatePipelineStatus(pipelineId: string, status: AutomationPipeline['status'], error?: string): void {
+  private updatePipelineStatus(
+    pipelineId: string,
+    status: AutomationPipeline['status'],
+    error?: string
+  ): void {
     const pipeline = this.activePipelines.get(pipelineId);
     if (pipeline) {
       pipeline.status = status;
-      if (error) pipeline.error = error;
+      if (error) {
+        pipeline.error = error;
+      }
       if (status === 'completed' || status === 'failed' || status === 'cancelled') {
         pipeline.completedAt = Date.now();
       }
@@ -477,9 +535,9 @@ export class TogetherAIAutomationService extends Service {
 
   async stop(): Promise<void> {
     elizaLogger.info('Stopping Together.ai Automation Service');
-    
+
     await this.dataCollector.stopCollection();
-    
+
     // Cancel any active pipelines
     for (const pipelineId of this.activePipelines.keys()) {
       await this.cancelPipeline(pipelineId);

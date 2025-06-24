@@ -1,4 +1,4 @@
-import { Service, ServiceType } from './service';
+import { Service } from './service';
 import { UUID } from './primitives';
 
 // Core universal wallet types
@@ -283,16 +283,16 @@ export interface ChainAdapter {
   readonly name: string;
   readonly nativeToken: string;
   readonly capabilities: WalletCapability[];
-  
+
   // Core operations
   getBalance(address: string, tokenAddress?: string): Promise<UniversalTokenBalance>;
   transfer(params: UniversalTransferParams): Promise<UniversalTransactionResult>;
   sendTransaction(params: UniversalTransactionParams): Promise<UniversalTransactionResult>;
-  
+
   // Advanced operations
   estimateGas(params: UniversalTransactionParams): Promise<GasEstimate>;
   simulateTransaction(params: UniversalTransactionParams): Promise<SimulationResult>;
-  
+
   // Optional operations
   swap?(params: SwapParams): Promise<UniversalTransactionResult>;
   stake?(params: any): Promise<UniversalTransactionResult>;
@@ -304,38 +304,38 @@ export interface IUniversalWalletService extends Service {
   // Core identification
   readonly chainSupport: string[];
   readonly capabilities: WalletCapability[];
-  
+
   // Portfolio management
   getPortfolio(owner?: string): Promise<UniversalPortfolio>;
   getBalances(owner?: string): Promise<UniversalTokenBalance[]>;
-  
+
   // Transaction operations
   transfer(params: UniversalTransferParams): Promise<UniversalTransactionResult>;
   swap(params: SwapParams): Promise<UniversalTransactionResult>;
   bridge(params: BridgeParams): Promise<UniversalTransactionResult>;
   sendTransaction(params: UniversalTransactionParams): Promise<UniversalTransactionResult>;
-  
+
   // Transaction utilities
   simulateTransaction(params: UniversalTransactionParams): Promise<SimulationResult>;
   estimateGas(params: UniversalTransactionParams): Promise<GasEstimate>;
   getTransaction(hash: string, chain?: string): Promise<UniversalTransactionResult>;
-  
+
   // Multi-chain support
   getSupportedChains(): Promise<ChainInfo[]>;
   switchChain(chainId: string): Promise<void>;
   isChainSupported(chainId: string): boolean;
-  
+
   // Payment protocol support (X.402)
   createPaymentRequest?(params: PaymentRequestParams): Promise<UniversalPaymentRequest>;
   processPayment?(request: UniversalPaymentRequest): Promise<PaymentResult>;
   verifyPayment?(paymentId: string): Promise<PaymentVerification>;
-  
+
   // Wallet management
   createWallet?(params: WalletCreationParams): Promise<WalletInstance>;
   importWallet?(params: WalletImportParams): Promise<WalletInstance>;
   getWallets?(filter?: WalletFilter): Promise<WalletInstance[]>;
   deleteWallet?(walletId: UUID): Promise<boolean>;
-  
+
   // Security & sessions
   createSession?(params: SessionParams): Promise<SessionKey>;
   validateSession?(sessionId: string, operation: string): Promise<boolean>;

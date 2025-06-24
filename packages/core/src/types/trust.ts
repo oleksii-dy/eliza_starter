@@ -48,14 +48,14 @@ export enum TrustEvidenceType {
   VERIFIED_IDENTITY = 'VERIFIED_IDENTITY',
   SUCCESSFUL_PAYMENT = 'SUCCESSFUL_PAYMENT',
   POSITIVE_FEEDBACK = 'POSITIVE_FEEDBACK',
-  
+
   // Negative evidence
   PROMISE_BROKEN = 'PROMISE_BROKEN',
   HARMFUL_ACTION = 'HARMFUL_ACTION',
   SECURITY_VIOLATION = 'SECURITY_VIOLATION',
   FAILED_PAYMENT = 'FAILED_PAYMENT',
   NEGATIVE_FEEDBACK = 'NEGATIVE_FEEDBACK',
-  
+
   // Neutral evidence
   IDENTITY_CHANGE = 'IDENTITY_CHANGE',
   ROLE_CHANGE = 'ROLE_CHANGE',
@@ -137,7 +137,10 @@ export interface ITrustProvider {
   /**
    * Check if entity meets trust requirements
    */
-  evaluateTrustRequirements(entityId: UUID, requirements: TrustRequirements): Promise<TrustDecision>;
+  evaluateTrustRequirements(
+    entityId: UUID,
+    requirements: TrustRequirements
+  ): Promise<TrustDecision>;
 
   /**
    * Check permission for specific action/resource
@@ -152,7 +155,12 @@ export interface ITrustProvider {
   /**
    * Record trust-related activity
    */
-  recordActivity(entityId: UUID, activity: string, result: 'success' | 'failure', metadata?: Record<string, any>): Promise<void>;
+  recordActivity(
+    entityId: UUID,
+    activity: string,
+    result: 'success' | 'failure',
+    metadata?: Record<string, any>
+  ): Promise<void>;
 }
 
 /**

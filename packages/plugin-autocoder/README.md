@@ -24,14 +24,6 @@ The AutoCoder plugin transforms ElizaOS into a powerful autonomous code generati
 - **Job Management**: Track and control plugin creation jobs with real-time status
 - **Plugin Manager Integration**: Seamlessly integrates with ElizaOS Plugin Manager
 
-#### N8n Workflow to Plugin Conversion (NEW!)
-- **Natural Language Plugin Creation**: Simply describe what you want your plugin to do
-- **Automatic Workflow Generation**: System creates n8n workflows behind the scenes
-- **Smart Component Mapping**: Converts workflows to appropriate ElizaOS components (actions, providers, services)
-- **Intelligent Caching**: Adds performance optimizations automatically
-- **State Management**: Persistent state handling for services
-- **Complete Package**: Generates tests, documentation, and TypeScript types
-
 #### N8n Workflow Creation
 - **Natural Language to Workflow**: Generate complete n8n workflows from descriptions
 - **JSON Specification Support**: Create workflows from detailed JSON specs
@@ -91,26 +83,11 @@ const agent = new Agent({
 
 ### Usage Examples
 
-#### Creating an ElizaOS Plugin (Traditional)
+#### Creating an ElizaOS Plugin
 ```
 User: Create a plugin that tracks cryptocurrency prices and sends alerts
 
 Agent: I'll create a cryptocurrency price tracking plugin with alert capabilities for you.
-```
-
-#### Creating an ElizaOS Plugin from Natural Language (NEW!)
-```
-User: Create a plugin that monitors GitHub for new issues and posts to Slack
-
-Agent: I'll create a plugin that monitors GitHub and posts to Slack. Behind the scenes, I'll:
-- Generate n8n workflows for the monitoring and posting logic
-- Convert webhook triggers to ElizaOS actions
-- Create providers for data fetching with caching
-- Set up services for background monitoring
-- Generate complete TypeScript code with tests
-
-Project ID: 123e4567-e89b-12d3-a456-426614174000
-Status: Started... You can check progress with "check plugin status <project-id>"
 ```
 
 #### Building N8n Workflows

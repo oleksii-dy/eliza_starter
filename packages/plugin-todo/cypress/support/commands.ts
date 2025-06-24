@@ -12,8 +12,8 @@
 Cypress.Commands.add('uploadFile', (selector: string, fileName: string, fileContent: string, mimeType: string = 'text/plain') => {
   cy.get(selector).selectFile({
     contents: Cypress.Buffer.from(fileContent),
-    fileName: fileName,
-    mimeType: mimeType
+    fileName,
+    mimeType
   }, { force: true });
 });
 
@@ -50,8 +50,8 @@ Cypress.Commands.add(
     cy.get('[data-testid="file-upload-input"]').selectFile(
       {
         contents: Cypress.Buffer.from(content),
-        fileName: fileName,
-        mimeType: mimeType,
+        fileName,
+        mimeType,
       },
       { force: true }
     );

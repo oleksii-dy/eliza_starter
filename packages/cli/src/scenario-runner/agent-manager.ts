@@ -1,3 +1,6 @@
+// IMPLEMENTED: Using real runtime factory for proper isolation
+import { RealRuntimeFactory, type RealRuntimeConfig } from '../utils/real-runtime-factory.js';
+
 import {
   type IAgentRuntime,
   type UUID,
@@ -5,9 +8,6 @@ import {
   type Character,
   logger,
   asUUID,
-  type Action,
-  type State,
-  type HandlerCallback,
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import type { ScenarioActor } from './types.js';
@@ -33,12 +33,12 @@ export class AgentManager {
     this.messageRouter = new MessageRouter();
   }
 
-  private getAgentMessages(agentId: UUID): Memory[] {
-    if (!this.agentMessageStore.has(agentId)) {
-      this.agentMessageStore.set(agentId, []);
-    }
-    return this.agentMessageStore.get(agentId)!;
-  }
+  // private _getAgentMessages(agentId: UUID): Memory[] {
+  //   if (!this.agentMessageStore.has(agentId)) {
+  //     this.agentMessageStore.set(agentId, []);
+  //   }
+  //   return this.agentMessageStore.get(agentId)!;
+  // }
 
   async createAgentForActor(
     actor: ScenarioActor,
@@ -86,104 +86,44 @@ export class AgentManager {
   private async createIsolatedRuntime(
     character: Character,
     worldId: UUID,
-    _roomId: UUID
+    roomId: UUID
   ): Promise<IAgentRuntime> {
-    // Create a proxy runtime that isolates memory and services
-    const agentId = asUUID(uuidv4());
-    const messages = this.getAgentMessages(agentId);
-
-    // Create a minimal runtime that extends the primary runtime
-    const isolatedRuntime = Object.create(this.primaryRuntime);
-
-    // Override specific properties
-    isolatedRuntime.agentId = agentId;
-    isolatedRuntime.character = character;
-
-    // Override memory operations to be isolated
-    isolatedRuntime.createMemory = async (memory: Memory): Promise<void> => {
-      messages.push({ ...memory, agentId });
-    };
-
-    isolatedRuntime.getMemories = async (params: any) => {
-      return messages
-        .filter(
-          (m: Memory) =>
-            (!params.roomId || m.roomId === params.roomId) &&
-            (!params.agentId || m.agentId === params.agentId)
-        )
-        .slice(0, params.count || params.limit || 50);
-    };
-
-    isolatedRuntime.updateMemory = async (memory: Partial<Memory> & { id: UUID }) => {
-      const index = messages.findIndex((m: Memory) => m.id === memory.id);
-      if (index >= 0) {
-        messages[index] = { ...messages[index], ...memory };
-        return true;
-      }
-      return false;
-    };
-
-    isolatedRuntime.deleteMemory = async (id: UUID): Promise<void> => {
-      const index = messages.findIndex((m: Memory) => m.id === id);
-      if (index >= 0) {
-        messages.splice(index, 1);
-      }
-    };
-
-    isolatedRuntime.searchMemories = async (params: any) => {
-      const query = params.query?.toLowerCase() || '';
-      return messages.filter((m: Memory) => m.content.text?.toLowerCase().includes(query));
-    };
-
-    // Override composeState to use isolated memory
-    isolatedRuntime.composeState = async (message: Memory) => {
-      const memories = await isolatedRuntime.getMemories({
-        roomId: message.roomId,
-        agentId: isolatedRuntime.agentId,
-        count: 50,
-      });
-
-      return {
-        values: {
-          agentName: character.name,
-          roomId: message.roomId,
+    // Create real runtime configuration for proper isolation
+    const config: RealRuntimeConfig = {
+      character,
+      database: {
+        type: 'pglite',
+        dataDir: `/tmp/eliza-scenario-${worldId}`,
+      },
+      plugins: {
+        enabled: character.plugins || [],
+        config: {},
+      },
+      environment: {
+        apiKeys: {
+          OPENAI_API_KEY: process.env.OPENAI_API_KEY || 'test-openai-key',
+          ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || 'test-anthropic-key',
+        },
+        settings: {
+          NODE_ENV: 'test',
+          LOG_LEVEL: 'info',
           worldId,
+          roomId,
         },
-        data: {
-          memories,
-          character,
-        },
-        text: memories.map((m: Memory) => m.content.text).join('\n'),
-      };
+      },
+      isolation: {
+        uniqueAgentId: true,
+        isolatedDatabase: true,
+        cleanupOnStop: true,
+      },
     };
 
-    // Override processActions to track action execution
-    if (isolatedRuntime.processActions) {
-      const originalProcessActions = isolatedRuntime.processActions.bind(isolatedRuntime);
-      isolatedRuntime.processActions = async (
-        message: Memory,
-        responses: Memory[],
-        state?: State,
-        callback?: HandlerCallback
-      ) => {
-        // Track action execution
-        const actions = message.content.actions || [];
-        for (const actionName of actions) {
-          const action = isolatedRuntime.actions?.find((a: Action) => a.name === actionName);
-          if (action) {
-            const result = await originalProcessActions(message, responses, state, callback);
-            this.agents.get(agentId)?.actionHistory.push({
-              timestamp: Date.now(),
-              action: action.name,
-              params: { message: message.content.text },
-              result,
-            });
-          }
-        }
-      };
-    }
+    // Create real runtime instance
+    const runtime = await RealRuntimeFactory.createRuntime(config);
 
-    return isolatedRuntime;
+    logger.info(`Created isolated runtime for actor ${character.name} (${runtime.agentId})`);
+
+    return runtime;
   }
 
   async routeMessage(fromActorId: UUID, toActorId: UUID | 'all', message: Memory): Promise<void> {
@@ -278,14 +218,17 @@ export class AgentManager {
   }
 
   async cleanup(): Promise<void> {
-    // Stop all services
+    // Stop all runtime instances using the factory
     for (const agent of this.agents.values()) {
-      for (const [_, service] of agent.runtime.services) {
-        await service.stop();
+      try {
+        await RealRuntimeFactory.stopRuntime(agent.runtime);
+      } catch (error) {
+        logger.warn(`Error stopping runtime for agent ${agent.actor.id}:`, error);
       }
     }
 
     this.agents.clear();
+    this.agentMessageStore.clear();
   }
 }
 

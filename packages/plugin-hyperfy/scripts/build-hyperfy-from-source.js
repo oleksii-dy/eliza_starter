@@ -46,7 +46,7 @@ try {
 
   // Copy built files
   console.log('\n📋 Copying built files...');
-  
+
   // Copy client build
   if (existsSync(join(BUILD_DIR, 'dist'))) {
     execSync(`cp -r ${join(BUILD_DIR, 'dist')}/* ${OUTPUT_DIR}`, { stdio: 'inherit' });
@@ -84,11 +84,11 @@ try {
 
 } catch (error) {
   console.error('\n❌ Build failed:', error.message);
-  
+
   // Clean up on failure
   if (existsSync(BUILD_DIR)) {
     rmSync(BUILD_DIR, { recursive: true, force: true });
   }
-  
+
   process.exit(1);
-} 
+}

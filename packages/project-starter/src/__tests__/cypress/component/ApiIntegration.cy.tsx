@@ -1,11 +1,15 @@
 import React from 'react';
 import '../../../frontend/index.css';
 
+interface ApiResponse {
+  items?: string[] | null;
+}
+
 /**
  * Example component that fetches data from an API using React state
  */
 const DataFetchingComponent: React.FC<{ agentId: string }> = ({ agentId }) => {
-  const [data, setData] = React.useState<any>(null);
+  const [data, setData] = React.useState<ApiResponse | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<Error | null>(null);
 
@@ -30,13 +34,16 @@ const DataFetchingComponent: React.FC<{ agentId: string }> = ({ agentId }) => {
     fetchData();
   }, [agentId]);
 
-  if (isLoading) return <div data-testid="loading">Loading agent data...</div>;
-  if (error)
+  if (isLoading) {
+    return <div data-testid="loading">Loading agent data...</div>;
+  }
+  if (error) {
     return (
       <div data-testid="error" className="text-red-500">
         Error: {error.message}
       </div>
     );
+  }
 
   return (
     <div data-testid="data-display">

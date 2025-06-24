@@ -12,9 +12,9 @@ describe('CharacterFileManager', () => {
       character: {
         bio: ['Original bio'],
         topics: ['topic1', 'topic2'],
-        name: 'TestAgent'
+        name: 'TestAgent',
       },
-      agentId: 'test-agent-id'
+      agentId: 'test-agent-id',
     } as any;
     fileManager = new CharacterFileManager(mockRuntime);
   });
@@ -23,7 +23,7 @@ describe('CharacterFileManager', () => {
     it('should validate valid modifications', () => {
       const modification = {
         bio: ['New bio line'],
-        topics: ['new topic']
+        topics: ['new topic'],
       };
 
       const result = fileManager.validateModification(modification);
@@ -34,7 +34,7 @@ describe('CharacterFileManager', () => {
     it('should reject modifications with XSS attempts', () => {
       const modification = {
         bio: ['<script>alert("xss")</script>'],
-        topics: ['javascript:void(0)']
+        topics: ['javascript:void(0)'],
       };
 
       const result = fileManager.validateModification(modification);
@@ -45,7 +45,7 @@ describe('CharacterFileManager', () => {
     it('should reject modifications exceeding limits', () => {
       const modification = {
         bio: new Array(21).fill('Too many bio elements'),
-        topics: new Array(51).fill('Too many topics')
+        topics: new Array(51).fill('Too many topics'),
       };
 
       const result = fileManager.validateModification(modification);
@@ -57,7 +57,7 @@ describe('CharacterFileManager', () => {
     it('should reject empty string values', () => {
       const modification = {
         bio: ['', 'Valid bio'],
-        topics: ['valid topic', '']
+        topics: ['valid topic', ''],
       };
 
       const result = fileManager.validateModification(modification);
@@ -68,7 +68,7 @@ describe('CharacterFileManager', () => {
     it('should accept edge case of maximum allowed elements', () => {
       const modification = {
         bio: new Array(20).fill('Valid bio element'),
-        topics: new Array(50).fill('validtopic')
+        topics: new Array(50).fill('validtopic'),
       };
 
       const result = fileManager.validateModification(modification);
@@ -78,15 +78,15 @@ describe('CharacterFileManager', () => {
 
     it('should validate system prompt modifications', () => {
       const validSystem = {
-        system: 'You are a helpful assistant that provides accurate information.'
+        system: 'You are a helpful assistant that provides accurate information.',
       };
 
       const invalidSystem = {
-        system: '<script>alert("xss")</script>'
+        system: '<script>alert("xss")</script>',
       };
 
       const shortSystem = {
-        system: 'Too short'
+        system: 'Too short',
       };
 
       expect(fileManager.validateModification(validSystem).valid).toBe(true);
@@ -101,4 +101,4 @@ describe('CharacterFileManager', () => {
       expect(CharacterFileManager.serviceType).toBe('character_management');
     });
   });
-}); 
+});

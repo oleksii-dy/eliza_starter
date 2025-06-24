@@ -1,7 +1,6 @@
 import { AgentRuntime, IWalletService, Service, ServiceType, WalletPortfolio } from '@elizaos/core';
 
 const DEFAULT_QUOTE_ASSET = 'USDC'; // Default asset for cash
-const DEFAULT_TRANSACTION_FEE_FIXED = 0.1; // Example fixed fee in quote asset
 
 interface DummyPositionLot {
   price: number;
@@ -99,9 +98,9 @@ export class DummyWalletService extends Service implements IWalletService {
     }
     this.balances.set(assetSymbolOrAddress, quantity);
     this.positions.set(assetSymbolOrAddress, {
-      quantity: quantity,
-      averagePrice: averagePrice,
-      lots: [{ price: averagePrice, quantity: quantity, timestamp: Date.now() }], // Create a single lot for simplicity
+      quantity,
+      averagePrice,
+      lots: [{ price: averagePrice, quantity, timestamp: Date.now() }], // Create a single lot for simplicity
     });
     console.log(
       `[${DummyWalletService.serviceType}] Set holding for ${assetSymbolOrAddress}: ${quantity} @ ${averagePrice}`

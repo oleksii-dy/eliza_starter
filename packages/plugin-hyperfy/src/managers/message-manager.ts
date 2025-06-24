@@ -14,8 +14,8 @@ import { HyperfyService } from '../service.js';
 import { agentActivityLock } from './guards';
 import { hyperfyEventType } from '../events';
 import moment from 'moment';
-import { generateId } from '../hyperfy/core/utils.js';
-import { HyperfyChatMessage } from '../types/hyperfy.js';
+import { v4 as uuidv4 } from 'uuid';
+import type { HyperfyChatMessage } from '../types/hyperfy.js';
 
 export class MessageManager {
   private runtime: IAgentRuntime;
@@ -60,7 +60,7 @@ export class MessageManager {
         console.debug(`[Hyperfy Chat] Creating entity connection for: ${entityId}`);
         // Ensure connection for the sender entity
         await this.runtime.ensureConnection({
-          entityId: entityId,
+          entityId,
           roomId: elizaRoomId,
           userName: senderName,
           name: senderName,
@@ -77,7 +77,7 @@ export class MessageManager {
         console.debug(`[Hyperfy Chat] Creating memory: ${messageId}`);
         const memory: Memory = {
           id: messageId,
-          entityId: entityId,
+          entityId,
           agentId: this.runtime.agentId,
           roomId: elizaRoomId,
           worldId: hyperfyWorldId,
@@ -158,7 +158,7 @@ export class MessageManager {
         await this.runtime.emitEvent(hyperfyEventType.MESSAGE_RECEIVED, {
           runtime: this.runtime,
           message: memory,
-          callback: callback,
+          callback,
           source: 'hyperfy',
           onComplete: () => {
             agentActivityLock.exit();
@@ -195,9 +195,9 @@ export class MessageManager {
     }
 
     const chatMessage: HyperfyChatMessage = {
-      id: generateId(),
+      id: this.generateId(),
       entityId: agentPlayerId,
-      text: text,
+      text,
       timestamp: Date.now(),
       from: this.runtime.character.name,
     };
@@ -304,5 +304,10 @@ export class MessageManager {
 
   private getService() {
     return this.runtime.getService<HyperfyService>(HyperfyService.serviceName);
+  }
+
+  // Private method to generate ID
+  private generateId(): string {
+    return `entity-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   }
 }

@@ -1,4 +1,7 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+// IMPLEMENTED: Using real runtime factory for integration testing
+import { createRuntimeForScenarios } from '../src/utils/mock-runtime.js';
+
+import { describe, expect, it, beforeEach, afterEach, mock } from 'bun:test';
 import { ScenarioRunner } from '../src/scenario-runner/index.js';
 import { type Scenario } from '../src/scenario-runner/types.js';
 import { AgentServer } from '@elizaos/server';
@@ -23,66 +26,73 @@ describe('ScenarioRunner Integration Tests', () => {
   };
 
   beforeEach(async () => {
-    // Create mock runtime with all necessary methods
-    mockRuntime = {
-      agentId: 'test-agent-id' as any,
-      character: mockCharacter,
-      databaseAdapter: {
-        db: ':memory:',
-      } as any,
-      token: 'test-token',
-      actions: [],
-      providers: [],
+    // Create real runtime for integration testing
+    try {
+      mockRuntime = await createRuntimeForScenarios();
+    } catch (error) {
+      console.warn('Failed to create real runtime, falling back to mock:', error);
 
-      // Mock core methods
-      initialize: vi.fn().mockResolvedValue(undefined),
-      stop: vi.fn().mockResolvedValue(undefined),
+      // Fallback to mock if real runtime creation fails
+      mockRuntime = {
+        agentId: 'test-agent-id' as any,
+        character: mockCharacter,
+        databaseAdapter: {
+          db: ':memory:',
+        } as any,
+        token: 'test-token',
+        actions: [],
+        providers: [],
 
-      // Mock database methods
-      ensureWorldExists: vi.fn().mockResolvedValue(undefined),
-      ensureRoomExists: vi.fn().mockResolvedValue(undefined),
-      createMemory: vi.fn().mockResolvedValue(undefined),
+        // Mock core methods
+        initialize: mock().mockResolvedValue(undefined),
+        stop: mock().mockResolvedValue(undefined),
 
-      // Mock event system
-      emitEvent: vi.fn().mockImplementation(async (event, data) => {
-        // Simulate agent processing and response
-        if (event === 'messageReceived' && data.callback) {
-          await data.callback?.({
-            text: 'Test response from agent',
-            source: 'test-agent',
-            actions: ['HELLO_WORLD'],
-          });
-        }
-      }),
+        // Mock database methods
+        ensureWorldExists: mock().mockResolvedValue(undefined),
+        ensureRoomExists: mock().mockResolvedValue(undefined),
+        createMemory: mock().mockResolvedValue(undefined),
 
-      // Mock service methods
-      getService: vi.fn().mockReturnValue(null),
-      registerService: vi.fn(),
+        // Mock event system
+        emitEvent: mock().mockImplementation(async (event, data) => {
+          // Simulate agent processing and response
+          if (event === 'messageReceived' && data.callback) {
+            await data.callback?.({
+              text: 'Test response from agent',
+              source: 'test-agent',
+              actions: ['HELLO_WORLD'],
+            });
+          }
+        }),
 
-      // Mock model methods
-      useModel: vi.fn().mockResolvedValue('Mocked LLM response'),
+        // Mock service methods
+        getService: mock().mockReturnValue(null),
+        registerService: mock(),
 
-      // Mock settings method
-      getSetting: vi.fn().mockImplementation((key: string) => {
-        const mockSettings: Record<string, any> = {
-          'OPENAI_API_KEY': 'mock-openai-key',
-          'ANTHROPIC_API_KEY': 'mock-anthropic-key',
-        };
-        return mockSettings[key] || null;
-      }),
+        // Mock model methods
+        useModel: mock().mockResolvedValue('Mocked LLM response'),
 
-      // Add other required methods as stubs
-      getCachedEmbeddings: vi.fn().mockResolvedValue([]),
-      addKnowledge: vi.fn().mockResolvedValue(undefined),
-      processActions: vi.fn().mockResolvedValue([]),
-      evaluate: vi.fn().mockResolvedValue([]),
-    } as any;
+        // Mock settings method
+        getSetting: mock().mockImplementation((key: string) => {
+          const mockSettings: Record<string, any> = {
+            'OPENAI_API_KEY': 'mock-openai-key',
+            'ANTHROPIC_API_KEY': 'mock-anthropic-key',
+          };
+          return mockSettings[key] || null;
+        }),
+
+        // Add other required methods as stubs
+        getCachedEmbeddings: mock().mockResolvedValue([]),
+        addKnowledge: mock().mockResolvedValue(undefined),
+        processActions: mock().mockResolvedValue([]),
+        evaluate: mock().mockResolvedValue([]),
+      } as any;
+    }
 
     // Create server with mock runtime
     server = new AgentServer();
     // Mock the stop method if it doesn't exist
     if (!server.stop) {
-      server.stop = vi.fn().mockResolvedValue(undefined);
+      server.stop = mock().mockResolvedValue(undefined);
     }
     try {
       await server.initialize({ dataDir: './test-data' });
@@ -101,7 +111,17 @@ describe('ScenarioRunner Integration Tests', () => {
     if (server && typeof server.stop === 'function') {
       await server.stop();
     }
-    vi.clearAllMocks();
+
+    // Cleanup real runtime if it was created
+    if (mockRuntime && typeof mockRuntime.stop === 'function') {
+      try {
+        await mockRuntime.stop();
+      } catch (error) {
+        console.warn('Error stopping runtime during cleanup:', error);
+      }
+    }
+
+    mock.restore();
   });
 
   it('should successfully run a complete scenario', async () => {

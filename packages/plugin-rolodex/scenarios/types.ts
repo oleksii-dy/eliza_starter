@@ -10,4 +10,4 @@ export interface ScenarioMessage {
   content?: string;
   expectedActions?: string[];
   expectedContent?: string[];
-} 
+}

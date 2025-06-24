@@ -4,7 +4,7 @@
  */
 
 import { ResearchService } from '../src/service';
-import { elizaLogger, IAgentRuntime, ModelType } from '@elizaos/core';
+import { logger, IAgentRuntime, ModelType } from '@elizaos/core';
 import { ResearchDomain, ResearchDepth } from '../src/types';
 
 async function quickTest() {
@@ -24,7 +24,7 @@ async function quickTest() {
       return process.env[key] || '';
     },
 
-    getService: function (name: string) {
+    getService(name: string) {
       if (name === 'research') {
         return researchService;
       }
@@ -49,7 +49,7 @@ async function quickTest() {
       return completion.choices[0].message.content;
     },
 
-    logger: elizaLogger,
+    logger: logger,
   } as any;
 
   const researchService = await ResearchService.start(runtime);
@@ -101,18 +101,18 @@ async function quickTest() {
         console.log(`\n✅ Research completed in ${Math.round(duration / 1000)}s`);
 
         // Log basic statistics
-        console.log(`\n📊 Research Statistics:`);
+        console.log('\n📊 Research Statistics:');
         console.log(`  - Sources found: ${updated.sources.length}`);
         console.log(`  - Findings extracted: ${updated.findings.length}`);
         console.log(`  - Word count: ${updated.report?.wordCount || 0}`);
 
         // Show summary if available
         if (updated.report?.summary) {
-          console.log(`\n📄 Summary preview:`);
-          console.log(updated.report.summary.substring(0, 200) + '...');
+          console.log('\n📄 Summary preview:');
+          console.log(`${updated.report.summary.substring(0, 200)}...`);
         }
 
-        console.log(`\n✅ SUCCESS: Deep research benchmark is working correctly!`);
+        console.log('\n✅ SUCCESS: Deep research benchmark is working correctly!');
         return true;
       } else if (updated.status === 'failed') {
         console.error(`\n❌ Research failed: ${updated.error}`);
@@ -144,13 +144,13 @@ async function quickTest() {
         console.log(`Final status: ${final.status}, phase: ${final.phase}`);
         console.log(`Sources collected: ${final.sources.length}`);
         console.log(
-          `\n✅ PARTIAL SUCCESS: Research is progressing correctly, just didn't complete in the short timeframe.`
+          '\n✅ PARTIAL SUCCESS: Research is progressing correctly, just didn\'t complete in the short timeframe.'
         );
       }
       return true; // Still a success - the system is working
     }
   } catch (error) {
-    console.error(`\n❌ ERROR in quick test:`, error);
+    console.error('\n❌ ERROR in quick test:', error);
     return false;
   } finally {
     await researchService.stop();

@@ -4,21 +4,21 @@
  * Tests the complete workflow with plugin integration
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import type { IAgentRuntime, Memory } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
 import { mvpCustomReasoningPlugin } from '../../mvp/mvp-plugin';
 
 // Mock elizaLogger
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
+mock.module('@elizaos/core', async () => {
+  const actual = await import('@elizaos/core');
   return {
     ...actual,
     elizaLogger: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      debug: mock(),
     },
   };
 });
@@ -42,10 +42,10 @@ function createFullMockRuntime(): IAgentRuntime {
     },
 
     // Mock useModel that tracks calls
-    useModel: vi.fn().mockResolvedValue('e2e model response'),
+    useModel: mock().mockResolvedValue('e2e model response'),
 
     // Mock plugin registration
-    registerAction: vi.fn().mockImplementation((action) => {
+    registerAction: mock().mockImplementation((action) => {
       actions.push(action);
     }),
 
@@ -56,31 +56,31 @@ function createFullMockRuntime(): IAgentRuntime {
 
     // Mock logger
     logger: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      debug: mock(),
     },
 
     // Mock service management
-    getService: vi.fn().mockImplementation((name) => {
+    getService: mock().mockImplementation((name) => {
       if (name === 'sql') {
         return {
-          query: vi.fn().mockResolvedValue([]),
+          query: mock().mockResolvedValue([]),
         };
       }
       return services.get(name);
     }),
 
-    registerService: vi.fn().mockImplementation((name, service) => {
+    registerService: mock().mockImplementation((name, service) => {
       services.set(name, service);
     }),
 
     // Other stubs
-    getSetting: vi.fn(),
-    composeState: vi.fn(),
-    processActions: vi.fn(),
-    evaluate: vi.fn(),
+    getSetting: mock(),
+    composeState: mock(),
+    processActions: mock(),
+    evaluate: mock(),
   } as unknown as IAgentRuntime;
 }
 
@@ -120,7 +120,7 @@ describe('MVP E2E Test - Complete Workflow', () => {
       createdAt: Date.now(),
     };
 
-    const enableCallback = vi.fn();
+    const enableCallback = mock();
     await enableAction!.handler(runtime, enableMessage, undefined, {}, enableCallback);
 
     // Verify enable callback
@@ -150,7 +150,7 @@ describe('MVP E2E Test - Complete Workflow', () => {
       createdAt: Date.now(),
     };
 
-    const statusCallback = vi.fn();
+    const statusCallback = mock();
     await statusAction!.handler(runtime, statusMessage, undefined, {}, statusCallback);
 
     expect(statusCallback).toHaveBeenCalledWith(
@@ -172,7 +172,7 @@ describe('MVP E2E Test - Complete Workflow', () => {
       createdAt: Date.now(),
     };
 
-    const disableCallback = vi.fn();
+    const disableCallback = mock();
     await disableAction!.handler(runtime, disableMessage, undefined, {}, disableCallback);
 
     expect(disableCallback).toHaveBeenCalledWith(
@@ -216,8 +216,8 @@ describe('MVP E2E Test - Complete Workflow', () => {
   it('should handle database initialization failure gracefully', async () => {
     // Create runtime with failing database
     const failingRuntime = createFullMockRuntime();
-    failingRuntime.getService = vi.fn().mockReturnValue({
-      query: vi.fn().mockRejectedValue(new Error('Database connection failed')),
+    failingRuntime.getService = mock().mockReturnValue({
+      query: mock().mockRejectedValue(new Error('Database connection failed')),
     });
 
     // Plugin initialization should not fail
@@ -233,7 +233,7 @@ describe('MVP E2E Test - Complete Workflow', () => {
   it('should work without database service', async () => {
     // Create runtime without SQL service
     const noDatabaseRuntime = createFullMockRuntime();
-    noDatabaseRuntime.getService = vi.fn().mockReturnValue(null);
+    noDatabaseRuntime.getService = mock().mockReturnValue(null);
 
     // Should initialize without error
     await expect(mvpCustomReasoningPlugin.init?.({}, noDatabaseRuntime)).resolves.not.toThrow();
@@ -252,7 +252,7 @@ describe('MVP E2E Test - Complete Workflow', () => {
 
         // Should not throw
         await expect(
-          action.handler(noDatabaseRuntime, message, undefined, {}, vi.fn())
+          action.handler(noDatabaseRuntime, message, undefined, {}, mock())
         ).resolves.not.toThrow();
       }
     }

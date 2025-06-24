@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { FirecrawlContentExtractor } from '../integrations/content-extractors/firecrawl';
 import { PlaywrightContentExtractor } from '../integrations/content-extractors/playwright';
 
@@ -10,12 +10,12 @@ describe('Content Extractors - Real Implementation Tests', () => {
     });
     expect(extractor).toBeDefined();
   });
-  
+
   it('should initialize Playwright extractor', () => {
     const extractor = new PlaywrightContentExtractor();
     expect(extractor).toBeDefined();
   });
-  
+
   it('should handle missing API key for Firecrawl', () => {
     expect(() => {
       new FirecrawlContentExtractor({
@@ -23,4 +23,4 @@ describe('Content Extractors - Real Implementation Tests', () => {
       });
     }).toThrow('Firecrawl API key is required');
   });
-}); 
+});

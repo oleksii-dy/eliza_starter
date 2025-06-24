@@ -1,8 +1,7 @@
 import { type IAgentRuntime, type TestSuite, logger } from '@elizaos/core';
 import puppeteer, { Browser, Page } from 'puppeteer';
+import { SecretForm } from '../services/secret-form-service';
 import { UnifiedSecretManager } from '../services/unified-secret-manager';
-// NgrokService removed - using tunnel service instead
-import { SecretFormService } from '../services/secret-form-service';
 import type { SecretContext } from '../types';
 
 /**
@@ -21,10 +20,10 @@ export const secretFormsSuite: TestSuite = {
 
         try {
           // Get services
-          const formService = runtime.getService('SECRET_FORMS') as SecretFormService;
-          const secretsManager = runtime.getService('SECRETS') as UnifiedSecretManager;
+          const form = runtime.get('SECRET_FORMS') as SecretForm;
+          const _secretsManager = runtime.get('SECRETS') as UnifiedSecretManager;
 
-          if (!formService || !secretsManager) {
+          if (!form || !secretsManager) {
             throw new Error('Required services not available');
           }
 
@@ -57,7 +56,7 @@ export const secretFormsSuite: TestSuite = {
           let submittedValue: string | null = null;
 
           // Create form with callback
-          const { url, sessionId } = await formService.createSecretForm(
+          const { url, sessionId } = await form.createSecretForm(
             request,
             context,
             async (submission) => {
@@ -86,7 +85,7 @@ export const secretFormsSuite: TestSuite = {
           await page.waitForSelector('#secretForm', { timeout: 10000 });
 
           // Fill out the form
-          const testApiKey = 'sk-test-' + Date.now();
+          const testApiKey = `sk-test-${Date.now()}`;
           await page.type('#TEST_API_KEY', testApiKey);
 
           // Submit form
@@ -113,8 +112,12 @@ export const secretFormsSuite: TestSuite = {
           throw error;
         } finally {
           // Cleanup
-          if (page) await page.close();
-          if (browser) await browser.close();
+          if (page) {
+            await page.close();
+          }
+          if (browser) {
+            await browser.close();
+          }
         }
       },
     },
@@ -123,7 +126,7 @@ export const secretFormsSuite: TestSuite = {
       name: 'Test Form Expiration',
       async fn(runtime: IAgentRuntime): Promise<void> {
         try {
-          const formService = runtime.getService('SECRET_FORMS') as SecretFormService;
+          const form = runtime.get('SECRET_FORMS') as SecretForm;
 
           // Create form with short expiration
           const request = {
@@ -148,13 +151,13 @@ export const secretFormsSuite: TestSuite = {
             requesterId: runtime.agentId,
           };
 
-          const { sessionId } = await formService.createSecretForm(request, context);
+          const { sessionId } = await form.createSecretForm(request, context);
 
           // Wait for form to expire
           await new Promise((resolve) => setTimeout(resolve, 200));
 
           // Check session status
-          const session = formService.getSession(sessionId);
+          const session = form.getSession(sessionId);
           if (session && session.status === 'active') {
             throw new Error('Form should have expired');
           }
@@ -171,8 +174,8 @@ export const secretFormsSuite: TestSuite = {
         let page: Page | null = null;
 
         try {
-          const formService = runtime.getService('SECRET_FORMS') as SecretFormService;
-          const secretsManager = runtime.getService('SECRETS') as UnifiedSecretManager;
+          const form = runtime.get('SECRET_FORMS') as SecretForm;
+          const _secretsManager = runtime.get('SECRETS') as UnifiedSecretManager;
 
           // Create form with multiple fields
           const request = {
@@ -212,7 +215,7 @@ export const secretFormsSuite: TestSuite = {
             requesterId: runtime.agentId,
           };
 
-          const { url } = await formService.createSecretForm(request, context);
+          const { url } = await form.createSecretForm(request, context);
 
           // Launch browser and fill form
           browser = await puppeteer.launch({ headless: true });
@@ -246,8 +249,12 @@ export const secretFormsSuite: TestSuite = {
         } catch (error) {
           throw error;
         } finally {
-          if (page) await page.close();
-          if (browser) await browser.close();
+          if (page) {
+            await page.close();
+          }
+          if (browser) {
+            await browser.close();
+          }
         }
       },
     },
@@ -259,7 +266,7 @@ export const secretFormsSuite: TestSuite = {
         let page: Page | null = null;
 
         try {
-          const formService = runtime.getService('SECRET_FORMS') as SecretFormService;
+          const form = runtime.get('SECRET_FORMS') as SecretForm;
 
           // Create form with validation
           const request = {
@@ -283,7 +290,7 @@ export const secretFormsSuite: TestSuite = {
             requesterId: runtime.agentId,
           };
 
-          const { url } = await formService.createSecretForm(request, context);
+          const { url } = await form.createSecretForm(request, context);
 
           browser = await puppeteer.launch({ headless: true });
           page = await browser.newPage();
@@ -304,8 +311,12 @@ export const secretFormsSuite: TestSuite = {
         } catch (error) {
           throw error;
         } finally {
-          if (page) await page.close();
-          if (browser) await browser.close();
+          if (page) {
+            await page.close();
+          }
+          if (browser) {
+            await browser.close();
+          }
         }
       },
     },
@@ -314,11 +325,11 @@ export const secretFormsSuite: TestSuite = {
       name: 'Test Ngrok Tunnel Management',
       async fn(runtime: IAgentRuntime): Promise<void> {
         try {
-          const ngrokService = runtime.getService('NGROK') as any;
-          const formService = runtime.getService('SECRET_FORMS') as SecretFormService;
+          const ngrok = runtime.get('NGROK') as any;
+          const form = runtime.get('SECRET_FORMS') as SecretForm;
 
           // Get initial tunnel count
-          const initialTunnels = ngrokService.getActiveTunnels().length;
+          const initialTunnels = ngrok.getActiveTunnels().length;
 
           // Create a form (which creates a tunnel)
           const request = {
@@ -342,20 +353,20 @@ export const secretFormsSuite: TestSuite = {
             requesterId: runtime.agentId,
           };
 
-          const { sessionId } = await formService.createSecretForm(request, context);
+          const { sessionId } = await form.createSecretForm(request, context);
 
           // Verify tunnel was created
-          const activeTunnels = ngrokService.getActiveTunnels();
+          const activeTunnels = ngrok.getActiveTunnels();
           if (activeTunnels.length <= initialTunnels) {
             throw new Error('Tunnel was not created');
           }
 
           // Close the session
-          await formService.closeSession(sessionId);
+          await form.closeSession(sessionId);
 
           // Verify tunnel was cleaned up
           await new Promise((resolve) => setTimeout(resolve, 1000));
-          const finalTunnels = ngrokService.getActiveTunnels().length;
+          const finalTunnels = ngrok.getActiveTunnels().length;
 
           if (finalTunnels !== initialTunnels) {
             throw new Error('Tunnel was not cleaned up');

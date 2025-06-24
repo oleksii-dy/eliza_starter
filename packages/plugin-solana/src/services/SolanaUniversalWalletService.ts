@@ -399,7 +399,9 @@ export class SolanaUniversalWalletService extends Service implements IUniversalW
 
   private getRpcUrl(): string {
     const customRpc = this.runtime?.getSetting('SOLANA_RPC_URL');
-    if (customRpc) return customRpc;
+    if (customRpc) {
+      return customRpc;
+    }
 
     const network = this.runtime?.getSetting('SOLANA_NETWORK') || 'mainnet-beta';
     switch (network) {

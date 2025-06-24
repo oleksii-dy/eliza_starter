@@ -1,12 +1,12 @@
-import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, mock } from 'bun:test';
 import { parseEther, formatEther, parseUnits, formatUnits } from 'viem';
 import type { Address } from 'viem';
 
 import { WalletProvider } from '../providers/wallet';
 import { SwapAction } from '../actions/swap';
-import { 
-  mainnetChains, 
-  MAINNET_TOKENS, 
+import {
+  mainnetChains,
+  MAINNET_TOKENS,
   MAINNET_TEST_REQUIREMENTS,
   MAINNET_DEXES,
 } from './test-config';
@@ -17,8 +17,8 @@ const MAINNET_PRIVATE_KEY = process.env.MAINNET_TEST_PRIVATE_KEY;
 
 // Mock cache manager
 const mockCacheManager = {
-  get: vi.fn().mockResolvedValue(null),
-  set: vi.fn(),
+  get: mock().mockResolvedValue(null),
+  set: mock(),
 };
 
 describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swap Tests', () => {
@@ -32,14 +32,14 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
     }
 
     console.log('🚀 Initializing mainnet swap test suite...');
-    
+
     // Initialize wallet provider with mainnet chains
     wp = new WalletProvider(
       MAINNET_PRIVATE_KEY as `0x${string}`,
       mockCacheManager as any,
       mainnetChains
     );
-    
+
     swapAction = new SwapAction(wp);
     walletAddress = wp.getAddress();
     console.log(`📍 Test wallet address: ${walletAddress}`);
@@ -55,12 +55,14 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
     console.log(`⛽ Gas Price: ${formatUnits(gasPrice, 9)} Gwei`);
 
     // Check token balances
-    const balanceAbi = [{
-      inputs: [{ name: 'account', type: 'address' }],
-      name: 'balanceOf',
-      outputs: [{ name: '', type: 'uint256' }],
-      type: 'function',
-    }];
+    const balanceAbi = [
+      {
+        inputs: [{ name: 'account', type: 'address' }],
+        name: 'balanceOf',
+        outputs: [{ name: '', type: 'uint256' }],
+        type: 'function',
+      },
+    ];
 
     const usdcBalance = await publicClient.readContract({
       address: MAINNET_TOKENS.mainnet.USDC,
@@ -74,25 +76,27 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
     // Verify minimum balance
     const minBalance = parseEther(MAINNET_TEST_REQUIREMENTS.minBalances.ETH);
     if (ethBalance < minBalance) {
-      throw new Error(`Insufficient ETH balance. Need at least ${MAINNET_TEST_REQUIREMENTS.minBalances.ETH} ETH`);
+      throw new Error(
+        `Insufficient ETH balance. Need at least ${MAINNET_TEST_REQUIREMENTS.minBalances.ETH} ETH`
+      );
     }
   });
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('ETH to Stablecoin Swaps', () => {
     it('should swap ETH to USDC on mainnet', async () => {
       const amount = MAINNET_TEST_REQUIREMENTS.testAmounts.smallTransfer;
-      
+
       console.log(`🔄 Swapping ${amount} ETH to USDC on mainnet`);
 
       const result = await swapAction.swap({
         chain: 'mainnet',
         fromToken: MAINNET_TOKENS.mainnet.ETH,
         toToken: MAINNET_TOKENS.mainnet.USDC,
-        amount: amount,
+        amount,
       });
 
       expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
@@ -107,14 +111,16 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
 
       expect(receipt.status).toBe('success');
       console.log(`⛽ Gas used: ${formatEther(receipt.gasUsed * receipt.effectiveGasPrice)} ETH`);
-      
+
       // Check USDC balance increased
-      const balanceAbi = [{
-        inputs: [{ name: 'account', type: 'address' }],
-        name: 'balanceOf',
-        outputs: [{ name: '', type: 'uint256' }],
-        type: 'function',
-      }];
+      const balanceAbi = [
+        {
+          inputs: [{ name: 'account', type: 'address' }],
+          name: 'balanceOf',
+          outputs: [{ name: '', type: 'uint256' }],
+          type: 'function',
+        },
+      ];
 
       const newUsdcBalance = await publicClient.readContract({
         address: MAINNET_TOKENS.mainnet.USDC,
@@ -128,14 +134,14 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
 
     it('should swap ETH to USDT on mainnet', async () => {
       const amount = MAINNET_TEST_REQUIREMENTS.testAmounts.smallTransfer;
-      
+
       console.log(`🔄 Swapping ${amount} ETH to USDT on mainnet`);
 
       const result = await swapAction.swap({
         chain: 'mainnet',
         fromToken: MAINNET_TOKENS.mainnet.ETH,
         toToken: MAINNET_TOKENS.mainnet.USDT,
-        amount: amount,
+        amount,
       });
 
       expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
@@ -144,14 +150,14 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
 
     it('should swap ETH to DAI on mainnet', async () => {
       const amount = MAINNET_TEST_REQUIREMENTS.testAmounts.smallTransfer;
-      
+
       console.log(`🔄 Swapping ${amount} ETH to DAI on mainnet`);
 
       const result = await swapAction.swap({
         chain: 'mainnet',
         fromToken: MAINNET_TOKENS.mainnet.ETH,
         toToken: MAINNET_TOKENS.mainnet.DAI,
-        amount: amount,
+        amount,
       });
 
       expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
@@ -162,15 +168,17 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
   describe('Stablecoin to Stablecoin Swaps', () => {
     it('should swap USDC to USDT on mainnet', async () => {
       const amount = MAINNET_TEST_REQUIREMENTS.testAmounts.smallSwap;
-      
+
       // Check USDC balance
       const publicClient = wp.getPublicClient('mainnet');
-      const balanceAbi = [{
-        inputs: [{ name: 'account', type: 'address' }],
-        name: 'balanceOf',
-        outputs: [{ name: '', type: 'uint256' }],
-        type: 'function',
-      }];
+      const balanceAbi = [
+        {
+          inputs: [{ name: 'account', type: 'address' }],
+          name: 'balanceOf',
+          outputs: [{ name: '', type: 'uint256' }],
+          type: 'function',
+        },
+      ];
 
       const usdcBalance = await publicClient.readContract({
         address: MAINNET_TOKENS.mainnet.USDC,
@@ -190,7 +198,7 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
         chain: 'mainnet',
         fromToken: MAINNET_TOKENS.mainnet.USDC,
         toToken: MAINNET_TOKENS.mainnet.USDT,
-        amount: amount,
+        amount,
       });
 
       expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
@@ -199,15 +207,17 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
 
     it('should swap USDT to DAI on mainnet', async () => {
       const amount = MAINNET_TEST_REQUIREMENTS.testAmounts.smallSwap;
-      
+
       // Check USDT balance
       const publicClient = wp.getPublicClient('mainnet');
-      const balanceAbi = [{
-        inputs: [{ name: 'account', type: 'address' }],
-        name: 'balanceOf',
-        outputs: [{ name: '', type: 'uint256' }],
-        type: 'function',
-      }];
+      const balanceAbi = [
+        {
+          inputs: [{ name: 'account', type: 'address' }],
+          name: 'balanceOf',
+          outputs: [{ name: '', type: 'uint256' }],
+          type: 'function',
+        },
+      ];
 
       const usdtBalance = await publicClient.readContract({
         address: MAINNET_TOKENS.mainnet.USDT,
@@ -227,7 +237,7 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
         chain: 'mainnet',
         fromToken: MAINNET_TOKENS.mainnet.USDT,
         toToken: MAINNET_TOKENS.mainnet.DAI,
-        amount: amount,
+        amount,
       });
 
       expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
@@ -238,15 +248,17 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
   describe('Token to ETH Swaps', () => {
     it('should swap USDC back to ETH on mainnet', async () => {
       const amount = MAINNET_TEST_REQUIREMENTS.testAmounts.smallSwap;
-      
+
       // Check USDC balance
       const publicClient = wp.getPublicClient('mainnet');
-      const balanceAbi = [{
-        inputs: [{ name: 'account', type: 'address' }],
-        name: 'balanceOf',
-        outputs: [{ name: '', type: 'uint256' }],
-        type: 'function',
-      }];
+      const balanceAbi = [
+        {
+          inputs: [{ name: 'account', type: 'address' }],
+          name: 'balanceOf',
+          outputs: [{ name: '', type: 'uint256' }],
+          type: 'function',
+        },
+      ];
 
       const usdcBalance = await publicClient.readContract({
         address: MAINNET_TOKENS.mainnet.USDC,
@@ -266,7 +278,7 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
         chain: 'mainnet',
         fromToken: MAINNET_TOKENS.mainnet.USDC,
         toToken: MAINNET_TOKENS.mainnet.ETH,
-        amount: amount,
+        amount,
       });
 
       expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
@@ -285,14 +297,14 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
 
       const publicClient = wp.getPublicClient('polygon');
       const balance = await publicClient.getBalance({ address: walletAddress });
-      
+
       if (balance < parseEther('0.01')) {
         console.log('⚠️ Insufficient MATIC balance, skipping Polygon swap');
         return;
       }
 
       console.log(`💰 MATIC Balance: ${formatEther(balance)} MATIC`);
-      
+
       const amount = '0.001'; // Small MATIC amount
       console.log(`🔄 Swapping ${amount} MATIC to USDC on Polygon`);
 
@@ -300,7 +312,7 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
         chain: 'polygon',
         fromToken: MAINNET_TOKENS.polygon.MATIC,
         toToken: MAINNET_TOKENS.polygon.USDC,
-        amount: amount,
+        amount,
       });
 
       expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
@@ -317,14 +329,14 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
 
       const publicClient = wp.getPublicClient('arbitrum');
       const balance = await publicClient.getBalance({ address: walletAddress });
-      
+
       if (balance < parseEther('0.001')) {
         console.log('⚠️ Insufficient ETH balance on Arbitrum, skipping');
         return;
       }
 
       console.log(`💰 Arbitrum ETH Balance: ${formatEther(balance)} ETH`);
-      
+
       const amount = '0.0001'; // Small ETH amount
       console.log(`🔄 Swapping ${amount} ETH to USDC on Arbitrum`);
 
@@ -332,7 +344,7 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
         chain: 'arbitrum',
         fromToken: MAINNET_TOKENS.arbitrum.ETH,
         toToken: MAINNET_TOKENS.arbitrum.USDC,
-        amount: amount,
+        amount,
       });
 
       expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
@@ -343,7 +355,7 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
   describe('Aggregator Comparison', () => {
     it('should compare quotes from multiple aggregators', async () => {
       const amount = MAINNET_TEST_REQUIREMENTS.testAmounts.smallTransfer;
-      
+
       console.log(`📊 Comparing swap quotes for ${amount} ETH to USDC`);
       console.log('   Aggregators: LiFi, Bebop, 1inch (if available)');
 
@@ -353,7 +365,7 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
         chain: 'mainnet',
         fromToken: MAINNET_TOKENS.mainnet.ETH,
         toToken: MAINNET_TOKENS.mainnet.USDC,
-        amount: amount,
+        amount,
       });
 
       expect(result.hash).toBeDefined();
@@ -365,9 +377,9 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
     it('should estimate and optimize gas for swaps', async () => {
       const publicClient = wp.getPublicClient('mainnet');
       const gasPrice = await publicClient.getGasPrice();
-      
+
       console.log('⛽ Current gas price:', formatUnits(gasPrice, 9), 'Gwei');
-      
+
       // Estimate gas for different swap types
       const swapTypes = [
         { from: 'ETH', to: 'USDC', expectedGas: 150000n },
@@ -397,4 +409,4 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED)('Mainnet Swap Test Summary', () => {
     console.log('\n💡 All swaps executed with real tokens on mainnet');
     console.log('📈 Check transactions on Etherscan for details');
   });
-}); 
+});

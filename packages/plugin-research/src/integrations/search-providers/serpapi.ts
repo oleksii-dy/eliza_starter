@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { SearchResult } from '../../types';
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 
 export interface SerpAPIConfig {
   apiKey: string;
@@ -23,7 +23,7 @@ export class SerpAPISearchProvider {
     this.apiKey = config.apiKey;
     this.config = {
       country: 'us',
-      language: 'en', 
+      language: 'en',
       num: 10,
       ...config,
     };
@@ -31,7 +31,7 @@ export class SerpAPISearchProvider {
 
   async search(query: string, maxResults?: number): Promise<SearchResult[]> {
     try {
-      elizaLogger.info(`[SerpAPI] Searching for: ${query}`);
+      logger.info(`[SerpAPI] Searching for: ${query}`);
 
       const params: any = {
         q: query,
@@ -112,18 +112,18 @@ export class SerpAPISearchProvider {
         );
       }
 
-      elizaLogger.info(`[SerpAPI] Found ${results.length} results`);
+      logger.info(`[SerpAPI] Found ${results.length} results`);
       return results.slice(0, maxResults || this.config.num);
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
-          elizaLogger.error('[SerpAPI] Invalid API key');
+          logger.error('[SerpAPI] Invalid API key');
           throw new Error('Invalid SerpAPI key');
         } else if (error.response?.status === 429) {
-          elizaLogger.error('[SerpAPI] Rate limit exceeded');
+          logger.error('[SerpAPI] Rate limit exceeded');
           throw new Error('SerpAPI rate limit exceeded');
         }
-        elizaLogger.error(`[SerpAPI] API error: ${error.message}`, {
+        logger.error(`[SerpAPI] API error: ${error.message}`, {
           status: error.response?.status,
           data: error.response?.data,
         });
@@ -134,7 +134,7 @@ export class SerpAPISearchProvider {
 
   async searchNews(query: string, maxResults?: number): Promise<SearchResult[]> {
     try {
-      elizaLogger.info(`[SerpAPI] Searching news for: ${query}`);
+      logger.info(`[SerpAPI] Searching news for: ${query}`);
 
       const params = {
         q: query,
@@ -173,17 +173,17 @@ export class SerpAPISearchProvider {
         );
       }
 
-      elizaLogger.info(`[SerpAPI] Found ${results.length} news results`);
+      logger.info(`[SerpAPI] Found ${results.length} news results`);
       return results;
     } catch (error) {
-      elizaLogger.error('[SerpAPI] News search error:', error);
+      logger.error('[SerpAPI] News search error:', error);
       throw error;
     }
   }
 
   async searchScholar(query: string, maxResults?: number): Promise<SearchResult[]> {
     try {
-      elizaLogger.info(`[SerpAPI] Searching Google Scholar for: ${query}`);
+      logger.info(`[SerpAPI] Searching Google Scholar for: ${query}`);
 
       const params = {
         q: query,
@@ -227,17 +227,17 @@ export class SerpAPISearchProvider {
         );
       }
 
-      elizaLogger.info(`[SerpAPI] Found ${results.length} scholar results`);
+      logger.info(`[SerpAPI] Found ${results.length} scholar results`);
       return results;
     } catch (error) {
-      elizaLogger.error('[SerpAPI] Scholar search error:', error);
+      logger.error('[SerpAPI] Scholar search error:', error);
       throw error;
     }
   }
 
   async searchImages(query: string, maxResults?: number): Promise<Array<{ url: string; title: string; source: string }>> {
     try {
-      elizaLogger.info(`[SerpAPI] Searching images for: ${query}`);
+      logger.info(`[SerpAPI] Searching images for: ${query}`);
 
       const params = {
         q: query,
@@ -267,11 +267,11 @@ export class SerpAPISearchProvider {
         );
       }
 
-      elizaLogger.info(`[SerpAPI] Found ${results.length} image results`);
+      logger.info(`[SerpAPI] Found ${results.length} image results`);
       return results;
     } catch (error) {
-      elizaLogger.error('[SerpAPI] Image search error:', error);
+      logger.error('[SerpAPI] Image search error:', error);
       throw error;
     }
   }
-} 
+}

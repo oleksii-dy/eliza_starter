@@ -21,7 +21,7 @@ export const rolodexScenarios = [
   relationshipBuildingScenario,
   trustEvolutionScenario,
   complexNetworkScenario,
-  followUpManagementScenario
+  followUpManagementScenario,
 ];
 
 // Export scenario metadata
@@ -56,4 +56,4 @@ export const scenarioMetadata = {
     agents: 8,
     duration: 20000,
   },
-}; 
+};

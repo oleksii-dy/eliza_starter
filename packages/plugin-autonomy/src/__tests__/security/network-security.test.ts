@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import { autoPlugin } from '../../index';
 import { createMockRuntime, createMockMemory, createMockState } from '../utils/mock-runtime';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
@@ -11,8 +11,8 @@ describe('Network Security Tests', () => {
   let mockRuntime: IAgentRuntime;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
-    
+    mock.restore();
+
     mockRuntime = createMockRuntime({
       settings: {
         AUTONOMOUS_ENABLED: 'true',
@@ -26,12 +26,12 @@ describe('Network Security Tests', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   describe('URL Validation and Filtering', () => {
     it('should block requests to localhost and internal IPs', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
@@ -59,7 +59,7 @@ describe('Network Security Tests', () => {
     });
 
     it('should validate domain whitelist and blacklist', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
@@ -98,7 +98,7 @@ describe('Network Security Tests', () => {
     });
 
     it('should prevent SSRF attacks through URL redirection', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
@@ -110,7 +110,7 @@ describe('Network Security Tests', () => {
         ];
 
         for (const url of ssrfUrls) {
-          const callback = vi.fn();
+          const callback = mock();
           const message = createMockMemory({
             content: { text: `Browse ${url}`, source: 'user' },
           });
@@ -118,7 +118,7 @@ describe('Network Security Tests', () => {
           // Should handle redirects safely
           await browseAction.handler(mockRuntime, message, createMockState(), {}, callback);
           expect(callback).toHaveBeenCalled();
-          
+
           // Check if response indicates security measures
           const response = callback.mock.calls[0][0];
           expect(response).toBeDefined();
@@ -129,7 +129,7 @@ describe('Network Security Tests', () => {
 
   describe('Request Size and Rate Limiting', () => {
     it('should enforce maximum request size limits', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
@@ -140,7 +140,7 @@ describe('Network Security Tests', () => {
         ];
 
         for (const url of largePayloadUrls) {
-          const callback = vi.fn();
+          const callback = mock();
           const message = createMockMemory({
             content: { text: `Download ${url}`, source: 'user' },
           });
@@ -150,10 +150,10 @@ describe('Network Security Tests', () => {
           const duration = Date.now() - startTime;
 
           expect(callback).toHaveBeenCalled();
-          
+
           // Should not take too long (should have size limits)
           expect(duration).toBeLessThan(60000); // 1 minute max
-          
+
           const response = callback.mock.calls[0][0];
           expect(response.text).toBeDefined();
         }
@@ -161,17 +161,18 @@ describe('Network Security Tests', () => {
     });
 
     it('should implement rate limiting for network requests', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
-        const callback = vi.fn();
-        const rapidRequests = Array.from({ length: 10 }, (_, i) => 
-          `https://httpbin.org/delay/0?request=${i}`
+        const callback = mock();
+        const rapidRequests = Array.from(
+          { length: 10 },
+          (_, i) => `https://httpbin.org/delay/0?request=${i}`
         );
 
         const startTime = Date.now();
-        
+
         // Make rapid successive requests
         for (const url of rapidRequests) {
           const message = createMockMemory({
@@ -182,7 +183,7 @@ describe('Network Security Tests', () => {
         }
 
         const duration = Date.now() - startTime;
-        
+
         // Should have some delay between requests (rate limiting)
         expect(duration).toBeGreaterThan(1000); // At least 1 second for 10 requests
         expect(callback).toHaveBeenCalledTimes(rapidRequests.length);
@@ -192,7 +193,7 @@ describe('Network Security Tests', () => {
 
   describe('Protocol Security', () => {
     it('should enforce HTTPS for sensitive operations', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
@@ -204,16 +205,16 @@ describe('Network Security Tests', () => {
         ];
 
         for (const url of httpUrls) {
-          const callback = vi.fn();
+          const callback = mock();
           const message = createMockMemory({
             content: { text: `Access ${url}`, source: 'user' },
           });
 
           await browseAction.handler(mockRuntime, message, createMockState(), {}, callback);
-          
+
           expect(callback).toHaveBeenCalled();
           const response = callback.mock.calls[0][0];
-          
+
           // Should either upgrade to HTTPS or warn about insecurity
           expect(response.text).toBeDefined();
         }
@@ -221,7 +222,7 @@ describe('Network Security Tests', () => {
     });
 
     it('should block dangerous protocols', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
@@ -248,7 +249,7 @@ describe('Network Security Tests', () => {
 
   describe('Certificate and TLS Security', () => {
     it('should validate SSL certificates properly', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
@@ -260,16 +261,16 @@ describe('Network Security Tests', () => {
         ];
 
         for (const url of certificateTestUrls) {
-          const callback = vi.fn();
+          const callback = mock();
           const message = createMockMemory({
             content: { text: `Test certificate for ${url}`, source: 'user' },
           });
 
           await browseAction.handler(mockRuntime, message, createMockState(), {}, callback);
-          
+
           expect(callback).toHaveBeenCalled();
           const response = callback.mock.calls[0][0];
-          
+
           // Should handle certificate errors appropriately
           expect(response.text).toBeDefined();
         }
@@ -279,20 +280,20 @@ describe('Network Security Tests', () => {
 
   describe('Header Security', () => {
     it('should not send sensitive headers in requests', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
-        const callback = vi.fn();
+        const callback = mock();
         const message = createMockMemory({
           content: { text: 'Browse https://httpbin.org/headers', source: 'user' },
         });
 
         await browseAction.handler(mockRuntime, message, createMockState(), {}, callback);
-        
+
         expect(callback).toHaveBeenCalled();
         const response = callback.mock.calls[0][0];
-        
+
         // Should not expose sensitive information in headers
         expect(response.text).not.toContain('Authorization: Bearer');
         expect(response.text).not.toContain('X-Api-Key:');
@@ -301,17 +302,20 @@ describe('Network Security Tests', () => {
     });
 
     it('should respect security headers from responses', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
-        const callback = vi.fn();
+        const callback = mock();
         const message = createMockMemory({
-          content: { text: 'Browse https://httpbin.org/response-headers?X-Frame-Options=DENY', source: 'user' },
+          content: {
+            text: 'Browse https://httpbin.org/response-headers?X-Frame-Options=DENY',
+            source: 'user',
+          },
         });
 
         await browseAction.handler(mockRuntime, message, createMockState(), {}, callback);
-        
+
         expect(callback).toHaveBeenCalled();
         // Should properly handle security headers and not bypass them
       }
@@ -320,7 +324,7 @@ describe('Network Security Tests', () => {
 
   describe('DNS Security', () => {
     it('should prevent DNS rebinding attacks', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
@@ -346,20 +350,20 @@ describe('Network Security Tests', () => {
 
   describe('Content Security', () => {
     it('should sanitize and validate response content', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
-        const callback = vi.fn();
+        const callback = mock();
         const message = createMockMemory({
           content: { text: 'Browse https://httpbin.org/html', source: 'user' },
         });
 
         await browseAction.handler(mockRuntime, message, createMockState(), {}, callback);
-        
+
         expect(callback).toHaveBeenCalled();
         const response = callback.mock.calls[0][0];
-        
+
         // Should not contain potentially dangerous HTML/JavaScript
         expect(response.text).not.toContain('<script>');
         expect(response.text).not.toContain('javascript:');
@@ -369,20 +373,20 @@ describe('Network Security Tests', () => {
     });
 
     it('should limit response content size', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
-        const callback = vi.fn();
+        const callback = mock();
         const message = createMockMemory({
           content: { text: 'Browse https://httpbin.org/bytes/1000000', source: 'user' }, // 1MB
         });
 
         await browseAction.handler(mockRuntime, message, createMockState(), {}, callback);
-        
+
         expect(callback).toHaveBeenCalled();
         const response = callback.mock.calls[0][0];
-        
+
         // Response should be limited in size
         expect(response.text.length).toBeLessThan(100000); // Should be truncated or summarized
       }
@@ -391,7 +395,7 @@ describe('Network Security Tests', () => {
 
   describe('Proxy and VPN Detection', () => {
     it('should detect and handle proxy usage appropriately', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
@@ -403,13 +407,13 @@ describe('Network Security Tests', () => {
         ];
 
         for (const url of proxyUrls) {
-          const callback = vi.fn();
+          const callback = mock();
           const message = createMockMemory({
             content: { text: `Access via ${url}`, source: 'user' },
           });
 
           await browseAction.handler(mockRuntime, message, createMockState(), {}, callback);
-          
+
           expect(callback).toHaveBeenCalled();
           // Should handle proxy services appropriately
         }
@@ -419,11 +423,11 @@ describe('Network Security Tests', () => {
 
   describe('Network Timeout Security', () => {
     it('should enforce network timeouts to prevent DoS', async () => {
-      const browseAction = autoPlugin.actions?.find(a => a.name === 'BROWSE_WEB');
+      const browseAction = autoPlugin.actions?.find((a) => a.name === 'BROWSE_WEB');
       expect(browseAction).toBeDefined();
 
       if (browseAction) {
-        const callback = vi.fn();
+        const callback = mock();
         const message = createMockMemory({
           content: { text: 'Browse https://httpbin.org/delay/60', source: 'user' }, // 60 second delay
         });
@@ -433,10 +437,10 @@ describe('Network Security Tests', () => {
         const duration = Date.now() - startTime;
 
         expect(callback).toHaveBeenCalled();
-        
+
         // Should timeout before 60 seconds
         expect(duration).toBeLessThan(45000); // Should timeout within 45 seconds
-        
+
         const response = callback.mock.calls[0][0];
         expect(response.text).toBeDefined();
       }

@@ -412,9 +412,9 @@ Description: ${spec.description}
 
 Nodes that need code:
 ${(spec.nodes || [])
-  .filter((n) => n.type.includes('function'))
-  .map((n) => `- ${n.name}: ${n.parameters?.description || 'Custom logic'}`)
-  .join('\n')}
+    .filter((n) => n.type.includes('function'))
+    .map((n) => `- ${n.name}: ${n.parameters?.description || 'Custom logic'}`)
+    .join('\n')}
 
 Generate clean, well-commented JavaScript code for each function node.
 Include error handling and logging.`;
@@ -461,7 +461,7 @@ Include error handling and logging.`;
         errors.push(`Node ${node.name || 'unnamed'} must have a type`);
       }
       if (!node.name) {
-        errors.push(`Node must have a name`);
+        errors.push('Node must have a name');
       }
     }
 
@@ -500,10 +500,10 @@ Include error handling and logging.`;
     const sections = [
       `# ${spec.name}`,
       '',
-      `## Description`,
+      '## Description',
       spec.description,
       '',
-      `## Workflow Overview`,
+      '## Workflow Overview',
       `This workflow contains ${workflowJson.nodes.length} nodes.`,
       '',
     ];

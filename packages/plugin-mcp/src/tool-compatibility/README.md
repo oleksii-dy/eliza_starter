@@ -8,12 +8,12 @@ The MCP Tool Compatibility System is a standalone solution inspired by [Mastra's
 
 Different LLM providers handle JSON schema constraints very differently, causing tool call failures:
 
-| Provider | Common Issues |
-|----------|---------------|
-| **OpenAI** | Throws errors for unsupported properties like `format: "uri"` |
-| **OpenAI Reasoning Models (o1, o3)** | Very strict, rejects many constraint types |
-| **Google Gemini** | Silently ignores constraints (string length, array minimums, etc.) |
-| **Anthropic** | Generally handles most constraints well |
+| Provider                             | Common Issues                                                      |
+| ------------------------------------ | ------------------------------------------------------------------ |
+| **OpenAI**                           | Throws errors for unsupported properties like `format: "uri"`      |
+| **OpenAI Reasoning Models (o1, o3)** | Very strict, rejects many constraint types                         |
+| **Google Gemini**                    | Silently ignores constraints (string length, array minimums, etc.) |
+| **Anthropic**                        | Generally handles most constraints well                            |
 
 **Result**: Without compatibility, tool calling error rates can be 10-15% across different models.
 
@@ -24,6 +24,7 @@ Our system **embeds schema constraints directly into property descriptions** ins
 ### Example Transformation
 
 **❌ Before (causes errors in OpenAI o3-mini):**
+
 ```json
 {
   "type": "string",
@@ -33,9 +34,10 @@ Our system **embeds schema constraints directly into property descriptions** ins
 ```
 
 **✅ After (works everywhere):**
+
 ```json
 {
-  "type": "string", 
+  "type": "string",
   "description": "{\"format\":\"uri\",\"minLength\":5}"
 }
 ```
@@ -86,7 +88,7 @@ export class McpService extends Service {
 
 ```typescript
 // Get tool schema from MCP server
-const toolSchema = await mcpClient.request({ method: "tools/list" });
+const toolSchema = await mcpClient.request({ method: 'tools/list' });
 
 // Apply compatibility transformations
 const compatibleSchema = mcpService.applyToolCompatibility(toolSchema.inputSchema);
@@ -177,6 +179,7 @@ Constraints are embedded in descriptions using two strategies:
 ### Recursive Processing
 
 The system recursively processes:
+
 - Object properties
 - Array items
 - Union types (`oneOf`, `anyOf`, `allOf`)
@@ -200,7 +203,7 @@ The system recursively processes:
 To add support for a new provider:
 
 1. Create a new file in `providers/` directory
-2. Extend `McpToolCompatibility` 
+2. Extend `McpToolCompatibility`
 3. Implement the required abstract methods
 4. Add to the factory function in `index.ts`
 
@@ -211,11 +214,11 @@ export class NewProviderMcpCompatibility extends McpToolCompatibility {
   shouldApply(): boolean {
     return this.modelInfo.provider === 'newprovider';
   }
-  
+
   protected getUnsupportedStringProperties(): string[] {
     return ['format', 'pattern'];
   }
-  
+
   // ... implement other methods
 }
-``` 
+```

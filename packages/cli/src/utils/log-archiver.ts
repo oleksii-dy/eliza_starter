@@ -239,7 +239,7 @@ export class LogArchiver {
         if (fs.existsSync(source)) {
           await this.copyLogs(source, systemLogsDir, pattern);
         }
-      } catch (error) {
+      } catch {
         // Continue if specific log source doesn't exist
       }
     }
@@ -289,7 +289,9 @@ export class LogArchiver {
    * Copy logs matching a pattern from source to destination
    */
   private async copyLogs(sourceDir: string, destDir: string, pattern: string): Promise<void> {
-    if (!fs.existsSync(sourceDir)) return;
+    if (!fs.existsSync(sourceDir)) {
+      return;
+    }
 
     const files = await fs.promises.readdir(sourceDir);
 
@@ -308,7 +310,7 @@ export class LogArchiver {
         } else if (stat.isDirectory() && pattern === '*') {
           await this.copyDirectory(sourcePath, destPath);
         }
-      } catch (error) {
+      } catch {
         // Continue with other files
       }
     }

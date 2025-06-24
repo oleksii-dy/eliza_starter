@@ -1,19 +1,19 @@
-import { describe, it, expect, vi, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
-import plugin from '../plugin';
-import type { IAgentRuntime, Memory, State, Provider } from '@elizaos/core';
+import type { IAgentRuntime, Memory, Provider, State } from '@elizaos/core';
 import { logger } from '@elizaos/core';
-import { v4 as uuidv4 } from 'uuid';
+import { afterAll, beforeAll, describe, expect, it, spyOn } from 'bun:test';
 import dotenv from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
+import plugin from '../plugin';
 
 // Setup environment variables
 dotenv.config();
 
 // Set up logging to capture issues
 beforeAll(() => {
-  vi.spyOn(logger, 'info');
-  vi.spyOn(logger, 'error');
-  vi.spyOn(logger, 'warn');
-  vi.spyOn(logger, 'debug');
+  spyOn(logger, 'info');
+  spyOn(logger, 'error');
+  spyOn(logger, 'warn');
+  spyOn(logger, 'debug');
 });
 
 afterAll(() => {
@@ -21,7 +21,7 @@ afterAll(() => {
 });
 
 // Helper function to document test results
-function documentTestResult(testName: string, result: any, error: Error | null = null) {
+function documentTestResult(testName: string, result: unknown, error: Error | null = null) {
   // Clean, useful test documentation for developers
   logger.info(`✓ Testing: ${testName}`);
 
@@ -48,8 +48,8 @@ function documentTestResult(testName: string, result: any, error: Error | null =
           const more = keys.length > 3 ? ` +${keys.length - 3} more` : '';
           logger.info(`  → {${preview}${more}}`);
         }
-      } catch (e) {
-        logger.info(`  → [Complex object]`);
+      } catch (_e) {
+        logger.info('  → [Complex object]');
       }
     }
   }
@@ -64,43 +64,43 @@ function createRealRuntime(): IAgentRuntime {
       plugins: [],
       settings: {},
     },
-    getSetting: (key: string) => null,
+    getSetting: (_key: string) => null,
     models: plugin.models,
     db: {
-      get: async (key: string) => {
+      get: async (_key: string) => {
         return null;
       },
-      set: async (key: string, value: any) => {
+      set: async (_key: string, _value: unknown) => {
         return true;
       },
-      delete: async (key: string) => {
+      delete: async (_key: string) => {
         return true;
       },
-      getKeys: async (pattern: string) => {
+      getKeys: async (_pattern: string) => {
         return [];
       },
     },
     memory: {
-      add: async (memory: any) => {
+      add: async (_memory: unknown) => {
         // Memory operations for testing
       },
-      get: async (id: string) => {
+      get: async (_id: string) => {
         return null;
       },
-      getByEntityId: async (entityId: string) => {
+      getByEntityId: async (_entityId: string) => {
         return [];
       },
-      getLatest: async (entityId: string) => {
+      getLatest: async (_entityId: string) => {
         return null;
       },
-      getRecentMessages: async (options: any) => {
+      getRecentMessages: async (_options: unknown) => {
         return [];
       },
-      search: async (query: string) => {
+      search: async (_query: string) => {
         return [];
       },
     },
-    getService: (serviceType: string) => {
+    getService: (_serviceType: string) => {
       return null;
     },
   } as unknown as IAgentRuntime;
@@ -187,12 +187,20 @@ describe('Provider Tests', () => {
           text: 'Current state context',
         } as State;
 
-        let result: any = null;
+        let result: {
+          text?: string;
+          values?: Record<string, unknown>;
+          data?: Record<string, unknown>;
+        } | null = null;
         let error: Error | null = null;
 
         try {
           logger.info('Calling provider.get with real implementation');
-          result = await helloWorldProvider.get(runtime, message, state);
+          result = (await helloWorldProvider.get(runtime, message, state)) as {
+            text?: string;
+            values?: Record<string, unknown>;
+            data?: Record<string, unknown>;
+          } | null;
 
           expect(result).toBeDefined();
           expect(result).toHaveProperty('text');
@@ -204,11 +212,11 @@ describe('Provider Tests', () => {
             logger.warn('Provider returned empty text');
           }
 
-          if (result && Object.keys(result.values).length === 0) {
+          if (result && result.values && Object.keys(result.values).length === 0) {
             logger.warn('Provider returned empty values object');
           }
 
-          if (result && Object.keys(result.data).length === 0) {
+          if (result && result.data && Object.keys(result.data).length === 0) {
             logger.warn('Provider returned empty data object');
           }
         } catch (e) {
@@ -235,7 +243,11 @@ describe('Provider Tests', () => {
           text: '',
         } as State;
 
-        let result: any = null;
+        let result: {
+          text?: string;
+          values?: Record<string, unknown>;
+          data?: Record<string, unknown>;
+        } | null = null;
         let error: Error | null = null;
 
         try {

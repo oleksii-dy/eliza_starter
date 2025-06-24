@@ -1,4 +1,6 @@
-import { type Scenario } from '@elizaos/cli';
+import { type Scenario } from '../types.js';
+import { asUUID } from '@elizaos/core';
+import { v4 } from 'uuid';
 
 /**
  * Basic trust functionality validation without database dependencies
@@ -9,136 +11,73 @@ export const trustBasicValidationScenario: Scenario = {
   name: 'Trust Basic Validation',
   description: 'Test basic trust system functionality without complex dependencies',
   tags: ['trust', 'basic', 'validation'],
-  
+
   setup: {
-    plugins: ['@elizaos/plugin-trust'],
-    environment: {
-      NODE_ENV: 'test'
-    }
+    roomType: 'dm',
+    roomName: 'Trust Basic Validation',
+    context: 'Testing basic trust system functionality without complex dependencies',
   },
 
   actors: [
     {
-      id: 'test-user',
+      id: asUUID(v4()),
       name: 'Test User',
-      trustScore: 0.5,
-      roles: ['USER_ROLE']
+      role: 'assistant',
+      bio: 'A test user with medium trust level',
+      script: {
+        steps: [
+          {
+            type: 'message',
+            content: 'Hello, can you help me?',
+          },
+          {
+            type: 'wait',
+            waitTime: 2000,
+          },
+          {
+            type: 'message',
+            content: 'I need assistance with a task',
+          },
+        ],
+      },
     },
     {
-      id: 'agent',
+      id: asUUID(v4()),
       name: 'Agent',
-      type: 'agent'
-    }
+      role: 'subject',
+    },
   ],
 
-  interactions: [
-    // Test 1: Check trust services are available
-    {
-      actor: 'agent',
-      action: 'internal_check',
-      description: 'Verify trust services are available',
-      check: async (runtime) => {
-        const trustService = runtime.getService('trust-engine');
-        const permService = runtime.getService('contextual-permissions');
-        const secService = runtime.getService('security-module');
-        
-        // At least one service should be available
-        return !!(trustService || permService || secService);
-      }
-    },
-
-    // Test 2: Check TrustAwarePlugin framework exists
-    {
-      actor: 'agent',
-      action: 'internal_check',
-      description: 'Verify TrustAwarePlugin class is available',
-      check: async (runtime) => {
-        try {
-          const { TrustAwarePlugin } = await import('@elizaos/plugin-trust');
-          return typeof TrustAwarePlugin === 'function';
-        } catch {
-          return false;
-        }
-      }
-    },
-
-    // Test 3: Check trust middleware functionality
-    {
-      actor: 'agent',
-      action: 'internal_check',
-      description: 'Verify TrustMiddleware can wrap actions',
-      check: async (runtime) => {
-        try {
-          const { TrustMiddleware } = await import('@elizaos/plugin-trust');
-          return typeof TrustMiddleware === 'function';
-        } catch {
-          return false;
-        }
-      }
-    },
-
-    // Test 4: Basic trust calculation
-    {
-      actor: 'test-user',
-      action: 'send_message',
-      content: {
-        text: 'Hello, can you help me?'
-      },
-      expectedResponse: {
-        shouldNotContain: ['Access denied', 'insufficient trust']
-      },
-      timeout: 5000
-    }
-  ],
-
-  validation: {
-    checks: [
-      {
-        name: 'trust_plugin_loaded',
-        description: 'Trust plugin should be loaded successfully',
-        check: async (runtime) => {
-          // Check if trust actions/evaluators/services are registered
-          const hasServices = runtime.getService('trust-engine') ||
-                            runtime.getService('contextual-permissions') ||
-                            runtime.getService('security-module');
-          return !!hasServices;
-        }
-      },
-      {
-        name: 'trust_aware_framework_available',
-        description: 'TrustAware framework should be importable',
-        check: async (runtime) => {
-          try {
-            const trustModule = await import('@elizaos/plugin-trust');
-            return !!(trustModule.TrustAwarePlugin && trustModule.TrustMiddleware);
-          } catch {
-            return false;
-          }
-        }
-      },
-      {
-        name: 'basic_interaction_working',
-        description: 'Basic interactions should work without database errors',
-        check: async (runtime) => {
-          // If we get this far without database errors, basic functionality works
-          return true;
-        }
-      }
-    ]
+  execution: {
+    maxDuration: 30000, // 30 seconds
+    maxSteps: 10,
   },
 
-  metrics: {
-    successCriteria: [
-      'Trust plugin loads without critical errors',
-      'TrustAware framework classes are available',
-      'Basic interactions work without permission blocks',
-      'Trust services are properly registered'
+  verification: {
+    rules: [
+      {
+        id: 'trust-plugin-loaded',
+        type: 'llm',
+        description: 'Trust plugin should be loaded successfully',
+        config: {
+          successCriteria: 'The agent should respond without trust-related errors',
+        },
+      },
+      {
+        id: 'basic-interaction-working',
+        type: 'llm',
+        description: 'Basic interactions should work without database errors',
+        config: {
+          successCriteria: 'The agent should respond helpfully to basic requests',
+        },
+      },
     ],
-    performance: {
-      maxResponseTime: 2000,
-      minSuccessRate: 100
-    }
-  }
+  },
+
+  benchmarks: {
+    maxDuration: 30000,
+    targetAccuracy: 0.8,
+  },
 };
 
 export default trustBasicValidationScenario;

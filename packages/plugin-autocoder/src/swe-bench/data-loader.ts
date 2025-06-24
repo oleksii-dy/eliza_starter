@@ -49,7 +49,7 @@ export class SWEBenchDataLoader {
    * Load the complete dataset and filter for TypeScript instances
    */
   async loadDataset(forceRefresh: boolean = false): Promise<SWEBenchInstance[]> {
-    const cacheFile = path.join(this.cacheDir, `typescript-instances-all.json`);
+    const cacheFile = path.join(this.cacheDir, 'typescript-instances-all.json');
 
     // Check cache first
     if (!forceRefresh) {
@@ -68,7 +68,7 @@ export class SWEBenchDataLoader {
       }
     }
 
-    elizaLogger.info(`[SWE-BENCH] Fetching Multi-SWE-bench TypeScript/JavaScript datasets...`);
+    elizaLogger.info('[SWE-BENCH] Fetching Multi-SWE-bench TypeScript/JavaScript datasets...');
 
     const allInstances: SWEBenchInstance[] = [];
 
@@ -430,7 +430,7 @@ function Component() {
     byRepo: Record<string, number>;
     withTests: number;
     withoutTests: number;
-  } {
+    } {
     const instances = Array.from(this.instances.values());
 
     const stats = {
@@ -479,7 +479,7 @@ function Component() {
       const files = await fs.readdir(resultsDir);
 
       for (const file of files) {
-        if (!file.endsWith('.json') || !file.includes('results-')) continue;
+        if (!file.endsWith('.json') || !file.includes('results-')) {continue;}
 
         const content = await fs.readFile(path.join(resultsDir, file), 'utf-8');
         const results = JSON.parse(content) as SWEBenchResult[];

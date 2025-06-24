@@ -16,7 +16,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { 
+      use: {
         browserName: 'chromium',
         viewport: { width: 1920, height: 1080 }
       },
@@ -28,4 +28,4 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 30000,
   },
-}); 
+});

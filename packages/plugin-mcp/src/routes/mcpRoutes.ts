@@ -51,13 +51,11 @@ const getServersRoute: Route = {
           connectedServers: servers.filter((s: McpServer) => s.status === 'connected').length,
         },
       });
-      return;
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Internal server error',
       });
-      return;
     }
   },
 };
@@ -93,13 +91,11 @@ const callToolRoute: Route = {
           timestamp: new Date().toISOString(),
         },
       });
-      return;
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Tool execution failed',
       });
-      return;
     }
   },
 };
@@ -143,13 +139,11 @@ const readResourceRoute: Route = {
           timestamp: new Date().toISOString(),
         },
       });
-      return;
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Resource read failed',
       });
-      return;
     }
   },
 };
@@ -197,13 +191,11 @@ const reconnectServerRoute: Route = {
           timestamp: new Date().toISOString(),
         },
       });
-      return;
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Reconnection failed',
       });
-      return;
     }
   },
 };
@@ -214,7 +206,7 @@ const viewerRoute: Route = {
   type: 'GET',
   public: true,
   name: 'MCP Viewer',
-  handler: async (req: Request, res: Response, runtime: IAgentRuntime) => {
+  handler: async (req: Request, res: Response, _runtime: IAgentRuntime) => {
     try {
       // Serve the HTML page that loads the React app
       const htmlContent = `
@@ -260,13 +252,11 @@ const viewerRoute: Route = {
       `;
 
       res.type('html').send(htmlContent);
-      return;
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to load viewer',
       });
-      return;
     }
   },
 };
@@ -277,7 +267,7 @@ const viewerBundleRoute: Route = {
   type: 'GET',
   public: true,
   name: 'MCP Viewer Bundle',
-  handler: async (req: Request, res: Response, runtime: IAgentRuntime) => {
+  handler: async (req: Request, res: Response, _runtime: IAgentRuntime) => {
     try {
       // In production, this would serve the built React bundle
       // For development, we'll serve a module that dynamically imports the components
@@ -294,13 +284,11 @@ export function renderMcpViewer(elementId, agentId) {
       `;
 
       res.type('application/javascript').send(jsContent);
-      return;
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to load viewer bundle',
       });
-      return;
     }
   },
 };

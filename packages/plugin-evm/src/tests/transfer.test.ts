@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import type { Account, Chain } from 'viem';
 import { parseEther, formatEther } from 'viem';
@@ -13,30 +13,30 @@ const FUNDED_TEST_WALLET = process.env.FUNDED_TEST_PRIVATE_KEY; // Optional fund
 
 // Mock the ICacheManager
 const mockCacheManager = {
-  get: vi.fn().mockResolvedValue(null),
-  set: vi.fn(),
+  get: mock().mockResolvedValue(null),
+  set: mock(),
 };
 
 describe('Transfer Action', () => {
   let wp: WalletProvider;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    mock.restore();
     mockCacheManager.get.mockResolvedValue(null);
 
     const pk = TEST_PRIVATE_KEY as `0x${string}`;
-    
+
     // Initialize with Sepolia and Base Sepolia testnets
     const customChains = {
       sepolia: testnetChains.sepolia,
       baseSepolia: testnetChains.baseSepolia,
     };
-    
+
     wp = new WalletProvider(pk, mockCacheManager as any, customChains);
   });
 
   afterEach(() => {
-    // Remove vi.clearAllTimers() as it's not needed in Bun test runner
+    mock.restore();
   });
 
   describe('Constructor', () => {
@@ -203,7 +203,7 @@ describe('Transfer Action', () => {
       it('should estimate gas for transfer', async () => {
         const publicClient = wp.getPublicClient('sepolia');
         const walletAddress = wp.getAddress();
-        
+
         try {
           const gasEstimate = await publicClient.estimateGas({
             account: walletAddress,
@@ -221,16 +221,16 @@ describe('Transfer Action', () => {
 
       it('should calculate transfer cost', async () => {
         const publicClient = wp.getPublicClient('sepolia');
-        
+
         try {
           const gasPrice = await publicClient.getGasPrice();
           const estimatedGas = 21000n; // Standard ETH transfer gas
           const transferAmount = parseEther('0.001');
-          const totalCost = transferAmount + (gasPrice * estimatedGas);
+          const totalCost = transferAmount + gasPrice * estimatedGas;
 
           expect(typeof gasPrice).toBe('bigint');
           expect(gasPrice).toBeGreaterThan(0n);
-          
+
           console.log(`Gas price: ${formatEther(gasPrice)} ETH/gas`);
           console.log(`Estimated total cost: ${formatEther(totalCost)} ETH`);
         } catch (error) {
@@ -244,7 +244,7 @@ describe('Transfer Action', () => {
 const prepareChains = () => {
   const customChains: Record<string, Chain> = {};
   const chainNames = ['sepolia', 'baseSepolia'];
-  
+
   chainNames.forEach((chain) => {
     try {
       customChains[chain] = WalletProvider.genChainFromName(chain as any);

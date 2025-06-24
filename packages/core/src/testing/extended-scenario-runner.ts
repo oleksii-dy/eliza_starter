@@ -198,7 +198,7 @@ export class ExtendedScenarioRunner {
         if (step.backup) {
           try {
             await fs.copyFile(targetPath, `${targetPath}.backup`);
-          } catch (error) {
+          } catch (_error) {
             // Ignore if file doesn't exist
           }
         }
@@ -235,17 +235,23 @@ export class ExtendedScenarioRunner {
 
     switch (step.operation) {
       case 'clone':
-        if (!step.repository) throw new Error('Repository URL required for clone');
+        if (!step.repository) {
+          throw new Error('Repository URL required for clone');
+        }
         execSync(`git clone ${step.repository} .`, { cwd: workDir, stdio: 'pipe' });
         return { repository: step.repository, path: workDir };
 
       case 'branch':
-        if (!step.branch) throw new Error('Branch name required');
+        if (!step.branch) {
+          throw new Error('Branch name required');
+        }
         execSync(`git checkout -b ${step.branch}`, { cwd: workDir, stdio: 'pipe' });
         return { branch: step.branch };
 
       case 'commit':
-        if (!step.commitMessage) throw new Error('Commit message required');
+        if (!step.commitMessage) {
+          throw new Error('Commit message required');
+        }
         execSync('git add .', { cwd: workDir, stdio: 'pipe' });
         execSync(`git commit -m "${step.commitMessage}"`, { cwd: workDir, stdio: 'pipe' });
         return { message: step.commitMessage };
@@ -297,13 +303,15 @@ export class ExtendedScenarioRunner {
 
       const timeout = step.timeout
         ? setTimeout(() => {
-            child.kill();
-            reject(new Error(`Command timed out after ${step.timeout}ms`));
-          }, step.timeout)
+          child.kill();
+          reject(new Error(`Command timed out after ${step.timeout}ms`));
+        }, step.timeout)
         : null;
 
       child.on('close', (code) => {
-        if (timeout) clearTimeout(timeout);
+        if (timeout) {
+          clearTimeout(timeout);
+        }
 
         if (code !== step.expectedExitCode) {
           reject(
@@ -327,7 +335,9 @@ export class ExtendedScenarioRunner {
       });
 
       child.on('error', (error) => {
-        if (timeout) clearTimeout(timeout);
+        if (timeout) {
+          clearTimeout(timeout);
+        }
         reject(error);
       });
     });
@@ -397,25 +407,33 @@ export class ExtendedScenarioRunner {
   private async runValidationCheck(check: ValidationCheck): Promise<boolean> {
     switch (check.type) {
       case 'file_exists':
-        if (!check.target) throw new Error('Target path required for file_exists check');
+        if (!check.target) {
+          throw new Error('Target path required for file_exists check');
+        }
         return fs
           .access(this.resolvePath(check.target))
           .then(() => true)
           .catch(() => false);
 
       case 'file_content':
-        if (!check.target) throw new Error('Target path required for file_content check');
+        if (!check.target) {
+          throw new Error('Target path required for file_content check');
+        }
         const content = await fs.readFile(this.resolvePath(check.target), 'utf8');
         return check.expected ? content.includes(check.expected) : true;
 
       case 'package_json':
-        if (!check.target) throw new Error('Target path required for package_json check');
+        if (!check.target) {
+          throw new Error('Target path required for package_json check');
+        }
         const packageContent = await fs.readFile(this.resolvePath(check.target), 'utf8');
         const packageJson = JSON.parse(packageContent);
         return check.validator ? check.validator(packageJson) : true;
 
       case 'custom':
-        if (!check.validator) throw new Error('Validator function required for custom check');
+        if (!check.validator) {
+          throw new Error('Validator function required for custom check');
+        }
         return check.validator(check.expected);
 
       default:
@@ -454,7 +472,7 @@ export class ExtendedScenarioRunner {
       try {
         await task();
       } catch (error) {
-        console.warn(`Cleanup task failed:`, error);
+        console.warn('Cleanup task failed:', error);
       }
     }
 

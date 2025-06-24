@@ -8,7 +8,7 @@ import {
   type ServiceTypeName,
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { PluginManagerService } from '../../services/pluginManagerService.ts';
 
 // Mock service for testing
@@ -29,18 +29,18 @@ const createMockRuntime = (): IAgentRuntime => {
     providers: [],
     evaluators: [],
     services: new Map(),
-    registerAction: vi.fn((action: Action) => {
+    registerAction: mock((action: Action) => {
       runtime.actions.push(action);
     }),
-    registerProvider: vi.fn((provider: Provider) => {
+    registerProvider: mock((provider: Provider) => {
       runtime.providers.push(provider);
     }),
-    registerEvaluator: vi.fn((evaluator: Evaluator) => {
+    registerEvaluator: mock((evaluator: Evaluator) => {
       runtime.evaluators.push(evaluator);
     }),
-    getService: vi.fn(),
-    emitEvent: vi.fn(),
-    getSetting: vi.fn(),
+    getService: mock(),
+    emitEvent: mock(),
+    getSetting: mock(),
   };
   return runtime;
 };
@@ -48,9 +48,9 @@ const createMockRuntime = (): IAgentRuntime => {
 const createTestPlugin = (name: string): Plugin => ({
   name,
   description: `Test plugin ${name}`,
-  actions: [{ name: `${name}_ACTION`, handler: vi.fn() } as any],
-  providers: [{ name: `${name}_PROVIDER`, get: vi.fn() } as any],
-  evaluators: [{ name: `${name}_EVALUATOR`, handler: vi.fn() } as any],
+  actions: [{ name: `${name}_ACTION`, handler: mock() } as any],
+  providers: [{ name: `${name}_PROVIDER`, get: mock() } as any],
+  evaluators: [{ name: `${name}_EVALUATOR`, handler: mock() } as any],
   services: [TestService],
 });
 

@@ -306,9 +306,9 @@ export class VersionManager {
         cwd: pluginPath,
       });
       elizaLogger.info(`[VersionManager] Successfully merged ${sourceBranch} into ${targetBranch}`);
-    } catch (error) {
-      elizaLogger.error(`[VersionManager] Merge conflict detected`, error);
-      throw new Error(`Merge conflict detected. Please resolve manually.`);
+    } catch (_error) {
+      elizaLogger.error('[VersionManager] Merge conflict detected', _error);
+      throw new Error('Merge conflict detected. Please resolve manually.');
     }
   }
 
@@ -393,7 +393,7 @@ export class VersionManager {
             version: tag.replace('v', ''),
             branch: 'main', // Tags are usually on main
             commit: commit.substring(0, 7),
-            timestamp: parseInt(timestamp) * 1000,
+            timestamp: parseInt(timestamp, 10) * 1000,
             author,
             message,
             snapshot: {
@@ -402,12 +402,12 @@ export class VersionManager {
               packageJson,
             },
           });
-        } catch (error) {
-          elizaLogger.warn(`[VersionManager] Failed to get info for tag ${tag}`, error);
+        } catch (_error) {
+          elizaLogger.warn(`[VersionManager] Failed to get info for tag ${tag}`, _error);
         }
       }
-    } catch (error) {
-      elizaLogger.warn('[VersionManager] Failed to get version history', error);
+    } catch (_error) {
+      elizaLogger.warn('[VersionManager] Failed to get version history', _error);
     }
 
     return versions.sort((a, b) => b.timestamp - a.timestamp);

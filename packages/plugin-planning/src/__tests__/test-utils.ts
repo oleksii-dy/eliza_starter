@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { mock  } from 'bun:test';
 import type { IAgentRuntime, Memory, State, Character, UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -19,7 +19,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       plugins: ['@elizaos/plugin-planning'],
     } as Character,
 
-    getSetting: vi.fn((key: string) => {
+    getSetting: mock((key: string) => {
       const settings: Record<string, string> = {
         OPENAI_API_KEY: 'test-api-key',
         MODEL_NAME: 'gpt-4',
@@ -30,26 +30,26 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       return settings[key];
     }),
 
-    getService: vi.fn((name: string) => {
+    getService: mock((name: string) => {
       const services: Record<string, any> = {
         planning: {
-          createSimplePlan: vi.fn(),
-          createComprehensivePlan: vi.fn(),
-          executePlan: vi.fn(),
-          validatePlan: vi.fn(),
-          adaptPlan: vi.fn(),
+          createSimplePlan: mock(),
+          createComprehensivePlan: mock(),
+          executePlan: mock(),
+          validatePlan: mock(),
+          adaptPlan: mock(),
         },
         memory: {
-          getMemories: vi.fn().mockResolvedValue([]),
-          createMemory: vi.fn().mockResolvedValue(true),
-          searchMemories: vi.fn().mockResolvedValue([]),
+          getMemories: mock().mockResolvedValue([]),
+          createMemory: mock().mockResolvedValue(true),
+          searchMemories: mock().mockResolvedValue([]),
         },
         ...(overrides as any).services,
       };
       return services[name];
     }),
 
-    useModel: vi.fn().mockImplementation(async (modelType: string, params: any) => {
+    useModel: mock().mockImplementation(async (modelType: string, params: any) => {
       // Mock different model responses based on type and prompt
       if (modelType === 'TEXT_LARGE') {
         if (params.prompt?.includes('Create a comprehensive action plan')) {
@@ -188,32 +188,32 @@ ${steps}
         name: 'REPLY',
         similes: ['RESPOND', 'ANSWER'],
         description: 'Send a text response',
-        handler: vi.fn().mockResolvedValue({ text: 'Mock reply response' }),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockResolvedValue({ text: 'Mock reply response' }),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       },
       {
         name: 'THINK',
         similes: ['REFLECT', 'ANALYZE'],
         description: 'Internal thinking process',
-        handler: vi.fn().mockResolvedValue({ thought: 'Mock thinking process' }),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockResolvedValue({ thought: 'Mock thinking process' }),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       },
       {
         name: 'SEND_EMAIL',
         similes: ['EMAIL'],
         description: 'Send an email message',
-        handler: vi.fn().mockResolvedValue({ text: 'Email sent successfully' }),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockResolvedValue({ text: 'Email sent successfully' }),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       },
       {
         name: 'SEARCH',
         similes: ['LOOKUP', 'FIND'],
         description: 'Search for information',
-        handler: vi.fn().mockResolvedValue({ text: 'Search results found' }),
-        validate: vi.fn().mockResolvedValue(true),
+        handler: mock().mockResolvedValue({ text: 'Search results found' }),
+        validate: mock().mockResolvedValue(true),
         examples: [],
       },
     ],
@@ -222,22 +222,22 @@ ${steps}
       {
         name: 'TIME',
         description: 'Current time information',
-        get: vi.fn().mockResolvedValue({
-          text: 'Current time: ' + new Date().toISOString(),
+        get: mock().mockResolvedValue({
+          text: `Current time: ${new Date().toISOString()}`,
           values: { currentTime: new Date().toISOString() },
         }),
       },
       {
         name: 'CHARACTER',
         description: 'Agent character information',
-        get: vi.fn().mockResolvedValue({
+        get: mock().mockResolvedValue({
           text: 'Agent: TestAgent',
           values: { agentName: 'TestAgent' },
         }),
       },
     ],
 
-    composeState: vi.fn().mockResolvedValue({
+    composeState: mock().mockResolvedValue({
       values: {
         currentTime: new Date().toISOString(),
         userName: 'TestUser',
@@ -251,19 +251,19 @@ ${steps}
 
     // Additional mock methods
     messageManager: {
-      createMemory: vi.fn().mockResolvedValue(true),
-      getMemories: vi.fn().mockResolvedValue([]),
-      updateMemory: vi.fn().mockResolvedValue(true),
-      deleteMemory: vi.fn().mockResolvedValue(true),
-      searchMemories: vi.fn().mockResolvedValue([]),
-      getLastMessages: vi.fn().mockResolvedValue([]),
+      createMemory: mock().mockResolvedValue(true),
+      getMemories: mock().mockResolvedValue([]),
+      updateMemory: mock().mockResolvedValue(true),
+      deleteMemory: mock().mockResolvedValue(true),
+      searchMemories: mock().mockResolvedValue([]),
+      getLastMessages: mock().mockResolvedValue([]),
     },
 
     logger: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      debug: mock(),
     },
 
     ...overrides,

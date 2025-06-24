@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 
 describe('Intentionally Failing Tests', () => {
   it('should be a placeholder for intentionally failing tests', () => {

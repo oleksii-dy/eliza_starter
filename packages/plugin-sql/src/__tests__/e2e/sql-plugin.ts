@@ -13,7 +13,7 @@ export class SqlPluginTestSuite implements TestSuite {
         if (!runtime.db) {
           throw new Error('Database adapter not found on runtime');
         }
-        console.log(`✅ SQL plugin initialized with database adapter`);
+        console.log('✅ SQL plugin initialized with database adapter');
       },
     },
 
@@ -21,7 +21,7 @@ export class SqlPluginTestSuite implements TestSuite {
       name: 'Core tables should be created',
       fn: async (runtime: any) => {
         const db = runtime.db;
-        
+
         // Test that we can query core tables
         const coreTableTests = [
           { table: 'agents', operation: () => db.getAgents() },
@@ -47,8 +47,8 @@ export class SqlPluginTestSuite implements TestSuite {
     {
       name: 'Should create and retrieve entities',
       fn: async (runtime: any) => {
-        const entityId = stringToUuid('test-entity-' + Date.now());
-        
+        const entityId = stringToUuid(`test-entity-${Date.now()}`);
+
         // Create entity
         await runtime.createEntity({
           id: entityId,
@@ -74,8 +74,8 @@ export class SqlPluginTestSuite implements TestSuite {
     {
       name: 'Should create and retrieve rooms',
       fn: async (runtime: any) => {
-        const roomId = stringToUuid('test-room-' + Date.now());
-        
+        const roomId = stringToUuid(`test-room-${Date.now()}`);
+
         // Create room
         await runtime.createRoom({
           id: roomId,
@@ -102,9 +102,9 @@ export class SqlPluginTestSuite implements TestSuite {
     {
       name: 'Should handle cache operations',
       fn: async (runtime: any) => {
-        const cacheKey = 'test-cache-key-' + Date.now();
+        const cacheKey = `test-cache-key-${Date.now()}`;
         const cacheValue = { data: 'test-value', timestamp: Date.now() };
-        
+
         // Set cache
         await runtime.setCache(cacheKey, cacheValue);
 
@@ -135,9 +135,9 @@ export class SqlPluginTestSuite implements TestSuite {
       name: 'Should create and manage relationships',
       fn: async (runtime: any) => {
         // Create two entities
-        const entity1Id = stringToUuid('entity1-' + Date.now());
-        const entity2Id = stringToUuid('entity2-' + Date.now());
-        
+        const entity1Id = stringToUuid(`entity1-${Date.now()}`);
+        const entity2Id = stringToUuid(`entity2-${Date.now()}`);
+
         await runtime.createEntity({
           id: entity1Id,
           names: ['Entity 1'],
@@ -183,9 +183,9 @@ export class SqlPluginTestSuite implements TestSuite {
     {
       name: 'Should handle memory operations with proper tables',
       fn: async (runtime: any) => {
-        const entityId = stringToUuid('memory-entity-' + Date.now());
-        const roomId = stringToUuid('memory-room-' + Date.now());
-        
+        const entityId = stringToUuid(`memory-entity-${Date.now()}`);
+        const roomId = stringToUuid(`memory-room-${Date.now()}`);
+
         // Create prerequisites
         await runtime.createEntity({
           id: entityId,
@@ -203,9 +203,9 @@ export class SqlPluginTestSuite implements TestSuite {
 
         // Create memory
         const memoryId = await runtime.createMemory({
-          entityId: entityId,
+          entityId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: 'Test memory content',
             type: 'test',
@@ -233,10 +233,10 @@ export class SqlPluginTestSuite implements TestSuite {
     {
       name: 'Should create and manage components',
       fn: async (runtime: any) => {
-        const entityId = stringToUuid('component-entity-' + Date.now());
-        const roomId = stringToUuid('component-room-' + Date.now());
-        const worldId = stringToUuid('component-world-' + Date.now());
-        
+        const entityId = stringToUuid(`component-entity-${Date.now()}`);
+        const roomId = stringToUuid(`component-room-${Date.now()}`);
+        const worldId = stringToUuid(`component-world-${Date.now()}`);
+
         // Create prerequisites
         await runtime.createEntity({
           id: entityId,
@@ -257,17 +257,17 @@ export class SqlPluginTestSuite implements TestSuite {
           source: 'test',
           type: 'GROUP',
           agentId: runtime.agentId,
-          worldId: worldId,
+          worldId,
         });
 
         // Create component
-        const componentId = stringToUuid('test-component-' + Date.now());
+        const componentId = stringToUuid(`test-component-${Date.now()}`);
         await runtime.createComponent({
           id: componentId,
-          entityId: entityId,
+          entityId,
           agentId: runtime.agentId,
-          roomId: roomId,
-          worldId: worldId,
+          roomId,
+          worldId,
           sourceEntityId: runtime.agentId,
           type: 'test-component',
           data: { test: 'data' },
@@ -291,9 +291,9 @@ export class SqlPluginTestSuite implements TestSuite {
     {
       name: 'Should handle participant operations',
       fn: async (runtime: any) => {
-        const entityId = stringToUuid('participant-entity-' + Date.now());
-        const roomId = stringToUuid('participant-room-' + Date.now());
-        
+        const entityId = stringToUuid(`participant-entity-${Date.now()}`);
+        const roomId = stringToUuid(`participant-room-${Date.now()}`);
+
         // Create prerequisites
         await runtime.createEntity({
           id: entityId,
@@ -315,7 +315,7 @@ export class SqlPluginTestSuite implements TestSuite {
         // Get participants
         const participants = await runtime.getParticipantsForRoom(roomId);
         const hasParticipant = participants.some(p => p === entityId);
-        
+
         if (!hasParticipant) {
           throw new Error('Participant not found in room');
         }
@@ -326,7 +326,7 @@ export class SqlPluginTestSuite implements TestSuite {
         // Verify removal
         const afterRemoval = await runtime.getParticipantsForRoom(roomId);
         const stillHasParticipant = afterRemoval.some(p => p === entityId);
-        
+
         if (stillHasParticipant) {
           throw new Error('Participant was not removed');
         }
@@ -355,7 +355,7 @@ export class SqlPluginTestSuite implements TestSuite {
 
         // Verify all entities were created
         const entities = await runtime.getEntitiesForAgent(runtime.agentId);
-        const concurrentEntities = entities.filter(e => 
+        const concurrentEntities = entities.filter(e =>
           e.names.some(n => n.startsWith('Concurrent Entity'))
         );
 

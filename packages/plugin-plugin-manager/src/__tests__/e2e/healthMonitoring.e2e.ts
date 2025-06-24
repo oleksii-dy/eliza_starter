@@ -94,7 +94,7 @@ export const healthMonitoringTests: TestCase[] = [
         try {
           await action.handler(runtime, {} as any, { values: {}, data: {}, text: '' });
           successCount++;
-        } catch (error) {
+        } catch (_error) {
           errorCount++;
           console.log(`[HealthMonitor] Action crashed on attempt ${i + 1}`);
 
@@ -104,7 +104,7 @@ export const healthMonitoringTests: TestCase[] = [
       }
 
       console.log(`[HealthMonitor] Success: ${successCount}, Errors: ${errorCount}`);
-      assert(errorCount > 0, 'Should have experienced crashes');
+      assert(_errorCount > 0, 'Should have experienced crashes');
 
       // Plugin should still be functional after crashes
       const pluginState = pluginManager.getPlugin(pluginId);

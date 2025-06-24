@@ -8,7 +8,9 @@ export const ngrokEnvSchema = z.object({
     .union([z.string(), z.number()])
     .optional()
     .transform((val) => {
-      if (val === undefined || val === null) return 'us';
+      if (val === undefined || val === null) {
+        return 'us';
+      }
       return String(val);
     })
     .default('us'),
@@ -18,10 +20,14 @@ export const ngrokEnvSchema = z.object({
     .union([z.string(), z.number()])
     .optional()
     .transform((val) => {
-      if (val === undefined || val === '') return 3000;
+      if (val === undefined || val === '') {
+        return 3000;
+      }
       const num = typeof val === 'string' ? parseInt(val, 10) : val;
       // If port is 0 or invalid, use default
-      if (isNaN(num) || num <= 0 || num > 65535) return 3000;
+      if (isNaN(num) || num <= 0 || num > 65535) {
+        return 3000;
+      }
       return num;
     })
     .default(3000),

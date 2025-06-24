@@ -355,7 +355,7 @@ export class ContinuousVerificationManager {
    * Check if should fail fast based on results
    */
   private shouldFailFast(stages: VerificationStageResult[]): boolean {
-    if (!this.config.failFast) return false;
+    if (!this.config.failFast) {return false;}
 
     const criticalErrors = stages.reduce(
       (sum, stage) => sum + stage.findings.filter((f) => f.severity === 'critical').length,
@@ -601,7 +601,7 @@ Metrics:
     complexity: number;
     security: number;
     performance: number;
-  } {
+    } {
     if (this.metricsHistory.length < 2) {
       return { coverage: 0, complexity: 0, security: 0, performance: 0 };
     }

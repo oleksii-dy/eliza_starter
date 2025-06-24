@@ -32,7 +32,7 @@ export class ReasoningHooks {
     originalShouldRespond: () => Promise<boolean>
   ): Promise<boolean> {
     const reasoningService = runtime.getService<CustomReasoningService>('together-reasoning');
-    
+
     if (!reasoningService) {
       elizaLogger.debug('Custom reasoning service not available, using original shouldRespond');
       return originalShouldRespond();
@@ -49,17 +49,17 @@ export class ReasoningHooks {
           tableName: 'messages',
         }),
       };
-      
+
       const result = await reasoningService.shouldRespond(context);
-      
+
       elizaLogger.debug(
         `Custom shouldRespond decision: ${result.decision} (confidence: ${result.confidence})`,
-        { 
+        {
           reasoning: result.reasoning,
           messageText: message.content.text?.substring(0, 100),
         }
       );
-      
+
       // Log the decision for monitoring
       elizaLogger.info('Custom shouldRespond decision logged', {
         entityId: runtime.agentId,
@@ -70,7 +70,7 @@ export class ReasoningHooks {
         confidence: result.confidence,
         type: 'custom-shouldrespond-decision',
       });
-      
+
       return result.decision === 'RESPOND';
     } catch (error) {
       elizaLogger.error('Error in custom shouldRespond, falling back to original:', error);
@@ -89,7 +89,7 @@ export class ReasoningHooks {
     originalPlanning: () => Promise<Content>
   ): Promise<Content> {
     const reasoningService = runtime.getService<CustomReasoningService>('together-reasoning');
-    
+
     if (!reasoningService) {
       elizaLogger.debug('Custom reasoning service not available, using original planning');
       return originalPlanning();
@@ -102,19 +102,16 @@ export class ReasoningHooks {
         state,
         actionNames,
       };
-      
+
       const result = await reasoningService.planResponse(context);
-      
-      elizaLogger.debug(
-        `Custom planning result:`,
-        { 
-          thought: result.thought,
-          actions: result.actions,
-          providers: result.providers,
-          textLength: result.text.length,
-        }
-      );
-      
+
+      elizaLogger.debug('Custom planning result:', {
+        thought: result.thought,
+        actions: result.actions,
+        providers: result.providers,
+        textLength: result.text.length,
+      });
+
       // Log the planning decision for monitoring
       elizaLogger.info('Custom planning decision logged', {
         entityId: runtime.agentId,
@@ -125,7 +122,7 @@ export class ReasoningHooks {
         providers: result.providers,
         type: 'custom-planning-decision',
       });
-      
+
       return {
         thought: result.thought,
         actions: result.actions,
@@ -149,7 +146,7 @@ export class ReasoningHooks {
     originalCoding?: () => Promise<string>
   ): Promise<string> {
     const reasoningService = runtime.getService<CustomReasoningService>('together-reasoning');
-    
+
     if (!reasoningService) {
       elizaLogger.debug('Custom reasoning service not available, using original coding');
       return originalCoding ? originalCoding() : prompt;
@@ -161,18 +158,15 @@ export class ReasoningHooks {
         language,
         context,
       };
-      
+
       const result = await reasoningService.generateCode(codingContext);
-      
-      elizaLogger.debug(
-        `Custom coding result:`,
-        { 
-          codeLength: result.code.length,
-          language,
-          hasExplanation: !!result.explanation,
-        }
-      );
-      
+
+      elizaLogger.debug('Custom coding result:', {
+        codeLength: result.code.length,
+        language,
+        hasExplanation: !!result.explanation,
+      });
+
       // Log the coding decision for monitoring
       elizaLogger.info('Custom coding generation logged', {
         entityId: runtime.agentId,
@@ -183,7 +177,7 @@ export class ReasoningHooks {
         hasExplanation: !!result.explanation,
         type: 'custom-coding-generation',
       });
-      
+
       return result.code;
     } catch (error) {
       elizaLogger.error('Error in custom coding, falling back to original:', error);
@@ -208,7 +202,7 @@ export class ReasoningHooks {
     costs?: any;
   }> {
     const service = runtime.getService<CustomReasoningService>('together-reasoning');
-    
+
     if (!service) {
       return {
         available: false,
@@ -219,7 +213,7 @@ export class ReasoningHooks {
     try {
       const costs = await service.getCostReport();
       const enabledModels: string[] = [];
-      
+
       // Check which models are enabled
       for (const modelType of ['should_respond', 'planning', 'coding']) {
         try {
@@ -260,13 +254,14 @@ export class ReasoningHooks {
         state: shouldRespondState,
         template: shouldRespondTemplate,
       });
-      
+
       const response = await runtime.useModel(ModelType.TEXT_LARGE, { prompt });
       const responseObject = parseKeyValueXml(response);
-      
+
       const nonResponseActions = ['IGNORE', 'NONE'];
-      return responseObject?.action && 
-        !nonResponseActions.includes(responseObject.action.toUpperCase());
+      return (
+        responseObject?.action && !nonResponseActions.includes(responseObject.action.toUpperCase())
+      );
     };
   }
 
@@ -284,14 +279,18 @@ export class ReasoningHooks {
         state: planningState,
         template: messageHandlerTemplate,
       });
-      
+
       const response = await runtime.useModel(ModelType.TEXT_LARGE, { prompt });
       const responseObject = parseKeyValueXml(response);
-      
+
       return {
         thought: responseObject?.thought || '',
-        actions: responseObject?.actions ? responseObject.actions.split(',').map((a: string) => a.trim()) : ['IGNORE'],
-        providers: responseObject?.providers ? responseObject.providers.split(',').map((p: string) => p.trim()) : [],
+        actions: responseObject?.actions
+          ? responseObject.actions.split(',').map((a: string) => a.trim())
+          : ['IGNORE'],
+        providers: responseObject?.providers
+          ? responseObject.providers.split(',').map((p: string) => p.trim())
+          : [],
         text: responseObject?.text || '',
       };
     };

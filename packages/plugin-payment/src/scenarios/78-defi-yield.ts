@@ -41,26 +41,26 @@ const defiYieldScenario: Scenario = {
   ],
   actions: ['DEFI_STAKE', 'DEFI_PROVIDE_LIQUIDITY', 'DEFI_YIELD_SEARCH'],
   evaluator: (response: string) => {
-    const hasDefi = 
+    const hasDefi =
       response.toLowerCase().includes('defi') ||
       response.toLowerCase().includes('aave') ||
       response.toLowerCase().includes('compound') ||
       response.toLowerCase().includes('uniswap') ||
       response.toLowerCase().includes('curve') ||
       response.toLowerCase().includes('yearn');
-    
-    const hasYield = 
+
+    const hasYield =
       response.toLowerCase().includes('yield') ||
       response.toLowerCase().includes('apy') ||
       response.toLowerCase().includes('apr') ||
       response.toLowerCase().includes('stake') ||
       response.toLowerCase().includes('liquidity');
-    
+
     const hasAmount = /\d+(\.\d+)?\s*(USDC|ETH|DAI|USD)/i.test(response);
-    
+
     return hasDefi && hasYield && hasAmount;
   },
   tags: ['payment', 'defi', 'yield', 'staking', 'liquidity'],
 };
 
-export default defiYieldScenario; 
+export default defiYieldScenario;

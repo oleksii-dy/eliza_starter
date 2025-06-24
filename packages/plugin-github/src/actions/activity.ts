@@ -17,8 +17,8 @@ export const getGitHubActivityAction: Action = {
 
   validate: async (
     runtime: IAgentRuntime,
-    message: Memory,
-    state: State | undefined
+    _message: Memory,
+    _state: State | undefined
   ): Promise<boolean> => {
     const githubService = runtime.getService<GitHubService>('github');
     return !!githubService;

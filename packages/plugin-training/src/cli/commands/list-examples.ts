@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import { type Command } from 'commander';
 import { elizaLogger } from '@elizaos/core';
 import { DatasetBuilder } from '../../lib/dataset-builder.js';
 
@@ -27,7 +27,7 @@ export function listExamplesCommand(program: Command) {
         }
 
         const stats = builder.getStats();
-        
+
         elizaLogger.info('📊 Dataset Statistics:');
         elizaLogger.info(`  Total examples: ${stats.totalExamples}`);
         elizaLogger.info(`  Average quality: ${stats.averageQuality.toFixed(2)}`);
@@ -38,20 +38,24 @@ export function listExamplesCommand(program: Command) {
         }
 
         if (stats.totalExamples === 0) {
-          elizaLogger.info('\n📝 No training examples found. Add some with: eliza-training add-example');
+          elizaLogger.info(
+            '\n📝 No training examples found. Add some with: eliza-training add-example'
+          );
           return;
         }
 
         let examples = builder.listExamples();
-        
+
         if (options.minQuality) {
           const minQuality = parseFloat(options.minQuality);
           if (isNaN(minQuality)) {
             elizaLogger.error('❌ Error: Min quality must be a number');
             process.exit(1);
           }
-          examples = examples.filter(ex => ex.quality >= minQuality);
-          elizaLogger.info(`\n🔍 Filtered to ${examples.length} examples with quality >= ${minQuality}`);
+          examples = examples.filter((ex) => ex.quality >= minQuality);
+          elizaLogger.info(
+            `\n🔍 Filtered to ${examples.length} examples with quality >= ${minQuality}`
+          );
         }
 
         elizaLogger.info('\n📋 Training Examples:');
@@ -61,20 +65,29 @@ export function listExamplesCommand(program: Command) {
           elizaLogger.info(`${index + 1}. ID: ${example.id}`);
           elizaLogger.info(`   Quality: ${example.quality.toFixed(2)}`);
           elizaLogger.info(`   Created: ${example.createdAt.toISOString()}`);
-          elizaLogger.info(`   Request: ${example.request.substring(0, 100)}${example.request.length > 100 ? '...' : ''}`);
-          elizaLogger.info(`   Response: ${example.response.substring(0, 100)}${example.response.length > 100 ? '...' : ''}`);
+          elizaLogger.info(
+            `   Request: ${example.request.substring(0, 100)}${example.request.length > 100 ? '...' : ''}`
+          );
+          elizaLogger.info(
+            `   Response: ${example.response.substring(0, 100)}${example.response.length > 100 ? '...' : ''}`
+          );
           if (example.thinking) {
-            elizaLogger.info(`   Thinking: ${example.thinking.substring(0, 100)}${example.thinking.length > 100 ? '...' : ''}`);
+            elizaLogger.info(
+              `   Thinking: ${example.thinking.substring(0, 100)}${example.thinking.length > 100 ? '...' : ''}`
+            );
           }
           elizaLogger.info('─'.repeat(80));
         });
 
         if (examples.length > 0) {
-          elizaLogger.info(`\n💡 To remove an example: eliza-training list-examples --remove <id>`);
-          elizaLogger.info(`💡 To create a dataset: eliza-training create-dataset`);
+          elizaLogger.info('\n💡 To remove an example: eliza-training list-examples --remove <id>');
+          elizaLogger.info('💡 To create a dataset: eliza-training create-dataset');
         }
       } catch (error) {
-        elizaLogger.error('❌ Error listing examples:', error instanceof Error ? error.message : String(error));
+        elizaLogger.error(
+          '❌ Error listing examples:',
+          error instanceof Error ? error.message : String(error)
+        );
         process.exit(1);
       }
     });

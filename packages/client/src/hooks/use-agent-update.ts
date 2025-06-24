@@ -78,7 +78,7 @@ export function useAgentUpdate(initialAgent: Agent) {
    * @param settings The new settings object
    */
   const setSettings = useCallback(
-    (settings: any) => {
+    (settings: Record<string, unknown>) => {
       updateSettings(settings);
     },
     [updateSettings]
@@ -334,7 +334,7 @@ export function useAgentUpdate(initialAgent: Agent) {
         const currentSecrets = currentSettings.secrets || {};
 
         // Only include secrets that were added or modified
-        const changedSecrets: Record<string, any> = {};
+        const changedSecrets: Record<string, unknown> = {};
         let hasSecretChanges = false;
 
         // Find added or modified secrets
@@ -354,7 +354,9 @@ export function useAgentUpdate(initialAgent: Agent) {
         });
 
         if (hasSecretChanges) {
-          if (!changedFields.settings) changedFields.settings = {};
+          if (!changedFields.settings) {
+            changedFields.settings = {};
+          }
           changedFields.settings.secrets = changedSecrets;
         }
       }

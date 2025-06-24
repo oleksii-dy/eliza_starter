@@ -62,7 +62,7 @@ export const listRegistryPluginsAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State) => {
     const pluginManager = runtime.getService(PluginManagerServiceType.PLUGIN_MANAGER);
     return !!pluginManager;
   },
@@ -100,7 +100,7 @@ export const listRegistryPluginsAction: Action = {
         for (const plugin of displayPlugins) {
           text += `- **${plugin.name}**: ${plugin.description}\n`;
         }
-        
+
         if (plugins.length > 20) {
           text += `\n... and ${plugins.length - 20} more plugins available.\n`;
           text += '\nUse SEARCH_PLUGINS to find specific plugins by name or functionality.';
@@ -122,23 +122,23 @@ export const listRegistryPluginsAction: Action = {
 
       // Check permissions
       const trustService = runtime.getService('TRUST') as any;
-      const canInstall = trustService ? 
-        await trustService.checkPermission(message.entityId, 'plugin:install') : 
+      const canInstall = trustService ?
+        await trustService.checkPermission(message.entityId, 'plugin:install') :
         true;
 
       const suggestions: string[] = [];
-      
+
       if (canInstall) {
         suggestions.push('Use INSTALL_PLUGIN_FROM_REGISTRY to install a plugin');
       }
       suggestions.push('Use SEARCH_PLUGINS to find specific plugins');
-      
+
       if (installedPlugins.some(p => p.status === 'needs_configuration')) {
         suggestions.push('Use START_PLUGIN_CONFIGURATION to configure installed plugins');
       }
 
       if (suggestions.length > 0) {
-        text += '\n\n**Available Actions:**\n' + suggestions.map(s => `- ${s}`).join('\n');
+        text += `\n\n**Available Actions:**\n${suggestions.map(s => `- ${s}`).join('\n')}`;
       }
 
       await callback?.({
@@ -154,22 +154,22 @@ export const listRegistryPluginsAction: Action = {
         text,
         data: {
           availablePlugins: plugins,
-          installedPlugins: installedPlugins,
+          installedPlugins,
         },
         values: {
           availableCount: plugins.length,
           installedCount: installedPlugins.length,
         },
       };
-    } catch (error) {
+    } catch (_error) {
       logger.error('[LIST_REGISTRY_PLUGINS] Error:', error);
-      
+
       await callback?.({
-        text: `Error listing registry plugins: ${error instanceof Error ? error.message : String(error)}`,
+        text: `Error listing registry plugins: ${_error instanceof Error ? _error.message : String(_error)}`,
         actions: ['LIST_REGISTRY_PLUGINS'],
       });
 
       throw error;
     }
   },
-}; 
+};

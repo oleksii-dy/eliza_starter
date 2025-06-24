@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import type { Account, Chain, Address } from 'viem';
 import { parseEther, encodeFunctionData, parseAbi } from 'viem';
@@ -19,15 +19,15 @@ const MAINNET_TEST_WALLET = process.env.MAINNET_TEST_PRIVATE_KEY;
 
 // Mock the ICacheManager
 const mockCacheManager = {
-  get: vi.fn().mockResolvedValue(null),
-  set: vi.fn(),
+  get: mock().mockResolvedValue(null),
+  set: mock(),
 };
 
 describe('Governance Actions', () => {
   let wp: WalletProvider;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    mock.restore();
     mockCacheManager.get.mockResolvedValue(null);
 
     const pk = TEST_PRIVATE_KEY as `0x${string}`;

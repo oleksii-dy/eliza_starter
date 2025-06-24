@@ -130,7 +130,7 @@ export const comprehensivePluginScenarios: TestSuite = {
           );
         }
 
-        let currentProject = await orchestrationService.getProject(project.id);
+        const currentProject = await orchestrationService.getProject(project.id);
         if (!currentProject) {
           throw new Error('Weather plugin project not found');
         }
@@ -201,7 +201,7 @@ export const comprehensivePluginScenarios: TestSuite = {
           );
         }
 
-        let currentProject = await orchestrationService.getProject(project.id);
+        const currentProject = await orchestrationService.getProject(project.id);
         if (!currentProject) {
           throw new Error('News plugin project not found');
         }
@@ -272,7 +272,7 @@ export const comprehensivePluginScenarios: TestSuite = {
           );
         }
 
-        let currentProject = await orchestrationService.getProject(project.id);
+        const currentProject = await orchestrationService.getProject(project.id);
         if (!currentProject) {
           throw new Error('Shell plugin project not found');
         }
@@ -343,7 +343,7 @@ export const comprehensivePluginScenarios: TestSuite = {
           );
         }
 
-        let currentProject = await orchestrationService.getProject(project.id);
+        const currentProject = await orchestrationService.getProject(project.id);
         if (!currentProject) {
           throw new Error('Mars time plugin project not found');
         }
@@ -414,7 +414,7 @@ export const comprehensivePluginScenarios: TestSuite = {
           );
         }
 
-        let currentProject = await orchestrationService.getProject(project.id);
+        const currentProject = await orchestrationService.getProject(project.id);
         if (!currentProject) {
           throw new Error('Astrology plugin project not found');
         }

@@ -1,12 +1,13 @@
 import * as THREE from 'three';
-import { createEmoteFactory } from '../hyperfy/core/extras/createEmoteFactory.js';
-import { createNode } from '../hyperfy/core/extras/createNode.js';
-import { glbToNodes } from '../hyperfy/core/extras/glbToNodes.js';
-import { GLTFLoader, GLTF } from '../hyperfy/core/libs/gltfloader/GLTFLoader.js';
-import { System } from '../hyperfy/core/systems/System.js';
+import { createEmoteFactory } from '@elizaos/hyperfy';
+import { createNode } from '@elizaos/hyperfy';
+import { glbToNodes } from '@elizaos/hyperfy';
+import { GLTFLoader, type GLTF } from '@elizaos/hyperfy';
+import { System } from '@elizaos/hyperfy';
 import { PuppeteerManager } from '../managers/puppeteer-manager.js';
 import { resolveUrl } from '../utils.js';
 import { AgentAvatar } from './avatar.js';
+import type { HyperfyWorld } from '../types/hyperfy.js';
 
 // import { VRMLoaderPlugin } from "@pixiv/three-vrm";
 // --- Mock Browser Environment for Loaders ---
@@ -64,7 +65,7 @@ export class AgentLoader extends System {
     super(world);
     this.promises = new Map();
     this.results = new Map();
-    this.gltfLoader = new GLTFLoader();
+    this.gltfLoader = new GLTFLoader(null);
 
     // --- Dummy Scene for Hooks ---
     // Create one dummy object to act as the scene target for all avatar loads
@@ -109,9 +110,11 @@ export class AgentLoader extends System {
 
   async load(type, url) {
     const key = `${type}/${url}`;
-    if (this.promises.has(key)) return this.promises.get(key);
+    if (this.promises.has(key)) {
+      return this.promises.get(key);
+    }
 
-    let resolvedUrl = await resolveUrl(url, this.world);
+    const resolvedUrl = await resolveUrl(url, this.world);
 
     if (!resolvedUrl) {
       const error = new Error(`[AgentLoader] Failed to resolve URL: ${url}`);
@@ -141,7 +144,7 @@ export class AgentLoader extends System {
           );
 
           if (isForbidden) {
-            console.warn(`[ScriptLoader] Skipping script: disallowed type used\n`);
+            console.warn('[ScriptLoader] Skipping script: disallowed type used\n');
             return;
           }
 

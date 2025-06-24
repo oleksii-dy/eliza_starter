@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { stringToUuid } from '@elizaos/core';
 
 describe('Infrastructure Test', () => {
@@ -16,4 +16,4 @@ describe('Infrastructure Test', () => {
     expect(testData).toBeDefined();
     expect(testData.name).toBe('Test Entity');
   });
-}); 
+});

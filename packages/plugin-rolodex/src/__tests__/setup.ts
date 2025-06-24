@@ -1,9 +1,9 @@
-import "./setup-window-mock";
+import './setup-window-mock';
 // Temporarily disable jest-dom due to lodash import issue
 // import '@testing-library/jest-dom';
-import { afterEach } from 'vitest';
+import { afterEach  } from 'bun:test';
 import { cleanup } from '@testing-library/react';
-import { vi } from 'vitest';
+import { mock  } from 'bun:test';
 import { logger, IAgentRuntime } from '@elizaos/core';
 
 // Mock browser APIs for tests
@@ -28,12 +28,12 @@ if (typeof window !== 'undefined') {
 // Global test utilities
 global.console = {
   ...console,
-  error: vi.fn(console.error),
-  warn: vi.fn(console.warn),
+  error: mock(console.error),
+  warn: mock(console.warn),
 };
 
 // Mock fetch globally
-global.fetch = vi.fn(() =>
+global.fetch = mock(() =>
   Promise.resolve({
     ok: true,
     json: () => Promise.resolve({}),
@@ -45,9 +45,9 @@ global.fetch = vi.fn(() =>
 const originalError = console.error;
 console.error = (...args: any[]) => {
   // Suppress React act() warnings
-  if (args[0]?.includes?.('act()')) return;
+  if (args[0]?.includes?.('act()')) {return;}
   // Suppress force-graph warnings
-  if (args[0]?.includes?.('force-graph')) return;
+  if (args[0]?.includes?.('force-graph')) {return;}
   originalError(...args);
 };
 
@@ -56,7 +56,7 @@ afterEach(() => {
   // Clean up React components
   cleanup();
   // Clear all mocks
-  vi.clearAllMocks();
+  mock.restore();
 });
 
 // E2E Test setup utilities

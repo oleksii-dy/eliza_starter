@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import type { IAgentRuntime, UUID } from '@elizaos/core';
+import type { IAgentRuntime } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
 import type { TrainingDataPoint, CustomModelType } from '../interfaces/CustomReasoningService.js';
 
@@ -29,10 +29,14 @@ export class TrainingRecordingManager {
   private baseDir: string;
   private currentSession?: RecordingSession;
 
-  constructor(private runtime: IAgentRuntime, baseDir?: string) {
+  constructor(
+    private runtime: IAgentRuntime,
+    baseDir?: string
+  ) {
     // Use provided baseDir or default to project root
-    this.baseDir = baseDir || 
-      runtime.getSetting('TRAINING_RECORDINGS_DIR') || 
+    this.baseDir =
+      baseDir ||
+      runtime.getSetting('TRAINING_RECORDINGS_DIR') ||
       path.join(process.cwd(), 'training_recordings');
   }
 
@@ -42,14 +46,14 @@ export class TrainingRecordingManager {
   async initialize(): Promise<void> {
     try {
       await fs.mkdir(this.baseDir, { recursive: true });
-      
+
       // Create subdirectories for each model type
       const modelTypes: CustomModelType[] = ['should_respond', 'planning', 'coding'];
-      
+
       for (const modelType of modelTypes) {
         const modelDir = path.join(this.baseDir, modelType);
         await fs.mkdir(modelDir, { recursive: true });
-        
+
         // Create daily subdirectories
         const today = new Date().toISOString().split('T')[0];
         const todayDir = path.join(modelDir, today);
@@ -71,11 +75,12 @@ export class TrainingRecordingManager {
    * Start a new recording session
    */
   async startSession(modelType: CustomModelType, sessionName?: string): Promise<string> {
-    const sessionId = sessionName || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const sessionId =
+      sessionName || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const sessionDir = path.join(this.baseDir, 'sessions', sessionId);
-    
+
     await fs.mkdir(sessionDir, { recursive: true });
-    
+
     this.currentSession = {
       sessionId,
       startTime: new Date(),
@@ -112,7 +117,7 @@ export class TrainingRecordingManager {
     }
 
     this.currentSession.endTime = new Date();
-    
+
     // Update session metadata
     const sessionMetadata = {
       sessionId: this.currentSession.sessionId,
@@ -141,10 +146,10 @@ export class TrainingRecordingManager {
     const timestamp = new Date().toISOString();
     const date = timestamp.split('T')[0];
     const timeStr = timestamp.replace(/[:.]/g, '-');
-    
+
     // Determine recording directory
     let recordingDir: string;
-    
+
     if (this.currentSession) {
       recordingDir = this.currentSession.directory;
     } else {
@@ -160,21 +165,21 @@ export class TrainingRecordingManager {
     const record = {
       // Basic info
       id: dataPoint.id,
-      timestamp: timestamp,
+      timestamp,
       modelType: dataPoint.modelType,
       agentId: this.runtime.agentId,
       agentName: this.runtime.character.name,
-      
+
       // Context
       roomId: dataPoint.metadata?.roomId,
       messageId: dataPoint.metadata?.messageId,
-      
+
       // Input data (formatted for readability)
       input: this.formatInputForReading(dataPoint),
-      
+
       // Output data (formatted for readability)
       output: this.formatOutputForReading(dataPoint),
-      
+
       // Performance metrics
       performance: {
         responseTimeMs: dataPoint.metadata?.responseTimeMs,
@@ -182,7 +187,7 @@ export class TrainingRecordingManager {
         costUsd: dataPoint.metadata?.costUsd,
         confidence: dataPoint.output.confidence,
       },
-      
+
       // Raw data for complete debugging
       raw: {
         input: dataPoint.input,
@@ -193,7 +198,7 @@ export class TrainingRecordingManager {
 
     // Write the recording file
     await fs.writeFile(filePath, JSON.stringify(record, null, 2));
-    
+
     // Update session statistics
     if (this.currentSession) {
       this.currentSession.recordingCount++;
@@ -217,25 +222,25 @@ export class TrainingRecordingManager {
             role: msg.entityId === this.runtime.agentId ? 'Agent' : 'User',
             text: msg.content.text,
           })),
-          prompt: dataPoint.input.prompt?.substring(0, 500) + '...',
+          prompt: `${dataPoint.input.prompt?.substring(0, 500)}...`,
         };
-        
+
       case 'planning':
         return {
           messageText: dataPoint.input.messageText,
           availableActions: dataPoint.input.availableActions,
           stateValues: Object.keys(dataPoint.input.state?.values || {}),
           stateProviders: Object.keys(dataPoint.input.state?.data?.providers || {}),
-          prompt: dataPoint.input.prompt?.substring(0, 500) + '...',
+          prompt: `${dataPoint.input.prompt?.substring(0, 500)}...`,
         };
-        
+
       case 'coding':
         return {
           prompt: dataPoint.input.prompt,
           language: dataPoint.input.language,
-          context: dataPoint.input.context?.substring(0, 300) + '...',
+          context: `${dataPoint.input.context?.substring(0, 300)}...`,
         };
-        
+
       default:
         return dataPoint.input;
     }
@@ -252,23 +257,23 @@ export class TrainingRecordingManager {
           reasoning: dataPoint.output.reasoning,
           confidence: dataPoint.output.confidence,
         };
-        
+
       case 'planning':
         return {
           thought: dataPoint.output.thought,
           actions: dataPoint.output.actions,
           providers: dataPoint.output.providers,
-          responseText: dataPoint.output.text?.substring(0, 200) + '...',
+          responseText: `${dataPoint.output.text?.substring(0, 200)}...`,
         };
-        
+
       case 'coding':
         return {
           codeLines: dataPoint.output.code?.split('\n').length,
-          codePreview: dataPoint.output.code?.substring(0, 300) + '...',
+          codePreview: `${dataPoint.output.code?.substring(0, 300)}...`,
           hasExplanation: !!dataPoint.output.explanation,
-          explanationPreview: dataPoint.output.explanation?.substring(0, 200) + '...',
+          explanationPreview: `${dataPoint.output.explanation?.substring(0, 200)}...`,
         };
-        
+
       default:
         return dataPoint.output;
     }
@@ -279,36 +284,38 @@ export class TrainingRecordingManager {
    */
   async getRecordingFiles(modelType?: CustomModelType, date?: string): Promise<RecordingFile[]> {
     const files: RecordingFile[] = [];
-    
+
     try {
       let searchDirs: string[] = [];
-      
+
       if (modelType && date) {
         searchDirs = [path.join(this.baseDir, modelType, date)];
       } else if (modelType) {
         const modelDir = path.join(this.baseDir, modelType);
         const dates = await fs.readdir(modelDir);
-        searchDirs = dates.map(date => path.join(modelDir, date));
+        searchDirs = dates.map((date) => path.join(modelDir, date));
       } else {
         const modelTypes = await fs.readdir(this.baseDir);
         for (const mt of modelTypes) {
-          if (mt === 'sessions') continue;
+          if (mt === 'sessions') {
+            continue;
+          }
           const modelDir = path.join(this.baseDir, mt);
           const dates = await fs.readdir(modelDir);
-          searchDirs.push(...dates.map(date => path.join(modelDir, date)));
+          searchDirs.push(...dates.map((date) => path.join(modelDir, date)));
         }
       }
 
       for (const dir of searchDirs) {
         try {
           const entries = await fs.readdir(dir);
-          const jsonFiles = entries.filter(entry => entry.endsWith('.json'));
-          
+          const jsonFiles = entries.filter((entry) => entry.endsWith('.json'));
+
           for (const filename of jsonFiles) {
             const filePath = path.join(dir, filename);
             const stats = await fs.stat(filePath);
             const extractedModelType = filename.split('_')[2] as CustomModelType;
-            
+
             files.push({
               filename,
               path: filePath,
@@ -334,27 +341,27 @@ export class TrainingRecordingManager {
    */
   async getRecordingSessions(): Promise<RecordingSession[]> {
     const sessions: RecordingSession[] = [];
-    
+
     try {
       const sessionsDir = path.join(this.baseDir, 'sessions');
       const sessionDirs = await fs.readdir(sessionsDir);
-      
+
       for (const sessionDir of sessionDirs) {
         try {
           const sessionPath = path.join(sessionsDir, sessionDir);
           const metadataPath = path.join(sessionPath, 'session.json');
-          
+
           const metadata = JSON.parse(await fs.readFile(metadataPath, 'utf-8'));
           const files = await fs.readdir(sessionPath);
-          const jsonFiles = files.filter(f => f.endsWith('.json') && f !== 'session.json');
-          
+          const jsonFiles = files.filter((f) => f.endsWith('.json') && f !== 'session.json');
+
           // Calculate total size
           let totalSize = 0;
           for (const file of jsonFiles) {
             const stats = await fs.stat(path.join(sessionPath, file));
             totalSize += stats.size;
           }
-          
+
           sessions.push({
             sessionId: metadata.sessionId,
             startTime: new Date(metadata.startTime),
@@ -398,7 +405,7 @@ export class TrainingRecordingManager {
 
     try {
       const allFiles = await this.getRecordingFiles();
-      
+
       for (const file of allFiles) {
         if (file.created < cutoffDate) {
           await fs.unlink(file.path);
@@ -418,7 +425,7 @@ export class TrainingRecordingManager {
    * Export recordings to JSONL for training
    */
   async exportRecordingsToJSONL(
-    outputPath: string, 
+    outputPath: string,
     options: {
       modelType?: CustomModelType;
       startDate?: Date;
@@ -432,12 +439,18 @@ export class TrainingRecordingManager {
 
     try {
       for (const file of files) {
-        if (options.startDate && file.created < options.startDate) continue;
-        if (options.endDate && file.created > options.endDate) continue;
-        if (options.limit && processedCount >= options.limit) break;
+        if (options.startDate && file.created < options.startDate) {
+          continue;
+        }
+        if (options.endDate && file.created > options.endDate) {
+          continue;
+        }
+        if (options.limit && processedCount >= options.limit) {
+          break;
+        }
 
         const recording = await this.readRecording(file.path);
-        
+
         // Convert to training format
         const trainingSample = {
           messages: [
@@ -482,17 +495,18 @@ export class TrainingRecordingManager {
   private formatUserPrompt(recording: any): string {
     switch (recording.modelType) {
       case 'should_respond':
-        const context = recording.input.conversationContext?.map((msg: any) => 
-          `${msg.role}: ${msg.text}`
-        ).join('\n') || '';
+        const context =
+          recording.input.conversationContext
+            ?.map((msg: any) => `${msg.role}: ${msg.text}`)
+            .join('\n') || '';
         return `Recent conversation:\n${context}\n\nCurrent message: ${recording.input.messageText}\n\nShould the agent respond to this message?`;
-        
+
       case 'planning':
         return `Message: ${recording.input.messageText}\n\nAvailable actions: ${recording.input.availableActions?.join(', ') || 'None'}\n\nPlan your response:`;
-        
+
       case 'coding':
         return recording.input.prompt;
-        
+
       default:
         return recording.input.prompt || recording.input.messageText || '';
     }
@@ -502,15 +516,15 @@ export class TrainingRecordingManager {
     switch (recording.modelType) {
       case 'should_respond':
         return `<response>\n<reasoning>${recording.output.reasoning}</reasoning>\n<action>${recording.output.decision}</action>\n</response>`;
-        
+
       case 'planning':
         return `<response>\n<thought>${recording.output.thought}</thought>\n<actions>${recording.output.actions?.join(',') || ''}</actions>\n<text>${recording.output.responseText || ''}</text>\n</response>`;
-        
+
       case 'coding':
-        return recording.output.hasExplanation 
+        return recording.output.hasExplanation
           ? `${recording.output.explanationPreview}\n\n\`\`\`${recording.input.language || 'javascript'}\n${recording.raw.output.code}\n\`\`\``
           : `\`\`\`${recording.input.language || 'javascript'}\n${recording.raw.output.code}\n\`\`\``;
-        
+
       default:
         return JSON.stringify(recording.output);
     }
@@ -538,10 +552,10 @@ export class TrainingRecordingManager {
       for (const file of files) {
         totalSize += file.size;
         byModelType[file.modelType] = (byModelType[file.modelType] || 0) + 1;
-        
+
         const dateStr = file.created.toISOString().split('T')[0];
         byDate[dateStr] = (byDate[dateStr] || 0) + 1;
-        
+
         if (!oldestRecording || file.created < oldestRecording) {
           oldestRecording = file.created;
         }

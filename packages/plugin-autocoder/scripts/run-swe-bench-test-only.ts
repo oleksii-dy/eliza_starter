@@ -13,7 +13,7 @@ const INSTANCE_ID = process.argv[2] || 'iamkun__dayjs-2399';
 
 async function runTestOnly() {
   elizaLogger.info(`🚀 Running SWE-bench test-only mode for: ${INSTANCE_ID}`);
-  
+
   // Check for API key
   if (!process.env.ANTHROPIC_API_KEY) {
     elizaLogger.error('❌ ANTHROPIC_API_KEY not found in environment');
@@ -27,7 +27,7 @@ async function runTestOnly() {
     logger: elizaLogger,
     getService: () => null
   } as unknown as IAgentRuntime;
-  
+
   // Create runner with test-only configuration
   const runner = new SWEBenchRunner(runtime, {
     work_dir: '.swe-bench-work-single',
@@ -73,9 +73,9 @@ async function runTestOnly() {
 - **Execution Time**: ${(result.execution_time / 1000).toFixed(1)}s
 
 ### Summary
-${result.tests_passed ? 
-  '✅ Tests are passing! The fix appears to be working correctly.' : 
-  '❌ Tests are still failing. Further investigation needed.'}
+${result.tests_passed ?
+    '✅ Tests are passing! The fix appears to be working correctly.' :
+    '❌ Tests are still failing. Further investigation needed.'}
 
 ### Details
 - Check \`.swe-bench-work-single/repos/${INSTANCE_ID}\` for the patched code
@@ -88,7 +88,7 @@ ${result.tests_passed ?
     );
 
     elizaLogger.info(`📊 Analysis saved to: ${analysisDir}`);
-    
+
     if (result.tests_passed) {
       elizaLogger.info(`✅ SUCCESS: Tests are passing for ${INSTANCE_ID}!`);
     } else {
@@ -102,4 +102,4 @@ runTestOnly().catch(error => {
   elizaLogger.error('Fatal error:', error);
   console.error('Stack trace:', error.stack);
   process.exit(1);
-}); 
+});

@@ -4,17 +4,17 @@ import { createTestWorld, createTestRoom, waitForCondition } from './test-helper
 
 export const realEntityExtractionTests: TestSuite = {
   name: 'Real Entity Extraction Tests',
-  
+
   tests: [
     {
       name: 'Extract entities from natural conversation',
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing real entity extraction from natural language...');
-        
+
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
         const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
-        
+
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -61,10 +61,10 @@ export const realEntityExtractionTests: TestSuite = {
 
         for (const testCase of testCases) {
           console.log(`\n📝 Testing extraction from: "${testCase.context.substring(0, 50)}..."`);
-          
+
           // Create a unique entity ID for this test
           const entityId = stringToUuid(`extraction-test-${Date.now()}`);
-          
+
           // Track entity - this should trigger LLM extraction
           const profile = await entityGraphService.trackEntity(
             entityId,
@@ -110,10 +110,10 @@ export const realEntityExtractionTests: TestSuite = {
           if (testCase.expected.names) {
             const extractedNames = profile.names.map(n => n.toLowerCase());
             const expectedNames = testCase.expected.names.map(n => n.toLowerCase());
-            const foundExpectedName = expectedNames.some(expected => 
+            const foundExpectedName = expectedNames.some(expected =>
               extractedNames.some(extracted => extracted.includes(expected) || expected.includes(extracted))
             );
-            
+
             if (!foundExpectedName) {
               throw new Error(`Expected to extract names like ${testCase.expected.names.join(', ')} but got ${profile.names.join(', ')}`);
             }
@@ -128,11 +128,11 @@ export const realEntityExtractionTests: TestSuite = {
       name: 'Extract and resolve entity mentions in conversation',
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing entity mention extraction and resolution...');
-        
+
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
         const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
-        
+
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -158,7 +158,7 @@ export const realEntityExtractionTests: TestSuite = {
 
         for (const context of mentionContexts) {
           console.log(`\n🔍 Testing mention resolution: "${context}"`);
-          
+
           // This should identify that "Alice" refers to the known entity
           const searchResults = await entityGraphService.searchEntities('Alice', {
             limit: 5,
@@ -168,7 +168,7 @@ export const realEntityExtractionTests: TestSuite = {
             throw new Error('Failed to find known entity through search');
           }
 
-          const aliceResult = searchResults.find(r => 
+          const aliceResult = searchResults.find(r =>
             r.entity.names.some(n => n.toLowerCase().includes('alice'))
           );
 
@@ -192,11 +192,11 @@ export const realEntityExtractionTests: TestSuite = {
       name: 'Handle ambiguous and complex entity extraction',
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing complex entity extraction scenarios...');
-        
+
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
         const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
-        
+
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -233,9 +233,9 @@ export const realEntityExtractionTests: TestSuite = {
 
         for (const edgeCase of edgeCases) {
           console.log(`\n🔬 Testing edge case: "${edgeCase.context.substring(0, 50)}..."`);
-          
+
           const entityId = stringToUuid(`edge-case-${Date.now()}`);
-          
+
           try {
             const profile = await entityGraphService.trackEntity(
               entityId,
@@ -269,7 +269,7 @@ export const realEntityExtractionTests: TestSuite = {
               }
             }
 
-            console.log(`✓ Edge case handled correctly`);
+            console.log('✓ Edge case handled correctly');
             if (profile.names.length > 0) {
               console.log(`  Extracted: ${profile.names.join(', ')}`);
               console.log(`  Type: ${profile.type}`);
@@ -289,4 +289,4 @@ export const realEntityExtractionTests: TestSuite = {
       },
     },
   ],
-}; 
+};

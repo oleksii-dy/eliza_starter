@@ -3,7 +3,7 @@
  * Tests plugin lifecycle without database dependencies
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { AgentRuntime } from '../../runtime';
 import { Service } from '../../types/service';
 import type {
@@ -118,13 +118,13 @@ describe('Plugin Configuration System E2E Tests', () => {
   beforeEach(async () => {
     // Create a minimal mock adapter
     const mockAdapter = {
-      init: vi.fn().mockResolvedValue(undefined),
-      initialize: vi.fn().mockResolvedValue(undefined),
-      isReady: vi.fn().mockResolvedValue(true),
-      close: vi.fn().mockResolvedValue(undefined),
-      getAgent: vi.fn().mockResolvedValue(null),
-      createAgent: vi.fn().mockResolvedValue(true),
-      getEntitiesByIds: vi.fn().mockImplementation((ids) => {
+      init: mock().mockResolvedValue(undefined),
+      initialize: mock().mockResolvedValue(undefined),
+      isReady: mock().mockResolvedValue(true),
+      close: mock().mockResolvedValue(undefined),
+      getAgent: mock().mockResolvedValue(null),
+      createAgent: mock().mockResolvedValue(true),
+      getEntitiesByIds: mock().mockImplementation((ids) => {
         // Return agent entity when requested
         return ids.map((id: string) => ({
           id,
@@ -133,24 +133,24 @@ describe('Plugin Configuration System E2E Tests', () => {
           agentId: id,
         }));
       }),
-      createEntities: vi.fn().mockResolvedValue(true),
-      getRoomsByIds: vi.fn().mockResolvedValue([]),
-      createRoom: vi.fn().mockResolvedValue('test-room-id'),
-      createRooms: vi.fn().mockResolvedValue(['test-room-id']),
-      getRoom: vi.fn().mockResolvedValue(null),
-      getRooms: vi.fn().mockResolvedValue([]),
-      getMemories: vi.fn().mockResolvedValue([]),
-      createMemory: vi.fn().mockResolvedValue('test-memory-id'),
-      searchMemories: vi.fn().mockResolvedValue([]),
-      getCachedValue: vi.fn().mockResolvedValue(null),
-      setCachedValue: vi.fn().mockResolvedValue(undefined),
+      createEntities: mock().mockResolvedValue(true),
+      getRoomsByIds: mock().mockResolvedValue([]),
+      createRoom: mock().mockResolvedValue('test-room-id'),
+      createRooms: mock().mockResolvedValue(['test-room-id']),
+      getRoom: mock().mockResolvedValue(null),
+      getRooms: mock().mockResolvedValue([]),
+      getMemories: mock().mockResolvedValue([]),
+      createMemory: mock().mockResolvedValue('test-memory-id'),
+      searchMemories: mock().mockResolvedValue([]),
+      getCachedValue: mock().mockResolvedValue(null),
+      setCachedValue: mock().mockResolvedValue(undefined),
       // Add other required methods as empty mocks
-      getAgents: vi.fn().mockResolvedValue([]),
-      updateAgent: vi.fn().mockResolvedValue(true),
-      deleteAgent: vi.fn().mockResolvedValue(true),
-      getEntities: vi.fn().mockResolvedValue([]),
-      getEntity: vi.fn().mockResolvedValue(null),
-      getEntityById: vi.fn().mockImplementation((id) => {
+      getAgents: mock().mockResolvedValue([]),
+      updateAgent: mock().mockResolvedValue(true),
+      deleteAgent: mock().mockResolvedValue(true),
+      getEntities: mock().mockResolvedValue([]),
+      getEntity: mock().mockResolvedValue(null),
+      getEntityById: mock().mockImplementation((id) => {
         // Return agent entity when requested
         return Promise.resolve({
           id,
@@ -159,29 +159,29 @@ describe('Plugin Configuration System E2E Tests', () => {
           agentId: id,
         });
       }),
-      createEntity: vi.fn().mockResolvedValue(undefined),
-      updateEntity: vi.fn().mockResolvedValue(undefined),
-      deleteEntity: vi.fn().mockResolvedValue(undefined),
-      getRelationships: vi.fn().mockResolvedValue([]),
-      createRelationship: vi.fn().mockResolvedValue(true),
-      updateRoom: vi.fn().mockResolvedValue(undefined),
-      deleteRoom: vi.fn().mockResolvedValue(undefined),
-      addParticipant: vi.fn().mockResolvedValue(undefined),
-      addParticipantsRoom: vi.fn().mockResolvedValue(true),
-      removeParticipant: vi.fn().mockResolvedValue(true),
-      getParticipantsForRoom: vi.fn().mockResolvedValue([]),
-      getComponents: vi.fn().mockResolvedValue([]),
-      createComponent: vi.fn().mockResolvedValue(true),
-      updateComponent: vi.fn().mockResolvedValue(undefined),
-      deleteComponent: vi.fn().mockResolvedValue(undefined),
-      deleteCachedValue: vi.fn().mockResolvedValue(undefined),
-      removeMemory: vi.fn().mockResolvedValue(undefined),
-      removeAllMemories: vi.fn().mockResolvedValue(undefined),
-      getMemoriesByEntityId: vi.fn().mockResolvedValue([]),
+      createEntity: mock().mockResolvedValue(undefined),
+      updateEntity: mock().mockResolvedValue(undefined),
+      deleteEntity: mock().mockResolvedValue(undefined),
+      getRelationships: mock().mockResolvedValue([]),
+      createRelationship: mock().mockResolvedValue(true),
+      updateRoom: mock().mockResolvedValue(undefined),
+      deleteRoom: mock().mockResolvedValue(undefined),
+      addParticipant: mock().mockResolvedValue(undefined),
+      addParticipantsRoom: mock().mockResolvedValue(true),
+      removeParticipant: mock().mockResolvedValue(true),
+      getParticipantsForRoom: mock().mockResolvedValue([]),
+      getComponents: mock().mockResolvedValue([]),
+      createComponent: mock().mockResolvedValue(true),
+      updateComponent: mock().mockResolvedValue(undefined),
+      deleteComponent: mock().mockResolvedValue(undefined),
+      deleteCachedValue: mock().mockResolvedValue(undefined),
+      removeMemory: mock().mockResolvedValue(undefined),
+      removeAllMemories: mock().mockResolvedValue(undefined),
+      getMemoriesByEntityId: mock().mockResolvedValue([]),
       db: null,
-      runMigrations: vi.fn().mockResolvedValue(undefined),
-      getConnection: vi.fn().mockReturnValue(null),
-      ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
+      runMigrations: mock().mockResolvedValue(undefined),
+      getConnection: mock().mockReturnValue(null),
+      ensureEmbeddingDimension: mock().mockResolvedValue(undefined),
     } as any as IDatabaseAdapter;
 
     // Create test character

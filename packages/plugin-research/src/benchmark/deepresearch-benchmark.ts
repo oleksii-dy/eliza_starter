@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs/promises';
 import path from 'path';
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { ResearchProject, DeepResearchBenchResult } from '../types';
 
 const execAsync = promisify(exec);
@@ -51,7 +51,7 @@ export class DeepResearchBenchmark {
     try {
       // Check Python availability
       const { stdout: pythonVersion } = await execAsync(`${this.pythonPath} --version`);
-      elizaLogger.info(`Python version: ${pythonVersion.trim()}`);
+      logger.info(`Python version: ${pythonVersion.trim()}`);
 
       // Check if benchmark directory exists
       try {
@@ -102,22 +102,22 @@ export class DeepResearchBenchmark {
    */
   async setupBenchmark(): Promise<boolean> {
     try {
-      elizaLogger.info('Installing DeepResearch benchmark dependencies...');
-      
+      logger.info('Installing DeepResearch benchmark dependencies...');
+
       const { stdout, stderr } = await execAsync(
         `cd "${this.benchmarkPath}" && pip install -r requirements.txt`,
         { timeout: 180000 } // 3 minutes
       );
 
       if (stderr && stderr.includes('ERROR')) {
-        elizaLogger.error('Pip install errors:', stderr);
+        logger.error('Pip install errors:', stderr);
         return false;
       }
 
-      elizaLogger.info('Dependencies installed successfully');
+      logger.info('Dependencies installed successfully');
       return true;
     } catch (error) {
-      elizaLogger.error('Failed to install dependencies:', error);
+      logger.error('Failed to install dependencies:', error);
       return false;
     }
   }
@@ -176,18 +176,18 @@ export class DeepResearchBenchmark {
    */
   private async saveProjectForBenchmark(project: ResearchProject, modelName: string): Promise<string> {
     const benchmarkData = this.convertProjectToBenchmarkFormat(project);
-    
+
     // Create model directory
     const modelDir = path.join(this.benchmarkPath, 'data', 'test_data', 'raw_data');
     await fs.mkdir(modelDir, { recursive: true });
 
     // Save as JSONL file (one line per project)
     const outputFile = path.join(modelDir, `${modelName}.jsonl`);
-    const jsonLine = JSON.stringify(benchmarkData) + '\n';
-    
+    const jsonLine = `${JSON.stringify(benchmarkData)}\n`;
+
     await fs.writeFile(outputFile, jsonLine, 'utf-8');
-    elizaLogger.info(`Saved project to benchmark format: ${outputFile}`);
-    
+    logger.info(`Saved project to benchmark format: ${outputFile}`);
+
     return outputFile;
   }
 
@@ -195,7 +195,7 @@ export class DeepResearchBenchmark {
    * Run the RACE evaluation for a single project
    */
   async evaluateProject(
-    project: ResearchProject, 
+    project: ResearchProject,
     modelName: string = 'elizaos-research-agent'
   ): Promise<BenchmarkResult> {
     // Check setup first
@@ -209,30 +209,30 @@ export class DeepResearchBenchmark {
       await this.saveProjectForBenchmark(project, modelName);
 
       // Run the benchmark
-      elizaLogger.info(`Running DeepResearch benchmark for model: ${modelName}`);
-      
+      logger.info(`Running DeepResearch benchmark for model: ${modelName}`);
+
       const command = `cd "${this.benchmarkPath}" && ${this.pythonPath} deepresearch_bench_race.py ${modelName} --limit 1 --only_en`;
-      
+
       const { stdout, stderr } = await execAsync(command, {
         timeout: 300000, // 5 minutes
         maxBuffer: 1024 * 1024 * 10 // 10MB buffer
       });
 
       if (stderr && stderr.includes('ERROR')) {
-        elizaLogger.error('Benchmark execution errors:', stderr);
+        logger.error('Benchmark execution errors:', stderr);
       }
 
-      elizaLogger.info('Benchmark completed, parsing results...');
+      logger.info('Benchmark completed, parsing results...');
 
       // Parse results
       const resultFile = path.join(this.outputDir, 'race_result.txt');
       const results = await this.parseResults(resultFile);
 
-      elizaLogger.info('Benchmark results:', results);
+      logger.info('Benchmark results:', results);
       return results;
 
     } catch (error) {
-      elizaLogger.error('Benchmark evaluation failed:', error);
+      logger.error('Benchmark evaluation failed:', error);
       throw error;
     }
   }
@@ -244,7 +244,7 @@ export class DeepResearchBenchmark {
     try {
       const content = await fs.readFile(resultFile, 'utf-8');
       const lines = content.split('\n');
-      
+
       const results: any = {
         timestamp: new Date().toISOString(),
         modelName: 'elizaos-research-agent'
@@ -287,7 +287,7 @@ export class DeepResearchBenchmark {
       return results as BenchmarkResult;
 
     } catch (error) {
-      elizaLogger.error('Failed to parse benchmark results:', error);
+      logger.error('Failed to parse benchmark results:', error);
       throw new Error(`Failed to parse benchmark results: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
@@ -296,20 +296,20 @@ export class DeepResearchBenchmark {
    * Run benchmark on multiple projects
    */
   async evaluateProjects(
-    projects: ResearchProject[], 
+    projects: ResearchProject[],
     modelName: string = 'elizaos-research-agent'
   ): Promise<BenchmarkResult[]> {
     const results: BenchmarkResult[] = [];
 
     for (let i = 0; i < projects.length; i++) {
       const project = projects[i];
-      elizaLogger.info(`Evaluating project ${i + 1}/${projects.length}: ${project.query.substring(0, 50)}...`);
-      
+      logger.info(`Evaluating project ${i + 1}/${projects.length}: ${project.query.substring(0, 50)}...`);
+
       try {
         const result = await this.evaluateProject(project, `${modelName}-${i}`);
         results.push(result);
       } catch (error) {
-        elizaLogger.error(`Failed to evaluate project ${i + 1}:`, error);
+        logger.error(`Failed to evaluate project ${i + 1}:`, error);
         // Continue with other projects
       }
     }
@@ -334,7 +334,7 @@ export class DeepResearchBenchmark {
       const rawResultsFile = path.join(this.outputDir, 'raw_results.jsonl');
       const content = await fs.readFile(rawResultsFile, 'utf-8');
       const lines = content.trim().split('\n');
-      
+
       const scores = lines
         .map(line => JSON.parse(line))
         .filter(result => !result.error); // Filter out failed evaluations
@@ -359,7 +359,7 @@ export class DeepResearchBenchmark {
       };
 
     } catch (error) {
-      elizaLogger.error('Failed to get benchmark stats:', error);
+      logger.error('Failed to get benchmark stats:', error);
       throw error;
     }
   }

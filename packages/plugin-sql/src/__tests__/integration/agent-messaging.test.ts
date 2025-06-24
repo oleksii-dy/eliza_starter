@@ -51,7 +51,7 @@ describe('Agent Messaging with PGLite', () => {
 
   it('should allow agent to receive and respond to messages', async () => {
     console.log('[Test] Creating user message...');
-    
+
     // User sends a message
     const userMessage: Memory = {
       id: uuidv4() as UUID,
@@ -82,7 +82,7 @@ describe('Agent Messaging with PGLite', () => {
 
     // Simulate agent processing and responding
     console.log('[Test] Creating agent response...');
-    
+
     const agentResponse: Memory = {
       id: uuidv4() as UUID,
       entityId: testAgentId, // Agent's own ID
@@ -118,7 +118,7 @@ describe('Agent Messaging with PGLite', () => {
 
   it('should handle multiple back-and-forth messages', async () => {
     const conversationRoomId = uuidv4() as UUID;
-    
+
     await adapter.createRoom({
       id: conversationRoomId,
       name: 'Conversation Room',
@@ -162,7 +162,7 @@ describe('Agent Messaging with PGLite', () => {
     });
 
     expect(conversation).toHaveLength(6);
-    
+
     // Verify alternating pattern
     for (let i = 0; i < messages.length; i++) {
       expect(conversation[i].entityId).toBe(messages[i].entity);
@@ -174,7 +174,7 @@ describe('Agent Messaging with PGLite', () => {
 
   it('should handle sudden shutdown and restart', async () => {
     const testRoomId = uuidv4() as UUID;
-    
+
     await adapter.createRoom({
       id: testRoomId,
       name: 'Shutdown Test Room',
@@ -199,10 +199,10 @@ describe('Agent Messaging with PGLite', () => {
     await adapter.createMemory(messageBeforeShutdown, 'messages');
 
     console.log('[Test] Simulating sudden shutdown...');
-    
+
     // Simulate sudden shutdown
     await adapter.close();
-    
+
     // Verify adapter reports as not ready
     const isReadyAfterClose = await adapter.isReady();
     expect(isReadyAfterClose).toBe(false);
@@ -212,14 +212,14 @@ describe('Agent Messaging with PGLite', () => {
     // For PGLite in-memory, we need to create a new adapter
     // In real scenarios with file-based PGLite, data would persist
     const isPGLite = adapter.constructor.name === 'PgliteDatabaseAdapter';
-    
+
     if (isPGLite) {
       console.log('[Test] Note: In-memory PGLite loses data on shutdown. In production, use file-based storage.');
     }
 
     // Re-initialize the adapter
     await adapter.init();
-    
+
     // Verify adapter is ready again
     const isReadyAfterRestart = await adapter.isReady();
     expect(isReadyAfterRestart).toBe(true);
@@ -249,13 +249,13 @@ describe('Agent Messaging with PGLite', () => {
     // For in-memory PGLite, we'll only have the new message
     // For file-based PGLite or PostgreSQL, we'd have both
     expect(messagesAfterRestart.length).toBeGreaterThan(0);
-    
+
     console.log('[Test] Successfully handled shutdown and restart');
   });
 
   it('should handle rapid message sending', async () => {
     const rapidRoomId = uuidv4() as UUID;
-    
+
     await adapter.createRoom({
       id: rapidRoomId,
       name: 'Rapid Messages Room',
@@ -293,7 +293,7 @@ describe('Agent Messaging with PGLite', () => {
     });
 
     expect(rapidMessages).toHaveLength(10);
-    
+
     // Verify message order
     for (let i = 0; i < 10; i++) {
       expect(rapidMessages[i].content.text).toContain(`Rapid message ${i}`);
@@ -304,7 +304,7 @@ describe('Agent Messaging with PGLite', () => {
 
   it('should properly manage message search and retrieval', async () => {
     const searchRoomId = uuidv4() as UUID;
-    
+
     await adapter.createRoom({
       id: searchRoomId,
       name: 'Search Test Room',
@@ -354,7 +354,7 @@ describe('Agent Messaging with PGLite', () => {
     });
 
     expect(allMessages).toHaveLength(4);
-    
+
     // Verify message content
     const messageTexts = allMessages.map(m => m.content.text);
     for (const testMsg of testMessages) {

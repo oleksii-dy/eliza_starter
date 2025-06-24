@@ -123,7 +123,8 @@ Make sure to include the \`\`\`json\`\`\` tags around the JSON object.`;
 export const choiceAction: Action = {
   name: 'CHOOSE_OPTION',
   similes: ['SELECT_OPTION', 'SELECT', 'PICK', 'CHOOSE'],
-  description: 'Selects an option for a pending task that has multiple options',
+  description:
+    'Selects an option for a pending task that has multiple options. Often used after task creation actions to make selections or confirm/cancel operations. Returns selected option details for chaining with subsequent task actions.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     if (!state) {
@@ -176,7 +177,7 @@ export const choiceAction: Action = {
     state?: State,
     _options?: any,
     callback?: HandlerCallback,
-    responses?: Memory[]
+    _responses?: Memory[]
   ): Promise<ActionResult> => {
     try {
       const pendingTasks = await runtime.getTasks({
@@ -381,6 +382,38 @@ export const choiceAction: Action = {
   },
 
   examples: [
+    // Multi-action: Create task then choose option
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Create a deployment task and select the production option',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: "I'll create the deployment task and select the production option.",
+          actions: ['CREATE_TASK', 'CHOOSE_OPTION'],
+        },
+      },
+    ],
+    // Multi-action: List tasks then choose option
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Show me pending tasks and select the approve option for the review task',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: "I'll list the pending tasks and approve the review task.",
+          actions: ['LIST_TASKS', 'CHOOSE_OPTION'],
+        },
+      },
+    ],
     [
       {
         name: '{{name1}}',

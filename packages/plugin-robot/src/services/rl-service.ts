@@ -13,7 +13,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 
 export interface RLConfig {
-  modelPath?: string;
+  _modelPath?: string;
   taskType?: 'walking' | 'manipulation' | 'balance' | 'custom';
   episodeLength?: number;
   trainingEnabled?: boolean;
@@ -54,7 +54,7 @@ export class RLService extends Service {
     this.rlConfig = {
       modelPath: runtime.getSetting('RL_MODEL_PATH'),
       taskType: (runtime.getSetting('RL_TASK_TYPE') as any) || 'walking',
-      episodeLength: parseInt(runtime.getSetting('RL_EPISODE_LENGTH') || '1000'),
+      episodeLength: parseInt(runtime.getSetting('RL_EPISODE_LENGTH') || '1000', 10),
       trainingEnabled: runtime.getSetting('RL_TRAINING_ENABLED') === 'true',
       inferenceOnly: runtime.getSetting('RL_INFERENCE_ONLY') === 'true',
     };
@@ -98,7 +98,7 @@ export class RLService extends Service {
   /**
    * Load ONNX model for inference
    */
-  async loadModel(modelPath: string): Promise<void> {
+  async loadModel(_modelPath: string): Promise<void> {
     try {
       // Check if file exists
       await fs.access(modelPath);
@@ -122,7 +122,7 @@ export class RLService extends Service {
   /**
    * Save model in ONNX format
    */
-  async saveModel(modelPath: string): Promise<void> {
+  async saveModel(_modelPath: string): Promise<void> {
     // This would be implemented with actual model export
     // For now, it's a placeholder
     logger.info('[RLService] Model saving not yet implemented');
@@ -187,7 +187,7 @@ export class RLService extends Service {
       }
 
       // Step environment
-      const result = await this.environment.step({
+      const _result = await this.environment.step({
         jointCommands: action,
       });
 
@@ -271,7 +271,7 @@ export class RLService extends Service {
 
     try {
       for (let episode = 0; episode < episodes && this.isTraining; episode++) {
-        const result = await this.runEpisode(false); // Use random policy for training
+        const _result = await this.runEpisode(false); // Use random policy for training
 
         // Log progress
         if (episode % 10 === 0) {
@@ -284,7 +284,7 @@ export class RLService extends Service {
 
         // Save checkpoint periodically
         if (episode % 100 === 0 && episode > 0) {
-          const checkpointPath = path.join('models', 'checkpoints', `episode_${episode}.onnx`);
+          const _checkpointPath = path.join('models', 'checkpoints', `episode_${episode}.onnx`);
           // await this.saveModel(checkpointPath);
           logger.info(`[RLService] Checkpoint saved at episode ${episode}`);
         }
@@ -332,7 +332,7 @@ export class RLService extends Service {
         const action = await this.predict(observation);
 
         // Execute action
-        const result = await this.environment!.step({
+        const _result = await this.environment!.step({
           jointCommands: action,
         });
 
@@ -389,10 +389,12 @@ export class RLService extends Service {
     let successes = 0;
 
     for (let i = 0; i < episodes; i++) {
-      const result = await this.runEpisode(true); // Use policy
+      const _result = await this.runEpisode(true); // Use policy
       rewards.push(result.totalReward);
       steps.push(result.steps);
-      if (result.success) successes++;
+      if (result.success) {
+        successes++;
+      }
     }
 
     const averageReward = rewards.reduce((a, b) => a + b, 0) / rewards.length;
@@ -400,7 +402,7 @@ export class RLService extends Service {
     const successRate = successes / episodes;
 
     logger.info(
-      `[RLService] Evaluation complete - ` +
+      '[RLService] Evaluation complete - ' +
         `Avg Reward: ${averageReward.toFixed(2)}, ` +
         `Avg Steps: ${averageSteps.toFixed(0)}, ` +
         `Success Rate: ${(successRate * 100).toFixed(1)}%`

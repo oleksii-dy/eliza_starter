@@ -1,4 +1,4 @@
-import { elizaLogger, IAgentRuntime, ModelType } from '@elizaos/core';
+import { logger, IAgentRuntime, ModelType } from '@elizaos/core';
 import {
   CriteriaDefinition,
   EvaluationCriteria,
@@ -333,14 +333,14 @@ Respond with just the option name.`;
         .trim()
         .toLowerCase();
 
-      if (focus.includes('historical')) return TemporalFocus.HISTORICAL;
-      if (focus.includes('current')) return TemporalFocus.CURRENT;
-      if (focus.includes('recent')) return TemporalFocus.RECENT;
-      if (focus.includes('future')) return TemporalFocus.FUTURE_ORIENTED;
+      if (focus.includes('historical')) {return TemporalFocus.HISTORICAL;}
+      if (focus.includes('current')) {return TemporalFocus.CURRENT;}
+      if (focus.includes('recent')) {return TemporalFocus.RECENT;}
+      if (focus.includes('future')) {return TemporalFocus.FUTURE_ORIENTED;}
 
       return undefined;
     } catch (error) {
-      elizaLogger.error('Error analyzing temporal focus:', error);
+      logger.error('Error analyzing temporal focus:', error);
       return undefined;
     }
   }
@@ -372,7 +372,7 @@ Respond with a comma-separated list.`;
 
       return locations.length > 0 ? locations : [];
     } catch (error) {
-      elizaLogger.error('Error extracting geographic scope:', error);
+      logger.error('Error extracting geographic scope:', error);
       return [];
     }
   }
@@ -504,7 +504,7 @@ Separate each sub-query with ---`;
         '[QueryPlanner] AI model failed to generate valid sub-queries. This indicates a model configuration or prompt issue.'
       );
     } catch (error) {
-      elizaLogger.error('Error generating sub-queries with AI:', error);
+      logger.error('Error generating sub-queries with AI:', error);
       throw error;
     }
   }
@@ -515,23 +515,23 @@ Separate each sub-query with ---`;
 
   private parseResultType(type: string): ResultType {
     const normalized = type.toLowerCase().trim();
-    if (normalized.includes('statistical')) return ResultType.STATISTICAL;
-    if (normalized.includes('theoretical')) return ResultType.THEORETICAL;
-    if (normalized.includes('practical')) return ResultType.PRACTICAL;
-    if (normalized.includes('comparative')) return ResultType.COMPARATIVE;
+    if (normalized.includes('statistical')) {return ResultType.STATISTICAL;}
+    if (normalized.includes('theoretical')) {return ResultType.THEORETICAL;}
+    if (normalized.includes('practical')) {return ResultType.PRACTICAL;}
+    if (normalized.includes('comparative')) {return ResultType.COMPARATIVE;}
     return ResultType.FACTUAL;
   }
 
   private parsePriority(priority: string): number {
     const normalized = priority.toLowerCase().trim();
-    if (normalized === 'high') return 3;
-    if (normalized === 'low') return 1;
+    if (normalized === 'high') {return 3;}
+    if (normalized === 'low') {return 1;}
     return 2; // medium
   }
 
   private determineDependencies(index: number, existingQueries: SubQuery[]): string[] {
     // First query has no dependencies
-    if (index === 0) return [];
+    if (index === 0) {return [];}
 
     // Comparative queries might depend on factual queries
     // This is a simplified logic - in production, would use more sophisticated dependency analysis
@@ -742,7 +742,7 @@ Format:
         '[EvaluationCriteriaGenerator] AI model failed to generate valid evaluation criterion. This indicates a model configuration or prompt issue.'
       );
     } catch (error) {
-      elizaLogger.error('Error generating criterion with AI:', error);
+      logger.error('Error generating criterion with AI:', error);
       throw error;
     }
   }

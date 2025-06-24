@@ -11,7 +11,7 @@ export async function setupReminderDemo(runtime: IAgentRuntime) {
   console.log('🚀 Setting up reminder demo scenarios...\n');
 
   const dataService = createTodoDataService(runtime);
-  
+
   // Test user details
   const testUserId = 'test-user-123' as UUID;
   const testRoomId = 'test-room-456' as UUID;
@@ -21,7 +21,7 @@ export async function setupReminderDemo(runtime: IAgentRuntime) {
   console.log('📌 Scenario 1: Creating an overdue task...');
   const overdueDate = new Date();
   overdueDate.setHours(overdueDate.getHours() - 2); // 2 hours overdue
-  
+
   const overdueTaskId = await dataService.createTodo({
     agentId: runtime.agentId,
     worldId: testWorldId,
@@ -41,7 +41,7 @@ export async function setupReminderDemo(runtime: IAgentRuntime) {
   console.log('\n📌 Scenario 2: Creating a task due in 15 minutes...');
   const upcomingDate = new Date();
   upcomingDate.setMinutes(upcomingDate.getMinutes() + 15);
-  
+
   const upcomingTaskId = await dataService.createTodo({
     agentId: runtime.agentId,
     worldId: testWorldId,
@@ -59,7 +59,7 @@ export async function setupReminderDemo(runtime: IAgentRuntime) {
 
   // Scenario 3: Daily recurring task (will remind at 9 AM and 6 PM)
   console.log('\n📌 Scenario 3: Creating daily recurring tasks...');
-  
+
   const dailyTasks = [
     {
       name: '💊 Take morning vitamins',
@@ -96,7 +96,7 @@ export async function setupReminderDemo(runtime: IAgentRuntime) {
 
   // Scenario 4: Future tasks with various deadlines
   console.log('\n📌 Scenario 4: Creating future tasks with deadlines...');
-  
+
   const futureTasks = [
     {
       name: '📝 Finish project proposal',
@@ -121,7 +121,7 @@ export async function setupReminderDemo(runtime: IAgentRuntime) {
   for (const task of futureTasks) {
     const dueDate = new Date();
     dueDate.setHours(dueDate.getHours() + task.hoursFromNow);
-    
+
     const taskId = await dataService.createTodo({
       agentId: runtime.agentId,
       worldId: testWorldId,
@@ -139,7 +139,7 @@ export async function setupReminderDemo(runtime: IAgentRuntime) {
 
   // Scenario 5: Aspirational tasks (no due date)
   console.log('\n📌 Scenario 5: Creating aspirational tasks...');
-  
+
   const aspirationalTasks = [
     '🎸 Learn to play guitar',
     '🗣️ Become fluent in Spanish',
@@ -199,23 +199,23 @@ export async function setupReminderDemo(runtime: IAgentRuntime) {
  */
 export async function monitorReminders(runtime: IAgentRuntime, duration: number = 60000) {
   console.log(`\n👀 Monitoring reminders for ${duration / 1000} seconds...`);
-  
+
   const startTime = Date.now();
   const checkInterval = 5000; // Check every 5 seconds
-  
+
   const monitor = setInterval(() => {
     const elapsed = Date.now() - startTime;
     const remaining = duration - elapsed;
-    
+
     if (remaining <= 0) {
       clearInterval(monitor);
       console.log('\n✅ Monitoring complete!');
       return;
     }
-    
+
     console.log(`⏱️  ${Math.floor(remaining / 1000)}s remaining...`);
   }, checkInterval);
-  
+
   // Wait for monitoring to complete
   await new Promise(resolve => setTimeout(resolve, duration));
 }
@@ -225,14 +225,14 @@ export async function monitorReminders(runtime: IAgentRuntime, duration: number 
  */
 export async function cleanupDemo(runtime: IAgentRuntime, testUserId: UUID) {
   console.log('\n🧹 Cleaning up demo tasks...');
-  
+
   const dataService = createTodoDataService(runtime);
   const todos = await dataService.getTodos({ entityId: testUserId });
-  
+
   for (const todo of todos) {
     await dataService.deleteTodo(todo.id);
   }
-  
+
   console.log(`✅ Deleted ${todos.length} demo tasks`);
 }
 
@@ -241,4 +241,4 @@ export default {
   setupReminderDemo,
   monitorReminders,
   cleanupDemo,
-}; 
+};

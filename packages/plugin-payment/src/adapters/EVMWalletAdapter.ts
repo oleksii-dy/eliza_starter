@@ -2,7 +2,7 @@ import { type IAgentRuntime, elizaLogger as logger } from '@elizaos/core';
 import { Contract, ethers, JsonRpcProvider, Wallet } from 'ethers';
 import { isAddress } from 'viem';
 import { IWalletAdapter, PaymentMethod, PaymentStatus, TransactionResult } from '../types';
-// @ts-ignore - Plugin types not available at compile time
+// @ts-expect-error - Plugin types not available at compile time
 import type { IWalletService } from '@elizaos/plugin-evm';
 
 /**
@@ -32,7 +32,7 @@ export class EVMWalletAdapter implements IWalletAdapter {
     try {
       // Initialize providers for each supported chain
       this.initializeProviders();
-      
+
       // Get the EVM wallet service from runtime
       const service = this.runtime.getService('wallet');
 
@@ -78,7 +78,7 @@ export class EVMWalletAdapter implements IWalletAdapter {
       }
 
       const provider = this.getProvider(method);
-      
+
       if (this.isNativeToken(method)) {
         // Get native token balance
         const balance = await provider.getBalance(address);
@@ -221,10 +221,10 @@ export class EVMWalletAdapter implements IWalletAdapter {
     try {
       // Create a new random wallet - returns HDNodeWallet
       const hdWallet = Wallet.createRandom();
-      
+
       // Convert to base Wallet if needed
       const wallet = new Wallet(hdWallet.privateKey);
-      
+
       // Store encrypted wallet
       await this.storeWallet(wallet);
 
@@ -250,18 +250,18 @@ export class EVMWalletAdapter implements IWalletAdapter {
   private getProvider(method: PaymentMethod): JsonRpcProvider {
     const chainId = this.getChainId(method);
     const provider = this.providers.get(chainId);
-    
+
     if (!provider) {
       throw new Error(`No provider for chain ${chainId}`);
     }
-    
+
     return provider;
   }
 
   private async storeWallet(wallet: Wallet): Promise<void> {
     // In production, store encrypted in database
     this.wallets.set(wallet.address, wallet);
-    
+
     // TODO: Store encrypted private key in database
     logger.info('[EVMWalletAdapter] Wallet stored', { address: wallet.address });
   }
@@ -269,11 +269,11 @@ export class EVMWalletAdapter implements IWalletAdapter {
   private async loadWallet(address: string): Promise<Wallet> {
     // In production, load from database and decrypt
     const wallet = this.wallets.get(address);
-    
+
     if (!wallet) {
       throw new Error(`Wallet not found for address ${address}`);
     }
-    
+
     return wallet;
   }
 

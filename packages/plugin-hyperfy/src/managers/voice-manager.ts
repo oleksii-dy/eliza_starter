@@ -168,7 +168,9 @@ export class VoiceManager {
 
   private async processTranscription(playerId: UUID) {
     const state = this.userStates.get(playerId);
-    if (!state || state.buffers.length === 0) return;
+    if (!state || state.buffers.length === 0) {
+      return;
+    }
     try {
       const inputBuffer = Buffer.concat(state.buffers, state.totalLength);
 
@@ -186,7 +188,9 @@ export class VoiceManager {
 
       console.log('[VOICE MANAGER] Transcrtion: ', transcriptionText);
       function isValidTranscription(text: string): boolean {
-        if (!text || text.includes('[BLANK_AUDIO]')) return false;
+        if (!text || text.includes('[BLANK_AUDIO]')) {
+          return false;
+        }
         return true;
       }
 
@@ -253,13 +257,13 @@ export class VoiceManager {
       const memory: Memory = {
         id: createUniqueUuid(this.runtime, `${channelId}-voice-message-${Date.now()}`),
         agentId: this.runtime.agentId,
-        entityId: entityId,
+        entityId,
         roomId,
         content: {
           text: message,
           source: 'hyperfy',
-          name: name,
-          userName: userName,
+          name,
+          userName,
           isVoiceMessage: true,
           channelType: type,
         },
@@ -326,7 +330,7 @@ export class VoiceManager {
 
   async playAudio(audioBuffer) {
     if (this.processingVoice) {
-      logger.info(`[VOICE MANAER] Current voice is processing.....`);
+      logger.info('[VOICE MANAER] Current voice is processing.....');
       return;
     }
 

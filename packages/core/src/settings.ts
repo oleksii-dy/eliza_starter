@@ -1,4 +1,3 @@
-// @ts-ignore - crypto-browserify doesn't have types
 import crypto from 'crypto-browserify';
 import { createUniqueUuid } from './entities';
 import { logger } from './logger';
@@ -93,7 +92,7 @@ export function encryptStringValue(value: string, salt: string): string {
         logger.debug('Value appears to be already encrypted, skipping re-encryption');
         return value;
       }
-    } catch (e) {
+    } catch (_e) {
       // Not a valid hex string, proceed with encryption
     }
   }

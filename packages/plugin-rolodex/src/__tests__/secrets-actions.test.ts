@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { stringToUuid, asUUID } from '@elizaos/core';
 import { storeSecretAction } from '../actions/storeSecretAction';
 import { checkWeatherAction } from '../actions/checkWeatherAction';
@@ -13,10 +13,10 @@ describe('Secrets Management Actions', () => {
   let mockState: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    
+    mock.restore();
+
     mockRuntime = createMockRuntime({
-      getSetting: vi.fn((key: string) => {
+      getSetting: mock((key: string) => {
         const settings = {
           WEATHER_API_KEY: undefined,
           NEWS_API_KEY: undefined,
@@ -32,7 +32,7 @@ describe('Secrets Management Actions', () => {
       },
     });
 
-    mockCallback = vi.fn();
+    mockCallback = mock();
     mockState = createMockState();
   });
 
@@ -109,7 +109,7 @@ describe('Secrets Management Actions', () => {
 
   describe('checkWeatherAction', () => {
     it('should validate when weather keywords present and API key exists', async () => {
-      mockRuntime.getSetting = vi.fn((key: string) => 
+      mockRuntime.getSetting = mock((key: string) =>
         key === 'WEATHER_API_KEY' ? 'test-key' : undefined
       );
 
@@ -131,7 +131,7 @@ describe('Secrets Management Actions', () => {
     });
 
     it('should check weather for specified location', async () => {
-      mockRuntime.getSetting = vi.fn((key: string) => 
+      mockRuntime.getSetting = mock((key: string) =>
         key === 'WEATHER_API_KEY' ? 'test-weather-key' : undefined
       );
 
@@ -184,7 +184,7 @@ describe('Secrets Management Actions', () => {
 
   describe('getNewsAction', () => {
     it('should validate when news keywords present and API key exists', async () => {
-      mockRuntime.getSetting = vi.fn((key: string) => 
+      mockRuntime.getSetting = mock((key: string) =>
         key === 'NEWS_API_KEY' ? 'test-key' : undefined
       );
 
@@ -197,7 +197,7 @@ describe('Secrets Management Actions', () => {
     });
 
     it('should fetch news for specified topic', async () => {
-      mockRuntime.getSetting = vi.fn((key: string) => 
+      mockRuntime.getSetting = mock((key: string) =>
         key === 'NEWS_API_KEY' ? 'test-news-key' : undefined
       );
 
@@ -230,7 +230,7 @@ describe('Secrets Management Actions', () => {
 
   describe('getStockPriceAction', () => {
     it('should validate when stock keywords present and API key exists', async () => {
-      mockRuntime.getSetting = vi.fn((key: string) => 
+      mockRuntime.getSetting = mock((key: string) =>
         key === 'FINANCE_API_KEY' ? 'test-key' : undefined
       );
 
@@ -243,7 +243,7 @@ describe('Secrets Management Actions', () => {
     });
 
     it('should fetch stock price for specified ticker', async () => {
-      mockRuntime.getSetting = vi.fn((key: string) => 
+      mockRuntime.getSetting = mock((key: string) =>
         key === 'FINANCE_API_KEY' ? 'test-finance-key' : undefined
       );
 
@@ -299,16 +299,16 @@ describe('Secrets Management Actions', () => {
       // Verify action examples are properly formatted
       expect(storeSecretAction.examples).toBeDefined();
       expect(Array.isArray(storeSecretAction.examples)).toBe(true);
-      
+
       expect(checkWeatherAction.examples).toBeDefined();
       expect(Array.isArray(checkWeatherAction.examples)).toBe(true);
-      
+
       expect(getNewsAction.examples).toBeDefined();
       expect(Array.isArray(getNewsAction.examples)).toBe(true);
-      
+
       expect(getStockPriceAction.examples).toBeDefined();
       expect(Array.isArray(getStockPriceAction.examples)).toBe(true);
-      
+
       // Check format of examples
       if (storeSecretAction.examples && storeSecretAction.examples.length > 0) {
         const example = storeSecretAction.examples[0];
@@ -319,4 +319,4 @@ describe('Secrets Management Actions', () => {
       }
     });
   });
-}); 
+});

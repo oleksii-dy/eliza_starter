@@ -12,12 +12,12 @@ const CACHE_DIR = '.swe-bench-cache';
 
 async function downloadDataset() {
   elizaLogger.info('Downloading Multi-SWE-bench dataset...');
-  
+
   try {
     await fs.mkdir(CACHE_DIR, { recursive: true });
-    
+
     const outputPath = path.join(CACHE_DIR, 'multi-swe-bench-full.jsonl');
-    
+
     // Check if already downloaded
     try {
       const stats = await fs.stat(outputPath);
@@ -26,31 +26,31 @@ async function downloadDataset() {
         return outputPath;
       }
     } catch {}
-    
+
     elizaLogger.info(`Downloading from: ${DATASET_URL}`);
     elizaLogger.info('This may take a few minutes...');
-    
+
     // Note: Direct download from HuggingFace may require authentication
     // For now, we'll create a more comprehensive sample dataset
     const sampleInstances = generateSampleDataset();
-    
+
     const lines = sampleInstances.map(inst => JSON.stringify(inst));
     await fs.writeFile(outputPath, lines.join('\n'));
-    
+
     elizaLogger.info(`Dataset saved to: ${outputPath}`);
     elizaLogger.info(`Total instances: ${sampleInstances.length}`);
-    
+
     // Filter TypeScript instances
     const tsInstances = sampleInstances.filter(
       inst => inst.language === 'TypeScript' || inst.language === 'JavaScript'
     );
-    
+
     const tsOutputPath = path.join(CACHE_DIR, 'typescript-instances.json');
     await fs.writeFile(tsOutputPath, JSON.stringify(tsInstances, null, 2));
-    
+
     elizaLogger.info(`TypeScript instances: ${tsInstances.length}`);
     elizaLogger.info(`TypeScript dataset saved to: ${tsOutputPath}`);
-    
+
     return outputPath;
   } catch (error) {
     elizaLogger.error('Failed to download dataset:', error);
@@ -70,7 +70,7 @@ function generateSampleDataset() {
     { name: 'expressjs/express', language: 'JavaScript' },
     { name: 'sveltejs/svelte', language: 'TypeScript' }
   ];
-  
+
   const issueTemplates = [
     {
       title: 'Type inference fails with generic constraints',
@@ -113,14 +113,14 @@ function generateSampleDataset() {
       complexity: 'medium'
     }
   ];
-  
+
   const instances = [];
   let instanceId = 1;
-  
+
   for (const repo of repos) {
     for (let i = 0; i < 5; i++) {
       const issue = issueTemplates[Math.floor(Math.random() * issueTemplates.length)];
-      
+
       instances.push({
         instance_id: `${repo.language.toLowerCase()}-${instanceId.toString().padStart(3, '0')}`,
         repo: repo.name,
@@ -140,11 +140,11 @@ function generateSampleDataset() {
         ] : undefined,
         test_patch: Math.random() > 0.3 ? generateTestPatch(issue.title) : undefined
       });
-      
+
       instanceId++;
     }
   }
-  
+
   return instances;
 }
 
@@ -164,7 +164,7 @@ index 0000000..1234567
 --- /dev/null
 +++ b/test/issue.test.ts
 @@ -0,0 +1,15 @@
-+import { describe, it, expect } from 'vitest';
++import { describe, it, expect  } from 'bun:test';
 +
 +describe('${issueTitle}', () => {
 +  it('should handle the reported issue correctly', () => {

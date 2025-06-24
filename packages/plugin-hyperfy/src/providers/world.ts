@@ -149,9 +149,9 @@ export const hyperfyProvider: Provider = {
           'Unknown User';
 
         const receivedMessageSection = [
-          `### Received Message`,
+          '### Received Message',
           `${senderName}: ${messageText}`,
-          `\n### Focus your response`,
+          '\n### Focus your response',
           `You are replying to the above message from **${senderName}**. Keep your answer relevant to that message. Do not repeat earlier replies unless the sender asks again.`,
         ].join('\n');
 
@@ -163,7 +163,7 @@ export const hyperfyProvider: Provider = {
         : `### Your Last Response\nNo recent message.\n\n### Your Last Action\n${JSON.stringify(lastActions, null, 2)}`;
 
       const formattedText = [
-        `# Hyperfy World State`,
+        '# Hyperfy World State',
         `\n## Current UTC Time\n${utcTimeString}`,
         `\n${agentText}`,
         `${categorizedSummary}`,

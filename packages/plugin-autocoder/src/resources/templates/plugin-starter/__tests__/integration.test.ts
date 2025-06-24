@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterAll, beforeAll } from 'vitest';
+import { describe, expect, it, mock, beforeEach, afterAll, beforeAll } from 'bun:test';
 import { starterPlugin, StarterService } from '../src/index';
 import { createMockRuntime, setupLoggerSpies, MockRuntime } from './test-utils';
 import { HandlerCallback, IAgentRuntime, Memory, State, UUID, logger } from '@elizaos/core';
@@ -18,7 +18,7 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  vi.restoreAllMocks();
+  mock.restore();
 });
 
 describe('Integration: HelloWorld Action with StarterService', () => {
@@ -30,11 +30,11 @@ describe('Integration: HelloWorld Action with StarterService', () => {
     const mockService = {
       capabilityDescription:
         'This is a starter service which is attached to the agent through the starter plugin.',
-      stop: vi.fn().mockResolvedValue(undefined),
+      stop: mock().mockResolvedValue(undefined),
     };
 
     // Create a mock runtime with a spied getService method
-    getServiceSpy = vi.fn().mockImplementation((serviceType) => {
+    getServiceSpy = mock().mockImplementation((serviceType) => {
       if (serviceType === 'starter') {
         return mockService;
       }
@@ -71,7 +71,7 @@ describe('Integration: HelloWorld Action with StarterService', () => {
     };
 
     // Create a mock callback to capture the response
-    const callbackFn = vi.fn();
+    const callbackFn = mock();
 
     // Execute the action
     await helloWorldAction?.handler(
@@ -104,7 +104,7 @@ describe('Integration: Plugin initialization and service registration', () => {
     const mockRuntime = createMockRuntime();
 
     // Create and install a spy on registerService
-    const registerServiceSpy = vi.fn();
+    const registerServiceSpy = mock();
     mockRuntime.registerService = registerServiceSpy;
 
     // Run a minimal simulation of the plugin initialization process

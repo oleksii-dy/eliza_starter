@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import { describe, expect, it, mock, spyOn, beforeEach, afterEach, beforeAll, afterAll } from 'bun:test';
 import { hyperfyPlugin } from '../index';
 import { HyperfyService } from '../service';
 import { ModelType, logger } from '@elizaos/core';
@@ -9,14 +9,14 @@ dotenv.config();
 
 // Need to spy on logger for documentation
 beforeAll(() => {
-  vi.spyOn(logger, 'info');
-  vi.spyOn(logger, 'error');
-  vi.spyOn(logger, 'warn');
-  vi.spyOn(logger, 'debug');
+  spyOn(logger, 'info');
+  spyOn(logger, 'error');
+  spyOn(logger, 'warn');
+  spyOn(logger, 'debug');
 });
 
 afterAll(() => {
-  vi.restoreAllMocks();
+  mock.restore();
 });
 
 // Create a real runtime for testing
@@ -91,7 +91,10 @@ describe('Plugin Configuration', () => {
       const runtime = createRealRuntime();
 
       if (hyperfyPlugin.init) {
-        await hyperfyPlugin.init({ DEFAULT_HYPERFY_WS_URL: 'wss://test.hyperfy.xyz/ws' }, runtime as any);
+        await hyperfyPlugin.init(
+          { DEFAULT_HYPERFY_WS_URL: 'wss://test.hyperfy.xyz/ws' },
+          runtime as any
+        );
         expect(true).toBe(true); // If we got here, init succeeded
       }
     } finally {
@@ -148,7 +151,7 @@ describe('HyperfyService', () => {
     runtime.registerService(HyperfyService.serviceName, service);
 
     // Spy on the real service's stop method
-    const stopSpy = vi.spyOn(service, 'stop');
+    const stopSpy = spyOn(service, 'stop');
 
     // Call the static stop method
     await HyperfyService.stop(runtime as any);

@@ -189,7 +189,7 @@ export class Entities extends System implements IEntities {
 
   add(data: EntityData, local?: boolean): Entity {
     let EntityClass: EntityConstructor = BaseEntity;
-    
+
     if (data.type === 'player') {
       const isLocal = 'network' in this.world && data.owner === (this.world as any).network?.id;
       EntityClass = EntityTypes[isLocal ? 'playerLocal' : 'playerRemote'] as EntityConstructor;
@@ -202,7 +202,7 @@ export class Entities extends System implements IEntities {
 
     if (data.type === 'player') {
       this.players.set(entity.id, entity as Player);
-      
+
       // On the client, remote players emit enter events here.
       // On the server, enter events are delayed for players entering until after their snapshot is sent
       // so they can respond correctly to follow-through events.
@@ -229,8 +229,8 @@ export class Entities extends System implements IEntities {
 
   remove(id: string): void {
     const entity = this.items.get(id);
-    if (!entity) return console.warn(`Tried to remove entity that did not exist: ${id}`);
-    if (entity.isPlayer) this.players.delete(entity.id);
+    if (!entity) {return console.warn(`Tried to remove entity that did not exist: ${id}`);}
+    if (entity.isPlayer) {this.players.delete(entity.id);}
     entity.destroy(true);
     this.items.delete(id);
     this.removed.push(id);
@@ -283,7 +283,7 @@ export class Entities extends System implements IEntities {
     for (const data of datas) {
       this.add(data);
     }
-    console.log(`[Entities] Deserialization complete`);
+    console.log('[Entities] Deserialization complete');
   }
 
   override destroy(): void {
@@ -292,7 +292,7 @@ export class Entities extends System implements IEntities {
     for (const id of entityIds) {
       this.remove(id);
     }
-    
+
     this.items.clear();
     this.players.clear();
     this.hot.clear();
@@ -317,4 +317,4 @@ export class Entities extends System implements IEntities {
     this.removed = [];
     return ids;
   }
-} 
+}

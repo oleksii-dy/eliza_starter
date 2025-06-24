@@ -523,7 +523,9 @@ export class Token22Service extends Service {
    */
   async hasExtension(mint: PublicKey, extensionType: ExtensionType): Promise<boolean> {
     const info = await this.getToken22Info(mint);
-    if (!info) return false;
+    if (!info) {
+      return false;
+    }
 
     const extensionName = ExtensionType[extensionType];
     return info.extensions.includes(extensionName);

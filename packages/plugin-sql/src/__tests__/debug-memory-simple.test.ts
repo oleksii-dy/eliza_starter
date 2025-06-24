@@ -90,8 +90,8 @@ describe('Debug Memory Simple Operations', () => {
       type: 'test',
       content: { text: 'Simple test' },
       metadata: {},
-      entityId: entityId, // Use valid entity ID instead of null
-      agentId: agentId,
+      entityId, // Use valid entity ID instead of null
+      agentId,
       roomId: null,
       worldId: null,
       unique: true,

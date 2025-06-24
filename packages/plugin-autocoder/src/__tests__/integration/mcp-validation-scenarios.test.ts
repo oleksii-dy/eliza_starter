@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import * as path from 'path';
 import type { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 
 // Mock child_process before any imports that use it
-vi.mock('child_process', () => ({
-  exec: vi.fn((cmd: string, opts: any, callback?: any) => {
+mock.module('child_process', () => ({
+  exec: mock((cmd: string, opts: any, callback?: any) => {
     const cb = callback || ((err: any, stdout: string, stderr: string) => {});
     // Simulate successful command execution
     process.nextTick(() => cb(null, '', ''));
@@ -12,20 +12,20 @@ vi.mock('child_process', () => ({
 }));
 
 // Mock util.promisify to return a working async function
-vi.mock('util', () => ({
-  promisify: vi.fn(() => vi.fn().mockResolvedValue({ stdout: '', stderr: '' })),
+mock.module('util', () => ({
+  promisify: mock(() => mock().mockResolvedValue({ stdout: '', stderr: '' })),
 }));
 
 // Mock the MCPCreationService entirely to avoid file system operations
-vi.mock('../../services/mcp-creation-service', () => {
+mock.module('../../services/mcp-creation-service', () => {
   return {
-    MCPCreationService: vi.fn().mockImplementation((runtime) => {
+    MCPCreationService: mock().mockImplementation((runtime) => {
       return {
         runtime,
         templatePath: '/mock/template',
-        start: vi.fn().mockResolvedValue(undefined),
-        stop: vi.fn().mockResolvedValue(undefined),
-        createMCPProject: vi.fn().mockImplementation(async (config) => {
+        start: mock().mockResolvedValue(undefined),
+        stop: mock().mockResolvedValue(undefined),
+        createMCPProject: mock().mockImplementation(async (config) => {
           // Simple mock that returns success based on config
           const sanitizedName = config.name
             .replace(/[^a-zA-Z0-9-]/g, '-')
@@ -55,15 +55,15 @@ vi.mock('../../services/mcp-creation-service', () => {
 });
 
 // Mock fs/promises - simplified to avoid memory issues
-vi.mock('fs/promises', () => ({
-  mkdir: vi.fn().mockResolvedValue(undefined),
-  rm: vi.fn().mockResolvedValue(undefined),
-  readFile: vi.fn().mockResolvedValue('mock content'),
-  writeFile: vi.fn().mockResolvedValue(undefined),
-  access: vi.fn().mockResolvedValue(undefined),
-  readdir: vi.fn().mockResolvedValue([]),
-  stat: vi.fn().mockResolvedValue({ isDirectory: () => true }),
-  copyFile: vi.fn().mockResolvedValue(undefined),
+mock.module('fs/promises', () => ({
+  mkdir: mock().mockResolvedValue(undefined),
+  rm: mock().mockResolvedValue(undefined),
+  readFile: mock().mockResolvedValue('mock content'),
+  writeFile: mock().mockResolvedValue(undefined),
+  access: mock().mockResolvedValue(undefined),
+  readdir: mock().mockResolvedValue([]),
+  stat: mock().mockResolvedValue({ isDirectory: () => true }),
+  copyFile: mock().mockResolvedValue(undefined),
 }));
 
 import * as fs from 'fs/promises';
@@ -87,10 +87,10 @@ describe('MCP Validation Scenarios - Production Ready', () => {
       getSetting: (key: string) => 'test-value',
       getService: (name: string) => null,
       logger: {
-        info: vi.fn(),
-        error: vi.fn(),
-        warn: vi.fn(),
-        debug: vi.fn(),
+        info: mock(),
+        error: mock(),
+        warn: mock(),
+        debug: mock(),
       },
     } as any;
 
@@ -106,14 +106,14 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         }
         if (name === 'orchestration') {
           return {
-            start: vi.fn(),
-            stop: vi.fn(),
+            start: mock(),
+            stop: mock(),
           };
         }
         if (name === 'secrets-manager') {
           return {
-            start: vi.fn(),
-            stop: vi.fn(),
+            start: mock(),
+            stop: mock(),
           };
         }
         return null;
@@ -122,7 +122,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
   });
 
   afterEach(async () => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('Scenario 1: Ultra-Simple Time Plugin', () => {

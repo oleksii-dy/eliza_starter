@@ -1,28 +1,29 @@
-import fs from 'fs/promises'
-import path from 'path'
-import { EMOTES_LIST } from '../constants.js'
-import { playerEmotes, emoteMap } from '../hyperfy/core/extras/playerEmotes.js'
-import { hashFileBuffer, getModuleDirectory } from '../utils.js'
-import { IAgentRuntime } from '@elizaos/core'
+import fs from 'fs/promises';
+import path from 'path';
+import { EMOTES_LIST } from '../constants.js';
+import { playerEmotes, emoteMap } from '../hyperfy/core/extras/playerEmotes.js';
+import { hashFileBuffer, getModuleDirectory } from '../utils.js';
+import type { IAgentRuntime } from '@elizaos/core';
+import type { HyperfyWorld } from '../types/hyperfy.js';
+import { HyperfyService } from '../service.js';
 
 const logger = {
   info: console.info,
   error: console.error,
   warn: console.warn,
-  debug: console.debug
+  debug: console.debug,
 };
-import { HyperfyService } from '../service.js'
 
 export class EmoteManager {
-  private emoteHashMap: Map<string, string>
-  private currentEmoteTimeout: NodeJS.Timeout | null
+  private emoteHashMap: Map<string, string>;
+  private currentEmoteTimeout: NodeJS.Timeout | null;
   private movementCheckInterval: NodeJS.Timeout | null = null;
   private runtime: IAgentRuntime;
 
   constructor(runtime) {
     this.runtime = runtime;
-    this.emoteHashMap = new Map()
-    this.currentEmoteTimeout = null
+    this.emoteHashMap = new Map();
+    this.currentEmoteTimeout = null;
   }
 
   async uploadEmotes() {
@@ -30,10 +31,10 @@ export class EmoteManager {
       try {
         const moduleDirPath = getModuleDirectory();
         const emoteBuffer = await fs.readFile(moduleDirPath + emote.path);
-        const emoteMimeType = "model/gltf-binary";
+        const emoteMimeType = 'model/gltf-binary';
 
         const emoteHash = await hashFileBuffer(emoteBuffer);
-        const emoteExt = emote.path.split(".").pop()?.toLowerCase() || "glb";
+        const emoteExt = emote.path.split('.').pop()?.toLowerCase() || 'glb';
         const emoteFullName = `${emoteHash}.${emoteExt}`;
         const emoteUrl = `asset://${emoteFullName}`;
 
@@ -47,7 +48,9 @@ export class EmoteManager {
 
         const service = this.getService();
         if (!service) {
-          console.error(`[Appearance] Failed to upload emote '${emote.name}': Service not available`);
+          console.error(
+            `[Appearance] Failed to upload emote '${emote.name}': Service not available`
+          );
           continue;
         }
         const world = service.getWorld();
@@ -57,15 +60,13 @@ export class EmoteManager {
         }
         const emoteUploadPromise = world.network.upload(emoteFile);
         const emoteTimeout = new Promise((_resolve, reject) =>
-          setTimeout(() => reject(new Error("Upload timed out")), 30000)
+          setTimeout(() => reject(new Error('Upload timed out')), 30000)
         );
 
         await Promise.race([emoteUploadPromise, emoteTimeout]);
 
         this.emoteHashMap.set(emote.name, emoteFullName);
-        console.info(
-          `[Appearance] Emote '${emote.name}' uploaded: ${emoteUrl}`
-        );
+        console.info(`[Appearance] Emote '${emote.name}' uploaded: ${emoteUrl}`);
       } catch (err: any) {
         console.error(
           `[Appearance] Failed to upload emote '${emote.name}': ${err.message}`,
@@ -100,7 +101,7 @@ export class EmoteManager {
     this.clearTimers();
 
     // Get duration from EMOTES_LIST
-    const emoteMeta = EMOTES_LIST.find(e => e.name === emoteName);
+    const emoteMeta = EMOTES_LIST.find((e) => e.name === emoteName);
     const duration = emoteMeta?.duration || 1.5;
 
     this.movementCheckInterval = setInterval(() => {

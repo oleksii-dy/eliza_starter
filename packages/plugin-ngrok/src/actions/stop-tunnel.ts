@@ -1,6 +1,8 @@
 import type { ITunnelService } from '@elizaos/core';
 import {
   type Action,
+  type ActionExample,
+  type ActionResult,
   type HandlerCallback,
   type IAgentRuntime,
   type Memory,
@@ -11,8 +13,8 @@ import {
 export const stopTunnelAction: Action = {
   name: 'STOP_TUNNEL',
   similes: ['CLOSE_TUNNEL', 'SHUTDOWN_TUNNEL', 'NGROK_STOP', 'TUNNEL_DOWN'],
-  description: 'Stop the running ngrok tunnel',
-  validate: async (runtime: IAgentRuntime, message: Memory) => {
+  description: 'Stop the running ngrok tunnel and clean up resources. Can be chained with START_TUNNEL actions for tunnel rotation workflows or combined with deployment actions for automated service management.',
+  validate: async (runtime: IAgentRuntime, _message: Memory) => {
     const tunnelService = runtime.getService('tunnel') as ITunnelService;
     return !!tunnelService;
   },
@@ -22,7 +24,7 @@ export const stopTunnelAction: Action = {
     state?: State,
     options?: any,
     callback?: HandlerCallback
-  ): Promise<boolean> => {
+  ): Promise<ActionResult> => {
     const tunnelService = runtime.getService('tunnel') as ITunnelService;
     if (!tunnelService) {
       elizaLogger.error('Tunnel service is not available');
@@ -31,7 +33,11 @@ export const stopTunnelAction: Action = {
           text: 'Tunnel service is not available. Please ensure the ngrok plugin is properly configured.',
         });
       }
-      return false;
+      return {
+        text: 'Tunnel service is not available. Please ensure the ngrok plugin is properly configured.',
+        values: { success: false, error: 'service_unavailable' },
+        data: { action: 'STOP_TUNNEL' }
+      };
     }
 
     if (!tunnelService.isActive()) {
@@ -44,7 +50,11 @@ export const stopTunnelAction: Action = {
           },
         });
       }
-      return true;
+      return {
+        text: 'No tunnel is currently running.',
+        values: { success: true, wasActive: false },
+        data: { action: 'STOP_TUNNEL', status: 'already_stopped' }
+      };
     }
 
     elizaLogger.info('Stopping ngrok tunnel...');
@@ -69,7 +79,23 @@ export const stopTunnelAction: Action = {
         });
       }
 
-      return true;
+      return {
+        text: responseText,
+        values: {
+          success: true,
+          wasActive: true,
+          previousUrl,
+          previousPort
+        },
+        data: {
+          action: 'STOP_TUNNEL',
+          previousTunnelMetadata: {
+            url: previousUrl,
+            port: previousPort,
+            stoppedAt: new Date().toISOString()
+          }
+        }
+      };
     } catch (error: any) {
       elizaLogger.error('Failed to stop tunnel:', error);
 
@@ -83,41 +109,85 @@ export const stopTunnelAction: Action = {
         });
       }
 
-      return false;
+      return {
+        text: `❌ Failed to stop ngrok tunnel: ${error.message}`,
+        values: {
+          success: false,
+          error: error.message
+        },
+        data: {
+          action: 'STOP_TUNNEL',
+          errorType: 'tunnel_stop_failed',
+          errorDetails: error.stack
+        }
+      };
     }
   },
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user}}',
         content: {
           text: 'Stop the ngrok tunnel',
         },
       },
       {
-        name: 'assistant',
+        name: '{{agent}}',
         content: {
           text: '✅ Ngrok tunnel stopped successfully!\n\n🔌 Was running on port: 3000\n🌐 Previous URL: https://abc123.ngrok.io\n\nThe tunnel has been closed and is no longer accessible.',
-          action: 'STOP_TUNNEL',
+          actions: ['STOP_TUNNEL'],
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user}}',
         content: {
-          text: 'Please close the tunnel',
+          text: 'Stop the current tunnel and start a new one on port 8080',
         },
       },
       {
-        name: 'assistant',
+        name: '{{agent}}',
         content: {
-          text: '✅ Ngrok tunnel stopped successfully!\n\n🔌 Was running on port: 8080\n🌐 Previous URL: https://xyz789.ngrok.io\n\nThe tunnel has been closed and is no longer accessible.',
-          action: 'STOP_TUNNEL',
+          text: 'I\'ll stop the current tunnel and then start a new one on port 8080.',
+          thought: 'User wants to switch tunnels - I need to stop the current one first, then start a new tunnel on the specified port.',
+          actions: ['STOP_TUNNEL'],
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: '✅ Tunnel stopped successfully! Now starting new tunnel on port 8080...',
+          thought: 'Current tunnel is closed. Now I can start the new tunnel on port 8080 as requested.',
+          actions: ['START_TUNNEL'],
         },
       },
     ],
-  ],
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Close the tunnel and deploy to production',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'I\'ll stop the development tunnel and then proceed with the production deployment.',
+          thought: 'User is ready to move from development to production - I should close the ngrok tunnel first, then handle the deployment process.',
+          actions: ['STOP_TUNNEL'],
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'Development tunnel closed successfully. Now initiating production deployment...',
+          thought: 'Tunnel is down, development phase is complete. I can now proceed with the production deployment workflow.',
+          actions: ['DEPLOY_PRODUCTION'],
+        },
+      },
+    ],
+  ] as ActionExample[][],
 };
 
 export default stopTunnelAction;

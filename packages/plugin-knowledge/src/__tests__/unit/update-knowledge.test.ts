@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import type { IAgentRuntime, Memory, UUID } from '@elizaos/core';
 import { MemoryType } from '@elizaos/core';
 import { KnowledgeService } from '../../service';
 
 // Create mock functions for testing
-const createMockFn = () => vi.fn();
+const createMockFn = () => mock();
 
 describe('Knowledge Update Operations', () => {
   let mockRuntime: IAgentRuntime;
@@ -17,40 +17,40 @@ describe('Knowledge Update Operations', () => {
 
     mockRuntime = {
       agentId: 'test-agent-id' as UUID,
-      getMemoryById: vi.fn((id: UUID) => memories.get(id) || null),
-      updateMemory: vi.fn(async (memory: any) => {
+      getMemoryById: mock((id: UUID) => memories.get(id) || null),
+      updateMemory: mock(async (memory: any) => {
         if (memory.id && memories.has(memory.id)) {
           memories.set(memory.id, { ...memories.get(memory.id)!, ...memory });
           return true;
         }
         return false;
       }),
-      createMemory: vi.fn(async (memory: Memory, tableName?: string) => {
+      createMemory: mock(async (memory: Memory, tableName?: string) => {
         const id =
           memory.id || (`mem-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` as UUID);
         memories.set(id, { ...memory, id });
         return id;
       }),
-      deleteMemory: vi.fn(async (id: UUID) => {
+      deleteMemory: mock(async (id: UUID) => {
         memories.delete(id);
       }),
-      getService: vi.fn((name: string) => {
+      getService: mock((name: string) => {
         if (name === KnowledgeService.serviceType) {
           return service;
         }
         return null;
       }),
-      useModel: vi.fn(() => Promise.resolve(new Array(1536).fill(0).map(() => Math.random()))),
-      getMemories: vi.fn(() => Promise.resolve([])),
-      getSetting: vi.fn((key: string) => {
+      useModel: mock(() => Promise.resolve(new Array(1536).fill(0).map(() => Math.random()))),
+      getMemories: mock(() => Promise.resolve([])),
+      getSetting: mock((key: string) => {
         const settings: Record<string, string> = {
           KNOWLEDGE_USE_NEW_TABLES: 'false',
           KNOWLEDGE_CHUNKING_MAX_SIZE: '1000',
         };
         return settings[key] || null;
       }),
-      searchMemories: vi.fn(() => Promise.resolve([])),
-      searchMemoriesByEmbedding: vi.fn(() => Promise.resolve([])),
+      searchMemories: mock(() => Promise.resolve([])),
+      searchMemoriesByEmbedding: mock(() => Promise.resolve([])),
     } as any;
 
     service = new KnowledgeService(mockRuntime);

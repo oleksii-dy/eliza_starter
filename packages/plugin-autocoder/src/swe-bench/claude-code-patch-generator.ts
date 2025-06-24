@@ -75,7 +75,7 @@ export class ClaudeCodePatchGenerator {
 
       try {
         for await (const message of query({
-          prompt: prompt + '\n\n' + this.buildSystemPrompt(analysis),
+          prompt: `${prompt}\n\n${this.buildSystemPrompt(analysis)}`,
           abortController,
           options,
         })) {
@@ -209,12 +209,12 @@ export class ClaudeCodePatchGenerator {
 
 **Research Findings:**
 ${researchContext.findings
-  .slice(0, 5)
-  .map(
-    (f: any, i: number) =>
-      `${i + 1}. ${f.type.toUpperCase()}: ${f.content} (Confidence: ${(f.confidence * 100).toFixed(0)}%)`
-  )
-  .join('\n')}
+    .slice(0, 5)
+    .map(
+      (f: any, i: number) =>
+        `${i + 1}. ${f.type.toUpperCase()}: ${f.content} (Confidence: ${(f.confidence * 100).toFixed(0)}%)`
+    )
+    .join('\n')}
 
 **Implementation Guidance:**
 - Approach: ${researchContext.implementationGuidance.approach}
@@ -455,7 +455,7 @@ When verifying:
 
     // Start conversation
     for await (const message of query({
-      prompt: initialPrompt + '\n\n' + this.buildSystemPrompt(analysis),
+      prompt: `${initialPrompt}\n\n${this.buildSystemPrompt(analysis)}`,
       abortController: new AbortController(),
       options: {
         maxTurns: 3,

@@ -6,7 +6,7 @@ interface ImportMetaEnv {
   readonly PROD: boolean
   readonly DEV: boolean
   readonly SSR: boolean
-  
+
   // Custom environment variables
   readonly PORT?: string
   readonly WS_PORT?: string
@@ -17,18 +17,18 @@ interface ImportMetaEnv {
   readonly ADMIN_CODE?: string
   readonly NODE_ENV?: string
   readonly VITEST?: string
-  
+
   // LiveKit
   readonly LIVEKIT_URL?: string
   readonly LIVEKIT_WS_URL?: string
   readonly LIVEKIT_API_KEY?: string
   readonly LIVEKIT_API_SECRET?: string
-  
+
   // Public variables
   readonly PUBLIC_API_URL?: string
   readonly PUBLIC_ASSETS_URL?: string
   readonly PUBLIC_MAX_UPLOAD_SIZE?: string
-  
+
   // Hyperfy configuration
   readonly HYPERFY_ASSETS_URL?: string
   readonly HYPERFY_ASSETS_DIR?: string
@@ -40,16 +40,16 @@ interface ImportMetaEnv {
   readonly HYPERFY_GRAVITY_X?: string
   readonly HYPERFY_GRAVITY_Y?: string
   readonly HYPERFY_GRAVITY_Z?: string
-  
+
   // Build configuration
   readonly CLIENT_BUILD_DIR?: string
   readonly NO_CLIENT_SERVE?: string
   readonly COMMIT_HASH?: string
-  
+
   // Allow any other environment variables
   [key: string]: string | boolean | undefined
 }
 
 interface ImportMeta {
   readonly env: ImportMetaEnv
-} 
+}

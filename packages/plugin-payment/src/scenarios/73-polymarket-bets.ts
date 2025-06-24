@@ -41,19 +41,19 @@ const polymarketBetsScenario: Scenario = {
   ],
   actions: ['GET_POLYMARKET_ODDS', 'GET_POLYMARKET_MARKETS', 'CHECK_POLYMARKET_POSITIONS'],
   evaluator: (response: string) => {
-    const hasMarketInfo = 
+    const hasMarketInfo =
       response.toLowerCase().includes('polymarket') ||
       response.toLowerCase().includes('odds') ||
       response.toLowerCase().includes('prediction') ||
       response.toLowerCase().includes('market');
-    
+
     const hasPercentage = /\d+%/.test(response);
     const hasPrice = /\$\d+(\.\d+)?/.test(response);
     const hasVolume = /volume|position|bet/i.test(response);
-    
+
     return hasMarketInfo && (hasPercentage || hasPrice || hasVolume);
   },
   tags: ['payment', 'polymarket', 'prediction', 'betting', 'odds'],
 };
 
-export default polymarketBetsScenario; 
+export default polymarketBetsScenario;

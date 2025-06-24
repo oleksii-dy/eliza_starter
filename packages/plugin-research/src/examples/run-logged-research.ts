@@ -21,20 +21,20 @@ process.env.FILE_LOGGING = 'true';
 const runtime = {
   getSetting: (key: string) => {
     // Enable file logging
-    if (key === 'FILE_LOGGING') return 'true';
-    
+    if (key === 'FILE_LOGGING') {return 'true';}
+
     // API keys
-    if (key === 'TAVILY_API_KEY') return process.env.TAVILY_API_KEY || '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';
-    if (key === 'EXA_API_KEY') return process.env.EXA_API_KEY || '267d9e0d-8617-444f-b1bf-612f3bf431f0';
-    if (key === 'SERPAPI_API_KEY') return process.env.SERPAPI_API_KEY || '301e99e18e27bb7d0ddee79a86168f251b08925f9b260962573f45c77134b9f6';
-    if (key === 'FIRECRAWL_API_KEY') return process.env.FIRECRAWL_API_KEY || 'fc-857417811665460e92716b92e08ec398';
-    
+    if (key === 'TAVILY_API_KEY') {return process.env.TAVILY_API_KEY || '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';}
+    if (key === 'EXA_API_KEY') {return process.env.EXA_API_KEY || '267d9e0d-8617-444f-b1bf-612f3bf431f0';}
+    if (key === 'SERPAPI_API_KEY') {return process.env.SERPAPI_API_KEY || '301e99e18e27bb7d0ddee79a86168f251b08925f9b260962573f45c77134b9f6';}
+    if (key === 'FIRECRAWL_API_KEY') {return process.env.FIRECRAWL_API_KEY || 'fc-857417811665460e92716b92e08ec398';}
+
     return process.env[key] || null;
   },
-  
+
   useModel: async (type: any, params: any) => {
     const prompt = params.messages?.[params.messages.length - 1]?.content || '';
-    
+
     // Domain classification
     if (prompt.includes('research domain')) {
       if (prompt.toLowerCase().includes('climate') || prompt.toLowerCase().includes('environment')) {
@@ -48,15 +48,15 @@ const runtime = {
       }
       return 'general';
     }
-    
+
     // Task type classification
     if (prompt.includes('task type')) {
-      if (prompt.toLowerCase().includes('compare')) return 'comparative';
-      if (prompt.toLowerCase().includes('analyze')) return 'analytical';
-      if (prompt.toLowerCase().includes('explore')) return 'exploratory';
+      if (prompt.toLowerCase().includes('compare')) {return 'comparative';}
+      if (prompt.toLowerCase().includes('analyze')) {return 'analytical';}
+      if (prompt.toLowerCase().includes('explore')) {return 'exploratory';}
       return 'analytical';
     }
-    
+
     // Research planning
     if (prompt.includes('research plan')) {
       return `Research Plan:
@@ -66,7 +66,7 @@ const runtime = {
 4. Synthesize findings into coherent insights
 5. Identify key trends and implications`;
     }
-    
+
     // Query generation
     if (prompt.includes('search queries')) {
       if (prompt.includes('climate change')) {
@@ -83,32 +83,32 @@ large language models developments`;
       }
       return 'latest research findings\nrecent developments\nexpert analysis';
     }
-    
+
     // Relevance scoring
     if (prompt.includes('relevance')) {
       return '0.85';
     }
-    
+
     // Analysis
     if (prompt.includes('Analyze')) {
       return 'Key insights: The research reveals significant developments in this field, with important implications for future work.';
     }
-    
+
     // Synthesis
     if (prompt.includes('Synthesize')) {
       return 'The research findings indicate substantial progress in the field, with multiple converging lines of evidence supporting the main conclusions. Key themes include innovation, practical applications, and future directions.';
     }
-    
+
     return 'Processed successfully';
   },
-  
+
   logger: {
     info: console.log,
     warn: console.warn,
     error: console.error,
     debug: () => {}, // Suppress debug logs
   },
-  
+
   getService: () => null,
 } as unknown as IAgentRuntime;
 
@@ -142,7 +142,7 @@ async function runLoggedResearch() {
     console.log(`\n${'='.repeat(80)}`);
     console.log(`Research ${i + 1}/${queries.length}: ${description}`);
     console.log(`Query: "${query}"`);
-    console.log('='.repeat(80) + '\n');
+    console.log(`${'='.repeat(80)}\n`);
 
     try {
       // Start research
@@ -154,7 +154,7 @@ async function runLoggedResearch() {
 
       // Simulate research progress
       console.log('\n⏳ Research in progress...');
-      
+
       // Mock some search results
       const mockSources = [
         {
@@ -163,7 +163,7 @@ async function runLoggedResearch() {
           title: `Research Finding ${i + 1}.1: ${description}`,
           content: `This is a comprehensive analysis of ${query.toLowerCase()}. Recent studies show significant developments...`,
           accessedAt: Date.now(),
-                     type: SourceType.WEB,
+          type: SourceType.WEB,
           reliability: 0.9,
           metadata: { language: 'en' },
         },
@@ -173,7 +173,7 @@ async function runLoggedResearch() {
           title: `Expert Analysis ${i + 1}.2: ${description}`,
           content: `Expert perspectives on ${query.toLowerCase()} reveal important trends and future directions...`,
           accessedAt: Date.now(),
-                     type: SourceType.ACADEMIC,
+          type: SourceType.ACADEMIC,
           reliability: 0.95,
           metadata: { language: 'en' },
         },
@@ -247,10 +247,10 @@ async function runLoggedResearch() {
       // Generate report (this will save to file)
       await (service as any).generateReport(project);
 
-      console.log(`\n✅ Research completed successfully!`);
+      console.log('\n✅ Research completed successfully!');
       console.log(`📑 Sources Found: ${project.sources.length}`);
       console.log(`💡 Key Findings: ${project.findings.length}`);
-      console.log(`📝 Report saved to research_logs/`);
+      console.log('📝 Report saved to research_logs/');
 
     } catch (error) {
       console.error(`\n❌ Error with research: ${error}`);
@@ -263,42 +263,42 @@ async function runLoggedResearch() {
   }
 
   // Show all saved files
-  console.log('\n' + '='.repeat(80));
+  console.log(`\n${'='.repeat(80)}`);
   console.log('📂 Research Outputs Saved:\n');
-  
+
   try {
     const logsDir = path.join(process.cwd(), 'research_logs');
     const files = await fs.readdir(logsDir);
     const mdFiles = files.filter(f => f.endsWith('.md')).sort();
     const jsonFiles = files.filter(f => f.endsWith('.json')).sort();
-    
+
     if (mdFiles.length > 0) {
       console.log('📄 Markdown Reports:');
       mdFiles.forEach(file => {
         console.log(`   - ${file}`);
       });
     }
-    
+
     if (jsonFiles.length > 0) {
       console.log('\n📊 JSON Data Files:');
       jsonFiles.forEach(file => {
         console.log(`   - ${file}`);
       });
     }
-    
+
     console.log('\n💡 To view reports:');
     console.log('   ls -la research_logs/');
     console.log('   cat research_logs/<filename>.md');
-    
+
     console.log('\n💡 To analyze JSON data:');
     console.log('   cat research_logs/<filename>.json | jq .');
-    
+
   } catch (error) {
     console.log('No files found in research_logs/');
   }
-  
+
   console.log('\n✨ Research demonstration complete!');
 }
 
 // Run the research
-runLoggedResearch().catch(console.error); 
+runLoggedResearch().catch(console.error);

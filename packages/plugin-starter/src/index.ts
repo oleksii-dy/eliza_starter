@@ -1,6 +1,8 @@
 import type { Plugin } from '@elizaos/core';
 import {
   type Action,
+  type ActionExample,
+  type ActionResult,
   type Content,
   type GenerateTextParams,
   type HandlerCallback,
@@ -51,7 +53,8 @@ const configSchema = z.object({
 const helloWorldAction: Action = {
   name: 'HELLO_WORLD',
   similes: ['GREET', 'SAY_HELLO'],
-  description: 'Responds with a simple hello world message',
+  description:
+    'Responds with a simple hello world message. Can be chained with other greeting actions or used to test basic functionality.',
 
   validate: async (
     _runtime: IAgentRuntime,
@@ -69,7 +72,7 @@ const helloWorldAction: Action = {
     _options: any,
     callback?: HandlerCallback,
     _responses?: Memory[]
-  ) => {
+  ): Promise<ActionResult> => {
     try {
       logger.info('Handling HELLO_WORLD action');
 
@@ -85,30 +88,68 @@ const helloWorldAction: Action = {
         await callback(responseContent);
       }
 
-      return responseContent;
+      return {
+        text: responseContent.text,
+        data: {
+          actionName: 'HELLO_WORLD',
+          greeting: 'hello world!',
+          timestamp: Date.now(),
+        },
+        values: {
+          success: true,
+          messageDelivered: true,
+          greetingType: 'hello_world',
+        },
+      };
     } catch (error) {
       logger.error('Error in HELLO_WORLD action:', error);
-      throw error;
+      return {
+        text: 'Failed to say hello',
+        data: {
+          actionName: 'HELLO_WORLD',
+          error: error instanceof Error ? error.message : 'unknown_error',
+        },
+        values: {
+          success: false,
+          errorType: 'greeting_error',
+        },
+      };
     }
   },
 
   examples: [
+    // Multi-action: Hello followed by another greeting
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
+        content: {
+          text: 'Say hello and then introduce yourself',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll greet you and then introduce myself.",
+          actions: ['HELLO_WORLD', 'INTRODUCE'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
         content: {
           text: 'Can you say hello?',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'hello world!',
           actions: ['HELLO_WORLD'],
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 };
 
 /**
@@ -137,7 +178,7 @@ export class StarterService extends Service {
   serviceType = 'starter'; // Add instance property
   capabilityDescription =
     'This is a starter service which is attached to the agent through the starter plugin.';
-  
+
   constructor(runtime: IAgentRuntime) {
     super(runtime);
     logger.info(`StarterService constructor called with serviceType: ${this.serviceType}`);
@@ -178,7 +219,9 @@ export const starterPlugin: Plugin = {
 
       // Set all environment variables at once
       for (const [key, value] of Object.entries(validatedConfig)) {
-        if (value) process.env[key] = value;
+        if (value) {
+          process.env[key] = value;
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -192,19 +235,19 @@ export const starterPlugin: Plugin = {
   models: {
     [ModelType.TEXT_SMALL]: async (
       _runtime,
-      { prompt, stopSequences = [] }: GenerateTextParams
+      { prompt: _prompt, stopSequences: _stopSequences = [] }: GenerateTextParams
     ) => {
       return 'Never gonna give you up, never gonna let you down, never gonna run around and desert you...';
     },
     [ModelType.TEXT_LARGE]: async (
       _runtime,
       {
-        prompt,
-        stopSequences = [],
-        maxTokens = 8192,
-        temperature = 0.7,
-        frequencyPenalty = 0.7,
-        presencePenalty = 0.7,
+        prompt: _prompt,
+        stopSequences: _stopSequences = [],
+        maxTokens: _maxTokens = 8192,
+        temperature: _temperature = 0.7,
+        frequencyPenalty: _frequencyPenalty = 0.7,
+        presencePenalty: _presencePenalty = 0.7,
       }: GenerateTextParams
     ) => {
       return 'Never gonna make you cry, never gonna say goodbye, never gonna tell a lie and hurt you...';
@@ -272,7 +315,7 @@ export const starterPlugin: Plugin = {
   actions: [helloWorldAction],
   providers: [helloWorldProvider],
   tests: [StarterPluginTestSuite],
-  // dependencies: ['@elizaos/plugin-knowledge'], <--- plugin dependecies go here (if requires another plugin)
+  // dependencies: ['@elizaos/plugin-knowledge'], <--- plugin dependencies go here (if requires another plugin)
 };
 
 export default starterPlugin;

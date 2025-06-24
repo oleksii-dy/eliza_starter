@@ -1,10 +1,20 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, mock } from 'bun:test';
 import {
   analyzeInputAction,
   processAnalysisAction,
   executeFinalAction,
 } from '../actions/chain-example';
 import { ActionResult } from '@elizaos/core';
+
+interface ActionOptions {
+  abortSignal?: AbortSignal;
+  previousResults?: ActionResult[];
+  chainContext?: {
+    chainId: string;
+    totalActions: number;
+    currentIndex: number;
+  };
+}
 
 describe('Action Chaining', () => {
   const mockRuntime = {
@@ -69,7 +79,7 @@ describe('Action Chaining', () => {
       },
     };
 
-    const mockCallback = vi.fn();
+    const mockCallback = mock();
     const result3 = await executeFinalAction.handler(
       mockRuntime as any,
       mockMessage as any,
@@ -144,8 +154,8 @@ describe('Action Chaining', () => {
   });
 
   it('should execute cleanup functions', async () => {
-    const cleanupMock = vi.fn();
-    console.log = vi.fn(); // Mock console.log
+    const cleanupMock = mock();
+    console.log = mock(); // Mock console.log
 
     const result = await executeFinalAction.handler(
       mockRuntime as any,

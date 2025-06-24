@@ -31,14 +31,15 @@ interface ProviderResult {
  */
 export const walletProvider: Provider = {
   name: 'solana-wallet',
-  description: 'Solana wallet balance, portfolio value, and holdings when agent needs to check wallet status or perform financial operations',
+  description:
+    'Solana wallet balance, portfolio value, and holdings when agent needs to check wallet status or perform financial operations',
   // it's not slow we always have this data
   // but we don't always need this data, let's free up the context
   dynamic: true,
   get: async (runtime: IAgentRuntime, _message: Memory, state?: State): Promise<ProviderResult> => {
     try {
       const portfolioCache = await runtime.getCache<WalletPortfolio>(SOLANA_WALLET_DATA_CACHE_KEY);
-      
+
       if (!portfolioCache) {
         logger.info('solana::wallet provider - portfolioCache is not ready');
         return { data: null, values: {}, text: '' };
@@ -46,12 +47,12 @@ export const walletProvider: Provider = {
 
       const { publicKey } = await getWalletKey(runtime, false);
       const pubkeyStr = publicKey ? ` (${publicKey.toBase58()})` : '';
-      
+
       // Get additional wallet info
       const connection = new Connection(
         runtime.getSetting('SOLANA_RPC_URL') || 'https://api.mainnet-beta.solana.com'
       );
-      
+
       // Get SOL balance for gas estimation
       let solBalance = 0;
       let hasEnoughForFees = false;
@@ -70,7 +71,7 @@ export const walletProvider: Provider = {
 
       // Get TokenService to resolve token metadata
       const tokenService = runtime.getService<TokenService>('token-service');
-      
+
       // Values that can be injected into templates
       const values: Record<string, string> = {
         total_usd: new BigNumber(portfolio.totalUsd).toFixed(2),
@@ -115,15 +116,15 @@ export const walletProvider: Provider = {
       } else {
         // If we have token service, enhance the display
         if (tokenService) {
-          const mintAddresses = nonZeroItems.map(item => item.address);
+          const mintAddresses = nonZeroItems.map((item) => item.address);
           const tokenInfoMap = await tokenService.getMultipleTokenInfo(mintAddresses);
-          
+
           for (const item of nonZeroItems) {
             const tokenInfo = tokenInfoMap.get(item.address);
             const displayName = tokenInfo?.name || item.name;
             const displaySymbol = tokenInfo?.symbol || item.symbol;
             const valueUsd = new BigNumber(item.valueUsd).toFixed(2);
-            
+
             text += `${displayName} (${displaySymbol}): ${new BigNumber(item.uiAmount).toFixed(
               6
             )} ($${valueUsd} | ${item.valueSol} SOL)\n`;
@@ -149,8 +150,8 @@ export const walletProvider: Provider = {
 
       return {
         data: portfolio,
-        values: values,
-        text: text,
+        values,
+        text,
       };
     } catch (error) {
       console.error('Error in Solana wallet provider:', error);

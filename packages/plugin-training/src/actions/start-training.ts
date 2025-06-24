@@ -1,5 +1,6 @@
 import {
-  Action,
+  type Action,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
@@ -7,11 +8,8 @@ import {
   elizaLogger,
   ModelType,
 } from '@elizaos/core';
-import {
-  type TrainingConfig,
-  type TrainingServiceInterface,
-} from '../types.js';
-import { TrainingService } from '../services/training-service.js';
+import { type TrainingConfig, type TrainingServiceInterface } from '../types.js';
+import { type TrainingService } from '../services/training-service.js';
 
 /**
  * Action to start RLAIF training with Atropos
@@ -19,7 +17,8 @@ import { TrainingService } from '../services/training-service.js';
 export const startTrainingAction: Action = {
   name: 'START_TRAINING',
   similes: ['BEGIN_TRAINING', 'LAUNCH_TRAINING', 'INITIATE_TRAINING', 'START_RLAIF'],
-  description: 'Start RLAIF training with Atropos using extracted dataset',
+  description:
+    'Start RLAIF training with Atropos using extracted dataset. Can be chained with EXTRACT_TRAINING_DATA to prepare datasets or MONITOR_TRAINING to track progress.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     // Check if training service is available
@@ -33,7 +32,8 @@ export const startTrainingAction: Action = {
     const trustService = runtime.getService('trust');
     if (trustService && typeof (trustService as any).getTrustScore === 'function') {
       const trustScore = await (trustService as any).getTrustScore(message.entityId);
-      if (trustScore < 0.9) { // Higher threshold for training
+      if (trustScore < 0.9) {
+        // Higher threshold for training
         elizaLogger.warn('Insufficient trust score for starting training');
         return false;
       }
@@ -41,7 +41,9 @@ export const startTrainingAction: Action = {
 
     // Check if message contains training request
     const text = message.content.text?.toLowerCase();
-    if (!text) return false;
+    if (!text) {
+      return false;
+    }
 
     const trainingKeywords = [
       'start training',
@@ -54,7 +56,7 @@ export const startTrainingAction: Action = {
       'run training',
     ];
 
-    return trainingKeywords.some(keyword => text.includes(keyword));
+    return trainingKeywords.some((keyword) => text.includes(keyword));
   },
 
   handler: async (
@@ -63,7 +65,7 @@ export const startTrainingAction: Action = {
     state?: State,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
-  ) => {
+  ): Promise<ActionResult> => {
     elizaLogger.info('Executing START_TRAINING action');
 
     try {
@@ -85,7 +87,7 @@ export const startTrainingAction: Action = {
       const datasetPath = state?.values?.datasetPath;
       if (!datasetPath) {
         elizaLogger.info('No existing dataset found, extracting training data first');
-        
+
         await callback?.({
           text: 'No dataset found. Extracting training data first...',
           thought: 'Need to extract training data before starting training',
@@ -94,7 +96,7 @@ export const startTrainingAction: Action = {
 
         const conversations = await trainingService.extractTrainingData(config);
         const newDatasetPath = await trainingService.prepareDataset(conversations, config);
-        
+
         elizaLogger.info(`Dataset prepared at: ${newDatasetPath}`);
       }
 
@@ -174,17 +176,19 @@ Happy training! 🎯`;
       });
 
       return {
-        values: {
-          trainingJobId: trainingJob.id,
-          trainingStatus: trainingJob.status,
-          cloudInstanceId: cloudInstance?.id,
-        },
+        text: `Training started: ${trainingJob.id}`,
         data: {
+          actionName: 'START_TRAINING',
           trainingJob,
           config,
           cloudInstance,
         },
-        text: `Training started: ${trainingJob.id}`,
+        values: {
+          success: true,
+          trainingJobId: trainingJob.id,
+          trainingStatus: trainingJob.status,
+          cloudInstanceId: cloudInstance?.id,
+        },
       };
     } catch (error) {
       elizaLogger.error('Error in START_TRAINING action:', error);
@@ -201,11 +205,73 @@ Please check:
         actions: ['START_TRAINING'],
       });
 
-      throw error;
+      return {
+        text: `Failed to start training: ${error instanceof Error ? error.message : String(error)}`,
+        data: {
+          actionName: 'START_TRAINING',
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
 
   examples: [
+    // Multi-action: Extract data then start training
+    [
+      {
+        name: 'User',
+        content: {
+          text: 'Extract the training data from my conversation history and start RLAIF training',
+        },
+      },
+      {
+        name: 'Assistant',
+        content: {
+          text: "I'll extract training data from your conversation history and then start RLAIF training.",
+          thought: 'User wants full training pipeline',
+          actions: ['EXTRACT_TRAINING_DATA', 'START_TRAINING'],
+        },
+      },
+    ],
+    // Multi-action: Start training then monitor
+    [
+      {
+        name: 'User',
+        content: {
+          text: 'Start training on Google Cloud and monitor the progress',
+        },
+      },
+      {
+        name: 'Assistant',
+        content: {
+          text: "I'll start RLAIF training on Google Cloud and set up monitoring for the progress.",
+          thought: 'User wants cloud training with monitoring',
+          actions: ['START_TRAINING', 'MONITOR_TRAINING'],
+        },
+      },
+    ],
+    // Multi-action: Check status, prepare data, then train
+    [
+      {
+        name: 'User',
+        content: {
+          text: 'Check if I have existing datasets, generate new training data if needed, then start training',
+        },
+      },
+      {
+        name: 'Assistant',
+        content: {
+          text: "I'll check for existing datasets, generate new training data if needed, and then start the training process.",
+          thought: 'User wants conditional training workflow',
+          actions: ['CHECK_TRAINING_STATUS', 'GENERATE_TRAINING_DATA', 'START_TRAINING'],
+        },
+      },
+    ],
     [
       {
         name: 'User',
@@ -222,38 +288,6 @@ Please check:
         },
       },
     ],
-    [
-      {
-        name: 'User',
-        content: {
-          text: 'Launch training on Google Cloud with 1000 steps and batch size 8',
-        },
-      },
-      {
-        name: 'Assistant',
-        content: {
-          text: "I'll launch RLAIF training on Google Cloud with your specified parameters: 1000 training steps and batch size 8. This will include setting up the cloud infrastructure and starting the Atropos training pipeline.",
-          thought: 'User wants cloud deployment with specific hyperparameters',
-          actions: ['START_TRAINING'],
-        },
-      },
-    ],
-    [
-      {
-        name: 'User',
-        content: {
-          text: 'Begin fine-tuning with DeepSeek model using GPT-4 as judge',
-        },
-      },
-      {
-        name: 'Assistant',
-        content: {
-          text: "I'll start RLAIF training targeting DeepSeek model with GPT-4 as the preference judge. This will generate multiple response variants and use GPT-4 to evaluate them for reinforcement learning.",
-          thought: 'User wants specific model and judge configuration',
-          actions: ['START_TRAINING'],
-        },
-      },
-    ],
   ],
 };
 
@@ -266,7 +300,7 @@ async function parseTrainingConfig(
   state?: State
 ): Promise<TrainingConfig> {
   const text = message.content.text || '';
-  
+
   // Use LLM to extract training configuration parameters
   const configPrompt = `Parse the following request for RLAIF training and return a JSON configuration:
 
@@ -339,8 +373,9 @@ Return only valid JSON with this structure:
       temperature: 0.1,
     });
 
-    const configText = typeof response === 'string' ? response : (response as any).content || String(response);
-    
+    const configText =
+      typeof response === 'string' ? response : (response as any).content || String(response);
+
     // Extract JSON from response
     const jsonMatch = configText.match(/\\{[\\s\\S]*\\}/);
     if (!jsonMatch) {
@@ -348,7 +383,7 @@ Return only valid JSON with this structure:
     }
 
     const parsedConfig = JSON.parse(jsonMatch[0]);
-    
+
     // Apply defaults and validation
     const config: TrainingConfig = {
       extractionConfig: {
@@ -368,7 +403,8 @@ Return only valid JSON with this structure:
       },
       rlaifConfig: {
         judgeModel: 'gpt-4',
-        preferenceDescription: 'helpful, harmless, and honest responses that demonstrate good coding practices and clear explanations',
+        preferenceDescription:
+          'helpful, harmless, and honest responses that demonstrate good coding practices and clear explanations',
         maxResponseVariants: 3,
         scoringStrategy: 'pairwise',
         rewardThreshold: 0.7,
@@ -388,7 +424,10 @@ Return only valid JSON with this structure:
     };
 
     // Add deployment config if cloud provider specified
-    if (parsedConfig.deploymentConfig?.provider && parsedConfig.deploymentConfig.provider !== 'null') {
+    if (
+      parsedConfig.deploymentConfig?.provider &&
+      parsedConfig.deploymentConfig.provider !== 'null'
+    ) {
       config.deploymentConfig = {
         provider: parsedConfig.deploymentConfig.provider,
         region: parsedConfig.deploymentConfig.region || 'us-central1-a',
@@ -419,7 +458,7 @@ Return only valid JSON with this structure:
     return config;
   } catch (error) {
     elizaLogger.error('Error parsing training configuration:', error);
-    
+
     // Return default configuration
     return {
       extractionConfig: {
@@ -437,7 +476,8 @@ Return only valid JSON with this structure:
       },
       rlaifConfig: {
         judgeModel: 'gpt-4',
-        preferenceDescription: 'helpful, harmless, and honest responses that demonstrate good coding practices and clear explanations',
+        preferenceDescription:
+          'helpful, harmless, and honest responses that demonstrate good coding practices and clear explanations',
         maxResponseVariants: 3,
         scoringStrategy: 'pairwise',
         rewardThreshold: 0.7,

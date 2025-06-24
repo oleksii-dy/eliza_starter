@@ -1,7 +1,7 @@
 // Type definitions for Hyperfy client components
 
-import { ReactNode } from 'react'
-import * as THREE from 'three'
+import { ReactNode } from 'react';
+import * as THREE from 'three';
 
 // Core types
 export interface World {

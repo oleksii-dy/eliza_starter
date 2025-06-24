@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { SecurityModule } from '../SecurityModule';
 import { createMockRuntime } from '../../__tests__/test-utils';
 import type { IAgentRuntime, Memory } from '@elizaos/core';
@@ -11,13 +11,13 @@ describe('SecurityModule', () => {
   let mockTrustEngine: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
-    
+
     mockTrustEngine = {
-      recordInteraction: vi.fn().mockResolvedValue(undefined)
+      recordInteraction: mock().mockResolvedValue(undefined)
     };
-    
+
     securityModule = new SecurityModule();
   });
 
@@ -52,7 +52,7 @@ describe('SecurityModule', () => {
         };
 
         const result = await securityModule.detectPromptInjection(content, context);
-        
+
         expect(result.detected).toBe(true);
         expect(result.type).toBe('prompt_injection');
         expect(result.severity).toMatch(/medium|high|critical/);
@@ -68,7 +68,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.detectPromptInjection(safeContent, context);
-      
+
       expect(result.detected).toBe(false);
       expect(result.action).toBe('allow');
     });
@@ -81,7 +81,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.detectPromptInjection(content, context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.confidence).toBeGreaterThan(0.8);
     });
@@ -94,7 +94,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.detectPromptInjection(content, context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.severity).toMatch(/high|critical/);
     });
@@ -113,7 +113,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.detectSocialEngineering(content, context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.type).toBe('social_engineering');
       expect(result.details).toContain('Urgency indicators');
@@ -127,7 +127,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.detectSocialEngineering(content, context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.details).toContain('Authority claims');
     });
@@ -140,7 +140,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.detectSocialEngineering(content, context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.details).toContain('Intimidation tactics');
     });
@@ -153,7 +153,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.detectSocialEngineering(content, context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.details).toContain('Requesting credentials');
     });
@@ -166,7 +166,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.detectSocialEngineering(content, context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.severity).toMatch(/high|critical/);
       expect(result.action).toBe('block');
@@ -181,7 +181,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.detectSocialEngineering(content, context);
-      
+
       expect(result.detected).toBe(false);
       expect(result.action).toBe('allow');
     });
@@ -198,7 +198,7 @@ describe('SecurityModule', () => {
       } as SecurityContext;
 
       const result = await securityModule.assessThreatLevel(context);
-      
+
       expect(result.detected).toBe(false);
       expect(result.severity).toBe('low');
       expect(result.action).toBe('log_only');
@@ -207,7 +207,7 @@ describe('SecurityModule', () => {
 
     it('should assess threat level based on message history', async () => {
       const entityId = 'test-entity' as UUID;
-      
+
       // Store some messages
       for (let i = 0; i < 25; i++) {
         await securityModule.storeMemory({
@@ -225,14 +225,14 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.assessThreatLevel(context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.severity).toMatch(/medium|high/);
     });
 
     it('should detect credential theft patterns', async () => {
       const entityId = 'test-entity' as UUID;
-      
+
       await securityModule.storeMemory({
         id: 'msg-1' as UUID,
         entityId,
@@ -247,7 +247,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.assessThreatLevel(context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.severity).toMatch(/medium|high/);
     });
@@ -268,20 +268,20 @@ describe('SecurityModule', () => {
       };
 
       await securityModule.storeMemory(message);
-      
+
       // Verify message was stored by checking threat assessment
       const context: SecurityContext = {
         entityId: message.entityId,
         timestamp: Date.now()
       };
-      
+
       const result = await securityModule.assessThreatLevel(context);
       expect(result).toBeDefined();
     });
 
     it('should limit message history to 100 messages', async () => {
       const entityId = 'entity-123' as UUID;
-      
+
       // Store 105 messages
       for (let i = 0; i < 105; i++) {
         await securityModule.storeMemory({
@@ -292,7 +292,7 @@ describe('SecurityModule', () => {
           roomId: 'room-456' as UUID
         });
       }
-      
+
       // Internal check - would need to expose for proper testing
       // For now, just verify it doesn't throw
       expect(true).toBe(true);
@@ -308,7 +308,7 @@ describe('SecurityModule', () => {
       };
 
       await securityModule.storeAction(action);
-      
+
       // Verify action was stored
       expect(true).toBe(true);
     });
@@ -322,7 +322,7 @@ describe('SecurityModule', () => {
     it('should detect similar behavioral patterns', async () => {
       const entity1 = 'entity-1' as UUID;
       const entity2 = 'entity-2' as UUID;
-      
+
       // Create similar behavioral profiles
       for (const entityId of [entity1, entity2]) {
         for (let i = 0; i < 5; i++) {
@@ -337,7 +337,7 @@ describe('SecurityModule', () => {
       }
 
       const result = await securityModule.detectMultiAccountPattern([entity1, entity2]);
-      
+
       expect(result.type).toBe('multi_account');
       // The actual detection depends on behavioral similarity calculation
     });
@@ -345,7 +345,7 @@ describe('SecurityModule', () => {
     it('should not detect patterns for dissimilar accounts', async () => {
       const entity1 = 'entity-1' as UUID;
       const entity2 = 'entity-2' as UUID;
-      
+
       // Create different behavioral profiles
       await securityModule.storeMemory({
         id: 'msg-1' as UUID,
@@ -354,7 +354,7 @@ describe('SecurityModule', () => {
         createdAt: Date.now(),
         roomId: 'room-456' as UUID
       });
-      
+
       await securityModule.storeMemory({
         id: 'msg-2' as UUID,
         entityId: entity2,
@@ -364,7 +364,7 @@ describe('SecurityModule', () => {
       });
 
       const result = await securityModule.detectMultiAccountPattern([entity1, entity2]);
-      
+
       expect(result.detected).toBe(false);
     });
   });
@@ -376,9 +376,9 @@ describe('SecurityModule', () => {
 
     it('should detect similar usernames', async () => {
       const existingUsers = ['admin', 'moderator', 'john_doe'];
-      
+
       const result = await securityModule.detectImpersonation('admin1', existingUsers);
-      
+
       expect(result.type).toBe('impersonation');
       expect(result.detected).toBe(true);
       expect(result.patterns.length).toBeGreaterThan(0);
@@ -386,19 +386,19 @@ describe('SecurityModule', () => {
 
     it('should detect character substitution', async () => {
       const existingUsers = ['alice', 'bob123'];
-      
+
       // Test a clear substitution case
       const result = await securityModule.detectImpersonation('alice1', existingUsers);
-      
+
       expect(result.type).toBe('impersonation');
       // The detection might not work perfectly for all cases, so we'll just check the type
     });
 
     it('should not flag legitimate usernames', async () => {
       const existingUsers = ['alice', 'bob', 'charlie'];
-      
+
       const result = await securityModule.detectImpersonation('david', existingUsers);
-      
+
       expect(result.detected).toBe(false);
       expect(result.patterns).toHaveLength(0);
     });
@@ -418,7 +418,7 @@ describe('SecurityModule', () => {
       ];
 
       const result = await securityModule.detectPhishing(messages, 'entity-123' as UUID);
-      
+
       expect(result.type).toBe('phishing');
       expect(result.detected).toBe(true);
       expect(result.indicators[0].type).toBe('credential_request');
@@ -433,7 +433,7 @@ describe('SecurityModule', () => {
       ];
 
       const result = await securityModule.detectPhishing(messages, 'entity-123' as UUID);
-      
+
       expect(result.detected).toBe(true);
       expect(result.indicators.length).toBeGreaterThan(0);
     });
@@ -451,7 +451,7 @@ describe('SecurityModule', () => {
       ];
 
       const result = await securityModule.detectPhishing(messages, 'entity-123' as UUID);
-      
+
       expect(result.detected).toBe(true);
       expect(result.indicators.some((i: any) => i.type === 'suspicious_links')).toBe(true);
     });
@@ -465,7 +465,7 @@ describe('SecurityModule', () => {
       ];
 
       const result = await securityModule.detectPhishing(messages, 'entity-123' as UUID);
-      
+
       expect(result.detected).toBe(false);
     });
   });
@@ -477,7 +477,7 @@ describe('SecurityModule', () => {
 
     it('should log trust impact to trust engine', async () => {
       const entityId = 'entity-123' as UUID;
-      
+
       await securityModule.logTrustImpact(
         entityId,
         SecurityEventType.PROMPT_INJECTION_ATTEMPT,
@@ -493,7 +493,7 @@ describe('SecurityModule', () => {
     });
 
     it('should handle trust engine errors gracefully', async () => {
-      mockTrustEngine.recordInteraction = vi.fn().mockRejectedValue(new Error('Trust engine error'));
+      mockTrustEngine.recordInteraction = mock().mockRejectedValue(new Error('Trust engine error'));
 
       // Should not throw even if trust engine fails
       await securityModule.logTrustImpact(
@@ -501,7 +501,7 @@ describe('SecurityModule', () => {
         SecurityEventType.SOCIAL_ENGINEERING_ATTEMPT,
         -15
       );
-      
+
       // Test passes if no error is thrown
     });
   });
@@ -513,21 +513,21 @@ describe('SecurityModule', () => {
 
     it('should return threat assessment for EmergencyElevationManager', async () => {
       const entityId = 'entity-123' as UUID;
-      
+
       const result = await securityModule.getThreatAssessment(entityId);
-      
+
       expect(result).toBeDefined();
       expect(result).toHaveProperty('riskScore');
       expect(result).toHaveProperty('threatLevel');
       expect(result).toHaveProperty('activeThreats');
       expect(result).toHaveProperty('recommendations');
-      
+
       // Check types
       expect(typeof result.riskScore).toBe('number');
       expect(typeof result.threatLevel).toBe('string');
       expect(Array.isArray(result.activeThreats)).toBe(true);
       expect(Array.isArray(result.recommendations)).toBe(true);
-      
+
       // Check threatLevel is valid
       expect(['low', 'medium', 'high', 'critical']).toContain(result.threatLevel);
     });
@@ -547,7 +547,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.analyzeContent(content, entityId, context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.severity).toMatch(/high|critical/);
       expect(result.action).toMatch(/block|require_verification/);
@@ -562,7 +562,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.analyzeContent(content, entityId, context);
-      
+
       expect(result.detected).toBe(true);
       expect(result.type).toBe('prompt_injection');
     });
@@ -576,7 +576,7 @@ describe('SecurityModule', () => {
       };
 
       const result = await securityModule.analyzeContent(content, entityId, context);
-      
+
       expect(result.detected).toBe(false);
       expect(result.action).toBe('allow');
     });
@@ -585,7 +585,7 @@ describe('SecurityModule', () => {
   describe('stop', () => {
     it('should clean up resources', async () => {
       await securityModule.initialize(mockRuntime, mockTrustEngine);
-      
+
       // Store some data
       await securityModule.storeMemory({
         id: 'msg-1' as UUID,
@@ -596,9 +596,9 @@ describe('SecurityModule', () => {
       });
 
       await securityModule.stop();
-      
+
       // Verify cleanup (internal state cleared)
       expect(true).toBe(true);
     });
   });
-}); 
+});

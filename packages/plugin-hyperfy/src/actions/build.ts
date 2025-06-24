@@ -1,6 +1,8 @@
 // @ts-nocheck - Suppressing TypeScript errors for legacy compatibility
 import {
   type Action,
+  type ActionResult,
+  type ActionExample,
   type HandlerCallback,
   type IAgentRuntime,
   type Memory,
@@ -165,7 +167,8 @@ ${summary}
 export const hyperfyEditEntityAction: Action = {
   name: 'HYPERFY_EDIT_ENTITY',
   similes: ['EDIT_ENTITY_IN_WORLD', 'MODIFY_SCENE', 'BUILD_STRUCTURE'],
-  description: `Performs scene edits in Hyperfy, including duplicating, moving, rotating, scaling, deleting, or importing entities. Use when the user asks to modify or add something in the 3D world.`,
+  description:
+    'Performs scene edits in Hyperfy, including duplicating, moving, rotating, scaling, deleting, or importing entities. Use when the user asks to modify or add something in the 3D world. Can be chained with movement or perception actions for complex building scenarios.',
   validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
     return !!service && service.isConnected() && !!service.getWorld()?.controls;
@@ -177,7 +180,7 @@ export const hyperfyEditEntityAction: Action = {
     options?: Record<string, any>,
     callback?: HandlerCallback,
     responses?: Memory[]
-  ) => {
+  ): Promise<ActionResult> => {
     const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
     const world = service?.getWorld();
     const buildManager = service?.getBuildManager();
@@ -186,7 +189,11 @@ export const hyperfyEditEntityAction: Action = {
       logger.error(
         '[EDIT_ENTITY Action] Hyperfy service, world, buildManager, or callback not found.'
       );
-      return;
+      return {
+        text: 'Error: Cannot perform scene edits. Required systems unavailable.',
+        values: { success: false, error: 'service_unavailable' },
+        data: { action: 'HYPERFY_EDIT_ENTITY' }
+      };
     }
 
     let operationResults: any = null;
@@ -202,7 +209,9 @@ export const hyperfyEditEntityAction: Action = {
 
         operationResults = await runtime.useModel(ModelType.OBJECT_LARGE, { prompt });
 
-        if (Array.isArray(operationResults?.operations)) break;
+        if (Array.isArray(operationResults?.operations)) {
+          break;
+        }
 
         logger.warn(
           `[EDIT_ENTITY Action] Unexpected structure on attempt ${attempts + 1}:`,
@@ -217,14 +226,18 @@ export const hyperfyEditEntityAction: Action = {
 
     if (!Array.isArray(operationResults?.operations)) {
       logger.error(
-        `[EDIT_ENTITY Action] Scene editing failed — could not understand instructions properly.`
+        '[EDIT_ENTITY Action] Scene editing failed — could not understand instructions properly.'
       );
-      return;
+      return {
+        text: 'Sorry, I could not understand the scene editing instructions.',
+        values: { success: false, error: 'instruction_parsing_failed' },
+        data: { action: 'HYPERFY_EDIT_ENTITY' }
+      };
     }
 
     for (const op of operationResults.operations) {
       if (!op?.success) {
-        logger.warn(`[EDIT_ENTITY Action] Skipping failed operation:`, op?.reason || op);
+        logger.warn('[EDIT_ENTITY Action] Skipping failed operation:', op?.reason || op);
         continue;
       }
 
@@ -285,36 +298,64 @@ export const hyperfyEditEntityAction: Action = {
       finalXml = await runtime.useModel(ModelType.TEXT_SMALL, { prompt: agentResponsePrompt });
     } catch (err) {
       logger.error('[EDIT_ENTITY Action] Final summarization failed:', err);
-      await callback({
+      const errorResponse = {
         thought: 'Scene edits completed, but final summary generation failed.',
         text: 'Edits are done, but I had trouble summarizing the results clearly.',
-      });
-      return;
+      };
+      await callback(errorResponse);
+      return {
+        text: errorResponse.text,
+        values: { success: true, summaryFailed: true },
+        data: { action: 'HYPERFY_EDIT_ENTITY', thought: errorResponse.thought }
+      };
     }
 
     const response = parseKeyValueXml(finalXml);
     if (!response) {
       logger.error('[EDIT_ENTITY Action] Failed to parse summary XML.');
-      await callback({
+      const parseErrorResponse = {
         thought: 'Could not interpret response XML.',
         text: "Edits completed, but I couldn't finish the summary properly.",
-      });
-      return;
+      };
+      await callback(parseErrorResponse);
+      return {
+        text: parseErrorResponse.text,
+        values: { success: true, parseError: true },
+        data: { action: 'HYPERFY_EDIT_ENTITY', thought: parseErrorResponse.thought }
+      };
     }
 
-    await callback({
+    const finalResponse = {
       ...response,
       thought: response.thought || 'Finished with scene edits.',
       text: response.text || 'Scene updates complete!',
       emote: response.emote || '',
-    });
+    };
+    
+    await callback(finalResponse);
+
+    return {
+      text: finalResponse.text,
+      values: { 
+        success: true, 
+        operationsCompleted: operationResults.operations.length,
+        summary: summaryText
+      },
+      data: { 
+        action: 'HYPERFY_EDIT_ENTITY', 
+        operations: operationResults.operations,
+        thought: finalResponse.thought,
+        emote: finalResponse.emote
+      }
+    };
   },
   examples: [
     [
-      { name: '{{name1}}', content: { text: 'Can you put another block on top of the water?' } },
+      { name: '{{user}}', content: { text: 'Can you put another block on top of the water?' } },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User wants me to duplicate a block and place it above the water - I need to find the block entity and position it correctly',
           text: 'Duplicating block and placing it on top of water...',
           actions: ['HYPERFY_EDIT_ENTITY'],
           source: 'hyperfy',
@@ -322,10 +363,11 @@ export const hyperfyEditEntityAction: Action = {
       },
     ],
     [
-      { name: '{{name1}}', content: { text: 'Move the tree next to the house.' } },
+      { name: '{{user}}', content: { text: 'Move the tree next to the house.' } },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'I need to translate the tree entity to a position adjacent to the house - this will require finding both entities and calculating the new position',
           text: 'Moving tree entity beside the house...',
           actions: ['HYPERFY_EDIT_ENTITY'],
           source: 'hyperfy',
@@ -333,10 +375,11 @@ export const hyperfyEditEntityAction: Action = {
       },
     ],
     [
-      { name: '{{name1}}', content: { text: 'Delete that floating cube.' } },
+      { name: '{{user}}', content: { text: 'Delete that floating cube.' } },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
+          thought: 'User wants me to remove a floating cube from the scene - I need to identify the cube entity and delete it',
           text: 'Deleting the floating cube entity...',
           actions: ['HYPERFY_EDIT_ENTITY'],
           source: 'hyperfy',

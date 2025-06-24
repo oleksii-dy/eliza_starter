@@ -7,7 +7,7 @@ import { getSchemaFactory, createLazyTableProxy } from './factory';
  */
 function createMessageServerTable() {
   const factory = getSchemaFactory();
-  
+
   return factory.table('message_servers', {
     id: factory.text('id').primaryKey(), // UUID stored as text
     name: factory.text('name').notNull(),

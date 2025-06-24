@@ -5,7 +5,7 @@
  * real git operations, GitHub API calls, and actual repository cloning.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import {
   RepositoryCloner,
   type RepositoryInfo,
@@ -89,7 +89,7 @@ describe('RepositoryCloner Runtime Integration', () => {
       GITHUB_TOKEN: 'test-token-123',
     });
 
-    const authenticatedCloner = new RepositoryCloner(testWorkspace + '-auth', authenticatedRuntime);
+    const authenticatedCloner = new RepositoryCloner(`${testWorkspace}-auth`, authenticatedRuntime);
 
     try {
       // This will fail with an invalid token, but we can verify the auth is being attempted
@@ -332,7 +332,9 @@ async function countFilesManually(dirPath: string): Promise<number> {
     const entries = await fs.readdir(currentPath, { withFileTypes: true });
 
     for (const entry of entries) {
-      if (entry.name === '.git') continue;
+      if (entry.name === '.git') {
+        continue;
+      }
 
       const fullPath = path.join(currentPath, entry.name);
 

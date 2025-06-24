@@ -1,6 +1,6 @@
 describe('Todo Plugin API Tests', () => {
   const baseUrl = Cypress.config('baseUrl') || 'http://localhost:3000';
-  
+
   describe('Basic Server Tests', () => {
     it('should have the server running', () => {
       // Just check that the server responds
@@ -69,4 +69,4 @@ describe('Todo Plugin API Tests', () => {
       });
     });
   });
-}); 
+});

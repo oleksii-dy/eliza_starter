@@ -5,10 +5,10 @@
 export default {
   // Use the test version of the plugin for E2E testing
   importPath: './dist/index.js', // Test version with test suites
-  
+
   // Test configuration
   testTimeout: 60000,
-  
+
   // Plugin configuration
   plugin: {
     entry: './dist/index.js', // Use test version

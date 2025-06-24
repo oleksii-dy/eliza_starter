@@ -31,7 +31,7 @@ export class Scripts extends System {
 
   constructor(world: World) {
     super(world);
-    
+
     // Check if Compartment is available (SES needs to be initialized)
     if (typeof Compartment === 'undefined') {
       // Only warn on server side where scripts are expected to be sandboxed
@@ -90,7 +90,7 @@ export class Scripts extends System {
         exec: (...args: any[]) => {
           // Create a basic evaluation context
           const wrappedCode = wrapRawCode(code);
-          const evalFunc = new Function('return ' + wrappedCode)();
+          const evalFunc = new Function(`return ${wrappedCode}`)();
           return evalFunc(...args);
         },
         code,
@@ -98,7 +98,7 @@ export class Scripts extends System {
     }
 
     let value: ((...args: any[]) => any) | undefined;
-    
+
     const result: ScriptResult = {
       exec: (...args: any[]) => {
         if (!value) {
@@ -111,7 +111,7 @@ export class Scripts extends System {
       },
       code,
     };
-    
+
     return result;
   }
 }
@@ -127,4 +127,4 @@ function wrapRawCode(code: string): string {
     }
   })()
   `;
-} 
+}

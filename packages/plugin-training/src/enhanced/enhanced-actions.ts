@@ -1,6 +1,6 @@
 /**
  * Enhanced Custom Reasoning Actions
- * 
+ *
  * Actions that interact with the EnhancedReasoningService for comprehensive
  * training data collection with database and file system storage.
  */
@@ -16,11 +16,11 @@ const enhancedServiceRegistry = new Map<string, EnhancedReasoningService>();
  */
 function getOrCreateEnhancedService(runtime: IAgentRuntime): EnhancedReasoningService {
   const agentId = runtime.agentId;
-  
+
   if (!enhancedServiceRegistry.has(agentId)) {
     enhancedServiceRegistry.set(agentId, new EnhancedReasoningService(runtime));
   }
-  
+
   return enhancedServiceRegistry.get(agentId)!;
 }
 
@@ -32,7 +32,7 @@ export const enableEnhancedReasoningAction: Action = {
   name: 'ENABLE_ENHANCED_REASONING',
   similes: ['ENABLE_TRAINING', 'START_TRAINING', 'ACTIVATE_ENHANCED_REASONING'],
   description: 'Enable enhanced custom reasoning with comprehensive training data collection',
-  
+
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
     return (
@@ -51,7 +51,7 @@ export const enableEnhancedReasoningAction: Action = {
       await service.enable();
 
       const status = service.getStatus();
-      
+
       await callback?.({
         text: `🚀 **Enhanced Custom Reasoning Service Enabled!**
 
@@ -67,10 +67,10 @@ export const enableEnhancedReasoningAction: Action = {
 • Files: \`training_recording/${status.sessionId}/\` directory
 
 The service will now intercept all \`useModel\` calls and collect comprehensive training data. When disabled, it will seamlessly return to normal operation.`,
-        thought: 'Successfully enabled enhanced reasoning service with comprehensive data collection capabilities',
+        thought:
+          'Successfully enabled enhanced reasoning service with comprehensive data collection capabilities',
         actions: ['ENABLE_ENHANCED_REASONING'],
       });
-
     } catch (error) {
       await callback?.({
         text: `❌ **Failed to enable enhanced reasoning**: ${error instanceof Error ? error.message : String(error)}
@@ -127,10 +127,10 @@ export const disableEnhancedReasoningAction: Action = {
   handler: async (runtime, message, state, options, callback) => {
     try {
       const service = getOrCreateEnhancedService(runtime);
-      
+
       // Get final status before disabling
       const finalStatus = service.getStatus();
-      
+
       if (!finalStatus.enabled) {
         await callback?.({
           text: `ℹ️ **Enhanced reasoning is already disabled**
@@ -161,7 +161,6 @@ The service has returned to normal operation. All \`useModel\` calls will now be
         thought: 'Successfully disabled enhanced reasoning service and completed training session',
         actions: ['DISABLE_ENHANCED_REASONING'],
       });
-
     } catch (error) {
       await callback?.({
         text: `❌ **Failed to disable enhanced reasoning**: ${error instanceof Error ? error.message : String(error)}
@@ -219,9 +218,10 @@ export const checkEnhancedReasoningStatusAction: Action = {
 
       if (status.enabled) {
         const durationSeconds = Math.round(status.stats.durationMs / 1000);
-        const successRate = status.stats.totalCalls > 0 
-          ? Math.round((status.stats.successfulCalls / status.stats.totalCalls) * 100)
-          : 0;
+        const successRate =
+          status.stats.totalCalls > 0
+            ? Math.round((status.stats.successfulCalls / status.stats.totalCalls) * 100)
+            : 0;
 
         await callback?.({
           text: `🔬 **Enhanced Reasoning Status: ACTIVE**
@@ -243,7 +243,6 @@ export const checkEnhancedReasoningStatusAction: Action = {
           thought: 'Enhanced reasoning is active and collecting training data',
           actions: ['CHECK_ENHANCED_REASONING_STATUS'],
         });
-
       } else {
         await callback?.({
           text: `💤 **Enhanced Reasoning Status: INACTIVE**
@@ -258,7 +257,6 @@ Use "enable enhanced reasoning" to start a new training session with comprehensi
           actions: ['CHECK_ENHANCED_REASONING_STATUS'],
         });
       }
-
     } catch (error) {
       await callback?.({
         text: `❌ **Error checking enhanced reasoning status**: ${error instanceof Error ? error.message : String(error)}

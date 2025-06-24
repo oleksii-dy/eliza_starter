@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { SearchResult } from '../../types';
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 
 export interface ExaConfig {
   apiKey: string;
@@ -29,7 +29,7 @@ export class ExaSearchProvider {
 
   async search(query: string, maxResults?: number): Promise<SearchResult[]> {
     try {
-      elizaLogger.info(`[Exa] Searching for: ${query}`);
+      logger.info(`[Exa] Searching for: ${query}`);
 
       const response = await axios.post(
         `${this.baseUrl}/search`,
@@ -39,7 +39,7 @@ export class ExaSearchProvider {
           numResults: maxResults || 10,
           text: true, // Get text content
           summary: {
-            query: "Key points and main findings"
+            query: 'Key points and main findings'
           },
           highlights: {
             numSentences: 3,
@@ -55,7 +55,7 @@ export class ExaSearchProvider {
       );
 
       if (!response.data || !response.data.results) {
-        elizaLogger.warn('[Exa] No results found');
+        logger.warn('[Exa] No results found');
         return [];
       }
 
@@ -77,11 +77,11 @@ export class ExaSearchProvider {
         },
       }));
 
-      elizaLogger.info(`[Exa] Found ${results.length} results`);
+      logger.info(`[Exa] Found ${results.length} results`);
       return results;
     } catch (error: any) {
       if (error.response) {
-        elizaLogger.error(`[Exa] API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+        logger.error(`[Exa] API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
         if (error.response.status === 401) {
           throw new Error('Invalid Exa API key');
         }
@@ -89,7 +89,7 @@ export class ExaSearchProvider {
           throw new Error('Exa API rate limit exceeded');
         }
       } else {
-        elizaLogger.error(`[Exa] Search error:`, error);
+        logger.error('[Exa] Search error:', error);
       }
       throw error;
     }
@@ -97,7 +97,7 @@ export class ExaSearchProvider {
 
   async searchAcademic(query: string, maxResults?: number): Promise<SearchResult[]> {
     try {
-      elizaLogger.info(`[Exa] Searching academic papers for: ${query}`);
+      logger.info(`[Exa] Searching academic papers for: ${query}`);
 
       const response = await axios.post(
         `${this.baseUrl}/search`,
@@ -108,7 +108,7 @@ export class ExaSearchProvider {
           numResults: maxResults || 10,
           text: true,
           summary: {
-            query: "Main contributions and findings"
+            query: 'Main contributions and findings'
           },
           highlights: {
             numSentences: 5,
@@ -124,7 +124,7 @@ export class ExaSearchProvider {
       );
 
       if (!response.data || !response.data.results) {
-        elizaLogger.warn('[Exa] No academic results found');
+        logger.warn('[Exa] No academic results found');
         return [];
       }
 
@@ -145,17 +145,17 @@ export class ExaSearchProvider {
         },
       }));
 
-      elizaLogger.info(`[Exa] Found ${results.length} academic results`);
+      logger.info(`[Exa] Found ${results.length} academic results`);
       return results;
     } catch (error: any) {
-      elizaLogger.error(`[Exa] Academic search error:`, error);
+      logger.error('[Exa] Academic search error:', error);
       throw error;
     }
   }
 
   async findSimilar(url: string, maxResults?: number): Promise<SearchResult[]> {
     try {
-      elizaLogger.info(`[Exa] Finding similar pages to: ${url}`);
+      logger.info(`[Exa] Finding similar pages to: ${url}`);
 
       const response = await axios.post(
         `${this.baseUrl}/findSimilar`,
@@ -164,7 +164,7 @@ export class ExaSearchProvider {
           numResults: maxResults || 10,
           text: true,
           summary: {
-            query: "Key similarities and main points"
+            query: 'Key similarities and main points'
           }
         },
         {
@@ -176,7 +176,7 @@ export class ExaSearchProvider {
       );
 
       if (!response.data || !response.data.results) {
-        elizaLogger.warn('[Exa] No similar results found');
+        logger.warn('[Exa] No similar results found');
         return [];
       }
 
@@ -195,11 +195,11 @@ export class ExaSearchProvider {
         },
       }));
 
-      elizaLogger.info(`[Exa] Found ${results.length} similar results`);
+      logger.info(`[Exa] Found ${results.length} similar results`);
       return results;
     } catch (error: any) {
-      elizaLogger.error(`[Exa] Find similar error:`, error);
+      logger.error('[Exa] Find similar error:', error);
       throw error;
     }
   }
-} 
+}

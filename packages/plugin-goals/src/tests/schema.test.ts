@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { getTableColumns } from 'drizzle-orm';
 import { goalsTable, goalTagsTable, goalSchema } from '../schema';
 

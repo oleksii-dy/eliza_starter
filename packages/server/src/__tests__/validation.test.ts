@@ -2,7 +2,7 @@
  * Unit tests for validation functions
  */
 
-import { describe, it, expect, mock, jest } from 'bun:test';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import {
   validateChannelId,
   validateAgentId,
@@ -20,10 +20,10 @@ mock.module('@elizaos/core', async () => {
   return {
     ...actual,
     logger: {
-      warn: jest.fn(),
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      warn: mock(),
+      info: mock(),
+      error: mock(),
+      debug: mock(),
     },
   };
 });

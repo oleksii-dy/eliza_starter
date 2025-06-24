@@ -1,0 +1,41 @@
+{
+  "extends": "../../eslint.config.js",
+  "rules": {
+    "@typescript-eslint/no-unused-vars": [
+      "warn", 
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "args": "after-used",
+        "ignoreRestSiblings": true,
+        "destructuredArrayIgnorePattern": "^_"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/services/PaymentService.ts"],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": [
+          "warn",
+          {
+            "argsIgnorePattern": "^_|runtime|userId|fromMethod|toMethod|amount|transaction|transactionId",
+            "varsIgnorePattern": "^_"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/services/PriceOracleService.ts"],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": [
+          "warn",
+          {
+            "argsIgnorePattern": "^_|address|network",
+            "varsIgnorePattern": "^_"
+          }
+        ]
+      }
+    }
+  ]
+} 

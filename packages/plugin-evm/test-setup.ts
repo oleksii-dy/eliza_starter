@@ -1,20 +1,20 @@
-import { vi } from 'vitest';
+import { mock  } from 'bun:test';
 
 // Mock @elizaos/core
-vi.mock('@elizaos/core', () => ({
+mock.module('@elizaos/core', () => ({
   elizaLogger: {
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
-    log: vi.fn(),
+    info: mock(),
+    error: mock(),
+    warn: mock(),
+    debug: mock(),
+    log: mock(),
   },
   logger: {
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
-    log: vi.fn(),
+    info: mock(),
+    error: mock(),
+    warn: mock(),
+    debug: mock(),
+    log: mock(),
   },
   ModelType: {
     TEXT_SMALL: 'TEXT_SMALL',
@@ -45,7 +45,7 @@ vi.mock('@elizaos/core', () => ({
     TOKEN_DATA: 'token_data',
     TUNNEL: 'tunnel',
   },
-  parseKeyValueXml: vi.fn().mockImplementation((xml) => {
+  parseKeyValueXml: mock().mockImplementation((xml) => {
     // Simple XML parser for tests
     const matches = xml.matchAll(/<(\w+)>([^<]*)<\/\1>/g);
     const result: Record<string, string> = {};
@@ -54,95 +54,95 @@ vi.mock('@elizaos/core', () => ({
     }
     return result;
   }),
-  composePromptFromState: vi.fn().mockReturnValue('mocked prompt'),
-  generateText: vi.fn().mockResolvedValue('mocked text'),
-  formatEther: vi.fn((value) => (BigInt(value) / BigInt(1e18)).toString()),
-  parseEther: vi.fn((value) => BigInt(Math.floor(parseFloat(value) * 1e18))),
+  composePromptFromState: mock().mockReturnValue('mocked prompt'),
+  generateText: mock().mockResolvedValue('mocked text'),
+  formatEther: mock((value) => (BigInt(value) / BigInt(1e18)).toString()),
+  parseEther: mock((value) => BigInt(Math.floor(parseFloat(value) * 1e18))),
   // Add missing exports
-  ActionExample: vi.fn(),
-  Content: vi.fn(),
-  Memory: vi.fn(),
-  State: vi.fn(),
-  IAgentRuntime: vi.fn(),
-  HandlerCallback: vi.fn(),
-  Action: vi.fn(),
-  Provider: vi.fn(),
-  Evaluator: vi.fn(),
-  Plugin: vi.fn(),
-  Service: vi.fn(),
-  asUUID: vi.fn((id) => id),
-  UUID: vi.fn(),
-  IWalletService: vi.fn(),
-  ICacheManager: vi.fn(),
-  IDatabaseAdapter: vi.fn(),
-  IMemoryManager: vi.fn(),
+  ActionExample: mock(),
+  Content: mock(),
+  Memory: mock(),
+  State: mock(),
+  IAgentRuntime: mock(),
+  HandlerCallback: mock(),
+  Action: mock(),
+  Provider: mock(),
+  Evaluator: mock(),
+  Plugin: mock(),
+  Service: mock(),
+  asUUID: mock((id) => id),
+  UUID: mock(),
+  IWalletService: mock(),
+  ICacheManager: mock(),
+  IDatabaseAdapter: mock(),
+  IMemoryManager: mock(),
 }));
 
 // Mock complex dependencies
-vi.mock('@alchemy/aa-core', () => ({
+mock.module('@alchemy/aa-core', () => ({
   LocalAccountSigner: {
-    privateKeyToAccountSigner: vi.fn().mockReturnValue({
-      signMessage: vi.fn(),
-      signTransaction: vi.fn(),
+    privateKeyToAccountSigner: mock().mockReturnValue({
+      signMessage: mock(),
+      signTransaction: mock(),
       address: '0x1234567890123456789012345678901234567890',
     }),
   },
-  WalletClientSigner: vi.fn().mockImplementation(() => ({
-    signMessage: vi.fn(),
-    signTransaction: vi.fn(),
+  WalletClientSigner: mock().mockImplementation(() => ({
+    signMessage: mock(),
+    signTransaction: mock(),
     address: '0x1234567890123456789012345678901234567890',
   })),
-  SmartAccountSigner: vi.fn().mockImplementation(() => ({
-    signMessage: vi.fn(),
-    signTransaction: vi.fn(),
+  SmartAccountSigner: mock().mockImplementation(() => ({
+    signMessage: mock(),
+    signTransaction: mock(),
     address: '0x1234567890123456789012345678901234567890',
   })),
 }));
 
-vi.mock('@safe-global/protocol-kit', () => ({
-  SafeApiKit: vi.fn(),
+mock.module('@safe-global/protocol-kit', () => ({
+  SafeApiKit: mock(),
   Safe: {
-    create: vi.fn().mockResolvedValue({
-      getAddress: vi.fn().mockResolvedValue('0x1234567890123456789012345678901234567890'),
-      createTransaction: vi.fn(),
-      signTransaction: vi.fn(),
-      executeTransaction: vi.fn(),
+    create: mock().mockResolvedValue({
+      getAddress: mock().mockResolvedValue('0x1234567890123456789012345678901234567890'),
+      createTransaction: mock(),
+      signTransaction: mock(),
+      executeTransaction: mock(),
     }),
   },
 }));
 
-vi.mock('ethers', () => ({
+mock.module('ethers', () => ({
   ethers: {
-    Wallet: vi.fn().mockImplementation(() => ({
+    Wallet: mock().mockImplementation(() => ({
       address: '0x1234567890123456789012345678901234567890',
       privateKey: '0x1234567890123456789012345678901234567890123456789012345678901234',
-      connect: vi.fn().mockReturnThis(),
-      getBalance: vi.fn().mockResolvedValue(BigInt('1000000000000000000')),
-      sendTransaction: vi.fn().mockResolvedValue({ hash: '0xmockhash' }),
+      connect: mock().mockReturnThis(),
+      getBalance: mock().mockResolvedValue(BigInt('1000000000000000000')),
+      sendTransaction: mock().mockResolvedValue({ hash: '0xmockhash' }),
     })),
-    JsonRpcProvider: vi.fn().mockImplementation(() => ({
-      getBlockNumber: vi.fn().mockResolvedValue(1000000),
-      getGasPrice: vi.fn().mockResolvedValue(BigInt('20000000000')),
-      getBalance: vi.fn().mockResolvedValue(BigInt('1000000000000000000')),
-      estimateGas: vi.fn().mockResolvedValue(BigInt('21000')),
-      getTransaction: vi.fn(),
-      waitForTransaction: vi.fn(),
+    JsonRpcProvider: mock().mockImplementation(() => ({
+      getBlockNumber: mock().mockResolvedValue(1000000),
+      getGasPrice: mock().mockResolvedValue(BigInt('20000000000')),
+      getBalance: mock().mockResolvedValue(BigInt('1000000000000000000')),
+      estimateGas: mock().mockResolvedValue(BigInt('21000')),
+      getTransaction: mock(),
+      waitForTransaction: mock(),
     })),
-    Contract: vi.fn().mockImplementation(() => ({
-      interface: { encodeFunctionData: vi.fn() },
+    Contract: mock().mockImplementation(() => ({
+      interface: { encodeFunctionData: mock() },
       address: '0x1234567890123456789012345678901234567890',
     })),
-    getDefaultProvider: vi.fn(),
-    parseEther: vi.fn((value) => BigInt(Math.floor(parseFloat(value) * 1e18))),
-    formatEther: vi.fn((value) => (BigInt(value) / BigInt(1e18)).toString()),
+    getDefaultProvider: mock(),
+    parseEther: mock((value) => BigInt(Math.floor(parseFloat(value) * 1e18))),
+    formatEther: mock((value) => (BigInt(value) / BigInt(1e18)).toString()),
   },
-  Contract: vi.fn(),
-  Wallet: vi.fn(),
-  JsonRpcProvider: vi.fn(),
+  Contract: mock(),
+  Wallet: mock(),
+  JsonRpcProvider: mock(),
 }));
 
-vi.mock('viem', () => ({
-  createWalletClient: vi.fn().mockImplementation((config) => {
+mock.module('viem', () => ({
+  createWalletClient: mock().mockImplementation((config) => {
     // Get the account from config if provided
     const account = config?.account || { address: '0x1234567890123456789012345678901234567890' };
     const chain = config?.chain || { id: 11155111, name: 'Sepolia', testnet: true };
@@ -160,12 +160,12 @@ vi.mock('viem', () => ({
         }
       }
     }
-    
+
     return {
       account,
       chain,
       transport: { url: transportUrl },
-      sendTransaction: vi.fn().mockImplementation(async (args) => {
+      sendTransaction: mock().mockImplementation(async (args) => {
         // Validate transaction parameters
         if (args.to && args.to.toLowerCase() === 'invalid-address') {
           throw new Error('Invalid address');
@@ -178,13 +178,13 @@ vi.mock('viem', () => ({
           throw new Error('insufficient funds for gas * price + value');
         }
         // Return proper 64-character hash
-        return '0x' + 'a'.repeat(64);
+        return `0x${'a'.repeat(64)}`;
       }),
-      signMessage: vi.fn(),
-      writeContract: vi.fn().mockResolvedValue('0x' + 'b'.repeat(64)),
+      signMessage: mock(),
+      writeContract: mock().mockResolvedValue(`0x${'b'.repeat(64)}`),
     };
   }),
-  createPublicClient: vi.fn().mockImplementation((config) => {
+  createPublicClient: mock().mockImplementation((config) => {
     const chain = config?.chain || { id: 11155111, name: 'Sepolia', testnet: true };
     // Extract URL from transport config
     let transportUrl = 'http://localhost:8545';
@@ -200,23 +200,23 @@ vi.mock('viem', () => ({
         }
       }
     }
-    
+
     return {
       chain,
       transport: { url: transportUrl },
-      getBlockNumber: vi.fn().mockResolvedValue(BigInt(1000000)),
-      getGasPrice: vi.fn().mockResolvedValue(BigInt('20000000000')),
-      getBalance: vi.fn().mockResolvedValue(BigInt('1000000000000000000')),
-      estimateGas: vi.fn().mockResolvedValue(BigInt('21000')),
-      readContract: vi.fn().mockResolvedValue(18), // Default decimals for ERC20
-      simulateContract: vi.fn().mockResolvedValue({ result: true }),
-      getTransaction: vi.fn(),
-      waitForTransactionReceipt: vi.fn().mockResolvedValue({ status: 'success' }),
-      getChainId: vi.fn().mockResolvedValue(chain.id),
+      getBlockNumber: mock().mockResolvedValue(BigInt(1000000)),
+      getGasPrice: mock().mockResolvedValue(BigInt('20000000000')),
+      getBalance: mock().mockResolvedValue(BigInt('1000000000000000000')),
+      estimateGas: mock().mockResolvedValue(BigInt('21000')),
+      readContract: mock().mockResolvedValue(18), // Default decimals for ERC20
+      simulateContract: mock().mockResolvedValue({ result: true }),
+      getTransaction: mock(),
+      waitForTransactionReceipt: mock().mockResolvedValue({ status: 'success' }),
+      getChainId: mock().mockResolvedValue(chain.id),
     };
   }),
-  http: vi.fn(),
-  parseEther: vi.fn((value) => {
+  http: mock(),
+  parseEther: mock((value) => {
     if (typeof value === 'string') {
       const parsed = BigInt(Math.floor(parseFloat(value) * 1e18));
       // Log for debugging
@@ -227,53 +227,53 @@ vi.mock('viem', () => ({
     }
     return BigInt(0);
   }),
-  formatEther: vi.fn((value) => {
+  formatEther: mock((value) => {
     if (typeof value === 'bigint') {
       return (value / BigInt(1e18)).toString();
     }
     return '0';
   }),
-  formatUnits: vi.fn((value, decimals = 18) => {
+  formatUnits: mock((value, decimals = 18) => {
     if (typeof value === 'bigint') {
       return (value / BigInt(10 ** decimals)).toString();
     }
     return '0';
   }),
-  parseUnits: vi.fn((value, decimals = 18) => {
+  parseUnits: mock((value, decimals = 18) => {
     if (typeof value === 'string') {
       return BigInt(Math.floor(parseFloat(value) * (10 ** decimals)));
     }
     return BigInt(0);
   }),
-  isAddress: vi.fn((address) => {
-    if (typeof address !== 'string') return false;
-    if (address.toLowerCase() === 'invalid-address') return false;
+  isAddress: mock((address) => {
+    if (typeof address !== 'string') {return false;}
+    if (address.toLowerCase() === 'invalid-address') {return false;}
     return address.startsWith('0x') && address.length === 42 && /^0x[a-fA-F0-9]{40}$/i.test(address);
   }),
-  getContract: vi.fn().mockReturnValue({
+  getContract: mock().mockReturnValue({
     read: {},
     write: {},
     address: '0x1234567890123456789012345678901234567890',
   }),
-  encodeFunctionData: vi.fn().mockReturnValue('0xa9059cbb0000000000000000000000000000000000000000000000000000000000000000'),
-  decodeFunctionResult: vi.fn(),
-  parseAbi: vi.fn().mockReturnValue([]),
+  encodeFunctionData: mock().mockReturnValue('0xa9059cbb0000000000000000000000000000000000000000000000000000000000000000'),
+  decodeFunctionResult: mock(),
+  parseAbi: mock().mockReturnValue([]),
 }));
 
 // Mock viem/accounts
-vi.mock('viem/accounts', () => ({
-  privateKeyToAccount: vi.fn((privateKey) => ({
+mock.module('viem/accounts', () => ({
+  privateKeyToAccount: mock((privateKey) => ({
     address: '0xE234F3633E9C86a864fE8b6A9b9c97Fc97899B9c',
     publicKey: '0xmockpublickey',
-    signMessage: vi.fn(),
-    signTransaction: vi.fn(),
-    signTypedData: vi.fn(),
+    signMessage: mock(),
+    signTransaction: mock(),
+    signTypedData: mock(),
   })),
-  generatePrivateKey: vi.fn(() => '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
+  generatePrivateKey: mock(() => '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
 }));
 
 // Mock viem/chains
-vi.mock('viem/chains', () => {
+mock.module('viem/chains', () => {
   const createChain = (id, name, testnet = false, symbol = 'ETH') => ({
     id,
     name,
@@ -292,7 +292,7 @@ vi.mock('viem/chains', () => {
       },
     },
   });
-  
+
   return {
     mainnet: createChain(1, 'Ethereum', false),
     sepolia: createChain(11155111, 'Sepolia', true),
@@ -337,13 +337,13 @@ vi.mock('viem/chains', () => {
   };
 });
 
-vi.mock('@lifi/sdk', () => ({
-  createConfig: vi.fn().mockReturnValue({
+mock.module('@lifi/sdk', () => ({
+  createConfig: mock().mockReturnValue({
     integrator: 'eliza',
     chains: [{ id: 1 }, { id: 10 }, { id: 11155111 }],
   }),
-  EVM: vi.fn().mockImplementation(() => ({
-    getQuote: vi.fn().mockResolvedValue({
+  EVM: mock().mockImplementation(() => ({
+    getQuote: mock().mockResolvedValue({
       estimate: {
         toAmount: '1000000000000000000',
         gasCosts: [{ amount: '100000000000000' }],
@@ -355,7 +355,7 @@ vi.mock('@lifi/sdk', () => ({
         gasLimit: '200000',
       },
     }),
-    getRoutes: vi.fn().mockResolvedValue({
+    getRoutes: mock().mockResolvedValue({
       routes: [{
         id: 'test-route',
         fromChainId: 1,
@@ -365,8 +365,8 @@ vi.mock('@lifi/sdk', () => ({
       }],
     }),
   })),
-  LiFi: vi.fn().mockImplementation(() => ({
-    getQuote: vi.fn().mockResolvedValue({
+  LiFi: mock().mockImplementation(() => ({
+    getQuote: mock().mockResolvedValue({
       estimate: {
         toAmount: '1000000000000000000',
         gasCosts: [{ amount: '100000000000000' }],
@@ -394,7 +394,7 @@ vi.mock('@lifi/sdk', () => ({
         gasLimit: '200000',
       },
     }),
-    getRoutes: vi.fn().mockResolvedValue({
+    getRoutes: mock().mockResolvedValue({
       routes: [{
         id: 'test-route',
         fromChainId: 1,
@@ -411,16 +411,16 @@ vi.mock('@lifi/sdk', () => ({
         }],
       }],
     }),
-    executeRoute: vi.fn().mockResolvedValue({
-      transactionHash: '0x' + 'c'.repeat(64),
+    executeRoute: mock().mockResolvedValue({
+      transactionHash: `0x${'c'.repeat(64)}`,
     }),
   })),
-  getChains: vi.fn().mockResolvedValue([
+  getChains: mock().mockResolvedValue([
     { id: 1, name: 'Ethereum' },
     { id: 10, name: 'Optimism' },
     { id: 11155111, name: 'Sepolia' },
   ]),
-  getToken: vi.fn().mockImplementation(async (chainId, tokenSymbolOrAddress) => {
+  getToken: mock().mockImplementation(async (chainId, tokenSymbolOrAddress) => {
     const tokens: Record<string, any> = {
       'ETH': {
         symbol: 'ETH',
@@ -443,13 +443,13 @@ vi.mock('@lifi/sdk', () => ({
         address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
       },
     };
-    
+
     // Return token if found, otherwise throw error
     const token = tokens[tokenSymbolOrAddress.toUpperCase()];
     if (token) {
       return token;
     }
-    
+
     // If it's an address, return a generic token
     if (tokenSymbolOrAddress.startsWith('0x')) {
       return {
@@ -458,16 +458,16 @@ vi.mock('@lifi/sdk', () => ({
         address: tokenSymbolOrAddress,
       };
     }
-    
+
     throw new Error(`Token ${tokenSymbolOrAddress} not found`);
   }),
 }));
 
 // Global setup
-global.fetch = vi.fn().mockResolvedValue({
+global.fetch = mock().mockResolvedValue({
   ok: true,
-  json: vi.fn().mockResolvedValue({}),
-  text: vi.fn().mockResolvedValue(''),
+  json: mock().mockResolvedValue({}),
+  text: mock().mockResolvedValue(''),
   headers: new Headers(),
   status: 200,
   statusText: 'OK',

@@ -130,13 +130,13 @@ export class IssueAnalyzer {
       };
 
       // Detect test framework
-      if (dependencies.jest || dependencies['@types/jest']) testFramework = 'jest';
-      else if (dependencies.vitest) testFramework = 'vitest';
-      else if (dependencies.mocha) testFramework = 'mocha';
+      if (dependencies.jest || dependencies['@types/jest']) {testFramework = 'jest';}
+      else if (dependencies.bun) {testFramework = 'bun:test';}
+      else if (dependencies.mocha) {testFramework = 'mocha';}
 
       // Detect build system
-      if (packageJson.scripts?.build) buildSystem = 'npm';
-      if (dependencies.typescript) buildSystem = 'typescript';
+      if (packageJson.scripts?.build) {buildSystem = 'npm';}
+      if (dependencies.typescript) {buildSystem = 'typescript';}
     } catch {}
 
     // Find TypeScript/JavaScript files
@@ -293,8 +293,8 @@ export class IssueAnalyzer {
     const reqCount = requirements.length;
     const fileCount = affectedFiles.length;
 
-    if (reqCount <= 2 && fileCount <= 2) return 'low';
-    if (reqCount >= 5 || fileCount >= 4) return 'high';
+    if (reqCount <= 2 && fileCount <= 2) {return 'low';}
+    if (reqCount >= 5 || fileCount >= 4) {return 'high';}
     return 'medium';
   }
 
@@ -312,27 +312,27 @@ export class IssueAnalyzer {
     parts.push(`\nRepository: ${instance.repo}`);
 
     if (requirements.length > 0) {
-      parts.push(`\nKey Requirements:`);
+      parts.push('\nKey Requirements:');
       requirements.slice(0, 3).forEach((req, i) => {
         parts.push(`${i + 1}. ${req}`);
       });
     }
 
     if (affectedFiles.length > 0) {
-      parts.push(`\nLikely affected files:`);
+      parts.push('\nLikely affected files:');
       affectedFiles.forEach((file) => {
         parts.push(`- ${file}`);
       });
     }
 
-    parts.push(`\nSuggested approach:`);
-    parts.push(`1. Analyze the issue in detail`);
-    parts.push(`2. Examine the affected files and understand current implementation`);
-    parts.push(`3. Implement the required changes`);
-    parts.push(`4. Ensure all tests pass`);
+    parts.push('\nSuggested approach:');
+    parts.push('1. Analyze the issue in detail');
+    parts.push('2. Examine the affected files and understand current implementation');
+    parts.push('3. Implement the required changes');
+    parts.push('4. Ensure all tests pass');
 
     if (instance.test_patch) {
-      parts.push(`5. Verify the fix with provided test cases`);
+      parts.push('5. Verify the fix with provided test cases');
     }
 
     return parts.join('\n');

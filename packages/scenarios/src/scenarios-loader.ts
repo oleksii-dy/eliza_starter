@@ -12,39 +12,47 @@ import type { Scenario } from './types.js';
 export async function loadAllScenarios(): Promise<Scenario[]> {
   try {
     console.log('📦 Loading scenarios dynamically...');
-    
+
     // Create an empty array to collect scenarios
     const allScenarios: Scenario[] = [];
-    
+
     // Load individual scenario modules to avoid circular dependency
     try {
       const { default: truthVsLie } = await import('./truth-vs-lie.js');
-      if (truthVsLie) allScenarios.push(truthVsLie);
+      if (truthVsLie) {
+        allScenarios.push(truthVsLie);
+      }
     } catch (error) {
       console.warn('Could not load truth-vs-lie scenario:', error);
     }
-    
+
     try {
       const { default: researchTask } = await import('./research-task.js');
-      if (researchTask) allScenarios.push(researchTask);
+      if (researchTask) {
+        allScenarios.push(researchTask);
+      }
     } catch (error) {
       console.warn('Could not load research-task scenario:', error);
     }
-    
+
     try {
       const { default: codingChallenge } = await import('./coding-challenge.js');
-      if (codingChallenge) allScenarios.push(codingChallenge);
+      if (codingChallenge) {
+        allScenarios.push(codingChallenge);
+      }
     } catch (error) {
       console.warn('Could not load coding-challenge scenario:', error);
     }
-    
+
     try {
       const { default: workflowPlanning } = await import('./workflow-planning.js');
-      if (workflowPlanning) allScenarios.push(workflowPlanning);
+      if (workflowPlanning) {
+        allScenarios.push(workflowPlanning);
+      }
     } catch (error) {
       console.warn('Could not load workflow-planning scenario:', error);
     }
-    
+
     // Load plugin test scenarios
     try {
       const { pluginTestScenarios } = await import('./plugin-tests/index.js');
@@ -54,7 +62,7 @@ export async function loadAllScenarios(): Promise<Scenario[]> {
     } catch (error) {
       console.warn('Could not load plugin test scenarios:', error);
     }
-    
+
     // Load rolodex scenarios
     try {
       const rolodexModule = await import('./rolodex/index.js');
@@ -65,15 +73,14 @@ export async function loadAllScenarios(): Promise<Scenario[]> {
         rolodexModule.complexNetworkScenario,
         rolodexModule.followUpManagementScenario,
       ].filter(Boolean);
-      
+
       allScenarios.push(...rolodexScenarios);
     } catch (error) {
       console.warn('Could not load rolodex scenarios:', error);
     }
-    
+
     console.log(`📦 Successfully loaded ${allScenarios.length} scenarios`);
     return allScenarios;
-    
   } catch (error) {
     console.error('Failed to load scenarios:', error);
     return [];
@@ -85,45 +92,53 @@ export async function loadAllScenarios(): Promise<Scenario[]> {
  */
 export async function loadScenariosByCategory(category: string): Promise<Scenario[]> {
   const scenarios: Scenario[] = [];
-  
+
   try {
     switch (category.toLowerCase()) {
       case 'reasoning':
         try {
           const { default: truthVsLie } = await import('./truth-vs-lie.js');
-          if (truthVsLie) scenarios.push(truthVsLie);
+          if (truthVsLie) {
+            scenarios.push(truthVsLie);
+          }
         } catch (error) {
           console.warn('Could not load reasoning scenarios:', error);
         }
         break;
-        
+
       case 'research':
         try {
           const { default: researchTask } = await import('./research-task.js');
-          if (researchTask) scenarios.push(researchTask);
+          if (researchTask) {
+            scenarios.push(researchTask);
+          }
         } catch (error) {
           console.warn('Could not load research scenarios:', error);
         }
         break;
-        
+
       case 'coding':
         try {
           const { default: codingChallenge } = await import('./coding-challenge.js');
-          if (codingChallenge) scenarios.push(codingChallenge);
+          if (codingChallenge) {
+            scenarios.push(codingChallenge);
+          }
         } catch (error) {
           console.warn('Could not load coding scenarios:', error);
         }
         break;
-        
+
       case 'planning':
         try {
           const { default: workflowPlanning } = await import('./workflow-planning.js');
-          if (workflowPlanning) scenarios.push(workflowPlanning);
+          if (workflowPlanning) {
+            scenarios.push(workflowPlanning);
+          }
         } catch (error) {
           console.warn('Could not load planning scenarios:', error);
         }
         break;
-        
+
       case 'integration':
         try {
           const { pluginTestScenarios } = await import('./plugin-tests/index.js');
@@ -134,7 +149,7 @@ export async function loadScenariosByCategory(category: string): Promise<Scenari
           console.warn('Could not load integration scenarios:', error);
         }
         break;
-        
+
       case 'rolodex':
         try {
           const rolodexModule = await import('./rolodex/index.js');
@@ -145,13 +160,13 @@ export async function loadScenariosByCategory(category: string): Promise<Scenari
             rolodexModule.complexNetworkScenario,
             rolodexModule.followUpManagementScenario,
           ].filter(Boolean);
-          
+
           scenarios.push(...rolodexScenarios);
         } catch (error) {
           console.warn('Could not load rolodex scenarios:', error);
         }
         break;
-        
+
       default:
         console.warn(`Unknown scenario category: ${category}`);
         return await loadAllScenarios();
@@ -159,7 +174,7 @@ export async function loadScenariosByCategory(category: string): Promise<Scenari
   } catch (error) {
     console.error(`Failed to load scenarios for category ${category}:`, error);
   }
-  
+
   return scenarios;
 }
 
@@ -169,7 +184,7 @@ export async function loadScenariosByCategory(category: string): Promise<Scenari
 export async function loadScenarioById(id: string): Promise<Scenario | null> {
   try {
     const allScenarios = await loadAllScenarios();
-    return allScenarios.find(scenario => scenario.id === id) || null;
+    return allScenarios.find((scenario) => scenario.id === id) || null;
   } catch (error) {
     console.error(`Failed to load scenario with ID ${id}:`, error);
     return null;

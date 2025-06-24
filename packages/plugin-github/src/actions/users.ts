@@ -292,12 +292,12 @@ Total Events: ${events.length}
 
 **Most Popular Repositories:**
 ${repos
-  .sort((a: any, b: any) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
-  .slice(0, 5)
-  .map(
-    (r: any) => `• ${r.name} - ⭐ ${r.stargazers_count || 0} - ${r.description || 'No description'}`
-  )
-  .join('\n')}`,
+    .sort((a: any, b: any) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
+    .slice(0, 5)
+    .map(
+      (r: any) => `• ${r.name} - ⭐ ${r.stargazers_count || 0} - ${r.description || 'No description'}`
+    )
+    .join('\n')}`,
         actions: ['GET_GITHUB_USER_STATS'],
         source: message.content.source,
       };

@@ -13,7 +13,7 @@ declare global {
   var repairIntrinsics: any;
   var lockdown: any;
   var harden: any;
-  
+
   // Window extensions
   interface Window {
     ses?: any;
@@ -27,7 +27,7 @@ declare global {
     world?: any;
     app?: any;
   }
-  
+
   // Performance API extensions
   interface Performance {
     memory?: {
@@ -46,4 +46,4 @@ declare module '*/storage' {
   };
 }
 
-export {}; 
+export {};

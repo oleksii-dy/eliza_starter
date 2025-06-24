@@ -1,673 +1,441 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { autonomousWorldProvider, worldProvider } from '../../worldProvider';
-import { createMockRuntime, createMockMemory, createMockState, createMockService } from '../utils/mock-runtime';
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
+import { worldProvider } from '../../worldProvider';
+import {
+  createMockRuntime,
+  createMockMemory,
+  createMockState,
+  createMockService,
+} from '../utils/mock-runtime';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import { OODAPhase, AutonomousServiceType } from '../../types';
 
-// Mock addHeader utility
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
-  return {
-    ...actual,
-    addHeader: vi.fn((header: string, content: string) => `${header}\n\n${content}`),
-    createUniqueUuid: vi.fn((runtime: any, seed: string) => `unique-${seed}-${runtime.agentId}`),
-  };
-});
-
-describe('autonomousWorldProvider', () => {
+describe('World Provider', () => {
   let mockRuntime: IAgentRuntime;
-  let mockMessage: Memory;
-  let mockState: State;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockRuntime = createMockRuntime({
-      settings: {
-        WORLD_ID: 'test-world-id',
-      },
-    });
-    mockMessage = createMockMemory();
-    mockState = createMockState();
-  });
-
-  describe('provider structure', () => {
-    it('should have correct provider metadata', () => {
-      expect(autonomousWorldProvider.name).toBe('AUTONOMOUS_WORLD');
-      expect(autonomousWorldProvider.description).toContain('autonomous world and room setup');
-      expect(autonomousWorldProvider.position).toBe(50);
-      expect(typeof autonomousWorldProvider.get).toBe('function');
-    });
-
-    it('should not be marked as dynamic or private', () => {
-      expect(autonomousWorldProvider.dynamic).toBeUndefined();
-      expect(autonomousWorldProvider.private).toBeUndefined();
-    });
-  });
-
-  describe('get method', () => {
-    it('should handle missing WORLD_ID setting', async () => {
-      const noWorldRuntime = createMockRuntime({
-        settings: {},
-      });
-
-      const result = await autonomousWorldProvider.get(noWorldRuntime, mockMessage, mockState);
-
-      expect(result).toBeDefined();
-      expect(result.data).toBeDefined();
-      expect(result.data!.worldId).toBeNull();
-      expect(result.data!.status).toBe('no_world_id');
-      expect(result.text).toContain('No WORLD_ID configured');
-      expect(result.values!.autonomousWorld).toContain('may not be fully initialized');
-    });
-
-    it('should retrieve world and room information when available', async () => {
-      const mockWorld = {
-        id: 'test-world-id',
-        name: 'Test World',
-        serverId: 'server-123',
-        agentId: 'agent-456',
-      };
-
-      const mockRoom = {
-        id: 'unique-autonomous_room_singleton-test-agent',
-        name: 'Autonomous Room',
-        type: 'AUTONOMOUS',
-        worldId: 'test-world-id',
-        source: 'autonomous',
-      };
-
-      mockRuntime.getWorld = vi.fn().mockResolvedValue(mockWorld);
-      mockRuntime.getRoom = vi.fn().mockResolvedValue(mockRoom);
-
-      const result = await autonomousWorldProvider.get(mockRuntime, mockMessage, mockState);
-
-      expect(result).toBeDefined();
-      expect(result.data!.worldId).toBe('test-world-id');
-      expect(result.data!.worldInfo).toEqual({
-        id: mockWorld.id,
-        name: mockWorld.name,
-        serverId: mockWorld.serverId,
-        agentId: mockWorld.agentId,
-      });
-      expect(result.data!.roomInfo).toEqual({
-        id: mockRoom.id,
-        name: mockRoom.name,
-        type: mockRoom.type,
-        worldId: mockRoom.worldId,
-        source: mockRoom.source,
-      });
-      expect(result.data!.status).toBe('ready');
-      expect(result.values!.worldStatus).toBe('ready');
-      expect(result.values!.roomStatus).toBe('ready');
-    });
-
-    it('should handle world not found', async () => {
-      mockRuntime.getWorld = vi.fn().mockResolvedValue(null);
-      mockRuntime.getRoom = vi.fn().mockResolvedValue(null);
-
-      const result = await autonomousWorldProvider.get(mockRuntime, mockMessage, mockState);
-
-      expect(result.data!.worldInfo).toBeNull();
-      expect(result.data!.roomInfo).toBeNull();
-      expect(result.data!.status).toBe('incomplete');
-      expect(result.values!.worldStatus).toBe('missing');
-      expect(result.values!.roomStatus).toBe('missing');
-      expect(result.text).toContain('World Status:** Not Found');
-      expect(result.text).toContain('Room Status:** Not Found');
-    });
-
-    it('should handle runtime without getWorld/getRoom methods', async () => {
-      const limitedRuntime = createMockRuntime({
-        settings: {
-          WORLD_ID: 'test-world-id',
-        },
-      });
-      // Remove the methods to simulate older runtime
-      delete (limitedRuntime as any).getWorld;
-      delete (limitedRuntime as any).getRoom;
-
-      const result = await autonomousWorldProvider.get(limitedRuntime, mockMessage, mockState);
-
-      expect(result).toBeDefined();
-      expect(result.data!.worldInfo).toBeNull();
-      expect(result.data!.roomInfo).toBeNull();
-      expect(result.data!.status).toBe('incomplete');
-    });
-
-    it('should handle database query errors gracefully', async () => {
-      mockRuntime.getWorld = vi.fn().mockRejectedValue(new Error('Database connection failed'));
-      mockRuntime.getRoom = vi.fn().mockRejectedValue(new Error('Database connection failed'));
-
-      const result = await autonomousWorldProvider.get(mockRuntime, mockMessage, mockState);
-
-      expect(result).toBeDefined();
-      expect(result.data!.worldInfo).toBeNull();
-      expect(result.data!.roomInfo).toBeNull();
-      expect(result.data!.status).toBe('incomplete');
-    });
-
-    it('should format status text correctly with all information', async () => {
-      const mockWorld = {
-        id: 'test-world-id',
-        name: 'Test World',
-        serverId: 'server-123',
-        agentId: 'agent-456',
-      };
-
-      const mockRoom = {
-        id: 'unique-autonomous_room_singleton-test-agent',
-        name: 'Autonomous Room',
-        type: 'AUTONOMOUS',
-        worldId: 'test-world-id',
-        source: 'autonomous',
-      };
-
-      mockRuntime.getWorld = vi.fn().mockResolvedValue(mockWorld);
-      mockRuntime.getRoom = vi.fn().mockResolvedValue(mockRoom);
-
-      const result = await autonomousWorldProvider.get(mockRuntime, mockMessage, mockState);
-
-      expect(result.text).toContain('# Autonomous World Information');
-      expect(result.text).toContain('# Autonomous World Status');
-      expect(result.text).toContain('**World ID:** test-world-id');
-      expect(result.text).toContain('**World Status:** Found');
-      expect(result.text).toContain('**World Name:** Test World');
-      expect(result.text).toContain('**Room Status:** Found');
-      expect(result.text).toContain('**Room Name:** Autonomous Room');
-      expect(result.text).toContain('**Room Type:** AUTONOMOUS');
-      expect(result.text).toContain('**Agent ID:** test-agent');
-      expect(result.text).toContain('**Character Name:** TestAgent');
-    });
-
-    it('should include character and agent information', async () => {
-      const result = await autonomousWorldProvider.get(mockRuntime, mockMessage, mockState);
-
-      expect(result.data!.agentId).toBe(mockRuntime.agentId);
-      expect(result.data!.characterName).toBe(mockRuntime.character.name);
-      expect(result.text).toContain(`**Agent ID:** ${mockRuntime.agentId}`);
-      expect(result.text).toContain(`**Character Name:** ${mockRuntime.character.name}`);
-    });
-
-    it('should generate unique room ID based on agent', async () => {
-      const result = await autonomousWorldProvider.get(mockRuntime, mockMessage, mockState);
-
-      expect(result.data!.roomId).toMatch(/unique-autonomous_room_singleton-.+/);
-    });
-
-    it('should handle partial world/room availability', async () => {
-      const mockWorld = {
-        id: 'test-world-id',
-        name: 'Test World',
-        serverId: 'server-123',
-        agentId: 'agent-456',
-      };
-
-      mockRuntime.getWorld = vi.fn().mockResolvedValue(mockWorld);
-      mockRuntime.getRoom = vi.fn().mockResolvedValue(null); // Room not found
-
-      const result = await autonomousWorldProvider.get(mockRuntime, mockMessage, mockState);
-
-      expect(result.data!.worldInfo).toBeDefined();
-      expect(result.data!.roomInfo).toBeNull();
-      expect(result.data!.status).toBe('incomplete');
-      expect(result.values!.worldStatus).toBe('ready');
-      expect(result.values!.roomStatus).toBe('missing');
-    });
-  });
-
-  describe('error handling', () => {
-    it('should handle general errors gracefully', async () => {
-      const errorRuntime = createMockRuntime({
-        settings: {
-          WORLD_ID: 'test-world-id',
-        },
-      });
-
-      // Mock getSetting to throw an error
-      errorRuntime.getSetting = vi.fn().mockImplementation(() => {
-        throw new Error('Settings system failure');
-      });
-
-      const result = await autonomousWorldProvider.get(errorRuntime, mockMessage, mockState);
-
-      expect(result).toBeDefined();
-      expect(result.data!.error).toBe('Settings system failure');
-      expect(result.data!.status).toBe('error');
-      expect(result.text).toContain('Error retrieving autonomous world information');
-      expect(result.values!.autonomousWorld).toContain('Error retrieving');
-    });
-
-    it('should handle non-Error exceptions', async () => {
-      const errorRuntime = createMockRuntime({
-        settings: {
-          WORLD_ID: 'test-world-id',
-        },
-      });
-
-      errorRuntime.getSetting = vi.fn().mockImplementation(() => {
-        throw 'String error';
-      });
-
-      const result = await autonomousWorldProvider.get(errorRuntime, mockMessage, mockState);
-
-      expect(result.data!.error).toBe('String error');
-      expect(result.data!.status).toBe('error');
-    });
-
-    it('should handle null message gracefully', async () => {
-      const result = await autonomousWorldProvider.get(mockRuntime, null as any, mockState);
-
-      expect(result).toBeDefined();
-      expect(result.data).toBeDefined();
-    });
-
-    it('should handle null state gracefully', async () => {
-      const result = await autonomousWorldProvider.get(mockRuntime, mockMessage, null as any);
-
-      expect(result).toBeDefined();
-      expect(result.data).toBeDefined();
-    });
-  });
-});
-
-describe('worldProvider (AUTONOMOUS_WORLD_CONTEXT)', () => {
-  let mockRuntime: IAgentRuntime;
-  let mockMessage: Memory;
+  let mockMemory: Memory;
   let mockState: State;
   let mockOODAService: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    
-    // Create mock OODA service with comprehensive context
+    mock.restore();
+
+    // Create mock OODA service
     mockOODAService = createMockService('autonomous', {
-      currentContext: {
-        phase: OODAPhase.ORIENTING,
-        runId: 'run-123',
-        startTime: Date.now() - 60000, // 1 minute ago
+      isRunning: mock().mockReturnValue(true),
+      getCurrentPhase: mock().mockReturnValue(OODAPhase.OBSERVING),
+      getContext: mock().mockReturnValue({
+        phase: OODAPhase.OBSERVING,
+        runId: 'test-run-123',
+        startTime: Date.now() - 10000,
+        endTime: null,
         observations: [
           {
-            type: 'system_state',
-            source: 'resource_monitor',
-            relevance: 0.8,
-            timestamp: Date.now() - 30000,
-          },
-          {
-            type: 'user_activity',
-            source: 'message_handler',
-            relevance: 0.6,
-            timestamp: Date.now() - 20000,
-          },
-          {
-            type: 'performance_metric',
-            source: 'metrics_collector',
-            relevance: 0.9,
-            timestamp: Date.now() - 10000,
-          },
-        ],
-        actions: [
-          {
-            name: 'ANALYZE_DATA',
-            status: 'completed',
-            timestamp: Date.now() - 25000,
-          },
-          {
-            name: 'MONITOR_SYSTEM',
-            status: 'running',
-            timestamp: Date.now() - 15000,
-          },
-        ],
-        errors: [
-          {
-            message: 'Network timeout',
-            timestamp: Date.now() - 35000,
-            phase: OODAPhase.OBSERVING,
+            type: 'system',
+            source: 'test',
+            data: { test: 'observation' },
+            timestamp: Date.now() - 5000,
           },
         ],
         orientation: {
-          resourceStatus: {
-            cpu: 45.5,
-            memory: 60.2,
-            disk: 75.8,
-            taskSlots: {
-              used: 2,
-              total: 5,
-            },
-          },
-          environmentalFactors: [
+          currentGoals: [
             {
-              type: 'network_latency',
-              value: 150,
-              impact: 0.3,
+              id: 'goal-1',
+              description: 'Test goal',
+              priority: 1,
+              progress: 0.5,
+              type: 'system',
+              status: 'active',
+              createdAt: Date.now() - 60000,
             },
           ],
+          strategies: [],
+          worldModel: {},
         },
-        metrics: {
-          cycleTime: 2500,
-          actionSuccessRate: 0.85,
-          errorRate: 0.1,
-          resourceEfficiency: 0.72,
-        },
-      },
-      goals: [
-        {
-          description: 'Learn from user interactions',
-          progress: 0.65,
-          priority: 1,
-        },
-        {
-          description: 'Maintain system health',
-          progress: 0.8,
-          priority: 2,
-        },
-        {
-          description: 'Complete pending tasks',
-          progress: 0.4,
-          priority: 3,
-        },
-      ],
+        decisions: [],
+        actions: [],
+        reflections: [],
+        errors: [],
+      }),
+      getMetrics: mock().mockReturnValue({
+        cycleTime: 5000,
+        actionSuccessRate: 0.85,
+        errorRate: 0.1,
+        decisionsPerCycle: 2,
+        resourceEfficiency: 0.9,
+        goalProgress: 0.7,
+      }),
     });
 
+    // Create mock runtime with OODA service
     mockRuntime = createMockRuntime({
       services: {
         [AutonomousServiceType.AUTONOMOUS]: mockOODAService,
       },
     });
-    
-    mockMessage = createMockMemory();
+
+    mockMemory = createMockMemory();
     mockState = createMockState();
   });
 
-  describe('provider structure', () => {
-    it('should have correct provider metadata', () => {
+  afterEach(() => {
+    mock.restore();
+  });
+
+  describe('Provider Properties', () => {
+    it('should have correct metadata', () => {
       expect(worldProvider.name).toBe('AUTONOMOUS_WORLD_CONTEXT');
-      expect(worldProvider.description).toContain('dynamic context about the autonomous world');
-      expect(worldProvider.dynamic).toBe(true);
-      expect(worldProvider.position).toBe(1);
-      expect(typeof worldProvider.get).toBe('function');
+      expect(worldProvider.description).toContain('OODA loop context');
+      expect(worldProvider.position).toBe(50);
     });
   });
 
-  describe('get method', () => {
-    it('should return comprehensive OODA context when service is active', async () => {
-      const result = await worldProvider.get(mockRuntime, mockMessage, mockState);
+  describe('get() method', () => {
+    it('should provide OODA context when service is running', async () => {
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
 
       expect(result).toBeDefined();
-      expect(result.text).toBeDefined();
+      expect(result.text).toContain('OODA Loop Context');
+      expect(result.text).toContain('Phase: OBSERVING');
+      expect(result.text).toContain('Run ID: test-run-123');
       expect(result.values).toBeDefined();
-      expect(result.data).toBeDefined();
-
-      // Check values structure
       expect(result.values!.autonomousActive).toBe(true);
-      expect(result.values!.oodaRunning).toBe(true);
-      expect(result.values!.currentPhase).toBe(OODAPhase.ORIENTING);
-      expect(result.values!.runId).toBe('run-123');
-      expect(typeof result.values!.uptime).toBe('number');
-      expect(result.values!.observationCount).toBe(3);
-      expect(result.values!.actionCount).toBe(2);
-      expect(result.values!.runningActions).toBe(1);
-      expect(result.values!.errorCount).toBe(1);
-
-      // Check goals structure
-      expect(Array.isArray(result.values!.goals)).toBe(true);
-      expect(result.values!.goals).toHaveLength(3);
-      expect(result.values!.goals[0]).toHaveProperty('description');
-      expect(result.values!.goals[0]).toHaveProperty('progress');
-      expect(result.values!.goals[0]).toHaveProperty('priority');
-
-      // Check resource status
-      expect(result.values!.resourceStatus).toBeDefined();
-      expect(result.values!.resourceStatus.cpu).toBe(45.5);
-      expect(result.values!.resourceStatus.memory).toBe(60.2);
-      expect(result.values!.resourceStatus.taskSlots.used).toBe(2);
-
-      // Check metrics
-      expect(result.values!.metrics).toBeDefined();
-      expect(result.values!.metrics.cycleTime).toBe(2500);
-      expect(result.values!.metrics.actionSuccessRate).toBe(0.85);
-
-      // Check recent observations
-      expect(Array.isArray(result.values!.recentObservations)).toBe(true);
-      expect(result.values!.recentObservations).toHaveLength(3);
-
-      // Check data
-      expect(result.data!.fullContext).toBeDefined();
+      expect(result.values!.currentPhase).toBe('OBSERVING');
     });
 
-    it('should format context text correctly', async () => {
-      const result = await worldProvider.get(mockRuntime, mockMessage, mockState);
-
-      expect(result.text).toContain('Current OODA Phase:');
-      expect(result.text).toContain('Run ID: run-123');
-      expect(result.text).toContain('Active for:');
-      expect(result.text).toContain('System Status:');
-      expect(result.text).toContain('3 observations collected');
-      expect(result.text).toContain('2 actions executed (1 running)');
-      expect(result.text).toContain('1 errors encountered');
-      expect(result.text).toContain('Resource Usage:');
-      expect(result.text).toContain('CPU: 45.5%');
-      expect(result.text).toContain('Memory: 60.2%');
-      expect(result.text).toContain('Task Slots: 2/5');
-      expect(result.text).toContain('Active Goals:');
-      expect(result.text).toContain('Learn from user interactions (Progress: 65%)');
-      expect(result.text).toContain('Recent Observations:');
-      expect(result.text).toContain('Performance Metrics:');
-      expect(result.text).toContain('Success Rate: 85.0%');
-      expect(result.text).toContain('Error Rate: 10.0%');
-    });
-
-    it('should handle OODA service not available', async () => {
-      const noServiceRuntime = createMockRuntime({
+    it('should handle missing OODA service', async () => {
+      const runtimeWithoutService = createMockRuntime({
         services: {},
       });
 
-      const result = await worldProvider.get(noServiceRuntime, mockMessage, mockState);
+      const result = await worldProvider.get(runtimeWithoutService, mockMemory, mockState);
 
-      expect(result.text).toBe('Autonomous OODA loop service is not active.');
+      expect(result.text).toContain('Autonomous mode is not active');
+      expect(result.values!.autonomousActive).toBe(false);
+      expect(result.values!.currentPhase).toBe('IDLE');
+    });
+
+    it('should handle service not running', async () => {
+      mockOODAService.isRunning.mockReturnValue(false);
+
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
+
+      expect(result.text).toContain('Autonomous mode is not active');
       expect(result.values!.autonomousActive).toBe(false);
     });
 
-    it('should handle runtime without getService method', async () => {
-      const limitedRuntime = createMockRuntime();
-      delete (limitedRuntime as any).getService;
+    it('should include goals in context', async () => {
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
 
-      const result = await worldProvider.get(limitedRuntime, mockMessage, mockState);
-
-      expect(result.text).toBe('Autonomous OODA loop service is not active.');
-      expect(result.values!.autonomousActive).toBe(false);
+      expect(result.text).toContain('Active Goals');
+      expect(result.text).toContain('Test goal');
+      expect(result.text).toContain('Priority: 1');
+      expect(result.text).toContain('Progress: 50%');
     });
 
-    it('should handle OODA service without active context', async () => {
-      const noContextService = createMockService('autonomous', {
-        currentContext: null,
-      });
+    it('should include observations in context', async () => {
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
 
-      const noContextRuntime = createMockRuntime({
-        services: {
-          [AutonomousServiceType.AUTONOMOUS]: noContextService,
-        },
-      });
-
-      const result = await worldProvider.get(noContextRuntime, mockMessage, mockState);
-
-      expect(result.text).toBe('OODA loop is running but no active context available.');
-      expect(result.values!.autonomousActive).toBe(true);
-      expect(result.values!.oodaRunning).toBe(true);
-      expect(result.values!.contextAvailable).toBe(false);
+      expect(result.text).toContain('Recent Observations');
+      expect(result.text).toContain('system observation');
     });
 
-    it('should handle minimal context without optional fields', async () => {
-      const minimalService = createMockService('autonomous', {
-        currentContext: {
-          phase: OODAPhase.OBSERVING,
-          runId: 'minimal-run',
-          startTime: Date.now() - 30000,
-        },
-        goals: [],
-      });
+    it('should include metrics when available', async () => {
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
 
-      const minimalRuntime = createMockRuntime({
-        services: {
-          [AutonomousServiceType.AUTONOMOUS]: minimalService,
-        },
-      });
-
-      const result = await worldProvider.get(minimalRuntime, mockMessage, mockState);
-
-      expect(result.values!.autonomousActive).toBe(true);
-      expect(result.values!.currentPhase).toBe(OODAPhase.OBSERVING);
-      expect(result.values!.observationCount).toBe(0);
-      expect(result.values!.actionCount).toBe(0);
-      expect(result.values!.errorCount).toBe(0);
-      expect(result.values!.goals).toEqual([]);
-      expect(result.text).toContain('0 observations collected');
-      expect(result.text).toContain('0 actions executed');
+      expect(result.text).toContain('Performance Metrics');
+      expect(result.text).toContain('Cycle Time: 5000ms');
+      expect(result.text).toContain('Success Rate: 85%');
+      expect(result.text).toContain('Error Rate: 10%');
     });
 
-    it('should format duration correctly', async () => {
-      // Test different duration formats
-      const testCases = [
-        { startTime: Date.now() - 500, expected: 'ms' },
-        { startTime: Date.now() - 5000, expected: 's' },
-        { startTime: Date.now() - 150000, expected: 'm' },
-        { startTime: Date.now() - 7200000, expected: 'h' },
+    it('should handle context without goals', async () => {
+      mockOODAService.getContext.mockReturnValue({
+        phase: OODAPhase.IDLE,
+        runId: 'test-run',
+        startTime: Date.now(),
+        endTime: null,
+        observations: [],
+        orientation: {
+          currentGoals: [],
+          strategies: [],
+          worldModel: {},
+        },
+        decisions: [],
+        actions: [],
+        reflections: [],
+        errors: [],
+      });
+
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
+
+      expect(result.text).toContain('No active goals');
+    });
+
+    it('should handle different OODA phases', async () => {
+      const phases = [
+        OODAPhase.OBSERVING,
+        OODAPhase.ORIENTING,
+        OODAPhase.DECIDING,
+        OODAPhase.ACTING,
+        OODAPhase.REFLECTING,
       ];
 
-      for (const testCase of testCases) {
-        const serviceWithTime = createMockService('autonomous', {
-          currentContext: {
-            phase: OODAPhase.ACTING,
-            runId: 'time-test',
-            startTime: testCase.startTime,
-          },
-          goals: [],
+      for (const phase of phases) {
+        mockOODAService.getCurrentPhase.mockReturnValue(phase);
+        mockOODAService.getContext.mockReturnValue({
+          phase,
+          runId: 'test-run',
+          startTime: Date.now(),
+          endTime: null,
+          observations: [],
+          orientation: { currentGoals: [], strategies: [], worldModel: {} },
+          decisions: [],
+          actions: [],
+          reflections: [],
+          errors: [],
         });
 
-        const runtimeWithTime = createMockRuntime({
-          services: {
-            [AutonomousServiceType.AUTONOMOUS]: serviceWithTime,
-          },
-        });
+        const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
 
-        const result = await worldProvider.get(runtimeWithTime, mockMessage, mockState);
-        expect(result.text).toMatch(new RegExp(`Active for: .*${testCase.expected}`));
+        expect(result.text).toContain(`Phase: ${phase}`);
+        expect(result.values!.currentPhase).toBe(phase);
       }
     });
 
-    it('should handle context with resource status but no metrics', async () => {
-      const noMetricsService = createMockService('autonomous', {
-        currentContext: {
-          phase: OODAPhase.DECIDING,
-          runId: 'no-metrics',
-          startTime: Date.now() - 45000,
-          orientation: {
-            resourceStatus: {
-              cpu: 30,
-              memory: 50,
-              disk: 20,
-              taskSlots: { used: 1, total: 3 },
-            },
+    it('should include recent actions when in ACTING phase', async () => {
+      mockOODAService.getCurrentPhase.mockReturnValue(OODAPhase.ACTING);
+      mockOODAService.getContext.mockReturnValue({
+        phase: OODAPhase.ACTING,
+        runId: 'test-run',
+        startTime: Date.now(),
+        endTime: null,
+        observations: [],
+        orientation: { currentGoals: [], strategies: [], worldModel: {} },
+        decisions: [],
+        actions: [
+          {
+            id: 'action-1',
+            actionName: 'TEST_ACTION',
+            parameters: {},
+            status: 'executing',
+            startTime: Date.now() - 1000,
           },
-        },
-        goals: [],
+        ],
+        reflections: [],
+        errors: [],
       });
 
-      const noMetricsRuntime = createMockRuntime({
-        services: {
-          [AutonomousServiceType.AUTONOMOUS]: noMetricsService,
-        },
-      });
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
 
-      const result = await worldProvider.get(noMetricsRuntime, mockMessage, mockState);
-
-      expect(result.text).toContain('Resource Usage:');
-      expect(result.text).toContain('CPU: 30%');
-      expect(result.text).not.toContain('Performance Metrics:');
-      expect(result.values!.resourceStatus).toBeDefined();
-      expect(result.values!.metrics).toBeUndefined();
+      expect(result.text).toContain('Current Actions');
+      expect(result.text).toContain('TEST_ACTION');
+      expect(result.text).toContain('executing');
     });
 
-    it('should limit recent observations to last 3', async () => {
-      const manyObservationsService = createMockService('autonomous', {
-        currentContext: {
-          phase: OODAPhase.REFLECTING,
-          runId: 'many-obs',
-          startTime: Date.now() - 120000,
-          observations: Array.from({ length: 10 }, (_, i) => ({
-            type: `observation_${i}`,
-            source: `source_${i}`,
-            relevance: 0.5 + (i * 0.05),
-            timestamp: Date.now() - (10000 * (10 - i)),
-          })),
-        },
-        goals: [],
+    it('should include decisions when in DECIDING phase', async () => {
+      mockOODAService.getCurrentPhase.mockReturnValue(OODAPhase.DECIDING);
+      mockOODAService.getContext.mockReturnValue({
+        phase: OODAPhase.DECIDING,
+        runId: 'test-run',
+        startTime: Date.now(),
+        endTime: null,
+        observations: [],
+        orientation: { currentGoals: [], strategies: [], worldModel: {} },
+        decisions: [
+          {
+            id: 'decision-1',
+            type: 'action',
+            actionName: 'BROWSE_WEB',
+            reasoning: 'Need to gather information',
+            confidence: 0.8,
+            priority: 1,
+            timestamp: Date.now() - 500,
+          },
+        ],
+        actions: [],
+        reflections: [],
+        errors: [],
       });
 
-      const manyObsRuntime = createMockRuntime({
-        services: {
-          [AutonomousServiceType.AUTONOMOUS]: manyObservationsService,
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
+
+      expect(result.text).toContain('Recent Decisions');
+      expect(result.text).toContain('BROWSE_WEB');
+      expect(result.text).toContain('Need to gather information');
+    });
+
+    it('should include reflections when in REFLECTING phase', async () => {
+      mockOODAService.getCurrentPhase.mockReturnValue(OODAPhase.REFLECTING);
+      mockOODAService.getContext.mockReturnValue({
+        phase: OODAPhase.REFLECTING,
+        runId: 'test-run',
+        startTime: Date.now(),
+        endTime: null,
+        observations: [],
+        orientation: { currentGoals: [], strategies: [], worldModel: {} },
+        decisions: [],
+        actions: [],
+        reflections: [
+          {
+            id: 'reflection-1',
+            content: 'Successfully completed task',
+            type: 'success',
+            timestamp: Date.now() - 100,
+          },
+        ],
+        errors: [],
+      });
+
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
+
+      expect(result.text).toContain('Reflections');
+      expect(result.text).toContain('Successfully completed task');
+    });
+
+    it('should include errors when present', async () => {
+      mockOODAService.getContext.mockReturnValue({
+        phase: OODAPhase.IDLE,
+        runId: 'test-run',
+        startTime: Date.now(),
+        endTime: null,
+        observations: [],
+        orientation: { currentGoals: [], strategies: [], worldModel: {} },
+        decisions: [],
+        actions: [],
+        reflections: [],
+        errors: [
+          {
+            phase: OODAPhase.ACTING,
+            error: 'Failed to execute action',
+            timestamp: Date.now() - 1000,
+          },
+        ],
+      });
+
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
+
+      expect(result.text).toContain('Recent Errors');
+      expect(result.text).toContain('Failed to execute action');
+      expect(result.text).toContain('ACTING');
+    });
+
+    it('should provide structured data for autonomous decision making', async () => {
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
+
+      expect(result.data).toBeDefined();
+      expect(result.data!.context).toBeDefined();
+      expect(result.data!.context).toHaveProperty('phase');
+      expect(result.data!.context).toHaveProperty('runId');
+      expect(result.data!.context).toHaveProperty('observations');
+      expect(result.data!.context).toHaveProperty('orientation');
+    });
+
+    it('should handle service errors gracefully', async () => {
+      mockOODAService.getContext.mockImplementation(() => {
+        throw new Error('Service error');
+      });
+
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
+
+      expect(result.text).toContain('Autonomous mode is not active');
+      expect(result.values!.autonomousActive).toBe(false);
+    });
+
+    it('should format duration correctly', async () => {
+      mockOODAService.getContext.mockReturnValue({
+        phase: OODAPhase.IDLE,
+        runId: 'test-run',
+        startTime: Date.now() - 65000, // 65 seconds ago
+        endTime: null,
+        observations: [],
+        orientation: { currentGoals: [], strategies: [], worldModel: {} },
+        decisions: [],
+        actions: [],
+        reflections: [],
+        errors: [],
+      });
+
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
+
+      expect(result.text).toContain('Duration:');
+      // Should show as "1m 5s" or similar
+    });
+
+    it('should handle completed cycles', async () => {
+      const startTime = Date.now() - 10000;
+      const endTime = Date.now() - 5000;
+
+      mockOODAService.getContext.mockReturnValue({
+        phase: OODAPhase.IDLE,
+        runId: 'test-run',
+        startTime,
+        endTime,
+        observations: [],
+        orientation: { currentGoals: [], strategies: [], worldModel: {} },
+        decisions: [],
+        actions: [],
+        reflections: [],
+        errors: [],
+        metrics: {
+          cycleTime: 5000,
+          actionSuccessRate: 1,
+          errorRate: 0,
+          decisionsPerCycle: 3,
+          resourceEfficiency: 0.95,
+          goalProgress: 0.8,
         },
       });
 
-      const result = await worldProvider.get(manyObsRuntime, mockMessage, mockState);
+      const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
 
-      expect(result.values!.observationCount).toBe(10);
-      expect(result.values!.recentObservations).toHaveLength(3);
-      // Should contain the last 3 observations
-      expect(result.values!.recentObservations[0].type).toBe('observation_7');
-      expect(result.values!.recentObservations[1].type).toBe('observation_8');
-      expect(result.values!.recentObservations[2].type).toBe('observation_9');
+      expect(result.text).toContain('Cycle completed');
     });
   });
 
-  describe('error handling', () => {
-    it('should handle service access errors gracefully', async () => {
-      const errorRuntime = createMockRuntime();
-      errorRuntime.getService = vi.fn().mockImplementation(() => {
-        throw new Error('Service access denied');
-      });
+  describe('Integration', () => {
+    it('should work with real OODA service patterns', async () => {
+      // Simulate a real OODA cycle progression
+      const phases = [
+        OODAPhase.OBSERVING,
+        OODAPhase.ORIENTING,
+        OODAPhase.DECIDING,
+        OODAPhase.ACTING,
+        OODAPhase.REFLECTING,
+      ];
 
-      const result = await worldProvider.get(errorRuntime, mockMessage, mockState);
+      for (const phase of phases) {
+        mockOODAService.getCurrentPhase.mockReturnValue(phase);
+        mockOODAService.getContext.mockReturnValue({
+          phase,
+          runId: 'cycle-123',
+          startTime: Date.now() - 30000,
+          endTime: null,
+          observations: phase === OODAPhase.OBSERVING ? [{ type: 'test', data: {} }] : [],
+          orientation: {
+            currentGoals: [{ id: '1', description: 'Test', priority: 1 }],
+            strategies: [],
+            worldModel: {},
+          },
+          decisions: phase === OODAPhase.DECIDING ? [{ id: '1', type: 'action' }] : [],
+          actions: phase === OODAPhase.ACTING ? [{ id: '1', actionName: 'TEST' }] : [],
+          reflections: phase === OODAPhase.REFLECTING ? [{ id: '1', content: 'Done' }] : [],
+          errors: [],
+        });
 
-      expect(result.text).toBe('Failed to retrieve autonomous world context.');
-      expect(result.values!.autonomousActive).toBe(false);
-      expect(result.values!.error).toBe('Service access denied');
+        const result = await worldProvider.get(mockRuntime, mockMemory, mockState);
+
+        expect(result.values!.currentPhase).toBe(phase);
+        expect(result.text).toContain(phase);
+      }
     });
 
-    it('should handle null message gracefully', async () => {
-      const result = await worldProvider.get(mockRuntime, null as any, mockState);
+    it('should provide consistent data structure across calls', async () => {
+      const result1 = await worldProvider.get(mockRuntime, mockMemory, mockState);
+      const result2 = await worldProvider.get(mockRuntime, mockMemory, mockState);
 
-      expect(result).toBeDefined();
-      expect(result.values!.autonomousActive).toBe(true);
-    });
-
-    it('should handle null state gracefully', async () => {
-      const result = await worldProvider.get(mockRuntime, mockMessage, null as any);
-
-      expect(result).toBeDefined();
-      expect(result.values!.autonomousActive).toBe(true);
-    });
-
-    it('should handle corrupted context data', async () => {
-      const corruptedService = createMockService('autonomous', {
-        currentContext: {
-          phase: 'INVALID_PHASE' as any,
-          // Missing required fields
-        },
-        goals: null as any, // Invalid goals
-      });
-
-      const corruptedRuntime = createMockRuntime({
-        services: {
-          [AutonomousServiceType.AUTONOMOUS]: corruptedService,
-        },
-      });
-
-      const result = await worldProvider.get(corruptedRuntime, mockMessage, mockState);
-
-      expect(result).toBeDefined();
-      expect(result.values!.autonomousActive).toBe(true);
-      // Should handle gracefully even with corrupted data
+      // Structure should be consistent
+      expect(Object.keys(result1.values!)).toEqual(Object.keys(result2.values!));
+      expect(result1.data).toBeDefined();
+      expect(result2.data).toBeDefined();
     });
   });
 });

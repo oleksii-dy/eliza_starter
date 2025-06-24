@@ -1,13 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Assuming Card components
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Assuming Card components
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatAgentName, cn } from '@/lib/utils';
-import type { Agent, UUID, Character } from '@elizaos/core';
-import { AgentStatus as CoreAgentStatus } from '@elizaos/core';
-import { InfoIcon, MessageSquare, Settings, Play, UserX, Loader2, PowerOff } from 'lucide-react'; // Icons for actions
+import { AgentStatus as CoreAgentStatus, type Agent } from '@elizaos/core';
+import { MessageSquare, Settings, Play, Loader2, PowerOff } from 'lucide-react'; // Icons for actions
 import { useAgentManagement } from '@/hooks/use-agent-management'; // For start/stop logic
 import type { AgentWithStatus } from '@/types';
 import clientLogger from '@/lib/logger'; // Assuming you have a logger
@@ -39,7 +38,7 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
   const isStopping = isAgentStopping(agent.id);
 
   const agentForMutation: Agent = {
-    id: agent.id!,
+    id: agent.id,
     name: agentName,
     username: agent.username || agentName,
     bio: agent.bio || '',

@@ -5,8 +5,8 @@ import path from 'path';
 // Fix the prompts to match exactly what's in the query file
 const correctedResults = [
   {
-    id: "51",
-    prompt: "From 2020 to 2050, how many elderly people will there be in Japan? What is their consumption potential across various aspects such as clothing, food, housing, and transportation? Based on population projections, elderly consumer willingness, and potential changes in their consumption habits, please produce a market size analysis report for the elderly demographic.",
+    id: '51',
+    prompt: 'From 2020 to 2050, how many elderly people will there be in Japan? What is their consumption potential across various aspects such as clothing, food, housing, and transportation? Based on population projections, elderly consumer willingness, and potential changes in their consumption habits, please produce a market size analysis report for the elderly demographic.',
     article: `# Japan's Aging Society: Market Size Analysis for Elderly Demographics (2020-2050)
 
 ## Executive Summary
@@ -53,8 +53,8 @@ Key strategic recommendations include: early investment in technology platforms 
 [4] Nomura Research Institute. Silver Market Research Report 2020-2050. Tokyo: NRI, 2020.`
   },
   {
-    id: "62",
-    prompt: "What are the most effective approaches to scaling ion trap quantum computing from small-scale demonstration projects to large-scale systems capable of solving real-world problems? This research should investigate the various proposed scaling strategies, assess their feasibility, and evaluate which approaches are most likely to succeed based on current technological advancements and practical implementation challenges.",
+    id: '62',
+    prompt: 'What are the most effective approaches to scaling ion trap quantum computing from small-scale demonstration projects to large-scale systems capable of solving real-world problems? This research should investigate the various proposed scaling strategies, assess their feasibility, and evaluate which approaches are most likely to succeed based on current technological advancements and practical implementation challenges.',
     article: `# Scaling Ion Trap Quantum Computing: Pathways to Large-Scale Implementation
 
 ## Executive Summary
@@ -107,8 +107,8 @@ Key strategic recommendations include: prioritizing manufacturing process develo
 [4] Pino, J. M. et al. "Demonstration of the trapped-ion quantum CCD computer architecture." Nature 592, 209-213 (2021).`
   },
   {
-    id: "70",
-    prompt: "Trace the evolution from Java Servlets to the Spring Boot framework. Explain the problems each iteration aimed to solve, and detail the core functionalities of the Spring framework along with essential knowledge required for developers working with it.",
+    id: '70',
+    prompt: 'Trace the evolution from Java Servlets to the Spring Boot framework. Explain the problems each iteration aimed to solve, and detail the core functionalities of the Spring framework along with essential knowledge required for developers working with it.',
     article: `# The Evolution from Java Servlets to Spring Boot: A Comprehensive Framework Journey
 
 ## Executive Summary
@@ -194,7 +194,7 @@ async function fixBenchmarkData() {
   await fs.writeFile(rawPath, outputContent);
   await fs.writeFile(cleanedPath, outputContent);
 
-  console.log(`✅ Fixed benchmark data saved to both raw and cleaned directories`);
+  console.log('✅ Fixed benchmark data saved to both raw and cleaned directories');
   console.log(`📊 Updated ${correctedResults.length} research reports with exact prompt matches`);
 
   return correctedResults;

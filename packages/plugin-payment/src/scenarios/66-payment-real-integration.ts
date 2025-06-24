@@ -33,19 +33,19 @@ const paymentRealIntegrationScenario: any = {
 
   // Add evaluator function for test compatibility
   evaluator: (response: string) => {
-    const hasBlockchainMention = 
+    const hasBlockchainMention =
       response.toLowerCase().includes('blockchain') ||
       response.toLowerCase().includes('wallet') ||
       response.toLowerCase().includes('metamask') ||
       response.toLowerCase().includes('transaction') ||
       response.toLowerCase().includes('gas');
-    
-    const hasIntegrationMention = 
+
+    const hasIntegrationMention =
       response.toLowerCase().includes('connect') ||
       response.toLowerCase().includes('approve') ||
       response.toLowerCase().includes('fees') ||
       response.toLowerCase().includes('gwei');
-    
+
     return hasBlockchainMention || hasIntegrationMention;
   },
 
@@ -140,7 +140,7 @@ Research services cost 1 USDC. Always inform users of costs before processing pa
 
             // Check if wallet was created
             const balances = await paymentService.getUserBalance(userId, runtime);
-            
+
             if (balances.size === 0) {
               return { success: false, reason: 'No wallets created' };
             }
@@ -209,7 +209,7 @@ Research services cost 1 USDC. Always inform users of costs before processing pa
     const { state } = context;
     const { dbService } = state;
     const db = dbService.getDatabase();
-    
+
     try {
       // Clean up test data
       await db.delete('userWallets').where({ userId: 'b2c3d4e5-f6a7-8901-bcde-f23456789012' });
@@ -266,7 +266,7 @@ Always generate unique verification codes for payment confirmations.`,
     beforeRun: async (context: any) => {
       const runtime = context.runtime;
       const paymentService = runtime.getService('payment');
-      
+
       // Update settings to require confirmation
       await paymentService.updateSettings({
         requireConfirmation: true,
@@ -310,11 +310,11 @@ Always generate unique verification codes for payment confirmations.`,
             const { runtime } = context;
             const dbService = runtime.getService('database');
             const db = dbService.getDatabase();
-            
+
             const pendingPayments = await db
               .select()
               .from('paymentRequests')
-              .where({ 
+              .where({
                 userId: 'b2c3d4e5-f6a7-8901-bcde-f23456789012',
                 requiresConfirmation: true,
               })
@@ -326,7 +326,7 @@ Always generate unique verification codes for payment confirmations.`,
 
             const payment = pendingPayments[0];
             const metadata = payment.metadata as any;
-            
+
             if (!metadata?.verificationCode || metadata.verificationCode === '123456') {
               return { success: false, reason: 'No unique verification code' };
             }
@@ -360,7 +360,7 @@ Always generate unique verification codes for payment confirmations.`,
   cleanup: async (context: any) => {
     const { state } = context;
     const { paymentService } = state;
-    
+
     // Reset settings
     await paymentService.updateSettings({
       requireConfirmation: false,
@@ -370,4 +370,4 @@ Always generate unique verification codes for payment confirmations.`,
 };
 
 export default paymentRealIntegrationScenario;
-export { paymentConfirmationScenario }; 
+export { paymentConfirmationScenario };

@@ -1,4 +1,4 @@
-import type { Scenario } from "../types.js"
+import type { Scenario } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const pluginWorkflowEdgeCasesScenario: Scenario = {
@@ -44,9 +44,9 @@ export const pluginWorkflowEdgeCasesScenario: Scenario = {
 Always prioritize user experience and provide helpful guidance throughout the process.`,
       plugins: [
         '@elizaos/plugin-plugin-manager',
-        '@elizaos/plugin-autocoder', 
+        '@elizaos/plugin-autocoder',
         '@elizaos/plugin-secrets-manager',
-        '@elizaos/plugin-ngrok'
+        '@elizaos/plugin-ngrok',
       ],
       script: { steps: [] },
     },
@@ -58,7 +58,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         steps: [
           {
             type: 'message',
-            content: 'I want to create a plugin for GitHub integration that can list repositories and create issues. But I don\'t want to reinvent the wheel if something similar already exists.',
+            content:
+              "I want to create a plugin for GitHub integration that can list repositories and create issues. But I don't want to reinvent the wheel if something similar already exists.",
           },
           {
             type: 'wait',
@@ -66,7 +67,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
           },
           {
             type: 'message',
-            content: 'Hmm, if there\'s already a GitHub plugin, can we extend it instead? What would be the pros and cons of each approach?',
+            content:
+              "Hmm, if there's already a GitHub plugin, can we extend it instead? What would be the pros and cons of each approach?",
           },
           {
             type: 'wait',
@@ -74,7 +76,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
           },
           {
             type: 'message',
-            content: 'Ok, let\'s go with your recommendation. But I forgot my GitHub token - can you help me get set up with the right credentials?',
+            content:
+              "Ok, let's go with your recommendation. But I forgot my GitHub token - can you help me get set up with the right credentials?",
           },
           {
             type: 'wait',
@@ -82,7 +85,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
           },
           {
             type: 'message',
-            content: 'Actually, I just realized I need this to work with both GitHub and GitLab. Can the plugin support multiple Git platforms?',
+            content:
+              'Actually, I just realized I need this to work with both GitHub and GitLab. Can the plugin support multiple Git platforms?',
           },
           {
             type: 'wait',
@@ -90,7 +94,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
           },
           {
             type: 'message',
-            content: 'What if something goes wrong during development? How do we handle errors and retry failed builds?',
+            content:
+              'What if something goes wrong during development? How do we handle errors and retry failed builds?',
           },
           {
             type: 'wait',
@@ -98,7 +103,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
           },
           {
             type: 'message',
-            content: 'This is taking a while. Can you give me an estimated completion time and show me what\'s happening under the hood?',
+            content:
+              "This is taking a while. Can you give me an estimated completion time and show me what's happening under the hood?",
           },
           {
             type: 'wait',
@@ -106,13 +112,14 @@ Always prioritize user experience and provide helpful guidance throughout the pr
           },
           {
             type: 'message',
-            content: 'Perfect! Now what if I want to update this plugin later with new features? How does the update process work?',
+            content:
+              'Perfect! Now what if I want to update this plugin later with new features? How does the update process work?',
           },
         ],
         personality: 'curious, thorough, occasionally impatient, security-conscious',
         goals: [
           'understand all available options',
-          'make informed decisions about plugin architecture', 
+          'make informed decisions about plugin architecture',
           'ensure robust error handling',
           'plan for future extensibility',
           'optimize development workflow',
@@ -128,10 +135,10 @@ Always prioritize user experience and provide helpful guidance throughout the pr
     environment: {
       plugins: [
         '@elizaos/plugin-plugin-manager',
-        '@elizaos/plugin-autocoder', 
+        '@elizaos/plugin-autocoder',
         '@elizaos/plugin-secrets-manager',
         '@elizaos/plugin-ngrok',
-        '@elizaos/plugin-github' // Existing plugin to test discovery
+        '@elizaos/plugin-github', // Existing plugin to test discovery
       ],
       existingPlugins: ['@elizaos/plugin-github'],
       complexRequirements: true,
@@ -159,7 +166,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         description: 'Comprehensive plugin discovery performed',
         config: {
           expectedValue: 'SEARCH_PLUGINS',
-          criteria: 'Agent should search for existing GitHub/Git plugins and analyze their capabilities thoroughly',
+          criteria:
+            'Agent should search for existing GitHub/Git plugins and analyze their capabilities thoroughly',
         },
         weight: 4,
       },
@@ -168,7 +176,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         type: 'llm' as const,
         description: 'Intelligent recommendation provided',
         config: {
-          criteria: 'Agent should analyze existing GitHub plugin and provide pros/cons of extending vs creating new',
+          criteria:
+            'Agent should analyze existing GitHub plugin and provide pros/cons of extending vs creating new',
         },
         weight: 4,
       },
@@ -178,7 +187,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         description: 'Guided secret collection process',
         config: {
           expectedValue: 'requestSecretForm',
-          criteria: 'Agent should detect missing GitHub token and guide user through secure collection',
+          criteria:
+            'Agent should detect missing GitHub token and guide user through secure collection',
         },
         weight: 4,
       },
@@ -187,7 +197,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         type: 'llm' as const,
         description: 'Multi-platform architecture consideration',
         config: {
-          criteria: 'Agent should address GitHub + GitLab support requirements and suggest appropriate architecture',
+          criteria:
+            'Agent should address GitHub + GitLab support requirements and suggest appropriate architecture',
         },
         weight: 3,
       },
@@ -196,7 +207,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         type: 'llm' as const,
         description: 'Error handling strategy explained',
         config: {
-          criteria: 'Agent should explain error handling, retry mechanisms, and recovery procedures',
+          criteria:
+            'Agent should explain error handling, retry mechanisms, and recovery procedures',
         },
         weight: 3,
       },
@@ -225,7 +237,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         type: 'llm' as const,
         description: 'Dependency conflict detection',
         config: {
-          criteria: 'Agent should identify potential conflicts between GitHub and GitLab dependencies',
+          criteria:
+            'Agent should identify potential conflicts between GitHub and GitLab dependencies',
         },
         weight: 3,
       },
@@ -243,7 +256,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         type: 'llm' as const,
         description: 'User experience optimization',
         config: {
-          criteria: 'Agent should minimize user decision fatigue and provide clear guidance throughout',
+          criteria:
+            'Agent should minimize user decision fatigue and provide clear guidance throughout',
         },
         weight: 4,
       },
@@ -257,7 +271,8 @@ Always prioritize user experience and provide helpful guidance throughout the pr
           type: 'llm' as const,
           description: 'Complex scenario handled with excellence',
           config: {
-            criteria: 'Agent provided intelligent recommendations, guided user through challenges, and optimized the development experience',
+            criteria:
+              'Agent provided intelligent recommendations, guided user through challenges, and optimized the development experience',
           },
         },
       },

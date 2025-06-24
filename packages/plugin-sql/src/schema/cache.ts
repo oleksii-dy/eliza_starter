@@ -6,7 +6,7 @@ import { getSchemaFactory, createLazyTableProxy } from './factory';
  * ensuring the database type is set before schema creation.
  * Foreign key references are removed to avoid circular dependencies.
  * The database constraints will be enforced at the application level.
- 
+
  */
 function createCacheTable() {
   const factory = getSchemaFactory();
@@ -37,6 +37,6 @@ function createCacheTable() {
 /**
  * Represents a table for caching data.
  * Uses lazy initialization to ensure proper database type configuration.
- 
+
  */
 export const cacheTable = createLazyTableProxy(createCacheTable);

@@ -6,7 +6,7 @@ import runtimeTests from '../__tests__/runtime';
 export const testSuites: TestSuite[] = [
   // Runtime tests using real ElizaOS runtime with LLM
   runtimeTests,
-  
+
   // Comprehensive E2E test suite
   comprehensiveTests,
 ];

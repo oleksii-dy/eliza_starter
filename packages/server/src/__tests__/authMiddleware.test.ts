@@ -2,7 +2,7 @@
  * Unit tests for authMiddleware.ts
  */
 
-import { describe, it, expect, beforeEach, afterEach, mock, jest } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { type Request, type Response, type NextFunction } from 'express';
 import { apiKeyAuthMiddleware } from '../authMiddleware';
 import { logger } from '@elizaos/core';
@@ -13,10 +13,10 @@ mock.module('@elizaos/core', async () => {
   return {
     ...actual,
     logger: {
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-      debug: jest.fn(),
+      info: mock(),
+      error: mock(),
+      warn: mock(),
+      debug: mock(),
     },
   };
 });
@@ -39,12 +39,12 @@ describe('API Key Auth Middleware', () => {
     };
 
     mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      send: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
+      status: mock().mockReturnThis(),
+      send: mock().mockReturnThis(),
+      json: mock().mockReturnThis(),
     };
 
-    mockNext = jest.fn();
+    mockNext = mock();
     mock.restore();
   });
 

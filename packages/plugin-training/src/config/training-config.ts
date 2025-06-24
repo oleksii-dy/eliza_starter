@@ -1,6 +1,6 @@
 /**
  * Central Configuration System for Plugin Training
- * 
+ *
  * This replaces hard-coded values throughout the codebase with configurable settings
  * that can be set via environment variables, runtime settings, or configuration files.
  */
@@ -189,37 +189,40 @@ export class TrainingConfigurationManager {
     return {
       togetherAi: {
         baseUrl: this.getSetting('TOGETHER_AI_BASE_URL', 'https://api.together.xyz/v1'),
-        timeout: parseInt(this.getSetting('TOGETHER_AI_TIMEOUT', '30000')),
-        maxRetries: parseInt(this.getSetting('TOGETHER_AI_MAX_RETRIES', '3')),
-        defaultMaxTokens: parseInt(this.getSetting('TOGETHER_AI_DEFAULT_MAX_TOKENS', '100')),
+        timeout: parseInt(this.getSetting('TOGETHER_AI_TIMEOUT', '30000'), 10),
+        maxRetries: parseInt(this.getSetting('TOGETHER_AI_MAX_RETRIES', '3'), 10),
+        defaultMaxTokens: parseInt(this.getSetting('TOGETHER_AI_DEFAULT_MAX_TOKENS', '100'), 10),
         rateLimit: {
-          requestsPerMinute: parseInt(this.getSetting('TOGETHER_AI_RATE_LIMIT', '60')),
-          delayBetweenRequests: parseInt(this.getSetting('TOGETHER_AI_DELAY', '1000')),
+          requestsPerMinute: parseInt(this.getSetting('TOGETHER_AI_RATE_LIMIT', '60'), 10),
+          delayBetweenRequests: parseInt(this.getSetting('TOGETHER_AI_DELAY', '1000'), 10),
         },
       },
       anthropic: {
         baseUrl: this.getSetting('ANTHROPIC_BASE_URL', 'https://api.anthropic.com'),
-        proxyPort: parseInt(this.getSetting('ANTHROPIC_PROXY_PORT', '8001')),
+        proxyPort: parseInt(this.getSetting('ANTHROPIC_PROXY_PORT', '8001'), 10),
         requestSizeLimit: this.getSetting('ANTHROPIC_REQUEST_SIZE_LIMIT', '10mb'),
-        contextWindowSize: parseInt(this.getSetting('ANTHROPIC_CONTEXT_WINDOW', '3')),
+        contextWindowSize: parseInt(this.getSetting('ANTHROPIC_CONTEXT_WINDOW', '3'), 10),
         tokenEstimationRatio: parseFloat(this.getSetting('ANTHROPIC_TOKEN_RATIO', '4')),
       },
       github: {
         apiUrl: this.getSetting('GITHUB_API_URL', 'https://api.github.com'),
-        defaultRepository: this.getSetting('GITHUB_DEFAULT_REPO', 'https://github.com/elizaOS/eliza.git'),
-        timeout: parseInt(this.getSetting('GITHUB_TIMEOUT', '120000')),
+        defaultRepository: this.getSetting(
+          'GITHUB_DEFAULT_REPO',
+          'https://github.com/elizaOS/eliza.git'
+        ),
+        timeout: parseInt(this.getSetting('GITHUB_TIMEOUT', '120000'), 10),
         rateLimitDelay: {
-          withToken: parseInt(this.getSetting('GITHUB_DELAY_WITH_TOKEN', '50')),
-          withoutToken: parseInt(this.getSetting('GITHUB_DELAY_WITHOUT_TOKEN', '1000')),
+          withToken: parseInt(this.getSetting('GITHUB_DELAY_WITH_TOKEN', '50'), 10),
+          withoutToken: parseInt(this.getSetting('GITHUB_DELAY_WITHOUT_TOKEN', '1000'), 10),
         },
         retryConfig: {
-          maxRetries: parseInt(this.getSetting('GITHUB_MAX_RETRIES', '3')),
-          baseDelay: parseInt(this.getSetting('GITHUB_RETRY_DELAY', '2000')),
+          maxRetries: parseInt(this.getSetting('GITHUB_MAX_RETRIES', '3'), 10),
+          baseDelay: parseInt(this.getSetting('GITHUB_RETRY_DELAY', '2000'), 10),
         },
       },
       huggingFace: {
         baseUrl: this.getSetting('HUGGINGFACE_BASE_URL', 'https://huggingface.co'),
-        timeout: parseInt(this.getSetting('HUGGINGFACE_TIMEOUT', '30000')),
+        timeout: parseInt(this.getSetting('HUGGINGFACE_TIMEOUT', '30000'), 10),
       },
     };
   }
@@ -228,21 +231,21 @@ export class TrainingConfigurationManager {
     // Load model pricing from environment or use defaults
     const pricingOverrides = this.getSetting('MODEL_PRICING_OVERRIDES', '');
     let pricing: { [key: string]: { inputPrice: number; outputPrice: number } } = {
-      'deepseek-ai/DeepSeek-R1': { 
-        inputPrice: parseFloat(this.getSetting('DEEPSEEK_R1_INPUT_PRICE', '3.0')), 
-        outputPrice: parseFloat(this.getSetting('DEEPSEEK_R1_OUTPUT_PRICE', '7.0')) 
+      'deepseek-ai/DeepSeek-R1': {
+        inputPrice: parseFloat(this.getSetting('DEEPSEEK_R1_INPUT_PRICE', '3.0')),
+        outputPrice: parseFloat(this.getSetting('DEEPSEEK_R1_OUTPUT_PRICE', '7.0')),
       },
-      'deepseek-ai/DeepSeek-R1-Distill-Llama-70B': { 
-        inputPrice: parseFloat(this.getSetting('DEEPSEEK_LLAMA_70B_INPUT_PRICE', '2.0')), 
-        outputPrice: parseFloat(this.getSetting('DEEPSEEK_LLAMA_70B_OUTPUT_PRICE', '2.0')) 
+      'deepseek-ai/DeepSeek-R1-Distill-Llama-70B': {
+        inputPrice: parseFloat(this.getSetting('DEEPSEEK_LLAMA_70B_INPUT_PRICE', '2.0')),
+        outputPrice: parseFloat(this.getSetting('DEEPSEEK_LLAMA_70B_OUTPUT_PRICE', '2.0')),
       },
-      'deepseek-ai/DeepSeek-R1-Distill-Qwen-14B': { 
-        inputPrice: parseFloat(this.getSetting('DEEPSEEK_QWEN_14B_INPUT_PRICE', '1.0')), 
-        outputPrice: parseFloat(this.getSetting('DEEPSEEK_QWEN_14B_OUTPUT_PRICE', '1.0')) 
+      'deepseek-ai/DeepSeek-R1-Distill-Qwen-14B': {
+        inputPrice: parseFloat(this.getSetting('DEEPSEEK_QWEN_14B_INPUT_PRICE', '1.0')),
+        outputPrice: parseFloat(this.getSetting('DEEPSEEK_QWEN_14B_OUTPUT_PRICE', '1.0')),
       },
-      'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B': { 
-        inputPrice: parseFloat(this.getSetting('DEEPSEEK_QWEN_1_5B_INPUT_PRICE', '0.2')), 
-        outputPrice: parseFloat(this.getSetting('DEEPSEEK_QWEN_1_5B_OUTPUT_PRICE', '0.2')) 
+      'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B': {
+        inputPrice: parseFloat(this.getSetting('DEEPSEEK_QWEN_1_5B_INPUT_PRICE', '0.2')),
+        outputPrice: parseFloat(this.getSetting('DEEPSEEK_QWEN_1_5B_OUTPUT_PRICE', '0.2')),
       },
     };
 
@@ -269,10 +272,13 @@ export class TrainingConfigurationManager {
         '70B': parseFloat(this.getSetting('MODEL_SIZE_70B', '140')),
       },
       training: {
-        epochs: parseInt(this.getSetting('MODEL_TRAINING_EPOCHS', '3')),
+        epochs: parseInt(this.getSetting('MODEL_TRAINING_EPOCHS', '3'), 10),
         learningRate: parseFloat(this.getSetting('MODEL_TRAINING_LEARNING_RATE', '1e-5')),
-        batchSize: parseInt(this.getSetting('MODEL_TRAINING_BATCH_SIZE', '1')),
-        maxSequenceLength: parseInt(this.getSetting('MODEL_TRAINING_MAX_SEQUENCE_LENGTH', '2048')),
+        batchSize: parseInt(this.getSetting('MODEL_TRAINING_BATCH_SIZE', '1'), 10),
+        maxSequenceLength: parseInt(
+          this.getSetting('MODEL_TRAINING_MAX_SEQUENCE_LENGTH', '2048'),
+          10
+        ),
       },
       sizeThresholds: {
         localInference: parseFloat(this.getSetting('MODEL_SIZE_THRESHOLD_LOCAL', '3')),
@@ -280,9 +286,18 @@ export class TrainingConfigurationManager {
         largeModel: parseFloat(this.getSetting('MODEL_SIZE_THRESHOLD_LARGE', '50')),
       },
       defaults: {
-        shouldRespond: this.getSetting('DEFAULT_SHOULD_RESPOND_MODEL', 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'),
-        planning: this.getSetting('DEFAULT_PLANNING_MODEL', 'deepseek-ai/DeepSeek-R1-Distill-Qwen-14B'),
-        coding: this.getSetting('DEFAULT_CODING_MODEL', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B'),
+        shouldRespond: this.getSetting(
+          'DEFAULT_SHOULD_RESPOND_MODEL',
+          'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
+        ),
+        planning: this.getSetting(
+          'DEFAULT_PLANNING_MODEL',
+          'deepseek-ai/DeepSeek-R1-Distill-Qwen-14B'
+        ),
+        coding: this.getSetting(
+          'DEFAULT_CODING_MODEL',
+          'deepseek-ai/DeepSeek-R1-Distill-Llama-70B'
+        ),
         reasoning: this.getSetting('DEFAULT_REASONING_MODEL', 'deepseek-ai/DeepSeek-R1'),
       },
     };
@@ -308,8 +323,8 @@ export class TrainingConfigurationManager {
           medium: parseFloat(this.getSetting('QUALITY_THRESHOLD_MEDIUM', '0.5')),
           low: parseFloat(this.getSetting('QUALITY_THRESHOLD_LOW', '0.0')),
         },
-        maxDataPoints: parseInt(this.getSetting('MAX_DATA_POINTS', '10000')),
-        minDataPoints: parseInt(this.getSetting('MIN_DATA_POINTS', '100')),
+        maxDataPoints: parseInt(this.getSetting('MAX_DATA_POINTS', '10000'), 10),
+        minDataPoints: parseInt(this.getSetting('MIN_DATA_POINTS', '100'), 10),
         minQualityScore: parseFloat(this.getSetting('MIN_QUALITY_SCORE', '0.7')),
       },
       formats: {
@@ -323,19 +338,25 @@ export class TrainingConfigurationManager {
   private loadAutomationConfiguration(): AutomationConfiguration {
     return {
       dataCollection: {
-        saveInterval: parseInt(this.getSetting('DATA_COLLECTION_SAVE_INTERVAL', '300000')), // 5 minutes
-        maxDataPoints: parseInt(this.getSetting('DATA_COLLECTION_MAX_POINTS', '10000')),
+        saveInterval: parseInt(this.getSetting('DATA_COLLECTION_SAVE_INTERVAL', '300000'), 10), // 5 minutes
+        maxDataPoints: parseInt(this.getSetting('DATA_COLLECTION_MAX_POINTS', '10000'), 10),
         minQualityScore: parseFloat(this.getSetting('DATA_COLLECTION_MIN_QUALITY', '0.7')),
-        collectDuration: parseInt(this.getSetting('DATA_COLLECTION_DURATION', '3600000')), // 1 hour
+        collectDuration: parseInt(this.getSetting('DATA_COLLECTION_DURATION', '3600000'), 10), // 1 hour
       },
       training: {
-        statusCheckInterval: parseInt(this.getSetting('TRAINING_STATUS_CHECK_INTERVAL', '60000')), // 1 minute
-        deploymentCheckInterval: parseInt(this.getSetting('TRAINING_DEPLOYMENT_CHECK_INTERVAL', '30000')), // 30 seconds
+        statusCheckInterval: parseInt(
+          this.getSetting('TRAINING_STATUS_CHECK_INTERVAL', '60000'),
+          10
+        ), // 1 minute
+        deploymentCheckInterval: parseInt(
+          this.getSetting('TRAINING_DEPLOYMENT_CHECK_INTERVAL', '30000'),
+          10
+        ), // 30 seconds
         localInfrastructureCost: parseFloat(this.getSetting('LOCAL_INFRASTRUCTURE_COST', '200')),
         autoDeployment: {
           enabled: this.getSetting('AUTO_DEPLOYMENT_ENABLED', 'false') === 'true',
           budgetLimit: parseFloat(this.getSetting('AUTO_DEPLOYMENT_BUDGET_LIMIT', '100')),
-          expectedUsage: parseInt(this.getSetting('AUTO_DEPLOYMENT_EXPECTED_USAGE', '1000')),
+          expectedUsage: parseInt(this.getSetting('AUTO_DEPLOYMENT_EXPECTED_USAGE', '1000'), 10),
         },
       },
       cost: {
@@ -413,16 +434,27 @@ export class TrainingConfigurationManager {
    */
   public getModelTrainingConfig() {
     return {
-      defaultBaseModel: this.getSetting('MODEL_TRAINING_DEFAULT_BASE_MODEL', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B'),
-      defaultTrainingFile: this.getSetting('MODEL_TRAINING_DEFAULT_FILE', './training-output/together-ai-training.jsonl'),
+      defaultBaseModel: this.getSetting(
+        'MODEL_TRAINING_DEFAULT_BASE_MODEL',
+        'deepseek-ai/DeepSeek-R1-Distill-Llama-70B'
+      ),
+      defaultTrainingFile: this.getSetting(
+        'MODEL_TRAINING_DEFAULT_FILE',
+        './training-output/together-ai-training.jsonl'
+      ),
       defaultModelSuffix: this.getSetting('MODEL_TRAINING_DEFAULT_SUFFIX', 'eliza-trained'),
-      defaultLearningRate: parseFloat(this.getSetting('MODEL_TRAINING_DEFAULT_LEARNING_RATE', '1e-5')),
-      defaultEpochs: parseInt(this.getSetting('MODEL_TRAINING_DEFAULT_EPOCHS', '3')),
-      defaultBatchSize: parseInt(this.getSetting('MODEL_TRAINING_DEFAULT_BATCH_SIZE', '1')),
-      defaultMaxTokens: parseInt(this.getSetting('MODEL_TRAINING_DEFAULT_MAX_TOKENS', '2048')),
-      defaultWarmupSteps: parseInt(this.getSetting('MODEL_TRAINING_DEFAULT_WARMUP_STEPS', '100')),
-      defaultEvalSteps: parseInt(this.getSetting('MODEL_TRAINING_DEFAULT_EVAL_STEPS', '50')),
-      defaultSaveSteps: parseInt(this.getSetting('MODEL_TRAINING_DEFAULT_SAVE_STEPS', '100')),
+      defaultLearningRate: parseFloat(
+        this.getSetting('MODEL_TRAINING_DEFAULT_LEARNING_RATE', '1e-5')
+      ),
+      defaultEpochs: parseInt(this.getSetting('MODEL_TRAINING_DEFAULT_EPOCHS', '3'), 10),
+      defaultBatchSize: parseInt(this.getSetting('MODEL_TRAINING_DEFAULT_BATCH_SIZE', '1'), 10),
+      defaultMaxTokens: parseInt(this.getSetting('MODEL_TRAINING_DEFAULT_MAX_TOKENS', '2048'), 10),
+      defaultWarmupSteps: parseInt(
+        this.getSetting('MODEL_TRAINING_DEFAULT_WARMUP_STEPS', '100'),
+        10
+      ),
+      defaultEvalSteps: parseInt(this.getSetting('MODEL_TRAINING_DEFAULT_EVAL_STEPS', '50'), 10),
+      defaultSaveSteps: parseInt(this.getSetting('MODEL_TRAINING_DEFAULT_SAVE_STEPS', '100'), 10),
     };
   }
 
@@ -511,7 +543,7 @@ let globalConfigManager: TrainingConfigurationManager | null = null;
 export function getTrainingConfig(runtime?: IAgentRuntime): TrainingConfigurationManager {
   if (!globalConfigManager) {
     globalConfigManager = new TrainingConfigurationManager(runtime);
-    
+
     // Validate configuration on first load
     if (!globalConfigManager.validateConfiguration()) {
       elizaLogger.warn('Training plugin configuration validation failed, using defaults');

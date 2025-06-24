@@ -193,7 +193,9 @@ export class SolanaService extends Service {
     // Don't update if less than interval has passed, unless forced
     if (!force && now - this.lastUpdate < this.UPDATE_INTERVAL) {
       const cached = await this.getCachedData();
-      if (cached) return cached;
+      if (cached) {
+        return cached;
+      }
     }
     //console.log('updateWalletData - fetch')
 
@@ -313,7 +315,9 @@ export class SolanaService extends Service {
    * @returns {boolean} True if the address is valid, false otherwise.
    */
   public validateAddress(address: string | undefined): boolean {
-    if (!address) return false;
+    if (!address) {
+      return false;
+    }
     try {
       // Handle Solana addresses
       if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) {

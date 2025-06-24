@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { validateNgrokConfig, ngrokEnvSchema } from '../../environment';
 import type { IAgentRuntime } from '@elizaos/core';
-import { z } from 'zod';
+import { afterEach, beforeEach, describe, expect, it, jest } from 'bun:test';
+import { ngrokEnvSchema, validateNgrokConfig } from '../../environment';
 
 describe('Ngrok Environment Configuration', () => {
   let mockRuntime: IAgentRuntime;
@@ -19,7 +18,7 @@ describe('Ngrok Environment Configuration', () => {
 
     // Setup mock runtime
     mockRuntime = {
-      getSetting: vi.fn((key: string) => {
+      getSetting: jest.fn((key: string) => {
         const settings: Record<string, string> = {};
         return settings[key];
       }),
@@ -146,7 +145,7 @@ describe('Ngrok Environment Configuration', () => {
 
     it('should handle number inputs by converting them', async () => {
       const mockRuntime = {
-        getSetting: vi.fn((key: string) => {
+        getSetting: jest.fn((key: string) => {
           const settings: Record<string, any> = {
             NGROK_REGION: 123, // Will be converted to '123'
             NGROK_DEFAULT_PORT: 'invalid', // Will use default 3000
@@ -178,7 +177,7 @@ describe('Ngrok Environment Configuration', () => {
 
     it('should handle port zero', async () => {
       const mockRuntime = {
-        getSetting: vi.fn((key: string) => {
+        getSetting: jest.fn((key: string) => {
           const settings: Record<string, any> = {
             NGROK_DEFAULT_PORT: '0',
           };

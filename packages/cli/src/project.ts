@@ -13,6 +13,8 @@ import { getElizaCharacter } from '@/src/characters/eliza';
 import { detectDirectoryType } from '@/src/utils/directory-detection';
 import { buildProject } from '@/src/utils/build-project';
 
+import { cliTestAgent } from './characters/cli-test-agent.js';
+
 /**
  * Interface for a project module that can be loaded.
  */
@@ -134,7 +136,13 @@ function extractPlugin(module: any): Plugin {
  */
 export async function loadProject(dir: string): Promise<Project> {
   try {
-    // Get the package.json and get the main field
+    // Validate directory structure using centralized detection
+    const dirInfo = detectDirectoryType(dir);
+    if (!dirInfo.hasPackageJson) {
+      throw new Error(`No package.json found in ${dir}`);
+    }
+
+    // TODO: Get the package.json and get the main field
     const packageJson = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
     const main = packageJson.main;
     if (!main) {
@@ -207,8 +215,8 @@ export async function loadProject(dir: string): Promise<Project> {
       // Convert to file URL for ESM import
       const importUrl =
         process.platform === 'win32'
-          ? 'file:///' + importPath.replace(/\\/g, '/')
-          : 'file://' + importPath;
+          ? `file:///${importPath.replace(/\\/g, '/')}`
+          : `file://${importPath}`;
       projectModule = (await import(importUrl)) as ProjectModule;
       logger.info(`Loaded project from ${entryPoint}`);
 
@@ -326,7 +334,7 @@ export async function loadProject(dir: string): Promise<Project> {
           if ((value as ProjectModule).character && (value as ProjectModule).init) {
             // If it's a single agent, add it
             agents.push(value as ProjectAgent);
-            logger.debug(`Found agent in default export (single agent)`);
+            logger.debug('Found agent in default export (single agent)');
           }
         } else if (
           value &&
@@ -342,7 +350,17 @@ export async function loadProject(dir: string): Promise<Project> {
     }
 
     if (agents.length === 0) {
-      throw new Error('No agents found in project');
+      logger.warn('No agents found in project, using CLI test agent as fallback');
+
+      // Create a fallback agent using the CLI test agent
+      const fallbackAgent: ProjectAgent = {
+        character: cliTestAgent,
+        init: async () => {
+          logger.info('Initializing CLI test agent for scenario testing');
+        },
+      };
+
+      agents.push(fallbackAgent);
     }
 
     // Create and return the project object

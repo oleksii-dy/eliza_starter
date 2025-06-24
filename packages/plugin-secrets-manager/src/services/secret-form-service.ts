@@ -1,10 +1,9 @@
-import { Service, type IAgentRuntime, logger, type UUID } from '@elizaos/core';
-import express, { Express, Request, Response } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import { nanoid } from 'nanoid';
 import { createServer, Server } from 'http';
-// @ts-ignore - These might not be available in all environments
+import { Service, type IAgentRuntime, logger, type UUID } from '@elizaos/core';
+import cors from 'cors';
+import express, { Express, Request, Response } from 'express';
+import { nanoid } from 'nanoid';
+// @ts-expect-error -- Express types issue - These might not be available in all environments
 let cookieParser: any;
 let session: any;
 
@@ -19,6 +18,14 @@ try {
 
 import { EnhancedSecretManager } from '../enhanced-service';
 import {
+  csrfProtection,
+  rateLimiters,
+  securityHeaders,
+  htmlSanitizer,
+  formSanitizer,
+} from '../security';
+import type { SecretContext, SecretConfig } from '../types';
+import {
   type FormSchema,
   type FormSession,
   type FormSubmission,
@@ -26,14 +33,6 @@ import {
   type FormField,
   FormFieldPresets,
 } from '../types/form';
-import type { SecretContext, SecretConfig } from '../types';
-import {
-  csrfProtection,
-  rateLimiters,
-  securityHeaders,
-  htmlSanitizer,
-  formSanitizer
-} from '../security';
 
 // HTML escape function
 const escapeHtml = htmlSanitizer.escapeHTML;
@@ -67,7 +66,7 @@ export class SecretFormService extends Service {
 
   static async start(runtime: IAgentRuntime): Promise<SecretFormService> {
     const service = new SecretFormService(runtime);
-    await service.initialize();
+    await void void service.initialize();
     return service;
   }
 
@@ -79,20 +78,24 @@ export class SecretFormService extends Service {
     if (!this.ngrokService) {
       // Create a fallback service that throws meaningful errors when used
       logger.warn('[SecretFormService] NgrokService not available - secret forms will be disabled');
-      logger.warn('[SecretFormService] To enable secret forms, ensure @elizaos/plugin-ngrok is loaded');
+      logger.warn(
+        '[SecretFormService] To enable secret forms, ensure @elizaos/plugin-ngrok is loaded'
+      );
       this.isEnabled = false;
-      
+
       // Create a stub that provides helpful error messages
       this.ngrokService = {
         startTunnel: async (port: number) => {
-          throw new Error('Cannot create secret forms: NgrokService is not available. Please ensure @elizaos/plugin-ngrok is loaded.');
+          throw new Error(
+            'Cannot create secret forms: NgrokService is not available. Please ensure @elizaos/plugin-ngrok is loaded.'
+          );
         },
         stopTunnel: async () => {
           // No-op for fallback
         },
         getUrl: () => null,
         isActive: () => false,
-        getStatus: () => ({ status: 'unavailable', message: 'NgrokService not loaded' })
+        getStatus: () => ({ status: 'unavailable', message: 'NgrokService not loaded' }),
       };
     } else {
       this.isEnabled = true;
@@ -100,14 +103,16 @@ export class SecretFormService extends Service {
 
     this.secretsManager = this.runtime.getService('SECRETS') as EnhancedSecretManager;
     if (!this.secretsManager) {
-      logger.warn('[SecretFormService] SecretManager not available during initialization - will check again when needed');
+      logger.warn(
+        '[SecretFormService] SecretManager not available during initialization - will check again when needed'
+      );
     }
 
     // Only start cleanup interval if service is enabled
     if (this.isEnabled) {
       // Start cleanup interval
       setInterval(() => {
-        this.cleanupExpiredSessions();
+        void void void void this.cleanupExpiredSessions();
       }, 60 * 1000); // Every minute
     }
 
@@ -133,9 +138,11 @@ export class SecretFormService extends Service {
     callback?: (submission: FormSubmission) => Promise<void>
   ): Promise<{ url: string; sessionId: string }> {
     if (!this.isEnabled) {
-      throw new Error('Secret form service is disabled. NgrokService is required. Please ensure @elizaos/plugin-ngrok is loaded.');
+      throw new Error(
+        'Secret form service is disabled. NgrokService is required. Please ensure @elizaos/plugin-ngrok is loaded.'
+      );
     }
-    
+
     try {
       logger.info('[SecretFormService] Creating secret form', {
         secretCount: request.secrets.length,
@@ -243,9 +250,15 @@ export class SecretFormService extends Service {
 
     // Determine field type based on secret type
     let fieldType = 'password'; // Default for secrets
-    if (config.type === 'url') fieldType = 'url';
-    if (config.type === 'config') fieldType = 'json';
-    if (config.type === 'credential') fieldType = 'password';
+    if (config.type === 'url') {
+      fieldType = 'url';
+    }
+    if (config.type === 'config') {
+      fieldType = 'json';
+    }
+    if (config.type === 'credential') {
+      fieldType = 'password';
+    }
 
     const field: FormField = {
       name: key,
@@ -330,58 +343,62 @@ export class SecretFormService extends Service {
     });
 
     // Handle form submission with CSRF validation
-    app.post(`/api/form/${session.id}/submit`, csrfProtection.validateTokenMiddleware(), async (req, res) => {
-      try {
-        if (session.status !== 'active') {
-          res.status(410).json({ error: 'Form expired or completed' });
-          return;
+    app.post(
+      `/api/form/${session.id}/submit`,
+      csrfProtection.validateTokenMiddleware(),
+      async (req, res) => {
+        try {
+          if (session.status !== 'active') {
+            res.status(410).json({ error: 'Form expired or completed' });
+            return;
+          }
+
+          // Sanitize input data
+          const sanitizedData = this.sanitizeFormData(req.body);
+
+          // Validate submission
+          const validation = this.validateSubmission(session.schema, sanitizedData);
+          if (!validation.valid) {
+            res.status(400).json({ errors: validation.errors });
+            return;
+          }
+
+          // Create submission record
+          const submission: FormSubmission = {
+            formId: session.formId,
+            sessionId: session.id,
+            data: sanitizedData,
+            submittedAt: Date.now(),
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+          };
+
+          session.submissions.push(submission);
+
+          // Store secrets
+          await this.storeSubmittedSecrets(session, submission, context);
+
+          // Check if we've reached max submissions
+          if (session.submissions.length >= (session.schema.maxSubmissions || 1)) {
+            session.status = 'completed';
+            this.closeSession(session.id);
+          }
+
+          // Call callback if provided
+          if (session.callback) {
+            await void session.callback(submission);
+          }
+
+          res.json({
+            success: true,
+            message: session.schema.successMessage,
+          });
+        } catch (error) {
+          logger.error('[SecretFormService] Error handling submission:', error);
+          res.status(500).json({ error: 'Failed to process submission' });
         }
-
-        // Sanitize input data
-        const sanitizedData = this.sanitizeFormData(req.body);
-        
-        // Validate submission
-        const validation = this.validateSubmission(session.schema, sanitizedData);
-        if (!validation.valid) {
-          res.status(400).json({ errors: validation.errors });
-          return;
-        }
-
-        // Create submission record
-        const submission: FormSubmission = {
-          formId: session.formId,
-          sessionId: session.id,
-          data: sanitizedData,
-          submittedAt: Date.now(),
-          ipAddress: req.ip,
-          userAgent: req.get('user-agent'),
-        };
-
-        session.submissions.push(submission);
-
-        // Store secrets
-        await this.storeSubmittedSecrets(session, submission, context);
-
-        // Check if we've reached max submissions
-        if (session.submissions.length >= (session.schema.maxSubmissions || 1)) {
-          session.status = 'completed';
-          this.closeSession(session.id);
-        }
-
-        // Call callback if provided
-        if (session.callback) {
-          await session.callback(submission);
-        }
-
-        res.json({
-          success: true,
-          message: session.schema.successMessage,
-        });
-      } catch (error) {
-        logger.error('[SecretFormService] Error handling submission:', error);
-        res.status(500).json({ error: 'Failed to process submission' });
       }
-    });
+    );
 
     // Get form status
     app.get(`/api/form/${session.id}/status`, (req, res) => {
@@ -696,7 +713,9 @@ export class SecretFormService extends Service {
   ): Promise<void> {
     for (const secret of session.request.secrets) {
       const value = submission.data[secret.key];
-      if (!value) continue;
+      if (!value) {
+        continue;
+      }
 
       try {
         await this.getSecretsManager().set(secret.key, value, context, secret.config);
@@ -714,14 +733,14 @@ export class SecretFormService extends Service {
    */
   private sanitizeFormData(data: any): any {
     const sanitized: any = {};
-    
+
     for (const [key, value] of Object.entries(data)) {
       if (key === '_csrf') {
         // Pass CSRF token through unchanged
         sanitized[key] = value;
       } else if (typeof value === 'string') {
         // Sanitize string values based on field type
-        const field = this.sessions.get(data.sessionId)?.schema.fields.find(f => f.name === key);
+        const field = this.sessions.get(data.sessionId)?.schema.fields.find((f) => f.name === key);
         if (field?.type === 'json' || field?.type === 'code') {
           // Minimal sanitization for code/JSON fields
           sanitized[key] = formSanitizer.sanitizeSecretValue(value);
@@ -733,7 +752,7 @@ export class SecretFormService extends Service {
         sanitized[key] = value;
       }
     }
-    
+
     return sanitized;
   }
 
@@ -754,7 +773,9 @@ export class SecretFormService extends Service {
    */
   async closeSession(sessionId: string): Promise<void> {
     const session = this.sessions.get(sessionId);
-    if (!session) return;
+    if (!session) {
+      return;
+    }
 
     logger.info(`[SecretFormService] Closing session ${sessionId}`);
 

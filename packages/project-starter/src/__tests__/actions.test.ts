@@ -1,8 +1,7 @@
-import { describe, it, expect, vi, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, spyOn } from 'bun:test';
 import plugin from '../plugin';
 import { logger } from '@elizaos/core';
-import type { Action, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';
-import { v4 as uuidv4 } from 'uuid';
+import type { HandlerCallback } from '@elizaos/core';
 import dotenv from 'dotenv';
 import {
   runCoreActionTests,
@@ -17,9 +16,9 @@ dotenv.config();
 
 // Spy on logger to capture logs for documentation
 beforeAll(() => {
-  vi.spyOn(logger, 'info');
-  vi.spyOn(logger, 'error');
-  vi.spyOn(logger, 'warn');
+  spyOn(logger, 'info');
+  spyOn(logger, 'error');
+  spyOn(logger, 'warn');
 });
 
 afterAll(() => {
@@ -120,10 +119,10 @@ describe('Actions', () => {
         const mockMessage = createMockMessage('Hello!', {});
         const mockState = createMockState();
 
-        let callbackResponse: any = {};
+        let callbackResponse: { text?: string; actions?: string[]; source?: string } = {};
         let error: Error | null = null;
 
-        const mockCallback = (response: any) => {
+        const mockCallback = (response: { text?: string; actions?: string[]; source?: string }) => {
           callbackResponse = response;
         };
 

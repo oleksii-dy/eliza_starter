@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import { type Command } from 'commander';
 import { elizaLogger } from '@elizaos/core';
 import { DatasetBuilder } from '../../lib/dataset-builder.js';
 
@@ -20,7 +20,7 @@ export function createDatasetCommand(program: Command) {
           process.exit(1);
         }
 
-        const maxTokens = parseInt(options.maxTokens);
+        const maxTokens = parseInt(options.maxTokens, 10);
         if (isNaN(maxTokens) || maxTokens < 100) {
           elizaLogger.error('Error: Max tokens must be a number >= 100');
           process.exit(1);
@@ -50,17 +50,20 @@ export function createDatasetCommand(program: Command) {
         if (options.validate) {
           elizaLogger.info('🔍 Validating JSONL format...');
           const validation = await builder.validateJSONL(outputPath);
-          
+
           if (validation.valid) {
             elizaLogger.info('✅ JSONL format is valid');
           } else {
             elizaLogger.info('❌ JSONL validation failed:');
-            validation.errors.forEach(error => elizaLogger.info(`  - ${error}`));
+            validation.errors.forEach((error) => elizaLogger.info(`  - ${error}`));
             process.exit(1);
           }
         }
       } catch (error) {
-        elizaLogger.error('❌ Error creating dataset:', error instanceof Error ? error.message : String(error));
+        elizaLogger.error(
+          '❌ Error creating dataset:',
+          error instanceof Error ? error.message : String(error)
+        );
         process.exit(1);
       }
     });

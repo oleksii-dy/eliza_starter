@@ -94,4 +94,4 @@ export const testConfig = {
   },
 };
 
-export default testConfig; 
+export default testConfig;

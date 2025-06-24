@@ -1,5 +1,5 @@
-import { type IAgentRuntime, logger } from "@elizaos/core";
-import type { UUID } from "@elizaos/core";
+import { type IAgentRuntime, logger } from '@elizaos/core';
+import type { UUID } from '@elizaos/core';
 import type { TrustDatabase } from '../database/TrustDatabase';
 import { TrustCalculator } from '../calculators/TrustCalculator';
 import type {
@@ -62,10 +62,10 @@ export class TrustEngine {
     context: TrustContext
   ): Promise<TrustProfile> {
     const profile = await this.getProfile(entityId);
-    
+
     // Update last calculated time
     profile.lastCalculated = Date.now();
-    
+
     return profile;
   }
 
@@ -139,10 +139,10 @@ export class TrustEngine {
     try {
       // Get the updated profile for dimensions
       const updatedProfile = await this.getProfile(entityId);
-      
+
       // Get recent trust comments to include in context
       const recentComments = await this.db.getTrustCommentHistory(entityId, this.runtime.agentId, 3);
-      
+
       // Get recent evidence for context
       const recentEvidence = await this.db.getTrustEvidence(entityId);
       const last5Evidence = recentEvidence.slice(0, 5);
@@ -215,7 +215,7 @@ Do not include the numerical score in your response. Focus on the narrative and 
     const description = `Legacy interaction: ${
       interaction.type
     }. ${interaction.details?.description || ''}`;
-    
+
     const context = interaction.context || { entityId: interaction.sourceEntityId };
     if (!context.entityId) {
       context.entityId = interaction.sourceEntityId;
@@ -228,8 +228,8 @@ Do not include the numerical score in your response. Focus on the narrative and 
         interaction.impact > 0
           ? 'positive'
           : interaction.impact < 0
-          ? 'negative'
-          : 'neutral',
+            ? 'negative'
+            : 'neutral',
       affectedDimensions: {},
       analysisConfidence: 0.5,
       sourceContent: JSON.stringify(interaction.details),

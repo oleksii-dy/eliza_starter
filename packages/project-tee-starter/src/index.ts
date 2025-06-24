@@ -16,7 +16,7 @@ import { mrTeeCharacter } from './character';
  */
 export const character: Character = mrTeeCharacter;
 
-const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
+const initCharacter = ({ runtime: _runtime }: { runtime: IAgentRuntime }) => {
   logger.info(`Initializing character: ${mrTeeCharacter.name}`);
 };
 

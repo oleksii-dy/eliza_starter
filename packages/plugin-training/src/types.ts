@@ -1,4 +1,4 @@
-import { UUID, Memory, State, IAgentRuntime, Service } from '@elizaos/core';
+import { type UUID, Memory, State, IAgentRuntime, type Service } from '@elizaos/core';
 
 /**
  * Training data extraction configuration
@@ -395,7 +395,13 @@ export interface TogetherAIModel {
  */
 export interface ThinkingBlock {
   id: string;
-  type: 'reasoning' | 'planning' | 'analysis' | 'problem_solving' | 'plugin-creation' | 'mcp-creation';
+  type:
+    | 'reasoning'
+    | 'planning'
+    | 'analysis'
+    | 'problem_solving'
+    | 'plugin-creation'
+    | 'mcp-creation';
   content: string;
   thinking?: string; // Added for compatibility
   request?: string; // Added for compatibility
@@ -533,15 +539,12 @@ export interface TrainingDataPoint {
 /**
  * Custom Model Types
  */
-export const CustomModelType = {
-  SHOULD_RESPOND: 'should_respond',
-  PLANNING: 'planning',
-  CODING: 'coding',
-  AUTOCODER: 'autocoder',
-  CONVERSATION: 'conversation',
-} as const;
-
-export type CustomModelType = typeof CustomModelType[keyof typeof CustomModelType];
+export type CustomModelType =
+  | 'should_respond'
+  | 'planning'
+  | 'coding'
+  | 'autocoder'
+  | 'conversation';
 
 /**
  * Automation Pipeline Interface

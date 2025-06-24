@@ -8,7 +8,12 @@ import { SimulationService } from './services/simulation-service.js';
 import { RLService } from './services/rl-service.js';
 
 // Actions
-import { describeSceneAction, captureImageAction, killAutonomousAction, setVisionModeAction } from './action.js';
+import {
+  describeSceneAction,
+  captureImageAction,
+  killAutonomousAction,
+  setVisionModeAction,
+} from './action.js';
 import { nameEntityAction, identifyPersonAction, trackEntityAction } from './actions-enhanced.js';
 import { commandAction } from './actions/command-action.js';
 import { teachAction } from './actions/teach-action.js';
@@ -27,30 +32,26 @@ import './types.js';
 
 export const robotPlugin: Plugin = {
   name: 'robot',
-  description: 'Comprehensive robot control for AiNex humanoid with vision, motion control, and learning capabilities',
-  
+  description:
+    'Comprehensive robot control for AiNex humanoid with vision, motion control, and learning capabilities',
+
   services: [
     RobotServiceV2,
     VisionService,
     // Only include simulation services if not in test/mock mode
-    ...(process.env.NODE_ENV !== 'test' && process.env.USE_MOCK_ROBOT !== 'true' ? [
-      SimulationService,
-      RLService,
-    ] : []),
+    ...(process.env.NODE_ENV !== 'test' && process.env.USE_MOCK_ROBOT !== 'true'
+      ? [SimulationService, RLService]
+      : []),
   ],
-  
-  providers: [
-    robotStateProvider,
-    visionProvider,
-    visionEnhancedProvider,
-  ],
-  
+
+  providers: [robotStateProvider, visionProvider, visionEnhancedProvider],
+
   actions: [
     // Robot control actions
     commandAction,
     teachAction,
     gotoAction,
-    
+
     // Vision actions
     describeSceneAction,
     captureImageAction,
@@ -60,19 +61,19 @@ export const robotPlugin: Plugin = {
     identifyPersonAction,
     trackEntityAction,
   ],
-  
+
   tests: testSuites,
-  
-  init: async (config, runtime) => {
+
+  init: async (_config, runtime) => {
     // Plugin initialization
     // The services will be automatically registered and started by the runtime
     // Additional initialization logic can be added here if needed
-    
+
     // Log configuration
     const useSimulation = runtime.getSetting('USE_SIMULATION') === 'true';
     const robotPort = runtime.getSetting('ROBOT_SERIAL_PORT') || '/dev/ttyUSB0';
     const rosUrl = runtime.getSetting('ROS_WEBSOCKET_URL') || 'ws://localhost:9090';
-    
+
     console.log('[RobotPlugin] Initializing with configuration:');
     console.log(`  - Mode: ${useSimulation ? 'Simulation' : 'Hardware'}`);
     console.log(`  - Serial Port: ${robotPort}`);

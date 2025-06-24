@@ -2,7 +2,7 @@
  * Unit tests for loader.ts
  */
 
-import { describe, it, expect, beforeEach, mock, afterEach, jest } from 'bun:test';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import fs from 'node:fs';
 import {
   tryLoadFile,
@@ -24,16 +24,16 @@ const TEST_MULTI_CHARACTER_URL =
 // Mock modules
 mock.module('node:fs', () => ({
   default: {
-    readFileSync: jest.fn(),
+    readFileSync: mock(),
     promises: {
-      mkdir: jest.fn(),
-      readdir: jest.fn(),
+      mkdir: mock(),
+      readdir: mock(),
     },
   },
-  readFileSync: jest.fn(),
+  readFileSync: mock(),
   promises: {
-    mkdir: jest.fn(),
-    readdir: jest.fn(),
+    mkdir: mock(),
+    readdir: mock(),
   },
 }));
 mock.module('@elizaos/core', async () => {
@@ -41,23 +41,23 @@ mock.module('@elizaos/core', async () => {
   return {
     ...actual,
     logger: {
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-      debug: jest.fn(),
+      info: mock(),
+      error: mock(),
+      warn: mock(),
+      debug: mock(),
     },
-    validateCharacter: jest.fn((character) => ({
+    validateCharacter: mock((character) => ({
       success: true,
       data: character,
     })),
-    parseAndValidateCharacter: jest.fn((content) => {
+    parseAndValidateCharacter: mock((content) => {
       try {
         const parsed = JSON.parse(content);
         return {
           success: true,
           data: parsed,
         };
-      } catch (error) {
+      } catch (_error) {
         return {
           success: false,
           error: { message: 'Invalid JSON' },
@@ -68,7 +68,7 @@ mock.module('@elizaos/core', async () => {
 });
 
 // Mock fetch globally
-const mockFetch = jest.fn();
+const mockFetch = mock();
 global.fetch = mockFetch as any;
 
 describe('Loader Functions', () => {

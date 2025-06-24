@@ -1,6 +1,8 @@
 // Vision actions for scene analysis and image capture
 import {
   type Action,
+  type ActionExample,
+  type ActionResult,
   type IAgentRuntime,
   type Memory,
   type State,
@@ -43,7 +45,7 @@ export const describeSceneAction: Action = {
   name: 'DESCRIBE_SCENE',
   similes: ['ANALYZE_SCENE', 'WHAT_DO_YOU_SEE', 'VISION_CHECK', 'LOOK_AROUND'],
   description:
-    'Analyzes the current visual scene and provides a detailed description of what the agent sees through the camera.',
+    'Analyzes the current visual scene and provides a detailed description of what the agent sees through the camera. Returns scene analysis data including people count, objects, and camera info for action chaining.',
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const visionService = runtime.getService<VisionService>('VISION' as any);
     return !!visionService && visionService.isActive();
@@ -55,7 +57,7 @@ export const describeSceneAction: Action = {
     _options?: any,
     callback?: HandlerCallback,
     _responses?: Memory[]
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     const visionService = runtime.getService<VisionService>('VISION' as any);
 
     if (!visionService || !visionService.isActive()) {
@@ -69,7 +71,18 @@ export const describeSceneAction: Action = {
           actions: ['DESCRIBE_SCENE'],
         });
       }
-      return;
+      return {
+        text: 'Vision service unavailable - cannot analyze scene',
+        values: {
+          success: false,
+          visionAvailable: false,
+          error: 'Vision service not available',
+        },
+        data: {
+          actionName: 'DESCRIBE_SCENE',
+          error: 'Vision service not available or no camera connected',
+        },
+      };
     }
 
     try {
@@ -87,7 +100,20 @@ export const describeSceneAction: Action = {
             actions: ['DESCRIBE_SCENE'],
           });
         }
-        return;
+        return {
+          text: 'Camera connected but no scene analyzed yet',
+          values: {
+            success: false,
+            visionAvailable: true,
+            sceneAnalyzed: false,
+            cameraName: cameraInfo?.name,
+          },
+          data: {
+            actionName: 'DESCRIBE_SCENE',
+            cameraInfo,
+            sceneStatus: 'not_analyzed',
+          },
+        };
       }
 
       // Format the response
@@ -149,6 +175,27 @@ export const describeSceneAction: Action = {
           actions: ['DESCRIBE_SCENE'],
         });
       }
+
+      return {
+        text: description,
+        values: {
+          success: true,
+          visionAvailable: true,
+          sceneAnalyzed: true,
+          peopleCount,
+          objectCount,
+          cameraName: cameraInfo?.name,
+          sceneChanged: scene.sceneChanged,
+          changePercentage: scene.changePercentage,
+        },
+        data: {
+          actionName: 'DESCRIBE_SCENE',
+          scene,
+          cameraInfo,
+          timestamp,
+          description,
+        },
+      };
     } catch (error: any) {
       logger.error('[describeSceneAction] Error analyzing scene:', error);
       const thought = 'An error occurred while trying to analyze the visual scene.';
@@ -161,13 +208,28 @@ export const describeSceneAction: Action = {
           actions: ['DESCRIBE_SCENE'],
         });
       }
+
+      return {
+        text: 'Error analyzing scene',
+        values: {
+          success: false,
+          visionAvailable: true,
+          error: true,
+          errorMessage: error.message,
+        },
+        data: {
+          actionName: 'DESCRIBE_SCENE',
+          error: error.message,
+          errorType: 'analysis_error',
+        },
+      };
     }
   },
   examples: [
     [
-      { name: 'user', content: { text: 'what do you see?' } },
+      { name: '{{user}}', content: { text: 'what do you see?' } },
       {
-        name: 'agent',
+        name: '{{agent}}',
         content: {
           actions: ['DESCRIBE_SCENE'],
           thought: 'The user wants to know what I can see through my camera.',
@@ -176,21 +238,23 @@ export const describeSceneAction: Action = {
       },
     ],
     [
-      { name: 'user', content: { text: 'describe the scene' } },
+      { name: '{{user}}', content: { text: 'describe the scene and then take a photo' } },
       {
-        name: 'agent',
+        name: '{{agent}}',
         content: {
-          actions: ['DESCRIBE_SCENE'],
+          actions: ['DESCRIBE_SCENE', 'CAPTURE_IMAGE'],
+          thought: 'I should first analyze the scene, then capture an image for the user.',
+          text: 'I can see 3 people in an office setting. Let me capture this scene for you.',
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 };
 
 export const captureImageAction: Action = {
   name: 'CAPTURE_IMAGE',
   similes: ['TAKE_PHOTO', 'SCREENSHOT', 'CAPTURE_FRAME', 'TAKE_PICTURE'],
-  description: 'Captures the current frame from the camera and saves it as an image attachment.',
+  description: 'Captures the current frame from the camera and saves it as an image attachment. Returns image data with camera info and timestamp for action chaining. Can be combined with DESCRIBE_SCENE for analysis or NAME_ENTITY for identification workflows.',
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const visionService = runtime.getService<VisionService>('VISION' as any);
     return !!visionService && visionService.isActive();
@@ -202,7 +266,7 @@ export const captureImageAction: Action = {
     _options?: any,
     callback?: HandlerCallback,
     _responses?: Memory[]
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     const visionService = runtime.getService<VisionService>('VISION' as any);
 
     if (!visionService || !visionService.isActive()) {
@@ -216,7 +280,18 @@ export const captureImageAction: Action = {
           actions: ['CAPTURE_IMAGE'],
         });
       }
-      return;
+      return {
+        text: 'Vision service unavailable - cannot capture image',
+        values: {
+          success: false,
+          visionAvailable: false,
+          error: 'Vision service not available',
+        },
+        data: {
+          actionName: 'CAPTURE_IMAGE',
+          error: 'Vision service not available or no camera connected',
+        },
+      };
     }
 
     try {
@@ -234,7 +309,19 @@ export const captureImageAction: Action = {
             actions: ['CAPTURE_IMAGE'],
           });
         }
-        return;
+        return {
+          text: 'Failed to capture image from camera',
+          values: {
+            success: false,
+            visionAvailable: true,
+            captureSuccess: false,
+          },
+          data: {
+            actionName: 'CAPTURE_IMAGE',
+            error: 'Camera capture failed',
+            cameraInfo,
+          },
+        };
       }
 
       // Create image attachment
@@ -269,6 +356,23 @@ export const captureImageAction: Action = {
           attachments: [imageAttachment],
         });
       }
+
+      return {
+        text: `I've captured an image from the camera at ${timestamp}.`,
+        values: {
+          success: true,
+          visionAvailable: true,
+          captureSuccess: true,
+          cameraName: cameraInfo?.name,
+          timestamp,
+        },
+        data: {
+          actionName: 'CAPTURE_IMAGE',
+          imageAttachment,
+          cameraInfo,
+          timestamp,
+        },
+      };
     } catch (error: any) {
       logger.error('[captureImageAction] Error capturing image:', error);
       const thought = 'An error occurred while trying to capture an image.';
@@ -281,13 +385,40 @@ export const captureImageAction: Action = {
           actions: ['CAPTURE_IMAGE'],
         });
       }
+
+      return {
+        text: 'Error capturing image',
+        values: {
+          success: false,
+          visionAvailable: true,
+          error: true,
+          errorMessage: error.message,
+        },
+        data: {
+          actionName: 'CAPTURE_IMAGE',
+          error: error.message,
+          errorType: 'capture_error',
+        },
+      };
     }
   },
   examples: [
+    // Multi-action: Describe scene then capture image
     [
-      { name: 'user', content: { text: 'take a photo' } },
+      { name: '{{user}}', content: { text: 'describe what you see and take a photo' } },
       {
-        name: 'agent',
+        name: '{{agent}}',
+        content: {
+          actions: ['DESCRIBE_SCENE', 'CAPTURE_IMAGE'],
+          thought: 'User wants scene analysis followed by image capture.',
+          text: 'I can see 3 people in an office setting. Let me capture this scene for you.',
+        },
+      },
+    ],
+    [
+      { name: '{{user}}', content: { text: 'take a photo' } },
+      {
+        name: '{{agent}}',
         content: {
           actions: ['CAPTURE_IMAGE'],
           thought: 'The user wants me to capture an image from the camera.',
@@ -296,22 +427,22 @@ export const captureImageAction: Action = {
       },
     ],
     [
-      { name: 'user', content: { text: 'capture the current scene' } },
+      { name: '{{user}}', content: { text: 'capture the current scene' } },
       {
-        name: 'agent',
+        name: '{{agent}}',
         content: {
           actions: ['CAPTURE_IMAGE'],
         },
       },
     ],
-  ],
+  ] as ActionExample[][],
 };
 
 export const killAutonomousAction: Action = {
   name: 'KILL_AUTONOMOUS',
   similes: ['STOP_AUTONOMOUS', 'HALT_AUTONOMOUS', 'KILL_AUTO_LOOP'],
   description: 'Stops the autonomous agent loop for debugging purposes.',
-  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
+  validate: async (_runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     // Always allow this action for debugging
     return true;
   },
@@ -644,7 +775,7 @@ export const nameEntityAction: Action = {
       const name = nameMatch[1];
 
       // Get entity tracker
-      const worldId = message.worldId || 'default-world';
+      const _worldId = message.worldId || 'default-world';
       const entityTracker = visionService.getEntityTracker();
 
       // Update entities
@@ -688,7 +819,7 @@ export const nameEntityAction: Action = {
             thought,
             text,
             actions: ['NAME_ENTITY'],
-            data: { entityId: targetPerson.id, name: name },
+            data: { entityId: targetPerson.id, name },
           });
         }
 
@@ -779,7 +910,7 @@ export const identifyPersonAction: Action = {
       }
 
       // Get entity tracker
-      const worldId = message.worldId || 'default-world';
+      const _worldId = message.worldId || 'default-world';
       const entityTracker = visionService.getEntityTracker();
 
       // Update entities
@@ -798,7 +929,7 @@ export const identifyPersonAction: Action = {
       }
 
       // Build response about visible people
-      let responseText = '';
+      const _responseText = '';
       let recognizedCount = 0;
       let unknownCount = 0;
       const identifications: string[] = [];
@@ -818,7 +949,7 @@ export const identifyPersonAction: Action = {
 
           // Add more context if available
           if (person.appearances.length > 5) {
-            identifications.push(`I've been tracking them consistently.`);
+            identifications.push('I\'ve been tracking them consistently.');
           }
         } else {
           unknownCount++;
@@ -827,7 +958,7 @@ export const identifyPersonAction: Action = {
 
           if (person.attributes.faceId) {
             identifications.push(
-              `I've captured their face profile but they haven't been named yet.`
+              'I\'ve captured their face profile but they haven\'t been named yet.'
             );
           }
         }
@@ -938,10 +1069,10 @@ export const trackEntityAction: Action = {
         return;
       }
 
-      const text = message.content.text?.toLowerCase() || '';
+      const _text = message.content.text?.toLowerCase() || '';
 
       // Get entity tracker
-      const worldId = message.worldId || 'default-world';
+      const _worldId = message.worldId || 'default-world';
       const entityTracker = visionService.getEntityTracker();
 
       // Update entities

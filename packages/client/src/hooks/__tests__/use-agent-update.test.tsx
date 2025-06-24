@@ -1,18 +1,13 @@
 import { useAgentUpdate } from '../use-agent-update';
-import { describe, test, expect, mock } from 'bun:test';
+import { describe, test, expect, mock, beforeEach, afterEach } from 'bun:test';
+import { renderHook } from '@testing-library/react';
 
-// Mock the necessary hooks
-mock.module('react', () => ({
-  useCallback: (fn: Function) => fn,
-  useRef: (value: any) => ({ current: value }),
-  useState: (initialValue: any) => [initialValue, mock()],
-}));
-
+// Mock the usePartialUpdate hook instead of React core hooks
 mock.module('../use-partial-update', () => ({
-  usePartialUpdate: (initialValue: any) => {
-    let currentValue = { ...initialValue };
+  usePartialUpdate: (initialValue: unknown) => {
+    const currentValue = { ...initialValue };
 
-    const updateFieldMock = mock((path: string, value: any) => {
+    const updateFieldMock = mock((path: string, value: unknown) => {
       // Simple implementation to track updates
       const pathParts = path.split('.');
 
@@ -33,7 +28,7 @@ mock.module('../use-partial-update', () => ({
       }
     });
 
-    const addArrayItemMock = mock((path: string, item: any) => {
+    const addArrayItemMock = mock((path: string, item: unknown) => {
       const pathParts = path.split('.');
       if (pathParts.length === 1) {
         if (!Array.isArray(currentValue[path])) {
@@ -46,7 +41,7 @@ mock.module('../use-partial-update', () => ({
     const removeArrayItemMock = mock();
     const resetMock = mock();
 
-    const updateSettingsMock = mock((settings: any) => {
+    const updateSettingsMock = mock((settings: Record<string, unknown>) => {
       currentValue.settings = { ...currentValue.settings, ...settings };
     });
 
@@ -81,12 +76,22 @@ type MockAgent = {
       settings?: Record<string, any>;
     };
     secrets?: Record<string, string>;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   [key: string]: any;
 };
 
 describe('useAgentUpdate hook', () => {
+  beforeEach(() => {
+    // Clear all mocks before each test
+    mock.restore();
+  });
+
+  afterEach(() => {
+    // Clean up after each test
+    mock.restore();
+  });
+
   test('importAgent should call the appropriate update functions for all template fields', () => {
     // Create initial and template agents
     const initialAgent: MockAgent = {
@@ -137,14 +142,14 @@ describe('useAgentUpdate hook', () => {
       extraField: 'extra-field-value',
     };
 
-    // Initialize the hook
-    const hookResult = useAgentUpdate(initialAgent as any);
+    // Use renderHook to properly test the React hook
+    const { result } = renderHook(() => useAgentUpdate(initialAgent as any));
 
     // Get the necessary functions
-    const { updateField, updateSettings } = hookResult;
+    const { updateField, updateSettings } = result.current;
 
     // Call importAgent
-    hookResult.importAgent(templateAgent as any);
+    result.current.importAgent(templateAgent as any);
 
     // Verify that updateField or updateSettings was called for each field in the template
 
@@ -186,7 +191,7 @@ describe('useAgentUpdate hook', () => {
       bio: [],
       topics: [],
       plugins: [],
-      style: { all: [] chat: [] post: [] },
+      style: { all: [], chat: [], post: [] },
       settings: {
         complexObject: {
           level1: {
@@ -203,7 +208,7 @@ describe('useAgentUpdate hook', () => {
       bio: [],
       topics: [],
       plugins: [],
-      style: { all: [] chat: [] post: [] },
+      style: { all: [], chat: [], post: [] },
       settings: {
         complexObject: {
           level1: {
@@ -216,14 +221,14 @@ describe('useAgentUpdate hook', () => {
       customField: 'custom value',
     };
 
-    // Initialize the hook
-    const hookResult = useAgentUpdate(initialAgent as any);
+    // Use renderHook to properly test the React hook
+    const { result } = renderHook(() => useAgentUpdate(initialAgent as any));
 
     // Get the necessary functions
-    const { updateField, updateSettings } = hookResult;
+    const { updateField, updateSettings } = result.current;
 
     // Call importAgent
-    hookResult.importAgent(templateAgent as any);
+    result.current.importAgent(templateAgent as any);
 
     // Verify updateSettings was called with the complex nested object
     expect(updateSettings).toHaveBeenCalledWith(

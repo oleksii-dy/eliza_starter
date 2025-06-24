@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, spyOn, beforeEach } from 'bun:test';
 import { OrchestrationManager } from '../managers/orchestration-manager';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,20 +18,20 @@ describe('OrchestrationManager - Code Healing Integration', () => {
 
   beforeEach(async () => {
     mockRuntime = {
-      getSetting: vi.fn().mockReturnValue('test-key'),
-      getService: vi.fn().mockImplementation((name: string) => {
+      getSetting: mock().mockReturnValue('test-key'),
+      getService: mock().mockImplementation((name: string) => {
         if (name === 'research')
-          return {
-            createResearchProject: vi.fn().mockResolvedValue({ id: 'research-1' }),
-            getProject: vi.fn().mockResolvedValue({ status: 'completed', report: 'Mock report' }),
-          };
+        {return {
+          createResearchProject: mock().mockResolvedValue({ id: 'research-1' }),
+          getProject: mock().mockResolvedValue({ status: 'completed', report: 'Mock report' }),
+        };}
         if (name === 'knowledge')
-          return {
-            storeDocument: vi.fn().mockResolvedValue({ id: 'doc-1' }),
-          };
+        {return {
+          storeDocument: mock().mockResolvedValue({ id: 'doc-1' }),
+        };}
         return null;
       }),
-      logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+      logger: { info: mock(), error: mock(), warn: mock(), debug: mock() },
     } as any;
 
     manager = new OrchestrationManager(mockRuntime);
@@ -46,7 +46,7 @@ describe('OrchestrationManager - Code Healing Integration', () => {
     // Mock the AI client
     (manager as any).anthropic = {
       messages: {
-        create: vi.fn().mockResolvedValue({
+        create: mock().mockResolvedValue({
           content: [
             { type: 'text', text: 'File: src/index.ts\n```typescript\n// Fixed code\n```' },
           ],
@@ -55,7 +55,7 @@ describe('OrchestrationManager - Code Healing Integration', () => {
     };
 
     // Mock startCreationWorkflow to prevent actual workflow execution
-    vi.spyOn(manager as any, 'startCreationWorkflow').mockResolvedValue(undefined);
+    spyOn(manager as any, 'startCreationWorkflow').mockResolvedValue(undefined);
   });
 
   describe('TypeScript Error Healing', () => {
@@ -97,8 +97,7 @@ describe('OrchestrationManager - Code Healing Integration', () => {
 
       // Mock runCommand to simulate ESLint errors then success
       let eslintCallCount = 0;
-      const runCommandSpy = vi
-        .spyOn(manager as any, 'runCommand')
+      const runCommandSpy = spyOn(manager as any, 'runCommand')
         .mockImplementation(async (...args: unknown[]) => {
           const [p, command, cmdArgs] = args as [any, string, string[]];
           if (command === 'npx' && cmdArgs[0] === 'eslint') {
@@ -119,7 +118,7 @@ describe('OrchestrationManager - Code Healing Integration', () => {
         });
 
       // Mock the error analysis and fix
-      const parseErrorSpy = vi.spyOn(manager as any, 'parseErrorMessage').mockResolvedValue({
+      const parseErrorSpy = spyOn(manager as any, 'parseErrorMessage').mockResolvedValue({
         errorType: 'eslint',
         file: 'src/index.ts',
         line: 5,

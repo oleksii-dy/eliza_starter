@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 
 // Mock dependencies first
-vi.mock('@anthropic-ai/sdk', () => {
-  const mockCreate = vi.fn().mockResolvedValue({
+mock.module('@anthropic-ai/sdk', () => {
+  const mockCreate = mock().mockResolvedValue({
     content: [
       {
         type: 'text',
@@ -27,7 +27,7 @@ vi.mock('@anthropic-ai/sdk', () => {
   });
 
   return {
-    default: vi.fn(() => ({
+    default: mock(() => ({
       messages: {
         create: mockCreate,
       },
@@ -35,13 +35,13 @@ vi.mock('@anthropic-ai/sdk', () => {
   };
 });
 
-vi.mock('../../swe-bench/issue-analyzer');
-vi.mock('../../swe-bench/repository-manager');
+mock.module('../../swe-bench/issue-analyzer');
+mock.module('../../swe-bench/repository-manager');
 
 // Mock fs
-vi.mock('fs', () => ({
-  existsSync: vi.fn().mockReturnValue(true),
-  readFileSync: vi.fn().mockImplementation((path: string) => {
+mock.module('fs', () => ({
+  existsSync: mock().mockReturnValue(true),
+  readFileSync: mock().mockImplementation((path: string) => {
     if (path.includes('auth.ts')) {
       return `export function validateToken(token: string): boolean {
   return token.length > 0;
@@ -49,13 +49,13 @@ vi.mock('fs', () => ({
     }
     return '';
   }),
-  writeFileSync: vi.fn(),
-  mkdirSync: vi.fn(),
+  writeFileSync: mock(),
+  mkdirSync: mock(),
 }));
 
 // Mock fs/promises
-vi.mock('fs/promises', () => ({
-  readFile: vi.fn().mockImplementation((path: string) => {
+mock.module('fs/promises', () => ({
+  readFile: mock().mockImplementation((path: string) => {
     if (path.includes('auth.ts')) {
       return Promise.resolve(`export function validateToken(token: string): boolean {
   return token.length > 0 && token.startsWith('Bearer ');
@@ -91,8 +91,8 @@ export function validateAndProcessInput(input: unknown): string {
     }
     return Promise.resolve('');
   }),
-  writeFile: vi.fn().mockResolvedValue(undefined),
-  mkdir: vi.fn().mockResolvedValue(undefined),
+  writeFile: mock().mockResolvedValue(undefined),
+  mkdir: mock().mockResolvedValue(undefined),
 }));
 
 import { EnhancedPatchGenerator } from '../../swe-bench/enhanced-patch-generator';
@@ -109,7 +109,7 @@ describe('EnhancedPatchGenerator', () => {
   const apiKey = 'test-api-key';
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockInstance = {
       instance_id: 'axios-axios-5919',
       repo: 'axios/axios',
@@ -124,12 +124,12 @@ describe('EnhancedPatchGenerator', () => {
     };
 
     mockRuntime = {
-      getSetting: vi.fn().mockReturnValue('test-api-key'),
-      getService: vi.fn().mockReturnValue(null),
+      getSetting: mock().mockReturnValue('test-api-key'),
+      getService: mock().mockReturnValue(null),
     };
 
     mockIssueAnalyzer = {
-      analyzeIssue: vi.fn().mockResolvedValue({
+      analyzeIssue: mock().mockResolvedValue({
         affected_files: ['src/auth.ts'],
         complexity: 'medium',
         suggested_approach: 'Update token validation logic',
@@ -143,8 +143,8 @@ describe('EnhancedPatchGenerator', () => {
     };
 
     mockRepoManager = {
-      cloneRepository: vi.fn().mockResolvedValue('/tmp/repo'),
-      generateDiff: vi.fn().mockResolvedValue(`diff --git a/src/auth.ts b/src/auth.ts
+      cloneRepository: mock().mockResolvedValue('/tmp/repo'),
+      generateDiff: mock().mockResolvedValue(`diff --git a/src/auth.ts b/src/auth.ts
 index 1234567..abcdefg 100644
 --- a/src/auth.ts
 +++ b/src/auth.ts
@@ -153,9 +153,9 @@ index 1234567..abcdefg 100644
 -  return token.length > 0;
 +  return token.length > 0 && token.startsWith('Bearer ');
 }`),
-      getModifiedFiles: vi.fn().mockResolvedValue(['src/auth.ts']),
-      checkBuild: vi.fn().mockResolvedValue(true),
-      runTests: vi.fn().mockResolvedValue({
+      getModifiedFiles: mock().mockResolvedValue(['src/auth.ts']),
+      checkBuild: mock().mockResolvedValue(true),
+      runTests: mock().mockResolvedValue({
         total: 10,
         passed: 10,
         failed: 0,
@@ -218,7 +218,7 @@ index 1234567..abcdefg 100644
       let callCount = 0;
       const mockAnthropicInstance = {
         messages: {
-          create: vi.fn().mockImplementation(() => {
+          create: mock().mockImplementation(() => {
             callCount++;
             // First attempt has syntax error, second is better
             const text =
@@ -317,7 +317,7 @@ export function validateToken(token: string): boolean {
       // Mock the Anthropic client for multi-file response
       const mockAnthropicInstance = {
         messages: {
-          create: vi.fn().mockResolvedValue({
+          create: mock().mockResolvedValue({
             content: [
               {
                 type: 'text',
@@ -452,7 +452,7 @@ index 1234567..abcdefg 100644
       // Mock the Anthropic client to generate insecure code
       const mockAnthropicInstance = {
         messages: {
-          create: vi.fn().mockResolvedValue({
+          create: mock().mockResolvedValue({
             content: [
               {
                 type: 'text',
@@ -495,7 +495,7 @@ export function processInput(input: string) {
       // Mock the Anthropic client to generate high-quality code
       const mockAnthropicInstance = {
         messages: {
-          create: vi.fn().mockResolvedValue({
+          create: mock().mockResolvedValue({
             content: [
               {
                 type: 'text',

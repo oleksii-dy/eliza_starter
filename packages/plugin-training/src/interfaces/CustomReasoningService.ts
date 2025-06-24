@@ -1,4 +1,12 @@
-import type { IAgentRuntime, Memory, State, UUID, Service, ServiceTypeName, Content } from '@elizaos/core';
+import type {
+  IAgentRuntime,
+  Memory,
+  State,
+  UUID,
+  Service,
+  ServiceTypeName,
+  Content,
+} from '@elizaos/core';
 import type { CustomModelType, TrainingDataPoint } from '../types.js';
 
 // Re-export for convenience
@@ -9,16 +17,16 @@ export interface CustomReasoningService extends Service {
   shouldRespond(context: ShouldRespondContext): Promise<ShouldRespondResult>;
   planResponse(context: PlanningContext): Promise<PlanningResult>;
   generateCode(context: CodingContext): Promise<CodingResult>;
-  
+
   // Model management
   enableModel(modelType: CustomModelType): Promise<void>;
   disableModel(modelType: CustomModelType): Promise<void>;
   getModelStatus(modelType: CustomModelType): Promise<ModelStatus>;
-  
+
   // Training data collection
   collectTrainingData(interaction: TrainingDataPoint): Promise<void>;
   exportTrainingData(options: ExportOptions): Promise<TrainingDataset>;
-  
+
   // Cost management
   getCostReport(): Promise<CostReport>;
   setBudgetLimit(limitUSD: number): Promise<void>;
@@ -67,7 +75,6 @@ export interface CodingResult {
   explanation?: string;
   trainingData: TrainingDataPoint;
 }
-
 
 export interface ModelConfig {
   name: string;

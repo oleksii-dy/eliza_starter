@@ -87,9 +87,9 @@ export async function createTestDatabase(
       // Create and initialize runtime with the fully-prepared adapter
       const runtime = new AgentRuntime({
         character: testCharacter,
-        agentId: agentId,
+        agentId,
         plugins: [sqlPlugin, ...testPlugins],
-        adapter: adapter,
+        adapter,
       });
 
       // Initialize the runtime - this will handle agent creation
@@ -152,14 +152,14 @@ export async function createTestDatabase(
   // Create runtime with the adapter directly to bypass plugin initialization issues
   console.log(`[TEST] Creating runtime with ${testPlugins.length} plugins (excluding sqlPlugin)`);
   console.log(
-    `[TEST] Test plugins:`,
+    '[TEST] Test plugins:',
     testPlugins.map((p) => p.name)
   );
   const runtime = new AgentRuntime({
     character: testCharacter,
-    agentId: agentId,
+    agentId,
     plugins: [...testPlugins], // Don't include sqlPlugin to avoid duplicate adapter creation
-    adapter: adapter, // Pass adapter directly to ensure it's used
+    adapter, // Pass adapter directly to ensure it's used
   });
 
   // Initialize the runtime - this will handle agent creation
@@ -211,7 +211,7 @@ export async function createIsolatedTestDatabase(
   if (process.env.POSTGRES_URL) {
     try {
       // PostgreSQL - use test schema
-      console.log(`[TEST] Creating isolated PostgreSQL test`);
+      console.log('[TEST] Creating isolated PostgreSQL test');
 
       const connectionManager = connectionRegistry.getPostgresManager(process.env.POSTGRES_URL);
       const adapter = new PgDatabaseAdapter(
@@ -260,14 +260,14 @@ export async function createIsolatedTestDatabase(
         `[TEST] Creating isolated runtime with ${testPlugins.length} plugins (excluding sqlPlugin)`
       );
       console.log(
-        `[TEST] Test plugins:`,
+        '[TEST] Test plugins:',
         testPlugins.map((p) => p.name)
       );
       const runtime = new AgentRuntime({
         character: testCharacter,
         agentId: testAgentId,
         plugins: [...testPlugins], // Don't include sqlPlugin to avoid duplicate adapter creation
-        adapter: adapter, // Pass adapter directly to ensure it's used
+        adapter, // Pass adapter directly to ensure it's used
       });
 
       // Initialize the runtime - this will handle agent creation
@@ -338,7 +338,7 @@ export async function createIsolatedTestDatabase(
     character: testCharacter,
     agentId: testAgentId,
     plugins: [...testPlugins], // Don't include sqlPlugin to avoid duplicate adapter creation
-    adapter: adapter, // Pass adapter directly to ensure it's used
+    adapter, // Pass adapter directly to ensure it's used
   });
 
   // Initialize the runtime - this will handle agent creation

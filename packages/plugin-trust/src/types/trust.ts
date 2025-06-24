@@ -38,22 +38,22 @@ export interface TrustDimensions {
 export interface SemanticTrustEvidence {
   /** Natural language description of the evidence */
   description: string;
-  
+
   /** LLM-determined impact on trust (-100 to +100) */
   impact: number;
-  
+
   /** LLM-determined category (positive, negative, neutral) */
   sentiment: 'positive' | 'negative' | 'neutral';
-  
+
   /** Which trust dimensions this evidence affects */
   affectedDimensions: Partial<TrustDimensions>;
-  
+
   /** Confidence in the analysis (0-1) */
   analysisConfidence: number;
-  
+
   /** Original context/message that generated this evidence */
   sourceContent?: string;
-  
+
   timestamp: number;
   reportedBy: UUID;
   context: TrustContext;
@@ -88,7 +88,7 @@ export enum TrustEvidenceType {
   IDENTITY_CHANGE = 'IDENTITY_CHANGE',
   ROLE_CHANGE = 'ROLE_CHANGE',
   CONTEXT_SWITCH = 'CONTEXT_SWITCH',
-  
+
   // LLM-analyzed evidence
   SEMANTIC_ANALYSIS = 'SEMANTIC_ANALYSIS'
 }
@@ -220,7 +220,7 @@ export interface TrustRequirements {
 
   /** Required confidence level */
   minimumConfidence?: number;
-  
+
   context?: any;
   evaluatorId?: UUID;
   timestamp?: number;

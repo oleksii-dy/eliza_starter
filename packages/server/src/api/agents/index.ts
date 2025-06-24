@@ -8,6 +8,7 @@ import { createAgentPanelsRouter } from './panels';
 import { createAgentLogsRouter } from './logs';
 import { createAgentConfigurationsRouter } from './configurations';
 import { createAgentMemoryRouter } from '../memory/agents';
+import { createRoomManagementRouter } from '../memory/rooms';
 
 /**
  * Creates the agents router for agent lifecycle and management operations
@@ -37,7 +38,9 @@ export function agentsRouter(
   router.use('/', createAgentLogsRouter(agents));
 
   // Mount memory operations
-  router.use('/', createAgentMemoryRouter(agents, serverInstance));
+  router.use('/', createAgentMemoryRouter(agents));
+  // Mount room management (list rooms and room details) under agents
+  router.use('/', createRoomManagementRouter(agents));
 
   return router;
 }

@@ -1,87 +1,43 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
+import { spawn } from 'child_process';
+import { promisify } from 'util';
+import { exec as execCallback } from 'child_process';
 
-describe('Environment Setup', () => {
-  it('should verify configuration files exist', () => {
-    const requiredFiles = [
-      'package.json',
-      'tsconfig.json',
-      'tsconfig.build.json',
-      'tsup.config.ts',
-      'vitest.config.ts',
-    ];
+const exec = promisify(execCallback);
 
-    for (const file of requiredFiles) {
-      const filePath = path.join(process.cwd(), file);
-      expect(fs.existsSync(filePath)).toBe(true);
+describe('Build and Runtime Environment', () => {
+  it('should have a build script configured', async () => {
+    try {
+      // Instead of running the full build, just verify the build script exists
+      const packageJson = await import('../../package.json');
+      expect(packageJson.scripts).toBeDefined();
+      expect(packageJson.scripts.build).toBeDefined();
+      expect(packageJson.scripts.build).toContain('typecheck');
+      expect(packageJson.scripts.build).toContain('vite');
+      expect(packageJson.scripts.build).toContain('tsup');
+    } catch (error) {
+      throw new Error(`Build configuration check failed: ${error.message}`);
     }
   });
 
-  it('should have proper src directory structure', () => {
-    const srcDir = path.join(process.cwd(), 'src');
-    expect(fs.existsSync(srcDir)).toBe(true);
-
-    const requiredSrcFiles = ['index.ts'];
-
-    for (const file of requiredSrcFiles) {
-      const filePath = path.join(srcDir, file);
-      expect(fs.existsSync(filePath)).toBe(true);
+  it('should have all required dependencies installed', async () => {
+    try {
+      // Check that core dependency can be imported
+      const core = await import('@elizaos/core');
+      expect(core).toBeDefined();
+      expect(core.AgentRuntime).toBeDefined();
+    } catch (error) {
+      throw new Error(`Missing required dependency: ${error.message}`);
     }
   });
 
-  it('should have a valid package.json with required fields', () => {
-    const packageJsonPath = path.join(process.cwd(), 'package.json');
-    expect(fs.existsSync(packageJsonPath)).toBe(true);
-
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-    expect(packageJson).toHaveProperty('name');
-    expect(packageJson).toHaveProperty('version');
-    expect(packageJson).toHaveProperty('type', 'module');
-    expect(packageJson).toHaveProperty('main');
-    expect(packageJson).toHaveProperty('module');
-    expect(packageJson).toHaveProperty('types');
-    expect(packageJson).toHaveProperty('dependencies');
-    expect(packageJson).toHaveProperty('devDependencies');
-    expect(packageJson).toHaveProperty('scripts');
-
-    // Check for required dependencies
-    expect(packageJson.dependencies).toHaveProperty('@elizaos/core');
-
-    // Check for required scripts
-    expect(packageJson.scripts).toHaveProperty('build');
-    expect(packageJson.scripts).toHaveProperty('test');
-  });
-
-  it('should have a valid tsconfig.json with required configuration', () => {
-    const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
-    expect(fs.existsSync(tsconfigPath)).toBe(true);
-
-    const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'));
-    expect(tsconfig).toHaveProperty('compilerOptions');
-
-    // Check compiler options
-    expect(tsconfig.compilerOptions).toHaveProperty('target');
-    expect(tsconfig.compilerOptions).toHaveProperty('module');
-    expect(tsconfig.compilerOptions).toHaveProperty('moduleResolution');
-    expect(tsconfig.compilerOptions).toHaveProperty('esModuleInterop');
-  });
-
-  it('should have a valid tsup.config.ts for building', () => {
-    const tsupConfigPath = path.join(process.cwd(), 'tsup.config.ts');
-    expect(fs.existsSync(tsupConfigPath)).toBe(true);
-
-    const tsupConfig = fs.readFileSync(tsupConfigPath, 'utf8');
-    expect(tsupConfig).toContain('defineConfig');
-    expect(tsupConfig).toContain('entry:');
-    expect(tsupConfig).toContain('src/index.ts');
-  });
-
-  it('should have a valid README.md file', () => {
-    const readmePath = path.join(process.cwd(), 'README.md');
-    expect(fs.existsSync(readmePath)).toBe(true);
-
-    const readme = fs.readFileSync(readmePath, 'utf8');
-    expect(readme).toContain('# Project Starter');
+  it('should export the expected modules', async () => {
+    try {
+      const mainModule = await import('../index');
+      expect(mainModule.character).toBeDefined();
+      expect(mainModule.character.name).toBe('Eliza');
+    } catch (error) {
+      throw new Error(`Module export test failed: ${error.message}`);
+    }
   });
 });

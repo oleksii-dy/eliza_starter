@@ -1,14 +1,13 @@
-import { relations, sql } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 import {
   pgTable,
-  text,
-  integer,
-  index,
-  uniqueIndex,
+  uuid,
   timestamp,
   boolean,
   jsonb,
-  uuid,
+  text,
+  index,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
 /**

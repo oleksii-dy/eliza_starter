@@ -1,8 +1,6 @@
 import { logger, ModelType, type IAgentRuntime } from '@elizaos/core';
 import { spawn, ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
-import * as fs from 'fs/promises';
-import * as path from 'path';
 
 export interface StreamingAudioConfig {
   enabled: boolean;
@@ -220,7 +218,7 @@ export class StreamingAudioCaptureService extends EventEmitter {
   }
 
   private async startStreamingTranscription(): Promise<void> {
-    if (this.transcriptionInProgress) return;
+    if (this.transcriptionInProgress) {return;}
 
     this.transcriptionInProgress = true;
     logger.debug('[StreamingAudio] Starting streaming transcription');
@@ -255,7 +253,7 @@ export class StreamingAudioCaptureService extends EventEmitter {
   }
 
   private endSpeech(): void {
-    if (!this.isSpeaking) return;
+    if (!this.isSpeaking) {return;}
 
     this.isSpeaking = false;
     this.silenceTimer = null;
@@ -297,7 +295,7 @@ export class StreamingAudioCaptureService extends EventEmitter {
   }
 
   private getRecentAudioData(): Buffer {
-    if (this.audioBuffer.length === 0) return Buffer.alloc(0);
+    if (this.audioBuffer.length === 0) {return Buffer.alloc(0);}
 
     // Get audio from start of speech to now
     const startTime = this.audioBuffer[0].timestamp;
@@ -385,7 +383,7 @@ export class StreamingAudioCaptureService extends EventEmitter {
 
   private async createAudioMemory(transcription: string): Promise<void> {
     try {
-      const memory = {
+      const _memory = {
         content: {
           text: `[Audio] ${transcription}`,
           type: 'audio_transcription',

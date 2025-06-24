@@ -29,7 +29,7 @@ export * from './types/crossmint';
 
 /**
  * CrossMint Plugin for ElizaOS
- * 
+ *
  * Provides enterprise blockchain infrastructure with:
  * - MPC (Multi-Party Computation) wallets
  * - X.402 payment protocol support
@@ -40,7 +40,7 @@ export * from './types/crossmint';
 export const crossmintPlugin: Plugin = {
   name: '@elizaos/plugin-crossmint',
   description: 'Enterprise blockchain platform with MPC wallets, X.402 payments, and cross-chain infrastructure',
-  
+
   // Plugin configuration
   config: {
     CROSSMINT_API_KEY: {

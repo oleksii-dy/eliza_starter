@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'bun:test';
 import { EquipmentBonusCalculator } from '../../../rpg/systems/inventory/EquipmentBonusCalculator';
 import { ItemRegistry } from '../../../rpg/systems/inventory/ItemRegistry';
 import { EquipmentSlot, WeaponType } from '../../../rpg/types';
@@ -441,4 +441,4 @@ describe('EquipmentBonusCalculator', () => {
       expect(bonuses.prayerBonus).toBe(0);
     });
   });
-}); 
+});

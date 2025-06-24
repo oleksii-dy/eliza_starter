@@ -105,7 +105,7 @@ export const createMCPAction: Action = {
             `- Tools: ${tools.length > 0 ? tools.map((t) => t.name).join(', ') : 'None specified'}\n` +
             `- Resources: ${resources.length > 0 ? resources.map((r) => r.name).join(', ') : 'None specified'}\n` +
             `- Dependencies: ${dependencies.length > 0 ? dependencies.join(', ') : 'None specified'}\n\n` +
-            `This will take a few minutes...`,
+            'This will take a few minutes...',
           actions: ['CREATE_MCP'],
         });
       }
@@ -115,10 +115,19 @@ export const createMCPAction: Action = {
       const result = await mcpService.createMCPProject({
         name: mcpName,
         description: messageText,
-        outputDir: path.join(process.cwd(), '.eliza-temp', 'mcp-projects'),
+        // Use centralized path management for MCP projects
+        outputDir: (() => {
+          try {
+            const { getPluginDataPath } = require('@elizaos/core/utils/path-manager');
+            return getPluginDataPath('autocoder', 'mcp-projects');
+          } catch {
+            // Fallback to legacy path if path-manager is not available
+            return path.join(process.cwd(), '.eliza-temp', 'mcp-projects');
+          }
+        })(),
         tools: tools.map((t) => ({ name: t.name, description: t.description })),
         resources: resources.map((r) => ({ name: r.name, description: r.description })),
-        dependencies: dependencies,
+        dependencies,
       });
 
       // Check if creation was successful
@@ -127,24 +136,24 @@ export const createMCPAction: Action = {
       }
 
       // Prepare summary
-      let summary = `## MCP Server Created Successfully! 🎉\n\n`;
+      let summary = '## MCP Server Created Successfully! 🎉\n\n';
       summary += `**Name**: ${mcpName}\n`;
       summary += `**Path**: ${result.projectPath}\n\n`;
 
-      summary += `### Components Created:\n`;
+      summary += '### Components Created:\n';
       summary += `- ✅ MCP Server with ${result.details?.toolsGenerated?.length || 0} tools\n`;
       summary += `- ✅ ${result.details?.resourcesGenerated?.length || 0} resources configured\n`;
-      summary += `- ✅ Full test suite\n`;
-      summary += `- ✅ Configuration and utilities\n\n`;
+      summary += '- ✅ Full test suite\n';
+      summary += '- ✅ Configuration and utilities\n\n';
 
-      summary += `### Next Steps:\n`;
+      summary += '### Next Steps:\n';
       summary += `1. Navigate to the project: \`cd ${result.projectPath}\`\n`;
-      summary += `2. Install dependencies: \`npm install\`\n`;
-      summary += `3. Run tests: \`npm test\`\n`;
-      summary += `4. Start the server: \`npm run mcp:server\`\n\n`;
+      summary += '2. Install dependencies: `npm install`\n';
+      summary += '3. Run tests: `npm test`\n';
+      summary += '4. Start the server: `npm run mcp:server`\n\n';
 
-      summary += `### Testing with plugin-mcp:\n`;
-      summary += `Configure your Eliza agent with plugin-mcp to connect to this MCP server.\n`;
+      summary += '### Testing with plugin-mcp:\n';
+      summary += 'Configure your Eliza agent with plugin-mcp to connect to this MCP server.\n';
 
       elizaLogger.info('[CREATE_MCP] MCP creation completed', {
         name: mcpName,

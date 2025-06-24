@@ -9,7 +9,7 @@ import path from 'path';
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 import { ResearchService } from '../service';
-import { elizaLogger, IAgentRuntime, ModelType, Character, UUID, asUUID } from '@elizaos/core';
+import { logger, IAgentRuntime, ModelType, Character, UUID, asUUID } from '@elizaos/core';
 import { ResearchConfig, ResearchStatus } from '../types';
 import fs from 'fs/promises';
 
@@ -33,7 +33,7 @@ const createRealRuntime = (): IAgentRuntime => {
     getSetting: (key: string) => {
       const value = process.env[key];
       if (key.includes('API_KEY') && value) {
-        elizaLogger.debug(`[Runtime] Found ${key}`);
+        logger.debug(`[Runtime] Found ${key}`);
       }
       return value || null;
     },
@@ -49,7 +49,7 @@ const createRealRuntime = (): IAgentRuntime => {
       const messages = params?.messages || [];
       const lastMessage = messages[messages.length - 1]?.content || '';
 
-      elizaLogger.debug(`[Model ${modelType}] Processing:`, lastMessage.substring(0, 100) + '...');
+      logger.debug(`[Model ${modelType}] Processing:`, `${lastMessage.substring(0, 100)}...`);
 
       // Handle different types of model requests
       if (lastMessage.includes('Analyze this research query')) {
@@ -145,7 +145,7 @@ PRIORITY: medium`,
 };
 
 async function testRenewableEnergyResearch() {
-  elizaLogger.info('=== Testing Renewable Energy Storage Research ===');
+  logger.info('=== Testing Renewable Energy Storage Research ===');
 
   const runtime = createRealRuntime();
   const service = new ResearchService(runtime);
@@ -153,7 +153,7 @@ async function testRenewableEnergyResearch() {
   const query =
     'Compare the environmental and economic impacts of different renewable energy storage technologies for grid-scale deployment';
 
-  elizaLogger.info(`Research Query: "${query}"`);
+  logger.info(`Research Query: "${query}"`);
 
   try {
     // Create research project with specific configuration
@@ -167,7 +167,7 @@ async function testRenewableEnergyResearch() {
 
     const project = await service.createResearchProject(query, config);
 
-    elizaLogger.info('✅ Project created successfully:', {
+    logger.info('✅ Project created successfully:', {
       id: project.id,
       status: project.status,
     });
@@ -178,9 +178,9 @@ async function testRenewableEnergyResearch() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const currentProject = await service.getProject(project.id);
-      if (!currentProject) break;
+      if (!currentProject) {break;}
 
-      elizaLogger.info(
+      logger.info(
         `Progress: ${currentProject.phase} - Sources: ${currentProject.sources.length}, Findings: ${currentProject.findings.length}`
       );
 
@@ -188,7 +188,7 @@ async function testRenewableEnergyResearch() {
         currentProject.status === ResearchStatus.COMPLETED ||
         currentProject.status === ResearchStatus.FAILED
       ) {
-        elizaLogger.info(`Research ${currentProject.status}`);
+        logger.info(`Research ${currentProject.status}`);
 
         // Save the report if completed
         if (currentProject.report) {
@@ -196,10 +196,10 @@ async function testRenewableEnergyResearch() {
           const markdownReport = await service.exportProject(project.id, 'markdown');
           const reportPath = path.join(__dirname, '../../test-renewable-energy-report.md');
           await fs.writeFile(reportPath, markdownReport);
-          elizaLogger.info(`✅ Report saved to: ${reportPath}`);
+          logger.info(`✅ Report saved to: ${reportPath}`);
 
           // Show first 500 chars of the report
-          elizaLogger.info('\n📄 Report Preview:\n' + markdownReport.substring(0, 500) + '...\n');
+          logger.info(`\n📄 Report Preview:\n${markdownReport.substring(0, 500)}...\n`);
 
           // Check if report contains renewable energy content
           const hasRelevantContent =
@@ -208,9 +208,9 @@ async function testRenewableEnergyResearch() {
             markdownReport.toLowerCase().includes('battery');
 
           if (hasRelevantContent) {
-            elizaLogger.info('✅ Report contains relevant renewable energy content!');
+            logger.info('✅ Report contains relevant renewable energy content!');
           } else {
-            elizaLogger.error('❌ Report does NOT contain relevant renewable energy content!');
+            logger.error('❌ Report does NOT contain relevant renewable energy content!');
           }
         }
 
@@ -224,14 +224,14 @@ async function testRenewableEnergyResearch() {
     const exportData = await service.exportProject(project.id, 'json');
     const exportPath = path.join(__dirname, '../../test-renewable-energy-export.json');
     await fs.writeFile(exportPath, exportData);
-    elizaLogger.info(`✅ Project data exported to: ${exportPath}`);
+    logger.info(`✅ Project data exported to: ${exportPath}`);
 
     await service.stop();
   } catch (error) {
-    elizaLogger.error('❌ Test failed:', error);
+    logger.error('❌ Test failed:', error);
   }
 
-  elizaLogger.info('=== Test Complete ===');
+  logger.info('=== Test Complete ===');
 }
 
 // Run the test

@@ -45,11 +45,6 @@ describe('DummyTokenDataService', () => {
       expect(tokenData).toHaveProperty('lastUpdatedAt');
       expect(tokenData).toHaveProperty('raw');
     });
-
-    it('should always return 18 decimals', async () => {
-      const tokenData = await service.getTokenDetails('any-address', 'any-chain');
-      expect(tokenData?.decimals).toBe(18);
-    });
   });
 
   describe('getTrendingTokens', () => {

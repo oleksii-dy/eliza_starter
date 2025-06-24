@@ -14,7 +14,7 @@ interface SpawnConditions {
     start: number;  // 0-24
     end: number;
   };
-  
+
   // Player conditions
   minPlayers?: number;
   maxPlayers?: number;
@@ -22,7 +22,7 @@ interface SpawnConditions {
     min: number;
     max: number;
   };
-  
+
   // Custom conditions
   customCondition?: (spawner: Spawner, world: World) => boolean;
 }
@@ -36,25 +36,25 @@ export class SpawnConditionChecker {
    */
   checkConditions(spawner: Spawner, world: World): boolean {
     const conditions = spawner.conditions;
-    if (!conditions) return true;
-    
+    if (!conditions) {return true;}
+
     // Check time of day
     if (conditions.timeOfDay) {
       const currentTime = this.getTimeOfDay(world);
       const { start, end } = conditions.timeOfDay;
-      
+
       if (start <= end) {
-        if (currentTime < start || currentTime > end) return false;
+        if (currentTime < start || currentTime > end) {return false;}
       } else {
         // Handles overnight periods
-        if (currentTime < start && currentTime > end) return false;
+        if (currentTime < start && currentTime > end) {return false;}
       }
     }
-    
+
     // Check player count
     if (conditions.minPlayers !== undefined || conditions.maxPlayers !== undefined) {
       const playerCount = this.getPlayersInRange(spawner, world).length;
-      
+
       if (conditions.minPlayers !== undefined && playerCount < conditions.minPlayers) {
         return false;
       }
@@ -62,29 +62,29 @@ export class SpawnConditionChecker {
         return false;
       }
     }
-    
+
     // Check player level
     if (conditions.playerLevel) {
       const players = this.getPlayersInRange(spawner, world);
-      if (players.length === 0) return false;
-      
+      if (players.length === 0) {return false;}
+
       const avgLevel = this.getAveragePlayerLevel(players);
       const { min, max } = conditions.playerLevel;
-      
-      if (min !== undefined && avgLevel < min) return false;
-      if (max !== undefined && avgLevel > max) return false;
+
+      if (min !== undefined && avgLevel < min) {return false;}
+      if (max !== undefined && avgLevel > max) {return false;}
     }
-    
+
     // Check custom condition
     if (conditions.customCondition) {
       if (!conditions.customCondition(spawner, world)) {
         return false;
       }
     }
-    
+
     return true;
   }
-  
+
   /**
    * Get current time of day (0-24)
    */
@@ -94,43 +94,43 @@ export class SpawnConditionChecker {
     if (timeSystem && typeof timeSystem.getHour === 'function') {
       return timeSystem.getHour();
     }
-    
+
     // Check if world has day/night cycle
     const dayNightCycle = (world as any).dayNightCycle;
     if (dayNightCycle && typeof dayNightCycle.getCurrentHour === 'function') {
       return dayNightCycle.getCurrentHour();
     }
-    
+
     // Fallback to real time
     const now = new Date();
     return now.getHours() + (now.getMinutes() / 60);
   }
-  
+
   /**
    * Get players in range of spawner
    */
   private getPlayersInRange(spawner: Spawner, world: World): PlayerEntity[] {
     const players: PlayerEntity[] = [];
-    
+
     // Get all entities in range
     const entities = (world as any).getEntitiesInRange?.(spawner.position, spawner.activationRange) || [];
-    
+
     for (const entity of entities) {
       // Check both entity.type and entity.data.type for compatibility
       if (entity.type === 'player' || entity.data?.type === 'player') {
         players.push(entity as PlayerEntity);
       }
     }
-    
+
     return players;
   }
-  
+
   /**
    * Get average level of players
    */
   private getAveragePlayerLevel(players: PlayerEntity[]): number {
-    if (players.length === 0) return 0;
-    
+    if (players.length === 0) {return 0;}
+
     let totalLevel = 0;
     for (const player of players) {
       const stats = player.getComponent?.('stats') as StatsComponent | undefined;
@@ -138,7 +138,7 @@ export class SpawnConditionChecker {
         totalLevel += stats.combatLevel;
       }
     }
-    
+
     return totalLevel / players.length;
   }
-} 
+}

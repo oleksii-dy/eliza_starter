@@ -4,4 +4,4 @@ export { RelationshipOntologyManager } from './RelationshipOntologyManager';
 export { AutonomousRelationshipManager } from './AutonomousRelationshipManager';
 export { EventBridge } from '../managers/EventBridge';
 export { FollowUpManager } from './FollowUpManager';
-export { EntityGraphManager } from './EntityGraphManager'; 
+export { EntityGraphManager } from './EntityGraphManager';

@@ -134,17 +134,17 @@ export class TestPatternGenerator {
    */
   private static generateGrid(width: number, height: number, spacing: number = 100): string {
     const lines: string[] = [];
-    
+
     // Vertical lines
     for (let x = spacing; x < width; x += spacing) {
       lines.push(`<line x1="${x}" y1="0" x2="${x}" y2="${height}" stroke="#eeeeee" stroke-width="1"/>`);
     }
-    
+
     // Horizontal lines
     for (let y = spacing; y < height; y += spacing) {
       lines.push(`<line x1="0" y1="${y}" x2="${width}" y2="${y}" stroke="#eeeeee" stroke-width="1"/>`);
     }
-    
+
     return lines.join('\n');
   }
 
@@ -154,10 +154,10 @@ export class TestPatternGenerator {
   static async savePattern(buffer: Buffer, filename: string): Promise<string> {
     const outputDir = path.join(process.cwd(), 'test-patterns');
     await fs.mkdir(outputDir, { recursive: true });
-    
+
     const filepath = path.join(outputDir, filename);
     await fs.writeFile(filepath, buffer);
-    
+
     logger.info(`[TestPatternGenerator] Saved test pattern to ${filepath}`);
     return filepath;
   }
@@ -167,7 +167,7 @@ export class TestPatternGenerator {
    */
   static async generatePatternsForAllDisplays(displayCount: number): Promise<Map<number, Buffer>> {
     const patterns = new Map<number, Buffer>();
-    
+
     for (let i = 0; i < displayCount; i++) {
       const pattern = await this.generateQuadrantPattern({
         width: 1920,
@@ -175,10 +175,10 @@ export class TestPatternGenerator {
         displayIndex: i,
         includeTimestamp: true,
       });
-      
+
       patterns.set(i, pattern);
     }
-    
+
     return patterns;
   }
 
@@ -192,24 +192,24 @@ export class TestPatternGenerator {
   } {
     const expectedNumbers = [1, 2, 3, 4, 5];
     const foundNumbers: number[] = [];
-    
+
     // Extract all numbers from OCR text
     const matches = ocrText.match(/\d+/g);
     if (matches) {
       matches.forEach(match => {
-        const num = parseInt(match);
+        const num = parseInt(match, 10);
         if (expectedNumbers.includes(num) && !foundNumbers.includes(num)) {
           foundNumbers.push(num);
         }
       });
     }
-    
+
     const missingNumbers = expectedNumbers.filter(n => !foundNumbers.includes(n));
-    
+
     return {
       success: missingNumbers.length === 0,
       foundNumbers,
       missingNumbers,
     };
   }
-} 
+}

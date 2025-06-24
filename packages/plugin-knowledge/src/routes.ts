@@ -147,10 +147,10 @@ async function uploadKnowledgeHandler(req: any, res: any, runtime: IAgentRuntime
 
           // Construct AddKnowledgeOptions directly using available variables
           const addKnowledgeOpts: import('./types.ts').AddKnowledgeOptions = {
-            agentId: agentId, // Pass the agent ID from frontend
+            agentId, // Pass the agent ID from frontend
             clientDocumentId: knowledgeId, // This is knowledgeItem.id
             contentType: file.mimetype, // Directly from multer file object
-            originalFilename: originalFilename, // Directly from multer file object
+            originalFilename, // Directly from multer file object
             content: base64Content, // The base64 string of the file
             worldId,
             roomId: agentId, // Use the correct agent ID
@@ -262,11 +262,11 @@ async function uploadKnowledgeHandler(req: any, res: any, runtime: IAgentRuntime
 
           // Construct AddKnowledgeOptions with the fetched content
           const addKnowledgeOpts: import('./types.ts').AddKnowledgeOptions = {
-            agentId: agentId, // Pass the agent ID from frontend
+            agentId, // Pass the agent ID from frontend
             clientDocumentId: knowledgeId,
-            contentType: contentType,
-            originalFilename: originalFilename,
-            content: content, // Use the base64 encoded content from the URL
+            contentType,
+            originalFilename,
+            content, // Use the base64 encoded content from the URL
             worldId: agentId,
             roomId: agentId,
             entityId: agentId,
@@ -283,7 +283,7 @@ async function uploadKnowledgeHandler(req: any, res: any, runtime: IAgentRuntime
 
           return {
             id: result.clientDocumentId,
-            fileUrl: fileUrl,
+            fileUrl,
             filename: originalFilename,
             message: 'Knowledge created successfully',
             createdAt: Date.now(),
@@ -293,7 +293,7 @@ async function uploadKnowledgeHandler(req: any, res: any, runtime: IAgentRuntime
         } catch (urlError: any) {
           logger.error(`[KNOWLEDGE URL HANDLER] Error processing URL ${fileUrl}: ${urlError}`);
           return {
-            fileUrl: fileUrl,
+            fileUrl,
             status: 'error_processing',
             error: urlError.message,
           };
@@ -350,7 +350,7 @@ async function updateKnowledgeHandler(req: any, res: any, runtime: IAgentRuntime
       const base64Content = fileBuffer.toString('base64');
 
       const addKnowledgeOpts: import('./types.ts').AddKnowledgeOptions = {
-        agentId: agentId,
+        agentId,
         clientDocumentId: knowledgeId as UUID, // Keep the same ID
         contentType: file.mimetype,
         originalFilename: file.originalname,
@@ -467,9 +467,9 @@ async function getKnowledgeDocumentsHandler(req: any, res: any, runtime: IAgentR
     const cleanMemories = includeEmbedding
       ? filteredMemories
       : filteredMemories.map((memory: Memory) => ({
-          ...memory,
-          embedding: undefined,
-        }));
+        ...memory,
+        embedding: undefined,
+      }));
     sendSuccess(res, {
       memories: cleanMemories,
       urlFiltered: fileUrls ? true : false,
@@ -752,12 +752,12 @@ async function getKnowledgeChunksHandler(req: any, res: any, runtime: IAgentRunt
     // Filter chunks by documentId if provided
     const filteredChunks = documentId
       ? chunks.filter(
-          (chunk) =>
-            chunk.metadata &&
+        (chunk) =>
+          chunk.metadata &&
             typeof chunk.metadata === 'object' &&
             'documentId' in chunk.metadata &&
             chunk.metadata.documentId === documentId
-        )
+      )
       : chunks;
 
     sendSuccess(res, { chunks: filteredChunks });

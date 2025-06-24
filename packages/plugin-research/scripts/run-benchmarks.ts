@@ -4,7 +4,7 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { BenchmarkRunner } from '../src/benchmarks/benchmark-runner';
 import { STANDARD_BENCHMARKS, getBenchmarkByName } from '../src/benchmarks/standard-benchmarks';
 import { ResearchService } from '../src/service';

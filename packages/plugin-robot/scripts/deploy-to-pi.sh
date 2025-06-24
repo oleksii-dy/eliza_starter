@@ -69,7 +69,7 @@ cat > "$TEMP_DIR/deploy/package.json" << EOF
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@elizaos/core": "^1.0.9",
+    "@elizaos/core": "workspace:*",
     "serialport": "^12.0.0",
     "ws": "^8.16.0",
     "roslibjs": "^1.3.0"

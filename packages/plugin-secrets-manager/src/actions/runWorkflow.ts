@@ -1,13 +1,4 @@
-import {
-  type Action,
-  type IAgentRuntime,
-  type Memory,
-  type HandlerCallback,
-  logger,
-  elizaLogger,
-  parseJSONObjectFromText,
-} from '@elizaos/core';
-import { ActionChainService } from '../services/action-chain-service';
+import { ActionChain } from '../services/action-chain-service';
 import type { ActionChainWorkflow } from '../services/action-chain-service';
 
 interface RunWorkflowParams {
@@ -22,15 +13,17 @@ export const runWorkflowAction: Action = {
   description:
     'Execute a predefined workflow or custom workflow for complex secret management operations',
 
-  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
-    const hasService = !!runtime.getService('ACTION_CHAIN');
-    if (!hasService) {
+  validate: async (_runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+    const has = !!runtime.get('ACTION_CHAIN');
+    if (!has) {
       logger.warn('[RunWorkflow] Action chain service not available');
       return false;
     }
 
     const text = message.content.text?.toLowerCase();
-    if (!text) return false;
+    if (!text) {
+      return false;
+    }
     const keywords = [
       'run workflow',
       'execute workflow',
@@ -51,14 +44,14 @@ export const runWorkflowAction: Action = {
     message: Memory,
     state: any,
     options: any,
-    callback?: HandlerCallback
+    callback?: Callback
   ): Promise<boolean> => {
     elizaLogger.info('[RunWorkflow] Starting workflow execution');
 
-    const actionChainService = runtime.getService('ACTION_CHAIN') as ActionChainService;
-    if (!actionChainService) {
+    const actionChain = runtime.get('ACTION_CHAIN') as ActionChain;
+    if (!actionChain) {
       if (callback) {
-        callback({
+        void callback({
           text: 'Workflow execution service is not available.',
           error: true,
         });
@@ -71,7 +64,7 @@ export const runWorkflowAction: Action = {
       const messageText = message.content.text;
       if (!messageText) {
         if (callback) {
-          callback({
+          void callback({
             text: 'Message text is required for workflow execution',
             error: true,
           });
@@ -90,7 +83,7 @@ export const runWorkflowAction: Action = {
         // Execute predefined workflow
         elizaLogger.info(`[RunWorkflow] Executing predefined workflow: ${params.workflowId}`);
 
-        workflowResult = await actionChainService.executeWorkflow(
+        workflowResult = await actionChain.executeWorkflow(
           params.workflowId,
           params.params || {},
           message.entityId,
@@ -102,7 +95,7 @@ export const runWorkflowAction: Action = {
         // Execute custom workflow
         elizaLogger.info(`[RunWorkflow] Executing custom workflow: ${params.workflow.name}`);
 
-        workflowResult = await actionChainService.executeWorkflowDirect(
+        workflowResult = await actionChain.executeWorkflowDirect(
           params.workflow,
           params.params || {},
           message.entityId,
@@ -112,12 +105,12 @@ export const runWorkflowAction: Action = {
         responseText = generateWorkflowResponse(params.workflow.id, workflowResult);
       } else {
         // Show available workflows
-        const workflows = actionChainService.getWorkflows();
+        const workflows = actionChain.getWorkflows();
         responseText = generateWorkflowListResponse(workflows);
       }
 
       if (callback) {
-        callback({
+        void callback({
           text: responseText,
           data: {
             workflowResult,
@@ -131,7 +124,7 @@ export const runWorkflowAction: Action = {
       elizaLogger.error('[RunWorkflow] Error:', error);
 
       if (callback) {
-        callback({
+        void callback({
           text: `Error executing workflow: ${error instanceof Error ? error.message : String(error)}`,
           error: true,
         });
@@ -270,13 +263,13 @@ function generateWorkflowResponse(workflowId: string, result: any): string {
       : 0;
 
   let response = `✅ Workflow "${workflowId}" completed successfully!\n\n`;
-  response += `📊 **Summary:**\n`;
+  response += '📊 **Summary:**\n';
   response += `- Steps completed: ${result.completedSteps}/${result.totalSteps}\n`;
   response += `- Duration: ${duration}ms\n`;
   response += `- Session ID: ${result.sessionId}\n\n`;
 
   if (result.results.length > 0) {
-    response += `📋 **Steps executed:**\n`;
+    response += '📋 **Steps executed:**\n';
     result.results.forEach((step: any, index: number) => {
       const status = step.success ? '✅' : '❌';
       response += `${index + 1}. ${status} ${step.actionName}\n`;
@@ -288,15 +281,19 @@ function generateWorkflowResponse(workflowId: string, result: any): string {
 
   // Add specific workflow completion messages
   switch (workflowId) {
-    case 'user-secret-onboarding':
-      response += `\n🎉 Welcome aboard! Your API keys are now configured and ready to use.`;
+    case 'api-key-setup': {
+      response += '\n🎉 Welcome aboard! Your API keys are now configured and ready to use.';
       break;
-    case 'secret-rotation':
-      response += `\n🔄 Your secrets have been rotated successfully. All dependent services will use the new keys.`;
+    }
+    case 'full-setup': {
+      response +=
+        '\n🔄 Your secrets have been rotated successfully. All dependent services will use the new keys.';
       break;
-    case 'bulk-secret-import':
-      response += `\n📥 Bulk import completed. All secrets have been imported and validated.`;
+    }
+    case 'bulk-import': {
+      response += '\n📥 Bulk import completed. All secrets have been imported and validated.';
       break;
+    }
   }
 
   return response;
@@ -318,10 +315,10 @@ function generateWorkflowListResponse(workflows: ActionChainWorkflow[]): string 
     response += `   Steps: ${workflow.steps.length}\n\n`;
   });
 
-  response += `To run a workflow, say something like:\n`;
-  response += `- "Run the user onboarding workflow"\n`;
-  response += `- "I need to rotate my secrets"\n`;
-  response += `- "Help me import multiple secrets"\n`;
+  response += 'To run a workflow, say something like:\n';
+  response += '- "Run the user onboarding workflow"\n';
+  response += '- "I need to rotate my secrets"\n';
+  response += '- "Help me import multiple secrets"\n';
 
   return response;
 }

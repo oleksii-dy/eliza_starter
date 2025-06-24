@@ -142,7 +142,7 @@ export abstract class UniversalWalletService extends Service implements IUnivers
 
   async getTransaction(hash: string, chain?: string): Promise<UniversalTransactionResult> {
     const chainId = chain || this.defaultChain || this.chainSupport[0];
-    const adapter = this.getAdapterForChain(chainId);
+    const _adapter = this.getAdapterForChain(chainId);
 
     // This would need to be implemented by each adapter
     throw new Error('getTransaction not implemented by adapter');
@@ -173,49 +173,49 @@ export abstract class UniversalWalletService extends Service implements IUnivers
   }
 
   // Payment protocol methods (optional)
-  async createPaymentRequest(params: PaymentRequestParams): Promise<UniversalPaymentRequest> {
+  async createPaymentRequest(_params: PaymentRequestParams): Promise<UniversalPaymentRequest> {
     throw new Error('Payment request creation not implemented');
   }
 
-  async processPayment(request: UniversalPaymentRequest): Promise<PaymentResult> {
+  async processPayment(_request: UniversalPaymentRequest): Promise<PaymentResult> {
     throw new Error('Payment processing not implemented');
   }
 
-  async verifyPayment(paymentId: string): Promise<PaymentVerification> {
+  async verifyPayment(_paymentId: string): Promise<PaymentVerification> {
     throw new Error('Payment verification not implemented');
   }
 
   // Wallet management methods (optional)
-  async createWallet(params: WalletCreationParams): Promise<WalletInstance> {
+  async createWallet(_params: WalletCreationParams): Promise<WalletInstance> {
     throw new Error('Wallet creation not implemented');
   }
 
-  async importWallet(params: WalletImportParams): Promise<WalletInstance> {
+  async importWallet(_params: WalletImportParams): Promise<WalletInstance> {
     throw new Error('Wallet import not implemented');
   }
 
-  async getWallets(filter?: WalletFilter): Promise<WalletInstance[]> {
+  async getWallets(_filter?: WalletFilter): Promise<WalletInstance[]> {
     throw new Error('Wallet listing not implemented');
   }
 
-  async deleteWallet(walletId: string): Promise<boolean> {
+  async deleteWallet(_walletId: string): Promise<boolean> {
     throw new Error('Wallet deletion not implemented');
   }
 
   // Session management methods (optional)
-  async createSession(params: SessionParams): Promise<SessionKey> {
+  async createSession(_params: SessionParams): Promise<SessionKey> {
     throw new Error('Session creation not implemented');
   }
 
-  async validateSession(sessionId: string, operation: string): Promise<boolean> {
+  async validateSession(_sessionId: string, _operation: string): Promise<boolean> {
     throw new Error('Session validation not implemented');
   }
 
-  async revokeSession(sessionId: string): Promise<void> {
+  async revokeSession(_sessionId: string): Promise<void> {
     throw new Error('Session revocation not implemented');
   }
 
-  async listSessions(walletId?: string): Promise<SessionKey[]> {
+  async listSessions(_walletId?: string): Promise<SessionKey[]> {
     throw new Error('Session listing not implemented');
   }
 
@@ -253,7 +253,7 @@ export abstract class UniversalWalletService extends Service implements IUnivers
   }
 
   protected async calculatePortfolioChange(
-    balances: UniversalTokenBalance[]
+    _balances: UniversalTokenBalance[]
   ): Promise<{ amount: number; percent: number }> {
     // This would require historical price data
     // For now, return zero change

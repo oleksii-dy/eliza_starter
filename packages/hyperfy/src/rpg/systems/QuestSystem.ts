@@ -127,7 +127,7 @@ export class QuestSystem extends System {
 
     const playerQuests = this.getPlayerQuests(player.id);
     const questData = playerQuests.get(questId);
-    
+
     if (questData && questData.status !== 'not_started') {
       return { canStart: false, reason: 'Quest already started or completed' };
     }
@@ -212,14 +212,14 @@ export class QuestSystem extends System {
   }
 
   updateObjective(
-    player: PlayerEntity, 
-    questId: string, 
-    objectiveId: string, 
+    player: PlayerEntity,
+    questId: string,
+    objectiveId: string,
     progress: number
   ): void {
     const playerQuests = this.getPlayerQuests(player.id);
     const questData = playerQuests.get(questId);
-    
+
     if (!questData || questData.status !== 'in_progress') {
       return;
     }
@@ -230,7 +230,7 @@ export class QuestSystem extends System {
     }
 
     objective.current = Math.min(progress, objective.quantity || 1);
-    
+
     if (objective.current >= (objective.quantity || 1)) {
       objective.completed = true;
       this.world.events.emit('quest:objective_complete', {
@@ -251,7 +251,7 @@ export class QuestSystem extends System {
     const playerQuests = this.getPlayerQuests(player.id);
     const questData = playerQuests.get(questId);
     const quest = this.questDefinitions.get(questId);
-    
+
     if (!questData || !quest || questData.status !== 'in_progress') {
       return;
     }
@@ -378,10 +378,10 @@ export class QuestSystem extends System {
   // Event handlers for quest progress
   handleNPCKill(player: PlayerEntity, npcId: string): void {
     const activeQuests = this.getActiveQuests(player);
-    
+
     for (const quest of activeQuests) {
       const questData = this.getQuestProgress(player, quest.id)!;
-      
+
       for (const objective of questData.objectives) {
         if (objective.type === 'kill' && objective.target === npcId && !objective.completed) {
           this.updateObjective(player, quest.id, objective.id, objective.current + 1);
@@ -392,10 +392,10 @@ export class QuestSystem extends System {
 
   handleItemCollected(player: PlayerEntity, itemId: string, quantity: number): void {
     const activeQuests = this.getActiveQuests(player);
-    
+
     for (const quest of activeQuests) {
       const questData = this.getQuestProgress(player, quest.id)!;
-      
+
       for (const objective of questData.objectives) {
         if (objective.type === 'collect' && objective.target === itemId && !objective.completed) {
           const inventory = player.getComponent<InventoryComponent>('inventory');
@@ -410,10 +410,10 @@ export class QuestSystem extends System {
 
   handleNPCTalk(player: PlayerEntity, npcId: string): void {
     const activeQuests = this.getActiveQuests(player);
-    
+
     for (const quest of activeQuests) {
       const questData = this.getQuestProgress(player, quest.id)!;
-      
+
       for (const objective of questData.objectives) {
         if (objective.type === 'talk' && objective.target === npcId && !objective.completed) {
           this.updateObjective(player, quest.id, objective.id, 1);
@@ -424,10 +424,10 @@ export class QuestSystem extends System {
 
   handleLocationReached(player: PlayerEntity, locationId: string): void {
     const activeQuests = this.getActiveQuests(player);
-    
+
     for (const quest of activeQuests) {
       const questData = this.getQuestProgress(player, quest.id)!;
-      
+
       for (const objective of questData.objectives) {
         if (objective.type === 'reach' && objective.target === locationId && !objective.completed) {
           this.updateObjective(player, quest.id, objective.id, 1);
@@ -438,10 +438,10 @@ export class QuestSystem extends System {
 
   handleItemUsed(player: PlayerEntity, itemId: string, targetId?: string): void {
     const activeQuests = this.getActiveQuests(player);
-    
+
     for (const quest of activeQuests) {
       const questData = this.getQuestProgress(player, quest.id)!;
-      
+
       for (const objective of questData.objectives) {
         if (objective.type === 'use' && objective.target === itemId && !objective.completed) {
           this.updateObjective(player, quest.id, objective.id, objective.current + 1);
@@ -474,4 +474,4 @@ export class QuestSystem extends System {
       }
     }
   }
-} 
+}

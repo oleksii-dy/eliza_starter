@@ -1,4 +1,4 @@
-import type { Scenario } from "../types.js"
+import type { Scenario } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const secretsIntegrationWorkflowScenario: Scenario = {
@@ -45,7 +45,7 @@ Always prioritize security while maintaining excellent user experience.`,
         '@elizaos/plugin-secrets-manager',
         '@elizaos/plugin-autocoder',
         '@elizaos/plugin-plugin-manager',
-        '@elizaos/plugin-ngrok'
+        '@elizaos/plugin-ngrok',
       ],
       script: { steps: [] },
     },
@@ -57,7 +57,8 @@ Always prioritize security while maintaining excellent user experience.`,
         steps: [
           {
             type: 'message',
-            content: 'I want to create a plugin that integrates with multiple AI services: OpenAI for text generation, Anthropic for reasoning, and ElevenLabs for speech synthesis. I need help managing all the API keys securely.',
+            content:
+              'I want to create a plugin that integrates with multiple AI services: OpenAI for text generation, Anthropic for reasoning, and ElevenLabs for speech synthesis. I need help managing all the API keys securely.',
           },
           {
             type: 'wait',
@@ -65,7 +66,8 @@ Always prioritize security while maintaining excellent user experience.`,
           },
           {
             type: 'message',
-            content: 'Great! I can see the secure form. Let me fill it out... Actually, what\'s the difference between storing these keys globally vs for this specific project? Which is more secure?',
+            content:
+              "Great! I can see the secure form. Let me fill it out... Actually, what's the difference between storing these keys globally vs for this specific project? Which is more secure?",
           },
           {
             type: 'wait',
@@ -73,7 +75,8 @@ Always prioritize security while maintaining excellent user experience.`,
           },
           {
             type: 'message',
-            content: 'Perfect. I\'ll use project-level storage. Now, what happens if I need to rotate these API keys later? How do I update them without breaking the plugin?',
+            content:
+              "Perfect. I'll use project-level storage. Now, what happens if I need to rotate these API keys later? How do I update them without breaking the plugin?",
           },
           {
             type: 'wait',
@@ -81,7 +84,8 @@ Always prioritize security while maintaining excellent user experience.`,
           },
           {
             type: 'message',
-            content: 'Excellent. Now let\'s proceed with creating the multi-AI plugin. I want to make sure the secrets are properly integrated with the development process.',
+            content:
+              "Excellent. Now let's proceed with creating the multi-AI plugin. I want to make sure the secrets are properly integrated with the development process.",
           },
           {
             type: 'wait',
@@ -89,7 +93,8 @@ Always prioritize security while maintaining excellent user experience.`,
           },
           {
             type: 'message',
-            content: 'How can I verify that the plugin is correctly using the stored secrets? And what happens if one of the API keys is invalid?',
+            content:
+              'How can I verify that the plugin is correctly using the stored secrets? And what happens if one of the API keys is invalid?',
           },
           {
             type: 'wait',
@@ -97,7 +102,8 @@ Always prioritize security while maintaining excellent user experience.`,
           },
           {
             type: 'message',
-            content: 'Can you show me all the secrets currently stored for this project? I want to make sure everything is set up correctly.',
+            content:
+              'Can you show me all the secrets currently stored for this project? I want to make sure everything is set up correctly.',
           },
           {
             type: 'wait',
@@ -105,7 +111,8 @@ Always prioritize security while maintaining excellent user experience.`,
           },
           {
             type: 'message',
-            content: 'Finally, what are the best practices for sharing this plugin with others? How do they handle their own API keys?',
+            content:
+              'Finally, what are the best practices for sharing this plugin with others? How do they handle their own API keys?',
           },
         ],
         personality: 'security-focused, detail-oriented, methodical, forward-thinking',
@@ -129,7 +136,7 @@ Always prioritize security while maintaining excellent user experience.`,
         '@elizaos/plugin-secrets-manager',
         '@elizaos/plugin-autocoder',
         '@elizaos/plugin-plugin-manager',
-        '@elizaos/plugin-ngrok'
+        '@elizaos/plugin-ngrok',
       ],
       securityFocus: true,
       multiService: true,
@@ -156,7 +163,8 @@ Always prioritize security while maintaining excellent user experience.`,
         type: 'llm' as const,
         description: 'Automatic secret detection performed',
         config: {
-          criteria: 'Agent should automatically detect required API keys for OpenAI, Anthropic, and ElevenLabs services',
+          criteria:
+            'Agent should automatically detect required API keys for OpenAI, Anthropic, and ElevenLabs services',
         },
         weight: 4,
       },
@@ -166,7 +174,8 @@ Always prioritize security while maintaining excellent user experience.`,
         description: 'Secure web form generated',
         config: {
           expectedValue: 'requestSecretForm',
-          criteria: 'Agent should create a secure web form with appropriate fields for all detected secrets',
+          criteria:
+            'Agent should create a secure web form with appropriate fields for all detected secrets',
         },
         weight: 5,
       },
@@ -175,7 +184,8 @@ Always prioritize security while maintaining excellent user experience.`,
         type: 'llm' as const,
         description: 'Storage level guidance provided',
         config: {
-          criteria: 'Agent should explain different storage levels (global vs project) and recommend appropriate choice',
+          criteria:
+            'Agent should explain different storage levels (global vs project) and recommend appropriate choice',
         },
         weight: 3,
       },
@@ -203,7 +213,8 @@ Always prioritize security while maintaining excellent user experience.`,
         type: 'llm' as const,
         description: 'Secret validation and error handling',
         config: {
-          criteria: 'Agent should explain secret validation process and error handling for invalid keys',
+          criteria:
+            'Agent should explain secret validation process and error handling for invalid keys',
         },
         weight: 3,
       },
@@ -213,7 +224,8 @@ Always prioritize security while maintaining excellent user experience.`,
         description: 'Secret listing and verification',
         config: {
           expectedValue: 'listSecrets',
-          criteria: 'Agent should provide secure way to list/verify stored secrets without exposing values',
+          criteria:
+            'Agent should provide secure way to list/verify stored secrets without exposing values',
         },
         weight: 3,
       },
@@ -222,7 +234,8 @@ Always prioritize security while maintaining excellent user experience.`,
         type: 'llm' as const,
         description: 'Collaboration security guidance',
         config: {
-          criteria: 'Agent should explain best practices for plugin sharing and team secret management',
+          criteria:
+            'Agent should explain best practices for plugin sharing and team secret management',
         },
         weight: 3,
       },
@@ -231,7 +244,8 @@ Always prioritize security while maintaining excellent user experience.`,
         type: 'llm' as const,
         description: 'Comprehensive security workflow',
         config: {
-          criteria: 'Agent should demonstrate end-to-end secure secret management throughout plugin development',
+          criteria:
+            'Agent should demonstrate end-to-end secure secret management throughout plugin development',
         },
         weight: 5,
       },
@@ -254,7 +268,8 @@ Always prioritize security while maintaining excellent user experience.`,
           type: 'llm' as const,
           description: 'Complete secure workflow demonstrated',
           config: {
-            criteria: 'Agent provided secure, user-friendly secret management with proper integration into plugin development',
+            criteria:
+              'Agent provided secure, user-friendly secret management with proper integration into plugin development',
           },
         },
       },

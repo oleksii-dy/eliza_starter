@@ -19,7 +19,11 @@ import { testModelCommand } from './commands/test-model.js';
 import { listExamplesCommand } from './commands/list-examples.js';
 import { extractSimpleCommand } from './commands/extract-simple.js';
 import { simulateTrainingCommand } from './commands/simulate-training.js';
-import { trainWithMonitoringCommand, monitorExistingCommand, listJobsCommand } from './commands/train-with-monitoring.js';
+import {
+  trainWithMonitoringCommand,
+  monitorExistingCommand,
+  listJobsCommand,
+} from './commands/train-with-monitoring.js';
 import { testFineTunedCommand } from './commands/test-fine-tuned.js';
 import { customReasoningCommands } from './commands/custom-reasoning.js';
 import { extractDiscordCommand } from './commands/extract-discord.js';

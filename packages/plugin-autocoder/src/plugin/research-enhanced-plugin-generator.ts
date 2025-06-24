@@ -535,8 +535,8 @@ export interface ${this.toPascalCase(spec.name)}State {
 
 // Component-specific types
 ${architecture.coreComponents
-  .map(
-    (component: any) => `
+    .map(
+      (component: any) => `
 export interface ${this.toPascalCase(component.name)}Options {
   // Add component-specific options
 }
@@ -547,8 +547,8 @@ export interface ${this.toPascalCase(component.name)}Result {
   error?: string;
 }
 `
-  )
-  .join('\n')}
+    )
+    .join('\n')}
 
 // Plugin response types
 export interface PluginResponse {
@@ -660,7 +660,7 @@ ${sourceFile.content}
 \`\`\`
 
 **Test Requirements:**
-1. Use vitest testing framework
+1. Use bun test framework
 2. Test all exported functions and classes
 3. Include edge cases and error scenarios
 4. Mock external dependencies properly
@@ -790,8 +790,8 @@ Format as markdown.`;
       files: ['dist'],
       scripts: {
         build: 'tsc',
-        test: 'vitest',
-        'test:coverage': 'vitest --coverage',
+        test: 'bun test',
+        'test:coverage': 'bun test --coverage',
         lint: 'eslint src/**/*.ts',
         'lint:fix': 'eslint src/**/*.ts --fix',
         typecheck: 'tsc --noEmit',
@@ -809,7 +809,6 @@ Format as markdown.`;
       devDependencies: {
         '@types/node': '^20.0.0',
         typescript: '^5.0.0',
-        vitest: '^1.0.0',
         eslint: '^8.0.0',
         '@typescript-eslint/eslint-plugin': '^6.0.0',
         '@typescript-eslint/parser': '^6.0.0',
@@ -906,16 +905,16 @@ ${guidance.securityConsiderations.map((consideration, i) => `${i + 1}. ${conside
 
 ## Code Patterns Applied
 ${guidance.codePatterns
-  .map(
-    (pattern, i) => `
+    .map(
+      (pattern, i) => `
 ### ${i + 1}. ${pattern.pattern}
 **Description:** ${pattern.description}
 **When to Use:** ${pattern.whenToUse}
 **Example:** \`${pattern.example}\`
 **Alternatives:** ${pattern.alternatives.join(', ')}
 `
-  )
-  .join('\n')}
+    )
+    .join('\n')}
 
 ## Research-Driven Benefits
 - Enhanced code quality through proven patterns

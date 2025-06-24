@@ -7,8 +7,8 @@ import type { UUID } from '@elizaos/core';
  */
 
 export { validateShellCommand } from './plugin-shell-integration';
-export { 
-  SecretOperation, 
+export {
+  SecretOperation,
   SecretSensitivity
 } from './plugin-secrets-integration';
 
@@ -115,7 +115,7 @@ export async function validateActionWithTrust(
  * Trust middleware wrapper for actions
  * Use this to automatically add trust validation to any action
  */
-export function withTrustValidation<T extends Function>(
+export function withTrustValidation<T extends (...args: any[]) => any>(
   options: TrustValidationOptions
 ) {
   return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
@@ -133,9 +133,9 @@ export function withTrustValidation<T extends Function>(
 
       if (!validation.allowed) {
         logger.warn(`[TrustMiddleware] Action ${options.action} denied for ${message.entityId}: ${validation.reason}`);
-        
+
         return {
-          text: `Action denied: ${validation.reason}${validation.suggestions ? '\n\nSuggestions:\n' + validation.suggestions.join('\n') : ''}`,
+          text: `Action denied: ${validation.reason}${validation.suggestions ? `\n\nSuggestions:\n${validation.suggestions.join('\n')}` : ''}`,
           error: true,
           trustDenied: true,
           trustScore: validation.trustScore
@@ -161,7 +161,7 @@ export async function recordSuccessfulAction(
 ): Promise<void> {
   try {
     const trustEngine = runtime.getService('trust-engine') as any;
-    if (!trustEngine) return;
+    if (!trustEngine) {return;}
 
     await trustEngine.recordInteraction({
       sourceEntityId: userId,
@@ -194,7 +194,7 @@ export async function recordFailedAction(
 ): Promise<void> {
   try {
     const trustEngine = runtime.getService('trust-engine') as any;
-    if (!trustEngine) return;
+    if (!trustEngine) {return;}
 
     await trustEngine.recordInteraction({
       sourceEntityId: userId,
@@ -218,9 +218,9 @@ export async function recordFailedAction(
 
 /**
  * Example usage in any plugin:
- * 
+ *
  * import { withTrustValidation, validateActionWithTrust } from '@elizaos/plugin-trust/integrations';
- * 
+ *
  * export const myAction: Action = {
  *   name: 'MY_SENSITIVE_ACTION',
  *   handler: async (runtime, message, state, options, callback) => {
@@ -230,14 +230,14 @@ export async function recordFailedAction(
  *     //   minimumTrust: 60,
  *     //   requiredDimensions: { integrity: 50 }
  *     // })
- *     
+ *
  *     // Option 2: Manual validation
  *     const validation = await validateActionWithTrust(runtime, message, {
  *       action: 'MY_SENSITIVE_ACTION',
  *       minimumTrust: 60,
  *       requiredDimensions: { integrity: 50 },
  *     });
- *     
+ *
  *     if (!validation.allowed) {
  *       return {
  *         text: `Action denied: ${validation.reason}`,
@@ -245,7 +245,7 @@ export async function recordFailedAction(
  *         trustScore: validation.trustScore,
  *       };
  *     }
- *     
+ *
  *     // Execute action...
  *     return { text: 'Action completed successfully' };
  *   }

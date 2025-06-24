@@ -2,7 +2,7 @@
  * @fileoverview Simplified runtime mock for immediate use
  */
 
-import { vi } from './vi-helper';
+import { mock } from './mock-utils';
 import type { IAgentRuntime, Character, Memory, State, UUID } from '../../types';
 
 export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime {
@@ -28,20 +28,20 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     routes: [],
 
     // Core methods
-    getSetting: vi.fn().mockReturnValue('test-value'),
-    useModel: vi.fn().mockResolvedValue('mock response'),
-    composeState: vi.fn().mockResolvedValue({
+    getSetting: mock().mockReturnValue('test-value'),
+    useModel: mock().mockResolvedValue('mock response'),
+    composeState: mock().mockResolvedValue({
       values: {},
       data: {},
       text: '',
     }),
 
     // Database methods
-    getMemories: vi.fn().mockResolvedValue([]),
-    createMemory: vi.fn().mockResolvedValue('test-memory-id' as UUID),
+    getMemories: mock().mockResolvedValue([]),
+    createMemory: mock().mockResolvedValue('test-memory-id' as UUID),
 
     // Service methods
-    getService: vi.fn().mockReturnValue(null),
+    getService: mock().mockReturnValue(null),
 
     // Apply overrides
     ...overrides,
@@ -49,5 +49,3 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
 
   return baseRuntime;
 }
-
-// Note: vi is used internally but not exported to avoid conflicts

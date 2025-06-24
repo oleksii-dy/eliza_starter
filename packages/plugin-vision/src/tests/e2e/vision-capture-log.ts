@@ -69,12 +69,12 @@ export class VisionCaptureLogTestSuite implements TestSuite {
 
         while (Date.now() - startTime < totalDuration) {
           const captureStartTime = Date.now();
-          
+
           try {
             // Get current scene description
             const scene = await visionService.getSceneDescription();
             const frame = await visionService.getCurrentFrame();
-            
+
             // Capture image as base64
             const imageBuffer = await visionService.captureImage();
             let imageBase64: string | null = null;
@@ -127,13 +127,13 @@ export class VisionCaptureLogTestSuite implements TestSuite {
 
               // Count object types
               for (const obj of scene.objects) {
-                captureData.statistics.objectTypeCounts[obj.type] = 
+                captureData.statistics.objectTypeCounts[obj.type] =
                   (captureData.statistics.objectTypeCounts[obj.type] || 0) + 1;
               }
 
               // Count poses
               for (const person of scene.people) {
-                captureData.statistics.poseCounts[person.pose] = 
+                captureData.statistics.poseCounts[person.pose] =
                   (captureData.statistics.poseCounts[person.pose] || 0) + 1;
               }
 
@@ -142,7 +142,7 @@ export class VisionCaptureLogTestSuite implements TestSuite {
               await fs.writeFile(sceneLogPath, JSON.stringify({
                 capture: captureCount,
                 timestamp: capture.timestamp,
-                scene: scene,
+                scene,
                 frame: frame ? {
                   width: frame.width,
                   height: frame.height,
@@ -159,7 +159,7 @@ export class VisionCaptureLogTestSuite implements TestSuite {
               lastLoggedProgress = elapsedSeconds;
               const progress = (elapsedSeconds / 30) * 100;
               console.log(`  Progress: ${progress.toFixed(0)}% (${elapsedSeconds}/30s) - Captured ${captureCount} frames`);
-              
+
               if (scene) {
                 console.log(`    Last scene: "${scene.description.substring(0, 60)}..."`);
                 if (scene.objects.length > 0 || scene.people.length > 0) {
@@ -182,7 +182,7 @@ export class VisionCaptureLogTestSuite implements TestSuite {
           const captureEndTime = Date.now();
           const captureDuration = captureEndTime - captureStartTime;
           const waitTime = Math.max(0, captureInterval - captureDuration);
-          
+
           if (waitTime > 0) {
             await new Promise(resolve => setTimeout(resolve, waitTime));
           }
@@ -190,9 +190,9 @@ export class VisionCaptureLogTestSuite implements TestSuite {
 
         // Finalize statistics
         captureData.endTime = new Date().toISOString();
-        captureData.statistics.averageChangePercentage = 
-          captureData.statistics.totalFrames > 0 
-            ? totalChangePercentage / captureData.statistics.totalFrames 
+        captureData.statistics.averageChangePercentage =
+          captureData.statistics.totalFrames > 0
+            ? totalChangePercentage / captureData.statistics.totalFrames
             : 0;
 
         // Save main capture log
@@ -223,25 +223,25 @@ export class VisionCaptureLogTestSuite implements TestSuite {
 
 ## Object Type Distribution
 ${Object.entries(captureData.statistics.objectTypeCounts)
-  .sort(([,a], [,b]) => b - a)
-  .map(([type, count]) => `- **${type}**: ${count} detections`)
-  .join('\n') || '- No objects detected'}
+    .sort(([,a], [,b]) => b - a)
+    .map(([type, count]) => `- **${type}**: ${count} detections`)
+    .join('\n') || '- No objects detected'}
 
 ## Pose Distribution
 ${Object.entries(captureData.statistics.poseCounts)
-  .map(([pose, count]) => `- **${pose}**: ${count} detections`)
-  .join('\n') || '- No people detected'}
+    .map(([pose, count]) => `- **${pose}**: ${count} detections`)
+    .join('\n') || '- No people detected'}
 
 ## Sample Scene Descriptions
 ${captureData.captures
-  .filter(c => c.scene?.description)
-  .slice(0, 5)
-  .map((c, i) => `### Capture ${c.index} (${c.elapsedMs}ms)
+    .filter(c => c.scene?.description)
+    .slice(0, 5)
+    .map((c, _i) => `### Capture ${c.index} (${c.elapsedMs}ms)
 "${c.scene.description}"
 - Change: ${c.scene.changePercentage?.toFixed(1)}%
 - Objects: ${c.scene.objectCount}
 - People: ${c.scene.peopleCount}`)
-  .join('\n\n')}
+    .join('\n\n')}
 
 ## Files Generated
 - \`vision-capture-summary.json\` - Complete capture data
@@ -253,17 +253,17 @@ ${captureData.captures
         await fs.writeFile(reportPath, report);
 
         console.log('\n✅ Vision capture test completed!');
-        console.log(`📊 Capture Summary:`);
+        console.log('📊 Capture Summary:');
         console.log(`   - Total frames: ${captureCount}`);
         console.log(`   - Scene changes: ${captureData.statistics.totalSceneChanges}`);
         console.log(`   - Average change: ${captureData.statistics.averageChangePercentage.toFixed(2)}%`);
         console.log(`   - Objects detected: ${captureData.statistics.totalObjectsDetected}`);
         console.log(`   - People detected: ${captureData.statistics.totalPeopleDetected}`);
         console.log(`\n📁 Results saved to: ${sessionDir}`);
-        console.log(`   - Summary: vision-capture-summary.json`);
-        console.log(`   - Report: vision-capture-report.md`);
-        console.log(`   - Images: capture-XXX.jpg`);
-        console.log(`   - Scene data: scene-XXX.json`);
+        console.log('   - Summary: vision-capture-summary.json');
+        console.log('   - Report: vision-capture-report.md');
+        console.log('   - Images: capture-XXX.jpg');
+        console.log('   - Scene data: scene-XXX.json');
 
         console.log('✅ Vision capture log test PASSED');
       },
@@ -271,4 +271,4 @@ ${captureData.captures
   ];
 }
 
-export default new VisionCaptureLogTestSuite(); 
+export default new VisionCaptureLogTestSuite();

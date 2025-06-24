@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterAll, beforeAll } from 'vitest';
+import { describe, expect, it, mock, beforeEach, afterAll, beforeAll } from 'bun:test';
 import { githubPlugin, GitHubService } from '../index';
 import { createMockRuntime, setupLoggerSpies, MockRuntime } from './test-utils';
 import { HandlerCallback, IAgentRuntime, Memory, State, UUID, logger } from '@elizaos/core';
@@ -36,13 +36,13 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
 
     // Create a real runtime with GitHub token
     runtime = createMockRuntime({
-      getSetting: vi.fn().mockImplementation((key: string) => {
+      getSetting: mock().mockImplementation((key: string) => {
         if (key === 'GITHUB_TOKEN' || key === 'GITHUB_TOKEN') {
           return GITHUB_TOKEN;
         }
         return null;
       }),
-    }) as unknown as IAgentRuntime;
+    }) as IAgentRuntime;
 
     // Initialize the plugin
     await githubPlugin.init!(
@@ -56,8 +56,8 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
     githubService = await GitHubService.start(runtime);
 
     // Register the service with the runtime
-    // Note: registerService expects a service class, not instance, so we skip this
-    runtime.getService = vi.fn().mockImplementation((serviceType: string) => {
+    runtime.registerService(githubService);
+    runtime.getService = mock().mockImplementation((serviceType: string) => {
       if (serviceType === 'github') {
         return githubService;
       }
@@ -85,7 +85,7 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
       await githubService.stop();
     }
 
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   describe('Authentication and Service Initialization', () => {
@@ -127,25 +127,28 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
       expect(repo.name).toBe('TypeScript');
       expect(repo.owner.login).toBe('microsoft');
       expect(repo.stargazers_count).toBeGreaterThan(0);
-    }, 30000); // 30 second timeout
+    }, 120000); // 2 minute timeout for API calls
 
     it('should list user repositories', async () => {
       const user = await githubService.getAuthenticatedUser();
-      const repos = await githubService.getRepositories({
+      const repos = await githubService.listRepositories(user.login, {
         per_page: 10,
         sort: 'updated',
       });
 
       expect(repos).toBeDefined();
       expect(Array.isArray(repos)).toBe(true);
-    }, 30000); // 30 second timeout
+    });
   });
 
   describe('Issue Operations', () => {
     it('should search for issues in TypeScript repository', async () => {
-      const results = await githubService.searchIssues('repo:microsoft/TypeScript is:issue is:open', {
-        per_page: 5,
-      });
+      const results = await githubService.searchIssues(
+        'repo:microsoft/TypeScript is:issue is:open',
+        {
+          per_page: 5,
+        }
+      );
 
       expect(results.items).toBeDefined();
       expect(results.items.length).toBeGreaterThan(0);
@@ -163,12 +166,12 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
       expect(Array.isArray(issues)).toBe(true);
       if (issues.length > 0) {
         expect(
-          issues[0].labels.some((label) =>
+          issues[0].labels.some((label: any) =>
             typeof label === 'string' ? label === 'bug' : label.name === 'bug'
           )
         ).toBe(true);
       }
-    }, 30000); // 30 second timeout
+    }, 120000); // 2 minute timeout for API calls
   });
 
   describe('Pull Request Operations', () => {
@@ -203,9 +206,8 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
       );
       expect(searchAction).toBeDefined();
 
-      const searchCallback: HandlerCallback = vi.fn(async (response) => {
+      const searchCallback: HandlerCallback = mock((response) => {
         results.push({ step: 'search', response });
-        return [];
       });
 
       await searchAction!.handler(
@@ -226,9 +228,8 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
       const getRepoAction = githubPlugin.actions?.find((a) => a.name === 'GET_GITHUB_REPOSITORY');
       expect(getRepoAction).toBeDefined();
 
-      const getRepoCallback: HandlerCallback = vi.fn(async (response) => {
+      const getRepoCallback: HandlerCallback = mock((response) => {
         results.push({ step: 'getRepo', response });
-        return [];
       });
 
       await getRepoAction!.handler(
@@ -250,9 +251,8 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
       const listIssuesAction = githubPlugin.actions?.find((a) => a.name === 'LIST_GITHUB_ISSUES');
       expect(listIssuesAction).toBeDefined();
 
-      const listIssuesCallback: HandlerCallback = vi.fn(async (response) => {
+      const listIssuesCallback: HandlerCallback = mock((response) => {
         results.push({ step: 'listIssues', response });
-        return [];
       });
 
       await listIssuesAction!.handler(
@@ -281,7 +281,7 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
       expect(results[0].step).toBe('search');
       expect(results[1].step).toBe('getRepo');
       expect(results[2].step).toBe('listIssues');
-    }, 60000); // 60 second timeout for chain operations
+    }, 120000); // 2 minute timeout for API calls
 
     it('should chain actions: get rate limit -> search issues -> create issue (dry run)', async () => {
       const results: any[] = [];
@@ -290,9 +290,8 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
       const rateLimitAction = githubPlugin.actions?.find((a) => a.name === 'GET_GITHUB_RATE_LIMIT');
       expect(rateLimitAction).toBeDefined();
 
-      const rateLimitCallback: HandlerCallback = vi.fn(async (response) => {
+      const rateLimitCallback: HandlerCallback = mock((response) => {
         results.push({ step: 'rateLimit', response });
-        return [];
       });
 
       await rateLimitAction!.handler(
@@ -314,9 +313,8 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
       );
       expect(searchIssuesAction).toBeDefined();
 
-      const searchIssuesCallback: HandlerCallback = vi.fn(async (response) => {
+      const searchIssuesCallback: HandlerCallback = mock((response) => {
         results.push({ step: 'searchIssues', response });
-        return [];
       });
 
       await searchIssuesAction!.handler(
@@ -410,7 +408,7 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
       expect(analysis.activity.length).toBeGreaterThan(0);
 
       logger.info('Repository health analysis:', analysis);
-    }, 60000); // 60 second timeout for complex workflow
+    });
 
     it('should demonstrate provider integration with actions', async () => {
       // Get the repository provider
@@ -434,7 +432,7 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
         (a) => a.name === 'SEARCH_GITHUB_REPOSITORIES'
       );
 
-      const callback: HandlerCallback = vi.fn();
+      const callback: HandlerCallback = mock();
       await searchAction!.handler(
         runtime,
         createTestMemory('Find popular JavaScript frameworks on GitHub'),
@@ -457,7 +455,7 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
       await expect(
         githubService.getRepository('this-user-definitely-does-not-exist-12345', 'fake-repo')
       ).rejects.toThrow();
-    }, 30000); // 30 second timeout
+    }, 120000); // 2 minute timeout for API calls
 
     it('should handle rate limiting information', async () => {
       const rateLimit = await githubService.getRateLimit();
@@ -465,7 +463,7 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
       expect(rateLimit).toBeDefined();
       expect(rateLimit.remaining).toBeGreaterThanOrEqual(0);
       expect(rateLimit.limit).toBeGreaterThan(0);
-      expect(rateLimit.reset).toBeGreaterThan(Date.now() / 1000);
+      expect(rateLimit.reset).toBeGreaterThanOrEqual(Math.floor(Date.now() / 1000));
 
       // Check if we're close to rate limit
       if (rateLimit.remaining < 10) {

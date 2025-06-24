@@ -551,10 +551,10 @@ export const hyperfyScenarios = [
 ];
 
 // Import autonomous exploration scenarios
-export { 
+export {
   autonomousMultiAgentExploration,
   autonomousExplorationWithObservation,
   autonomousExplorationSmall
 } from './hyperfy-autonomous-exploration';
 
-export default hyperfyScenarios; 
+export default hyperfyScenarios;

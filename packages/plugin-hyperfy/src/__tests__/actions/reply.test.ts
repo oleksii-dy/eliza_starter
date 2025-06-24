@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { replyAction } from '../../actions/reply';
 import { createMockRuntime } from '../test-utils';
 
@@ -6,7 +6,7 @@ describe('REPLY Action', () => {
   let mockRuntime: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
   });
 
@@ -27,39 +27,33 @@ describe('REPLY Action', () => {
       mockMessage = {
         id: 'msg-123',
         content: {
-          text: 'Hello, how are you?'
-        }
+          text: 'Hello, how are you?',
+        },
       };
-      
+
       mockState = {
         values: {},
         data: {},
-        text: 'test state'
+        text: 'test state',
       };
-      
-      mockCallback = vi.fn();
-      
+
+      mockCallback = mock();
+
       // Mock composeState
-      mockRuntime.composeState = vi.fn().mockResolvedValue({
+      mockRuntime.composeState = mock().mockResolvedValue({
         ...mockState,
-        conversationContext: 'User greeted the agent'
+        conversationContext: 'User greeted the agent',
       });
-      
+
       // Mock useModel for reply generation
-      mockRuntime.useModel = vi.fn().mockResolvedValue({
+      mockRuntime.useModel = mock().mockResolvedValue({
         thought: 'User is greeting me, I should respond politely',
-        message: "I'm doing great, thank you for asking! How can I help you today?"
+        message: "I'm doing great, thank you for asking! How can I help you today?",
       });
     });
 
     it('should generate reply without existing responses', async () => {
-      await replyAction.handler(
-        mockRuntime,
-        mockMessage,
-        mockState,
-        {},
-        mockCallback
-      );
+      await replyAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
       expect(mockRuntime.composeState).toHaveBeenCalledWith(mockMessage);
       expect(mockRuntime.useModel).toHaveBeenCalled();
@@ -67,19 +61,21 @@ describe('REPLY Action', () => {
         expect.objectContaining({
           thought: 'User is greeting me, I should respond politely',
           text: "I'm doing great, thank you for asking! How can I help you today?",
-          actions: ['REPLY']
+          actions: ['REPLY'],
         })
       );
     });
 
     it('should use existing reply responses if available', async () => {
-      const existingResponses = [{
-        content: {
-          thought: 'Existing thought',
-          text: 'Existing reply message',
-          actions: ['REPLY']
-        }
-      }];
+      const existingResponses = [
+        {
+          content: {
+            thought: 'Existing thought',
+            text: 'Existing reply message',
+            actions: ['REPLY'],
+          },
+        },
+      ];
 
       await replyAction.handler(
         mockRuntime,
@@ -95,7 +91,7 @@ describe('REPLY Action', () => {
         expect.objectContaining({
           thought: 'Existing thought',
           text: 'Existing reply message',
-          actions: ['REPLY']
+          actions: ['REPLY'],
         })
       );
     });
@@ -105,15 +101,15 @@ describe('REPLY Action', () => {
         {
           content: {
             message: 'First reply',
-            actions: ['REPLY']
-          }
+            actions: ['REPLY'],
+          },
         },
         {
           content: {
             text: 'Second reply',
-            actions: ['REPLY']
-          }
-        }
+            actions: ['REPLY'],
+          },
+        },
       ];
 
       await replyAction.handler(
@@ -126,25 +122,29 @@ describe('REPLY Action', () => {
       );
 
       expect(mockCallback).toHaveBeenCalledTimes(2);
-      expect(mockCallback).toHaveBeenNthCalledWith(1, 
+      expect(mockCallback).toHaveBeenNthCalledWith(
+        1,
         expect.objectContaining({
-          text: 'First reply'
+          text: 'First reply',
         })
       );
-      expect(mockCallback).toHaveBeenNthCalledWith(2,
+      expect(mockCallback).toHaveBeenNthCalledWith(
+        2,
         expect.objectContaining({
-          text: 'Second reply'
+          text: 'Second reply',
         })
       );
     });
 
     it('should ignore responses without REPLY action', async () => {
-      const existingResponses = [{
-        content: {
-          text: 'Ambient message',
-          actions: ['HYPERFY_AMBIENT_SPEECH']
-        }
-      }];
+      const existingResponses = [
+        {
+          content: {
+            text: 'Ambient message',
+            actions: ['HYPERFY_AMBIENT_SPEECH'],
+          },
+        },
+      ];
 
       await replyAction.handler(
         mockRuntime,
@@ -158,7 +158,7 @@ describe('REPLY Action', () => {
       expect(mockRuntime.useModel).toHaveBeenCalled();
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
-          actions: ['REPLY']
+          actions: ['REPLY'],
         })
       );
     });
@@ -166,34 +166,30 @@ describe('REPLY Action', () => {
     it('should handle empty message from model', async () => {
       mockRuntime.useModel.mockResolvedValue({
         thought: 'Nothing to say',
-        message: ''
+        message: '',
       });
 
-      await replyAction.handler(
-        mockRuntime,
-        mockMessage,
-        mockState,
-        {},
-        mockCallback
-      );
+      await replyAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           thought: 'Nothing to say',
           text: '',
-          actions: ['REPLY']
+          actions: ['REPLY'],
         })
       );
     });
 
     it('should use message field when available in responses', async () => {
-      const existingResponses = [{
-        content: {
-          message: 'Message field content',
-          text: 'Text field content',
-          actions: ['REPLY']
-        }
-      }];
+      const existingResponses = [
+        {
+          content: {
+            message: 'Message field content',
+            text: 'Text field content',
+            actions: ['REPLY'],
+          },
+        },
+      ];
 
       await replyAction.handler(
         mockRuntime,
@@ -207,7 +203,7 @@ describe('REPLY Action', () => {
       // Since replyFieldKeys is ['message', 'text'], it will use message first
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: 'Message field content'
+          text: 'Message field content',
         })
       );
     });
@@ -221,15 +217,15 @@ describe('REPLY Action', () => {
     });
 
     it('should have properly formatted examples', () => {
-      replyAction.examples!.forEach(example => {
+      replyAction.examples!.forEach((example) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBe(2);
-        
+
         const [user, agent] = example;
         expect(user).toHaveProperty('name');
         expect(user).toHaveProperty('content');
         expect(user.content).toHaveProperty('text');
-        
+
         expect(agent).toHaveProperty('name');
         expect(agent).toHaveProperty('content');
         expect(agent.content).toHaveProperty('text');
@@ -238,4 +234,4 @@ describe('REPLY Action', () => {
       });
     });
   });
-}); 
+});

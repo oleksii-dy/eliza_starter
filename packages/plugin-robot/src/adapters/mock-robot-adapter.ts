@@ -1,9 +1,9 @@
 import { logger } from '@elizaos/core';
-import { 
+import {
   BaseRobotInterface,
   RobotCommand,
   ExecutionResult,
-  RobotCapabilities
+  RobotCapabilities,
 } from '../interfaces/robot-interface';
 import {
   RobotState,
@@ -13,21 +13,38 @@ import {
   Pose,
   Motion,
   IMUData,
-  RobotCommandType
+  RobotCommandType,
 } from '../types';
 
 // Default joint configuration for mock robot
 const MOCK_JOINTS = [
-  'head_yaw', 'head_pitch',
-  'left_shoulder_pitch', 'left_shoulder_roll', 'left_elbow_pitch',
-  'left_wrist_yaw', 'left_wrist_pitch', 'left_gripper',
-  'right_shoulder_pitch', 'right_shoulder_roll', 'right_elbow_pitch',
-  'right_wrist_yaw', 'right_wrist_pitch', 'right_gripper',
+  'head_yaw',
+  'head_pitch',
+  'left_shoulder_pitch',
+  'left_shoulder_roll',
+  'left_elbow_pitch',
+  'left_wrist_yaw',
+  'left_wrist_pitch',
+  'left_gripper',
+  'right_shoulder_pitch',
+  'right_shoulder_roll',
+  'right_elbow_pitch',
+  'right_wrist_yaw',
+  'right_wrist_pitch',
+  'right_gripper',
   'waist_yaw',
-  'left_hip_yaw', 'left_hip_roll', 'left_hip_pitch',
-  'left_knee_pitch', 'left_ankle_pitch', 'left_ankle_roll',
-  'right_hip_yaw', 'right_hip_roll', 'right_hip_pitch',
-  'right_knee_pitch', 'right_ankle_pitch', 'right_ankle_roll',
+  'left_hip_yaw',
+  'left_hip_roll',
+  'left_hip_pitch',
+  'left_knee_pitch',
+  'left_ankle_pitch',
+  'left_ankle_roll',
+  'right_hip_yaw',
+  'right_hip_roll',
+  'right_hip_pitch',
+  'right_knee_pitch',
+  'right_ankle_pitch',
+  'right_ankle_roll',
 ];
 
 export interface MockRobotConfig {
@@ -46,12 +63,12 @@ export class MockRobotAdapter extends BaseRobotInterface {
   private imuData: IMUData;
   private commandHistory: RobotCommand[] = [];
   private stateUpdateInterval?: NodeJS.Timeout;
-  
+
   constructor(private config: MockRobotConfig = {}) {
     super();
-    
+
     // Initialize joint states
-    MOCK_JOINTS.forEach(jointName => {
+    MOCK_JOINTS.forEach((jointName) => {
       const initialPosition = this.config.initialPose?.[jointName] || 0;
       this.jointStates.set(jointName, {
         name: jointName,
@@ -60,7 +77,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
         effort: 0,
       });
     });
-    
+
     // Initialize IMU data
     this.imuData = {
       timestamp: Date.now(),
@@ -68,40 +85,40 @@ export class MockRobotAdapter extends BaseRobotInterface {
       gyroscope: { x: 0, y: 0, z: 0 },
       orientation: { x: 0, y: 0, z: 0, w: 1 },
     };
-    
+
     // Load default poses
     this.loadDefaultPoses();
-    
+
     // Update initial state
     this.updateState();
-    
+
     logger.info('[MockRobotAdapter] Initialized with config:', this.config);
   }
-  
+
   async connect(): Promise<void> {
     logger.info('[MockRobotAdapter] Connecting to mock robot...');
-    
+
     // Simulate connection delay
     if (this.config.simulateDelay) {
-      await new Promise(resolve => setTimeout(resolve, this.config.defaultDelay || 500));
+      await new Promise((resolve) => setTimeout(resolve, this.config.defaultDelay || 500));
     }
-    
+
     // Simulate potential connection failure
     if (this.config.failureRate && Math.random() < this.config.failureRate) {
       throw new Error('Mock connection failed (simulated)');
     }
-    
+
     this.connected = true;
     this.currentState.status = RobotStatus.OK;
     this.currentState.mode = RobotMode.IDLE;
-    
+
     // Start state update simulation
     this.startStateSimulation();
-    
+
     logger.info('[MockRobotAdapter] Connected successfully');
     this.emit('connected');
   }
-  
+
   async disconnect(): Promise<void> {
     if (this.connected) {
       // Stop state simulation
@@ -109,21 +126,21 @@ export class MockRobotAdapter extends BaseRobotInterface {
         clearInterval(this.stateUpdateInterval);
         this.stateUpdateInterval = undefined;
       }
-      
+
       this.connected = false;
       this.currentState.status = RobotStatus.DISCONNECTED;
-      
+
       logger.info('[MockRobotAdapter] Disconnected');
       this.emit('disconnected');
     }
   }
-  
+
   async executeCommand(command: RobotCommand): Promise<ExecutionResult> {
     const startTime = Date.now();
-    
+
     // Store command in history
     this.commandHistory.push(command);
-    
+
     try {
       // Check connection
       if (!this.connected) {
@@ -134,7 +151,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
           error: 'Robot not connected',
         };
       }
-      
+
       // Check emergency stop
       if (this.currentState.isEmergencyStopped) {
         return {
@@ -144,32 +161,32 @@ export class MockRobotAdapter extends BaseRobotInterface {
           error: 'Robot is emergency stopped',
         };
       }
-      
+
       // Simulate execution delay
       if (this.config.simulateDelay) {
-        await new Promise(resolve => setTimeout(resolve, this.config.defaultDelay || 100));
+        await new Promise((resolve) => setTimeout(resolve, this.config.defaultDelay || 100));
       }
-      
+
       // Execute based on command type
       let result: ExecutionResult;
-      
+
       switch (command.type) {
         case RobotCommandType.MOVE_JOINT:
           result = await this.executeMoveJoint(command);
           break;
-          
+
         case RobotCommandType.MOVE_TO_POSE:
           result = await this.executeMoveToPose(command);
           break;
-          
+
         case RobotCommandType.EXECUTE_MOTION:
           result = await this.executeMotionSequence(command);
           break;
-          
+
         case RobotCommandType.STOP:
           result = await this.executeStop(command);
           break;
-          
+
         case RobotCommandType.EMERGENCY_STOP:
           await this.emergencyStop();
           result = {
@@ -178,7 +195,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
             executed_at: startTime,
           };
           break;
-          
+
         case RobotCommandType.RESET:
           await this.reset();
           result = {
@@ -187,7 +204,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
             executed_at: startTime,
           };
           break;
-          
+
         case RobotCommandType.SET_MODE:
           // Mode should be passed as target parameter
           const modeParam = command.parameters?.target;
@@ -207,7 +224,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
             };
           }
           break;
-          
+
         case RobotCommandType.START_TEACHING:
           await this.startTeaching();
           result = {
@@ -216,7 +233,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
             executed_at: startTime,
           };
           break;
-          
+
         case RobotCommandType.STOP_TEACHING:
           await this.stopTeaching();
           result = {
@@ -225,7 +242,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
             executed_at: startTime,
           };
           break;
-          
+
         case RobotCommandType.RECORD_POSE:
           const poseName = command.parameters?.target || `pose_${Date.now()}`;
           const pose = await this.recordPose(poseName);
@@ -236,7 +253,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
             metadata: { pose },
           };
           break;
-          
+
         default:
           result = {
             success: false,
@@ -245,17 +262,17 @@ export class MockRobotAdapter extends BaseRobotInterface {
             error: `Unsupported command type: ${command.type}`,
           };
       }
-      
+
       // Add timing info
       result.completed_at = Date.now();
       result.duration = result.completed_at - startTime;
-      
+
       // Update state
       result.state = this.getState();
-      
+
       // Emit command executed event
       this.emit('commandExecuted', result);
-      
+
       return result;
     } catch (error) {
       logger.error('[MockRobotAdapter] Command execution failed:', error);
@@ -268,7 +285,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
       };
     }
   }
-  
+
   // Teaching methods
   async startTeaching(): Promise<void> {
     logger.info('[MockRobotAdapter] Starting teaching mode');
@@ -277,44 +294,44 @@ export class MockRobotAdapter extends BaseRobotInterface {
     this.currentState.mode = RobotMode.TEACHING;
     this.emit('teachingStarted');
   }
-  
+
   async stopTeaching(): Promise<void> {
     logger.info('[MockRobotAdapter] Stopping teaching mode');
     this.isTeaching = false;
     this.currentState.mode = RobotMode.IDLE;
     this.emit('teachingStopped');
   }
-  
+
   async recordPose(name: string): Promise<Pose> {
     if (!this.isTeaching) {
       throw new Error('Not in teaching mode');
     }
-    
+
     // Get current joint positions
     const joints: { [name: string]: number } = {};
     for (const jointState of this.jointStates.values()) {
       joints[jointState.name] = jointState.position;
     }
-    
+
     const pose: Pose = {
       name,
       joints,
       duration: 1000,
     };
-    
+
     this.storedPoses.set(name, pose);
     this.teachingBuffer.push(pose);
-    
+
     logger.info(`[MockRobotAdapter] Recorded pose: ${name}`);
     this.emit('poseRecorded', pose);
-    
+
     return pose;
   }
-  
+
   // Query methods
   getJointLimits(): { [jointName: string]: { min: number; max: number } } {
     const limits: { [jointName: string]: { min: number; max: number } } = {};
-    
+
     for (const joint of MOCK_JOINTS) {
       if (joint.includes('yaw')) {
         limits[joint] = { min: -1.57, max: 1.57 };
@@ -328,32 +345,32 @@ export class MockRobotAdapter extends BaseRobotInterface {
         limits[joint] = { min: -3.14, max: 3.14 };
       }
     }
-    
+
     return limits;
   }
-  
+
   getStoredMotions(): string[] {
     return Array.from(this.storedMotions.keys());
   }
-  
+
   getIMUData(): IMUData | null {
     return this.imuData;
   }
-  
+
   getCommandHistory(): RobotCommand[] {
     return [...this.commandHistory];
   }
-  
+
   clearCommandHistory(): void {
     this.commandHistory = [];
   }
-  
+
   // Protected implementations
   protected async executeEmergencyStop(): Promise<void> {
     this.currentState.isEmergencyStopped = true;
     logger.warn('[MockRobotAdapter] Emergency stop activated');
   }
-  
+
   protected async executeReset(): Promise<void> {
     // Reset to home pose
     if (this.storedPoses.has('home')) {
@@ -366,11 +383,11 @@ export class MockRobotAdapter extends BaseRobotInterface {
         jointState.effort = 0;
       }
     }
-    
+
     this.updateState();
     logger.info('[MockRobotAdapter] Robot reset to home position');
   }
-  
+
   protected getInitialState(): RobotState {
     // Return a valid initial state even before joint states are initialized
     const joints = this.jointStates ? Array.from(this.jointStates.values()) : [];
@@ -383,7 +400,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
       imuData: this.imuData || null,
     };
   }
-  
+
   protected getDefaultCapabilities(): RobotCapabilities {
     return {
       name: 'Mock Robot',
@@ -410,11 +427,11 @@ export class MockRobotAdapter extends BaseRobotInterface {
       },
     };
   }
-  
+
   // Private helper methods
   private async executeMoveJoint(command: RobotCommand): Promise<ExecutionResult> {
     const { target, amount, speed, duration } = command.parameters || {};
-    
+
     if (!target) {
       return {
         success: false,
@@ -423,7 +440,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
         error: 'No target joint specified',
       };
     }
-    
+
     const jointState = this.jointStates.get(target);
     if (!jointState) {
       return {
@@ -433,31 +450,31 @@ export class MockRobotAdapter extends BaseRobotInterface {
         error: `Joint not found: ${target}`,
       };
     }
-    
+
     // Simulate joint movement
     if (amount !== undefined) {
       // Convert degrees to radians
-      const radians = amount * Math.PI / 180;
+      const radians = (amount * Math.PI) / 180;
       const limits = this.getJointLimits()[target];
       jointState.position = Math.max(limits.min, Math.min(limits.max, radians));
     }
-    
+
     if (speed !== undefined) {
       jointState.velocity = speed * 2.0; // Scale to max velocity
     }
-    
+
     this.updateState();
-    
+
     return {
       success: true,
       command_id: command.id,
       executed_at: Date.now(),
     };
   }
-  
+
   private async executeMoveToPose(command: RobotCommand): Promise<ExecutionResult> {
     const poseName = command.parameters?.pose;
-    
+
     if (!poseName) {
       return {
         success: false,
@@ -466,7 +483,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
         error: 'No pose name specified',
       };
     }
-    
+
     const pose = this.storedPoses.get(poseName);
     if (!pose) {
       return {
@@ -476,19 +493,19 @@ export class MockRobotAdapter extends BaseRobotInterface {
         error: `Pose not found: ${poseName}`,
       };
     }
-    
+
     await this.internalMoveToPose(pose);
-    
+
     return {
       success: true,
       command_id: command.id,
       executed_at: Date.now(),
     };
   }
-  
+
   private async executeMotionSequence(command: RobotCommand): Promise<ExecutionResult> {
     const motionName = command.parameters?.motion;
-    
+
     if (!motionName) {
       return {
         success: false,
@@ -497,7 +514,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
         error: 'No motion name specified',
       };
     }
-    
+
     const motion = this.storedMotions.get(motionName);
     if (!motion) {
       return {
@@ -507,37 +524,37 @@ export class MockRobotAdapter extends BaseRobotInterface {
         error: `Motion not found: ${motionName}`,
       };
     }
-    
+
     // Simulate motion execution
     for (const pose of motion.poses) {
       await this.moveToPose(pose);
       if (this.config.simulateDelay) {
-        await new Promise(resolve => setTimeout(resolve, pose.duration || 1000));
+        await new Promise((resolve) => setTimeout(resolve, pose.duration || 1000));
       }
     }
-    
+
     return {
       success: true,
       command_id: command.id,
       executed_at: Date.now(),
     };
   }
-  
+
   private async executeStop(command: RobotCommand): Promise<ExecutionResult> {
     // Stop all joint velocities
     for (const jointState of this.jointStates.values()) {
       jointState.velocity = 0;
     }
-    
+
     this.updateState();
-    
+
     return {
       success: true,
       command_id: command.id,
       executed_at: Date.now(),
     };
   }
-  
+
   // Internal helper for moving to pose
   private async internalMoveToPose(pose: Pose): Promise<void> {
     for (const [jointName, position] of Object.entries(pose.joints)) {
@@ -547,16 +564,16 @@ export class MockRobotAdapter extends BaseRobotInterface {
         jointState.position = Math.max(limits.min, Math.min(limits.max, position));
       }
     }
-    
+
     this.updateState();
   }
-  
+
   private updateState(): void {
     this.currentState.timestamp = Date.now();
     this.currentState.joints = Array.from(this.jointStates.values());
     this.currentState.imuData = this.imuData;
   }
-  
+
   private startStateSimulation(): void {
     // Simulate state updates at 10Hz
     this.stateUpdateInterval = setInterval(() => {
@@ -565,34 +582,34 @@ export class MockRobotAdapter extends BaseRobotInterface {
         if (jointState.velocity && jointState.velocity !== 0) {
           const dt = 0.1; // 100ms
           jointState.position += jointState.velocity * dt;
-          
+
           // Apply limits
           const limits = this.getJointLimits()[jointState.name];
           jointState.position = Math.max(limits.min, Math.min(limits.max, jointState.position));
         }
       }
-      
+
       // Simulate IMU data variations
       this.imuData.timestamp = Date.now();
       this.imuData.gyroscope.x = (Math.random() - 0.5) * 0.1;
       this.imuData.gyroscope.y = (Math.random() - 0.5) * 0.1;
       this.imuData.gyroscope.z = (Math.random() - 0.5) * 0.1;
-      
+
       this.updateState();
       this.emit('stateUpdate', this.currentState);
     }, 100);
   }
-  
+
   private loadDefaultPoses(): void {
     // Home pose
     this.storedPoses.set('home', {
       name: 'home',
-      joints: Object.fromEntries(MOCK_JOINTS.map(j => [j, 0])),
+      joints: Object.fromEntries(MOCK_JOINTS.map((j) => [j, 0])),
       duration: 2000,
     });
-    
+
     // Wave pose
-    const waveJoints = Object.fromEntries(MOCK_JOINTS.map(j => [j, 0]));
+    const waveJoints = Object.fromEntries(MOCK_JOINTS.map((j) => [j, 0]));
     waveJoints['right_shoulder_pitch'] = -1.57;
     waveJoints['right_elbow_pitch'] = -0.5;
     waveJoints['right_wrist_pitch'] = 0.5;
@@ -601,9 +618,9 @@ export class MockRobotAdapter extends BaseRobotInterface {
       joints: waveJoints,
       duration: 1500,
     });
-    
+
     // Ready pose
-    const readyJoints = Object.fromEntries(MOCK_JOINTS.map(j => [j, 0]));
+    const readyJoints = Object.fromEntries(MOCK_JOINTS.map((j) => [j, 0]));
     readyJoints['left_shoulder_pitch'] = 0.3;
     readyJoints['right_shoulder_pitch'] = 0.3;
     readyJoints['left_elbow_pitch'] = -0.5;
@@ -614,4 +631,4 @@ export class MockRobotAdapter extends BaseRobotInterface {
       duration: 1000,
     });
   }
-} 
+}

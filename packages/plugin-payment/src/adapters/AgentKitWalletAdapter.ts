@@ -1,7 +1,7 @@
 import { type IAgentRuntime, elizaLogger as logger } from '@elizaos/core';
 import { isAddress } from 'viem';
 import { IWalletAdapter, PaymentMethod, PaymentStatus, TransactionResult } from '../types';
-// @ts-ignore - Plugin types not available at compile time
+// @ts-expect-error - Plugin types not available at compile time
 import { AgentKitService, CustodialWalletService } from '@elizaos/plugin-agentkit';
 
 /**
@@ -103,7 +103,7 @@ export class AgentKitWalletAdapter implements IWalletAdapter {
     toAddress: string,
     amount: bigint,
     method: PaymentMethod,
-    privateKey?: string
+    _privateKey?: string
   ): Promise<TransactionResult> {
     try {
       // Validate addresses
@@ -119,7 +119,7 @@ export class AgentKitWalletAdapter implements IWalletAdapter {
         if (sourceWallet) {
           const result = await this.custodialService.executeTransaction({
             walletId: sourceWallet.id,
-            toAddress: toAddress,
+            toAddress,
             amountWei: amount,
             initiatedBy: this.runtime.agentId,
             purpose: 'payment',
@@ -159,7 +159,7 @@ export class AgentKitWalletAdapter implements IWalletAdapter {
 
               const tx = await wallet.sendTransaction({
                 to: usdcAddress,
-                data: data,
+                data,
                 value: '0',
               });
 
@@ -262,7 +262,6 @@ export class AgentKitWalletAdapter implements IWalletAdapter {
     try {
       // Try custodial service first
       if (this.custodialService) {
-        const entityId = `payment-${Date.now()}`;
         const wallet = await this.custodialService.createWallet({
           name: 'Payment Wallet',
           type: 'user',
@@ -299,11 +298,11 @@ export class AgentKitWalletAdapter implements IWalletAdapter {
       logger.warn('[AgentKitWalletAdapter] No service available for wallet creation');
       return {
         address:
-          '0x' +
-          Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+          `0x${
+            Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
         privateKey:
-          '0x' +
-          Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+          `0x${
+            Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
       };
     } catch (error) {
       logger.error('[AgentKitWalletAdapter] Error creating wallet', { error });
@@ -320,7 +319,7 @@ export class AgentKitWalletAdapter implements IWalletAdapter {
   }
 
   // Helper methods
-  private getUSDCAddress(method: PaymentMethod): string {
+  private getUSDCAddress(_method: PaymentMethod): string {
     // USDC addresses on different networks
     const network = this.runtime.getSetting('CDP_NETWORK_ID') || 'base-sepolia';
 

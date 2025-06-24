@@ -1,18 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { TestRunner } from '../../../src/utils/test-runner';
 import type { IAgentRuntime, Plugin, ProjectAgent, Character } from '@elizaos/core';
 
 // Mock logger
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
+mock.module('@elizaos/core', async () => {
+  const actual = await import('@elizaos/core');
   return {
     ...actual,
     logger: {
-      info: vi.fn(),
-      error: vi.fn(),
-      success: vi.fn(),
-      warn: vi.fn(),
-      debug: vi.fn(),
+      info: mock(),
+      error: mock(),
+      success: mock(),
+      warn: mock(),
+      debug: mock(),
     },
   };
 });
@@ -21,7 +21,7 @@ describe('TestRunner - Plugin Without Tests', () => {
   let mockRuntime: IAgentRuntime;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     process.env.ELIZA_TESTING_PLUGIN = 'true';
 
     mockRuntime = {
@@ -61,7 +61,7 @@ describe('TestRunner - Plugin Without Tests', () => {
           tests: [
             {
               name: 'test 1',
-              fn: vi.fn().mockResolvedValue(undefined),
+              fn: mock().mockResolvedValue(undefined),
             },
           ],
         },

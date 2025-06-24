@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { IAgentRuntime, Memory, State } from '@elizaos/core';
 import {
   activeResearchProvider,
@@ -17,15 +17,15 @@ describe('Research Providers', () => {
   beforeEach(() => {
     // Create mock service
     mockService = {
-      getActiveProjects: vi.fn().mockResolvedValue([]),
-      getProject: vi.fn().mockResolvedValue(null),
-      getAllProjects: vi.fn().mockResolvedValue([]),
+      getActiveProjects: mock().mockResolvedValue([]),
+      getProject: mock().mockResolvedValue(null),
+      getAllProjects: mock().mockResolvedValue([]),
     } as any;
 
     // Create mock runtime
     mockRuntime = {
       agentId: 'test-agent',
-      getService: vi.fn().mockReturnValue(mockService),
+      getService: mock().mockReturnValue(mockService),
     } as any;
 
     // Create mock memory and state
@@ -62,7 +62,7 @@ describe('Research Providers', () => {
         },
       };
 
-      mockService.getActiveProjects = vi.fn().mockResolvedValue([mockProject]);
+      mockService.getActiveProjects = mock().mockResolvedValue([mockProject]);
 
       const result = await activeResearchProvider.get(mockRuntime, mockMemory, mockState);
 
@@ -72,7 +72,7 @@ describe('Research Providers', () => {
     });
 
     it('should handle no active projects', async () => {
-      mockService.getActiveProjects = vi.fn().mockResolvedValue([]);
+      mockService.getActiveProjects = mock().mockResolvedValue([]);
 
       const result = await activeResearchProvider.get(mockRuntime, mockMemory, mockState);
 
@@ -80,7 +80,7 @@ describe('Research Providers', () => {
     });
 
     it('should handle service not available', async () => {
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
+      mockRuntime.getService = mock().mockReturnValue(null);
 
       const result = await activeResearchProvider.get(mockRuntime, mockMemory, mockState);
 
@@ -113,7 +113,7 @@ describe('Research Providers', () => {
         },
       ];
 
-      mockService.getAllProjects = vi.fn().mockResolvedValue(mockProjects);
+      mockService.getAllProjects = mock().mockResolvedValue(mockProjects);
 
       const result = await completedResearchProvider.get(mockRuntime, mockMemory, mockState);
 
@@ -124,7 +124,7 @@ describe('Research Providers', () => {
     });
 
     it('should handle no completed projects', async () => {
-      mockService.getAllProjects = vi.fn().mockResolvedValue([]);
+      mockService.getAllProjects = mock().mockResolvedValue([]);
 
       const result = await completedResearchProvider.get(mockRuntime, mockMemory, mockState);
 
@@ -143,7 +143,7 @@ describe('Research Providers', () => {
     });
 
     it('should work even without service', async () => {
-      mockRuntime.getService = vi.fn().mockReturnValue(null);
+      mockRuntime.getService = mock().mockReturnValue(null);
 
       const result = await researchCapabilitiesProvider.get(mockRuntime, mockMemory, mockState);
 

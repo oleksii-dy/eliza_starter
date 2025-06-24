@@ -35,7 +35,7 @@ export const updatePluginAction: Action = {
       {
         name: '{{agentName}}',
         content: {
-          text: 'Successfully updated @elizaos/plugin-weather from v1.2.0 to v1.3.0!\n\n**Changes:**\n- Added 5-day forecast support\n- Fixed timezone handling bug\n- Improved error messages\n\nThe previous version has been backed up and can be restored if needed.',
+          text: 'Successfully updated @elizaos/plugin-weather from v1.2.0 to v1.3.0!\n\n**Changes:**\n- Added 5-day forecast support\n- Fixed timezone handling bug\n- Improved _error messages\n\nThe previous version has been backed up and can be restored if needed.',
           actions: ['UPDATE_PLUGIN'],
         },
       },
@@ -96,10 +96,10 @@ export const updatePluginAction: Action = {
         'Plugin update functionality is not yet implemented. ' +
           'This feature requires integration with npm/git versioning systems and automated migration tools.'
       );
-    } catch (error) {
+    } catch (_error) {
       elizaLogger.error('[updatePluginAction] Error:', error);
 
-      const errorMessage = `Error: ${error instanceof Error ? error.message : String(error)}`;
+      const errorMessage = `Error: ${_error instanceof Error ? _error.message : String(_error)}`;
 
       if (callback) {
         await callback({

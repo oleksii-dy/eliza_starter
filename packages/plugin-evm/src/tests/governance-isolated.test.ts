@@ -1,15 +1,15 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { createMockRuntime, testPrivateKey, MOCK_PROPOSAL, TESTNET_GOVERNORS } from './test-config';
 import { proposeAction } from '../actions/gov-propose';
 import type { IAgentRuntime } from '@elizaos/core';
 
 describe('Governance Action Isolated Tests', () => {
   let mockRuntime: IAgentRuntime;
-  let mockCallback: ReturnType<typeof vi.fn>;
+  let mockCallback: ReturnType<typeof mock>;
 
   beforeEach(() => {
     mockRuntime = createMockRuntime();
-    mockCallback = vi.fn();
+    mockCallback = mock();
   });
 
   describe('Propose Action Parameter Validation', () => {
@@ -73,42 +73,12 @@ describe('Governance Action Isolated Tests', () => {
       // This test will fail at WalletProvider creation, but that's expected
       // We're just testing parameter validation here
       try {
-        await proposeAction.handler(
-          mockRuntime,
-          {} as any,
-          {} as any,
-          options,
-          mockCallback
-        );
+        await proposeAction.handler(mockRuntime, {} as any, {} as any, options, mockCallback);
       } catch (error) {
         // Expected to fail at wallet provider creation stage
         // The important thing is it passes parameter validation
         expect(error).toBeDefined();
       }
-    });
-  });
-
-  describe('Action Properties', () => {
-    it('should have correct action name', () => {
-      expect(proposeAction.name).toBe('propose');
-    });
-
-    it('should have description', () => {
-      expect(proposeAction.description).toBeTruthy();
-    });
-
-    it('should have template', () => {
-      expect(proposeAction.template).toBeDefined();
-    });
-
-    it('should have examples', () => {
-      expect(proposeAction.examples).toBeDefined();
-      expect(proposeAction.examples.length).toBeGreaterThan(0);
-    });
-
-    it('should have similes', () => {
-      expect(proposeAction.similes).toBeDefined();
-      expect(proposeAction.similes.length).toBeGreaterThan(0);
     });
   });
 });

@@ -131,7 +131,7 @@ describe('Embedding Integration Tests', () => {
 
       // Helper function to create a simple embedding that represents semantic similarity
       // For testing, we'll use embeddings that have controlled similarity
-      const createTestEmbedding = (baseVector: number[] similarity: number = 1.0): number[] => {
+      const createTestEmbedding = (baseVector: number[], similarity: number = 1.0): number[] => {
         const embedding = new Array(384).fill(0);
         // Copy base vector values scaled by similarity
         for (let i = 0; i < Math.min(baseVector.length, 384); i++) {

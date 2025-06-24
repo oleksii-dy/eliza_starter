@@ -1,13 +1,13 @@
-import { type IAgentRuntime, Service, logger } from "@elizaos/core";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { type IAgentRuntime, Service, logger } from '@elizaos/core';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import type {
   CallToolResult,
   Resource,
   ResourceTemplate,
   Tool,
-} from "@modelcontextprotocol/sdk/types.js";
+} from '@modelcontextprotocol/sdk/types.js';
 import {
   DEFAULT_MCP_TIMEOUT_SECONDS,
   MCP_SERVICE_NAME,
@@ -25,24 +25,24 @@ import {
   INITIAL_RETRY_DELAY,
   type ConnectionState,
   type PingConfig,
-} from "./types";
-import { buildMcpProviderData } from "./utils/mcp";
+} from './types';
+import { buildMcpProviderData } from './utils/mcp';
 import {
   createMcpToolCompatibilitySync as createMcpToolCompatibility,
   type McpToolCompatibility,
-} from "./tool-compatibility";
+} from './tool-compatibility';
 
 export class McpService extends Service {
   static serviceType: string = MCP_SERVICE_NAME;
-  capabilityDescription = "Enables the agent to interact with MCP (Model Context Protocol) servers";
-  
+  capabilityDescription = 'Enables the agent to interact with MCP (Model Context Protocol) servers';
+
   protected runtime: IAgentRuntime;
   private connections: Map<string, McpConnection> = new Map();
   private connectionStates: Map<string, ConnectionState> = new Map();
   private mcpProvider: McpProvider = {
     values: { mcp: {} },
     data: { mcp: {} },
-    text: "",
+    text: '',
   };
   private pingConfig: PingConfig = DEFAULT_PING_CONFIG;
   private toolCompatibility: McpToolCompatibility | null = null;
@@ -65,8 +65,12 @@ export class McpService extends Service {
     }
     this.connections.clear();
     for (const state of this.connectionStates.values()) {
-      if (state.pingInterval) clearInterval(state.pingInterval);
-      if (state.reconnectTimeout) clearTimeout(state.reconnectTimeout);
+      if (state.pingInterval) {
+        clearInterval(state.pingInterval);
+      }
+      if (state.reconnectTimeout) {
+        clearTimeout(state.reconnectTimeout);
+      }
     }
     this.connectionStates.clear();
   }
@@ -75,7 +79,7 @@ export class McpService extends Service {
     try {
       const mcpSettings = this.getMcpSettings();
       if (!mcpSettings || !mcpSettings.servers) {
-        logger.info("No MCP servers configured.");
+        logger.info('No MCP servers configured.');
         return;
       }
       await this.updateServerConnections(mcpSettings.servers);
@@ -83,31 +87,33 @@ export class McpService extends Service {
       this.mcpProvider = buildMcpProviderData(servers);
     } catch (error) {
       logger.error(
-        "Failed to initialize MCP servers:",
+        'Failed to initialize MCP servers:',
         error instanceof Error ? error.message : String(error)
       );
     }
   }
 
   private getMcpSettings(): McpSettings | undefined {
-    const settingValue = this.runtime.getSetting("mcp");
-    if (!settingValue) return undefined;
-    
+    const settingValue = this.runtime.getSetting('mcp');
+    if (!settingValue) {
+      return undefined;
+    }
+
     // If it's already an object, return it
     if (typeof settingValue === 'object') {
       return settingValue as McpSettings;
     }
-    
+
     // If it's a string, try to parse it
     if (typeof settingValue === 'string') {
       try {
         return JSON.parse(settingValue) as McpSettings;
       } catch (error) {
-        logger.error("Failed to parse MCP settings:", error);
+        logger.error('Failed to parse MCP settings:', error);
         return undefined;
       }
     }
-    
+
     return undefined;
   }
 
@@ -153,22 +159,22 @@ export class McpService extends Service {
   private async initializeConnection(name: string, config: McpServerConfig): Promise<void> {
     await this.deleteConnection(name); // Clean up if exists
     const state: ConnectionState = {
-      status: "connecting",
+      status: 'connecting',
       reconnectAttempts: 0,
       consecutivePingFailures: 0,
     };
     this.connectionStates.set(name, state);
     try {
-      const client = new Client({ name: "ElizaOS", version: "1.0.0" }, { capabilities: {} });
+      const client = new Client({ name: 'ElizaOS', version: '1.0.0' }, { capabilities: {} });
       const transport: StdioClientTransport | SSEClientTransport =
-        config.type === "stdio"
+        config.type === 'stdio'
           ? await this.buildStdioClientTransport(name, config)
           : await this.buildHttpClientTransport(name, config);
       const connection: McpConnection = {
         server: {
           name,
           config: JSON.stringify(config),
-          status: "connecting",
+          status: 'connecting',
         },
         client,
         transport,
@@ -177,45 +183,49 @@ export class McpService extends Service {
       this.setupTransportHandlers(name, connection, state);
       await client.connect(transport);
       connection.server = {
-        status: "connected",
+        status: 'connected',
         name,
         config: JSON.stringify(config),
-        error: "",
+        error: '',
         tools: await this.fetchToolsList(name),
         resources: await this.fetchResourcesList(name),
         resourceTemplates: await this.fetchResourceTemplatesList(name),
       };
-      state.status = "connected";
+      state.status = 'connected';
       state.lastConnected = new Date();
       state.reconnectAttempts = 0;
       state.consecutivePingFailures = 0;
       this.startPingMonitoring(name);
       logger.info(`Successfully connected to MCP server: ${name}`);
     } catch (error) {
-      state.status = "disconnected";
+      state.status = 'disconnected';
       state.lastError = error instanceof Error ? error : new Error(String(error));
       this.handleDisconnection(name, error);
       throw error;
     }
   }
 
-  private setupTransportHandlers(name: string, connection: McpConnection, state: ConnectionState) {
+  private setupTransportHandlers(name: string, connection: McpConnection, _state: ConnectionState) {
     connection.transport.onerror = async (error) => {
       logger.error(`Transport error for "${name}":`, error);
-      connection.server.status = "disconnected";
+      connection.server.status = 'disconnected';
       this.appendErrorMessage(connection, error.message);
       this.handleDisconnection(name, error);
     };
     connection.transport.onclose = async () => {
-      connection.server.status = "disconnected";
-      this.handleDisconnection(name, new Error("Transport closed"));
+      connection.server.status = 'disconnected';
+      this.handleDisconnection(name, new Error('Transport closed'));
     };
   }
 
   private startPingMonitoring(name: string) {
     const state = this.connectionStates.get(name);
-    if (!state || !this.pingConfig.enabled) return;
-    if (state.pingInterval) clearInterval(state.pingInterval);
+    if (!state || !this.pingConfig.enabled) {
+      return;
+    }
+    if (state.pingInterval) {
+      clearInterval(state.pingInterval);
+    }
     state.pingInterval = setInterval(() => {
       this.sendPing(name).catch((err) => {
         logger.warn(`Ping failed for ${name}:`, err instanceof Error ? err.message : String(err));
@@ -226,22 +236,28 @@ export class McpService extends Service {
 
   private async sendPing(name: string): Promise<void> {
     const connection = this.connections.get(name);
-    if (!connection) throw new Error(`No connection for ping: ${name}`);
+    if (!connection) {
+      throw new Error(`No connection for ping: ${name}`);
+    }
     // Use a lightweight call, e.g., listTools as a ping
     await Promise.race([
       connection.client.listTools(),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Ping timeout")), this.pingConfig.timeoutMs)
+        setTimeout(() => reject(new Error('Ping timeout')), this.pingConfig.timeoutMs)
       ),
     ]);
     // Reset ping failures on success
     const state = this.connectionStates.get(name);
-    if (state) state.consecutivePingFailures = 0;
+    if (state) {
+      state.consecutivePingFailures = 0;
+    }
   }
 
   private handlePingFailure(name: string, error: unknown) {
     const state = this.connectionStates.get(name);
-    if (!state) return;
+    if (!state) {
+      return;
+    }
     state.consecutivePingFailures++;
     if (state.consecutivePingFailures >= this.pingConfig.failuresBeforeDisconnect) {
       logger.warn(`Ping failures exceeded for ${name}, disconnecting and attempting reconnect.`);
@@ -251,11 +267,17 @@ export class McpService extends Service {
 
   private handleDisconnection(name: string, error: unknown) {
     const state = this.connectionStates.get(name);
-    if (!state) return;
-    state.status = "disconnected";
+    if (!state) {
+      return;
+    }
+    state.status = 'disconnected';
     state.lastError = error instanceof Error ? error : new Error(String(error));
-    if (state.pingInterval) clearInterval(state.pingInterval);
-    if (state.reconnectTimeout) clearTimeout(state.reconnectTimeout);
+    if (state.pingInterval) {
+      clearInterval(state.pingInterval);
+    }
+    if (state.reconnectTimeout) {
+      clearTimeout(state.reconnectTimeout);
+    }
     if (state.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       logger.error(`Max reconnect attempts reached for ${name}. Giving up.`);
       return;
@@ -295,8 +317,12 @@ export class McpService extends Service {
     }
     const state = this.connectionStates.get(name);
     if (state) {
-      if (state.pingInterval) clearInterval(state.pingInterval);
-      if (state.reconnectTimeout) clearTimeout(state.reconnectTimeout);
+      if (state.pingInterval) {
+        clearInterval(state.pingInterval);
+      }
+      if (state.reconnectTimeout) {
+        clearTimeout(state.reconnectTimeout);
+      }
       this.connectionStates.delete(name);
     }
   }
@@ -317,7 +343,7 @@ export class McpService extends Service {
         ...config.env,
         ...(process.env.PATH ? { PATH: process.env.PATH } : {}),
       },
-      stderr: "pipe",
+      stderr: 'pipe',
       cwd: config.cwd,
     });
   }
@@ -328,7 +354,7 @@ export class McpService extends Service {
     }
 
     // Add deprecation warning for legacy "sse" type
-    if (config.type === "sse") {
+    if (config.type === 'sse') {
       logger.warn(
         `Server "${name}": "sse" transport type is deprecated. Use "streamable-http" or "http" instead for the modern Streamable HTTP transport.`
       );
@@ -353,7 +379,7 @@ export class McpService extends Service {
 
       const tools = (response?.tools || []).map((tool) => {
         // Apply tool compatibility transformation to the tool's input schema
-        let processedTool = { ...tool };
+        const processedTool = { ...tool };
 
         if (tool.inputSchema) {
           try {
@@ -464,7 +490,7 @@ export class McpService extends Service {
       { timeout }
     );
     if (!result.content) {
-      throw new Error("Invalid tool result: missing content array");
+      throw new Error('Invalid tool result: missing content array');
     }
     return result as CallToolResult;
   }
@@ -485,8 +511,8 @@ export class McpService extends Service {
     const config = connection?.server.config;
     if (config) {
       logger.info(`Restarting ${serverName} MCP server...`);
-      connection.server.status = "connecting";
-      connection.server.error = "";
+      connection.server.status = 'connecting';
+      connection.server.error = '';
       try {
         await this.deleteConnection(serverName);
         await this.initializeConnection(serverName, JSON.parse(config));
@@ -502,15 +528,17 @@ export class McpService extends Service {
   }
 
   private initializeToolCompatibility(): void {
-    if (this.compatibilityInitialized) return;
+    if (this.compatibilityInitialized) {
+      return;
+    }
 
     this.toolCompatibility = createMcpToolCompatibility(this.runtime);
     this.compatibilityInitialized = true;
 
     if (this.toolCompatibility) {
-      logger.info(`Tool compatibility enabled`);
+      logger.info('Tool compatibility enabled');
     } else {
-      logger.info(`No tool compatibility needed`);
+      logger.info('No tool compatibility needed');
     }
   }
 
@@ -526,20 +554,20 @@ export class McpService extends Service {
     try {
       return this.toolCompatibility.transformToolSchema(toolSchema);
     } catch (error) {
-      logger.warn(`Tool compatibility transformation failed:`, error);
+      logger.warn('Tool compatibility transformation failed:', error);
       return toolSchema; // Fall back to original schema
     }
   }
 
   public async reconnectServer(serverName: string, config: McpServerConfig): Promise<void> {
     logger.info(`Reconnecting to MCP server: ${serverName}`);
-    
+
     // First disconnect the existing connection
     await this.deleteConnection(serverName);
-    
+
     // Wait a moment to ensure clean disconnect
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // Reconnect with the provided config
     await this.initializeConnection(serverName, config);
   }

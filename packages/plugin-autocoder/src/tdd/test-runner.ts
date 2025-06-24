@@ -192,9 +192,9 @@ ${testSuite.teardownCode || ''}
             error:
               assertionResult.status === 'failed'
                 ? {
-                    message: assertionResult.failureMessages.join('\n'),
-                    stack: assertionResult.failureDetails?.[0]?.stack,
-                  }
+                  message: assertionResult.failureMessages.join('\n'),
+                  stack: assertionResult.failureDetails?.[0]?.stack,
+                }
                 : undefined,
           });
         }
@@ -212,10 +212,10 @@ ${testSuite.teardownCode || ''}
       const coverageData = JSON.parse(await fs.readFile(coveragePath, 'utf-8'));
 
       // Aggregate coverage
-      let statements = { total: 0, covered: 0 };
-      let branches = { total: 0, covered: 0 };
-      let functions = { total: 0, covered: 0 };
-      let lines = { total: 0, covered: 0 };
+      const statements = { total: 0, covered: 0 };
+      const branches = { total: 0, covered: 0 };
+      const functions = { total: 0, covered: 0 };
+      const lines = { total: 0, covered: 0 };
       const uncoveredLines: number[] = [];
 
       for (const file in coverageData) {
@@ -283,9 +283,9 @@ ${testSuite.teardownCode || ''}
       avgDuration,
       slowestTest: slowestTest
         ? {
-            name: slowestTest.test.name,
-            duration: slowestTest.duration,
-          }
+          name: slowestTest.test.name,
+          duration: slowestTest.duration,
+        }
         : null,
       failureReasons: this.categorizeFailures(results.filter((r) => !r.passed)),
     };

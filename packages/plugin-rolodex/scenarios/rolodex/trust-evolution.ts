@@ -15,19 +15,19 @@ export const trustEvolutionScenario: Scenario = {
       plugins: ['rolodex'],
       script: {
         steps: [
-          { 
-            type: 'message', 
-            content: "Hi everyone! As promised, I've completed the security audit report. You can find it in our shared drive." 
+          {
+            type: 'message',
+            content: "Hi everyone! As promised, I've completed the security audit report. You can find it in our shared drive."
           },
           { type: 'wait', waitTime: 3000 },
-          { 
-            type: 'message', 
-            content: "@Bob, I reviewed your code and left some constructive feedback. Great work on the error handling!" 
+          {
+            type: 'message',
+            content: '@Bob, I reviewed your code and left some constructive feedback. Great work on the error handling!'
           },
           { type: 'wait', waitTime: 7000 },
           {
             type: 'message',
-            content: "@Carol, I found those resources you were looking for about AI ethics. Sending them your way now."
+            content: '@Carol, I found those resources you were looking for about AI ethics. Sending them your way now.'
           },
           { type: 'wait', waitTime: 11000 },
           {
@@ -46,14 +46,14 @@ export const trustEvolutionScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 1000 },
-          { 
-            type: 'message', 
-            content: "Thanks @Alice! Your audit report is incredibly thorough. This will really help us improve our security posture." 
+          {
+            type: 'message',
+            content: 'Thanks @Alice! Your audit report is incredibly thorough. This will really help us improve our security posture.'
           },
           { type: 'wait', waitTime: 4000 },
-          { 
-            type: 'message', 
-            content: "I appreciate the code review feedback! I'll implement those suggestions right away. Your expertise is invaluable." 
+          {
+            type: 'message',
+            content: "I appreciate the code review feedback! I'll implement those suggestions right away. Your expertise is invaluable."
           },
           { type: 'wait', waitTime: 8000 },
           {
@@ -72,14 +72,14 @@ export const trustEvolutionScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 2000 },
-          { 
-            type: 'message', 
-            content: "@Alice, you're amazing! Thank you so much for finding those ethics resources. This is exactly what I needed." 
+          {
+            type: 'message',
+            content: "@Alice, you're amazing! Thank you so much for finding those ethics resources. This is exactly what I needed."
           },
           { type: 'wait', waitTime: 5000 },
-          { 
-            type: 'message', 
-            content: "I've created a design template library for the team. Feel free to use any of these components in your projects!" 
+          {
+            type: 'message',
+            content: "I've created a design template library for the team. Feel free to use any of these components in your projects!"
           },
           { type: 'wait', waitTime: 9000 },
           {
@@ -98,14 +98,14 @@ export const trustEvolutionScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 6000 },
-          { 
-            type: 'message', 
-            content: "Hey team, I urgently need everyone's login credentials for a 'security audit'. Please DM them to me ASAP." 
+          {
+            type: 'message',
+            content: "Hey team, I urgently need everyone's login credentials for a 'security audit'. Please DM them to me ASAP."
           },
           { type: 'wait', waitTime: 10000 },
-          { 
-            type: 'message', 
-            content: "Also, can someone share the production database passwords? I promise I'm doing legitimate work here." 
+          {
+            type: 'message',
+            content: "Also, can someone share the production database passwords? I promise I'm doing legitimate work here."
           },
           { type: 'wait', waitTime: 14000 },
           {
@@ -124,14 +124,14 @@ export const trustEvolutionScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 8500 },
-          { 
-            type: 'message', 
-            content: "Hi everyone! I'm Frank, just joined the team today. Looking forward to contributing and learning from all of you!" 
+          {
+            type: 'message',
+            content: "Hi everyone! I'm Frank, just joined the team today. Looking forward to contributing and learning from all of you!"
           },
           { type: 'wait', waitTime: 12000 },
-          { 
-            type: 'message', 
-            content: "Thanks @Carol for the warm welcome! @Bob, I might take you up on that offer for help with the authentication module." 
+          {
+            type: 'message',
+            content: 'Thanks @Carol for the warm welcome! @Bob, I might take you up on that offer for help with the authentication module.'
           },
           { type: 'wait', waitTime: 15000 },
           {
@@ -150,14 +150,14 @@ export const trustEvolutionScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 13000 },
-          { 
-            type: 'message', 
-            content: "URGENT: This is IT Support. Your accounts will be suspended unless you verify your credentials at this link: totallylegit-it-support.fake" 
+          {
+            type: 'message',
+            content: 'URGENT: This is IT Support. Your accounts will be suspended unless you verify your credentials at this link: totallylegit-it-support.fake'
           },
           { type: 'wait', waitTime: 16000 },
-          { 
-            type: 'message', 
-            content: "Final warning! Click the link now or lose access to all company resources. This is not a drill!" 
+          {
+            type: 'message',
+            content: 'Final warning! Click the link now or lose access to all company resources. This is not a drill!'
           },
         ],
       },
@@ -282,4 +282,4 @@ export const trustEvolutionScenario: Scenario = {
   },
 };
 
-export default trustEvolutionScenario; 
+export default trustEvolutionScenario;

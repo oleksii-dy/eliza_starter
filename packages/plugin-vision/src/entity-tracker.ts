@@ -1,8 +1,6 @@
 import { logger, type IAgentRuntime, type UUID } from '@elizaos/core';
 import type {
   TrackedEntity,
-  EntityAppearance,
-  EntityAttributes,
   WorldState,
   DetectedObject,
   PersonInfo,
@@ -180,10 +178,10 @@ export class EntityTracker {
 
     for (const entity of this.worldState.entities.values()) {
       // Skip if wrong type
-      if (entity.entityType !== entityType) continue;
+      if (entity.entityType !== entityType) {continue;}
 
       // Skip if entity has been missing too long
-      if (currentTime - entity.lastSeen > this.MISSING_THRESHOLD) continue;
+      if (currentTime - entity.lastSeen > this.MISSING_THRESHOLD) {continue;}
 
       // If we have face ID, prioritize face matching for people
       if (entityType === 'person' && faceProfileId && entity.attributes.faceId) {
@@ -257,7 +255,7 @@ export class EntityTracker {
     try {
       // Create or update entities in the runtime
       for (const entity of frameEntities) {
-        const elizaEntity = {
+        const _elizaEntity = {
           id: entity.id as UUID,
           names: [entity.attributes.name || entity.id],
           metadata: {
@@ -329,7 +327,7 @@ export class EntityTracker {
     recentlyLeft: number;
     people: number;
     objects: number;
-  } {
+    } {
     const entities = Array.from(this.worldState.entities.values());
     return {
       totalEntities: entities.length,

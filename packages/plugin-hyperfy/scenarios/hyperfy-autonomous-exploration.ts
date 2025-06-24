@@ -1,13 +1,13 @@
 /**
  * Autonomous Multi-Agent Exploration Scenario
- * 
+ *
  * This scenario spawns multiple autonomous agents in a Hyperfy world
  * and observes their exploration behavior for 1 minute.
- * 
+ *
  * Prerequisites:
  * - Hyperfy server running locally (cd hyperfy && npm run dev)
  * - Plugin-autonomy and plugin-hyperfy installed
- * 
+ *
  * To run with observation window:
  * ENABLE_OBSERVATION_WINDOW=true elizaos scenario run scenarios/hyperfy-autonomous-exploration.ts
  */
@@ -293,4 +293,4 @@ export const autonomousExplorationSmall: Scenario = {
   description: 'Smaller test with only 3 agents for debugging',
   tags: [...autonomousMultiAgentExploration.tags, 'debug'],
   actors: autonomousMultiAgentExploration.actors.slice(0, 3)
-}; 
+};

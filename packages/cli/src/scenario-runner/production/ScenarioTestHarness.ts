@@ -50,7 +50,7 @@ export class ScenarioTestHarness {
         userId: this.runtime.agentId,
         agentId: this.runtime.agentId,
         roomId: (content.roomId as UUID) || (uuidv4() as UUID),
-        content: content,
+        content,
         messageType: 'agent',
       };
 
@@ -205,7 +205,7 @@ export class ScenarioTestHarness {
 
     // Wait for the response with a timeout
     const timeoutPromise = new Promise<AgentResponse>((_, reject) => {
-      setTimeout(() => reject(new Error(`Timeout waiting for response (30s)`)), 30000);
+      setTimeout(() => reject(new Error('Timeout waiting for response (30s)')), 30000);
     });
 
     try {

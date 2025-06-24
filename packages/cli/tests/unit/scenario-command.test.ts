@@ -1,37 +1,37 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { ScenarioActionTracker } from '../../src/commands/scenario/action-tracker.js';
 import type { Scenario } from '../../src/scenario-runner/types.js';
 
 // Mock fs and fs/promises at the top level
-vi.mock('fs', async () => {
-  const actual = await vi.importActual('fs');
+mock.module('fs', async () => {
+  const actual = await import('fs');
   return {
     ...actual,
-    existsSync: vi.fn(() => true),
-    readFileSync: vi.fn(() => '{}'),
+    existsSync: mock(() => true),
+    readFileSync: mock(() => '{}'),
   };
 });
-vi.mock('fs/promises', async () => {
-  const actual = await vi.importActual('fs/promises');
+mock.module('fs/promises', async () => {
+  const actual = await import('fs/promises');
   return {
     ...actual,
-    readFile: vi.fn().mockResolvedValue('{}'),
-    writeFile: vi.fn().mockResolvedValue(undefined),
-    readdir: vi.fn().mockResolvedValue([]),
-    stat: vi.fn().mockResolvedValue({ isFile: () => true, isDirectory: () => false }),
+    readFile: mock().mockResolvedValue('{}'),
+    writeFile: mock().mockResolvedValue(undefined),
+    readdir: mock().mockResolvedValue([]),
+    stat: mock().mockResolvedValue({ isFile: () => true, isDirectory: () => false }),
   };
 });
 
 // Mock implementations for internal functions that are not exported
-const loadScenarioFile = vi.fn();
-const loadScenarios = vi.fn();
-const loadScenariosFromDirectory = vi.fn();
+const loadScenarioFile = mock();
+const loadScenarios = mock();
+const loadScenariosFromDirectory = mock();
 
 describe('Scenario Command Module', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     // Reset mock implementations
     loadScenarioFile.mockReset();
     loadScenarios.mockReset();
@@ -50,9 +50,9 @@ describe('Scenario Command Module', () => {
         verification: { rules: [] },
       };
 
-      vi.mocked(fs.existsSync).mockReturnValue(true);
+      mock(fs.existsSync).mockReturnValue(true);
       const fsPromises = await import('fs/promises');
-      vi.mocked(fsPromises.readFile).mockResolvedValue(JSON.stringify(mockScenario));
+      mock(fsPromises.readFile).mockResolvedValue(JSON.stringify(mockScenario));
 
       // Mock the implementation for this test
       loadScenarioFile.mockImplementation(async (filePath: string) => {
@@ -73,8 +73,8 @@ describe('Scenario Command Module', () => {
     });
 
     it('should load TypeScript scenario files', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      
+      mock(fs.existsSync).mockReturnValue(true);
+
       // Mock dynamic import
       const mockModule = {
         default: {
@@ -90,7 +90,7 @@ describe('Scenario Command Module', () => {
 
       // Create a temporary file and mock its import
       const testPath = path.resolve('/test/scenario.ts');
-      vi.doMock(testPath, () => mockModule);
+      mock.module(testPath, () => mockModule);
 
       // Mock the implementation for TypeScript files
       loadScenarioFile.mockImplementation(async (filePath: string) => {
@@ -110,7 +110,7 @@ describe('Scenario Command Module', () => {
     });
 
     it('should throw error for non-existent files', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(false);
+      mock(fs.existsSync).mockReturnValue(false);
 
       loadScenarioFile.mockImplementation(async (filePath: string) => {
         if (!fs.existsSync(filePath)) {
@@ -125,7 +125,7 @@ describe('Scenario Command Module', () => {
     });
 
     it('should throw error for unsupported file formats', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
+      mock(fs.existsSync).mockReturnValue(true);
 
       loadScenarioFile.mockImplementation(async (filePath: string) => {
         if (!fs.existsSync(filePath)) {
@@ -146,7 +146,7 @@ describe('Scenario Command Module', () => {
   describe('loadScenariosFromDirectory', () => {
     it('should load all scenario files from directory', async () => {
       const fsPromises = await import('fs/promises');
-      
+
       (fsPromises.readdir as any).mockResolvedValue([
         'scenario1.json',
         'scenario2.ts',
@@ -162,7 +162,7 @@ describe('Scenario Command Module', () => {
         return { isFile: () => true, isDirectory: () => false } as any;
       });
 
-      vi.mocked(fs.existsSync).mockReturnValue(true);
+      mock(fs.existsSync).mockReturnValue(true);
       (fsPromises.readFile as any).mockImplementation(async (filePath: any) => {
         const pathStr = String(filePath);
         if (pathStr.includes('scenario1.json')) {
@@ -179,7 +179,7 @@ describe('Scenario Command Module', () => {
       });
 
       // Mock imports for TS files
-      vi.doMock(path.join('/test/dir', 'scenario2.ts'), () => ({
+      mock.module(path.join('/test/dir', 'scenario2.ts'), () => ({
         default: {
           id: 'scenario2',
           name: 'Scenario 2',
@@ -195,11 +195,11 @@ describe('Scenario Command Module', () => {
         try {
           const files = await fsPromises.readdir(dirPath);
           const scenarios = [];
-          
+
           for (const file of files) {
             const filePath = path.join(dirPath, file);
             const stat = await fsPromises.stat(filePath);
-            
+
             if (stat.isFile() && (file.endsWith('.json') || file.endsWith('.ts'))) {
               if (file.endsWith('.json')) {
                 const content = await fsPromises.readFile(filePath, 'utf-8');
@@ -217,7 +217,7 @@ describe('Scenario Command Module', () => {
               }
             }
           }
-          
+
           return scenarios;
         } catch (error) {
           return [];
@@ -250,9 +250,9 @@ describe('Scenario Command Module', () => {
         scenario: '/test/scenario.json',
       };
 
-      vi.mocked(fs.existsSync).mockReturnValue(true);
+      mock(fs.existsSync).mockReturnValue(true);
       const fsPromises = await import('fs/promises');
-      vi.mocked(fsPromises.readFile).mockResolvedValue(
+      mock(fsPromises.readFile).mockResolvedValue(
         JSON.stringify({
           id: 'single-scenario',
           name: 'Single Scenario',
@@ -286,7 +286,7 @@ describe('Scenario Command Module', () => {
       const fsPromises = await import('fs/promises');
       (fsPromises.readdir as any).mockResolvedValue(['auth-test.json', 'other-test.json']);
       (fsPromises.stat as any).mockResolvedValue({ isFile: () => true, isDirectory: () => false });
-      vi.mocked(fs.existsSync).mockReturnValue(true);
+      mock(fs.existsSync).mockReturnValue(true);
 
       (fsPromises.readFile as any).mockImplementation(async (filePath: any) => {
         const pathStr = String(filePath);
@@ -331,14 +331,15 @@ describe('Scenario Command Module', () => {
             setup: {},
             execution: {},
             verification: { rules: [] },
-          }
+          },
         ];
-        
+
         if (opts.filter) {
           const pattern = opts.filter.toLowerCase();
-          return allScenarios.filter(s => 
-            s.name.toLowerCase().includes(pattern) ||
-            s.tags?.some(tag => tag.toLowerCase().includes(pattern))
+          return allScenarios.filter(
+            (s) =>
+              s.name.toLowerCase().includes(pattern) ||
+              s.tags?.some((tag) => tag.toLowerCase().includes(pattern))
           );
         }
         return allScenarios;
@@ -375,14 +376,16 @@ describe('Scenario Command Module', () => {
       loadScenarios.mockImplementation(async (opts: any) => {
         if (!opts.scenario && !opts.directory) {
           // Return default scenario
-          return [{
-            id: 'default-scenario',
-            name: 'Default Scenario',
-            actors: [],
-            setup: {},
-            execution: {},
-            verification: { rules: [] },
-          }];
+          return [
+            {
+              id: 'default-scenario',
+              name: 'Default Scenario',
+              actors: [],
+              setup: {},
+              execution: {},
+              verification: { rules: [] },
+            },
+          ];
         }
         return [];
       });
@@ -402,14 +405,14 @@ describe('ScenarioActionTracker', () => {
 
   beforeEach(() => {
     mockMetricsCollector = {
-      recordAction: vi.fn(),
+      recordAction: mock(),
     };
 
     tracker = new ScenarioActionTracker(mockMetricsCollector);
 
     mockRuntime = {
       actions: {
-        execute: vi.fn().mockResolvedValue(true),
+        execute: mock().mockResolvedValue(true),
       },
     };
 
@@ -453,13 +456,13 @@ describe('ScenarioActionTracker', () => {
   describe('stopTracking', () => {
     it('should restore original execute method', async () => {
       const originalExecute = mockRuntime.actions.execute;
-      
+
       await tracker.startTracking(mockRuntime, mockContext);
       expect(mockRuntime.actions.execute).not.toBe(originalExecute);
 
       (global as any).runtime = mockRuntime;
       await tracker.stopTracking();
-      
+
       // Clean up global
       delete (global as any).runtime;
     });
@@ -512,4 +515,4 @@ describe('ScenarioActionTracker', () => {
       expect(counts).toEqual({});
     });
   });
-}); 
+});

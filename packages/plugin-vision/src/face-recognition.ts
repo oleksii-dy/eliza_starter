@@ -2,7 +2,7 @@ import * as faceapi from 'face-api.js';
 import { logger } from '@elizaos/core';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import type { FaceProfile, FaceLibrary, TrackedEntity, EntityAppearance } from './types';
+import type { FaceProfile, FaceLibrary } from './types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,7 +16,7 @@ async function initializeCanvas() {
     Canvas = canvas.Canvas;
     Image = canvas.Image;
     ImageData = canvas.ImageData;
-    
+
     // Polyfill for face-api.js
     faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
   } catch (error) {
@@ -32,27 +32,27 @@ export class FaceRecognition {
     embeddings: new Map(),
   };
   private modelPath = path.join(__dirname, '..', 'models', 'face-api');
-  
+
   // Thresholds
   private readonly FACE_MATCH_THRESHOLD = 0.6; // Euclidean distance threshold
   private readonly MIN_FACE_SIZE = 50; // Minimum face size in pixels
 
   async initialize(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {return;}
 
     try {
       logger.info('[FaceRecognition] Loading face detection models...');
-      
+
       // Initialize canvas first
       await initializeCanvas();
-      
+
       // Load face-api.js models
       await faceapi.nets.ssdMobilenetv1.loadFromDisk(this.modelPath);
       await faceapi.nets.faceLandmark68Net.loadFromDisk(this.modelPath);
       await faceapi.nets.faceRecognitionNet.loadFromDisk(this.modelPath);
       await faceapi.nets.faceExpressionNet.loadFromDisk(this.modelPath);
       await faceapi.nets.ageGenderNet.loadFromDisk(this.modelPath);
-      
+
       this.initialized = true;
       logger.info('[FaceRecognition] Models loaded successfully');
     } catch (error) {
@@ -75,10 +75,10 @@ export class FaceRecognition {
 
     // Validate input parameters
     if (!imageData || imageData.length === 0 || width <= 0 || height <= 0) {
-      logger.warn('[FaceRecognition] Invalid input parameters:', { 
-        dataLength: imageData?.length || 0, 
-        width, 
-        height 
+      logger.warn('[FaceRecognition] Invalid input parameters:', {
+        dataLength: imageData?.length || 0,
+        width,
+        height
       });
       return [];
     }
@@ -138,7 +138,7 @@ export class FaceRecognition {
     for (const [profileId, embeddings] of this.faceLibrary.embeddings) {
       for (const knownEmbedding of embeddings) {
         const distance = this.euclideanDistance(descriptor, knownEmbedding);
-        
+
         if (distance < this.FACE_MATCH_THRESHOLD && distance < minDistance) {
           minDistance = distance;
           bestMatch = { profileId, distance };
@@ -152,24 +152,24 @@ export class FaceRecognition {
   async addOrUpdateFace(descriptor: Float32Array, attributes?: Partial<FaceProfile>): Promise<string> {
     // Check if this face already exists
     const match = await this.recognizeFace(descriptor);
-    
+
     if (match) {
       // Update existing profile
       const profile = this.faceLibrary.faces.get(match.profileId)!;
       profile.lastSeen = Date.now();
       profile.seenCount++;
-      
+
       // Add new embedding for better recognition
       const embeddings = this.faceLibrary.embeddings.get(match.profileId)!;
       if (embeddings.length < 10) { // Keep up to 10 embeddings per person
         embeddings.push(Array.from(descriptor));
       }
-      
+
       // Update attributes if provided
       if (attributes) {
         Object.assign(profile, attributes);
       }
-      
+
       return match.profileId;
     } else {
       // Create new profile
@@ -182,10 +182,10 @@ export class FaceRecognition {
         seenCount: 1,
         ...attributes,
       };
-      
+
       this.faceLibrary.faces.set(profileId, profile);
       this.faceLibrary.embeddings.set(profileId, [Array.from(descriptor)]);
-      
+
       logger.info(`[FaceRecognition] New face registered: ${profileId}`);
       return profileId;
     }
@@ -214,7 +214,7 @@ export class FaceRecognition {
       faces: Array.from(this.faceLibrary.faces.entries()),
       embeddings: Array.from(this.faceLibrary.embeddings.entries()),
     };
-    
+
     const fs = await import('fs/promises');
     await fs.writeFile(path, JSON.stringify(data, null, 2));
     logger.info(`[FaceRecognition] Face library saved to ${path}`);
@@ -224,13 +224,13 @@ export class FaceRecognition {
     try {
       const fs = await import('fs/promises');
       const data = JSON.parse(await fs.readFile(path, 'utf-8'));
-      
+
       this.faceLibrary.faces = new Map(data.faces);
       this.faceLibrary.embeddings = new Map(data.embeddings);
-      
+
       logger.info(`[FaceRecognition] Loaded ${this.faceLibrary.faces.size} face profiles`);
     } catch (error) {
       logger.warn('[FaceRecognition] Could not load face library:', error);
     }
   }
-} 
+}

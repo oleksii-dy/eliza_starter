@@ -27,7 +27,7 @@ describe('UI Components - Simple Tests', () => {
     it('should handle click events', () => {
       cy.get('[data-testid="button-clickable"]').click();
       cy.get('[data-testid="click-count"]').should('contain', '1');
-      
+
       cy.get('[data-testid="button-clickable"]').click();
       cy.get('[data-testid="click-count"]').should('contain', '2');
     });
@@ -76,4 +76,4 @@ describe('UI Components - Simple Tests', () => {
       cy.get('[data-testid="table-caption"]').should('contain', 'Test Caption');
     });
   });
-}); 
+});

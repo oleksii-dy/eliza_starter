@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'bun:test';
 import { io as ioClient, Socket as ClientSocket } from 'socket.io-client';
 import { AgentServer } from '../../index';
-import type { IAgentRuntime, UUID, Character, Content, Memory } from '@elizaos/core';
+import type { IAgentRuntime, UUID, Character, Content } from '@elizaos/core';
 import { SOCKET_MESSAGE_TYPE, ChannelType, AgentRuntime } from '@elizaos/core';
 import { createDatabaseAdapter } from '@elizaos/plugin-sql';
 import { messageHandlingPlugin } from '@elizaos/plugin-message-handling';
@@ -110,7 +110,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
     const channel = await agentServer.createChannel({
       name: 'WebSocket Test Channel',
       type: ChannelType.GROUP,
-      serverId: serverId,
+      serverId,
       metadata: {},
     });
     channelId = channel.id;
@@ -119,19 +119,26 @@ describe('WebSocket Agent End-to-End Tests', () => {
     await agentServer.addAgentToChannel(channelId, agent.agentId);
 
     // Also ensure the agent is following the channel
-    await agent.setParticipantUserState(channelId, agent.agentId, 'FOLLOWED');
+    // Note: setParticipantUserState may not be available on agent directly
+    // The agent should automatically follow channels it's added to
 
     // Start server
     port = 3200;
     agentServer.start(port);
 
     // Wait for server to be ready
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }, 60000); // 60 second timeout
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(undefined);
+      }, 1000);
+    });
+  });
 
   afterAll(async () => {
     // Cleanup
-    if (client) client.close();
+    if (client) {
+      client.close();
+    }
 
     if (agentServer) {
       await agentServer.stop();
@@ -362,7 +369,9 @@ describe('WebSocket Agent End-to-End Tests', () => {
         // Responses should be broadcast to all channel participants
         expect(user1Responses.length).toBe(user2Responses.length);
       } finally {
-        if (client2.connected) client2.disconnect();
+        if (client2.connected) {
+          client2.disconnect();
+        }
       }
     }, 30000);
 
@@ -439,7 +448,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
 
       const error = await errorPromise;
       expect(error).toBeDefined();
-      expect(error.error).toContain('Message content is required');
+      expect((error as any).error).toContain('Message content is required');
     });
 
     it('should verify complete message flow with database persistence', async () => {
@@ -498,7 +507,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
         (m) => m.authorId === agent.agentId && m.inReplyToRootMessageId === messageId
       );
       expect(agentMessage).toBeDefined();
-      expect(agentMessage?.content).toBe(agentResponseText);
+      expect(agentMessage?.content).toBe(agentResponseText || '');
     }, 30000);
   });
 

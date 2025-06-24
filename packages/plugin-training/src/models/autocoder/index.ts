@@ -1,10 +1,10 @@
 /**
  * Autocoder/Code Model - Records entire trajectory of MCP plugin creation and code generation
- * 
+ *
  * This model captures the complete process from user request to final implementation,
  * including all intermediate steps, decisions, and iterations. It uses back-reasoning
  * from the final result to create optimal training trajectories for code generation.
- * 
+ *
  * Key features:
  * - Complete trajectory recording of coding sessions
  * - MCP plugin creation process capture
@@ -13,43 +13,27 @@
  * - Error recovery and iteration tracking
  * - Integration with autocoder system
  * - Code quality and testing validation
- * 
+ *
  * Model Target: Largest available model on Together.ai
  */
 
-export { 
-  TrajectoryRecorder, 
-  type CodeTrajectory, 
-  type CodeTrajectoryStep, 
-  type AutocoderTrainingExample 
+export {
+  TrajectoryRecorder,
+  type CodeTrajectory,
+  type CodeTrajectoryStep,
+  type AutocoderTrainingExample,
 } from './TrajectoryRecorder';
 
-export { 
-  AutocoderIntegration, 
-  type AutocoderSession 
-} from './AutocoderIntegration';
+export { AutocoderIntegration, type AutocoderSession } from './AutocoderIntegration';
 
 // Export configuration
 export const AUTOCODER_MODEL_CONFIG = {
   TARGET_MODEL: 'largest_available', // Use largest model on Together.ai
   MODEL_SIZE: 'largest',
-  
-  PROJECT_TYPES: [
-    'mcp_plugin',
-    'eliza_plugin', 
-    'code_generation',
-    'debugging',
-    'refactoring',
-  ],
 
-  STEP_TYPES: [
-    'analysis',
-    'planning',
-    'implementation',
-    'testing',
-    'refinement',
-    'documentation',
-  ],
+  PROJECT_TYPES: ['mcp_plugin', 'eliza_plugin', 'code_generation', 'debugging', 'refactoring'],
+
+  STEP_TYPES: ['analysis', 'planning', 'implementation', 'testing', 'refinement', 'documentation'],
 
   TRAJECTORY_RECORDING: {
     capture_thinking: true,
@@ -70,7 +54,7 @@ export const AUTOCODER_DEPLOYMENT_CONFIG = {
   training_format: 'instruction_following_with_code',
   max_tokens: 8192,
   temperature: 0.2, // Lower temperature for more precise code generation
-  
+
   system_prompt_template: `You are an expert software developer and autocoder with deep expertise in:
 - MCP (Model Context Protocol) plugin development
 - ElizaOS plugin architecture and development
@@ -129,7 +113,7 @@ export const AUTOCODER_DATA_CONFIG = {
     capture_user_feedback: true,
     back_reasoning_required: true,
   },
-  
+
   quality_filters: {
     min_code_lines: 10,
     max_code_lines: 5000,
@@ -138,7 +122,7 @@ export const AUTOCODER_DATA_CONFIG = {
     min_confidence: 0.5,
     max_iterations: 10,
   },
-  
+
   code_analysis: {
     analyze_complexity: true,
     analyze_quality: true,
@@ -146,7 +130,7 @@ export const AUTOCODER_DATA_CONFIG = {
     extract_best_practices: true,
     identify_common_mistakes: true,
   },
-  
+
   integration_points: {
     autocoder_events: true,
     mcp_sdk_integration: true,
@@ -184,31 +168,31 @@ export const TRAJECTORY_STEP_CATEGORIES = {
     typical_duration: '5-30 minutes',
     outputs: ['requirements_analysis', 'technical_constraints', 'success_criteria'],
   },
-  
+
   planning: {
     description: 'Plan the implementation approach and architecture',
     typical_duration: '10-60 minutes',
     outputs: ['implementation_plan', 'architecture_design', 'file_structure'],
   },
-  
+
   implementation: {
     description: 'Write the actual code and implement functionality',
     typical_duration: '30 minutes - 8 hours',
     outputs: ['source_code', 'configuration_files', 'build_scripts'],
   },
-  
+
   testing: {
     description: 'Write and run tests to validate functionality',
     typical_duration: '15 minutes - 3 hours',
     outputs: ['test_files', 'test_results', 'coverage_reports'],
   },
-  
+
   refinement: {
     description: 'Improve code quality, performance, and maintainability',
     typical_duration: '10 minutes - 2 hours',
     outputs: ['refactored_code', 'performance_improvements', 'code_cleanup'],
   },
-  
+
   documentation: {
     description: 'Create documentation and usage examples',
     typical_duration: '15 minutes - 2 hours',
@@ -222,22 +206,22 @@ export const BACK_REASONING_STRATEGIES = {
     description: 'Eliminate unnecessary repetition and false starts',
     impact: 'Reduces training time and improves efficiency',
   },
-  
+
   identify_optimal_path: {
     description: 'Extract the most effective sequence of steps',
     impact: 'Creates cleaner training examples',
   },
-  
+
   capture_decision_points: {
     description: 'Record key decisions and their reasoning',
     impact: 'Improves model decision-making capabilities',
   },
-  
+
   extract_error_patterns: {
     description: 'Identify common mistakes and recovery strategies',
     impact: 'Improves error handling and debugging skills',
   },
-  
+
   optimize_for_success: {
     description: 'Focus on patterns that lead to successful outcomes',
     impact: 'Increases success rate of generated code',
@@ -272,20 +256,23 @@ export const AUTOCODER_UTILS = {
    * Extract code quality metrics
    */
   extractCodeMetrics: (trajectory: any) => {
-    const codeSteps = trajectory.trajectory.filter((step: any) => 
-      step.step_type === 'implementation' && step.action.code_generated
+    const codeSteps = trajectory.trajectory.filter(
+      (step: any) => step.step_type === 'implementation' && step.action.code_generated
     );
-    
-    const totalLines = codeSteps.reduce((sum: number, step: any) => 
-      sum + (step.action.code_generated?.split('\n').length || 0), 0
+
+    const totalLines = codeSteps.reduce(
+      (sum: number, step: any) => sum + (step.action.code_generated?.split('\n').length || 0),
+      0
     );
-    
+
     return {
       total_lines: totalLines,
       implementation_steps: codeSteps.length,
       avg_lines_per_step: totalLines / Math.max(codeSteps.length, 1),
       has_tests: trajectory.trajectory.some((step: any) => step.step_type === 'testing'),
-      has_documentation: trajectory.trajectory.some((step: any) => step.step_type === 'documentation'),
+      has_documentation: trajectory.trajectory.some(
+        (step: any) => step.step_type === 'documentation'
+      ),
     };
   },
 
@@ -317,7 +304,7 @@ export const AUTOCODER_UTILS = {
    */
   detectProjectType: (userRequest: string): string => {
     const text = userRequest.toLowerCase();
-    
+
     if (text.includes('mcp') || text.includes('model context protocol')) {
       return 'mcp_plugin';
     }
@@ -330,7 +317,7 @@ export const AUTOCODER_UTILS = {
     if (text.includes('refactor') || text.includes('improve') || text.includes('optimize')) {
       return 'refactoring';
     }
-    
+
     return 'code_generation';
   },
 
@@ -339,21 +326,35 @@ export const AUTOCODER_UTILS = {
    */
   calculateComplexity: (trajectory: any): number => {
     let complexity = 1;
-    
+
     const stepCount = trajectory.trajectory?.length || 0;
     const iterationCount = trajectory.metadata?.iterations_required || 0;
     const codeLines = trajectory.metadata?.code_lines_generated || 0;
     const toolsUsed = Object.keys(trajectory.metadata?.tools_effectiveness || {}).length;
-    
+
     // Factor in various complexity indicators
-    if (stepCount > 10) complexity += 2;
-    if (stepCount > 20) complexity += 2;
-    if (iterationCount > 3) complexity += 1;
-    if (iterationCount > 6) complexity += 2;
-    if (codeLines > 500) complexity += 1;
-    if (codeLines > 2000) complexity += 2;
-    if (toolsUsed > 5) complexity += 1;
-    
+    if (stepCount > 10) {
+      complexity += 2;
+    }
+    if (stepCount > 20) {
+      complexity += 2;
+    }
+    if (iterationCount > 3) {
+      complexity += 1;
+    }
+    if (iterationCount > 6) {
+      complexity += 2;
+    }
+    if (codeLines > 500) {
+      complexity += 1;
+    }
+    if (codeLines > 2000) {
+      complexity += 2;
+    }
+    if (toolsUsed > 5) {
+      complexity += 1;
+    }
+
     return Math.min(complexity, 10);
   },
 };

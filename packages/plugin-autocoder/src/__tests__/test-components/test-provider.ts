@@ -12,7 +12,7 @@ export const testProvider: Provider = {
       },
       data: {
         message: message.content.text,
-        state: state,
+        state,
       },
     };
   },

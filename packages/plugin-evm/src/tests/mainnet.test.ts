@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, mock } from 'bun:test';
 import { parseEther, formatEther, parseUnits, formatUnits, encodeFunctionData } from 'viem';
 import type { Address } from 'viem';
 
@@ -7,22 +7,24 @@ import { TransferAction } from '../actions/transfer';
 import { SwapAction } from '../actions/swap';
 import { BridgeAction } from '../actions/bridge';
 import { VoteAction } from '../actions/gov-vote';
-import { 
-  mainnetChains, 
-  MAINNET_TOKENS, 
+import {
+  mainnetChains,
+  MAINNET_TOKENS,
   MAINNET_GOVERNORS,
   MAINNET_TEST_REQUIREMENTS,
-  estimateTestCosts 
+  estimateTestCosts,
 } from './test-config';
 
 // Skip these tests unless explicitly running mainnet tests
 const MAINNET_TEST_ENABLED = process.env.RUN_MAINNET_TESTS === 'true';
 const MAINNET_PRIVATE_KEY = process.env.MAINNET_TEST_PRIVATE_KEY;
 
+
+
 // Mock cache manager
 const mockCacheManager = {
-  get: vi.fn().mockResolvedValue(null),
-  set: vi.fn(),
+  get: mock().mockResolvedValue(null),
+  set: mock(),
 };
 
 describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integration Tests', () => {
@@ -35,14 +37,14 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
     }
 
     console.log('🚀 Initializing mainnet test suite...');
-    
+
     // Initialize wallet provider with all mainnet chains
     wp = new WalletProvider(
       MAINNET_PRIVATE_KEY as `0x${string}`,
       mockCacheManager as any,
       mainnetChains
     );
-    
+
     walletAddress = wp.getAddress();
     console.log(`📍 Test wallet address: ${walletAddress}`);
 
@@ -65,12 +67,14 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
     // Verify minimum balance
     const minBalance = parseEther(MAINNET_TEST_REQUIREMENTS.minBalances.ETH);
     if (balance < minBalance) {
-      throw new Error(`Insufficient ETH balance. Need at least ${MAINNET_TEST_REQUIREMENTS.minBalances.ETH} ETH`);
+      throw new Error(
+        `Insufficient ETH balance. Need at least ${MAINNET_TEST_REQUIREMENTS.minBalances.ETH} ETH`
+      );
     }
   });
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('Transfer Action - Mainnet', () => {
@@ -89,7 +93,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
       const result = await transferAction.transfer({
         fromChain: 'mainnet',
         toAddress: recipient,
-        amount: amount,
+        amount,
       });
 
       expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
@@ -112,12 +116,14 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
 
       // Check USDC balance first
       const publicClient = wp.getPublicClient('mainnet');
-      const balanceAbi = [{
-        inputs: [{ name: 'account', type: 'address' }],
-        name: 'balanceOf',
-        outputs: [{ name: '', type: 'uint256' }],
-        type: 'function',
-      }];
+      const balanceAbi = [
+        {
+          inputs: [{ name: 'account', type: 'address' }],
+          name: 'balanceOf',
+          outputs: [{ name: '', type: 'uint256' }],
+          type: 'function',
+        },
+      ];
 
       const balance = await publicClient.readContract({
         address: usdcAddress,
@@ -136,7 +142,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
       const result = await transferAction.transfer({
         fromChain: 'mainnet',
         toAddress: recipient,
-        amount: amount,
+        amount,
         token: 'USDC',
       });
 
@@ -151,15 +157,17 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
       for (const token of tokens) {
         try {
           const tokenAddress = MAINNET_TOKENS.mainnet[token as keyof typeof MAINNET_TOKENS.mainnet];
-          
+
           // Check balance
           const publicClient = wp.getPublicClient('mainnet');
-          const balanceAbi = [{
-            inputs: [{ name: 'account', type: 'address' }],
-            name: 'balanceOf',
-            outputs: [{ name: '', type: 'uint256' }],
-            type: 'function',
-          }];
+          const balanceAbi = [
+            {
+              inputs: [{ name: 'account', type: 'address' }],
+              name: 'balanceOf',
+              outputs: [{ name: '', type: 'uint256' }],
+              type: 'function',
+            },
+          ];
 
           const balance = await publicClient.readContract({
             address: tokenAddress,
@@ -176,7 +184,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
               fromChain: 'mainnet',
               toAddress: walletAddress,
               amount: '1', // Small amount
-              token: token,
+              token,
             });
 
             results.push({ token, hash: result.hash, success: true });
@@ -202,14 +210,14 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
 
     it('should swap ETH to USDC on mainnet', async () => {
       const amount = MAINNET_TEST_REQUIREMENTS.testAmounts.smallTransfer;
-      
+
       console.log(`🔄 Swapping ${amount} ETH to USDC`);
 
       const result = await swapAction.swap({
         chain: 'mainnet',
         fromToken: MAINNET_TOKENS.mainnet.ETH,
         toToken: MAINNET_TOKENS.mainnet.USDC,
-        amount: amount,
+        amount,
       });
 
       expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
@@ -227,15 +235,17 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
 
     it('should swap between stablecoins', async () => {
       const amount = MAINNET_TEST_REQUIREMENTS.testAmounts.smallSwap;
-      
+
       // Check USDC balance
       const publicClient = wp.getPublicClient('mainnet');
-      const balanceAbi = [{
-        inputs: [{ name: 'account', type: 'address' }],
-        name: 'balanceOf',
-        outputs: [{ name: '', type: 'uint256' }],
-        type: 'function',
-      }];
+      const balanceAbi = [
+        {
+          inputs: [{ name: 'account', type: 'address' }],
+          name: 'balanceOf',
+          outputs: [{ name: '', type: 'uint256' }],
+          type: 'function',
+        },
+      ];
 
       const usdcBalance = await publicClient.readContract({
         address: MAINNET_TOKENS.mainnet.USDC,
@@ -255,7 +265,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
         chain: 'mainnet',
         fromToken: MAINNET_TOKENS.mainnet.USDC,
         toToken: MAINNET_TOKENS.mainnet.USDT,
-        amount: amount,
+        amount,
       });
 
       expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
@@ -264,7 +274,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
 
     it('should compare quotes from multiple aggregators', async () => {
       const amount = MAINNET_TEST_REQUIREMENTS.testAmounts.smallTransfer;
-      
+
       console.log(`📊 Comparing swap quotes for ${amount} ETH to USDC`);
 
       // Get quotes but don't execute
@@ -272,13 +282,13 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
         chain: 'mainnet' as const,
         fromToken: MAINNET_TOKENS.mainnet.ETH,
         toToken: MAINNET_TOKENS.mainnet.USDC,
-        amount: amount,
+        amount,
       };
 
       // This would normally get quotes from multiple sources
       // For now, just test the swap execution
       const result = await swapAction.swap(swapParams);
-      
+
       expect(result.hash).toBeDefined();
       console.log(`✅ Best quote executed: ${result.hash}`);
     });
@@ -293,7 +303,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
 
     it('should get bridge quote from Ethereum to Arbitrum', async () => {
       const amount = MAINNET_TEST_REQUIREMENTS.testAmounts.smallTransfer;
-      
+
       console.log(`🌉 Getting bridge quote: ${amount} ETH from Ethereum to Arbitrum`);
 
       // Note: This test only gets a quote, doesn't execute the bridge
@@ -304,18 +314,18 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
           toChain: 'arbitrum' as const,
           fromToken: MAINNET_TOKENS.mainnet.ETH,
           toToken: MAINNET_TOKENS.arbitrum.ETH,
-          amount: amount,
+          amount,
           toAddress: walletAddress,
         };
 
         // Get quote without executing
         console.log('📋 Bridge parameters:', bridgeParams);
         console.log('⚠️ Bridge execution skipped to save costs');
-        
+
         // In a real test with sufficient funds:
         // const result = await bridgeAction.bridge(bridgeParams);
         // expect(result.hash).toMatch(/^0x[a-fA-F0-9]{64}$/);
-        
+
         expect(true).toBe(true); // Placeholder assertion
       } catch (error) {
         console.error('Bridge quote error:', error);
@@ -350,7 +360,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
     it('should read from Compound Governor', async () => {
       const governor = MAINNET_GOVERNORS.mainnet.compound.governor;
       const publicClient = wp.getPublicClient('mainnet');
-      
+
       console.log(`🏛️ Reading from Compound Governor: ${governor}`);
 
       const governorAbi = [
@@ -392,7 +402,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
         }),
       ]);
 
-      console.log(`📊 Compound Governor Stats:`);
+      console.log('📊 Compound Governor Stats:');
       console.log(`   - Total Proposals: ${proposalCount}`);
       console.log(`   - Voting Delay: ${votingDelay} blocks`);
       console.log(`   - Voting Period: ${votingPeriod} blocks`);
@@ -430,12 +440,14 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
       for (const protocol of protocols) {
         try {
           const [votes, balance] = await Promise.all([
-            publicClient.readContract({
-              address: protocol.token,
-              abi: votesAbi,
-              functionName: 'getVotes',
-              args: [walletAddress],
-            }).catch(() => 0n),
+            publicClient
+              .readContract({
+                address: protocol.token,
+                abi: votesAbi,
+                functionName: 'getVotes',
+                args: [walletAddress],
+              })
+              .catch(() => 0n),
             publicClient.readContract({
               address: protocol.token,
               abi: votesAbi,
@@ -456,7 +468,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
     it('should validate governance token interactions', async () => {
       const compToken = MAINNET_GOVERNORS.mainnet.compound.token;
       const publicClient = wp.getPublicClient('mainnet');
-      
+
       // Check if we can delegate (read-only test)
       const delegateAbi = [
         {
@@ -483,7 +495,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
     it('should estimate gas for various operations', async () => {
       const publicClient = wp.getPublicClient('mainnet');
       const walletClient = wp.getWalletClient('mainnet');
-      
+
       console.log('⛽ Estimating gas for various operations...');
 
       // ETH transfer
@@ -494,30 +506,34 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
       });
 
       // ERC20 transfer (USDC)
-      const transferAbi = [{
-        inputs: [
-          { name: 'recipient', type: 'address' },
-          { name: 'amount', type: 'uint256' },
-        ],
-        name: 'transfer',
-        outputs: [{ name: '', type: 'bool' }],
-        type: 'function',
-      }];
+      const transferAbi = [
+        {
+          inputs: [
+            { name: 'recipient', type: 'address' },
+            { name: 'amount', type: 'uint256' },
+          ],
+          name: 'transfer',
+          outputs: [{ name: '', type: 'bool' }],
+          type: 'function',
+        },
+      ];
 
-      const erc20TransferGas = await publicClient.estimateGas({
-        account: walletAddress,
-        to: MAINNET_TOKENS.mainnet.USDC,
-        data: encodeFunctionData({
-          abi: transferAbi,
-          functionName: 'transfer',
-          args: [walletAddress, parseUnits('1', 6)],
-        }),
-      }).catch(() => 65000n); // Fallback estimate
+      const erc20TransferGas = await publicClient
+        .estimateGas({
+          account: walletAddress,
+          to: MAINNET_TOKENS.mainnet.USDC,
+          data: encodeFunctionData({
+            abi: transferAbi,
+            functionName: 'transfer',
+            args: [walletAddress, parseUnits('1', 6)],
+          }),
+        })
+        .catch(() => 65000n); // Fallback estimate
 
       console.log('📊 Gas Estimates:');
       console.log(`   - ETH Transfer: ${ethTransferGas} gas`);
       console.log(`   - ERC20 Transfer: ${erc20TransferGas} gas`);
-      
+
       expect(ethTransferGas).toBe(21000n);
       expect(erc20TransferGas).toBeGreaterThan(21000n);
     });
@@ -526,14 +542,14 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
   describe('Error Handling and Edge Cases', () => {
     it('should handle insufficient balance gracefully', async () => {
       const transferAction = new TransferAction(wp);
-      
+
       // Try to transfer more ETH than available
       const balance = await wp.getPublicClient('mainnet').getBalance({
         address: walletAddress,
       });
-      
+
       const excessiveAmount = formatEther(balance * 2n);
-      
+
       await expect(
         transferAction.transfer({
           fromChain: 'mainnet',
@@ -545,7 +561,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
 
     it('should handle invalid token addresses', async () => {
       const swapAction = new SwapAction(wp);
-      
+
       await expect(
         swapAction.swap({
           chain: 'mainnet',
@@ -558,13 +574,13 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
 
     it('should validate chain support', () => {
       const supportedChains = wp.getSupportedChains();
-      
+
       expect(supportedChains).toContain('mainnet');
       expect(supportedChains).toContain('polygon');
       expect(supportedChains).toContain('arbitrum');
       expect(supportedChains).toContain('optimism');
       expect(supportedChains).toContain('base');
-      
+
       console.log(`✅ Supported chains: ${supportedChains.join(', ')}`);
     });
   });
@@ -584,4 +600,4 @@ describe.skipIf(!MAINNET_TEST_ENABLED)('Mainnet Test Summary', () => {
     console.log('\n⚠️ Note: Some tests skipped to minimize costs');
     console.log('💡 Run with sufficient balance for full coverage');
   });
-}); 
+});

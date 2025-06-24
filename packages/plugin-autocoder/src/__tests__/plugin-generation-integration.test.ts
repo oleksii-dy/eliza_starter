@@ -1,34 +1,34 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, mock, afterEach } from 'bun:test';
 import type { IAgentRuntime } from '@elizaos/core';
 
 // Mock modules with factory functions
-vi.mock('fs-extra', () => ({
+mock.module('fs-extra', () => ({
   default: {
-    ensureDir: vi.fn().mockResolvedValue(undefined),
-    writeFile: vi.fn().mockResolvedValue(undefined),
-    writeJson: vi.fn().mockResolvedValue(undefined),
-    pathExists: vi.fn().mockResolvedValue(true),
-    readFile: vi.fn().mockResolvedValue(''),
-    remove: vi.fn().mockResolvedValue(undefined),
+    ensureDir: mock().mockResolvedValue(undefined),
+    writeFile: mock().mockResolvedValue(undefined),
+    writeJson: mock().mockResolvedValue(undefined),
+    pathExists: mock().mockResolvedValue(true),
+    readFile: mock().mockResolvedValue(''),
+    remove: mock().mockResolvedValue(undefined),
   },
-  ensureDir: vi.fn().mockResolvedValue(undefined),
-  writeFile: vi.fn().mockResolvedValue(undefined),
-  writeJson: vi.fn().mockResolvedValue(undefined),
-  pathExists: vi.fn().mockResolvedValue(true),
-  readFile: vi.fn().mockResolvedValue(''),
-  remove: vi.fn().mockResolvedValue(undefined),
+  ensureDir: mock().mockResolvedValue(undefined),
+  writeFile: mock().mockResolvedValue(undefined),
+  writeJson: mock().mockResolvedValue(undefined),
+  pathExists: mock().mockResolvedValue(true),
+  readFile: mock().mockResolvedValue(''),
+  remove: mock().mockResolvedValue(undefined),
 }));
 
-vi.mock('child_process', () => ({
-  spawn: vi.fn(() => ({
-    stdout: { on: vi.fn() },
-    stderr: { on: vi.fn() },
-    on: vi.fn((event: string, callback: Function) => {
+mock.module('child_process', () => ({
+  spawn: mock(() => ({
+    stdout: { on: mock() },
+    stderr: { on: mock() },
+    on: mock((event: string, callback: Function) => {
       if (event === 'close') {
         setTimeout(() => callback(0), 10);
       }
     }),
-    kill: vi.fn(),
+    kill: mock(),
   })),
 }));
 
@@ -46,15 +46,15 @@ describe('Plugin Generation Integration', () => {
   let runtime: IAgentRuntime;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    mock.restore();
 
     runtime = {
-      getSetting: vi.fn().mockImplementation((key: string) => {
-        if (key === 'PLUGIN_DATA_DIR') return '/test/plugins';
-        if (key === 'ANTHROPIC_API_KEY') return null; // Force template usage
+      getSetting: mock().mockImplementation((key: string) => {
+        if (key === 'PLUGIN_DATA_DIR') {return '/test/plugins';}
+        if (key === 'ANTHROPIC_API_KEY') {return null;} // Force template usage
         return null;
       }),
-      getService: vi.fn().mockReturnValue(null),
+      getService: mock().mockReturnValue(null),
       services: new Map(),
     } as any;
 
@@ -88,7 +88,7 @@ describe('Plugin Generation Integration', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Check that writeFile was called with the correct provider code
-    const writeFileCalls = vi.mocked(fs.writeFile).mock.calls;
+    const writeFileCalls = mock(fs.writeFile).mock.calls;
     const providerCall = writeFileCalls.find((call) =>
       call[0].toString().includes('providers/timeProvider.ts')
     );
@@ -139,7 +139,7 @@ describe('Plugin Generation Integration', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Check index file generation
-    const writeFileCalls = vi.mocked(fs.writeFile).mock.calls;
+    const writeFileCalls = mock(fs.writeFile).mock.calls;
     const indexCall = writeFileCalls.find((call) => call[0].toString().endsWith('src/index.ts'));
 
     expect(indexCall).toBeDefined();
@@ -186,7 +186,7 @@ describe('Plugin Generation Integration', () => {
     // Wait for processing
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    const writeFileCalls = vi.mocked(fs.writeFile).mock.calls;
+    const writeFileCalls = mock(fs.writeFile).mock.calls;
 
     // Check timeProvider file (already has suffix)
     const timeProviderCall = writeFileCalls.find((call) =>
@@ -241,7 +241,7 @@ describe('Plugin Generation Integration', () => {
     // Wait for processing
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    const writeFileCalls = vi.mocked(fs.writeFile).mock.calls;
+    const writeFileCalls = mock(fs.writeFile).mock.calls;
     const providerCall = writeFileCalls.find((call) =>
       call[0].toString().includes('providers/testProvider.ts')
     );

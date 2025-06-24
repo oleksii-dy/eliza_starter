@@ -1,7 +1,7 @@
 import { type IAgentRuntime } from '@elizaos/core';
 import { type LogEntry, LogLevel, OODAPhase } from './types';
 import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as path from 'node:path';
 import { createWriteStream, type WriteStream } from 'fs';
 
 export interface LoggerConfig {
@@ -78,9 +78,9 @@ export class AutonomyLogger {
         config: this.config,
       };
 
-      this.fileStream.write(`=== AUTONOMY RUN START ===\n`);
-      this.fileStream.write(JSON.stringify(header, null, 2) + '\n');
-      this.fileStream.write(`========================\n\n`);
+      this.fileStream.write('=== AUTONOMY RUN START ===\n');
+      this.fileStream.write(`${JSON.stringify(header, null, 2)}\n`);
+      this.fileStream.write('========================\n\n');
     }
 
     this.info('Starting new autonomy run', { runId });
@@ -91,10 +91,10 @@ export class AutonomyLogger {
       this.info('Ending autonomy run', { runId: this.currentRunId });
 
       if (this.fileStream) {
-        this.fileStream.write(`\n=== AUTONOMY RUN END ===\n`);
+        this.fileStream.write('\n=== AUTONOMY RUN END ===\n');
         this.fileStream.write(`Run ID: ${this.currentRunId}\n`);
         this.fileStream.write(`End Time: ${new Date().toISOString()}\n`);
-        this.fileStream.write(`======================\n`);
+        this.fileStream.write('======================\n');
         this.fileStream.end();
         this.fileStream = null;
       }
@@ -204,7 +204,7 @@ export class AutonomyLogger {
 
       // File logging
       if (this.config.enableFileLogging && this.fileStream && !this.fileStream.destroyed) {
-        this.fileStream.write(formatted + '\n');
+        this.fileStream.write(`${formatted}\n`);
       }
     }
   }

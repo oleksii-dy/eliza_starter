@@ -1,4 +1,4 @@
-import type { Scenario } from "../types.js"
+import type { Scenario } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const socialmediaanalysisScenario: Scenario = {
@@ -7,7 +7,7 @@ export const socialmediaanalysisScenario: Scenario = {
   description: 'Analyze social media presence across platforms',
   category: 'integration',
   tags: ['stagehand', 'rolodex', 'research', 'knowledge', 'complex-workflow'],
-  
+
   actors: [
     {
       id: uuidv4() as any,
@@ -23,32 +23,34 @@ export const socialmediaanalysisScenario: Scenario = {
         steps: [
           {
             type: 'message',
-            content: 'Analyze our brand mentions across Twitter, LinkedIn, and Reddit for the past month.',
-      },
+            content:
+              'Analyze our brand mentions across Twitter, LinkedIn, and Reddit for the past month.',
+          },
           {
             type: 'wait',
             waitTime: 8000,
-      },
+          },
           {
             type: 'message',
-            content: 'Identify key influencers talking about our product and create entity profiles.',
-      },
+            content:
+              'Identify key influencers talking about our product and create entity profiles.',
+          },
           {
             type: 'wait',
             waitTime: 10000,
-      },
+          },
           {
             type: 'message',
             content: 'Research sentiment trends and competitor mentions.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 12000,
-      },
+          },
           {
             type: 'message',
             content: 'Create a comprehensive social media report with actionable insights.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 14000,
@@ -68,7 +70,7 @@ export const socialmediaanalysisScenario: Scenario = {
       plugins: ['stagehand', 'rolodex', 'research', 'knowledge'],
     },
   },
-  
+
   execution: {
     maxDuration: 300000,
     maxSteps: 25,
@@ -80,7 +82,7 @@ export const socialmediaanalysisScenario: Scenario = {
       },
     ],
   },
-  
+
   verification: {
     rules: [
       {
@@ -88,7 +90,8 @@ export const socialmediaanalysisScenario: Scenario = {
         type: 'llm',
         description: 'All required plugins were utilized',
         config: {
-          criteria: 'The agent successfully used stagehand, rolodex, research, knowledge plugins to complete the workflow',
+          criteria:
+            'The agent successfully used stagehand, rolodex, research, knowledge plugins to complete the workflow',
         },
         weight: 3,
       },
@@ -109,7 +112,7 @@ export const socialmediaanalysisScenario: Scenario = {
           criteria: 'Multiple actions from different plugins were chained together effectively',
         },
         weight: 3,
-      }
+      },
     ],
     expectedOutcomes: [
       {
@@ -134,7 +137,7 @@ export const socialmediaanalysisScenario: Scenario = {
       ],
     },
   },
-  
+
   benchmarks: {
     maxDuration: 300000,
     maxSteps: 25,

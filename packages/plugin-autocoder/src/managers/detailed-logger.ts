@@ -92,7 +92,7 @@ export class DetailedLogger {
       logFormat: 'NDJSON',
     };
 
-    fs.writeFileSync(this.currentLogFile, JSON.stringify(header) + '\n');
+    fs.writeFileSync(this.currentLogFile, `${JSON.stringify(header)}\n`);
 
     // Create write stream for appending
     this.logStream = fs.createWriteStream(this.currentLogFile, { flags: 'a' });
@@ -417,7 +417,7 @@ export class DetailedLogger {
     }
 
     if (messages && messages.length > 0) {
-      formatted += `=== MESSAGES ===\n`;
+      formatted += '=== MESSAGES ===\n';
       messages.forEach((msg, index) => {
         formatted += `[${index + 1}] ${msg.role?.toUpperCase() || 'UNKNOWN'}:\n`;
         if (typeof msg.content === 'string') {
@@ -459,14 +459,14 @@ export class DetailedLogger {
   }
 
   private flushLogs(): void {
-    if (this.logBuffer.length === 0) return;
+    if (this.logBuffer.length === 0) {return;}
 
     const toFlush = [...this.logBuffer];
     this.logBuffer = [];
 
     toFlush.forEach((entry) => {
       if (this.logStream && !this.logStream.destroyed) {
-        this.logStream.write(JSON.stringify(entry) + '\n');
+        this.logStream.write(`${JSON.stringify(entry)}\n`);
       }
     });
   }
@@ -474,7 +474,7 @@ export class DetailedLogger {
   public generateSummary(): string {
     const summaryFile = path.join(this.logDir, 'runs', `summary_${this.currentRunId}.md`);
 
-    let summary = `# AutoCoder Run Summary\n\n`;
+    let summary = '# AutoCoder Run Summary\n\n';
     summary += `**Run ID:** ${this.currentRunId}\n`;
     summary += `**Generated:** ${new Date().toISOString()}\n\n`;
 
@@ -504,7 +504,7 @@ export class DetailedLogger {
       errors: entries.filter((e) => e.type === 'error').length,
     };
 
-    summary += `## Statistics\n\n`;
+    summary += '## Statistics\n\n';
     summary += `- Total Log Entries: ${stats.totalEntries}\n`;
     summary += `- LLM Prompts: ${stats.prompts}\n`;
     summary += `- LLM Responses: ${stats.responses}\n`;
@@ -514,7 +514,7 @@ export class DetailedLogger {
 
     // List all phases
     const phases = [...new Set(entries.map((e) => e.phase).filter(Boolean))];
-    summary += `## Phases\n\n`;
+    summary += '## Phases\n\n';
     phases.forEach((phase) => {
       const phaseEntries = entries.filter((e) => e.phase === phase);
       summary += `- **${phase}**: ${phaseEntries.length} entries\n`;
@@ -523,11 +523,11 @@ export class DetailedLogger {
     // List errors
     const errors = entries.filter((e) => e.type === 'error');
     if (errors.length > 0) {
-      summary += `\n## Errors\n\n`;
+      summary += '\n## Errors\n\n';
       errors.forEach((error, index) => {
         summary += `${index + 1}. **[${error.timestamp}]** ${error.content.message}\n`;
-        if (error.phase) summary += `   - Phase: ${error.phase}\n`;
-        if (error.metadata?.projectId) summary += `   - Project: ${error.metadata.projectId}\n`;
+        if (error.phase) {summary += `   - Phase: ${error.phase}\n`;}
+        if (error.metadata?.projectId) {summary += `   - Project: ${error.metadata.projectId}\n`;}
       });
     }
 
@@ -536,7 +536,7 @@ export class DetailedLogger {
       .filter((e) => e.type === 'response' && e.metadata?.tokenCount)
       .reduce((sum, e) => sum + (e.metadata?.tokenCount || 0), 0);
 
-    summary += `\n## Token Usage\n\n`;
+    summary += '\n## Token Usage\n\n';
     summary += `Total Tokens Used: ${tokenUsage}\n`;
 
     fs.writeFileSync(summaryFile, summary);

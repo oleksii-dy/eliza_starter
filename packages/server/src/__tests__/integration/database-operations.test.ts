@@ -74,7 +74,7 @@ describe('Database Operations Integration Tests', () => {
         id: channelId,
         name: 'Concurrent Test Channel',
         type: ChannelType.GROUP,
-        serverId: serverId,
+        serverId,
         metadata: {},
       });
 
@@ -116,7 +116,7 @@ describe('Database Operations Integration Tests', () => {
         id: channelId,
         name: 'Integrity Test Channel',
         type: ChannelType.GROUP,
-        serverId: serverId,
+        serverId,
         metadata: {},
       });
 
@@ -171,7 +171,7 @@ describe('Database Operations Integration Tests', () => {
           id: channelId,
           name: 'Participant Test Channel',
           type: ChannelType.GROUP,
-          serverId: serverId,
+          serverId,
           metadata: {},
         },
         participants.slice(0, 2) // First two participants
@@ -201,7 +201,7 @@ describe('Database Operations Integration Tests', () => {
         id: channelId,
         name: 'Query Test Channel',
         type: ChannelType.GROUP,
-        serverId: serverId,
+        serverId,
         metadata: {},
       });
 
@@ -311,7 +311,7 @@ describe('Database Operations Integration Tests', () => {
         id: channelId,
         name: 'Bulk Test Channel',
         type: ChannelType.GROUP,
-        serverId: serverId,
+        serverId,
         metadata: {},
       });
 
@@ -354,7 +354,7 @@ describe('Database Operations Integration Tests', () => {
           agentServer.createChannel({
             name: `Large Set Channel ${i}`,
             type: ChannelType.GROUP,
-            serverId: serverId,
+            serverId,
             metadata: { index: i },
           }) as never
         );

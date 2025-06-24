@@ -111,7 +111,7 @@ export function displayRegistryPublicationMessage(
     // NPM-only publishing with registry enabled
     console.warn('NPM publishing currently does not update the registry.');
     console.info('To include this package in the registry:');
-    console.info(`1. Fork the registry repository at https://github.com/elizaos/registry`);
+    console.info('1. Fork the registry repository at https://github.com/elizaos/registry');
     console.info('2. Add your package metadata');
     console.info('3. Submit a pull request to the main repository');
     return;
@@ -127,7 +127,7 @@ export function displayRegistryPublicationMessage(
     // For non-maintainers, show instructions for registry inclusion
     console.info("Package published, but you're not a maintainer of this package.");
     console.info('To include this package in the registry, please:');
-    console.info(`1. Fork the registry repository at https://github.com/elizaos/registry`);
+    console.info('1. Fork the registry repository at https://github.com/elizaos/registry');
     console.info('2. Add your package metadata');
     console.info('3. Submit a pull request to the main repository');
   }

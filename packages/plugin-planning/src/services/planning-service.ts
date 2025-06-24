@@ -546,10 +546,10 @@ Focus on:
       const steps: ActionStep[] = [];
 
       // Enhanced step parsing - try multiple approaches
-      let goal = parsedXml?.goal || context.goal;
-      let executionModel =
+      const goal = parsedXml?.goal || context.goal;
+      const executionModel =
         parsedXml?.execution_model || context.preferences?.executionModel || 'sequential';
-      let estimatedDuration = parseInt(parsedXml?.estimated_duration) || 30000;
+      const estimatedDuration = parseInt(parsedXml?.estimated_duration) || 30000;
 
       // Parse steps using regex if XML parsing failed
       const stepMatches = response.match(/<step>(.*?)<\/step>/gs) || [];
@@ -892,9 +892,9 @@ Focus on:
           {
             ...step.parameters,
             context: actionContext,
-            previousResults: previousResults,
-            workingMemory: workingMemory,
-            abortSignal: abortSignal,
+            previousResults,
+            workingMemory,
+            abortSignal,
           },
           callback
         );

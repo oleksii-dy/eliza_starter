@@ -2,7 +2,7 @@
  * Unit tests for middleware functions
  */
 
-import { describe, it, expect, beforeEach, jest, mock } from 'bun:test';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import express from 'express';
 import {
   agentExistsMiddleware,
@@ -22,12 +22,12 @@ mock.module('@elizaos/core', async () => {
   return {
     ...actual,
     logger: {
-      warn: jest.fn(),
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      warn: mock(),
+      info: mock(),
+      error: mock(),
+      debug: mock(),
     },
-    validateUuid: jest.fn((id: string) => {
+    validateUuid: mock((id: string) => {
       // Simple UUID validation mock
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       return uuidRegex.test(id) ? id : null;
@@ -36,7 +36,7 @@ mock.module('@elizaos/core', async () => {
 });
 
 mock.module('../src/api/shared/response-utils', () => ({
-  sendError: jest.fn((res, status, code, message) => {
+  sendError: mock((res, status, code, message) => {
     res.status(status).json({ success: false, error: { code, message } });
   }),
 }));
@@ -56,17 +56,17 @@ describe('Middleware Functions', () => {
       originalUrl: '/api/test',
       url: '/api/test',
       query: {},
-      get: jest.fn(),
+      get: mock(),
     };
 
     res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-      setHeader: jest.fn().mockReturnThis(),
-      removeHeader: jest.fn().mockReturnThis(),
+      status: mock().mockReturnThis(),
+      json: mock().mockReturnThis(),
+      setHeader: mock().mockReturnThis(),
+      removeHeader: mock().mockReturnThis(),
     };
 
-    next = jest.fn();
+    next = mock();
   });
 
   describe('agentExistsMiddleware', () => {
@@ -210,7 +210,9 @@ describe('Middleware Functions', () => {
 
     it('should detect suspicious User-Agent patterns', () => {
       (req.get as any).mockImplementation((header: string) => {
-        if (header === 'User-Agent') return 'Mozilla/5.0 <script>alert(1)</script>';
+        if (header === 'User-Agent') {
+          return 'Mozilla/5.0 <script>alert(1)</script>';
+        }
         return null;
       });
 
@@ -264,8 +266,12 @@ describe('Middleware Functions', () => {
     it('should allow valid content types for POST requests', () => {
       req.method = 'POST';
       (req.get as any).mockImplementation((header: string) => {
-        if (header === 'Content-Type') return 'application/json';
-        if (header === 'Content-Length') return '100';
+        if (header === 'Content-Type') {
+          return 'application/json';
+        }
+        if (header === 'Content-Length') {
+          return '100';
+        }
         return null;
       });
 
@@ -287,7 +293,9 @@ describe('Middleware Functions', () => {
     it('should skip validation when Content-Length is 0', () => {
       req.method = 'POST';
       (req.get as any).mockImplementation((header: string) => {
-        if (header === 'Content-Length') return '0';
+        if (header === 'Content-Length') {
+          return '0';
+        }
         return null;
       });
 
@@ -300,8 +308,12 @@ describe('Middleware Functions', () => {
     it('should reject invalid content type for POST requests', () => {
       req.method = 'POST';
       (req.get as any).mockImplementation((header: string) => {
-        if (header === 'Content-Type') return 'text/plain';
-        if (header === 'Content-Length') return '100';
+        if (header === 'Content-Type') {
+          return 'text/plain';
+        }
+        if (header === 'Content-Length') {
+          return '100';
+        }
         return null;
       });
 

@@ -66,7 +66,7 @@ export const trustProfileProvider: Provider = {
 
       // Create the base text
       let text = `The user has ${trustLevel} (${senderProfile.overallTrust}/100) with ${trendText} trust trend based on ${senderProfile.interactionCount} interactions.`;
-      
+
       // Add the narrative comment if available
       if (latestComment) {
         text += `\n\nTrust Assessment: ${latestComment.comment}`;

@@ -105,7 +105,7 @@ export const autocoderIntegrationTests: TestCase[] = [
           } else {
             console.log(`[Autocoder] Clone failed: ${cloneResult.error}`);
           }
-        } catch (error) {
+        } catch (_error) {
           console.log('[Autocoder] Clone operation skipped (no repo URL)');
         }
       }

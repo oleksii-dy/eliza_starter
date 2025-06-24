@@ -38,7 +38,7 @@ export class ActionsTestSuite implements TestSuite {
           name: 'Follow Test Room',
           channelId: 'follow-test',
           serverId: 'test-server',
-          worldId: worldId,
+          worldId,
           type: ChannelType.GROUP,
           source: 'test',
         });
@@ -59,7 +59,7 @@ export class ActionsTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: `${runtime.character.name}, please follow this channel`,
             type: 'text',
@@ -137,7 +137,7 @@ export class ActionsTestSuite implements TestSuite {
           name: 'Unfollow Test Room',
           channelId: 'unfollow-test',
           serverId: 'test-server',
-          worldId: worldId,
+          worldId,
           type: ChannelType.GROUP,
           source: 'test',
         });
@@ -162,7 +162,7 @@ export class ActionsTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: `${runtime.character.name}, stop following this channel`,
             type: 'text',
@@ -232,7 +232,7 @@ export class ActionsTestSuite implements TestSuite {
           name: 'Mute Test Room',
           channelId: 'mute-test',
           serverId: 'test-server',
-          worldId: worldId,
+          worldId,
           type: ChannelType.GROUP,
           source: 'test',
         });
@@ -253,7 +253,7 @@ export class ActionsTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: `${runtime.character.name}, please mute this channel`,
             type: 'text',
@@ -300,7 +300,7 @@ export class ActionsTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: 'Hey everyone, how is it going?',
             type: 'text',
@@ -363,7 +363,7 @@ export class ActionsTestSuite implements TestSuite {
           name: 'Unmute Test Room',
           channelId: 'unmute-test',
           serverId: 'test-server',
-          worldId: worldId,
+          worldId,
           type: ChannelType.GROUP,
           source: 'test',
         });
@@ -392,7 +392,7 @@ export class ActionsTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: `${runtime.character.name}, you can unmute this channel now`,
             type: 'text',
@@ -454,7 +454,7 @@ export class ActionsTestSuite implements TestSuite {
           name: 'Ignore Test Room',
           channelId: 'ignore-test',
           serverId: 'test-server',
-          worldId: worldId,
+          worldId,
           type: ChannelType.GROUP,
           source: 'test',
         });
@@ -479,7 +479,7 @@ export class ActionsTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: 'shut up you stupid bot',
             type: 'text',
@@ -558,7 +558,7 @@ export class ActionsTestSuite implements TestSuite {
           name: 'Validation Test Room',
           channelId: 'validation-test',
           serverId: 'test-server',
-          worldId: worldId,
+          worldId,
           type: ChannelType.GROUP,
           source: 'test',
         });
@@ -583,7 +583,7 @@ export class ActionsTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: `${runtime.character.name}, unfollow this room`,
             type: 'text',
@@ -626,7 +626,7 @@ export class ActionsTestSuite implements TestSuite {
           id: v4() as UUID,
           entityId: userId,
           agentId: runtime.agentId,
-          roomId: roomId,
+          roomId,
           content: {
             text: `${runtime.character.name}, unmute this room`,
             type: 'text',

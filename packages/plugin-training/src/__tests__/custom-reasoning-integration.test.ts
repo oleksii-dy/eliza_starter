@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'bun:test';
 import { trainingPlugin, TogetherReasoningService, TrainingService } from '../index.js';
 import type { IAgentRuntime } from '@elizaos/core';
 import { createMockRuntime } from './test-utils.js';
@@ -7,9 +7,9 @@ describe('Custom Reasoning Integration', () => {
   let mockRuntime: IAgentRuntime;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime({
-      getSetting: vi.fn((key: string) => {
+      getSetting: mock((key: string) => {
         const settings: Record<string, string> = {
           REASONING_SERVICE_ENABLED: 'true',
           TOGETHER_AI_API_KEY: 'test-api-key',
@@ -23,7 +23,7 @@ describe('Custom Reasoning Integration', () => {
         };
         return settings[key];
       }),
-      getConnection: vi.fn().mockResolvedValue({}),
+      getConnection: mock().mockResolvedValue({}),
     });
   });
 
@@ -48,7 +48,7 @@ describe('Custom Reasoning Integration', () => {
 
   describe('Plugin Initialization', () => {
     it('should initialize successfully with custom reasoning enabled', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = mock.spyOn(console, 'log').mockImplementation(() => {});
 
       await trainingPlugin.init?.({}, mockRuntime);
 
@@ -59,7 +59,7 @@ describe('Custom Reasoning Integration', () => {
     });
 
     it('should log correct model states during initialization', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = mock.spyOn(console, 'log').mockImplementation(() => {});
 
       await trainingPlugin.init?.({}, mockRuntime);
 
@@ -75,7 +75,7 @@ describe('Custom Reasoning Integration', () => {
 
     it('should warn when Together.ai API key is missing', async () => {
       const mockRuntimeWithoutKey = createMockRuntime({
-        getSetting: vi.fn((key: string) => {
+        getSetting: mock((key: string) => {
           const settings: Record<string, string> = {
             REASONING_SERVICE_ENABLED: 'true',
             // TOGETHER_AI_API_KEY missing
@@ -84,10 +84,10 @@ describe('Custom Reasoning Integration', () => {
           };
           return settings[key];
         }),
-        getConnection: vi.fn().mockResolvedValue({}),
+        getConnection: mock().mockResolvedValue({}),
       });
 
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = mock.spyOn(console, 'log').mockImplementation(() => {});
 
       await trainingPlugin.init?.({}, mockRuntimeWithoutKey);
 

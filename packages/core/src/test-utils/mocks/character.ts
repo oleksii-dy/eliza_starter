@@ -5,7 +5,6 @@
  * agent configurations, and personality definitions.
  */
 
-import { vi } from './vi-helper';
 import type { Character, UUID, MessageExample, TemplateType, DirectoryItem } from '../../types';
 
 /**

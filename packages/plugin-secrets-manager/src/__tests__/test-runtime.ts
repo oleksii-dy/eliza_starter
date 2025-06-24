@@ -1,19 +1,5 @@
-import {
-  type IAgentRuntime,
-  type Plugin,
-  type Character,
-  type Memory,
-  type UUID,
-  type World,
-  type Component,
-  type Room,
-  Role,
-  ChannelType,
-  ModelType,
-  AgentRuntime,
-} from '@elizaos/core';
-import envPlugin from '../index';
 import sqlPlugin from '@elizaos/plugin-sql';
+import envPlugin from '../index';
 
 // Test settings
 const TEST_SETTINGS = {
@@ -64,13 +50,13 @@ export async function createTestRuntime(options?: {
 /**
  * Clean up test runtime
  */
-export async function cleanupTestRuntime(runtime: IAgentRuntime): Promise<void> {
+export async function cleanupTestRuntime(_runtime: IAgentRuntime): Promise<void> {
   // Stop all services
   const services = runtime.services;
   if (services) {
     for (const [_, service] of services) {
       try {
-        await service.stop();
+        await void service.stop();
       } catch (error) {
         // Ignore cleanup errors
       }
@@ -81,13 +67,13 @@ export async function cleanupTestRuntime(runtime: IAgentRuntime): Promise<void> 
 /**
  * Create test entities for multi-level secret testing
  */
-export async function createTestEntities(runtime: IAgentRuntime): Promise<{
+export async function createTestEntities(_runtime: IAgentRuntime): Promise<{
   world: World;
   room: Room;
   user: Component;
 }> {
   // Create test world
-  const world: World = {
+  const _world: World = {
     id: `world-${Date.now()}` as UUID,
     name: 'Test World',
     agentId: runtime.agentId,

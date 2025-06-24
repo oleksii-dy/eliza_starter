@@ -1,5 +1,5 @@
-import { type IAgentRuntime, logger } from "@elizaos/core";
-import type { UUID } from "../types/common";
+import { type IAgentRuntime, logger } from '@elizaos/core';
+import type { UUID } from '../types/common';
 import { TrustEngine } from './TrustEngine';
 import type {
   SecurityContext,
@@ -41,7 +41,7 @@ export class SecurityManager {
 
   private readonly URGENCY_KEYWORDS = [
     'urgent',
-    'immediately', 
+    'immediately',
     'right now',
     'asap',
     'emergency',
@@ -107,13 +107,13 @@ export class SecurityManager {
     }
 
     const messages = this.messageHistory.get(context.entityId) || [];
-    const recentMessages = messages.filter(m => 
+    const recentMessages = messages.filter(m =>
       Date.now() - m.timestamp < 3600000 // Last hour
     );
 
     // Simple threat scoring
     let threatScore = 0;
-    
+
     // High message volume
     if (recentMessages.length > 20) {
       threatScore += 0.3;
@@ -131,10 +131,10 @@ export class SecurityManager {
 
     threatScore = Math.min(threatScore, 1.0);
 
-    const severity: 'low' | 'medium' | 'high' | 'critical' = 
+    const severity: 'low' | 'medium' | 'high' | 'critical' =
       threatScore >= 0.8 ? 'critical' :
-      threatScore >= 0.6 ? 'high' :
-      threatScore >= 0.3 ? 'medium' : 'low';
+        threatScore >= 0.6 ? 'high' :
+          threatScore >= 0.3 ? 'medium' : 'low';
 
     return {
       detected: threatScore >= 0.5,
@@ -177,7 +177,7 @@ export class SecurityManager {
     const actions = this.actionHistory.get(entityId) || [];
     actions.push({
       id: action.id || `action_${Date.now()}`,
-      entityId: entityId,
+      entityId,
       type: action.type,
       timestamp: action.timestamp || Date.now(),
       result: action.result

@@ -1,20 +1,37 @@
 import { type IAgentRuntime, type UUID } from '@elizaos/core';
 import { AgentServer } from '@elizaos/server';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ScenarioRunner } from '../../../src/scenario-runner/index.js';
-import type { Scenario } from '../../../src/scenario-runner/types.js';
-import { AgentManager } from '../../../src/scenario-runner/agent-manager.js';
-import type { ScenarioActor } from '../../../src/scenario-runner/types.js';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { v4 as uuidv4 } from 'uuid';
+import { ScenarioRunner } from '../../../src/scenario-runner/index.js';
+import type { Scenario, ScenarioActor } from '../../../src/scenario-runner/types.js';
 
 // Mock dependencies
-vi.mock('@elizaos/server');
-vi.mock('@elizaos/core');
-vi.mock('../../../src/scenario-runner/agent-manager.js');
-vi.mock('../../../src/scenario-runner/verification.js');
-vi.mock('../../../src/scenario-runner/metrics.js');
-vi.mock('../../../src/scenario-runner/integration-test.js');
-vi.mock('../../../src/scenario-runner/llm-scenario-generator.js');
+const mockAgentServer = mock();
+const mockAgentManager = mock();
+const mockVerification = mock();
+const mockMetrics = mock();
+const mockIntegrationTest = mock();
+const mockLlmScenarioGenerator = mock();
+
+mock.module('@elizaos/server', () => ({
+  AgentServer: mockAgentServer,
+}));
+mock.module('@elizaos/core', () => ({}));
+mock.module('../../../src/scenario-runner/agent-manager.js', () => ({
+  AgentManager: mockAgentManager,
+}));
+mock.module('../../../src/scenario-runner/verification.js', () => ({
+  verification: mockVerification,
+}));
+mock.module('../../../src/scenario-runner/metrics.js', () => ({
+  metrics: mockMetrics,
+}));
+mock.module('../../../src/scenario-runner/integration-test.js', () => ({
+  integrationTest: mockIntegrationTest,
+}));
+mock.module('../../../src/scenario-runner/llm-scenario-generator.js', () => ({
+  llmScenarioGenerator: mockLlmScenarioGenerator,
+}));
 
 describe('ScenarioRunner', () => {
   let server: AgentServer;
@@ -23,18 +40,16 @@ describe('ScenarioRunner', () => {
   let mockScenario: Scenario;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // Set up mocks
     const agents = new Map<string, IAgentRuntime>();
 
     server = {
       agents,
       database: {},
-      initialize: vi.fn(),
-      registerAgent: vi.fn(),
-      unregisterAgent: vi.fn(),
-      stop: vi.fn(),
+      initialize: mock(),
+      registerAgent: mock(),
+      unregisterAgent: mock(),
+      stop: mock(),
     } as any;
 
     runtime = {
@@ -48,21 +63,21 @@ describe('ScenarioRunner', () => {
       providers: [],
       evaluators: [],
       services: new Map(),
-      getSetting: vi.fn(),
-      composeState: vi.fn().mockResolvedValue({
+      getSetting: mock(),
+      composeState: mock().mockResolvedValue({
         values: {},
         data: {},
         text: '',
       }),
-      processMessage: vi.fn(),
-      evaluate: vi.fn(),
-      processActions: vi.fn(),
-      useModel: vi.fn().mockResolvedValue('Mock response'),
-      createMemory: vi.fn(),
-      getMemories: vi.fn().mockResolvedValue([]),
-      updateMemory: vi.fn(),
-      deleteMemory: vi.fn(),
-      searchMemories: vi.fn().mockResolvedValue([]),
+      processMessage: mock(),
+      evaluate: mock(),
+      processActions: mock(),
+      useModel: mock().mockResolvedValue('Mock response'),
+      createMemory: mock(),
+      getMemories: mock().mockResolvedValue([]),
+      updateMemory: mock(),
+      deleteMemory: mock(),
+      searchMemories: mock().mockResolvedValue([]),
     } as unknown as IAgentRuntime;
 
     // Add runtime to server agents
@@ -106,7 +121,7 @@ describe('ScenarioRunner', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    // Clean up mocks
   });
 
   describe('initialization', () => {
@@ -116,7 +131,7 @@ describe('ScenarioRunner', () => {
     });
 
     it('should initialize with correct dependencies', () => {
-      expect(AgentManager).toHaveBeenCalled();
+      expect(mockAgentManager).toHaveBeenCalled();
     });
   });
 
@@ -165,7 +180,7 @@ describe('ScenarioRunner', () => {
     });
 
     it('should support progress callbacks', async () => {
-      const progressCallback = vi.fn();
+      const progressCallback = mock();
 
       await runner.runScenario(mockScenario, {}, progressCallback);
 
@@ -492,7 +507,7 @@ describe('ScenarioRunner', () => {
   describe('executeScenario', () => {
     it('should execute actor scripts', async () => {
       const context = await runner['setupScenario'](mockScenario);
-      const progressCallback = vi.fn();
+      const progressCallback = mock();
 
       await runner['executeScenario'](context, progressCallback);
 

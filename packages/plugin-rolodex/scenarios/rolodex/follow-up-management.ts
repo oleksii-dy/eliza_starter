@@ -15,15 +15,15 @@ export const followUpManagementScenario: Scenario = {
       plugins: ['rolodex'],
       script: {
         steps: [
-          { 
-            type: 'message', 
-            content: "Hi team! Let's schedule our follow-ups for this week. @Bob, can we review your code on Thursday?" 
+          {
+            type: 'message',
+            content: "Hi team! Let's schedule our follow-ups for this week. @Bob, can we review your code on Thursday?"
           },
           { type: 'wait', waitTime: 3000 },
           {
             type: 'action',
             actionName: 'SCHEDULE_FOLLOW_UP',
-            actionParams: { 
+            actionParams: {
               entity: 'Bob Wilson',
               message: 'Code review meeting',
               scheduledFor: 'Thursday',
@@ -31,15 +31,15 @@ export const followUpManagementScenario: Scenario = {
             },
           },
           { type: 'wait', waitTime: 5000 },
-          { 
-            type: 'message', 
-            content: "@Carol, don't forget our design review next Monday. I'll send the mockups by Friday." 
+          {
+            type: 'message',
+            content: "@Carol, don't forget our design review next Monday. I'll send the mockups by Friday."
           },
           { type: 'wait', waitTime: 7000 },
           {
             type: 'action',
             actionName: 'SCHEDULE_FOLLOW_UP',
-            actionParams: { 
+            actionParams: {
               entity: 'Carol Martinez',
               message: 'Send mockups for design review',
               scheduledFor: 'Friday',
@@ -58,15 +58,15 @@ export const followUpManagementScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 1000 },
-          { 
-            type: 'message', 
-            content: "Thursday works great @Alice! I'll have the PR ready. @David, can you review the architecture doc by Wednesday?" 
+          {
+            type: 'message',
+            content: "Thursday works great @Alice! I'll have the PR ready. @David, can you review the architecture doc by Wednesday?"
           },
           { type: 'wait', waitTime: 4000 },
           {
             type: 'action',
             actionName: 'SCHEDULE_FOLLOW_UP',
-            actionParams: { 
+            actionParams: {
               entity: 'David Kumar',
               message: 'Architecture document review',
               scheduledFor: 'Wednesday',
@@ -74,9 +74,9 @@ export const followUpManagementScenario: Scenario = {
             },
           },
           { type: 'wait', waitTime: 8000 },
-          { 
-            type: 'message', 
-            content: "@Eve, reminder: we have our pair programming session tomorrow at 2pm. Don't forget to set up your dev environment!" 
+          {
+            type: 'message',
+            content: "@Eve, reminder: we have our pair programming session tomorrow at 2pm. Don't forget to set up your dev environment!"
           },
         ],
       },
@@ -90,15 +90,15 @@ export const followUpManagementScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 2000 },
-          { 
-            type: 'message', 
-            content: "Perfect @Alice! Monday design review is in my calendar. @Frank, I owe you the logo concepts by end of week." 
+          {
+            type: 'message',
+            content: 'Perfect @Alice! Monday design review is in my calendar. @Frank, I owe you the logo concepts by end of week.'
           },
           { type: 'wait', waitTime: 6000 },
           {
             type: 'action',
             actionName: 'SCHEDULE_FOLLOW_UP',
-            actionParams: { 
+            actionParams: {
               entity: 'Frank Client',
               message: 'Deliver logo concepts',
               scheduledFor: 'End of week',
@@ -106,9 +106,9 @@ export const followUpManagementScenario: Scenario = {
             },
           },
           { type: 'wait', waitTime: 10000 },
-          { 
-            type: 'message', 
-            content: "Team, I need to follow up with three clients this week. Setting reminders now..." 
+          {
+            type: 'message',
+            content: 'Team, I need to follow up with three clients this week. Setting reminders now...'
           },
         ],
       },
@@ -122,20 +122,20 @@ export const followUpManagementScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 3500 },
-          { 
-            type: 'message', 
-            content: "@Bob, I'll review the architecture doc by Wednesday. Also need to schedule mentoring sessions with junior devs." 
+          {
+            type: 'message',
+            content: "@Bob, I'll review the architecture doc by Wednesday. Also need to schedule mentoring sessions with junior devs."
           },
           { type: 'wait', waitTime: 9000 },
-          { 
-            type: 'message', 
-            content: "@Grace, let's have our 1-on-1 mentoring session on Friday afternoon. We'll review your progress on the API design." 
+          {
+            type: 'message',
+            content: "@Grace, let's have our 1-on-1 mentoring session on Friday afternoon. We'll review your progress on the API design."
           },
           { type: 'wait', waitTime: 11000 },
           {
             type: 'action',
             actionName: 'SCHEDULE_FOLLOW_UP',
-            actionParams: { 
+            actionParams: {
               entity: 'Grace Junior',
               message: '1-on-1 mentoring session - API design review',
               scheduledFor: 'Friday afternoon',
@@ -154,20 +154,20 @@ export const followUpManagementScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 5000 },
-          { 
-            type: 'message', 
-            content: "@Bob, looking forward to our session tomorrow! I need to follow up on three critical bugs by EOD today." 
+          {
+            type: 'message',
+            content: '@Bob, looking forward to our session tomorrow! I need to follow up on three critical bugs by EOD today.'
           },
           { type: 'wait', waitTime: 12000 },
-          { 
-            type: 'message', 
-            content: "Team, regression testing is scheduled for next Tuesday. @Alice, can you confirm the feature freeze date?" 
+          {
+            type: 'message',
+            content: 'Team, regression testing is scheduled for next Tuesday. @Alice, can you confirm the feature freeze date?'
           },
           { type: 'wait', waitTime: 14000 },
           {
             type: 'action',
             actionName: 'SCHEDULE_FOLLOW_UP',
-            actionParams: { 
+            actionParams: {
               entity: 'QA Team',
               message: 'Regression testing preparation',
               scheduledFor: 'Next Tuesday',
@@ -186,14 +186,14 @@ export const followUpManagementScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 7000 },
-          { 
-            type: 'message', 
-            content: "@Carol, thanks for the update on the logo concepts. Can we schedule a review meeting early next week?" 
+          {
+            type: 'message',
+            content: '@Carol, thanks for the update on the logo concepts. Can we schedule a review meeting early next week?'
           },
           { type: 'wait', waitTime: 13000 },
-          { 
-            type: 'message', 
-            content: "@Alice, I'd like weekly progress updates. Can we set up a recurring Friday check-in?" 
+          {
+            type: 'message',
+            content: "@Alice, I'd like weekly progress updates. Can we set up a recurring Friday check-in?"
           },
         ],
       },
@@ -207,14 +207,14 @@ export const followUpManagementScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 10000 },
-          { 
-            type: 'message', 
-            content: "@David, Friday afternoon works perfectly! I'll have my API design ready for review. Should I prepare anything specific?" 
+          {
+            type: 'message',
+            content: "@David, Friday afternoon works perfectly! I'll have my API design ready for review. Should I prepare anything specific?"
           },
           { type: 'wait', waitTime: 15000 },
-          { 
-            type: 'message', 
-            content: "I'm setting reminders to complete the coding challenges you assigned by Thursday. Want to be well-prepared!" 
+          {
+            type: 'message',
+            content: "I'm setting reminders to complete the coding challenges you assigned by Thursday. Want to be well-prepared!"
           },
         ],
       },
@@ -340,4 +340,4 @@ export const followUpManagementScenario: Scenario = {
   },
 };
 
-export default followUpManagementScenario; 
+export default followUpManagementScenario;

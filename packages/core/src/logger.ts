@@ -3,7 +3,9 @@ import { Sentry } from './sentry/instrument';
 
 // Local utility function to avoid circular dependency
 function parseBooleanFromText(value: string | undefined | null): boolean {
-  if (!value) return false;
+  if (!value) {
+    return false;
+  }
   const normalized = value.toLowerCase().trim();
   return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on';
 }
@@ -28,12 +30,16 @@ interface LogEntry {
 // Custom destination that maintains recent logs in memory
 /**
  * Class representing an in-memory destination stream for logging.
- * Implements DestinationStream interface.
+ * Implements DestinationStream interface with proper Node.js stream compatibility.
  */
 class InMemoryDestination implements DestinationStream {
   private logs: LogEntry[] = [];
   private maxLogs = 1000; // Keep last 1000 logs
   private stream: DestinationStream | null;
+
+  // Add required stream properties
+  public readonly writable = true;
+  public readonly readable = false;
 
   /**
    * Constructor for creating a new instance of the class.
@@ -47,76 +53,102 @@ class InMemoryDestination implements DestinationStream {
    * Writes a log entry to the memory buffer and forwards it to the pretty print stream if available.
    *
    * @param {string | LogEntry} data - The data to be written, which can be either a string or a LogEntry object.
-   * @returns {void}
+   * @returns {boolean} Returns true indicating the write was successful
    */
-  write(data: string | LogEntry): void {
-    // Parse the log entry if it's a string
-    let logEntry: LogEntry;
-    let stringData: string;
+  write(data: string | LogEntry): boolean {
+    try {
+      // Parse the log entry if it's a string
+      let logEntry: LogEntry;
+      let stringData: string;
 
-    if (typeof data === 'string') {
-      stringData = data;
-      try {
-        logEntry = JSON.parse(data);
-      } catch (e) {
-        // If it's not valid JSON, just pass it through
-        if (this.stream) {
-          this.stream.write(data);
-        }
-        return;
-      }
-    } else {
-      logEntry = data;
-      stringData = JSON.stringify(data);
-    }
-
-    // Add timestamp if not present
-    if (!logEntry.time) {
-      logEntry.time = Date.now();
-    }
-
-    // Filter out service registration logs unless in debug mode
-    const isDebugMode = (process?.env?.LOG_LEVEL || '').toLowerCase() === 'debug';
-    const isLoggingDiagnostic = Boolean(process?.env?.LOG_DIAGNOSTIC);
-
-    if (isLoggingDiagnostic) {
-      // When diagnostic mode is on, add a marker to every log to see what's being processed
-      logEntry.diagnostic = true;
-    }
-
-    if (!isDebugMode) {
-      // Check if this is a service or agent log that we want to filter
-      if (logEntry.agentName && logEntry.agentId) {
-        const msg = logEntry.msg || '';
-        // Filter only service/agent registration logs, not all agent logs
-        if (
-          typeof msg === 'string' &&
-          (msg.includes('registered successfully') ||
-            msg.includes('Registering') ||
-            msg.includes('Success:') ||
-            msg.includes('linked to') ||
-            msg.includes('Started'))
-        ) {
-          if (isLoggingDiagnostic) {
-            console.error('Filtered log:', stringData);
+      if (typeof data === 'string') {
+        stringData = data;
+        try {
+          logEntry = JSON.parse(data);
+        } catch (_e) {
+          // If it's not valid JSON, just pass it through
+          if (this.stream && typeof this.stream.write === 'function') {
+            this.stream.write(data);
           }
-          // This is a service registration/agent log, skip it
-          return;
+          return true;
+        }
+      } else {
+        logEntry = data;
+        stringData = JSON.stringify(data);
+      }
+
+      // Add timestamp if not present
+      if (!logEntry.time) {
+        logEntry.time = Date.now();
+      }
+
+      // Filter out service registration logs unless in debug mode
+      const isDebugMode = (process?.env?.LOG_LEVEL || '').toLowerCase() === 'debug';
+      const isLoggingDiagnostic = Boolean(process?.env?.LOG_DIAGNOSTIC);
+
+      if (isLoggingDiagnostic) {
+        // When diagnostic mode is on, add a marker to every log to see what's being processed
+        logEntry.diagnostic = true;
+      }
+
+      if (!isDebugMode) {
+        // Check if this is a service or agent log that we want to filter
+        if (logEntry.agentName && logEntry.agentId) {
+          const msg = logEntry.msg || '';
+          // Filter only service/agent registration logs, not all agent logs
+          if (
+            typeof msg === 'string' &&
+            (msg.includes('registered successfully') ||
+              msg.includes('Registering') ||
+              msg.includes('Success:') ||
+              msg.includes('linked to') ||
+              msg.includes('Started'))
+          ) {
+            if (isLoggingDiagnostic) {
+              console.error('Filtered log:', stringData);
+            }
+            // This is a service registration/agent log, skip it
+            return true;
+          }
         }
       }
+
+      // Add to memory buffer
+      this.logs.push(logEntry);
+
+      // Maintain buffer size
+      if (this.logs.length > this.maxLogs) {
+        this.logs.shift();
+      }
+
+      // Forward to pretty print stream if available
+      if (this.stream && typeof this.stream.write === 'function') {
+        this.stream.write(stringData);
+      }
+
+      return true;
+    } catch (error) {
+      // Fail silently for logging to avoid infinite loops
+      console.error('Logger write error:', error);
+      return false;
     }
+  }
 
-    // Add to memory buffer
-    this.logs.push(logEntry);
-
-    // Maintain buffer size
-    if (this.logs.length > this.maxLogs) {
-      this.logs.shift();
+  /**
+   * End method required by stream interface
+   */
+  end(): void {
+    if (this.stream && typeof (this.stream as any).end === 'function') {
+      (this.stream as any).end();
     }
+  }
 
-    // Forward to pretty print stream if available
-    if (this.stream) {
-      this.stream.write(stringData);
+  /**
+   * Destroy method required by stream interface
+   */
+  destroy(): void {
+    if (this.stream && typeof (this.stream as any).destroy === 'function') {
+      (this.stream as any).destroy();
     }
   }
 
@@ -216,7 +248,7 @@ const createPrettyConfig = () => ({
   messageFormat: '{msg}',
 });
 
-const createStream = async () => {
+const _createStream = async () => {
   if (raw) {
     return undefined;
   }
@@ -331,49 +363,33 @@ interface LoggerWithClear extends pino.Logger {
 // Enhance logger with custom destination in Node.js environment
 if (typeof process !== 'undefined') {
   // Create the destination with in-memory logging
-  // Instead of async initialization, initialize synchronously to avoid race conditions
   let stream: DestinationStream | null = null;
 
   if (!raw) {
-    // If we're in a Node.js environment where require is available, use require for pino-pretty
-    // This will ensure synchronous loading
+    // Try to load pino-pretty synchronously for better compatibility
     try {
-      const pretty = require('pino-pretty');
-      stream = pretty.default ? pretty.default(createPrettyConfig()) : null;
+      const pretty = await import('pino-pretty');
+      stream = pretty.default(createPrettyConfig());
     } catch (e) {
-      // Fall back to async loading if synchronous loading fails
-      createStream().then((prettyStream) => {
-        if (prettyStream) {
-          const destination = new InMemoryDestination(prettyStream);
-          logger = pino(options, destination);
-          (logger as any)[Symbol.for('pino-destination')] = destination;
-
-          // Add clear method to logger
-          (logger as any as LoggerWithClear).clear = () => {
-            const dest = (logger as any)[Symbol.for('pino-destination')];
-            if (dest instanceof InMemoryDestination) {
-              dest.clear();
-            }
-          };
-        }
-      });
+      // If synchronous loading fails, continue without pretty printing
+      // This prevents the async race condition that was causing issues
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      console.warn('Failed to load pino-pretty, logging without formatting:', errorMessage);
     }
   }
 
-  // If stream was created synchronously, use it now
-  if (stream !== null || raw) {
-    const destination = new InMemoryDestination(stream);
-    logger = pino(options, destination);
-    (logger as any)[Symbol.for('pino-destination')] = destination;
+  // Always create destination, even if stream is null (raw mode or fallback)
+  const destination = new InMemoryDestination(stream);
+  logger = pino(options, destination);
+  (logger as any)[Symbol.for('pino-destination')] = destination;
 
-    // Add clear method to logger
-    (logger as any as LoggerWithClear).clear = () => {
-      const dest = (logger as any)[Symbol.for('pino-destination')];
-      if (dest instanceof InMemoryDestination) {
-        dest.clear();
-      }
-    };
-  }
+  // Add clear method to logger
+  (logger as any as LoggerWithClear).clear = () => {
+    const dest = (logger as any)[Symbol.for('pino-destination')];
+    if (dest instanceof InMemoryDestination) {
+      dest.clear();
+    }
+  };
 }
 
 export { createLogger, logger };

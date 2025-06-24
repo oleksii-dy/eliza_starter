@@ -55,7 +55,9 @@ export function sanitizeFilename(filename: string): string {
  * Safely cleans up a single file by path with path validation
  */
 export const cleanupFile = (filePath: string) => {
-  if (!filePath) return;
+  if (!filePath) {
+    return;
+  }
 
   try {
     // Validate and resolve the path to prevent directory traversal

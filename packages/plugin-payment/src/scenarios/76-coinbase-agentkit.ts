@@ -41,27 +41,27 @@ const coinbaseAgentKitScenario: Scenario = {
   ],
   actions: ['AGENTKIT_DCA_SETUP', 'AGENTKIT_REBALANCE', 'AGENTKIT_SMART_ROUTE'],
   evaluator: (response: string) => {
-    const hasAgentKit = 
+    const hasAgentKit =
       response.toLowerCase().includes('agentkit') ||
       response.toLowerCase().includes('coinbase');
-    
-    const hasAutomation = 
+
+    const hasAutomation =
       response.toLowerCase().includes('automat') ||
       response.toLowerCase().includes('dca') ||
       response.toLowerCase().includes('rebalance') ||
       response.toLowerCase().includes('smart') ||
       response.toLowerCase().includes('configur');
-    
-    const hasTrading = 
+
+    const hasTrading =
       response.toLowerCase().includes('buy') ||
       response.toLowerCase().includes('sell') ||
       response.toLowerCase().includes('trade') ||
       response.toLowerCase().includes('portfolio') ||
       response.toLowerCase().includes('purchas');
-    
+
     return hasAgentKit && (hasAutomation || hasTrading);
   },
   tags: ['payment', 'coinbase', 'agentkit', 'automation', 'trading'],
 };
 
-export default coinbaseAgentKitScenario; 
+export default coinbaseAgentKitScenario;

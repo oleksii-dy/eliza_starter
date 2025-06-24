@@ -1,6 +1,6 @@
 /**
  * Enhanced Custom Reasoning Service
- * 
+ *
  * This service provides comprehensive training data collection with:
  * - Database persistence using plugin-sql
  * - File system storage for visual debugging
@@ -73,7 +73,7 @@ export class EnhancedReasoningService {
 
       // Override runtime.useModel with enhanced logic
       const self = this;
-      this.runtime.useModel = async function(modelType: any, params: any, provider?: string) {
+      this.runtime.useModel = async function (modelType: any, params: any, provider?: string) {
         return await self.interceptUseModel(modelType, params, provider);
       };
 
@@ -81,7 +81,9 @@ export class EnhancedReasoningService {
       logger.info(`🔬 Enhanced reasoning service enabled with session: ${this.currentSessionId}`);
     } catch (error) {
       this.enabled = false;
-      throw new Error(`Failed to enable enhanced reasoning: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to enable enhanced reasoning: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -108,7 +110,7 @@ export class EnhancedReasoningService {
 
       // Log final statistics
       const duration = Date.now() - this.sessionStats.startTime;
-      logger.info(`🔬 Enhanced reasoning session completed:`, {
+      logger.info('🔬 Enhanced reasoning session completed:', {
         sessionId: this.currentSessionId,
         totalCalls: this.sessionStats.totalCalls,
         successfulCalls: this.sessionStats.successfulCalls,
@@ -122,10 +124,11 @@ export class EnhancedReasoningService {
       this.currentSessionId = null;
       this.trainingRecords = [];
       this.sessionStats = { totalCalls: 0, successfulCalls: 0, failedCalls: 0, startTime: 0 };
-
     } catch (error) {
       logger.error('Error disabling enhanced reasoning:', error);
-      throw new Error(`Failed to disable enhanced reasoning: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to disable enhanced reasoning: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -134,7 +137,7 @@ export class EnhancedReasoningService {
    */
   getStatus() {
     const duration = this.enabled ? Date.now() - this.sessionStats.startTime : 0;
-    
+
     return {
       enabled: this.enabled,
       sessionId: this.currentSessionId,
@@ -152,7 +155,7 @@ export class EnhancedReasoningService {
   private async interceptUseModel(modelType: any, params: any, provider?: string): Promise<any> {
     const startTime = Date.now();
     const recordId = uuidv4();
-    
+
     this.sessionStats.totalCalls++;
 
     // Create training record
@@ -169,13 +172,13 @@ export class EnhancedReasoningService {
     try {
       // Call original useModel function
       const result = await this.originalUseModel(modelType, params, provider);
-      
+
       // Record successful execution
       const executionTime = Date.now() - startTime;
       record.output = this.sanitizeOutput(result);
       record.success = true;
       record.executionTimeMs = executionTime;
-      
+
       this.sessionStats.successfulCalls++;
 
       // Store record
@@ -190,14 +193,13 @@ export class EnhancedReasoningService {
       });
 
       return result;
-
     } catch (error) {
       // Record failed execution
       const executionTime = Date.now() - startTime;
       record.errorMessage = error instanceof Error ? error.message : String(error);
       record.executionTimeMs = executionTime;
       record.success = false;
-      
+
       this.sessionStats.failedCalls++;
 
       // Store failed record
@@ -314,7 +316,7 @@ export class EnhancedReasoningService {
   private async saveToDatabaseAndFile(record: TrainingRecord): Promise<void> {
     // Save to database
     await this.saveToDatabase(record);
-    
+
     // Save to file system for visual debugging
     await this.saveToFileSystem(record);
   }
@@ -368,12 +370,20 @@ export class EnhancedReasoningService {
    */
   private async saveToFileSystem(record: TrainingRecord): Promise<void> {
     try {
-      const trainingDir = path.join(process.cwd(), 'training_recording', this.currentSessionId!);
+      // Use centralized path management for training recordings
+      let trainingDir: string;
+      try {
+        const { getTrainingPath } = require('@elizaos/core/utils/path-manager');
+        trainingDir = getTrainingPath(`recordings/${this.currentSessionId!}`);
+      } catch {
+        // Fallback to legacy path if path-manager is not available
+        trainingDir = path.join(process.cwd(), 'training_recording', this.currentSessionId!);
+      }
       await fs.mkdir(trainingDir, { recursive: true });
 
       const filename = `${record.timestamp}_${record.id}_${record.modelType}.json`;
       const filepath = path.join(trainingDir, filename);
-      
+
       const fileData = {
         ...record,
         humanTimestamp: new Date(record.timestamp).toISOString(),
@@ -399,9 +409,17 @@ export class EnhancedReasoningService {
    */
   private async saveSessionFile(): Promise<void> {
     try {
-      const trainingDir = path.join(process.cwd(), 'training_recording', this.currentSessionId!);
+      // Use centralized path management for training recordings
+      let trainingDir: string;
+      try {
+        const { getTrainingPath } = require('@elizaos/core/utils/path-manager');
+        trainingDir = getTrainingPath(`recordings/${this.currentSessionId!}`);
+      } catch {
+        // Fallback to legacy path if path-manager is not available
+        trainingDir = path.join(process.cwd(), 'training_recording', this.currentSessionId!);
+      }
       const sessionFile = path.join(trainingDir, 'session_summary.json');
-      
+
       const sessionData = {
         sessionId: this.currentSessionId,
         agentId: this.runtime.agentId,
@@ -414,7 +432,7 @@ export class EnhancedReasoningService {
       };
 
       await fs.writeFile(sessionFile, JSON.stringify(sessionData, null, 2), 'utf-8');
-      logger.info(`✅ Session summary saved: session_summary.json`);
+      logger.info('✅ Session summary saved: session_summary.json');
     } catch (error) {
       logger.error('Failed to save session file:', error);
     }
@@ -425,12 +443,21 @@ export class EnhancedReasoningService {
    */
   private async ensureTrainingDirectory(): Promise<void> {
     try {
-      const trainingDir = path.join(process.cwd(), 'training_recording');
+      // Use centralized path management for training recordings
+      let trainingDir: string;
+      let sessionDir: string;
+      try {
+        const { getTrainingPath } = require('@elizaos/core/utils/path-manager');
+        trainingDir = getTrainingPath('recordings');
+        sessionDir = getTrainingPath(`recordings/${this.currentSessionId!}`);
+      } catch {
+        // Fallback to legacy path if path-manager is not available
+        trainingDir = path.join(process.cwd(), 'training_recording');
+        sessionDir = path.join(trainingDir, this.currentSessionId!);
+      }
       await fs.mkdir(trainingDir, { recursive: true });
-      
-      const sessionDir = path.join(trainingDir, this.currentSessionId!);
       await fs.mkdir(sessionDir, { recursive: true });
-      
+
       logger.info(`✅ Training directory ready: ${sessionDir}`);
     } catch (error) {
       logger.error('Failed to create training directory:', error);

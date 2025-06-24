@@ -5,9 +5,9 @@
  */
 
 import { logger } from '@elizaos/core';
-import type { IAgentRuntime, UUID } from '@elizaos/core';
+import type { IAgentRuntime } from '@elizaos/core';
 import { ProductionCostTracker } from '../production-cost-tracker.js';
-import { RealWorldTaskExecutor, type RealWorldTask } from '../real-world-task-executor.js';
+import { RealWorldTaskExecutor } from '../real-world-task-executor.js';
 import { LiveMessageBus } from '../live-message-bus.js';
 
 export interface EcommerceBenchmark {
@@ -573,7 +573,7 @@ export class EcommerceStoreBenchmarkRunner {
         startTime,
         endTime: Date.now(),
         duration: Date.now() - startTime,
-        totalCost: await this.costTracker.getBenchmarkSpend(benchmarkId),
+        totalCost: (await (this.costTracker as any).getBenchmarkSpend?.(benchmarkId)) || 0,
         finalScore,
         ranking: 0, // Will be set by benchmark system
         storeMetrics: {
@@ -751,7 +751,7 @@ export class EcommerceStoreBenchmarkRunner {
    * Initialize an e-commerce store for the benchmark
    */
   private async initializeStore(
-    agentId: string,
+    _agentId: string,
     benchmarkId: string,
     parameters: any
   ): Promise<EcommerceStoreState> {
@@ -945,7 +945,9 @@ export class EcommerceStoreBenchmarkRunner {
     result: any
   ): Promise<void> {
     const store = this.activeStores.get(benchmarkId);
-    if (!store) return;
+    if (!store) {
+      return;
+    }
 
     // Simulate store updates based on task type and result
     // In real implementation, this would integrate with actual e-commerce platforms
@@ -1098,7 +1100,9 @@ export class EcommerceStoreBenchmarkRunner {
   private simulateSales(store: EcommerceStoreState, numberOfSales: number): void {
     for (let i = 0; i < numberOfSales; i++) {
       const product = store.products[Math.floor(Math.random() * store.products.length)];
-      if (!product) continue;
+      if (!product) {
+        continue;
+      }
 
       const order: Order = {
         id: `order-${Date.now()}-${i}`,
@@ -1179,7 +1183,7 @@ export class EcommerceStoreBenchmarkRunner {
   /**
    * Calculate final benchmark score
    */
-  private calculateFinalScore(store: EcommerceStoreState, taskResults: TaskResult[]): number {
+  private calculateFinalScore(store: EcommerceStoreState, _taskResults: TaskResult[]): number {
     const benchmark = this.getBenchmark();
     let score = 0;
 
@@ -1244,7 +1248,9 @@ export class EcommerceStoreBenchmarkRunner {
     const totalInvestment =
       initialCapital + Object.values(store.financials.costs).reduce((sum, cost) => sum + cost, 0);
 
-    if (totalInvestment === 0) return 0;
+    if (totalInvestment === 0) {
+      return 0;
+    }
 
     return store.financials.profit.net / totalInvestment;
   }

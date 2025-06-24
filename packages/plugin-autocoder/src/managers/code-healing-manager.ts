@@ -88,9 +88,9 @@ export class CodeHealingManager {
         );
         if (returnMatch) {
           const returnValue = returnMatch[1].trim();
-          if (/^\d+$/.test(returnValue)) return match.replace('{', ': number {');
-          if (/^["']/.test(returnValue)) return match.replace('{', ': string {');
-          if (/^true|false$/.test(returnValue)) return match.replace('{', ': boolean {');
+          if (/^\d+$/.test(returnValue)) {return match.replace('{', ': number {');}
+          if (/^["']/.test(returnValue)) {return match.replace('{', ': string {');}
+          if (/^true|false$/.test(returnValue)) {return match.replace('{', ': boolean {');}
         }
         return match.replace('{', ': unknown {');
       });
@@ -149,7 +149,7 @@ export class CodeHealingManager {
         // Generic handling for other undefined variables
         const regex = new RegExp(`\\b${varName}\\b`);
         if (regex.test(fixedCode)) {
-          fixedCode = `const ${varName} = undefined; // Auto-defined\n` + fixedCode;
+          fixedCode = `const ${varName} = undefined; // Auto-defined\n${fixedCode}`;
         }
       }
     }
@@ -240,7 +240,7 @@ export class CodeHealingManager {
               line.includes('return ') ||
               (line.includes('=') && !line.includes('=>')))
           ) {
-            return line + ';';
+            return `${line};`;
           }
           return line;
         })
@@ -363,7 +363,7 @@ export class CodeHealingManager {
 
   async healTypeScriptErrors(project: PluginProject): Promise<void> {
     const projectPath = project.localPath;
-    if (!projectPath) return;
+    if (!projectPath) {return;}
 
     // Run tsc to get errors
     try {
@@ -391,7 +391,7 @@ export class CodeHealingManager {
 
   async healESLintErrors(project: PluginProject): Promise<void> {
     const projectPath = project.localPath;
-    if (!projectPath) return;
+    if (!projectPath) {return;}
 
     // Run eslint to get errors
     try {

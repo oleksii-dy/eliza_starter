@@ -406,7 +406,9 @@ export async function publishToGitHub(
           const line = lines[i].trim();
 
           // Skip empty lines and opening brace
-          if (!line || line === '{') continue;
+          if (!line || line === '{') {
+            continue;
+          }
 
           // If we hit the closing brace, insert before it
           if (line === '}') {
@@ -499,7 +501,7 @@ Submitted by: @${username}`,
     // Return success with PR URL
     return {
       success: true,
-      prUrl: prUrl,
+      prUrl,
     };
   } else {
     logger.info('Test successful - all checks passed');

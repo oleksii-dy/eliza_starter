@@ -12,7 +12,7 @@
  * - Error handling with actual filesystem operations
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { AgentRuntime, elizaLogger } from '@elizaos/core';
 import type { Character, IAgentRuntime, UUID } from '@elizaos/core';
 import { TrainingRecordingManager } from '../../filesystem/TrainingRecordingManager.js';
@@ -191,7 +191,9 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       } catch (error) {
         // Should handle permission errors gracefully
         expect(error).toBeDefined();
-        expect(error.message).toContain('EACCES' || 'EPERM' || 'Permission');
+        expect(['EACCES', 'EPERM', 'Permission'].some((err) => error.message.includes(err))).toBe(
+          true
+        );
         elizaLogger.info('✅ Directory creation error properly handled');
       }
     });
@@ -702,7 +704,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
         elizaLogger.info('✅ Invalid path handled gracefully (permissions allow creation)');
       } catch (error) {
         expect(error).toBeDefined();
-        expect(error.message).toContain('EACCES' || 'EPERM' || 'ENOENT');
+        expect(['EACCES', 'EPERM', 'ENOENT'].some((err) => error.message.includes(err))).toBe(true);
         elizaLogger.info('✅ Export error properly handled with real filesystem');
       }
     });
@@ -871,7 +873,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       } catch (error) {
         // Permission errors are acceptable for cleanup operations
         expect(error).toBeDefined();
-        expect(error.message).toContain('EACCES' || 'EPERM' || 'ENOENT');
+        expect(['EACCES', 'EPERM', 'ENOENT'].some((err) => error.message.includes(err))).toBe(true);
         elizaLogger.info('✅ Cleanup error properly handled with real filesystem');
       }
     });

@@ -1,5 +1,9 @@
 import { elizaLogger, type IAgentRuntime } from '@elizaos/core';
-import { PlanningScenarioGenerator, type PlanningScenario, type PlanningTrainingExample } from './PlanningScenarioGenerator';
+import {
+  PlanningScenarioGenerator,
+  type PlanningScenario,
+  type PlanningTrainingExample,
+} from './PlanningScenarioGenerator';
 import { TrainingDatabaseManager } from '../../database/TrainingDatabaseManager';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs/promises';
@@ -7,7 +11,7 @@ import path from 'path';
 
 /**
  * PlanningModelTrainer - Trains the planning model using REALM-style scenarios
- * 
+ *
  * This trainer generates comprehensive planning scenarios and creates training data
  * specifically designed for the largest available model (Qwen R1 distill) to handle
  * complex multi-step reasoning and strategic planning tasks.
@@ -46,14 +50,19 @@ export class PlanningModelTrainer {
 
     // Define target distribution for complexity levels
     const complexityTargets = {
-      simple: Math.floor(totalScenarios * 0.2),    // 20%
-      medium: Math.floor(totalScenarios * 0.4),    // 40%
-      complex: Math.floor(totalScenarios * 0.3),   // 30%
-      expert: Math.floor(totalScenarios * 0.1),    // 10%
+      simple: Math.floor(totalScenarios * 0.2), // 20%
+      medium: Math.floor(totalScenarios * 0.4), // 40%
+      complex: Math.floor(totalScenarios * 0.3), // 30%
+      expert: Math.floor(totalScenarios * 0.1), // 10%
     };
 
     // Generate scenarios across all domains and complexity levels
-    const domains = ['software_development', 'business_strategy', 'ai_research', 'project_management'];
+    const domains = [
+      'software_development',
+      'business_strategy',
+      'ai_research',
+      'project_management',
+    ];
     const complexities = ['simple', 'medium', 'complex', 'expert'] as const;
 
     for (const complexity of complexities) {
@@ -61,13 +70,19 @@ export class PlanningModelTrainer {
       const scenariosPerDomain = Math.ceil(targetCount / domains.length);
 
       for (const domain of domains) {
-        const domainScenarios = Math.min(scenariosPerDomain, targetCount - (complexityDistribution[complexity] || 0));
+        const domainScenarios = Math.min(
+          scenariosPerDomain,
+          targetCount - (complexityDistribution[complexity] || 0)
+        );
 
         for (let i = 0; i < domainScenarios; i++) {
           try {
             // Generate scenario
-            const scenario = await this.scenarioGenerator.generatePlanningScenario(domain, complexity);
-            
+            const scenario = await this.scenarioGenerator.generatePlanningScenario(
+              domain,
+              complexity
+            );
+
             // Generate training examples from scenario
             const examples = await this.scenarioGenerator.generateTrainingExamples(scenario);
             allExamples.push(...examples);
@@ -77,9 +92,10 @@ export class PlanningModelTrainer {
             domainDistribution[domain] = (domainDistribution[domain] || 0) + 1;
 
             if ((complexityDistribution[complexity] + domainDistribution[domain]) % 50 === 0) {
-              elizaLogger.info(`📊 Generated ${Object.values(complexityDistribution).reduce((a, b) => a + b, 0)} scenarios so far...`);
+              elizaLogger.info(
+                `📊 Generated ${Object.values(complexityDistribution).reduce((a, b) => a + b, 0)} scenarios so far...`
+              );
             }
-
           } catch (error) {
             elizaLogger.warn(`Failed to generate ${complexity} ${domain} scenario:`, error);
           }
@@ -103,7 +119,7 @@ export class PlanningModelTrainer {
       datasetPath,
     };
 
-    elizaLogger.info(`🎉 Planning dataset generation complete:`, result);
+    elizaLogger.info('🎉 Planning dataset generation complete:', result);
     return result;
   }
 
@@ -123,7 +139,7 @@ export class PlanningModelTrainer {
       target_model: 'Qwen/QwQ-32B-Preview',
       description: 'REALM-style planning scenarios for strategic multi-step reasoning',
       format: 'instruction_following_with_thinking',
-      samples: examples.map(ex => this.formatForTraining(ex)),
+      samples: examples.map((ex) => this.formatForTraining(ex)),
       metadata: {
         total_samples: examples.length,
         complexity_distribution: this.calculateComplexityDistribution(examples),
@@ -145,7 +161,7 @@ export class PlanningModelTrainer {
 
     // Write JSONL training data
     const jsonlPath = path.join(datasetsDir, 'planning_training.jsonl');
-    const jsonlLines = mainDataset.samples.map(sample => JSON.stringify(sample)).join('\n');
+    const jsonlLines = mainDataset.samples.map((sample) => JSON.stringify(sample)).join('\n');
     await fs.writeFile(jsonlPath, jsonlLines);
 
     // Write metadata
@@ -186,7 +202,7 @@ Use <thinking> blocks to work through your reasoning process before presenting y
 Objective: ${input.objective}
 
 Constraints:
-${input.constraints.map(c => `- ${c}`).join('\n')}
+${input.constraints.map((c) => `- ${c}`).join('\n')}
 
 Context:
 - Background: ${input.context.background}
@@ -206,7 +222,7 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
     }
 
     responseText += `# Strategic Plan\n\n## Overview\n${output.plan.overview}\n\n## Implementation Steps\n`;
-    
+
     output.plan.steps.forEach((step, index) => {
       responseText += `\n### Step ${index + 1}: ${step.action}\n`;
       responseText += `**Reasoning:** ${step.reasoning}\n`;
@@ -217,9 +233,9 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
       }
     });
 
-    responseText += `\n## Success Criteria\n${output.plan.success_criteria.map(c => `- ${c}`).join('\n')}`;
+    responseText += `\n## Success Criteria\n${output.plan.success_criteria.map((c) => `- ${c}`).join('\n')}`;
     responseText += `\n\n## Risk Assessment\n${output.plan.risk_assessment}`;
-    responseText += `\n\n## Contingency Plans\n${output.plan.contingencies.map(c => `- ${c}`).join('\n')}`;
+    responseText += `\n\n## Contingency Plans\n${output.plan.contingencies.map((c) => `- ${c}`).join('\n')}`;
     responseText += `\n\n**Confidence Level:** ${Math.round(output.confidence * 100)}%`;
 
     return {
@@ -241,15 +257,20 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
   /**
    * Create complexity-specific dataset subsets
    */
-  private async createComplexitySubsets(examples: PlanningTrainingExample[] outputDir: string): Promise<void> {
+  private async createComplexitySubsets(
+    examples: PlanningTrainingExample[],
+    outputDir: string
+  ): Promise<void> {
     const complexities = ['simple', 'medium', 'complex', 'expert'];
 
     for (const complexity of complexities) {
-      const subset = examples.filter(ex => ex.metadata.complexity === complexity);
-      if (subset.length === 0) continue;
+      const subset = examples.filter((ex) => ex.metadata.complexity === complexity);
+      if (subset.length === 0) {
+        continue;
+      }
 
       const subsetPath = path.join(outputDir, `planning_${complexity}.jsonl`);
-      const jsonlLines = subset.map(ex => JSON.stringify(this.formatForTraining(ex))).join('\n');
+      const jsonlLines = subset.map((ex) => JSON.stringify(this.formatForTraining(ex))).join('\n');
       await fs.writeFile(subsetPath, jsonlLines);
 
       elizaLogger.debug(`📁 Created ${complexity} subset: ${subset.length} examples`);
@@ -259,15 +280,25 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
   /**
    * Create domain-specific dataset subsets
    */
-  private async createDomainSubsets(examples: PlanningTrainingExample[] outputDir: string): Promise<void> {
-    const domains = ['software_development', 'business_strategy', 'ai_research', 'project_management'];
+  private async createDomainSubsets(
+    examples: PlanningTrainingExample[],
+    outputDir: string
+  ): Promise<void> {
+    const domains = [
+      'software_development',
+      'business_strategy',
+      'ai_research',
+      'project_management',
+    ];
 
     for (const domain of domains) {
-      const subset = examples.filter(ex => ex.metadata.domain === domain);
-      if (subset.length === 0) continue;
+      const subset = examples.filter((ex) => ex.metadata.domain === domain);
+      if (subset.length === 0) {
+        continue;
+      }
 
       const subsetPath = path.join(outputDir, `planning_${domain}.jsonl`);
-      const jsonlLines = subset.map(ex => JSON.stringify(this.formatForTraining(ex))).join('\n');
+      const jsonlLines = subset.map((ex) => JSON.stringify(this.formatForTraining(ex))).join('\n');
       await fs.writeFile(subsetPath, jsonlLines);
 
       elizaLogger.debug(`📁 Created ${domain} subset: ${subset.length} examples`);
@@ -278,7 +309,9 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
    * Store examples in training database
    */
   private async storeInDatabase(examples: PlanningTrainingExample[]): Promise<void> {
-    if (!this.runtime) return;
+    if (!this.runtime) {
+      return;
+    }
 
     try {
       const dbPath = this.runtime.getSetting('TRAINING_DATABASE_URL') || 'sqlite:./training.db';
@@ -313,14 +346,15 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
       }
 
       elizaLogger.info(`💾 Stored ${examples.length} planning examples in database`);
-      
     } catch (error) {
       elizaLogger.error('Failed to store planning data in database:', error);
     }
   }
 
   // Helper calculation methods
-  private calculateComplexityDistribution(examples: PlanningTrainingExample[]): Record<string, number> {
+  private calculateComplexityDistribution(
+    examples: PlanningTrainingExample[]
+  ): Record<string, number> {
     const distribution: Record<string, number> = {};
     for (const example of examples) {
       const complexity = example.metadata.complexity;
@@ -343,12 +377,12 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
     return Math.round(totalSteps / examples.length);
   }
 
-  private calculateThinkingUsage(examples: PlanningTrainingExample[]): { 
-    with_thinking: number; 
-    without_thinking: number; 
+  private calculateThinkingUsage(examples: PlanningTrainingExample[]): {
+    with_thinking: number;
+    without_thinking: number;
     percentage: number;
   } {
-    const withThinking = examples.filter(ex => !!ex.output.thinking).length;
+    const withThinking = examples.filter((ex) => !!ex.output.thinking).length;
     const withoutThinking = examples.length - withThinking;
     return {
       with_thinking: withThinking,
@@ -360,19 +394,27 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
   /**
    * Export planning training data for external use
    */
-  async exportForTraining(format: 'together_ai' | 'huggingface' | 'openai' = 'together_ai'): Promise<any> {
+  async exportForTraining(
+    format: 'together_ai' | 'huggingface' | 'openai' = 'together_ai'
+  ): Promise<any> {
     try {
       const data = await this.dbManager.getTrainingData({ modelType: 'planning', limit: 5000 });
-      
-      const formattedData = data.map(item => {
+
+      const formattedData = data.map((item) => {
         const input = JSON.parse(item.input_data);
         const output = JSON.parse(item.output_data);
-        
-        return this.formatForTraining({ input, output, metadata: JSON.parse(item.metadata || '{}') });
+
+        return this.formatForTraining({
+          input,
+          output,
+          metadata: JSON.parse(item.metadata || '{}'),
+        });
       });
 
-      elizaLogger.info(`📊 Exported ${formattedData.length} planning training samples for ${format}`);
-      
+      elizaLogger.info(
+        `📊 Exported ${formattedData.length} planning training samples for ${format}`
+      );
+
       return {
         model_type: 'planning',
         format: `${format}_compatible`,
@@ -385,7 +427,6 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
           intended_use: 'strategic_planning_and_multi_step_reasoning',
         },
       };
-      
     } catch (error) {
       elizaLogger.error('❌ Failed to export planning training data:', error);
       throw error;

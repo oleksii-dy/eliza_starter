@@ -63,7 +63,7 @@ try {
 // Test basic select from each table first
 console.log('🔧 Testing basic SELECT from entities...');
 try {
-  const result = await db.execute(sql.raw(`SELECT id FROM entities LIMIT 1`));
+  const result = await db.execute(sql.raw('SELECT id FROM entities LIMIT 1'));
   console.log('🔧 Entities table works, result:', result.rows);
 } catch (error) {
   console.error('🔧 Basic entities select failed:', error.message);
@@ -71,7 +71,7 @@ try {
 
 console.log('🔧 Testing basic SELECT from components...');
 try {
-  const result = await db.execute(sql.raw(`SELECT id FROM components LIMIT 1`));
+  const result = await db.execute(sql.raw('SELECT id FROM components LIMIT 1'));
   console.log('🔧 Components table works, result:', result.rows);
 } catch (error) {
   console.error('🔧 Basic components select failed:', error.message);
@@ -101,7 +101,7 @@ try {
     FROM entities 
     WHERE entities.id = ${sql.placeholder('id')}
   `, { id: testId }));
-  
+
   console.log('🔧 SUCCESS: Drizzle parameterized query worked! Result:', result.rows);
 } catch (error) {
   console.error('🔧 FAILED: Drizzle parameterized query failed');
@@ -119,7 +119,7 @@ try {
     FROM entities 
     WHERE entities.id = $1
   `, [testId]);
-  
+
   console.log('🔧 SUCCESS: Direct PGLite query worked! Result:', result.rows);
 } catch (error) {
   console.error('🔧 FAILED: Direct PGLite query failed');
@@ -134,7 +134,7 @@ try {
     FROM entities 
     WHERE entities.id IN ($1)
   `, ['00000000-0000-0000-0000-000000000000']));
-  
+
   console.log('🔧 SUCCESS: Parameterized IN query worked! Result:', result.rows);
 } catch (error) {
   console.error('🔧 FAILED: Parameterized IN query failed');
@@ -164,7 +164,7 @@ try {
     left join "components" on "components"."entityId" = "entities"."id" 
     where "entities"."id" in ($1)
   `, ['00000000-0000-0000-0000-000000000000']));
-  
+
   console.log('🔧 SUCCESS: Original query worked! Result:', result);
 } catch (error) {
   console.error('🔧 FAILED: Original query failed');

@@ -12,7 +12,7 @@ import {
   ServiceType,
   EventType,
 } from '@elizaos/core';
-import { createNodeClientWorld } from './hyperfy/core/createNodeClientWorld.js';
+import { createNodeClientWorld } from '@elizaos/hyperfy';
 import { promises as fsPromises } from 'fs';
 import path from 'path';
 import { hyperfyMessageReceivedHandler } from './handlers/messageReceivedHandler.js';
@@ -26,16 +26,18 @@ import { loadPhysX } from './physx/loadPhysX.js';
 import { hashFileBuffer, getModuleDirectory } from './utils.js';
 import { AgentAvatar } from './systems/avatar.js';
 import { AgentControls } from './systems/controls.js';
-import { AgentLoader } from './systems/loader.js';
-import { AgentEnvironment } from './systems/environment.js';
+import { EnvironmentSystem } from './systems/environment.js';
 import { AgentActions } from './systems/actions.js';
 import { AgentLiveKit } from './systems/liveKit.js';
+import { AgentLoader } from './systems/loader.js';
 import type {
   HyperfyWorld,
   HyperfyEntity,
   HyperfyChatMessage,
   HyperfyWorldConfig,
 } from './types/hyperfy';
+import { EventEmitter } from 'events';
+import { isHyperfyChatMessage } from './types/hyperfy.js';
 
 const moduleDirPath = getModuleDirectory();
 const LOCAL_AVATAR_PATH = `${moduleDirPath}/avatars/avatar.vrm`;
@@ -114,12 +116,12 @@ Hyperfy world integration service that enables agents to:
     console.info('*** Starting Hyperfy service ***');
     const service = new HyperfyService(runtime);
     console.info(`Attempting automatic connection to default Hyperfy URL: ${HYPERFY_WS_URL}`);
-    const defaultWorldId = createUniqueUuid(runtime, runtime.agentId + '-default-hyperfy') as UUID;
+    const defaultWorldId = createUniqueUuid(runtime, `${runtime.agentId}-default-hyperfy`) as UUID;
     const authToken: string | undefined = undefined;
 
     service
       .connect({ wsUrl: HYPERFY_WS_URL, worldId: defaultWorldId, authToken })
-      .then(() => console.info(`Automatic Hyperfy connection initiated.`))
+      .then(() => console.info('Automatic Hyperfy connection initiated.'))
       .catch((err) => console.error(`Automatic Hyperfy connection failed: ${err.message}`));
 
     return service;
@@ -175,7 +177,7 @@ Hyperfy world integration service that enables agents to:
       const loader = new AgentLoader(world);
       world.systems.push(loader);
 
-      const environment = new AgentEnvironment(world);
+      const environment = new EnvironmentSystem(world);
       world.systems.push(environment);
 
       (world as any).chat.add = (msg, broadcast) => {
@@ -253,8 +255,10 @@ Hyperfy world integration service that enables agents to:
 
       // @ts-ignore - Appearance property access
       if (this.world?.entities?.player?.data) {
-        data: {
-          appearance: this.world.entities.player.data.appearance;
+        // Access appearance data for validation
+        const appearance = this.world.entities.player.data.appearance;
+        if (appearance) {
+          console.debug('[Appearance] Current appearance data available');
         }
       }
     } catch (error: any) {
@@ -352,7 +356,7 @@ Hyperfy world integration service that enables agents to:
         );
 
         await Promise.race([uploadPromise, timeoutPromise]);
-        console.info(`[Appearance] Avatar uploaded successfully.`);
+        console.info('[Appearance] Avatar uploaded successfully.');
       } catch (uploadError: any) {
         console.error(
           `[Appearance] Avatar upload failed: ${uploadError.message}`,
@@ -399,8 +403,10 @@ Hyperfy world integration service that enables agents to:
   }
 
   private startAppearancePolling(): void {
-    if (this.appearanceRefreshInterval) clearInterval(this.appearanceRefreshInterval);
-    let pollingTasks = {
+    if (this.appearanceRefreshInterval) {
+      clearInterval(this.appearanceRefreshInterval);
+    }
+    const pollingTasks = {
       avatar: this.appearanceHash !== null,
       name: this.world?.entities?.player?.data?.name !== undefined,
     };
@@ -415,9 +421,11 @@ Hyperfy world integration service that enables agents to:
 
     const f = async () => {
       if (pollingTasks.avatar && pollingTasks.name) {
-        if (this.appearanceRefreshInterval) clearInterval(this.appearanceRefreshInterval);
+        if (this.appearanceRefreshInterval) {
+          clearInterval(this.appearanceRefreshInterval);
+        }
         this.appearanceRefreshInterval = null;
-        console.info(`[Appearance/Name Polling] Both avatar and name set. Polling stopped.`);
+        console.info('[Appearance/Name Polling] Both avatar and name set. Polling stopped.');
         return;
       }
 
@@ -425,7 +433,7 @@ Hyperfy world integration service that enables agents to:
       const agentPlayerReady = !!agentPlayer;
       const agentPlayerId = agentPlayer?.data?.id;
       const agentPlayerIdReady = !!agentPlayerId;
-      const networkReady = this.world?.network?.id != null;
+      const networkReady = this.world?.network?.id !== null;
       const assetsUrlReady = !!this.world?.assetsUrl;
 
       console.log('agentPlayerReady', agentPlayerReady);
@@ -481,7 +489,7 @@ Hyperfy world integration service that enables agents to:
             const hashValue = await hashFileBuffer(Buffer.from(JSON.stringify(result.success)));
             this.appearanceHash = hashValue;
             pollingTasks.avatar = true;
-            console.info(`[Appearance Polling] Avatar setting process successfully completed.`);
+            console.info('[Appearance Polling] Avatar setting process successfully completed.');
           } else {
             console.warn(
               `[Appearance Polling] Avatar setting process failed: ${result.error || 'Unknown reason'}. Will retry...`
@@ -522,7 +530,9 @@ Hyperfy world integration service that enables agents to:
   }
 
   async handleDisconnect(): Promise<void> {
-    if (!this.isServiceConnected && !this.world) return;
+    if (!this.isServiceConnected && !this.world) {
+      return;
+    }
     console.info('Handling Hyperfy disconnection...');
     this.isServiceConnected = false;
 
@@ -647,8 +657,9 @@ Hyperfy world integration service that enables agents to:
 
     this.world.chat.subscribe((msgs: any[]) => {
       // Wait for player entity (ensures world/chat exist too)
-      if (!this.world || !this.world.chat || !this.world.entities?.player || !this.connectionTime)
+      if (!this.world || !this.world.chat || !this.world.entities?.player || !this.connectionTime) {
         return;
+      }
 
       const newMessagesFound: any[] = []; // Temporary list for new messages
 

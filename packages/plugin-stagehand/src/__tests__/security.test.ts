@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, vi } from 'vitest';
+import { describe, expect, it, beforeEach, mock, spyOn } from 'bun:test';
 import {
   UrlValidator,
   InputSanitizer,
@@ -42,7 +42,7 @@ describe('UrlValidator', () => {
     });
 
     it('should reject URLs that are too long', () => {
-      const longUrl = 'https://example.com/' + 'a'.repeat(3000);
+      const longUrl = `https://example.com/${'a'.repeat(3000)}`;
       const result = validator.validateUrl(longUrl);
       expect(result.valid).toBe(false);
       expect(result.error).toBe('URL is too long');
@@ -114,7 +114,7 @@ describe('UrlValidator', () => {
     it('should update configuration', () => {
       validator.updateConfig({ maxUrlLength: 100 });
 
-      const longUrl = 'https://example.com/' + 'a'.repeat(100);
+      const longUrl = `https://example.com/${'a'.repeat(100)}`;
       const result = validator.validateUrl(longUrl);
       expect(result.valid).toBe(false);
       expect(result.error).toBe('URL is too long');
@@ -238,7 +238,7 @@ describe('RateLimiter', () => {
       maxSessionsPerHour: 3,
     });
     now = Date.now();
-    vi.spyOn(Date, 'now').mockReturnValue(now);
+    spyOn(Date, 'now').mockReturnValue(now);
   });
 
   describe('action limits', () => {
@@ -259,7 +259,7 @@ describe('RateLimiter', () => {
       expect(rateLimiter.checkActionLimit('user1')).toBe(false);
 
       // Advance time by 1 minute
-      vi.spyOn(Date, 'now').mockReturnValue(now + 60001);
+      spyOn(Date, 'now').mockReturnValue(now + 60001);
 
       expect(rateLimiter.checkActionLimit('user1')).toBe(true);
     });
@@ -293,7 +293,7 @@ describe('RateLimiter', () => {
       expect(rateLimiter.checkSessionLimit('user1')).toBe(false);
 
       // Advance time by 1 hour
-      vi.spyOn(Date, 'now').mockReturnValue(now + 3600001);
+      spyOn(Date, 'now').mockReturnValue(now + 3600001);
 
       expect(rateLimiter.checkSessionLimit('user1')).toBe(true);
     });

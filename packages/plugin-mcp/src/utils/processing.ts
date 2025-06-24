@@ -14,17 +14,6 @@ import { resourceAnalysisTemplate } from '../templates/resourceAnalysisTemplate'
 import { toolReasoningTemplate } from '../templates/toolReasoningTemplate';
 import { createMcpMemory } from './mcp';
 
-function getMimeTypeToContentType(mimeType?: string): ContentType | undefined {
-  if (!mimeType) return undefined;
-
-  if (mimeType.startsWith('image/')) return ContentType.IMAGE;
-  if (mimeType.startsWith('video/')) return ContentType.VIDEO;
-  if (mimeType.startsWith('audio/')) return ContentType.AUDIO;
-  if (mimeType.includes('pdf') || mimeType.includes('document')) return ContentType.DOCUMENT;
-
-  return undefined;
-}
-
 export function processResourceResult(
   result: {
     contents: Array<{

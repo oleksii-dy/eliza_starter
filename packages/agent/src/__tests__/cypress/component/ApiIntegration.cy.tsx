@@ -30,13 +30,16 @@ const DataFetchingComponent: React.FC<{ agentId: string }> = ({ agentId }) => {
     fetchData();
   }, [agentId]);
 
-  if (isLoading) return <div data-testid="loading">Loading agent data...</div>;
-  if (error)
+  if (isLoading) {
+    return <div data-testid="loading">Loading agent data...</div>;
+  }
+  if (error) {
     return (
       <div data-testid="error" className="text-red-500">
         Error: {error.message}
       </div>
     );
+  }
 
   return (
     <div data-testid="data-display">

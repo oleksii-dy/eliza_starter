@@ -96,7 +96,7 @@ export class AutonomyAPIServer {
           runId: runId as string,
           phase: phase as any,
           level: level as any,
-          limit: parseInt(limit as string),
+          limit: parseInt(limit as string, 10),
         });
 
         res.json(logs);
@@ -166,15 +166,13 @@ export class AutonomyAPIServer {
     });
 
     // Error handler
-    this.app.use(
-      (err: any, req: any, res: any, next: any) => {
-        this.logger.error('API Server Error', err);
-        res.status(500).json({
-          error: 'Internal server error',
-          message: err.message,
-        });
-      }
-    );
+    this.app.use((err: any, req: any, res: any, next: any) => {
+      this.logger.error('API Server Error', err);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: err.message,
+      });
+    });
   }
 
   private setupWebSocket() {

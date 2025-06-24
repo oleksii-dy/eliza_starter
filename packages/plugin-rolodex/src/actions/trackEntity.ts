@@ -97,7 +97,7 @@ If no clear entity is mentioned, return null.`;
 
       // Generate response
       const responseText = `I've tracked information about ${entityInfo.name}. ${
-        entityInfo.attributes 
+        entityInfo.attributes
           ? `They are ${JSON.stringify(entityInfo.attributes).replace(/[{}"]/g, '').replace(/,/g, ', ')}.`
           : ''
       }`;

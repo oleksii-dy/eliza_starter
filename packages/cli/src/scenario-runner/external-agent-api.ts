@@ -5,10 +5,8 @@
  */
 
 import { logger } from '@elizaos/core';
-import type { IAgentRuntime, Character, UUID } from '@elizaos/core';
 import { EventEmitter } from 'events';
 import { ProductionCostTracker } from './production-cost-tracker.js';
-import { liveMessageBus } from './live-message-bus.js';
 
 export interface ExternalAgent {
   id: string;
@@ -174,14 +172,13 @@ export interface SecurityViolation {
 export class ExternalAgentAPI extends EventEmitter {
   private registeredAgents: Map<string, ExternalAgent> = new Map();
   private isolationContainers: Map<string, IsolationContainer> = new Map();
-  private costTracker: ProductionCostTracker;
   private securityMonitor: SecurityMonitor;
   private benchmarkQueue: BenchmarkQueue;
-  private apiServer: any; // Express server instance
+  // private _apiServer: any; // Express server instance
 
-  constructor(costTracker: ProductionCostTracker) {
+  constructor(_costTracker: ProductionCostTracker) {
     super();
-    this.costTracker = costTracker;
+    // costTracker initialization handled elsewhere
     this.securityMonitor = new SecurityMonitor();
     this.benchmarkQueue = new BenchmarkQueue();
     this.initializeAPI();
@@ -619,7 +616,7 @@ export class ExternalAgentAPI extends EventEmitter {
 
   private async provisionContainer(
     container: IsolationContainer,
-    agent: ExternalAgent
+    _agent: ExternalAgent
   ): Promise<void> {
     // Implementation would depend on container type
     // For now, simulate container creation
@@ -628,28 +625,28 @@ export class ExternalAgentAPI extends EventEmitter {
   }
 
   private async validateBenchmarkExecution(
-    agent: ExternalAgent,
-    benchmarkId: string,
-    parameters: Record<string, any>
+    _agent: ExternalAgent,
+    _benchmarkId: string,
+    _parameters: Record<string, any>
   ): Promise<void> {
     // Check agent status
-    if (agent.status !== 'approved' && agent.status !== 'active') {
-      throw new Error(`Agent ${agent.id} is not approved for benchmark execution`);
+    if (_agent.status !== 'approved' && _agent.status !== 'active') {
+      throw new Error(`Agent ${_agent.id} is not approved for benchmark execution`);
     }
 
     // Check resource limits
-    const currentBudget = parameters.budget || 0;
-    if (currentBudget > agent.resourceLimits.budget.maxHourlySpend) {
-      throw new Error(`Requested budget exceeds hourly limit`);
+    const currentBudget = _parameters.budget || 0;
+    if (currentBudget > _agent.resourceLimits.budget.maxHourlySpend) {
+      throw new Error('Requested budget exceeds hourly limit');
     }
 
     // Check concurrent execution limits
     const activeContainers = Array.from(this.isolationContainers.values()).filter(
-      (c) => c.agentId === agent.id && c.status === 'running'
+      (c) => c.agentId === _agent.id && c.status === 'running'
     );
 
-    if (activeContainers.length >= agent.resourceLimits.execution.maxConcurrentTasks) {
-      throw new Error(`Agent has reached maximum concurrent execution limit`);
+    if (activeContainers.length >= _agent.resourceLimits.execution.maxConcurrentTasks) {
+      throw new Error('Agent has reached maximum concurrent execution limit');
     }
   }
 
@@ -691,7 +688,7 @@ class SecurityMonitor {
     }
   }
 
-  private checkViolations(container: IsolationContainer, agent: ExternalAgent): void {
+  private checkViolations(container: IsolationContainer, _agent: ExternalAgent): void {
     // Simulate monitoring checks
     // In real implementation, this would check actual resource usage
 

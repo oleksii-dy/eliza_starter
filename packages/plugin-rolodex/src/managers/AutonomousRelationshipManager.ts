@@ -139,7 +139,7 @@ export class AutonomousRelationshipManager {
   }
 
   async start(): Promise<void> {
-    if (this.isActive) return;
+    if (this.isActive) {return;}
 
     logger.info('[AutonomousRelationshipManager] Starting autonomous operations...');
     this.isActive = true;
@@ -205,10 +205,10 @@ export class AutonomousRelationshipManager {
 
         // Create a friendly check-in message
         const messages = [
-          `Hey! It's been a while since we last connected. How have you been?`,
-          `Just thinking about you! What's new in your world?`,
-          `Hi there! Haven't heard from you in a bit. Everything going well?`,
-          `Hope you're doing great! Would love to catch up when you have a moment.`,
+          'Hey! It\'s been a while since we last connected. How have you been?',
+          'Just thinking about you! What\'s new in your world?',
+          'Hi there! Haven\'t heard from you in a bit. Everything going well?',
+          'Hope you\'re doing great! Would love to catch up when you have a moment.',
         ];
 
         const message = messages[Math.floor(Math.random() * messages.length)];
@@ -252,7 +252,7 @@ export class AutonomousRelationshipManager {
                 entityId: runtime.agentId,
                 roomId: task.roomId!,
                 content: {
-                  text: `I noticed some unusual activity. Could you help me verify your identity by answering a quick question about our previous conversations?`,
+                  text: 'I noticed some unusual activity. Could you help me verify your identity by answering a quick question about our previous conversations?',
                   metadata: {
                     type: 'trust_verification',
                     entityId,
@@ -278,7 +278,7 @@ export class AutonomousRelationshipManager {
                 entityId: runtime.agentId,
                 roomId: task.roomId!,
                 content: {
-                  text: `I value our connection and would love to understand you better. What's been on your mind lately?`,
+                  text: 'I value our connection and would love to understand you better. What\'s been on your mind lately?',
                   metadata: {
                     type: 'trust_building',
                     entityId,
@@ -442,7 +442,7 @@ export class AutonomousRelationshipManager {
   }
 
   async performHealthCheck(): Promise<RelationshipHealth[]> {
-    if (!this.isActive || !this.rolodexService) return [];
+    if (!this.isActive || !this.rolodexService) {return [];}
 
     logger.info('[AutonomousRelationshipManager] Performing relationship health check...');
     const healthReports: RelationshipHealth[] = [];
@@ -588,8 +588,8 @@ export class AutonomousRelationshipManager {
     // Calculate days since last interaction
     const lastInteractionDays = profile?.lastInteractionAt
       ? Math.floor(
-          (Date.now() - new Date(profile.lastInteractionAt).getTime()) / (1000 * 60 * 60 * 24)
-        )
+        (Date.now() - new Date(profile.lastInteractionAt).getTime()) / (1000 * 60 * 60 * 24)
+      )
       : 999;
 
     // Calculate health score
@@ -650,7 +650,7 @@ export class AutonomousRelationshipManager {
       `[AutonomousRelationshipManager] Handling unhealthy relationship: ${health.entityId} (${health.status})`
     );
 
-    if (!this.config.autoEngagementEnabled) return;
+    if (!this.config.autoEngagementEnabled) {return;}
 
     // Create engagement suggestion
     const suggestion = await this.createEngagementSuggestion(health);
@@ -686,7 +686,7 @@ export class AutonomousRelationshipManager {
   async suggestEngagements(): Promise<EngagementSuggestion[]> {
     const suggestions: EngagementSuggestion[] = [];
 
-    if (!this.rolodexService) return suggestions;
+    if (!this.rolodexService) {return suggestions;}
 
     // Get all relationships that need attention
     const stats = await this.rolodexService.getNetworkStats();
@@ -750,8 +750,8 @@ export class AutonomousRelationshipManager {
 
     // Calculate next follow-up date
     let daysUntilFollowUp = 7;
-    if (priority === 'high') daysUntilFollowUp = 1;
-    else if (priority === 'medium') daysUntilFollowUp = 3;
+    if (priority === 'high') {daysUntilFollowUp = 1;}
+    else if (priority === 'medium') {daysUntilFollowUp = 3;}
 
     const nextFollowUpDate = new Date();
     nextFollowUpDate.setDate(nextFollowUpDate.getDate() + daysUntilFollowUp);
@@ -797,7 +797,7 @@ export class AutonomousRelationshipManager {
   }
 
   async detectPatterns(): Promise<void> {
-    if (!this.isActive || !this.rolodexService) return;
+    if (!this.isActive || !this.rolodexService) {return;}
 
     logger.info('[AutonomousRelationshipManager] Running pattern detection...');
 
@@ -941,11 +941,11 @@ export class AutonomousRelationshipManager {
 
     // Analyze interaction frequency
     const frequencyPattern = this.analyzeInteractionFrequency(messages);
-    if (frequencyPattern) patterns.push(frequencyPattern);
+    if (frequencyPattern) {patterns.push(frequencyPattern);}
 
     // Analyze response times
     const responsePattern = this.analyzeResponseTimes(messages);
-    if (responsePattern) patterns.push(responsePattern);
+    if (responsePattern) {patterns.push(responsePattern);}
 
     // Detect anomalies
     const messageAnomalies = this.detectMessageAnomalies(messages);
@@ -967,7 +967,7 @@ export class AutonomousRelationshipManager {
 
     // Calculate trend
     const days = Array.from(messagesByDay.keys()).sort();
-    if (days.length < 3) return null;
+    if (days.length < 3) {return null;}
 
     const recentAvg =
       Array.from(messagesByDay.values())
@@ -976,8 +976,8 @@ export class AutonomousRelationshipManager {
     const overallAvg = Array.from(messagesByDay.values()).reduce((a, b) => a + b, 0) / days.length;
 
     let trend: 'positive' | 'negative' | 'stable' = 'stable';
-    if (recentAvg > overallAvg * 1.5) trend = 'positive';
-    else if (recentAvg < overallAvg * 0.5) trend = 'negative';
+    if (recentAvg > overallAvg * 1.5) {trend = 'positive';}
+    else if (recentAvg < overallAvg * 0.5) {trend = 'negative';}
 
     return {
       type: 'interaction_frequency',
@@ -1006,14 +1006,14 @@ export class AutonomousRelationshipManager {
       }
     }
 
-    if (responseTimes.length < 5) return null;
+    if (responseTimes.length < 5) {return null;}
 
     const avgResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
     const recentAvg = responseTimes.slice(-5).reduce((a, b) => a + b, 0) / 5;
 
     let trend: 'positive' | 'negative' | 'stable' = 'stable';
-    if (recentAvg < avgResponseTime * 0.7) trend = 'positive';
-    else if (recentAvg > avgResponseTime * 1.3) trend = 'negative';
+    if (recentAvg < avgResponseTime * 0.7) {trend = 'positive';}
+    else if (recentAvg > avgResponseTime * 1.3) {trend = 'negative';}
 
     return {
       type: 'response_time',
@@ -1077,7 +1077,7 @@ export class AutonomousRelationshipManager {
     if (adjustment !== 'none') {
       await this.runtime.createTask({
         name: 'PATTERN_ADJUSTMENT',
-        description: `Adjust relationship based on detected pattern`,
+        description: 'Adjust relationship based on detected pattern',
         roomId,
         metadata: {
           entityId,
@@ -1113,7 +1113,7 @@ export class AutonomousRelationshipManager {
   }
 
   private async updateRelationshipFromInteraction(message: Memory): Promise<void> {
-    if (!message.entityId || message.entityId === this.runtime.agentId) return;
+    if (!message.entityId || message.entityId === this.runtime.agentId) {return;}
 
     // Update last interaction time
     const relationships = await this.runtime.getRelationships({
@@ -1152,7 +1152,7 @@ export class AutonomousRelationshipManager {
 
     await this.runtime.createTask({
       name: 'TRUST_INTERVENTION',
-      description: `Handle significant trust change`,
+      description: 'Handle significant trust change',
       roomId,
       metadata: {
         entityId,
@@ -1186,7 +1186,7 @@ export class AutonomousRelationshipManager {
   // ============================================================================
 
   private async makeAutonomousDecisions(): Promise<void> {
-    if (!this.isActive || !this.rolodexService) return;
+    if (!this.isActive || !this.rolodexService) {return;}
 
     logger.info('[AutonomousRelationshipManager] Making autonomous decisions...');
 
@@ -1436,7 +1436,7 @@ export class AutonomousRelationshipManager {
         });
       }
     } catch (error) {
-      logger.error(`[AutonomousRelationshipManager] Failed to execute decision:`, error);
+      logger.error('[AutonomousRelationshipManager] Failed to execute decision:', error);
 
       // Record failed decision
       decision.metadata = {
@@ -1529,12 +1529,12 @@ export class AutonomousRelationshipManager {
   }
 
   private async executePrivacyChangeDecision(decision: AutonomousDecision): Promise<void> {
-    if (!this.rolodexService) return;
+    if (!this.rolodexService) {return;}
 
     // TODO: Privacy settings not implemented in RolodexService yet
     // For now, we'll update metadata to track privacy preferences
     const entity = await this.rolodexService.getEntity(decision.entityId);
-    if (!entity) return;
+    if (!entity) {return;}
 
     let privacyLevel = 'standard';
     if (decision.action === 'increase_privacy_restrictions') {
@@ -1592,7 +1592,7 @@ export class AutonomousRelationshipManager {
   // ============================================================================
 
   private async updateLearningInsights(): Promise<void> {
-    if (!this.isActive || !this.rolodexService) return;
+    if (!this.isActive || !this.rolodexService) {return;}
 
     logger.info('[AutonomousRelationshipManager] Updating learning insights...');
 
@@ -1658,19 +1658,19 @@ export class AutonomousRelationshipManager {
       count: 200,
     });
 
-    if (messages.length < 20) return insights; // Need sufficient data
+    if (messages.length < 20) {return insights;} // Need sufficient data
 
     // Learn communication preferences
     const commInsight = this.learnCommunicationPreferences(entityId, messages);
-    if (commInsight) insights.push(commInsight);
+    if (commInsight) {insights.push(commInsight);}
 
     // Learn behavioral patterns
     const behaviorInsight = this.learnBehavioralPatterns(entityId, messages);
-    if (behaviorInsight) insights.push(behaviorInsight);
+    if (behaviorInsight) {insights.push(behaviorInsight);}
 
     // Learn trust factors
     const trustInsight = await this.learnTrustFactors(entityId);
-    if (trustInsight) insights.push(trustInsight);
+    if (trustInsight) {insights.push(trustInsight);}
 
     return insights;
   }
@@ -1684,7 +1684,7 @@ export class AutonomousRelationshipManager {
       .filter((m) => m.createdAt)
       .map((m) => new Date(m.createdAt!).getHours());
 
-    if (timings.length < 10) return null;
+    if (timings.length < 10) {return null;}
 
     // Find most common communication hours
     const hourCounts = timings.reduce(
@@ -1696,18 +1696,18 @@ export class AutonomousRelationshipManager {
     );
 
     const mostActiveHour = Object.keys(hourCounts).reduce((a, b) =>
-      hourCounts[parseInt(a)] > hourCounts[parseInt(b)] ? a : b
+      hourCounts[parseInt(a, 10)] > hourCounts[parseInt(b, 10)] ? a : b
     );
 
-    const peakActivity = hourCounts[parseInt(mostActiveHour)];
+    const peakActivity = hourCounts[parseInt(mostActiveHour, 10)];
     const confidence = Math.min((peakActivity / timings.length) * 3, 1); // Higher if concentrated
 
-    if (confidence < this.config.learningConfidenceThreshold) return null;
+    if (confidence < this.config.learningConfidenceThreshold) {return null;}
 
     return {
       entityId,
       insightType: 'communication_optimal',
-      insight: `Most active during hour ${mostActiveHour}:00-${parseInt(mostActiveHour) + 1}:00`,
+      insight: `Most active during hour ${mostActiveHour}:00-${parseInt(mostActiveHour, 10) + 1}:00`,
       evidence: [
         `${peakActivity} messages during peak hour`,
         `${timings.length} total messages analyzed`,
@@ -1723,7 +1723,7 @@ export class AutonomousRelationshipManager {
     // Analyze message length patterns to understand communication style
     const lengths = messages.map((m) => m.content.text?.length || 0).filter((l) => l > 0);
 
-    if (lengths.length < 15) return null;
+    if (lengths.length < 15) {return null;}
 
     const avgLength = lengths.reduce((a, b) => a + b, 0) / lengths.length;
     const shortMessages = lengths.filter((l) => l < 50).length;
@@ -1731,7 +1731,7 @@ export class AutonomousRelationshipManager {
 
     let communicationStyle = 'balanced';
     let insight = '';
-    let evidence: string[] = [];
+    const evidence: string[] = [];
 
     if (shortMessages / lengths.length > 0.7) {
       communicationStyle = 'concise';
@@ -1764,12 +1764,12 @@ export class AutonomousRelationshipManager {
   }
 
   private async learnTrustFactors(entityId: UUID): Promise<LearningInsight | null> {
-    if (!this.rolodexService) return null;
+    if (!this.rolodexService) {return null;}
 
     // Use getTrustScore instead of evaluateContactTrust
     const trustScore = await this.rolodexService.getTrustScore(entityId);
 
-    if (!trustScore) return null;
+    if (!trustScore) {return null;}
 
     if (trustScore.score > 70) {
       return {
@@ -1826,7 +1826,7 @@ export class AutonomousRelationshipManager {
     insight: LearningInsight,
     originEntityId: UUID
   ): Promise<void> {
-    if (!this.rolodexService) return;
+    if (!this.rolodexService) {return;}
 
     // Find entities with similar characteristics
     const contacts = await this.rolodexService.searchEntities('', 1000);

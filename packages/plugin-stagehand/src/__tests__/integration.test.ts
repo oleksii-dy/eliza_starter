@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterAll, beforeAll } from 'vitest';
+import { describe, expect, it, mock, beforeEach, afterAll, beforeAll, spyOn } from 'bun:test';
 import { stagehandPlugin, StagehandService, BrowserSession } from '../index';
 import {
   createMockRuntime,
@@ -15,22 +15,22 @@ import { Stagehand } from '@browserbasehq/stagehand';
  */
 
 // Mock the Stagehand module
-vi.mock('@browserbasehq/stagehand', () => {
+mock.module('@browserbasehq/stagehand', () => {
   return {
-    Stagehand: vi.fn().mockImplementation(() => {
+    Stagehand: mock().mockImplementation(() => {
       const mockPage = {
-        goto: vi.fn().mockResolvedValue(undefined),
-        goBack: vi.fn().mockResolvedValue(undefined),
-        goForward: vi.fn().mockResolvedValue(undefined),
-        reload: vi.fn().mockResolvedValue(undefined),
-        waitForLoadState: vi.fn().mockResolvedValue(undefined),
-        title: vi.fn().mockResolvedValue('Test Page Title'),
-        url: vi.fn().mockReturnValue('https://example.com'),
+        goto: mock().mockResolvedValue(undefined),
+        goBack: mock().mockResolvedValue(undefined),
+        goForward: mock().mockResolvedValue(undefined),
+        reload: mock().mockResolvedValue(undefined),
+        waitForLoadState: mock().mockResolvedValue(undefined),
+        title: mock().mockResolvedValue('Test Page Title'),
+        url: mock().mockReturnValue('https://example.com'),
       };
 
       return {
-        init: vi.fn().mockResolvedValue(undefined),
-        close: vi.fn().mockResolvedValue(undefined),
+        init: mock().mockResolvedValue(undefined),
+        close: mock().mockResolvedValue(undefined),
         page: mockPage,
       };
     }),
@@ -43,7 +43,7 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  vi.restoreAllMocks();
+  mock.restore();
 });
 
 describe('Integration: Browser Navigation with StagehandService', () => {
@@ -51,10 +51,10 @@ describe('Integration: Browser Navigation with StagehandService', () => {
   let service: StagehandService;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
     service = new StagehandService(mockRuntime as unknown as IAgentRuntime);
-    mockRuntime.getService = vi.fn().mockReturnValue(service);
+    mockRuntime.getService = mock().mockReturnValue(service);
   });
 
   it('should navigate to URL and provide state through provider', async () => {
@@ -74,7 +74,7 @@ describe('Integration: Browser Navigation with StagehandService', () => {
     }) as Memory;
 
     const mockState = createMockState() as State;
-    const mockCallback = vi.fn().mockResolvedValue([]);
+    const mockCallback = mock().mockResolvedValue([]);
 
     // Execute the navigation action
     await navigateAction!.handler(
@@ -113,7 +113,7 @@ describe('Integration: Browser Navigation with StagehandService', () => {
     const backAction = stagehandPlugin.actions?.find((a) => a.name === 'BROWSER_BACK');
     const forwardAction = stagehandPlugin.actions?.find((a) => a.name === 'BROWSER_FORWARD');
 
-    const mockCallback = vi.fn().mockResolvedValue([]);
+    const mockCallback = mock().mockResolvedValue([]);
 
     // Navigate to first page
     await navigateAction!.handler(
@@ -162,17 +162,17 @@ describe('Integration: Session Management', () => {
   let service: StagehandService;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
     service = new StagehandService(mockRuntime as unknown as IAgentRuntime);
-    mockRuntime.getService = vi.fn().mockReturnValue(service);
+    mockRuntime.getService = mock().mockReturnValue(service);
   });
 
   it('should create session on first navigation and reuse it', async () => {
     const navigateAction = stagehandPlugin.actions?.find((a) => a.name === 'BROWSER_NAVIGATE');
     const refreshAction = stagehandPlugin.actions?.find((a) => a.name === 'BROWSER_REFRESH');
 
-    const mockCallback = vi.fn().mockResolvedValue([]);
+    const mockCallback = mock().mockResolvedValue([]);
 
     // First navigation - should create session
     await navigateAction!.handler(
@@ -220,7 +220,7 @@ describe('Integration: Session Management', () => {
 describe('Integration: Plugin initialization and service registration', () => {
   it('should initialize the plugin and register the service', async () => {
     const mockRuntime = createMockRuntime();
-    const registerServiceSpy = vi.fn();
+    const registerServiceSpy = mock();
     mockRuntime.registerService = registerServiceSpy;
 
     // Initialize the plugin
@@ -256,23 +256,23 @@ describe('Integration: Error Handling', () => {
   let mockRuntime: MockRuntime;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime();
   });
 
   it('should handle navigation errors gracefully', async () => {
     const service = new StagehandService(mockRuntime as unknown as IAgentRuntime);
-    mockRuntime.getService = vi.fn().mockReturnValue(service);
+    mockRuntime.getService = mock().mockReturnValue(service);
 
     // Make page.goto throw an error
     const mockStagehand = new Stagehand({ env: 'LOCAL' } as any);
     const mockSession = new BrowserSession('error-session', mockStagehand as any);
-    mockSession.page.goto = vi.fn().mockRejectedValue(new Error('Navigation failed'));
+    mockSession.page.goto = mock().mockRejectedValue(new Error('Navigation failed'));
 
-    vi.spyOn(service, 'createSession').mockResolvedValue(mockSession);
+    spyOn(service, 'createSession').mockResolvedValue(mockSession);
 
     const navigateAction = stagehandPlugin.actions?.find((a) => a.name === 'BROWSER_NAVIGATE');
-    const mockCallback = vi.fn().mockResolvedValue([]);
+    const mockCallback = mock().mockResolvedValue([]);
 
     // Execute the handler
     await navigateAction!.handler(
@@ -304,7 +304,7 @@ describe('Integration: Error Handling', () => {
 
   it('should validate actions before execution', async () => {
     // No service available
-    mockRuntime.getService = vi.fn().mockReturnValue(null);
+    mockRuntime.getService = mock().mockReturnValue(null);
 
     const backAction = stagehandPlugin.actions?.find((a) => a.name === 'BROWSER_BACK');
 

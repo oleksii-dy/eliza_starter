@@ -1,5 +1,7 @@
 import {
   type Action,
+  type ActionResult,
+  type ActionExample,
   type HandlerCallback,
   type IAgentRuntime,
   type Memory,
@@ -35,7 +37,7 @@ export const hyperfyUseItemAction: Action = {
   name: 'HYPERFY_USE_ITEM',
   similes: ['INTERACT_WITH_ITEM', 'USE_NEARBY_OBJECT', 'PICK_UP_ITEM'],
   description:
-    'Walks to and interacts with a nearby usable item (like picking it up); use when a player asks you to use or grab something.',
+    'Walks to and interacts with a nearby usable item (like picking it up); use when a player asks you to use or grab something. Can be chained with GOTO actions for complex interaction sequences.',
   validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
     const world = service?.getWorld();
@@ -47,7 +49,7 @@ export const hyperfyUseItemAction: Action = {
     _state?: State,
     options?: { entityId?: string },
     callback?: HandlerCallback
-  ) => {
+  ): Promise<ActionResult> => {
     const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
     const world = service?.getWorld();
     const controls = world?.controls as unknown as AgentControls;
@@ -60,7 +62,11 @@ export const hyperfyUseItemAction: Action = {
       if (callback) {
         await callback({ text: 'Error: Cannot use item. Agent action system unavailable.' });
       }
-      return;
+      return {
+        text: 'Error: Cannot use item. Agent action system unavailable.',
+        values: { success: false, error: 'action_system_unavailable' },
+        data: { action: 'HYPERFY_USE_ITEM' }
+      };
     }
 
     let targetEntityId = options?.entityId;
@@ -95,19 +101,28 @@ export const hyperfyUseItemAction: Action = {
 
     if (!targetEntityId) {
       logger.warn('[USE ITEM] No suitable item found to use based on the context.');
-      return;
+      return {
+        text: 'No suitable item found to use based on the context.',
+        values: { success: false, error: 'no_item_found' },
+        data: { action: 'HYPERFY_USE_ITEM' }
+      };
     }
 
     const entity = world.entities.items.get(targetEntityId);
     const targetPosition = entity?.root?.position;
     if (!targetPosition) {
       if (callback) {
-        await callback({
+        const errorResponse = {
           text: `Could not locate entity ${targetEntityId}.`,
           metadata: { error: 'entity_not_found' },
-        });
+        };
+        await callback(errorResponse);
       }
-      return;
+      return {
+        text: `Could not locate entity ${targetEntityId}.`,
+        values: { success: false, error: 'entity_not_found', targetEntityId },
+        data: { action: 'HYPERFY_USE_ITEM' }
+      };
     }
 
     await controls.goto(targetPosition.x, targetPosition.z);
@@ -116,34 +131,58 @@ export const hyperfyUseItemAction: Action = {
     actions.performAction(targetEntityId);
 
     if (callback) {
-      await callback({
+      const successResponse = {
         text: `Using item: ${targetEntityId}`,
         actions: ['HYPERFY_USE_ITEM'],
         source: 'hyperfy',
         metadata: { targetEntityId, status: 'triggered' },
-      });
+      };
+      await callback(successResponse);
     }
+    
+    return {
+      text: `Using item: ${targetEntityId}`,
+      values: { success: true, targetEntityId, status: 'triggered' },
+      data: { 
+        action: 'HYPERFY_USE_ITEM', 
+        targetEntityId, 
+        position: { x: targetPosition.x, z: targetPosition.z }
+      }
+    };
   },
   examples: [
     [
-      { name: '{{name1}}', content: { text: 'Pick up the book.' } },
+      { name: '{{user}}', content: { text: 'Pick up the book.' } },
       {
-        name: '{{name2}}',
-        content: { text: 'Using item: book123', actions: ['HYPERFY_USE_ITEM'], source: 'hyperfy' },
+        name: '{{agent}}',
+        content: { 
+          thought: 'User wants me to pick up a book - I need to find the book entity and interact with it',
+          text: 'Using item: book123', 
+          actions: ['HYPERFY_USE_ITEM'], 
+          source: 'hyperfy' 
+        },
       },
     ],
     [
-      { name: '{{name1}}', content: { text: 'Interact with the glowing orb.' } },
+      { name: '{{user}}', content: { text: 'Interact with the glowing orb.' } },
       {
-        name: '{{name2}}',
-        content: { text: 'Using item: orb888', actions: ['HYPERFY_USE_ITEM'], source: 'hyperfy' },
+        name: '{{agent}}',
+        content: { 
+          thought: 'The user wants me to interact with a glowing orb - I should navigate to it and activate it',
+          text: 'Using item: orb888', 
+          actions: ['HYPERFY_USE_ITEM'], 
+          source: 'hyperfy' 
+        },
       },
     ],
     [
-      { name: '{{name1}}', content: { text: 'Do we need to pick something up?' } },
+      { name: '{{user}}', content: { text: 'Do we need to pick something up?' } },
       {
-        name: '{{name2}}',
-        content: { text: 'No suitable item found to use based on the context.' },
+        name: '{{agent}}',
+        content: { 
+          thought: 'The user is asking if there\'s something to pick up, but I don\'t see any obvious interactive items nearby',
+          text: 'No suitable item found to use based on the context.' 
+        },
       },
     ],
   ],

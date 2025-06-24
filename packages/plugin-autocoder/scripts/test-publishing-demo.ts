@@ -34,7 +34,7 @@ const createMockRuntime = (settings: Record<string, string>): IAgentRuntime => {
     documentsManager: {} as any,
     knowledgeManager: {} as any,
     cacheManager: {} as any,
-    services: services,
+    services,
     providers: [],
     actions: [],
     evaluators: [],
@@ -108,7 +108,7 @@ async function runPublishingDemo() {
 
   const checkProgress = async () => {
     const currentProject = await orchestrationService.getProject(project.id);
-    if (!currentProject) return false;
+    if (!currentProject) {return false;}
 
     if (currentProject.phase !== lastPhase || currentProject.status !== lastStatus) {
       lastPhase = currentProject.phase;
@@ -125,7 +125,7 @@ async function runPublishingDemo() {
 
       if (currentProject.status === 'awaiting-secrets') {
         logger.info('\nProject is awaiting secrets. This should not happen in demo mode.');
-        logger.info('Required secrets: ' + currentProject.requiredSecrets.join(', '));
+        logger.info(`Required secrets: ${currentProject.requiredSecrets.join(', ')}`);
       }
     }
 
@@ -137,7 +137,7 @@ async function runPublishingDemo() {
 
   while (true) {
     const isDone = await checkProgress();
-    if (isDone) break;
+    if (isDone) {break;}
     await new Promise((resolve) => setTimeout(resolve, 5000));
   }
 
@@ -148,7 +148,7 @@ async function runPublishingDemo() {
     logger.info('\n=== Plugin Successfully Published! ===');
     logger.info(`GitHub Repository: ${finalProject.githubRepo}`);
     logger.info(`Registry PR: ${finalProject.pullRequestUrl}`);
-    logger.info(`\nTest Results:`);
+    logger.info('\nTest Results:');
     logger.info(`  Passed: ${finalProject.testResults?.passed || 0}`);
     logger.info(`  Failed: ${finalProject.testResults?.failed || 0}`);
     logger.info(`  Duration: ${finalProject.testResults?.duration || 0}ms`);

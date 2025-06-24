@@ -17,7 +17,7 @@
     "moduleDetection": "force",
     "allowArbitraryExtensions": true,
     "jsx": "react",
-    "types": ["vitest/globals", "node"]
+    "types": ["bun-types", "node"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": [

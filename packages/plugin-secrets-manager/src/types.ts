@@ -152,12 +152,18 @@ export interface SecretRequest {
     title: string;
     description: string;
     requestedBy: string;
-    channel: CallbackChannelType;
+    channel: Callback;
     [key: string]: any;
   };
 }
 
-export type SecretRequestStatus = 'pending' | 'accepted' | 'completed' | 'declined' | 'expired' | 'failed';
+export type SecretRequestStatus =
+  | 'pending'
+  | 'accepted'
+  | 'completed'
+  | 'declined'
+  | 'expired'
+  | 'failed';
 
 export interface SecretRequestCallback {
   requestId: string;
@@ -166,10 +172,10 @@ export interface SecretRequestCallback {
   onTimeout?: () => Promise<void>;
 }
 
-export type CallbackChannelType = 'discord' | 'telegram' | 'slack' | 'memory' | 'webhook';
+export type Callback = 'discord' | 'telegram' | 'slack' | 'memory' | 'webhook';
 
 export interface CallbackChannel {
-  type: CallbackChannelType;
+  type: Callback;
   roomId?: string; // UUID for platform channels
   userId?: string; // UUID for direct channels
   webhookUrl?: string; // For webhook notifications

@@ -3,7 +3,7 @@ import { type Scenario } from '../types';
 export const runtimeTestScenario: Scenario = {
   name: 'Rolodex Runtime Test',
   description: 'Tests the rolodex plugin functionality with real runtime',
-  
+
   messages: [
     {
       role: 'user',
@@ -15,7 +15,7 @@ export const runtimeTestScenario: Scenario = {
       expectedContent: ['Sarah Chen', 'TechCorp', 'VP of Engineering'],
     },
     {
-      role: 'user', 
+      role: 'user',
       content: 'Sarah introduced me to her colleague Mike Johnson who leads their blockchain team.',
     },
     {
@@ -81,4 +81,4 @@ export const runtimeTestScenario: Scenario = {
       followUps: followUps.length,
     };
   },
-}; 
+};

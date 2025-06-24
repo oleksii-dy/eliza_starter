@@ -12,7 +12,7 @@ export const PluginManagerServiceType: Record<string, ServiceTypeName> = {
   PLUGIN_MANAGER: 'plugin_manager' as ServiceTypeName,
 };
 
-export const PluginStatus = {
+export const PluginStatusValues = {
   BUILDING: 'building',
   READY: 'ready',
   LOADED: 'loaded',
@@ -22,7 +22,7 @@ export const PluginStatus = {
   CONFIGURATION_IN_PROGRESS: 'configuration_in_progress',
 } as const;
 
-export type PluginStatus = (typeof PluginStatus)[keyof typeof PluginStatus];
+export type PluginStatus = (typeof PluginStatusValues)[keyof typeof PluginStatusValues];
 
 // Configuration-related types
 export interface PluginEnvironmentVariable {

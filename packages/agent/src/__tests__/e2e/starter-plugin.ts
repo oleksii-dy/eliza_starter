@@ -222,7 +222,7 @@ export class StarterTestSuite implements TestSuite {
           // Note: We do NOT specify any actions - the agent must understand and decide
           const userMessage: Memory = {
             entityId: userId,
-            roomId: roomId,
+            roomId,
             content: {
               text: 'Please say hello world', // Natural language request
               source: 'test',
@@ -393,19 +393,19 @@ export class StarterTestSuite implements TestSuite {
           const testData = {
             // Your test setup here
           };
-          
+
           // 2. Execute the feature
           const result = await runtime.someMethod(testData);
-          
+
           // 3. Verify the results
           if (!result) {
             throw new Error('Expected result but got nothing');
           }
-          
+
           if (result.someProperty !== 'expected value') {
             throw new Error(`Expected 'expected value' but got '${result.someProperty}'`);
           }
-          
+
           // Test passed if we reach here without throwing
         } catch (error) {
           // Always wrap errors with context for easier debugging

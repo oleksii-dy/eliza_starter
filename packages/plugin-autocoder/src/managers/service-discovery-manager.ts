@@ -274,15 +274,15 @@ export class ServiceDiscoveryManager {
    */
   private pluginMatchesSearchTerms(plugin: any, searchTerms: string[]): boolean {
     const pluginText = (
-      plugin.name +
-      ' ' +
-      (plugin.description || '') +
-      ' ' +
-      (plugin.services?.map((s: any) => s.serviceName || s.name || '').join(' ') || '') +
-      ' ' +
-      (plugin.actions?.map((a: any) => a.name || '').join(' ') || '') +
-      ' ' +
-      (plugin.providers?.map((p: any) => p.name || '').join(' ') || '')
+      `${plugin.name
+      } ${
+        plugin.description || ''
+      } ${
+        plugin.services?.map((s: any) => s.serviceName || s.name || '').join(' ') || ''
+      } ${
+        plugin.actions?.map((a: any) => a.name || '').join(' ') || ''
+      } ${
+        plugin.providers?.map((p: any) => p.name || '').join(' ') || ''}`
     ).toLowerCase();
 
     return searchTerms.some((term) => pluginText.includes(term.toLowerCase()));
@@ -487,7 +487,7 @@ export class ServiceDiscoveryManager {
     result: ServiceDiscoveryResult,
     options: DiscoveryOptions
   ): void {
-    if (!this.checker) return;
+    if (!this.checker) {return;}
 
     // Check for service classes
     if (ts.isClassDeclaration(node) && node.name) {
@@ -536,7 +536,7 @@ export class ServiceDiscoveryManager {
    * Check if a class extends Service
    */
   private extendsService(node: ts.ClassDeclaration): boolean {
-    if (!node.heritageClauses) return false;
+    if (!node.heritageClauses) {return false;}
 
     for (const clause of node.heritageClauses) {
       if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
@@ -562,7 +562,7 @@ export class ServiceDiscoveryManager {
     sourceFile: ts.SourceFile,
     options: DiscoveryOptions
   ): ServiceInfo | null {
-    if (!node.name || !this.checker) return null;
+    if (!node.name || !this.checker) {return null;}
 
     const serviceInfo: ServiceInfo = {
       name: node.name.text,
@@ -583,7 +583,7 @@ export class ServiceDiscoveryManager {
 
         // Skip private methods unless requested
         if (!options.includePrivateMethods && this.isPrivate(member)) {
-          return;
+
         }
 
         // Method extraction removed - not needed for new ServiceInfo structure
@@ -619,10 +619,10 @@ export class ServiceDiscoveryManager {
     node: ts.MethodDeclaration,
     sourceFile: ts.SourceFile
   ): MethodInfo | null {
-    if (!node.name || !ts.isIdentifier(node.name) || !this.checker) return null;
+    if (!node.name || !ts.isIdentifier(node.name) || !this.checker) {return null;}
 
     const signature = this.checker.getSignatureFromDeclaration(node);
-    if (!signature) return null;
+    if (!signature) {return null;}
 
     const methodInfo: MethodInfo = {
       name: node.name.text,
@@ -878,22 +878,22 @@ export class ServiceDiscoveryManager {
           // Simple heuristic-based detection
           if (fileName.includes('action') || content.includes('Action = {')) {
             const match = content.match(/export\s+const\s+(\w+Action)/);
-            if (match) result.actions.push(match[1]);
+            if (match) {result.actions.push(match[1]);}
           }
 
           if (fileName.includes('provider') || content.includes('Provider = {')) {
             const match = content.match(/export\s+const\s+(\w+Provider)/);
-            if (match) result.providers.push(match[1]);
+            if (match) {result.providers.push(match[1]);}
           }
 
           if (fileName.includes('service') || content.includes('extends Service')) {
             const match = content.match(/export\s+class\s+(\w+Service)/);
-            if (match) result.services.push(match[1]);
+            if (match) {result.services.push(match[1]);}
           }
 
           if (fileName.includes('evaluator') || content.includes('Evaluator = {')) {
             const match = content.match(/export\s+const\s+(\w+Evaluator)/);
-            if (match) result.evaluators.push(match[1]);
+            if (match) {result.evaluators.push(match[1]);}
           }
         }
       }

@@ -39,7 +39,9 @@ export const actionStateProvider: Provider = {
 
     // Format plan status if available
     const formatPlan = (plan: any) => {
-      if (!plan) return '';
+      if (!plan) {
+        return '';
+      }
       return `Goal: ${plan.goal}\nSteps: ${plan.steps.length}\nStatus: ${plan.state?.status || 'unknown'}`;
     };
 

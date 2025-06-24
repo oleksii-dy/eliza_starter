@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { SearchResult } from '../../types';
-import { elizaLogger } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { z } from 'zod';
 
 // Serper API response schema validation
@@ -78,7 +78,7 @@ export class SerperSearchProvider {
     const startTime = Date.now();
 
     try {
-      elizaLogger.info(`[Serper] Searching for: ${query}`);
+      logger.info(`[Serper] Searching for: ${query}`);
 
       const response = await axios.post(
         this.baseUrl,
@@ -158,7 +158,7 @@ export class SerperSearchProvider {
       }
 
       const duration = Date.now() - startTime;
-      elizaLogger.info(`[Serper] Found ${results.length} results in ${duration}ms`);
+      logger.info(`[Serper] Found ${results.length} results in ${duration}ms`);
 
       return results.slice(0, maxResults || this.config.num);
     } catch (error) {
@@ -169,31 +169,31 @@ export class SerperSearchProvider {
 
         // Handle specific error cases
         if (axiosError.response?.status === 401) {
-          elizaLogger.error('[Serper] Invalid API key');
+          logger.error('[Serper] Invalid API key');
           throw new Error('Invalid Serper API key');
         } else if (axiosError.response?.status === 429) {
-          elizaLogger.error('[Serper] Rate limit exceeded');
+          logger.error('[Serper] Rate limit exceeded');
           throw new Error('Serper rate limit exceeded');
         } else if (axiosError.response?.status === 403) {
-          elizaLogger.error('[Serper] Forbidden - check API key permissions', {
+          logger.error('[Serper] Forbidden - check API key permissions', {
             data: axiosError.response?.data,
             headers: axiosError.response?.headers
           });
           throw new Error(`Serper API access forbidden: ${JSON.stringify(axiosError.response?.data)}`);
         } else if (axiosError.code === 'ECONNABORTED') {
-          elizaLogger.error(`[Serper] Request timeout after ${duration}ms`);
+          logger.error(`[Serper] Request timeout after ${duration}ms`);
           throw new Error('Serper search timeout');
         }
 
-        elizaLogger.error(`[Serper] API error: ${axiosError.message}`, {
+        logger.error(`[Serper] API error: ${axiosError.message}`, {
           status: axiosError.response?.status,
           data: axiosError.response?.data,
         });
       } else if (error instanceof z.ZodError) {
-        elizaLogger.error('[Serper] Invalid response format:', error.issues);
+        logger.error('[Serper] Invalid response format:', error.issues);
         throw new Error('Invalid Serper API response format');
       } else {
-        elizaLogger.error('[Serper] Unknown error:', error);
+        logger.error('[Serper] Unknown error:', error);
       }
 
       throw error;
@@ -204,7 +204,7 @@ export class SerperSearchProvider {
     const startTime = Date.now();
 
     try {
-      elizaLogger.info(`[Serper] Searching news for: ${query}`);
+      logger.info(`[Serper] Searching news for: ${query}`);
 
       const response = await axios.post(
         'https://google.serper.dev/news',
@@ -244,11 +244,11 @@ export class SerperSearchProvider {
         })) || [];
 
       const duration = Date.now() - startTime;
-      elizaLogger.info(`[Serper] Found ${results.length} news results in ${duration}ms`);
+      logger.info(`[Serper] Found ${results.length} news results in ${duration}ms`);
 
       return results;
     } catch (error) {
-      elizaLogger.error('[Serper] News search error:', error);
+      logger.error('[Serper] News search error:', error);
       throw error;
     }
   }
@@ -258,7 +258,7 @@ export class SerperSearchProvider {
     maxResults?: number
   ): Promise<Array<{ url: string; title: string; source: string }>> {
     try {
-      elizaLogger.info(`[Serper] Searching images for: ${query}`);
+      logger.info(`[Serper] Searching images for: ${query}`);
 
       const response = await axios.post(
         'https://google.serper.dev/images',
@@ -282,14 +282,14 @@ export class SerperSearchProvider {
         source: img.source,
       })) || [];
     } catch (error) {
-      elizaLogger.error('[Serper] Image search error:', error);
+      logger.error('[Serper] Image search error:', error);
       throw error;
     }
   }
 
   async searchScholar(query: string, maxResults?: number): Promise<SearchResult[]> {
     try {
-      elizaLogger.info(`[Serper] Searching Google Scholar for: ${query}`);
+      logger.info(`[Serper] Searching Google Scholar for: ${query}`);
 
       const response = await axios.post(
         'https://google.serper.dev/scholar',
@@ -327,11 +327,11 @@ export class SerperSearchProvider {
           },
         })) || [];
 
-      elizaLogger.info(`[Serper] Found ${results.length} scholar results`);
+      logger.info(`[Serper] Found ${results.length} scholar results`);
 
       return results;
     } catch (error) {
-      elizaLogger.error('[Serper] Scholar search error:', error);
+      logger.error('[Serper] Scholar search error:', error);
       throw error;
     }
   }
@@ -349,7 +349,7 @@ export class SerperSearchProvider {
         remaining: response.data.remaining || 0,
       };
     } catch (error) {
-      elizaLogger.warn('[Serper] Could not fetch usage data');
+      logger.warn('[Serper] Could not fetch usage data');
       return null;
     }
   }

@@ -1,10 +1,10 @@
 /**
  * Basic Tests for Training Error Handling System
- * 
+ *
  * Tests core functionality without complex timing scenarios
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'bun:test';
 import {
   TrainingError,
   ConfigurationError,
@@ -28,7 +28,7 @@ describe('Training Error Handling System - Basic Tests', () => {
   describe('Error Type Creation', () => {
     it('should create MissingConfigurationError correctly', () => {
       const error = new MissingConfigurationError('API_KEY');
-      
+
       expect(error).toBeInstanceOf(TrainingError);
       expect(error).toBeInstanceOf(ConfigurationError);
       expect(error.code).toBe('MISSING_CONFIGURATION');
@@ -40,7 +40,7 @@ describe('Training Error Handling System - Basic Tests', () => {
 
     it('should create NetworkError with retry settings', () => {
       const error = new NetworkError('Connection failed', 'https://api.example.com', 500);
-      
+
       expect(error.code).toBe('NETWORK_ERROR');
       expect(error.category).toBe(ErrorCategory.NETWORK);
       expect(error.retryable).toBe(true);
@@ -51,7 +51,7 @@ describe('Training Error Handling System - Basic Tests', () => {
 
     it('should create APIError with service context', () => {
       const error = new APIError('GitHub', 'Rate limit exceeded', 429);
-      
+
       expect(error.code).toBe('API_ERROR');
       expect(error.category).toBe(ErrorCategory.NETWORK);
       expect(error.message).toContain('GitHub');
@@ -61,7 +61,7 @@ describe('Training Error Handling System - Basic Tests', () => {
 
     it('should create ValidationError for data validation', () => {
       const error = new ValidationError('email', 'invalid-email', 'must be valid email format');
-      
+
       expect(error.code).toBe('VALIDATION_ERROR');
       expect(error.category).toBe(ErrorCategory.VALIDATION);
       expect(error.retryable).toBe(false);
@@ -74,7 +74,7 @@ describe('Training Error Handling System - Basic Tests', () => {
     it('should normalize generic Error to ProcessingError by default', () => {
       const genericError = new Error('Something went wrong');
       const normalized = ErrorHandler.normalizeError(genericError, 'test_operation');
-      
+
       expect(normalized.code).toBe('PROCESSING_ERROR');
       expect(normalized.category).toBe(ErrorCategory.PROCESSING);
       expect(normalized.message).toContain('Something went wrong');
@@ -82,12 +82,10 @@ describe('Training Error Handling System - Basic Tests', () => {
 
     it('should normalize fetch errors to NetworkError', () => {
       const fetchError = new Error('fetch failed: network timeout');
-      const normalized = ErrorHandler.normalizeError(
-        fetchError,
-        'api_call',
-        { url: 'https://api.example.com' }
-      );
-      
+      const normalized = ErrorHandler.normalizeError(fetchError, 'api_call', {
+        url: 'https://api.example.com',
+      });
+
       expect(normalized.code).toBe('NETWORK_ERROR');
       expect(normalized.category).toBe(ErrorCategory.NETWORK);
       expect(normalized.context.url).toBe('https://api.example.com');
@@ -95,12 +93,8 @@ describe('Training Error Handling System - Basic Tests', () => {
 
     it('should normalize authentication errors correctly', () => {
       const authError = new Error('Bad credentials provided');
-      const normalized = ErrorHandler.normalizeError(
-        authError,
-        'api_call',
-        { service: 'GitHub' }
-      );
-      
+      const normalized = ErrorHandler.normalizeError(authError, 'api_call', { service: 'GitHub' });
+
       expect(normalized.code).toBe('AUTHENTICATION_ERROR');
       expect(normalized.category).toBe(ErrorCategory.AUTHENTICATION);
       expect(normalized.context.service).toBe('GitHub');
@@ -109,7 +103,7 @@ describe('Training Error Handling System - Basic Tests', () => {
     it('should keep existing TrainingError instances unchanged', () => {
       const originalError = new ConfigurationError('Test error', 'TEST_KEY');
       const normalized = ErrorHandler.normalizeError(originalError, 'test');
-      
+
       expect(normalized).toBe(originalError);
       expect(normalized.code).toBe('CONFIGURATION_ERROR');
     });
@@ -120,9 +114,9 @@ describe('Training Error Handling System - Basic Tests', () => {
       const config = {
         API_KEY: 'test-key',
         DATABASE_URL: 'postgres://localhost:5432/test',
-        TIMEOUT: '30000'
+        TIMEOUT: '30000',
       };
-      
+
       expect(() => {
         ErrorHandler.validateConfiguration(config, ['API_KEY', 'DATABASE_URL']);
       }).not.toThrow();
@@ -130,9 +124,9 @@ describe('Training Error Handling System - Basic Tests', () => {
 
     it('should throw for missing required configuration', () => {
       const config = {
-        API_KEY: 'test-key'
+        API_KEY: 'test-key',
       };
-      
+
       expect(() => {
         ErrorHandler.validateConfiguration(config, ['API_KEY', 'MISSING_KEY']);
       }).toThrow(MissingConfigurationError);
@@ -142,7 +136,7 @@ describe('Training Error Handling System - Basic Tests', () => {
       expect(() => {
         ErrorHandler.validateURL('https://api.example.com', 'API_URL');
       }).not.toThrow();
-      
+
       expect(() => {
         ErrorHandler.validateURL('not-a-url', 'API_URL');
       }).toThrow(InvalidConfigurationError);
@@ -152,11 +146,11 @@ describe('Training Error Handling System - Basic Tests', () => {
       expect(() => {
         ErrorHandler.validateNumericRange(50, 0, 100, 'PERCENTAGE');
       }).not.toThrow();
-      
+
       expect(() => {
         ErrorHandler.validateNumericRange(150, 0, 100, 'PERCENTAGE');
       }).toThrow(InvalidConfigurationError);
-      
+
       expect(() => {
         ErrorHandler.validateNumericRange(-10, 0, 100, 'PERCENTAGE');
       }).toThrow(InvalidConfigurationError);
@@ -165,21 +159,15 @@ describe('Training Error Handling System - Basic Tests', () => {
 
   describe('safely Wrapper Function', () => {
     it('should return result on successful operation', async () => {
-      const result = await safely(
-        async () => 'success',
-        'safe_success_test'
-      );
+      const result = await safely(async () => 'success', 'safe_success_test');
 
       expect(result).toBe('success');
     });
 
     it('should return null on failed operation without throwing', async () => {
-      const result = await safely(
-        async () => {
-          throw new Error('Operation failed');
-        },
-        'safe_failure_test'
-      );
+      const result = await safely(async () => {
+        throw new Error('Operation failed');
+      }, 'safe_failure_test');
 
       expect(result).toBeNull();
     });
@@ -189,15 +177,14 @@ describe('Training Error Handling System - Basic Tests', () => {
         new ConfigurationError('Config error'),
         new NetworkError('Network error'),
         new ValidationError('field', 'value', 'rule'),
-        new Error('Generic error')
+        new Error('Generic error'),
       ];
 
       for (const error of errors) {
-        const result = await safely(
-          async () => { throw error; },
-          'safe_error_test'
-        );
-        
+        const result = await safely(async () => {
+          throw error;
+        }, 'safe_error_test');
+
         expect(result).toBeNull();
       }
     });
@@ -205,16 +192,11 @@ describe('Training Error Handling System - Basic Tests', () => {
 
   describe('Error Context and Logging', () => {
     it('should provide comprehensive log context', () => {
-      const error = new NetworkError(
-        'Connection failed',
-        'https://api.example.com',
-        500,
-        { 
-          attempt: 2,
-          timeout: 5000,
-          userAgent: 'ElizaOS'
-        }
-      );
+      const error = new NetworkError('Connection failed', 'https://api.example.com', 500, {
+        attempt: 2,
+        timeout: 5000,
+        userAgent: 'ElizaOS',
+      });
 
       const logContext = error.toLogContext();
 
@@ -230,7 +212,7 @@ describe('Training Error Handling System - Basic Tests', () => {
           statusCode: 500,
           attempt: 2,
           timeout: 5000,
-          userAgent: 'ElizaOS'
+          userAgent: 'ElizaOS',
         },
       });
 
@@ -245,7 +227,7 @@ describe('Training Error Handling System - Basic Tests', () => {
         new ValidationError('email', 'bad-email', 'must be valid email'),
       ];
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         const userMessage = error.getUserMessage();
         expect(userMessage).toBeTruthy();
         expect(userMessage.length).toBeGreaterThan(10); // Should be descriptive
@@ -263,31 +245,31 @@ describe('Training Error Handling System - Basic Tests', () => {
           input: new Error('fetch failed: connection timeout'),
           context: { url: 'https://api.github.com' },
           expectedType: NetworkError,
-          expectedRetryable: true
+          expectedRetryable: true,
         },
         {
           input: new Error('401 Unauthorized: Bad credentials'),
           context: { service: 'GitHub' },
           expectedType: AuthenticationError,
-          expectedRetryable: false
+          expectedRetryable: false,
         },
         {
           input: new Error('File not found: /path/to/file.txt'),
           context: { resourceType: 'file', identifier: '/path/to/file.txt' },
           expectedType: 'RESOURCE_NOT_FOUND', // Check the actual error code
-          expectedRetryable: false
-        }
+          expectedRetryable: false,
+        },
       ];
 
       scenarios.forEach(({ input, context, expectedType, expectedRetryable }) => {
         const normalized = ErrorHandler.normalizeError(input, 'test_operation', context);
-        
+
         if (typeof expectedType === 'string') {
           expect(normalized.code).toBe(expectedType);
         } else {
           expect(normalized).toBeInstanceOf(expectedType);
         }
-        
+
         expect(normalized.retryable).toBe(expectedRetryable);
       });
     });
@@ -297,13 +279,13 @@ describe('Training Error Handling System - Basic Tests', () => {
         { message: '', expectedCode: 'PROCESSING_ERROR' },
         { message: 'Network error with timeout issue', expectedCode: 'NETWORK_ERROR' },
         { message: 'Authentication failed with bad api key', expectedCode: 'AUTHENTICATION_ERROR' },
-        { message: 'Too many requests - rate limit exceeded', expectedCode: 'RATE_LIMIT_ERROR' }
+        { message: 'Too many requests - rate limit exceeded', expectedCode: 'RATE_LIMIT_ERROR' },
       ];
 
       edgeCases.forEach(({ message, expectedCode }) => {
         const error = new Error(message);
         const normalized = ErrorHandler.normalizeError(error, 'edge_case_test');
-        
+
         expect(normalized.code).toBe(expectedCode);
       });
     });
@@ -315,7 +297,7 @@ describe('Training Error Handling System - Basic Tests', () => {
         operation: 'file_read',
         fileName: 'test.txt',
         lineNumber: 42,
-        userId: 'user123'
+        userId: 'user123',
       };
 
       const error = new ValidationError(
@@ -329,7 +311,7 @@ describe('Training Error Handling System - Basic Tests', () => {
         field: 'content',
         value: 'invalid',
         rule: 'file content validation failed',
-        ...originalContext
+        ...originalContext,
       });
 
       const logContext = error.toLogContext();
@@ -338,8 +320,9 @@ describe('Training Error Handling System - Basic Tests', () => {
 
     it('should handle concurrent error scenarios', () => {
       // Simulate multiple errors happening simultaneously
-      const errors = Array.from({ length: 5 }, (_, i) => 
-        new NetworkError(`Connection ${i} failed`, `https://api${i}.example.com`, 500)
+      const errors = Array.from(
+        { length: 5 },
+        (_, i) => new NetworkError(`Connection ${i} failed`, `https://api${i}.example.com`, 500)
       );
 
       errors.forEach((error, index) => {
@@ -349,8 +332,8 @@ describe('Training Error Handling System - Basic Tests', () => {
       });
 
       // Verify each error maintains its own context
-      const contexts = errors.map(e => e.context);
-      const uniqueUrls = new Set(contexts.map(c => c.url));
+      const contexts = errors.map((e) => e.context);
+      const uniqueUrls = new Set(contexts.map((c) => c.url));
       expect(uniqueUrls.size).toBe(5); // All unique
     });
   });

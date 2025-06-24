@@ -282,7 +282,7 @@ export const createBranchAction: Action = {
       const refData = await githubService.getRef(owner, repo, `heads/${from}`);
 
       // Create the new branch
-      const newBranch = await githubService.createBranch(owner, repo, branch, refData.object.sha);
+      const _newBranch = await githubService.createBranch(owner, repo, branch, refData.object.sha);
 
       const responseContent: Content = {
         text: `Successfully created branch "${branch}" from "${from}" in ${owner}/${repo}
@@ -550,10 +550,20 @@ function getTimeAgo(date: Date): string {
   const diffWeeks = Math.floor(diffMs / 604800000);
   const diffMonths = Math.floor(diffMs / 2592000000);
 
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-  if (diffWeeks < 4) return `${diffWeeks} week${diffWeeks === 1 ? '' : 's'} ago`;
+  if (diffMins < 1) {
+    return 'just now';
+  }
+  if (diffMins < 60) {
+    return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+  }
+  if (diffHours < 24) {
+    return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  }
+  if (diffDays < 7) {
+    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+  }
+  if (diffWeeks < 4) {
+    return `${diffWeeks} week${diffWeeks === 1 ? '' : 's'} ago`;
+  }
   return `${diffMonths} month${diffMonths === 1 ? '' : 's'} ago`;
 }

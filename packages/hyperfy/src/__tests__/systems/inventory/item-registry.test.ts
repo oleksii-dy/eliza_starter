@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'bun:test';
 import { ItemRegistry } from '../../../rpg/systems/inventory/ItemRegistry';
 import { EquipmentSlot, WeaponType } from '../../../rpg/types';
 import type { ItemDefinition } from '../../../rpg/types';
@@ -113,7 +113,7 @@ describe('ItemRegistry', () => {
   describe('register', () => {
     it('should register an item', () => {
       registry.register(mockSword);
-      
+
       expect(registry.get(1)).toEqual(mockSword);
     });
 
@@ -121,7 +121,7 @@ describe('ItemRegistry', () => {
       registry.register(mockSword);
       registry.register(mockCoins);
       registry.register(mockShield);
-      
+
       expect(registry.get(1)).toEqual(mockSword);
       expect(registry.get(2)).toEqual(mockCoins);
       expect(registry.get(3)).toEqual(mockShield);
@@ -129,16 +129,16 @@ describe('ItemRegistry', () => {
 
     it('should overwrite existing item with same ID', () => {
       registry.register(mockSword);
-      
+
       const modifiedSword = { ...mockSword, name: 'Modified Sword' };
       registry.register(modifiedSword);
-      
+
       expect(registry.get(1)?.name).toBe('Modified Sword');
     });
 
     it('should build name index', () => {
       registry.register(mockSword);
-      
+
       expect(registry.getByName('Bronze Sword')).toEqual(mockSword);
     });
   });
@@ -234,7 +234,7 @@ describe('ItemRegistry', () => {
           tradeable: false
         };
         registry.register(untradeableItem);
-        
+
         expect(registry.isTradeable(5)).toBe(false);
       });
 
@@ -251,7 +251,7 @@ describe('ItemRegistry', () => {
           noteable: true
         };
         registry.register(noteableItem);
-        
+
         expect(registry.isNoteable(6)).toBe(true);
       });
 
@@ -307,7 +307,7 @@ describe('ItemRegistry', () => {
           notedId: 8
         };
         registry.register(noteableItem);
-        
+
         expect(registry.getNoted(7)).toBe(8);
       });
 
@@ -328,7 +328,7 @@ describe('ItemRegistry', () => {
           members: true
         };
         registry.register(membersItem);
-        
+
         expect(registry.isMembers(9)).toBe(true);
       });
 
@@ -348,9 +348,9 @@ describe('ItemRegistry', () => {
       registry.register(mockSword);
       registry.register(mockCoins);
       registry.register(mockShield);
-      
+
       const allItems = registry.getAll();
-      
+
       expect(allItems).toHaveLength(3);
       expect(allItems).toContainEqual(mockSword);
       expect(allItems).toContainEqual(mockCoins);
@@ -367,7 +367,7 @@ describe('ItemRegistry', () => {
       registry.register(mockSword);
       registry.register(mockCoins);
       registry.register(mockShield);
-      
+
       // Add more weapons
       const ironSword: ItemDefinition = {
         ...mockSword,
@@ -379,7 +379,7 @@ describe('ItemRegistry', () => {
 
     it('should return all weapons', () => {
       const weapons = registry.getByCategory('weapon');
-      
+
       expect(weapons).toHaveLength(2);
       expect(weapons.map(w => w.name)).toContain('Bronze Sword');
       expect(weapons.map(w => w.name)).toContain('Iron Sword');
@@ -387,7 +387,7 @@ describe('ItemRegistry', () => {
 
     it('should return all shields', () => {
       const shields = registry.getByCategory('shield');
-      
+
       expect(shields).toHaveLength(1);
       expect(shields[0].name).toBe('Bronze Shield');
     });
@@ -402,7 +402,7 @@ describe('ItemRegistry', () => {
       registry.register(mockSword);
       registry.register(mockCoins);
       registry.register(mockShield);
-      
+
       const ironSword: ItemDefinition = {
         ...mockSword,
         id: 10,
@@ -413,7 +413,7 @@ describe('ItemRegistry', () => {
 
     it('should find items by partial name match', () => {
       const results = registry.search('sword');
-      
+
       expect(results).toHaveLength(2);
       expect(results.map(r => r.name)).toContain('Bronze Sword');
       expect(results.map(r => r.name)).toContain('Iron Sword');
@@ -421,7 +421,7 @@ describe('ItemRegistry', () => {
 
     it('should be case insensitive', () => {
       const results = registry.search('BRONZE');
-      
+
       expect(results).toHaveLength(2);
       expect(results.map(r => r.name)).toContain('Bronze Sword');
       expect(results.map(r => r.name)).toContain('Bronze Shield');
@@ -436,9 +436,9 @@ describe('ItemRegistry', () => {
     it('should remove all items', () => {
       registry.register(mockSword);
       registry.register(mockCoins);
-      
+
       registry.clear();
-      
+
       expect(registry.get(1)).toBeNull();
       expect(registry.get(2)).toBeNull();
       expect(registry.getAll()).toEqual([]);
@@ -448,15 +448,15 @@ describe('ItemRegistry', () => {
   describe('size', () => {
     it('should return number of registered items', () => {
       expect(registry.size()).toBe(0);
-      
+
       registry.register(mockSword);
       expect(registry.size()).toBe(1);
-      
+
       registry.register(mockCoins);
       expect(registry.size()).toBe(2);
-      
+
       registry.clear();
       expect(registry.size()).toBe(0);
     });
   });
-}); 
+});

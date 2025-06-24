@@ -7,7 +7,6 @@ import {
   type Evaluator,
 } from '@elizaos/core';
 import { Anthropic } from '@anthropic-ai/sdk';
-// @ts-ignore - EnhancedSecretManager export issue
 import EnhancedSecretManager from '@elizaos/plugin-secrets-manager';
 import * as fs from 'fs-extra';
 import path from 'path';
@@ -309,7 +308,7 @@ export class PluginCreationService extends Service {
 
   private async processJob(jobId: string, apiKeyOverride?: string): Promise<void> {
     const job = this.jobs.get(jobId);
-    if (!job) return;
+    if (!job) {return;}
 
     try {
       job.status = 'running';
@@ -467,8 +466,8 @@ export class PluginCreationService extends Service {
       types: 'dist/index.d.ts',
       scripts: {
         build: 'tsc',
-        test: 'vitest run',
-        dev: 'vitest watch',
+        test: 'bun test',
+        dev: 'bun test --watch',
       },
       dependencies: {
         '@elizaos/core': '^0.1.0',
@@ -482,7 +481,6 @@ export class PluginCreationService extends Service {
       },
       devDependencies: {
         typescript: '^5.0.0',
-        vitest: '^1.0.0',
         '@types/node': '^20.0.0',
       },
       agentConfig: {

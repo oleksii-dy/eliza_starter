@@ -63,8 +63,12 @@ const OODAMonitor: React.FC<OODAMonitorProps> = ({ apiUrl = 'http://localhost:30
   };
 
   const formatDuration = (ms: number): string => {
-    if (ms < 1000) return `${ms}ms`;
-    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+    if (ms < 1000) {
+      return `${ms}ms`;
+    }
+    if (ms < 60000) {
+      return `${(ms / 1000).toFixed(1)}s`;
+    }
     return `${(ms / 60000).toFixed(1)}m`;
   };
 
@@ -83,7 +87,9 @@ const OODAMonitor: React.FC<OODAMonitorProps> = ({ apiUrl = 'http://localhost:30
   );
 
   const renderPhaseIndicator = () => {
-    if (!context) return null;
+    if (!context) {
+      return null;
+    }
 
     return (
       <div className="mb-6">
@@ -113,7 +119,9 @@ const OODAMonitor: React.FC<OODAMonitorProps> = ({ apiUrl = 'http://localhost:30
   };
 
   const renderMetrics = () => {
-    if (!metrics) return null;
+    if (!metrics) {
+      return null;
+    }
 
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
@@ -152,7 +160,9 @@ const OODAMonitor: React.FC<OODAMonitorProps> = ({ apiUrl = 'http://localhost:30
   };
 
   const renderGoals = () => {
-    if (!context?.orientation.currentGoals) return null;
+    if (!context?.orientation.currentGoals) {
+      return null;
+    }
 
     return (
       <div className="mb-6">
@@ -178,7 +188,9 @@ const OODAMonitor: React.FC<OODAMonitorProps> = ({ apiUrl = 'http://localhost:30
   };
 
   const renderObservations = () => {
-    if (!context?.observations || context.observations.length === 0) return null;
+    if (!context?.observations || context.observations.length === 0) {
+      return null;
+    }
 
     const recentObservations = context.observations.slice(-5);
 
@@ -207,7 +219,9 @@ const OODAMonitor: React.FC<OODAMonitorProps> = ({ apiUrl = 'http://localhost:30
   };
 
   const renderActions = () => {
-    if (!context?.actions || context.actions.length === 0) return null;
+    if (!context?.actions || context.actions.length === 0) {
+      return null;
+    }
 
     const recentActions = context.actions.slice(-5);
 
@@ -246,7 +260,9 @@ const OODAMonitor: React.FC<OODAMonitorProps> = ({ apiUrl = 'http://localhost:30
   };
 
   const renderErrors = () => {
-    if (!context?.errors || context.errors.length === 0) return null;
+    if (!context?.errors || context.errors.length === 0) {
+      return null;
+    }
 
     return (
       <div className="mb-6">

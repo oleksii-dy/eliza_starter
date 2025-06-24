@@ -12,9 +12,8 @@
     "build": "tsc && chmod +x dist/mcp-server/index.js",
     "start": "node --loader ts-node/esm dist/mcp-server/index.js",
     "dev": "node --loader ts-node/esm src/mcp-server/index.ts",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "lint": "eslint src --ext .ts",
+    "test": "elizaos test",
+    "lint": "prettier --write ./src",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
@@ -30,8 +29,8 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.0",
-    "vitest": "^1.0.0",
+    "typescript": "5.8.3",
+    "@types/bun": "1.2.17",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.0.0"

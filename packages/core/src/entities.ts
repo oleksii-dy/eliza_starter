@@ -151,7 +151,9 @@ export async function findEntityByName(
   // Filter components for each entity based on permissions
   const filteredEntities = await Promise.all(
     entitiesInRoom.map(async (entity) => {
-      if (!entity.components) return entity;
+      if (!entity.components) {
+        return entity;
+      }
 
       // Get world roles if we have a world
       const worldRoles = world?.metadata?.roles || {};
@@ -159,16 +161,22 @@ export async function findEntityByName(
       // Filter components based on permissions
       entity.components = entity.components.filter((component) => {
         // 1. Pass if sourceEntityId matches the requesting entity
-        if (component.sourceEntityId === message.entityId) return true;
+        if (component.sourceEntityId === message.entityId) {
+          return true;
+        }
 
         // 2. Pass if sourceEntityId is an owner/admin of the current world
         if (world && component.sourceEntityId) {
           const sourceRole = worldRoles[component.sourceEntityId];
-          if (sourceRole === 'OWNER' || sourceRole === 'ADMIN') return true;
+          if (sourceRole === 'OWNER' || sourceRole === 'ADMIN') {
+            return true;
+          }
         }
 
         // 3. Pass if sourceEntityId is the agentId
-        if (component.sourceEntityId === runtime.agentId) return true;
+        if (component.sourceEntityId === runtime.agentId) {
+          return true;
+        }
 
         // Filter out components that don't meet any criteria
         return false;
@@ -240,12 +248,18 @@ export async function findEntityByName(
       if (entity.components) {
         const worldRoles = world?.metadata?.roles || {};
         entity.components = entity.components.filter((component) => {
-          if (component.sourceEntityId === message.entityId) return true;
+          if (component.sourceEntityId === message.entityId) {
+            return true;
+          }
           if (world && component.sourceEntityId) {
             const sourceRole = worldRoles[component.sourceEntityId];
-            if (sourceRole === 'OWNER' || sourceRole === 'ADMIN') return true;
+            if (sourceRole === 'OWNER' || sourceRole === 'ADMIN') {
+              return true;
+            }
           }
-          if (component.sourceEntityId === runtime.agentId) return true;
+          if (component.sourceEntityId === runtime.agentId) {
+            return true;
+          }
           return false;
         });
       }
@@ -260,7 +274,9 @@ export async function findEntityByName(
     // Find matching entity by username/handle in components or by name
     const matchingEntity = allEntities.find((entity) => {
       // Check names
-      if (entity.names.some((n) => n.toLowerCase() === matchName)) return true;
+      if (entity.names.some((n) => n.toLowerCase() === matchName)) {
+        return true;
+      }
 
       // Check components for username/handle match
       return entity.components?.some(
@@ -336,7 +352,9 @@ export async function getEntityDetails({
 
   // Process entities in a single pass
   for (const entity of roomEntities) {
-    if (uniqueEntities.has(entity.id)) continue;
+    if (uniqueEntities.has(entity.id)) {
+      continue;
+    }
 
     // Merge component data more efficiently
     const allData: Record<string, any> = {};
@@ -423,11 +441,17 @@ export function calculateRelationshipStrength({
   if (lastInteractionAt) {
     const daysSinceLastInteraction =
       (Date.now() - new Date(lastInteractionAt).getTime()) / (1000 * 60 * 60 * 24);
-    if (daysSinceLastInteraction < 1) recencyScore = 30;
-    else if (daysSinceLastInteraction < 7) recencyScore = 25;
-    else if (daysSinceLastInteraction < 30) recencyScore = 20;
-    else if (daysSinceLastInteraction < 90) recencyScore = 10;
-    else recencyScore = 5;
+    if (daysSinceLastInteraction < 1) {
+      recencyScore = 30;
+    } else if (daysSinceLastInteraction < 7) {
+      recencyScore = 25;
+    } else if (daysSinceLastInteraction < 30) {
+      recencyScore = 20;
+    } else if (daysSinceLastInteraction < 90) {
+      recencyScore = 10;
+    } else {
+      recencyScore = 5;
+    }
   }
 
   // Quality score (max 20 points)

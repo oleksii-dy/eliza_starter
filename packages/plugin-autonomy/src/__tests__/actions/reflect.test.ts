@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { reflectAction } from '../../reflect';
 import { createMockRuntime, createMockMemory, createMockState } from '../utils/mock-runtime';
 import type { IAgentRuntime, Memory, State, ModelType } from '@elizaos/core';
@@ -10,10 +10,10 @@ describe('reflectAction', () => {
   let mockCallback: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockRuntime = createMockRuntime({
       modelResponses: {
-        'TEXT_SMALL': `<response>
+        TEXT_SMALL: `<response>
           <thought>This is a test reflection</thought>
           <message>I'm thinking about the current situation.</message>
         </response>`,
@@ -26,7 +26,7 @@ describe('reflectAction', () => {
       },
     });
     mockState = createMockState();
-    mockCallback = vi.fn();
+    mockCallback = mock();
   });
 
   describe('validate', () => {
@@ -44,14 +44,7 @@ describe('reflectAction', () => {
 
   describe('handler', () => {
     it('should process reflection with LLM when no existing responses', async () => {
-      await reflectAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback,
-        []
-      );
+      await reflectAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback, []);
 
       // Verify LLM was called
       expect(mockRuntime.useModel).toHaveBeenCalledWith(
@@ -120,37 +113,23 @@ describe('reflectAction', () => {
     it('should handle LLM errors gracefully', async () => {
       const errorRuntime = createMockRuntime({
         modelErrors: {
-          'TEXT_SMALL': new Error('LLM service unavailable'),
+          TEXT_SMALL: new Error('LLM service unavailable'),
         },
       });
 
       await expect(
-        reflectAction.handler(
-          errorRuntime,
-          mockMemory,
-          mockState,
-          {},
-          mockCallback,
-          []
-        )
+        reflectAction.handler(errorRuntime, mockMemory, mockState, {}, mockCallback, [])
       ).rejects.toThrow('LLM service unavailable');
     });
 
     it('should handle malformed XML response', async () => {
       const malformedRuntime = createMockRuntime({
         modelResponses: {
-          'TEXT_SMALL': 'Invalid XML response without proper tags',
+          TEXT_SMALL: 'Invalid XML response without proper tags',
         },
       });
 
-      await reflectAction.handler(
-        malformedRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback,
-        []
-      );
+      await reflectAction.handler(malformedRuntime, mockMemory, mockState, {}, mockCallback, []);
 
       // Should handle gracefully with fallback values
       expect(mockCallback).toHaveBeenCalledWith(
@@ -180,16 +159,16 @@ describe('reflectAction', () => {
       );
 
       // Verify state composition included custom providers
-      expect(mockRuntime.composeState).toHaveBeenCalledWith(
-        memoryWithProviders,
-        ['CUSTOM_PROVIDER', 'AUTONOMOUS_FEED']
-      );
+      expect(mockRuntime.composeState).toHaveBeenCalledWith(memoryWithProviders, [
+        'CUSTOM_PROVIDER',
+        'AUTONOMOUS_FEED',
+      ]);
     });
 
     it('should handle memory creation failures', async () => {
       const errorRuntime = createMockRuntime({
         modelResponses: {
-          'TEXT_SMALL': `<response>
+          TEXT_SMALL: `<response>
             <thought>Test thought</thought>
             <message>Test message</message>
           </response>`,
@@ -198,26 +177,12 @@ describe('reflectAction', () => {
       });
 
       await expect(
-        reflectAction.handler(
-          errorRuntime,
-          mockMemory,
-          mockState,
-          {},
-          mockCallback,
-          []
-        )
+        reflectAction.handler(errorRuntime, mockMemory, mockState, {}, mockCallback, [])
       ).rejects.toThrow('Memory creation failed');
     });
 
     it('should create memory with correct structure', async () => {
-      await reflectAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback,
-        []
-      );
+      await reflectAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback, []);
 
       expect(mockRuntime.createMemory).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -286,11 +251,11 @@ describe('reflectAction', () => {
 
     it('should have valid examples', () => {
       expect(reflectAction.examples!.length).toBeGreaterThan(0);
-      
+
       reflectAction.examples!.forEach((example, index) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBeGreaterThanOrEqual(2);
-        
+
         example.forEach((turn) => {
           expect(turn).toHaveProperty('name');
           expect(turn).toHaveProperty('content');

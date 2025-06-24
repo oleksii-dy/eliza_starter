@@ -33,5 +33,5 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // console.log('[TEST SETUP] Cleared PostgreSQL environment variables');
-console.log('[TEST SETUP] Tests will use', process.env.POSTGRES_URL ? 'PostgreSQL' : 'PGLite', 'for database operations'); 
-console.log('[TEST SETUP] WebAssembly is available:', typeof WebAssembly !== 'undefined'); 
+console.log('[TEST SETUP] Tests will use', process.env.POSTGRES_URL ? 'PostgreSQL' : 'PGLite', 'for database operations');
+console.log('[TEST SETUP] WebAssembly is available:', typeof WebAssembly !== 'undefined');

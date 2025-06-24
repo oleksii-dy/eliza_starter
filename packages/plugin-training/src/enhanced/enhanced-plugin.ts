@@ -1,6 +1,6 @@
 /**
  * Enhanced Custom Reasoning Plugin
- * 
+ *
  * Complete implementation with database integration, file system storage,
  * and comprehensive training data collection capabilities.
  */
@@ -11,18 +11,19 @@ import { trainingSchema } from './schema';
 
 /**
  * Enhanced Custom Reasoning Plugin
- * 
+ *
  * Features:
  * - Database persistence using plugin-sql integration
  * - File system storage in training_recording/ for visual debugging
- * - Session management and statistics tracking  
+ * - Session management and statistics tracking
  * - Complete ModelType support for all use cases
  * - Non-breaking backwards compatibility when disabled
  */
 export const enhancedCustomReasoningPlugin: Plugin = {
   name: 'enhanced-custom-reasoning',
-  description: 'Enhanced custom reasoning plugin with comprehensive training data collection, database storage, and session management',
-  
+  description:
+    'Enhanced custom reasoning plugin with comprehensive training data collection, database storage, and session management',
+
   // Actions for enable/disable/status functionality
   actions: enhancedActions,
 
@@ -34,15 +35,17 @@ export const enhancedCustomReasoningPlugin: Plugin = {
       // Verify database adapter availability
       const dbAdapter = (runtime as any).databaseAdapter;
       if (!dbAdapter) {
-        logger.warn('⚠️ No database adapter found. Enhanced reasoning will work but without database storage.');
+        logger.warn(
+          '⚠️ No database adapter found. Enhanced reasoning will work but without database storage.'
+        );
       } else {
         logger.info('✅ Database adapter detected for enhanced reasoning data storage');
-        
+
         // Check if we can access the database
         const db = dbAdapter.db;
         if (db) {
           logger.info('✅ Database connection available for training data storage');
-          
+
           // Test database connectivity
           try {
             await db.execute({ sql: 'SELECT 1', args: [] });
@@ -59,31 +62,32 @@ export const enhancedCustomReasoningPlugin: Plugin = {
       try {
         const fs = await import('fs/promises');
         const path = await import('path');
-        
+
         const trainingDir = path.join(process.cwd(), 'training_recording');
         await fs.mkdir(trainingDir, { recursive: true });
-        
+
         // Test write access
         const testFile = path.join(trainingDir, 'test_write.tmp');
         await fs.writeFile(testFile, 'test', 'utf-8');
         await fs.unlink(testFile);
-        
+
         logger.info('✅ File system access verified for training_recording directory');
       } catch (error) {
         logger.error('❌ File system access failed for training_recording directory:', error);
-        throw new Error(`Enhanced reasoning requires write access to training_recording directory: ${error instanceof Error ? error.message : String(error)}`);
+        throw new Error(
+          `Enhanced reasoning requires write access to training_recording directory: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
 
       // Log available actions
       logger.info('🎯 Enhanced reasoning actions available:', {
-        actions: enhancedActions.map(action => action.name),
+        actions: enhancedActions.map((action) => action.name),
         enableTriggers: ['enable enhanced reasoning', 'enable training', 'start training'],
-        disableTriggers: ['disable enhanced reasoning', 'disable training', 'stop training'], 
+        disableTriggers: ['disable enhanced reasoning', 'disable training', 'stop training'],
         statusTriggers: ['enhanced reasoning status', 'training status', 'session status'],
       });
 
       logger.info('🚀 Enhanced Custom Reasoning Plugin initialized successfully');
-
     } catch (error) {
       logger.error('❌ Enhanced Custom Reasoning Plugin initialization failed:', error);
       throw error;
@@ -95,7 +99,7 @@ export const enhancedCustomReasoningPlugin: Plugin = {
 
   // Plugin metadata
   priority: 1, // Higher priority to ensure proper loading order
-  
+
   // Dependencies
   dependencies: ['@elizaos/plugin-sql'], // Requires SQL plugin for database storage
 };

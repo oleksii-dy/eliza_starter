@@ -38,13 +38,13 @@ export class ShopSystem extends System {
   private shops: Map<string, Shop> = new Map();
   private playerShops: Map<string, Map<string, ShopItem[]>> = new Map(); // For per-player stock
   private activeSessions: Map<string, PlayerShopSession> = new Map();
-  
+
   // Configuration
   private readonly RESTOCK_INTERVAL = 60000; // 1 minute
   private readonly DEFAULT_BUY_MODIFIER = 1.0;
   private readonly DEFAULT_SELL_MODIFIER = 0.4; // 40% of item value
   private readonly GENERAL_STORE_ID = 'general_store';
-  
+
   constructor(world: World) {
     super(world);
     this.registerDefaultShops();
@@ -81,7 +81,7 @@ export class ShopSystem extends System {
     // Sword Shop
     this.registerShop({
       id: 'sword_shop',
-      name: "Varrock Swords",
+      name: 'Varrock Swords',
       npcId: 'shopkeeper_sword',
       items: [
         { itemId: 1277, stock: 5, maxStock: 5, restockRate: 0.2, lastRestock: Date.now() }, // Bronze sword
@@ -130,17 +130,17 @@ export class ShopSystem extends System {
    */
   public openShop(playerId: string, shopId: string): boolean {
     const player = this.world.entities.get(playerId);
-    if (!player) return false;
+    if (!player) {return false;}
 
     const shop = this.shops.get(shopId);
-    if (!shop) return false;
+    if (!shop) {return false;}
 
     // Check if shop NPC exists and is nearby
     const shopNPC = this.findShopNPC(shop.npcId);
     if (shopNPC) {
       const distance = this.getDistance(player, shopNPC);
       if (distance > 5) {
-        this.sendMessage(playerId, "You are too far away from the shop.");
+        this.sendMessage(playerId, 'You are too far away from the shop.');
         return false;
       }
     }
@@ -177,10 +177,10 @@ export class ShopSystem extends System {
    */
   public closeShop(playerId: string): void {
     const session = this.activeSessions.get(playerId);
-    if (!session) return;
+    if (!session) {return;}
 
     this.activeSessions.delete(playerId);
-    
+
     this.world.events.emit('shop:closed', {
       playerId,
       shopId: session.shopId
@@ -192,17 +192,17 @@ export class ShopSystem extends System {
    */
   public buyItem(playerId: string, shopId: string, itemIndex: number, quantity: number = 1): boolean {
     const session = this.activeSessions.get(playerId);
-    if (!session || session.shopId !== shopId) return false;
+    if (!session || session.shopId !== shopId) {return false;}
 
     const shop = this.shops.get(shopId);
-    if (!shop) return false;
+    if (!shop) {return false;}
 
     const player = this.world.entities.get(playerId);
-    if (!player) return false;
+    if (!player) {return false;}
 
     // Get current stock
     const stock = this.getShopStock(shop, playerId);
-    if (itemIndex < 0 || itemIndex >= stock.length) return false;
+    if (itemIndex < 0 || itemIndex >= stock.length) {return false;}
 
     const shopItem = stock[itemIndex];
     if (!shopItem || shopItem.stock < quantity) {
@@ -212,14 +212,14 @@ export class ShopSystem extends System {
 
     // Calculate price
     const itemDef = this.getItemDefinition(shopItem.itemId);
-    if (!itemDef) return false;
+    if (!itemDef) {return false;}
 
     const basePrice = shopItem.customPrice || itemDef.value;
     const totalPrice = Math.floor(basePrice * shop.buyModifier * quantity);
 
     // Check if player has enough money
     const inventory = player.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return false;
+    if (!inventory) {return false;}
 
     const playerGold = this.getPlayerCurrency(inventory, shop.currency);
     if (playerGold < totalPrice) {
@@ -229,7 +229,7 @@ export class ShopSystem extends System {
 
     // Check inventory space
     const inventorySystem = this.world.getSystem<any>('inventory');
-    if (!inventorySystem) return false;
+    if (!inventorySystem) {return false;}
 
     const hasSpace = inventorySystem.hasSpace(playerId, shopItem.itemId, quantity);
     if (!hasSpace) {
@@ -258,7 +258,7 @@ export class ShopSystem extends System {
     });
 
     this.sendMessage(playerId, `You buy ${quantity} ${itemDef.name} for ${totalPrice} coins.`);
-    
+
     return true;
   }
 
@@ -267,23 +267,23 @@ export class ShopSystem extends System {
    */
   public sellItem(playerId: string, shopId: string, inventorySlot: number, quantity: number = 1): boolean {
     const session = this.activeSessions.get(playerId);
-    if (!session || session.shopId !== shopId) return false;
+    if (!session || session.shopId !== shopId) {return false;}
 
     const shop = this.shops.get(shopId);
-    if (!shop) return false;
+    if (!shop) {return false;}
 
     const player = this.world.entities.get(playerId);
-    if (!player) return false;
+    if (!player) {return false;}
 
     const inventory = player.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return false;
+    if (!inventory) {return false;}
 
     const item = inventory.items[inventorySlot];
-    if (!item || item.quantity < quantity) return false;
+    if (!item || item.quantity < quantity) {return false;}
 
     // Get item definition
     const itemDef = this.getItemDefinition(item.itemId);
-    if (!itemDef) return false;
+    if (!itemDef) {return false;}
 
     // Check if item can be sold
     if (!itemDef.tradeable) {
@@ -298,7 +298,7 @@ export class ShopSystem extends System {
     // Check if shop accepts this item
     const shopStock = this.getShopStock(shop, playerId);
     const existingItem = shopStock.find(si => si.itemId === item.itemId);
-    
+
     // General stores accept everything, specialist shops only their items
     if (shop.id !== this.GENERAL_STORE_ID && !existingItem) {
       this.sendMessage(playerId, "This shop doesn't buy that type of item.");
@@ -307,7 +307,7 @@ export class ShopSystem extends System {
 
     // Remove item from inventory
     const inventorySystem = this.world.getSystem<any>('inventory');
-    if (!inventorySystem) return false;
+    if (!inventorySystem) {return false;}
 
     if (!inventorySystem.removeItem(playerId, inventorySlot, quantity)) {
       return false;
@@ -339,7 +339,7 @@ export class ShopSystem extends System {
     });
 
     this.sendMessage(playerId, `You sell ${quantity} ${itemDef.name} for ${totalPrice} coins.`);
-    
+
     return true;
   }
 
@@ -348,14 +348,14 @@ export class ShopSystem extends System {
    */
   public getItemValue(shopId: string, itemId: number, buying: boolean): number {
     const shop = this.shops.get(shopId);
-    if (!shop) return 0;
+    if (!shop) {return 0;}
 
     const itemDef = this.getItemDefinition(itemId);
-    if (!itemDef) return 0;
+    if (!itemDef) {return 0;}
 
     const basePrice = itemDef.value;
     const modifier = buying ? shop.buyModifier : shop.sellModifier;
-    
+
     return Math.floor(basePrice * modifier);
   }
 
@@ -365,9 +365,9 @@ export class ShopSystem extends System {
   private updateShopStock(shop: Shop): void {
     const now = Date.now();
     const timeDiff = now - shop.lastUpdate;
-    
-    if (timeDiff < this.RESTOCK_INTERVAL) return;
-    
+
+    if (timeDiff < this.RESTOCK_INTERVAL) {return;}
+
     const restockTicks = Math.floor(timeDiff / this.RESTOCK_INTERVAL);
     shop.lastUpdate = now;
 
@@ -385,7 +385,7 @@ export class ShopSystem extends System {
    */
   public update(delta: number): void {
     const now = Date.now();
-    
+
     // Update shop stocks periodically
     for (const shop of this.shops.values()) {
       if (now - shop.lastUpdate >= this.RESTOCK_INTERVAL) {
@@ -437,23 +437,23 @@ export class ShopSystem extends System {
   private getDistance(entity1: RPGEntity, entity2: RPGEntity): number {
     const pos1 = entity1.position;
     const pos2 = entity2.position;
-    
+
     const dx = pos1.x - pos2.x;
     const dz = pos1.z - pos2.z;
-    
+
     return Math.sqrt(dx * dx + dz * dz);
   }
 
   private getItemDefinition(itemId: number): any {
     const inventorySystem = this.world.getSystem<any>('inventory');
-    if (!inventorySystem) return null;
-    
+    if (!inventorySystem) {return null;}
+
     return inventorySystem.itemRegistry?.getItem(itemId);
   }
 
   private getPlayerCurrency(inventory: InventoryComponent, currency: string): number {
-    if (currency !== 'gp') return 0; // Only support GP for now
-    
+    if (currency !== 'gp') {return 0;} // Only support GP for now
+
     let total = 0;
     for (const item of inventory.items) {
       if (item && item.itemId === 995) { // Coins
@@ -464,20 +464,20 @@ export class ShopSystem extends System {
   }
 
   private removeCurrency(playerId: string, currency: string, amount: number): boolean {
-    if (currency !== 'gp') return false; // Only support GP for now
-    
+    if (currency !== 'gp') {return false;} // Only support GP for now
+
     const inventorySystem = this.world.getSystem<any>('inventory');
-    if (!inventorySystem) return false;
-    
+    if (!inventorySystem) {return false;}
+
     return inventorySystem.removeItem(playerId, 995, amount);
   }
 
   private addCurrency(playerId: string, currency: string, amount: number): boolean {
-    if (currency !== 'gp') return false; // Only support GP for now
-    
+    if (currency !== 'gp') {return false;} // Only support GP for now
+
     const inventorySystem = this.world.getSystem<any>('inventory');
-    if (!inventorySystem) return false;
-    
+    if (!inventorySystem) {return false;}
+
     return inventorySystem.addItem(playerId, 995, amount);
   }
 
@@ -516,4 +516,4 @@ export class ShopSystem extends System {
     const session = this.activeSessions.get(playerId);
     return session ? session.shopId : null;
   }
-} 
+}

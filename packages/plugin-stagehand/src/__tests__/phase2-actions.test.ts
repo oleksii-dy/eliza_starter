@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterAll, beforeAll } from 'vitest';
+import { describe, expect, it, mock, beforeEach, afterAll, beforeAll, spyOn } from 'bun:test';
 import { stagehandPlugin, StagehandService, BrowserSession } from '../index';
 import {
   createMockRuntime,
@@ -10,26 +10,26 @@ import { type HandlerCallback, type Memory, type State, type IAgentRuntime } fro
 import { Stagehand } from '@browserbasehq/stagehand';
 
 // Mock the Stagehand module
-vi.mock('@browserbasehq/stagehand', () => {
+mock.module('@browserbasehq/stagehand', () => {
   return {
-    Stagehand: vi.fn().mockImplementation(() => {
+    Stagehand: mock().mockImplementation(() => {
       const mockPage = {
-        goto: vi.fn().mockResolvedValue(undefined),
-        goBack: vi.fn().mockResolvedValue(undefined),
-        goForward: vi.fn().mockResolvedValue(undefined),
-        reload: vi.fn().mockResolvedValue(undefined),
-        waitForLoadState: vi.fn().mockResolvedValue(undefined),
-        title: vi.fn().mockResolvedValue('Test Page Title'),
-        url: vi.fn().mockReturnValue('https://example.com'),
-        screenshot: vi.fn().mockResolvedValue(Buffer.from('fake-screenshot-data')),
+        goto: mock().mockResolvedValue(undefined),
+        goBack: mock().mockResolvedValue(undefined),
+        goForward: mock().mockResolvedValue(undefined),
+        reload: mock().mockResolvedValue(undefined),
+        waitForLoadState: mock().mockResolvedValue(undefined),
+        title: mock().mockResolvedValue('Test Page Title'),
+        url: mock().mockReturnValue('https://example.com'),
+        screenshot: mock().mockResolvedValue(Buffer.from('fake-screenshot-data')),
       };
 
       return {
-        init: vi.fn().mockResolvedValue(undefined),
-        close: vi.fn().mockResolvedValue(undefined),
+        init: mock().mockResolvedValue(undefined),
+        close: mock().mockResolvedValue(undefined),
         page: mockPage,
-        act: vi.fn().mockResolvedValue({ success: true }),
-        extract: vi.fn().mockResolvedValue({ data: 'extracted text', found: true }),
+        act: mock().mockResolvedValue({ success: true }),
+        extract: mock().mockResolvedValue({ data: 'extracted text', found: true }),
       };
     }),
   };
@@ -43,7 +43,7 @@ describe('Phase 2 Browser Actions', () => {
   });
 
   afterAll(() => {
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   describe('BROWSER_CLICK Action', () => {
@@ -55,7 +55,7 @@ describe('Phase 2 Browser Actions', () => {
     let mockCallback: HandlerCallback;
 
     beforeEach(() => {
-      vi.clearAllMocks();
+      mock.restore();
 
       // Create mock service and session
       mockRuntime = createMockRuntime();
@@ -66,13 +66,13 @@ describe('Phase 2 Browser Actions', () => {
       mockSession = new BrowserSession('test-session', mockStagehand as any);
 
       // Mock service methods
-      vi.spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
+      spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
 
       // Set up runtime to return our mock service
       mockRuntime.getService.mockReturnValue(mockService);
 
       // Create mock callback
-      mockCallback = vi.fn().mockResolvedValue([]);
+      mockCallback = mock().mockResolvedValue([]);
     });
 
     it('should validate click messages', async () => {
@@ -128,7 +128,7 @@ describe('Phase 2 Browser Actions', () => {
     let mockCallback: HandlerCallback;
 
     beforeEach(() => {
-      vi.clearAllMocks();
+      mock.restore();
 
       mockRuntime = createMockRuntime();
       mockService = new StagehandService(mockRuntime);
@@ -136,9 +136,9 @@ describe('Phase 2 Browser Actions', () => {
       const mockStagehand = new Stagehand({ env: 'LOCAL' } as any);
       mockSession = new BrowserSession('test-session', mockStagehand as any);
 
-      vi.spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
+      spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
       mockRuntime.getService.mockReturnValue(mockService);
-      mockCallback = vi.fn().mockResolvedValue([]);
+      mockCallback = mock().mockResolvedValue([]);
     });
 
     it('should validate type messages', async () => {
@@ -189,7 +189,7 @@ describe('Phase 2 Browser Actions', () => {
     let mockCallback: HandlerCallback;
 
     beforeEach(() => {
-      vi.clearAllMocks();
+      mock.restore();
 
       mockRuntime = createMockRuntime();
       mockService = new StagehandService(mockRuntime);
@@ -197,9 +197,9 @@ describe('Phase 2 Browser Actions', () => {
       const mockStagehand = new Stagehand({ env: 'LOCAL' } as any);
       mockSession = new BrowserSession('test-session', mockStagehand as any);
 
-      vi.spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
+      spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
       mockRuntime.getService.mockReturnValue(mockService);
-      mockCallback = vi.fn().mockResolvedValue([]);
+      mockCallback = mock().mockResolvedValue([]);
     });
 
     it('should validate select messages', async () => {

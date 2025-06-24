@@ -12,7 +12,7 @@
  * - Error handling with authentic runtime behavior
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { AgentRuntime, elizaLogger } from '@elizaos/core';
 import type { Character, IAgentRuntime, UUID } from '@elizaos/core';
 import { enhancedCustomReasoningPlugin } from '../enhanced-export';

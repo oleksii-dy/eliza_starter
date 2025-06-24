@@ -12,9 +12,6 @@ import {
   SidebarMenuItem,
   SidebarMenuSkeleton,
 } from '@/components/ui/sidebar';
-import ConfirmationDialog from '@/components/confirmation-dialog';
-import { useConfirmation } from '@/hooks/use-confirmation';
-
 import {
   useAgentsWithDetails, // New hook
   useChannels,
@@ -33,11 +30,10 @@ import {
   type UUID,
 } from '@elizaos/core';
 
-import { useDeleteChannel } from '@/hooks/use-query-hooks';
 import clientLogger from '@/lib/logger'; // Added import
 import { useQueryClient } from '@tanstack/react-query'; // Import useQueryClient
-import { Book, Cog, Hash, Plus, TerminalIcon, Trash2, Users } from 'lucide-react'; // Added Users icon for groups and Hash for channels
-import { useMemo, useState } from 'react';
+import { Book, Cog, Hash, Plus, TerminalIcon } from 'lucide-react'; // Added Hash for channels
+import { useMemo } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'; // Added useNavigate
 
 /* ---------- helpers ---------- */
@@ -136,8 +132,7 @@ const GroupRow = ({
           <div className="flex items-center gap-3">
             <Hash className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm truncate max-w-32">
-              {channel.name ||
-                generateGroupName(channel, (channel as any).participants || [], currentClientId)}
+              {channel.name || generateGroupName(channel, [], currentClientId)}
             </span>
           </div>
         </SidebarMenuButton>
@@ -173,12 +168,10 @@ const GroupListSection = ({
   servers,
   isLoadingServers,
   activePath,
-  className = '',
 }: {
   servers: ClientMessageServer[] | undefined;
   isLoadingServers: boolean;
   activePath: string;
-  className?: string;
 }) => {
   const navigate = useNavigate();
 
@@ -218,159 +211,6 @@ const GroupListSection = ({
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
-    </>
-  );
-};
-
-// Updated RoomListSection to GroupChannelListSection
-const GroupChannelListSection = ({
-  servers,
-  isLoadingServers,
-  className = '',
-  onManageServers,
-}: {
-  servers: ClientMessageServer[] | undefined;
-  isLoadingServers: boolean;
-  className?: string;
-  onManageServers: () => void;
-}) => {
-  const navigate = useNavigate();
-
-  return (
-    <SidebarSection title="Groups" className={className}>
-      {isLoadingServers &&
-        Array.from({ length: 3 }).map((_, i) => (
-          <SidebarMenuItem key={`skel-server-${i}`}>
-            <SidebarMenuSkeleton />
-          </SidebarMenuItem>
-        ))}
-      {servers?.map((server) => (
-        <SidebarGroup key={server.id} className="mt-1">
-          {/* Optionally display server name if relevant, or just list all groups flatly */}
-          {/* <div className="px-3 py-1 text-xs text-muted-foreground">{server.name}</div> */}
-          <ChannelsForServer serverId={server.id} navigate={navigate} />
-        </SidebarGroup>
-      ))}
-      {(!servers || servers.length === 0) && !isLoadingServers && (
-        <SidebarMenuItem>
-          <div className="p-4 text-xs text-muted-foreground">No groups found.</div>
-        </SidebarMenuItem>
-      )}
-      <div className="flex justify-endtop-0">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/group/new')}
-          className="text-xs"
-        >
-          <Plus className="h-3 w-3 mr-1" /> New Group
-        </Button>
-      </div>
-    </SidebarSection>
-  );
-};
-
-const ChannelsForServer = ({
-  serverId,
-  navigate,
-}: {
-  serverId: UUID;
-  navigate: ReturnType<typeof useNavigate>;
-}) => {
-  const { data: channelsData, isLoading: isLoadingChannels } = useChannels(serverId);
-  const currentClientId = getEntityId(); // Get current client/user ID
-  const deleteChannelMutation = useDeleteChannel();
-  const [deletingChannelId, setDeletingChannelId] = useState<UUID | null>(null);
-  const { confirm, isOpen, onOpenChange, onConfirm, options } = useConfirmation();
-
-  const groupChannels = useMemo(
-    () => channelsData?.data?.channels?.filter((ch) => ch.type === CoreChannelType.GROUP) || [],
-    [channelsData]
-  );
-
-  const handleDeleteChannel = (e: React.MouseEvent, channelId: UUID) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    confirm(
-      {
-        title: 'Delete Group',
-        description: 'Are you sure you want to delete this group? This action cannot be undone.',
-        confirmText: 'Delete',
-        variant: 'destructive',
-      },
-      async () => {
-        setDeletingChannelId(channelId);
-        try {
-          await deleteChannelMutation.mutateAsync({ channelId, serverId });
-        } catch (error) {
-          console.error('Failed to delete channel:', error);
-        } finally {
-          setDeletingChannelId(null);
-        }
-      }
-    );
-  };
-
-  if (isLoadingChannels) {
-    return (
-      <SidebarMenuItem>
-        <SidebarMenuSkeleton />
-      </SidebarMenuItem>
-    );
-  }
-  if (!groupChannels.length) {
-    return null; // Don't render section if no group channels for this server
-  }
-
-  return (
-    <>
-      <SidebarGroupContent className="px-1 mt-0">
-        <SidebarMenu>
-          {groupChannels.map((channel) => (
-            <SidebarMenuItem key={channel.id} className="h-12 group">
-              <div className="flex items-center gap-1 w-full">
-                <NavLink to={`/group/${channel.id}?serverId=${serverId}`} className="flex-1">
-                  <SidebarMenuButton className="px-4 py-2 my-1 h-full rounded-md">
-                    <div className="flex items-center gap-3">
-                      <Users className="h-5 w-5 text-muted-foreground" /> {/* Group icon */}
-                      <span className="text-sm truncate max-w-32">
-                        {/* Use generateGroupName - assumes channel.participants exists or will be added */}
-                        {generateGroupName(
-                          channel,
-                          (channel as any).participants || [],
-                          currentClientId
-                        )}
-                      </span>
-                    </div>
-                  </SidebarMenuButton>
-                </NavLink>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => handleDeleteChannel(e, channel.id)}
-                  disabled={deletingChannelId === channel.id}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-
-      {/* Confirmation Dialog */}
-      <ConfirmationDialog
-        open={isOpen}
-        onOpenChange={onOpenChange}
-        title={options?.title || ''}
-        description={options?.description || ''}
-        confirmText={options?.confirmText}
-        cancelText={options?.cancelText}
-        variant={options?.variant}
-        onConfirm={onConfirm}
-      />
     </>
   );
 };
@@ -417,7 +257,7 @@ const GroupChannelsForServer = ({
 
 // Updated CreateButton: Removed DropdownMenu, simplified to a single action (Create Agent)
 // For "Create Group", users will use the button in the "Groups" section header.
-const CreateAgentButton = ({ onClick }: { onClick: () => void }) => {
+const _CreateAgentButton = ({ onClick }: { onClick: () => void }) => {
   return (
     <Button variant="outline" size="sm" onClick={onClick} className="w-full">
       <Plus className="h-4 w-4 mr-2" />
@@ -450,8 +290,8 @@ export function AppSidebar({
   } = useAgentsWithDetails();
   const { data: serversData, isLoading: isLoadingServers } = useServers();
 
-  const agents = useMemo(() => agentsData?.agents || [] [agentsData]);
-  const servers = useMemo(() => serversData?.data?.servers || [] [serversData]);
+  const agents = useMemo(() => agentsData?.agents || [], [agentsData]);
+  const servers = useMemo(() => serversData?.data?.servers || [], [serversData]);
 
   const [onlineAgents, offlineAgents] = useMemo(
     () => partition(agents, (a) => a.status === CoreAgentStatus.ACTIVE),
@@ -565,7 +405,7 @@ export function AppSidebar({
                "Create Group" is a + button in the GroupChannelListSection.
                So the old CreateButton component and its direct usage here can be removed.
             */}
-          {/* 
+          {/*
             <div className="px-4 py-2 mb-2">
               <CreateButton onCreateGroupChannel={handleCreateGroupChannel} />
             </div>

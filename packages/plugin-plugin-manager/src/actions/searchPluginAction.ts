@@ -4,7 +4,6 @@ import {
   Memory,
   State,
   elizaLogger,
-  ActionExample,
   HandlerCallback,
   ActionResult,
 } from '@elizaos/core';
@@ -18,7 +17,7 @@ export const searchPluginAction: Action = {
   name: 'SEARCH_PLUGINS',
   description: 'Search for plugins in the registry based on keywords or capabilities',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     // Simply check if the plugin manager service is available
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
@@ -136,9 +135,9 @@ export const searchPluginAction: Action = {
           })),
         },
       };
-    } catch (error) {
+    } catch (_error) {
       logger.error('[searchPluginAction] Error searching plugins:', error);
-      const errorMessage = 'An error occurred while searching for plugins. Please try again.';
+      const errorMessage = 'An _error occurred while searching for plugins. Please try again.';
       if (callback) {
         callback({
           text: errorMessage,
@@ -148,7 +147,7 @@ export const searchPluginAction: Action = {
       return {
         text: errorMessage,
         data: {
-          error: error instanceof Error ? error.message : String(error),
+          error: _error instanceof Error ? _error.message : String(_error),
         },
       };
     }

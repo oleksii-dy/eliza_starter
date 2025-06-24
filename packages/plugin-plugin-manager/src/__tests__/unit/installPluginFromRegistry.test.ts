@@ -1,5 +1,5 @@
 import type { IAgentRuntime, Memory, HandlerCallback } from '@elizaos/core';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { installPluginFromRegistryAction } from '../../actions/installPluginFromRegistry.ts';
 import { PluginManagerService } from '../../services/pluginManagerService.ts';
 
@@ -9,14 +9,14 @@ describe('installPluginFromRegistry Action (Consolidated)', () => {
   let mockCallback: HandlerCallback;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockPluginManager = {
-      installPluginFromRegistry: vi.fn(),
+      installPluginFromRegistry: mock(),
     } as any;
     mockRuntime = {
-      getService: vi.fn().mockReturnValue(mockPluginManager),
+      getService: mock().mockReturnValue(mockPluginManager),
     } as any;
-    mockCallback = vi.fn();
+    mockCallback = mock();
   });
 
   it('handler should call the consolidated service method', async () => {
@@ -27,7 +27,7 @@ describe('installPluginFromRegistry Action (Consolidated)', () => {
       },
     } as any;
 
-    mockPluginManager.installPluginFromRegistry = vi.fn().mockResolvedValue({
+    mockPluginManager.installPluginFromRegistry = mock().mockResolvedValue({
       name: '@elizaos/plugin-example',
       version: '1.0.0',
       status: 'installed',
@@ -66,7 +66,7 @@ describe('installPluginFromRegistry Action (Consolidated)', () => {
       },
     } as any;
 
-    mockPluginManager.installPluginFromRegistry = vi.fn().mockResolvedValue({
+    mockPluginManager.installPluginFromRegistry = mock().mockResolvedValue({
       name: '@elizaos/plugin-needs-config',
       version: '1.0.0',
       status: 'needs_configuration',
@@ -103,8 +103,7 @@ describe('installPluginFromRegistry Action (Consolidated)', () => {
         pluginName: '@elizaos/plugin-fails',
       },
     } as any;
-    mockPluginManager.installPluginFromRegistry = vi
-      .fn()
+    mockPluginManager.installPluginFromRegistry = mock()
       .mockRejectedValue(new Error('Installation failed'));
 
     const result = await installPluginFromRegistryAction.handler(
@@ -125,7 +124,7 @@ describe('installPluginFromRegistry Action (Consolidated)', () => {
   });
 
   it('handler should handle missing plugin manager service', async () => {
-    mockRuntime.getService = vi.fn().mockReturnValue(null);
+    mockRuntime.getService = mock().mockReturnValue(null);
     const message: Memory = {
       content: {
         text: 'install plugin',

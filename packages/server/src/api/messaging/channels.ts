@@ -7,7 +7,7 @@ import {
   validateUuid,
   type UUID,
 } from '@elizaos/core';
-import express, { type RequestHandler } from 'express';
+import express from 'express';
 import internalMessageBus from '../../bus';
 import type { AgentServer } from '../../index';
 import type { MessageServiceStructure as MessageService } from '../../types';
@@ -303,12 +303,28 @@ export function createChannelsRouter(
 
   // POST /channels - Create a new central channel
   (router as any).post('/channels', async (req: express.Request, res: express.Response) => {
-    const { serverId, name, type, sourceType, sourceId, topic, metadata } = req.body;
+    const serverId = req.body.serverId as UUID;
+    const { name, type, sourceType, sourceId, metadata } = req.body;
+    const topic = req.body.topic ?? req.body.description;
 
-    if (!serverId || !name || !type) {
+    if (!serverId) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: serverId, name, type',
+        error: 'Missing required fields: serverId.',
+      });
+    }
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: name.',
+      });
+    }
+
+    if (!type) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: type.',
       });
     }
 
@@ -321,7 +337,7 @@ export function createChannelsRouter(
 
     try {
       const channel = await serverInstance.createChannel({
-        serverId: serverId as UUID,
+        serverId,
         name,
         type,
         sourceType,
@@ -663,8 +679,8 @@ export function createChannelsRouter(
 
         // Then emit message_deleted event to internal bus for agent memory cleanup
         const deletedMessagePayload = {
-          messageId: messageId,
-          channelId: channelId,
+          messageId,
+          channelId,
         };
 
         internalMessageBus.emit('message_deleted', deletedMessagePayload);
@@ -675,8 +691,8 @@ export function createChannelsRouter(
         // Also, emit an event via SocketIO to inform clients about the deletion
         if (serverInstance.socketIO) {
           serverInstance.socketIO.to(channelId).emit('messageDeleted', {
-            messageId: messageId,
-            channelId: channelId,
+            messageId,
+            channelId,
           });
         }
         res.status(204).send();
@@ -704,7 +720,7 @@ export function createChannelsRouter(
 
         // Emit to internal bus for agent memory cleanup
         const channelClearedPayload = {
-          channelId: channelId,
+          channelId,
         };
         internalMessageBus.emit('channel_cleared', channelClearedPayload);
         logger.info(
@@ -714,7 +730,7 @@ export function createChannelsRouter(
         // Also, emit an event via SocketIO to inform clients about the channel clear
         if (serverInstance.socketIO) {
           serverInstance.socketIO.to(channelId).emit('channelCleared', {
-            channelId: channelId,
+            channelId,
           });
         }
         res.status(204).send();
@@ -743,7 +759,7 @@ export function createChannelsRouter(
         // Emit an event via SocketIO to inform clients about the channel update
         if (serverInstance.socketIO) {
           serverInstance.socketIO.to(channelId).emit('channelUpdated', {
-            channelId: channelId,
+            channelId,
             updates: updatedChannel,
           });
         }
@@ -776,7 +792,7 @@ export function createChannelsRouter(
 
         // Emit to internal bus for agent memory cleanup (same as clear messages)
         const channelClearedPayload = {
-          channelId: channelId,
+          channelId,
         };
         internalMessageBus.emit('channel_cleared', channelClearedPayload);
         logger.info(
@@ -786,7 +802,7 @@ export function createChannelsRouter(
         // Emit an event via SocketIO to inform clients about the channel deletion
         if (serverInstance.socketIO) {
           serverInstance.socketIO.to(channelId).emit('channelDeleted', {
-            channelId: channelId,
+            channelId,
           });
         }
         res.status(204).send();

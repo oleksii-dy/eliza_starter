@@ -1,4 +1,4 @@
-import type { Scenario } from "../types.js"
+import type { Scenario } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const smartcontractauditScenario: Scenario = {
@@ -7,7 +7,7 @@ export const smartcontractauditScenario: Scenario = {
   description: 'Audit smart contracts across multiple chains',
   category: 'integration',
   tags: ['solana', 'evm', 'research', 'todo', 'knowledge', 'complex-workflow'],
-  
+
   actors: [
     {
       id: uuidv4() as any,
@@ -23,32 +23,34 @@ export const smartcontractauditScenario: Scenario = {
         steps: [
           {
             type: 'message',
-            content: 'Analyze the smart contract at address 0x123... on Ethereum for common vulnerabilities.',
-      },
+            content:
+              'Analyze the smart contract at address 0x123... on Ethereum for common vulnerabilities.',
+          },
           {
             type: 'wait',
             waitTime: 8000,
-      },
+          },
           {
             type: 'message',
             content: 'Research known exploits for similar contract patterns.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 10000,
-      },
+          },
           {
             type: 'message',
             content: 'Create a detailed audit report with severity levels for each finding.',
-      },
+          },
           {
             type: 'wait',
             waitTime: 12000,
-      },
+          },
           {
             type: 'message',
-            content: 'Set up monitoring tasks for the contract and store the audit in the knowledge base.',
-      },
+            content:
+              'Set up monitoring tasks for the contract and store the audit in the knowledge base.',
+          },
           {
             type: 'wait',
             waitTime: 14000,
@@ -68,7 +70,7 @@ export const smartcontractauditScenario: Scenario = {
       plugins: ['solana', 'evm', 'research', 'todo', 'knowledge'],
     },
   },
-  
+
   execution: {
     maxDuration: 300000,
     maxSteps: 25,
@@ -80,7 +82,7 @@ export const smartcontractauditScenario: Scenario = {
       },
     ],
   },
-  
+
   verification: {
     rules: [
       {
@@ -88,7 +90,8 @@ export const smartcontractauditScenario: Scenario = {
         type: 'llm',
         description: 'All required plugins were utilized',
         config: {
-          criteria: 'The agent successfully used solana, evm, research, todo, knowledge plugins to complete the workflow',
+          criteria:
+            'The agent successfully used solana, evm, research, todo, knowledge plugins to complete the workflow',
         },
         weight: 3,
       },
@@ -109,7 +112,7 @@ export const smartcontractauditScenario: Scenario = {
           criteria: 'Multiple actions from different plugins were chained together effectively',
         },
         weight: 3,
-      }
+      },
     ],
     expectedOutcomes: [
       {
@@ -134,7 +137,7 @@ export const smartcontractauditScenario: Scenario = {
       ],
     },
   },
-  
+
   benchmarks: {
     maxDuration: 300000,
     maxSteps: 25,

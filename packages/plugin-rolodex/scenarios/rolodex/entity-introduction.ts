@@ -15,14 +15,14 @@ export const entityIntroductionScenario: Scenario = {
       plugins: ['rolodex'],
       script: {
         steps: [
-          { 
-            type: 'message', 
-            content: "Hi everyone! I'm Alice Chen, CTO at TechCorp. I specialize in neural network architectures and AI safety. You can find me on Twitter @alicechen_ai" 
+          {
+            type: 'message',
+            content: "Hi everyone! I'm Alice Chen, CTO at TechCorp. I specialize in neural network architectures and AI safety. You can find me on Twitter @alicechen_ai"
           },
           { type: 'wait', waitTime: 3000 },
-          { 
-            type: 'message', 
-            content: "I've been working on transformer models for the past 3 years. Always happy to discuss AI ethics and technical implementation!" 
+          {
+            type: 'message',
+            content: "I've been working on transformer models for the past 3 years. Always happy to discuss AI ethics and technical implementation!"
           },
         ],
       },
@@ -36,14 +36,14 @@ export const entityIntroductionScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 1000 },
-          { 
-            type: 'message', 
-            content: "Hey Alice! I'm Bob Wilson, Senior ML Engineer at DataSystems Inc. Great to meet someone else working on transformers!" 
+          {
+            type: 'message',
+            content: "Hey Alice! I'm Bob Wilson, Senior ML Engineer at DataSystems Inc. Great to meet someone else working on transformers!"
           },
           { type: 'wait', waitTime: 4000 },
-          { 
-            type: 'message', 
-            content: "I focus mainly on distributed training and model optimization. My LinkedIn is linkedin.com/in/bobwilson-ml" 
+          {
+            type: 'message',
+            content: 'I focus mainly on distributed training and model optimization. My LinkedIn is linkedin.com/in/bobwilson-ml'
           },
         ],
       },
@@ -57,14 +57,14 @@ export const entityIntroductionScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 2000 },
-          { 
-            type: 'message', 
-            content: "Hello Alice and Bob! I'm Carol Martinez, VP of Product at AI Solutions Ltd. Love seeing this technical expertise here!" 
+          {
+            type: 'message',
+            content: "Hello Alice and Bob! I'm Carol Martinez, VP of Product at AI Solutions Ltd. Love seeing this technical expertise here!"
           },
           { type: 'wait', waitTime: 5000 },
-          { 
-            type: 'message', 
-            content: "I work on translating AI capabilities into user-facing products. Always looking for innovative applications. Email me at carol@aisolutions.com" 
+          {
+            type: 'message',
+            content: 'I work on translating AI capabilities into user-facing products. Always looking for innovative applications. Email me at carol@aisolutions.com'
           },
         ],
       },
@@ -78,14 +78,14 @@ export const entityIntroductionScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 2500 },
-          { 
-            type: 'message', 
-            content: "Greetings everyone! David Kumar here, Research Scientist at University Labs. Fascinating to see industry perspectives!" 
+          {
+            type: 'message',
+            content: 'Greetings everyone! David Kumar here, Research Scientist at University Labs. Fascinating to see industry perspectives!'
           },
           { type: 'wait', waitTime: 6000 },
-          { 
-            type: 'message', 
-            content: "My research focuses on attention mechanisms and model interpretability. Published several papers on arxiv under 'dkumar-ai'" 
+          {
+            type: 'message',
+            content: "My research focuses on attention mechanisms and model interpretability. Published several papers on arxiv under 'dkumar-ai'"
           },
         ],
       },
@@ -99,9 +99,9 @@ export const entityIntroductionScenario: Scenario = {
       script: {
         steps: [
           { type: 'wait', waitTime: 8000 },
-          { 
-            type: 'message', 
-            content: "Let me track all these introductions..." 
+          {
+            type: 'message',
+            content: 'Let me track all these introductions...'
           },
           { type: 'wait', waitTime: 1000 },
           {
@@ -209,4 +209,4 @@ export const entityIntroductionScenario: Scenario = {
   },
 };
 
-export default entityIntroductionScenario; 
+export default entityIntroductionScenario;

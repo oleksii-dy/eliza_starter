@@ -50,22 +50,21 @@ export const McpViewer: React.FC<McpViewerProps> = ({ agentId }) => {
   const [error, setError] = useState<string | null>(null);
   const [totalServers, setTotalServers] = useState(0);
   const [connectedServers, setConnectedServers] = useState(0);
-  const [refreshInterval, setRefreshInterval] = useState<number | null>(null);
 
   const fetchServers = useCallback(async () => {
     try {
       const response = await fetch(`/api/mcp/servers?agentId=${agentId}`);
       const data: McpServersResponse = await response.json();
-      
+
       if (data.success && data.data) {
         setServers(data.data.servers);
         setTotalServers(data.data.totalServers);
         setConnectedServers(data.data.connectedServers);
         setError(null);
-        
+
         // Update selected server if it exists in new data
         if (selectedServer) {
-          const updatedServer = data.data.servers.find(s => s.name === selectedServer.name);
+          const updatedServer = data.data.servers.find((s) => s.name === selectedServer.name);
           if (updatedServer) {
             setSelectedServer(updatedServer);
           }
@@ -83,10 +82,10 @@ export const McpViewer: React.FC<McpViewerProps> = ({ agentId }) => {
   // Initial fetch and setup auto-refresh
   useEffect(() => {
     fetchServers();
-    
+
     // Set up auto-refresh every 5 seconds
     const interval = setInterval(fetchServers, 5000);
-    
+
     return () => {
       clearInterval(interval);
     };
@@ -95,13 +94,13 @@ export const McpViewer: React.FC<McpViewerProps> = ({ agentId }) => {
   const handleReconnect = async (serverName: string) => {
     try {
       const response = await fetch(`/api/mcp/servers/${serverName}/reconnect?agentId=${agentId}`, {
-        method: 'POST'
+        method: 'POST',
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to reconnect');
       }
-      
+
       // Refresh servers after reconnection attempt
       setTimeout(fetchServers, 1000);
     } catch (err) {
@@ -114,11 +113,11 @@ export const McpViewer: React.FC<McpViewerProps> = ({ agentId }) => {
       const response = await fetch(`/api/mcp/tools/${serverName}/${toolName}?agentId=${agentId}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ arguments: args })
+        body: JSON.stringify({ arguments: args }),
       });
-      
+
       const data = await response.json();
       return data;
     } catch (err) {
@@ -132,11 +131,11 @@ export const McpViewer: React.FC<McpViewerProps> = ({ agentId }) => {
       const response = await fetch(`/api/mcp/resources/${serverName}?agentId=${agentId}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ uri })
+        body: JSON.stringify({ uri }),
       });
-      
+
       const data = await response.json();
       return data;
     } catch (err) {
@@ -172,12 +171,9 @@ export const McpViewer: React.FC<McpViewerProps> = ({ agentId }) => {
     <div className="mcp-viewer">
       <div className="mcp-header">
         <h1>MCP Viewer</h1>
-        <ConnectionStats 
-          total={totalServers} 
-          connected={connectedServers} 
-        />
+        <ConnectionStats total={totalServers} connected={connectedServers} />
       </div>
-      
+
       <div className="mcp-content">
         <div className="mcp-sidebar">
           <ServerList
@@ -187,7 +183,7 @@ export const McpViewer: React.FC<McpViewerProps> = ({ agentId }) => {
             onReconnect={handleReconnect}
           />
         </div>
-        
+
         <div className="mcp-main">
           {selectedServer ? (
             <>
@@ -205,18 +201,12 @@ export const McpViewer: React.FC<McpViewerProps> = ({ agentId }) => {
                   Resources ({selectedServer.resourceCount})
                 </button>
               </div>
-              
+
               <div className="mcp-tab-content">
                 {activeTab === 'tools' ? (
-                  <ToolExplorer
-                    server={selectedServer}
-                    onExecute={handleToolExecute}
-                  />
+                  <ToolExplorer server={selectedServer} onExecute={handleToolExecute} />
                 ) : (
-                  <ResourceViewer
-                    server={selectedServer}
-                    onRead={handleResourceRead}
-                  />
+                  <ResourceViewer server={selectedServer} onRead={handleResourceRead} />
                 )}
               </div>
             </>
@@ -229,4 +219,4 @@ export const McpViewer: React.FC<McpViewerProps> = ({ agentId }) => {
       </div>
     </div>
   );
-}; 
+};

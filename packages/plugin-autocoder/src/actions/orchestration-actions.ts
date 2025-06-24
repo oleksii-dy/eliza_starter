@@ -37,7 +37,7 @@ export const createPluginProjectAction: Action = {
   },
   handler: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const service = runtime.getService('autocoder') as AutoCodeService;
-    if (!service) return { text: 'Orchestration service is not available.' };
+    if (!service) {return { text: 'Orchestration service is not available.' };}
 
     const text = message.content.text || '';
     const nameMatch = text.match(/named "(.*?)"/);
@@ -90,7 +90,7 @@ export const updatePluginProjectAction: Action = {
   },
   handler: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const service = runtime.getService('autocoder') as AutoCodeService;
-    if (!service) return { text: 'Orchestration service is not available.' };
+    if (!service) {return { text: 'Orchestration service is not available.' };}
 
     const text = message.content.text || '';
     const nameMatch = text.match(/plugin "(.*?)"/);
@@ -131,7 +131,7 @@ export const checkProjectStatusAction: Action = {
   },
   handler: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const service = runtime.getService('autocoder') as AutoCodeService;
-    if (!service) return { text: 'Orchestration service is not available.' };
+    if (!service) {return { text: 'Orchestration service is not available.' };}
 
     const text = message.content.text || '';
     const idMatch = text.match(/project ([a-zA-Z0-9-]+)/);
@@ -139,7 +139,7 @@ export const checkProjectStatusAction: Action = {
 
     if (projectId) {
       const project = await service.getProject(projectId);
-      if (!project) return { text: `Project with ID ${projectId} not found.` };
+      if (!project) {return { text: `Project with ID ${projectId} not found.` };}
       return {
         text: `Status of project ${project.name}: ${project.status}, Phase: ${project.phase}/${project.totalPhases}`,
       };
@@ -152,8 +152,8 @@ export const checkProjectStatusAction: Action = {
 
     return {
       text:
-        'Active projects:\n' +
-        activeProjects.map((p) => `- ${p.name} (ID: ${p.id}): ${p.status}`).join('\n'),
+        `Active projects:\n${
+          activeProjects.map((p) => `- ${p.name} (ID: ${p.id}): ${p.status}`).join('\n')}`,
     };
   },
 };
@@ -183,7 +183,7 @@ export const provideSecretsAction: Action = {
   },
   handler: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const service = runtime.getService('autocoder') as AutoCodeService;
-    if (!service) return { text: 'Orchestration service is not available.' };
+    if (!service) {return { text: 'Orchestration service is not available.' };}
 
     const text = message.content.text || '';
 
@@ -237,7 +237,7 @@ export const provideSecretsAction: Action = {
       await service.provideSecrets(projectId, secrets);
 
       const project = await service.getProject(projectId);
-      if (!project) return { text: 'Project not found.' };
+      if (!project) {return { text: 'Project not found.' };}
 
       const providedKeys = Object.keys(secrets).join(', ');
       const remainingSecrets = project.requiredSecrets.filter(
@@ -283,12 +283,12 @@ export const cancelProjectAction: Action = {
   },
   handler: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const service = runtime.getService('autocoder') as AutoCodeService;
-    if (!service) return { text: 'Orchestration service is not available.' };
+    if (!service) {return { text: 'Orchestration service is not available.' };}
 
     const text = message.content.text || '';
     const idMatch = text.match(/project ([a-zA-Z0-9-]+)/);
     const projectId = idMatch ? idMatch[1] : null;
-    if (!projectId) return { text: 'Please specify a project ID to cancel.' };
+    if (!projectId) {return { text: 'Please specify a project ID to cancel.' };}
 
     await service.cancelProject(projectId);
     return { text: `Project ${projectId} has been cancelled.` };
@@ -327,12 +327,12 @@ export const setInfiniteModeAction: Action = {
   },
   handler: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const service = runtime.getService('autocoder') as AutoCodeService;
-    if (!service) return { text: 'Orchestration service is not available.' };
+    if (!service) {return { text: 'Orchestration service is not available.' };}
 
     const text = message.content.text || '';
     const idMatch = text.match(/project ([a-zA-Z0-9-]+)/);
     const projectId = idMatch ? idMatch[1] : null;
-    if (!projectId) return { text: 'Please specify a project ID.' };
+    if (!projectId) {return { text: 'Please specify a project ID.' };}
 
     const enable = text.toLowerCase().includes('enable');
     await service.setInfiniteMode(projectId, enable);
@@ -371,12 +371,12 @@ export const addCustomInstructionsAction: Action = {
   },
   handler: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const service = runtime.getService('autocoder') as AutoCodeService;
-    if (!service) return { text: 'Orchestration service is not available.' };
+    if (!service) {return { text: 'Orchestration service is not available.' };}
 
     const text = message.content.text || '';
     const idMatch = text.match(/project ([a-zA-Z0-9-]+)/);
     const projectId = idMatch ? idMatch[1] : null;
-    if (!projectId) return { text: 'Please specify a project ID.' };
+    if (!projectId) {return { text: 'Please specify a project ID.' };}
 
     // Extract instructions - look for quoted strings or text after colon
     const quotedInstructions = text.match(/"([^"]+)"/g);
@@ -437,7 +437,7 @@ export const publishPluginAction: Action = {
   },
   handler: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const service = runtime.getService('autocoder') as AutoCodeService;
-    if (!service) return { text: 'Orchestration service is not available.' };
+    if (!service) {return { text: 'Orchestration service is not available.' };}
 
     const pluginManager = runtime.getService('PLUGIN_MANAGER') as any; // PluginManagerService
     if (!pluginManager) {
@@ -454,17 +454,17 @@ export const publishPluginAction: Action = {
 
     if (idMatch) {
       project = await service.getProject(idMatch[1]);
-      if (!project) return { text: `Project ${idMatch[1]} not found.` };
+      if (!project) {return { text: `Project ${idMatch[1]} not found.` };}
     } else if (nameMatch) {
       // Try to find project by name
       const projects = await service.getAllProjects();
       project = projects.find((p) => p.name === nameMatch[1]);
-      if (!project) return { text: `No project found with name "${nameMatch[1]}".` };
+      if (!project) {return { text: `No project found with name "${nameMatch[1]}".` };}
     } else {
       // Try to find the most recent completed project
       const projects = await service.getProjectsByUser(message.entityId);
       project = projects.find((p) => p.status === 'completed');
-      if (!project) return { text: 'No completed projects found to publish.' };
+      if (!project) {return { text: 'No completed projects found to publish.' };}
     }
 
     // Check if project is completed
@@ -545,7 +545,7 @@ export const publishPluginAction: Action = {
         successMessage += `- GitHub: ${result.githubRepo}\n`;
       }
       if (publishToRegistry) {
-        successMessage += `- Plugin Registry: Available for discovery\n`;
+        successMessage += '- Plugin Registry: Available for discovery\n';
       }
 
       // Update project with publishing info
@@ -598,7 +598,7 @@ export const getProjectNotificationsAction: Action = {
   },
   handler: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const service = runtime.getService('autocoder') as AutoCodeService;
-    if (!service) return { text: 'Orchestration service is not available.' };
+    if (!service) {return { text: 'Orchestration service is not available.' };}
 
     const text = message.content.text || '';
     const idMatch = text.match(/project ([a-zA-Z0-9-]+)/);
@@ -607,7 +607,7 @@ export const getProjectNotificationsAction: Action = {
       // Get notifications for specific project
       const projectId = idMatch[1];
       const project = await service.getProject(projectId);
-      if (!project) return { text: `Project ${projectId} not found.` };
+      if (!project) {return { text: `Project ${projectId} not found.` };}
 
       const recentNotifications = project.userNotifications.slice(-10);
       if (recentNotifications.length === 0) {

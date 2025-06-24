@@ -238,16 +238,11 @@ async function safeLoadCharacter(path: string): Promise<Character> {
  */
 export async function loadCharacterTryPath(characterPath: string): Promise<Character> {
   if (characterPath.startsWith('http')) {
-    try {
-      const characters = await loadCharactersFromUrl(characterPath);
-      if (!characters || characters.length === 0) {
-        throw new Error('No characters found in the URL response');
-      }
-      return characters[0];
-    } catch (error) {
-      // The error is already formatted by loadCharactersFromUrl, so just re-throw it
-      throw error;
+    const characters = await loadCharactersFromUrl(characterPath);
+    if (!characters || characters.length === 0) {
+      throw new Error('No characters found in the URL response');
     }
+    return characters[0];
   }
 
   // Create path variants with and without .json extension

@@ -12,7 +12,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { PluginManagerService } from '../services/pluginManagerService';
 
-interface PluginDetailsResponse {
+interface _PluginDetailsResponse {
   success: boolean;
   pluginName?: string;
   details?: {
@@ -77,7 +77,7 @@ const viewPluginDetailsHandler: Handler = async (
     const loadedPlugins = await pluginService.getLoadedPlugins();
     const isLoaded = loadedPlugins.includes(pluginName);
 
-    let pluginDetails: any = {
+    const pluginDetails: any = {
       loaded: isLoaded,
     };
 
@@ -117,7 +117,7 @@ const viewPluginDetailsHandler: Handler = async (
           exists: false,
         };
       }
-    } catch (error) {
+    } catch (_error) {
       // Schema check failed, but don't fail the whole operation
       pluginDetails.schema = {
         exists: false,
@@ -131,11 +131,11 @@ const viewPluginDetailsHandler: Handler = async (
     }
 
     return true;
-  } catch (error) {
-    elizaLogger.error('Error viewing plugin details:', error);
+  } catch (_error) {
+    elizaLogger.error('Error viewing plugin details:', _error);
     if (callback) {
       await callback({
-        text: `Error viewing plugin details: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
+        text: `Error viewing plugin details: ${_error instanceof Error ? _error.message : 'Unknown _error occurred'}`,
       });
     }
     return false;

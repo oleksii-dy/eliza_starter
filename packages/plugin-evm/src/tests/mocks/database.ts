@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { mock  } from 'bun:test';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import type { WalletInstance } from '../../core/interfaces/IWalletService';
 import type { Address } from 'viem';
@@ -23,7 +23,11 @@ export class MockWalletDatabaseService {
 
   constructor(private runtime: IAgentRuntime) {}
 
-  async createWallet(wallet: Omit<WalletInstance, 'id'>, privateKey?: string, mnemonic?: string): Promise<WalletInstance> {
+  async createWallet(
+    wallet: Omit<WalletInstance, 'id'>,
+    privateKey?: string,
+    mnemonic?: string,
+  ): Promise<WalletInstance> {
     const newWallet: WalletInstance = {
       ...wallet,
       id: `00000000-0000-0000-0000-${Date.now().toString().padStart(12, '0')}` as UUID,
@@ -38,8 +42,10 @@ export class MockWalletDatabaseService {
 
   async updateWallet(id: string, updates: Partial<WalletInstance>): Promise<WalletInstance | null> {
     const wallet = this.wallets.get(id);
-    if (!wallet) return null;
-    
+    if (!wallet) {
+      return null;
+    }
+
     const updatedWallet = { ...wallet, ...updates };
     this.wallets.set(id, updatedWallet);
     return updatedWallet;
@@ -77,10 +83,15 @@ export class MockWalletDatabaseService {
     return null;
   }
 
-  async updateCustodialWallet(id: string, updates: Partial<CustodialWalletData>): Promise<CustodialWalletData | null> {
+  async updateCustodialWallet(
+    id: string,
+    updates: Partial<CustodialWalletData>,
+  ): Promise<CustodialWalletData | null> {
     const wallet = this.custodialWallets.get(id);
-    if (!wallet) return null;
-    
+    if (!wallet) {
+      return null;
+    }
+
     const updatedWallet = { ...wallet, ...updates };
     this.custodialWallets.set(id, updatedWallet);
     return updatedWallet;
@@ -93,7 +104,7 @@ export class MockWalletDatabaseService {
   async listCustodialWallets(agentId?: string): Promise<CustodialWalletData[]> {
     const allWallets = Array.from(this.custodialWallets.values());
     if (agentId) {
-      return allWallets.filter(w => w.agentId === agentId);
+      return allWallets.filter((w) => w.agentId === agentId);
     }
     return allWallets;
   }
@@ -129,6 +140,6 @@ export function createMockWalletDatabaseService(runtime: IAgentRuntime): MockWal
  * Mock for the actual module
  */
 export const mockDatabaseModule = {
-  createWalletDatabaseService: vi.fn().mockImplementation(createMockWalletDatabaseService),
+  createWalletDatabaseService: mock().mockImplementation(createMockWalletDatabaseService),
   WalletDatabaseService: MockWalletDatabaseService,
 };

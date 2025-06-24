@@ -1,32 +1,19 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/api';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { 
-  ChevronDown, 
-  ChevronRight, 
-  Settings, 
-  Loader2, 
-  Power, 
+  ChevronDown,
+  ChevronRight,
+  Settings,
+  Loader2,
+  Power,
   PowerOff,
   RefreshCw,
   AlertTriangle,
   CheckCircle,
-  XCircle
 } from 'lucide-react';
 import clsx from 'clsx';
 import {
@@ -35,22 +22,12 @@ import {
   useDisableComponent,
   useToggleComponent,
   useRuntimeStatus,
-  usePluginConfigurationRealtime
+  usePluginConfigurationRealtime,
 } from '@/hooks/use-plugin-configurations';
 
 interface PluginComponentConfig {
   enabled: boolean;
-  settings?: Record<string, any>;
-}
-
-interface PluginConfiguration {
-  pluginName: string;
-  enabled: boolean;
-  actions?: Record<string, PluginComponentConfig>;
-  providers?: Record<string, PluginComponentConfig>;
-  evaluators?: Record<string, PluginComponentConfig>;
-  services?: Record<string, PluginComponentConfig>;
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
 }
 
 interface PluginComponentsPanelProps {
@@ -62,11 +39,11 @@ interface PluginComponentsPanelProps {
 
 type ComponentType = 'actions' | 'providers' | 'evaluators' | 'services';
 
-export default function PluginComponentsPanel({ 
-  agentId, 
-  plugins, 
-  isOpen, 
-  onClose 
+export default function PluginComponentsPanel({
+  agentId,
+  plugins,
+  isOpen,
+  onClose,
 }: PluginComponentsPanelProps) {
   const { toast } = useToast();
   const [expandedPlugins, setExpandedPlugins] = useState<Set<string>>(new Set());
@@ -74,16 +51,17 @@ export default function PluginComponentsPanel({
   const [selectedPluginForStatus, setSelectedPluginForStatus] = useState<string | null>(null);
 
   // Use enhanced hooks for configuration management
-  const { data: configurations, isLoading: loading, refetch: refetchConfigurations } = usePluginConfigurations(agentId);
+  const {
+    data: configurations,
+    isLoading: loading,
+    refetch: refetchConfigurations,
+  } = usePluginConfigurations(agentId);
   const enableComponent = useEnableComponent();
   const disableComponent = useDisableComponent();
   const toggleComponent = useToggleComponent();
-  
+
   // Runtime status for selected plugin
-  const { data: runtimeStatus, refetch: refetchRuntimeStatus } = useRuntimeStatus(
-    agentId, 
-    selectedPluginForStatus || ''
-  );
+  const { data: runtimeStatus } = useRuntimeStatus(agentId, selectedPluginForStatus || '');
 
   // Enable real-time updates
   usePluginConfigurationRealtime(agentId);
@@ -118,11 +96,14 @@ export default function PluginComponentsPanel({
     componentName: string
   ) => {
     try {
-      const componentTypeMap: Record<ComponentType, 'action' | 'provider' | 'evaluator' | 'service'> = {
+      const componentTypeMap: Record<
+        ComponentType,
+        'action' | 'provider' | 'evaluator' | 'service'
+      > = {
         actions: 'action',
-        providers: 'provider', 
+        providers: 'provider',
         evaluators: 'evaluator',
-        services: 'service'
+        services: 'service',
       };
 
       await toggleComponent.mutateAsync({
@@ -131,8 +112,8 @@ export default function PluginComponentsPanel({
         componentType: componentTypeMap[componentType],
         componentName,
         options: {
-          overrideReason: 'Toggled via UI'
-        }
+          overrideReason: 'Toggled via UI',
+        },
       });
 
       toast({
@@ -162,11 +143,15 @@ export default function PluginComponentsPanel({
     componentType: ComponentType,
     componentName: string
   ) => {
-    if (!runtimeStatus || selectedPluginForStatus !== pluginName) return null;
-    
+    if (!runtimeStatus || selectedPluginForStatus !== pluginName) {
+      return null;
+    }
+
     const comparison = runtimeStatus.comparison?.[componentType]?.[componentName];
-    if (!comparison) return null;
-    
+    if (!comparison) {
+      return null;
+    }
+
     return comparison;
   };
 
@@ -203,16 +188,25 @@ export default function PluginComponentsPanel({
           <CollapsibleContent className={clsx('space-y-2 mt-2', { hidden: !isExpanded })}>
             {Object.entries(components).map(([componentName, config]) => {
               const syncStatus = getComponentSyncStatus(pluginName, componentType, componentName);
-              
+
               return (
-                <div key={componentName} className="flex items-center justify-between py-2 px-3 bg-muted/20 rounded">
+                <div
+                  key={componentName}
+                  className="flex items-center justify-between py-2 px-3 bg-muted/20 rounded"
+                >
                   <div className="flex items-center space-x-3">
                     <Button
                       size="sm"
-                      variant={config.enabled ? "default" : "outline"}
+                      variant={config.enabled ? 'default' : 'outline'}
                       className="h-6 w-12 p-0 text-xs"
-                      onClick={() => handleToggleComponent(pluginName, componentType, componentName)}
-                      disabled={enableComponent.isPending || disableComponent.isPending || toggleComponent.isPending}
+                      onClick={() =>
+                        handleToggleComponent(pluginName, componentType, componentName)
+                      }
+                      disabled={
+                        enableComponent.isPending ||
+                        disableComponent.isPending ||
+                        toggleComponent.isPending
+                      }
                     >
                       {config.enabled ? (
                         <>
@@ -226,11 +220,9 @@ export default function PluginComponentsPanel({
                         </>
                       )}
                     </Button>
-                    
+
                     <div className="flex flex-col">
-                      <label className="text-sm font-medium">
-                        {componentName}
-                      </label>
+                      <label className="text-sm font-medium">{componentName}</label>
                       {syncStatus && (
                         <div className="flex items-center gap-1 text-xs">
                           {syncStatus.inSync ? (
@@ -242,8 +234,8 @@ export default function PluginComponentsPanel({
                             <>
                               <AlertTriangle className="h-3 w-3 text-yellow-500" />
                               <span className="text-yellow-600">
-                                Config: {syncStatus.configured ? 'ON' : 'OFF'} | 
-                                Runtime: {syncStatus.registered ? 'ON' : 'OFF'}
+                                Config: {syncStatus.configured ? 'ON' : 'OFF'} | Runtime:{' '}
+                                {syncStatus.registered ? 'ON' : 'OFF'}
                               </span>
                             </>
                           )}
@@ -251,17 +243,17 @@ export default function PluginComponentsPanel({
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     {config.settings && Object.keys(config.settings).length > 0 && (
                       <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
                         <Settings className="h-3 w-3" />
                       </Button>
                     )}
-                    
+
                     {/* Status badge */}
-                    <Badge variant={config.enabled ? "default" : "secondary"} className="text-xs">
-                      {config.enabled ? "Enabled" : "Disabled"}
+                    <Badge variant={config.enabled ? 'default' : 'secondary'} className="text-xs">
+                      {config.enabled ? 'Enabled' : 'Disabled'}
                     </Badge>
                   </div>
                 </div>
@@ -274,8 +266,10 @@ export default function PluginComponentsPanel({
   };
 
   const filteredPlugins = useMemo(() => {
-    if (!configurations) return [];
-    return plugins.filter(plugin => configurations[plugin]);
+    if (!configurations) {
+      return [];
+    }
+    return plugins.filter((plugin) => configurations[plugin]);
   }, [plugins, configurations]);
 
   return (
@@ -287,7 +281,7 @@ export default function PluginComponentsPanel({
             Plugin Component Configuration
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="flex flex-col gap-4 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-8">
@@ -303,11 +297,13 @@ export default function PluginComponentsPanel({
               ) : (
                 filteredPlugins.map((pluginName) => {
                   const config = configurations?.[pluginName];
-                  if (!config) return null;
-                  
+                  if (!config) {
+                    return null;
+                  }
+
                   const isExpanded = expandedPlugins.has(pluginName);
                   const showingRuntimeStatus = selectedPluginForStatus === pluginName;
-                  
+
                   return (
                     <div key={pluginName} className="border rounded-lg p-4 space-y-3">
                       <Collapsible>
@@ -324,21 +320,23 @@ export default function PluginComponentsPanel({
                             <span className="font-semibold">
                               {getPluginDisplayName(pluginName)}
                             </span>
-                            <Badge variant={config.enabled ? "default" : "secondary"}>
+                            <Badge variant={config.enabled ? 'default' : 'secondary'}>
                               {config.enabled ? 'Enabled' : 'Disabled'}
                             </Badge>
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             {runtimeStatus && showingRuntimeStatus && (
-                              <Badge variant={runtimeStatus.inSync ? "default" : "destructive"}>
+                              <Badge variant={runtimeStatus.inSync ? 'default' : 'destructive'}>
                                 {runtimeStatus.inSync ? 'In Sync' : 'Out of Sync'}
                               </Badge>
                             )}
                           </div>
                         </CollapsibleTrigger>
-                        
-                        <CollapsibleContent className={clsx('space-y-3 mt-3', { hidden: !isExpanded })}>
+
+                        <CollapsibleContent
+                          className={clsx('space-y-3 mt-3', { hidden: !isExpanded })}
+                        >
                           {isExpanded && (
                             <div className="flex justify-end gap-2 mb-3">
                               <Button
@@ -357,7 +355,7 @@ export default function PluginComponentsPanel({
                               </Button>
                             </div>
                           )}
-                          
+
                           {renderComponentSection(pluginName, 'actions', config.actions)}
                           {renderComponentSection(pluginName, 'providers', config.providers)}
                           {renderComponentSection(pluginName, 'evaluators', config.evaluators)}
@@ -370,7 +368,7 @@ export default function PluginComponentsPanel({
               )}
             </div>
           )}
-          
+
           <div className="flex justify-between gap-2 pt-4 border-t">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
@@ -382,7 +380,7 @@ export default function PluginComponentsPanel({
                 Out of Sync
               </div>
             </div>
-            
+
             <div className="flex gap-2">
               <Button variant="outline" onClick={onClose}>
                 Close

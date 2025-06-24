@@ -9,7 +9,7 @@ import { getSchemaFactory, createLazyTableProxy } from './factory';
  */
 function createChannelParticipantsTable() {
   const factory = getSchemaFactory();
-  
+
   const tableColumns = {
     channelId: factory.uuid('channel_id').notNull(),
     userId: factory.uuid('user_id').notNull(),

@@ -7,7 +7,7 @@
  * If this fails, we have fundamental issues to fix.
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll } from 'bun:test';
 import { elizaLogger } from '@elizaos/core';
 import { AgentRuntime, type Character } from '@elizaos/core';
 

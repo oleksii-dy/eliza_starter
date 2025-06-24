@@ -52,7 +52,7 @@ export class RangedSystem extends System {
   private rangedWeapons: Map<number, RangedWeapon> = new Map();
   private ammunition: Map<number, Ammunition> = new Map();
   private autoRetrieveAmmo: Map<string, boolean> = new Map(); // Player preferences
-  
+
   constructor(world: World) {
     super(world);
     this.registerDefaultWeapons();
@@ -232,36 +232,36 @@ export class RangedSystem extends System {
   public performRangedAttack(attackerId: string, targetId: string): boolean {
     const attacker = this.world.entities.get(attackerId);
     const target = this.world.entities.get(targetId);
-    
-    if (!attacker || !target) return false;
+
+    if (!attacker || !target) {return false;}
 
     const inventory = attacker.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return false;
+    if (!inventory) {return false;}
 
     // Check if attacker has ranged weapon equipped
     const weapon = inventory.equipment[EquipmentSlot.WEAPON];
     if (!weapon) {
-      this.sendMessage(attackerId, "You need a ranged weapon to attack.");
+      this.sendMessage(attackerId, 'You need a ranged weapon to attack.');
       return false;
     }
 
     const rangedWeapon = this.rangedWeapons.get(weapon.id);
     if (!rangedWeapon) {
-      this.sendMessage(attackerId, "You need a ranged weapon to attack.");
+      this.sendMessage(attackerId, 'You need a ranged weapon to attack.');
       return false;
     }
 
     // Check ammunition
     const ammo = this.getEquippedAmmunition(inventory, rangedWeapon.ammunitionType);
     if (!ammo && rangedWeapon.ammunitionType !== AmmunitionType.CHINCHOMPA) {
-      this.sendMessage(attackerId, "You have run out of ammunition.");
+      this.sendMessage(attackerId, 'You have run out of ammunition.');
       return false;
     }
 
     // Check range
     const distance = this.getDistance(attacker, target);
     if (distance > rangedWeapon.attackRange) {
-      this.sendMessage(attackerId, "Your target is too far away.");
+      this.sendMessage(attackerId, 'Your target is too far away.');
       return false;
     }
 
@@ -306,7 +306,7 @@ export class RangedSystem extends System {
     const attackerStats = attacker.getComponent<StatsComponent>('stats');
     const attackerCombat = attacker.getComponent<CombatComponent>('combat');
     const targetStats = target.getComponent<StatsComponent>('stats');
-    
+
     if (!attackerStats || !attackerCombat || !targetStats) {
       return {
         damage: 0,
@@ -321,9 +321,9 @@ export class RangedSystem extends System {
     // Calculate accuracy
     const rangedLevel = attackerStats.ranged.level;
     const rangedBonus = attackerStats.combatBonuses.attackRanged;
-    
+
     let effectiveLevel = rangedLevel;
-    
+
     // Apply combat style bonuses
     switch (attackerCombat.combatStyle) {
       case CombatStyle.ACCURATE:
@@ -338,21 +338,21 @@ export class RangedSystem extends System {
     }
 
     effectiveLevel += 8; // Stance bonus
-    
+
     const attackRoll = effectiveLevel * (rangedBonus + 64);
-    
+
     // Target defense roll
     const defenseLevel = targetStats.defense.level;
     const defenseBonus = targetStats.combatBonuses.defenseRanged;
     const defenseRoll = (defenseLevel + 8) * (defenseBonus + 64);
-    
+
     // Check if hit lands
-    const hitChance = attackRoll > defenseRoll 
+    const hitChance = attackRoll > defenseRoll
       ? 1 - (defenseRoll + 2) / (2 * (attackRoll + 1))
       : attackRoll / (2 * (defenseRoll + 1));
-      
+
     const isHit = Math.random() < hitChance;
-    
+
     if (!isHit) {
       return {
         damage: 0,
@@ -365,7 +365,7 @@ export class RangedSystem extends System {
     }
 
     // Calculate damage
-    let maxHit = this.calculateMaxRangedHit(attackerStats, attackerCombat, weapon, ammo);
+    const maxHit = this.calculateMaxRangedHit(attackerStats, attackerCombat, weapon, ammo);
     const damage = Math.floor(Math.random() * (maxHit + 1));
 
     return {
@@ -384,28 +384,28 @@ export class RangedSystem extends System {
   private calculateMaxRangedHit(stats: StatsComponent, combat: CombatComponent, weapon: RangedWeapon, ammo: Ammunition | null): number {
     const rangedLevel = stats.ranged.level;
     let rangedStrength = stats.combatBonuses.rangedStrength;
-    
+
     // Add weapon and ammo ranged strength
     rangedStrength += weapon.rangedStrength;
     if (ammo) {
       rangedStrength += ammo.rangedStrength;
     }
-    
+
     let effectiveStrength = rangedLevel;
-    
+
     // Apply combat style bonuses
     if (combat.combatStyle === CombatStyle.ACCURATE) {
       effectiveStrength += 3;
     }
-    
+
     effectiveStrength += 8; // Stance bonus
-    
+
     // Calculate max hit
-    let maxHit = 0.5 + effectiveStrength * (rangedStrength + 64) / 640;
-    
+    const maxHit = 0.5 + effectiveStrength * (rangedStrength + 64) / 640;
+
     // Apply prayer bonuses (if any)
     // maxHit *= prayerBonus;
-    
+
     return Math.floor(maxHit);
   }
 
@@ -414,10 +414,10 @@ export class RangedSystem extends System {
    */
   private getEquippedAmmunition(inventory: InventoryComponent, requiredType: AmmunitionType): Ammunition | null {
     const equippedAmmo = inventory.equipment[EquipmentSlot.AMMO];
-    if (!equippedAmmo) return null;
+    if (!equippedAmmo) {return null;}
 
     const ammo = this.ammunition.get(equippedAmmo.id);
-    if (!ammo || ammo.type !== requiredType) return null;
+    if (!ammo || ammo.type !== requiredType) {return null;}
 
     return ammo;
   }
@@ -427,14 +427,14 @@ export class RangedSystem extends System {
    */
   private consumeAmmunition(entityId: string, ammoId: number): void {
     const inventorySystem = this.world.systems.find(s => s.constructor.name === 'InventorySystem');
-    if (!inventorySystem) return;
+    if (!inventorySystem) {return;}
 
     // Remove 1 ammo from equipment slot
     const entity = this.world.entities.get(entityId);
-    if (!entity) return;
+    if (!entity) {return;}
 
     const inventory = entity.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return;
+    if (!inventory) {return;}
 
     const ammoStack = inventory.equipment[EquipmentSlot.AMMO];
     if (ammoStack && ammoStack.metadata?.quantity) {
@@ -473,14 +473,14 @@ export class RangedSystem extends System {
    */
   private grantRangedExperience(entityId: string, hit: HitResult): void {
     const skillsSystem = this.world.systems.find(s => s.constructor.name === 'SkillsSystem');
-    if (!skillsSystem) return;
+    if (!skillsSystem) {return;}
 
     // 4 XP per damage in ranged
     const rangedXP = hit.damage * 4;
-    
+
     // Also grant HP experience
     const hpXP = hit.damage * 1.33;
-    
+
     (skillsSystem as any).grantXP(entityId, 'ranged', rangedXP);
     (skillsSystem as any).grantXP(entityId, 'hitpoints', hpXP);
   }
@@ -491,7 +491,7 @@ export class RangedSystem extends System {
   public toggleAutoRetrieve(entityId: string): void {
     const current = this.autoRetrieveAmmo.get(entityId) || false;
     this.autoRetrieveAmmo.set(entityId, !current);
-    
+
     this.sendMessage(entityId, `Auto-retrieve ammunition: ${!current ? 'ON' : 'OFF'}`);
   }
 
@@ -522,10 +522,10 @@ export class RangedSystem extends System {
   private getDistance(entity1: RPGEntity, entity2: RPGEntity): number {
     const pos1 = entity1.position;
     const pos2 = entity2.position;
-    
+
     const dx = pos1.x - pos2.x;
     const dz = pos1.z - pos2.z;
-    
+
     return Math.sqrt(dx * dx + dz * dz);
   }
 
@@ -535,4 +535,4 @@ export class RangedSystem extends System {
       message
     });
   }
-} 
+}

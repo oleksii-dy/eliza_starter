@@ -54,14 +54,18 @@ export function SecretPanel({ characterValue, onChange }: SecretPanelProps) {
       const newEnvs: Record<string, string> = {};
       for (const line of lines) {
         const trimmedLine = line.trim();
-        if (!trimmedLine || trimmedLine.startsWith('#')) continue;
+        if (!trimmedLine || trimmedLine.startsWith('#')) {
+          continue;
+        }
 
         const [key, ...rest] = trimmedLine.split('=');
         const val = rest
           .join('=')
           .trim()
           .replace(/^['"]|['"]$/g, '');
-        if (key) newEnvs[key.trim()] = val;
+        if (key) {
+          newEnvs[key.trim()] = val;
+        }
       }
 
       setEnvs((prev) => {
@@ -88,7 +92,9 @@ export function SecretPanel({ characterValue, onChange }: SecretPanelProps) {
 
   useEffect(() => {
     const drop = dropRef.current;
-    if (!drop) return;
+    if (!drop) {
+      return;
+    }
 
     const preventDefaults = (e: Event) => {
       e.preventDefault();

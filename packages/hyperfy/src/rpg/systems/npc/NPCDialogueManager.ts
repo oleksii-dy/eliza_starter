@@ -28,12 +28,12 @@ export class NPCDialogueManager {
   private world: World;
   private sessions: Map<string, DialogueSession> = new Map();
   private dialogues: Map<string, Map<string, DialogueNode>> = new Map();
-  
+
   constructor(world: World) {
     this.world = world;
     this.registerDefaultDialogues();
   }
-  
+
   /**
    * Update dialogue sessions
    */
@@ -46,7 +46,7 @@ export class NPCDialogueManager {
       }
     }
   }
-  
+
   /**
    * Start dialogue between player and NPC
    */
@@ -55,14 +55,14 @@ export class NPCDialogueManager {
     if (this.sessions.has(playerId)) {
       this.endDialogue(playerId);
     }
-    
+
     // Get NPC component
     const npc = this.getNPC(npcId);
-    if (!npc) return;
-    
+    if (!npc) {return;}
+
     const npcComponent = npc.getComponent<NPCComponent>('npc');
-    if (!npcComponent || !npcComponent.dialogue) return;
-    
+    if (!npcComponent || !npcComponent.dialogue) {return;}
+
     // Create session
     const session: DialogueSession = {
       playerId,
@@ -71,49 +71,49 @@ export class NPCDialogueManager {
       startTime: Date.now(),
       variables: new Map()
     };
-    
+
     this.sessions.set(playerId, session);
-    
+
     // Send first dialogue
     this.sendDialogueNode(playerId, session);
-    
+
     // Emit event
     this.world.events.emit('dialogue:start', {
       playerId,
       npcId
     });
   }
-  
+
   /**
    * Handle player dialogue choice
    */
   handleChoice(playerId: string, optionIndex: number): void {
     const session = this.sessions.get(playerId);
-    if (!session) return;
-    
+    if (!session) {return;}
+
     const dialogue = this.getDialogue(session.npcId, session.currentNode);
     if (!dialogue || !dialogue.options || optionIndex >= dialogue.options.length) {
       this.endDialogue(playerId);
       return;
     }
-    
+
     const option = dialogue.options[optionIndex];
     if (!option) {
       this.endDialogue(playerId);
       return;
     }
-    
+
     // Check condition
     if (option.condition && !option.condition()) {
       this.sendMessage(playerId, "You can't do that right now.");
       return;
     }
-    
+
     // Execute action
     if (option.action) {
       option.action();
     }
-    
+
     // Move to next node
     if (option.nextNode === 'end') {
       this.endDialogue(playerId);
@@ -122,23 +122,23 @@ export class NPCDialogueManager {
       this.sendDialogueNode(playerId, session);
     }
   }
-  
+
   /**
    * End dialogue session
    */
   endDialogue(playerId: string): void {
     const session = this.sessions.get(playerId);
-    if (!session) return;
-    
+    if (!session) {return;}
+
     this.sessions.delete(playerId);
-    
+
     // Emit event
     this.world.events.emit('dialogue:end', {
       playerId,
       npcId: session.npcId
     });
   }
-  
+
   /**
    * Send dialogue node to player
    */
@@ -148,23 +148,23 @@ export class NPCDialogueManager {
       this.endDialogue(playerId);
       return;
     }
-    
+
     // Check condition
     if (dialogue.condition && !dialogue.condition()) {
       this.endDialogue(playerId);
       return;
     }
-    
+
     // Execute action
     if (dialogue.action) {
       dialogue.action();
     }
-    
+
     // Format options
-    const options = dialogue.options?.filter(opt => 
+    const options = dialogue.options?.filter(opt =>
       !opt.condition || opt.condition()
     ).map(opt => opt.text) || [];
-    
+
     // Send to player
     this.world.events.emit('dialogue:node', {
       playerId,
@@ -173,14 +173,14 @@ export class NPCDialogueManager {
       options
     });
   }
-  
+
   /**
    * Register dialogue for an NPC
    */
   registerDialogue(npcId: string, dialogues: Map<string, DialogueNode>): void {
     this.dialogues.set(npcId, dialogues);
   }
-  
+
   /**
    * Get dialogue node
    */
@@ -188,7 +188,7 @@ export class NPCDialogueManager {
     const npcDialogues = this.dialogues.get(npcId);
     return npcDialogues?.get(nodeId);
   }
-  
+
   /**
    * Get NPC entity
    */
@@ -199,15 +199,15 @@ export class NPCDialogueManager {
         return entity as unknown as NPCEntity;
       }
     }
-    
+
     const entity = this.world.entities.get?.(npcId);
     if (entity && typeof entity.getComponent === 'function') {
       return entity as unknown as NPCEntity;
     }
-    
+
     return undefined;
   }
-  
+
   /**
    * Send message to player
    */
@@ -217,7 +217,7 @@ export class NPCDialogueManager {
       message
     });
   }
-  
+
   /**
    * Register default dialogues
    */
@@ -244,7 +244,7 @@ export class NPCDialogueManager {
         }
       ]
     });
-    
+
     shopkeeperDialogue.set('shop', {
       id: 'shop',
       text: 'Take your time browsing!',
@@ -255,9 +255,9 @@ export class NPCDialogueManager {
         }
       ]
     });
-    
+
     this.registerDialogue('100', shopkeeperDialogue);
-    
+
     // Quest giver dialogue
     const questGiverDialogue = new Map<string, DialogueNode>();
     questGiverDialogue.set('start', {
@@ -278,7 +278,7 @@ export class NPCDialogueManager {
         }
       ]
     });
-    
+
     questGiverDialogue.set('threats', {
       id: 'threats',
       text: 'Goblins have been raiding our farms, and strange creatures lurk in the nearby caves.',
@@ -297,7 +297,7 @@ export class NPCDialogueManager {
         }
       ]
     });
-    
+
     questGiverDialogue.set('quests', {
       id: 'quests',
       text: 'I have several tasks that need doing. Which interests you?',
@@ -316,7 +316,7 @@ export class NPCDialogueManager {
         }
       ]
     });
-    
+
     questGiverDialogue.set('goblin_quest', {
       id: 'goblin_quest',
       text: 'Excellent! Please eliminate 10 goblins from the area. They can be found east of here.',
@@ -334,7 +334,7 @@ export class NPCDialogueManager {
         }
       ]
     });
-    
+
     this.registerDialogue('200', questGiverDialogue);
   }
-} 
+}

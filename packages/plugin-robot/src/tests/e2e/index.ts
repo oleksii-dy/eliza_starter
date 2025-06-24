@@ -19,4 +19,4 @@ export const testSuites: TestSuite[] = [
 ];
 
 // Default export for ElizaOS test runner
-export default testSuites; 
+export default testSuites;

@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { mock } from 'bun:test';
 import { Content, IAgentRuntime, Memory, State, logger } from '@elizaos/core';
 import {
   createMockRuntime as createCoreMockRuntime,
@@ -23,16 +23,16 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
   // Enhance with project-specific configuration
   const mockRuntime = {
     ...baseRuntime,
-    character: character,
+    character,
     plugins: [],
-    registerPlugin: vi.fn(),
-    initialize: vi.fn(),
-    getService: vi.fn(),
-    getSetting: vi.fn().mockReturnValue(null),
-    useModel: vi.fn().mockResolvedValue('Test model response'),
-    getProviderResults: vi.fn().mockResolvedValue([]),
-    evaluateProviders: vi.fn().mockResolvedValue([]),
-    evaluate: vi.fn().mockResolvedValue([]),
+    registerPlugin: mock(),
+    initialize: mock(),
+    getService: mock(),
+    getSetting: mock().mockReturnValue(null),
+    useModel: mock().mockResolvedValue('Test model response'),
+    getProviderResults: mock().mockResolvedValue([]),
+    evaluateProviders: mock().mockResolvedValue([]),
+    evaluate: mock().mockResolvedValue([]),
     ...overrides,
   } as unknown as IAgentRuntime;
 
@@ -83,7 +83,7 @@ export function setupTest(
   } = {}
 ) {
   // Create mock callback function
-  const callbackFn = vi.fn();
+  const callbackFn = mock();
 
   // Create a message
   const mockMessage = createMockMessage(
@@ -110,11 +110,11 @@ export { documentTestResult, runCoreActionTests };
 
 // Add spy on logger for common usage in tests
 export function setupLoggerSpies() {
-  vi.spyOn(logger, 'info').mockImplementation(() => {});
-  vi.spyOn(logger, 'error').mockImplementation(() => {});
-  vi.spyOn(logger, 'warn').mockImplementation(() => {});
-  vi.spyOn(logger, 'debug').mockImplementation(() => {});
+  mock.spyOn(logger, 'info').mockImplementation(() => {});
+  mock.spyOn(logger, 'error').mockImplementation(() => {});
+  mock.spyOn(logger, 'warn').mockImplementation(() => {});
+  mock.spyOn(logger, 'debug').mockImplementation(() => {});
 
   // allow tests to restore originals
-  return () => vi.restoreAllMocks();
+  return () => mock.restore();
 }

@@ -65,8 +65,8 @@ export const ${camelCaseName}Action: Action = {
       // Extract parameters from message or options
       const messageText = message.content?.text || '';
       ${
-        parameters
-          ? `
+  parameters
+    ? `
       // Expected parameters: ${JSON.stringify(parameters, null, 2)}
       // Extract parameters from the message or options
       const params = options || {};
@@ -76,19 +76,19 @@ export const ${camelCaseName}Action: Action = {
       
       // Validate required parameters
       ${Object.entries(parameters)
-        .map(([key, value]: [string, any]) => {
-          if (value.required) {
-            return `if (!${key}) {
+    .map(([key, value]: [string, any]) => {
+      if (value.required) {
+        return `if (!${key}) {
         return "${key} is required";
       }`;
-          }
-          return '';
-        })
-        .filter(Boolean)
-        .join('\n      ')}
-      `
-          : ''
       }
+      return '';
+    })
+    .filter(Boolean)
+    .join('\n      ')}
+      `
+    : ''
+}
       
       // Implement the action logic
       // For now, we'll acknowledge the request and simulate processing
@@ -175,23 +175,23 @@ export const ${camelCaseName}: Provider = {
       const currentTime = new Date().toISOString();
       
       ${
-        dataStructure
-          ? `// Build the expected data structure: ${JSON.stringify(dataStructure, null, 2)}
+  dataStructure
+    ? `// Build the expected data structure: ${JSON.stringify(dataStructure, null, 2)}
       const providerData = {
         ${Object.entries(dataStructure || {})
-          .map(([key, type]) => {
-            if (type === 'string') return `${key}: 'Sample ${key} value'`;
-            if (type === 'number') return `${key}: 0`;
-            if (type === 'boolean') return `${key}: false`;
-            if (type === 'array') return `${key}: []`;
-            return `${key}: {}`;
-          })
-          .join(',\n        ')},
+    .map(([key, type]) => {
+      if (type === 'string') {return `${key}: 'Sample ${key} value'`;}
+      if (type === 'number') {return `${key}: 0`;}
+      if (type === 'boolean') {return `${key}: false`;}
+      if (type === 'array') {return `${key}: []`;}
+      return `${key}: {}`;
+    })
+    .join(',\n        ')},
         timestamp: currentTime,
         source: "${name}",
         context: context.substring(0, 100) // Include some context
       };`
-          : `
+    : `
       // Create provider data based on the description: ${description}
       const providerData = {
         timestamp: currentTime,
@@ -201,7 +201,7 @@ export const ${camelCaseName}: Provider = {
         status: 'active',
         available: true
       };`
-      }
+}
       
       // You can access runtime services and state:
       // const service = runtime.getService('SOME_SERVICE');
@@ -298,10 +298,10 @@ export class ${className} extends Service {
   }
   
   ${
-    methods
-      ? methods
-          .map(
-            (method) => `
+  methods
+    ? methods
+      .map(
+        (method) => `
   async ${method}(...args: any[]): Promise<any> {
     logger.info(\`${className}.${method} called with args:\`, args);
     
@@ -323,10 +323,10 @@ export class ${className} extends Service {
     }
   }
   `
-          )
-          .join('\n')
-      : ''
-  }
+      )
+      .join('\n')
+    : ''
+}
   
   // Additional service methods
   async getStatus(): Promise<{ active: boolean; uptime: number }> {
@@ -384,18 +384,18 @@ export const ${camelCaseName}Evaluator: Evaluator = {
     const content = message.content?.text?.toLowerCase() || '';
     
     ${
-      triggers && triggers.length > 0
-        ? `// Check against configured triggers: ${triggers.join(', ')}
+  triggers && triggers.length > 0
+    ? `// Check against configured triggers: ${triggers.join(', ')}
     const shouldTrigger = ${triggers.map((t) => `content.includes('${t.toLowerCase()}')`).join(' || ')};
     
     if (!shouldTrigger) {
       return false;
     }`
-        : `// Default validation - run on messages with sufficient content
+    : `// Default validation - run on messages with sufficient content
     if (content.length < 5) {
       return false;
     }`
-    }
+}
     
     // Additional validation logic
     // For example, check if enough time has passed since last evaluation
@@ -470,19 +470,19 @@ export const ${camelCaseName}Evaluator: Evaluator = {
 export const generatePluginIndex = (pluginName: string, specification: any): string => {
   const cleanPluginName = pluginName.replace(/^@[^/]+\//, '').replace(/[-_]/g, '');
   const pluginClassName =
-    cleanPluginName.charAt(0).toUpperCase() + cleanPluginName.slice(1) + 'Plugin';
+    `${cleanPluginName.charAt(0).toUpperCase() + cleanPluginName.slice(1)}Plugin`;
 
   const imports: string[] = [];
   const exports: string[] = [];
 
   // Always import from core
-  imports.push(`import { Plugin, IAgentRuntime, logger } from "@elizaos/core";`);
+  imports.push('import { Plugin, IAgentRuntime, logger } from "@elizaos/core";');
 
   // Determine if this plugin needs secrets manager based on environment variables
   const needsSecretsManager = specification.environmentVariables?.length > 0;
   if (needsSecretsManager) {
-    imports.push(`// @ts-ignore - EnhancedSecretManager export issue`);
-    imports.push(`import type EnhancedSecretManager from "@elizaos/plugin-secrets-manager";`);
+    imports.push('// @ts-ignore - EnhancedSecretManager export issue');
+    imports.push('import type EnhancedSecretManager from "@elizaos/plugin-secrets-manager";');
   }
 
   if (specification.actions?.length) {
@@ -601,15 +601,15 @@ async function setConfigValue(
 }export const ${pluginClassName}: Plugin = {
   name: "${pluginName}",
   description: "${specification.description}",${
-    dependencies.length > 0
-      ? `
+  dependencies.length > 0
+    ? `
   
   // Declare dependencies${needsSecretsManager ? ' including secrets manager for secure configuration' : ''}
   dependencies: [${dependencies.map((d) => `'${d}'`).join(', ')}],`
-      : ''
-  }${
-    specification.environmentVariables?.length > 0
-      ? `
+    : ''
+}${
+  specification.environmentVariables?.length > 0
+    ? `
   
   // Declare environment variables for secrets manager
   declaredEnvVars: {${specification.environmentVariables
@@ -624,26 +624,26 @@ async function setConfigValue(
     )
     .join(',')}
   },`
-      : ''
-  }${
-    needsSecretsManager
-      ? `
+    : ''
+}${
+  needsSecretsManager
+    ? `
   
   async init(config: Record<string, string>, runtime: IAgentRuntime) {
     logger.info('Initializing ${pluginName}');
     
     try {
       // Load and validate configuration using secrets manager${specification.environmentVariables
-        ?.map(
-          (envVar: any) => `
+    ?.map(
+      (envVar: any) => `
       const ${envVar.name.toLowerCase()} = config?.${envVar.name} || await getConfigValue(runtime, '${envVar.name}');${
-        envVar.required
-          ? `
+  envVar.required
+    ? `
       if (!${envVar.name.toLowerCase()}) {
         throw new Error('${envVar.name} is required but not configured');
       }`
-          : ''
-      }
+    : ''
+}
       
       if (${envVar.name.toLowerCase()}) {
         await setConfigValue(runtime, '${envVar.name}', ${envVar.name.toLowerCase()}, {
@@ -652,8 +652,8 @@ async function setConfigValue(
           sensitive: ${envVar.sensitive || false}
         });
       }`
-        )
-        .join('\n      ')}
+    )
+    .join('\n      ')}
       
       logger.info('${pluginName} initialized successfully');
     } catch (error) {
@@ -661,45 +661,45 @@ async function setConfigValue(
       throw error;
     }
   },`
-      : ''
-  }${
-    specification.actions?.length
-      ? `
+    : ''
+}${
+  specification.actions?.length
+    ? `
   
   actions: [
     ${specification.actions.map((a: any) => `${a.name.charAt(0).toLowerCase() + a.name.slice(1)}Action`).join(',\n    ')}
   ],`
-      : ''
-  }${
-    specification.providers?.length
-      ? `
+    : ''
+}${
+  specification.providers?.length
+    ? `
   
   providers: [
     ${specification.providers
-      .map((p: any) => {
-        const camelCaseName = p.name.charAt(0).toLowerCase() + p.name.slice(1);
-        return p.name.endsWith('Provider') ? camelCaseName : `${camelCaseName}Provider`;
-      })
-      .join(',\n    ')}
+    .map((p: any) => {
+      const camelCaseName = p.name.charAt(0).toLowerCase() + p.name.slice(1);
+      return p.name.endsWith('Provider') ? camelCaseName : `${camelCaseName}Provider`;
+    })
+    .join(',\n    ')}
   ],`
-      : ''
-  }${
-    specification.services?.length
-      ? `
+    : ''
+}${
+  specification.services?.length
+    ? `
   
   services: [
     ${specification.services.map((s: any) => `${s.name}`).join(',\n    ')}
   ],`
-      : ''
-  }${
-    specification.evaluators?.length
-      ? `
+    : ''
+}${
+  specification.evaluators?.length
+    ? `
   
   evaluators: [
     ${specification.evaluators.map((e: any) => `${e.name.charAt(0).toLowerCase() + e.name.slice(1)}Evaluator`).join(',\n    ')}
   ]`
-      : ''
-  }
+    : ''
+}
 };
 
 // Export individual components for direct use
@@ -716,14 +716,14 @@ export const generateTestCode = (componentName: string, componentType: string): 
   const camelCaseName = componentName.charAt(0).toLowerCase() + componentName.slice(1);
   const typeLower = componentType.toLowerCase();
 
-  return `import { describe, it, expect, beforeEach, vi } from 'vitest';
+  return `import { describe, it, expect, beforeEach, mock  } from 'bun:test';
 import { ${camelCaseName}${componentType} } from '../${typeLower}s/${componentName}';
 import { IAgentRuntime, Memory, State } from '@elizaos/core';
 
 // Mock runtime
 const createMockRuntime = (): IAgentRuntime => {
   return {
-    getSetting: vi.fn(),
+    getSetting: mock(),
     services: new Map(),
     providers: new Map(),
     actions: new Map(),
@@ -748,7 +748,7 @@ describe('${componentName}${componentType}', () => {
   beforeEach(() => {
     mockRuntime = createMockRuntime();
     mockState = { values: {}, data: {}, text: "" };
-    vi.clearAllMocks();
+    mock.restore();
   });
   
   it('should be properly defined', () => {
@@ -757,8 +757,8 @@ describe('${componentName}${componentType}', () => {
   });
   
   ${
-    componentType === 'Action'
-      ? `
+  componentType === 'Action'
+    ? `
   describe('validate', () => {
     it('should validate valid input', async () => {
       const message = createMockMemory('test input');
@@ -788,12 +788,12 @@ describe('${componentName}${componentType}', () => {
     });
   });
   `
-      : ''
-  }
+    : ''
+}
   
   ${
-    componentType === 'Provider'
-      ? `
+  componentType === 'Provider'
+    ? `
   describe('get', () => {
     it('should provide data', async () => {
       const message = createMockMemory('test');
@@ -811,12 +811,12 @@ describe('${componentName}${componentType}', () => {
     });
   });
   `
-      : ''
-  }
+    : ''
+}
   
   ${
-    componentType === 'Evaluator'
-      ? `
+  componentType === 'Evaluator'
+    ? `
   describe('validate', () => {
     it('should validate when appropriate', async () => {
       const message = createMockMemory('test evaluation');
@@ -833,8 +833,8 @@ describe('${componentName}${componentType}', () => {
     });
   });
   `
-      : ''
-  }
+    : ''
+}
   
   // TODO: Add more specific tests based on the component's functionality
 });

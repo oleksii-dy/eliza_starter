@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { TrustDatabase } from '../TrustDatabase';
 import { createMockRuntime } from '../../__tests__/test-utils';
 import type { IAgentRuntime } from '@elizaos/core';
@@ -23,7 +23,7 @@ class InMemoryDatabase {
 
   async execute(sql: string, params?: any[]): Promise<any> {
     const trimmedSql = sql.trim().toUpperCase();
-    
+
     // Handle CREATE TABLE
     if (trimmedSql.startsWith('CREATE TABLE') || trimmedSql.startsWith('CREATE INDEX')) {
       return { changes: 0 };
@@ -33,7 +33,7 @@ class InMemoryDatabase {
     if (trimmedSql.includes('INSERT OR REPLACE INTO TRUST_PROFILES')) {
       const profiles = this.tables.get('trust_profiles') || [];
       const existingIndex = profiles.findIndex(p => p.entity_id === params?.[0]);
-      
+
       const profile = {
         entity_id: params?.[0],
         overall_trust: params?.[1],
@@ -55,7 +55,7 @@ class InMemoryDatabase {
       } else {
         profiles.push(profile);
       }
-      
+
       this.tables.set('trust_profiles', profiles);
       return { changes: 1 };
     }
@@ -63,12 +63,12 @@ class InMemoryDatabase {
     // Handle SELECT from trust_profiles
     if (trimmedSql.includes('SELECT * FROM TRUST_PROFILES')) {
       const profiles = this.tables.get('trust_profiles') || [];
-      
+
       if (trimmedSql.includes('WHERE ENTITY_ID = ?')) {
         const filtered = profiles.filter(p => p.entity_id === params?.[0]);
         return { rows: filtered };
       }
-      
+
       return { rows: profiles };
     }
 
@@ -121,17 +121,17 @@ class InMemoryDatabase {
     // Handle SELECT from trust_comments
     if (trimmedSql.includes('SELECT * FROM TRUST_COMMENTS')) {
       const comments = this.tables.get('trust_comments') || [];
-      let filtered = comments.filter(c => 
+      let filtered = comments.filter(c =>
         c.entity_id === params?.[0] && c.evaluator_id === params?.[1]
       );
       // Sort by timestamp DESC
       filtered.sort((a, b) => b.timestamp - a.timestamp);
-      
+
       // Handle LIMIT
       if (trimmedSql.includes('LIMIT ?') && params?.[2]) {
         filtered = filtered.slice(0, params[2]);
       }
-      
+
       return { rows: filtered };
     }
 
@@ -139,7 +139,7 @@ class InMemoryDatabase {
     if (trimmedSql.includes('INSERT OR REPLACE INTO PERMISSION_DELEGATIONS')) {
       const delegations = this.tables.get('permission_delegations') || [];
       const existingIndex = delegations.findIndex(d => d.id === params?.[0]);
-      
+
       const delegation = {
         id: params?.[0],
         delegator_id: params?.[1],
@@ -157,7 +157,7 @@ class InMemoryDatabase {
       } else {
         delegations.push(delegation);
       }
-      
+
       this.tables.set('permission_delegations', delegations);
       return { changes: 1 };
     }
@@ -166,8 +166,8 @@ class InMemoryDatabase {
     if (trimmedSql.includes('SELECT * FROM PERMISSION_DELEGATIONS')) {
       const delegations = this.tables.get('permission_delegations') || [];
       const now = params?.[1] || Date.now();
-      const filtered = delegations.filter(d => 
-        d.delegator_id === params?.[0] && 
+      const filtered = delegations.filter(d =>
+        d.delegator_id === params?.[0] &&
         d.active === 1 &&
         (!d.expires_at || d.expires_at > now)
       );
@@ -185,14 +185,14 @@ describe('TrustDatabase', () => {
   let mockDb: InMemoryDatabase;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockDb = new InMemoryDatabase();
     mockRuntime = createMockRuntime({
       db: {
-        execute: vi.fn((sql, params) => mockDb.execute(sql, params)),
-        query: vi.fn().mockResolvedValue([]),
-        getWorlds: vi.fn().mockResolvedValue([]),
-        getWorld: vi.fn().mockResolvedValue(null),
+        execute: mock((sql, params) => mockDb.execute(sql, params)),
+        query: mock().mockResolvedValue([]),
+        getWorlds: mock().mockResolvedValue([]),
+        getWorld: mock().mockResolvedValue(null),
       }
     });
     trustDatabase = new TrustDatabase();
@@ -330,7 +330,7 @@ describe('TrustDatabase', () => {
     it('should handle multiple evidence entries', async () => {
       const entityId = 'entity-123' as UUID;
       const now = Date.now();
-      
+
       // Add multiple evidence entries
       const evidence1: TrustEvidence = {
         targetEntityId: entityId,
@@ -379,7 +379,7 @@ describe('TrustDatabase', () => {
     it('should save and retrieve trust comments', async () => {
       const entityId = 'entity-123' as UUID;
       const evaluatorId = mockRuntime.agentId;
-      
+
       await trustDatabase.saveTrustComment({
         entityId,
         evaluatorId,
@@ -390,7 +390,7 @@ describe('TrustDatabase', () => {
       });
 
       const latestComment = await trustDatabase.getLatestTrustComment(entityId, evaluatorId);
-      
+
       expect(latestComment).toBeDefined();
       expect(latestComment?.trustScore).toBe(75);
       expect(latestComment?.trustChange).toBe(10);
@@ -400,7 +400,7 @@ describe('TrustDatabase', () => {
     it('should retrieve comment history', async () => {
       const entityId = 'entity-123' as UUID;
       const evaluatorId = mockRuntime.agentId;
-      
+
       // Add multiple comments
       for (let i = 0; i < 5; i++) {
         await trustDatabase.saveTrustComment({
@@ -416,7 +416,7 @@ describe('TrustDatabase', () => {
       }
 
       const history = await trustDatabase.getTrustCommentHistory(entityId, evaluatorId, 3);
-      
+
       expect(history).toHaveLength(3);
       // Should be ordered by timestamp DESC
       expect(history[0].comment).toBe('Comment 4');
@@ -449,7 +449,7 @@ describe('TrustDatabase', () => {
 
       await trustDatabase.savePermissionDelegation(delegation);
       const delegations = await trustDatabase.getPermissionDelegations(delegatorId);
-      
+
       expect(delegations).toHaveLength(1);
       expect(delegations[0].delegatorId).toBe(delegatorId);
       expect(delegations[0].delegateeId).toBe(delegation.delegateeId);
@@ -465,4 +465,4 @@ describe('TrustDatabase', () => {
       // Test passes if no error is thrown
     });
   });
-}); 
+});

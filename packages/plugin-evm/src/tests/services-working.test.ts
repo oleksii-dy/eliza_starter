@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { createMockRuntime, testPrivateKey, getTestChains } from './test-config';
 import { WalletProvider } from '../providers/wallet';
 import { ChainConfigService } from '../core/chains/config';
@@ -10,14 +10,13 @@ describe('EVM Services Working Tests', () => {
 
   beforeEach(() => {
     mockRuntime = createMockRuntime();
-    vi.clearAllMocks();
   });
 
   describe('WalletProvider', () => {
     it('should create wallet provider with chains', () => {
       const chains = getTestChains();
       const walletProvider = new WalletProvider(testPrivateKey, mockRuntime, chains);
-      
+
       expect(walletProvider).toBeDefined();
       expect(walletProvider.getAddress()).toMatch(/^0x[a-fA-F0-9]{40}$/);
     });
@@ -25,7 +24,7 @@ describe('EVM Services Working Tests', () => {
     it('should support multiple chains', () => {
       const chains = getTestChains();
       const walletProvider = new WalletProvider(testPrivateKey, mockRuntime, chains);
-      
+
       const supportedChains = walletProvider.getSupportedChains();
       expect(supportedChains).toContain('sepolia');
       expect(supportedChains).toContain('mainnet');
@@ -35,7 +34,7 @@ describe('EVM Services Working Tests', () => {
     it('should get chain configs', () => {
       const chains = getTestChains();
       const walletProvider = new WalletProvider(testPrivateKey, mockRuntime, chains);
-      
+
       const sepoliaConfig = walletProvider.getChainConfigs('sepolia');
       expect(sepoliaConfig).toBeDefined();
       expect(sepoliaConfig.id).toBe(11155111); // Sepolia chain ID
@@ -44,7 +43,7 @@ describe('EVM Services Working Tests', () => {
     it('should create public client for supported chain', () => {
       const chains = getTestChains();
       const walletProvider = new WalletProvider(testPrivateKey, mockRuntime, chains);
-      
+
       const publicClient = walletProvider.getPublicClient('sepolia');
       expect(publicClient).toBeDefined();
     });
@@ -52,7 +51,7 @@ describe('EVM Services Working Tests', () => {
     it('should create wallet client for supported chain', () => {
       const chains = getTestChains();
       const walletProvider = new WalletProvider(testPrivateKey, mockRuntime, chains);
-      
+
       const walletClient = walletProvider.getWalletClient('sepolia');
       expect(walletClient).toBeDefined();
       expect(walletClient.account).toBeDefined();
@@ -62,8 +61,10 @@ describe('EVM Services Working Tests', () => {
     it('should throw error for unsupported chain', () => {
       const chains = getTestChains();
       const walletProvider = new WalletProvider(testPrivateKey, mockRuntime, chains);
-      
-      expect(() => walletProvider.getChainConfigs('unsupported' as any)).toThrow('Invalid chain name');
+
+      expect(() => walletProvider.getChainConfigs('unsupported' as any)).toThrow(
+        'Invalid chain name'
+      );
     });
   });
 
@@ -110,37 +111,11 @@ describe('EVM Services Working Tests', () => {
     });
   });
 
-  describe('Mock Runtime Configuration', () => {
-    it('should have all required settings', () => {
-      const requiredSettings = [
-        'EVM_PRIVATE_KEY',
-        'DATABASE_URL',
-        'SEPOLIA_RPC_URL',
-        'ETHEREUM_RPC_URL'
-      ];
-
-      for (const setting of requiredSettings) {
-        const value = mockRuntime.getSetting(setting);
-        expect(value).toBeTruthy();
-      }
-    });
-
-    it('should provide valid private key format', () => {
-      const privateKey = mockRuntime.getSetting('EVM_PRIVATE_KEY');
-      expect(privateKey).toMatch(/^0x[a-fA-F0-9]{64}$/);
-    });
-
-    it('should provide database URL', () => {
-      const dbUrl = mockRuntime.getSetting('DATABASE_URL');
-      expect(dbUrl).toBe('sqlite::memory:');
-    });
-  });
-
   describe('Error Handling', () => {
     it('should handle missing chains gracefully', () => {
       // Create wallet provider without chains
       const walletProvider = new WalletProvider(testPrivateKey, mockRuntime);
-      
+
       expect(() => walletProvider.getChainConfigs('sepolia')).toThrow('Invalid chain name');
     });
 

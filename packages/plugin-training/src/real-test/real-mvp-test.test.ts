@@ -5,7 +5,7 @@
  * Based on validated minimal integration test.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'bun:test';
 import { AgentRuntime, type Character, elizaLogger } from '@elizaos/core';
 import { realMvpPlugin } from '../real-mvp/real-plugin';
 import { getReasoningService, clearServiceRegistry } from '../real-mvp/real-reasoning-service';
@@ -53,7 +53,7 @@ describe('Real MVP Plugin - ZERO LARP', () => {
 
     it('should initialize plugin properly', async () => {
       // REAL: Test plugin initialization
-      const initSpy = vi.fn();
+      const initSpy = mock();
       const testPlugin = {
         ...realMvpPlugin,
         init: async (config: any, runtime: any) => {

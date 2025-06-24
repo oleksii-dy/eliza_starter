@@ -95,7 +95,9 @@ export class PerformanceOptimizer {
     }
 
     const batch = this.batchQueue.splice(0, this.batchConfig.maxBatchSize);
-    if (batch.length === 0) return;
+    if (batch.length === 0) {
+      return;
+    }
 
     logger.debug(`Processing batch of ${batch.length} verifications`);
 

@@ -4,7 +4,7 @@
  * Focuses on core functionality without database dependencies
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { Service } from '../../types/service';
 import type {
   IAgentRuntime,

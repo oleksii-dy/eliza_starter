@@ -55,16 +55,16 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
    * @returns {Promise<void>}
    */
   async runMigrations(): Promise<void> {
-    logger.info(`[PgDatabaseAdapter] Starting unified migration process`);
+    logger.info('[PgDatabaseAdapter] Starting unified migration process');
 
     if (!this.migrator) {
       this.migrator = await createMigrator(this.agentId, 'postgres', this.postgresUrl);
     }
 
     await this.migrator.initialize();
-    
+
     this.migrationsComplete = true;
-    logger.info(`[PgDatabaseAdapter] Unified migration completed`);
+    logger.info('[PgDatabaseAdapter] Unified migration completed');
   }
 
   /**
@@ -252,9 +252,9 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
   protected async listTables(): Promise<string[]> {
     try {
       const result = await this.db.execute(
-        sql.raw(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`)
+        sql.raw('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\'')
       );
-      
+
       return result.map((row: any) => row.table_name);
     } catch (error) {
       logger.warn('Failed to list tables in PostgreSQL:', error);

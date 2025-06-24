@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from 'bun:test';
 import { NgrokService } from '../../services/NgrokService';
 import { startTunnelAction } from '../../actions/start-tunnel';
 import { stopTunnelAction } from '../../actions/stop-tunnel';
@@ -24,18 +24,18 @@ describe('Real ngrok API E2E Tests', () => {
     // Check if we should skip tests
     const hasAuthToken = Boolean(process.env.NGROK_AUTH_TOKEN);
     const skipEnvVar = process.env.SKIP_NGROK_TESTS === 'true';
-    
+
     console.log('E2E test environment check:');
     console.log('- NGROK_AUTH_TOKEN:', hasAuthToken ? 'Set' : 'Not set');
     console.log('- NGROK_DOMAIN:', process.env.NGROK_DOMAIN || 'Not set (will use random URL)');
     console.log('- SKIP_NGROK_TESTS:', skipEnvVar);
-    
+
     if (!hasAuthToken || skipEnvVar) {
       skipTests = true;
       console.log('⚠️  Skipping E2E tests');
       return;
     }
-    
+
     // Add delay before starting the test suite
     await testDelay(testConfig.execution.suitesDelay);
 
@@ -102,11 +102,13 @@ describe('Real ngrok API E2E Tests', () => {
 
     // Initialize service
     service = new NgrokService(runtime);
-  }, testConfig.execution.e2eTimeout);
+  });
 
   afterAll(async () => {
-    if (skipTests) return;
-    
+    if (skipTests) {
+      return;
+    }
+
     // Clean up any active tunnels
     if (service && service.isActive()) {
       await service.stopTunnel();
@@ -122,11 +124,13 @@ describe('Real ngrok API E2E Tests', () => {
   });
 
   beforeEach(async () => {
-    if (skipTests) return;
-    
+    if (skipTests) {
+      return;
+    }
+
     // Add delay before each test
     await testDelay();
-    
+
     // Ensure clean state before each test
     if (service && service.isActive()) {
       await service.stopTunnel();
@@ -135,13 +139,15 @@ describe('Real ngrok API E2E Tests', () => {
   });
 
   afterEach(async () => {
-    if (skipTests) return;
-    
+    if (skipTests) {
+      return;
+    }
+
     // Ensure tunnel is stopped after each test
     if (service && service.isActive()) {
       await service.stopTunnel();
     }
-    
+
     // Add delay after each test
     await testDelay();
   });
@@ -158,68 +164,86 @@ describe('Real ngrok API E2E Tests', () => {
   }
 
   describe('Basic Tunnel Operations', () => {
-    it('should start a tunnel with real ngrok', async () => {
-      if (skipTests) {
-        console.log('Test skipped - no auth token');
-        return;
-      }
+    it(
+      'should start a tunnel with real ngrok',
+      async () => {
+        if (skipTests) {
+          console.log('Test skipped - no auth token');
+          return;
+        }
 
-      const url = await service.startTunnel(testServerPort);
-
-      expect(url).toBeTruthy();
-      expect(url).toMatch(/^https:\/\/[a-zA-Z0-9-]+\.ngrok(-free)?\.app$/);
-      expect(service.isActive()).toBe(true);
-
-      const status = service.getStatus();
-      expect(status.active).toBe(true);
-      expect(status.url).toBe(url);
-      expect(status.port).toBe(testServerPort);
-      expect(status.provider).toBe('ngrok');
-
-      console.log(`✅ Tunnel created: ${url}`);
-    }, testConfig.execution.e2eTimeout);
-
-    it('should stop a tunnel', async () => {
-      if (skipTests) return;
-
-      // Start tunnel first
-      const url = await service.startTunnel(testServerPort);
-      expect(service.isActive()).toBe(true);
-
-      // Stop tunnel
-      await service.stopTunnel();
-      expect(service.isActive()).toBe(false);
-      expect(service.getUrl()).toBeNull();
-
-      const status = service.getStatus();
-      expect(status.active).toBe(false);
-      expect(status.url).toBeNull();
-      expect(status.port).toBeNull();
-    }, testConfig.execution.e2eTimeout);
-
-    it('should handle multiple start/stop cycles', async () => {
-      if (skipTests) return;
-
-      for (let i = 0; i < 3; i++) {
-        console.log(`\n🔄 Cycle ${i + 1}/3`);
         const url = await service.startTunnel(testServerPort);
+
         expect(url).toBeTruthy();
+        expect(url).toMatch(/^https:\/\/[a-zA-Z0-9-]+\.ngrok(-free)?\.app$/);
         expect(service.isActive()).toBe(true);
 
+        const status = service.getStatus();
+        expect(status.active).toBe(true);
+        expect(status.url).toBe(url as string | null);
+        expect(status.port).toBe(testServerPort);
+        expect(status.provider).toBe('ngrok');
+
+        console.log(`✅ Tunnel created: ${url}`);
+      },
+      testConfig.execution.e2eTimeout
+    );
+
+    it(
+      'should stop a tunnel',
+      async () => {
+        if (skipTests) {
+          return;
+        }
+
+        // Start tunnel first
+        const url = await service.startTunnel(testServerPort);
+        expect(service.isActive()).toBe(true);
+
+        // Stop tunnel
         await service.stopTunnel();
         expect(service.isActive()).toBe(false);
+        expect(service.getUrl()).toBeNull();
 
-        // Longer delay between cycles to avoid domain conflicts
-        if (i < 2) {
-          await testDelay(testConfig.ngrok.minIntervalBetweenStarts);
+        const status = service.getStatus();
+        expect(status.active).toBe(false);
+        expect(status.url).toBeNull();
+        expect(status.port).toBeNull();
+      },
+      testConfig.execution.e2eTimeout
+    );
+
+    it(
+      'should handle multiple start/stop cycles',
+      async () => {
+        if (skipTests) {
+          return;
         }
-      }
-    }, testConfig.execution.e2eTimeout * 2); // Double timeout for this test
+
+        for (let i = 0; i < 3; i++) {
+          console.log(`\n🔄 Cycle ${i + 1}/3`);
+          const url = await service.startTunnel(testServerPort);
+          expect(url).toBeTruthy();
+          expect(service.isActive()).toBe(true);
+
+          await service.stopTunnel();
+          expect(service.isActive()).toBe(false);
+
+          // Longer delay between cycles to avoid domain conflicts
+          if (i < 2) {
+            await testDelay(testConfig.ngrok.minIntervalBetweenStarts);
+          }
+        }
+      },
+      testConfig.execution.e2eTimeout * 2
+    ); // Double timeout for this test
   });
 
   describe('Action Integration Tests', () => {
     it('should start tunnel via action', async () => {
-      if (skipTests) return;
+      if (skipTests) {
+        return;
+      }
 
       const message: Memory = {
         id: '00000000-0000-0000-0000-000000000001' as `${string}-${string}-${string}-${string}-${string}`,
@@ -230,7 +254,7 @@ describe('Real ngrok API E2E Tests', () => {
         createdAt: Date.now(),
       } as Memory;
 
-      const callback = vi.fn().mockResolvedValue([]);
+      const callback = jest.fn().mockResolvedValue([]);
       const result = await startTunnelAction.handler(runtime, message, {} as State, {}, callback);
 
       expect(result).toBe(true);
@@ -247,7 +271,9 @@ describe('Real ngrok API E2E Tests', () => {
     }, 30000);
 
     it('should get tunnel status via action', async () => {
-      if (skipTests) return;
+      if (skipTests) {
+        return;
+      }
 
       // Start tunnel first
       await service.startTunnel(testServerPort);
@@ -262,7 +288,7 @@ describe('Real ngrok API E2E Tests', () => {
         createdAt: Date.now(),
       } as Memory;
 
-      const callback = vi.fn().mockResolvedValue([]);
+      const callback = jest.fn().mockResolvedValue([]);
       const result = await getTunnelStatusAction.handler(
         runtime,
         message,
@@ -286,7 +312,9 @@ describe('Real ngrok API E2E Tests', () => {
     }, 30000);
 
     it('should stop tunnel via action', async () => {
-      if (skipTests) return;
+      if (skipTests) {
+        return;
+      }
 
       // Start tunnel first
       const url = await service.startTunnel(testServerPort);
@@ -301,7 +329,7 @@ describe('Real ngrok API E2E Tests', () => {
         createdAt: Date.now(),
       } as Memory;
 
-      const callback = vi.fn().mockResolvedValue([]);
+      const callback = jest.fn().mockResolvedValue([]);
       const result = await stopTunnelAction.handler(runtime, message, {} as State, {}, callback);
 
       expect(result).toBe(true);
@@ -321,7 +349,9 @@ describe('Real ngrok API E2E Tests', () => {
 
   describe('Real HTTP Traffic Tests', () => {
     it('should handle real HTTP requests through tunnel', async () => {
-      if (skipTests) return;
+      if (skipTests) {
+        return;
+      }
 
       const tunnelUrl = (await service.startTunnel(testServerPort)) as string;
 
@@ -335,7 +365,9 @@ describe('Real ngrok API E2E Tests', () => {
     }, 30000);
 
     it('should handle webhook requests through tunnel', async () => {
-      if (skipTests) return;
+      if (skipTests) {
+        return;
+      }
 
       const tunnelUrl = (await service.startTunnel(testServerPort)) as string;
 
@@ -368,7 +400,9 @@ describe('Real ngrok API E2E Tests', () => {
     }, 30000);
 
     it('should handle multiple concurrent requests', async () => {
-      if (skipTests) return;
+      if (skipTests) {
+        return;
+      }
 
       const tunnelUrl = (await service.startTunnel(testServerPort)) as string;
 
@@ -394,7 +428,9 @@ describe('Real ngrok API E2E Tests', () => {
 
   describe('Error Handling with Real API', () => {
     it('should handle port already in use', async () => {
-      if (skipTests) return;
+      if (skipTests) {
+        return;
+      }
 
       // Start first tunnel
       const url1 = await service.startTunnel(testServerPort);
@@ -407,12 +443,14 @@ describe('Real ngrok API E2E Tests', () => {
     }, 30000);
 
     it('should handle invalid port gracefully', async () => {
-      if (skipTests) return;
+      if (skipTests) {
+        return;
+      }
 
       try {
         // Use port 0 which is reserved and invalid for ngrok
         await service.startTunnel(0);
-        expect.fail('Should have thrown an error');
+        throw new Error('Should have thrown an error');
       } catch (error) {
         expect(error).toBeTruthy();
         expect(service.isActive()).toBe(false);
@@ -420,7 +458,9 @@ describe('Real ngrok API E2E Tests', () => {
     }, 30000);
 
     it('should recover from network interruption', async () => {
-      if (skipTests) return;
+      if (skipTests) {
+        return;
+      }
 
       // Start tunnel
       const url = await service.startTunnel(testServerPort);
@@ -438,7 +478,9 @@ describe('Real ngrok API E2E Tests', () => {
 
   describe('Slack Agent Use Cases', () => {
     it('should simulate Slack webhook events', async () => {
-      if (skipTests) return;
+      if (skipTests) {
+        return;
+      }
 
       const tunnelUrl = (await service.startTunnel(testServerPort)) as string;
 

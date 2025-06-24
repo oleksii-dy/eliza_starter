@@ -2,7 +2,7 @@
  * Unit tests for SocketIORouter
  */
 
-import { describe, it, expect, mock, beforeEach, afterEach, jest } from 'bun:test';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { SocketIORouter } from '../socketio';
 import { createMockAgentRuntime } from './test-utils/mocks';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
@@ -14,13 +14,13 @@ mock.module('@elizaos/core', async () => {
   return {
     ...actual,
     logger: {
-      info: jest.fn(),
-      debug: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
+      info: mock(),
+      debug: mock(),
+      warn: mock(),
+      error: mock(),
       levels: { values: { debug: 10, info: 20, warn: 30, error: 40 } },
     },
-    validateUuid: jest.fn((id: string) => {
+    validateUuid: mock((id: string) => {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       return uuidRegex.test(id) ? id : null;
     }),
@@ -51,27 +51,27 @@ describe('SocketIORouter', () => {
 
     // Create mock server instance
     mockServerInstance = {
-      getChannelDetails: jest.fn(),
-      createChannel: jest.fn(),
-      createMessage: jest.fn(),
-      getServers: jest
-        .fn()
-        .mockReturnValue(Promise.resolve([{ id: '00000000-0000-0000-0000-000000000000' }])),
+      getChannelDetails: mock(),
+      createChannel: mock(),
+      createMessage: mock(),
+      getServers: mock().mockReturnValue(
+        Promise.resolve([{ id: '00000000-0000-0000-0000-000000000000' }])
+      ),
     };
 
     // Create mock socket
     mockSocket = {
       id: 'socket-123',
-      join: jest.fn(),
-      emit: jest.fn(),
-      to: jest.fn().mockReturnThis(),
-      on: jest.fn(),
-      onAny: jest.fn(),
+      join: mock(),
+      emit: mock(),
+      to: mock().mockReturnThis(),
+      on: mock(),
+      onAny: mock(),
     };
 
     // Create mock IO server
     mockIO = {
-      on: jest.fn(),
+      on: mock(),
       sockets: {
         sockets: new Map([[mockSocket.id, mockSocket]]),
       },
@@ -228,7 +228,7 @@ describe('SocketIORouter', () => {
         (call) => call[0] === String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE)
       )?.[1];
 
-      expect(messageHandler).toBeDefined();
+      expect(typeof messageHandler).toBe('function');
 
       const payload = {
         channelId: '123e4567-e89b-12d3-a456-426614174000',
@@ -270,7 +270,7 @@ describe('SocketIORouter', () => {
         (call) => call[0] === String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE)
       )?.[1];
 
-      expect(messageHandler).toBeDefined();
+      expect(typeof messageHandler).toBe('function');
 
       const payload = {
         channelId: '123e4567-e89b-12d3-a456-426614174000',
@@ -307,7 +307,7 @@ describe('SocketIORouter', () => {
         (call) => call[0] === String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE)
       )?.[1];
 
-      expect(messageHandler).toBeDefined();
+      expect(typeof messageHandler).toBe('function');
 
       const payload = {
         channelId: '123e4567-e89b-12d3-a456-426614174000',
@@ -490,11 +490,13 @@ describe('SocketIORouter', () => {
         (call) => call[0] === 'disconnect'
       )?.[1];
 
+      expect(typeof disconnectHandler).toBe('function');
+
+      // Call the disconnect handler
       disconnectHandler();
 
-      // Should clean up internal maps (we can't directly test this without exposing internals)
-      // But we can verify the handler was called
-      expect(disconnectHandler).toBeDefined();
+      // Verify disconnect was handled without errors
+      expect(mockSocket.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
     });
   });
 
@@ -506,11 +508,12 @@ describe('SocketIORouter', () => {
 
       const errorHandler = mockSocket.on.mock.calls.find((call) => call[0] === 'error')?.[1];
 
-      const testError = new Error('Test socket error');
-      errorHandler(testError);
+      expect(typeof errorHandler).toBe('function');
 
-      // Should not throw, just log the error
-      expect(errorHandler).toBeDefined();
+      const testError = new Error('Test socket error');
+
+      // Should handle error without throwing
+      expect(() => errorHandler(testError)).not.toThrow();
     });
 
     it('should handle malformed message event data', () => {
@@ -520,13 +523,12 @@ describe('SocketIORouter', () => {
 
       const messageHandler = mockSocket.on.mock.calls.find((call) => call[0] === 'message')?.[1];
 
-      // Send malformed data
-      messageHandler('not an object');
-      messageHandler({ notType: 'missing type' });
-      messageHandler({ type: 'unknown', payload: {} });
+      expect(typeof messageHandler).toBe('function');
 
-      // Should not throw
-      expect(messageHandler).toBeDefined();
+      // Should handle malformed data without throwing
+      expect(() => messageHandler('not an object')).not.toThrow();
+      expect(() => messageHandler({ notType: 'missing type' })).not.toThrow();
+      expect(() => messageHandler({ type: 'unknown', payload: {} })).not.toThrow();
     });
   });
 });

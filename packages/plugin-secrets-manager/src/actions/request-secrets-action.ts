@@ -1,27 +1,18 @@
 /**
  * TEMPORARILY DISABLED: This action depends on services that have been removed
  * during the service architecture refactoring. The functionality will be restored
- * once the SecretFormService is enhanced with channel callback and request tracking
+ * once the SecretForm is enhanced with channel callback and request tracking
  * capabilities as internal managers.
  *
- * TODO: Re-enable once SecretFormService includes:
+ * TODO: Re-enable once SecretForm includes:
  * - ChannelCallbackManager
  * - RequestTrackingManager
  */
 
-import {
-  Action,
-  type Handler,
-  type IAgentRuntime,
-  type Memory,
-  type State,
-  logger,
-  ModelType,
-} from '@elizaos/core';
 import type { SecretContext, CallbackChannel, SecretRequirement, SecretRequest } from '../types';
 // TEMPORARILY DISABLED: These services no longer exist as separate services
-// import { ChannelCallbackService } from '../services/channel-callback-service';
-// import { RequestTrackingService } from '../services/request-tracking-service';
+// import { ChannelCallback } from '../services/channel-callback-service';
+// import { RequestTracking } from '../services/request-tracking-service';
 
 /**
  * Action for requesting secrets from users via secure channels
@@ -34,7 +25,7 @@ export const requestSecretsAction: Action = {
   similes: [],
   description: 'DISABLED: Request secrets functionality is temporarily unavailable',
 
-  validate: async (runtime: IAgentRuntime, message: Memory) => {
+  validate: async (_runtime: IAgentRuntime, _message: Memory) => {
     // Always return false while disabled
     return false;
   },
@@ -46,7 +37,7 @@ export const requestSecretsAction: Action = {
     options?: any,
     callback?: any
   ) => {
-    await callback({
+    await void callback({
       text: 'Secret request functionality is temporarily disabled while we upgrade the service architecture.',
       thought: 'RequestSecretsAction is disabled during service refactoring',
     });
@@ -58,7 +49,7 @@ export const requestSecretsAction: Action = {
 /**
  * Analyze message content to determine what secrets are needed
  */
-async function analyzeSecretRequest(
+async function _analyzeSecretRequest(
   runtime: IAgentRuntime,
   message: Memory,
   state: State
@@ -147,12 +138,18 @@ Respond in JSON format:
 /**
  * Determine channel type from message source
  */
-function determineChannelType(message: Memory): 'discord' | 'telegram' | 'slack' | 'memory' {
+function _determine(_message: Memory): 'discord' | 'telegram' | 'slack' | 'memory' {
   const source = message.content.source?.toLowerCase();
 
-  if (source?.includes('discord')) return 'discord';
-  if (source?.includes('telegram')) return 'telegram';
-  if (source?.includes('slack')) return 'slack';
+  if (source?.includes('discord')) {
+    return 'discord';
+  }
+  if (source?.includes('telegram')) {
+    return 'telegram';
+  }
+  if (source?.includes('slack')) {
+    return 'slack';
+  }
 
   return 'memory'; // Default to memory-based notifications
 }
@@ -160,33 +157,33 @@ function determineChannelType(message: Memory): 'discord' | 'telegram' | 'slack'
 /**
  * Generate confirmation message for secret request
  */
-function generateRequestConfirmation(analysis: SecretAnalysis, request: SecretRequest): string {
-  let message = `🔐 **Secure Information Request Created**\n\n`;
-  message += `I've set up a secure way for you to provide:\n`;
+function _generateRequestConfirmation(analysis: SecretAnalysis, request: SecretRequest): string {
+  let message = '🔐 **Secure Information Request Created**\n\n';
+  message += "I've set up a secure way for you to provide:\n";
 
   for (const secret of analysis.secrets) {
     message += `• ${secret.replace(/_/g, ' ').toLowerCase()}\n`;
   }
 
-  message += `\n`;
+  message += '\n';
 
   if (analysis.requireVerification) {
     const methods = analysis.verificationMethods?.join(' or ') || 'verification';
     message += `🛡️ **Identity verification required** (${methods})\n`;
   }
 
-  message += `📝 **Next steps:**\n`;
-  message += `1. You'll receive a notification with instructions\n`;
-  message += `2. Click the secure portal link\n`;
+  message += '📝 **Next steps:**\n';
+  message += "1. You'll receive a notification with instructions\n";
+  message += '2. Click the secure portal link\n';
   if (analysis.requireVerification) {
-    message += `3. Complete identity verification\n`;
-    message += `4. Provide your information safely\n`;
+    message += '3. Complete identity verification\n';
+    message += '4. Provide your information safely\n';
   } else {
-    message += `3. Provide your information safely\n`;
+    message += '3. Provide your information safely\n';
   }
 
   message += `\n⏰ This request expires in ${Math.round((analysis.expiresIn || 30 * 60 * 1000) / 60000)} minutes\n`;
-  message += `🔒 All information is encrypted and secure`;
+  message += '🔒 All information is encrypted and secure';
 
   return message;
 }
@@ -194,7 +191,7 @@ function generateRequestConfirmation(analysis: SecretAnalysis, request: SecretRe
 /**
  * Handle successful secret submission
  */
-async function handleSecretSuccess(
+async function _handleSecretSuccess(
   runtime: IAgentRuntime,
   originalMessage: Memory,
   secretKeys: string[],
@@ -213,7 +210,7 @@ async function handleSecretSuccess(
           metadata: {
             type: 'secret_success_notification',
             secretCount: secretKeys.length,
-            secretKeys: secretKeys,
+            secretKeys,
           },
         },
       },
@@ -231,7 +228,7 @@ async function handleSecretSuccess(
 /**
  * Handle failed secret submission
  */
-async function handleSecretFailure(
+async function _handleSecretFailure(
   runtime: IAgentRuntime,
   originalMessage: Memory,
   error: string
@@ -247,7 +244,7 @@ async function handleSecretFailure(
           source: runtime.agentId,
           metadata: {
             type: 'secret_failure_notification',
-            error: error,
+            error,
           },
         },
       },
@@ -263,7 +260,10 @@ async function handleSecretFailure(
 /**
  * Handle secret request timeout
  */
-async function handleSecretTimeout(runtime: IAgentRuntime, originalMessage: Memory): Promise<void> {
+async function _handleSecretTimeout(
+  _runtime: IAgentRuntime,
+  originalMessage: Memory
+): Promise<void> {
   try {
     await runtime.createMemory(
       {
@@ -271,7 +271,7 @@ async function handleSecretTimeout(runtime: IAgentRuntime, originalMessage: Memo
         agentId: runtime.agentId,
         roomId: originalMessage.roomId,
         content: {
-          text: `⏰ **Information Request Expired**\n\nThe secure information request has expired. If you still need to provide this information, please ask me to create a new secure request.`,
+          text: '⏰ **Information Request Expired**\n\nThe secure information request has expired. If you still need to provide this information, please ask me to create a new secure request.',
           source: runtime.agentId,
           metadata: {
             type: 'secret_timeout_notification',

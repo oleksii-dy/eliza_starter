@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { TodoPlugin } from '../index';
 import type { IAgentRuntime } from '@elizaos/core';
 

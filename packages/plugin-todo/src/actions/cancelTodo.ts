@@ -69,7 +69,7 @@ async function extractTaskCancellation(
       state: {
         text: message.content.text || '',
         availableTasks: tasksText,
-        messageHistory: messageHistory,
+        messageHistory,
       },
       template: extractCancellationTemplate,
     });
@@ -188,8 +188,8 @@ export const cancelTodoAction: Action = {
         if (callback) {
           await callback({
             text:
-              "I couldn't determine which task you want to cancel. Could you be more specific? Here are your current tasks:\n\n" +
-              availableTasks.map((task) => `- ${task.name}`).join('\n'),
+              `I couldn't determine which task you want to cancel. Could you be more specific? Here are your current tasks:\n\n${
+                availableTasks.map((task) => `- ${task.name}`).join('\n')}`,
             actions: ['CANCEL_TODO_NOT_FOUND'],
             source: message.content.source,
           });

@@ -17,26 +17,28 @@ async function runE2ETests() {
     getSetting: (key: string) => {
       const settings: Record<string, string> = {
         CAMERA_NAME: 'test',
-        PIXEL_CHANGE_THRESHOLD: '50'
+        PIXEL_CHANGE_THRESHOLD: '50',
       };
       return settings[key] || null;
     },
     getService: (name: string) => {
-      if (name === 'VISION') return visionService;
+      if (name === 'VISION') {
+        return visionService;
+      }
       return null;
     },
     createMemory: async () => {},
     getMemories: async () => [],
-    composeState: async () => ({ 
+    composeState: async () => ({
       values: {
         visionAvailable: visionService?.isActive() || false,
         cameraStatus: visionService?.isActive() ? 'connected' : 'not connected',
-        sceneDescription: 'Test scene'
-      }, 
-      data: {}, 
-      text: 'Visual Perception: Available' 
+        sceneDescription: 'Test scene',
+      },
+      data: {},
+      text: 'Visual Perception: Available',
     }),
-    useModel: async (type: string, params: any) => {
+    useModel: async (type: string, _params: any) => {
       if (type === 'IMAGE_DESCRIPTION') {
         return { description: 'A test scene with various objects' };
       }
@@ -47,10 +49,7 @@ async function runE2ETests() {
   const visionService = await VisionService.start(runtime);
   runtime.services = new Map([['VISION', visionService]]);
 
-  const testSuites = [
-    visionBasicE2ETests,
-    visionAutonomyE2ETests,
-  ];
+  const testSuites = [visionBasicE2ETests, visionAutonomyE2ETests];
 
   let totalTests = 0;
   let passedTests = 0;
@@ -80,12 +79,12 @@ async function runE2ETests() {
   }
 
   // Summary
-  console.log('\n' + '='.repeat(60));
+  console.log(`\n${'='.repeat(60)}`);
   console.log('📊 Test Summary:');
   console.log(`   Total:  ${totalTests} tests`);
   console.log(`   ✅ Passed: ${passedTests} tests`);
   console.log(`   ❌ Failed: ${failedTests} tests`);
-  console.log('='.repeat(60) + '\n');
+  console.log(`${'='.repeat(60)}\n`);
 
   // Cleanup
   await visionService.stop();

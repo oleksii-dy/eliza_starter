@@ -35,7 +35,7 @@ export class MultiStageAIReviewer {
 
     const stageResults: StageReviewResult[] = [];
     let overallScore = 100;
-    let criticalIssues: CriticalIssue[] = [];
+    const criticalIssues: CriticalIssue[] = [];
 
     for (const stage of stages) {
       elizaLogger.info(`[AI-REVIEWER] Running ${stage}`);
@@ -190,18 +190,18 @@ Please review the code IN THE CONTEXT of these requirements. The code should be 
    * Build code context for prompts
    */
   private buildCodeContext(code: Code): string {
-    let context = `# Code Review Context\n\n`;
+    let context = '# Code Review Context\n\n';
     context += `**Total Files:** ${code.files.length}\n`;
     context += `**Project Type:** ${this.detectProjectType(code)}\n\n`;
 
     // Add file overview
-    context += `## File Structure\n`;
+    context += '## File Structure\n';
     for (const file of code.files) {
       context += `- ${file.path} (${file.content.split('\n').length} lines)\n`;
     }
 
     // Add file contents (truncated if too large)
-    context += `\n## File Contents\n\n`;
+    context += '\n## File Contents\n\n';
     for (const file of code.files) {
       const lines = file.content.split('\n');
       const displayLines = lines.length > 100 ? lines.slice(0, 100) : lines;
@@ -210,7 +210,7 @@ Please review the code IN THE CONTEXT of these requirements. The code should be 
       if (lines.length > 100) {
         context += `\n... (${lines.length - 100} more lines)`;
       }
-      context += `\n\`\`\`\n\n`;
+      context += '\n```\n\n';
     }
 
     return context;
@@ -636,10 +636,10 @@ Respond in this exact XML format:
           line: lineMatch?.[1] ? parseInt(lineMatch[1]) : undefined,
           fix: recommendationMatch?.[1]
             ? {
-                description: recommendationMatch[1],
-                automatic: false,
-                confidence: 0.7,
-              }
+              description: recommendationMatch[1],
+              automatic: false,
+              confidence: 0.7,
+            }
             : undefined,
         });
       }
@@ -797,15 +797,15 @@ Respond in this exact XML format:
     const files = code.files.map((f) => f.path);
 
     if (files.some((f) => f.includes('package.json'))) {
-      if (files.some((f) => f.includes('next.config'))) return 'Next.js';
-      if (files.some((f) => f.includes('react'))) return 'React';
-      if (files.some((f) => f.includes('express') || f.includes('server'))) return 'Node.js API';
+      if (files.some((f) => f.includes('next.config'))) {return 'Next.js';}
+      if (files.some((f) => f.includes('react'))) {return 'React';}
+      if (files.some((f) => f.includes('express') || f.includes('server'))) {return 'Node.js API';}
       return 'Node.js';
     }
 
-    if (files.some((f) => f.endsWith('.py'))) return 'Python';
-    if (files.some((f) => f.endsWith('.java'))) return 'Java';
-    if (files.some((f) => f.endsWith('.go'))) return 'Go';
+    if (files.some((f) => f.endsWith('.py'))) {return 'Python';}
+    if (files.some((f) => f.endsWith('.java'))) {return 'Java';}
+    if (files.some((f) => f.endsWith('.go'))) {return 'Go';}
 
     return 'Unknown';
   }
@@ -817,7 +817,7 @@ Respond in this exact XML format:
     const seen = new Set<string>();
     return findings.filter((finding) => {
       const key = `${finding.message}:${finding.file}:${finding.line}`;
-      if (seen.has(key)) return false;
+      if (seen.has(key)) {return false;}
       seen.add(key);
       return true;
     });
@@ -830,7 +830,7 @@ Respond in this exact XML format:
     const seen = new Set<string>();
     return issues.filter((issue) => {
       const key = `${issue.type}:${issue.location}:${issue.description}`;
-      if (seen.has(key)) return false;
+      if (seen.has(key)) {return false;}
       seen.add(key);
       return true;
     });
@@ -842,10 +842,10 @@ Respond in this exact XML format:
   private estimateEffort(critical: number, high: number, medium: number): string {
     const totalWork = critical * 4 + high * 2 + medium * 1;
 
-    if (totalWork <= 4) return '2-4 hours';
-    if (totalWork <= 8) return '1-2 days';
-    if (totalWork <= 16) return '3-5 days';
-    if (totalWork <= 32) return '1-2 weeks';
+    if (totalWork <= 4) {return '2-4 hours';}
+    if (totalWork <= 8) {return '1-2 days';}
+    if (totalWork <= 16) {return '3-5 days';}
+    if (totalWork <= 32) {return '1-2 weeks';}
     return '2+ weeks';
   }
 }

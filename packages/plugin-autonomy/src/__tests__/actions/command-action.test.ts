@@ -1,22 +1,30 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { executeCommandAction } from '../../actions/command-action';
 import { createMockRuntime, createMockMemory, createMockState } from '../utils/mock-runtime';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import { spawn, exec } from 'child_process';
 
 // Mock child_process
-vi.mock('child_process', async () => {
-  const actual = await vi.importActual('child_process');
+mock.module('child_process', async () => {
+  const actual = await import('child_process');
   return {
     ...actual,
-    spawn: vi.fn(),
-    exec: vi.fn(),
+    spawn: mock(),
+    exec: mock(),
   };
 });
 
 // Mock promisify
-vi.mock('util', () => ({
-  promisify: vi.fn((fn) => fn),
+mock.module('util', () => ({
+  promisify: mock((fn) => {
+    // Return a function that returns a promise
+    return (command: string, options?: any) => {
+      return Promise.resolve({
+        stdout: 'Command output',
+        stderr: '',
+      });
+    };
+  }),
 }));
 
 describe('executeCommandAction', () => {
@@ -27,24 +35,24 @@ describe('executeCommandAction', () => {
   let mockProcess: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    
+    mock.restore();
+
     // Mock child process
     mockProcess = {
       stdout: {
-        on: vi.fn(),
-        pipe: vi.fn(),
+        on: mock(),
+        pipe: mock(),
       },
       stderr: {
-        on: vi.fn(),
-        pipe: vi.fn(),
+        on: mock(),
+        pipe: mock(),
       },
-      on: vi.fn(),
-      kill: vi.fn(),
+      on: mock(),
+      kill: mock(),
     };
-    
-    vi.mocked(spawn).mockReturnValue(mockProcess);
-    vi.mocked(exec).mockImplementation((command, options, callback) => {
+
+    mock(spawn).mockReturnValue(mockProcess);
+    (mock(exec) as any).mockImplementation((command: any, options: any, callback: any) => {
       // Handle both function signatures
       const cb = typeof options === 'function' ? options : callback;
       if (cb) {
@@ -55,7 +63,7 @@ describe('executeCommandAction', () => {
       }
       return mockProcess as any;
     });
-    
+
     mockRuntime = createMockRuntime({
       settings: {
         ALLOWED_COMMANDS: JSON.stringify(['ls', 'echo', 'cat', 'pwd', 'date']),
@@ -63,12 +71,12 @@ describe('executeCommandAction', () => {
         SAFE_MODE: 'true',
       },
     });
-    mockCallback = vi.fn();
+    mockCallback = mock();
     mockState = createMockState();
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('validate', () => {
@@ -124,7 +132,7 @@ describe('executeCommandAction', () => {
   describe('handler - safe commands', () => {
     it('should execute allowed commands successfully', async () => {
       const mockStdout = 'file1.txt\nfile2.txt\ndirectory/\n';
-      
+
       // Simulate successful command execution
       mockProcess.stdout.on.mockImplementation((event, callback) => {
         if (event === 'data') {
@@ -149,13 +157,7 @@ describe('executeCommandAction', () => {
         },
       });
 
-      await executeCommandAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await executeCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(spawn).toHaveBeenCalledWith('ls', ['-la'], {
         shell: true,
@@ -163,7 +165,7 @@ describe('executeCommandAction', () => {
       });
 
       // Wait for async execution
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -194,13 +196,7 @@ describe('executeCommandAction', () => {
         },
       });
 
-      await executeCommandAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await executeCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(spawn).toHaveBeenCalledWith('echo', ['"Hello World"'], {
         shell: true,
@@ -210,7 +206,7 @@ describe('executeCommandAction', () => {
 
     it('should handle command execution errors', async () => {
       const mockStderr = 'command not found: invalidcommand';
-      
+
       mockProcess.stdout.on.mockImplementation((event, callback) => {});
       mockProcess.stderr.on.mockImplementation((event, callback) => {
         if (event === 'data') {
@@ -230,15 +226,9 @@ describe('executeCommandAction', () => {
         },
       });
 
-      await executeCommandAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await executeCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -282,7 +272,7 @@ describe('executeCommandAction', () => {
       );
 
       // Wait for timeout
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(mockProcess.kill).toHaveBeenCalledWith('SIGTERM');
       expect(mockCallback).toHaveBeenCalledWith(
@@ -315,13 +305,7 @@ describe('executeCommandAction', () => {
           },
         });
 
-        await executeCommandAction.handler(
-          mockRuntime,
-          mockMemory,
-          mockState,
-          {},
-          mockCallback
-        );
+        await executeCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
         expect(mockCallback).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -352,13 +336,7 @@ describe('executeCommandAction', () => {
           },
         });
 
-        await executeCommandAction.handler(
-          mockRuntime,
-          mockMemory,
-          mockState,
-          {},
-          mockCallback
-        );
+        await executeCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
         expect(mockCallback).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -380,13 +358,7 @@ describe('executeCommandAction', () => {
         },
       });
 
-      await executeCommandAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await executeCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -405,13 +377,7 @@ describe('executeCommandAction', () => {
         },
       });
 
-      await executeCommandAction.handler(
-        mockRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await executeCommandAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -438,13 +404,7 @@ describe('executeCommandAction', () => {
         },
       });
 
-      await executeCommandAction.handler(
-        unsafeRuntime,
-        mockMemory,
-        mockState,
-        {},
-        mockCallback
-      );
+      await executeCommandAction.handler(unsafeRuntime, mockMemory, mockState, {}, mockCallback);
 
       // In unsafe mode, should still validate for basic security
       expect(mockCallback).toHaveBeenCalledWith(
@@ -469,11 +429,11 @@ describe('executeCommandAction', () => {
 
     it('should have valid examples', () => {
       expect(executeCommandAction.examples!.length).toBeGreaterThan(0);
-      
+
       executeCommandAction.examples!.forEach((example) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBeGreaterThanOrEqual(2);
-        
+
         example.forEach((turn) => {
           expect(turn).toHaveProperty('name');
           expect(turn).toHaveProperty('content');

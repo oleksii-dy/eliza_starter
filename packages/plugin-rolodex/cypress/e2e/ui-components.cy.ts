@@ -153,7 +153,7 @@ describe('UI Components', () => {
       // First tab should be active by default
       cy.get('[data-testid="tabs-trigger-1"]').should('have.attr', 'data-state', 'active');
       cy.get('[data-testid="tabs-content-1"]').should('be.visible');
-      
+
       // Second tab should be inactive
       cy.get('[data-testid="tabs-trigger-2"]').should('have.attr', 'data-state', 'inactive');
     });
@@ -162,9 +162,9 @@ describe('UI Components', () => {
       // Since this is static HTML, we'll just verify the tabs can be focused
       cy.get('[data-testid="tabs-trigger-1"]').focus();
       cy.get('[data-testid="tabs-trigger-1"]').should('have.focus');
-      
+
       cy.get('[data-testid="tabs-trigger-2"]').focus();
       cy.get('[data-testid="tabs-trigger-2"]').should('have.focus');
     });
   });
-}); 
+});

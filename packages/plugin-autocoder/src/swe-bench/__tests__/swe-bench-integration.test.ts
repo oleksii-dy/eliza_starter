@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { SWEBenchRunner } from '../swe-bench-runner';
 import { SWEBenchDataLoader } from '../data-loader';
 import type { IAgentRuntime } from '@elizaos/core';

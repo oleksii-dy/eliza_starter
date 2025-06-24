@@ -6,11 +6,16 @@
 import { type IAgentRuntime, type Memory, type Content, logger } from '@elizaos/core';
 
 export class MockLLMService {
-  private runtime: IAgentRuntime;
+  // @ts-expect-error - Used for potential future functionality
+  private _runtime: IAgentRuntime;
   private responseTemplates: Map<string, string[]> = new Map();
 
   constructor(runtime: IAgentRuntime) {
-    this.runtime = runtime;
+    this._runtime = runtime;
+
+    // Log that we're using mock service
+    console.log('🎭 Using MockLLMService for deterministic responses');
+
     this.setupResponseTemplates();
   }
 

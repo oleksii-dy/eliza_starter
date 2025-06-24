@@ -94,7 +94,7 @@ export class ProjectTestSuite implements TestSuite {
         if (!myService) {
           throw new Error('Expected service not found');
         }
-        
+
         // Example: Test service functionality
         const result = await myService.doSomething();
         if (!result) {
@@ -114,7 +114,7 @@ export class ProjectTestSuite implements TestSuite {
       fn: async (runtime: any) => {
         // Create a test room/conversation
         const roomId = `test-room-${Date.now()}`;
-        
+
         // Simulate sending a message to the agent
         const userMessage = {
           userId: 'test-user',
@@ -122,24 +122,24 @@ export class ProjectTestSuite implements TestSuite {
           content: { text: 'Hello agent!' },
           // Add other required message properties
         };
-        
+
         // Process the message through the runtime
         await runtime.processMessage(userMessage);
-        
+
         // Retrieve messages from the conversation
         const messages = await runtime.messageManager.getMessages({ roomId });
-        
+
         // Verify the agent responded
         if (messages.length < 2) {
           throw new Error('Agent did not respond to message');
         }
-        
+
         // Check the agent's response
         const agentResponse = messages.find(m => m.userId === runtime.agentId);
         if (!agentResponse) {
           throw new Error('Could not find agent response');
         }
-        
+
         // Verify response content
         if (!agentResponse.content.text.toLowerCase().includes('hello')) {
           throw new Error('Agent response did not contain expected greeting');

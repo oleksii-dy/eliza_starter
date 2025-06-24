@@ -47,11 +47,11 @@ export const enableCustomReasoningAction: Action = {
 
       if (status.enabled) {
         await callback?.({
-          text:
-            '✅ Custom reasoning is already enabled!\n\n📊 Current Status:\n• Service: Active\n• Training data collected: ' +
-            status.dataCount +
-            ' records\n• Last activity: ' +
-            (status.lastActivity ? new Date(status.lastActivity).toLocaleString() : 'None'),
+          text: `✅ Custom reasoning is already enabled!\n\n📊 Current Status:\n• Service: Active\n• Training data collected: ${
+            status.dataCount
+          } records\n• Last activity: ${
+            status.lastActivity ? new Date(status.lastActivity).toLocaleString() : 'None'
+          }`,
           thought: 'Custom reasoning was already enabled, provided status update',
         });
         return;
@@ -66,10 +66,9 @@ export const enableCustomReasoningAction: Action = {
       });
     } catch (error) {
       await callback?.({
-        text:
-          '❌ **Failed to enable custom reasoning service**\n\nError: ' +
-          (error as Error).message +
-          '\n\nThe original ElizaOS behavior is preserved.',
+        text: `❌ **Failed to enable custom reasoning service**\n\nError: ${
+          (error as Error).message
+        }\n\nThe original ElizaOS behavior is preserved.`,
         thought: 'Failed to enable custom reasoning, but original functionality is intact',
       });
     }
@@ -118,10 +117,9 @@ export const disableCustomReasoningAction: Action = {
 
       if (!status.enabled) {
         await callback?.({
-          text:
-            '✅ Custom reasoning is already disabled.\n\n📊 Status: Using original ElizaOS behavior\n• Training data preserved: ' +
-            status.dataCount +
-            ' records',
+          text: `✅ Custom reasoning is already disabled.\n\n📊 Status: Using original ElizaOS behavior\n• Training data preserved: ${
+            status.dataCount
+          } records`,
           thought: 'User tried to disable custom reasoning but it was already disabled',
         });
         return;
@@ -130,19 +128,17 @@ export const disableCustomReasoningAction: Action = {
       await service.disable();
 
       await callback?.({
-        text:
-          '✅ **Custom Reasoning Service Disabled**\n\n🔄 **Restored to original ElizaOS behavior**\n• All model calls now use original methods\n• Training data preserved: ' +
-          status.dataCount +
-          ' records\n• No functionality lost',
+        text: `✅ **Custom Reasoning Service Disabled**\n\n🔄 **Restored to original ElizaOS behavior**\n• All model calls now use original methods\n• Training data preserved: ${
+          status.dataCount
+        } records\n• No functionality lost`,
         thought: 'Successfully disabled custom reasoning and restored original behavior',
         actions: ['DISABLE_REASONING_SERVICE'],
       });
     } catch (error) {
       await callback?.({
-        text:
-          '❌ **Failed to disable custom reasoning service**\n\nError: ' +
-          (error as Error).message +
-          '\n\nPlease check the service status.',
+        text: `❌ **Failed to disable custom reasoning service**\n\nError: ${
+          (error as Error).message
+        }\n\nPlease check the service status.`,
         thought: 'Failed to disable custom reasoning service',
       });
     }
@@ -199,7 +195,7 @@ export const checkReasoningStatusAction: Action = {
       });
     } catch (error) {
       await callback?.({
-        text: '❌ **Unable to check service status**\n\nError: ' + (error as Error).message,
+        text: `❌ **Unable to check service status**\n\nError: ${(error as Error).message}`,
         thought: 'Failed to check custom reasoning service status',
       });
     }

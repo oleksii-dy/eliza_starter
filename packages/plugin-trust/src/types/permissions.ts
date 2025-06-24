@@ -204,11 +204,11 @@ export enum SecurityEventType {
  * Format: XYYY where:
  * X = Special permissions (setuid, setgid, sticky)
  * First Y = Owner (self) permissions
- * Second Y = Group (admin/trusted) permissions  
+ * Second Y = Group (admin/trusted) permissions
  * Third Y = Others (user/anon) permissions
- * 
+ *
  * Each digit is sum of: 4 (read), 2 (write), 1 (execute)
- * 
+ *
  * Examples:
  * 0700 = Only self can read/write/execute
  * 0755 = Self has full, others can read/execute
@@ -219,7 +219,7 @@ export interface UnixPermission {
   mode: number; // e.g., 0o755
   owner: 'self' | 'system' | string; // UUID for other agents
   group: 'admin' | 'trusted' | 'user' | string; // Custom groups
-  
+
   // Special bits
   setuid?: boolean; // Execute as owner
   setgid?: boolean; // Execute as group
@@ -229,12 +229,12 @@ export interface UnixPermission {
 export interface ActionPermission {
   action: UUID;
   unix: UnixPermission;
-  
+
   // Additional constraints
   trustRequired?: number; // Minimum trust score
   roleRequired?: UUID[]; // Required roles
   contextRequired?: UUID[]; // Required contexts
-  
+
   // For autonomous operations
   selfCallable?: boolean; // Can agent call this on itself
   delegatable?: boolean; // Can delegate to other agents
@@ -256,7 +256,7 @@ export const PermissionUtils = {
   fromOctal: (octal: string): number => {
     return parseInt(octal, 8);
   },
-  
+
   // Check if caller has permission
   canExecute: (
     permission: UnixPermission,
@@ -266,23 +266,23 @@ export const PermissionUtils = {
     const ownerPerms = (mode >> 6) & 7;
     const groupPerms = (mode >> 3) & 7;
     const otherPerms = mode & 7;
-    
+
     // Check owner permissions
     if (caller.caller === 'self' || caller.caller === permission.owner) {
       return (ownerPerms & 1) !== 0;
     }
-    
+
     // Check group permissions
-    if (caller.caller === 'admin' || 
+    if (caller.caller === 'admin' ||
         (permission.group === 'trusted' && (caller.trust || 0) >= 80) ||
         caller.roles?.includes(permission.group)) {
       return (groupPerms & 1) !== 0;
     }
-    
+
     // Check other permissions
     return (otherPerms & 1) !== 0;
   },
-  
+
   // Check read permission
   canRead: (
     permission: UnixPermission,
@@ -292,20 +292,20 @@ export const PermissionUtils = {
     const ownerPerms = (mode >> 6) & 7;
     const groupPerms = (mode >> 3) & 7;
     const otherPerms = mode & 7;
-    
+
     if (caller.caller === 'self' || caller.caller === permission.owner) {
       return (ownerPerms & 4) !== 0;
     }
-    
-    if (caller.caller === 'admin' || 
+
+    if (caller.caller === 'admin' ||
         (permission.group === 'trusted' && (caller.trust || 0) >= 80) ||
         caller.roles?.includes(permission.group)) {
       return (groupPerms & 4) !== 0;
     }
-    
+
     return (otherPerms & 4) !== 0;
   },
-  
+
   // Check write permission
   canWrite: (
     permission: UnixPermission,
@@ -315,17 +315,17 @@ export const PermissionUtils = {
     const ownerPerms = (mode >> 6) & 7;
     const groupPerms = (mode >> 3) & 7;
     const otherPerms = mode & 7;
-    
+
     if (caller.caller === 'self' || caller.caller === permission.owner) {
       return (ownerPerms & 2) !== 0;
     }
-    
-    if (caller.caller === 'admin' || 
+
+    if (caller.caller === 'admin' ||
         (permission.group === 'trusted' && (caller.trust || 0) >= 80) ||
         caller.roles?.includes(permission.group)) {
       return (groupPerms & 2) !== 0;
     }
-    
+
     return (otherPerms & 2) !== 0;
   }
 };

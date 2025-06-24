@@ -274,7 +274,7 @@ export class DependencyResolverManager {
           return version;
         }
       }
-    } catch (error) {
+    } catch (_error) {
       elizaLogger.error('[DependencyResolver] Error checking version constraints', error);
     }
 
@@ -288,7 +288,7 @@ export class DependencyResolverManager {
     // Analyze constraints and suggest the most permissive version
     try {
       const ranges = constraints.map((c) => semver.validRange(c)).filter(Boolean);
-      if (ranges.length === 0) return 'latest';
+      if (ranges.length === 0) {return 'latest';}
 
       // Find the intersection of all ranges (simplified)
       return ranges[0] || 'latest';
@@ -308,7 +308,7 @@ export class DependencyResolverManager {
     const visited = new Set<string>();
 
     const markRequired = (pluginName: string) => {
-      if (visited.has(pluginName)) return;
+      if (visited.has(pluginName)) {return;}
       visited.add(pluginName);
       required.add(pluginName);
 

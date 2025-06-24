@@ -57,7 +57,9 @@ const Dialog = ({
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
 }) => {
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
   return (
     <div
       className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4"
@@ -245,9 +247,15 @@ const apiClient = {
   ) => {
     const params = new URLSearchParams();
     params.append('agentId', agentId);
-    if (options?.limit) params.append('limit', options.limit.toString());
-    if (options?.before) params.append('before', options.before.toString());
-    if (options?.includeEmbedding) params.append('includeEmbedding', 'true');
+    if (options?.limit) {
+      params.append('limit', options.limit.toString());
+    }
+    if (options?.before) {
+      params.append('before', options.before.toString());
+    }
+    if (options?.includeEmbedding) {
+      params.append('includeEmbedding', 'true');
+    }
 
     const response = await fetch(`/api/documents?${params.toString()}`);
     if (!response.ok) {
@@ -263,9 +271,15 @@ const apiClient = {
   ) => {
     const params = new URLSearchParams();
     params.append('agentId', agentId);
-    if (options?.limit) params.append('limit', options.limit.toString());
-    if (options?.before) params.append('before', options.before.toString());
-    if (options?.documentId) params.append('documentId', options.documentId);
+    if (options?.limit) {
+      params.append('limit', options.limit.toString());
+    }
+    if (options?.before) {
+      params.append('before', options.before.toString());
+    }
+    if (options?.documentId) {
+      params.append('documentId', options.documentId);
+    }
 
     const response = await fetch(`/api/knowledges?${params.toString()}`);
     if (!response.ok) {
@@ -286,7 +300,9 @@ const apiClient = {
       const errorText = await response.text();
       throw new Error(`Failed to delete knowledge document: ${response.status} ${errorText}`);
     }
-    if (response.status === 204) return;
+    if (response.status === 204) {
+      return;
+    }
     return await response.json();
   },
 
@@ -301,7 +317,7 @@ const apiClient = {
     }
     formData.append('agentId', agentId);
 
-    const response = await fetch(`/api/documents`, {
+    const response = await fetch('/api/documents', {
       method: 'POST',
       body: formData,
     });
@@ -532,7 +548,9 @@ export function KnowledgeTab({ agentId }: { agentId: UUID }) {
   };
 
   const handleUploadClick = () => {
-    if (fileInputRef.current) fileInputRef.current.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   const handleUrlUploadClick = () => {
@@ -590,7 +608,7 @@ export function KnowledgeTab({ agentId }: { agentId: UUID }) {
     setUrlError(null);
 
     try {
-      const result = await fetch(`/api/documents`, {
+      const result = await fetch('/api/documents', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -631,7 +649,9 @@ export function KnowledgeTab({ agentId }: { agentId: UUID }) {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0) {
+      return;
+    }
     setIsUploading(true);
     try {
       const fileArray = Array.from(files);

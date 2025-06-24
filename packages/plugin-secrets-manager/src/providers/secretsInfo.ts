@@ -1,10 +1,3 @@
-import {
-  type Provider,
-  type IAgentRuntime,
-  type Memory,
-  type State,
-  elizaLogger,
-} from '@elizaos/core';
 import { EnhancedSecretManager } from '../enhanced-service';
 import type { SecretContext } from '../types';
 
@@ -13,11 +6,11 @@ export const secretsInfoProvider: Provider = {
   description:
     'Provides comprehensive inventory of available API keys and secrets across all permission levels when agent needs to assess configuration status or help users understand their secret management setup',
 
-  get: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+  get: async (_runtime: IAgentRuntime, message: Memory, state?: State) => {
     elizaLogger.debug('[SecretsInfo] Fetching secrets information');
 
-    const secretsService = runtime.getService('SECRETS') as EnhancedSecretManager;
-    if (!secretsService) {
+    const secrets = runtime.get('SECRETS') as EnhancedSecretManager;
+    if (!secrets) {
       return {
         text: 'Secrets management service is not available',
         values: {},
@@ -38,7 +31,7 @@ export const secretsInfoProvider: Provider = {
           agentId: runtime.agentId,
           requesterId: message.entityId,
         };
-        const globalSecrets = await secretsService.list(globalContext);
+        const globalSecrets = await secrets.list(globalContext);
         const globalKeys = Object.keys(globalSecrets);
         results.global = {
           count: globalKeys.length,
@@ -57,7 +50,7 @@ export const secretsInfoProvider: Provider = {
             agentId: runtime.agentId,
             requesterId: message.entityId,
           };
-          const worldSecrets = await secretsService.list(worldContext);
+          const worldSecrets = await secrets.list(worldContext);
           const worldKeys = Object.keys(worldSecrets);
           results.world = {
             count: worldKeys.length,
@@ -76,7 +69,7 @@ export const secretsInfoProvider: Provider = {
           agentId: runtime.agentId,
           requesterId: message.entityId,
         };
-        const userSecrets = await secretsService.list(userContext);
+        const userSecrets = await secrets.list(userContext);
         const userKeys = Object.keys(userSecrets);
         results.user = {
           count: userKeys.length,
@@ -108,7 +101,7 @@ export const secretsInfoProvider: Provider = {
         text: summaryText,
         values: {
           hasGlobalSecrets: (results.global?.count || 0) > 0,
-          hasWorldSecrets: (results.world?.count || 0) > 0,
+          hasSecrets: (results.world?.count || 0) > 0,
           hasUserSecrets: (results.user?.count || 0) > 0,
           globalSecretCount: results.global?.count || 0,
           worldSecretCount: results.world?.count || 0,

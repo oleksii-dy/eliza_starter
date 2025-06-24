@@ -56,7 +56,7 @@ export class EVMService extends IWalletService {
 
     evmService.refreshInterval = setInterval(
       () => evmService.refreshWalletData(),
-      CACHE_REFRESH_INTERVAL_MS
+      CACHE_REFRESH_INTERVAL_MS,
     );
 
     logger.log('EVM service initialized');
@@ -120,7 +120,7 @@ export class EVMService extends IWalletService {
 
       logger.log(
         'EVM wallet data refreshed for chains:',
-        chainDetails.map((c) => c?.chainName).join(', ')
+        chainDetails.map((c) => c?.chainName).join(', '),
       );
     } catch (error) {
       logger.error('Error refreshing EVM wallet data:', error);

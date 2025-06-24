@@ -1,39 +1,40 @@
-import { expect, beforeAll, vi } from 'vitest'
+import { expect, beforeAll } from 'bun:test'
+import { mock, spyOn } from 'bun:test'
 import type { Vector3, Quaternion } from 'three'
 
 // Mock WebGL context for headless testing
 beforeAll(() => {
   // Create a mock WebGL context
   const mockWebGLContext = {
-    getParameter: vi.fn(() => 1024),
-    getExtension: vi.fn(() => ({})),
-    createShader: vi.fn(() => ({})),
-    shaderSource: vi.fn(),
-    compileShader: vi.fn(),
-    getShaderParameter: vi.fn(() => true),
-    createProgram: vi.fn(() => ({})),
-    attachShader: vi.fn(),
-    linkProgram: vi.fn(),
-    getProgramParameter: vi.fn(() => true),
-    useProgram: vi.fn(),
-    createBuffer: vi.fn(() => ({})),
-    bindBuffer: vi.fn(),
-    bufferData: vi.fn(),
-    createTexture: vi.fn(() => ({})),
-    bindTexture: vi.fn(),
-    texImage2D: vi.fn(),
-    texParameteri: vi.fn(),
-    clear: vi.fn(),
-    clearColor: vi.fn(),
-    enable: vi.fn(),
-    disable: vi.fn(),
-    viewport: vi.fn(),
-    drawArrays: vi.fn(),
-    drawElements: vi.fn(),
+    getParameter: mock(() => 1024),
+    getExtension: mock(() => ({})),
+    createShader: mock(() => ({})),
+    shaderSource: mock(),
+    compileShader: mock(),
+    getShaderParameter: mock(() => true),
+    createProgram: mock(() => ({})),
+    attachShader: mock(),
+    linkProgram: mock(),
+    getProgramParameter: mock(() => true),
+    useProgram: mock(),
+    createBuffer: mock(() => ({})),
+    bindBuffer: mock(),
+    bufferData: mock(),
+    createTexture: mock(() => ({})),
+    bindTexture: mock(),
+    texImage2D: mock(),
+    texParameteri: mock(),
+    clear: mock(),
+    clearColor: mock(),
+    enable: mock(),
+    disable: mock(),
+    viewport: mock(),
+    drawArrays: mock(),
+    drawElements: mock(),
   }
 
   // Mock canvas.getContext
-  HTMLCanvasElement.prototype.getContext = vi.fn((contextType: string) => {
+  HTMLCanvasElement.prototype.getContext = mock((contextType: string) => {
     if (contextType === 'webgl' || contextType === 'webgl2' || contextType === 'experimental-webgl') {
       return mockWebGLContext
     }
@@ -70,7 +71,7 @@ beforeAll(() => {
   }
 
   // Mock createNode function
-  ;(global as any).createNode = vi.fn((type: string, props?: any) => {
+  ;(global as any).createNode = mock((type: string, props?: any) => {
     return {
       type,
       props,
@@ -79,28 +80,32 @@ beforeAll(() => {
       scale: { x: 1, y: 1, z: 1 },
       visible: true,
       active: true,
-      add: vi.fn(),
-      remove: vi.fn(),
-      traverse: vi.fn(),
+      add: mock(),
+      remove: mock(),
+      traverse: mock(),
       parent: null,
       children: [],
     }
   })
 
   // Mock requestAnimationFrame for physics simulations
-  global.requestAnimationFrame = vi.fn(callback => {
+  global.requestAnimationFrame = mock(callback => {
     return setTimeout(() => callback(Date.now()), 16) // 60fps
   }) as any
 
-  global.cancelAnimationFrame = vi.fn(id => {
+  global.cancelAnimationFrame = mock(id => {
     clearTimeout(id)
   }) as any
 
   // Mock performance.now for accurate timing
-  global.performance = {
-    ...global.performance,
-    now: vi.fn(() => Date.now()),
-  }
+  const originalPerformance = global.performance
+  Object.defineProperty(global, 'performance', {
+    writable: true,
+    value: {
+      ...originalPerformance,
+      now: mock(() => Date.now()),
+    },
+  })
 })
 
 // Custom matchers for game engine testing
@@ -113,7 +118,7 @@ interface CustomMatchers<R = unknown> {
   toHaveVelocityMagnitude(min: number, max: number): R
 }
 
-declare module 'vitest' {
+declare module 'bun:test' {
   interface Assertion<T = any> extends CustomMatchers<T> {}
   interface AsymmetricMatchersContaining extends CustomMatchers {}
 }
@@ -183,7 +188,7 @@ expect.extend({
       pass,
       message: () =>
         pass
-          ? `Expected position not to be within bounds`
+          ? 'Expected position not to be within bounds'
           : `Expected position ${JSON.stringify(position)} to be within bounds [${JSON.stringify(min)}, ${JSON.stringify(max)}]`,
     }
   },

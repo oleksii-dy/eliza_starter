@@ -12,8 +12,8 @@ const runtime: IAgentRuntime = {
   getSetting: (key: string) => process.env[key],
   useModel: async (modelType: any, params: any) => {
     console.log('\n[LLM Called] Model type:', modelType);
-    console.log('[LLM Called] Content preview:', params.messages?.[1]?.content?.substring(0, 300) + '...\n');
-    
+    console.log('[LLM Called] Content preview:', `${params.messages?.[1]?.content?.substring(0, 300)}...\n`);
+
     // Simulate the exact error: returning empty array
     return '[]';
   },
@@ -30,9 +30,9 @@ async function testUserErrorScenario() {
   console.log('Simulating the exact error from the logs:');
   console.log('- Space Situational Awareness content returning empty findings');
   console.log('- Data Extraction content returning empty findings\n');
-  
+
   const service = new ResearchService(runtime);
-  
+
   // Test case 1: Space Situational Awareness (from user's error)
   const ssaSource = {
     id: 'ssa-1',
@@ -53,7 +53,7 @@ async function testUserErrorScenario() {
       <p>Learn more at https://aerospace.org/space-safety</p>
     `,
   };
-  
+
   // Test case 2: Data Extraction (from user's error)
   const dataExtractionSource = {
     id: 'de-1',
@@ -76,7 +76,7 @@ async function testUserErrorScenario() {
       </article>
     `,
   };
-  
+
   console.log('Test 1: Space Situational Awareness Content');
   console.log('==========================================');
   try {
@@ -86,14 +86,14 @@ async function testUserErrorScenario() {
       ssaSource.fullContent || '',
       { queryIntent: 'Learn about SSA', keyTopics: ['SSA', 'space tracking'] }
     );
-    
+
     console.log(`✅ SUCCESS: Extracted ${findings1.length} findings (expected: 0 with graceful handling)`);
     console.log('No error thrown - empty findings handled correctly\n');
   } catch (error: any) {
     console.log('❌ ERROR:', error.message);
     console.log('Stack:', error.stack);
   }
-  
+
   console.log('\nTest 2: Data Extraction Content');
   console.log('================================');
   try {
@@ -103,32 +103,32 @@ async function testUserErrorScenario() {
       dataExtractionSource.fullContent || '',
       { queryIntent: 'Learn about data extraction', keyTopics: ['data extraction', 'big data'] }
     );
-    
+
     console.log(`✅ SUCCESS: Extracted ${findings2.length} findings (expected: 0 with graceful handling)`);
     console.log('No error thrown - empty findings handled correctly\n');
   } catch (error: any) {
     console.log('❌ ERROR:', error.message);
     console.log('Stack:', error.stack);
   }
-  
+
   console.log('\n=== Content Sanitization Results ===');
-  
+
   // Show what the content looks like after sanitization
   const sanitized1 = (service as any).sanitizeContentForLLM(ssaSource.fullContent || '');
   const sanitized2 = (service as any).sanitizeContentForLLM(dataExtractionSource.fullContent || '');
-  
+
   console.log('\nSSA Content:');
   console.log('- Original length:', ssaSource.fullContent?.length);
   console.log('- Sanitized length:', sanitized1.length);
-  console.log('- Preview:', sanitized1.substring(0, 200) + '...');
-  
+  console.log('- Preview:', `${sanitized1.substring(0, 200)}...`);
+
   console.log('\nData Extraction Content:');
   console.log('- Original length:', dataExtractionSource.fullContent?.length);
   console.log('- Sanitized length:', sanitized2.length);
-  console.log('- Preview:', sanitized2.substring(0, 200) + '...');
-  
+  console.log('- Preview:', `${sanitized2.substring(0, 200)}...`);
+
   console.log('\n✅ SUMMARY: Both error scenarios are now handled gracefully without throwing errors');
 }
 
 // Run the test
-testUserErrorScenario().catch(console.error); 
+testUserErrorScenario().catch(console.error);

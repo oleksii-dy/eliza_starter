@@ -1,7 +1,7 @@
 import type { IAgentRuntime, TestCase } from '@elizaos/core';
 import { strict as assert } from 'node:assert';
 import { PluginManagerService } from '../../services/pluginManagerService.ts';
-import { PluginStatus } from '../../types.ts';
+import { PluginStatusValues } from '../../types.ts';
 
 /**
  * E2E test for Auton8n integration with Plugin Manager.
@@ -111,7 +111,7 @@ export const auton8nIntegrationTests: TestCase[] = [
 
         // Verify it's loaded
         const updatedState = pluginManager.getPlugin(pluginId);
-        assert.strictEqual(updatedState?.status, PluginStatus.LOADED, 'Plugin should be loaded');
+        assert.strictEqual(updatedState?.status, PluginStatusValues.LOADED, 'Plugin should be loaded');
 
         // Simulate step execution
         console.log(`[Auton8n] Executing ${pluginState?.name}...`);
@@ -183,8 +183,8 @@ export const auton8nIntegrationTests: TestCase[] = [
       const baseState = pluginManager.getPlugin(baseId);
       const depState = pluginManager.getPlugin(depId);
 
-      assert.strictEqual(baseState?.status, PluginStatus.LOADED);
-      assert.strictEqual(depState?.status, PluginStatus.LOADED);
+      assert.strictEqual(baseState?.status, PluginStatusValues.LOADED);
+      assert.strictEqual(depState?.status, PluginStatusValues.LOADED);
 
       console.log('[Auton8n] Successfully loaded plugins with dependencies');
     },
@@ -218,7 +218,7 @@ export const auton8nIntegrationTests: TestCase[] = [
 
       const pluginId = await pluginManager.registerPlugin(faultyPlugin);
 
-      // Workflow with error handling
+      // Workflow with _error handling
       console.log('[Auton8n] Starting workflow with potential failures...');
 
       try {
@@ -237,11 +237,11 @@ export const auton8nIntegrationTests: TestCase[] = [
             // In real scenario, would execute the action
             // For demo, just check if plugin is loaded
             const state = pluginManager.getPlugin(pluginId);
-            if (state?.status === PluginStatus.LOADED) {
+            if (state?.status === PluginStatusValues.LOADED) {
               success = true;
               console.log('[Auton8n] Workflow step succeeded');
             }
-          } catch (error) {
+          } catch (_error) {
             console.log(`[Auton8n] Attempt ${attempts} failed:`, error);
             if (attempts === maxAttempts) {
               throw error;
@@ -252,7 +252,7 @@ export const auton8nIntegrationTests: TestCase[] = [
         // Cleanup
         await pluginManager.unloadPlugin({ pluginId });
         console.log('[Auton8n] Workflow completed with recovery');
-      } catch (error) {
+      } catch (_error) {
         console.log('[Auton8n] Workflow failed after all attempts:', error);
 
         // Recovery: suggest alternative plugins
@@ -271,7 +271,7 @@ export const auton8nIntegrationTests: TestCase[] = [
 
       // Get all available plugins
       const allPlugins = pluginManager.getAllPlugins();
-      const loadedPlugins = allPlugins.filter((p) => p.status === PluginStatus.LOADED);
+      const loadedPlugins = allPlugins.filter((p) => p.status === PluginStatusValues.LOADED);
 
       console.log(`[Auton8n] Analyzing ${loadedPlugins.length} loaded plugins for optimization`);
 

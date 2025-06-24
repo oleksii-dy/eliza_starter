@@ -2,7 +2,6 @@ import type {
   PluginEnvironmentValidation,
   AgentConfigParameter,
   PluginScenario,
-  ScenarioCharacter,
 } from '../types/scenario';
 import type { IAgentRuntime } from '../types/runtime';
 import { logger } from '../logger';
@@ -128,7 +127,7 @@ export class PluginEnvironmentValidator {
    */
   private static async getPluginAgentConfig(
     pluginName: string,
-    runtime: IAgentRuntime
+    _runtime: IAgentRuntime
   ): Promise<{ pluginParameters?: Record<string, AgentConfigParameter> } | null> {
     try {
       // Try to find the plugin's package.json

@@ -2,6 +2,7 @@
  * Configuration validation for the Knowledge plugin
  */
 import type { IAgentRuntime } from '@elizaos/core';
+import { ModelType } from '@elizaos/core';
 import { logger } from '@elizaos/core';
 
 export interface ValidatedModelConfig {

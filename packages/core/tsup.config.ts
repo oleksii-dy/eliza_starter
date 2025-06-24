@@ -6,7 +6,7 @@ export default defineConfig({
   clean: true,
   format: ['esm'],
   target: 'node18',
-  dts: false,
+  dts: true,
   tsconfig: './tsconfig.build.json', // Use build-specific tsconfig
   ignoreWatch: ['**/__tests__/**', '**/test_resources/**'],
   external: [
@@ -31,6 +31,7 @@ export default defineConfig({
     'zod',
     '@hapi/shot',
     '@elizaos/core',
+    'bun:test',
   ],
   sourcemap: false,
 });

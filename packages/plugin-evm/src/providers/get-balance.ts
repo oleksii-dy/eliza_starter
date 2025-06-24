@@ -79,7 +79,7 @@ export const tokenBalanceProvider: Provider = {
         text: `${token} balance on ${chain} for ${address}: ${formattedBalance}`,
         data: {
           token: tokenData.symbol,
-          chain: chain,
+          chain,
           balance: formattedBalance,
           decimals: tokenData.decimals,
           address: tokenData.address,
@@ -87,7 +87,7 @@ export const tokenBalanceProvider: Provider = {
         },
         values: {
           token: tokenData.symbol,
-          chain: chain,
+          chain,
           balance: formattedBalance,
           hasBalance: (parseFloat(formattedBalance) > 0).toString(),
         },

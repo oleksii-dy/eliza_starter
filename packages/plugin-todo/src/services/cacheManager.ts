@@ -102,7 +102,7 @@ export class CacheManager {
 
   async has(key: string): Promise<boolean> {
     const entry = this.cache.get(key);
-    if (!entry) return false;
+    if (!entry) {return false;}
 
     if (this.isExpired(entry)) {
       this.cache.delete(key);
@@ -194,7 +194,6 @@ export class CacheManager {
   }
 
   private cleanup(): void {
-    const now = Date.now();
     const keysToDelete: string[] = [];
 
     for (const [key, entry] of this.cache) {

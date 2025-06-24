@@ -56,7 +56,7 @@ export async function validateShellCommand(
       if (securityModule) {
         await securityModule.logSecurityEvent({
           type: 'SHELL_ACCESS_DENIED',
-          entityId: entityId,
+          entityId,
           severity: dangerLevel > 3 ? 'high' : 'medium',
           context: {
             command,
@@ -89,7 +89,7 @@ export async function validateShellCommand(
       const permissionSystem = runtime.getService('contextual-permissions') as any;
       if (permissionSystem) {
         const permissionCheck = await permissionSystem.checkAccess({
-          entityId: entityId,
+          entityId,
           action: 'EXECUTE_SHELL_COMMAND',
           resource: 'system',
           context: {
@@ -206,16 +206,16 @@ function assessCommandDanger(command: string): number {
 
   // Check patterns in order of danger
   for (const pattern of criticalPatterns) {
-    if (pattern.test(cmd)) return 5;
+    if (pattern.test(cmd)) {return 5;}
   }
   for (const pattern of highDangerPatterns) {
-    if (pattern.test(cmd)) return 4;
+    if (pattern.test(cmd)) {return 4;}
   }
   for (const pattern of mediumDangerPatterns) {
-    if (pattern.test(cmd)) return 3;
+    if (pattern.test(cmd)) {return 3;}
   }
   for (const pattern of lowDangerPatterns) {
-    if (pattern.test(cmd)) return 2;
+    if (pattern.test(cmd)) {return 2;}
   }
 
   // Default to safe (1) for simple commands like ls, ps, etc.
@@ -239,15 +239,15 @@ function getDangerBasedTrustRequirement(dangerLevel: number): number {
 
 /**
  * Example usage in plugin-shell action handler:
- * 
+ *
  * export const shellAction: Action = {
  *   name: 'EXECUTE_SHELL_COMMAND',
  *   handler: async (runtime, message, state, options, callback) => {
  *     const command = extractCommandFromMemory(message);
- *     
+ *
  *     // Validate with trust system
  *     const validation = await validateShellCommand(runtime, message, command);
- *     
+ *
  *     if (!validation.allowed) {
  *       return {
  *         text: `Command denied: ${validation.reason}`,
@@ -256,7 +256,7 @@ function getDangerBasedTrustRequirement(dangerLevel: number): number {
  *         trustScore: validation.trustScore,
  *       };
  *     }
- *     
+ *
  *     // Execute command if validation passes
  *     return executeShellCommand(command);
  *   }

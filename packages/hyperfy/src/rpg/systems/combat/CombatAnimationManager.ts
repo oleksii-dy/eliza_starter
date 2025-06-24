@@ -19,30 +19,30 @@ export class CombatAnimationManager {
   private world: World;
   private activeAnimations: Map<string, AnimationTask> = new Map();
   private animationQueue: AnimationTask[] = [];
-  
+
   // Animation definitions
   private readonly animations = {
     // Melee animations
     'melee_slash': { duration: 600, file: 'slash.glb' },
     'melee_stab': { duration: 600, file: 'stab.glb' },
     'melee_crush': { duration: 600, file: 'crush.glb' },
-    
+
     // Ranged animations
     'ranged_bow': { duration: 900, file: 'bow_shoot.glb' },
     'ranged_crossbow': { duration: 700, file: 'crossbow_shoot.glb' },
     'ranged_thrown': { duration: 600, file: 'throw.glb' },
-    
+
     // Magic animations
     'magic_cast': { duration: 1200, file: 'magic_cast.glb' },
     'magic_strike': { duration: 600, file: 'magic_strike.glb' },
-    
+
     // Defense animations
     'block': { duration: 400, file: 'block.glb' },
     'dodge': { duration: 500, file: 'dodge.glb' },
-    
+
     // Death animation
     'death': { duration: 2000, file: 'death.glb' },
-    
+
     // Hit reactions
     'hit_reaction': { duration: 300, file: 'hit_reaction.glb' }
   };
@@ -57,14 +57,14 @@ export class CombatAnimationManager {
   update(delta: number): void {
     const now = Date.now();
     const toRemove: string[] = [];
-    
+
     // Check for completed animations
     for (const [entityId, task] of Array.from(this.activeAnimations)) {
       if (now - task.startTime >= task.duration) {
         toRemove.push(entityId);
       }
     }
-    
+
     // Remove completed animations
     toRemove.forEach(id => {
       const animation = this.activeAnimations.get(id);
@@ -114,12 +114,12 @@ export class CombatAnimationManager {
       console.warn(`Unknown animation: ${animationName}`);
       return;
     }
-    
+
     // Cancel current animation if playing
     if (this.activeAnimations.has(entityId)) {
       this.cancelAnimation(entityId);
     }
-    
+
     // Create animation task
     const task: AnimationTask = {
       id: `anim_${Date.now()}_${Math.random()}`,
@@ -134,9 +134,9 @@ export class CombatAnimationManager {
       progress: 0,
       cancelled: false
     };
-    
+
     this.activeAnimations.set(entityId, task);
-    
+
     // Broadcast animation to clients
     this.broadcastAnimation(entityId, animationName);
   }
@@ -146,11 +146,11 @@ export class CombatAnimationManager {
    */
   cancelAnimation(entityId: string): void {
     const currentAnimation = this.activeAnimations.get(entityId);
-    if (!currentAnimation) return;
-    
+    if (!currentAnimation) {return;}
+
     // Cancel the animation
     currentAnimation.cancelled = true;
-    
+
     // Broadcast animation cancellation
     const network = (this.world as any).network;
     if (network) {
@@ -160,7 +160,7 @@ export class CombatAnimationManager {
         timestamp: Date.now()
       });
     }
-    
+
     // Clean up
     this.activeAnimations.delete(entityId);
   }
@@ -179,7 +179,7 @@ export class CombatAnimationManager {
         visual.animationTime = 0;
       }
     }
-    
+
     // Use actual network system
     const network = (this.world as any).network;
     if (network) {
@@ -190,7 +190,7 @@ export class CombatAnimationManager {
         timestamp: Date.now()
       });
     }
-    
+
     // Emit event through world
     this.world.events.emit('animation:complete', {
       entityId,
@@ -250,8 +250,8 @@ export class CombatAnimationManager {
               return style === CombatStyle.AGGRESSIVE ? 'stab_aggressive' : 'stab';
             case WeaponType.SWORD:
             case WeaponType.SCIMITAR:
-              return style === CombatStyle.AGGRESSIVE ? 'slash_aggressive' : 
-                     style === CombatStyle.DEFENSIVE ? 'slash_defensive' : 'slash';
+              return style === CombatStyle.AGGRESSIVE ? 'slash_aggressive' :
+                style === CombatStyle.DEFENSIVE ? 'slash_defensive' : 'slash';
             case WeaponType.MACE:
             case WeaponType.AXE:
               return style === CombatStyle.AGGRESSIVE ? 'crush_aggressive' : 'crush';
@@ -263,7 +263,7 @@ export class CombatAnimationManager {
           }
         }
         return 'punch'; // Unarmed
-        
+
       case AttackType.RANGED:
         // Determine bow vs crossbow based on weapon
         const rangedWeapon = this.getEquippedWeapon(entity);
@@ -274,22 +274,22 @@ export class CombatAnimationManager {
           }
         }
         return 'bow_shoot'; // Default to bow
-        
+
       case AttackType.MAGIC:
         return style === CombatStyle.DEFENSIVE ? 'cast_defensive' : 'cast_standard';
-        
+
       default:
         return 'idle';
     }
   }
-  
+
   /**
    * Get equipped weapon
    */
   private getEquippedWeapon(entity: RPGEntity): any {
     const inventory = entity.getComponent<InventoryComponent>('inventory');
-    if (!inventory) return null;
-    
+    if (!inventory) {return null;}
+
     return inventory.equipment[EquipmentSlot.WEAPON];
   }
 
@@ -304,11 +304,11 @@ export class CombatAnimationManager {
     targetId?: string
   ): void {
     const entity = this.world.entities.get(entityId);
-    const animationName = entity ? 
+    const animationName = entity ?
       this.determineAnimation(entity as RPGEntity, attackType, style) :
       this.getDefaultAnimationName(attackType);
     const duration = this.getAnimationDuration(animationName);
-    
+
     const task: AnimationTask = {
       id: `anim_${Date.now()}_${Math.random()}`,
       entityId,
@@ -322,7 +322,7 @@ export class CombatAnimationManager {
       progress: 0,
       cancelled: false
     };
-    
+
     this.animationQueue.push(task);
   }
 
@@ -341,7 +341,7 @@ export class CombatAnimationManager {
         return 'idle';
     }
   }
-  
+
   /**
    * Get animation duration
    */
@@ -350,7 +350,7 @@ export class CombatAnimationManager {
     if (animation) {
       return animation.duration;
     }
-    
+
     // Check for custom animations
     const customAnimations: Record<string, number> = {
       'stab': 600,
@@ -369,7 +369,7 @@ export class CombatAnimationManager {
       'cast_defensive': 1400,
       'idle': 0
     };
-    
+
     return customAnimations[animationName] || 600; // Default 600ms
   }
-} 
+}

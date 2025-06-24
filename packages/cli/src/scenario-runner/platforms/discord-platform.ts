@@ -66,7 +66,9 @@ export class DiscordPlatform implements MessagePlatform {
 
     this.client.on('messageCreate', (discordMessage: any) => {
       // Skip bot messages to avoid loops
-      if (discordMessage.author.bot) return;
+      if (discordMessage.author.bot) {
+        return;
+      }
 
       const platformMessage: PlatformMessage = {
         id: discordMessage.id,
@@ -105,7 +107,9 @@ export class DiscordPlatform implements MessagePlatform {
     });
 
     this.client.on('messageReactionAdd', (reaction: any, user: any) => {
-      if (user.bot) return;
+      if (user.bot) {
+        return;
+      }
 
       const platformReaction: PlatformReaction = {
         messageId: reaction.message.id,
@@ -235,7 +239,7 @@ export class DiscordPlatform implements MessagePlatform {
     logger.debug(`Agent ${agentId} leaving Discord channel ${channelId}`);
   }
 
-  async sendMessage(channelId: string, senderId: string, content: Content): Promise<string> {
+  async sendMessage(channelId: string, _senderId: string, content: Content): Promise<string> {
     try {
       const channel = await this.client.channels.fetch(channelId);
       if (!channel || !channel.isTextBased()) {
@@ -255,8 +259,8 @@ export class DiscordPlatform implements MessagePlatform {
       }
 
       // Handle embeds for rich content
-      if (content.metadata?.embed) {
-        messageOptions.embeds = [content.metadata.embed];
+      if ((content.metadata as any)?.embed) {
+        messageOptions.embeds = [(content.metadata as any).embed];
       }
 
       const sentMessage = await channel.send(messageOptions);
@@ -365,7 +369,7 @@ export class DiscordPlatform implements MessagePlatform {
     }
   }
 
-  async inviteToChannel(channelId: string, userId: string): Promise<string | null> {
+  async inviteToChannel(channelId: string, _userId: string): Promise<string | null> {
     try {
       const channel = await this.client.channels.fetch(channelId);
       if (channel && 'createInvite' in channel) {

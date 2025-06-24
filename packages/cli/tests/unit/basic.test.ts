@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect  } from 'bun:test';
 
 describe('Basic CLI Tests', () => {
   it('should run basic test', () => {

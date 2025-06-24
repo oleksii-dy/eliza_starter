@@ -14,16 +14,16 @@ export const activeResearchProvider: Provider = {
 
   async get(runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> {
     const researchService = runtime.getService<ResearchService>('research');
-    if (!researchService) return { text: '' };
+    if (!researchService) {return { text: '' };}
 
     const activeProjects = await researchService.getActiveProjects();
-    if (activeProjects.length === 0) return { text: '' };
+    if (activeProjects.length === 0) {return { text: '' };}
 
     const projectInfo = activeProjects.map(project => {
       const phaseProgress = Math.floor(
         (Object.keys(ResearchPhase).indexOf(project.phase) / (Object.keys(ResearchPhase).length - 1)) * 100
       );
-      
+
       return `- Research on "${project.query}" (ID: ${project.id})
   Status: ${project.status}
   Phase: ${project.phase} (${phaseProgress}% complete)
@@ -41,20 +41,20 @@ export const completedResearchProvider: Provider = {
 
   async get(runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> {
     const researchService = runtime.getService<ResearchService>('research');
-    if (!researchService) return { text: '' };
+    if (!researchService) {return { text: '' };}
 
     const allProjects = await researchService.getAllProjects();
     const completedProjects = allProjects.filter(p => p.status === ResearchStatus.COMPLETED);
-    
-    if (completedProjects.length === 0) return { text: '' };
+
+    if (completedProjects.length === 0) {return { text: '' };}
 
     const projectInfo = completedProjects
       .slice(-5) // Show last 5 completed projects
       .map(project => {
-        const reportSummary = project.report 
+        const reportSummary = project.report
           ? `Report available (${project.report.sections.length} sections)`
           : 'Report generation pending';
-        
+
         return `- "${project.query}" (ID: ${project.id})
   Completed: ${new Date(project.completedAt || project.updatedAt).toLocaleDateString()}
   ${reportSummary}
@@ -71,7 +71,7 @@ export const researchCapabilitiesProvider: Provider = {
 
   async get(runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> {
     const researchService = runtime.getService<ResearchService>('research');
-    
+
     // Always return capabilities info, even if service is not currently available
     return { text: `Research Capabilities:
 - Deep multi-phase internet research
@@ -88,4 +88,4 @@ export const researchProviders = [
   activeResearchProvider,
   completedResearchProvider,
   researchCapabilitiesProvider,
-]; 
+];

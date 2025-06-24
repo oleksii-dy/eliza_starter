@@ -1,9 +1,7 @@
 import { ChatOpenAI } from '@langchain/openai';
 import dotenv from 'dotenv';
 import type { Configuration } from '../Configuration.js';
-import { TypeScriptParser } from '../TypeScriptParser.js';
 import { CodeFormatter } from './utils/CodeFormatter.js';
-import { DocumentOrganizer } from './utils/DocumentOrganizer.js';
 
 dotenv.config();
 

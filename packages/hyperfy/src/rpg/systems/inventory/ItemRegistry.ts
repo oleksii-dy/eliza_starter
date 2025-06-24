@@ -103,7 +103,7 @@ export class ItemRegistry {
    */
   getByCategory(category: string): ItemDefinition[] {
     const results: ItemDefinition[] = [];
-    
+
     for (const item of this.items.values()) {
       if (item.equipment) {
         const slot = item.equipment.slot.toLowerCase();
@@ -112,7 +112,7 @@ export class ItemRegistry {
         }
       }
     }
-    
+
     return results;
   }
 
@@ -122,13 +122,13 @@ export class ItemRegistry {
   search(query: string): ItemDefinition[] {
     const lowerQuery = query.toLowerCase();
     const results: ItemDefinition[] = [];
-    
+
     for (const item of this.items.values()) {
       if (item.name.toLowerCase().includes(lowerQuery)) {
         results.push(item);
       }
     }
-    
+
     return results;
   }
 
@@ -233,4 +233,4 @@ export class ItemRegistry {
       icon: 'bones_icon'
     });
   }
-} 
+}

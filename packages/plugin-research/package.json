@@ -6,14 +6,13 @@
   "type": "module",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup",
+    "build": "bun run typecheck && tsup",
     "clean": "rm -rf dist",
     "test": "elizaos test",
-    "test:unit": "vitest run --exclude='**/*.e2e.test.ts'",
-    "test:unit:watch": "vitest --exclude='**/*.e2e.test.ts'",
-    "test:watch": "vitest",
     "dev": "tsup --watch",
-    "lint": "eslint src --ext ts,tsx",
+    "lint": "eslint src --fix && prettier --write \"src/**/*.{ts,tsx,md}\"",
+    "lint:check": "eslint src && prettier --check \"src/**/*.{ts,tsx,md}\"",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,md}\"",
     "benchmark": "node scripts/run-benchmarks.ts",
     "benchmark:deepresearch": "node scripts/run-benchmarks.ts deepresearch",
@@ -48,13 +47,12 @@
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/uuid": "^9.0.7",
-    "@typescript-eslint/eslint-plugin": "^6.18.1",
-    "@typescript-eslint/parser": "^6.18.1",
-    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
+    "eslint": "^9.22.0",
     "prettier": "^3.2.2",
     "tsup": "^8.0.1",
-    "typescript": "^5.3.3",
-    "vitest": "^1.2.0"
+    "typescript": "5.8.3"
   },
   "files": [
     "dist",

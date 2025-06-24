@@ -34,40 +34,40 @@ export const messageClassifierProvider: Provider = {
 
   get: async (runtime, message, state) => {
     const text = message.content?.text || '';
-    
+
     let classification = 'SIMPLE';
     let complexity = 'low';
-    
+
     // Multi-step planning indicators
     const multiStepIndicators = [
       'and', 'then', 'also', 'make sure', 'include', 'ensure',
       'step', 'process', 'workflow', 'sequence'
     ];
-    
+
     // Strategic planning keywords
     const strategicKeywords = [
       'plan', 'strategy', 'coordinate', 'organize', 'manage',
       'schedule', 'meeting', 'project', 'workflow', 'process'
     ];
-    
+
     // Research/analysis keywords
     const researchKeywords = [
       'research', 'analyze', 'investigate', 'study', 'examine',
       'review', 'evaluate', 'assess', 'compare'
     ];
-    
+
     // Complex task indicators
     const complexTaskIndicators = [
       'email', 'document', 'report', 'presentation', 'meeting',
       'send', 'create', 'generate', 'compose', 'draft'
     ];
-    
+
     // Count indicators
     const hasMultiStep = multiStepIndicators.some(indicator => text.toLowerCase().includes(indicator));
     const hasStrategic = strategicKeywords.some(keyword => text.toLowerCase().includes(keyword));
     const hasResearch = researchKeywords.some(keyword => text.toLowerCase().includes(keyword));
     const hasComplexTask = complexTaskIndicators.some(indicator => text.toLowerCase().includes(indicator));
-    
+
     // Classify based on patterns
     if (hasStrategic || (hasMultiStep && hasComplexTask)) {
       classification = 'STRATEGIC';
@@ -84,7 +84,7 @@ export const messageClassifierProvider: Provider = {
       text: `[MESSAGE CLASSIFIER]\nClassification: ${classification}\nComplexity: ${complexity}\nRequires Planning: ${classification !== 'SIMPLE'}\n[/MESSAGE CLASSIFIER]`,
       values: {
         messageClassification: classification,
-        complexity: complexity,
+        complexity,
         requiresPlanning: classification !== 'SIMPLE',
         hasMultiStep,
         hasStrategic,
@@ -103,8 +103,8 @@ export const createPlanAction: Action = {
   validate: async (runtime, message) => {
     const text = message.content?.text || '';
     // Activate for complex requests or when explicitly asked to plan
-    return text.includes('plan') || 
-           text.includes('strategy') || 
+    return text.includes('plan') ||
+           text.includes('strategy') ||
            text.includes('step') ||
            text.includes('organize') ||
            text.length > 100; // Long requests might need planning
@@ -112,31 +112,31 @@ export const createPlanAction: Action = {
 
   handler: async (runtime, message, state, options, callback) => {
     const userRequest = message.content?.text || '';
-    
+
     // Simple plan generation logic
     const steps = [];
-    
+
     if (userRequest.includes('email')) {
       steps.push('COMPOSE_EMAIL', 'SEND_EMAIL');
     }
-    
+
     if (userRequest.includes('research') || userRequest.includes('search')) {
       steps.push('SEARCH_INFORMATION', 'ANALYZE_RESULTS');
     }
-    
+
     if (userRequest.includes('report') || userRequest.includes('document')) {
       steps.push('GATHER_DATA', 'CREATE_DOCUMENT');
     }
-    
+
     if (userRequest.includes('meeting') || userRequest.includes('schedule')) {
       steps.push('CHECK_CALENDAR', 'SCHEDULE_MEETING');
     }
-    
+
     // Default steps if no specific actions identified
     if (steps.length === 0) {
       steps.push('ANALYZE_REQUEST', 'EXECUTE_ACTION', 'PROVIDE_RESPONSE');
     }
-    
+
     const plan = {
       goal: `Complete user request: ${userRequest}`,
       steps: steps.map((step, index) => ({
@@ -157,14 +157,14 @@ export const createPlanAction: Action = {
     }
 
     return {
-      values: { 
+      values: {
         plan,
         planCreated: true,
-        nextActions: steps 
+        nextActions: steps
       },
-      data: { 
+      data: {
         strategicPlan: plan,
-        executionSteps: steps 
+        executionSteps: steps
       },
       text: `Plan created with ${plan.steps.length} steps`,
     };
@@ -201,7 +201,7 @@ export const executePlanAction: Action = {
 
   handler: async (runtime, message, state, options, callback) => {
     const plan = state?.data?.strategicPlan || state?.values?.plan;
-    
+
     if (!plan) {
       if (callback) {
         await callback({
@@ -216,7 +216,7 @@ export const executePlanAction: Action = {
     for (let i = 0; i < plan.steps.length; i++) {
       const step = plan.steps[i];
       let stepOutput = '';
-      
+
       // Generate realistic step outputs based on action type
       switch (step.action) {
         case 'COMPOSE_EMAIL':
@@ -246,7 +246,7 @@ export const executePlanAction: Action = {
         default:
           stepOutput = `${step.action.toLowerCase().replace('_', ' ')} completed`;
       }
-      
+
       if (callback) {
         await callback({
           text: stepOutput,
@@ -254,7 +254,7 @@ export const executePlanAction: Action = {
           actions: [step.action],
         });
       }
-      
+
       // Simulate some processing time
       await new Promise(resolve => setTimeout(resolve, 100));
     }
@@ -268,14 +268,14 @@ export const executePlanAction: Action = {
     }
 
     return {
-      values: { 
+      values: {
         planExecuted: true,
         executionComplete: true,
-        success: true 
+        success: true
       },
-      data: { 
+      data: {
         executionResult: 'success',
-        completedSteps: plan.steps.length 
+        completedSteps: plan.steps.length
       },
       text: 'Plan execution completed successfully',
     };
@@ -297,9 +297,9 @@ export const planningReplyAction: Action = {
   handler: async (runtime, message, state, options, callback) => {
     const userRequest = message.content?.text || '';
     const classification = state?.values?.messageClassification || 'SIMPLE';
-    
+
     let response = '';
-    
+
     if (classification === 'STRATEGIC') {
       response = 'I understand this requires a strategic approach. Let me think through this systematically and create a plan.';
     } else if (classification === 'RESEARCH_NEEDED') {
@@ -337,7 +337,7 @@ export const planningPlugin: Plugin = {
 
   actions: [createPlanAction, executePlanAction, planningReplyAction],
 
-  services: [] // No services for now to avoid import issues
+  services: [], // No services for now to avoid import issues
 
   evaluators: [],
 };

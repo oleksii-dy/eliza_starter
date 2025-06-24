@@ -1,6 +1,7 @@
 import {
   type Action,
   type ActionExample,
+  type ActionResult,
   composePrompt,
   type HandlerCallback,
   type IAgentRuntime,
@@ -137,7 +138,7 @@ ${pendingTask.recurring ? `Recurring: ${pendingTask.recurring}` : ''}
 export const confirmTodoAction: Action = {
   name: 'CONFIRM_TODO',
   similes: ['CONFIRM_TASK', 'APPROVE_TODO', 'APPROVE_TASK', 'TODO_CONFIRM'],
-  description: 'Confirms or cancels a pending todo creation after user review.',
+  description: 'Confirms or cancels pending todo creation after user review. Processes confirmation intent and creates task if approved. Returns created task details or cancellation status. Used after CREATE_TODO_PREVIEW action.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     // This action is only valid if there's a pending todo in the state
@@ -151,7 +152,7 @@ export const confirmTodoAction: Action = {
     state: State | undefined,
     options: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     try {
       if (!state) {
         if (callback) {
@@ -161,7 +162,15 @@ export const confirmTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CONFIRM_TODO',
+            error: 'Missing state context',
+          },
+          values: {
+            success: false,
+          },
+        };
       }
 
       const pendingTodo = state.data?.pendingTodo as PendingTodoData | undefined;
@@ -173,7 +182,16 @@ export const confirmTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CONFIRM_TODO',
+            error: 'No pending todo to confirm',
+          },
+          values: {
+            success: false,
+            hasPendingTodo: false,
+          },
+        };
       }
 
       if (!message.roomId || !message.entityId) {
@@ -184,7 +202,15 @@ export const confirmTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CONFIRM_TODO',
+            error: 'Missing room or entity context',
+          },
+          values: {
+            success: false,
+          },
+        };
       }
 
       // Extract confirmation intent
@@ -199,7 +225,17 @@ export const confirmTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CONFIRM_TODO',
+            error: 'Message not related to confirmation',
+          },
+          values: {
+            success: false,
+            isWaitingForConfirmation: true,
+            pendingTaskName: pendingTodo.name,
+          },
+        };
       }
 
       if (!confirmation.shouldProceed) {
@@ -214,7 +250,18 @@ export const confirmTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CONFIRM_TODO',
+            result: 'Task creation cancelled',
+            pendingTaskName: pendingTodo.name,
+          },
+          values: {
+            success: true,
+            taskCreated: false,
+            taskCancelled: true,
+          },
+        };
       }
 
       // User confirmed - create the task
@@ -238,7 +285,17 @@ export const confirmTodoAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CONFIRM_TODO',
+            error: 'Duplicate task found',
+            duplicateTaskName: pendingTodo.name,
+          },
+          values: {
+            success: false,
+            isDuplicate: true,
+          },
+        };
       }
 
       // Create the task
@@ -293,6 +350,25 @@ export const confirmTodoAction: Action = {
           source: message.content.source,
         });
       }
+
+      return {
+        data: {
+          actionName: 'CONFIRM_TODO',
+          createdTodoId,
+          createdTaskName: pendingTodo.name,
+          taskType: pendingTodo.taskType,
+          priority: pendingTodo.priority,
+          urgent: pendingTodo.urgent,
+          dueDate: pendingTodo.dueDate,
+          hadModifications: !!confirmation.modifications,
+        },
+        values: {
+          success: true,
+          taskCreated: true,
+          createdTodoId,
+          createdTaskName: pendingTodo.name,
+        },
+      };
     } catch (error) {
       logger.error('Error in confirmTodo handler:', error);
       if (callback) {
@@ -302,10 +378,50 @@ export const confirmTodoAction: Action = {
           source: message.content.source,
         });
       }
+
+      return {
+        data: {
+          actionName: 'CONFIRM_TODO',
+          error: error instanceof Error ? error.message : String(error),
+        },
+        values: {
+          success: false,
+        },
+      };
     }
   },
 
   examples: [
+    // Multi-action example: CREATE_TODO_PREVIEW followed by CONFIRM_TODO and LIST_TODOS
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Add a todo to finish my taxes by April 15',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: "I'll create a one-off todo: 'Finish taxes' with Priority 2, Due April 15.\n\nIs this correct?",
+          actions: ['CREATE_TODO_PREVIEW'],
+        },
+      },
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Yes, that looks good, and show me all my tasks',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: "I'll confirm the task creation and show your task list.",
+          actions: ['CONFIRM_TODO', 'LIST_TODOS'],
+        },
+      },
+    ],
+    // Standard confirmation flow
     [
       {
         name: '{{name1}}',
@@ -330,7 +446,7 @@ export const confirmTodoAction: Action = {
         name: '{{name2}}',
         content: {
           text: "✅ Created task: 'Finish taxes' (Priority 2, Due: 4/15/2024)",
-          actions: ['CONFIRM_TODO_SUCCESS'],
+          actions: ['CONFIRM_TODO'],
         },
       },
     ],

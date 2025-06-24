@@ -1,5 +1,5 @@
 // Test utilities for plugin-training
-import { vi } from 'vitest';
+import { mock, expect } from 'bun:test';
 import type { IAgentRuntime, Memory, State, UUID, Plugin } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
 import type { CustomReasoningService } from '../interfaces/CustomReasoningService.js';
@@ -10,33 +10,33 @@ import type { TrainingDataPoint, CustomModelType } from '../types.js';
  */
 export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime {
   const mockReasoningService = {
-    shouldRespond: vi.fn().mockResolvedValue({
+    shouldRespond: mock().mockResolvedValue({
       decision: 'RESPOND',
       reasoning: 'Test reasoning',
       confidence: 0.95,
     }),
-    planResponse: vi.fn().mockResolvedValue({
+    planResponse: mock().mockResolvedValue({
       thought: 'Test thought',
       actions: ['TEST_ACTION'],
       providers: ['TEST_PROVIDER'],
       text: 'Test response',
     }),
-    generateCode: vi.fn().mockResolvedValue({
+    generateCode: mock().mockResolvedValue({
       code: 'elizaLogger.info("Hello, world!");',
       explanation: 'Simple hello world example',
       language: 'javascript',
     }),
-    enableModel: vi.fn().mockResolvedValue(undefined),
-    disableModel: vi.fn().mockResolvedValue(undefined),
-    getModelStatus: vi.fn().mockResolvedValue({
+    enableModel: mock().mockResolvedValue(undefined),
+    disableModel: mock().mockResolvedValue(undefined),
+    getModelStatus: mock().mockResolvedValue({
       enabled: true,
       name: 'test-model',
       size: 'small',
       costPerHour: 0.1,
       isDeployed: true,
     }),
-    collectTrainingData: vi.fn().mockResolvedValue(undefined),
-    exportTrainingData: vi.fn().mockResolvedValue({
+    collectTrainingData: mock().mockResolvedValue(undefined),
+    exportTrainingData: mock().mockResolvedValue({
       modelType: 'should_respond',
       format: 'jsonl',
       samples: [],
@@ -46,17 +46,17 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
         totalSamples: 0,
       },
     }),
-    getCostReport: vi.fn().mockResolvedValue({
+    getCostReport: mock().mockResolvedValue({
       totalCost: 0.05,
       budgetUsed: 0.05,
       budgetLimit: 10.0,
       recentCosts: [],
     }),
-    setBudgetLimit: vi.fn().mockResolvedValue(undefined),
-    enableAutoShutdown: vi.fn().mockResolvedValue(undefined),
+    setBudgetLimit: mock().mockResolvedValue(undefined),
+    enableAutoShutdown: mock().mockResolvedValue(undefined),
     serviceName: 'together-reasoning',
     capabilityDescription: 'Custom reasoning capabilities',
-    stop: vi.fn().mockResolvedValue(undefined),
+    stop: mock().mockResolvedValue(undefined),
   } as unknown as CustomReasoningService;
 
   // Create the base mock runtime first
@@ -74,15 +74,15 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
 
     // Logger (required by failing tests)
     logger: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
-      log: vi.fn(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      debug: mock(),
+      log: mock(),
     },
 
     // Training-specific settings
-    getSetting: vi.fn((key: string) => {
+    getSetting: mock((key: string) => {
       const mockSettings: Record<string, string> = {
         REASONING_SERVICE_ENABLED: 'true',
         REASONING_SERVICE_SHOULD_RESPOND_ENABLED: 'true',
@@ -99,18 +99,18 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     }),
 
     // Training-specific services
-    getService: vi.fn((name: string) => {
+    getService: mock((name: string) => {
       if (name === 'together-reasoning') {
         return mockReasoningService;
       }
       const services: Record<string, any> = {
         training: {
-          extractTrainingData: vi.fn().mockResolvedValue([]),
-          prepareDataset: vi.fn().mockResolvedValue('./test-dataset'),
-          uploadToHuggingFace: vi.fn().mockResolvedValue('https://huggingface.co/test'),
-          startTraining: vi.fn().mockResolvedValue({ id: 'test-job-id', status: 'running' }),
-          monitorTraining: vi.fn().mockResolvedValue({ id: 'test-job-id', status: 'running' }),
-          getTrainingStats: vi.fn().mockResolvedValue({
+          extractTrainingData: mock().mockResolvedValue([]),
+          prepareDataset: mock().mockResolvedValue('./test-dataset'),
+          uploadToHuggingFace: mock().mockResolvedValue('https://huggingface.co/test'),
+          startTraining: mock().mockResolvedValue({ id: 'test-job-id', status: 'running' }),
+          monitorTraining: mock().mockResolvedValue({ id: 'test-job-id', status: 'running' }),
+          getTrainingStats: mock().mockResolvedValue({
             totalConversations: 100,
             totalMessages: 1000,
             averageConversationLength: 10,
@@ -123,7 +123,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
           }),
         },
         trust: {
-          getTrustScore: vi.fn().mockResolvedValue(0.9),
+          getTrustScore: mock().mockResolvedValue(0.9),
         },
         ...overrides.services,
       };
@@ -134,26 +134,26 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     agentId: 'test-agent-id' as UUID,
 
     // Model/LLM
-    useModel: vi.fn().mockResolvedValue('mock model response'),
-    generateText: vi.fn().mockResolvedValue('generated text'),
+    useModel: mock().mockResolvedValue('mock model response'),
+    generateText: mock().mockResolvedValue('generated text'),
 
     // Memory operations
     messageManager: {
-      createMemory: vi.fn().mockResolvedValue(true),
-      getMemories: vi.fn().mockResolvedValue([]),
-      updateMemory: vi.fn().mockResolvedValue(true),
-      deleteMemory: vi.fn().mockResolvedValue(true),
-      searchMemories: vi.fn().mockResolvedValue([]),
-      getLastMessages: vi.fn().mockResolvedValue([]),
+      createMemory: mock().mockResolvedValue(true),
+      getMemories: mock().mockResolvedValue([]),
+      updateMemory: mock().mockResolvedValue(true),
+      deleteMemory: mock().mockResolvedValue(true),
+      searchMemories: mock().mockResolvedValue([]),
+      getLastMessages: mock().mockResolvedValue([]),
     },
 
     // State
-    composeState: vi.fn().mockResolvedValue({
+    composeState: mock().mockResolvedValue({
       values: {},
       data: {},
       text: '',
     }),
-    updateState: vi.fn().mockResolvedValue(true),
+    updateState: mock().mockResolvedValue(true),
 
     // Actions & Providers
     actions: [],
@@ -161,25 +161,25 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     evaluators: [],
 
     // Components
-    createComponent: vi.fn().mockResolvedValue(true),
-    getComponents: vi.fn().mockResolvedValue([]),
-    updateComponent: vi.fn().mockResolvedValue(true),
+    createComponent: mock().mockResolvedValue(true),
+    getComponents: mock().mockResolvedValue([]),
+    updateComponent: mock().mockResolvedValue(true),
 
     // Other methods
-    registerPlugin: vi.fn().mockResolvedValue(undefined),
-    initialize: vi.fn().mockResolvedValue(undefined),
-    processActions: vi.fn().mockResolvedValue(undefined),
-    evaluate: vi.fn().mockResolvedValue(null),
-    registerTaskWorker: vi.fn(),
-    getTaskWorker: vi.fn().mockReturnValue(undefined),
+    registerPlugin: mock().mockResolvedValue(undefined),
+    initialize: mock().mockResolvedValue(undefined),
+    processActions: mock().mockResolvedValue(undefined),
+    evaluate: mock().mockResolvedValue(null),
+    registerTaskWorker: mock(),
+    getTaskWorker: mock().mockReturnValue(undefined),
 
     ...overrides,
   };
 
   // Ensure database methods are available with proper spy setup
   (baseRuntime as any).db = {
-    run: vi.fn().mockResolvedValue({ changes: 1, lastID: 1 }),
-    get: vi.fn().mockResolvedValue({
+    run: mock().mockResolvedValue({ changes: 1, lastID: 1 }),
+    get: mock().mockResolvedValue({
       total: 150,
       avg_confidence: 0.87,
       avg_response_time: 245,
@@ -195,7 +195,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
         '2024-01-14': 15,
       }),
     }),
-    all: vi.fn().mockImplementation((sql: string) => {
+    all: mock().mockImplementation((sql: string) => {
       // Return different data based on the query
       if (sql.includes('training_data')) {
         return Promise.resolve([
@@ -231,7 +231,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       }
       return Promise.resolve([]);
     }),
-    exec: vi.fn().mockResolvedValue(undefined),
+    exec: mock().mockResolvedValue(undefined),
   };
 
   // Add plugins property
@@ -313,51 +313,49 @@ export const TEST_CONSTANTS = {
 
 export function mockFileSystem() {
   const mockFs = {
-    mkdir: vi.fn().mockResolvedValue(undefined),
-    writeFile: vi.fn().mockResolvedValue(undefined),
-    readFile: vi.fn().mockResolvedValue('{"test": "data"}'),
-    readdir: vi
-      .fn()
-      .mockResolvedValue(['test-file-1.json', 'test-file-2.json', 'test-file-3.json']),
-    stat: vi.fn().mockResolvedValue({
+    mkdir: mock().mockResolvedValue(undefined),
+    writeFile: mock().mockResolvedValue(undefined),
+    readFile: mock().mockResolvedValue('{"test": "data"}'),
+    readdir: mock().mockResolvedValue(['test-file-1.json', 'test-file-2.json', 'test-file-3.json']),
+    stat: mock().mockResolvedValue({
       size: 1024,
       birthtime: new Date(),
-      isDirectory: vi.fn().mockReturnValue(false),
-      isFile: vi.fn().mockReturnValue(true),
+      isDirectory: mock().mockReturnValue(false),
+      isFile: mock().mockReturnValue(true),
     }),
-    unlink: vi.fn().mockResolvedValue(undefined),
-    access: vi.fn().mockResolvedValue(undefined),
-    rmdir: vi.fn().mockResolvedValue(undefined),
-    rm: vi.fn().mockResolvedValue(undefined),
+    unlink: mock().mockResolvedValue(undefined),
+    access: mock().mockResolvedValue(undefined),
+    rmdir: mock().mockResolvedValue(undefined),
+    rm: mock().mockResolvedValue(undefined),
   };
 
-  vi.doMock('fs', () => ({
+  mock.module('fs', () => ({
     promises: mockFs,
   }));
 
-  vi.doMock('fs/promises', () => mockFs);
+  mock.module('fs/promises', () => mockFs);
 
   return mockFs;
 }
 
 export function expectTrainingDataStored(mockDb: any, expectedData: Partial<TrainingDataPoint>) {
-  expect(mockDb.run.called).eq(true);
+  expect(mockDb.run).toHaveBeenCalled();
   const calls = mockDb.run.mock.calls;
-  expect(calls.length).greaterThan(0);
+  expect(calls.length).toBeGreaterThan(0);
 
   const insertCall = calls.find((call: any[]) => call[0]?.includes('INSERT INTO training_data'));
-  expect(insertCall).not.undefined;
+  expect(insertCall).toBeDefined();
 }
 
 export function expectRecordingFileSaved(mockFs: any, expectedFilename: string) {
-  expect(mockFs.writeFile.called).eq(true);
+  expect(mockFs.writeFile).toHaveBeenCalled();
   const calls = mockFs.writeFile.mock.calls;
-  expect(calls.length).greaterThan(0);
+  expect(calls.length).toBeGreaterThan(0);
 
   const relevantCall = calls.find(
     (call: any[]) => call[0]?.includes(expectedFilename) && call[1]?.includes('"modelType"')
   );
-  expect(relevantCall).not.undefined;
+  expect(relevantCall).toBeDefined();
 }
 
 /**
@@ -441,7 +439,7 @@ export function createMockTrainingConfig() {
  * Mock fetch for testing HTTP requests
  */
 export function mockFetch(responses: Record<string, any> = {}) {
-  return vi.fn().mockImplementation((url: string) => {
+  return mock().mockImplementation((url: string) => {
     const response = responses[url] || { ok: true, json: () => Promise.resolve({}) };
     return Promise.resolve({
       ok: response.ok !== false,
@@ -458,11 +456,11 @@ export function mockFetch(responses: Record<string, any> = {}) {
  */
 export function mockWebSocket() {
   const mockWS = {
-    send: vi.fn(),
-    close: vi.fn(),
-    on: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
+    send: mock(),
+    close: mock(),
+    on: mock(),
+    addEventListener: mock(),
+    removeEventListener: mock(),
     readyState: 1, // OPEN
     CONNECTING: 0,
     OPEN: 1,
@@ -479,13 +477,13 @@ export function mockWebSocket() {
 export function mockChildProcess() {
   const mockProcess = {
     stdout: {
-      on: vi.fn(),
+      on: mock(),
     },
     stderr: {
-      on: vi.fn(),
+      on: mock(),
     },
-    on: vi.fn(),
-    kill: vi.fn(),
+    on: mock(),
+    kill: mock(),
   };
 
   return mockProcess;

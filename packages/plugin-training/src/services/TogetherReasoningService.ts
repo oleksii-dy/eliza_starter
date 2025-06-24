@@ -31,7 +31,7 @@ import type {
 
 import { TogetherAIClient } from '../lib/together-client.js';
 import { TrainingDataCollector } from '../training/DataCollector.js';
-import { CustomModelType } from '../types.js';
+import { type CustomModelType } from '../types.js';
 
 export class TogetherReasoningService extends Service implements CustomReasoningService {
   static serviceName = 'together-reasoning';
@@ -129,7 +129,8 @@ export class TogetherReasoningService extends Service implements CustomReasoning
         budgetLimitUSD:
           parseFloat(this.runtime.getSetting('REASONING_SERVICE_BUDGET_LIMIT') || '0') || undefined,
         autoShutdownIdleMinutes: parseInt(
-          this.runtime.getSetting('REASONING_SERVICE_AUTO_SHUTDOWN_MINUTES') || '30'
+          this.runtime.getSetting('REASONING_SERVICE_AUTO_SHUTDOWN_MINUTES') || '30',
+          10
         ),
         maxCostPerHour: parseFloat(
           this.runtime.getSetting('REASONING_SERVICE_MAX_COST_PER_HOUR') || '10'
@@ -138,10 +139,12 @@ export class TogetherReasoningService extends Service implements CustomReasoning
       trainingData: {
         collectData: this.runtime.getSetting('REASONING_SERVICE_COLLECT_TRAINING_DATA') === 'true',
         maxSamplesPerModel: parseInt(
-          this.runtime.getSetting('REASONING_SERVICE_MAX_SAMPLES_PER_MODEL') || '10000'
+          this.runtime.getSetting('REASONING_SERVICE_MAX_SAMPLES_PER_MODEL') || '10000',
+          10
         ),
         retentionDays: parseInt(
-          this.runtime.getSetting('REASONING_SERVICE_RETENTION_DAYS') || '30'
+          this.runtime.getSetting('REASONING_SERVICE_RETENTION_DAYS') || '30',
+          10
         ),
       },
     };
@@ -570,7 +573,7 @@ export class TogetherReasoningService extends Service implements CustomReasoning
       // Use the TrainingDataCollector to export data from database logs
       const dataset = await this.dataCollector.exportTrainingData(options);
 
-      elizaLogger.info(`Successfully exported training dataset`, {
+      elizaLogger.info('Successfully exported training dataset', {
         modelType: dataset.modelType,
         totalSamples: dataset.samples.length,
         format: dataset.format,
@@ -642,7 +645,9 @@ export class TogetherReasoningService extends Service implements CustomReasoning
   }
 
   private async checkBudgetLimit(): Promise<void> {
-    if (!this.budgetLimit) return;
+    if (!this.budgetLimit) {
+      return;
+    }
 
     const report = await this.getCostReport();
     if (report.totalCost >= this.budgetLimit) {
@@ -662,7 +667,9 @@ export class TogetherReasoningService extends Service implements CustomReasoning
     responseTimeMs: number
   ): Promise<void> {
     const model = this.models.get(modelType);
-    if (!model) return;
+    if (!model) {
+      return;
+    }
 
     const deployment = this.deployments.get(model.name);
     if (deployment) {
@@ -692,7 +699,9 @@ export class TogetherReasoningService extends Service implements CustomReasoning
     setTimeout(
       async () => {
         const deployment = this.deployments.get(modelName);
-        if (!deployment) return;
+        if (!deployment) {
+          return;
+        }
 
         const idleTime = Date.now() - deployment.lastUsed;
         const idleThreshold = idleMinutes * 60 * 1000;

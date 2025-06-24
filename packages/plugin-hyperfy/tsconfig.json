@@ -24,5 +24,11 @@
     "noEmit": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": []
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/__tests__/**/*",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx"
+  ]
 }

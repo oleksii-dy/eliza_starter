@@ -160,7 +160,9 @@ export class InputSanitizer {
  * Security middleware for actions
  */
 export function validateSecureAction(url: string | null, validator: UrlValidator): void {
-  if (!url) return;
+  if (!url) {
+    return;
+  }
 
   const validation = validator.validateUrl(url);
   if (!validation.valid) {

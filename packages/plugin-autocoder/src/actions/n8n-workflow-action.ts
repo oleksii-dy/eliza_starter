@@ -207,7 +207,7 @@ Return ONLY valid JSON, no explanation.`;
     // Fallback to a basic workflow structure
     return {
       name: 'custom-workflow',
-      description: description,
+      description,
       nodes: [
         {
           type: 'n8n-nodes-base.webhook',
@@ -232,7 +232,7 @@ function formatWorkflowComponents(spec: any): string {
   }
 
   if (spec.settings) {
-    components.push(`- **Settings:** Custom configuration included`);
+    components.push('- **Settings:** Custom configuration included');
   }
 
   return components.join('\n');

@@ -10,7 +10,7 @@ if (!apiKey) {
 
 async function testTavily() {
   const tavily = new TavilySearchProvider({ apiKey: apiKey! });
-  
+
   // Test two different queries
   console.log('\n=== Test 1: Japan Elderly Population ===');
   const results1 = await tavily.search('From 2020 to 2050, how many elderly people will there be in Japan?', 5);
@@ -19,7 +19,7 @@ async function testTavily() {
     console.log(`${i + 1}. ${r.title}`);
     console.log(`   URL: ${r.url}`);
   });
-  
+
   console.log('\n=== Test 2: Investment Philosophies ===');
   const results2 = await tavily.search('What are the investment philosophies of Duan Yongping, Warren Buffett, and Charlie Munger?', 5);
   console.log(`Found ${results2.length} results:`);
@@ -29,4 +29,4 @@ async function testTavily() {
   });
 }
 
-testTavily().catch(console.error); 
+testTavily().catch(console.error);

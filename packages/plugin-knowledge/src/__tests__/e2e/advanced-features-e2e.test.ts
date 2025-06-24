@@ -110,7 +110,7 @@ export const advancedFeaturesE2ETest: TestCase = {
     console.log(`  - Total fragments: ${analytics.totalFragments}`);
     console.log(`  - Storage size: ${(analytics.storageSize / 1024).toFixed(2)} KB`);
     console.log(
-      `  - Content types:`,
+      '  - Content types:',
       Object.entries(analytics.contentTypes)
         .map(([type, count]) => `${type}: ${count}`)
         .join(', ')

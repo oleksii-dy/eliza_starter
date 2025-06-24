@@ -45,7 +45,7 @@ export class GoogleMcpCompatibility extends McpToolCompatibility {
 
   private formatConstraintsForGoogle(constraints: any): string {
     const rules: string[] = [];
-    
+
     // Format constraints in a way that Google models understand better
     if (constraints.minLength) {
       rules.push(`text must be at least ${constraints.minLength} characters long`);
@@ -69,16 +69,16 @@ export class GoogleMcpCompatibility extends McpToolCompatibility {
       rules.push(`number must be a multiple of ${constraints.multipleOf}`);
     }
     if (constraints.format === 'email') {
-      rules.push(`must be a valid email address`);
+      rules.push('must be a valid email address');
     }
     if (constraints.format === 'uri' || constraints.format === 'url') {
-      rules.push(`must be a valid URL starting with http:// or https://`);
+      rules.push('must be a valid URL starting with http:// or https://');
     }
     if (constraints.format === 'uuid') {
-      rules.push(`must be a valid UUID in the format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`);
+      rules.push('must be a valid UUID in the format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx');
     }
     if (constraints.format === 'date-time') {
-      rules.push(`must be a valid ISO 8601 date-time (e.g., 2023-12-25T10:30:00Z)`);
+      rules.push('must be a valid ISO 8601 date-time (e.g., 2023-12-25T10:30:00Z)');
     }
     if (constraints.pattern) {
       rules.push(`must match the regular expression pattern: ${constraints.pattern}`);
@@ -93,7 +93,7 @@ export class GoogleMcpCompatibility extends McpToolCompatibility {
       rules.push(`array must contain no more than ${constraints.maxItems} items`);
     }
     if (constraints.uniqueItems === true) {
-      rules.push(`array items must all be unique (no duplicates)`);
+      rules.push('array items must all be unique (no duplicates)');
     }
     if (constraints.minProperties) {
       rules.push(`object must have at least ${constraints.minProperties} properties`);
@@ -102,9 +102,11 @@ export class GoogleMcpCompatibility extends McpToolCompatibility {
       rules.push(`object must have no more than ${constraints.maxProperties} properties`);
     }
     if (constraints.additionalProperties === false) {
-      rules.push(`object must only contain the specified properties, no additional properties allowed`);
+      rules.push(
+        'object must only contain the specified properties, no additional properties allowed'
+      );
     }
-    
+
     return rules.join('; ');
   }
-} 
+}

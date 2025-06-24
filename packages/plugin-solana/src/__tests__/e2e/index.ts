@@ -8,10 +8,6 @@ import { lpManagerScenariosSuite } from '../../e2e/scenarios.js';
 import { realTokenTestsSuite } from '../../e2e/real-token-tests.js';
 import { walletBalanceTestSuite } from '../../e2e/wallet-balance-tests.js';
 
-export const testSuites = [
-    lpManagerScenariosSuite,
-    realTokenTestsSuite,
-    walletBalanceTestSuite
-];
+export const testSuites = [lpManagerScenariosSuite, realTokenTestsSuite, walletBalanceTestSuite];
 
-export default testSuites; 
+export default testSuites;

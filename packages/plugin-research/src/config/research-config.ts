@@ -1,11 +1,11 @@
-import { IAgentRuntime, elizaLogger } from '@elizaos/core';
+import { IAgentRuntime, logger } from '@elizaos/core';
 import { ResearchConfig, ResearchDepth, ResearchDomain } from '../types';
 
 /**
  * Loads and validates research configuration from runtime settings
  */
 export function loadResearchConfig(runtime: IAgentRuntime): ResearchConfig {
-  elizaLogger.info('[ResearchConfig] Loading configuration from runtime settings');
+  logger.info('[ResearchConfig] Loading configuration from runtime settings');
 
   // Validate required AI model access
   if (!runtime.useModel) {
@@ -32,7 +32,7 @@ export function loadResearchConfig(runtime: IAgentRuntime): ResearchConfig {
   // Validate configuration
   validateResearchConfig(config);
 
-  elizaLogger.info('[ResearchConfig] Configuration loaded:', {
+  logger.info('[ResearchConfig] Configuration loaded:', {
     maxSearchResults: config.maxSearchResults,
     researchDepth: config.researchDepth,
     domain: config.domain,
@@ -56,22 +56,22 @@ function parseResearchDepth(value: string): ResearchDepth {
     case 'phd_level':
       return ResearchDepth.PHD_LEVEL;
     default:
-      elizaLogger.warn(`[ResearchConfig] Unknown research depth: ${value}, defaulting to DEEP`);
+      logger.warn(`[ResearchConfig] Unknown research depth: ${value}, defaulting to DEEP`);
       return ResearchDepth.DEEP;
   }
 }
 
 function parseResearchDomain(value: string): ResearchDomain {
   const normalized = value.toLowerCase().replace(/[^a-z]/g, '_');
-  
+
   // Try to match to enum values
   for (const [key, enumValue] of Object.entries(ResearchDomain)) {
     if (key.toLowerCase() === normalized || enumValue.toLowerCase() === normalized) {
       return enumValue as ResearchDomain;
     }
   }
-  
-  elizaLogger.warn(`[ResearchConfig] Unknown research domain: ${value}, defaulting to GENERAL`);
+
+  logger.warn(`[ResearchConfig] Unknown research domain: ${value}, defaulting to GENERAL`);
   return ResearchDomain.GENERAL;
 }
 
@@ -115,7 +115,7 @@ function validateResearchConfig(config: ResearchConfig): void {
  * Validates that required environment variables are available for configured search providers
  */
 export function validateSearchProviderConfig(config: ResearchConfig, runtime: IAgentRuntime): void {
-  elizaLogger.info('[ResearchConfig] Validating search provider configuration');
+  logger.info('[ResearchConfig] Validating search provider configuration');
 
   const missingKeys: string[] = [];
 
@@ -146,7 +146,7 @@ export function validateSearchProviderConfig(config: ResearchConfig, runtime: IA
         const webProviders = ['TAVILY_API_KEY', 'SERPER_API_KEY', 'EXA_API_KEY', 'SERPAPI_API_KEY'];
         const hasWebProvider = webProviders.some(key => runtime.getSetting(key));
         if (!hasWebProvider) {
-          missingKeys.push('At least one of: ' + webProviders.join(', '));
+          missingKeys.push(`At least one of: ${webProviders.join(', ')}`);
         }
         break;
       case 'academic':
@@ -160,7 +160,7 @@ export function validateSearchProviderConfig(config: ResearchConfig, runtime: IA
         // These don't require API keys
         break;
       default:
-        elizaLogger.warn(`[ResearchConfig] Unknown search provider: ${provider}`);
+        logger.warn(`[ResearchConfig] Unknown search provider: ${provider}`);
     }
   }
 
@@ -168,7 +168,7 @@ export function validateSearchProviderConfig(config: ResearchConfig, runtime: IA
     throw new Error(`[ResearchConfig] Missing required API keys for configured search providers: ${missingKeys.join(', ')}`);
   }
 
-  elizaLogger.info('[ResearchConfig] All search provider requirements validated');
+  logger.info('[ResearchConfig] All search provider requirements validated');
 }
 
 /**

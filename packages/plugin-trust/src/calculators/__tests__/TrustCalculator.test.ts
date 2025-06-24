@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'bun:test';
 import { TrustCalculator } from '../TrustCalculator';
-import type { 
-  TrustCalculationConfig, 
-  TrustProfile, 
+import type {
+  TrustCalculationConfig,
+  TrustProfile,
   TrustEvidence,
   TrustDimensions,
-  TrustEvidenceType 
+  TrustEvidenceType
 } from '../../types/trust';
 import type { UUID } from '@elizaos/core';
 
@@ -71,7 +71,7 @@ describe('TrustCalculator', () => {
       };
 
       const score = calculator.calculateOverallScore(dimensions);
-      
+
       // Expected: (80*0.2 + 70*0.2 + 60*0.2 + 90*0.2 + 50*0.2) = 70
       expect(score).toBe(70);
     });
@@ -97,7 +97,7 @@ describe('TrustCalculator', () => {
       };
 
       const score = customCalculator.calculateOverallScore(dimensions);
-      
+
       // Expected: (100*0.4 + 80*0.3 + 60*0.2 + 40*0.05 + 20*0.05) = 79
       expect(score).toBe(79);
     });
@@ -228,7 +228,7 @@ describe('TrustCalculator', () => {
       };
 
       const overallTrust = calculator.calculateOverallTrust(dimensions);
-      
+
       // Expected: (80*0.2 + 70*0.2 + 60*0.2 + 90*0.2 + 50*0.2) = 70
       expect(overallTrust).toBe(70);
     });
@@ -254,7 +254,7 @@ describe('TrustCalculator', () => {
       };
 
       const overallTrust = zeroWeightCalculator.calculateOverallScore(dimensions);
-      
+
       // Should return default value when all weights are zero
       expect(overallTrust).toBe(50);
     });
@@ -309,19 +309,19 @@ describe('TrustCalculator', () => {
       expect(profile.entityId).toBe(entityId);
       expect(profile.overallTrust).toBeGreaterThan(0);
       expect(profile.overallTrust).toBeLessThanOrEqual(100);
-      
+
       // Check dimensions
       expect(profile.dimensions).toBeDefined();
       expect(profile.dimensions.reliability).toBeGreaterThanOrEqual(0);
       expect(profile.dimensions.reliability).toBeLessThanOrEqual(100);
-      
+
       // Check metadata
       expect(profile.interactionCount).toBe(3);
       expect(profile.confidence).toBeGreaterThan(0);
       expect(profile.confidence).toBeLessThanOrEqual(1);
       expect(profile.evidence).toHaveLength(3);
       expect(profile.calculationMethod).toBe('weighted_dimensions');
-      
+
       // Check trend
       expect(profile.trend).toBeDefined();
       expect(['increasing', 'decreasing', 'stable']).toContain(profile.trend.direction);
@@ -413,4 +413,4 @@ describe('TrustCalculator', () => {
       expect(profile.trend.changeRate).toBeGreaterThan(0);
     });
   });
-}); 
+});

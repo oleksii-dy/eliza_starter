@@ -1,18 +1,18 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, mock, beforeEach, afterEach } from 'bun:test';
 import { CapSolverService, detectCaptchaType, injectCaptchaSolution } from '../capsolver';
 import { logger } from '@elizaos/core';
 import axios from 'axios';
 
 // Mock axios
-vi.mock('axios');
+mock.module('axios');
 
 // Mock logger
-vi.mock('@elizaos/core', () => ({
+mock.module('@elizaos/core', () => ({
   logger: {
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
+    info: mock(),
+    error: mock(),
+    warn: mock(),
+    debug: mock(),
   },
 }));
 
@@ -21,14 +21,14 @@ describe('CapSolverService', () => {
   const mockApiKey = 'test-api-key';
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     capSolver = new CapSolverService({ apiKey: mockApiKey });
   });
 
   describe('createTask', () => {
     it('should create a task successfully', async () => {
       const mockTaskId = 'task-123';
-      vi.mocked(axios.post).mockResolvedValueOnce({
+      mock(axios.post).mockResolvedValueOnce({
         data: {
           errorId: 0,
           taskId: mockTaskId,
@@ -55,7 +55,7 @@ describe('CapSolverService', () => {
     });
 
     it('should throw error when API returns error', async () => {
-      vi.mocked(axios.post).mockResolvedValueOnce({
+      mock(axios.post).mockResolvedValueOnce({
         data: {
           errorId: 1,
           errorDescription: 'Invalid API key',
@@ -75,7 +75,7 @@ describe('CapSolverService', () => {
   describe('getTaskResult', () => {
     it('should return solution when task is ready', async () => {
       const mockSolution = { token: 'solved-token' };
-      vi.mocked(axios.post).mockResolvedValueOnce({
+      mock(axios.post).mockResolvedValueOnce({
         data: {
           errorId: 0,
           status: 'ready',
@@ -97,7 +97,7 @@ describe('CapSolverService', () => {
     });
 
     it('should poll until task is ready', async () => {
-      vi.mocked(axios.post)
+      mock(axios.post)
         .mockResolvedValueOnce({
           data: {
             errorId: 0,
@@ -125,7 +125,7 @@ describe('CapSolverService', () => {
     });
 
     it('should throw error on timeout', async () => {
-      vi.mocked(axios.post).mockResolvedValue({
+      mock(axios.post).mockResolvedValue({
         data: {
           errorId: 0,
           status: 'processing',
@@ -149,7 +149,7 @@ describe('CapSolverService', () => {
       const mockTaskId = 'task-123';
       const mockToken = 'turnstile-token';
 
-      vi.mocked(axios.post)
+      mock(axios.post)
         .mockResolvedValueOnce({
           data: { errorId: 0, taskId: mockTaskId },
         })
@@ -164,7 +164,7 @@ describe('CapSolverService', () => {
     });
 
     it('should use proxy when provided', async () => {
-      vi.mocked(axios.post)
+      mock(axios.post)
         .mockResolvedValueOnce({
           data: { errorId: 0, taskId: 'task-123' },
         })
@@ -195,7 +195,7 @@ describe('CapSolverService', () => {
 
   describe('solveRecaptchaV2', () => {
     it('should solve reCAPTCHA v2', async () => {
-      vi.mocked(axios.post)
+      mock(axios.post)
         .mockResolvedValueOnce({
           data: { errorId: 0, taskId: 'task-456' },
         })
@@ -214,7 +214,7 @@ describe('CapSolverService', () => {
     });
 
     it('should handle invisible reCAPTCHA v2', async () => {
-      vi.mocked(axios.post)
+      mock(axios.post)
         .mockResolvedValueOnce({
           data: { errorId: 0, taskId: 'task-789' },
         })
@@ -243,7 +243,7 @@ describe('CapSolverService', () => {
 
   describe('solveRecaptchaV3', () => {
     it('should solve reCAPTCHA v3', async () => {
-      vi.mocked(axios.post)
+      mock(axios.post)
         .mockResolvedValueOnce({
           data: { errorId: 0, taskId: 'task-v3' },
         })
@@ -262,7 +262,7 @@ describe('CapSolverService', () => {
     });
 
     it('should use custom action and score', async () => {
-      vi.mocked(axios.post)
+      mock(axios.post)
         .mockResolvedValueOnce({
           data: { errorId: 0, taskId: 'task-v3-custom' },
         })
@@ -297,7 +297,7 @@ describe('CapSolverService', () => {
 
   describe('solveHCaptcha', () => {
     it('should solve hCaptcha', async () => {
-      vi.mocked(axios.post)
+      mock(axios.post)
         .mockResolvedValueOnce({
           data: { errorId: 0, taskId: 'task-hcaptcha' },
         })
@@ -316,7 +316,7 @@ describe('CapSolverService', () => {
     });
 
     it('should use proxy when provided', async () => {
-      vi.mocked(axios.post)
+      mock(axios.post)
         .mockResolvedValueOnce({
           data: { errorId: 0, taskId: 'task-hcaptcha-proxy' },
         })
@@ -351,7 +351,7 @@ describe('CapSolverService', () => {
 
   describe('error handling', () => {
     it('should handle network errors', async () => {
-      vi.mocked(axios.post).mockRejectedValueOnce(new Error('Network error'));
+      mock(axios.post).mockRejectedValueOnce(new Error('Network error'));
 
       await expect(
         capSolver.createTask({
@@ -368,7 +368,7 @@ describe('CapSolverService', () => {
     });
 
     it('should handle invalid proxy format', async () => {
-      vi.mocked(axios.post)
+      mock(axios.post)
         .mockResolvedValueOnce({
           data: { errorId: 0, taskId: 'task-proxy-error' },
         })
@@ -387,7 +387,7 @@ describe('CapSolverService', () => {
     });
 
     it('should retry on task polling errors', async () => {
-      vi.mocked(axios.post)
+      mock(axios.post)
         .mockResolvedValueOnce({
           data: { errorId: 0, taskId: 'task-retry' },
         })
@@ -413,16 +413,20 @@ describe('detectCaptchaType', () => {
 
   beforeEach(() => {
     mockPage = {
-      $: vi.fn(),
-      evaluate: vi.fn(),
+      $: mock(),
+      evaluate: mock(),
     };
   });
 
   it('should detect Cloudflare Turnstile', async () => {
     const mockElement = {};
     mockPage.$.mockImplementation((selector: string) => {
-      if (selector === '[data-sitekey]') return Promise.resolve(mockElement);
-      if (selector === '.cf-turnstile') return Promise.resolve(mockElement);
+      if (selector === '[data-sitekey]') {
+        return Promise.resolve(mockElement);
+      }
+      if (selector === '.cf-turnstile') {
+        return Promise.resolve(mockElement);
+      }
       return Promise.resolve(null);
     });
     mockPage.evaluate.mockResolvedValue('test-sitekey');
@@ -438,7 +442,9 @@ describe('detectCaptchaType', () => {
   it('should detect reCAPTCHA v2', async () => {
     const mockElement = {};
     mockPage.$.mockImplementation((selector: string) => {
-      if (selector === '[data-sitekey], .g-recaptcha') return Promise.resolve(mockElement);
+      if (selector === '[data-sitekey], .g-recaptcha') {
+        return Promise.resolve(mockElement);
+      }
       return Promise.resolve(null);
     });
     mockPage.evaluate.mockResolvedValueOnce('recaptcha-sitekey').mockResolvedValueOnce(false); // Not v3
@@ -454,7 +460,9 @@ describe('detectCaptchaType', () => {
   it('should detect reCAPTCHA v3', async () => {
     const mockElement = {};
     mockPage.$.mockImplementation((selector: string) => {
-      if (selector === '[data-sitekey], .g-recaptcha') return Promise.resolve(mockElement);
+      if (selector === '[data-sitekey], .g-recaptcha') {
+        return Promise.resolve(mockElement);
+      }
       return Promise.resolve(null);
     });
     mockPage.evaluate.mockResolvedValueOnce('recaptcha-sitekey').mockResolvedValueOnce(true); // Is v3
@@ -499,7 +507,7 @@ describe('injectCaptchaSolution', () => {
 
   beforeEach(() => {
     mockPage = {
-      evaluate: vi.fn(),
+      evaluate: mock(),
     };
   });
 

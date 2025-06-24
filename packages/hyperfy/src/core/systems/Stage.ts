@@ -139,12 +139,12 @@ export class Stage extends System implements IStage {
   private insertLinked(options: InsertOptions): StageHandle {
     const { geometry, material, castShadow = false, receiveShadow = false, node, matrix } = options;
     const id = `${geometry.uuid}/${material.uuid}/${castShadow}/${receiveShadow}`;
-    
+
     if (!this.models.has(id)) {
       const model = new Model(this, geometry, material, castShadow, receiveShadow);
       this.models.set(id, model);
     }
-    
+
     return this.models.get(id)!.create(node, matrix);
   }
 
@@ -152,13 +152,13 @@ export class Stage extends System implements IStage {
     const { geometry, material, castShadow = false, receiveShadow = false, node, matrix } = options;
     const materialWrapper = this.createMaterial({ raw: material });
     const mesh = new THREE.Mesh(geometry, materialWrapper.raw);
-    
+
     mesh.castShadow = castShadow;
     mesh.receiveShadow = receiveShadow;
     mesh.matrixWorld.copy(matrix);
     mesh.matrixAutoUpdate = false;
     mesh.matrixWorldAutoUpdate = false;
-    
+
     const sItem: StageItem = {
       matrix,
       geometry,
@@ -166,10 +166,10 @@ export class Stage extends System implements IStage {
       getEntity: () => node.ctx?.entity,
       node,
     };
-    
+
     this.scene.add(mesh);
     this.octree.insert(sItem);
-    
+
     return {
       material: materialWrapper.proxy,
       move: (newMatrix: THREE.Matrix4) => {
@@ -187,7 +187,7 @@ export class Stage extends System implements IStage {
     const self = this;
     const material: any = {};
     let raw: THREE.Material;
-    
+
     if (options.raw) {
       raw = options.raw.clone();
       (raw as any).onBeforeCompile = (options.raw as any).onBeforeCompile;
@@ -202,10 +202,10 @@ export class Stage extends System implements IStage {
         roughness: isNumber(options.roughness) ? options.roughness : 1,
       });
     }
-    
+
     (raw as any).shadowSide = THREE.BackSide; // fix csm shadow banding
     const textures: THREE.Texture[] = [];
-    
+
     if ((raw as any).map) {
       (raw as any).map = (raw as any).map.clone();
       textures.push((raw as any).map);
@@ -230,9 +230,9 @@ export class Stage extends System implements IStage {
       (raw as any).metalnessMap = (raw as any).metalnessMap.clone();
       textures.push((raw as any).metalnessMap);
     }
-    
+
     this.world.setupMaterial(raw);
-    
+
     const proxy: MaterialProxy = {
       get id() {
         return raw.uuid;
@@ -283,46 +283,46 @@ export class Stage extends System implements IStage {
         raw.needsUpdate = true;
       },
       get _ref() {
-        if ((self.world as any)._allowMaterial) return material;
+        if ((self.world as any)._allowMaterial) {return material;}
         return undefined;
       },
     };
-    
+
     material.raw = raw;
     material.proxy = proxy;
     return material as MaterialWrapper;
   }
 
   raycastPointer(position: { x: number; y: number }, layers: THREE.Layers = this.maskNone, min = 0, max = Infinity): any[] {
-    if (!this.viewport) throw new Error('no viewport');
-    
+    if (!this.viewport) {throw new Error('no viewport');}
+
     const rect = this.viewport.getBoundingClientRect();
     vec2.x = ((position.x - rect.left) / rect.width) * 2 - 1;
     vec2.y = -((position.y - rect.top) / rect.height) * 2 + 1;
-    
+
     this.raycaster.setFromCamera(vec2, this.world.camera);
     this.raycaster.layers = layers;
     this.raycaster.near = min;
     this.raycaster.far = max;
     this.raycastHits.length = 0;
     this.octree.raycast(this.raycaster, this.raycastHits);
-    
+
     return this.raycastHits;
   }
 
   raycastReticle(layers: THREE.Layers = this.maskNone, min = 0, max = Infinity): any[] {
-    if (!this.viewport) throw new Error('no viewport');
-    
+    if (!this.viewport) {throw new Error('no viewport');}
+
     vec2.x = 0;
     vec2.y = 0;
-    
+
     this.raycaster.setFromCamera(vec2, this.world.camera);
     this.raycaster.layers = layers;
     this.raycaster.near = min;
     this.raycaster.far = max;
     this.raycastHits.length = 0;
     this.octree.raycast(this.raycaster, this.raycastHits);
-    
+
     return this.raycastHits;
   }
 
@@ -389,11 +389,11 @@ class Model {
       node,
       matrix,
     };
-    
+
     this.items.push(item);
     this.iMesh.setMatrixAt(item.idx, item.matrix);
     this.dirty = true;
-    
+
     const sItem: StageItem = {
       matrix,
       geometry: this.geometry,
@@ -401,9 +401,9 @@ class Model {
       getEntity: () => this.items[item.idx]?.node.ctx?.entity,
       node,
     };
-    
+
     this.stage.octree.insert(sItem);
-    
+
     return {
       material: this.material.proxy,
       move: (newMatrix: THREE.Matrix4) => {
@@ -427,7 +427,7 @@ class Model {
     const last = this.items[this.items.length - 1];
     const isOnly = this.items.length === 1;
     const isLast = item === last;
-    
+
     if (isOnly) {
       this.items = [];
       this.dirty = true;
@@ -444,11 +444,11 @@ class Model {
   }
 
   clean(): void {
-    if (!this.dirty) return;
-    
+    if (!this.dirty) {return;}
+
     const size = this.iMesh.instanceMatrix.array.length / 16;
     const count = this.items.length;
-    
+
     if (size < this.items.length) {
       const newSize = count + 100;
       (this.iMesh as any).resize(newSize);
@@ -459,19 +459,19 @@ class Model {
         }
       }
     }
-    
+
     this.iMesh.count = count;
-    
+
     if (this.iMesh.parent && !count) {
       this.stage.scene.remove(this.iMesh);
       this.dirty = false;
       return;
     }
-    
+
     if (!this.iMesh.parent && count) {
       this.stage.scene.add(this.iMesh);
     }
-    
+
     this.iMesh.instanceMatrix.needsUpdate = true;
     this.dirty = false;
   }
@@ -490,4 +490,4 @@ class Model {
       return position ? position.count / 3 : 0;
     }
   }
-} 
+}

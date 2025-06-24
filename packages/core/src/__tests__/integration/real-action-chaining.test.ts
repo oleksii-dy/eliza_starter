@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import type { IAgentRuntime, Action, ActionResult, UUID, Memory } from '../../types';
 import {
   createRealTestRuntime,

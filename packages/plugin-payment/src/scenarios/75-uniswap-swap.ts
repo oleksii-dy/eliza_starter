@@ -41,20 +41,20 @@ const uniswapSwapScenario: Scenario = {
   ],
   actions: ['UNISWAP_SWAP'],
   evaluator: (response: string) => {
-    const hasSwapIntent = 
+    const hasSwapIntent =
       response.toLowerCase().includes('swap') ||
       response.toLowerCase().includes('convert') ||
       response.toLowerCase().includes('trade') ||
       response.toLowerCase().includes('exchange');
-    
+
     const hasUniswap = response.toLowerCase().includes('uniswap');
     const hasTokenPair = /→|->|to|for/i.test(response);
     const hasAmount = /\d+(\.\d+)?\s*[A-Z]{3,}/i.test(response);
     const hasRate = /rate|price|slippage|output/i.test(response);
-    
+
     return hasSwapIntent && hasUniswap && hasTokenPair && (hasAmount || hasRate);
   },
   tags: ['payment', 'uniswap', 'swap', 'dex', 'trading'],
 };
 
-export default uniswapSwapScenario; 
+export default uniswapSwapScenario;

@@ -95,14 +95,14 @@ DESCRIPTION: ${context.description}
 
 REQUIREMENTS:
 ${requirements
-  .map(
-    (req, i) => `
+    .map(
+      (req, i) => `
 ${i + 1}. ${req.description} (Priority: ${req.priority})
    Acceptance Criteria:
    ${req.acceptanceCriteria.map((ac) => `   - ${ac}`).join('\n')}
 `
-  )
-  .join('\n')}
+    )
+    .join('\n')}
 
 ARCHITECTURE:
 ${
@@ -526,16 +526,16 @@ AFFECTED TESTS: ${pattern.affectedTests.length}
 
 SAMPLE FAILURES:
 ${failures
-  .slice(0, 3)
-  .map(
-    (f) => `
+    .slice(0, 3)
+    .map(
+      (f) => `
 Test: ${f.test.name}
 Error: ${f.error?.message}
 Expected: ${f.error?.expected}
 Actual: ${f.error?.actual}
 `
-  )
-  .join('\n')}
+    )
+    .join('\n')}
 
 Generate fixes that:
 1. Address the root cause
@@ -666,15 +666,15 @@ ${analysis.patterns.map((p) => `- ${p.type}: ${p.description}`).join('\n')}
 
 CURRENT IMPLEMENTATION:
 ${implementation.files
-  .map(
-    (f) => `
+    .map(
+      (f) => `
 File: ${f.path}
 \`\`\`typescript
 ${f.content.slice(0, 500)}...
 \`\`\`
 `
-  )
-  .join('\n')}
+    )
+    .join('\n')}
 
 Generate the minimal code change needed to fix the most critical failure.
 Focus on making at least one test pass.

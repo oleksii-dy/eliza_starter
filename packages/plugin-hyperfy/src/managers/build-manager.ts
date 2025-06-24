@@ -1,23 +1,24 @@
-import { IAgentRuntime } from "@elizaos/core";
-import { HyperfyService } from "../service.js";
-import { generateId } from '../hyperfy/core/utils.js'
-import { importApp } from '../hyperfy/core/extras/appTools.js'
-import { hashFile } from '../hyperfy/core/utils-client.js'
-import { resolveUrl } from "../utils.js";
-
+import type { IAgentRuntime } from '@elizaos/core';
+import { HyperfyService } from '../service.js';
+import { resolveUrl } from '../utils.js';
+import type { HyperfyWorld, HyperfyEntity } from '../types/hyperfy.js';
 
 export class BuildManager {
   private runtime: IAgentRuntime;
-  
+
   constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
   }
-  
+
   async translate(entityId, position: [number, number, number]) {
     const service = this.getService();
-    if (!service) return;
+    if (!service) {
+      return;
+    }
     const world = service.getWorld();
-    if (!world) return;
+    if (!world) {
+      return;
+    }
     const entity = world.entities.items.get(entityId);
     if (entity && entity.root) {
       const controls = world.controls;
@@ -31,9 +32,13 @@ export class BuildManager {
 
   async rotate(entityId, quaternion: [number, number, number, number]) {
     const service = this.getService();
-    if (!service) return;
+    if (!service) {
+      return;
+    }
     const world = service.getWorld();
-    if (!world) return;
+    if (!world) {
+      return;
+    }
     const entity = world.entities.items.get(entityId);
     if (entity && entity.root) {
       const controls = world.controls;
@@ -44,12 +49,16 @@ export class BuildManager {
       this.entityUpdate(entity);
     }
   }
-  
+
   async scale(entityId, scale: [number, number, number]) {
     const service = this.getService();
-    if (!service) return;
+    if (!service) {
+      return;
+    }
     const world = service.getWorld();
-    if (!world) return;
+    if (!world) {
+      return;
+    }
     const entity = world.entities.items.get(entityId);
     if (entity && entity.root) {
       const controls = world.controls;
@@ -63,23 +72,29 @@ export class BuildManager {
 
   async duplicate(entityId) {
     const service = this.getService();
-    if (!service) return;
+    if (!service) {
+      return;
+    }
     const world = service.getWorld();
-    if (!world) return;
+    if (!world) {
+      return;
+    }
     const entity = world.entities.items.get(entityId);
-    if (!entity) return;
-    
+    if (!entity) {
+      return;
+    }
+
     const controls = world.controls;
     if (controls && entity.root) {
       await controls.goto(entity.root.position.x, entity.root.position.z);
     }
-    
+
     if (entity.isApp && entity.blueprint) {
-      let blueprintId = entity.data.blueprint
+      let blueprintId = entity.data.blueprint;
       // if unique, we also duplicate the blueprint
       if (entity.blueprint.unique) {
         const blueprint = {
-          id: generateId(),
+          id: this.generateId(),
           version: 0,
           name: entity.blueprint.name,
           image: entity.blueprint.image,
@@ -99,10 +114,10 @@ export class BuildManager {
         (world.blueprints as any).add(blueprint, true);
         blueprintId = blueprint.id;
       }
-      
+
       if (entity.root) {
         const data = {
-          id: generateId(),
+          id: this.generateId(),
           type: 'app',
           blueprint: blueprintId,
           position: entity.root.position.toArray(),
@@ -120,9 +135,13 @@ export class BuildManager {
 
   async delete(entityId) {
     const service = this.getService();
-    if (!service) return;
+    if (!service) {
+      return;
+    }
     const world = service.getWorld();
-    if (!world) return;
+    if (!world) {
+      return;
+    }
     const entity = world.entities.items.get(entityId);
     if (entity?.isApp && !entity.data.pinned) {
       const controls = world.controls;
@@ -136,75 +155,83 @@ export class BuildManager {
     }
   }
 
-  async importEntity(
-    url: string,
-    position?: any,
-    quaternion?: any
-  ) {
+  async importEntity(url: string, position?: any, quaternion?: any) {
     const service = this.getService();
-    if (!service) return;
+    if (!service) {
+      return;
+    }
     const world = service.getWorld();
-    if (!world) return;
-    
+    if (!world) {
+      return;
+    }
+
     const resolvedUrlurl = await resolveUrl(url, world);
     if (!resolvedUrlurl) {
       console.error(`Failed to resolve URL: ${url}`);
       return;
     }
-    
-    let file
-    
-    const resp = await fetch(resolvedUrlurl)
-    const blob = await resp.blob()
+
+    let file;
+
+    const resp = await fetch(resolvedUrlurl);
+    const blob = await resp.blob();
     const fileName = url.split('/').pop() || 'unknown';
-    file = new File([blob], fileName, { type: resp.headers.get('content-type') || 'application/octet-stream' })
-    if (!file) return
-    
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    const maxSize = world.network.maxUploadSize * 1024 * 1024
+    file = new File([blob], fileName, {
+      type: resp.headers.get('content-type') || 'application/octet-stream',
+    });
+    if (!file) {
+      return;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const maxSize = world.network.maxUploadSize * 1024 * 1024;
 
     if (file.size > maxSize) {
-      console.error(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`)
-      return
+      console.error(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`);
+      return;
     }
     const validVec3 = (v: any): v is [number, number, number] =>
-      Array.isArray(v) && v.length === 3 && v.every(n => typeof n === 'number');
+      Array.isArray(v) && v.length === 3 && v.every((n) => typeof n === 'number');
 
     const validQuat = (q: any): q is [number, number, number, number] =>
-      Array.isArray(q) && q.length === 4 && q.every(n => typeof n === 'number');
+      Array.isArray(q) && q.length === 4 && q.every((n) => typeof n === 'number');
 
     position = validVec3(position) ? position : [0, 0, 0];
     quaternion = validQuat(quaternion) ? quaternion : [0, 0, 0, 1];
-    
+
     const controls = world.controls;
     if (controls) {
       await controls.goto(position[0], position[2]);
     }
-    
+
     const transform = {
       position,
       quaternion,
     };
-    const ext = file.name.split('.').pop()?.toLowerCase()
+    const ext = file.name.split('.').pop()?.toLowerCase();
     if (ext === 'hyp') {
-      this.addApp(file, transform)
+      this.addApp(file, transform);
     }
     if (ext === 'glb' || ext === 'vrm') {
-      this.addModel(file, transform)
+      this.addModel(file, transform);
     }
   }
 
   async addApp(file, transform) {
     const service = this.getService();
-    if (!service) return;
+    if (!service) {
+      return;
+    }
     const world = service.getWorld();
-    if (!world) return;
-    
-    const info = await importApp(file)
-    
+    if (!world) {
+      return;
+    }
+
+    const info = await this.importApp(file);
+
     const blueprint = {
-      id: generateId(),
+      id: this.generateId(),
       version: 0,
       name: info.blueprint.name,
       image: info.blueprint.image,
@@ -223,7 +250,7 @@ export class BuildManager {
     };
     (world.blueprints as any).add(blueprint, true);
     const data = {
-      id: generateId(),
+      id: this.generateId(),
       type: 'app',
       blueprint: blueprint.id,
       position: transform.position,
@@ -235,40 +262,44 @@ export class BuildManager {
       state: {},
     };
     const app = (world.entities as any).add(data, true);
-    const promises = info.assets.map(asset => {
-      return world.network.upload(asset.file)
-    })
+    const promises = info.assets.map((asset) => {
+      return world.network.upload(asset.file);
+    });
     try {
-      await Promise.all(promises)
-      app?.onUploaded?.()
+      await Promise.all(promises);
+      app?.onUploaded?.();
     } catch (err) {
-      console.error('failed to upload .hyp assets')
-      console.error(err)
-      app?.destroy?.()
+      console.error('failed to upload .hyp assets');
+      console.error(err);
+      app?.destroy?.();
     }
   }
 
   async addModel(file, transform) {
     const service = this.getService();
-    if (!service) return;
+    if (!service) {
+      return;
+    }
     const world = service.getWorld();
-    if (!world || !world.assetsUrl) return;
-    
-    const hash = await hashFile(file)
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'glb'
-    const filename = `${hash}.${ext}`
-    
-    const baseUrl = world.assetsUrl.replace(/\/$/, "");
+    if (!world || !world.assetsUrl) {
+      return;
+    }
+
+    const hash = await this.hashFile(file);
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'glb';
+    const filename = `${hash}.${ext}`;
+
+    const baseUrl = world.assetsUrl.replace(/\/$/, '');
     const url = `${baseUrl}/${filename}`;
     const uploadPromise = world.network.upload(file);
     const timeoutPromise = new Promise((_resolve, reject) =>
-      setTimeout(() => reject(new Error("Upload timed out")), 30000)
+      setTimeout(() => reject(new Error('Upload timed out')), 30000)
     );
 
     await Promise.race([uploadPromise, timeoutPromise]);
-    
+
     const blueprint = {
-      id: generateId(),
+      id: this.generateId(),
       version: 0,
       name: file.name.split('.')[0],
       image: null,
@@ -287,7 +318,7 @@ export class BuildManager {
 
     (world.blueprints as any).add(blueprint, true);
     const data = {
-      id: generateId(),
+      id: this.generateId(),
       type: 'app',
       blueprint: blueprint.id,
       position: transform.position,
@@ -301,22 +332,62 @@ export class BuildManager {
     const app = (world.entities as any).add(data, true);
     app?.onUploaded?.();
   }
-  
+
   entityUpdate(entity) {
     const service = this.getService();
-    if (!service) return;
+    if (!service) {
+      return;
+    }
     const world = service.getWorld();
-    if (!world || !entity.root) return;
-    
+    if (!world || !entity.root) {
+      return;
+    }
+
     world.network.send('entityModified', {
-        id: entity.data.id,
-        position: entity.root.position.toArray(),
-        quaternion: entity.root.quaternion.toArray(),
-        scale: entity.root.scale.toArray(),
-    })
+      id: entity.data.id,
+      position: entity.root.position.toArray(),
+      quaternion: entity.root.quaternion.toArray(),
+      scale: entity.root.scale.toArray(),
+    });
   }
 
   private getService() {
     return this.runtime.getService<HyperfyService>(HyperfyService.serviceName);
+  }
+
+  private generateId(): string {
+    return `entity-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  }
+
+  private async importApp(file: File): Promise<any> {
+    // Basic implementation for importing apps
+    const name = file.name.replace('.hyp', '');
+    return {
+      blueprint: {
+        name,
+        image: null,
+        author: null,
+        url: null,
+        desc: `Imported ${name} app`,
+        model: null,
+        script: null,
+        props: {},
+        preload: false,
+        public: false,
+        locked: false,
+        frozen: false,
+        unique: false,
+        disabled: false,
+      },
+      assets: [],
+    };
+  }
+
+  private async hashFile(file: File): Promise<string> {
+    const buffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
   }
 }

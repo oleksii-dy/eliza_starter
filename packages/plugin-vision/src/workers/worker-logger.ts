@@ -12,14 +12,14 @@ export const logger = {
       args,
       timestamp: new Date().toISOString(),
     };
-    
+
     if (parentPort) {
       parentPort.postMessage(logMessage);
     } else {
       console.log(`[INFO] ${message}`, ...args);
     }
   },
-  
+
   warn: (message: string, ...args: any[]) => {
     const logMessage = {
       type: 'log',
@@ -28,14 +28,14 @@ export const logger = {
       args,
       timestamp: new Date().toISOString(),
     };
-    
+
     if (parentPort) {
       parentPort.postMessage(logMessage);
     } else {
       console.warn(`[WARN] ${message}`, ...args);
     }
   },
-  
+
   error: (message: string, ...args: any[]) => {
     const logMessage = {
       type: 'log',
@@ -44,14 +44,14 @@ export const logger = {
       args,
       timestamp: new Date().toISOString(),
     };
-    
+
     if (parentPort) {
       parentPort.postMessage(logMessage);
     } else {
       console.error(`[ERROR] ${message}`, ...args);
     }
   },
-  
+
   debug: (message: string, ...args: any[]) => {
     const logMessage = {
       type: 'log',
@@ -60,11 +60,11 @@ export const logger = {
       args,
       timestamp: new Date().toISOString(),
     };
-    
+
     if (parentPort) {
       parentPort.postMessage(logMessage);
     } else {
       console.debug(`[DEBUG] ${message}`, ...args);
     }
   },
-}; 
+};

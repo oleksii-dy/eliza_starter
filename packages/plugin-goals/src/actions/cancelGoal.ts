@@ -1,6 +1,7 @@
 import {
   type Action,
   type ActionExample,
+  type ActionResult,
   composePrompt,
   type HandlerCallback,
   type IAgentRuntime,
@@ -10,7 +11,6 @@ import {
   parseKeyValueXml,
   type State,
   formatMessages,
-  type UUID,
 } from '@elizaos/core';
 import { createGoalDataService, type GoalData } from '../services/goalDataService.js';
 
@@ -69,7 +69,7 @@ async function extractTaskCancellation(
       state: {
         text: message.content.text || '',
         availableTasks: tasksText,
-        messageHistory: messageHistory,
+        messageHistory,
       },
       template: extractCancellationTemplate,
     });
@@ -109,7 +109,7 @@ async function extractTaskCancellation(
 export const cancelGoalAction: Action = {
   name: 'CANCEL_GOAL',
   similes: ['DELETE_GOAL', 'REMOVE_TASK', 'DELETE_TASK', 'REMOVE_GOAL'],
-  description: "Cancels and deletes a goal item from the user's task list immediately.",
+  description: "Cancels and deletes a goal item from the user's task list immediately. Can be chained with LIST_GOALS to see remaining goals or CREATE_GOAL to add a new one.",
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     // Check if *any* active GOALs exist
@@ -136,7 +136,7 @@ export const cancelGoalAction: Action = {
     state: State | undefined,
     options: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     try {
       if (!state) {
         if (callback) {
@@ -146,7 +146,16 @@ export const cancelGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CANCEL_GOAL',
+            error: 'No state context',
+          },
+          values: {
+            success: false,
+            error: 'No state context',
+          },
+        };
       }
       if (!message.roomId) {
         if (callback) {
@@ -156,7 +165,16 @@ export const cancelGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CANCEL_GOAL',
+            error: 'Missing room context',
+          },
+          values: {
+            success: false,
+            error: 'Missing room context',
+          },
+        };
       }
       const dataService = createGoalDataService(runtime);
 
@@ -175,7 +193,18 @@ export const cancelGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CANCEL_GOAL',
+            error: 'No active goals',
+            activeGoalsCount: 0,
+          },
+          values: {
+            success: false,
+            error: 'No active goals',
+            hasActiveGoals: false,
+          },
+        };
       }
 
       // Extract which goal to cancel
@@ -192,7 +221,19 @@ export const cancelGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CANCEL_GOAL',
+            error: 'Goal not found',
+            availableGoals: goalsList,
+            activeGoalsCount: activeGoals.length,
+          },
+          values: {
+            success: false,
+            error: 'Goal not found',
+            needsClarification: true,
+          },
+        };
       }
 
       // Find the goal to cancel
@@ -206,7 +247,17 @@ export const cancelGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          data: {
+            actionName: 'CANCEL_GOAL',
+            error: 'Goal not found',
+            attemptedGoalName: cancelInfo.taskName,
+          },
+          values: {
+            success: false,
+            error: 'Goal not found',
+          },
+        };
       }
 
       // Delete the goal
@@ -220,6 +271,20 @@ export const cancelGoalAction: Action = {
             source: message.content.source,
           });
         }
+        return {
+          data: {
+            actionName: 'CANCEL_GOAL',
+            deletedGoalId: goalToCancel.id,
+            deletedGoalName: goalToCancel.name,
+            remainingGoals: activeGoals.length - 1,
+          },
+          values: {
+            success: true,
+            goalId: goalToCancel.id,
+            goalName: goalToCancel.name,
+            remainingGoalsCount: activeGoals.length - 1,
+          },
+        };
       } else {
         throw new Error('Failed to delete goal');
       }
@@ -232,32 +297,76 @@ export const cancelGoalAction: Action = {
           source: message.content.source,
         });
       }
+      return {
+        data: {
+          actionName: 'CANCEL_GOAL',
+          error: error instanceof Error ? error.message : String(error),
+        },
+        values: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
 
   examples: [
+    // Multi-action: Cancel goal then list remaining to show updated goal state
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
+        content: {
+          text: 'Cancel my task to finish taxes and show me what\'s left',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: '✅ Cancelled goal: "Finish taxes". Now let me show you your remaining goals.',
+          thought: "The user wants to remove a goal and see their updated goal list. I need to chain CANCEL_GOAL with LIST_GOALS to remove the unwanted goal and then display the current active goals.",
+          actions: ['CANCEL_GOAL', 'LIST_GOALS'],
+        },
+      },
+    ],
+    // Multi-action: Cancel goal then create new one to show goal replacement workflow
+    [
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Remove my exercise goal and add a new one for yoga',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'I\'ve cancelled your exercise goal. Now I\'ll create a new goal for yoga.',
+          thought: "The user wants to replace one goal with another. I\'ll chain CANCEL_GOAL with CREATE_GOAL to remove the old exercise goal and create the new yoga goal, ensuring smooth goal management transition.",
+          actions: ['CANCEL_GOAL', 'CREATE_GOAL'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
         content: {
           text: 'Cancel my task to finish taxes',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'Are you sure you want to cancel this one-off task: "Finish taxes" (Priority 2, due 4/15/2023)? Once cancelled, it will be permanently removed.',
           actions: ['CANCEL_GOAL_CONFIRM'],
         },
       },
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Yes, please cancel it',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: '✓ Task cancelled: "Finish taxes" has been removed from your goal list.',
           actions: ['CANCEL_GOAL'],
@@ -266,26 +375,26 @@ export const cancelGoalAction: Action = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: "I don't want to do 50 pushups anymore, please delete that task",
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'Are you sure you want to cancel this daily task: "Do 50 pushups"? Once cancelled, it will be permanently removed.',
           actions: ['CANCEL_GOAL_CONFIRM'],
         },
       },
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: "No, I changed my mind, I'll keep it",
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'I\'ve kept your daily task "Do 50 pushups" active. Keep up the good work!',
           actions: ['CANCEL_GOAL_REJECTED'],

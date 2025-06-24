@@ -8,7 +8,7 @@
  * and validates actual functionality rather than mock behavior.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { trainModelAction } from '../../actions/train-model.js';
 import type { IAgentRuntime, Memory, UUID, State } from '@elizaos/core';
 import * as fs from 'fs/promises';
@@ -83,7 +83,9 @@ describe('Train Model Action Runtime Integration', () => {
       // Override runtime to simulate missing API key
       const originalGetSetting = runtime.getSetting;
       runtime.getSetting = (key: string) => {
-        if (key === 'TOGETHER_API_KEY') return '';
+        if (key === 'TOGETHER_API_KEY') {
+          return '';
+        }
         return originalGetSetting(key);
       };
 
@@ -172,7 +174,9 @@ describe('Train Model Action Runtime Integration', () => {
         // Override runtime to point to test file
         const originalGetSetting = runtime.getSetting;
         runtime.getSetting = (key: string) => {
-          if (key === 'TOGETHER_API_KEY') return 'test-api-key';
+          if (key === 'TOGETHER_API_KEY') {
+            return 'test-api-key';
+          }
           return originalGetSetting(key);
         };
 
@@ -281,7 +285,9 @@ describe('Train Model Action Runtime Integration', () => {
       // Use invalid API key to trigger API error
       const originalGetSetting = runtime.getSetting;
       runtime.getSetting = (key: string) => {
-        if (key === 'TOGETHER_API_KEY') return 'invalid-test-key-format';
+        if (key === 'TOGETHER_API_KEY') {
+          return 'invalid-test-key-format';
+        }
         return originalGetSetting(key);
       };
 

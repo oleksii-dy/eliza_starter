@@ -42,26 +42,26 @@ const crossmintNFTScenario: Scenario = {
   actions: ['CROSSMINT_NFT_MINT', 'CROSSMINT_NFT_PURCHASE', 'CROSSMINT_NFT_BRIDGE'],
   evaluator: (response: string) => {
     const hasCrossmint = response.toLowerCase().includes('crossmint');
-    const hasNFT = 
+    const hasNFT =
       response.toLowerCase().includes('nft') ||
       response.toLowerCase().includes('mint') ||
       response.toLowerCase().includes('artwork');
-    
-    const hasPayment = 
+
+    const hasPayment =
       response.toLowerCase().includes('card') ||
       response.toLowerCase().includes('visa') ||
       response.toLowerCase().includes('payment') ||
       response.toLowerCase().includes('cost');
-    
-    const hasBlockchain = 
+
+    const hasBlockchain =
       response.toLowerCase().includes('ethereum') ||
       response.toLowerCase().includes('solana') ||
       response.toLowerCase().includes('polygon') ||
       response.toLowerCase().includes('bridge');
-    
+
     return hasCrossmint && hasNFT && (hasPayment || hasBlockchain);
   },
   tags: ['payment', 'crossmint', 'nft', 'minting', 'bridge'],
 };
 
-export default crossmintNFTScenario; 
+export default crossmintNFTScenario;

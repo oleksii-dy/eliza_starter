@@ -99,15 +99,15 @@ const fixes = [
 // Apply fixes
 fixes.forEach(({ file, replacements }) => {
   const filePath = path.join(__dirname, '..', file);
-  
+
   if (!fs.existsSync(filePath)) {
     console.log(`File not found: ${filePath}`);
     return;
   }
-  
+
   let content = fs.readFileSync(filePath, 'utf8');
   let changed = false;
-  
+
   replacements.forEach(({ from, to }) => {
     if (content.includes(from)) {
       content = content.replace(new RegExp(from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), to);
@@ -115,7 +115,7 @@ fixes.forEach(({ file, replacements }) => {
       console.log(`  Fixed: ${from} -> ${to}`);
     }
   });
-  
+
   if (changed) {
     fs.writeFileSync(filePath, content, 'utf8');
     console.log(`Updated: ${file}`);
@@ -126,28 +126,28 @@ fixes.forEach(({ file, replacements }) => {
 const eventFiles = ['src/events.ts'];
 eventFiles.forEach(file => {
   const filePath = path.join(__dirname, '..', file);
-  
+
   if (!fs.existsSync(filePath)) {
     console.log(`File not found: ${filePath}`);
     return;
   }
-  
+
   let content = fs.readFileSync(filePath, 'utf8');
-  
+
   // Make callback optional in event handlers
   content = content.replace(
     /callback:\s*HandlerCallback\s*\|?\s*undefined/g,
     'callback?: HandlerCallback'
   );
-  
+
   // Add null checks
   content = content.replace(
     /await callback\(/g,
     'await callback?.('
   );
-  
+
   fs.writeFileSync(filePath, content, 'utf8');
   console.log(`Fixed event handlers in: ${file}`);
 });
 
-console.log('TypeScript errors fixed!'); 
+console.log('TypeScript errors fixed!');

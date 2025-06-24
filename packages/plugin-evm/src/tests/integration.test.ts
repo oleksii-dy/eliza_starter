@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, mock } from 'bun:test';
 import { transferAction } from '../actions/transfer';
 import { swapAction } from '../actions/swap';
 import { bridgeAction } from '../actions/bridge';
@@ -39,7 +39,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
   });
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     mockMessage = {
       id: asUUID('test-message-id'),
@@ -191,7 +191,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         await evmService.start(mockRuntime);
         await walletService.start(mockRuntime);
 
-        const transferCallback = vi.fn();
+        const transferCallback = mock();
 
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
@@ -228,7 +228,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         await evmService.start(mockRuntime);
         await walletService.start(mockRuntime);
 
-        const swapCallback = vi.fn();
+        const swapCallback = mock();
 
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
@@ -265,7 +265,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         await evmService.start(mockRuntime);
         await walletService.start(mockRuntime);
 
-        const bridgeCallback = vi.fn();
+        const bridgeCallback = mock();
 
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
@@ -310,7 +310,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         const workflowId = 'defi-workflow-001';
 
         // Step 1: Transfer to prepare for swap
-        const transferCallback = vi.fn();
+        const transferCallback = mock();
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
             <fromChain>sepolia</fromChain>
@@ -341,7 +341,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         );
 
         // Step 2: Swap the transferred tokens
-        const swapCallback = vi.fn();
+        const swapCallback = mock();
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
             <inputToken>ETH</inputToken>
@@ -399,7 +399,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         const workflowId = 'cross-chain-farming-001';
 
         // Step 1: Swap to prepare for bridge
-        const swapCallback = vi.fn();
+        const swapCallback = mock();
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
             <inputToken>ETH</inputToken>
@@ -427,7 +427,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         );
 
         // Step 2: Bridge to target chain
-        const bridgeCallback = vi.fn();
+        const bridgeCallback = mock();
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
             <sourceChain>sepolia</sourceChain>
@@ -474,7 +474,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         ];
 
         for (const [index, swap] of swaps.entries()) {
-          const swapCallback = vi.fn();
+          const swapCallback = mock();
           mockRuntime.useModel.mockResolvedValueOnce(`
             <response>
               <inputToken>${swap.from}</inputToken>
@@ -524,7 +524,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         const workflowId = 'governance-lifecycle-001';
 
         // Step 1: Vote on proposal
-        const voteCallback = vi.fn();
+        const voteCallback = mock();
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
             <proposalId>1</proposalId>
@@ -585,7 +585,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         ];
 
         for (const [index, proposal] of proposals.entries()) {
-          const voteCallback = vi.fn();
+          const voteCallback = mock();
           mockRuntime.useModel.mockResolvedValueOnce(`
             <response>
               <proposalId>${proposal.id}</proposalId>
@@ -642,9 +642,9 @@ describe.skip('EVM Services Integration Test Suite', () => {
 
         // Simulate wallet service failure
         const mockError = new Error('Wallet service unavailable');
-        vi.spyOn(walletService, 'createWallet').mockRejectedValueOnce(mockError);
+        mock.spyOn(walletService, 'createWallet').mockRejectedValueOnce(mockError);
 
-        const transferCallback = vi.fn();
+        const transferCallback = mock();
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
             <fromChain>sepolia</fromChain>
@@ -676,7 +676,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
 
         // Simulate balance service failure
         const mockError = new Error('Balance service error');
-        vi.spyOn(balanceService, 'getTokenBalances').mockRejectedValueOnce(mockError);
+        mock.spyOn(balanceService, 'getTokenBalances').mockRejectedValueOnce(mockError);
 
         // Other services should continue working
         const walletInstance = await walletService.createWallet('EOA', testWalletAddress);
@@ -694,7 +694,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
 
         // Simulate network failure
         const networkError = new Error('Network unavailable');
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleSpy = mock.spyOn(console, 'error').mockImplementation(() => {});
 
         // Services should handle network errors gracefully
         try {
@@ -732,7 +732,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         );
 
         // Resume workflow with swap
-        const swapCallback = vi.fn();
+        const swapCallback = mock();
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
             <inputToken>ETH</inputToken>
@@ -762,7 +762,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         const workflowId = 'rollback-test-001';
 
         // Simulate successful transfer
-        const transferCallback = vi.fn();
+        const transferCallback = mock();
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
             <fromChain>sepolia</fromChain>
@@ -783,7 +783,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         expect(transferResult).toBe(true);
 
         // Simulate failed swap
-        const swapCallback = vi.fn();
+        const swapCallback = mock();
         mockRuntime.useModel.mockResolvedValueOnce(`
           <response>
             <inputToken>ETH</inputToken>
@@ -860,7 +860,7 @@ describe.skip('EVM Services Integration Test Suite', () => {
         ];
 
         const workflowPromises = workflows.map(async (workflow, index) => {
-          const callback = vi.fn();
+          const callback = mock();
 
           if (workflow.action === 'transfer') {
             mockRuntime.useModel.mockResolvedValueOnce(`

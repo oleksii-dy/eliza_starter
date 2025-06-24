@@ -1,4 +1,4 @@
-import { TrainingExample } from '../simple-types.js';
+import { type TrainingExample } from '../simple-types.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { elizaLogger } from '@elizaos/core';
@@ -36,12 +36,14 @@ export class SimpleDbExtractor {
             const filePath = path.join(this.dataDir, file);
             const content = await fs.readFile(filePath, 'utf-8');
             const data = JSON.parse(content);
-            
+
             elizaLogger.info(`📄 Processing ${file}...`);
             const fileExamples = this.extractFromData(data, file);
             examples.push(...fileExamples);
           } catch (error) {
-            elizaLogger.warn(`⚠️  Skipping ${file}: ${error instanceof Error ? error.message : String(error)}`);
+            elizaLogger.warn(
+              `⚠️  Skipping ${file}: ${error instanceof Error ? error.message : String(error)}`
+            );
           }
         }
       }
@@ -53,7 +55,6 @@ export class SimpleDbExtractor {
 
       elizaLogger.info(`✅ Extracted ${examples.length} examples from database`);
       return examples;
-
     } catch (error) {
       elizaLogger.error('❌ Error extracting from database:', error);
       elizaLogger.info('📭 Creating sample data instead...');
@@ -74,7 +75,7 @@ export class SimpleDbExtractor {
         for (let i = 0; i < data.length - 1; i++) {
           const current = data[i];
           const next = data[i + 1];
-          
+
           const example = this.tryCreateExample(current, next, filename);
           if (example) {
             examples.push(example);
@@ -87,7 +88,7 @@ export class SimpleDbExtractor {
           for (let i = 0; i < messages.length - 1; i++) {
             const current = messages[i];
             const next = messages[i + 1];
-            
+
             const example = this.tryCreateExample(current, next, filename);
             if (example) {
               examples.push(example);
@@ -101,7 +102,6 @@ export class SimpleDbExtractor {
           examples.push(example);
         }
       }
-
     } catch (error) {
       elizaLogger.warn(`⚠️  Error processing data from ${filename}:`, error);
     }
@@ -145,7 +145,6 @@ export class SimpleDbExtractor {
         quality,
         createdAt: new Date(),
       };
-
     } catch (error) {
       return null;
     }
@@ -167,7 +166,7 @@ export class SimpleDbExtractor {
         return null;
       }
 
-      const request = parts[0] + '.';
+      const request = `${parts[0]}.`;
       const response = parts.slice(1).join(' ');
 
       if (response.length < 10) {
@@ -182,7 +181,6 @@ export class SimpleDbExtractor {
         quality: 0.6,
         createdAt: new Date(),
       };
-
     } catch (error) {
       return null;
     }
@@ -236,10 +234,10 @@ export class SimpleDbExtractor {
 
     // Check for request-response patterns
     const requestWords = ['create', 'make', 'build', 'implement', 'write', 'help', 'please'];
-    const responseWords = ['I\'ll', 'I will', 'Here', 'Let me', 'Sure'];
+    const responseWords = ["I'll", 'I will', 'Here', 'Let me', 'Sure'];
 
-    const hasRequest = requestWords.some(word => currentText.toLowerCase().includes(word));
-    const hasResponse = responseWords.some(word => nextText.includes(word));
+    const hasRequest = requestWords.some((word) => currentText.toLowerCase().includes(word));
+    const hasResponse = responseWords.some((word) => nextText.includes(word));
 
     return hasRequest && hasResponse;
   }
@@ -251,9 +249,15 @@ export class SimpleDbExtractor {
     let quality = 0.5;
 
     // Length indicates effort
-    if (response.length > 100) quality += 0.1;
-    if (response.length > 300) quality += 0.1;
-    if (response.length > 500) quality += 0.1;
+    if (response.length > 100) {
+      quality += 0.1;
+    }
+    if (response.length > 300) {
+      quality += 0.1;
+    }
+    if (response.length > 500) {
+      quality += 0.1;
+    }
 
     // Code indicates technical content
     if (response.includes('```') || response.includes('function') || response.includes('export')) {
@@ -271,8 +275,12 @@ export class SimpleDbExtractor {
     }
 
     // Penalty for short or low-effort responses
-    if (response.length < 50) quality -= 0.3;
-    if (response.includes('I don\'t know') || response.includes('sorry')) quality -= 0.1;
+    if (response.length < 50) {
+      quality -= 0.3;
+    }
+    if (response.includes("I don't know") || response.includes('sorry')) {
+      quality -= 0.1;
+    }
 
     return Math.max(0, Math.min(1, quality));
   }
@@ -295,7 +303,7 @@ export class SimpleDbExtractor {
     }
 
     if (response.includes('```')) {
-      thoughts.push('I\'ll include code examples to illustrate the solution.');
+      thoughts.push("I'll include code examples to illustrate the solution.");
     }
 
     return thoughts.join(' ');
@@ -309,24 +317,30 @@ export class SimpleDbExtractor {
       {
         id: 'sample-1',
         request: 'Create a Discord plugin for ElizaOS',
-        response: 'I\'ll create a comprehensive Discord plugin for ElizaOS. Here\'s the implementation:\n\n```typescript\nimport { Plugin } from \'@elizaos/core\';\n// Complete implementation...\n```',
-        thinking: 'The user wants a Discord plugin. I need to create a complete implementation with proper TypeScript types, Discord.js integration, and ElizaOS patterns.',
+        response:
+          "I'll create a comprehensive Discord plugin for ElizaOS. Here's the implementation:\n\n```typescript\nimport { Plugin } from '@elizaos/core';\n// Complete implementation...\n```",
+        thinking:
+          'The user wants a Discord plugin. I need to create a complete implementation with proper TypeScript types, Discord.js integration, and ElizaOS patterns.',
         quality: 0.95,
         createdAt: new Date(),
       },
       {
         id: 'sample-2',
         request: 'How do I create a custom action?',
-        response: 'To create a custom action in ElizaOS, you need to implement the Action interface. Here\'s how:\n\n```typescript\nconst myAction: Action = {\n  name: \'MY_ACTION\',\n  // implementation...\n};\n```',
-        thinking: 'The user wants to understand how to create custom actions. I should explain the Action interface and provide a complete example.',
+        response:
+          "To create a custom action in ElizaOS, you need to implement the Action interface. Here's how:\n\n```typescript\nconst myAction: Action = {\n  name: 'MY_ACTION',\n  // implementation...\n};\n```",
+        thinking:
+          'The user wants to understand how to create custom actions. I should explain the Action interface and provide a complete example.',
         quality: 0.9,
         createdAt: new Date(),
       },
       {
         id: 'sample-3',
         request: 'Build a weather API integration',
-        response: 'I\'ll create a weather API integration plugin that fetches real-time weather data. This will include error handling, rate limiting, and proper data formatting for ElizaOS.',
-        thinking: 'This requires API integration with proper error handling and rate limiting. I should structure this as a service with actions and providers.',
+        response:
+          "I'll create a weather API integration plugin that fetches real-time weather data. This will include error handling, rate limiting, and proper data formatting for ElizaOS.",
+        thinking:
+          'This requires API integration with proper error handling and rate limiting. I should structure this as a service with actions and providers.',
         quality: 0.85,
         createdAt: new Date(),
       },

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { AgentRuntime } from '@elizaos/core';
 import type { IAgentRuntime, Character, Memory, State } from '@elizaos/core';
 import { autocoderPlugin } from '../index.ts';
@@ -229,7 +229,7 @@ describe('AutoCoder Plugin - Real Runtime Integration', () => {
         expect(responseContent.actions).toContain('SPAWN_SUB_AGENT');
 
         console.log('✅ SPAWN_SUB_AGENT action executed successfully');
-        console.log('Response preview:', responseContent.text.substring(0, 100) + '...');
+        console.log('Response preview:', `${responseContent.text.substring(0, 100)}...`);
       } catch (error) {
         // If Docker or LLM is not available, the action should fail gracefully
         console.warn(

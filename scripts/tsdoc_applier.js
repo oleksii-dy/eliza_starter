@@ -242,9 +242,9 @@ async function applyCommentsToFiles(packagePath, options = {}) {
       for (const node of nodes) {
         // Add the comment at the node position
         updatedContent =
-          updatedContent.substring(0, node.position) +
-          `${node.comment}\n` +
-          updatedContent.substring(node.position);
+          `${updatedContent.substring(0, node.position)
+          }${node.comment}\n${
+            updatedContent.substring(node.position)}`;
         changed = true;
       }
 
@@ -286,7 +286,7 @@ async function applyCommentsToFiles(packagePath, options = {}) {
 
     // Function to start processing a file from the queue
     const processNextFile = () => {
-      if (queue.length === 0) return null;
+      if (queue.length === 0) {return null;}
 
       const tsFile = queue.shift();
       const filePromise = processFile(tsFile)

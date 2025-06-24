@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, mock, beforeEach, type Mock } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
 import { reflectionEvaluator } from '../reflection';
@@ -6,31 +6,31 @@ import { reflectionEvaluator } from '../reflection';
 const createMockRuntime = (): IAgentRuntime => {
   return {
     agentId: 'test-agent' as UUID,
-    getCache: vi.fn().mockResolvedValue(null),
-    setCache: vi.fn().mockResolvedValue(true),
-    getMemories: vi.fn().mockResolvedValue([
+    getCache: mock().mockResolvedValue(null),
+    setCache: mock().mockResolvedValue(true),
+    getMemories: mock().mockResolvedValue([
       { id: 'msg-1', content: { text: 'Hello' } },
       { id: 'msg-2', content: { text: 'How are you?' } },
       { id: 'msg-3', content: { text: 'I am fine' } },
       { id: 'msg-4', content: { text: 'Great!' } },
       { id: 'msg-5', content: { text: 'What about you?' } },
     ]),
-    getConversationLength: vi.fn().mockReturnValue(4),
-    getRelationships: vi.fn().mockResolvedValue([]),
-    getRoom: vi.fn().mockResolvedValue({
+    getConversationLength: mock().mockReturnValue(4),
+    getRelationships: mock().mockResolvedValue([]),
+    getRoom: mock().mockResolvedValue({
       id: 'room-1',
       name: 'Test Room',
       source: 'test'
     }),
-    getEntitiesForRoom: vi.fn().mockResolvedValue([
+    getEntitiesForRoom: mock().mockResolvedValue([
       { id: 'entity-1', names: ['User 1'] },
       { id: 'test-agent', names: ['Test Agent'] }
     ]),
-    getMemoriesByRoomIds: vi.fn().mockResolvedValue([
+    getMemoriesByRoomIds: mock().mockResolvedValue([
       { userId: 'entity-1', agentId: 'test-agent' },
       { userId: 'test-agent', agentId: 'test-agent' }
     ]),
-    useModel: vi.fn().mockResolvedValue({
+    useModel: mock().mockResolvedValue({
       thought: 'I am reflecting on this conversation',
       facts: [
         {
@@ -42,13 +42,13 @@ const createMockRuntime = (): IAgentRuntime => {
       ],
       relationships: [],
     }),
-    addEmbeddingToMemory: vi.fn().mockImplementation((memory) => ({
+    addEmbeddingToMemory: mock().mockImplementation((memory) => ({
       ...memory,
       id: `fact-${Date.now()}`,
     })),
-    createMemory: vi.fn().mockResolvedValue(true),
-    updateRelationship: vi.fn().mockResolvedValue(true),
-    createRelationship: vi.fn().mockResolvedValue(true),
+    createMemory: mock().mockResolvedValue(true),
+    updateRelationship: mock().mockResolvedValue(true),
+    createRelationship: mock().mockResolvedValue(true),
   } as any;
 };
 
@@ -70,7 +70,7 @@ describe('reflectionEvaluator', () => {
 
   beforeEach(() => {
     runtime = createMockRuntime();
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   it('should validate when enough messages have accumulated', async () => {

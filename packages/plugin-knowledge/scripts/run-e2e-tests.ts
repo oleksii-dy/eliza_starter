@@ -55,8 +55,8 @@ const createMockRuntime = (): IAgentRuntime => {
       const tableMemories = memories.get(tableName) || [];
 
       return tableMemories.filter((m) => {
-        if (entityId && m.entityId !== entityId) return false;
-        if (roomId && m.roomId !== roomId) return false;
+        if (entityId && m.entityId !== entityId) {return false;}
+        if (roomId && m.roomId !== roomId) {return false;}
         return true;
       });
     },
@@ -125,7 +125,7 @@ const createMockRuntime = (): IAgentRuntime => {
     getMemoryById: async (id: UUID) => {
       for (const [_, tableMemories] of memories) {
         const memory = tableMemories.find((m) => m.id === id);
-        if (memory) return memory;
+        if (memory) {return memory;}
       }
       return null;
     },

@@ -53,24 +53,26 @@ export class SimulationService extends Service {
 
   constructor(runtime: IAgentRuntime) {
     super(runtime);
-    
+
     // Load configuration
     this.simulationConfig = {
-      gazeboWorldFile: runtime.getSetting('GAZEBO_WORLD_FILE') || 
-                      path.join(process.cwd(), 'gazebo', 'worlds', 'ainex_world.world'),
-      urdfPath: runtime.getSetting('ROBOT_URDF_PATH') || 
-                path.join(process.cwd(), 'urdf', 'ainex-humanoid.urdf'),
+      gazeboWorldFile:
+        runtime.getSetting('GAZEBO_WORLD_FILE') ||
+        path.join(process.cwd(), 'gazebo', 'worlds', 'ainex_world.world'),
+      urdfPath:
+        runtime.getSetting('ROBOT_URDF_PATH') ||
+        path.join(process.cwd(), 'urdf', 'ainex-humanoid.urdf'),
       launchFile: runtime.getSetting('ROS2_LAUNCH_FILE'),
       rosWebsocketUrl: runtime.getSetting('ROS_WEBSOCKET_URL') || 'ws://localhost:9090',
       autoStart: runtime.getSetting('SIMULATION_AUTO_START') === 'true',
       headless: runtime.getSetting('SIMULATION_HEADLESS') === 'true',
       physics: {
-        updateRate: parseInt(runtime.getSetting('PHYSICS_UPDATE_RATE') || '1000'),
+        updateRate: parseInt(runtime.getSetting('PHYSICS_UPDATE_RATE') || '1000', 10),
         gravity: { x: 0, y: 0, z: -9.81 },
         solver: (runtime.getSetting('PHYSICS_SOLVER') as any) || 'ode',
       },
     };
-    
+
     logger.info('[SimulationService] Initialized with config:', this.simulationConfig);
   }
 
@@ -84,20 +86,20 @@ export class SimulationService extends Service {
     try {
       // Check if required files exist
       await this.validateFiles();
-      
+
       // Initialize ROS 2 bridge
       this.ros2Bridge = new ROS2Bridge({
         url: this.simulationConfig.rosWebsocketUrl!,
       });
-      
+
       // Set up simulation control topics
       this.setupSimulationTopics();
-      
+
       // Auto-start if configured
       if (this.simulationConfig.autoStart) {
         await this.startSimulation();
       }
-      
+
       logger.info('[SimulationService] Initialization complete');
     } catch (error) {
       logger.error('[SimulationService] Failed to initialize:', error);
@@ -115,7 +117,7 @@ export class SimulationService extends Service {
         logger.warn('[SimulationService] URDF not found, will need to generate');
       }
     }
-    
+
     // Check world file exists
     if (this.simulationConfig.gazeboWorldFile) {
       try {
@@ -128,15 +130,19 @@ export class SimulationService extends Service {
   }
 
   private setupSimulationTopics(): void {
-    if (!this.ros2Bridge) return;
-    
+    if (!this.ros2Bridge) {
+      return;
+    }
+
     // Subscribe to simulation status
     this.ros2Bridge.subscribeTopic('/clock', 'rosgraph_msgs/Clock', (message: any) => {
       this.simulationState.simTime = message.clock.secs + message.clock.nsecs / 1e9;
     });
-    
+
     // Subscribe to physics properties
-    this.ros2Bridge.subscribeTopic('/gazebo/performance_metrics', 'gazebo_msgs/PerformanceMetrics', 
+    this.ros2Bridge.subscribeTopic(
+      '/gazebo/performance_metrics',
+      'gazebo_msgs/PerformanceMetrics',
       (message: any) => {
         this.simulationState.realTimeFactor = message.real_time_factor;
       }
@@ -151,29 +157,29 @@ export class SimulationService extends Service {
       logger.warn('[SimulationService] Simulation already running');
       return;
     }
-    
+
     logger.info('[SimulationService] Starting Gazebo simulation');
-    
+
     try {
       // Start Gazebo
       await this.startGazebo();
-      
+
       // Wait for Gazebo to initialize
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+
       // Start ROS 2 launch file if specified
       if (this.simulationConfig.launchFile) {
         await this.startROS2Launch();
       }
-      
+
       // Connect ROS 2 bridge
       if (this.ros2Bridge && !this.ros2Bridge.isConnected()) {
         await this.ros2Bridge.connect();
       }
-      
+
       // Spawn robot model
       await this.spawnRobot();
-      
+
       this.simulationState.isRunning = true;
       logger.info('[SimulationService] Simulation started successfully');
     } catch (error) {
@@ -185,26 +191,26 @@ export class SimulationService extends Service {
 
   private async startGazebo(): Promise<void> {
     const args: string[] = [];
-    
+
     // Add world file if specified
     if (this.simulationConfig.gazeboWorldFile) {
       args.push(this.simulationConfig.gazeboWorldFile);
     }
-    
+
     // Add headless flag if configured
     if (this.simulationConfig.headless) {
       args.push('-s', 'libgazebo_ros_init.so');
       args.push('-s', 'libgazebo_ros_factory.so');
       args.push('--headless');
     }
-    
+
     // Add physics properties
     if (this.simulationConfig.physics) {
       args.push('--physics', this.simulationConfig.physics.solver!);
       args.push('--iters', '50');
       args.push('--update-rate', this.simulationConfig.physics.updateRate!.toString());
     }
-    
+
     // Spawn Gazebo process
     this.gazeboProcess = spawn('gazebo', args, {
       stdio: 'pipe',
@@ -214,15 +220,15 @@ export class SimulationService extends Service {
         GAZEBO_PLUGIN_PATH: '/opt/ros/humble/lib',
       },
     });
-    
+
     this.gazeboProcess.stdout?.on('data', (data) => {
       logger.debug('[Gazebo]', data.toString().trim());
     });
-    
+
     this.gazeboProcess.stderr?.on('data', (data) => {
       logger.error('[Gazebo Error]', data.toString().trim());
     });
-    
+
     this.gazeboProcess.on('exit', (code) => {
       logger.info(`[SimulationService] Gazebo exited with code ${code}`);
       this.simulationState.isRunning = false;
@@ -230,16 +236,18 @@ export class SimulationService extends Service {
   }
 
   private async startROS2Launch(): Promise<void> {
-    if (!this.simulationConfig.launchFile) return;
-    
+    if (!this.simulationConfig.launchFile) {
+      return;
+    }
+
     this.ros2LaunchProcess = spawn('ros2', ['launch', this.simulationConfig.launchFile], {
       stdio: 'pipe',
     });
-    
+
     this.ros2LaunchProcess.stdout?.on('data', (data) => {
       logger.debug('[ROS2 Launch]', data.toString().trim());
     });
-    
+
     this.ros2LaunchProcess.stderr?.on('data', (data) => {
       logger.error('[ROS2 Launch Error]', data.toString().trim());
     });
@@ -250,13 +258,13 @@ export class SimulationService extends Service {
       logger.warn('[SimulationService] No URDF path specified, skipping robot spawn');
       return;
     }
-    
+
     try {
       // Read URDF file
       const urdfContent = await fs.readFile(this.simulationConfig.urdfPath, 'utf-8');
-      
+
       // Call spawn service
-      const response = await this.ros2Bridge!.callService(
+      const _response = await this.ros2Bridge!.callService(
         '/spawn_entity',
         'gazebo_msgs/SpawnEntity',
         {
@@ -270,7 +278,7 @@ export class SimulationService extends Service {
           reference_frame: 'world',
         }
       );
-      
+
       logger.info('[SimulationService] Robot spawned successfully');
       this.simulationState.modelCount++;
     } catch (error) {
@@ -284,38 +292,38 @@ export class SimulationService extends Service {
    */
   async stopSimulation(): Promise<void> {
     logger.info('[SimulationService] Stopping simulation');
-    
+
     // Disconnect ROS 2 bridge
     if (this.ros2Bridge?.isConnected()) {
       await this.ros2Bridge.disconnect();
     }
-    
+
     // Stop ROS 2 launch
     if (this.ros2LaunchProcess) {
       this.ros2LaunchProcess.kill('SIGTERM');
       this.ros2LaunchProcess = null;
     }
-    
+
     // Stop Gazebo
     if (this.gazeboProcess) {
       this.gazeboProcess.kill('SIGTERM');
-      
+
       // Wait for process to exit
       await new Promise<void>((resolve) => {
         const timeout = setTimeout(() => {
           this.gazeboProcess?.kill('SIGKILL');
           resolve();
         }, 5000);
-        
+
         this.gazeboProcess!.on('exit', () => {
           clearTimeout(timeout);
           resolve();
         });
       });
-      
+
       this.gazeboProcess = null;
     }
-    
+
     this.simulationState.isRunning = false;
     logger.info('[SimulationService] Simulation stopped');
   }
@@ -327,13 +335,9 @@ export class SimulationService extends Service {
     if (!this.simulationState.isRunning) {
       throw new Error('Simulation not running');
     }
-    
-    await this.ros2Bridge!.callService(
-      '/pause_physics',
-      'std_srvs/Empty',
-      {}
-    );
-    
+
+    await this.ros2Bridge!.callService('/pause_physics', 'std_srvs/Empty', {});
+
     this.simulationState.isPaused = true;
     logger.info('[SimulationService] Simulation paused');
   }
@@ -345,13 +349,9 @@ export class SimulationService extends Service {
     if (!this.simulationState.isRunning) {
       throw new Error('Simulation not running');
     }
-    
-    await this.ros2Bridge!.callService(
-      '/unpause_physics',
-      'std_srvs/Empty',
-      {}
-    );
-    
+
+    await this.ros2Bridge!.callService('/unpause_physics', 'std_srvs/Empty', {});
+
     this.simulationState.isPaused = false;
     logger.info('[SimulationService] Simulation resumed');
   }
@@ -363,13 +363,9 @@ export class SimulationService extends Service {
     if (!this.simulationState.isRunning) {
       throw new Error('Simulation not running');
     }
-    
-    await this.ros2Bridge!.callService(
-      '/reset_simulation',
-      'std_srvs/Empty',
-      {}
-    );
-    
+
+    await this.ros2Bridge!.callService('/reset_simulation', 'std_srvs/Empty', {});
+
     this.simulationState.simTime = 0;
     logger.info('[SimulationService] Simulation reset');
   }
@@ -381,11 +377,11 @@ export class SimulationService extends Service {
     if (!this.simulationState.isRunning) {
       throw new Error('Simulation not running');
     }
-    
+
     if (factor < 0.1 || factor > 10) {
       throw new Error('Time factor must be between 0.1 and 10');
     }
-    
+
     await this.ros2Bridge!.callService(
       '/set_physics_properties',
       'gazebo_msgs/SetPhysicsProperties',
@@ -394,35 +390,35 @@ export class SimulationService extends Service {
         max_update_rate: 1000 * factor,
       }
     );
-    
+
     logger.info(`[SimulationService] Time factor set to ${factor}x`);
   }
 
   /**
    * Spawn object in simulation
    */
-  async spawnObject(name: string, modelPath: string, position: { x: number; y: number; z: number }): Promise<void> {
+  async spawnObject(
+    name: string,
+    modelPath: string,
+    position: { x: number; y: number; z: number }
+  ): Promise<void> {
     if (!this.simulationState.isRunning) {
       throw new Error('Simulation not running');
     }
-    
+
     // Read model file
     const modelContent = await fs.readFile(modelPath, 'utf-8');
-    
-    await this.ros2Bridge!.callService(
-      '/spawn_entity',
-      'gazebo_msgs/SpawnEntity',
-      {
-        name,
-        xml: modelContent,
-        initial_pose: {
-          position,
-          orientation: { x: 0, y: 0, z: 0, w: 1 },
-        },
-        reference_frame: 'world',
-      }
-    );
-    
+
+    await this.ros2Bridge!.callService('/spawn_entity', 'gazebo_msgs/SpawnEntity', {
+      name,
+      xml: modelContent,
+      initial_pose: {
+        position,
+        orientation: { x: 0, y: 0, z: 0, w: 1 },
+      },
+      reference_frame: 'world',
+    });
+
     this.simulationState.modelCount++;
     logger.info(`[SimulationService] Spawned object: ${name}`);
   }
@@ -434,13 +430,9 @@ export class SimulationService extends Service {
     if (!this.simulationState.isRunning) {
       throw new Error('Simulation not running');
     }
-    
-    await this.ros2Bridge!.callService(
-      '/delete_entity',
-      'gazebo_msgs/DeleteEntity',
-      { name }
-    );
-    
+
+    await this.ros2Bridge!.callService('/delete_entity', 'gazebo_msgs/DeleteEntity', { name });
+
     this.simulationState.modelCount--;
     logger.info(`[SimulationService] Deleted object: ${name}`);
   }
@@ -461,13 +453,13 @@ export class SimulationService extends Service {
 
   async stop(): Promise<void> {
     logger.info('[SimulationService] Stopping service');
-    
+
     // Stop simulation if running
     if (this.simulationState.isRunning) {
       await this.stopSimulation();
     }
-    
+
     // Clear ROS 2 bridge
     this.ros2Bridge = null;
   }
-} 
+}

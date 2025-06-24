@@ -190,9 +190,9 @@ export interface IIdentityManager {
    * Link platform identity to entity
    */
   linkPlatformIdentity(
-    entityId: UUID, 
-    platform: string, 
-    platformId: string, 
+    entityId: UUID,
+    platform: string,
+    platformId: string,
     verified: boolean,
     metadata?: Record<string, any>
   ): Promise<void>;

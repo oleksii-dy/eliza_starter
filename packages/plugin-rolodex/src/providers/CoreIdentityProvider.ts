@@ -63,7 +63,6 @@ export class CoreIdentityProvider implements IIdentityManager {
 
       // Convert to core format
       return {
-        confidence: 1.0,
         entityId: bestMatch.entityId,
         confidence: bestMatch.confidence || 0.8,
         reason,
@@ -109,14 +108,14 @@ export class CoreIdentityProvider implements IIdentityManager {
       const platformIdentityIds: Record<string, any> = {};
       Object.entries(entity.platforms || {}).forEach(([platform, data]) => {
         if (typeof data === 'string') {
-          platformIdentities[platform] = {
+          platformIdentityIds[platform] = {
             platformId: data,
             verified: false,
             metadata: {},
             linkedAt: entity.createdAt,
           };
         } else if (typeof data === 'object' && data !== null) {
-          platformIdentities[platform] = {
+          platformIdentityIds[platform] = {
             platformId: (data as any).id || (data as any).username || platform,
             verified: (data as any).verified || false,
             metadata: data,
@@ -219,7 +218,6 @@ export class CoreIdentityProvider implements IIdentityManager {
       }
 
       return {
-        confidence: 1.0,
         verified: verificationResult.verified,
         confidence: verificationResult.confidence,
         reason: verificationResult.reason,
@@ -323,7 +321,7 @@ export class CoreIdentityProvider implements IIdentityManager {
 
         // Check if this entity has the specific platform identity
         const platformData = entity.platforms?.[platform];
-        if (!platformData) continue;
+        if (!platformData) {continue;}
 
         const entityPlatformId =
           typeof platformData === 'string'
@@ -539,11 +537,11 @@ export class CoreIdentityProvider implements IIdentityManager {
 
       // Build search query from identity criteria
       let searchText = '';
-      if (query.name) searchText += query.name + ' ';
+      if (query.name) {searchText += `${query.name} `;}
       if (query.platform && query.platformId) {
         searchText += `${query.platform} ${query.platformId} `;
       }
-      if (query.alias) searchText += query.alias + ' ';
+      if (query.alias) {searchText += `${query.alias} `;}
 
       const searchResults = await this.entityGraphService.searchEntities(searchText.trim(), {
         type: query.entityType,
@@ -822,7 +820,7 @@ export class CoreIdentityProvider implements IIdentityManager {
   async getIdentityLinks(entityId: UUID): Promise<any[]> {
     // This functionality is handled by getIdentityProfile
     const profile = await this.getIdentityProfile(entityId);
-    if (!profile) return [];
+    if (!profile) {return [];}
 
     return Object.entries(profile.platformIdentities || {}).map(
       ([platform, data]: [string, any]) => ({

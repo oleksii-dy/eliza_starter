@@ -1,8 +1,8 @@
-import type { IAgentRuntime, Role, UUID, World } from '@elizaos/core';
+import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { vi } from 'vitest';
 
 export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime {
-  const registeredServices = new Map<string, any>();
+  const registereds = new Map<string, any>();
   const worlds = new Map<string, any>();
   const components = new Map<string, any[]>();
   const settings = new Map<string, any>([
@@ -81,26 +81,26 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
         return false;
       }),
     },
-    getService: vi.fn((type: string) => registeredServices.get(type) || null),
-    registerService: vi.fn(async (ServiceClass: any) => {
-      const identifier = ServiceClass.serviceName || ServiceClass.serviceType;
+    get: vi.fn((type: string) => registereds.get(type) || null),
+    register: vi.fn(async (Class: any) => {
+      const identifier = Class.serviceName || Class.serviceType;
       let instance;
 
-      if (identifier === 'SECRETS' && ServiceClass.start) {
+      if (identifier === 'SECRETS' && Class.start) {
         // For EnhancedSecretManager, use the static start method
-        instance = await ServiceClass.start(runtime);
-      } else if (identifier === 'SECRET_FORMS' && ServiceClass.prototype.initialize) {
-        // For SecretFormService, create instance and initialize it
-        instance = new ServiceClass(runtime);
+        instance = await Class.start(runtime);
+      } else if (identifier === 'SECRET_FORMS' && Class.prototype.initialize) {
+        // For SecretForm create instance and initialize it
+        instance = new Class(runtime);
         if (instance.initialize) {
           await instance.initialize();
         }
       } else {
         // For other services, just create instance
-        instance = new ServiceClass(runtime);
+        instance = new Class(runtime);
       }
 
-      registeredServices.set(identifier, instance);
+      registereds.set(identifier, instance);
       return Promise.resolve();
     }) as any,
     // Add getComponents and other methods to runtime directly (not just db)

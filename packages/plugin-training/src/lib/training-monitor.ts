@@ -45,7 +45,7 @@ export class TrainingMonitor {
       onProgress,
       onComplete,
       onError,
-      verbose = true
+      verbose = true,
     } = options;
 
     if (this.isMonitoring) {
@@ -54,7 +54,7 @@ export class TrainingMonitor {
 
     this.isMonitoring = true;
     let lastStatus = '';
-    let startTime = Date.now();
+    const startTime = Date.now();
 
     if (verbose) {
       elizaLogger.info(`🔍 Starting live monitoring for job ${jobId}`);
@@ -65,7 +65,7 @@ export class TrainingMonitor {
     const poll = async () => {
       try {
         const status = await this.getJobProgress(jobId);
-        
+
         // Calculate elapsed time
         const elapsed = Math.floor((Date.now() - startTime) / 1000);
         const elapsedFormatted = this.formatDuration(elapsed);
@@ -84,7 +84,7 @@ export class TrainingMonitor {
         // Check if complete
         if (this.isJobComplete(status.status)) {
           this.stopMonitoring();
-          
+
           if (verbose) {
             elizaLogger.info('\n🎉 Training completed!');
             this.displayFinalSummary(status, elapsedFormatted);
@@ -99,9 +99,9 @@ export class TrainingMonitor {
         // Check if failed
         if (this.isJobFailed(status.status)) {
           this.stopMonitoring();
-          
+
           const error = new Error(`Training failed with status: ${status.status}`);
-          
+
           if (verbose) {
             elizaLogger.info(`\n❌ Training failed: ${status.status}`);
           }
@@ -109,12 +109,12 @@ export class TrainingMonitor {
           if (onError) {
             onError(error);
           }
-          return;
         }
-
       } catch (error) {
         if (verbose) {
-          elizaLogger.error(`❌ Error checking status: ${error instanceof Error ? error.message : String(error)}`);
+          elizaLogger.error(
+            `❌ Error checking status: ${error instanceof Error ? error.message : String(error)}`
+          );
         }
 
         if (onError) {
@@ -155,9 +155,9 @@ export class TrainingMonitor {
         `TOGETHER_API_KEY="${this.client['apiKey']}" together fine-tuning retrieve ${jobId}`,
         { timeout: 10000 }
       );
-      
+
       const data = JSON.parse(result.stdout);
-      
+
       // Calculate progress percentage
       let progress = 0;
       if (data.total_steps > 0) {
@@ -181,7 +181,9 @@ export class TrainingMonitor {
         updated_at: data.updated_at,
       };
     } catch (error) {
-      throw new Error(`Failed to get job progress: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get job progress: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -191,24 +193,26 @@ export class TrainingMonitor {
   private displayProgress(status: TrainingProgress, elapsed: string): void {
     const timestamp = new Date().toLocaleTimeString();
     const statusEmoji = this.getStatusEmoji(status.status);
-    
+
     elizaLogger.info(`[${timestamp}] ${statusEmoji} Status: ${status.status.toUpperCase()}`);
-    
+
     if (status.total_steps > 0) {
       const progressBar = this.createProgressBar(status.progress);
-      elizaLogger.info(`📊 Progress: ${progressBar} ${status.progress}% (${status.steps_completed}/${status.total_steps} steps)`);
+      elizaLogger.info(
+        `📊 Progress: ${progressBar} ${status.progress}% (${status.steps_completed}/${status.total_steps} steps)`
+      );
     }
-    
+
     if (status.epochs_completed > 0) {
       elizaLogger.info(`📚 Epochs: ${status.epochs_completed}/${status.total_epochs}`);
     }
-    
+
     elizaLogger.info(`⏱️  Elapsed: ${elapsed}`);
-    
+
     if (status.output_name) {
       elizaLogger.info(`🎯 Output: ${status.output_name}`);
     }
-    
+
     elizaLogger.info('─'.repeat(80));
   }
 
@@ -246,12 +250,18 @@ export class TrainingMonitor {
    */
   private getStatusEmoji(status: string): string {
     switch (status.toLowerCase()) {
-      case 'queued': return '⏳';
-      case 'running': return '🚀';
-      case 'completed': return '✅';
-      case 'failed': return '❌';
-      case 'cancelled': return '⚠️';
-      default: return '📋';
+      case 'queued':
+        return '⏳';
+      case 'running':
+        return '🚀';
+      case 'completed':
+        return '✅';
+      case 'failed':
+        return '❌';
+      case 'cancelled':
+        return '⚠️';
+      default:
+        return '📋';
     }
   }
 

@@ -207,11 +207,11 @@ export const executeSwap: Action = {
       // Show quote to user
       callback?.({
         text:
-          `Quote received:\n` +
+          'Quote received:\n' +
           `• Rate: 1 ${inputToken} = ${priceImpact.rate.toFixed(6)} ${outputToken}\n` +
           `• Expected output: ${priceImpact.minimumReceived.toFixed(6)} ${outputToken}\n` +
           `• Price impact: ${priceImpact.priceImpactPct.toFixed(2)}%\n` +
-          `Executing swap...`,
+          'Executing swap...',
       });
 
       // Get wallet public key from getWalletKey utility
@@ -227,7 +227,7 @@ export const executeSwap: Action = {
 
       callback?.({
         text:
-          `✅ Swap completed successfully!\n` +
+          '✅ Swap completed successfully!\n' +
           `Transaction: ${txSignature}\n` +
           `View on Solscan: https://solscan.io/tx/${txSignature}`,
         content: {

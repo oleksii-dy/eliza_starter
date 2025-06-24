@@ -1,7 +1,8 @@
-import { System } from '../hyperfy/core/systems/System.js';
+import { System } from '@elizaos/hyperfy';
 import { logger } from '@elizaos/core';
 import * as THREE from 'three';
-import { Vector3Enhanced } from '../hyperfy/core/extras/Vector3Enhanced.js';
+import { Vector3Enhanced } from '@elizaos/hyperfy';
+import type { HyperfyWorld, HyperfyPlayer, HyperfyEntity } from '../types/hyperfy.js';
 
 const FORWARD = new THREE.Vector3(0, 0, -1);
 const v1 = new THREE.Vector3();
@@ -17,6 +18,19 @@ const NAVIGATION_STOP_DISTANCE = 0.5; // meters
 const FOLLOW_STOP_DISTANCE = 2.5; // meters
 const RANDOM_WALK_DEFAULT_INTERVAL = 5000; // ms <-- SET TO 5 SECONDS
 const RANDOM_WALK_DEFAULT_MAX_DISTANCE = 7; // meters
+
+// Extended player type with additional properties
+interface ExtendedPlayer extends HyperfyPlayer {
+  base: {
+    position: THREE.Vector3;
+    quaternion: THREE.Quaternion;
+    scale: THREE.Vector3;
+  };
+  cam: {
+    rotation: THREE.Euler;
+  };
+  teleport: (options: { position: THREE.Vector3; rotationY: number }) => void;
+}
 
 function createButtonState() {
   return {
@@ -156,7 +170,11 @@ export class AgentControls extends System {
   // This is important for detecting single presses/releases
   postLateUpdate() {
     for (const key in this) {
-      if (this.hasOwnProperty(key) && this[key] && (this[key] as any).$button) {
+      if (
+        Object.prototype.hasOwnProperty.call(this, key) &&
+        this[key] &&
+        (this[key] as any).$button
+      ) {
         (this[key] as any).pressed = false;
         (this[key] as any).released = false;
       }
@@ -202,7 +220,13 @@ export class AgentControls extends System {
           break;
         }
 
-        const pos = this.world.entities.player.base.position;
+        const player = this.world.entities.player as unknown as ExtendedPlayer;
+        if (!player?.base) {
+          logger.warn('[Controls] Player base not available');
+          break;
+        }
+
+        const pos = player.base.position;
         const angle = Math.random() * Math.PI * 2;
         const radius = Math.random() * maxDistance;
         const targetX = pos.x + Math.cos(angle) * radius;
@@ -246,8 +270,13 @@ export class AgentControls extends System {
     v2.set(0, 0, 0);
     await this._navigateTowards(
       () => {
-        const target = this.world.entities.items.get(entityId);
-        if (!target) return v2;
+        const target = this.world.entities.items.get(entityId) as unknown as HyperfyEntity & {
+          base?: { position: THREE.Vector3 };
+          root?: { position: THREE.Vector3 };
+        };
+        if (!target) {
+          return v2;
+        }
         return target.base?.position?.clone() || target.root?.position?.clone() || null;
       },
       stopDistance,
@@ -274,15 +303,20 @@ export class AgentControls extends System {
   }
 
   private async _navigateTowards(
-    getTargetPosition: () => THREE.Vector3,
+    getTargetPosition: () => THREE.Vector3 | null,
     stopDistance: number,
     token: ControlsToken,
     allowSprint: boolean = true
   ): Promise<void> {
-    const player = this.world.entities.player;
+    const player = this.world.entities.player as unknown as ExtendedPlayer | null;
+    if (!player) {
+      logger.warn('[Controls] Player not available for navigation');
+      return;
+    }
+
     const tickDelay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-    let previousPosition = player.base.position.clone();
+    const previousPosition = player.base.position.clone();
     let noProgressTicks = 0;
     const STUCK_THRESHOLD = 0.05;
     const MAX_NO_PROGRESS_TICKS = 10;
@@ -291,11 +325,13 @@ export class AgentControls extends System {
     const SPRINT_DISTANCE_THRESHOLD = 15.0;
 
     while (!token.aborted && this._currentWalkToken === token) {
-      if (!this._validatePlayerState('_navigateTowards')) break;
+      if (!this._validatePlayerState('_navigateTowards')) {
+        break;
+      }
 
       const targetPos = getTargetPosition();
       if (!targetPos) {
-        logger.warn(`[Controls] Target position is null during navigation.`);
+        logger.warn('[Controls] Target position is null during navigation.');
         this.stopNavigation('target null');
         break;
       }
@@ -375,7 +411,7 @@ export class AgentControls extends System {
     direction: 'front' | 'back' | 'left' | 'right',
     duration: number = 500
   ): Promise<void> {
-    const player = this.world?.entities?.player;
+    const player = this.world?.entities?.player as unknown as ExtendedPlayer | null;
     if (!player?.base) {
       logger.warn('[Controls rotateTo] Player entity not ready.');
       return;
@@ -488,86 +524,61 @@ export class AgentControls extends System {
     return this._isRandomWalking;
   }
 
-  /** Helper to check if player and base position/quaternion are valid */
   private _validatePlayerState(caller: string): boolean {
-    const player = this.world?.entities?.player;
+    const player = this.world?.entities?.player as unknown as ExtendedPlayer | null;
     if (!player?.base) {
-      logger.error(`[Controls ${caller}] Cannot proceed: Player entity or base not found.`);
+      logger.warn(`[Controls ${caller}] Player not available`);
+      this.stopNavigation('player not available');
       return false;
     }
-    // --- Enhanced Checks ---
-    const pos = player.base.position;
-    const quat = player.base.quaternion;
-
-    if (!(pos instanceof THREE.Vector3 || pos instanceof Vector3Enhanced)) {
-      logger.error(
-        `[Controls ${caller}] Invalid state: player.base.position must be a THREE.Vector3 or Vector3Enhanced.`
-      );
-      return false;
-    }
-    if (isNaN(pos.x) || isNaN(pos.y) || isNaN(pos.z)) {
-      logger.error(`[Controls ${caller}] Invalid state: player.base.position contains NaN values.`);
-      return false;
-    }
-
-    if (!(quat instanceof THREE.Quaternion)) {
-      logger.error(
-        `[Controls ${caller}] Invalid state: player.base.quaternion is not a THREE.Quaternion.`
-      );
-      return false;
-    }
-    if (isNaN(quat.x) || isNaN(quat.y) || isNaN(quat.z) || isNaN(quat.w)) {
-      logger.error(
-        `[Controls ${caller}] Invalid state: player.base.quaternion contains NaN values.`
-      );
-      return false;
-    }
-    // Check if quaternion is normalized (length approx 1)
-    const quatLengthSq = quat.lengthSq();
-    if (Math.abs(quatLengthSq - 1.0) > 0.01) {
-      // Allow small tolerance
-      logger.warn(
-        `[Controls ${caller}] Player quaternion is not normalized (lengthSq: ${quatLengthSq.toFixed(4)}). Attempting normalization.`
-      );
-      // Attempt to normalize in place if possible, or log warning
-      quat.normalize();
-    }
-
-    logger.debug(`[Controls ${caller}] Player state validated successfully.`);
-    // ---------------------
     return true;
   }
 
   createCamera(self) {
     function bindRotations(quaternion, euler) {
-      euler._onChange(() => {
-        quaternion.setFromEuler(euler, false);
+      quaternion._x = euler._x = 0;
+      quaternion._y = euler._y = 0;
+      quaternion._z = euler._z = 0;
+      quaternion._w = euler._w = 1;
+      const quat = { _x: 0, _y: 0, _z: 0, _w: 1 };
+      Object.defineProperty(quaternion, 'x', {
+        get: () => quat._x,
+        set(n) {
+          quat._x = n;
+          quaternion._onChangeCallback();
+        },
       });
-      quaternion._onChange(() => {
-        euler.setFromQuaternion(quaternion, undefined, false);
+      Object.defineProperty(quaternion, 'y', {
+        get: () => quat._y,
+        set(n) {
+          quat._y = n;
+          quaternion._onChangeCallback();
+        },
+      });
+      Object.defineProperty(quaternion, 'z', {
+        get: () => quat._z,
+        set(n) {
+          quat._z = n;
+          quaternion._onChangeCallback();
+        },
+      });
+      Object.defineProperty(quaternion, 'w', {
+        get: () => quat._w,
+        set(n) {
+          quat._w = n;
+          quaternion._onChangeCallback();
+        },
       });
     }
-    const world = self.world;
-    const position = new THREE.Vector3().copy(world.rig?.position || new THREE.Vector3());
-    const quaternion = new THREE.Quaternion().copy(world.rig?.quaternion || new THREE.Quaternion());
-    const rotation = new THREE.Euler(0, 0, 0, 'YXZ').copy(world.rig?.rotation || new THREE.Euler());
-    bindRotations(quaternion, rotation); // You already import this
-    const zoom = world.camera?.position?.z ?? 10;
-
-    return {
-      $camera: true,
-      position,
-      quaternion,
-      rotation,
-      zoom,
-      write: false,
-    };
+    const camera = new THREE.PerspectiveCamera();
+    bindRotations(camera.quaternion, camera.rotation);
+    return camera;
   }
 
-  // Dummy methods
   bind(options: any) {
-    return this;
+    // Implementation if needed
   }
+
   release() {}
   setActions() {}
 }

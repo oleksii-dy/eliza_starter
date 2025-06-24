@@ -13,7 +13,7 @@
  * - Error handling with real database errors
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { AgentRuntime, elizaLogger } from '@elizaos/core';
 import type { Character, IAgentRuntime, UUID } from '@elizaos/core';
 import { TrainingDatabaseManager } from '../../database/TrainingDatabaseManager.js';
@@ -488,7 +488,7 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
     it('should create training session successfully', async () => {
       const mockId = 'session-id-123';
       const originalCrypto = global.crypto;
-      global.crypto = { randomUUID: vi.fn().mockReturnValue(mockId) } as any;
+      global.crypto = { randomUUID: mock().mockReturnValue(mockId) } as any;
 
       const sessionData = {
         agent_id: TEST_CONSTANTS.AGENT_ID,

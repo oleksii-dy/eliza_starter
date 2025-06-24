@@ -40,11 +40,10 @@
     "tsup.config.ts"
   ],
   "dependencies": {
-    "@elizaos/core": "^1.0.0",
+    "@elizaos/core": "workspace:*",
     "@octokit/rest": "^20.1.1",
     "@octokit/types": "^13.5.0",
     "deprecation": "^2.3.1",
-    "ngrok": "^5.0.0-beta.2",
     "tailwindcss": "^4.1.10",
     "vite": "^6.3.5",
     "zod": "^3.25.67"
@@ -52,7 +51,6 @@
   "peerDependencies": {},
   "devDependencies": {
     "@cypress/react": "^9.0.1",
-    "@elizaos/cli": "^1.0.0",
     "@testing-library/cypress": "^10.0.3",
     "@types/node": "^20.0.0",
     "axios": "^1.6.5",
@@ -61,27 +59,24 @@
     "prettier": "3.5.3",
     "tsup": "8.5.0",
     "tsx": "^4.19.2",
-    "typescript": "5.8.2",
-    "vitest": "3.1.4"
+    "typescript": "5.8.3"
   },
   "scripts": {
     "start": "elizaos start",
     "dev": "tsup --watch",
     "build": "tsup",
     "lint": "prettier --write ./src",
-    "test": "elizaos test",
-    "test:watch": "vitest",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
     "test:e2e": "./scripts/run-e2e-tests.sh",
     "test:e2e-manual": "node scripts/e2e-webhook-test.js",
     "publish": "elizaos publish",
     "format": "prettier --write ./src",
     "format:check": "prettier --check ./src",
     "analyze-registry": "tsx scripts/analyze-plugin-registry.ts",
-    "analyze-registry-v2": "tsx scripts/analyze-plugin-registry-v2.ts",
     "enhance-docs": "tsx scripts/enhance-plugin-docs.ts",
     "fix-dependencies": "tsx scripts/fix-plugin-dependencies.ts",
-    "test-scripts": "tsx scripts/test-scripts.ts",
-    "test-scripts-v2": "tsx scripts/test-scripts-v2.ts"
+    "test-scripts": "tsx scripts/test-scripts.ts"
   },
   "publishConfig": {
     "access": "public"

@@ -1,8 +1,4 @@
-import {
-  type IAgentRuntime,
-  type UUID,
-  elizaLogger,
-} from '@elizaos/core';
+import { type IAgentRuntime, type UUID, elizaLogger } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import {
   type TrainingDataPoint,
@@ -33,10 +29,10 @@ export class AutomatedDataCollector {
 
   async initialize(): Promise<void> {
     elizaLogger.info('Initializing Automated Data Collector');
-    
+
     // Set up event listeners for successful code generations
     this.setupEventListeners();
-    
+
     elizaLogger.info('Automated Data Collector initialized');
   }
 
@@ -52,7 +48,9 @@ export class AutomatedDataCollector {
     elizaLogger.info('Started automated data collection');
 
     if (config?.autoSave) {
-      this.setupAutoSave(config.saveInterval || this.config.getAutomationConfig().dataCollection.saveInterval);
+      this.setupAutoSave(
+        config.saveInterval || this.config.getAutomationConfig().dataCollection.saveInterval
+      );
     }
   }
 
@@ -68,7 +66,9 @@ export class AutomatedDataCollector {
    * Handle successful plugin creation
    */
   async handlePluginSuccess(event: PluginCreationEvent): Promise<void> {
-    if (!this.isCollecting) return;
+    if (!this.isCollecting) {
+      return;
+    }
 
     try {
       elizaLogger.info(`Recording successful plugin creation: ${event.outcome.pluginName}`);
@@ -132,7 +132,6 @@ export class AutomatedDataCollector {
 
       this.collectedData.push(dataPoint);
       elizaLogger.info(`Collected training data point: ${dataPoint.id}`);
-
     } catch (error) {
       elizaLogger.error('Error handling plugin success:', error);
     }
@@ -142,7 +141,9 @@ export class AutomatedDataCollector {
    * Handle successful MCP creation
    */
   async handleMCPSuccess(event: MCPCreationEvent): Promise<void> {
-    if (!this.isCollecting) return;
+    if (!this.isCollecting) {
+      return;
+    }
 
     try {
       elizaLogger.info(`Recording successful MCP creation: ${event.outcome.mcpName}`);
@@ -204,7 +205,6 @@ export class AutomatedDataCollector {
 
       this.collectedData.push(dataPoint);
       elizaLogger.info(`Collected training data point: ${dataPoint.id}`);
-
     } catch (error) {
       elizaLogger.error('Error handling MCP success:', error);
     }
@@ -232,7 +232,7 @@ export class AutomatedDataCollector {
     // Filter by quality if specified
     let filteredData = this.collectedData;
     if (options?.minQuality) {
-      filteredData = filteredData.filter(dp => (dp.quality || 0) >= options.minQuality!);
+      filteredData = filteredData.filter((dp) => (dp.quality || 0) >= options.minQuality!);
     }
 
     // Limit data points if specified
@@ -241,7 +241,9 @@ export class AutomatedDataCollector {
     }
 
     // Convert to JSONL format
-    const jsonlData = filteredData.map(dataPoint => this.convertToJSONL(dataPoint, options?.includeThinking));
+    const jsonlData = filteredData.map((dataPoint) =>
+      this.convertToJSONL(dataPoint, options?.includeThinking)
+    );
 
     // Split into train/validation/test using configuration
     const splitRatio = options?.splitRatio || this.config.getDataConfig().processing.splitRatio;
@@ -288,7 +290,9 @@ export class AutomatedDataCollector {
       isCollecting: this.isCollecting,
       typeDistribution,
       qualityDistribution,
-      averageQuality: this.collectedData.reduce((sum, dp) => sum + (dp.quality || 0), 0) / this.collectedData.length,
+      averageQuality:
+        this.collectedData.reduce((sum, dp) => sum + (dp.quality || 0), 0) /
+        this.collectedData.length,
       collectionStarted: this.isCollecting ? new Date() : undefined,
       lastDataPoint: this.collectedData[this.collectedData.length - 1]?.createdAt,
     };
@@ -304,7 +308,7 @@ export class AutomatedDataCollector {
     if (format === 'json') {
       await this.saveJSON(this.collectedData, filename);
     } else {
-      const jsonlData = this.collectedData.map(dp => this.convertToJSONL(dp, true));
+      const jsonlData = this.collectedData.map((dp) => this.convertToJSONL(dp, true));
       await this.saveJSONL(jsonlData, filename);
     }
 
@@ -315,7 +319,7 @@ export class AutomatedDataCollector {
   private setupEventListeners(): void {
     // Register event listeners for code generation events
     // This would integrate with the autocoder plugin and MCP creation systems
-    
+
     elizaLogger.info('Event listeners set up for automated data collection');
   }
 
@@ -336,22 +340,30 @@ export class AutomatedDataCollector {
     let quality = 0.5; // Base quality
 
     // Increase quality based on success indicators
-    if (event.outcome.success) quality += 0.3;
-    if (event.outcome.files && event.outcome.files.length > 0) quality += 0.1;
-    if (event.executionTime && event.executionTime < 30000) quality += 0.1; // Fast execution
+    if (event.outcome.success) {
+      quality += 0.3;
+    }
+    if (event.outcome.files && event.outcome.files.length > 0) {
+      quality += 0.1;
+    }
+    if (event.executionTime && event.executionTime < 30000) {
+      quality += 0.1;
+    } // Fast execution
 
     // Adjust based on complexity
     const fileCount = event.outcome.files?.length || 0;
-    if (fileCount > 3) quality += 0.1; // More comprehensive implementation
+    if (fileCount > 3) {
+      quality += 0.1;
+    } // More comprehensive implementation
 
     return Math.min(quality, 1.0);
   }
 
   private formatPluginResponse(event: PluginCreationEvent, success: CodeGenerationSuccess): string {
     let response = `I'll create a ${event.outcome.pluginType} plugin called "${event.outcome.pluginName}".\n\n`;
-    
+
     if (success.files && success.files.length > 0) {
-      success.files.forEach(file => {
+      success.files.forEach((file) => {
         response += `**${file.path}**\n\`\`\`typescript\n${file.content}\n\`\`\`\n\n`;
       });
     }
@@ -363,9 +375,9 @@ export class AutomatedDataCollector {
 
   private formatMCPResponse(event: MCPCreationEvent, success: CodeGenerationSuccess): string {
     let response = `I'll create an MCP server called "${event.outcome.mcpName}".\n\n`;
-    
+
     if (success.files && success.files.length > 0) {
-      success.files.forEach(file => {
+      success.files.forEach((file) => {
         response += `**${file.path}**\n\`\`\`typescript\n${file.content}\n\`\`\`\n\n`;
       });
     }
@@ -380,9 +392,16 @@ export class AutomatedDataCollector {
       executionTime: event.executionTime,
       tokensUsed: event.tokensUsed,
       fileCount: event.outcome.files?.length || 0,
-      codeLines: event.outcome.files?.reduce((sum: number, file: any) => sum + file.content.split('\n').length, 0) || 0,
+      codeLines:
+        event.outcome.files?.reduce(
+          (sum: number, file: any) => sum + file.content.split('\n').length,
+          0
+        ) || 0,
       hasTests: event.outcome.files?.some((file: any) => file.path.includes('test')) || false,
-      hasDocs: event.outcome.files?.some((file: any) => file.path.includes('README') || file.path.includes('.md')) || false,
+      hasDocs:
+        event.outcome.files?.some(
+          (file: any) => file.path.includes('README') || file.path.includes('.md')
+        ) || false,
     };
   }
 
@@ -390,25 +409,26 @@ export class AutomatedDataCollector {
     const messages: any[] = [
       {
         role: 'system',
-        content: 'You are an expert ElizaOS developer who creates high-quality plugins and MCP servers. You think through problems step by step and provide complete, working implementations.'
+        content:
+          'You are an expert ElizaOS developer who creates high-quality plugins and MCP servers. You think through problems step by step and provide complete, working implementations.',
       },
       {
         role: 'user',
-        content: dataPoint.request
-      }
+        content: dataPoint.request,
+      },
     ];
 
     let assistantContent = '';
-    
+
     if (includeThinking && dataPoint.thinking) {
-      assistantContent += dataPoint.thinking + '\n\n';
+      assistantContent += `${dataPoint.thinking}\n\n`;
     }
-    
+
     assistantContent += dataPoint.response;
 
     messages.push({
       role: 'assistant',
-      content: assistantContent
+      content: assistantContent,
     });
 
     return {
@@ -418,20 +438,23 @@ export class AutomatedDataCollector {
         subtype: dataPoint.subtype,
         quality: dataPoint.quality,
         created_at: dataPoint.createdAt?.toISOString() || new Date().toISOString(),
-      }
+      },
     };
   }
 
-  private splitDataset(data: any[] splitRatio: { train: number; validation: number; test: number }): {
+  private splitDataset(
+    data: any[],
+    splitRatio: { train: number; validation: number; test: number }
+  ): {
     train: any[];
     validation: any[];
     test: any[];
   } {
     const shuffled = [...data].sort(() => Math.random() - 0.5);
-    
+
     const trainSize = Math.floor(shuffled.length * splitRatio.train);
     const validationSize = Math.floor(shuffled.length * splitRatio.validation);
-    
+
     return {
       train: shuffled.slice(0, trainSize),
       validation: shuffled.slice(trainSize, trainSize + validationSize),
@@ -441,7 +464,7 @@ export class AutomatedDataCollector {
 
   private getTypeDistribution(data: TrainingDataPoint[]): Record<string, number> {
     const distribution: Record<string, number> = {};
-    data.forEach(dp => {
+    data.forEach((dp) => {
       const key = `${dp.type}-${dp.subtype}`;
       distribution[key] = (distribution[key] || 0) + 1;
     });
@@ -455,7 +478,7 @@ export class AutomatedDataCollector {
       'low (<0.5)': 0,
     };
 
-    data.forEach(dp => {
+    data.forEach((dp) => {
       const quality = dp.quality || 0;
       if (quality >= 0.8) {
         distribution['high (0.8+)']++;
@@ -474,9 +497,9 @@ export class AutomatedDataCollector {
     await fs.writeFile(filename, JSON.stringify(data, null, 2));
   }
 
-  private async saveJSONL(data: any[] filename: string): Promise<void> {
+  private async saveJSONL(data: any[], filename: string): Promise<void> {
     const fs = await import('fs/promises');
-    const content = data.map(item => JSON.stringify(item)).join('\n');
+    const content = data.map((item) => JSON.stringify(item)).join('\n');
     await fs.writeFile(filename, content);
   }
 }

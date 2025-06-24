@@ -29,6 +29,6 @@ declare module 'pdf-parse' {
   }
 
   function pdf(dataBuffer: Buffer, options?: PDFOptions): Promise<PDFData>;
-  
+
   export = pdf;
-} 
+}

@@ -1,6 +1,7 @@
 import {
   type Action,
   type ActionExample,
+  type ActionResult,
   composePrompt,
   type HandlerCallback,
   type IAgentRuntime,
@@ -9,7 +10,6 @@ import {
   ModelType,
   parseKeyValueXml,
   type State,
-  type UUID,
   formatMessages,
 } from '@elizaos/core';
 import { createGoalDataService } from '../services/goalDataService.js';
@@ -137,7 +137,8 @@ ${pendingTask.recurring ? `Recurring: ${pendingTask.recurring}` : ''}
 export const confirmGoalAction: Action = {
   name: 'CONFIRM_GOAL',
   similes: ['CONFIRM_TASK', 'APPROVE_GOAL', 'APPROVE_TASK', 'GOAL_CONFIRM'],
-  description: 'Confirms or cancels a pending goal creation after user review.',
+  description:
+    'Confirms or cancels a pending goal creation after user review. Can be chained with LIST_GOALS to see updated list or UPDATE_GOAL to modify the confirmed goal.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     // This action is only valid if there's a pending goal in the state
@@ -151,7 +152,7 @@ export const confirmGoalAction: Action = {
     state: State | undefined,
     options: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     try {
       if (!state) {
         if (callback) {
@@ -161,7 +162,17 @@ export const confirmGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          text: 'Unable to process confirmation without state context.',
+          data: {
+            actionName: 'CONFIRM_GOAL',
+            error: 'missing_state_context'
+          },
+          values: {
+            success: false,
+            errorType: 'missing_state_context'
+          }
+        };
       }
 
       const pendingGoal = state.data?.pendingGoal as PendingGoalData | undefined;
@@ -173,7 +184,17 @@ export const confirmGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          text: "I don't have a pending task to confirm. Would you like to create a new task?",
+          data: {
+            actionName: 'CONFIRM_GOAL',
+            error: 'no_pending_goal'
+          },
+          values: {
+            success: false,
+            errorType: 'no_pending_goal'
+          }
+        };
       }
 
       if (!message.roomId || !message.entityId) {
@@ -184,7 +205,17 @@ export const confirmGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          text: 'I cannot confirm a goal without a room and entity context.',
+          data: {
+            actionName: 'CONFIRM_GOAL',
+            error: 'missing_context'
+          },
+          values: {
+            success: false,
+            errorType: 'missing_context'
+          }
+        };
       }
 
       // Extract confirmation intent
@@ -199,7 +230,19 @@ export const confirmGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          text: `I'm still waiting for your confirmation on the task "${pendingGoal.name}". Would you like me to create it?`,
+          data: {
+            actionName: 'CONFIRM_GOAL',
+            status: 'waiting_for_confirmation',
+            pendingGoalName: pendingGoal.name
+          },
+          values: {
+            success: false,
+            awaiting_confirmation: true,
+            goalName: pendingGoal.name
+          }
+        };
       }
 
       if (!confirmation.shouldProceed) {
@@ -214,7 +257,19 @@ export const confirmGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          text: "Okay, I've cancelled the task creation. Let me know if you'd like to create a different task.",
+          data: {
+            actionName: 'CONFIRM_GOAL',
+            status: 'cancelled',
+            cancelledGoalName: pendingGoal.name
+          },
+          values: {
+            success: true,
+            goalCancelled: true,
+            goalName: pendingGoal.name
+          }
+        };
       }
 
       // User confirmed - create the task
@@ -238,7 +293,19 @@ export const confirmGoalAction: Action = {
             source: message.content.source,
           });
         }
-        return;
+        return {
+          text: `It looks like you already have an active goal named "${pendingGoal.name}". I haven't added a duplicate.`,
+          data: {
+            actionName: 'CONFIRM_GOAL',
+            error: 'duplicate_goal',
+            duplicateGoalName: pendingGoal.name
+          },
+          values: {
+            success: false,
+            errorType: 'duplicate_goal',
+            goalName: pendingGoal.name
+          }
+        };
       }
 
       // Create the goal
@@ -292,41 +359,106 @@ export const confirmGoalAction: Action = {
           source: message.content.source,
         });
       }
+
+      return {
+        text: successMessage,
+        data: {
+          actionName: 'CONFIRM_GOAL',
+          status: 'success',
+          goalId: createdGoalId,
+          goalName: pendingGoal.name,
+          taskType: pendingGoal.taskType,
+          priority: pendingGoal.priority,
+          urgent: pendingGoal.urgent,
+          dueDate: pendingGoal.dueDate,
+          modifications: confirmation.modifications
+        },
+        values: {
+          success: true,
+          goalCreated: true,
+          goalId: createdGoalId,
+          goalName: pendingGoal.name
+        }
+      };
     } catch (error) {
       logger.error('Error in confirmGoal handler:', error);
+      const errorMessage = 'I encountered an error while confirming your goal. Please try again.';
       if (callback) {
         await callback({
-          text: 'I encountered an error while confirming your goal. Please try again.',
+          text: errorMessage,
           actions: ['CONFIRM_GOAL_ERROR'],
           source: message.content.source,
         });
       }
+      return {
+        text: errorMessage,
+        data: {
+          actionName: 'CONFIRM_GOAL',
+          error: 'execution_error',
+          errorDetails: error instanceof Error ? error.message : 'Unknown error'
+        },
+        values: {
+          success: false,
+          errorType: 'execution_error',
+          hasError: true
+        }
+      };
     }
   },
 
   examples: [
+    // Multi-action: Create goal preview, confirm, then list all goals to show complete workflow
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
+        content: {
+          text: 'Add a goal to finish my taxes by April 15 and show me all my goals after',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I'll create a one-off goal: 'Finish taxes' with Priority 2, Due April 15. After you confirm, I'll show you all your goals.",
+          thought: "The user wants to create a goal with confirmation and then see their complete goal list. I need to chain CREATE_GOAL, CONFIRM_GOAL, and LIST_GOALS to handle the full workflow from creation through confirmation to viewing the updated list.",
+          actions: ['CREATE_GOAL_PREVIEW'],
+        },
+      },
+      {
+        name: '{{user}}',
+        content: {
+          text: 'Yes, that looks good',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "✅ Created task: 'Finish taxes' (Priority 2, Due: 4/15/2024). Now showing all your goals.",
+          actions: ['CONFIRM_GOAL_SUCCESS', 'LIST_GOALS'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user}}',
         content: {
           text: 'Add a goal to finish my taxes by April 15',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: "I'll create a one-off goal: 'Finish taxes' with Priority 2, Due April 15.\n\nIs this correct?",
           actions: ['CREATE_GOAL_PREVIEW'],
         },
       },
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Yes, that looks good',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: "✅ Created task: 'Finish taxes' (Priority 2, Due: 4/15/2024)",
           actions: ['CONFIRM_GOAL_SUCCESS'],
@@ -335,26 +467,26 @@ export const confirmGoalAction: Action = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'I want to add a daily task to exercise',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: "I'll create a daily goal: 'Exercise'.\n\nIs this correct?",
           actions: ['CREATE_GOAL_PREVIEW'],
         },
       },
       {
-        name: '{{name1}}',
+        name: '{{user}}',
         content: {
           text: 'Actually, nevermind',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: "Okay, I've cancelled the task creation. Let me know if you'd like to create a different task.",
           actions: ['CONFIRM_GOAL_CANCELLED'],

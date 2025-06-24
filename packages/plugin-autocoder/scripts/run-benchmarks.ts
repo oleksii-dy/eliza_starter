@@ -132,19 +132,19 @@ function createMockRuntime(): IAgentRuntime {
       elizaLogger.info('Mock runtime initialized');
     },
     registerPlugin: async () => {},
-    registerAction: function (action: any) {
+    registerAction(action: any) {
       // Register actions in the runtime
       runtime.actions.push(action);
     },
-    registerProvider: function (provider: any) {
+    registerProvider(provider: any) {
       // Register providers in the runtime
       runtime.providers.push(provider);
     },
-    registerEvaluator: function (evaluator: any) {
+    registerEvaluator(evaluator: any) {
       // Register evaluators in the runtime
       runtime.evaluators.push(evaluator);
     },
-    registerService: function (service: any) {
+    registerService(service: any) {
       // Register services in the runtime
       const serviceName = service.constructor?.serviceName || service.name;
       runtime.services.set(serviceName, service);
@@ -194,7 +194,7 @@ async function runBenchmarks() {
     // Debug API key loading
     const anthropicKey = runtime.getSetting('ANTHROPIC_API_KEY');
     elizaLogger.info(
-      `API Key loaded: ${anthropicKey ? 'Yes (' + anthropicKey.substring(0, 10) + '...)' : 'No'}`
+      `API Key loaded: ${anthropicKey ? `Yes (${anthropicKey.substring(0, 10)}...)` : 'No'}`
     );
     elizaLogger.info(
       `Process env ANTHROPIC_API_KEY: ${process.env.ANTHROPIC_API_KEY ? 'Yes' : 'No'}`

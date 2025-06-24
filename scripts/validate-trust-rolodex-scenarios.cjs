@@ -2,7 +2,7 @@
 
 /**
  * Trust-Rolodex Integration Scenario Validator
- * 
+ *
  * This script validates the structure and logic of our integration scenarios
  * without requiring full system initialization.
  */
@@ -33,7 +33,7 @@ function validateScenarioStructure(scenarioPath) {
   try {
     const content = fs.readFileSync(scenarioPath, 'utf8');
     const fileName = path.basename(scenarioPath);
-    
+
     // Basic structure checks
     const checks = {
       hasDefaultExport: content.includes('export default'),
@@ -48,12 +48,12 @@ function validateScenarioStructure(scenarioPath) {
 
     // Count verification rules
     const verificationRules = (content.match(/\{\s*id:/g) || []).length;
-    
+
     // Extract scenario metadata
     const idMatch = content.match(/id:\s*['"`]([^'"`]+)['"`]/);
     const nameMatch = content.match(/name:\s*['"`]([^'"`]+)['"`]/);
     const categoryMatch = content.match(/category:\s*['"`]([^'"`]+)['"`]/);
-    
+
     const metadata = {
       id: idMatch ? idMatch[1] : 'Unknown',
       name: nameMatch ? nameMatch[1] : 'Unknown',
@@ -64,13 +64,13 @@ function validateScenarioStructure(scenarioPath) {
     // Determine overall validity
     const criticalChecks = [
       'hasDefaultExport',
-      'hasScenarioId', 
+      'hasScenarioId',
       'hasActors',
       'hasVerificationRules',
       'hasTrustIntegration',
       'hasRolodexIntegration'
     ];
-    
+
     const passedCritical = criticalChecks.every(check => checks[check]);
     const score = Object.values(checks).filter(Boolean).length / Object.keys(checks).length;
 
@@ -97,11 +97,11 @@ function analyzeIntegrationDepth(content) {
     // Trust system integration
     trustActions: [
       'RECORD_TRUST_INTERACTION',
-      'EVALUATE_TRUST', 
+      'EVALUATE_TRUST',
       'UPDATE_TRUST',
       'TRUST_DECISION'
     ],
-    
+
     // Rolodex system integration
     rolodexActions: [
       'TRACK_ENTITY',
@@ -109,7 +109,7 @@ function analyzeIntegrationDepth(content) {
       'UPDATE_ENTITY',
       'SEARCH_ENTITIES'
     ],
-    
+
     // Integration concepts
     integrationConcepts: [
       'trust score',
@@ -125,23 +125,23 @@ function analyzeIntegrationDepth(content) {
   };
 
   const depth = {
-    trustIntegration: integrationIndicators.trustActions.filter(action => 
+    trustIntegration: integrationIndicators.trustActions.filter(action =>
       content.includes(action)).length,
-    rolodexIntegration: integrationIndicators.rolodexActions.filter(action => 
+    rolodexIntegration: integrationIndicators.rolodexActions.filter(action =>
       content.includes(action)).length,
-    conceptCoverage: integrationIndicators.integrationConcepts.filter(concept => 
+    conceptCoverage: integrationIndicators.integrationConcepts.filter(concept =>
       content.toLowerCase().includes(concept.toLowerCase())).length,
   };
 
   depth.overall = (depth.trustIntegration + depth.rolodexIntegration + depth.conceptCoverage) / 3;
-  
+
   return depth;
 }
 
 // Validate each scenario
 scenarioFiles.forEach(filePath => {
   results.totalScenarios++;
-  
+
   if (!fs.existsSync(filePath)) {
     results.issues.push(`❌ File not found: ${filePath}`);
     return;
@@ -150,7 +150,7 @@ scenarioFiles.forEach(filePath => {
   const validation = validateScenarioStructure(filePath);
   const content = fs.readFileSync(filePath, 'utf8');
   const integration = analyzeIntegrationDepth(content);
-  
+
   if (validation.valid) {
     results.validScenarios++;
     console.log(`✅ ${validation.fileName}`);
@@ -169,12 +169,12 @@ scenarioFiles.forEach(filePath => {
     }
     results.issues.push(`${validation.fileName}: Structural issues`);
   }
-  
+
   results.details.push({
     ...validation,
     integration,
   });
-  
+
   console.log('');
 });
 
@@ -221,7 +221,7 @@ if (results.validScenarios === results.totalScenarios) {
   console.log('   • Security-focused scenarios (social engineering, identity verification)');
   console.log('   • Network dynamics and trust propagation testing');
   console.log('   • Trust decay and maintenance lifecycle testing');
-  
+
   console.log('\n🚀 Ready for integration testing:');
   console.log('   • Scenarios cover basic integration through advanced security');
   console.log('   • Each scenario tests different aspects of the integration');

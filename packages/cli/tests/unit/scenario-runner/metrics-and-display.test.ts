@@ -1,11 +1,16 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { MetricsCollector, BenchmarkAnalyzer } from '../../../src/scenario-runner/metrics.js';
 import { displayScenarioResults, saveResults } from '../../../src/commands/scenario/display.js';
 import type { ScenarioContext, ScenarioResult, ScenarioMetrics } from '../../../src/scenario-runner/types.js';
-import * as fs from 'fs/promises';
 import * as path from 'path';
 
-vi.mock('fs/promises');
+// Mock fs/promises module
+const mockMkdir = mock();
+const mockWriteFile = mock();
+mock.module('fs/promises', () => ({
+  mkdir: mockMkdir,
+  writeFile: mockWriteFile,
+}));
 
 describe('MetricsCollector', () => {
   let collector: MetricsCollector;
@@ -242,6 +247,7 @@ describe('BenchmarkAnalyzer', () => {
 describe('Display Functions', () => {
   let mockResults: ScenarioResult[];
   let mockOptions: any;
+  let originalLog: typeof console.log;
 
   beforeEach(() => {
     mockResults = [
@@ -272,6 +278,8 @@ describe('Display Functions', () => {
           },
         ],
         transcript: [],
+        completed: true,
+        success: true,
       },
       {
         scenarioId: 'test-2',
@@ -301,6 +309,8 @@ describe('Display Functions', () => {
         ],
         transcript: [],
         errors: ['Timeout error'],
+        completed: true,
+        success: false,
       },
     ];
 
@@ -310,11 +320,14 @@ describe('Display Functions', () => {
     };
 
     // Capture console output
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+    originalLog = console.log;
+    console.log = mock(() => {});
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    console.log = originalLog;
+    mockMkdir.mockReset();
+    mockWriteFile.mockReset();
   });
 
   describe('displayScenarioResults', () => {
@@ -337,15 +350,15 @@ describe('Display Functions', () => {
 
   describe('saveResults', () => {
     beforeEach(() => {
-      vi.mocked(fs.mkdir).mockResolvedValue(undefined);
-      vi.mocked(fs.writeFile).mockResolvedValue(undefined);
+      mockMkdir.mockResolvedValue(undefined);
+      mockWriteFile.mockResolvedValue(undefined);
     });
 
     it('should save results as JSON', async () => {
       await saveResults(mockResults, '/tmp/results.json', 'json');
 
-      expect(fs.mkdir).toHaveBeenCalledWith(path.dirname('/tmp/results.json'), { recursive: true });
-      expect(fs.writeFile).toHaveBeenCalledWith(
+      expect(mockMkdir).toHaveBeenCalledWith(path.dirname('/tmp/results.json'), { recursive: true });
+      expect(mockWriteFile).toHaveBeenCalledWith(
         '/tmp/results.json',
         expect.stringContaining('"timestamp"'),
       );
@@ -354,7 +367,7 @@ describe('Display Functions', () => {
     it('should save results as text', async () => {
       await saveResults(mockResults, '/tmp/results.txt', 'text');
 
-      expect(fs.writeFile).toHaveBeenCalledWith(
+      expect(mockWriteFile).toHaveBeenCalledWith(
         '/tmp/results.txt',
         expect.stringContaining('Scenario Test Results'),
       );
@@ -363,10 +376,10 @@ describe('Display Functions', () => {
     it('should save results as HTML', async () => {
       await saveResults(mockResults, '/tmp/results.html', 'html');
 
-      expect(fs.writeFile).toHaveBeenCalledWith(
+      expect(mockWriteFile).toHaveBeenCalledWith(
         '/tmp/results.html',
         expect.stringContaining('<!DOCTYPE html>'),
       );
     });
   });
-}); 
+});

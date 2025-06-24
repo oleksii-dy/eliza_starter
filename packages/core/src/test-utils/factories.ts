@@ -5,12 +5,11 @@
  * mock objects to create realistic testing scenarios.
  */
 
-import { vi } from './mocks/vi-helper';
+import { mock } from './mocks/mock-utils';
 import type {
   IAgentRuntime,
   Memory,
   State,
-  Character,
   Action,
   Provider,
   Evaluator,
@@ -20,9 +19,8 @@ import type {
 } from '../types';
 
 import { createMockRuntime } from './mocks/runtime';
-import { createMockDatabase } from './mocks/database';
 import { createMockMemory, createMockConversation } from './mocks/memory';
-import { createMockState, createMockConversationState } from './mocks/state';
+import { createMockConversationState } from './mocks/state';
 import { createMockCharacter } from './mocks/character';
 
 /**
@@ -121,29 +119,27 @@ export function createTestAction(
     description,
     examples,
 
-    validate: vi.fn().mockResolvedValue(validateResult),
+    validate: mock().mockResolvedValue(validateResult),
 
-    handler: vi
-      .fn()
-      .mockImplementation(
-        async (
-          runtime: IAgentRuntime,
-          message: Memory,
-          state?: State,
-          options?: any,
-          callback?: HandlerCallback
-        ) => {
-          // Simulate action execution
-          if (callback) {
-            await callback({
-              text: handlerResult.text || `${name} action executed`,
-              thought: `Executing ${name} action`,
-              actions: [name],
-            });
-          }
-          return handlerResult;
+    handler: mock(
+      async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state?: State,
+        options?: any,
+        callback?: HandlerCallback
+      ) => {
+        // Simulate action execution
+        if (callback) {
+          await callback({
+            text: handlerResult.text || `${name} action executed`,
+            thought: `Executing ${name} action`,
+            actions: [name],
+          });
         }
-      ),
+        return handlerResult;
+      }
+    ),
   };
 }
 
@@ -180,7 +176,7 @@ export function createTestProvider(
     dynamic,
     private: isPrivate,
 
-    get: vi.fn().mockResolvedValue({
+    get: mock().mockResolvedValue({
       text,
       values,
       data,
@@ -217,13 +213,11 @@ export function createTestEvaluator(
     alwaysRun,
     examples: [],
 
-    validate: vi.fn().mockResolvedValue(validateResult),
+    validate: mock().mockResolvedValue(validateResult),
 
-    handler: vi
-      .fn()
-      .mockImplementation(async (runtime: IAgentRuntime, message: Memory, state?: State) => {
-        return handlerResult;
-      }),
+    handler: mock(async (_runtime: IAgentRuntime, _message: Memory, _state?: State) => {
+      return handlerResult;
+    }),
   };
 }
 
@@ -248,7 +242,6 @@ export function createPluginTestScenario(
     actions = ['TEST_ACTION'],
     providers = ['TEST_PROVIDER'],
     evaluators = ['TEST_EVALUATOR'],
-    services = ['test-service'],
     conversationSteps = ['Hello', 'How can I test this plugin?'],
   } = options;
 

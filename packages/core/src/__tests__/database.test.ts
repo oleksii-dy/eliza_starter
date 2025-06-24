@@ -1,4 +1,4 @@
-import { describe, expect, beforeEach, it } from 'vitest';
+import { describe, expect, beforeEach, it } from 'bun:test';
 import { DatabaseAdapter } from '../database';
 import type {
   Agent,
@@ -212,7 +212,7 @@ class MockDatabaseAdapter extends DatabaseAdapter {
    */
   async getMemoriesByIds(memoryIds: UUID[], _tableName?: string): Promise<Memory[]> {
     return memoryIds.map((id) => ({
-      id: id,
+      id,
       content: { text: 'Test Memory' },
       roomId: 'room-id' as UUID,
       entityId: 'user-id' as UUID,

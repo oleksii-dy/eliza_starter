@@ -41,18 +41,18 @@ const polymarketBetPlacementScenario: Scenario = {
   ],
   actions: ['PLACE_POLYMARKET_BET'],
   evaluator: (response: string) => {
-    const hasBetIntent = 
+    const hasBetIntent =
       response.toLowerCase().includes('bet') ||
       response.toLowerCase().includes('placing') ||
       response.toLowerCase().includes('order');
-    
+
     const hasPolymarket = response.toLowerCase().includes('polymarket');
     const hasAmount = /\d+\s*(USDC|USD|\$)/i.test(response);
     const hasOdds = /\$0\.\d+|odds|shares|price/i.test(response);
-    
+
     return hasBetIntent && hasPolymarket && hasAmount && hasOdds;
   },
   tags: ['payment', 'polymarket', 'bet', 'prediction', 'trading'],
 };
 
-export default polymarketBetPlacementScenario; 
+export default polymarketBetPlacementScenario;

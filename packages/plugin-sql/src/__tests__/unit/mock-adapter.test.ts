@@ -300,7 +300,7 @@ describe('MockDatabaseAdapter', () => {
       };
 
       await adapter.createEntity(entity);
-      
+
       // Verify entity exists
       let retrieved = await adapter.getEntityById(entity.id!);
       expect(retrieved).toBeDefined();
