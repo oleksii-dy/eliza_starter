@@ -474,8 +474,53 @@ describe('Utils Comprehensive Tests', () => {
 
       const result = formatMessages({ messages, entities: mockEntities });
 
+      // Attachments are now separated by newlines, not commas
       expect(result).toContain(
-        '(Attachments: [att-1 - Image (http://example.com/img.jpg)], [att-2 - Document (http://example.com/doc.pdf)])'
+        '(Attachments: [att-1 - Image (http://example.com/img.jpg)]\n[att-2 - Document (http://example.com/doc.pdf)])'
+      );
+    });
+
+    it('should handle attachments with text and description fields', () => {
+      const messages: Memory[] = [
+        {
+          id: 'msg-1' as any,
+          entityId: 'entity-1' as any,
+          roomId: 'room-1' as any,
+          createdAt: Date.now(),
+          content: {
+            text: 'Check these files',
+            attachments: [
+              {
+                id: 'att-1',
+                title: 'Report',
+                url: 'http://example.com/report.pdf',
+                text: 'Q3 Financial Report',
+                description: 'Quarterly financial results for Q3 2024',
+              },
+              {
+                id: 'att-2',
+                title: 'Chart',
+                url: 'http://example.com/chart.png',
+                text: 'Revenue Growth Chart',
+                // No description for this one
+              },
+              {
+                id: 'att-3',
+                title: 'Spreadsheet',
+                url: 'http://example.com/data.xlsx',
+                // No text or description
+              },
+            ],
+            source: 'chat',
+          } as Content,
+        },
+      ];
+
+      const result = formatMessages({ messages, entities: mockEntities });
+
+      // Check that attachments are formatted with newlines and include text/description
+      expect(result).toContain(
+        '(Attachments: [att-1 - Report (http://example.com/report.pdf)]\nText: Q3 Financial Report\nDescription: Quarterly financial results for Q3 2024\n[att-2 - Chart (http://example.com/chart.png)]\nText: Revenue Growth Chart\n[att-3 - Spreadsheet (http://example.com/data.xlsx)])'
       );
     });
 
