@@ -11,8 +11,10 @@ import { PolygonRpcService } from '../services/PolygonRpcService.js';
 
 export const getPolygonBlockDetailsAction: Action = {
   name: 'GET_POLYGON_BLOCK_DETAILS',
-  similes: ['SHOW_BLOCK_INFO', 'GET_BLOCK_DATA', 'CHECK_BLOCK_DETAILS', 'GET_POLYGON_BLOCK_INFO'],
-  description: 'Gets details for a specific Polygon block when a block number is mentioned.',
+  similes: ['SHOW_BLOCK_INFO', 'GET_BLOCK_DATA', 'CHECK_BLOCK_DETAILS', 'GET_BLOCK_INFO'].map(
+    (s) => `POLYGON_${s}`
+  ),
+  description: 'Gets details for a specific block on Polygon by number or hash.',
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const content = message.content?.text?.toLowerCase() || '';
 

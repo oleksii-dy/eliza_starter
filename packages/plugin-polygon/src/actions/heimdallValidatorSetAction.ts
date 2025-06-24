@@ -8,7 +8,7 @@ export const heimdallValidatorSetAction: Action = {
     'QUERY_VALIDATOR_SET',
     'VALIDATOR_SET_HEIMDALL',
     'LIST_HEIMDALL_VALIDATORS',
-  ],
+  ].map((s) => `POLYGON_${s}`),
   description: 'Queries the current validator set from Heimdall network (read-only operation)',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     logger.log('Validating Heimdall validator set query...');

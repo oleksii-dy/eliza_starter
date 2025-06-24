@@ -15,9 +15,9 @@ import { blockDetailsByNumberTemplate } from '../templates';
 import { callLLMWithTimeout } from '../utils/llmHelpers';
 
 export const getBlockDetailsByNumberAction: Action = {
-  name: 'POLYGON_GET_BLOCK_DETAILS_BY_NUMBER_ZKEVM',
-  similes: ['GET_ZKEVM_BLOCK_BY_NUMBER', 'SHOW_ZKEVM_BLOCK_DETAILS_BY_NUMBER'],
-  description: 'Gets details for a specific Polygon zkEVM block by its number.',
+  name: 'POLYGON_ZKEVM_GET_BLOCK_DETAILS_BY_NUMBER',
+  similes: ['GET_BLOCK_BY_NUMBER', 'SHOW_BLOCK_DETAILS_BY_NUMBER'].map((s) => `POLYGON_ZKEVM_${s}`),
+  description: 'Gets block details for a given number on Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY'); // Assuming direct env access for now

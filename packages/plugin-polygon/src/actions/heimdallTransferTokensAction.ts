@@ -79,7 +79,7 @@ export const heimdallTransferTokensAction: Action = {
     'HEIMDALL_TRANSFER',
     'TRANSFER_MATIC_HEIMDALL',
     'SEND_MATIC_HEIMDALL',
-  ],
+  ].map((s) => `POLYGON_${s}`),
   description:
     'Transfers native tokens (e.g., MATIC) on the Heimdall network when the recipient address starts with "heimdall".',
 

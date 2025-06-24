@@ -46,7 +46,7 @@ function validateAndNormalizeAddress(address: string): string {
  * Estimates gas limit and total fee for a provided transaction payload
  */
 export const estimateTransactionFeeAction: Action = {
-  name: 'POLYGON_ESTIMATE_TRANSACTION_FEE_ZKEVM',
+  name: 'POLYGON_ZKEVM_ESTIMATE_TRANSACTION_FEE',
   similes: [
     'ESTIMATE_FEE',
     'TRANSACTION_FEE',
@@ -54,7 +54,7 @@ export const estimateTransactionFeeAction: Action = {
     'CALCULATE_FEE',
     'GAS_ESTIMATE',
     'TRANSACTION_COST',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description: 'Estimate gas limit and total fee for a transaction on Polygon zkEVM',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {

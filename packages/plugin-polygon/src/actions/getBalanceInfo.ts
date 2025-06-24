@@ -17,7 +17,9 @@ const WETH_ADDRESS = '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619'; // WETH on Po
 
 export const getUSDCBalanceAction: Action = {
   name: 'GET_USDC_BALANCE',
-  similes: ['CHECK_USDC_BALANCE', 'SHOW_USDC_BALANCE', 'GET_USDC_AMOUNT'],
+  similes: ['CHECK_USDC_BALANCE', 'SHOW_USDC_BALANCE', 'GET_USDC_AMOUNT'].map(
+    (s) => `POLYGON_${s}`
+  ),
   description: 'Gets the USDC balance for the agent wallet on Polygon.',
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const content = message.content?.text?.toLowerCase() || '';
@@ -160,7 +162,9 @@ export const getUSDCBalanceAction: Action = {
 
 export const getWETHBalanceAction: Action = {
   name: 'GET_WETH_BALANCE',
-  similes: ['CHECK_WETH_BALANCE', 'SHOW_WETH_BALANCE', 'GET_WETH_AMOUNT'],
+  similes: ['CHECK_WETH_BALANCE', 'SHOW_WETH_BALANCE', 'GET_WETH_AMOUNT'].map(
+    (s) => `POLYGON_${s}`
+  ),
   description: 'Gets the WETH balance for the agent wallet on Polygon.',
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const content = message.content?.text?.toLowerCase() || '';
@@ -305,8 +309,10 @@ export const getWETHBalanceAction: Action = {
 
 export const getERC20BalanceAction: Action = {
   name: 'GET_ERC20_BALANCE',
-  similes: ['CHECK_TOKEN_BALANCE', 'SHOW_TOKEN_BALANCE', 'GET_TOKEN_AMOUNT'],
-  description: 'Gets the ERC-20 token balance for a specific token contract address.',
+  similes: ['CHECK_TOKEN_BALANCE', 'SHOW_TOKEN_BALANCE', 'GET_TOKEN_AMOUNT'].map(
+    (s) => `POLYGON_${s}`
+  ),
+  description: 'Gets the balance of a specified ERC20 token for the agent wallet on Polygon.',
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const content = message.content?.text?.toLowerCase() || '';
 

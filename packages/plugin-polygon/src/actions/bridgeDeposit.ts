@@ -346,7 +346,7 @@ class PolygonBridgeActionRunner {
 
 export const bridgeDepositAction: Action = {
   name: 'BRIDGE_DEPOSIT_POLYGON',
-  similes: ['POLYGON_BRIDGE_FUNDS', 'MOVE_ETH_TO_POLYGON_LIFI'],
+  similes: ['BRIDGE_FUNDS', 'MOVE_ETH_TO_LIFI'].map((s) => `POLYGON_${s}`),
   description: 'Initiates a deposit/bridge using LiFi.',
   validate: async (runtime: IAgentRuntime, _m: Memory, _s: State | undefined): Promise<boolean> => {
     logger.debug('Validating BRIDGE_DEPOSIT_POLYGON...');

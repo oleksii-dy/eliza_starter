@@ -43,8 +43,8 @@ interface ClobMarketsParams {
 }
 
 export const getClobMarkets: Action = {
-  name: 'GET_CLOB_MARKETS',
-  similes: CLOB_MARKETS_SIMILES,
+  name: 'POLYMARKET_GET_CLOB_MARKETS',
+  similes: CLOB_MARKETS_SIMILES.map((s) => `POLYMARKET_${s}`),
   description:
     'Get Polymarket markets available for trading via CLOB (Central Limit Order Book) - all markets ready for order placement and execution',
 

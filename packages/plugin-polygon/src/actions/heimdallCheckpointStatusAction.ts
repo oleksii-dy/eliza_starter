@@ -8,7 +8,7 @@ export const heimdallCheckpointStatusAction: Action = {
     'QUERY_CHECKPOINT_STATUS',
     'CHECKPOINT_STATUS_HEIMDALL',
     'CHECK_LATEST_CHECKPOINT',
-  ],
+  ].map((s) => `POLYGON_${s}`),
   description: 'Queries the latest checkpoint status from Heimdall network (read-only operation)',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     logger.log('Validating Heimdall checkpoint status query...');

@@ -19,7 +19,7 @@ export const fetchTokenDataAction: Action = {
     'CHECK_TOKEN_DETAILS',
     'TOKEN_LOOKUP',
     'GET_CRYPTO_INFO',
-  ],
+  ].map((s) => `QUICKSWAP_${s}`),
   description:
     'Fetches comprehensive token data (name, symbol, decimals, address) from Quickswap for a given token symbol or address.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {

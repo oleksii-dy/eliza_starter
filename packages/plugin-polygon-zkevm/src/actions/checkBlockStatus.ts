@@ -31,7 +31,7 @@ interface BlockStatusResult {
  * Determines whether a block is trusted, virtual, or consolidated
  */
 export const checkBlockStatusAction: Action = {
-  name: 'POLYGON_CHECK_L2_BLOCK_STATUS_ZKEVM',
+  name: 'POLYGON_ZKEVM_CHECK_L2_BLOCK_STATUS',
   similes: [
     'CHECK_BLOCK_STATUS',
     'BLOCK_STATUS',
@@ -41,7 +41,7 @@ export const checkBlockStatusAction: Action = {
     'BLOCK_STATE',
     'VERIFY_BLOCK',
     'BLOCK_CONFIRMATION',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description: 'Check the status of a Polygon zkEVM block (trusted, virtual, or consolidated)',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {

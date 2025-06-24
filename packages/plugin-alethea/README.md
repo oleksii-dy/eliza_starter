@@ -1,44 +1,48 @@
 # Alethea AI Plugin for ElizaOS
 
 This plugin bootstraps **Alethea AI** support for ElizaOS agents.  
-It lays the groundwork for future actions that will interact with Alethea’s AliAgent, INFT, Hive, token, governance and market-data APIs.
+It lays the groundwork for future actions that will interact with Alethea's AliAgent, INFT, Hive, token, governance and market-data APIs.
 
-> **Status:** **alpha / scaffold** – provides configuration handling and build pipeline only.  
-> Functional actions will be added in subsequent tickets of the _M4 Alethea AI Plugin Integration_ epic.
+## Features
 
----
+- **Convert NFT to ALI Agent**: Transform an ERC-721 NFT into an intelligent ALI Agent (Base Network)
+- **Convert iNFT to ALI Agent**: Transform an iNFT into an ALI Agent (Ethereum Mainnet)
+- **Keys Trading**: Buy and sell keys for ALI Agents
+- **Pod Operations**: Fuse pods with ALI Agents
+- **Hive Operations**: Create liquidity pools and distribute tokens
+- **Token Operations**: Deploy and airdrop ALI Agent or Hive utility tokens
 
-## ✨ Features (current)
+## Core Workflow
 
-- Standard ElizaOS plugin skeleton (TypeScript, TSUP, Vitest, Prettier, ESLint)
-- Environment-variable validation with `zod`
-- Automatic loading and verification of required credentials at runtime
-- Ready-made build script (`npm run build`) that outputs ESM bundle in `dist/`
-- Placeholder action arrays exposed for upcoming functionality
+The main Alethea AI workflow is:
 
----
+1. **Start with existing NFT/iNFT** (user owns)
+2. **Convert to ALI Agent** using Keys Factory contract
+3. **Trade keys** for the ALI Agent
+4. **Additional operations** like pods, hives, etc.
 
-## 📦 Installation / Build
+**No custom token deployment needed** - ALI Agents are created from existing NFTs!
+
+## Installation
 
 ```bash
-# From ElizaOS monorepo root
-bun i        # or npm install
-bun run build --filter=@elizaos/plugin-alethea   # or npm run build --workspace @elizaos/plugin-alethea
+npm install
 ```
 
-The output bundle and type declarations are emitted to `packages/plugins/plugin-alethea/dist`.
+## Configuration
 
 ---
 
 ## 🔧 Configuration
 
-The plugin reads its credentials from environment variables **or** from the agent’s `character.settings.secrets` block.
+The plugin reads its credentials from environment variables **or** from the agent's `character.settings.secrets` block.
 
-| Variable          | Description                                     | Required |
-| ----------------- | ----------------------------------------------- | -------- |
-| `ALETHEA_RPC_URL` | JSON-RPC endpoint for Alethea chain             | ✅       |
-| `PRIVATE_KEY`     | Signer private key used for authenticated calls | ✅       |
-| `ALETHEA_API_KEY` | Alethea SDK / REST API key (if applicable)      | ✅       |
+| Variable           | Description                                     | Required |
+| ------------------ | ----------------------------------------------- | -------- |
+| `ALETHEA_RPC_URL`  | JSON-RPC endpoint for Alethea chain             | ✅       |
+| `PRIVATE_KEY`      | Signer private key used for authenticated calls | ✅       |
+| `ALETHEA_API_KEY`  | Alethea SDK / REST API key (if applicable)      | ✅       |
+| `SNAPSHOT_API_URL` | URL for the Snapshot API (optional)             | ❌       |
 
 Create/extend your project `.env`:
 
@@ -47,60 +51,75 @@ Create/extend your project `.env`:
 ALETHEA_RPC_URL=https://api.alethea.ai
 PRIVATE_KEY=0xYOUR_PRIVATE_KEY_HERE
 ALETHEA_API_KEY=your_alethea_api_key
+SNAPSHOT_API_URL=https://hub.snapshot.org
 ```
 
-If any required variable is missing at startup the plugin throws a descriptive error.
+**Required for Airdrop Operations:**
+
+- `ALETHEA_RPC_URL`: Base Network RPC endpoint
+- `PRIVATE_KEY`: Wallet private key with tokens to distribute
+
+## Usage
+
+### Convert NFT to ALI Agent (Base Network)
+
+```typescript
+'Convert my NFT at address 0x123... token ID 42 to an ALI Agent using ETH implementation';
+```
+
+### Convert iNFT to ALI Agent (Ethereum Mainnet)
 
 ---
 
-## 🚀 Activation
+## ⚡ Available Actions
 
-Add the plugin to your character configuration (usually `eliza.ts`):
+### Governance
 
-```typescript
-...(process.env.ALETHEA_RPC_URL ? ['@elizaos/plugin-alethea'] : []),
-```
+#### `PARTICIPATE_IN_VOTE`
 
-The convention mirrors other ElizaOS plugins: **presence of `ALETHEA_RPC_URL` activates the plugin automatically**.
+Casts a vote on a Snapshot proposal.
+
+**Similes:** `VOTE`, `CAST_VOTE`, `PARTICIPATE_IN_GOVERNANCE`
+
+**Parameters:**
+
+- `space` (string): The Snapshot space (e.g., `alethea-ai.eth`).
+- `proposalId` (string): The ID of the proposal.
+- `choice` (number | string): The vote choice (e.g., `1` for "yes").
+
+**Example Usage:**
+`Vote on proposal 0xabc...def in space alethea-ai.eth with choice 1.`
+
+#### `HANDLE_GOVERNANCE_ERRORS`
+
+Handles and interprets AI Protocol governance errors (550–558).
+
+**Similes:** `PROCESS_ERROR`, `HANDLE_ERROR`, `MANAGE_GOVERNANCE_ERROR`
+
+**Parameters:**
+
+- `error` (object): The error object, which should contain a `code` property.
+
+**Example Usage:**
+`I received a governance error with code 551. What does it mean?`
+
+**Error Code Mapping:**
+| Code | Message |
+| ---- | -------------------------------------------------------------------------- |
+| 550 | "Interaction nuances are refined to uphold our community standards." |
+| 551 | "Guides the ALI Agent creation process to ensure content integrity." |
+| 552 | "Curates Dream content to maintain harmony with community values." |
+| 553 | "Shapes Avatar Images to reflect our shared respect and creativity." |
+| 554 | "Oversees Dream Cover Image creation to align with our collective ethos." |
+| 555 | "Guides Background Image creation for Dreams, ensuring a positive space." |
+| 556 | "Assists in crafting Creator Bios that welcome and inspire." |
+| 557 | "Manages ALI Agent Profile adjustments to resonate with our guidelines." |
+| 558 | "Curates Dream updates to foster a safe and inspiring environment." |
 
 ---
 
 ## 🗂️ Project Structure
 
 ```
-plugin-alethea/
-├── src/
-│   ├── index.ts        # Entry point – exports plugin & placeholder arrays
-│   └── plugin.ts       # Config validation & initialization logic
-├── tsup.config.ts      # Build pipeline
-├── tsconfig*.json      # TypeScript configs
-└── README.md           # You are here
+
 ```
-
----
-
-## 🛠️ Roadmap
-
-Upcoming tickets will implement:
-
-1. **AliAgent Actions** – create / manage AliAgents
-2. **INFT Actions** – mint, edit & query intelligent NFTs
-3. **Hive Actions** – hive creation, membership, messaging
-4. **Token & Governance** – staking, proposals, voting
-5. **Market Data** – price feeds, analytics
-
----
-
-## 🤝 Contributing
-
-Pull requests are welcome! Please follow existing code patterns:
-
-1. **Add tests** (`vitest`) for every new feature
-2. Run `npm run lint && npm run format`
-3. Document new actions in this README
-
----
-
-## 📝 License
-
-MIT © ElizaOS Contributors

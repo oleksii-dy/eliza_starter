@@ -23,14 +23,14 @@ import { interactSmartContractTemplate } from '../templates';
 import { callLLMWithTimeout } from '../utils/llmHelpers';
 
 export const interactSmartContractAction: Action = {
-  name: 'POLYGON_INTERACT_SMART_CONTRACT_ZKEVM',
+  name: 'POLYGON_ZKEVM_INTERACT_SMART_CONTRACT',
   similes: [
     'CALL_CONTRACT',
     'INVOKE_CONTRACT',
     'EXECUTE_CONTRACT_METHOD',
     'CONTRACT_INTERACTION',
     'SEND_CONTRACT_TRANSACTION',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description:
     'Interacts with a smart contract by calling a state-changing method on Polygon zkEVM.',
 

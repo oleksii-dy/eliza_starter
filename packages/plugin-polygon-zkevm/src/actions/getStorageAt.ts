@@ -18,9 +18,11 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves storage value at a specific slot for a contract address
  */
 export const getStorageAtAction: Action = {
-  name: 'POLYGON_GET_STORAGE_AT_ZKEVM',
-  similes: ['GET_STORAGE', 'STORAGE_SLOT', 'CONTRACT_STORAGE', 'STORAGE_VALUE'],
-  description: 'Get storage value at a specific slot for a contract address on Polygon zkEVM',
+  name: 'GET_STORAGE_AT_ZKEVM',
+  similes: ['GET_STORAGE', 'STORAGE_SLOT', 'CONTRACT_STORAGE', 'STORAGE_VALUE'].map(
+    (s) => `POLYGON_ZKEVM_${s}`
+  ),
+  description: 'Gets the storage at a specific slot for a contract on Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');

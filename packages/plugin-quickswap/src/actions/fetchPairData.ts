@@ -20,7 +20,7 @@ export const fetchPairDataAction: Action = {
     'CHECK_PAIR_DETAILS',
     'PAIR_LOOKUP',
     'GET_LIQUIDITY_INFO',
-  ],
+  ].map((s) => `QUICKSWAP_${s}`),
   description:
     'Fetches comprehensive token pair data (e.g., liquidity, reserves, price) from Quickswap for a given pair of token symbols or addresses.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {

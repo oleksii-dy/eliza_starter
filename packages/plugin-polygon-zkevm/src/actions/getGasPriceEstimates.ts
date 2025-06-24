@@ -30,7 +30,7 @@ interface GasPriceEstimates {
  * Provides low/medium/high gas price tiers for transaction planning
  */
 export const getGasPriceEstimatesAction: Action = {
-  name: 'POLYGON_GET_GAS_PRICE_ESTIMATES_ZKEVM',
+  name: 'POLYGON_ZKEVM_GET_GAS_PRICE_ESTIMATES',
   similes: [
     'GAS_PRICE_TIERS',
     'GAS_ESTIMATES',
@@ -40,7 +40,7 @@ export const getGasPriceEstimatesAction: Action = {
     'TRANSACTION_FEES',
     'GAS_COST',
     'FEE_ESTIMATES',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description: 'Get gas price estimates with low/medium/high tiers for Polygon zkEVM transactions',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {

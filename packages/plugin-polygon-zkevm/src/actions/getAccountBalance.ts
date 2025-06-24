@@ -72,7 +72,7 @@ function validateAndNormalizeAddress(address: string): string {
  * Retrieves native ETH balance and ERC-20 token balances for a given address
  */
 export const getAccountBalanceAction: Action = {
-  name: 'POLYGON_GET_ACCOUNT_BALANCE_ZKEVM',
+  name: 'POLYGON_ZKEVM_GET_ACCOUNT_BALANCE',
   similes: [
     'GET_WALLET_BALANCE',
     'CHECK_ACCOUNT_BALANCE',
@@ -82,7 +82,7 @@ export const getAccountBalanceAction: Action = {
     'CHECK_TOKENS',
     'BALANCE_CHECK',
     'GET_ALL_BALANCES',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description:
     'Get comprehensive account balance including native ETH and ERC-20 token balances for a Polygon zkEVM address',
 

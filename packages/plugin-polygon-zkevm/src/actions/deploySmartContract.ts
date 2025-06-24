@@ -15,7 +15,7 @@ import { deploySmartContractTemplate } from '../templates';
 import { callLLMWithTimeout } from '../utils/llmHelpers';
 
 export const deploySmartContractAction: Action = {
-  name: 'POLYGON_DEPLOY_SMART_CONTRACT_ZKEVM',
+  name: 'POLYGON_ZKEVM_DEPLOY_SMART_CONTRACT',
   similes: [
     'DEPLOY_CONTRACT',
     'DEPLOY_ZKEVM_CONTRACT',
@@ -24,7 +24,7 @@ export const deploySmartContractAction: Action = {
     'CREATE_SMART_CONTRACT',
     'PUBLISH_CONTRACT',
     'DEPLOY_CONTRACT_ZKEVM',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description:
     'Deploys a smart contract to Polygon zkEVM using bytecode and optional constructor arguments.',
 

@@ -79,7 +79,7 @@ If tokenId is missing:
 
 export const getPriceHistory: Action = {
   name: 'POLYMARKET_GET_PRICE_HISTORY',
-  similes: PRICE_HISTORY_SIMILES,
+  similes: PRICE_HISTORY_SIMILES.map((s) => `POLYMARKET_${s}`),
   description:
     'Get historical price data for a Polymarket token - returns time-series of price points with timestamps and prices',
 

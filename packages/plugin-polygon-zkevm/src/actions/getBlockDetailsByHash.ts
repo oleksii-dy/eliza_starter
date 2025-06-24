@@ -15,9 +15,9 @@ import { blockDetailsByHashTemplate } from '../templates';
 import { callLLMWithTimeout } from '../utils/llmHelpers';
 
 export const getBlockDetailsByHashAction: Action = {
-  name: 'POLYGON_GET_BLOCK_DETAILS_BY_HASH_ZKEVM',
-  similes: ['GET_ZKEVM_BLOCK_BY_HASH', 'SHOW_ZKEVM_BLOCK_DETAILS_BY_HASH'],
-  description: 'Gets details for a specific Polygon zkEVM block by its hash.',
+  name: 'POLYGON_ZKEVM_GET_BLOCK_DETAILS_BY_HASH',
+  similes: ['GET_BLOCK_BY_HASH', 'SHOW_BLOCK_DETAILS_BY_HASH'].map((s) => `POLYGON_ZKEVM_${s}`),
+  description: 'Gets block details for a given hash on Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
@@ -47,7 +47,7 @@ export const getBlockDetailsByHashAction: Action = {
       logger.error(`[getBlockDetailsByHashAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['POLYGON_GET_BLOCK_DETAILS_BY_HASH_ZKEVM'],
+        actions: ['POLYGON_ZKEVM_GET_BLOCK_DETAILS_BY_HASH'],
         data: { error: errorMessage },
       };
 
@@ -184,7 +184,7 @@ export const getBlockDetailsByHashAction: Action = {
 ${JSON.stringify(blockDetails, null, 2)}
 \`\`\`
 ZK-specific fields: ${JSON.stringify(zkevmFields, null, 2)}`,
-        actions: ['POLYGON_GET_BLOCK_DETAILS_BY_HASH_ZKEVM'],
+        actions: ['POLYGON_ZKEVM_GET_BLOCK_DETAILS_BY_HASH'],
         data: {
           block: blockDetails,
           zkevmFields: zkevmFields,
@@ -206,7 +206,7 @@ ZK-specific fields: ${JSON.stringify(zkevmFields, null, 2)}`,
 
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['POLYGON_GET_BLOCK_DETAILS_BY_HASH_ZKEVM'],
+        actions: ['POLYGON_ZKEVM_GET_BLOCK_DETAILS_BY_HASH'],
         data: { error: errorMessage, errors: errorMessages, blockHashInput },
       };
 
@@ -229,7 +229,7 @@ ZK-specific fields: ${JSON.stringify(zkevmFields, null, 2)}`,
         name: '{{user2}}',
         content: {
           text: 'Here are the details for Polygon zkEVM block 0xd5f1812548be429cbdc6376b29611fc49e06f1359758c4ceaaa3b393e2239f9c (via alchemy):\n```json\n{\n  "number": 12345,\n  "hash": "0xd5f1812548be429cbdc6376b29611fc49e06f1359758c4ceaaa3b393e2239f9c",\n  "parentHash": "0x...",\n  "timestamp": 1234567890,\n  "transactions": []\n}\n```\nZK-specific fields: {\n  "zkProverVersion": "1.0.0",\n  "batchIndex": 123\n}',
-          action: 'POLYGON_GET_BLOCK_DETAILS_BY_HASH_ZKEVM',
+          action: 'POLYGON_ZKEVM_GET_BLOCK_DETAILS_BY_HASH',
         },
       },
     ],
@@ -244,7 +244,7 @@ ZK-specific fields: ${JSON.stringify(zkevmFields, null, 2)}`,
         name: '{{user2}}',
         content: {
           text: 'Here are the details for Polygon zkEVM block 0xabcdef... (via rpc):\n```json\n{\n  "number": 12346,\n  "hash": "0xabcdef...",\n  "parentHash": "0x...",\n  "timestamp": 1234567891,\n  "transactions": []\n}\n```\nZK-specific fields: {\n  "zkProverVersion": "1.0.0",\n  "batchIndex": 124\n}',
-          action: 'POLYGON_GET_BLOCK_DETAILS_BY_HASH_ZKEVM',
+          action: 'POLYGON_ZKEVM_GET_BLOCK_DETAILS_BY_HASH',
         },
       },
     ],

@@ -18,7 +18,7 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves both transaction data and receipt for a given transaction hash
  */
 export const getTransactionDetailsAction: Action = {
-  name: 'POLYGON_GET_TRANSACTION_DETAILS_ZKEVM',
+  name: 'POLYGON_ZKEVM_GET_TRANSACTION_DETAILS',
   similes: [
     'GET_TX_DETAILS',
     'TRANSACTION_DETAILS',
@@ -27,7 +27,7 @@ export const getTransactionDetailsAction: Action = {
     'TRANSACTION_DATA',
     'TX_RECEIPT',
     'GET_TX_DATA',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description:
     'Get comprehensive transaction details including receipt data for a Polygon zkEVM transaction hash',
 

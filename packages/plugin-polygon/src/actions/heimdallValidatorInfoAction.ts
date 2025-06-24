@@ -14,7 +14,7 @@ export const heimdallValidatorInfoAction: Action = {
     'QUERY_VALIDATOR_INFO',
     'VALIDATOR_INFO_HEIMDALL',
     'CHECK_VALIDATOR_HEIMDALL',
-  ],
+  ].map((s) => `POLYGON_${s}`),
   description: 'Queries validator information from Heimdall network (read-only operation)',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     logger.log('Validating Heimdall validator info query...');

@@ -14,9 +14,9 @@ import { PolygonRpcService } from '../services/PolygonRpcService.js';
 import { initWalletProvider } from '../providers/PolygonWalletProvider.js';
 
 export const getMaticBalanceAction: Action = {
-  name: 'POLYGON_GET_MATIC_BALANCE',
-  similes: ['CHECK_MATIC_BALANCE', 'SHOW_POLYGON_BALANCE', 'GET_NATIVE_BALANCE'],
-  description: "Gets the MATIC balance for the agent's address on Polygon (L2).",
+  name: 'GET_MATIC_BALANCE',
+  similes: ['CHECK_MATIC_BALANCE', 'SHOW_BALANCE', 'GET_NATIVE_BALANCE'].map((s) => `POLYGON_${s}`),
+  description: 'Gets the native MATIC balance for the agent wallet on Polygon.',
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const content = message.content?.text?.toLowerCase() || '';
 

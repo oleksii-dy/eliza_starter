@@ -28,8 +28,8 @@ interface CheckpointParams {
 
 export const getCheckpointStatusAction: Action = {
   name: 'POLYGON_GET_CHECKPOINT_STATUS',
-  similes: ['CHECK_CHECKPOINT', 'POLYGON_CHECKPOINT_STATE'],
-  description: 'Checks if a Polygon L2 block has been checkpointed to Ethereum L1.',
+  similes: ['CHECK_CHECKPOINT', 'CHECKPOINT_STATE'].map((s) => `POLYGON_${s}`),
+  description: 'Gets the status of the latest checkpoint.',
 
   validate: async (
     runtime: IAgentRuntime,

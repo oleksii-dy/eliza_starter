@@ -19,15 +19,15 @@ interface CurrentBlockParams {
 }
 
 export const getCurrentBlockNumberAction: Action = {
-  name: 'POLYGON_GET_CURRENT_BLOCK_NUMBER_ZKEVM',
+  name: 'POLYGON_ZKEVM_GET_CURRENT_BLOCK_NUMBER',
   similes: [
     'GET_CURRENT_L2_BLOCK_NUMBER',
-    'CHECK_ZKEVM_BLOCK',
-    'SHOW_LATEST_ZKEVM_BLOCK',
-    'POLYGON_ZKEVM_BLOCK_NUMBER',
-    'GET_ZKEVM_BLOCK_NUMBER',
+    'CHECK_BLOCK',
+    'SHOW_LATEST_BLOCK',
+    'BLOCK_NUMBER',
+    'GET_BLOCK_NUMBER',
     'GET_L2_BLOCK_NUMBER',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description: 'Gets the current block number on Polygon zkEVM (Layer 2 zero-knowledge rollup).',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {

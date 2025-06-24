@@ -48,9 +48,11 @@ const NETWORK_IDS = {
 };
 
 export const bridgeAssetsAction: Action = {
-  name: 'POLYGON_BRIDGE_ASSETS_ZKEVM',
-  similes: ['BRIDGE_TOKENS', 'DEPOSIT_ASSETS', 'WITHDRAW_ASSETS', 'BRIDGE_ETH', 'BRIDGE_ERC20'],
-  description: 'Bridges assets (ETH or ERC-20 tokens) between Ethereum and Polygon zkEVM.',
+  name: 'BRIDGE_ASSETS_ZKEVM',
+  similes: ['BRIDGE_TOKENS', 'DEPOSIT_ASSETS', 'WITHDRAW_ASSETS', 'BRIDGE_ETH', 'BRIDGE_ERC20'].map(
+    (s) => `POLYGON_ZKEVM_${s}`
+  ),
+  description: 'Bridge assets (ETH or ERC20 tokens) to or from Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
@@ -108,7 +110,7 @@ export const bridgeAssetsAction: Action = {
       logger.error(`[bridgeAssetsAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['POLYGON_BRIDGE_ASSETS_ZKEVM'],
+        actions: ['BRIDGE_ASSETS_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -123,7 +125,7 @@ export const bridgeAssetsAction: Action = {
       logger.error(`[bridgeAssetsAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['POLYGON_BRIDGE_ASSETS_ZKEVM'],
+        actions: ['BRIDGE_ASSETS_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -373,7 +375,7 @@ export const bridgeAssetsAction: Action = {
 **Bridge Contract:** \`${bridgeAddress}\`
 
 Please wait for the transaction to be confirmed.`,
-        actions: ['POLYGON_BRIDGE_ASSETS_ZKEVM'],
+        actions: ['BRIDGE_ASSETS_ZKEVM'],
         data: {
           transactionHash: txHash,
           amount: bridgeParams.amount,
@@ -401,7 +403,7 @@ Please wait for the transaction to be confirmed.`,
 
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['POLYGON_BRIDGE_ASSETS_ZKEVM'],
+        actions: ['BRIDGE_ASSETS_ZKEVM'],
         data: {
           error: errorMessage,
           bridgeParams,
@@ -429,7 +431,7 @@ Please wait for the transaction to be confirmed.`,
         name: '{{user2}}',
         content: {
           text: '✅ Assets bridged successfully! Transaction Hash: 0x123...',
-          action: 'POLYGON_BRIDGE_ASSETS_ZKEVM',
+          action: 'BRIDGE_ASSETS_ZKEVM',
         },
       },
     ],
@@ -444,7 +446,7 @@ Please wait for the transaction to be confirmed.`,
         name: '{{user2}}',
         content: {
           text: '✅ Assets bridged successfully! Transaction Hash: 0x456...',
-          action: 'POLYGON_BRIDGE_ASSETS_ZKEVM',
+          action: 'BRIDGE_ASSETS_ZKEVM',
         },
       },
     ],

@@ -18,7 +18,7 @@ import { getGasPriceTemplate } from '../templates';
  */
 export const getGasPriceAction: Action = {
   name: 'POLYGON_GET_GAS_PRICE_ZKEVM',
-  similes: ['GAS_PRICE', 'CURRENT_GAS', 'GAS_FEE', 'GWEI'],
+  similes: ['GAS_PRICE', 'CURRENT_GAS', 'GAS_FEE', 'GWEI'].map((s) => `POLYGON_ZKEVM_${s}`),
   description: 'Get current gas price on Polygon zkEVM',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {

@@ -46,14 +46,14 @@ const NETWORK_IDS = {
 };
 
 export const bridgeMessagesAction: Action = {
-  name: 'POLYGON_BRIDGE_MESSAGES_ZKEVM',
+  name: 'POLYGON_ZKEVM_BRIDGE_MESSAGES',
   similes: [
     'SEND_MESSAGE',
     'CROSS_CHAIN_MESSAGE',
     'BRIDGE_CALLDATA',
     'SEND_CROSS_CHAIN_MESSAGE',
     'MESSAGE_BRIDGE',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description:
     'Sends arbitrary calldata messages between Ethereum and Polygon zkEVM using the bridge contract.',
 

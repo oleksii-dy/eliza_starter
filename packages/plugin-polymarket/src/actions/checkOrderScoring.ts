@@ -25,9 +25,11 @@ interface OfficialOrdersScoringParams {
  * Check if an order is scoring (eligible for rewards) action for Polymarket.
  */
 export const checkOrderScoringAction: Action = {
-  name: 'POLYMARKET_CHECK_ORDER_SCORING',
-  similes: ['ORDERS_ELIGIBLE_FOR_REWARDS', 'POLYMARKET_SCORING_STATUS', 'ARE_MY_ORDERS_SCORING'],
-  description: 'Checks if one or more orders are currently eligible for rewards (scoring).',
+  name: 'CHECK_ORDER_SCORING',
+  similes: ['ORDERS_ELIGIBLE_FOR_REWARDS', 'SCORING_STATUS', 'ARE_MY_ORDERS_SCORING'].map(
+    (s) => `POLYMARKET_${s}`
+  ),
+  description: 'Checks if any of the authenticated user orders are eligible for rewards (scoring).',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     logger.info(
@@ -110,7 +112,7 @@ export const checkOrderScoringAction: Action = {
         logger.error(`[checkOrderScoringAction] Order ID extraction failed. Text: "${text}"`);
         const errorContent: Content = {
           text: `❌ **Error**: ${errorMessage}`,
-          actions: ['POLYMARKET_CHECK_ORDER_SCORING'],
+          actions: ['CHECK_ORDER_SCORING'],
           data: { error: errorMessage },
         };
         if (callback) await callback(errorContent);
@@ -145,7 +147,7 @@ export const checkOrderScoringAction: Action = {
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['POLYMARKET_CHECK_ORDER_SCORING'],
+        actions: ['CHECK_ORDER_SCORING'],
         data: {
           request: apiParams,
           response: scoringResponse,
@@ -163,7 +165,7 @@ export const checkOrderScoringAction: Action = {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred.';
       const errorContent: Content = {
         text: `❌ **Error checking order scoring**: ${errorMessage}`,
-        actions: ['POLYMARKET_CHECK_ORDER_SCORING'],
+        actions: ['CHECK_ORDER_SCORING'],
         data: {
           error: errorMessage,
           orderIds: orderIdsToScore,
@@ -185,7 +187,7 @@ export const checkOrderScoringAction: Action = {
         name: '{{user2}}',
         content: {
           text: 'Checking scoring status for orders 123xyz and abc789 via Polymarket.',
-          action: 'POLYMARKET_CHECK_ORDER_SCORING',
+          action: 'CHECK_ORDER_SCORING',
         },
       },
     ],

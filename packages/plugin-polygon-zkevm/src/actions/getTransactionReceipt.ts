@@ -17,9 +17,14 @@ import { JsonRpcProvider } from 'ethers';
  * Retrieves transaction receipt details by transaction hash
  */
 export const getTransactionReceiptAction: Action = {
-  name: 'POLYGON_GET_TRANSACTION_RECEIPT_ZKEVM',
-  similes: ['GET_TX_RECEIPT', 'TRANSACTION_RECEIPT', 'TX_RECEIPT', 'RECEIPT'],
-  description: 'Get transaction receipt by hash on Polygon zkEVM',
+  name: 'GET_TRANSACTION_RECEIPT_ZKEVM',
+  similes: ['GET_TX_RECEIPT', 'TRANSACTION_RECEIPT', 'TX_RECEIPT', 'RECEIPT'].map(
+    (s) => `POLYGON_ZKEVM_${s}`
+  ),
+  description: 'Gets the transaction receipt for a given hash on Polygon zkEVM.',
+  parameters: {
+    type: 'object',
+  },
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');

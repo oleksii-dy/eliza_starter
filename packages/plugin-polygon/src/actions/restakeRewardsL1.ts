@@ -34,10 +34,9 @@ function extractParamsFromText(text: string): Partial<RestakeRewardsL1Params> {
 }
 
 export const restakeRewardsL1Action: Action = {
-  name: 'POLYGON_RESTAKE_REWARDS_L1',
-  similes: ['COMPOUND_L1_REWARDS', 'REINVEST_STAKING_REWARDS_L1'],
-  description:
-    'Withdraws accumulated L1 staking rewards and re-delegates them to the same Polygon validator.',
+  name: 'RESTAKE_REWARDS_L1',
+  description: 'Restakes accumulated staking rewards on the L1 staking contract.',
+  similes: ['COMPOUND_L1_REWARDS', 'REINVEST_STAKING_REWARDS_L1'].map((s) => `POLYGON_${s}`),
   validate: async (
     runtime: IAgentRuntime,
     _message: Memory,

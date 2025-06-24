@@ -80,7 +80,9 @@ async function attemptParamExtraction(responseText: string): Promise<ValidatorPa
 
 export const getValidatorInfoAction: Action = {
   name: 'POLYGON_GET_VALIDATOR_INFO',
-  similes: ['QUERY_VALIDATOR', 'VALIDATOR_DETAILS', 'GET_L1_VALIDATOR_INFO'],
+  similes: ['QUERY_VALIDATOR', 'VALIDATOR_DETAILS', 'GET_L1_VALIDATOR_INFO'].map(
+    (s) => `POLYGON_${s}`
+  ),
   description: 'Retrieves information about a specific Polygon validator.',
 
   validate: async (

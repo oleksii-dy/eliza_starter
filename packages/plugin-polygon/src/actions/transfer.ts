@@ -173,7 +173,7 @@ class PolygonTransferActionRunner {
 
 export const transferPolygonAction: Action = {
   name: 'POLYGON_TRANSFER',
-  similes: ['POLYGON_SEND', 'TRANSFER_MATIC_OR_TOKEN_POLYGON'],
+  similes: ['SEND', 'TRANSFER_MATIC_OR_TOKEN'].map((s) => `POLYGON_${s}`),
   description: 'Transfers MATIC (native currency) or executes a token transaction on Polygon.',
 
   validate: async (runtime: IAgentRuntime, _m: Memory, _s: State | undefined): Promise<boolean> => {

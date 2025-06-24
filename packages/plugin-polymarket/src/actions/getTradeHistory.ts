@@ -75,8 +75,10 @@ function parseDateToTimestamp(dateString?: string): number | undefined {
 }
 
 export const getTradeHistoryAction: Action = {
-  name: 'POLYMARKET_GET_TRADE_HISTORY',
-  similes: ['USER_TRADE_HISTORY', 'FETCH_MY_TRADES', 'POLYMARKET_TRADES_LIST', 'SHOW_PAST_TRADES'],
+  name: 'GET_TRADE_HISTORY',
+  similes: ['USER_TRADE_HISTORY', 'FETCH_MY_TRADES', 'TRADES_LIST', 'SHOW_PAST_TRADES'].map(
+    (s) => `POLYMARKET_${s}`
+  ),
   description:
     'Retrieves trade history for a user, with optional filters for market, token, date range, and pagination.',
 

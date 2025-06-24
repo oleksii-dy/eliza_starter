@@ -16,7 +16,12 @@ interface EstimateGasFeesParams {
  */
 export const estimateGasFeesAction: Action = {
   name: 'QUICKSWAP_ESTIMATE_GAS_FEES',
-  similes: ['CHECK_TRANSACTION_COST', 'GAS_PRICE_PREDICTION', 'FEE_ESTIMATION', 'TRANSACTION_FEES'],
+  similes: [
+    'CHECK_TRANSACTION_COST',
+    'GAS_PRICE_PREDICTION',
+    'FEE_ESTIMATION',
+    'TRANSACTION_FEES',
+  ].map((s) => `QUICKSWAP_${s}`),
   description: 'Estimates the current gas fees for a specified type of transaction on Quickswap.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     logger.info(`[estimateGasFeesAction] Validate called for message: "${message.content?.text}"`);

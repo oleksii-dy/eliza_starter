@@ -229,16 +229,16 @@ class PolygonProposeGovernanceActionRunner {
 }
 
 export const proposeGovernanceAction: Action = {
-  name: 'POLYGON_PROPOSE_GOVERNANCE',
-  similes: ['CREATE_POLYGON_PROPOSAL', 'SUBMIT_POLYGON_GOVERNANCE_ACTION'],
-  description: 'Submits a new governance proposal using the Polygon WalletProvider.',
+  name: 'PROPOSE_GOVERNANCE',
+  similes: ['CREATE_PROPOSAL', 'SUBMIT_GOVERNANCE_ACTION'].map((s) => `POLYGON_${s}`),
+  description: 'Creates a new governance proposal on Polygon.',
 
   validate: async (
     runtime: IAgentRuntime,
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    logger.debug('Validating POLYGON_PROPOSE_GOVERNANCE action...');
+    logger.debug('Validating PROPOSE_GOVERNANCE action...');
     const checks = [
       runtime.getSetting('WALLET_PRIVATE_KEY'),
       runtime.getSetting('POLYGON_PLUGINS_ENABLED'),
@@ -267,7 +267,7 @@ export const proposeGovernanceAction: Action = {
     callback: HandlerCallback | undefined,
     _responses: Memory[] | undefined
   ) => {
-    logger.info(`Handling POLYGON_PROPOSE_GOVERNANCE for message: ${message.id}`);
+    logger.info(`Handling PROPOSE_GOVERNANCE for message: ${message.id}`);
     const rawMessageText = message.content.text || '';
     let extractedParams: (Partial<ProposeGovernanceParams> & { error?: string }) | null = null;
 
@@ -291,21 +291,16 @@ export const proposeGovernanceAction: Action = {
             error?: string;
           };
         }
-        logger.debug(
-          'POLYGON_PROPOSE_GOVERNANCE: Extracted params via TEXT_SMALL:',
-          extractedParams
-        );
+        logger.debug('PROPOSE_GOVERNANCE: Extracted params via TEXT_SMALL:', extractedParams);
 
         if (extractedParams?.error) {
-          logger.warn(
-            `POLYGON_PROPOSE_GOVERNANCE: Model responded with error: ${extractedParams.error}`
-          );
+          logger.warn(`PROPOSE_GOVERNANCE: Model responded with error: ${extractedParams.error}`);
           throw new Error(extractedParams.error);
         }
       } catch (e: unknown) {
         const errorMsg = e instanceof Error ? e.message : String(e);
         logger.warn(
-          `POLYGON_PROPOSE_GOVERNANCE: Failed to parse JSON from model (Proceeding to manual): ${errorMsg}`
+          `PROPOSE_GOVERNANCE: Failed to parse JSON from model (Proceeding to manual): ${errorMsg}`
         );
       }
 
@@ -321,7 +316,7 @@ export const proposeGovernanceAction: Action = {
         !extractedParams.description
       ) {
         logger.info(
-          'POLYGON_PROPOSE_GOVERNANCE: Model extraction insufficient, attempting manual extraction.'
+          'PROPOSE_GOVERNANCE: Model extraction insufficient, attempting manual extraction.'
         );
         const manualParams = extractProposeGovernanceParamsFromText(rawMessageText);
 
@@ -349,7 +344,7 @@ export const proposeGovernanceAction: Action = {
           extractedParams = manualParams;
         }
         logger.debug(
-          'POLYGON_PROPOSE_GOVERNANCE: Params after manual extraction attempt:',
+          'PROPOSE_GOVERNANCE: Params after manual extraction attempt:',
           extractedParams
         );
       }
@@ -367,7 +362,7 @@ export const proposeGovernanceAction: Action = {
         !extractedParams.description
       ) {
         logger.error(
-          'POLYGON_PROPOSE_GOVERNANCE: Incomplete parameters after all extraction attempts.',
+          'PROPOSE_GOVERNANCE: Incomplete parameters after all extraction attempts.',
           extractedParams
         );
         throw new Error(
@@ -391,18 +386,18 @@ export const proposeGovernanceAction: Action = {
         await callback({
           text: `Successfully created proposal. Tx hash: ${txResult.hash}. Proposal ID may be available in the transaction logs.`,
           content: { success: true, ...txResult },
-          actions: ['POLYGON_PROPOSE_GOVERNANCE'],
+          actions: ['PROPOSE_GOVERNANCE'],
           source: message.content.source,
         });
       }
       return { success: true, ...txResult };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
-      logger.error(`Error in PROPOSE_GOVERNANCE_POLYGON handler: ${errMsg}`, error);
+      logger.error(`Error in PROPOSE_GOVERNANCE handler: ${errMsg}`, error);
       if (callback) {
         await callback({
           text: `Error submitting governance proposal: ${errMsg}`,
-          actions: ['POLYGON_PROPOSE_GOVERNANCE'],
+          actions: ['PROPOSE_GOVERNANCE'],
           source: message.content.source,
         });
       }

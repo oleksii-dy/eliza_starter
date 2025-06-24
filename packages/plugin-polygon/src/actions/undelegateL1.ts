@@ -63,10 +63,32 @@ function extractParamsFromText(text: string): Partial<UndelegateL1Params> {
 }
 
 export const undelegateL1Action: Action = {
-  name: 'POLYGON_UNDELEGATE_L1',
-  similes: ['UNSTAKE_L1', 'UNBOND_VALIDATOR_SHARES_L1', 'SELL_VALIDATOR_SHARES_L1'],
-  description:
-    'Initiates undelegation (unbonding) of Validator Shares from a Polygon validator on Ethereum L1 via Polygon.',
+  name: 'UNDELEGATE_L1',
+  description: 'Unstakes (unbonds) tokens from a validator on the L1 staking contract.',
+  similes: ['UNSTAKE_L1', 'UNBOND_VALIDATOR_SHARES_L1', 'SELL_VALIDATOR_SHARES_L1'].map(
+    (s) => `POLYGON_${s}`
+  ),
+  parameters: {
+    type: 'object',
+    properties: {
+      validatorId: {
+        type: 'integer',
+        description: 'The ID of the validator to undelegate from',
+      },
+      sharesAmountWei: {
+        type: 'string',
+        description: 'The amount of shares to undelegate in Wei',
+      },
+      maticAmount: {
+        type: 'string',
+        description: 'The amount of MATIC to undelegate',
+      },
+      error: {
+        type: 'string',
+        description: 'Error message from the model',
+      },
+    },
+  },
 
   validate: async (
     runtime: IAgentRuntime,

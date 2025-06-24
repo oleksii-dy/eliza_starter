@@ -10,9 +10,11 @@ import {
 import { PolygonRpcService } from '../services/PolygonRpcService.js';
 
 export const getL2BlockNumberAction: Action = {
-  name: 'POLYGON_GET_L2_BLOCK_NUMBER',
-  similes: ['GET_POLYGON_BLOCK_NUMBER', 'CHECK_CURRENT_BLOCK', 'SHOW_LATEST_BLOCK'],
-  description: 'Gets the current block number on Polygon (L2).',
+  name: 'GET_L2_BLOCK_NUMBER',
+  similes: ['GET_BLOCK_NUMBER', 'CHECK_CURRENT_BLOCK', 'SHOW_LATEST_BLOCK'].map(
+    (s) => `POLYGON_${s}`
+  ),
+  description: 'Gets the latest L2 block number from the Polygon RPC.',
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const content = message.content?.text?.toLowerCase() || '';
 

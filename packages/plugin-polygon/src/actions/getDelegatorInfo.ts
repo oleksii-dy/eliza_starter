@@ -22,8 +22,10 @@ interface DelegatorParams {
 }
 
 export const getDelegatorInfoAction: Action = {
-  name: 'POLYGON_GET_DELEGATOR_INFO',
-  similes: ['QUERY_STAKE', 'DELEGATOR_DETAILS', 'GET_MY_STAKE', 'GET_L1_DELEGATOR_INFO'],
+  name: 'GET_DELEGATOR_INFO',
+  similes: ['QUERY_STAKE', 'DELEGATOR_DETAILS', 'GET_MY_STAKE', 'GET_L1_DELEGATOR_INFO'].map(
+    (s) => `POLYGON_${s}`
+  ),
   description:
     'Retrieves staking information for a specific delegator address (defaults to agent wallet).',
 

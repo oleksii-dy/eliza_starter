@@ -13,7 +13,12 @@ interface SupportFeeOnTransferTokensParams {
  */
 export const supportFeeOnTransferTokensAction: Action = {
   name: 'QUICKSWAP_SUPPORT_FEE_ON_TRANSFER_TOKENS',
-  similes: ['CHECK_TOKEN_COMPATIBILITY', 'IS_FEE_ON_TRANSFER', 'FEE_TOKEN_CHECK', 'TOKEN_SUPPORT'],
+  similes: [
+    'CHECK_TOKEN_COMPATIBILITY',
+    'IS_FEE_ON_TRANSFER',
+    'FEE_TOKEN_CHECK',
+    'TOKEN_SUPPORT',
+  ].map((s) => `QUICKSWAP_${s}`),
   description:
     'Checks if a token is a fee-on-transfer token and if Quickswap can handle it for trades.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {

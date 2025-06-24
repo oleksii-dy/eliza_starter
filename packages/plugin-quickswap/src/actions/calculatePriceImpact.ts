@@ -15,7 +15,9 @@ interface CalculatePriceImpactParams {
  */
 export const calculatePriceImpactAction: Action = {
   name: 'QUICKSWAP_CALCULATE_PRICE_IMPACT',
-  similes: ['ESTIMATE_SLIPPAGE', 'PRICE_IMPACT_CHECK', 'TRADE_COST_ANALYSIS', 'SWAP_IMPACT'],
+  similes: ['ESTIMATE_SLIPPAGE', 'PRICE_IMPACT_CHECK', 'TRADE_COST_ANALYSIS', 'SWAP_IMPACT'].map(
+    (s) => `QUICKSWAP_${s}`
+  ),
   description: 'Calculates the potential price impact for a swap between two tokens on Quickswap.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     logger.info(

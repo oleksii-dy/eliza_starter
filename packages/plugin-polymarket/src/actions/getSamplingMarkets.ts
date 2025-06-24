@@ -42,7 +42,7 @@ interface SamplingMarketsParams {
 
 export const getSamplingMarkets: Action = {
   name: 'POLYMARKET_GET_SAMPLING_MARKETS',
-  similes: SAMPLING_MARKETS_SIMILES,
+  similes: SAMPLING_MARKETS_SIMILES.map((s) => `POLYMARKET_${s}`),
   description:
     'Get available Polymarket markets with rewards enabled (sampling markets) - markets where users can earn liquidity rewards',
 

@@ -41,8 +41,8 @@ interface OpenMarketsParams {
 }
 
 export const getOpenMarkets: Action = {
-  name: 'GET_OPEN_MARKETS',
-  similes: OPEN_MARKETS_SIMILES,
+  name: 'POLYMARKET_GET_OPEN_MARKETS',
+  similes: OPEN_MARKETS_SIMILES.map((s) => `POLYMARKET_${s}`),
   description:
     'Get the latest open Polymarket markets sorted by listing time - markets that are still active and available for trading',
 

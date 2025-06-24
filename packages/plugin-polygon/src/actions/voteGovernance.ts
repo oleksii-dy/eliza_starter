@@ -182,9 +182,12 @@ class PolygonVoteGovernanceActionRunner {
 }
 
 export const voteGovernanceAction: Action = {
-  name: 'POLYGON_VOTE_GOVERNANCE',
-  similes: ['CAST_VOTE_POLYGON', 'SUPPORT_PROPOSAL_POLYGON', 'VOTE_ON_PROPOSAL_POLYGON'],
-  description: 'Casts a vote on a governance proposal on Polygon.',
+  name: 'VOTE_GOVERNANCE_PROPOSAL',
+  similes: ['CAST_VOTE', 'SUPPORT_PROPOSAL', 'VOTE_ON_PROPOSAL'].map((s) => `POLYGON_${s}`),
+  description: 'Votes on a governance proposal on Polygon.',
+  parameters: {
+    type: 'object',
+  },
 
   validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     logger.debug('Validating POLYGON_VOTE_GOVERNANCE action...');

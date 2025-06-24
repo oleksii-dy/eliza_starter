@@ -196,13 +196,13 @@ class PolygonSwapActionRunner {
   }
 }
 
-export const swapPolygonAction: Action = {
+export const swapAction: Action = {
   name: 'POLYGON_SWAP_TOKENS',
-  similes: ['POLYGON_SWAP', 'TRADE_POLYGON_TOKENS'],
-  description: 'Swaps tokens on Polygon using LiFi.',
+  similes: ['SWAP', 'TRADE_TOKENS'].map((s) => `POLYGON_${s}`),
+  description: 'Swaps one token for another using a decentralized exchange on Polygon.',
 
   validate: async (runtime: IAgentRuntime, _m: Memory, _s: State | undefined): Promise<boolean> => {
-    logger.debug('Validating POLYGON_SWAP_TOKENS action...');
+    logger.debug('Validating SWAP_TOKENS action...');
     const checks = [
       runtime.getSetting('WALLET_PRIVATE_KEY'),
       runtime.getSetting('POLYGON_PLUGINS_ENABLED'),
