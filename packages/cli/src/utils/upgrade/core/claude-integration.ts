@@ -196,8 +196,9 @@ Apply these patterns to complete the V2 migration.`;
 
   /**
    * Run Claude with complex structural changes using SDK
+   * FIXED: Now returns the generated code content
    */
-  async runClaudeCodeWithPrompt(prompt: string, context: MigrationContext): Promise<void> {
+  async runClaudeCodeWithPrompt(prompt: string, context: MigrationContext): Promise<string> {
     process.chdir(this.repoPath);
 
     // Initialize SDK adapter if not already done
@@ -243,6 +244,9 @@ Apply these patterns to complete the V2 migration.`;
           logger.warn(`⚠️  ${warning}`);
         }
       }
+
+      // CRITICAL FIX: Return the generated content instead of void
+      return result.message || '';
     } catch (error) {
       logger.error('❌ Claude SDK execution failed:', error);
       throw error;
