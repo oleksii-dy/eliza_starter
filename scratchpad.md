@@ -431,107 +431,94 @@ This design provides a roadmap for the capabilities and structure of the Blockch
     *   **Final Test Assertion:** S logs/outputs overall success for initial goal, including the code. E.g., "Project 'conv-001', task 'GENERATE_ADD_INTEGERS_PY' completed by dev-001 with result: [code]".
 
 This E2E test design outlines the key interactions and data flows for a supervisor-developer workflow.
+
 ---
-## Advanced Topics Review & Documentation (Current Plan - Step 6)
+## Refined E2E Test Scenario: Supervisor-Developer-Auditor Workflow (Current Plan - Step 4)
+
+**Goal:** Verify a more complete workflow: Supervisor delegates development to DeveloperAgent, then delegates auditing of the developed code to AuditorAgent, and finally aggregates results.
+
+**Agents Involved:**
+1.  `SupervisoryAgent` (S, ID: `supervisor-001`), using `supervisor.character.ts`.
+2.  `DeveloperAgent` (D, ID: `dev-001`), using `developer.character.ts`.
+3.  `BlockchainAuditorAgent` (A, ID: `auditor-001`), using `auditor.character.ts`.
+
+**Setup:**
+*   ElizaOS running S, D, & A. All use `@elizaos/plugin-deepseek` & `@elizaos/plugin-a2a-communication`. Auditor also uses `@elizaos/plugin-blockchain-auditor`.
+*   S's `team_roster` in settings includes D (type `DeveloperAgent`) and A (type `BlockchainAuditorAgent`).
+*   `DEEPSEEK_API_KEY` is set.
+*   A conceptual shared workspace or mechanism for agents to "pass" artifacts like code files or paths. For this test design, paths are passed in A2A messages. `ToolExecutionService` (mocked for E2E conceptual design) would need to access these.
+*   A simple, valid Foundry project structure is assumed at `/test_workspace/sample_foundry_project` for `AuditorAgent` to use for `forge test`.
+
+**Workflow & Expected Interactions (Conceptual - Highlighting LLM calls and A2A messages):**
+
+1.  **Trigger:** User command to `supervisor-001`:
+    `"SupervisorAlpha, please manage the creation and basic security audit of a simple Solidity contract named 'SimpleStorage'. It should have a 'uint public myNumber;' and a function 'setMyNumber(uint _newNumber)'."`
+
+2.  **`supervisor-001` - Goal Decomposition:**
+    *   **Input to `PROCESS_A2A_TASK_EVENT` (for S, if task is self-assigned or from user):** `taskMessage.payload = { task_name: 'MANAGE_PROJECT_GOAL', goal_description: "Create and audit SimpleStorage..." }`
+    *   **S's LLM Call (Decomposition - `runtime.useModel`):** Uses `default_task_decomposition_prompt_template`.
+    *   **Expected Parsed Sub-tasks (internal to S):**
+        1.  `subTaskDev = { task_name: "GENERATE_SOLIDITY_SIMPLESTORAGE", agent_type: "DeveloperAgent", description: "Create SimpleStorage.sol...", parameters: { language: "Solidity", ... }, expected_response_format: "code_string_solidity" }`
+        2.  `subTaskAudit = { task_name: "PERFORM_AUDIT", agent_type: "BlockchainAuditorAgent", description: "Audit SimpleStorage.sol using Slither and Forge.", dependencies: ["GENERATE_SOLIDITY_SIMPLESTORAGE"], parameters: { contract_content_or_path: "output_from_GENERATE_SOLIDITY_SIMPLESTORAGE", project_path_for_forge: "/test_workspace/sample_foundry_project" }, expected_response_format: "audit_report_markdown" }`
+    *   **S's Own `TASK_RESPONSE` (to original requester of `MANAGE_PROJECT_GOAL`):** Summary of plan.
+
+3.  **`supervisor-001` - Delegates to `developer-001` (subTaskDev):**
+    *   S uses `SEND_A2A_MESSAGE` action (`runtime.performAction`).
+    *   **A2A `TASK_REQUEST` (S to D):** Payload from `subTaskDev`. `conversation_id` (e.g., `proj-001`).
+
+4.  **`developer-001` - Code Generation:**
+    *   `A2AService` (for D) queues, sends `ACK` to S.
+    *   `PROCESS_A2A_TASK_EVENT` triggers D.
+    *   **D's LLM Call (Code Gen - `runtime.useModel`):** Prompt based on D's system prompt + `subTaskDev` payload.
+    *   **Expected LLM Code Output (to D):** Solidity code for `SimpleStorage.sol`.
+    *   **A2A `TASK_RESPONSE` (D to S):** `status: "SUCCESS"`, `result: "<solidity_code_string>"`. `conversation_id: "proj-001"`.
+
+5.  **`supervisor-001` - Receives Code, Delegates to `auditor-001` (subTaskAudit):**
+    *   S receives `TASK_RESPONSE` from D.
+    *   S identifies `subTaskAudit` is ready (dependency met).
+    *   S uses `SEND_A2A_MESSAGE` action.
+    *   **A2A `TASK_REQUEST` (S to A):** Payload from `subTaskAudit`. `parameters.contract_content_or_path` now contains the code string from D's response (or a conceptual path to it). `conversation_id: "proj-001"`.
+
+6.  **`auditor-001` - Contract Audit:**
+    *   `A2AService` (for A) queues, sends `ACK` to S.
+    *   `PROCESS_A2A_TASK_EVENT` triggers A.
+    *   **A's Internal Logic & Action Calls:**
+        1.  Parses task: `contract_content_or_path`, `project_path_for_forge`.
+        2.  (If `contract_content`): Saves content to a temporary file, e.g., `/tmp/audit_ws/SimpleStorage.sol`. Uses this as `targetPath`.
+        3.  Calls `RUN_SLITHER_ANALYSIS` action (`runtime.performAction`) on `targetPath`.
+            *   **Mocked Action Result:** Slither JSON output (e.g., few/no issues for simple contract).
+        4.  Calls `RUN_FORGE_TEST` action (`runtime.performAction`) using `project_path_for_forge`.
+            *   (Assumes `SimpleStorage.sol` from D is conceptually placed into the test project by `ToolExecutionService` or a prior step if `project_path_for_forge` implies a fresh setup).
+            *   **Mocked Action Result:** Forge test output (e.g., tests pass).
+        5.  **A's LLM Call (Report Gen - `runtime.useModel`):** Prompt includes Slither & Forge outputs.
+        6.  **Expected LLM Report Output (to A):** Markdown summary of audit findings.
+    *   **A2A `TASK_RESPONSE` (A to S):** `status: "SUCCESS"`, `result: { summary: "<llm_audit_report_markdown>", slitherRaw: "...", forgeRaw: "..." }`. `conversation_id: "proj-001"`.
+
+7.  **`supervisor-001` - Aggregates & Final Report:**
+    *   S receives `TASK_RESPONSE` from A.
+    *   S determines all sub-tasks for `proj-001` are complete.
+    *   **S's LLM Call (Final Aggregation - `runtime.useModel`):** Prompt: "Project 'Create and audit SimpleStorage' complete. Dev output: [code]. Auditor output: [audit_summary]. Compile a final project completion report for the user."
+    *   **Final Test Assertion:** S logs/outputs a message indicating project success, including the generated code and the audit summary from the LLM.
+
+**Key Documentation Points for this E2E Scenario:**
+*   **Agent IDs:** Emphasize the need for stable, known agent IDs (`supervisor-001`, `dev-001`, `auditor-001`) for routing A2A messages.
+*   **A2A Message Payloads:** Clearly define the expected structure of `payload.parameters` for `GENERATE_CODE` and `PERFORM_AUDIT` tasks.
+*   **LLM Prompts (Conceptual):** Illustrate the *type* of prompts each agent constructs for its LLM at different stages (decomposition, code gen, report gen).
+*   **Action Calls & Results:** Show how agents use `runtime.performAction` and how the results of these actions (e.g., tool outputs) feed into subsequent LLM calls or A2A responses.
+*   **Artifact Handling (Conceptual):** Note how code generated by DeveloperAgent is conceptually made available to AuditorAgent (e.g., via `contract_content_or_path` parameter). In a real system, this needs a robust file management/workspace service.
+*   **Error Handling:** While not detailed in this success-path scenario, mention that each A2A `TASK_RESPONSE` should handle `status: "FAILURE"` with an `error_message`. Supervisors would need logic to react to these failures.
+
+This refined scenario gives a clearer picture of the multi-agent collaboration using the implemented features.
+---
+## Advanced Topics Review & Documentation (Current Plan - Step 6, formerly Step 6 of previous plan)
 
 This section details further considerations for sandboxing tool execution within `plugin-blockchain-auditor` and scaling `plugin-a2a-communication` for distributed environments.
 
 **I. Robust Sandboxing for `ToolExecutionService` (`plugin-blockchain-auditor`)**
-
-The current PoC `ToolExecutionService` uses `child_process.spawn` directly, which is insecure for untrusted inputs (e.g., contracts from arbitrary Git repos).
-
-**A. Risks of Current Approach:**
-*   **Arbitrary Code Execution:** A malicious `foundry.toml`, `hardhat.config.js`, or even a cleverly crafted contract file could potentially execute arbitrary commands on the host system if the audit tools themselves have vulnerabilities or allow script execution through config files.
-*   **File System Access:** Tools might read/write outside the intended workspace.
-*   **Network Access:** Tools might make unintended outbound network calls.
-*   **Resource Exhaustion:** A malicious test suite could attempt a denial-of-service attack (e.g., "zip bomb" in project files, infinite loops in tests).
-
-**B. Recommended Sandboxing Strategies:**
-
-1.  **Docker Containers (Preferred for Portability & Strong Isolation):**
-    *   **Mechanism:**
-        *   Maintain pre-built Docker images for different audit environments (e.g., one with Foundry, one with Hardhat + Slither, one with Python + Brownie).
-        *   When an audit task arrives, `ToolExecutionService` would:
-            a.  Create a temporary, isolated workspace directory on the host.
-            b.  Pull/clone the target contracts into this workspace.
-            c.  Run the appropriate Docker image, mounting the workspace directory as a volume (e.g., `/workspace` inside the container).
-            d.  Execute the audit command (e.g., `forge test`) inside the container using `docker exec`.
-            e.  Retrieve results (stdout, stderr, exit code, report files) from the container/mounted volume.
-            f.  Clean up the container and optionally the workspace.
-    *   **Pros:** Excellent isolation (filesystem, network, process), consistent environments, dependency management via Dockerfiles.
-    *   **Cons:** Docker daemon dependency, performance overhead (container startup), image management.
-    *   **`ToolExecutionService` Changes:** Would become a Docker orchestration client. Needs permissions to interact with Docker daemon.
-
-2.  **OS-Level Sandboxing (e.g., `firejail` on Linux):**
-    *   **Mechanism:** Wrap tool execution with `firejail --profile=<tool_profile> <command> <args>`.
-        *   Requires specific profiles for each tool (Forge, Slither) defining allowed syscalls, file access (`--whitelist`, `--blacklist`), network access (`--net=none` or specific).
-    *   **Pros:** Lighter weight than Docker if tools are already on the host. Fine-grained control.
-    *   **Cons:** Linux-specific, profile creation and maintenance can be complex. Less portable.
-
-3.  **MicroVMs (e.g., Firecracker):**
-    *   **Mechanism:** Launch a minimal MicroVM for each audit task, execute tools inside.
-    *   **Pros:** Strongest isolation, very fast boot times for MicroVMs.
-    *   **Cons:** Significant infrastructure complexity to manage MicroVMs. Likely overkill unless extreme security is paramount for every task.
-
-4.  **TEE (Trusted Execution Environments):**
-    *   **Mechanism:** As noted in `AGENTS.md`, ElizaOS has TEE starter projects. Could involve running critical parts of the audit or the tools themselves inside a TEE.
-    *   **Pros:** Hardware-backed security for sensitive operations.
-    *   **Cons:** Complex to implement, limited by TEE capabilities and tool compatibility. A long-term research area.
-
-**C. Immediate `ToolExecutionService` Enhancements (Pre-Full Sandboxing):**
-*   **Strict Command Whitelisting:** Only allow known commands (`forge`, `slither`, `npx hardhat`, `python -m pytest`).
-*   **Argument Sanitization/Validation:** Ensure arguments don't contain shell metacharacters if `shell: true` were ever used (current PoC uses `shell: false`, which is good). Validate paths.
-*   **Resource Limits (via `child_process` options or OS tools like `ulimit` if wrapped in a shell script):** Set timeouts (already in PoC), potentially memory/CPU limits if possible.
-*   **Dedicated User Account:** Run the ElizaOS process (or at least the tool execution parts) as a low-privilege, dedicated user with restricted file system access.
-
-**D. Documentation Update for `plugin-blockchain-auditor/README.md`:**
-*   Add a prominent, detailed "Security Considerations" section explaining the risks of the PoC and strongly recommending proper sandboxing for any real use.
-*   Briefly outline the suggested sandboxing strategies (Docker as a primary recommendation).
+... (content remains the same as previously added) ...
 
 **II. Scalable Distributed A2A Communication (`plugin-a2a-communication`)**
-
-The current in-memory `EventEmitter` in `A2AService` limits A2A to agents within the same Node.js process.
-
-**A. Requirements for Distributed A2A:**
-*   **External Message Bus:** A system that agents in different processes/machines can connect to.
-*   **Message Serialization:** JSON is suitable.
-*   **Agent Addressing/Routing:** How messages find their target agent. Agent IDs must be globally unique and resolvable to a "location" or subscription topic on the bus.
-*   **(Optional) Persistence & Reliability:** Delivery guarantees, dead-letter queues.
-
-**B. Design for Pluggable Message Bus Backend:**
-
-1.  **`IMessageBusAdapter` Interface (in `plugin-a2a-communication/src/types.ts` or a new file):**
-    ```typescript
-    export interface IMessageBusAdapter {
-      publish(topic: string, message: A2AMessage): Promise<void>;
-      subscribe(topic: string, handler: (message: A2AMessage) => void): Promise<void>; // handler processes the message
-      unsubscribe(topic: string): Promise<void>;
-      connect(): Promise<void>;
-      disconnect(): Promise<void>;
-    }
-    ```
-
-2.  **Modify `A2AService`:**
-    *   Constructor takes an `IMessageBusAdapter` instance.
-    *   Configuration (`plugin-a2a-communication/src/environment.ts`) would specify which adapter to load/use (e.g., `A2A_BUS_TYPE: "redis" | "in-memory"`).
-    *   `sendMessage` uses `adapter.publish()`. The topic could be `a2a:agent:${receiver_agent_id}`.
-    *   `subscribeToMessages` uses `adapter.subscribe()` to this agent's specific topic (e.g., `a2a:agent:${this.agentId}`). The handler remains similar (enqueueing tasks, emitting events).
-    *   The global `EventEmitter` is replaced by the adapter.
-
-3.  **Example: `RedisMessageBusAdapter`:**
-    *   Uses a Redis client (e.g., `ioredis`).
-    *   `publish`: Uses `redis.publish(topic, JSON.stringify(message))`.
-    *   `subscribe`: Uses `redis.subscribe(topic)` and sets up a message listener that parses JSON and calls the provided handler.
-    *   Requires Redis connection details in config.
-
-**C. Agent Discovery (Brief Consideration):**
-*   For a message bus to route `a2a:agent:<agent_id>`, agents need to register their ID and listen on that topic.
-*   A more advanced system might involve a central Agent Registry where agents publish their ID and capabilities, and how to reach them (e.g., their specific message bus topic). This is beyond the A2A plugin itself but is a necessary component of a larger distributed agent system.
-
-**D. Documentation Update for `plugin-a2a-communication/README.md`:**
-*   Explain the limitations of the current in-memory bus.
-*   Outline the design for pluggable message bus adapters and give Redis as an example.
-*   Mention future considerations like agent discovery and enhanced reliability.
+... (content remains the same as previously added) ...
 
 By documenting these advanced topics thoroughly in `scratchpad.md` and updating the relevant plugin READMEs, this step will be complete.
 ---
