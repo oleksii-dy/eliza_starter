@@ -8,10 +8,13 @@ import {
   type A2AMessage,
   PROCESS_A2A_TASK_EVENT,
   type TaskResponsePayload,
-  DelegatedSubTaskStatus // Import for status checks
+  SupervisorTaskStatus
 } from '../types';
 import { ModelType, type IAgentRuntime, type Action, logger, Service, type Character } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
+
+// Import the service we are integrating for the supervisor
+import { SupervisorTaskDBService } from '@elizaos/plugin-supervisor-utils';
 
 // --- Mocking Core ElizaOS and Dependencies ---
 vi.mock('@elizaos/core', async (importOriginal) => {
@@ -28,37 +31,44 @@ vi.mock('../a2a-service', () => ({
 
 vi.mock('uuid', () => ({ v4: vi.fn() }));
 
-// --- Conceptual SQL Service Mocking ---
-const mockSqlDbInsertExecute = vi.fn().mockResolvedValue({ changes: 1 });
-const mockSqlDbUpdateExecute = vi.fn().mockResolvedValue({ changes: 1 });
-const mockSqlDbSelectExecute = vi.fn().mockResolvedValue([]); // Default to no results for select
-const mockSqlValues = vi.fn().mockReturnThis();
-const mockSqlSet = vi.fn().mockReturnThis();
-const mockSqlWhere = vi.fn().mockReturnThis();
-const mockSqlLimit = vi.fn().mockReturnThis(); // For .limit()
-const mockSqlFrom = vi.fn().mockReturnThis(); // For .from()
+// --- Mock SupervisorTaskDBService ---
+const mockRecordNewSubTask = vi.fn();
+const mockUpdateTaskStatusByA2ARequestId = vi.fn();
+const mockGetTaskByA2ARequestId = vi.fn();
+const mockGetTasksByProjectAndStatus = vi.fn();
+const mockGetTasksByProjectAndNames = vi.fn();
 
-const mockSqlService = {
-  db: {
-    insert: vi.fn(() => ({ values: mockSqlValues, execute: mockSqlDbInsertExecute, returning: vi.fn().mockResolvedValue([]) })),
-    update: vi.fn(() => ({ set: mockSqlSet, where: mockSqlWhere, execute: mockSqlDbUpdateExecute })),
-    select: vi.fn(() => ({ from: mockSqlFrom, where: mockSqlWhere, limit: mockSqlLimit, execute: mockSqlDbSelectExecute })),
+vi.mock('@elizaos/plugin-supervisor-utils', () => ({
+  SupervisorTaskDBService: vi.fn().mockImplementation(() => ({
+    recordNewSubTask: mockRecordNewSubTask,
+    updateTaskStatusByA2ARequestId: mockUpdateTaskStatusByA2ARequestId,
+    getTaskByA2ARequestId: mockGetTaskByA2ARequestId,
+    getTasksByProjectAndStatus: mockGetTasksByProjectAndStatus,
+    getTasksByProjectAndNames: mockGetTasksByProjectAndNames,
+  })),
+  SupervisorTaskStatus: {
+    PENDING_DELEGATION: 'PENDING_DELEGATION', DELEGATION_SENT: 'DELEGATION_SENT',
+    ACKNOWLEDGED: 'ACKNOWLEDGED', IN_PROGRESS: 'IN_PROGRESS',
+    SUCCESS: 'SUCCESS', FAILURE: 'FAILURE',
+    WAITING_FOR_DEPENDENCY: 'WAITING_FOR_DEPENDENCY',
   }
-};
-// --- End SQL Service Mocking ---
+}));
+// --- End SupervisorTaskDBService Mocking ---
+
 
 describe('@elizaos/plugin-a2a-communication', () => {
   let mockRuntime: IAgentRuntime;
   let mockHandlerCallback: ReturnType<typeof vi.fn>;
   let runtimeEventEmitter: EventEmitter;
 
-  const devAgentChar: Character = { name: 'DevAgent001', system: 'Dev', plugins:[], bio:[], topics:[], messageExamples:[], style:{} };
+  const devAgentChar: Character = { name: 'DevAgent001', system: 'Dev System Prompt', plugins:[], bio:[], topics:[], messageExamples:[], style:{} };
+  const auditorChar: Character = { name: 'AuditBot001', system: 'Auditor System Prompt', plugins:[], bio:[], topics:[], messageExamples:[], style:{} };
   const supervisorChar: Character = {
-    name: 'SupervisorAlpha', system: 'Supervisor', plugins: ['@elizaos/plugin-sql'],
+    name: 'SupervisorAlpha', system: 'Supervisor System Prompt', plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-supervisor-utils'],
     bio:[], topics:[], messageExamples:[], style:{},
     settings: {
       supervisor_settings: {
-        default_task_decomposition_prompt_template: "Goal: {user_goal}. Decompose into JSON array of objects (fields: task_name, agent_type, task_description, parameters, dependencies as string[], expected_response_format): ",
+        default_task_decomposition_prompt_template: "Goal: {user_goal}. Decompose: ",
         team_roster: [
           { agent_id: 'dev-001', agent_type: 'DeveloperAgent', capabilities: ['GENERATE_CODE'] },
           { agent_id: 'audit-001', agent_type: 'BlockchainAuditorAgent', capabilities: ['PERFORM_AUDIT'] },
@@ -69,170 +79,178 @@ describe('@elizaos/plugin-a2a-communication', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-    mockSqlValues.mockReturnThis(); mockSqlSet.mockReturnThis(); mockSqlWhere.mockReturnThis(); mockSqlLimit.mockReturnThis(); mockSqlFrom.mockReturnThis();
-    mockSqlDbSelectExecute.mockResolvedValue([]); // Reset select mock
     mockHandlerCallback = vi.fn();
     runtimeEventEmitter = new EventEmitter();
 
     mockRuntime = {
-      agentId: 'test-agent-id', character: supervisorChar,
+      agentId: 'test-agent-id', character: devAgentChar, // Default character
       emit: vi.fn((event, ...args) => runtimeEventEmitter.emit(event, ...args)),
       on: vi.fn((event, listener) => runtimeEventEmitter.on(event, listener as (...args: any[]) => void)),
       getService: vi.fn().mockImplementation((serviceTypeOrClass: string | typeof Service | any) => {
         const type = typeof serviceTypeOrClass === 'string' ? serviceTypeOrClass : serviceTypeOrClass.serviceType;
         if (type === 'A2AService') return new (vi.mocked(A2AService))(mockRuntime);
-        if (type === '@elizaos/plugin-sql') return mockSqlService;
+        if (type === SupervisorTaskDBService.serviceType || serviceTypeOrClass === SupervisorTaskDBService) { // Use static serviceType
+            return new (vi.mocked(SupervisorTaskDBService))(mockRuntime);
+        }
         return undefined;
       }),
       useModel: vi.fn().mockResolvedValue("LLM_RESPONSE"),
       performAction: vi.fn().mockImplementation(async (actionName, options) => {
         if (actionName === 'SEND_A2A_MESSAGE') {
           const msgId = uuidv4();
-          (mockRuntime.getService('A2AService') as A2AService)?.sendMessage({ message_id: msgId, receiver_agent_id: options.receiver_agent_id } as A2AMessage);
+          (mockRuntime.getService(A2AService.serviceType) as A2AService)?.sendMessage({ message_id: msgId, receiver_agent_id: options.receiver_agent_id } as A2AMessage);
           return { data: { messageId: msgId } };
         }
         return { stdout: 'Mocked Action Result' };
       }),
     } as unknown as IAgentRuntime;
     (A2AService as any).serviceType = 'A2AService';
+    (SupervisorTaskDBService as any).serviceType = 'SupervisorTaskDBService'; // Ensure static type is on the mock
     (uuidv4 as ReturnType<typeof vi.fn>).mockImplementation(() => `mock-uuid-${Math.random().toString(36).substring(2, 8)}`);
-    a2aCommunicationPlugin.init?.(mockRuntime, {});
+    // Plugin init is called per test suite (describe block) if needed with specific character
   });
 
-  describe('SupervisoryAgent Logic with Task Dependencies and DB Updates', () => {
-    beforeEach(() => {
-        mockRuntime.character = supervisorChar;
-        mockRuntime.agentId = 'supervisor-001';
-        a2aCommunicationPlugin.init?.(mockRuntime, {});
+  describe(`Handler for ${PROCESS_A2A_TASK_EVENT}`, () => {
+
+    describe('DeveloperAgent Logic', () => {
+        beforeEach(async () => {
+            mockRuntime.character = devAgentChar;
+            mockRuntime.agentId = 'dev-001';
+            await a2aCommunicationPlugin.init?.(mockRuntime, {});
+        });
+
+        it('TASK_RESPONSE includes original_request_message_id', async () => {
+            const taskRequestMessage: A2AMessage = {
+                protocol_version: A2AProtocolVersion, message_id: 'dev-task-orig-id-check', timestamp: new Date().toISOString(),
+                sender_agent_id: 'supervisor-001', receiver_agent_id: 'dev-001',
+                message_type: A2AMessageType.TASK_REQUEST,
+                payload: { task_name: 'GENERATE_CODE', task_description: 'Test original ID field.' },
+            };
+            vi.mocked(mockRuntime.useModel).mockResolvedValueOnce('// generated code');
+            (uuidv4 as ReturnType<typeof vi.fn>).mockReturnValueOnce('dev-resp-id-for-orig-check');
+
+            runtimeEventEmitter.emit(PROCESS_A2A_TASK_EVENT, taskRequestMessage);
+            await new Promise(setImmediate);
+
+            expect(mockA2AServiceSendMessage).toHaveBeenCalledOnce();
+            const responseMessage = mockA2AServiceSendMessage.mock.calls[0][0] as A2AMessage;
+            const responsePayload = responseMessage.payload as TaskResponsePayload;
+            expect(responsePayload.original_request_message_id).toBe('dev-task-orig-id-check');
+            expect(responsePayload.status).toBe('SUCCESS');
+            expect(responsePayload.result).toBe('// generated code');
+        });
     });
 
-    it('MANAGE_PROJECT_GOAL: should mark task as WAITING_FOR_DEPENDENCY if prerequisite is not SUCCESS', async () => {
-      const goal = "Develop feature Y which depends on X.";
-      const taskMsg: A2AMessage = { /* ... MANAGE_PROJECT_GOAL task ... */ } as A2AMessage;
-      taskMsg.payload = { task_name: 'MANAGE_PROJECT_GOAL', goal_description: goal };
-      taskMsg.message_type = A2AMessageType.TASK_REQUEST;
-      taskMsg.conversation_id = 'proj-depend';
+    describe('BlockchainAuditorAgent Logic', () => {
+        beforeEach(async () => {
+            mockRuntime.character = auditorChar;
+            mockRuntime.agentId = 'audit-001';
+            await a2aCommunicationPlugin.init?.(mockRuntime, {});
+        });
 
-      const subTasksLLMResponse = JSON.stringify([
-        { task_name: "DEV_X", agent_type: "DeveloperAgent", dependencies: [] },
-        { task_name: "DEV_Y", agent_type: "DeveloperAgent", dependencies: ["DEV_X"] }
-      ]);
-      vi.mocked(mockRuntime.useModel).mockResolvedValueOnce(subTasksLLMResponse);
-      // Mock DB select for DEV_X to show it's not yet SUCCESS
-      mockSqlDbSelectExecute.mockImplementation(async () => {
-          // This mock should specifically respond to the query for DEV_X's status
-          // For simplicity, assume any select call here is the dependency check for DEV_X
-          return [{ status: DelegatedSubTaskStatus.DELEGATION_SENT }]; // DEV_X is not SUCCESS
-      });
+        it('TASK_RESPONSE includes original_request_message_id', async () => {
+            const taskRequestMessage: A2AMessage = {
+                protocol_version: A2AProtocolVersion, message_id: 'audit-task-orig-id-check', timestamp: new Date().toISOString(),
+                sender_agent_id: 'supervisor-001', receiver_agent_id: 'audit-001',
+                message_type: A2AMessageType.TASK_REQUEST,
+                payload: { task_name: 'PERFORM_AUDIT', parameters: { targetPath: '/test/path' } },
+            };
+            vi.mocked(mockRuntime.performAction).mockResolvedValue({ stdout: 'Tool output', stderr: '', exitCode: 0 });
+            vi.mocked(mockRuntime.useModel).mockResolvedValueOnce('Audit summary from LLM');
+            (uuidv4 as ReturnType<typeof vi.fn>).mockReturnValueOnce('audit-resp-id-for-orig-check');
 
-      (uuidv4 as ReturnType<typeof vi.fn>) // Control UUIDs for this specific test
-        .mockReturnValueOnce('devX-a2a-id')   // For DEV_X A2A message
-        .mockReturnValueOnce('db-devX-id')    // For DEV_X DB record
-        // No A2A id for DEV_Y as it should be waiting
-        .mockReturnValueOnce('db-devY-id')    // For DEV_Y DB record (marked as waiting)
-        .mockReturnValueOnce('supervisor-resp-id');
+            runtimeEventEmitter.emit(PROCESS_A2A_TASK_EVENT, taskRequestMessage);
+            await new Promise(setImmediate);
 
-      runtimeEventEmitter.emit(PROCESS_A2A_TASK_EVENT, taskMsg);
-      await new Promise(setImmediate);
-
-      expect(mockSqlService.db.insert).toHaveBeenCalledTimes(2); // Both tasks recorded
-      const devXCall = mockSqlValues.mock.calls.find(c => c[0].subTaskName === 'DEV_X');
-      const devYCall = mockSqlValues.mock.calls.find(c => c[0].subTaskName === 'DEV_Y');
-
-      expect(devXCall[0].status).toBe(DelegatedSubTaskStatus.PENDING_DELEGATION); // Will be updated to DELEGATION_SENT after performAction
-      expect(devYCall[0].status).toBe(DelegatedSubTaskStatus.WAITING_FOR_DEPENDENCY);
-
-      // Check that performAction was called for DEV_X but not DEV_Y initially
-      expect(mockRuntime.performAction).toHaveBeenCalledTimes(1); // Only DEV_X delegated
-      expect(vi.mocked(mockRuntime.performAction).mock.calls[0][1].payload.task_name).toBe("DEV_X");
+            expect(mockA2AServiceSendMessage).toHaveBeenCalledOnce();
+            const responseMessage = mockA2AServiceSendMessage.mock.calls[0][0] as A2AMessage;
+            const responsePayload = responseMessage.payload as TaskResponsePayload;
+            expect(responsePayload.original_request_message_id).toBe('audit-task-orig-id-check');
+            expect(responsePayload.status).toBe('SUCCESS');
+            expect(responsePayload.result.summary).toBe('Audit summary from LLM');
+        });
     });
 
-    it('on TASK_RESPONSE (SUCCESS): should update completed task and trigger delegation of waiting dependent tasks', async () => {
-      const projectConvId = 'proj-depend-trigger';
-      // 1. Setup: Supervisor has two tasks, DEV_Y depends on DEV_X. DEV_X is PENDING, DEV_Y is WAITING.
-      // Mock DB state:
-      const mockWaitingDevYTask = {
-          id: 'db-devY-id', subTaskName: 'DEV_Y', projectConversationId: projectConvId,
-          status: DelegatedSubTaskStatus.WAITING_FOR_DEPENDENCY,
-          dependencies: JSON.stringify(['DEV_X']), // Assume dependencies are stored as JSON string
-          parametersSent: JSON.stringify({ lang: 'ts' }) // Assume params are stored
-      };
-      mockSqlDbSelectExecute
-          .mockResolvedValueOnce([]) // Initial check for DEV_X (no SUCCESS record yet)
-          .mockResolvedValueOnce([mockWaitingDevYTask]); // When checkAndDelegateWaitingTasks queries for waiting tasks
+    describe('SupervisoryAgent Logic with SQL Persistence', () => {
+        beforeEach(async () => {
+            mockRuntime.character = supervisorChar;
+            mockRuntime.agentId = 'supervisor-001';
+            await a2aCommunicationPlugin.init?.(mockRuntime, {});
+        });
 
-      // Simulate Supervisor decomposing and initially trying to delegate
-      const initialGoalTask: A2AMessage = { /* ... MANAGE_PROJECT_GOAL task ... */ } as A2AMessage;
-      initialGoalTask.payload = { task_name: 'MANAGE_PROJECT_GOAL', goal_description: "Dep test" };
-      initialGoalTask.message_type = A2AMessageType.TASK_REQUEST;
-      initialGoalTask.conversation_id = projectConvId;
-      const subTasksLLMResp = JSON.stringify([
-        { task_name: "DEV_X", agent_type: "DeveloperAgent", dependencies: [] },
-        { task_name: "DEV_Y", agent_type: "DeveloperAgent", dependencies: ["DEV_X"] }
-      ]);
-      vi.mocked(mockRuntime.useModel).mockResolvedValueOnce(subTasksLLMResp);
-      (uuidv4 as ReturnType<typeof vi.fn>)
-        .mockReturnValueOnce('devX-a2a-id-trigger')
-        .mockReturnValueOnce('db-devX-id-trigger')
-        .mockReturnValueOnce('db-devY-id-trigger')
-        .mockReturnValueOnce('supervisor-resp-id-trigger');
+        // Test for MANAGE_PROJECT_GOAL (decomposition and delegation)
+        it('MANAGE_PROJECT_GOAL: should delegate tasks and insert records using SupervisorTaskDBService', async () => {
+            const goal = "Supervise a project.";
+            const manageProjectGoalTask: A2AMessage = {
+                protocol_version: A2AProtocolVersion, message_id: 'sup-goal-msg-id', timestamp: new Date().toISOString(),
+                sender_agent_id: 'human-user', receiver_agent_id: 'supervisor-001',
+                message_type: A2AMessageType.TASK_REQUEST,
+                payload: { task_name: 'MANAGE_PROJECT_GOAL', goal_description: goal },
+                conversation_id: 'proj-supervise-123',
+            };
+            const decomposedSubTasks = [
+                { task_name: "SUB_A", agent_type: "DeveloperAgent", dependencies: [], parameters: {detail:"A"}, task_description:"Desc A" },
+                { task_name: "SUB_B", agent_type: "BlockchainAuditorAgent", dependencies: ["SUB_A"], parameters: {detail:"B"}, task_description:"Desc B" }
+            ];
+            vi.mocked(mockRuntime.useModel).mockResolvedValueOnce("```json\n" + JSON.stringify(decomposedSubTasks) + "\n```");
 
-      runtimeEventEmitter.emit(PROCESS_A2A_TASK_EVENT, initialGoalTask);
-      await new Promise(setImmediate);
-      vi.clearAllMocks(); // Clear mocks after initial setup processing
+            // Mock performAction to return unique message IDs for sent A2A messages
+            const subTaskAMsgId = 'sub-a-a2a-msg-id';
+            vi.mocked(mockRuntime.performAction).mockResolvedValueOnce({ data: { messageId: subTaskAMsgId } });
+            // SUB_B won't be delegated immediately due to dependency
 
-      // 2. Action: Supervisor receives TASK_RESPONSE (SUCCESS) for DEV_X
-      const devXSuccessResponse: A2AMessage = {
-        message_type: A2AMessageType.TASK_RESPONSE,
-        payload: { original_task_name: "DEV_X", status: "SUCCESS", result: "//code", original_request_message_id: 'devX-a2a-id-trigger' },
-        sender_agent_id: 'dev-001', receiver_agent_id: 'supervisor-001', message_id: 'devX-resp-id',
-        protocol_version: A2AProtocolVersion, timestamp: new Date().toISOString(), conversation_id: projectConvId,
-      };
-      // Mock DB select for dependency check inside checkAndDelegateWaitingTasks:
-      // First call for DEV_X status (now SUCCESS)
-      mockSqlDbSelectExecute.mockResolvedValueOnce([{ status: DelegatedSubTaskStatus.SUCCESS }]);
-      // Second call for finding waiting tasks (returns DEV_Y)
-      // mockSqlDbSelectExecute.mockResolvedValueOnce([mockWaitingDevYTask]); // This was for initial setup, now it's for re-check
-      // For the re-check of DEV_Y's dependencies, it will query for DEV_X again
-      // Let's refine the mock for sqlService.db.select for more granular control
-      const selectMock = vi.fn();
-      selectMock.mockImplementation(async () => {
-          // If querying for DEV_X status for dependency check of DEV_Y
-          if (mockSqlWhere.mock.calls.some(c => c[0].field === 'subTaskName' && c[0].value === 'DEV_X')) {
-              return [{ status: DelegatedSubTaskStatus.SUCCESS }];
-          }
-          // If querying for WAITING_FOR_DEPENDENCY tasks
-          if (mockSqlWhere.mock.calls.some(c => c[0].field === 'status' && c[0].value === DelegatedSubTaskStatus.WAITING_FOR_DEPENDENCY)) {
-              return [mockWaitingDevYTask];
-          }
-          return [];
-      });
-      mockSqlService.db.select = vi.fn(() => ({ from: mockSqlFrom, where: mockSqlWhere, limit: mockSqlLimit, execute: selectMock }));
+            // Mock recordNewSubTask to return the task with a DB ID
+            mockRecordNewSubTask.mockImplementation(async (taskData) => ({ ...taskData, id: `db-${taskData.subTaskName}` }));
 
-      (uuidv4 as ReturnType<typeof vi.fn>)
-        .mockReturnValueOnce('devY-re-delegated-a2a-id') // For re-delegating DEV_Y
-        .mockReturnValueOnce('some-other-uuid'); // For any other UUID needs
+            runtimeEventEmitter.emit(PROCESS_A2A_TASK_EVENT, manageProjectGoalTask);
+            await new Promise(setImmediate);
 
-      runtimeEventEmitter.emit('a2a_message_received', devXSuccessResponse);
-      await new Promise(setImmediate);
+            expect(mockRecordNewSubTask).toHaveBeenCalledWith(expect.objectContaining({
+                subTaskName: "SUB_A", status: SupervisorTaskStatus.PENDING_DELEGATION // Will be updated to DELEGATION_SENT after action
+            }));
+            expect(mockRecordNewSubTask).toHaveBeenCalledWith(expect.objectContaining({
+                subTaskName: "SUB_B", status: SupervisorTaskStatus.WAITING_FOR_DEPENDENCY
+            }));
 
-      // Assertions:
-      // DEV_X status updated to SUCCESS in DB
-      expect(mockSqlService.db.update).toHaveBeenCalledWith(expect.objectContaining({ name: 'delegated_sub_tasks' }));
-      const devXUpdateCall = mockSqlSet.mock.calls.find(c => c[0].status === DelegatedSubTaskStatus.SUCCESS);
-      expect(devXUpdateCall).toBeDefined();
-      expect(mockSqlWhere).toHaveBeenCalledWith(expect.objectContaining({ field: 'a2aRequestMessageId', value: 'devX-a2a-id-trigger' }));
+            // Check if SUB_A was delegated
+            expect(mockRuntime.performAction).toHaveBeenCalledWith('SEND_A2A_MESSAGE',
+                expect.objectContaining({ payload: expect.objectContaining({ task_name: "SUB_A" }) })
+            );
+            // Check if SUB_A's status was updated to DELEGATION_SENT
+            expect(mockUpdateTaskStatusByA2ARequestId).toHaveBeenCalledWith(
+                expect.any(String), // temp a2aRequestMessageId used during PENDING_DELEGATION
+                SupervisorTaskStatus.DELEGATION_SENT,
+                expect.objectContaining({ resultSummary: expect.stringContaining(subTaskAMsgId) })
+            );
+        });
 
-      // checkAndDelegateWaitingTasks was called
-      // DEV_Y was re-evaluated and delegated
-      expect(mockRuntime.performAction).toHaveBeenCalledTimes(1); // For re-delegating DEV_Y
-      expect(vi.mocked(mockRuntime.performAction).mock.calls[0][0]).toBe('SEND_A2A_MESSAGE');
-      expect(vi.mocked(mockRuntime.performAction).mock.calls[0][1].payload.task_name).toBe('DEV_Y');
+        // Test for Supervisor receiving ACK and TASK_RESPONSE
+        it('on a2a_message_received (ACK/TASK_RESPONSE by Supervisor): should update DB via SupervisorTaskDBService', async () => {
+            const originalSentA2AMsgId = 'delegated-task-a2a-id';
+            // ACK
+            const ackMessage: A2AMessage = {
+                message_type: A2AMessageType.ACK, payload: { original_message_id: originalSentA2AMsgId },
+                /* other fields */ } as A2AMessage;
+            runtimeEventEmitter.emit('a2a_message_received', ackMessage);
+            await new Promise(setImmediate);
+            expect(mockUpdateTaskStatusByA2ARequestId).toHaveBeenCalledWith(originalSentA2AMsgId, SupervisorTaskStatus.ACKNOWLEDGED, expect.anything());
 
-      // DEV_Y status updated from WAITING_FOR_DEPENDENCY to DELEGATION_SENT in DB
-      const devYUpdateCall = mockSqlSet.mock.calls.find(c => c[0].status === DelegatedSubTaskStatus.DELEGATION_SENT && c[0].a2aRequestMessageId === 'devY-re-delegated-a2a-id');
-      expect(devYUpdateCall).toBeDefined();
-      expect(mockSqlWhere).toHaveBeenCalledWith(expect.objectContaining({ field: 'id', value: 'db-devY-id' }));
+            vi.clearAllMocks(); // Clear for next part
+
+            // TASK_RESPONSE (SUCCESS)
+            const taskResponseMessage: A2AMessage = {
+                message_type: A2AMessageType.TASK_RESPONSE,
+                payload: { original_request_message_id: originalSentA2AMsgId, status: "SUCCESS", result: "done" },
+                 /* other fields */ } as A2AMessage;
+
+            // Mock for checkAndDelegateWaitingTasks
+            mockGetTasksByProjectAndStatus.mockResolvedValueOnce([]); // No waiting tasks to simplify
+
+            runtimeEventEmitter.emit('a2a_message_received', taskResponseMessage);
+            await new Promise(setImmediate);
+            expect(mockUpdateTaskStatusByA2ARequestId).toHaveBeenCalledWith(originalSentA2AMsgId, SupervisorTaskStatus.SUCCESS, expect.objectContaining({ resultSummary: '"done"'}));
+            expect(mockGetTasksByProjectAndStatus).toHaveBeenCalled(); // checkAndDelegate was called
+        });
     });
   });
 });

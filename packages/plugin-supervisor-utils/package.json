@@ -1,0 +1,81 @@
+{
+  "name": "@elizaos/plugin-supervisor-utils",
+  "description": "Utility plugin for Supervisor Agents, including DB schema and services for task management.",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "packageType": "plugin",
+  "platform": "node",
+  "license": "Apache-2.0",
+  "author": "Jules for ElizaOS",
+  "keywords": [
+    "plugin",
+    "elizaos",
+    "supervisor",
+    "task-management",
+    "database"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elizaos/eliza.git",
+    "directory": "packages/plugin-supervisor-utils"
+  },
+  "homepage": "https://elizaos.ai",
+  "bugs": {
+    "url": "https://github.com/elizaos/eliza/issues"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./db/schema": {
+      "import": {
+        "types": "./dist/db/schema.d.ts",
+        "default": "./dist/db/schema.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    ".npmignore",
+    "package.json",
+    "tsup.config.ts",
+    "src"
+  ],
+  "dependencies": {
+    "@elizaos/core": "^1.0.0",
+    "drizzle-orm": "^0.30.10", // For schema definition and query building
+    "uuid": "^10.0.0" // If generating IDs within this plugin's service
+    // SQL driver (e.g., better-sqlite3, pg) would be a dependency of @elizaos/plugin-sql, not directly here.
+  },
+  "devDependencies": {
+    "@elizaos/cli": "^1.0.0",
+    "@types/uuid": "^10.0.0",
+    "prettier": "3.5.3",
+    "tsup": "8.5.0",
+    "typescript": "5.8.2",
+    "@types/node": "^20.12.12",
+    "vitest": "^1.6.0"
+    // "drizzle-kit": "^0.21.0" // Would be needed for generating migrations
+  },
+  "scripts": {
+    "dev": "tsup --watch", // Watch all entry points
+    "build": "tsup",
+    "lint": "prettier --write ./src",
+    "test": "bun test",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check ./src"
+    // "db:generate": "drizzle-kit generate" // Example for migrations
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

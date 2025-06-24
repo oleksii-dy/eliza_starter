@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false, // Allow emitting files for the build by tsup
+    "declaration": true, // Generate .d.ts files
+    "declarationDir": "./dist", // Output directory for declaration files
+    // tsup handles actual JS emit, so emitDeclarationOnly could be true if tsc is only for .d.ts
+    // However, tsup uses this tsconfig, so noEmit:false is fine.
+    // isolatedModules might be better false for build tsconfig if tsc has issues with complex types for d.ts
+    "isolatedModules": false
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/__tests__",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}

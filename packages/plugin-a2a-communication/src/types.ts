@@ -37,7 +37,7 @@ export type TaskRequestPayload = z.infer<typeof TaskRequestPayloadSchema>;
 
 export const TaskResponsePayloadSchema = z.object({
   original_task_name: z.string({ description: "The 'task_name' from the original TASK_REQUEST." }),
-  original_request_message_id: z.string().uuid({ message: "Original TASK_REQUEST message ID must be a valid UUID."}).optional().describe("The message_id of the TASK_REQUEST this is a response to. Crucial for supervisor tracking."),
+  original_request_message_id: z.string().uuid({ message: "Original TASK_REQUEST message ID must be a valid UUID."}).describe("The message_id of the TASK_REQUEST this is a response to. This field is CRITICAL for supervisor tracking and should always be populated by specialist agents."),
   status: z.enum(["SUCCESS", "FAILURE", "IN_PROGRESS"], { description: "Status of the task execution."}),
   result: z.any().optional().describe("The result of the task if status is SUCCESS. Can be any JSON-compatible type."),
   error_message: z.string().nullable().optional().describe("Error message if status is FAILURE."),
