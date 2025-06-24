@@ -1657,6 +1657,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
               const embeddingValues: Record<string, unknown> = {
                 id: v4(),
                 memoryId: memory.id,
+                createdAt: new Date().getTime(),
               };
               embeddingValues[this.embeddingDimension] = cleanVector;
 
