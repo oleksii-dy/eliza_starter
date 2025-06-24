@@ -361,7 +361,7 @@ esac`;
 
   // publish --help (safe test that never prompts)
   it('publish --help shows usage', () => {
-    const result = execSync(`${elizaosCmd} publish --help`, { encoding: 'utf8' });
+    const result = execSync(`${elizaosCmd} publish --help`, getPlatformOptions({ encoding: 'utf8' }));
     expect(result).toContain('Usage: elizaos publish');
     expect(result).toContain('Publish a plugin to npm, GitHub, and the registry');
     expect(result).toContain('--npm');
@@ -373,18 +373,18 @@ esac`;
   // CLI integration (safe test)
   it('publish command integrates with CLI properly', () => {
     // Test that publish command is properly integrated into main CLI
-    const helpResult = execSync(`${elizaosCmd} --help`, { encoding: 'utf8' });
+    const helpResult = execSync(`${elizaosCmd} --help`, getPlatformOptions({ encoding: 'utf8' }));
     expect(helpResult).toContain('publish');
 
     // Test that publish command can be invoked
-    const publishHelpResult = execSync(`${elizaosCmd} publish --help`, { encoding: 'utf8' });
+    const publishHelpResult = execSync(`${elizaosCmd} publish --help`, getPlatformOptions({ encoding: 'utf8' }));
     expect(publishHelpResult).toContain('Options:');
   });
 
   // Test mode functionality (should not prompt with proper mocking)
   it('publish command validates basic directory structure', () => {
     // Test that publish command works with help
-    const result = execSync(`${elizaosCmd} publish --help`, { encoding: 'utf8' });
+    const result = execSync(`${elizaosCmd} publish --help`, getPlatformOptions({ encoding: 'utf8' }));
     expect(result).toContain('publish');
   });
 
@@ -400,14 +400,14 @@ esac`;
       })
     );
 
-    const result = execSync(`${elizaosCmd} publish --help`, { encoding: 'utf8' });
+    const result = execSync(`${elizaosCmd} publish --help`, getPlatformOptions({ encoding: 'utf8' }));
     expect(result).toContain('publish');
   });
 
   // Dry run functionality (should not prompt)
   it('publish dry-run flag works', () => {
     // Test that --dry-run flag is recognized
-    const result = execSync(`${elizaosCmd} publish --dry-run --help`, { encoding: 'utf8' });
+    const result = execSync(`${elizaosCmd} publish --dry-run --help`, getPlatformOptions({ encoding: 'utf8' }));
     expect(result).toContain('dry-run');
   });
 });

@@ -47,7 +47,7 @@ describe('ElizaOS Update Commands', () => {
 
   // --help
   it('update --help shows usage and options', () => {
-    const result = execSync(`${elizaosCmd} update --help`, { encoding: 'utf8' });
+    const result = execSync(`${elizaosCmd} update --help`, getPlatformOptions({ encoding: 'utf8' }));
     expect(result).toContain('Usage: elizaos update');
     expect(result).toContain('--cli');
     expect(result).toContain('--packages');

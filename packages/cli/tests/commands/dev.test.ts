@@ -195,7 +195,7 @@ describe('ElizaOS Dev Commands', () => {
   };
 
   it('dev --help shows usage', () => {
-    const result = execSync(`${elizaosCmd} dev --help`, { encoding: 'utf8' });
+    const result = execSync(`${elizaosCmd} dev --help`, getPlatformOptions({ encoding: 'utf8' }));
     expect(result).toContain('Usage: elizaos dev');
     expect(result).toContain('development mode');
     expect(result).toContain('auto-rebuild');
@@ -520,12 +520,14 @@ describe('ElizaOS Dev Commands', () => {
   it('dev command validates port parameter', () => {
     // Test that invalid port is rejected
     try {
-      execSync(`${elizaosCmd} dev --port abc`, {
-        encoding: 'utf8',
-        stdio: 'pipe',
-        timeout: TEST_TIMEOUTS.QUICK_COMMAND,
-        cwd: projectDir,
-      });
+      execSync(`${elizaosCmd} dev --port abc`, 
+        getPlatformOptions({
+          encoding: 'utf8',
+          stdio: 'pipe',
+          timeout: TEST_TIMEOUTS.QUICK_COMMAND,
+          cwd: projectDir,
+        })
+      );
       expect(false).toBe(true); // Should not reach here
     } catch (error: any) {
       // Expect command to fail with non-zero exit code

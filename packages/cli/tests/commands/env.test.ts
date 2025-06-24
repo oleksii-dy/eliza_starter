@@ -61,11 +61,15 @@ describe('ElizaOS Env Commands', () => {
       return;
     }
 
-    // Use printf to simulate user input on Unix systems
-    const result = execSync(`printf "y\\n" | ${context.elizaosCmd} env edit-local`, {
+    // Use platform-appropriate command to simulate user input
+    const inputCommand = process.platform === 'win32' 
+      ? `echo y | ${context.elizaosCmd} env edit-local`
+      : `printf "y\\n" | ${context.elizaosCmd} env edit-local`;
+    
+    const result = execSync(inputCommand, getPlatformOptions({
       encoding: 'utf8',
-      shell: '/bin/bash',
-    });
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
+    }));
 
     // The command should complete successfully
     expect(result).toBeTruthy();
