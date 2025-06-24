@@ -18,12 +18,9 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves event logs based on filter criteria
  */
 export const getLogsAction: Action = {
-  name: 'GET_LOGS_ZKEVM',
+  name: 'POLYGON_ZKEVM_GET_LOGS',
   similes: ['GET_EVENTS', 'EVENT_LOGS', 'LOGS', 'CONTRACT_EVENTS'].map((s) => `POLYGON_ZKEVM_${s}`),
   description: 'Gets logs/events for a given contract address on Polygon zkEVM.',
-  parameters: {
-    type: 'object',
-  },
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');

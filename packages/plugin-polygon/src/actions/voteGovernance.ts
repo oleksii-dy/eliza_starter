@@ -182,7 +182,7 @@ class PolygonVoteGovernanceActionRunner {
 }
 
 export const voteGovernanceAction: Action = {
-  name: 'VOTE_GOVERNANCE_PROPOSAL',
+  name: 'POLYGON_VOTE_GOVERNANCE_PROPOSAL',
   similes: ['CAST_VOTE', 'SUPPORT_PROPOSAL', 'VOTE_ON_PROPOSAL'].map((s) => `POLYGON_${s}`),
   description: 'Votes on a governance proposal on Polygon.',
   parameters: {

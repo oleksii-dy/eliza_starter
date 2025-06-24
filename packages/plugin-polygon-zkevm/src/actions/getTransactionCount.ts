@@ -18,12 +18,9 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves the transaction count (nonce) for a specific address
  */
 export const getTransactionCountAction: Action = {
-  name: 'GET_TRANSACTION_COUNT_ZKEVM',
+  name: 'POLYGON_ZKEVM_GET_TRANSACTION_COUNT',
   similes: ['GET_NONCE', 'TRANSACTION_COUNT', 'NONCE', 'TX_COUNT'].map((s) => `POLYGON_ZKEVM_${s}`),
   description: 'Gets the transaction count (nonce) for a given address on Polygon zkEVM.',
-  parameters: {
-    type: 'object',
-  },
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');

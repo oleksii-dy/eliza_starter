@@ -17,7 +17,7 @@ import { getGasPriceTemplate } from '../templates';
  * Retrieves current gas price
  */
 export const getGasPriceAction: Action = {
-  name: 'POLYGON_GET_GAS_PRICE_ZKEVM',
+  name: 'POLYGON_ZKEVM_GET_GAS_PRICE',
   similes: ['GAS_PRICE', 'CURRENT_GAS', 'GAS_FEE', 'GWEI'].map((s) => `POLYGON_ZKEVM_${s}`),
   description: 'Get current gas price on Polygon zkEVM',
 

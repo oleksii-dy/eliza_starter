@@ -229,7 +229,7 @@ class PolygonProposeGovernanceActionRunner {
 }
 
 export const proposeGovernanceAction: Action = {
-  name: 'PROPOSE_GOVERNANCE',
+  name: 'POLYGON_PROPOSE_GOVERNANCE',
   similes: ['CREATE_PROPOSAL', 'SUBMIT_GOVERNANCE_ACTION'].map((s) => `POLYGON_${s}`),
   description: 'Creates a new governance proposal on Polygon.',
 

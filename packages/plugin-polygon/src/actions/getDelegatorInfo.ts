@@ -22,7 +22,7 @@ interface DelegatorParams {
 }
 
 export const getDelegatorInfoAction: Action = {
-  name: 'GET_DELEGATOR_INFO',
+  name: 'POLYGON_GET_DELEGATOR_INFO',
   similes: ['QUERY_STAKE', 'DELEGATOR_DETAILS', 'GET_MY_STAKE', 'GET_L1_DELEGATOR_INFO'].map(
     (s) => `POLYGON_${s}`
   ),

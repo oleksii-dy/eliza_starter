@@ -18,14 +18,11 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves the contract code for a specific address
  */
 export const getCodeAction: Action = {
-  name: 'GET_CODE_ZKEVM',
+  name: 'POLYGON_ZKEVM_GET_CODE',
   similes: ['GET_CONTRACT_CODE', 'CONTRACT_CODE', 'BYTECODE', 'CODE'].map(
     (s) => `POLYGON_ZKEVM_${s}`
   ),
   description: 'Gets the code for a given contract address on Polygon zkEVM.',
-  parameters: {
-    type: 'object',
-  },
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');

@@ -39,14 +39,11 @@ interface OfficialOpenOrder {
  * Fetches detailed information for a specific order.
  */
 export const getOrderDetailsAction: Action = {
-  name: 'GET_ORDER_DETAILS',
+  name: 'POLYMARKET_GET_ORDER_DETAILS',
   similes: ['ORDER_DETAILS', 'GET_ORDER', 'FETCH_ORDER', 'SHOW_ORDER_INFO', 'ORDER_STATUS'].map(
     (s) => `POLYMARKET_${s}`
   ),
   description: 'Retrieves details for a specific order by its ID.',
-  parameters: {
-    type: 'object',
-  },
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     logger.info(`[getOrderDetailsAction] Validate called for message: "${message.content?.text}"`);

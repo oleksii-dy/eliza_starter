@@ -48,7 +48,7 @@ const NETWORK_IDS = {
 };
 
 export const bridgeAssetsAction: Action = {
-  name: 'BRIDGE_ASSETS_ZKEVM',
+  name: 'POLYGON_ZKEVM_BRIDGE_ASSETS',
   similes: ['BRIDGE_TOKENS', 'DEPOSIT_ASSETS', 'WITHDRAW_ASSETS', 'BRIDGE_ETH', 'BRIDGE_ERC20'].map(
     (s) => `POLYGON_ZKEVM_${s}`
   ),

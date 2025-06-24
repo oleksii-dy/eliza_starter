@@ -53,7 +53,7 @@ function extractParamsFromText(text: string): Partial<DelegateL1Params> {
 }
 
 export const delegateL1Action: Action = {
-  name: 'DELEGATE_L1',
+  name: 'POLYGON_DELEGATE_L1',
   description: 'Delegates MATIC tokens to a validator on the L1 staking contract.',
   similes: ['STAKE_L1_MATIC', 'DELEGATE_TO_VALIDATOR_L1', 'STAKE_ON_ETHEREUM_L1'].map(
     (s) => `POLYGON_${s}`

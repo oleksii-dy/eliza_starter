@@ -46,14 +46,11 @@ function validateAndNormalizeAddress(address: string): string {
  * Estimates gas required for a transaction
  */
 export const estimateGasAction: Action = {
-  name: 'ESTIMATE_GAS_ZKEVM',
+  name: 'POLYGON_ZKEVM_ESTIMATE_GAS',
   similes: ['ESTIMATE_GAS', 'GAS_ESTIMATE', 'GAS_COST', 'TRANSACTION_COST'].map(
     (s) => `POLYGON_ZKEVM_${s}`
   ),
   description: 'Estimates the gas required for a transaction on Polygon zkEVM.',
-  parameters: {
-    type: 'object',
-  },
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');

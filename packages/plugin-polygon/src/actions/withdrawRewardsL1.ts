@@ -37,23 +37,10 @@ function extractParamsFromText(text: string): Partial<WithdrawRewardsParams> {
 }
 
 export const withdrawRewardsAction: Action = {
-  name: 'WITHDRAW_REWARDS_L1',
+  name: 'POLYGON_WITHDRAW_REWARDS_L1',
   description:
     'Withdraws accumulated staking rewards for a delegator from the L1 staking contract.',
   similes: ['CLAIM_L1_STAKING_REWARDS', 'COLLECT_VALIDATOR_REWARDS_L1'].map((s) => `POLYGON_${s}`),
-  parameters: {
-    type: 'object',
-    properties: {
-      validatorId: {
-        type: 'integer',
-        description: 'The ID of the validator to withdraw rewards from',
-      },
-      error: {
-        type: 'string',
-        description: 'Error message if the action fails',
-      },
-    },
-  },
 
   validate: async (
     runtime: IAgentRuntime,

@@ -25,7 +25,7 @@ interface OfficialOrdersScoringParams {
  * Check if an order is scoring (eligible for rewards) action for Polymarket.
  */
 export const checkOrderScoringAction: Action = {
-  name: 'CHECK_ORDER_SCORING',
+  name: 'POLYMARKET_CHECK_ORDER_SCORING',
   similes: ['ORDERS_ELIGIBLE_FOR_REWARDS', 'SCORING_STATUS', 'ARE_MY_ORDERS_SCORING'].map(
     (s) => `POLYMARKET_${s}`
   ),

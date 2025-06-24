@@ -184,7 +184,7 @@ class PolygonExecuteGovernanceActionRunner {
 }
 
 export const executeGovernanceAction: Action = {
-  name: 'EXECUTE_GOVERNANCE_PROPOSAL',
+  name: 'POLYGON_EXECUTE_GOVERNANCE_PROPOSAL',
   similes: ['GOV_EXECUTE', 'RUN_POLYGON_PROPOSAL'].map((s) => `POLYGON_${s}`),
   description: 'Executes a queued governance proposal on Polygon.',
   validate: async (runtime: IAgentRuntime, _m: Memory, _s: State | undefined): Promise<boolean> => {

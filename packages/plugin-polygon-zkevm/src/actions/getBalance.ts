@@ -18,14 +18,11 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves the balance of a specific address
  */
 export const getBalanceAction: Action = {
-  name: 'GET_BALANCE_ZKEVM',
+  name: 'POLYGON_ZKEVM_GET_BALANCE',
   similes: ['CHECK_BALANCE', 'BALANCE', 'GET_ETH_BALANCE', 'WALLET_BALANCE'].map(
     (s) => `POLYGON_ZKEVM_${s}`
   ),
   description: 'Gets the balance of a given address on Polygon zkEVM.',
-  parameters: {
-    type: 'object',
-  },
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');

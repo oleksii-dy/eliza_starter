@@ -34,7 +34,7 @@ function extractParamsFromText(text: string): Partial<RestakeRewardsL1Params> {
 }
 
 export const restakeRewardsL1Action: Action = {
-  name: 'RESTAKE_REWARDS_L1',
+  name: 'POLYGON_RESTAKE_REWARDS_L1',
   description: 'Restakes accumulated staking rewards on the L1 staking contract.',
   similes: ['COMPOUND_L1_REWARDS', 'REINVEST_STAKING_REWARDS_L1'].map((s) => `POLYGON_${s}`),
   validate: async (

@@ -10,7 +10,7 @@ import {
 import { PolygonRpcService } from '../services/PolygonRpcService.js';
 
 export const getL2BlockNumberAction: Action = {
-  name: 'GET_L2_BLOCK_NUMBER',
+  name: 'POLYGON_GET_L2_BLOCK_NUMBER',
   similes: ['GET_BLOCK_NUMBER', 'CHECK_CURRENT_BLOCK', 'SHOW_LATEST_BLOCK'].map(
     (s) => `POLYGON_${s}`
   ),

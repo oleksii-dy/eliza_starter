@@ -18,7 +18,7 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves storage value at a specific slot for a contract address
  */
 export const getStorageAtAction: Action = {
-  name: 'GET_STORAGE_AT_ZKEVM',
+  name: 'POLYGON_ZKEVM_GET_STORAGE',
   similes: ['GET_STORAGE', 'STORAGE_SLOT', 'CONTRACT_STORAGE', 'STORAGE_VALUE'].map(
     (s) => `POLYGON_ZKEVM_${s}`
   ),

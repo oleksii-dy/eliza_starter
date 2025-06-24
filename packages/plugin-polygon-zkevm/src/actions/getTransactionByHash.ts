@@ -18,14 +18,11 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves transaction details by transaction hash
  */
 export const getTransactionByHashAction: Action = {
-  name: 'GET_TRANSACTION_BY_HASH_ZKEVM',
+  name: 'POLYGON_ZKEVM_GET_TRANSACTION_BY_HASH',
   similes: ['GET_TX_BY_HASH', 'GET_TRANSACTION', 'TRANSACTION_DETAILS', 'TX_DETAILS'].map(
     (s) => `POLYGON_ZKEVM_${s}`
   ),
   description: 'Gets transaction details for a given hash on Polygon zkEVM.',
-  parameters: {
-    type: 'object',
-  },
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
