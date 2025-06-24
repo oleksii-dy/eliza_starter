@@ -5,7 +5,6 @@ import { Check, Eye, EyeOff, MoreVertical, Settings, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { apiClient } from '@/lib/api';
 import { ApiKeyDialog } from './api-key-dialog';
-import { useToast } from '@/hooks/use-toast';
 
 export default function EnvSettings() {
   const [name, setName] = useState('');
@@ -18,7 +17,6 @@ export default function EnvSettings() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -229,28 +227,7 @@ export default function EnvSettings() {
         <Button variant="outline" onClick={handleReset}>
           Reset
         </Button>
-        <Button
-          type="submit"
-          disabled={isUpdating}
-          onClick={async () => {
-            setIsUpdating(true);
-            try {
-              await apiClient.updateLocalEnvs(localEnvs);
-              toast({
-                title: 'Success',
-                description: 'Environment variables updated successfully!',
-              });
-            } catch (error) {
-              toast({
-                title: 'Error',
-                description: 'Failed to update environment variables.',
-                variant: 'destructive',
-              });
-            } finally {
-              setIsUpdating(false);
-            }
-          }}
-        >
+        <Button variant="outline" disabled={isUpdating}>
           Save Changes
         </Button>
       </div>

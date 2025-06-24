@@ -1,4 +1,14 @@
-import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  mock,
+  spyOn,
+} from 'bun:test';
 import { createIsolatedTestDatabase } from '../test-helpers';
 import { v4 as uuidv4 } from 'uuid';
 import type {
@@ -6,6 +16,7 @@ import type {
   Memory,
   Component,
   Room,
+  World,
   UUID,
   Content,
   AgentRuntime,
@@ -63,7 +74,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         metadata: { type: 'test' },
       },
     ]);
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {

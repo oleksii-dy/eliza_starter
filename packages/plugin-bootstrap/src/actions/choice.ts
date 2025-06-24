@@ -172,10 +172,10 @@ export const choiceAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state?: State,
+    state?: State,
     _options?: any,
     callback?: HandlerCallback,
-    _responses?: Memory[]
+    responses?: Memory[]
   ): Promise<void> => {
     const pendingTasks = await runtime.getTasks({
       roomId: message.roomId,

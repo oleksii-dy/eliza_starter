@@ -3,6 +3,7 @@ import { mock, spyOn } from 'bun:test';
 import { findEntityByName, createUniqueUuid, getEntityDetails, formatEntities } from '../entities';
 import type { IAgentRuntime } from '../types/runtime';
 import type { Entity, UUID, Memory, State } from '../types';
+import { parseJSONObjectFromText } from '../utils';
 import * as utils from '../utils';
 import * as index from '../index';
 import * as logger_module from '../logger';
@@ -320,7 +321,7 @@ describe('entities', () => {
       const result = await findEntityByName(mockRuntime, mockMemory, mockState);
 
       expect(result).toBeDefined();
-      expect(result?.id).toBe('entity-exact' as UUID);
+      expect(result?.id).toBe('entity-exact');
       // Verify getEntityById was called (covers lines 274-282)
       expect(mockRuntime.getEntityById).toHaveBeenCalledWith('entity-exact');
       parseJSONSpy.mockRestore();
@@ -375,7 +376,7 @@ describe('entities', () => {
       const result = await findEntityByName(mockRuntime, mockMemory, mockState);
 
       expect(result).toBeDefined();
-      expect(result?.id).toBe('entity-user' as UUID);
+      expect(result?.id).toBe('entity-user');
       parseJSONSpy.mockRestore();
     });
 
@@ -428,7 +429,7 @@ describe('entities', () => {
       const result = await findEntityByName(mockRuntime, mockMemory, mockState);
 
       expect(result).toBeDefined();
-      expect(result?.id).toBe('entity-handle' as UUID);
+      expect(result?.id).toBe('entity-handle');
       parseJSONSpy.mockRestore();
     });
   });
@@ -436,7 +437,7 @@ describe('entities', () => {
   describe('createUniqueUuid', () => {
     it('should return agent ID when base user ID matches agent ID', () => {
       const result = createUniqueUuid(mockRuntime, 'agent-id-123');
-      expect(result).toBe('agent-id-123' as UUID);
+      expect(result).toBe('agent-id-123');
     });
 
     it('should create UUID from combined string for different IDs', () => {
@@ -445,7 +446,7 @@ describe('entities', () => {
 
       const result = createUniqueUuid(mockRuntime, 'user-456');
 
-      expect(result).toBe('unique-uuid-123' as UUID);
+      expect(result).toBe('unique-uuid-123');
       expect(stringToUuidSpy).toHaveBeenCalledWith('user-456:agent-id-123');
       stringToUuidSpy.mockRestore();
     });
@@ -456,7 +457,7 @@ describe('entities', () => {
 
       const result = createUniqueUuid(mockRuntime, 'user-789' as UUID);
 
-      expect(result).toBe('unique-uuid-456' as UUID);
+      expect(result).toBe('unique-uuid-456');
       expect(stringToUuidSpy).toHaveBeenCalledWith('user-789:agent-id-123');
       stringToUuidSpy.mockRestore();
     });

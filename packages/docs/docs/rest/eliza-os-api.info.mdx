@@ -1,7 +1,7 @@
 ---
 id: eliza-os-api
 title: 'Eliza OS API'
-description: 'API documentation for Eliza OS v1.0.10 - A flexible and scalable AI agent framework.'
+description: 'API documentation for Eliza OS v1.0.0-alpha - A flexible and scalable AI agent framework.'
 sidebar_label: Introduction
 sidebar_position: 0
 hide_title: true
@@ -16,26 +16,28 @@ import Export from '@theme/ApiExplorer/Export';
 
 <span
   className={'theme-doc-version-badge badge badge--secondary'}
-  children={'Version: 1.0.10'}
+  children={'Version: 1.0.0-alpha'}
 ></span>
 
 <Heading as={'h1'} className={'openapi__heading'} children={'Eliza OS API'}></Heading>
 
-API documentation for Eliza OS v1.0.10 - A flexible and scalable AI agent framework.
+API documentation for Eliza OS v1.0.0-alpha - A flexible and scalable AI agent framework.
 
 This API is designed to be used with a locally running Eliza instance. Endpoints allow for creating,
 managing, and interacting with AI agents through a REST interface.
 
-The API is organized into the following domains:
+## API Structure
 
-- **System**: System-wide operations and environment management
-- **Agents**: Agent lifecycle and management operations
-- **Memory**: Agent memory and room management
-- **Messaging**: Message handling, channels, and servers
-- **Audio**: Audio processing and speech synthesis
-- **Media**: File upload and media management
-- **TEE**: Trusted Execution Environment operations
-- **WebSocket**: Real-time communication via Socket.IO
+The API is organized into the following main categories:
+
+- **`/api/agents`** - Agent creation, management, and interactions
+- **`/api/messaging`** - Message handling, channels, and communication
+- **`/api/media`** - File uploads, downloads, and media management
+- **`/api/memory`** - Agent memory storage and retrieval
+- **`/api/audio`** - Audio processing, transcription, and voice operations
+- **`/api/server`** - Runtime and server management operations
+- **`/api/tee`** - Trusted Execution Environment operations
+- **`/api/system`** - System configuration, health checks, and environment
 
 <div
   style={{

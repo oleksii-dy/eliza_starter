@@ -48,12 +48,7 @@ export const agentTemplates: AgentTemplate[] = [
       ],
       topics: ['Discord server', 'Community assistance', 'Command handling', 'Server information'],
       adjectives: ['Helpful', 'Responsive', 'Friendly', 'Informative', 'Reliable'],
-      plugins: [
-        '@elizaos/plugin-sql',
-        '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
-        '@elizaos/plugin-discord',
-      ],
+      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-discord'],
       style: {
         all: [
           'Be friendly and helpful',
@@ -100,12 +95,7 @@ export const agentTemplates: AgentTemplate[] = [
         'FAQ responses',
       ],
       adjectives: ['Helpful', 'Responsive', 'Friendly', 'Informative', 'Reliable'],
-      plugins: [
-        '@elizaos/plugin-sql',
-        '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
-        '@elizaos/plugin-telegram',
-      ],
+      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-telegram'],
       style: {
         all: [
           'Be concise and clear',
@@ -156,12 +146,7 @@ export const agentTemplates: AgentTemplate[] = [
         'Task management',
       ],
       adjectives: ['Responsive', 'Helpful', 'Organized', 'Team-oriented', 'Professional'],
-      plugins: [
-        '@elizaos/plugin-sql',
-        '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
-        '@elizaos/plugin-slack',
-      ],
+      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-slack'],
       style: {
         all: [
           'Be concise and clear',
@@ -213,12 +198,7 @@ export const agentTemplates: AgentTemplate[] = [
         'Brand voice',
       ],
       adjectives: ['Engaging', 'Concise', 'Strategic', 'Conversational', 'Creative'],
-      plugins: [
-        '@elizaos/plugin-sql',
-        '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
-        '@elizaos/plugin-twitter',
-      ],
+      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-twitter'],
       style: {
         all: [
           'Be concise and impactful',
@@ -273,12 +253,7 @@ export const agentTemplates: AgentTemplate[] = [
         'Development workflows',
       ],
       adjectives: ['Technical', 'Precise', 'Helpful', 'Organized', 'Knowledgeable'],
-      plugins: [
-        '@elizaos/plugin-sql',
-        '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
-        '@elizaos/plugin-github',
-      ],
+      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-github'],
       style: {
         all: [
           'Use technically precise language',
@@ -329,12 +304,7 @@ export const agentTemplates: AgentTemplate[] = [
         'Visual aesthetics',
       ],
       adjectives: ['Creative', 'Visual', 'Engaging', 'Trend-aware', 'Authentic'],
-      plugins: [
-        '@elizaos/plugin-sql',
-        '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
-        '@elizaos/plugin-instagram',
-      ],
+      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-instagram'],
       style: {
         all: [
           'Balance visual description with compelling text',

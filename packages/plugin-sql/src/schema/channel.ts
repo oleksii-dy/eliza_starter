@@ -1,5 +1,5 @@
 import { pgTable, text, jsonb, timestamp } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { messageServerTable } from './messageServer';
 
 export const channelTable = pgTable('channels', {

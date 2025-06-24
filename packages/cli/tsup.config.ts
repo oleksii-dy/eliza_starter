@@ -1,5 +1,6 @@
 import { defineConfig } from 'tsup';
 import { copy } from 'esbuild-plugin-copy';
+import path from 'path';
 
 export default defineConfig({
   clean: true,
@@ -18,7 +19,16 @@ export default defineConfig({
   dts: true,
   sourcemap: false,
   // Externalize problematic fs-related dependencies
-  external: ['fs-extra'],
+  external: [
+    'express',
+    'fs-extra',
+    'multer',
+    'socket.io',
+    'body-parser',
+    'cors',
+    'helmet',
+    'express-rate-limit',
+  ],
   platform: 'node',
   minify: false,
   target: 'esnext',
@@ -41,6 +51,14 @@ const require = createRequire(import.meta.url);
       // Recommended to resolve assets relative to the tsup.config.ts file directory
       resolveFrom: 'cwd',
       assets: [
+        {
+          from: '../../node_modules/@electric-sql/pglite/dist/pglite.data',
+          to: './dist',
+        },
+        {
+          from: '../../node_modules/@electric-sql/pglite/dist/pglite.wasm',
+          to: './dist',
+        },
         {
           from: './templates/**/*',
           to: './dist/templates',

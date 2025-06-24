@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { expandTildePath, resolveEnvFile, resolvePgliteDir } from '../../utils';
 import * as path from 'node:path';
+import * as os from 'node:os';
 
 // Mock dotenv to prevent loading actual .env file
 // In bun:test, module mocking is handled differently, but this test doesn't need it
@@ -70,18 +71,16 @@ describe('Utils', () => {
       expect(result).toBe('/env/pglite/dir');
     });
 
-    it('should use default .eliza/.elizadb dir if no dir or env var', () => {
+    it('should use fallback dir if no dir or env var', () => {
       delete process.env.PGLITE_DATA_DIR;
-      const result = resolvePgliteDir();
-      const projectRoot = path.resolve(process.cwd(), '..', '..');
-      expect(result).toBe(path.join(projectRoot, '.elizadb'));
+      const result = resolvePgliteDir(undefined, '/fallback/dir');
+      expect(result).toBe('/fallback/dir');
     });
 
     it('should use default path if no arguments or env var', () => {
       delete process.env.PGLITE_DATA_DIR;
       const result = resolvePgliteDir();
-      const projectRoot = path.resolve(process.cwd(), '..', '..');
-      expect(result).toBe(path.join(projectRoot, '.elizadb'));
+      expect(result).toBe(path.join(process.cwd(), '.eliza', '.elizadb'));
     });
 
     it('should expand tilde paths', () => {

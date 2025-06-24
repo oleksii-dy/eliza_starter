@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach, afterEach } from 'bun:test';
-import { mock } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
 import { createLogger, logger, elizaLogger } from '../logger';
+import type { Logger } from 'pino';
 
 // Mock environment variables
 const mockEnv = {

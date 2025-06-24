@@ -4,7 +4,3 @@ coverage = true
 
 [test.env]
 NODE_ENV = "test"
-
-coverage-exclude = [
-  "**/dist/**",
-]

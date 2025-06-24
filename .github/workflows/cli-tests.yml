@@ -35,6 +35,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # ── Restore Turborepo local cache ───────────────────────────────
+      - name: Restore Turbo cache
+        id: cache-turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: |
+            ${{ runner.os }}-turbo-${{ hashFiles('turbo.json', '**/bun.lock', '**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -43,7 +54,7 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.15
+          bun-version: latest
 
       - name: Mention Bun version
         run: bun --version
@@ -70,7 +81,6 @@ jobs:
         run: bun run build
 
       - name: Verify CLI build artifacts
-        shell: bash
         run: |
           echo "Checking CLI build artifacts..."
           echo "CLI dist contents:"
@@ -81,6 +91,14 @@ jobs:
           echo ""
           echo "CLI executable:"
           test -f packages/cli/dist/index.js && echo "✓ CLI index.js exists" || echo "ERROR: CLI index.js missing"
+
+      # ── Save Turborepo local cache (only if no hit above) ───────────
+      - name: Save Turbo cache
+        if: steps.cache-turbo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .turbo
+          key: ${{ steps.cache-turbo.outputs.cache-primary-key }}
 
       - name: Clean eliza projects cache
         shell: bash
@@ -123,32 +141,7 @@ jobs:
             fi
           done
 
-      - name: Install cross-env globally
-        run: npm install -g cross-env
-
-      - name: Install BATS on macOS
-        if: matrix.os == 'macos-latest'
-        run: npm install -g bats
-
-      - name: Run CLI TypeScript tests (macOS optimized)
-        if: matrix.os == 'macos-latest'
-        timeout-minutes: 15
-        run: cross-env NODE_OPTIONS="--max-old-space-size=8192" bun test tests/commands/ --timeout 240000
-        working-directory: packages/cli
-        env:
-          ELIZA_TEST_MODE: true
-
-      - name: Run CLI TypeScript tests (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
-        timeout-minutes: 15
-        run: bun run test:cli
-        working-directory: packages/cli
-        env:
-          ELIZA_TEST_MODE: true
-          NODE_OPTIONS: --max-old-space-size=4096
-
-      - name: Run CLI TypeScript tests (Windows)
-        if: matrix.os == 'windows-latest'
+      - name: Run CLI TypeScript tests
         timeout-minutes: 15
         run: bun run test:cli
         working-directory: packages/cli

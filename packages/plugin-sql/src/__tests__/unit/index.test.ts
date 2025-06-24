@@ -1,23 +1,15 @@
 import type { IAgentRuntime } from '@elizaos/core';
-import { beforeEach, describe, expect, it, mock, afterEach } from 'bun:test';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { plugin, createDatabaseAdapter } from '../../index';
-import fs from 'node:fs';
-import path from 'node:path';
-import os from 'node:os';
 
 describe('SQL Plugin', () => {
   let mockRuntime: IAgentRuntime;
-  let tempDir: string;
 
   beforeEach(() => {
-    // Create a temporary directory for tests
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'eliza-plugin-sql-test-'));
-
     // Reset environment variables
     delete process.env.POSTGRES_URL;
     delete process.env.POSTGRES_USER;
     delete process.env.POSTGRES_PASSWORD;
-    delete process.env.PGLITE_DATA_DIR;
 
     mockRuntime = {
       agentId: '00000000-0000-0000-0000-000000000000',
@@ -27,23 +19,6 @@ describe('SQL Plugin', () => {
       getService: mock(() => {}),
       databaseAdapter: undefined,
     } as any;
-  });
-
-  afterEach(() => {
-    // Clean up temporary directory
-    if (tempDir && fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    }
-
-    // Clear global singletons to prevent contamination between tests
-    const GLOBAL_SINGLETONS = Symbol.for('@elizaos/plugin-sql/global-singletons');
-    const globalSymbols = global as unknown as Record<symbol, any>;
-    if (globalSymbols[GLOBAL_SINGLETONS]) {
-      globalSymbols[GLOBAL_SINGLETONS] = {};
-    }
-
-    // Reset environment variables
-    delete process.env.PGLITE_DATA_DIR;
   });
 
   describe('Plugin Structure', () => {
@@ -82,15 +57,7 @@ describe('SQL Plugin', () => {
     });
 
     it('should register database adapter when none exists', async () => {
-      // Set PGLITE_DATA_DIR to temp directory to avoid directory creation issues
-      process.env.PGLITE_DATA_DIR = tempDir;
-      mockRuntime.getSetting = mock((key) => {
-        // Return temp directory for database paths to avoid directory creation issues
-        if (key === 'PGLITE_PATH' || key === 'DATABASE_PATH') {
-          return tempDir;
-        }
-        return null;
-      });
+      mockRuntime.getSetting = mock(() => null);
 
       await plugin.init?.({}, mockRuntime);
 
@@ -132,8 +99,6 @@ describe('SQL Plugin', () => {
     });
 
     it('should use default path if neither PGLITE_PATH nor DATABASE_PATH is set', async () => {
-      // Set PGLITE_DATA_DIR to temp directory to avoid directory creation issues
-      process.env.PGLITE_DATA_DIR = tempDir;
       mockRuntime.getSetting = mock(() => null);
 
       await plugin.init?.({}, mockRuntime);
@@ -156,10 +121,8 @@ describe('SQL Plugin', () => {
     });
 
     it('should create PgliteDatabaseAdapter when no postgresUrl is provided', () => {
-      // Set PGLITE_DATA_DIR to avoid directory creation issues
-      process.env.PGLITE_DATA_DIR = tempDir;
       const config = {
-        dataDir: path.join(tempDir, 'custom-data'),
+        dataDir: '/custom/data',
       };
 
       const adapter = createDatabaseAdapter(config, agentId);
@@ -168,8 +131,6 @@ describe('SQL Plugin', () => {
     });
 
     it('should use default dataDir when none provided', () => {
-      // Set PGLITE_DATA_DIR to avoid directory creation issues
-      process.env.PGLITE_DATA_DIR = tempDir;
       const config = {};
 
       const adapter = createDatabaseAdapter(config, agentId);

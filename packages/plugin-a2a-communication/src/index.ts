@@ -6,25 +6,27 @@ import {
   type Memory,
   type State,
   type HandlerCallback,
+  ModelType, // Required for LLM interaction
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod'; // Ensure zod is imported for inputSchema
 import {
   A2AMessageSchema,
   type A2AMessage,
   A2AMessageType,
   A2AProtocolVersion,
-  TaskRequestPayloadSchema, // For validating payload of SEND_TASK action
+  PROCESS_A2A_TASK_EVENT, // Import the new event name
+  TaskRequestPayloadSchema,
+  type TaskResponsePayload,
 } from './types';
 import { A2AService } from './a2a-service';
 
 // Helper function to get the A2AService instance from the runtime
 function getA2AService(runtime: IAgentRuntime): A2AService | undefined {
   try {
-    // Plugins add services to the runtime by their class name or a specific key.
-    // Assuming the service is registered with its static serviceType.
     return runtime.getService<A2AService>(A2AService.serviceType);
   } catch (e) {
-    logger.warn(`A2AService not found in runtime for agent ${runtime.agentId}. It might not have been started or registered. Error: ${e}`);
+    logger.warn(`[A2A Plugin - ${runtime.agentId}] A2AService not found. Error: ${e}`);
     return undefined;
   }
 }
@@ -119,83 +121,131 @@ const sendMessageAction: Action = {
   },
   examples: [
     // Example of how an LLM might call this action:
-    // {
-    //   "action": "SEND_A2A_MESSAGE",
-    //   "options": {
-    //     "receiver_agent_id": "some-target-agent-uuid",
-    //     "message_type": "TASK_REQUEST",
-    //     "payload": {
-    //       "task_name": "ANALYZE_DATA",
-    //       "data_pointer": "db://table/id"
-    //     }
-    //   }
-    // }
+    /*
+    {
+      "action": "SEND_A2A_MESSAGE",
+      "options": {
+        "receiver_agent_id": "some-target-agent-uuid",
+        "message_type": "TASK_REQUEST",
+        "payload": {
+          "task_name": "GENERATE_CODE",
+          "task_description": "Write a Python function that adds two numbers.",
+          "parameters": { "language": "python" }
+        },
+        "conversation_id": "conv-123"
+      }
+    }
+    */
   ]
 };
 
 
 export const a2aCommunicationPlugin: Plugin = {
   name: 'a2a-communication',
-  description: 'Enables Agent-to-Agent (A2A) communication.',
+  description: 'Enables Agent-to-Agent (A2A) communication with task queuing.',
 
   async init(runtime: IAgentRuntime, _config: Record<string, any>) {
-    logger.info('Initializing A2A Communication Plugin...');
-    // The A2AService should be started and managed by the ElizaOS runtime if listed in `services`
-    // If not automatically managed, we might need to instantiate or ensure it's started here.
-    // For now, assuming A2AService.start is called elsewhere or the service is auto-started.
-    // We just need to ensure this agent subscribes to its messages.
+    const agentId = runtime.agentId || 'unknownAgentOnInit';
+    logger.info(`[A2A Plugin - ${agentId}] Initializing...`);
 
-    const a2aService = A2AService.getService(runtime);
+    // Ensure A2AService is started and available.
+    // It's declared in `services` array, so ElizaOS runtime should manage its lifecycle.
+    // The service constructor now handles its own subscriptions and starts the task processor.
+    const a2aService = getA2AService(runtime);
     if (!a2aService) {
-        logger.warn(`[A2A Plugin Init - ${runtime.agentId}] A2AService not yet available during plugin init. It should be started by the runtime.`);
-        // It's possible the service starts after the plugin. The service constructor handles subscription.
+        // This might happen if service registration order is an issue,
+        // or if the service failed to start. The service itself logs errors on start failure.
+        logger.error(`[A2A Plugin - ${agentId}] A2AService could not be obtained during init. Task processing might not work.`);
     }
 
-    // Event listener for when this agent receives an A2A message
-    // The A2AService emits this on the specific agent's runtime
-    runtime.on(`a2a_message_received:${runtime.agentId}`, (message: A2AMessage) => {
-      logger.info(`[A2A Plugin - ${runtime.agentId}] Event: Received A2A message via specific runtime event`, { messageId: message.message_id, type: message.message_type, from: message.sender_agent_id });
-      // TODO: Process the received message.
-      // This could involve:
-      // 1. Storing it in a specific memory (e.g., an A2A inbox).
-      // 2. Triggering other actions or LLM evaluations based on the message content.
-      // 3. For TASK_REQUEST, it might mean adding it to a task queue for the agent.
-      // For now, just log it.
-      if (message.message_type === A2AMessageType.TASK_REQUEST) {
-        logger.info(`[A2A Plugin - ${runtime.agentId}] Task request received: ${message.payload.task_name || 'Unknown Task'}`);
-        // Example: Reply with ACK
-        // This would require the agent to have an agentId.
-        if (runtime.agentId) {
-            const ackPayload = {
-                original_message_id: message.message_id,
-                status: "RECEIVED"
-            };
-            const ackMessage: A2AMessage = {
-                protocol_version: A2AProtocolVersion,
-                message_id: uuidv4(),
-                timestamp: new Date().toISOString(),
-                sender_agent_id: runtime.agentId,
-                receiver_agent_id: message.sender_agent_id,
-                conversation_id: message.conversation_id,
-                message_type: A2AMessageType.ACK,
-                payload: ackPayload,
-            };
-            const service = getA2AService(runtime);
-            service?.sendMessage(ackMessage);
-        }
+    // Listener for ALL A2A messages received by this agent (before queuing for TASK_REQUESTS)
+    // This is useful for immediate reactions like logging or specific handling of non-task messages.
+    // The A2AService emits 'a2a_message_received' when a message targets this agent.
+    // The ACK for TASK_REQUEST is now handled by A2AService upon queuing.
+    runtime.on('a2a_message_received', (message: A2AMessage) => {
+      logger.info(`[A2A Plugin - ${agentId}] Raw A2A message sniffed: Type: ${message.message_type}, From: ${message.sender_agent_id}, ID: ${message.message_id}`);
+      // Example: if other message types like INFO_SHARE need immediate plugin-level reaction
+      if (message.message_type === A2AMessageType.INFO_SHARE) {
+        logger.info(`[A2A Plugin - ${agentId}] INFO_SHARE received:`, message.payload);
+        // Agent's core logic or other plugins would decide how to use this info.
       }
     });
-    logger.success('A2A Communication Plugin initialized and listener set up.');
+
+    // Listener for dequeued TASK_REQUESTS that need processing by this agent's LLM/logic
+    runtime.on(PROCESS_A2A_TASK_EVENT, async (taskMessage: A2AMessage) => {
+      if (taskMessage.message_type !== A2AMessageType.TASK_REQUEST) return;
+
+      const currentAgentId = runtime.agentId; // Crucial for sending response
+      if (!currentAgentId) {
+        logger.error(`[A2A Plugin - ${PROCESS_A2A_TASK_EVENT}] Agent ID is undefined. Cannot process task or respond.`);
+        return;
+      }
+
+      logger.info(`[A2A Plugin - ${currentAgentId}] Event: Processing A2A Task: ${taskMessage.payload?.task_name || taskMessage.message_id} from ${taskMessage.sender_agent_id}`);
+
+      // --- Placeholder for LLM Interaction & Task Execution ---
+      // This is where the agent (e.g., DeveloperAgent, AuditorAgent) would use its LLM (DeepSeek)
+      // to understand taskMessage.payload and generate a result.
+      // For this generic A2A plugin, we'll simulate a simple "echo" or "not implemented" response.
+      // In specialized agents (DeveloperAgent, AuditorAgent), this logic would be more sophisticated.
+
+      let taskResult: any = `Task "${taskMessage.payload?.task_name}" processed by ${currentAgentId}. (Default Handler - Implement specific logic in agent)`;
+      let taskStatus: TaskResponsePayload['status'] = 'SUCCESS';
+      let errorMessage: string | null = null;
+
+      // Example: Simulate LLM call for a "GENERATE_CODE" task (conceptual)
+      if (taskMessage.payload?.task_name === 'GENERATE_CODE_EXAMPLE') {
+        try {
+          const codePrompt = `Based on the A2A task request:\n${JSON.stringify(taskMessage.payload, null, 2)}\nGenerate the requested code.`;
+          // const generatedCode = await runtime.useModel(ModelType.TEXT_SMALL, { prompt: codePrompt }); // Agent uses its configured LLM
+          // taskResult = generatedCode;
+          // For PoC, simulate:
+          taskResult = `// Simulated code for ${taskMessage.payload?.task_description}\nfunction example() { return "hello"; }`;
+          logger.info(`[A2A Plugin - ${currentAgentId}] Simulated code generation for task.`);
+        } catch (e: any) {
+          logger.error(`[A2A Plugin - ${currentAgentId}] Error during simulated LLM call for task:`, e);
+          taskStatus = 'FAILURE';
+          errorMessage = e.message || "LLM processing failed";
+          taskResult = null;
+        }
+      }
+      // --- End Placeholder ---
+
+      const responsePayload: TaskResponsePayload = {
+        original_task_name: String(taskMessage.payload?.task_name || 'unknown_task'),
+        status: taskStatus,
+        result: taskResult,
+        error_message: errorMessage,
+      };
+
+      const responseA2AMessage: A2AMessage = {
+        protocol_version: A2AProtocolVersion,
+        message_id: uuidv4(),
+        timestamp: new Date().toISOString(),
+        sender_agent_id: currentAgentId,
+        receiver_agent_id: taskMessage.sender_agent_id, // Send back to original requester
+        conversation_id: taskMessage.conversation_id,
+        message_type: A2AMessageType.TASK_RESPONSE,
+        payload: responsePayload,
+      };
+
+      const service = getA2AService(runtime);
+      if (service) {
+        logger.info(`[A2A Plugin - ${currentAgentId}] Sending TASK_RESPONSE for task ${taskMessage.payload?.task_name} to ${responseA2AMessage.receiver_agent_id}.`);
+        service.sendMessage(responseA2AMessage);
+      } else {
+        logger.error(`[A2A Plugin - ${currentAgentId}] Failed to get A2AService to send TASK_RESPONSE.`);
+      }
+    });
+
+    logger.success(`[A2A Plugin - ${agentId}] Initialized. Listening for raw A2A messages and processed tasks.`);
   },
 
   actions: [sendMessageAction],
 
-  services: [A2AService], // Declare the service for the runtime to manage
+  services: [A2AService],
 
-  // No specific model interactions defined by this plugin itself
   models: {},
-
-  // No specific providers defined by this plugin
   providers: [],
 };
 

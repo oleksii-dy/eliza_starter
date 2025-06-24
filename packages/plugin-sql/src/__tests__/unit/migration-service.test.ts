@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { DatabaseMigrationService } from '../../migration-service';
-import { type Plugin } from '@elizaos/core';
+import { logger, type Plugin } from '@elizaos/core';
+import * as customMigrator from '../../custom-migrator';
 
 // Mock the logger to avoid console output during tests
 const mockLogger = {
@@ -126,8 +127,9 @@ describe('DatabaseMigrationService', () => {
 
       migrationService.discoverAndRegisterPluginSchemas(plugins);
 
-      // Simply await - if it throws, the test fails automatically
-      await migrationService.runAllPluginMigrations();
+      // Run migrations - in bun:test we can't easily mock the function call
+      // but we can verify it doesn't throw
+      await expect(migrationService.runAllPluginMigrations()).resolves.not.toThrow();
     });
 
     it('should handle migration errors', async () => {
@@ -143,8 +145,8 @@ describe('DatabaseMigrationService', () => {
         },
       ]);
 
-      // Simply await - if it throws, the test fails automatically
-      await migrationService.runAllPluginMigrations();
+      // In bun:test, we'll just verify it runs without throwing for now
+      await expect(migrationService.runAllPluginMigrations()).resolves.not.toThrow();
     });
 
     it('should run migrations even with no plugins', async () => {

@@ -10,9 +10,6 @@
   ],
   "compilerOptions": {
     "lib": ["es2019", "dom"],
-    "baseUrl": "./",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "baseUrl": "."
   }
 }

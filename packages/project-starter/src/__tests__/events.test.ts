@@ -1,22 +1,22 @@
-import { describe, expect, it, beforeEach, mock } from 'bun:test';
+import { describe, expect, it, spyOn, beforeEach } from 'bun:test';
 import plugin from '../plugin';
 import { logger } from '@elizaos/core';
 
 // Mock logger
-mock.module('@elizaos/core', () => {
-  const actual = require('@elizaos/core');
+spyOnmock('@elizaos/core', async () => {
+  const actual = await spyOnimportActual('@elizaos/core');
   return {
     ...actual,
     logger: {
-      info: mock(),
-      error: mock(),
+      info: spyOnfn(),
+      error: spyOnfn(),
     },
   };
 });
 
 describe('Plugin Events', () => {
   beforeEach(() => {
-    mock.restore();
+    spyOnclearAllMocks();
   });
 
   it('should have events defined', () => {

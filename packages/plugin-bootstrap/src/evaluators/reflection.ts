@@ -37,7 +37,7 @@ const relationshipSchema = z.object({
  * 'relationships' is an array of objects following the relationshipSchema.
  */
 
-z.object({
+const reflectionSchema = z.object({
   // reflection: z.string(),
   facts: z.array(
     z.object({

@@ -1,52 +1,18 @@
 import { validateUuid, logger, getContentTypeFromMimeType } from '@elizaos/core';
 import express from 'express';
 import { sendError, sendSuccess } from '../shared/response-utils';
-import { ALLOWED_MEDIA_MIME_TYPES, MAX_FILE_SIZE } from '../shared/constants';
-import multer from 'multer';
-import fs from 'fs';
-import path from 'path';
+import { cleanupUploadedFile } from '../shared/file-utils';
+import { agentMediaUpload, validateMediaFile, processUploadedFile } from '../shared/uploads';
+import type fileUpload from 'express-fileupload';
 
-// Configure multer for file uploads
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage,
-  limits: {
-    fileSize: MAX_FILE_SIZE,
-    files: 1,
-  },
-  fileFilter: (req, file, cb) => {
-    if (ALLOWED_MEDIA_MIME_TYPES.includes(file.mimetype as any)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type'), false);
-    }
-  },
-});
+// Using express-fileupload file type
+type UploadedFile = fileUpload.UploadedFile;
 
-// Helper function to save uploaded file
-async function saveUploadedFile(
-  file: Express.Multer.File,
-  agentId: string
-): Promise<{ filename: string; url: string }> {
-  const uploadDir = path.join(process.cwd(), '.eliza/data/uploads/agents', agentId);
-
-  // Ensure directory exists
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-
-  // Generate unique filename
-  const timestamp = Date.now();
-  const random = Math.round(Math.random() * 1e9);
-  const ext = path.extname(file.originalname);
-  const filename = `${timestamp}-${random}${ext}`;
-  const filePath = path.join(uploadDir, filename);
-
-  // Write file to disk
-  fs.writeFileSync(filePath, file.buffer);
-
-  const url = `/media/uploads/agents/${agentId}/${filename}`;
-  return { filename, url };
+interface AgentMediaRequest extends Omit<express.Request, 'files'> {
+  files?: { [fieldname: string]: UploadedFile | UploadedFile[] } | UploadedFile[];
+  params: {
+    agentId: string;
+  };
 }
 
 /**
@@ -55,32 +21,55 @@ async function saveUploadedFile(
 export function createAgentMediaRouter(): express.Router {
   const router = express.Router();
 
-  // Media upload endpoint for images and videos using multer
-  router.post('/:agentId/upload-media', upload.single('file'), async (req, res) => {
-    logger.debug('[MEDIA UPLOAD] Processing media upload with multer');
+  // Media upload endpoint for images and videos
+  router.post('/:agentId/upload-media', agentMediaUpload(), async (req, res) => {
+    const agentMediaReq = req as AgentMediaRequest;
 
-    const agentId = validateUuid(req.params.agentId);
+    logger.debug('[MEDIA UPLOAD] Processing media upload');
+    const agentId = validateUuid(agentMediaReq.params.agentId);
+
     if (!agentId) {
       return sendError(res, 400, 'INVALID_ID', 'Invalid agent ID format');
     }
 
-    if (!req.file) {
+    // Get the uploaded file from express-fileupload
+    let mediaFile: UploadedFile;
+    if (agentMediaReq.files && !Array.isArray(agentMediaReq.files)) {
+      // files is an object with field names
+      mediaFile = agentMediaReq.files.file as UploadedFile;
+    } else if (Array.isArray(agentMediaReq.files) && agentMediaReq.files.length > 0) {
+      // files is an array
+      mediaFile = agentMediaReq.files[0];
+    } else {
       return sendError(res, 400, 'INVALID_REQUEST', 'No media file provided');
     }
 
-    const mediaType = getContentTypeFromMimeType(req.file.mimetype);
+    if (!mediaFile) {
+      return sendError(res, 400, 'INVALID_REQUEST', 'No media file provided');
+    }
+
+    const mimetype = mediaFile.mimetype;
+
+    if (!validateMediaFile(mediaFile)) {
+      cleanupUploadedFile(mediaFile);
+      return sendError(res, 400, 'INVALID_FILE_TYPE', 'Unsupported media file type');
+    }
+
+    const mediaType = getContentTypeFromMimeType(mimetype);
+
     if (!mediaType) {
+      cleanupUploadedFile(mediaFile);
       return sendError(
         res,
         400,
         'UNSUPPORTED_MEDIA_TYPE',
-        `Unsupported media MIME type: ${req.file.mimetype}`
+        `Unsupported media MIME type: ${mimetype}`
       );
     }
 
     try {
-      // Save the uploaded file
-      const result = await saveUploadedFile(req.file, agentId);
+      // Process and move the uploaded file
+      const result = await processUploadedFile(mediaFile, agentId, 'agents');
 
       logger.info(
         `[MEDIA UPLOAD] Successfully uploaded ${mediaType}: ${result.filename}. URL: ${result.url}`
@@ -90,11 +79,12 @@ export function createAgentMediaRouter(): express.Router {
         url: result.url,
         type: mediaType,
         filename: result.filename,
-        originalName: req.file.originalname,
-        size: req.file.size,
+        originalName: mediaFile.name,
+        size: mediaFile.size,
       });
     } catch (error) {
       logger.error(`[MEDIA UPLOAD] Error processing upload: ${error}`);
+      cleanupUploadedFile(mediaFile);
       sendError(
         res,
         500,

@@ -13,8 +13,22 @@ export function getProjectType(testPath?: string): DirectoryInfo {
   return detectDirectoryType(targetPath);
 }
 
-// Note: findMonorepoRoot() has been removed - use UserEnvironment.getInstance().findMonorepoRoot() instead
-// This centralized version looks for packages/core directory instead of lerna.json for better reliability
+/**
+ * Find the monorepo root by looking for lerna.json
+ */
+export function findMonorepoRoot(startDir: string): string {
+  let currentDir = startDir;
+  while (currentDir !== path.parse(currentDir).root) {
+    if (fs.existsSync(path.join(currentDir, 'lerna.json'))) {
+      return currentDir;
+    }
+    currentDir = path.dirname(currentDir);
+  }
+
+  throw new Error(
+    'Could not find monorepo root. Make sure to run tests from within the Eliza project.'
+  );
+}
 
 /**
  * Process filter name to remove extensions consistently

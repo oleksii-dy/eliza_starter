@@ -78,11 +78,52 @@ bun test
 
 Unit tests are located in `src/__tests__`.
 
-## Future Enhancements
+## Asynchronous Task Handling
 
--   Support for external message brokers (e.g., Redis, RabbitMQ) for multi-process/distributed agent communication.
--   More sophisticated message routing and discovery mechanisms.
--   Standardized task ontologies and payload structures for common A2A interactions.
+The `A2AService` includes an in-memory task queue. When a `TASK_REQUEST` is received:
+1.  It's added to the receiving agent's local queue.
+2.  An immediate `ACK` (with status `TASK_QUEUED`) is sent back to the requester.
+3.  A background task processor in `A2AService` dequeues tasks and emits a local `PROCESS_A2A_TASK_EVENT` on the agent's runtime.
+4.  The plugin's `init` function sets up a listener for `PROCESS_A2A_TASK_EVENT`. This handler is responsible for the actual task execution (e.g., LLM calls, using other actions) and sending the final `TASK_RESPONSE`.
+
+This setup allows agents to acknowledge tasks quickly and process them asynchronously without blocking further message reception.
+
+## Future Enhancements & Distributed Communication
+
+The current in-memory message bus and task queue are suitable for agents running within a **single Node.js process**. For true multi-process or distributed agent communication and task management, the following enhancements are envisioned:
+
+1.  **Pluggable Message Bus Backend for `A2AService`**:
+    *   **Concept**: Refactor `A2AService` to use an `IMessageBusAdapter` interface. This would allow different messaging technologies to be plugged in.
+        ```typescript
+        // Conceptual interface (details in scratchpad.md or src/types.ts)
+        interface IMessageBusAdapter {
+          publish(topic: string, message: A2AMessage): Promise<void>;
+          subscribe(topic: string, handler: (message: A2AMessage) => void): Promise<void>;
+          // ... connect, disconnect, unsubscribe ...
+        }
+        ```
+    *   **Configuration**: The plugin would be configured with the desired bus type (e.g., `A2A_BUS_TYPE: "redis"`) and its connection parameters.
+    *   **Example: Redis Adapter**:
+        *   Uses a Redis client (e.g., `ioredis`).
+        *   `publish`: Publishes messages to a Redis channel, e.g., `a2a:agent:<receiver_agent_id>`.
+        *   `subscribe`: Subscribes to the agent's specific Redis channel.
+    *   Other potential backends: RabbitMQ, NATS, Kafka.
+
+2.  **Distributed Task Queues**:
+    *   If using an external message broker that also supports persistent queues (like RabbitMQ or Redis with lists/streams), the agent's task queue could also be moved to this external system. This would provide better scalability and resilience for task management.
+
+3.  **Agent Discovery/Registry**:
+    *   In a distributed environment, agents need a way to discover each other and their "addresses" (e.g., message bus topics or API endpoints). A central agent registry service could manage this. This is a broader ElizaOS architectural consideration.
+
+4.  **Enhanced A2A Protocol**:
+    *   Richer status updates (e.g., `TASK_IN_PROGRESS` with progress details).
+    *   Support for `CANCEL_TASK` messages.
+    *   Standardized error reporting within `TASK_RESPONSE` payloads.
+
+5.  **Standardized Task Ontologies**:
+    *   Defining common `task_name` values and `payload` structures for frequent inter-agent operations (e.g., `CODE_GENERATION_REQUEST`, `CONTRACT_AUDIT_REQUEST`) would improve interoperability between different agent types and teams.
+
+These enhancements would enable `plugin-a2a-communication` to support more complex and scalable multi-agent systems within ElizaOS.
 
 ---
 

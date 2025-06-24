@@ -1110,6 +1110,7 @@ const handleServerSync = async ({
 const controlMessageHandler = async ({
   runtime,
   message,
+  source,
 }: {
   runtime: IAgentRuntime;
   message: {

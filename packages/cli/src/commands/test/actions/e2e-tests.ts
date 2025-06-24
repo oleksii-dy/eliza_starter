@@ -15,7 +15,7 @@ import path from 'node:path';
 import { getElizaCharacter } from '@/src/characters/eliza';
 import { startAgent } from '@/src/commands/start';
 import { E2ETestOptions, TestResult } from '../types';
-import { processFilterName } from '../utils/project-utils';
+import { findMonorepoRoot, processFilterName } from '../utils/project-utils';
 
 /**
  * Function that runs the end-to-end tests.
@@ -133,13 +133,8 @@ export async function runE2eTests(
     let project;
     try {
       logger.info('Attempting to load project or plugin...');
-      // Resolve path from monorepo root, not cwd (using centralized detection)
-      const monorepoRoot = UserEnvironment.getInstance().findMonorepoRoot(process.cwd());
-      if (!monorepoRoot) {
-        throw new Error(
-          'Could not find monorepo root. Make sure to run tests from within the Eliza project.'
-        );
-      }
+      // Resolve path from monorepo root, not cwd
+      const monorepoRoot = findMonorepoRoot(process.cwd());
       const targetPath = testPath ? path.resolve(monorepoRoot, testPath) : process.cwd();
       project = await loadProject(targetPath);
 

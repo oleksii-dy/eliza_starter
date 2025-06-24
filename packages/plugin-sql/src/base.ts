@@ -171,7 +171,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         .limit(1);
 
       if (existingMemory.length > 0) {
-        Object.entries(DIMENSION_MAP).find(
+        const usedDimension = Object.entries(DIMENSION_MAP).find(
           ([_, colName]) => (existingMemory[0] as any).embeddings[colName] !== null
         );
         // We don't actually need to use usedDimension for now, but it's good to know it's there.
@@ -387,6 +387,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
           ? { ...target }
           : {};
 
+      let isEmpty = true; // Flag to track if the resulting object is empty
       for (const key of Object.keys(source)) {
         // Iterate over source keys
         const sourceValue = source[key];
@@ -402,10 +403,12 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
             delete output[key];
           } else {
             output[key] = nestedMergeResult;
+            isEmpty = false; // The object is not empty if it has a nested object
           }
         } else {
           // Primitive or array value from source, assign it.
           output[key] = sourceValue;
+          isEmpty = false; // The object is not empty
         }
       }
 
@@ -941,7 +944,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     roomId?: UUID;
     worldId?: UUID;
   }): Promise<Memory[]> {
-    const { entityId, agentId, roomId, worldId, tableName, unique, start, end } = params;
+    const { entityId, agentId, roomId, worldId, tableName, count, unique, start, end } = params;
 
     if (!tableName) throw new Error('tableName is required');
 

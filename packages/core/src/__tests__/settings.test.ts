@@ -25,7 +25,6 @@ import type {
   WorldSettings,
   OnboardingConfig,
   Character,
-  UUID,
 } from '../types';
 
 import * as entities from '../entities';
@@ -42,7 +41,7 @@ describe('settings utilities', () => {
 
     // Set up scoped mocks for this test
     spyOn(entities, 'createUniqueUuid').mockImplementation(
-      (_runtime, serverId) => `world-${serverId}` as UUID
+      (runtime, serverId) => `world-${serverId}`
     );
 
     // Mock logger if it doesn't have the methods
@@ -103,7 +102,7 @@ describe('settings utilities', () => {
 
     it('should create setting with optional fields', () => {
       const validationFn = (value: any) => /^[A-Z0-9]+$/.test(value);
-      const onSetActionFn = (_value: any) => 'restart';
+      const onSetActionFn = (value: any) => 'restart';
       const cfg = {
         name: 'API_KEY',
         description: 'API Key for service',
@@ -640,10 +639,10 @@ describe('settings utilities', () => {
 
       const encrypted = encryptedCharacter(character);
 
-      expect(encrypted.settings?.secrets?.['API_KEY']).not.toBe('secret-api-key');
-      expect(encrypted.settings?.secrets?.['API_KEY']).toContain(':');
-      expect(encrypted.settings?.secrets?.['PASSWORD']).not.toBe('secret-password');
-      expect(encrypted.settings?.secrets?.['PASSWORD']).toContain(':');
+      expect(encrypted.settings?.secrets?.API_KEY).not.toBe('secret-api-key');
+      expect(encrypted.settings?.secrets?.API_KEY).toContain(':');
+      expect(encrypted.settings?.secrets?.PASSWORD).not.toBe('secret-password');
+      expect(encrypted.settings?.secrets?.PASSWORD).toContain(':');
     });
 
     it('should encrypt character.secrets', () => {
@@ -711,8 +710,8 @@ describe('settings utilities', () => {
 
       const decrypted = decryptedCharacter(character, mockRuntime);
 
-      expect(decrypted.settings?.secrets?.['API_KEY']).toBe('secret-api-key');
-      expect(decrypted.settings?.secrets?.['PASSWORD']).toBe('secret-password');
+      expect(decrypted.settings?.secrets?.API_KEY).toBe('secret-api-key');
+      expect(decrypted.settings?.secrets?.PASSWORD).toBe('secret-password');
     });
 
     it('should decrypt character.secrets', () => {

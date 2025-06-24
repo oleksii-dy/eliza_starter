@@ -1,18 +1,17 @@
+import { logger } from '@elizaos/core';
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { PgDatabaseAdapter } from '../../../pg/adapter';
+import { PostgresConnectionManager } from '../../../pg/manager';
 
-// Mock the logger module
-mock.module('@elizaos/core', () => ({
-  logger: {
-    debug: mock(),
-    info: mock(),
-    warn: mock(),
-    error: mock(),
-  },
-}));
+// Mock the logger to avoid console output during tests
+const mockLogger = {
+  info: mock(() => {}),
+  error: mock(() => {}),
+  warn: mock(() => {}),
+  debug: mock(() => {}),
+};
 
-// Import after mocking
-import { logger } from '@elizaos/core';
+// Module mocking not needed for this test in bun:test
 
 describe('PgDatabaseAdapter', () => {
   let adapter: PgDatabaseAdapter;
@@ -20,11 +19,10 @@ describe('PgDatabaseAdapter', () => {
   const agentId = '00000000-0000-0000-0000-000000000000';
 
   beforeEach(() => {
-    // Clear mocks before each test
-    (logger.debug as any).mockClear();
-    (logger.info as any).mockClear();
-    (logger.warn as any).mockClear();
-    (logger.error as any).mockClear();
+    mockLogger.info.mockClear();
+    mockLogger.error.mockClear();
+    mockLogger.warn.mockClear();
+    mockLogger.debug.mockClear();
 
     // Create a mock manager
     mockManager = {
@@ -113,7 +111,7 @@ describe('PgDatabaseAdapter', () => {
       mockManager.getConnection.mockReturnValue(mockConnection);
 
       const result = await adapter.getConnection();
-      expect(result).toBe(mockConnection as any);
+      expect(result).toBe(mockConnection);
       expect(mockManager.getConnection).toHaveBeenCalled();
     });
   });

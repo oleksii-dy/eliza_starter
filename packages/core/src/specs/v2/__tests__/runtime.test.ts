@@ -1,11 +1,13 @@
-import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import { AgentRuntime } from '../runtime';
 import { AgentRuntime as CoreAgentRuntime } from '../../../runtime';
 import { MemoryType, ModelType } from '../types';
 import type {
   Action,
+  Agent,
   Character,
   IDatabaseAdapter,
+  KnowledgeItem,
   Memory,
   ModelTypeName,
   Plugin,
@@ -20,7 +22,7 @@ const stringToUuid = (id: string): UUID => id as UUID;
 
 // Create mock functions
 const mockSplitChunks = mock();
-const mockSafeReplacer = mock((_key, value) => value);
+const mockSafeReplacer = mock((key, value) => value);
 
 // Mock modules using bun:test
 mock.module('../utils', () => ({
@@ -97,10 +99,10 @@ const mockDatabaseAdapter: IDatabaseAdapter = {
   getLogs: mock(async () => []),
   deleteLog: mock(async () => undefined),
   removeWorld: mock(async () => undefined),
-  deleteRoomsByWorldId: function (_worldId: UUID): Promise<void> {
+  deleteRoomsByWorldId: function (worldId: UUID): Promise<void> {
     throw new Error('Function not implemented.');
   },
-  getMemoriesByWorldId: function (_params: {
+  getMemoriesByWorldId: function (params: {
     worldId: UUID;
     count?: number;
     tableName?: string;

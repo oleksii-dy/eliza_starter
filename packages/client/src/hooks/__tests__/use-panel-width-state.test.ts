@@ -1,12 +1,30 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { describe, it, expect, beforeEach } from 'bun:test';
+import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { usePanelWidthState } from '../use-panel-width-state';
+
+// Mock localStorage
+const localStorageMock = {
+  getItem: mock(),
+  setItem: mock(),
+  removeItem: mock(),
+  clear: mock(),
+};
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+});
+
+// Mock clientLogger
+mock.module('../../lib/logger', () => ({
+  default: {
+    error: mock(),
+  },
+}));
 
 describe('usePanelWidthState', () => {
   beforeEach(() => {
-    // Clear localStorage before each test
-    localStorage.clear();
-
+    mock.restore();
+    localStorageMock.getItem.mockReturnValue(null);
     // Reset window dimensions (above 1400 threshold)
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
@@ -24,89 +42,67 @@ describe('usePanelWidthState', () => {
     expect(result.current.floatingThreshold).toBe(1400);
   });
 
-  it('should load persisted values from localStorage on mount', async () => {
-    // Set up localStorage with saved values (use correct keys)
-    localStorage.setItem('eliza-main-panel-width', '65');
-    localStorage.setItem('eliza-sidebar-panel-width', '35');
+  it('should load persisted values from localStorage on mount', () => {
+    localStorageMock.getItem
+      .mockReturnValueOnce('65') // main panel size
+      .mockReturnValueOnce('35'); // sidebar panel size
 
     const { result } = renderHook(() => usePanelWidthState());
 
-    await waitFor(() => {
-      expect(result.current.mainPanelSize).toBe(65);
-      expect(result.current.sidebarPanelSize).toBe(35);
-    });
+    expect(result.current.mainPanelSize).toBe(65);
+    expect(result.current.sidebarPanelSize).toBe(35);
   });
 
-  it('should persist main panel size to localStorage when updated', async () => {
+  it('should persist main panel size to localStorage when updated', () => {
     const { result } = renderHook(() => usePanelWidthState());
 
     act(() => {
       result.current.setMainPanelSize(75);
     });
 
-    await waitFor(() => {
-      expect(result.current.mainPanelSize).toBe(75);
-    });
-
-    expect(localStorage.getItem('eliza-main-panel-width')).toBe('75');
+    expect(result.current.mainPanelSize).toBe(75);
+    expect(localStorageMock.setItem).toHaveBeenCalledWith('eliza-main-panel-width', '75');
   });
 
-  it('should persist sidebar panel size to localStorage when updated', async () => {
+  it('should persist sidebar panel size to localStorage when updated', () => {
     const { result } = renderHook(() => usePanelWidthState());
 
     act(() => {
       result.current.setSidebarPanelSize(25);
     });
 
-    await waitFor(() => {
-      expect(result.current.sidebarPanelSize).toBe(25);
-    });
-
-    expect(localStorage.getItem('eliza-sidebar-panel-width')).toBe('25');
+    expect(result.current.sidebarPanelSize).toBe(25);
+    expect(localStorageMock.setItem).toHaveBeenCalledWith('eliza-sidebar-panel-width', '25');
   });
 
-  it('should validate and clamp panel sizes within bounds', async () => {
+  it('should validate and clamp panel sizes within bounds', () => {
     const { result } = renderHook(() => usePanelWidthState());
 
     // Test main panel size clamping
     act(() => {
       result.current.setMainPanelSize(5); // Below minimum (20)
     });
-
-    await waitFor(() => {
-      expect(result.current.mainPanelSize).toBe(20);
-    });
+    expect(result.current.mainPanelSize).toBe(20);
 
     act(() => {
-      result.current.setMainPanelSize(95); // Above maximum (80)
+      result.current.setMainPanelSize(90); // Above maximum (80)
     });
-
-    await waitFor(() => {
-      expect(result.current.mainPanelSize).toBe(80);
-    });
+    expect(result.current.mainPanelSize).toBe(80);
 
     // Test sidebar panel size clamping
     act(() => {
       result.current.setSidebarPanelSize(15); // Below minimum (20)
     });
-
-    await waitFor(() => {
-      expect(result.current.sidebarPanelSize).toBe(20);
-    });
+    expect(result.current.sidebarPanelSize).toBe(20);
 
     act(() => {
       result.current.setSidebarPanelSize(85); // Above maximum (80)
     });
-
-    await waitFor(() => {
-      expect(result.current.sidebarPanelSize).toBe(80);
-    });
+    expect(result.current.sidebarPanelSize).toBe(80);
   });
 
   it('should reset panel sizes to defaults and clear localStorage', () => {
-    // Set up some custom values first
-    localStorage.setItem('eliza-main-panel-width', '60');
-    localStorage.setItem('eliza-sidebar-panel-width', '40');
+    localStorageMock.getItem.mockReturnValueOnce('60').mockReturnValueOnce('40');
 
     const { result } = renderHook(() => usePanelWidthState());
 
@@ -114,21 +110,20 @@ describe('usePanelWidthState', () => {
     expect(result.current.mainPanelSize).toBe(60);
     expect(result.current.sidebarPanelSize).toBe(40);
 
-    // Reset to defaults
     act(() => {
       result.current.resetPanelSizes();
     });
 
     expect(result.current.mainPanelSize).toBe(70);
     expect(result.current.sidebarPanelSize).toBe(30);
-    expect(localStorage.getItem('eliza-main-panel-width')).toBe(null);
-    expect(localStorage.getItem('eliza-sidebar-panel-width')).toBe(null);
+    expect(localStorageMock.removeItem).toHaveBeenCalledWith('eliza-main-panel-width');
+    expect(localStorageMock.removeItem).toHaveBeenCalledWith('eliza-sidebar-panel-width');
   });
 
   it('should handle localStorage errors gracefully when reading', () => {
-    // Set up invalid values
-    localStorage.setItem('eliza-main-panel-width', 'invalid');
-    localStorage.setItem('eliza-sidebar-panel-width', 'invalid');
+    localStorageMock.getItem.mockImplementation(() => {
+      throw new Error('localStorage error');
+    });
 
     const { result } = renderHook(() => usePanelWidthState());
 
@@ -138,13 +133,11 @@ describe('usePanelWidthState', () => {
   });
 
   it('should handle localStorage errors gracefully when writing', () => {
-    const { result } = renderHook(() => usePanelWidthState());
+    localStorageMock.setItem.mockImplementation(() => {
+      throw new Error('localStorage error');
+    });
 
-    // Mock localStorage to throw an error on setItem
-    const originalSetItem = localStorage.setItem;
-    localStorage.setItem = () => {
-      throw new Error('localStorage save error');
-    };
+    const { result } = renderHook(() => usePanelWidthState());
 
     // Should still update state even if localStorage fails
     act(() => {
@@ -152,35 +145,34 @@ describe('usePanelWidthState', () => {
     });
 
     expect(result.current.mainPanelSize).toBe(65);
-
-    // Restore original setItem immediately
-    localStorage.setItem = originalSetItem;
   });
 
   it('should handle invalid JSON values from localStorage', () => {
-    localStorage.setItem('eliza-main-panel-width', 'not-a-number');
-    localStorage.setItem('eliza-sidebar-panel-width', 'also-not-a-number');
+    localStorageMock.getItem
+      .mockReturnValueOnce('invalid-number')
+      .mockReturnValueOnce('also-invalid');
 
     const { result } = renderHook(() => usePanelWidthState());
 
-    // Should use defaults when values can't be parsed
+    // Should fall back to defaults for invalid values
     expect(result.current.mainPanelSize).toBe(70);
     expect(result.current.sidebarPanelSize).toBe(30);
   });
 
   it('should handle out-of-range values from localStorage', () => {
-    localStorage.setItem('eliza-main-panel-width', '150'); // Way too high (> 100)
-    localStorage.setItem('eliza-sidebar-panel-width', '0'); // Way too low (<= 0)
+    localStorageMock.getItem
+      .mockReturnValueOnce('150') // Above 100
+      .mockReturnValueOnce('0'); // Below 1
 
     const { result } = renderHook(() => usePanelWidthState());
 
-    // Should fall back to defaults when values are out of valid loading range
-    expect(result.current.mainPanelSize).toBe(70); // Default value
-    expect(result.current.sidebarPanelSize).toBe(30); // Default value
+    // Should fall back to defaults for out-of-range values
+    expect(result.current.mainPanelSize).toBe(70);
+    expect(result.current.sidebarPanelSize).toBe(30);
   });
 
   it('should detect floating mode based on window width', () => {
-    // Set window width below threshold
+    // Set narrow width (below 1400 threshold)
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
       configurable: true,
@@ -195,6 +187,7 @@ describe('usePanelWidthState', () => {
   it('should toggle floating mode manually', () => {
     const { result } = renderHook(() => usePanelWidthState());
 
+    // Initially not floating (window width is 1200)
     expect(result.current.isFloatingMode).toBe(false);
 
     act(() => {
@@ -212,17 +205,17 @@ describe('usePanelWidthState', () => {
     });
 
     expect(result.current.floatingThreshold).toBe(900);
-    expect(localStorage.getItem('eliza-floating-threshold')).toBe('900');
+    expect(localStorageMock.setItem).toHaveBeenCalledWith('eliza-floating-threshold', '900');
   });
 
   it('should respond to window resize events', () => {
     const { result } = renderHook(() => usePanelWidthState());
 
-    // Initially not in floating mode (width 1500 > 1400)
+    // Initially not floating (window width is 1200 from beforeEach, above 1400 threshold)
     expect(result.current.isFloatingMode).toBe(false);
 
+    // Simulate window resize to narrow width (below 1400 threshold)
     act(() => {
-      // Simulate window resize to trigger floating mode
       Object.defineProperty(window, 'innerWidth', {
         writable: true,
         configurable: true,
@@ -232,5 +225,17 @@ describe('usePanelWidthState', () => {
     });
 
     expect(result.current.isFloatingMode).toBe(true);
+
+    // Simulate window resize back to wide width (above 1400 threshold)
+    act(() => {
+      Object.defineProperty(window, 'innerWidth', {
+        writable: true,
+        configurable: true,
+        value: 1500,
+      });
+      window.dispatchEvent(new Event('resize'));
+    });
+
+    expect(result.current.isFloatingMode).toBe(false);
   });
 });

@@ -85,7 +85,6 @@ export const roleProvider: Provider = {
         values: {
           roles: 'No role information available for this server.',
         },
-        text: 'No role information available for this server.',
       };
     }
 

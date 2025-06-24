@@ -4,8 +4,10 @@ import { AgentRuntime } from '../runtime';
 import { MemoryType, ModelType } from '../types';
 import type {
   Action,
+  Agent,
   Character,
   IDatabaseAdapter,
+  KnowledgeItem,
   Memory,
   ModelTypeName,
   Plugin,
@@ -25,7 +27,7 @@ mock.module('../src/utils', () => ({
 }));
 
 // Use hoisted for ./index mock (safeReplacer)
-const mockSafeReplacer = mock((_key, value) => value); // Simple replacer mock
+const mockSafeReplacer = mock((key, value) => value); // Simple replacer mock
 // Don't mock the entire index module to avoid interfering with other tests
 
 // Mock IDatabaseAdapter (inline style matching your example)
@@ -98,10 +100,10 @@ const mockDatabaseAdapter: IDatabaseAdapter = {
   getLogs: mock().mockResolvedValue([]),
   deleteLog: mock().mockResolvedValue(undefined),
   removeWorld: mock().mockResolvedValue(undefined),
-  deleteRoomsByWorldId: function (_worldId: UUID): Promise<void> {
+  deleteRoomsByWorldId: function (worldId: UUID): Promise<void> {
     throw new Error('Function not implemented.');
   },
-  getMemoriesByWorldId: function (_params: {
+  getMemoriesByWorldId: function (params: {
     worldId: UUID;
     count?: number;
     tableName?: string;

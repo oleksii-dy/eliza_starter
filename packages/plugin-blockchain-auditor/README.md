@@ -96,12 +96,39 @@ bun test
 ```
 Unit tests are in `src/__tests__`. These mock `child_process` to avoid actual command execution during tests.
 
-## Important Security Note
-The `ToolExecutionService` in this PoC directly uses `child_process.spawn`. **This is not secure for handling untrusted inputs or running in untrusted environments.** A production-ready version of this plugin would require:
--   Strict validation and sanitization of all inputs.
--   Execution of tools within a heavily restricted sandbox (e.g., Docker containers, gVisor, Firecracker).
--   Careful management of file system access.
--   Consideration of resource limits (CPU, memory, time) for tool execution.
+## Important Security Note & Future Sandboxing Strategies
+The `ToolExecutionService` in this PoC directly uses `child_process.spawn` without robust sandboxing. **This is highly insecure for handling untrusted inputs (e.g., smart contracts from arbitrary sources) or running in untrusted environments.** Executing external tools based on potentially malicious inputs can lead to arbitrary code execution on the host system, unauthorized file system access, unintended network activity, or resource exhaustion attacks.
+
+**A production-ready version of this plugin requires a robust sandboxing mechanism. Recommended strategies include:**
+
+1.  **Docker Containers (Preferred):**
+    *   **How:** Execute audit tools within isolated Docker containers. Each task could spin up a container with the necessary tools (Forge, Slither, etc.) pre-installed. The target smart contract code would be mounted into the container as a volume.
+    *   **Pros:** Strong isolation (filesystem, network, process), consistent and reproducible environments, good dependency management.
+    *   **Cons:** Requires Docker daemon access, performance overhead for container startup/shutdown, management of Docker images.
+    *   The `ToolExecutionService` would need to be refactored to orchestrate Docker commands (e.g., `docker run`, `docker exec`, `docker cp`).
+
+2.  **OS-Level Sandboxing (e.g., `firejail` on Linux):**
+    *   **How:** Wrap tool execution with a utility like `firejail`, using specific security profiles for each tool to restrict its capabilities (syscalls, file access, network).
+    *   **Pros:** Lighter weight than Docker if tools are on the host. Fine-grained control.
+    *   **Cons:** OS-specific (primarily Linux), complex profile creation and maintenance.
+
+3.  **MicroVMs (e.g., AWS Firecracker):**
+    *   **How:** For even stronger isolation, each audit task could run within a minimal, fast-booting MicroVM.
+    *   **Pros:** Excellent isolation.
+    *   **Cons:** Higher implementation complexity for managing MicroVM lifecycle.
+
+4.  **TEE (Trusted Execution Environments):**
+    *   **How:** For tasks requiring the highest level of assurance, critical parts of the audit or tool execution could potentially run within a TEE.
+    *   **Pros:** Hardware-enforced security.
+    *   **Cons:** Very complex, depends on hardware support and tool compatibility. More of a long-term research direction for this plugin.
+
+**Interim Security Enhancements (Still not sufficient for untrusted code):**
+*   **Strict Command Whitelisting:** Only allow execution of known, vetted tool commands (e.g., `forge`, `slither`).
+*   **Input Sanitization:** Rigorously validate and sanitize all paths and arguments passed to tools.
+*   **Resource Limiting:** Implement strict timeouts (already in PoC) and explore OS-level ways to limit CPU and memory for tool processes.
+*   **Dedicated Low-Privilege User:** Run the ElizaOS agent process, or at least the `ToolExecutionService`, as a dedicated user with minimal system privileges.
+
+**Users should not deploy this plugin in a production setting that processes untrusted smart contracts without implementing one of the robust sandboxing strategies mentioned above.**
 
 ---
 

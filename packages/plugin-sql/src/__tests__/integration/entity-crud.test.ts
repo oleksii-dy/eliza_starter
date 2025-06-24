@@ -1,21 +1,33 @@
-import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'bun:test';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  mock,
+  spyOn,
+} from 'bun:test';
 import { createIsolatedTestDatabase } from '../test-helpers';
 import { v4 as uuidv4 } from 'uuid';
-import type { Entity, UUID, Metadata } from '@elizaos/core';
+import type { Entity, UUID, AgentRuntime } from '@elizaos/core';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 
 describe('Entity CRUD Operations', () => {
   let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
 
   beforeAll(async () => {
     const setup = await createIsolatedTestDatabase('entity-crud');
     adapter = setup.adapter;
+    runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {
@@ -51,7 +63,7 @@ describe('Entity CRUD Operations', () => {
 
       const retrieved = await adapter.getEntityByIds([entity.id!]);
       expect(retrieved).toHaveLength(1);
-      expect(retrieved![0].id).toBe(entity.id as UUID);
+      expect(retrieved![0].id).toBe(entity.id);
     });
 
     it('should update an entity', async () => {
@@ -195,7 +207,7 @@ describe('Entity CRUD Operations', () => {
       await adapter.createEntities([entity]);
 
       const retrieved = await adapter.getEntityByIds([entity.id!]);
-      expect(retrieved![0].metadata).toEqual(entity.metadata as Metadata);
+      expect(retrieved![0].metadata).toEqual(entity.metadata);
       expect((retrieved![0].metadata?.nested as any)?.array).toEqual([1, 2, 3]);
     });
 
@@ -333,7 +345,7 @@ describe('Entity CRUD Operations', () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0].id).toBe(entity.id as UUID);
+      expect(results[0].id).toBe(entity.id);
     });
   });
 });

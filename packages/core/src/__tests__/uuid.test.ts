@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import type { UUID } from '../types';
-import { stringToUuid } from '../utils';
+import { stringToUuid } from '../../dist';
 
 describe('UUID Module', () => {
   // Helper function to generate test strings

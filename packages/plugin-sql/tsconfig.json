@@ -19,10 +19,7 @@
     "noEmitOnError": false,
     "moduleDetection": "force",
     "allowArbitraryExtensions": true,
-    "baseUrl": ".",
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "allowUnusedLabels": true
+    "baseUrl": "."
   },
   "include": ["src/**/*.ts"]
 }

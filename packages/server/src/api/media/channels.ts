@@ -1,52 +1,18 @@
 import { validateUuid, logger } from '@elizaos/core';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { ALLOWED_MEDIA_MIME_TYPES, MAX_FILE_SIZE } from '../shared/constants';
-import multer from 'multer';
-import fs from 'fs';
-import path from 'path';
+import { channelUpload, validateMediaFile, processUploadedFile } from '../shared/uploads';
+import { cleanupUploadedFile } from '../shared/file-utils';
+import type fileUpload from 'express-fileupload';
 
-// Configure multer for file uploads
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage,
-  limits: {
-    fileSize: MAX_FILE_SIZE,
-    files: 1,
-  },
-  fileFilter: (req, file, cb) => {
-    if (ALLOWED_MEDIA_MIME_TYPES.includes(file.mimetype as any)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type'), false);
-    }
-  },
-});
+// Using express-fileupload file type
+type UploadedFile = fileUpload.UploadedFile;
 
-// Helper function to save uploaded file
-async function saveUploadedFile(
-  file: Express.Multer.File,
-  channelId: string
-): Promise<{ filename: string; url: string }> {
-  const uploadDir = path.join(process.cwd(), '.eliza/data/uploads/channels', channelId);
-
-  // Ensure directory exists
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-
-  // Generate unique filename
-  const timestamp = Date.now();
-  const random = Math.round(Math.random() * 1e9);
-  const ext = path.extname(file.originalname);
-  const filename = `${timestamp}-${random}${ext}`;
-  const filePath = path.join(uploadDir, filename);
-
-  // Write file to disk
-  fs.writeFileSync(filePath, file.buffer);
-
-  const url = `/media/uploads/channels/${channelId}/${filename}`;
-  return { filename, url };
+interface ChannelMediaRequest extends Omit<express.Request, 'files'> {
+  files?: { [fieldname: string]: UploadedFile | UploadedFile[] } | UploadedFile[];
+  params: {
+    channelId: string;
+  };
 }
 
 /**
@@ -66,22 +32,43 @@ export function createChannelMediaRouter(): express.Router {
   router.post(
     '/:channelId/upload-media',
     uploadMediaRateLimiter, // Apply rate limiter
-    upload.single('file'),
+    channelUpload(),
     async (req, res) => {
-      const channelId = validateUuid(req.params.channelId);
+      const channelMediaReq = req as ChannelMediaRequest;
+      const channelId = validateUuid(channelMediaReq.params.channelId);
       if (!channelId) {
         res.status(400).json({ success: false, error: 'Invalid channelId format' });
         return;
       }
 
-      if (!req.file) {
+      // Get the uploaded file from express-fileupload
+      let mediaFile: UploadedFile;
+      if (channelMediaReq.files && !Array.isArray(channelMediaReq.files)) {
+        // files is an object with field names
+        mediaFile = channelMediaReq.files.file as UploadedFile;
+      } else if (Array.isArray(channelMediaReq.files) && channelMediaReq.files.length > 0) {
+        // files is an array
+        mediaFile = channelMediaReq.files[0];
+      } else {
         res.status(400).json({ success: false, error: 'No media file provided' });
         return;
       }
 
+      if (!mediaFile) {
+        res.status(400).json({ success: false, error: 'No media file provided' });
+        return;
+      }
+
+      // Validate file type using the helper function
+      if (!validateMediaFile(mediaFile)) {
+        cleanupUploadedFile(mediaFile);
+        res.status(400).json({ success: false, error: `Invalid file type: ${mediaFile.mimetype}` });
+        return;
+      }
+
       try {
-        // Save the uploaded file
-        const result = await saveUploadedFile(req.file, channelId);
+        // Process and move the uploaded file
+        const result = await processUploadedFile(mediaFile, channelId, 'channels');
 
         logger.info(
           `[Channel Media Upload] File uploaded for channel ${channelId}: ${result.filename}. URL: ${result.url}`
@@ -91,10 +78,10 @@ export function createChannelMediaRouter(): express.Router {
           success: true,
           data: {
             url: result.url, // Relative URL, client prepends server origin
-            type: req.file.mimetype,
+            type: mediaFile.mimetype,
             filename: result.filename,
-            originalName: req.file.originalname,
-            size: req.file.size,
+            originalName: mediaFile.name,
+            size: mediaFile.size,
           },
         });
       } catch (error: any) {
@@ -102,6 +89,7 @@ export function createChannelMediaRouter(): express.Router {
           `[Channel Media Upload] Error processing upload for channel ${channelId}: ${error.message}`,
           error
         );
+        cleanupUploadedFile(mediaFile);
         res.status(500).json({ success: false, error: 'Failed to process media upload' });
       }
     }

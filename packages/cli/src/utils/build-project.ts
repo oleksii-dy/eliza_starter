@@ -23,18 +23,16 @@ export async function buildProject(cwd: string = process.cwd(), isPlugin = false
 
   logger.info(`Building ${isPlugin ? 'plugin' : 'project'} in ${cwd}...`);
 
-  // Validate that the project directory exists and use centralized detection
+  // Validate that the project directory exists
   if (!fs.existsSync(cwd)) {
-    throw new Error(`Project directory ${cwd} does not exist.`);
-  }
-
-  const dirInfo = detectDirectoryType(cwd);
-  if (!dirInfo.hasPackageJson) {
-    logger.warn(`package.json not found in ${cwd}. Cannot determine build method.`);
-    throw new Error(`Project directory ${cwd} does not have package.json.`);
+    throw new Error(`Project directory ${cwd} does not exist or package.json is missing.`);
   }
 
   const packageJsonPath = path.join(cwd, 'package.json');
+  if (!fs.existsSync(packageJsonPath)) {
+    logger.warn(`package.json not found at ${packageJsonPath}. Cannot determine build method.`);
+    throw new Error(`Project directory ${cwd} does not exist or package.json is missing.`);
+  }
 
   // Clean dist directory if it exists
   const distPath = path.join(cwd, 'dist');

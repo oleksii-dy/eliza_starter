@@ -21,18 +21,6 @@ TOTAL_TESTS=0
 PASSED_TESTS=0
 FAILED_TESTS=0
 
-# Detect macOS and adjust settings
-if [[ "$OSTYPE" == "darwin"* ]] || [[ "$(uname)" == "Darwin" ]]; then
-  echo -e "${YELLOW}macOS detected - using optimized settings${NC}"
-  TIMEOUT=240000    # 4 minutes instead of 2
-  CONCURRENCY=1     # No concurrency on macOS
-  MEMORY=8192       # 8GB instead of 4GB
-else
-  TIMEOUT=120000
-  CONCURRENCY=2
-  MEMORY=4096
-fi
-
 # Function to run test suite
 run_test_suite() {
   local suite_name="$1"
@@ -65,7 +53,7 @@ echo -e "${YELLOW}⚠ Skipping TypeScript validation due to dependency type issu
 # Run unit tests - disable coverage in CI due to memory constraints
 if [ "$CI" = "true" ]; then
   echo -e "${YELLOW}Running tests without coverage in CI to avoid memory issues${NC}"
-  run_test_suite "Unit Tests" "cross-env NODE_OPTIONS=\"--max-old-space-size=${MEMORY}\" bun test tests/commands --timeout ${TIMEOUT} --concurrency ${CONCURRENCY}"
+  run_test_suite "Unit Tests" "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" bun test tests/commands --timeout 120000 --concurrency 2"
 else
   # Run with coverage locally
   run_test_suite "Unit Tests" "bun test tests/commands --coverage --timeout 60000"

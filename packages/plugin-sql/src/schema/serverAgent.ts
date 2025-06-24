@@ -1,4 +1,5 @@
 import { pgTable, uuid, primaryKey } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { messageServerTable } from './messageServer';
 import { agentTable } from './agent';
 

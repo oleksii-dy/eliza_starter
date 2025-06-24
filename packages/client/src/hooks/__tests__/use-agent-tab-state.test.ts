@@ -1,6 +1,18 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { mock, describe, it, expect, beforeEach } from 'bun:test';
 import { useAgentTabState } from '../use-agent-tab-state';
+
+// Mock localStorage
+const localStorageMock = {
+  getItem: mock(),
+  setItem: mock(),
+  removeItem: mock(),
+  clear: mock(),
+};
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+});
 
 // Mock clientLogger
 mock.module('../../lib/logger', () => ({
@@ -11,8 +23,8 @@ mock.module('../../lib/logger', () => ({
 
 describe('useAgentTabState', () => {
   beforeEach(() => {
-    // Clear localStorage before each test
-    localStorage.clear();
+    mock.restore();
+    localStorageMock.getItem.mockReturnValue(null);
   });
 
   it('should initialize with details tab when no agentId is provided', () => {
@@ -23,30 +35,29 @@ describe('useAgentTabState', () => {
 
   it('should initialize with details tab for new agent', () => {
     const agentId = '550e8400-e29b-41d4-a716-446655440000';
-    localStorage.setItem('eliza-agent-tab-states', '{}');
+    localStorageMock.getItem.mockReturnValue('{}');
 
     const { result } = renderHook(() => useAgentTabState(agentId));
 
     expect(result.current.currentTab).toBe('details');
+    expect(localStorageMock.getItem).toHaveBeenCalledWith('eliza-agent-tab-states');
   });
 
-  it('should load saved tab state for existing agent', async () => {
+  it('should load saved tab state for existing agent', () => {
     const agentId = '550e8400-e29b-41d4-a716-446655440000';
     const savedStates = {
       '550e8400-e29b-41d4-a716-446655440000': 'memories',
     };
-    localStorage.setItem('eliza-agent-tab-states', JSON.stringify(savedStates));
+    localStorageMock.getItem.mockReturnValue(JSON.stringify(savedStates));
 
     const { result } = renderHook(() => useAgentTabState(agentId));
 
-    await waitFor(() => {
-      expect(result.current.currentTab).toBe('memories');
-    });
+    expect(result.current.currentTab).toBe('memories');
   });
 
-  it('should save tab state when changed', async () => {
+  it('should save tab state when changed', () => {
     const agentId = '550e8400-e29b-41d4-a716-446655440000';
-    localStorage.setItem('eliza-agent-tab-states', '{}');
+    localStorageMock.getItem.mockReturnValue('{}');
 
     const { result } = renderHook(() => useAgentTabState(agentId));
 
@@ -54,11 +65,9 @@ describe('useAgentTabState', () => {
       result.current.setTab('actions');
     });
 
-    await waitFor(() => {
-      expect(result.current.currentTab).toBe('actions');
-    });
-
-    expect(localStorage.getItem('eliza-agent-tab-states')).toBe(
+    expect(result.current.currentTab).toBe('actions');
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(
+      'eliza-agent-tab-states',
       JSON.stringify({ '550e8400-e29b-41d4-a716-446655440000': 'actions' })
     );
   });
@@ -68,7 +77,7 @@ describe('useAgentTabState', () => {
     const existingStates = {
       '550e8400-e29b-41d4-a716-446655440000': 'memories',
     };
-    localStorage.setItem('eliza-agent-tab-states', JSON.stringify(existingStates));
+    localStorageMock.getItem.mockReturnValue(JSON.stringify(existingStates));
 
     const { result } = renderHook(() => useAgentTabState(agentId));
 
@@ -76,7 +85,8 @@ describe('useAgentTabState', () => {
       result.current.setTab('logs');
     });
 
-    expect(localStorage.getItem('eliza-agent-tab-states')).toBe(
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(
+      'eliza-agent-tab-states',
       JSON.stringify({
         '550e8400-e29b-41d4-a716-446655440000': 'memories',
         '550e8400-e29b-41d4-a716-446655440001': 'logs',
@@ -86,52 +96,41 @@ describe('useAgentTabState', () => {
 
   it('should handle localStorage errors gracefully', () => {
     const agentId = '550e8400-e29b-41d4-a716-446655440000';
-    const originalGetItem = localStorage.getItem;
-    localStorage.getItem = () => {
+    localStorageMock.getItem.mockImplementation(() => {
       throw new Error('localStorage not available');
-    };
+    });
 
     const { result } = renderHook(() => useAgentTabState(agentId));
 
     expect(result.current.currentTab).toBe('details');
-
-    // Restore original getItem
-    localStorage.getItem = originalGetItem;
   });
 
-  it('should switch tab state when agentId changes', async () => {
+  it('should switch tab state when agentId changes', () => {
     const savedStates = {
       '550e8400-e29b-41d4-a716-446655440000': 'memories',
       '550e8400-e29b-41d4-a716-446655440001': 'actions',
     };
-    localStorage.setItem('eliza-agent-tab-states', JSON.stringify(savedStates));
+    localStorageMock.getItem.mockReturnValue(JSON.stringify(savedStates));
 
     const { result, rerender } = renderHook(({ agentId }) => useAgentTabState(agentId), {
       initialProps: { agentId: '550e8400-e29b-41d4-a716-446655440000' as any },
     });
 
-    await waitFor(() => {
-      expect(result.current.currentTab).toBe('memories');
-    });
+    expect(result.current.currentTab).toBe('memories');
 
     rerender({ agentId: '550e8400-e29b-41d4-a716-446655440001' as any });
 
-    await waitFor(() => {
-      expect(result.current.currentTab).toBe('actions');
-    });
+    expect(result.current.currentTab).toBe('actions');
   });
 
-  it('should not save to localStorage when no agentId is provided', async () => {
+  it('should not save to localStorage when no agentId is provided', () => {
     const { result } = renderHook(() => useAgentTabState(undefined));
 
     act(() => {
       result.current.setTab('actions');
     });
 
-    await waitFor(() => {
-      expect(result.current.currentTab).toBe('actions');
-    });
-
-    expect(localStorage.getItem('eliza-agent-tab-states')).toBe(null);
+    expect(result.current.currentTab).toBe('actions');
+    expect(localStorageMock.setItem).not.toHaveBeenCalled();
   });
 });

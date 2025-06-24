@@ -1,26 +1,35 @@
-import { describe, it, expect, beforeEach, mock } from 'bun:test';
-
-// Create mock pool instance
-const mockPoolInstance = {
-  connect: mock(),
-  end: mock(),
-  query: mock(),
-};
-
-// Mock the 'pg' module
-mock.module('pg', () => ({
-  Pool: mock(() => mockPoolInstance),
-}));
-
-// Import after mocking
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  mock,
+  spyOn,
+} from 'bun:test';
 import { PostgresConnectionManager } from '../../../pg/manager';
+import { Pool } from 'pg';
+
+// Mock the 'pg' module to avoid actual DB connections in unit tests
+// In bun:test, we'll create a simpler mock approach
 
 describe('PostgresConnectionManager', () => {
+  let mockPoolInstance: any;
+
   beforeEach(() => {
-    // Clear all mocks before each test
-    mockPoolInstance.connect.mockClear();
-    mockPoolInstance.end.mockClear();
-    mockPoolInstance.query.mockClear();
+    // Create a mock pool instance
+    mockPoolInstance = {
+      connect: mock(),
+      end: mock(),
+      query: mock(),
+    };
+  });
+
+  afterEach(() => {
+    // Clear all mocks after each test
+    // Mocks auto-clear in bun:test;
   });
 
   describe('constructor', () => {
@@ -52,7 +61,7 @@ describe('PostgresConnectionManager', () => {
 
       const connection = manager.getConnection();
       expect(connection).toBeDefined();
-      expect(connection).toBe(mockPoolInstance as any);
+      expect(connection).toBe(mockPoolInstance);
     });
   });
 
@@ -69,7 +78,7 @@ describe('PostgresConnectionManager', () => {
       mockPoolInstance.connect.mockResolvedValue(mockClient);
 
       const client = await manager.getClient();
-      expect(client).toBe(mockClient as any);
+      expect(client).toBe(mockClient);
       expect(mockPoolInstance.connect).toHaveBeenCalled();
     });
 
@@ -133,8 +142,6 @@ describe('PostgresConnectionManager', () => {
     it('should end the pool connection', async () => {
       const connectionUrl = 'postgresql://user:pass@localhost:5432/testdb';
       const manager = new PostgresConnectionManager(connectionUrl);
-
-      mockPoolInstance.end.mockResolvedValue(undefined);
 
       await manager.close();
       expect(mockPoolInstance.end).toHaveBeenCalled();

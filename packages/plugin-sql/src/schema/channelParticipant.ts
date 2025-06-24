@@ -1,4 +1,5 @@
 import { pgTable, text, primaryKey } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { channelTable } from './channel';
 
 export const channelParticipantsTable = pgTable(

@@ -1,9 +1,23 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  mock,
+  spyOn,
+} from 'bun:test';
+import { PostgresConnectionManager } from '../../pg/manager';
+import { PgDatabaseAdapter } from '../../pg/adapter';
 import { v4 as uuidv4 } from 'uuid';
 import type { UUID, Entity, Memory, Component, Agent, ChannelType } from '@elizaos/core';
 import { DatabaseMigrationService } from '../../migration-service';
 import * as schema from '../../schema';
 import { PGlite } from '@electric-sql/pglite';
+import { drizzle } from 'drizzle-orm/pglite';
+import { sql } from 'drizzle-orm';
 import { PGliteClientManager } from '../../pglite/manager';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 
@@ -67,7 +81,7 @@ describe('PostgreSQL E2E Tests', () => {
       const retrieved = await adapter.getAgent(agentId);
       expect(retrieved).toBeDefined();
       expect(retrieved?.name).toBe('Test Agent');
-      expect(retrieved!.settings).toEqual(agent.settings!);
+      expect(retrieved?.settings).toEqual(agent.settings);
 
       await adapter.close();
     });

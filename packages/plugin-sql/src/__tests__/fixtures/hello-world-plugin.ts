@@ -32,7 +32,7 @@ export const helloWorldPlugin: Plugin = {
   priority: 100, // Load after SQL plugin
   dependencies: ['@elizaos/plugin-sql'],
 
-  init: async (_config, _runtime) => {
+  init: async (config, runtime) => {
     console.log('Hello World Plugin initialized!');
   },
 };
