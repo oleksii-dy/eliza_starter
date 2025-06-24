@@ -510,6 +510,43 @@ This E2E test design outlines the key interactions and data flows for a supervis
 
 This refined scenario gives a clearer picture of the multi-agent collaboration using the implemented features.
 ---
+## Conceptual SQL Schema for Supervisor Task Tracking (Current Plan - Step 3)
+
+This schema is for `SupervisorAlpha` to track delegated sub-tasks. It would ideally be managed by `@elizaos/plugin-sql`. For PoC, this definition guides mock interactions.
+
+```typescript
+// File: (conceptual, e.g., packages/plugin-supervisor-tools/src/schema.ts or types.ts)
+// import { text, integer, sqliteTable } from 'drizzle-orm/sqlite-core'; // Example for SQLite with Drizzle
+
+// export const delegatedSubTasksSchema = sqliteTable('delegated_sub_tasks', {
+//   id: text('id').primaryKey(), // Unique ID for this tracked sub-task entry (e.g., new UUID)
+//   projectConversationId: text('project_conversation_id').notNull(), // Links to the overall project/goal
+//   a2aRequestMessageId: text('a2a_request_message_id').notNull().unique(), // The message_id of the A2A TASK_REQUEST sent
+                                                                      // This is the primary key for updates based on ACKs/Responses.
+//   subTaskName: text('sub_task_name').notNull(),
+//   assignedAgentId: text('assigned_agent_id').notNull(),
+//   status: text('status', {
+//     enum: [
+//       'PENDING_DELEGATION', // Supervisor decided to delegate, but A2A message not yet confirmed sent by action
+//       'DELEGATION_SENT',    // SEND_A2A_MESSAGE action completed successfully
+//       'ACKNOWLEDGED',       // Received ACK from specialist agent (task queued by them)
+//       'IN_PROGRESS',        // Specialist agent reported IN_PROGRESS (future A2A enhancement)
+//       'SUCCESS',            // Specialist agent reported SUCCESS
+//       'FAILURE'             // Specialist agent reported FAILURE
+//     ]
+//   }).notNull().default('PENDING_DELEGATION'),
+//   resultSummary: text('result_summary'),      // Store stringified JSON, key details, or pointer to full result
+//   lastErrorMessage: text('last_error_message'), // If status is FAILURE
+//   delegatedAt: text('delegated_at').notNull(), // Timestamp when SEND_A2A_MESSAGE was called
+//   lastStatusUpdateAt: text('last_status_update_at').notNull(),
+// });
+
+// export type DelegatedSubTask = typeof delegatedSubTasksSchema.$inferSelect;
+// export type NewDelegatedSubTask = typeof delegatedSubTasksSchema.$inferInsert;
+```
+**Key for updates:** `a2aRequestMessageId` will be used to find and update tasks when an `ACK` (referencing `original_message_id`) or a `TASK_RESPONSE` (referencing `original_task_name` within a `projectConversationId`) comes back.
+
+---
 ## Advanced Topics Review & Documentation (Current Plan - Step 6, formerly Step 6 of previous plan)
 
 This section details further considerations for sandboxing tool execution within `plugin-blockchain-auditor` and scaling `plugin-a2a-communication` for distributed environments.
