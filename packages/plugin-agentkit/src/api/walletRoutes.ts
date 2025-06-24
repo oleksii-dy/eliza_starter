@@ -1,5 +1,5 @@
 import { type Route, type IAgentRuntime, logger } from "../types/core.d";
-import { CustodialWalletService } from "../services/CustodialWalletService";
+import type { CustodialWalletService } from "../services/CustodialWalletService";
 import { AgentKitTrustValidator, HighValueTransactionValidator } from "../trust/trustIntegration";
 import type { CustodialWallet } from "../types/wallet";
 
@@ -521,7 +521,7 @@ export const custodialWalletRoutes: Route[] = [
                      WHERE wallet_id = ? 
                      ORDER BY created_at DESC 
                      LIMIT ? OFFSET ?`,
-                    [walletId, parseInt(limit as string), parseInt(offset as string)]
+                    [walletId, Number.parseInt(limit as string), Number.parseInt(offset as string)]
                 );
                 
                 const totalCount = await db.query(
@@ -534,8 +534,8 @@ export const custodialWalletRoutes: Route[] = [
                     transactions: transactions || [],
                     pagination: {
                         total: totalCount?.[0]?.count || 0,
-                        limit: parseInt(limit as string),
-                        offset: parseInt(offset as string)
+                        limit: Number.parseInt(limit as string),
+                        offset: Number.parseInt(offset as string)
                     }
                 });
                 

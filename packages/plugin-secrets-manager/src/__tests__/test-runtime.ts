@@ -10,7 +10,7 @@ import {
   Role,
   ChannelType,
   ModelType,
-  AgentRuntime
+  AgentRuntime,
 } from '@elizaos/core';
 import envPlugin from '../index';
 import sqlPlugin from '@elizaos/plugin-sql';
@@ -39,9 +39,9 @@ export async function createTestRuntime(options?: {
     settings: {
       // Add any default settings for tests
       ...TEST_SETTINGS,
-      ...options?.character?.settings
+      ...options?.character?.settings,
     },
-    ...options?.character
+    ...options?.character,
   };
 
   // Create runtime - it will use in-memory database by default
@@ -51,8 +51,8 @@ export async function createTestRuntime(options?: {
     plugins: [
       sqlPlugin,
       ...(options?.includeEnvPlugin !== false ? [envPlugin] : []),
-      ...(options?.plugins || [])
-    ]
+      ...(options?.plugins || []),
+    ],
   });
 
   // Initialize runtime
@@ -94,12 +94,12 @@ export async function createTestEntities(runtime: IAgentRuntime): Promise<{
     serverId: 'test-server',
     metadata: {
       ownership: {
-        ownerId: runtime.agentId
+        ownerId: runtime.agentId,
       },
       roles: {
-        [runtime.agentId]: Role.OWNER
-      }
-    }
+        [runtime.agentId]: Role.OWNER,
+      },
+    },
   };
 
   await runtime.createWorld(world);
@@ -113,7 +113,7 @@ export async function createTestEntities(runtime: IAgentRuntime): Promise<{
     type: ChannelType.GROUP,
     worldId: world.id,
     serverId: 'test-server',
-    channelId: 'test-channel'
+    channelId: 'test-channel',
   };
 
   // Create test user component
@@ -128,8 +128,8 @@ export async function createTestEntities(runtime: IAgentRuntime): Promise<{
     createdAt: Date.now(),
     data: {
       name: 'Test User',
-      userId: `user-${Date.now()}`
-    }
+      userId: `user-${Date.now()}`,
+    },
   };
 
   await runtime.createComponent(user);
@@ -148,9 +148,9 @@ export function createTestMemory(overrides: Partial<Memory> = {}): Memory {
     agentId: `agent-${Date.now()}` as UUID,
     content: {
       text: 'Test message',
-      source: 'test'
+      source: 'test',
     },
     createdAt: Date.now(),
-    ...overrides
+    ...overrides,
   } as Memory;
-} 
+}

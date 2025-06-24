@@ -47,14 +47,14 @@ export async function sendMessageAndWaitForResponse(
     };
     
     // Process message - using runtime's actual method
-    // @ts-ignore - processMessage exists on runtime in e2e context
+    // @ts-expect-error - processMessage exists on runtime in e2e context
     await runtime.processMessage(message);
     
     // Wait for processing
     await new Promise(resolve => setTimeout(resolve, waitTime));
     
     // Get responses - using runtime's actual method
-    // @ts-ignore - messageManager exists on runtime in e2e context
+    // @ts-expect-error - messageManager exists on runtime in e2e context
     const messages = await runtime.messageManager.getMessages({
         roomId,
         limit: 10,

@@ -85,7 +85,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     registerService: vi.fn(async (ServiceClass: any) => {
       const identifier = ServiceClass.serviceName || ServiceClass.serviceType;
       let instance;
-      
+
       if (identifier === 'SECRETS' && ServiceClass.start) {
         // For EnhancedSecretManager, use the static start method
         instance = await ServiceClass.start(runtime);
@@ -99,7 +99,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
         // For other services, just create instance
         instance = new ServiceClass(runtime);
       }
-      
+
       registeredServices.set(identifier, instance);
       return Promise.resolve();
     }) as any,
@@ -128,4 +128,4 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
   } as any;
 
   return runtime;
-} 
+}

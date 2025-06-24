@@ -25,31 +25,31 @@ export function isValidPluginShape(obj: any): obj is Plugin {
  * Map of short plugin names to full package names
  */
 const pluginNameMapping: Record<string, string> = {
-  'todo': '@elizaos/plugin-todo',
-  'trust': '@elizaos/plugin-trust',
-  'rolodex': '@elizaos/plugin-rolodex',
-  'bootstrap': '@elizaos/plugin-bootstrap',
-  'openai': '@elizaos/plugin-openai',
-  'anthropic': '@elizaos/plugin-anthropic',
-  'sql': '@elizaos/plugin-sql',
+  todo: '@elizaos/plugin-todo',
+  trust: '@elizaos/plugin-trust',
+  rolodex: '@elizaos/plugin-rolodex',
+  bootstrap: '@elizaos/plugin-bootstrap',
+  openai: '@elizaos/plugin-openai',
+  anthropic: '@elizaos/plugin-anthropic',
+  sql: '@elizaos/plugin-sql',
   'message-handling': '@elizaos/plugin-message-handling',
-  'messageHandling': '@elizaos/plugin-message-handling',
-  'knowledge': '@elizaos/plugin-knowledge',
-  'research': '@elizaos/plugin-research',
+  messageHandling: '@elizaos/plugin-message-handling',
+  knowledge: '@elizaos/plugin-knowledge',
+  research: '@elizaos/plugin-research',
   'web-search': '@elizaos/plugin-web-search',
-  'planning': '@elizaos/plugin-planning',
-  'goals': '@elizaos/plugin-goals',
-  'stagehand': '@elizaos/plugin-stagehand',
+  planning: '@elizaos/plugin-planning',
+  goals: '@elizaos/plugin-goals',
+  stagehand: '@elizaos/plugin-stagehand',
   'plugin-manager': '@elizaos/plugin-plugin-manager',
-  'github': '@elizaos/plugin-github',
-  'solana': '@elizaos/plugin-solana',
-  'evm': '@elizaos/plugin-evm',
+  github: '@elizaos/plugin-github',
+  solana: '@elizaos/plugin-solana',
+  evm: '@elizaos/plugin-evm',
   'secrets-manager': '@elizaos/plugin-secrets-manager',
-  'shell': '@elizaos/plugin-shell',
-  'mcp': '@elizaos/plugin-mcp',
-  'ngrok': '@elizaos/plugin-ngrok',
-  'agentkit': '@elizaos/plugin-agentkit',
-  'autocoder': '@elizaos/plugin-autocoder',
+  shell: '@elizaos/plugin-shell',
+  mcp: '@elizaos/plugin-mcp',
+  ngrok: '@elizaos/plugin-ngrok',
+  agentkit: '@elizaos/plugin-agentkit',
+  autocoder: '@elizaos/plugin-autocoder',
 };
 
 /**
@@ -91,10 +91,10 @@ async function loadPluginModuleWithEnvironment(pluginName: string): Promise<any>
 export async function loadAndPreparePlugin(pluginName: string): Promise<Plugin | null> {
   const version = getCliInstallTag();
   let pluginModule: any;
-  
+
   // Map short plugin names to full package names
   const resolvedPluginName = pluginNameMapping[pluginName] || pluginName;
-  
+
   const context = detectPluginContext(resolvedPluginName);
   const envConfig = getEnvironmentConfig();
 

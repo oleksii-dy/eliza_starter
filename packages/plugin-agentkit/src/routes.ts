@@ -1,5 +1,5 @@
 import type { Route } from "./types/core";
-import { AgentKitService } from "./services/AgentKitService";
+import type { AgentKitService } from "./services/AgentKitService";
 import { custodialWalletRoutes } from "./api/walletRoutes";
 
 export const agentKitRoutes: Route[] = [

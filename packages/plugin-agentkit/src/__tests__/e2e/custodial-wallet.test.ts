@@ -1,5 +1,5 @@
-import { type TestSuite, type IAgentRuntime } from "../../types/core";
-import { CustodialWalletService } from "../../services/CustodialWalletService";
+import type { TestSuite, IAgentRuntime } from "../../types/core";
+import type { CustodialWalletService } from "../../services/CustodialWalletService";
 import { 
     createCustodialWalletAction,
     listCustodialWalletsAction,

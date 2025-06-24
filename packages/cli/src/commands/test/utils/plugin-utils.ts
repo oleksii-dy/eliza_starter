@@ -48,7 +48,7 @@ export async function loadPluginDependencies(projectInfo: DirectoryInfo): Promis
  * @returns Array of loaded plugins with scenarios
  */
 export async function loadPluginsFromProject(
-  projectPath: string, 
+  projectPath: string,
   projectInfo: any
 ): Promise<Plugin[]> {
   const plugins: Plugin[] = [];
@@ -69,7 +69,7 @@ export async function loadPluginsFromProject(
           for (const pluginRef of agent.plugins) {
             try {
               let plugin: Plugin;
-              
+
               if (typeof pluginRef === 'string') {
                 // Plugin reference by name - try to resolve and load
                 plugin = await resolvePluginByName(pluginRef, projectPath);
@@ -78,12 +78,14 @@ export async function loadPluginsFromProject(
                 plugin = pluginRef;
               }
 
-              if (plugin && !plugins.find(p => p.name === plugin.name)) {
+              if (plugin && !plugins.find((p) => p.name === plugin.name)) {
                 plugins.push(plugin);
                 logger.debug(`Loaded plugin from agent: ${plugin.name}`);
               }
             } catch (error) {
-              logger.warn(`Failed to load plugin ${pluginRef}: ${error instanceof Error ? error.message : String(error)}`);
+              logger.warn(
+                `Failed to load plugin ${pluginRef}: ${error instanceof Error ? error.message : String(error)}`
+              );
             }
           }
         }
@@ -93,22 +95,25 @@ export async function loadPluginsFromProject(
     // Load dependency plugins
     const dependencyPlugins = await loadPluginDependencies(projectInfo);
     for (const depPlugin of dependencyPlugins) {
-      if (!plugins.find(p => p.name === depPlugin.name)) {
+      if (!plugins.find((p) => p.name === depPlugin.name)) {
         plugins.push(depPlugin);
         logger.debug(`Loaded dependency plugin: ${depPlugin.name}`);
       }
     }
-
   } catch (error) {
-    logger.error(`Failed to load plugins from project ${projectPath}: ${error instanceof Error ? error.message : String(error)}`);
+    logger.error(
+      `Failed to load plugins from project ${projectPath}: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 
   // Filter to only plugins that have scenarios
-  const pluginsWithScenarios = plugins.filter(plugin => 
-    plugin.scenarios && plugin.scenarios.length > 0
+  const pluginsWithScenarios = plugins.filter(
+    (plugin) => plugin.scenarios && plugin.scenarios.length > 0
   );
 
-  logger.info(`Found ${pluginsWithScenarios.length} plugins with scenarios out of ${plugins.length} total plugins`);
+  logger.info(
+    `Found ${pluginsWithScenarios.length} plugins with scenarios out of ${plugins.length} total plugins`
+  );
 
   return plugins; // Return all plugins, not just those with scenarios, as they may be dependencies
 }
@@ -119,7 +124,7 @@ export async function loadPluginsFromProject(
 async function resolvePluginByName(pluginName: string, projectPath: string): Promise<Plugin> {
   // Try to load from node_modules
   const nodeModulesPath = path.join(projectPath, 'node_modules', pluginName);
-  
+
   if (fs.existsSync(nodeModulesPath)) {
     try {
       const pluginProject = await loadProject(nodeModulesPath);
@@ -134,7 +139,7 @@ async function resolvePluginByName(pluginName: string, projectPath: string): Pro
   // Try to require directly (for built-in or globally installed plugins)
   try {
     const pluginModule = require(pluginName);
-    
+
     // Handle different export patterns
     if (pluginModule.default) {
       return pluginModule.default;

@@ -19,7 +19,7 @@ export interface ActionResult {
     };
 }
 
-import { AgentKitService } from "./services/AgentKitService";
+import type { AgentKitService } from "./services/AgentKitService";
 
 /**
  * Comprehensive examples for AgentKit actions showing real-world usage patterns
@@ -498,7 +498,7 @@ export async function createAgentKitActionsFromService(runtime: IAgentRuntime): 
                     throw new Error("AgentKit service not available");
                 }
 
-                let currentState = state ?? (await runtime.composeState(message));
+                const currentState = state ?? (await runtime.composeState(message));
 
                 // Extract parameters from message using enhanced approach
                 const messageText = message.content.text || "";

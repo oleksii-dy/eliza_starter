@@ -1,0 +1,49 @@
+{
+  "files": {
+    "ignore": ["dist/**", "node_modules/**", ".turbo/**", "coverage/**"]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noImplicitAnyLet": "off"
+      },
+      "complexity": {
+        "noForEach": "off",
+        "useOptionalChain": "off",
+        "noStaticOnlyClass": "off",
+        "noThisInStatic": "off"
+      },
+      "performance": {
+        "noDelete": "off"
+      },
+      "style": {
+        "useNodejsImportProtocol": "off",
+        "useNumberNamespace": "off",
+        "useTemplate": "off",
+        "noUnusedTemplateLiteral": "off",
+        "noNonNullAssertion": "off"
+      },
+      "a11y": {
+        "useKeyWithClickEvents": "off",
+        "noLabelWithoutControl": "off",
+        "useButtonType": "off"
+      },
+      "correctness": {
+        "noSwitchDeclarations": "off"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true
+  },
+  "organizeImports": {
+    "enabled": true
+  },
+  "javascript": {
+    "formatter": {
+      "trailingCommas": "es5"
+    }
+  }
+}

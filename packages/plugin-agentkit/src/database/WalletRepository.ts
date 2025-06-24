@@ -1,5 +1,5 @@
 import { type IAgentRuntime, type UUID, elizaLogger } from "../types/core.d";
-import { CustodialWallet, WalletTransaction, WalletPermission } from "../types/wallet";
+import type { CustodialWallet, WalletTransaction, WalletPermission } from "../types/wallet";
 
 /**
  * Real database repository for custodial wallet persistence

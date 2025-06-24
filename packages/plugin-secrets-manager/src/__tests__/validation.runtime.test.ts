@@ -17,7 +17,7 @@ export class ValidationTestSuite implements TestSuite {
         // Test valid format
         const validKey = 'sk-proj-abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJ';
         const validResult = await validateEnvVar('OPENAI_API_KEY', validKey, 'api_key');
-        
+
         if (!validResult.isValid) {
           throw new Error('Valid OpenAI API key format was rejected');
         }
@@ -25,13 +25,13 @@ export class ValidationTestSuite implements TestSuite {
         // Test invalid format
         const invalidKey = 'invalid-key';
         const invalidResult = await validateEnvVar('OPENAI_API_KEY', invalidKey, 'api_key');
-        
+
         if (invalidResult.isValid) {
           throw new Error('Invalid OpenAI API key format was accepted');
         }
 
         console.log('✓ OpenAI API key format validation working correctly');
-      }
+      },
     },
 
     {
@@ -43,19 +43,21 @@ export class ValidationTestSuite implements TestSuite {
           { url: 'https://api.example.com/v1/endpoint', expected: true },
           { url: 'not-a-url', expected: false },
           { url: 'ftp://example.com', expected: false },
-          { url: '', expected: false }
+          { url: '', expected: false },
         ];
 
         for (const testCase of testCases) {
           const result = await validateEnvVar('TEST_URL', testCase.url, 'url');
-          
+
           if (result.isValid !== testCase.expected) {
-            throw new Error(`URL validation failed for "${testCase.url}". Expected ${testCase.expected}, got ${result.isValid}`);
+            throw new Error(
+              `URL validation failed for "${testCase.url}". Expected ${testCase.expected}, got ${result.isValid}`
+            );
           }
         }
 
         console.log('✓ URL format validation working correctly');
-      }
+      },
     },
 
     {
@@ -73,7 +75,7 @@ export class ValidationTestSuite implements TestSuite {
         }
 
         console.log('✓ Webhook URL validation with network check passed');
-      }
+      },
     },
 
     {
@@ -86,7 +88,7 @@ TdQr1qvKbvAQAEjDvZa8DPqbHnIBv9VJuYDdF9B5qQNPe3Ot66K1Ov4+tBuPmGRH
 -----END RSA PRIVATE KEY-----`;
 
         const result = await validateEnvVar('TEST_PRIVATE_KEY', validRSAKey, 'private_key');
-        
+
         if (!result.isValid) {
           throw new Error('Valid RSA private key format was rejected');
         }
@@ -94,13 +96,13 @@ TdQr1qvKbvAQAEjDvZa8DPqbHnIBv9VJuYDdF9B5qQNPe3Ot66K1Ov4+tBuPmGRH
         // Test invalid format
         const invalidKey = 'not-a-private-key';
         const invalidResult = await validateEnvVar('TEST_PRIVATE_KEY', invalidKey, 'private_key');
-        
+
         if (invalidResult.isValid) {
           throw new Error('Invalid private key format was accepted');
         }
 
         console.log('✓ Private key format validation working correctly');
-      }
+      },
     },
 
     {
@@ -114,13 +116,13 @@ TdQr1qvKbvAQAEjDvZa8DPqbHnIBv9VJuYDdF9B5qQNPe3Ot66K1Ov4+tBuPmGRH
         }
 
         const result = await validateEnvVar('OPENAI_API_KEY', apiKey, 'api_key');
-        
+
         if (!result.isValid) {
           throw new Error(`API key validation failed: ${result.error}`);
         }
 
         console.log('✓ API key validation with actual API call passed');
-      }
+      },
     },
 
     {
@@ -129,7 +131,7 @@ TdQr1qvKbvAQAEjDvZa8DPqbHnIBv9VJuYDdF9B5qQNPe3Ot66K1Ov4+tBuPmGRH
         // Test with a type that might cause errors
         try {
           const result = await validateEnvVar('TEST_VAR', 'test-value', 'unknown-type' as any);
-          
+
           // Should still return a result even for unknown types
           if (typeof result.isValid !== 'boolean') {
             throw new Error('Validation did not return a boolean isValid property');
@@ -139,7 +141,7 @@ TdQr1qvKbvAQAEjDvZa8DPqbHnIBv9VJuYDdF9B5qQNPe3Ot66K1Ov4+tBuPmGRH
         } catch (error) {
           throw new Error(`Validation threw an error instead of handling gracefully: ${error}`);
         }
-      }
+      },
     },
 
     {
@@ -149,7 +151,7 @@ TdQr1qvKbvAQAEjDvZa8DPqbHnIBv9VJuYDdF9B5qQNPe3Ot66K1Ov4+tBuPmGRH
         (validationStrategies as any).custom = {
           test_custom: async (value: string) => {
             return value === 'custom-valid';
-          }
+          },
         };
 
         // Test custom validation
@@ -167,10 +169,10 @@ TdQr1qvKbvAQAEjDvZa8DPqbHnIBv9VJuYDdF9B5qQNPe3Ot66K1Ov4+tBuPmGRH
         delete (validationStrategies as any).custom;
 
         console.log('✓ Custom validation strategies working correctly');
-      }
-    }
+      },
+    },
   ];
 }
 
 // Export test suite instance
-export default new ValidationTestSuite(); 
+export default new ValidationTestSuite();

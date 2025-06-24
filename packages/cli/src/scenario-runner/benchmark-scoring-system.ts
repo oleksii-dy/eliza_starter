@@ -14,19 +14,19 @@ export interface BenchmarkScore {
   benchmarkType: string;
   version: string;
   timestamp: number;
-  
+
   // Core scoring components
   overallScore: number; // 0-1
   categoryScores: CategoryScores;
   performanceMetrics: PerformanceMetrics;
   economicMetrics: EconomicMetrics;
   riskMetrics: RiskMetrics;
-  
+
   // Ranking and comparison
   ranking: RankingInfo;
   percentile: number; // 0-100
   improvementSuggestions: string[];
-  
+
   // Metadata
   executionContext: ExecutionContext;
   verification: VerificationInfo;
@@ -34,61 +34,61 @@ export interface BenchmarkScore {
 
 export interface CategoryScores {
   // Universal categories (0-1 scale)
-  technical: number;      // Technical execution quality
-  economic: number;       // Economic/financial performance
-  efficiency: number;     // Resource utilization efficiency
-  reliability: number;    // Consistency and error handling
-  innovation: number;     // Novel approaches and creativity
-  
+  technical: number; // Technical execution quality
+  economic: number; // Economic/financial performance
+  efficiency: number; // Resource utilization efficiency
+  reliability: number; // Consistency and error handling
+  innovation: number; // Novel approaches and creativity
+
   // Domain-specific categories
   domainSpecific: Record<string, number>;
 }
 
 export interface PerformanceMetrics {
   // Execution metrics
-  executionTime: number;          // Total milliseconds
-  taskCompletionRate: number;     // 0-1
-  errorRate: number;              // 0-1
-  
+  executionTime: number; // Total milliseconds
+  taskCompletionRate: number; // 0-1
+  errorRate: number; // 0-1
+
   // Quality metrics
-  accuracyScore: number;          // 0-1
-  consistencyScore: number;       // 0-1
-  innovationScore: number;        // 0-1
-  
+  accuracyScore: number; // 0-1
+  consistencyScore: number; // 0-1
+  innovationScore: number; // 0-1
+
   // Efficiency metrics
-  resourceEfficiency: number;     // 0-1
-  costEfficiency: number;         // 0-1
-  timeEfficiency: number;         // 0-1
+  resourceEfficiency: number; // 0-1
+  costEfficiency: number; // 0-1
+  timeEfficiency: number; // 0-1
 }
 
 export interface EconomicMetrics {
   // Financial performance
-  totalCost: number;              // USD
-  costPerTask: number;            // USD
-  costEfficiency: number;         // Value/Cost ratio
-  
+  totalCost: number; // USD
+  costPerTask: number; // USD
+  costEfficiency: number; // Value/Cost ratio
+
   // ROI metrics
-  returnOnInvestment: number;     // Ratio
-  profitMargin: number;          // Percentage
-  valueGenerated: number;         // USD equivalent
-  
+  returnOnInvestment: number; // Ratio
+  profitMargin: number; // Percentage
+  valueGenerated: number; // USD equivalent
+
   // Risk-adjusted returns
-  sharpeRatio: number;           // Risk-adjusted performance
-  maxDrawdown: number;           // Maximum loss
-  volatility: number;            // Standard deviation
+  sharpeRatio: number; // Risk-adjusted performance
+  maxDrawdown: number; // Maximum loss
+  volatility: number; // Standard deviation
 }
 
 export interface RiskMetrics {
   // Overall risk assessment
-  overallRisk: number;           // 0-1 scale
-  riskAdjustedScore: number;     // Score adjusted for risk
-  
+  overallRisk: number; // 0-1 scale
+  riskAdjustedScore: number; // Score adjusted for risk
+
   // Risk categories
-  executionRisk: number;         // Risk of execution failure
-  financialRisk: number;         // Risk of financial loss
-  operationalRisk: number;       // Risk of operational issues
-  complianceRisk: number;        // Risk of compliance violations
-  
+  executionRisk: number; // Risk of execution failure
+  financialRisk: number; // Risk of financial loss
+  operationalRisk: number; // Risk of operational issues
+  complianceRisk: number; // Risk of compliance violations
+
   // Risk factors
   riskFactors: RiskFactor[];
   mitigation: RiskMitigation[];
@@ -114,11 +114,11 @@ export interface RankingInfo {
   totalParticipants: number;
   previousRank?: number;
   rankChange: number;
-  
+
   // Comparative metrics
-  scoreVsAverage: number;        // How much above/below average
-  scoreVsLeader: number;         // Distance from leader
-  improvementRate: number;       // Rate of improvement over time
+  scoreVsAverage: number; // How much above/below average
+  scoreVsLeader: number; // Distance from leader
+  improvementRate: number; // Rate of improvement over time
 }
 
 export interface ExecutionContext {
@@ -149,7 +149,7 @@ export interface BenchmarkLeaderboard {
   benchmarkType: string;
   timeframe: 'daily' | 'weekly' | 'monthly' | 'all_time';
   lastUpdated: number;
-  
+
   rankings: LeaderboardEntry[];
   statistics: LeaderboardStats;
   trends: TrendAnalysis;
@@ -165,7 +165,7 @@ export interface LeaderboardEntry {
   cost: number;
   improvement: number; // Change from previous period
   verified: boolean;
-  
+
   // Additional metrics
   attempts: number;
   bestScore: number;
@@ -231,20 +231,13 @@ export class BenchmarkScoringSystem {
     const weights = this.scoringWeights.get(benchmarkType) || this.getDefaultWeights();
 
     // Calculate category scores
-    const categoryScores = await this.calculateCategoryScores(
-      benchmarkType,
-      rawResults,
-      weights
-    );
+    const categoryScores = await this.calculateCategoryScores(benchmarkType, rawResults, weights);
 
     // Calculate performance metrics
     const performanceMetrics = this.calculatePerformanceMetrics(rawResults);
 
     // Calculate economic metrics
-    const economicMetrics = await this.calculateEconomicMetrics(
-      benchmarkId,
-      rawResults
-    );
+    const economicMetrics = await this.calculateEconomicMetrics(benchmarkId, rawResults);
 
     // Calculate risk metrics
     const riskMetrics = this.calculateRiskMetrics(rawResults, benchmarkType);
@@ -259,17 +252,10 @@ export class BenchmarkScoringSystem {
     );
 
     // Get ranking information
-    const ranking = await this.calculateRanking(
-      benchmarkType,
-      agentId,
-      overallScore
-    );
+    const ranking = await this.calculateRanking(benchmarkType, agentId, overallScore);
 
     // Generate verification info
-    const verification = await this.generateVerificationInfo(
-      benchmarkId,
-      rawResults
-    );
+    const verification = await this.generateVerificationInfo(benchmarkId, rawResults);
 
     // Create comprehensive score
     const score: BenchmarkScore = {
@@ -338,10 +324,7 @@ export class BenchmarkScoringSystem {
     scores.innovation = this.calculateInnovationScore(rawResults);
 
     // Domain-specific scores
-    scores.domainSpecific = this.calculateDomainSpecificScores(
-      benchmarkType,
-      rawResults
-    );
+    scores.domainSpecific = this.calculateDomainSpecificScores(benchmarkType, rawResults);
 
     return scores;
   }
@@ -355,8 +338,8 @@ export class BenchmarkScoringSystem {
 
     // Task completion rate
     if (rawResults.taskResults) {
-      const completionRate = rawResults.taskResults.filter((t: any) => t.success).length / 
-        rawResults.taskResults.length;
+      const completionRate =
+        rawResults.taskResults.filter((t: any) => t.success).length / rawResults.taskResults.length;
       score += completionRate * 0.3;
       factors += 0.3;
     }
@@ -369,7 +352,7 @@ export class BenchmarkScoringSystem {
 
     // Error handling
     if (rawResults.errors) {
-      const errorScore = Math.max(0, 1 - (rawResults.errors.length / 10));
+      const errorScore = Math.max(0, 1 - rawResults.errors.length / 10);
       score += errorScore * 0.2;
       factors += 0.2;
     }
@@ -615,11 +598,11 @@ export class BenchmarkScoringSystem {
 
     // Performance adjustment
     const performanceWeight = weights.metrics.performance || 0.1;
-    const avgPerformance = (
-      performanceMetrics.accuracyScore +
-      performanceMetrics.consistencyScore +
-      performanceMetrics.resourceEfficiency
-    ) / 3;
+    const avgPerformance =
+      (performanceMetrics.accuracyScore +
+        performanceMetrics.consistencyScore +
+        performanceMetrics.resourceEfficiency) /
+      3;
     score += avgPerformance * performanceWeight;
     totalWeight += performanceWeight;
 
@@ -630,7 +613,7 @@ export class BenchmarkScoringSystem {
     totalWeight += economicWeight;
 
     // Risk adjustment
-    const riskAdjustment = 1 - (riskMetrics.overallRisk * 0.2); // Max 20% penalty
+    const riskAdjustment = 1 - riskMetrics.overallRisk * 0.2; // Max 20% penalty
     score *= riskAdjustment;
 
     // Apply scoring adjustments
@@ -678,14 +661,16 @@ export class BenchmarkScoringSystem {
   ): Promise<RankingInfo> {
     const allScores = this.getAllScoresForBenchmark(benchmarkType);
     const sortedScores = allScores.sort((a, b) => b.overallScore - a.overallScore);
-    
-    const currentRank = sortedScores.findIndex(s => s.agentId === agentId && s.overallScore === score) + 1;
+
+    const currentRank =
+      sortedScores.findIndex((s) => s.agentId === agentId && s.overallScore === score) + 1;
     const totalParticipants = sortedScores.length;
-    
+
     // Find previous rank
     const previousScores = this.getPreviousScoresForAgent(benchmarkType, agentId);
-    const previousRank = previousScores.length > 0 ? previousScores[0].ranking.currentRank : undefined;
-    
+    const previousRank =
+      previousScores.length > 0 ? previousScores[0].ranking.currentRank : undefined;
+
     const average = allScores.reduce((sum, s) => sum + s.overallScore, 0) / allScores.length;
     const leader = sortedScores[0]?.overallScore || score;
 
@@ -753,8 +738,12 @@ export class BenchmarkScoringSystem {
    * Update leaderboards with new score
    */
   private async updateLeaderboards(score: BenchmarkScore): Promise<void> {
-    const timeframes: Array<'daily' | 'weekly' | 'monthly' | 'all_time'> = 
-      ['daily', 'weekly', 'monthly', 'all_time'];
+    const timeframes: Array<'daily' | 'weekly' | 'monthly' | 'all_time'> = [
+      'daily',
+      'weekly',
+      'monthly',
+      'all_time',
+    ];
 
     for (const timeframe of timeframes) {
       await this.updateLeaderboard(score, timeframe);
@@ -795,8 +784,8 @@ export class BenchmarkScoringSystem {
     }
 
     // Update or add entry
-    const existingIndex = leaderboard.rankings.findIndex(r => r.agentId === score.agentId);
-    
+    const existingIndex = leaderboard.rankings.findIndex((r) => r.agentId === score.agentId);
+
     const entry: LeaderboardEntry = {
       rank: 0, // Will be calculated
       agentId: score.agentId,
@@ -818,7 +807,7 @@ export class BenchmarkScoringSystem {
       entry.attempts = existing.attempts + 1;
       entry.bestScore = Math.max(existing.bestScore, score.overallScore);
       entry.consistency = this.calculateConsistency(score.agentId, score.benchmarkType);
-      
+
       leaderboard.rankings[existingIndex] = entry;
     } else {
       leaderboard.rankings.push(entry);
@@ -849,12 +838,12 @@ export class BenchmarkScoringSystem {
     const key = score.benchmarkType;
     const scores = this.benchmarkScores.get(key) || [];
     scores.push(score);
-    
+
     // Keep only last 1000 scores per benchmark type
     if (scores.length > 1000) {
       scores.splice(0, scores.length - 1000);
     }
-    
+
     this.benchmarkScores.set(key, scores);
   }
 
@@ -946,7 +935,7 @@ export class BenchmarkScoringSystem {
 
     const totalRisk = riskFactors.reduce((sum, factor) => {
       const severityWeight = { low: 0.25, medium: 0.5, high: 0.75, critical: 1.0 };
-      return sum + (factor.probability * factor.impact * severityWeight[factor.severity]);
+      return sum + factor.probability * factor.impact * severityWeight[factor.severity];
     }, 0);
 
     return Math.min(totalRisk / riskFactors.length, 1);
@@ -976,7 +965,7 @@ export class BenchmarkScoringSystem {
   }
 
   private generateRiskMitigation(riskFactors: RiskFactor[]): RiskMitigation[] {
-    return riskFactors.map(factor => ({
+    return riskFactors.map((factor) => ({
       riskType: factor.type,
       strategy: this.getRiskMitigationStrategy(factor.type),
       effectiveness: 0.7, // Assume 70% effectiveness
@@ -1051,9 +1040,7 @@ export class BenchmarkScoringSystem {
 
   private getPreviousScoresForAgent(benchmarkType: string, agentId: string): BenchmarkScore[] {
     const allScores = this.getAllScoresForBenchmark(benchmarkType);
-    return allScores
-      .filter(s => s.agentId === agentId)
-      .sort((a, b) => b.timestamp - a.timestamp);
+    return allScores.filter((s) => s.agentId === agentId).sort((a, b) => b.timestamp - a.timestamp);
   }
 
   private calculateImprovementRate(benchmarkType: string, agentId: string): number {
@@ -1067,20 +1054,21 @@ export class BenchmarkScoringSystem {
 
   private calculatePercentile(benchmarkType: string, score: number): number {
     const allScores = this.getAllScoresForBenchmark(benchmarkType)
-      .map(s => s.overallScore)
+      .map((s) => s.overallScore)
       .sort((a, b) => a - b);
 
     if (allScores.length === 0) return 50;
 
-    const index = allScores.findIndex(s => s >= score);
+    const index = allScores.findIndex((s) => s >= score);
     if (index === -1) return 100;
 
     return (index / allScores.length) * 100;
   }
 
   private calculateConsistency(agentId: string, benchmarkType: string): number {
-    const scores = this.getPreviousScoresForAgent(benchmarkType, agentId)
-      .map(s => s.overallScore);
+    const scores = this.getPreviousScoresForAgent(benchmarkType, agentId).map(
+      (s) => s.overallScore
+    );
 
     if (scores.length < 2) return 1.0;
 
@@ -1089,23 +1077,23 @@ export class BenchmarkScoringSystem {
     const standardDeviation = Math.sqrt(variance);
 
     // Convert to consistency score (lower deviation = higher consistency)
-    return Math.max(0, 1 - (standardDeviation * 2));
+    return Math.max(0, 1 - standardDeviation * 2);
   }
 
   private updateLeaderboardStatistics(leaderboard: BenchmarkLeaderboard): void {
-    const scores = leaderboard.rankings.map(r => r.score);
-    
+    const scores = leaderboard.rankings.map((r) => r.score);
+
     leaderboard.statistics.totalParticipants = scores.length;
     leaderboard.statistics.averageScore = scores.reduce((sum, s) => sum + s, 0) / scores.length;
-    
+
     const sortedScores = [...scores].sort((a, b) => a - b);
     const mid = Math.floor(sortedScores.length / 2);
-    leaderboard.statistics.medianScore = sortedScores.length % 2 
-      ? sortedScores[mid]
-      : (sortedScores[mid - 1] + sortedScores[mid]) / 2;
+    leaderboard.statistics.medianScore =
+      sortedScores.length % 2 ? sortedScores[mid] : (sortedScores[mid - 1] + sortedScores[mid]) / 2;
 
-    const variance = scores.reduce((sum, s) => 
-      sum + Math.pow(s - leaderboard.statistics.averageScore, 2), 0) / scores.length;
+    const variance =
+      scores.reduce((sum, s) => sum + Math.pow(s - leaderboard.statistics.averageScore, 2), 0) /
+      scores.length;
     leaderboard.statistics.standardDeviation = Math.sqrt(variance);
   }
 
@@ -1159,7 +1147,7 @@ export class BenchmarkScoringSystem {
     // Get scores across all benchmark types
     const allScores: BenchmarkScore[] = [];
     for (const scores of this.benchmarkScores.values()) {
-      allScores.push(...scores.filter(s => s.agentId === agentId));
+      allScores.push(...scores.filter((s) => s.agentId === agentId));
     }
 
     return allScores.sort((a, b) => b.timestamp - a.timestamp);

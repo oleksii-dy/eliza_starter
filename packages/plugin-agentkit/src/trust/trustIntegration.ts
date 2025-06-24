@@ -1,6 +1,6 @@
 import { type Action, type IAgentRuntime, type Memory, type State, logger } from "../types/core.d";
 import { TrustMiddleware } from "@elizaos/plugin-trust";
-import { CustodialWalletService } from "../services/CustodialWalletService";
+import type { CustodialWalletService } from "../services/CustodialWalletService";
 
 /**
  * Trust requirements for different types of financial operations

@@ -5,12 +5,12 @@
 
 import { logger } from '@elizaos/core';
 import type { Content } from '@elizaos/core';
-import type { 
-  MessagePlatform, 
-  PlatformConfig, 
-  PlatformMessage, 
-  PlatformReaction, 
-  ChannelEvent 
+import type {
+  MessagePlatform,
+  PlatformConfig,
+  PlatformMessage,
+  PlatformReaction,
+  ChannelEvent,
 } from '../live-message-bus.js';
 
 export class DiscordPlatform implements MessagePlatform {
@@ -29,7 +29,7 @@ export class DiscordPlatform implements MessagePlatform {
     try {
       // Import Discord.js dynamically
       const Discord = await import('discord.js');
-      
+
       this.token = config.token || config.apiKey || '';
       if (!this.token) {
         throw new Error('Discord token is required');
@@ -50,10 +50,9 @@ export class DiscordPlatform implements MessagePlatform {
 
       // Login to Discord
       await this.client.login(this.token);
-      
+
       this.isConnected = true;
       logger.info('Discord platform connected successfully');
-
     } catch (error) {
       logger.error('Failed to initialize Discord platform:', error);
       throw new Error(`Discord initialization failed: ${error}`);
@@ -77,11 +76,12 @@ export class DiscordPlatform implements MessagePlatform {
         content: {
           text: discordMessage.content,
           source: 'discord',
-          attachments: discordMessage.attachments?.map((attachment: any) => ({
-            url: attachment.url,
-            name: attachment.name,
-            type: attachment.contentType,
-          })) || [],
+          attachments:
+            discordMessage.attachments?.map((attachment: any) => ({
+              url: attachment.url,
+              name: attachment.name,
+              type: attachment.contentType,
+            })) || [],
         },
         timestamp: discordMessage.createdTimestamp,
         platform: 'discord',
@@ -95,7 +95,7 @@ export class DiscordPlatform implements MessagePlatform {
       };
 
       // Notify all message callbacks
-      this.messageCallbacks.forEach(callback => {
+      this.messageCallbacks.forEach((callback) => {
         try {
           callback(platformMessage);
         } catch (error) {
@@ -116,7 +116,7 @@ export class DiscordPlatform implements MessagePlatform {
         platform: 'discord',
       };
 
-      this.reactionCallbacks.forEach(callback => {
+      this.reactionCallbacks.forEach((callback) => {
         try {
           callback(platformReaction);
         } catch (error) {
@@ -138,7 +138,7 @@ export class DiscordPlatform implements MessagePlatform {
         platform: 'discord',
       };
 
-      this.eventCallbacks.forEach(callback => {
+      this.eventCallbacks.forEach((callback) => {
         try {
           callback(event);
         } catch (error) {
@@ -161,7 +161,7 @@ export class DiscordPlatform implements MessagePlatform {
         platform: 'discord',
       };
 
-      this.eventCallbacks.forEach(callback => {
+      this.eventCallbacks.forEach((callback) => {
         try {
           callback(event);
         } catch (error) {
@@ -200,10 +200,9 @@ export class DiscordPlatform implements MessagePlatform {
       });
 
       this.channels.set(channel.id, channel);
-      
+
       logger.info(`Created Discord channel: ${channel.name} (${channel.id})`);
       return channel.id;
-
     } catch (error) {
       logger.error('Failed to create Discord channel:', error);
       throw new Error(`Failed to create Discord channel: ${error}`);
@@ -261,10 +260,9 @@ export class DiscordPlatform implements MessagePlatform {
       }
 
       const sentMessage = await channel.send(messageOptions);
-      
+
       logger.debug(`Sent Discord message: ${sentMessage.id} in channel ${channelId}`);
       return sentMessage.id;
-
     } catch (error) {
       logger.error(`Failed to send Discord message to ${channelId}:`, error);
       throw new Error(`Failed to send Discord message: ${error}`);
@@ -288,7 +286,6 @@ export class DiscordPlatform implements MessagePlatform {
       });
 
       logger.debug(`Edited Discord message: ${messageId}`);
-
     } catch (error) {
       logger.error(`Failed to edit Discord message ${messageId}:`, error);
       throw new Error(`Failed to edit Discord message: ${error}`);
@@ -307,7 +304,6 @@ export class DiscordPlatform implements MessagePlatform {
         await message.delete();
         logger.debug(`Deleted Discord message: ${messageId}`);
       }
-
     } catch (error) {
       logger.error(`Failed to delete Discord message ${messageId}:`, error);
       throw new Error(`Failed to delete Discord message: ${error}`);

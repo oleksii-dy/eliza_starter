@@ -103,7 +103,7 @@ export class BrowserServiceNotAvailableError extends StagehandError {
  */
 export function handleBrowserError(
   error: unknown,
-  callback: (response: any) => void,
+  callback?: (response: any) => void,
   defaultAction: string = 'perform browser action'
 ): void {
   let stagehandError: StagehandError;
@@ -135,7 +135,7 @@ export function handleBrowserError(
   }
 
   // Send user-friendly error response via callback
-  callback({
+  callback?.({
     text: stagehandError.userMessage,
     error: {
       code: stagehandError.code,

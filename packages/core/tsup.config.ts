@@ -6,7 +6,7 @@ export default defineConfig({
   clean: true,
   format: ['esm'],
   target: 'node18',
-  dts: true,
+  dts: false,
   tsconfig: './tsconfig.build.json', // Use build-specific tsconfig
   ignoreWatch: ['**/__tests__/**', '**/test_resources/**'],
   external: [

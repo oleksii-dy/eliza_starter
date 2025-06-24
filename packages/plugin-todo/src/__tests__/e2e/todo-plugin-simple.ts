@@ -109,4 +109,4 @@ export const TodoPluginSimpleE2ETestSuite: TestSuite = {
       },
     },
   ],
-}; 
+};

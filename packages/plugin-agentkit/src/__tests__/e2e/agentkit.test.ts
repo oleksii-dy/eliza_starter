@@ -6,8 +6,8 @@ function createTestMessage(id: string, text: string, actions?: string[]) {
   const baseId = '00000000-0000-0000-0000-';
   return {
     id: baseId + id.padStart(12, '0'),
-    entityId: baseId + (parseInt(id) + 1).toString().padStart(12, '0'),
-    roomId: baseId + (parseInt(id) + 2).toString().padStart(12, '0'),
+    entityId: baseId + (Number.parseInt(id) + 1).toString().padStart(12, '0'),
+    roomId: baseId + (Number.parseInt(id) + 2).toString().padStart(12, '0'),
     agentId: 'test-agent-id',
     content: {
       text,

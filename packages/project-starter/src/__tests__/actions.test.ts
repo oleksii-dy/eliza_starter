@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import plugin from '../plugin';
 import { logger } from '@elizaos/core';
 import type { Action, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';

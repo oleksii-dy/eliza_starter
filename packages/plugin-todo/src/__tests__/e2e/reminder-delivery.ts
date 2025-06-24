@@ -27,7 +27,7 @@ export const ReminderDeliveryE2ETestSuite: TestSuite = {
         // Monitor for 30 seconds to see reminders being sent
         logger.info('\n📡 Monitoring reminder delivery for 30 seconds...');
         logger.info('Check your connected platforms for notifications!');
-        
+
         await monitorReminders(runtime, 30000);
 
         // Clean up
@@ -54,11 +54,7 @@ export const ReminderDeliveryE2ETestSuite: TestSuite = {
 
         // Create daily tasks
         const dailyTaskIds: UUID[] = [];
-        const dailyTasks = [
-          '🌅 Morning meditation',
-          '💪 Workout session',
-          '📖 Evening journal',
-        ];
+        const dailyTasks = ['🌅 Morning meditation', '💪 Workout session', '📖 Evening journal'];
 
         for (const taskName of dailyTasks) {
           const taskId = await todoService.createTodo({
@@ -78,11 +74,11 @@ export const ReminderDeliveryE2ETestSuite: TestSuite = {
         // Check current time
         const now = new Date();
         const hour = now.getHours();
-        
+
         if (hour === 9 || hour === 18) {
           logger.info('🔔 Current time matches daily reminder schedule!');
           logger.info('Daily reminders should be sent now');
-          
+
           // Trigger reminder check
           const reminderService = runtime.getService('TODO_REMINDER' as any);
           if (reminderService) {
@@ -91,7 +87,9 @@ export const ReminderDeliveryE2ETestSuite: TestSuite = {
         } else {
           logger.info(`⏰ Current time is ${hour}:00`);
           logger.info('Daily reminders are scheduled for 9 AM and 6 PM');
-          logger.info(`Next reminder in ${hour < 9 ? 9 - hour : hour < 18 ? 18 - hour : 24 + 9 - hour} hours`);
+          logger.info(
+            `Next reminder in ${hour < 9 ? 9 - hour : hour < 18 ? 18 - hour : 24 + 9 - hour} hours`
+          );
         }
 
         // Clean up
@@ -140,11 +138,11 @@ export const ReminderDeliveryE2ETestSuite: TestSuite = {
 
         // Trigger multiple reminder checks
         logger.info('🔄 Triggering multiple reminder checks...');
-        
+
         for (let i = 1; i <= 3; i++) {
           logger.info(`Check #${i}...`);
           await (reminderService as any).checkTasksForReminders();
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
 
         logger.info('✓ Spam prevention should ensure only 1 reminder was sent');
@@ -236,4 +234,4 @@ export const ReminderDeliveryE2ETestSuite: TestSuite = {
       },
     },
   ],
-}; 
+};

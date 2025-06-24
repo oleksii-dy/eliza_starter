@@ -28,28 +28,28 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
         id: 'msg-123',
         content: {
           text: 'test message',
-          providers: ['HYPERFY_WORLD_STATE']
-        }
+          providers: ['HYPERFY_WORLD_STATE'],
+        },
       };
-      
+
       mockState = {
         values: {},
         data: {},
-        text: 'test state'
+        text: 'test state',
       };
-      
+
       mockCallback = vi.fn();
-      
+
       // Mock composeState
       mockRuntime.composeState = vi.fn().mockResolvedValue({
         ...mockState,
-        hyperfyStatus: 'Connected to world'
+        hyperfyStatus: 'Connected to world',
       });
-      
+
       // Mock useModel for ambient speech generation
       mockRuntime.useModel = vi.fn().mockResolvedValue({
         thought: 'Observing the peaceful environment',
-        message: 'This place feels ancient... wonder what stories it holds.'
+        message: 'This place feels ancient... wonder what stories it holds.',
       });
     });
 
@@ -66,26 +66,28 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
         mockMessage,
         expect.arrayContaining(['RECENT_MESSAGES'])
       );
-      
+
       expect(mockRuntime.useModel).toHaveBeenCalled();
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           thought: 'Observing the peaceful environment',
           text: 'This place feels ancient... wonder what stories it holds.',
-          actions: ['HYPERFY_AMBIENT_SPEECH']
+          actions: ['HYPERFY_AMBIENT_SPEECH'],
         })
       );
     });
 
     it('should use existing ambient responses if available', async () => {
-      const existingResponses = [{
-        content: {
-          thought: 'Existing thought',
-          message: 'Existing ambient message',
-          text: 'Existing ambient message',
-          actions: ['HYPERFY_AMBIENT_SPEECH']
-        }
-      }];
+      const existingResponses = [
+        {
+          content: {
+            thought: 'Existing thought',
+            message: 'Existing ambient message',
+            text: 'Existing ambient message',
+            actions: ['HYPERFY_AMBIENT_SPEECH'],
+          },
+        },
+      ];
 
       await hyperfyAmbientSpeechAction.handler(
         mockRuntime,
@@ -101,7 +103,7 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
         expect.objectContaining({
           thought: 'Existing thought',
           text: 'Existing ambient message',
-          actions: ['HYPERFY_AMBIENT_SPEECH']
+          actions: ['HYPERFY_AMBIENT_SPEECH'],
         })
       );
     });
@@ -111,15 +113,15 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
         {
           content: {
             message: 'First ambient message',
-            actions: ['HYPERFY_AMBIENT_SPEECH']
-          }
+            actions: ['HYPERFY_AMBIENT_SPEECH'],
+          },
         },
         {
           content: {
             text: 'Second ambient message',
-            actions: ['HYPERFY_AMBIENT_SPEECH']
-          }
-        }
+            actions: ['HYPERFY_AMBIENT_SPEECH'],
+          },
+        },
       ];
 
       await hyperfyAmbientSpeechAction.handler(
@@ -132,25 +134,29 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
       );
 
       expect(mockCallback).toHaveBeenCalledTimes(2);
-      expect(mockCallback).toHaveBeenNthCalledWith(1, 
+      expect(mockCallback).toHaveBeenNthCalledWith(
+        1,
         expect.objectContaining({
-          text: 'First ambient message'
+          text: 'First ambient message',
         })
       );
-      expect(mockCallback).toHaveBeenNthCalledWith(2,
+      expect(mockCallback).toHaveBeenNthCalledWith(
+        2,
         expect.objectContaining({
-          text: 'Second ambient message'
+          text: 'Second ambient message',
         })
       );
     });
 
     it('should ignore responses without HYPERFY_AMBIENT_SPEECH action', async () => {
-      const existingResponses = [{
-        content: {
-          text: 'Regular message',
-          actions: ['REPLY']
-        }
-      }];
+      const existingResponses = [
+        {
+          content: {
+            text: 'Regular message',
+            actions: ['REPLY'],
+          },
+        },
+      ];
 
       await hyperfyAmbientSpeechAction.handler(
         mockRuntime,
@@ -164,7 +170,7 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
       expect(mockRuntime.useModel).toHaveBeenCalled();
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
-          actions: ['HYPERFY_AMBIENT_SPEECH']
+          actions: ['HYPERFY_AMBIENT_SPEECH'],
         })
       );
     });
@@ -172,7 +178,7 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
     it('should handle empty message from model', async () => {
       mockRuntime.useModel.mockResolvedValue({
         thought: 'Quiet contemplation',
-        message: ''
+        message: '',
       });
 
       await hyperfyAmbientSpeechAction.handler(
@@ -187,7 +193,7 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
         expect.objectContaining({
           thought: 'Quiet contemplation',
           text: '',
-          actions: ['HYPERFY_AMBIENT_SPEECH']
+          actions: ['HYPERFY_AMBIENT_SPEECH'],
         })
       );
     });
@@ -197,8 +203,8 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
         ...mockMessage,
         content: {
           ...mockMessage.content,
-          providers: ['CUSTOM_PROVIDER', 'ANOTHER_PROVIDER']
-        }
+          providers: ['CUSTOM_PROVIDER', 'ANOTHER_PROVIDER'],
+        },
       };
 
       await hyperfyAmbientSpeechAction.handler(
@@ -224,14 +230,14 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
     });
 
     it('should have properly formatted examples', () => {
-      hyperfyAmbientSpeechAction.examples!.forEach(example => {
+      hyperfyAmbientSpeechAction.examples!.forEach((example) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBe(2);
-        
+
         const [context, agent] = example;
         expect(context).toHaveProperty('name');
         expect(context).toHaveProperty('content');
-        
+
         expect(agent).toHaveProperty('name');
         expect(agent).toHaveProperty('content');
         expect(agent.content).toHaveProperty('text');
@@ -240,4 +246,4 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
       });
     });
   });
-}); 
+});

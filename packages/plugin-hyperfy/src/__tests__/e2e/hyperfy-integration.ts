@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 /**
  * Hyperfy Plugin E2E Test Suite
  * =============================
- * 
+ *
  * These tests verify the complete integration of the Hyperfy plugin,
  * including world connection, agent movement, perception, and interaction.
  */
@@ -31,14 +31,14 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
       name: 'hyperfy_service_initialization',
       fn: async (runtime) => {
         const service = runtime.getService('hyperfy');
-        
+
         if (!service) {
           throw new Error('HyperfyService not found in runtime');
         }
 
-        // Check service properties
+        // @ts-ignore - Service capabilityDescription property access
         if (!service.capabilityDescription.includes('Hyperfy world')) {
-          throw new Error('Invalid service capability description');
+          throw new Error('Service capability description missing or incorrect');
         }
 
         console.log('✅ HyperfyService initialized successfully');
@@ -53,14 +53,14 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
       name: 'hyperfy_world_connection_mock',
       fn: async (runtime) => {
         const service = runtime.getService('hyperfy') as any;
-        
+
         if (!service) {
           throw new Error('HyperfyService not found');
         }
 
         // Check if we can get the world (will be null if not connected)
         const world = service.getWorld?.();
-        
+
         // In a real test environment, we'd mock the connection
         // For now, we verify the service methods exist
         if (typeof service.connect !== 'function') {
@@ -85,12 +85,12 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
         const movementActions = [
           'HYPERFY_GOTO_ENTITY',
           'HYPERFY_WALK_RANDOMLY',
-          'HYPERFY_STOP_MOVING'
+          'HYPERFY_STOP_MOVING',
         ];
 
         for (const actionName of movementActions) {
-          const action = runtime.actions.find(a => a.name === actionName);
-          
+          const action = runtime.actions.find((a) => a.name === actionName);
+
           if (!action) {
             throw new Error(`Movement action ${actionName} not found`);
           }
@@ -112,9 +112,7 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
     {
       name: 'hyperfy_perception_action',
       fn: async (runtime) => {
-        const perceptionAction = runtime.actions.find(
-          a => a.name === 'HYPERFY_SCENE_PERCEPTION'
-        );
+        const perceptionAction = runtime.actions.find((a) => a.name === 'HYPERFY_SCENE_PERCEPTION');
 
         if (!perceptionAction) {
           throw new Error('Scene perception action not found');
@@ -127,21 +125,21 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
           roomId: 'test-room-id-1234-5678-9012-345678901234' as UUID,
           content: {
             text: 'Look around',
-            source: 'test'
+            source: 'test',
           },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         // Create mock state
         const mockState: State = {
           values: {},
           data: {},
-          text: ''
+          text: '',
         };
 
         // Test validation (should pass without service connection in test mode)
         const isValid = await perceptionAction.validate(runtime, mockMessage, mockState);
-        
+
         console.log(`✅ Perception action validation: ${isValid}`);
       },
     },
@@ -153,9 +151,7 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
     {
       name: 'hyperfy_emote_system',
       fn: async (runtime) => {
-        const emoteProvider = runtime.providers.find(
-          p => p.name === 'HYPERFY_EMOTE_LIST'
-        );
+        const emoteProvider = runtime.providers.find((p) => p.name === 'HYPERFY_EMOTE_LIST');
 
         if (!emoteProvider) {
           throw new Error('Emote provider not found');
@@ -167,18 +163,18 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
           entityId: runtime.agentId,
           roomId: 'test-room-id-1234-5678-9012-345678901234' as UUID,
           content: { text: '', source: 'test' },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         const mockState: State = {
           values: {},
           data: {},
-          text: ''
+          text: '',
         };
 
         // Get emote list
         const result = await emoteProvider.get(runtime, mockMessage, mockState);
-        
+
         if (!result.data?.emotes || !Array.isArray(result.data.emotes)) {
           throw new Error('Emote provider did not return emote list');
         }
@@ -189,7 +185,12 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
 
         // Verify emote structure
         const firstEmote = result.data.emotes[0];
-        if (!firstEmote.name || !firstEmote.path || !firstEmote.duration || !firstEmote.description) {
+        if (
+          !firstEmote.name ||
+          !firstEmote.path ||
+          !firstEmote.duration ||
+          !firstEmote.description
+        ) {
           throw new Error('Emote missing required properties');
         }
 
@@ -204,9 +205,7 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
     {
       name: 'hyperfy_world_state_provider',
       fn: async (runtime) => {
-        const worldProvider = runtime.providers.find(
-          p => p.name === 'HYPERFY_WORLD_STATE'
-        );
+        const worldProvider = runtime.providers.find((p) => p.name === 'HYPERFY_WORLD_STATE');
 
         if (!worldProvider) {
           throw new Error('World state provider not found');
@@ -218,18 +217,18 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
           entityId: runtime.agentId,
           roomId: 'test-room-id-1234-5678-9012-345678901234' as UUID,
           content: { text: '', source: 'test' },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         const mockState: State = {
           values: {},
           data: {},
-          text: ''
+          text: '',
         };
 
         // Get world state (will show disconnected in test)
         const result = await worldProvider.get(runtime, mockMessage, mockState);
-        
+
         if (!result.text || !result.values || !result.data) {
           throw new Error('World provider returned incomplete result');
         }
@@ -250,9 +249,7 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
     {
       name: 'hyperfy_build_actions',
       fn: async (runtime) => {
-        const buildAction = runtime.actions.find(
-          a => a.name === 'HYPERFY_EDIT_ENTITY'
-        );
+        const buildAction = runtime.actions.find((a) => a.name === 'HYPERFY_EDIT_ENTITY');
 
         if (!buildAction) {
           throw new Error('Build action not found');
@@ -260,9 +257,7 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
 
         // Check similes include expected values
         const expectedSimiles = ['EDIT_ENTITY_IN_WORLD', 'MODIFY_SCENE', 'BUILD_STRUCTURE'];
-        const hasSimilies = expectedSimiles.every(s => 
-          buildAction.similes?.includes(s)
-        );
+        const hasSimilies = expectedSimiles.every((s) => buildAction.similes?.includes(s));
 
         if (!hasSimilies) {
           throw new Error('Build action missing expected similes');
@@ -281,21 +276,21 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
       fn: async (runtime) => {
         // Check for message handler in events
         const events = runtime.events;
-        
+
         if (!events || !events.get) {
           throw new Error('Runtime events not properly initialized');
         }
 
         // Verify REPLY action exists
-        const replyAction = runtime.actions.find(a => a.name === 'REPLY');
-        
+        const replyAction = runtime.actions.find((a) => a.name === 'REPLY');
+
         if (!replyAction) {
           throw new Error('REPLY action not found');
         }
 
         // Verify IGNORE action exists
-        const ignoreAction = runtime.actions.find(a => a.name === 'IGNORE');
-        
+        const ignoreAction = runtime.actions.find((a) => a.name === 'IGNORE');
+
         if (!ignoreAction) {
           throw new Error('IGNORE action not found');
         }
@@ -311,9 +306,7 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
     {
       name: 'hyperfy_character_integration',
       fn: async (runtime) => {
-        const characterProvider = runtime.providers.find(
-          p => p.name === 'CHARACTER'
-        );
+        const characterProvider = runtime.providers.find((p) => p.name === 'CHARACTER');
 
         if (!characterProvider) {
           throw new Error('Character provider not found');
@@ -325,17 +318,17 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
           entityId: runtime.agentId,
           roomId: 'test-room-id-1234-5678-9012-345678901234' as UUID,
           content: { text: '', source: 'test' },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         const mockState: State = {
           values: {},
           data: {},
-          text: ''
+          text: '',
         };
 
         const result = await characterProvider.get(runtime, mockMessage, mockState);
-        
+
         if (!result.values?.agentName) {
           throw new Error('Character provider did not return agent name');
         }
@@ -355,9 +348,7 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
     {
       name: 'hyperfy_action_examples',
       fn: async (runtime) => {
-        const hyperfyActions = runtime.actions.filter(a => 
-          a.name.startsWith('HYPERFY_')
-        );
+        const hyperfyActions = runtime.actions.filter((a) => a.name.startsWith('HYPERFY_'));
 
         for (const action of hyperfyActions) {
           if (!action.examples || !Array.isArray(action.examples)) {
@@ -382,4 +373,4 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
 };
 
 // Export default instance for test runner
-export default HyperfyIntegrationTestSuite; 
+export default HyperfyIntegrationTestSuite;

@@ -23,10 +23,11 @@ import knowledgePlugin from './index.ts';
 import { knowledgeProvider } from './provider.ts';
 import { KnowledgeService } from './service.ts';
 import { isBinaryContentType } from './utils.ts';
-import knowledgeE2ETest from './__tests__/e2e/knowledge-e2e.test.ts';
-import startupLoadingTest from './__tests__/e2e/startup-loading.test.ts';
-import attachmentHandlingTest from './__tests__/e2e/attachment-handling.test.ts';
-import advancedFeaturesE2ETest from './__tests__/e2e/advanced-features-e2e.test.ts';
+// E2E test imports - lazy loaded to avoid logger initialization issues
+// import knowledgeE2ETest from './__tests__/e2e/knowledge-e2e.test.ts';
+// import startupLoadingTest from './__tests__/e2e/startup-loading.test.ts';
+// import attachmentHandlingTest from './__tests__/e2e/attachment-handling.test.ts';
+// import advancedFeaturesE2ETest from './__tests__/e2e/advanced-features-e2e.test.ts';
 
 // Define an interface for the mock logger functions
 interface MockLogFunction extends Function {
@@ -1246,11 +1247,14 @@ export class KnowledgeTestSuite implements TestSuite {
     },
 
     // E2E Tests
-    // Wrapped in safe execution to handle potential runtime errors
+    // Lazy loaded to avoid logger initialization issues during module loading
     {
       name: 'Knowledge Plugin E2E Test',
       fn: async (runtime: IAgentRuntime) => {
         try {
+          const { default: knowledgeE2ETest } = await import(
+            './__tests__/e2e/knowledge-e2e.test.ts'
+          );
           await knowledgeE2ETest.fn(runtime);
         } catch (error: any) {
           console.error('E2E test failed:', error.message);
@@ -1262,6 +1266,9 @@ export class KnowledgeTestSuite implements TestSuite {
       name: 'Startup Loading Test',
       fn: async (runtime: IAgentRuntime) => {
         try {
+          const { default: startupLoadingTest } = await import(
+            './__tests__/e2e/startup-loading.test.ts'
+          );
           await startupLoadingTest.fn(runtime);
         } catch (error: any) {
           console.error('Startup loading test failed:', error.message);
@@ -1273,6 +1280,9 @@ export class KnowledgeTestSuite implements TestSuite {
       name: 'Attachment Handling Test',
       fn: async (runtime: IAgentRuntime) => {
         try {
+          const { default: attachmentHandlingTest } = await import(
+            './__tests__/e2e/attachment-handling.test.ts'
+          );
           await attachmentHandlingTest.fn(runtime);
         } catch (error: any) {
           console.error('Attachment handling test failed:', error.message);
@@ -1284,6 +1294,9 @@ export class KnowledgeTestSuite implements TestSuite {
       name: 'Advanced Features E2E Test',
       fn: async (runtime: IAgentRuntime) => {
         try {
+          const { default: advancedFeaturesE2ETest } = await import(
+            './__tests__/e2e/advanced-features-e2e.test.ts'
+          );
           await advancedFeaturesE2ETest.fn(runtime);
         } catch (error: any) {
           console.error('Advanced features test failed:', error.message);

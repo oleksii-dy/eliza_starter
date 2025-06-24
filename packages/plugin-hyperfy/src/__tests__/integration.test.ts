@@ -34,20 +34,32 @@ describe('Integration: Hyperfy Action with HyperfyService', () => {
       stop: vi.fn().mockResolvedValue(undefined),
       isConnected: vi.fn().mockReturnValue(true),
       getWorld: vi.fn().mockReturnValue({
-        entities: { 
+        entities: {
           player: { data: { position: { x: 0, y: 0, z: 0 } } },
-          items: new Map()
+          items: new Map(),
         },
         controls: {
           stopAllActions: vi.fn(),
-          followEntity: vi.fn()
-        }
+          followEntity: vi.fn(),
+        },
       }),
       getPuppeteerManager: vi.fn().mockReturnValue({
-        snapshotEquirectangular: vi.fn().mockResolvedValue('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='),
-        snapshotFacingDirection: vi.fn().mockResolvedValue('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='),
-        snapshotViewToTarget: vi.fn().mockResolvedValue('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==')
-      })
+        snapshotEquirectangular: vi
+          .fn()
+          .mockResolvedValue(
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+          ),
+        snapshotFacingDirection: vi
+          .fn()
+          .mockResolvedValue(
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+          ),
+        snapshotViewToTarget: vi
+          .fn()
+          .mockResolvedValue(
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+          ),
+      }),
     };
 
     // Create a mock runtime with a spied getService method
@@ -60,27 +72,33 @@ describe('Integration: Hyperfy Action with HyperfyService', () => {
 
     mockRuntime = createMockRuntime({
       getService: getServiceSpy,
-      useModel: vi.fn()
-        .mockResolvedValueOnce(`
+      useModel: vi
+        .fn()
+        .mockResolvedValueOnce(
+          `
           <response>
             <snapshotType>LOOK_AROUND</snapshotType>
             <parameter></parameter>
           </response>
-        `)
-        .mockResolvedValueOnce('A detailed description of the scene with various objects and entities visible in the Hyperfy world.')
-        .mockResolvedValueOnce(`
+        `
+        )
+        .mockResolvedValueOnce(
+          'A detailed description of the scene with various objects and entities visible in the Hyperfy world.'
+        ).mockResolvedValueOnce(`
           <response>
             <thought>I can see the surrounding area clearly</thought>
             <text>I'm looking around and can see the environment clearly</text>
             <emote>observing</emote>
           </response>
-        `)
+        `),
     }) as unknown as IAgentRuntime;
   });
 
   it('should handle HYPERFY_SCENE_PERCEPTION action with HyperfyService available', async () => {
     // Find the perception action
-    const perceptionAction = hyperfyPlugin.actions?.find((action) => action.name === 'HYPERFY_SCENE_PERCEPTION');
+    const perceptionAction = hyperfyPlugin.actions?.find(
+      (action) => action.name === 'HYPERFY_SCENE_PERCEPTION'
+    );
     expect(perceptionAction).toBeDefined();
 
     // Create a mock message and state
@@ -122,14 +140,15 @@ describe('Integration: Hyperfy Action with HyperfyService', () => {
         thought: expect.any(String),
         metadata: expect.objectContaining({
           snapshotType: expect.any(String),
-          sceneDescription: expect.any(String)
-        })
+          sceneDescription: expect.any(String),
+        }),
       })
     );
 
     // Get the service to ensure integration
     const service = mockRuntime.getService('hyperfy');
     expect(service).toBeDefined();
+    // @ts-ignore - Service capabilityDescription property access
     expect(service?.capabilityDescription).toContain('hyperfy service');
   });
 });

@@ -13,7 +13,7 @@ import {
 interface SubscriptionInfo {
   id: number;
   type: 'account' | 'logs' | 'signature' | 'slot';
-  callback: Function;
+  callback: AccountChangeCallback | LogsCallback | SignatureResultCallback | SlotChangeCallback;
 }
 
 export class WebSocketService extends Service {

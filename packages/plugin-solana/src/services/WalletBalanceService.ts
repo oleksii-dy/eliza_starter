@@ -138,7 +138,7 @@ export class WalletBalanceService extends Service {
             }
 
             // Calculate total value (would need price data)
-            let totalValueUSD = 0;
+            const totalValueUSD = 0;
             
             // Add SOL value (would need SOL price)
             // totalValueUSD += solUiAmount * solPriceUSD;

@@ -34,7 +34,7 @@ Cypress.Commands.add('mount', (component: React.ReactNode, options?: any) => {
 
 // Add custom commands to the global Cypress object
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+   
   namespace Cypress {
     interface Chainable {
       /**

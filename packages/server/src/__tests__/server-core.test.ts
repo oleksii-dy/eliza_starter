@@ -18,11 +18,11 @@ describe('Server Core Functionality', () => {
         if (options.postgresUrl && !options.postgresUrl.startsWith('postgresql://')) {
           return false;
         }
-        
+
         if (options.dataDir && options.dataDir.includes('..')) {
           return false; // Path traversal check
         }
-        
+
         return true;
       };
 
@@ -55,7 +55,7 @@ describe('Server Core Functionality', () => {
     it('should validate agent IDs', () => {
       const isValidAgentId = (id: string): boolean => {
         if (!id || typeof id !== 'string') return false;
-        
+
         // UUID pattern validation
         const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         return uuidPattern.test(id);
@@ -76,10 +76,10 @@ describe('Server Core Functionality', () => {
           'audio/mpeg',
           'audio/wav',
           'image/jpeg',
-          'image/png'
+          'image/png',
         ];
-        
-        return allowedTypes.some(type => contentType.includes(type));
+
+        return allowedTypes.some((type) => contentType.includes(type));
       };
 
       expect(isValidContentType('application/json')).toBe(true);
@@ -98,8 +98,8 @@ describe('Server Core Functionality', () => {
           error: {
             code: error.code || 'INTERNAL_ERROR',
             message: error.message || 'An error occurred',
-            details: error.details || null
-          }
+            details: error.details || null,
+          },
         };
       };
 
@@ -116,7 +116,11 @@ describe('Server Core Functionality', () => {
       class RateLimitTracker {
         private requests = new Map<string, number[]>();
 
-        isRateLimited(clientId: string, windowMs: number = 60000, maxRequests: number = 100): boolean {
+        isRateLimited(
+          clientId: string,
+          windowMs: number = 60000,
+          maxRequests: number = 100
+        ): boolean {
           const now = Date.now();
           const windowStart = now - windowMs;
 
@@ -125,8 +129,8 @@ describe('Server Core Functionality', () => {
           }
 
           const clientRequests = this.requests.get(clientId)!;
-          const validRequests = clientRequests.filter(time => time > windowStart);
-          
+          const validRequests = clientRequests.filter((time) => time > windowStart);
+
           if (validRequests.length >= maxRequests) {
             return true; // Rate limited
           }
@@ -138,11 +142,11 @@ describe('Server Core Functionality', () => {
       }
 
       const tracker = new RateLimitTracker();
-      
+
       // First request should not be rate limited
       expect(tracker.isRateLimited('client1', 60000, 2)).toBe(false);
       expect(tracker.isRateLimited('client1', 60000, 2)).toBe(false);
-      
+
       // Third request should be rate limited
       expect(tracker.isRateLimited('client1', 60000, 2)).toBe(true);
     });
@@ -153,7 +157,7 @@ describe('Server Core Functionality', () => {
       const isSecureUpload = (filename: string, size: number): boolean => {
         // Check file extension
         const allowedExtensions = ['.jpg', '.jpeg', '.png', '.mp3', '.wav', '.pdf', '.txt'];
-        const hasValidExtension = allowedExtensions.some(ext => 
+        const hasValidExtension = allowedExtensions.some((ext) =>
           filename.toLowerCase().endsWith(ext)
         );
 
@@ -162,9 +166,8 @@ describe('Server Core Functionality', () => {
         const validSize = size <= maxSize;
 
         // Check for suspicious patterns
-        const hasSuspiciousPattern = filename.includes('..') || 
-          filename.includes('/') || 
-          filename.includes('\\');
+        const hasSuspiciousPattern =
+          filename.includes('..') || filename.includes('/') || filename.includes('\\');
 
         return hasValidExtension && validSize && !hasSuspiciousPattern;
       };
@@ -179,7 +182,7 @@ describe('Server Core Functionality', () => {
     it('should validate API key format', () => {
       const isValidApiKey = (key: string): boolean => {
         if (!key || typeof key !== 'string') return false;
-        
+
         // Should be at least 32 characters and contain only alphanumeric and dashes
         const keyPattern = /^[a-zA-Z0-9-_]{32,}$/;
         return keyPattern.test(key);

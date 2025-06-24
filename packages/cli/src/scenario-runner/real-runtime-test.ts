@@ -3,7 +3,7 @@
 /**
  * Real Runtime Test Script - completely independent from vitest mocks
  * Tests the scenario runner with actual AgentServer, runtime, websockets, and message bridge
- * 
+ *
  * Run with: node dist/src/scenario-runner/real-runtime-test.js
  */
 
@@ -48,11 +48,15 @@ async function main() {
     const testCharacter: Character = {
       name: 'RealTestAgent',
       bio: ['Real runtime test agent for scenario runner validation'],
-      system: 'You are a helpful test agent for validating the scenario runner with real infrastructure.',
+      system:
+        'You are a helpful test agent for validating the scenario runner with real infrastructure.',
       messageExamples: [
         [
           { name: 'User', content: { text: 'Hello' } },
-          { name: 'RealTestAgent', content: { text: 'Hello! I am running on real infrastructure.' } },
+          {
+            name: 'RealTestAgent',
+            content: { text: 'Hello! I am running on real infrastructure.' },
+          },
         ],
       ],
       postExamples: [],
@@ -136,7 +140,9 @@ async function main() {
         throw new Error('Memory not created or retrieved');
       }
 
-      const foundMemory = memories.find(m => m.content.text === 'Basic functionality test message');
+      const foundMemory = memories.find(
+        (m) => m.content.text === 'Basic functionality test message'
+      );
       if (!foundMemory) {
         throw new Error('Created memory not found');
       }
@@ -200,7 +206,8 @@ async function main() {
               type: 'llm',
               description: 'Real interaction between user and agent',
               config: {
-                successCriteria: 'Agent successfully responds to user messages using real infrastructure',
+                successCriteria:
+                  'Agent successfully responds to user messages using real infrastructure',
               },
               weight: 1.0,
             },
@@ -226,12 +233,8 @@ async function main() {
       }
 
       // Verify conversation occurred
-      const userMessages = result.transcript.filter(msg => 
-        msg.actorName === 'Real Test User'
-      );
-      const agentMessages = result.transcript.filter(msg => 
-        msg.actorName === testCharacter.name
-      );
+      const userMessages = result.transcript.filter((msg) => msg.actorName === 'Real Test User');
+      const agentMessages = result.transcript.filter((msg) => msg.actorName === testCharacter.name);
 
       if (userMessages.length === 0) {
         throw new Error('No user messages found in transcript');
@@ -329,7 +332,6 @@ async function main() {
     console.log('   ✅ Real Scenario Runner: Working');
     console.log('   ✅ Real Message Bridge: Working');
     console.log('\n🚀 Scenario Runner with Real Infrastructure: ALL SYSTEMS OPERATIONAL');
-
   } catch (error) {
     console.error('\n❌ Real Infrastructure Test FAILED:');
     console.error(error);

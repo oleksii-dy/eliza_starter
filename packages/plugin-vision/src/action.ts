@@ -63,10 +63,10 @@ export const describeSceneAction: Action = {
       const text = 'I cannot see anything right now. No camera is available.';
       await saveExecutionRecord(runtime, message, thought, text, ['DESCRIBE_SCENE']);
       if (callback) {
-        await callback({ 
-          thought, 
+        await callback({
+          thought,
           text,
-          actions: ['DESCRIBE_SCENE']
+          actions: ['DESCRIBE_SCENE'],
         });
       }
       return;
@@ -81,10 +81,10 @@ export const describeSceneAction: Action = {
         const text = `Camera "${cameraInfo?.name}" is connected, but I haven't analyzed any scenes yet. Please wait a moment.`;
         await saveExecutionRecord(runtime, message, thought, text, ['DESCRIBE_SCENE']);
         if (callback) {
-          await callback({ 
-            thought, 
+          await callback({
+            thought,
             text,
-            actions: ['DESCRIBE_SCENE']
+            actions: ['DESCRIBE_SCENE'],
           });
         }
         return;
@@ -143,10 +143,10 @@ export const describeSceneAction: Action = {
 
       await saveExecutionRecord(runtime, message, thought, text, ['DESCRIBE_SCENE']);
       if (callback) {
-        await callback({ 
-          thought, 
+        await callback({
+          thought,
           text,
-          actions: ['DESCRIBE_SCENE']
+          actions: ['DESCRIBE_SCENE'],
         });
       }
     } catch (error: any) {
@@ -155,10 +155,10 @@ export const describeSceneAction: Action = {
       const text = `Error analyzing scene: ${error.message}`;
       await saveExecutionRecord(runtime, message, thought, text, ['DESCRIBE_SCENE']);
       if (callback) {
-        await callback({ 
-          thought, 
+        await callback({
+          thought,
           text,
-          actions: ['DESCRIBE_SCENE']
+          actions: ['DESCRIBE_SCENE'],
         });
       }
     }
@@ -210,10 +210,10 @@ export const captureImageAction: Action = {
       const text = 'I cannot capture an image right now. No camera is available.';
       await saveExecutionRecord(runtime, message, thought, text, ['CAPTURE_IMAGE']);
       if (callback) {
-        await callback({ 
-          thought, 
+        await callback({
+          thought,
           text,
-          actions: ['CAPTURE_IMAGE']
+          actions: ['CAPTURE_IMAGE'],
         });
       }
       return;
@@ -228,10 +228,10 @@ export const captureImageAction: Action = {
         const text = 'I could not capture an image from the camera. Please try again.';
         await saveExecutionRecord(runtime, message, thought, text, ['CAPTURE_IMAGE']);
         if (callback) {
-          await callback({ 
-            thought, 
+          await callback({
+            thought,
             text,
-            actions: ['CAPTURE_IMAGE']
+            actions: ['CAPTURE_IMAGE'],
           });
         }
         return;
@@ -240,7 +240,7 @@ export const captureImageAction: Action = {
       // Create image attachment
       const attachmentId = createUniqueUuid(runtime, `capture-${Date.now()}`);
       const timestamp = new Date().toISOString();
-      
+
       const imageAttachment: Media = {
         id: attachmentId,
         title: `Camera Capture - ${timestamp}`,
@@ -275,10 +275,10 @@ export const captureImageAction: Action = {
       const text = `Error capturing image: ${error.message}`;
       await saveExecutionRecord(runtime, message, thought, text, ['CAPTURE_IMAGE']);
       if (callback) {
-        await callback({ 
-          thought, 
+        await callback({
+          thought,
           text,
-          actions: ['CAPTURE_IMAGE']
+          actions: ['CAPTURE_IMAGE'],
         });
       }
     }
@@ -336,10 +336,10 @@ export const killAutonomousAction: Action = {
 
         await saveExecutionRecord(runtime, message, thought, text, ['KILL_AUTONOMOUS']);
         if (callback) {
-          await callback({ 
-            thought, 
+          await callback({
+            thought,
             text,
-            actions: ['KILL_AUTONOMOUS']
+            actions: ['KILL_AUTONOMOUS'],
           });
         }
       } else {
@@ -348,10 +348,10 @@ export const killAutonomousAction: Action = {
 
         await saveExecutionRecord(runtime, message, thought, text, ['KILL_AUTONOMOUS']);
         if (callback) {
-          await callback({ 
-            thought, 
+          await callback({
+            thought,
             text,
-            actions: ['KILL_AUTONOMOUS']
+            actions: ['KILL_AUTONOMOUS'],
           });
         }
       }
@@ -363,10 +363,10 @@ export const killAutonomousAction: Action = {
 
       await saveExecutionRecord(runtime, message, thought, text, ['KILL_AUTONOMOUS']);
       if (callback) {
-        await callback({ 
-          thought, 
+        await callback({
+          thought,
           text,
-          actions: ['KILL_AUTONOMOUS']
+          actions: ['KILL_AUTONOMOUS'],
         });
       }
     }
@@ -420,16 +420,16 @@ export const setVisionModeAction: Action = {
     _responses?: Memory[]
   ): Promise<void> => {
     const visionService = runtime.getService<VisionService>('VISION' as any);
-    
+
     if (!visionService) {
       const thought = 'Vision service is not available.';
       const text = 'I cannot change vision mode because the vision service is not available.';
       await saveExecutionRecord(runtime, message, thought, text, ['SET_VISION_MODE']);
       if (callback) {
-        await callback({ 
-          thought, 
+        await callback({
+          thought,
           text,
-          actions: ['SET_VISION_MODE']
+          actions: ['SET_VISION_MODE'],
         });
       }
       return;
@@ -439,7 +439,7 @@ export const setVisionModeAction: Action = {
       // Extract the desired mode from the message
       const messageText = message.content.text?.toLowerCase() || '';
       let newMode: VisionMode | null = null;
-      
+
       if (messageText.includes('off') || messageText.includes('disable')) {
         newMode = VisionMode.OFF;
       } else if (messageText.includes('both')) {
@@ -449,16 +449,16 @@ export const setVisionModeAction: Action = {
       } else if (messageText.includes('camera')) {
         newMode = VisionMode.CAMERA;
       }
-      
+
       if (!newMode) {
         const thought = 'Could not determine the desired vision mode from the message.';
         const text = 'Please specify the vision mode: OFF, CAMERA, SCREEN, or BOTH.';
         await saveExecutionRecord(runtime, message, thought, text, ['SET_VISION_MODE']);
         if (callback) {
-          await callback({ 
-            thought, 
+          await callback({
+            thought,
             text,
-            actions: ['SET_VISION_MODE']
+            actions: ['SET_VISION_MODE'],
           });
         }
         return;
@@ -469,7 +469,7 @@ export const setVisionModeAction: Action = {
 
       const thought = `Changed vision mode from ${currentMode} to ${newMode}.`;
       let text = '';
-      
+
       switch (newMode) {
         case VisionMode.OFF:
           text = 'Vision has been disabled. I will no longer process visual input.';
@@ -478,7 +478,7 @@ export const setVisionModeAction: Action = {
           text = 'Vision mode set to CAMERA only. I will process input from the camera.';
           break;
         case VisionMode.SCREEN:
-          text = 'Vision mode set to SCREEN only. I will analyze what\'s on your screen.';
+          text = "Vision mode set to SCREEN only. I will analyze what's on your screen.";
           break;
         case VisionMode.BOTH:
           text = 'Vision mode set to BOTH. I will process input from both camera and screen.';
@@ -487,10 +487,10 @@ export const setVisionModeAction: Action = {
 
       await saveExecutionRecord(runtime, message, thought, text, ['SET_VISION_MODE']);
       if (callback) {
-        await callback({ 
-          thought, 
+        await callback({
+          thought,
           text,
-          actions: ['SET_VISION_MODE']
+          actions: ['SET_VISION_MODE'],
         });
       }
     } catch (error: any) {
@@ -499,10 +499,10 @@ export const setVisionModeAction: Action = {
       const text = `Error changing vision mode: ${error.message}`;
       await saveExecutionRecord(runtime, message, thought, text, ['SET_VISION_MODE']);
       if (callback) {
-        await callback({ 
-          thought, 
+        await callback({
+          thought,
           text,
-          actions: ['SET_VISION_MODE']
+          actions: ['SET_VISION_MODE'],
         });
       }
     }
@@ -515,7 +515,7 @@ export const setVisionModeAction: Action = {
         content: {
           actions: ['SET_VISION_MODE'],
           thought: 'The user wants to switch to screen vision mode.',
-          text: 'Vision mode set to SCREEN only. I will analyze what\'s on your screen.',
+          text: "Vision mode set to SCREEN only. I will analyze what's on your screen.",
         },
       },
     ],
@@ -567,7 +567,7 @@ export const nameEntityAction: Action = {
       {
         name: 'agent',
         content: {
-          text: 'I\'ve identified the person in the blue shirt as Alice. I\'ll remember them for future interactions.',
+          text: "I've identified the person in the blue shirt as Alice. I'll remember them for future interactions.",
           actions: ['NAME_ENTITY'],
         },
       },
@@ -582,18 +582,18 @@ export const nameEntityAction: Action = {
       {
         name: 'agent',
         content: {
-          text: 'I\'ve named the person on the left as Bob. Their face profile has been updated.',
+          text: "I've named the person on the left as Bob. Their face profile has been updated.",
           actions: ['NAME_ENTITY'],
         },
       },
     ],
   ],
-  
+
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const visionService = runtime.getService<VisionService>('VISION' as any);
     return visionService?.isActive() || false;
   },
-  
+
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
@@ -603,7 +603,7 @@ export const nameEntityAction: Action = {
   ): Promise<void> => {
     try {
       const visionService = runtime.getService<VisionService>('VISION' as any);
-      
+
       if (!visionService) {
         const thought = 'Vision service is not available.';
         const text = 'I cannot name entities because the vision service is not available.';
@@ -613,12 +613,12 @@ export const nameEntityAction: Action = {
         }
         return;
       }
-      
+
       const scene = await visionService.getSceneDescription();
-      
+
       if (!scene || scene.people.length === 0) {
         const thought = 'No people visible to name.';
-        const text = 'I don\'t see any people in the current scene to name.';
+        const text = "I don't see any people in the current scene to name.";
         await saveExecutionRecord(runtime, message, thought, text, ['NAME_ENTITY']);
         if (callback) {
           await callback({ thought, text, actions: ['NAME_ENTITY'] });
@@ -629,10 +629,11 @@ export const nameEntityAction: Action = {
       // Extract name from message
       const text = message.content.text?.toLowerCase() || '';
       const nameMatch = text.match(/(?:named?|call(?:ed)?|is)\s+(\w+)/i);
-      
+
       if (!nameMatch) {
         const thought = 'Could not extract name from message.';
-        const text = 'I couldn\'t understand what name to assign. Please say something like "The person is named Alice".';
+        const text =
+          'I couldn\'t understand what name to assign. Please say something like "The person is named Alice".';
         await saveExecutionRecord(runtime, message, thought, text, ['NAME_ENTITY']);
         if (callback) {
           await callback({ thought, text, actions: ['NAME_ENTITY'] });
@@ -641,19 +642,20 @@ export const nameEntityAction: Action = {
       }
 
       const name = nameMatch[1];
-      
+
       // Get entity tracker
       const worldId = message.worldId || 'default-world';
       const entityTracker = visionService.getEntityTracker();
-      
+
       // Update entities
       await entityTracker.updateEntities(scene.objects, scene.people, undefined, runtime);
       const activeEntities = entityTracker.getActiveEntities();
-      const people = activeEntities.filter(e => e.entityType === 'person');
-      
+      const people = activeEntities.filter((e) => e.entityType === 'person');
+
       if (people.length === 0) {
         const thought = 'No tracked people found.';
-        const text = 'I can see someone but haven\'t established tracking yet. Please try again in a moment.';
+        const text =
+          "I can see someone but haven't established tracking yet. Please try again in a moment.";
         await saveExecutionRecord(runtime, message, thought, text, ['NAME_ENTITY']);
         if (callback) {
           await callback({ thought, text, actions: ['NAME_ENTITY'] });
@@ -673,23 +675,23 @@ export const nameEntityAction: Action = {
 
       // Assign the name
       const success = entityTracker.assignNameToEntity(targetPerson.id, name);
-      
+
       if (success) {
         // Success response
         const thought = `Named entity "${name}" and associated with person in scene.`;
         const text = `I've identified the person as ${name}. I'll remember them for future interactions.`;
-        
+
         await saveExecutionRecord(runtime, message, thought, text, ['NAME_ENTITY'], undefined);
-        
+
         if (callback) {
-          await callback({ 
-            thought, 
+          await callback({
+            thought,
             text,
             actions: ['NAME_ENTITY'],
-            data: { entityId: targetPerson.id, name: name }
+            data: { entityId: targetPerson.id, name: name },
           });
         }
-        
+
         logger.info(`[NameEntityAction] Assigned name "${name}" to entity ${targetPerson.id}`);
       } else {
         const thought = 'Failed to assign name to entity.';
@@ -732,18 +734,18 @@ export const identifyPersonAction: Action = {
       {
         name: 'agent',
         content: {
-          text: 'That\'s Alice. I last saw her about 5 minutes ago. She\'s been here for the past 20 minutes.',
+          text: "That's Alice. I last saw her about 5 minutes ago. She's been here for the past 20 minutes.",
           actions: ['IDENTIFY_PERSON'],
         },
       },
     ],
   ],
-  
+
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const visionService = runtime.getService<VisionService>('VISION' as any);
     return visionService?.isActive() || false;
   },
-  
+
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
@@ -753,7 +755,7 @@ export const identifyPersonAction: Action = {
   ): Promise<void> => {
     try {
       const visionService = runtime.getService<VisionService>('VISION' as any);
-      
+
       if (!visionService) {
         const thought = 'Vision service is not available.';
         const text = 'I cannot identify people because the vision service is not available.';
@@ -763,12 +765,12 @@ export const identifyPersonAction: Action = {
         }
         return;
       }
-      
+
       const scene = await visionService.getSceneDescription();
-      
+
       if (!scene || scene.people.length === 0) {
         const thought = 'No people visible to identify.';
-        const text = 'I don\'t see any people in the current scene.';
+        const text = "I don't see any people in the current scene.";
         await saveExecutionRecord(runtime, message, thought, text, ['IDENTIFY_PERSON']);
         if (callback) {
           await callback({ thought, text, actions: ['IDENTIFY_PERSON'] });
@@ -779,15 +781,15 @@ export const identifyPersonAction: Action = {
       // Get entity tracker
       const worldId = message.worldId || 'default-world';
       const entityTracker = visionService.getEntityTracker();
-      
+
       // Update entities
       await entityTracker.updateEntities(scene.objects, scene.people, undefined, runtime);
       const activeEntities = entityTracker.getActiveEntities();
-      const people = activeEntities.filter(e => e.entityType === 'person');
-      
+      const people = activeEntities.filter((e) => e.entityType === 'person');
+
       if (people.length === 0) {
         const thought = 'No tracked people found.';
-        const text = 'I can see someone but I\'m still processing their identity.';
+        const text = "I can see someone but I'm still processing their identity.";
         await saveExecutionRecord(runtime, message, thought, text, ['IDENTIFY_PERSON']);
         if (callback) {
           await callback({ thought, text, actions: ['IDENTIFY_PERSON'] });
@@ -800,19 +802,20 @@ export const identifyPersonAction: Action = {
       let recognizedCount = 0;
       let unknownCount = 0;
       const identifications: string[] = [];
-      
+
       for (const person of people) {
         const name = person.attributes.name;
         const duration = Date.now() - person.firstSeen;
-        const durationStr = duration < 60000 
-          ? `${Math.round(duration/1000)} seconds` 
-          : `${Math.round(duration/60000)} minutes`;
-        
+        const durationStr =
+          duration < 60000
+            ? `${Math.round(duration / 1000)} seconds`
+            : `${Math.round(duration / 60000)} minutes`;
+
         if (name) {
           recognizedCount++;
           const personInfo = `I can see ${name}. They've been here for ${durationStr}.`;
           identifications.push(personInfo);
-          
+
           // Add more context if available
           if (person.appearances.length > 5) {
             identifications.push(`I've been tracking them consistently.`);
@@ -821,9 +824,11 @@ export const identifyPersonAction: Action = {
           unknownCount++;
           const personInfo = `I see an unidentified person who has been here for ${durationStr}.`;
           identifications.push(personInfo);
-          
+
           if (person.attributes.faceId) {
-            identifications.push(`I've captured their face profile but they haven't been named yet.`);
+            identifications.push(
+              `I've captured their face profile but they haven't been named yet.`
+            );
           }
         }
       }
@@ -835,9 +840,10 @@ export const identifyPersonAction: Action = {
         for (const { entity, leftAt } of recentlyLeft) {
           if (entity.entityType === 'person' && entity.attributes.name) {
             const timeAgo = Date.now() - leftAt;
-            const timeStr = timeAgo < 60000 
-              ? `${Math.round(timeAgo/1000)} seconds ago` 
-              : `${Math.round(timeAgo/60000)} minutes ago`;
+            const timeStr =
+              timeAgo < 60000
+                ? `${Math.round(timeAgo / 1000)} seconds ago`
+                : `${Math.round(timeAgo / 60000)} minutes ago`;
             identifications.push(`${entity.attributes.name} left ${timeStr}.`);
           }
         }
@@ -845,15 +851,15 @@ export const identifyPersonAction: Action = {
 
       const thought = `Identified ${recognizedCount} known people and ${unknownCount} unknown people.`;
       const text = identifications.join(' ');
-      
+
       await saveExecutionRecord(runtime, message, thought, text, ['IDENTIFY_PERSON']);
-      
+
       if (callback) {
-        await callback({ 
-          thought, 
+        await callback({
+          thought,
           text,
           actions: ['IDENTIFY_PERSON'],
-          data: { identifications: people }
+          data: { identifications: people },
         });
       }
     } catch (error) {
@@ -888,18 +894,18 @@ export const trackEntityAction: Action = {
       {
         name: 'agent',
         content: {
-          text: 'I\'m now tracking the person in the red shirt. I\'ll notify you of any significant movements or if they leave the scene.',
+          text: "I'm now tracking the person in the red shirt. I'll notify you of any significant movements or if they leave the scene.",
           actions: ['TRACK_ENTITY'],
         },
       },
     ],
   ],
-  
+
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const visionService = runtime.getService<VisionService>('VISION' as any);
     return visionService?.isActive() || false;
   },
-  
+
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
@@ -909,7 +915,7 @@ export const trackEntityAction: Action = {
   ): Promise<void> => {
     try {
       const visionService = runtime.getService<VisionService>('VISION' as any);
-      
+
       if (!visionService) {
         const thought = 'Vision service is not available.';
         const text = 'I cannot track entities because the vision service is not available.';
@@ -919,9 +925,9 @@ export const trackEntityAction: Action = {
         }
         return;
       }
-      
+
       const scene = await visionService.getSceneDescription();
-      
+
       if (!scene) {
         const thought = 'No scene available for tracking.';
         const text = 'I need a moment to process the visual scene before I can track entities.';
@@ -933,35 +939,35 @@ export const trackEntityAction: Action = {
       }
 
       const text = message.content.text?.toLowerCase() || '';
-      
+
       // Get entity tracker
       const worldId = message.worldId || 'default-world';
       const entityTracker = visionService.getEntityTracker();
-      
+
       // Update entities
       await entityTracker.updateEntities(scene.objects, scene.people, undefined, runtime);
       const stats = entityTracker.getStatistics();
-      
+
       const thought = `Tracking ${stats.activeEntities} entities in the scene.`;
       const summary = [
         `I'm now tracking ${stats.activeEntities} entities in the scene`,
         `(${stats.people} people, ${stats.objects} objects).`,
         'The visual tracking system will maintain persistent IDs for all entities',
-        'and notify you of significant changes.'
+        'and notify you of significant changes.',
       ];
       const responseText = summary.join(' ');
-      
+
       await saveExecutionRecord(runtime, message, thought, responseText, ['TRACK_ENTITY']);
-      
+
       if (callback) {
-        await callback({ 
-          thought, 
+        await callback({
+          thought,
           text: responseText,
           actions: ['TRACK_ENTITY'],
-          data: { entities: stats.activeEntities }
+          data: { entities: stats.activeEntities },
         });
       }
-      
+
       logger.info(`[TrackEntityAction] Tracking ${stats.activeEntities} entities`);
     } catch (error) {
       logger.error('[trackEntityAction] Error:', error);

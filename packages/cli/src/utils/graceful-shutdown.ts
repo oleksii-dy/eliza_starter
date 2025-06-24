@@ -33,7 +33,9 @@ export class GracefulShutdownHandler {
     }
 
     this.timeoutId = setTimeout(async () => {
-      logger.info(`⏰ Timeout reached (${timeoutSeconds} seconds), initiating graceful shutdown...`);
+      logger.info(
+        `⏰ Timeout reached (${timeoutSeconds} seconds), initiating graceful shutdown...`
+      );
       await this.shutdown(options, 0); // Exit with code 0 for successful timeout
     }, timeoutSeconds * 1000);
 
@@ -133,7 +135,7 @@ export class GracefulShutdownHandler {
       // Check if any OODA loops are still running
       // This would need to be implemented based on the autonomy plugin structure
       // For now, just wait a reasonable amount of time
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       break; // For now, just wait 1 second
     }
   }

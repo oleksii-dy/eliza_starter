@@ -8,7 +8,6 @@ import {
   runCoreActionTests,
 } from './utils/core-test-utils';
 import { character } from '../index';
-import plugin from '../plugin';
 
 /**
  * Creates an enhanced mock runtime for testing that includes the project's
@@ -25,7 +24,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
   const mockRuntime = {
     ...baseRuntime,
     character: character,
-    plugins: [plugin],
+    plugins: [],
     registerPlugin: vi.fn(),
     initialize: vi.fn(),
     getService: vi.fn(),

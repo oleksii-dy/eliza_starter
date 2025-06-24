@@ -76,7 +76,7 @@ export class ProductionCostTracker {
     outputTokens: number
   ): Promise<void> {
     const cost = this.calculateOpenAICost(model, inputTokens, outputTokens);
-    
+
     await this.recordCost({
       id: `openai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       benchmarkId,
@@ -91,8 +91,8 @@ export class ProductionCostTracker {
         model,
         inputTokens,
         outputTokens,
-        totalTokens: inputTokens + outputTokens
-      }
+        totalTokens: inputTokens + outputTokens,
+      },
     });
   }
 
@@ -107,7 +107,7 @@ export class ProductionCostTracker {
     outputTokens: number
   ): Promise<void> {
     const cost = this.calculateAnthropicCost(model, inputTokens, outputTokens);
-    
+
     await this.recordCost({
       id: `anthropic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       benchmarkId,
@@ -122,8 +122,8 @@ export class ProductionCostTracker {
         model,
         inputTokens,
         outputTokens,
-        totalTokens: inputTokens + outputTokens
-      }
+        totalTokens: inputTokens + outputTokens,
+      },
     });
   }
 
@@ -139,7 +139,7 @@ export class ProductionCostTracker {
     transactionValue?: number
   ): Promise<void> {
     const cost = gasCost + (transactionValue || 0);
-    
+
     await this.recordCost({
       id: `blockchain-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       benchmarkId,
@@ -154,8 +154,8 @@ export class ProductionCostTracker {
         network,
         transactionType,
         gasCost,
-        transactionValue: transactionValue || 0
-      }
+        transactionValue: transactionValue || 0,
+      },
     });
   }
 
@@ -171,7 +171,7 @@ export class ProductionCostTracker {
     fees: number = 0
   ): Promise<void> {
     const cost = purchaseAmount + fees;
-    
+
     await this.recordCost({
       id: `ecommerce-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       benchmarkId,
@@ -186,8 +186,8 @@ export class ProductionCostTracker {
         platform,
         productId,
         purchaseAmount,
-        fees
-      }
+        fees,
+      },
     });
   }
 
@@ -214,8 +214,8 @@ export class ProductionCostTracker {
       metadata: {
         platform,
         campaignId,
-        adSpend
-      }
+        adSpend,
+      },
     });
   }
 
@@ -243,8 +243,8 @@ export class ProductionCostTracker {
       timestamp: Date.now(),
       metadata: {
         ...metadata,
-        category: 'infrastructure'
-      }
+        category: 'infrastructure',
+      },
     });
   }
 
@@ -254,7 +254,9 @@ export class ProductionCostTracker {
   private async recordCost(cost: BenchmarkCost): Promise<void> {
     // Check if benchmark is emergency stopped
     if (this.emergencyStops.has(cost.benchmarkId)) {
-      throw new Error(`Benchmark ${cost.benchmarkId} is emergency stopped - no further costs allowed`);
+      throw new Error(
+        `Benchmark ${cost.benchmarkId} is emergency stopped - no further costs allowed`
+      );
     }
 
     // Add cost to tracking
@@ -266,7 +268,9 @@ export class ProductionCostTracker {
     // Check budget limits
     await this.checkBudgetLimits(cost.benchmarkId);
 
-    logger.info(`Cost tracked: ${cost.provider}/${cost.service} - $${cost.cost.toFixed(4)} for benchmark ${cost.benchmarkId}`);
+    logger.info(
+      `Cost tracked: ${cost.provider}/${cost.service} - $${cost.cost.toFixed(4)} for benchmark ${cost.benchmarkId}`
+    );
   }
 
   /**
@@ -281,19 +285,25 @@ export class ProductionCostTracker {
 
     // Check warning threshold
     if (percentage >= budget.warningThreshold && percentage < 1.0) {
-      logger.warn(`Budget warning for benchmark ${benchmarkId}: ${(percentage * 100).toFixed(1)}% used ($${totalCost.toFixed(2)}/$${budget.maxTotalCost})`);
+      logger.warn(
+        `Budget warning for benchmark ${benchmarkId}: ${(percentage * 100).toFixed(1)}% used ($${totalCost.toFixed(2)}/$${budget.maxTotalCost})`
+      );
     }
 
     // Check emergency stop
     if (percentage >= 1.0 && budget.emergencyStop) {
       this.emergencyStops.add(benchmarkId);
-      logger.error(`EMERGENCY STOP: Budget exceeded for benchmark ${benchmarkId}: $${totalCost.toFixed(2)}/$${budget.maxTotalCost}`);
+      logger.error(
+        `EMERGENCY STOP: Budget exceeded for benchmark ${benchmarkId}: $${totalCost.toFixed(2)}/$${budget.maxTotalCost}`
+      );
       throw new Error(`Budget exceeded for benchmark ${benchmarkId} - emergency stop activated`);
     }
 
     // Check if approval required for high costs
     if (percentage >= 0.8 && budget.approvalRequired) {
-      logger.warn(`Approval required for benchmark ${benchmarkId}: Approaching budget limit (${(percentage * 100).toFixed(1)}%)`);
+      logger.warn(
+        `Approval required for benchmark ${benchmarkId}: Approaching budget limit (${(percentage * 100).toFixed(1)}%)`
+      );
     }
   }
 
@@ -336,31 +346,35 @@ export class ProductionCostTracker {
       breakdown.set(key, current + cost.cost);
     }
 
-    const breakdownArray = Array.from(breakdown.entries()).map(([key, cost]) => {
-      const [provider, service] = key.split('/');
-      return {
-        provider,
-        service,
-        cost,
-        percentage: totalCost > 0 ? (cost / totalCost) * 100 : 0
-      };
-    }).sort((a, b) => b.cost - a.cost);
+    const breakdownArray = Array.from(breakdown.entries())
+      .map(([key, cost]) => {
+        const [provider, service] = key.split('/');
+        return {
+          provider,
+          service,
+          cost,
+          percentage: totalCost > 0 ? (cost / totalCost) * 100 : 0,
+        };
+      })
+      .sort((a, b) => b.cost - a.cost);
 
     // Generate recommendations
     const recommendations = this.generateOptimizationRecommendations(benchmarkCosts);
 
     // Calculate budget status
-    const budgetStatus = budget ? {
-      used: totalCost,
-      remaining: Math.max(0, budget.maxTotalCost - totalCost),
-      percentage: (totalCost / budget.maxTotalCost) * 100,
-      exceeded: totalCost > budget.maxTotalCost
-    } : {
-      used: totalCost,
-      remaining: 0,
-      percentage: 0,
-      exceeded: false
-    };
+    const budgetStatus = budget
+      ? {
+          used: totalCost,
+          remaining: Math.max(0, budget.maxTotalCost - totalCost),
+          percentage: (totalCost / budget.maxTotalCost) * 100,
+          exceeded: totalCost > budget.maxTotalCost,
+        }
+      : {
+          used: totalCost,
+          remaining: 0,
+          percentage: 0,
+          exceeded: false,
+        };
 
     return {
       benchmarkId,
@@ -368,7 +382,7 @@ export class ProductionCostTracker {
       currency: 'USD',
       breakdown: breakdownArray,
       recommendations,
-      budgetStatus
+      budgetStatus,
     };
   }
 
@@ -379,31 +393,38 @@ export class ProductionCostTracker {
     const recommendations: string[] = [];
 
     // Analyze API costs
-    const apiCosts = costs.filter(c => c.provider === 'openai' || c.provider === 'anthropic');
+    const apiCosts = costs.filter((c) => c.provider === 'openai' || c.provider === 'anthropic');
     const totalApiCost = apiCosts.reduce((sum, c) => sum + c.cost, 0);
-    
+
     if (totalApiCost > 10) {
       recommendations.push('Consider using smaller models for routine tasks to reduce API costs');
     }
 
     // Analyze token usage patterns
-    const highTokenCalls = apiCosts.filter(c => c.metadata.totalTokens > 10000);
+    const highTokenCalls = apiCosts.filter((c) => c.metadata.totalTokens > 10000);
     if (highTokenCalls.length > 0) {
-      recommendations.push('Optimize prompts to reduce token usage - detected calls with >10k tokens');
+      recommendations.push(
+        'Optimize prompts to reduce token usage - detected calls with >10k tokens'
+      );
     }
 
     // Analyze blockchain costs
-    const blockchainCosts = costs.filter(c => c.provider === 'blockchain');
+    const blockchainCosts = costs.filter((c) => c.provider === 'blockchain');
     if (blockchainCosts.length > 0) {
-      const avgGasCost = blockchainCosts.reduce((sum, c) => sum + c.metadata.gasCost, 0) / blockchainCosts.length;
+      const avgGasCost =
+        blockchainCosts.reduce((sum, c) => sum + c.metadata.gasCost, 0) / blockchainCosts.length;
       if (avgGasCost > 20) {
-        recommendations.push('Consider batching transactions or using Layer 2 solutions to reduce gas costs');
+        recommendations.push(
+          'Consider batching transactions or using Layer 2 solutions to reduce gas costs'
+        );
       }
     }
 
     // General recommendations
     if (costs.length > 100) {
-      recommendations.push('High number of operations detected - consider caching and optimization');
+      recommendations.push(
+        'High number of operations detected - consider caching and optimization'
+      );
     }
 
     return recommendations;
@@ -443,11 +464,11 @@ export class ProductionCostTracker {
       'gpt-4': { input: 0.03 / 1000, output: 0.06 / 1000 },
       'gpt-3.5-turbo': { input: 0.001 / 1000, output: 0.002 / 1000 },
       'text-embedding-3-small': { input: 0.00002 / 1000, output: 0 },
-      'text-embedding-3-large': { input: 0.00013 / 1000, output: 0 }
+      'text-embedding-3-large': { input: 0.00013 / 1000, output: 0 },
     };
 
     const modelPricing = pricing[model] || pricing['gpt-4o']; // Default to GPT-4o pricing
-    return (inputTokens * modelPricing.input) + (outputTokens * modelPricing.output);
+    return inputTokens * modelPricing.input + outputTokens * modelPricing.output;
   }
 
   /**
@@ -460,11 +481,11 @@ export class ProductionCostTracker {
       'claude-3-sonnet-20240229': { input: 0.003 / 1000, output: 0.015 / 1000 },
       'claude-3-haiku-20240307': { input: 0.00025 / 1000, output: 0.00125 / 1000 },
       'claude-opus-4-20250514': { input: 0.015 / 1000, output: 0.075 / 1000 },
-      'claude-sonnet-4-20250514': { input: 0.003 / 1000, output: 0.015 / 1000 }
+      'claude-sonnet-4-20250514': { input: 0.003 / 1000, output: 0.015 / 1000 },
     };
 
     const modelPricing = pricing[model] || pricing['claude-3-sonnet-20240229']; // Default to Sonnet pricing
-    return (inputTokens * modelPricing.input) + (outputTokens * modelPricing.output);
+    return inputTokens * modelPricing.input + outputTokens * modelPricing.output;
   }
 
   /**
@@ -491,7 +512,7 @@ export class ProductionCostTracker {
     if (benchmarkId) {
       return this.costs.get(benchmarkId) || [];
     }
-    
+
     // Return all costs across all benchmarks
     const allCosts: BenchmarkCost[] = [];
     for (const costs of this.costs.values()) {

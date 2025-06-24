@@ -33,7 +33,11 @@ export class UXFlowTestSuite implements TestSuite {
         };
 
         // Get UX guidance
-        const result = await uxGuidanceProvider.get(runtime, message, { values: {}, data: {}, text: '' });
+        const result = await uxGuidanceProvider.get(runtime, message, {
+          values: {},
+          data: {},
+          text: '',
+        });
         const guidance = result.data as UXGuidanceResponse;
 
         if (!guidance) {
@@ -41,7 +45,7 @@ export class UXFlowTestSuite implements TestSuite {
         }
 
         // Verify new user suggestions
-        const setupSuggestion = guidance.suggestions.find(s => s.type === 'setup');
+        const setupSuggestion = guidance.suggestions.find((s) => s.type === 'setup');
         if (!setupSuggestion) {
           throw new Error('No setup suggestion found for new user');
         }
@@ -51,7 +55,9 @@ export class UXFlowTestSuite implements TestSuite {
         }
 
         // Verify quick actions
-        const addSecretAction = guidance.quickActions.find(a => a.actionName === 'REQUEST_SECRET_FORM');
+        const addSecretAction = guidance.quickActions.find(
+          (a) => a.actionName === 'REQUEST_SECRET_FORM'
+        );
         if (!addSecretAction) {
           throw new Error('No add secret quick action found');
         }
@@ -62,7 +68,7 @@ export class UXFlowTestSuite implements TestSuite {
         }
 
         console.log('✓ New user guidance working correctly');
-      }
+      },
     },
 
     {
@@ -104,7 +110,7 @@ export class UXFlowTestSuite implements TestSuite {
         }
 
         console.log('✓ User onboarding workflow executed successfully');
-      }
+      },
     },
 
     {
@@ -124,19 +130,19 @@ export class UXFlowTestSuite implements TestSuite {
 
         // Test validation
         const isValid = await requestSecretFormAction.validate(runtime, message);
-        
+
         // The action should be valid if secret form service is available
         const formService = runtime.getService('SECRET_FORMS');
         if (formService && !isValid) {
           throw new Error('Secret form action validation failed when service is available');
         }
-        
+
         if (!formService && isValid) {
           throw new Error('Secret form action validation passed when service is not available');
         }
 
         console.log('✓ Secret form action validation working correctly');
-      }
+      },
     },
 
     {
@@ -185,7 +191,7 @@ export class UXFlowTestSuite implements TestSuite {
         }
 
         console.log('✓ Secret listing working correctly');
-      }
+      },
     },
 
     {
@@ -223,16 +229,22 @@ export class UXFlowTestSuite implements TestSuite {
             createdAt: Date.now(),
           };
 
-          const result = await uxGuidanceProvider.get(runtime, message, { values: {}, data: {}, text: '' });
+          const result = await uxGuidanceProvider.get(runtime, message, {
+            values: {},
+            data: {},
+            text: '',
+          });
           const guidance = result.data as UXGuidanceResponse;
 
           if (guidance.contextualHelp.currentContext !== testCase.expectedContext) {
-            throw new Error(`Expected context ${testCase.expectedContext}, got ${guidance.contextualHelp.currentContext}`);
+            throw new Error(
+              `Expected context ${testCase.expectedContext}, got ${guidance.contextualHelp.currentContext}`
+            );
           }
         }
 
         console.log('✓ Contextual help detection working correctly');
-      }
+      },
     },
 
     {
@@ -256,17 +268,25 @@ export class UXFlowTestSuite implements TestSuite {
         (runtime as any).getService = () => null;
 
         try {
-          const result = await uxGuidanceProvider.get(runtime, message, { values: {}, data: {}, text: '' });
+          const result = await uxGuidanceProvider.get(runtime, message, {
+            values: {},
+            data: {},
+            text: '',
+          });
           const guidance = result.data as UXGuidanceResponse;
 
           // Should provide troubleshooting suggestions
-          const troubleshootingSuggestion = guidance.suggestions.find(s => s.type === 'troubleshooting');
+          const troubleshootingSuggestion = guidance.suggestions.find(
+            (s) => s.type === 'troubleshooting'
+          );
           if (!troubleshootingSuggestion) {
             throw new Error('No troubleshooting suggestion when services unavailable');
           }
 
           // Should have troubleshooting help
-          const serviceIssue = guidance.contextualHelp.troubleshooting.find(t => t.issue === 'Service unavailable');
+          const serviceIssue = guidance.contextualHelp.troubleshooting.find(
+            (t) => t.issue === 'Service unavailable'
+          );
           if (!serviceIssue) {
             throw new Error('No service unavailable troubleshooting help');
           }
@@ -276,7 +296,7 @@ export class UXFlowTestSuite implements TestSuite {
           // Restore original service getter
           (runtime as any).getService = originalGetService;
         }
-      }
+      },
     },
 
     {
@@ -303,10 +323,10 @@ export class UXFlowTestSuite implements TestSuite {
         }
 
         console.log('✓ Workflow chain integration verified');
-      }
-    }
+      },
+    },
   ];
 }
 
 // Export test suite instance
-export default new UXFlowTestSuite(); 
+export default new UXFlowTestSuite();

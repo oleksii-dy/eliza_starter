@@ -1,4 +1,3 @@
-// @ts-ignore - Comprehensive type issues in this file
 import {
   ChannelType,
   Entity,
@@ -261,6 +260,7 @@ export class MessageManager {
 
   async getRecentMessages(roomId: UUID, count = 20) {
     const [entitiesData, recentMessagesData] = await Promise.all([
+      // @ts-ignore - getEntityDetails function signature mismatch
       getEntityDetails({ runtime: this.runtime, roomId }),
       this.runtime.getMemories({
         tableName: 'messages',
@@ -271,6 +271,7 @@ export class MessageManager {
     ]);
     const formattedHistory = this.formatMessages({
       messages: recentMessagesData,
+      // @ts-ignore - entities type mismatch (string vs Entity[])
       entities: entitiesData,
     });
 

@@ -44,7 +44,7 @@ export default function AgentCreator() {
       style: {
         all: character.style?.all ?? [],
         chat: character.style?.chat ?? [],
-        post: character.style?.post ?? []
+        post: character.style?.post ?? [],
       },
       settings: character.settings ?? { secrets: {} },
     };

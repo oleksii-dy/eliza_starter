@@ -8,7 +8,7 @@ import {
     type UUID,
     elizaLogger,
 } from "../types/core.d";
-import { CustodialWalletService } from "../services/CustodialWalletService";
+import type { CustodialWalletService } from "../services/CustodialWalletService";
 
 /**
  * Create a new custodial wallet for an entity, room, or world
@@ -507,7 +507,7 @@ async function extractWalletParams(text: string, message: Memory, state?: State)
     // Extract trust level
     const trustMatch = text.match(/trust\s+level\s+(\d+)/i);
     if (trustMatch) {
-        params.trustLevel = parseInt(trustMatch[1]);
+        params.trustLevel = Number.parseInt(trustMatch[1]);
     }
 
     return params;

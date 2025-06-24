@@ -13,7 +13,12 @@ export interface RealWorldTask {
   id: string;
   benchmarkId: string;
   agentId: string;
-  type: 'defi_transaction' | 'ecommerce_purchase' | 'social_engagement' | 'advertising_campaign' | 'service_booking';
+  type:
+    | 'defi_transaction'
+    | 'ecommerce_purchase'
+    | 'social_engagement'
+    | 'advertising_campaign'
+    | 'service_booking';
   description: string;
   requirements: TaskRequirements;
   constraints: TaskConstraints;
@@ -145,7 +150,7 @@ export class RealWorldTaskExecutor {
     taskConfig: Partial<RealWorldTask>
   ): Promise<string> {
     const taskId = `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const task: RealWorldTask = {
       id: taskId,
       benchmarkId,
@@ -187,7 +192,7 @@ export class RealWorldTaskExecutor {
         'Complete task within budget',
         'Complete task within time limit',
         'Achieve successful transaction verification',
-        ...taskConfig.successCriteria || [],
+        ...(taskConfig.successCriteria || []),
       ],
       metadata: taskConfig.metadata || {},
       createdAt: Date.now(),
@@ -195,8 +200,10 @@ export class RealWorldTaskExecutor {
     };
 
     this.activeTasks.set(taskId, task);
-    
-    logger.info(`Created real-world task ${taskId} for agent ${agentId} in benchmark ${benchmarkId}`);
+
+    logger.info(
+      `Created real-world task ${taskId} for agent ${agentId} in benchmark ${benchmarkId}`
+    );
     return taskId;
   }
 
@@ -270,10 +277,11 @@ export class RealWorldTaskExecutor {
         await this.notifyTaskCompletion(channelId, task, finalResult);
       }
 
-      logger.info(`Task ${taskId} completed: ${result.success ? 'SUCCESS' : 'FAILED'} (score: ${result.score.toFixed(2)}, cost: $${result.totalCost.toFixed(2)})`);
-      
-      return finalResult;
+      logger.info(
+        `Task ${taskId} completed: ${result.success ? 'SUCCESS' : 'FAILED'} (score: ${result.score.toFixed(2)}, cost: $${result.totalCost.toFixed(2)})`
+      );
 
+      return finalResult;
     } catch (error) {
       task.status = 'failed';
       task.completedAt = Date.now();
@@ -313,12 +321,14 @@ export class RealWorldTaskExecutor {
     // Check budget constraints
     const currentSpend = await this.costTracker.getBenchmarkSpend(task.benchmarkId);
     if (currentSpend + task.requirements.maxBudget > task.constraints.budgetLimits.total) {
-      throw new Error(`Task would exceed total budget limit of $${task.constraints.budgetLimits.total}`);
+      throw new Error(
+        `Task would exceed total budget limit of $${task.constraints.budgetLimits.total}`
+      );
     }
 
     // Check agent capabilities
-    const hasRequiredActions = task.requirements.requiredActions.every(actionName =>
-      runtime.actions.some(action => action.name === actionName)
+    const hasRequiredActions = task.requirements.requiredActions.every((actionName) =>
+      runtime.actions.some((action) => action.name === actionName)
     );
     if (!hasRequiredActions) {
       throw new Error('Agent missing required actions for this task');
@@ -326,14 +336,19 @@ export class RealWorldTaskExecutor {
 
     // Check time constraints
     const now = Date.now();
-    if (now + task.requirements.timeLimit > task.createdAt + task.constraints.timeLimits.execution) {
+    if (
+      now + task.requirements.timeLimit >
+      task.createdAt + task.constraints.timeLimits.execution
+    ) {
       throw new Error('Task execution would exceed time limits');
     }
 
     // Risk assessment
     const riskScore = await this.assessTaskRisk(task);
     if (riskScore > task.constraints.riskLimits.maxRiskScore) {
-      throw new Error(`Task risk score ${riskScore.toFixed(2)} exceeds limit ${task.constraints.riskLimits.maxRiskScore}`);
+      throw new Error(
+        `Task risk score ${riskScore.toFixed(2)} exceeds limit ${task.constraints.riskLimits.maxRiskScore}`
+      );
     }
 
     logger.info(`Task ${task.id} validation passed (risk: ${riskScore.toFixed(2)})`);
@@ -352,11 +367,11 @@ export class RealWorldTaskExecutor {
 
     // Task type risk
     const typeRisk = {
-      'ecommerce_purchase': 0.1,
-      'social_engagement': 0.2,
-      'service_booking': 0.2,
-      'advertising_campaign': 0.3,
-      'defi_transaction': 0.4,
+      ecommerce_purchase: 0.1,
+      social_engagement: 0.2,
+      service_booking: 0.2,
+      advertising_campaign: 0.3,
+      defi_transaction: 0.4,
     };
     riskScore += typeRisk[task.type] || 0.5;
 
@@ -366,9 +381,9 @@ export class RealWorldTaskExecutor {
 
     // Verification level risk (less verification = more risk)
     const verificationRisk = {
-      'strict': 0,
-      'standard': 0.1,
-      'basic': 0.3,
+      strict: 0,
+      standard: 0.1,
+      basic: 0.3,
     };
     riskScore += verificationRisk[task.requirements.verificationLevel] || 0.5;
 
@@ -395,10 +410,10 @@ export class RealWorldTaskExecutor {
 
     // Automated verification
     if (result.actions.length > 0) {
-      const transactionActions = result.actions.filter(a => a.result.transactionId);
+      const transactionActions = result.actions.filter((a) => a.result.transactionId);
       verification.automated.transactionConfirmed = transactionActions.length > 0;
-      
-      const successfulActions = result.actions.filter(a => a.result.success);
+
+      const successfulActions = result.actions.filter((a) => a.result.success);
       verification.automated.servicesDelivered = successfulActions.length > 0;
     }
 
@@ -407,7 +422,7 @@ export class RealWorldTaskExecutor {
 
     // Manual verification requirements
     verification.manual.required = task.constraints.complianceLimits.requireApproval;
-    
+
     // Third-party verification for high-value tasks
     if (task.requirements.maxBudget > 1000) {
       verification.thirdParty.required = true;
@@ -440,12 +455,10 @@ Actions: ${result.actions.length}`,
         },
       };
 
-      await liveMessageBus.sendMessage(
-        channelId,
-        'task-executor',
-        message,
-        { taskType: task.type, benchmarkId: task.benchmarkId }
-      );
+      await liveMessageBus.sendMessage(channelId, 'task-executor', message, {
+        taskType: task.type,
+        benchmarkId: task.benchmarkId,
+      });
     } catch (error) {
       logger.error(`Failed to notify task completion for ${task.id}:`, error);
     }
@@ -462,8 +475,7 @@ Actions: ${result.actions.length}`,
    * List tasks for a benchmark
    */
   getBenchmarkTasks(benchmarkId: string): RealWorldTask[] {
-    return Array.from(this.activeTasks.values())
-      .filter(task => task.benchmarkId === benchmarkId);
+    return Array.from(this.activeTasks.values()).filter((task) => task.benchmarkId === benchmarkId);
   }
 
   /**
@@ -491,7 +503,7 @@ Actions: ${result.actions.length}`,
 
     for (const [taskId, task] of this.activeTasks) {
       if (benchmarkId && task.benchmarkId !== benchmarkId) continue;
-      
+
       if (['completed', 'failed', 'cancelled'].includes(task.status)) {
         tasksToRemove.push(taskId);
       }
@@ -501,7 +513,9 @@ Actions: ${result.actions.length}`,
       this.activeTasks.delete(taskId);
     }
 
-    logger.info(`Cleaned up ${tasksToRemove.length} tasks${benchmarkId ? ` for benchmark ${benchmarkId}` : ''}`);
+    logger.info(
+      `Cleaned up ${tasksToRemove.length} tasks${benchmarkId ? ` for benchmark ${benchmarkId}` : ''}`
+    );
   }
 }
 
@@ -570,7 +584,9 @@ abstract class TaskTypeExecutor {
       context.costs.push(costRecord);
     }
 
-    logger.info(`Recorded action ${type} for task ${context.task.id}: ${result.success ? 'SUCCESS' : 'FAILED'}`);
+    logger.info(
+      `Recorded action ${type} for task ${context.task.id}: ${result.success ? 'SUCCESS' : 'FAILED'}`
+    );
   }
 }
 
@@ -622,7 +638,6 @@ class DeFiTaskExecutor extends TaskTypeExecutor {
       );
 
       score = 0.9; // High score for successful DeFi operations
-
     } catch (error) {
       score = 0;
     }
@@ -638,7 +653,9 @@ class DeFiTaskExecutor extends TaskTypeExecutor {
       actions: context.actions,
       verification: {
         automated: {
-          transactionConfirmed: context.actions.some(a => a.type === 'verify_transaction' && a.result.success),
+          transactionConfirmed: context.actions.some(
+            (a) => a.type === 'verify_transaction' && a.result.success
+          ),
           fundsReceived: true,
           servicesDelivered: true,
           complianceCheck: totalCost <= task.requirements.maxBudget,
@@ -699,7 +716,6 @@ class EcommerceTaskExecutor extends TaskTypeExecutor {
       );
 
       score = 0.85; // Good score for e-commerce
-
     } catch (error) {
       score = 0;
     }
@@ -715,9 +731,11 @@ class EcommerceTaskExecutor extends TaskTypeExecutor {
       actions: context.actions,
       verification: {
         automated: {
-          transactionConfirmed: context.actions.some(a => a.type === 'verify_order' && a.result.success),
+          transactionConfirmed: context.actions.some(
+            (a) => a.type === 'verify_order' && a.result.success
+          ),
           fundsReceived: false,
-          servicesDelivered: context.actions.some(a => a.type === 'purchase' && a.result.success),
+          servicesDelivered: context.actions.some((a) => a.type === 'purchase' && a.result.success),
           complianceCheck: totalCost <= task.requirements.maxBudget,
         },
         manual: { required: false, completed: false },
@@ -740,7 +758,7 @@ class SocialEngagementExecutor extends TaskTypeExecutor {
     try {
       // Social engagement actions (posting, commenting, engaging)
       const engagementCost = Math.min(task.requirements.maxBudget, 20);
-      
+
       await this.recordAction(
         context,
         'social_post',
@@ -756,7 +774,6 @@ class SocialEngagementExecutor extends TaskTypeExecutor {
 
       totalCost += engagementCost;
       score = 0.7; // Moderate score for social
-
     } catch (error) {
       score = 0;
     }
@@ -774,7 +791,7 @@ class SocialEngagementExecutor extends TaskTypeExecutor {
         automated: {
           transactionConfirmed: false,
           fundsReceived: false,
-          servicesDelivered: context.actions.some(a => a.result.success),
+          servicesDelivered: context.actions.some((a) => a.result.success),
           complianceCheck: totalCost <= task.requirements.maxBudget,
         },
         manual: { required: false, completed: false },
@@ -797,7 +814,7 @@ class AdvertisingCampaignExecutor extends TaskTypeExecutor {
     try {
       // Advertising campaign setup and execution
       const adSpend = Math.min(task.requirements.maxBudget * 0.8, 100);
-      
+
       await this.recordAction(
         context,
         'create_campaign',
@@ -813,7 +830,6 @@ class AdvertisingCampaignExecutor extends TaskTypeExecutor {
 
       totalCost += adSpend;
       score = 0.8; // Good score for advertising
-
     } catch (error) {
       score = 0;
     }
@@ -831,7 +847,7 @@ class AdvertisingCampaignExecutor extends TaskTypeExecutor {
         automated: {
           transactionConfirmed: false,
           fundsReceived: false,
-          servicesDelivered: context.actions.some(a => a.result.success),
+          servicesDelivered: context.actions.some((a) => a.result.success),
           complianceCheck: totalCost <= task.requirements.maxBudget,
         },
         manual: { required: true, completed: false },
@@ -854,7 +870,7 @@ class ServiceBookingExecutor extends TaskTypeExecutor {
     try {
       // Service booking (ride, delivery, appointment, etc.)
       const serviceCost = Math.min(task.requirements.maxBudget * 0.9, 75);
-      
+
       await this.recordAction(
         context,
         'book_service',
@@ -871,7 +887,6 @@ class ServiceBookingExecutor extends TaskTypeExecutor {
 
       totalCost += serviceCost;
       score = 0.75; // Good score for service booking
-
     } catch (error) {
       score = 0;
     }
@@ -887,7 +902,7 @@ class ServiceBookingExecutor extends TaskTypeExecutor {
       actions: context.actions,
       verification: {
         automated: {
-          transactionConfirmed: context.actions.some(a => a.result.confirmationCode),
+          transactionConfirmed: context.actions.some((a) => a.result.confirmationCode),
           fundsReceived: false,
           servicesDelivered: false, // Service delivery is scheduled
           complianceCheck: totalCost <= task.requirements.maxBudget,
@@ -901,6 +916,4 @@ class ServiceBookingExecutor extends TaskTypeExecutor {
 }
 
 // Global instance for benchmark use
-export const realWorldTaskExecutor = new RealWorldTaskExecutor(
-  new ProductionCostTracker()
-);
+export const realWorldTaskExecutor = new RealWorldTaskExecutor(new ProductionCostTracker());

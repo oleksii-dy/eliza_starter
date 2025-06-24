@@ -7,6 +7,7 @@ import {
   type ProviderResult,
   logger,
   createUniqueUuid,
+  type State,
 } from '@elizaos/core';
 import { HyperfyService } from '../service.js';
 import * as THREE from 'three';
@@ -132,6 +133,7 @@ export const hyperfyProvider: Provider = {
         : '## Your Equipped Item or Action\nYou are not currently performing or holding anything.';
 
       const { formattedHistory, lastResponseText, lastActions } =
+        // @ts-ignore - messageManager null check
         await messageManager.getRecentMessages(elizaRoomId);
 
       let chatText = `## In-World Messages\n### Chat History\n${formattedHistory}`;

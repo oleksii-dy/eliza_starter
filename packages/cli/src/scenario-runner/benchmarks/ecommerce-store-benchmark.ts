@@ -44,7 +44,13 @@ export interface EcommerceBenchmarkRequirements {
 
 export interface EcommerceTask {
   id: string;
-  type: 'product_research' | 'sourcing' | 'listing' | 'marketing' | 'customer_service' | 'analytics';
+  type:
+    | 'product_research'
+    | 'sourcing'
+    | 'listing'
+    | 'marketing'
+    | 'customer_service'
+    | 'analytics';
   name: string;
   description: string;
   weight: number; // For scoring
@@ -415,19 +421,20 @@ export class EcommerceStoreBenchmarkRunner {
     return {
       id: 'ecommerce-store-v1',
       name: 'E-commerce Store Management',
-      description: 'Comprehensive benchmark testing agent capability to run a real e-commerce business',
+      description:
+        'Comprehensive benchmark testing agent capability to run a real e-commerce business',
       version: '1.0.0',
       category: 'ecommerce',
       difficulty: 'advanced',
       estimatedCost: {
-        minimum: 300,   // $300 minimum for basic store setup
-        typical: 1500,  // $1500 typical for full operations
-        maximum: 5000,  // $5000 maximum for large-scale testing
+        minimum: 300, // $300 minimum for basic store setup
+        typical: 1500, // $1500 typical for full operations
+        maximum: 5000, // $5000 maximum for large-scale testing
       },
       duration: {
-        preparation: 1800000,  // 30 minutes setup
-        execution: 10800000,   // 3 hours execution
-        verification: 600000,  // 10 minutes verification
+        preparation: 1800000, // 30 minutes setup
+        execution: 10800000, // 3 hours execution
+        verification: 600000, // 10 minutes verification
       },
       requirements: {
         minimumCapital: 500, // $500 minimum working capital
@@ -531,11 +538,7 @@ export class EcommerceStoreBenchmarkRunner {
 
     try {
       // Initialize store
-      const initialStore = await this.initializeStore(
-        agentId,
-        benchmarkId,
-        parameters
-      );
+      const initialStore = await this.initializeStore(agentId, benchmarkId, parameters);
 
       this.activeStores.set(benchmarkId, initialStore);
 
@@ -595,9 +598,10 @@ export class EcommerceStoreBenchmarkRunner {
         await this.messageBus.cleanupBenchmark(benchmarkId);
       }
 
-      logger.info(`E-commerce benchmark completed: ${benchmarkId} - Score: ${result.finalScore.toFixed(2)}`);
+      logger.info(
+        `E-commerce benchmark completed: ${benchmarkId} - Score: ${result.finalScore.toFixed(2)}`
+      );
       return result;
-
     } catch (error) {
       logger.error(`E-commerce benchmark failed: ${benchmarkId}`, error);
       throw error;
@@ -842,7 +846,9 @@ export class EcommerceStoreBenchmarkRunner {
       },
     };
 
-    logger.info(`Initialized e-commerce store ${benchmarkId} with $${parameters.initialCapital} capital`);
+    logger.info(
+      `Initialized e-commerce store ${benchmarkId} with $${parameters.initialCapital} capital`
+    );
     return store;
   }
 
@@ -882,11 +888,7 @@ export class EcommerceStoreBenchmarkRunner {
         });
 
         // Execute the task
-        const executionResult = await this.taskExecutor.executeTask(
-          runtime,
-          taskId,
-          channelId
-        );
+        const executionResult = await this.taskExecutor.executeTask(runtime, taskId, channelId);
 
         // Update store state based on task result
         await this.updateStoreFromTask(benchmarkId, task, executionResult);
@@ -911,17 +913,12 @@ export class EcommerceStoreBenchmarkRunner {
 
         // Notify progress if channel available
         if (channelId) {
-          await this.messageBus.sendMessage(
-            channelId,
-            'benchmark-runner',
-            {
-              text: `Task "${task.name}" completed: ${executionResult.success ? '✅ SUCCESS' : '❌ FAILED'} (Score: ${(executionResult.score * 100).toFixed(1)}%)`,
-              source: 'ecommerce-benchmark',
-              metadata: { taskResult, benchmarkId },
-            }
-          );
+          await this.messageBus.sendMessage(channelId, 'benchmark-runner', {
+            text: `Task "${task.name}" completed: ${executionResult.success ? '✅ SUCCESS' : '❌ FAILED'} (Score: ${(executionResult.score * 100).toFixed(1)}%)`,
+            source: 'ecommerce-benchmark',
+            metadata: { taskResult, benchmarkId },
+          });
         }
-
       } catch (error) {
         logger.error(`E-commerce task failed: ${task.name}`, error);
         results.push({
@@ -978,8 +975,9 @@ export class EcommerceStoreBenchmarkRunner {
           store.marketing.campaigns.push(this.createSampleCampaign(result.totalCost));
           store.marketing.traffic.total += 150;
           store.marketing.traffic.conversions += 5;
-          store.marketing.traffic.conversionRate = store.marketing.traffic.conversions / store.marketing.traffic.total;
-          
+          store.marketing.traffic.conversionRate =
+            store.marketing.traffic.conversions / store.marketing.traffic.total;
+
           // Simulate sales from marketing
           this.simulateSales(store, 3);
           store.financials.costs.marketing += result.totalCost;
@@ -987,29 +985,43 @@ export class EcommerceStoreBenchmarkRunner {
 
         case 'customer_service':
           // Improve operational metrics
-          store.operations.fulfillment.averageTime = Math.max(store.operations.fulfillment.averageTime - 12, 24);
-          store.operations.customerService.responseTime = Math.max(store.operations.customerService.responseTime - 1, 1);
-          store.operations.customerService.satisfaction = Math.min(store.operations.customerService.satisfaction + 0.3, 5);
+          store.operations.fulfillment.averageTime = Math.max(
+            store.operations.fulfillment.averageTime - 12,
+            24
+          );
+          store.operations.customerService.responseTime = Math.max(
+            store.operations.customerService.responseTime - 1,
+            1
+          );
+          store.operations.customerService.satisfaction = Math.min(
+            store.operations.customerService.satisfaction + 0.3,
+            5
+          );
           store.financials.costs.operations += result.totalCost;
           break;
 
         case 'analytics':
           // Optimization improvements
           store.marketing.traffic.conversionRate *= 1.2; // 20% improvement
-          store.operations.fulfillment.accuracy = Math.min(store.operations.fulfillment.accuracy + 0.02, 1);
+          store.operations.fulfillment.accuracy = Math.min(
+            store.operations.fulfillment.accuracy + 0.02,
+            1
+          );
           store.financials.costs.operations += result.totalCost;
           break;
       }
 
       // Update cash balance
       store.financials.cash.balance -= result.totalCost;
-      
+
       // Recalculate profit
-      store.financials.profit.net = store.financials.revenue.total - 
+      store.financials.profit.net =
+        store.financials.revenue.total -
         Object.values(store.financials.costs).reduce((sum, cost) => sum + cost, 0);
-      
+
       if (store.financials.revenue.total > 0) {
-        store.financials.profit.margin = store.financials.profit.net / store.financials.revenue.total;
+        store.financials.profit.margin =
+          store.financials.profit.net / store.financials.revenue.total;
       }
     }
   }
@@ -1027,7 +1039,7 @@ export class EcommerceStoreBenchmarkRunner {
     ];
 
     const product = products[index % products.length];
-    
+
     return {
       id: `product-${index + 1}`,
       sku: `SKU-${1000 + index}`,
@@ -1092,16 +1104,18 @@ export class EcommerceStoreBenchmarkRunner {
         id: `order-${Date.now()}-${i}`,
         customerId: `customer-${Date.now()}-${i}`,
         status: 'processing',
-        items: [{
-          productId: product.id,
-          quantity: 1,
-          price: product.price,
-          total: product.price,
-        }],
+        items: [
+          {
+            productId: product.id,
+            quantity: 1,
+            price: product.price,
+            total: product.price,
+          },
+        ],
         subtotal: product.price,
         tax: product.price * 0.08, // 8% tax
         shipping: 8.99,
-        total: product.price + (product.price * 0.08) + 8.99,
+        total: product.price + product.price * 0.08 + 8.99,
         shippingAddress: {
           name: 'Test Customer',
           line1: '123 Main St',
@@ -1132,12 +1146,12 @@ export class EcommerceStoreBenchmarkRunner {
 
       store.orders.push(order);
       store.financials.revenue.total += order.total;
-      store.financials.revenue.byProduct[product.id] = 
+      store.financials.revenue.byProduct[product.id] =
         (store.financials.revenue.byProduct[product.id] || 0) + order.total;
       store.financials.costs.cogs += product.cost;
 
       // Add customer if new
-      if (!store.customers.find(c => c.id === order.customerId)) {
+      if (!store.customers.find((c) => c.id === order.customerId)) {
         store.customers.push({
           id: order.customerId,
           email: `customer${i}@example.com`,
@@ -1170,20 +1184,37 @@ export class EcommerceStoreBenchmarkRunner {
     let score = 0;
 
     // Financial scoring (70% weight)
-    const financialScore = 
+    const financialScore =
       this.scoreMetric(store.financials.revenue.total, benchmark.scoring.financial.revenue) +
       this.scoreMetric(store.financials.profit.net, benchmark.scoring.financial.profit) +
       this.scoreMetric(this.calculateROI(store, 1000), benchmark.scoring.financial.roi) + // Assume $1000 initial
-      this.scoreMetric(store.marketing.customerAcquisition.cost || 50, benchmark.scoring.financial.cac, true); // Inverse scoring
+      this.scoreMetric(
+        store.marketing.customerAcquisition.cost || 50,
+        benchmark.scoring.financial.cac,
+        true
+      ); // Inverse scoring
 
     score += financialScore * 0.7;
 
     // Operational scoring (30% weight)
     const operationalScore =
-      this.scoreMetric(store.marketing.traffic.conversionRate, benchmark.scoring.operational.conversionRate) +
-      this.scoreMetric(store.operations.customerService.satisfaction, benchmark.scoring.operational.customerSatisfaction) +
-      this.scoreMetric(store.operations.inventory.turnover, benchmark.scoring.operational.inventoryTurnover) +
-      this.scoreMetric(store.operations.fulfillment.averageTime, benchmark.scoring.operational.fulfillmentTime, true); // Inverse
+      this.scoreMetric(
+        store.marketing.traffic.conversionRate,
+        benchmark.scoring.operational.conversionRate
+      ) +
+      this.scoreMetric(
+        store.operations.customerService.satisfaction,
+        benchmark.scoring.operational.customerSatisfaction
+      ) +
+      this.scoreMetric(
+        store.operations.inventory.turnover,
+        benchmark.scoring.operational.inventoryTurnover
+      ) +
+      this.scoreMetric(
+        store.operations.fulfillment.averageTime,
+        benchmark.scoring.operational.fulfillmentTime,
+        true
+      ); // Inverse
 
     score += operationalScore * 0.3;
 
@@ -1193,7 +1224,11 @@ export class EcommerceStoreBenchmarkRunner {
   /**
    * Score individual metric against target
    */
-  private scoreMetric(actual: number, target: { weight: number; target: number }, inverse = false): number {
+  private scoreMetric(
+    actual: number,
+    target: { weight: number; target: number },
+    inverse = false
+  ): number {
     let ratio = actual / target.target;
     if (inverse) {
       ratio = target.target / actual; // For metrics where lower is better
@@ -1206,11 +1241,11 @@ export class EcommerceStoreBenchmarkRunner {
    * Calculate return on investment
    */
   private calculateROI(store: EcommerceStoreState, initialCapital: number): number {
-    const totalInvestment = initialCapital + 
-      Object.values(store.financials.costs).reduce((sum, cost) => sum + cost, 0);
-    
+    const totalInvestment =
+      initialCapital + Object.values(store.financials.costs).reduce((sum, cost) => sum + cost, 0);
+
     if (totalInvestment === 0) return 0;
-    
+
     return store.financials.profit.net / totalInvestment;
   }
 

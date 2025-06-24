@@ -74,21 +74,21 @@ function getWorkspacePackages(): Map<string, string> {
   }
 
   try {
-    const rootPkg = JSON.parse(fs.readFileSync(path.join(monorepoRoot, 'package.json'), 'utf8'));
+    const rootPkg = JSON.parse(readFileSync(path.join(monorepoRoot, 'package.json'), 'utf8'));
     const workspaces = rootPkg.workspaces || [];
 
     for (const workspace of workspaces) {
       const workspacePattern = workspace.replace('/*', '');
       const packagesDir = path.join(monorepoRoot, workspacePattern);
 
-      if (fs.existsSync(packagesDir) && fs.statSync(packagesDir).isDirectory()) {
-        const dirs = fs.readdirSync(packagesDir);
+      if (existsSync(packagesDir) && statSync(packagesDir).isDirectory()) {
+        const dirs = readdirSync(packagesDir);
 
         for (const dir of dirs) {
           const pkgPath = path.join(packagesDir, dir, 'package.json');
-          if (fs.existsSync(pkgPath)) {
+          if (existsSync(pkgPath)) {
             try {
-              const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+              const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
               if (pkg.name) {
                 workspacePackages.set(pkg.name, path.join(packagesDir, dir));
               }
@@ -170,12 +170,12 @@ const importStrategies: ImportStrategy[] = [
         const packagePath = workspacePackages.get(repository)!;
         const pkgJsonPath = path.join(packagePath, 'package.json');
 
-        if (fs.existsSync(pkgJsonPath)) {
-          const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
+        if (existsSync(pkgJsonPath)) {
+          const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf8'));
           const entryPoint = pkgJson.module || pkgJson.main || DEFAULT_ENTRY_POINT;
           const fullPath = path.join(packagePath, entryPoint);
 
-          if (fs.existsSync(fullPath)) {
+          if (existsSync(fullPath)) {
             return tryImporting(fullPath, 'workspace package', repository);
           } else {
             logger.debug(
@@ -184,7 +184,7 @@ const importStrategies: ImportStrategy[] = [
 
             // Check if source exists but not built
             const srcPath = path.join(packagePath, 'src', 'index.ts');
-            if (fs.existsSync(srcPath)) {
+            if (existsSync(srcPath)) {
               logger.warn(
                 `Workspace plugin ${repository} found but not built. Please run 'bun run build' in ${packagePath}`
               );
@@ -220,7 +220,7 @@ const importStrategies: ImportStrategy[] = [
     name: 'global node_modules',
     tryImport: async (repository: string) => {
       const globalPath = path.resolve(getGlobalNodeModulesPath(), repository);
-      if (!fs.existsSync(path.dirname(globalPath))) {
+      if (!existsSync(path.dirname(globalPath))) {
         logger.debug(
           `Global node_modules directory not found at ${path.dirname(globalPath)}, skipping for ${repository}`
         );

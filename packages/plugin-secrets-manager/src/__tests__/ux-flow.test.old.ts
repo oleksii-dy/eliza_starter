@@ -69,7 +69,7 @@ describe('Secrets Manager UX Flow Tests', () => {
 
     // Initialize services
     secretsManager = new EnhancedSecretManager(mockRuntime);
-    
+
     // Use the static start method which properly initializes the service
     actionChainService = await ActionChainService.start(mockRuntime);
 
@@ -546,7 +546,7 @@ describe('UX Flow Scenarios from secrets_scripts.md', () => {
   beforeEach(async () => {
     mockRuntime = createMockRuntime();
     secretsManager = new EnhancedSecretManager(mockRuntime);
-    
+
     // Use the static start method which properly initializes the service
     actionChainService = await ActionChainService.start(mockRuntime);
 
@@ -613,7 +613,7 @@ describe('UX Flow Scenarios from secrets_scripts.md', () => {
         config: {
           type: 'api_key',
           required: true,
-        description: 'OpenAI API Key',
+          description: 'OpenAI API Key',
           canGenerate: false,
           status: 'missing',
           attempts: 0,

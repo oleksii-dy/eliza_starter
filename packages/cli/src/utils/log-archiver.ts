@@ -4,6 +4,7 @@ import { homedir } from 'os';
 import { join, resolve } from 'path';
 import { existsSync, mkdirSync, rmSync } from 'fs';
 import { randomBytes } from 'crypto';
+import { logger } from '@elizaos/core';
 
 /**
  * Base directory for all ElizaOS temporary files

@@ -4,7 +4,7 @@
  * Validates environment variable handling and component hot-swap functionality
  */
 
-import { Service } from '@elizaos/core';
+import { Service, asUUID } from '@elizaos/core';
 import type {
   IAgentRuntime,
   Plugin,
@@ -15,6 +15,7 @@ import type {
   State,
   HandlerCallback,
   Character,
+  ActionResult,
 } from '@elizaos/core';
 
 // Real Test Database Service with Environment Variable Validation
@@ -426,15 +427,17 @@ const performanceEvaluator: Evaluator = {
       }
 
       return {
-        success: true,
-        metrics,
-      };
+        text: `Performance evaluation completed`,
+        values: { performanceMetrics: metrics },
+        data: { fullMetrics: metrics }
+      } as ActionResult;
     } catch (error) {
       console.error('PERFORMANCE_EVALUATOR error:', error);
       return {
-        success: false,
-        error: error.message,
-      };
+        text: `Performance evaluation failed: ${error.message}`,
+        values: { performanceMetrics: null },
+        data: { error: error.message }
+      } as ActionResult;
     }
   },
 };
@@ -562,9 +565,9 @@ export async function testPluginConfigurationSystem(runtime: IAgentRuntime): Pro
   if (!queryAction) throw new Error('QUERY_DATABASE action not found');
 
   const testMessage = {
-    id: 'test-msg-1',
-    entityId: 'test-user',
-    roomId: 'test-room',
+    id: asUUID('12345678-1234-1234-1234-123456789012'),
+    entityId: asUUID('12345678-1234-1234-1234-123456789013'),
+    roomId: asUUID('12345678-1234-1234-1234-123456789014'),
     agentId: runtime.agentId,
     content: { text: 'query the database for user data' },
     createdAt: Date.now(),
@@ -574,7 +577,13 @@ export async function testPluginConfigurationSystem(runtime: IAgentRuntime): Pro
   if (!isValid) throw new Error('Action validation failed');
 
   const result = await queryAction.handler(runtime, testMessage);
-  if (!result || !result.text) throw new Error('Action execution failed');
+  if (typeof result === 'boolean') {
+    if (!result) throw new Error('Action execution failed');
+  } else if (result && typeof result === 'object' && 'text' in result) {
+    if (!result.text) throw new Error('Action execution failed');
+  } else {
+    throw new Error('Action execution failed - unexpected result type');
+  }
 
   console.log('✅ Test 2 passed: Action executed successfully with service dependencies');
 
@@ -584,7 +593,8 @@ export async function testPluginConfigurationSystem(runtime: IAgentRuntime): Pro
   const statsProvider = runtime.providers.find((p) => p.name === 'SYSTEM_STATS');
   if (!statsProvider) throw new Error('SYSTEM_STATS provider not found');
 
-  const providerResult = await statsProvider.get(runtime, testMessage);
+  const mockState = { values: {}, data: {}, text: '' };
+  const providerResult = await statsProvider.get(runtime, testMessage, mockState);
   if (!providerResult || !providerResult.text) throw new Error('Provider execution failed');
   if (!providerResult.values?.systemStats) throw new Error('Provider did not return system stats');
 

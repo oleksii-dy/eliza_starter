@@ -17,9 +17,9 @@ export class MockLLMService {
   private setupResponseTemplates(): void {
     // Greeting responses
     this.responseTemplates.set('greeting', [
-      'Hello! I\'m ready to help with this scenario test.',
-      'Hi there! All systems are operational and I\'m ready to assist.',
-      'Greetings! I\'m functioning properly and ready for testing.',
+      "Hello! I'm ready to help with this scenario test.",
+      "Hi there! All systems are operational and I'm ready to assist.",
+      "Greetings! I'm functioning properly and ready for testing.",
     ]);
 
     // Confirmation responses
@@ -70,7 +70,8 @@ export class MockLLMService {
     }
 
     // Select a random response from the category
-    const responses = this.responseTemplates.get(responseCategory) || this.responseTemplates.get('default')!;
+    const responses =
+      this.responseTemplates.get(responseCategory) || this.responseTemplates.get('default')!;
     const randomResponse = responses[Math.floor(Math.random() * responses.length)];
 
     logger.info(`MockLLMService: Generated ${responseCategory} response for: "${text}"`);
@@ -95,11 +96,11 @@ export class MockLLMService {
    */
   static createMockHandler(runtime: IAgentRuntime) {
     const mockService = new MockLLMService(runtime);
-    
+
     return async (message: Memory, callback: (response: Content) => Promise<Memory[]>) => {
       // Add a small delay to simulate processing time
-      await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500 + Math.random() * 1000));
+
       const response = mockService.generateResponse(message);
       await callback(response);
     };

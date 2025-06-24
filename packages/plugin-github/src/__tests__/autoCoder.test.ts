@@ -323,7 +323,7 @@ describe('Auto-Coder Action Tests', () => {
     });
 
     it('should handle file creation when README does not exist', async () => {
-      mockGitHubService.getFileContent = vi.fn().mockRejectedValue(new Error('Not found'));
+      mockGitHubService.getFileContent = vi.fn().mockImplementation(() => Promise.reject(new Error('Not found')));
 
       // Mock AI calls for issue analysis and code generation
       mockRuntime.useModel = vi.fn()

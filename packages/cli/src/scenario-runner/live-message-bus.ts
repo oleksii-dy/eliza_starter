@@ -11,22 +11,22 @@ export interface MessagePlatform {
   name: string;
   type: 'discord' | 'slack' | 'telegram' | 'websocket' | 'teams' | 'custom';
   isConnected: boolean;
-  
+
   // Lifecycle methods
   initialize(config: PlatformConfig): Promise<void>;
   disconnect(): Promise<void>;
-  
+
   // Channel management
   createChannel(name: string, metadata?: Record<string, any>): Promise<string>;
   deleteChannel(channelId: string): Promise<void>;
   joinChannel(channelId: string, agentId: string): Promise<void>;
   leaveChannel(channelId: string, agentId: string): Promise<void>;
-  
+
   // Message operations
   sendMessage(channelId: string, senderId: string, content: Content): Promise<string>;
   editMessage(channelId: string, messageId: string, newContent: Content): Promise<void>;
   deleteMessage(channelId: string, messageId: string): Promise<void>;
-  
+
   // Message listening
   onMessage(callback: (message: PlatformMessage) => void): void;
   onReaction(callback: (reaction: PlatformReaction) => void): void;
@@ -130,12 +130,12 @@ export class LiveMessageBus extends EventEmitter {
     try {
       await platform.initialize(config);
       this.platforms.set(platform.name, platform);
-      
+
       // Set up event listeners
       platform.onMessage((message) => this.handleIncomingMessage(message));
       platform.onReaction((reaction) => this.handleReaction(reaction));
       platform.onChannelEvent((event) => this.handleChannelEvent(event));
-      
+
       logger.info(`Platform ${platform.name} registered and connected`);
       this.emit('platform_registered', { platform: platform.name, type: platform.type });
     } catch (error) {
@@ -186,9 +186,11 @@ export class LiveMessageBus extends EventEmitter {
       }
     }
 
-    logger.info(`Created benchmark channel ${channelId} on ${platform} for benchmark ${benchmarkId}`);
+    logger.info(
+      `Created benchmark channel ${channelId} on ${platform} for benchmark ${benchmarkId}`
+    );
     this.emit('channel_created', { channelId, benchmarkId, platform, participants });
-    
+
     return channelId;
   }
 
@@ -219,13 +221,13 @@ export class LiveMessageBus extends EventEmitter {
     }
 
     const messageId = await platform.sendMessage(channelId, senderId, content);
-    
+
     // Record in analytics
     this.analytics.recordMessage(channel.platform, channelId, senderId, content);
-    
+
     logger.info(`Message sent from ${senderId} to channel ${channelId} on ${channel.platform}`);
     this.emit('message_sent', { channelId, senderId, messageId, content, metadata });
-    
+
     return messageId;
   }
 
@@ -234,7 +236,9 @@ export class LiveMessageBus extends EventEmitter {
    */
   addMessageRoute(route: MessageRoute): void {
     this.messageRoutes.push(route);
-    logger.info(`Added message route from ${route.fromAgent} to ${route.toAgent} via ${route.platform}/${route.channelId}`);
+    logger.info(
+      `Added message route from ${route.fromAgent} to ${route.toAgent} via ${route.platform}/${route.channelId}`
+    );
   }
 
   /**
@@ -250,10 +254,11 @@ export class LiveMessageBus extends EventEmitter {
     this.analytics.recordIncomingMessage(message);
 
     // Check for message routes
-    const applicableRoutes = this.messageRoutes.filter(route => 
-      route.channelId === message.channelId && 
-      route.platform === message.platform &&
-      this.matchesRouteFilters(message, route.filters)
+    const applicableRoutes = this.messageRoutes.filter(
+      (route) =>
+        route.channelId === message.channelId &&
+        route.platform === message.platform &&
+        this.matchesRouteFilters(message, route.filters)
     );
 
     // Route messages to target agents
@@ -266,7 +271,9 @@ export class LiveMessageBus extends EventEmitter {
     }
 
     this.emit('message_received', message);
-    logger.debug(`Processed incoming message ${message.id} from ${message.senderId} in ${message.channelId}`);
+    logger.debug(
+      `Processed incoming message ${message.id} from ${message.senderId} in ${message.channelId}`
+    );
   }
 
   /**
@@ -289,18 +296,21 @@ export class LiveMessageBus extends EventEmitter {
       },
     };
 
-    this.emit('message_routed', { 
-      from: route.fromAgent, 
-      to: route.toAgent, 
+    this.emit('message_routed', {
+      from: route.fromAgent,
+      to: route.toAgent,
       message: memory,
-      route 
+      route,
     });
   }
 
   /**
    * Check if a message matches route filters
    */
-  private matchesRouteFilters(message: PlatformMessage, filters?: MessageRoute['filters']): boolean {
+  private matchesRouteFilters(
+    message: PlatformMessage,
+    filters?: MessageRoute['filters']
+  ): boolean {
     if (!filters) return true;
 
     // Check message types
@@ -314,7 +324,7 @@ export class LiveMessageBus extends EventEmitter {
     // Check content patterns
     if (filters.contentPatterns && filters.contentPatterns.length > 0) {
       const text = message.content.text || '';
-      const hasMatch = filters.contentPatterns.some(pattern => {
+      const hasMatch = filters.contentPatterns.some((pattern) => {
         try {
           return new RegExp(pattern, 'i').test(text);
         } catch {
@@ -341,7 +351,9 @@ export class LiveMessageBus extends EventEmitter {
   private handleReaction(reaction: PlatformReaction): void {
     this.analytics.recordReaction(reaction);
     this.emit('reaction_received', reaction);
-    logger.debug(`Reaction ${reaction.emoji} from ${reaction.userId} on message ${reaction.messageId}`);
+    logger.debug(
+      `Reaction ${reaction.emoji} from ${reaction.userId} on message ${reaction.messageId}`
+    );
   }
 
   /**
@@ -368,12 +380,11 @@ export class LiveMessageBus extends EventEmitter {
    * Get analytics for a benchmark
    */
   getBenchmarkAnalytics(benchmarkId: string): BenchmarkAnalytics {
-    const channels = Array.from(this.benchmarkChannels.values())
-      .filter(channel => channel.benchmarkId === benchmarkId);
-
-    const allMessages = channels.flatMap(channel => 
-      this.messageHistory.get(channel.id) || []
+    const channels = Array.from(this.benchmarkChannels.values()).filter(
+      (channel) => channel.benchmarkId === benchmarkId
     );
+
+    const allMessages = channels.flatMap((channel) => this.messageHistory.get(channel.id) || []);
 
     return this.analytics.generateBenchmarkReport(benchmarkId, allMessages, channels);
   }
@@ -425,8 +436,9 @@ export class LiveMessageBus extends EventEmitter {
    * Clean up benchmark channels
    */
   async cleanupBenchmark(benchmarkId: string): Promise<void> {
-    const channelsToDelete = Array.from(this.benchmarkChannels.values())
-      .filter(channel => channel.benchmarkId === benchmarkId);
+    const channelsToDelete = Array.from(this.benchmarkChannels.values()).filter(
+      (channel) => channel.benchmarkId === benchmarkId
+    );
 
     for (const channel of channelsToDelete) {
       try {
@@ -443,8 +455,8 @@ export class LiveMessageBus extends EventEmitter {
     }
 
     // Remove routes for this benchmark
-    this.messageRoutes = this.messageRoutes.filter(route => 
-      !channelsToDelete.some(channel => channel.id === route.channelId)
+    this.messageRoutes = this.messageRoutes.filter(
+      (route) => !channelsToDelete.some((channel) => channel.id === route.channelId)
     );
 
     this.emit('benchmark_cleaned_up', { benchmarkId });
@@ -463,7 +475,7 @@ export class LiveMessageBus extends EventEmitter {
   getBenchmarkChannels(benchmarkId?: string): BenchmarkChannel[] {
     const channels = Array.from(this.benchmarkChannels.values());
     if (benchmarkId) {
-      return channels.filter(channel => channel.benchmarkId === benchmarkId);
+      return channels.filter((channel) => channel.benchmarkId === benchmarkId);
     }
     return channels;
   }
@@ -551,8 +563,8 @@ export class MessageAnalytics {
   }
 
   generateBenchmarkReport(
-    benchmarkId: string, 
-    messages: PlatformMessage[], 
+    benchmarkId: string,
+    messages: PlatformMessage[],
     channels: BenchmarkChannel[]
   ): BenchmarkAnalytics {
     const messagesByPlatform = new Map<string, number>();
@@ -562,10 +574,7 @@ export class MessageAnalytics {
     // Analyze messages
     for (const message of messages) {
       // Count by platform
-      messagesByPlatform.set(
-        message.platform, 
-        (messagesByPlatform.get(message.platform) || 0) + 1
-      );
+      messagesByPlatform.set(message.platform, (messagesByPlatform.get(message.platform) || 0) + 1);
 
       // Count by participant
       messagesByParticipant.set(
@@ -579,7 +588,7 @@ export class MessageAnalytics {
     for (let i = 0; i < sortedMessages.length - 1; i++) {
       const current = sortedMessages[i];
       const next = sortedMessages[i + 1];
-      
+
       if (current.senderId !== next.senderId) {
         const responseTime = next.timestamp - current.timestamp;
         conversationPatterns.push({
@@ -600,12 +609,14 @@ export class MessageAnalytics {
       platformUsage: Object.fromEntries(messagesByPlatform),
       participantActivity: Object.fromEntries(messagesByParticipant),
       conversationPatterns,
-      averageResponseTime: conversationPatterns.length > 0 
-        ? conversationPatterns.reduce((sum, p) => sum + p.responseTime, 0) / conversationPatterns.length
-        : 0,
+      averageResponseTime:
+        conversationPatterns.length > 0
+          ? conversationPatterns.reduce((sum, p) => sum + p.responseTime, 0) /
+            conversationPatterns.length
+          : 0,
       timeRange: {
-        start: Math.min(...messages.map(m => m.timestamp)),
-        end: Math.max(...messages.map(m => m.timestamp)),
+        start: Math.min(...messages.map((m) => m.timestamp)),
+        end: Math.max(...messages.map((m) => m.timestamp)),
       },
     };
   }

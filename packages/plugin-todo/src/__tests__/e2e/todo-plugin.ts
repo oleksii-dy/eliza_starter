@@ -250,7 +250,7 @@ export const TodoPluginE2ETestSuite: TestSuite = {
         logger.info('✓ Reminder check triggered');
 
         // Wait a bit for async operations
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // Verify reminder was processed (in real scenario, we'd check message delivery logs)
         logger.info('✓ Reminder processing completed');
@@ -295,9 +295,9 @@ export const TodoPluginE2ETestSuite: TestSuite = {
 
         // This should not throw even if delivery fails
         await (reminderService as any).checkTasksForReminders();
-        
+
         // Wait for processing
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         // Service should still be running
         const serviceStillRunning = runtime.getService('TODO_REMINDER' as any);
@@ -345,11 +345,11 @@ export const TodoPluginE2ETestSuite: TestSuite = {
 
         // First reminder check
         await (reminderService as any).checkTasksForReminders();
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Second reminder check immediately after - should not send duplicate
         await (reminderService as any).checkTasksForReminders();
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // The service should handle this gracefully without sending duplicate reminders
         logger.info('✓ Reminder interval protection working');

@@ -157,7 +157,7 @@ describe('Action Chaining: GitHub Plugin', () => {
         }
         return null;
       }),
-    });
+    }) as any;
   });
 
   describe('Search → Get Details → List Issues Chain', () => {
@@ -168,7 +168,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       const searchAction = actions.find((a) => a.name === 'SEARCH_GITHUB_REPOSITORIES')!;
 
       const searchResult = (await searchAction.handler(
-        mockRuntime as unknown as IAgentRuntime,
+        mockRuntime as IAgentRuntime,
         createMemory('Search for TypeScript projects'),
         createState(),
         { query: 'language:typescript', per_page: 2 }
@@ -182,7 +182,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       const getRepoAction = actions.find((a) => a.name === 'GET_GITHUB_REPOSITORY')!;
 
       const repoDetails = (await getRepoAction.handler(
-        mockRuntime as unknown as IAgentRuntime,
+        mockRuntime as IAgentRuntime,
         createMemory('Get details of the first repository'),
         createState(searchResult.data), // Pass the state from search
         { owner: 'user', repo: 'awesome-project' }
@@ -196,7 +196,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       const listIssuesAction = actions.find((a) => a.name === 'LIST_GITHUB_ISSUES')!;
 
       const issuesList = (await listIssuesAction.handler(
-        mockRuntime as unknown as IAgentRuntime,
+        mockRuntime as IAgentRuntime,
         createMemory('List issues for the repository'),
         createState(repoDetails.data), // Pass the state from get repo
         { owner: 'user', repo: 'awesome-project' }
@@ -217,7 +217,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       const rateLimitAction = actions.find((a) => a.name === 'GET_GITHUB_RATE_LIMIT')!;
 
       const rateLimitResult = (await rateLimitAction.handler(
-        mockRuntime as unknown as IAgentRuntime,
+        mockRuntime as IAgentRuntime,
         createMemory('Check rate limit'),
         createState(),
         {}
@@ -231,7 +231,7 @@ describe('Action Chaining: GitHub Plugin', () => {
         const searchIssuesAction = actions.find((a) => a.name === 'SEARCH_GITHUB_ISSUES')!;
 
         const searchResult = (await searchIssuesAction.handler(
-          mockRuntime as unknown as IAgentRuntime,
+          mockRuntime as IAgentRuntime,
           createMemory('Search for similar issues'),
           createState(rateLimitResult.data),
           { query: 'repo:user/awesome-project is:issue bug' }
@@ -244,7 +244,7 @@ describe('Action Chaining: GitHub Plugin', () => {
         const createIssueAction = actions.find((a) => a.name === 'CREATE_GITHUB_ISSUE')!;
 
         const createResult = (await createIssueAction.handler(
-          mockRuntime as unknown as IAgentRuntime,
+          mockRuntime as IAgentRuntime,
           createMemory('Create a new issue'),
           createState(searchResult.data),
           {
@@ -274,8 +274,9 @@ describe('Action Chaining: GitHub Plugin', () => {
         createMemory('Analyze repository user/awesome-project'),
         createState(),
         { owner: 'user', repo: 'awesome-project' },
-        (response) => {
+        async (response) => {
           workflow.push({ step: 'repo', callback: response });
+          return [];
         }
       )) as any;
 
@@ -286,8 +287,9 @@ describe('Action Chaining: GitHub Plugin', () => {
         createMemory('Get open issues'),
         createState(repoResult.data), // Use the return value's data
         { owner: 'user', repo: 'awesome-project', state: 'open' },
-        (response) => {
+        async (response) => {
           workflow.push({ step: 'issues', callback: response });
+          return [];
         }
       )) as any;
 
@@ -298,8 +300,9 @@ describe('Action Chaining: GitHub Plugin', () => {
         createMemory('Get open pull requests'),
         createState(issuesResult.data), // Use the return value's data
         { owner: 'user', repo: 'awesome-project', state: 'open' },
-        (response) => {
+        async (response) => {
           workflow.push({ step: 'prs', callback: response });
+          return [];
         }
       )) as any;
 
@@ -310,8 +313,9 @@ describe('Action Chaining: GitHub Plugin', () => {
         createMemory('Get recent activity'),
         createState(prsResult.data), // Use the return value's data
         { limit: 10 },
-        (response) => {
+        async (response) => {
           workflow.push({ step: 'activity', callback: response });
+          return [];
         }
       )) as any;
 
@@ -349,8 +353,9 @@ describe('Action Chaining: GitHub Plugin', () => {
         createMemory('Find popular repositories'),
         createState(),
         { query: 'stars:>500', per_page: 2 },
-        (response) => {
+        async (response) => {
           searchResult = response;
+          return [];
         }
       );
 
@@ -366,8 +371,9 @@ describe('Action Chaining: GitHub Plugin', () => {
             createMemory(`Check PRs for high-star repo ${repo.name}`),
             createState({ repository: repo }),
             { owner: repo.owner.login, repo: repo.name },
-            (response) => {
+            async (response) => {
               prResult = response;
+              return [];
             }
           );
 
@@ -382,8 +388,9 @@ describe('Action Chaining: GitHub Plugin', () => {
             createMemory(`Check issues for repo ${repo.name}`),
             createState({ repository: repo }),
             { owner: repo.owner.login, repo: repo.name },
-            (response) => {
+            async (response) => {
               issueResult = response;
+              return [];
             }
           );
 
@@ -412,7 +419,7 @@ describe('Action Chaining: GitHub Plugin', () => {
           createMemory(`Search for ${query} repositories`),
           createState(accumulatedState),
           { query, per_page: 2 },
-          (response) => {
+          async (response) => {
             // Accumulate results
             accumulatedState.allRepositories.push(...response.repositories);
             accumulatedState.searchQueries.push({
@@ -421,6 +428,7 @@ describe('Action Chaining: GitHub Plugin', () => {
               timestamp: Date.now(),
             });
             accumulatedState = { ...accumulatedState, ...response.data };
+            return [];
           }
         );
       }

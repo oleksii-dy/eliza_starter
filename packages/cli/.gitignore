@@ -4,6 +4,14 @@ dist
 cache
 models
 templates/
-:memory:
+:memory:*
 .eliza
 .cursor
+
+existing-app
+my-create-app
+my-default-app
+plugin-my-create
+plugin-my-plugin-app
+test-data
+create-in-place

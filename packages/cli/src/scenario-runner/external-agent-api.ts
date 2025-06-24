@@ -216,7 +216,7 @@ export class ExternalAgentAPI extends EventEmitter {
         ...request.developer,
         verified: false, // Requires manual verification
       },
-      capabilities: request.capabilities.map(cap => ({
+      capabilities: request.capabilities.map((cap) => ({
         ...cap,
         verified: false, // Requires testing
       })),
@@ -248,7 +248,7 @@ export class ExternalAgentAPI extends EventEmitter {
    * Approve an external agent for benchmark participation
    */
   async approveAgent(
-    agentId: string, 
+    agentId: string,
     approvalData: {
       approvedBy: string;
       securityReview: boolean;
@@ -274,7 +274,7 @@ export class ExternalAgentAPI extends EventEmitter {
 
     // Mark verified capabilities
     if (approvalData.capabilityTesting) {
-      agent.capabilities.forEach(cap => {
+      agent.capabilities.forEach((cap) => {
         cap.verified = true;
       });
     }
@@ -297,7 +297,7 @@ export class ExternalAgentAPI extends EventEmitter {
     }
 
     const containerId = `container-${agentId}-${Date.now()}`;
-    
+
     const container: IsolationContainer = {
       id: containerId,
       agentId,
@@ -331,7 +331,6 @@ export class ExternalAgentAPI extends EventEmitter {
 
       logger.info(`Isolation container created: ${containerId} for agent ${agentId}`);
       return containerId;
-
     } catch (error) {
       container.status = 'failed';
       logger.error(`Failed to create container for agent ${agentId}:`, error);
@@ -365,10 +364,7 @@ export class ExternalAgentAPI extends EventEmitter {
       containerId,
       parameters,
       maxDuration: agent.resourceLimits.execution.maxExecutionTime,
-      maxBudget: Math.min(
-        parameters.budget || 0,
-        agent.resourceLimits.budget.maxHourlySpend
-      ),
+      maxBudget: Math.min(parameters.budget || 0, agent.resourceLimits.budget.maxHourlySpend),
     });
 
     logger.info(`Benchmark execution queued: ${executionId} for agent ${agentId}`);
@@ -394,15 +390,15 @@ export class ExternalAgentAPI extends EventEmitter {
 
     if (filters) {
       if (filters.status) {
-        agents = agents.filter(agent => agent.status === filters.status);
+        agents = agents.filter((agent) => agent.status === filters.status);
       }
       if (filters.capability) {
-        agents = agents.filter(agent => 
-          agent.capabilities.some(cap => cap.type === filters.capability)
+        agents = agents.filter((agent) =>
+          agent.capabilities.some((cap) => cap.type === filters.capability)
         );
       }
       if (filters.developer) {
-        agents = agents.filter(agent => 
+        agents = agents.filter((agent) =>
           agent.developer.name.toLowerCase().includes(filters.developer!.toLowerCase())
         );
       }
@@ -414,11 +410,7 @@ export class ExternalAgentAPI extends EventEmitter {
   /**
    * Suspend an agent for violations
    */
-  async suspendAgent(
-    agentId: string,
-    reason: string,
-    duration?: number
-  ): Promise<void> {
+  async suspendAgent(agentId: string, reason: string, duration?: number): Promise<void> {
     const agent = this.registeredAgents.get(agentId);
     if (!agent) {
       throw new Error(`Agent ${agentId} not found`);
@@ -481,9 +473,9 @@ export class ExternalAgentAPI extends EventEmitter {
       const agentId = await this.registerAgent(req.body);
       res.json({ success: true, agentId });
     } catch (error) {
-      res.status(400).json({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Registration failed' 
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Registration failed',
       });
     }
   }
@@ -511,9 +503,9 @@ export class ExternalAgentAPI extends EventEmitter {
       );
       res.json({ success: true, executionId });
     } catch (error) {
-      res.status(400).json({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Execution failed' 
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Execution failed',
       });
     }
   }
@@ -521,18 +513,18 @@ export class ExternalAgentAPI extends EventEmitter {
   private async handleStatusUpdate(req: any, res: any): Promise<void> {
     try {
       const { action, reason, duration } = req.body;
-      
+
       if (action === 'suspend') {
         await this.suspendAgent(req.params.agentId, reason, duration);
       } else if (action === 'approve') {
         await this.approveAgent(req.params.agentId, req.body.approvalData);
       }
-      
+
       res.json({ success: true });
     } catch (error) {
-      res.status(400).json({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Status update failed' 
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Status update failed',
       });
     }
   }
@@ -613,21 +605,26 @@ export class ExternalAgentAPI extends EventEmitter {
     logger.info(`Initiated approval process for agent ${agent.id}`);
   }
 
-  private determineContainerType(isolation: SecurityProfile['isolation']): IsolationContainer['type'] {
+  private determineContainerType(
+    isolation: SecurityProfile['isolation']
+  ): IsolationContainer['type'] {
     const mapping = {
-      'sandboxed': 'sandbox' as const,
-      'containerized': 'docker' as const,
-      'process': 'process' as const,
-      'vm': 'vm' as const,
+      sandboxed: 'sandbox' as const,
+      containerized: 'docker' as const,
+      process: 'process' as const,
+      vm: 'vm' as const,
     };
     return mapping[isolation] || 'sandbox';
   }
 
-  private async provisionContainer(container: IsolationContainer, agent: ExternalAgent): Promise<void> {
+  private async provisionContainer(
+    container: IsolationContainer,
+    agent: ExternalAgent
+  ): Promise<void> {
     // Implementation would depend on container type
     // For now, simulate container creation
     logger.info(`Provisioning ${container.type} container ${container.id}`);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate creation time
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate creation time
   }
 
   private async validateBenchmarkExecution(
@@ -647,17 +644,19 @@ export class ExternalAgentAPI extends EventEmitter {
     }
 
     // Check concurrent execution limits
-    const activeContainers = Array.from(this.isolationContainers.values())
-      .filter(c => c.agentId === agent.id && c.status === 'running');
-    
+    const activeContainers = Array.from(this.isolationContainers.values()).filter(
+      (c) => c.agentId === agent.id && c.status === 'running'
+    );
+
     if (activeContainers.length >= agent.resourceLimits.execution.maxConcurrentTasks) {
       throw new Error(`Agent has reached maximum concurrent execution limit`);
     }
   }
 
   private async stopAgentContainers(agentId: string): Promise<void> {
-    const agentContainers = Array.from(this.isolationContainers.values())
-      .filter(c => c.agentId === agentId && c.status === 'running');
+    const agentContainers = Array.from(this.isolationContainers.values()).filter(
+      (c) => c.agentId === agentId && c.status === 'running'
+    );
 
     for (const container of agentContainers) {
       container.status = 'stopped';
@@ -695,7 +694,7 @@ class SecurityMonitor {
   private checkViolations(container: IsolationContainer, agent: ExternalAgent): void {
     // Simulate monitoring checks
     // In real implementation, this would check actual resource usage
-    
+
     // Check CPU usage
     if (container.monitoring.cpuUsage > container.resources.cpuLimit) {
       this.recordViolation(container, {
@@ -717,7 +716,10 @@ class SecurityMonitor {
     }
   }
 
-  private recordViolation(container: IsolationContainer, violation: Omit<SecurityViolation, 'timestamp' | 'details'>): void {
+  private recordViolation(
+    container: IsolationContainer,
+    violation: Omit<SecurityViolation, 'timestamp' | 'details'>
+  ): void {
     const fullViolation: SecurityViolation = {
       ...violation,
       timestamp: Date.now(),
@@ -753,7 +755,7 @@ class BenchmarkQueue {
     maxBudget: number;
   }): Promise<string> {
     const executionId = `exec-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
-    
+
     this.queue.push({
       id: executionId,
       ...execution,

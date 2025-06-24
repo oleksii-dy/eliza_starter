@@ -20,7 +20,7 @@ export const workflowPlanningScenario: Scenario = {
     {
       id: asUUID(uuidv4()),
       name: 'Project Stakeholder',
-      role: 'subject',
+      role: 'assistant',
       script: {
         steps: [
           {

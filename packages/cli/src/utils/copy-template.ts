@@ -185,9 +185,9 @@ export async function copyTemplate(
       '@elizaos/core',
       '@elizaos/cli',
       '@elizaos/plugin-discord',
-      '@elizaos/plugin-sql'
+      '@elizaos/plugin-sql',
     ];
-    
+
     const isPublishedPackage = (packageName: string): boolean => {
       return publishedPackages.includes(packageName);
     };

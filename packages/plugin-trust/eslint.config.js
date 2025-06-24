@@ -8,7 +8,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.{js,mjs,cjs,ts,tsx}'],
+    files: ['**/*.{js,mjs,cjs,ts}'],
     rules: {
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
@@ -18,11 +18,10 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/__tests__/**/*.{js,ts,tsx}', '**/*.test.{js,ts,tsx}', '**/*.cy.{ts,tsx}'],
+    files: ['**/__tests__/**/*.{js,ts}', '**/*.test.{js,ts}'],
     rules: {
       'no-console': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-namespace': 'off',
     },
   }
-); 
+);

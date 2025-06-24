@@ -341,9 +341,7 @@ describe('requestSecretFormAction', () => {
       const parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
       parseJSONSpy.mockReturnValue(null);
 
-      (mockFormService.createSecretForm as any).mockRejectedValue(
-        new Error('Ngrok tunnel failed')
-      );
+      (mockFormService.createSecretForm as any).mockRejectedValue(new Error('Ngrok tunnel failed'));
 
       const message: Memory = {
         content: { text: 'Request API key' },

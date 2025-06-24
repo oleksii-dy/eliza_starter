@@ -2,9 +2,9 @@ import { Service, type IAgentRuntime, type UUID, elizaLogger, ServiceType, type 
 import { AgentKit, CdpWalletProvider } from "@coinbase/agentkit";
 import { WalletRepository } from "../database/WalletRepository";
 import { EncryptionService } from "./EncryptionService";
-import { CustodialWallet, WalletTransaction, WalletPermission, CreateWalletRequest, ExecuteTransactionRequest, TransactionResult } from "../types/wallet";
+import type { CustodialWallet, WalletTransaction, WalletPermission, CreateWalletRequest, ExecuteTransactionRequest, TransactionResult } from "../types/wallet";
 import { randomBytes } from "crypto";
-import { AgentKitService } from "./AgentKitService";
+import type { AgentKitService } from "./AgentKitService";
 
 /**
  * Production-ready custodial wallet service with real database persistence
@@ -21,9 +21,9 @@ export class CustodialWalletService extends Service {
     private repository: WalletRepository;
     private encryption: EncryptionService;
     private agentKitService: AgentKitService | null = null;
-    private apiKeyId: string = "";
-    private apiKeySecret: string = "";
-    private defaultNetwork: string = "base-sepolia";
+    private apiKeyId = "";
+    private apiKeySecret = "";
+    private defaultNetwork = "base-sepolia";
 
     constructor(runtime: IAgentRuntime) {
         super(runtime);

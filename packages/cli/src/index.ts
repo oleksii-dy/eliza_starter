@@ -92,7 +92,10 @@ async function main() {
         sqlModule.setDatabaseType('pglite');
         console.log('✅ CLI: Set database type to PGLite for scenario testing');
       } else {
-        console.warn('⚠️  CLI: setDatabaseType not found in plugin-sql exports:', Object.keys(sqlModule));
+        console.warn(
+          '⚠️  CLI: setDatabaseType not found in plugin-sql exports:',
+          Object.keys(sqlModule)
+        );
       }
     } catch (error) {
       console.warn('⚠️  CLI: Failed to set database type for scenario:', error);
@@ -102,7 +105,8 @@ async function main() {
   for (const cmd of commands) {
     try {
       const commandModule = await import(cmd.path);
-      const command = commandModule.default || commandModule[cmd.name] || commandModule[`${cmd.name}Command`];
+      const command =
+        commandModule.default || commandModule[cmd.name] || commandModule[`${cmd.name}Command`];
       if (command) {
         program.addCommand(command);
       }

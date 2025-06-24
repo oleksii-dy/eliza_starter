@@ -44,7 +44,12 @@ export interface DeFiBenchmarkRequirements {
 
 export interface DeFiTask {
   id: string;
-  type: 'portfolio_analysis' | 'yield_optimization' | 'risk_management' | 'rebalancing' | 'arbitrage';
+  type:
+    | 'portfolio_analysis'
+    | 'yield_optimization'
+    | 'risk_management'
+    | 'rebalancing'
+    | 'arbitrage';
   name: string;
   description: string;
   weight: number; // For scoring
@@ -199,18 +204,19 @@ export class DeFiPortfolioBenchmarkRunner {
     return {
       id: 'defi-portfolio-v1',
       name: 'DeFi Portfolio Management',
-      description: 'Comprehensive benchmark testing agent capability to manage a real DeFi portfolio with actual funds',
+      description:
+        'Comprehensive benchmark testing agent capability to manage a real DeFi portfolio with actual funds',
       version: '1.0.0',
       category: 'defi',
       difficulty: 'advanced',
       estimatedCost: {
-        minimum: 500,   // $500 minimum for meaningful DeFi operations
-        typical: 2000,  // $2000 typical for full benchmark
+        minimum: 500, // $500 minimum for meaningful DeFi operations
+        typical: 2000, // $2000 typical for full benchmark
         maximum: 10000, // $10000 maximum for large-scale testing
       },
       duration: {
-        preparation: 600000,  // 10 minutes setup
-        execution: 7200000,   // 2 hours execution
+        preparation: 600000, // 10 minutes setup
+        execution: 7200000, // 2 hours execution
         verification: 300000, // 5 minutes verification
       },
       requirements: {
@@ -246,18 +252,26 @@ export class DeFiPortfolioBenchmarkRunner {
         maxPositionSize: 0.25, // 25% max position
         maxLeverage: 2.0,
         allowedProtocols: [
-          'uniswap', 'aave', 'compound', 'curve', 'balancer',
-          'yearn', 'convex', 'lido', 'makerdao', 'sushiswap'
+          'uniswap',
+          'aave',
+          'compound',
+          'curve',
+          'balancer',
+          'yearn',
+          'convex',
+          'lido',
+          'makerdao',
+          'sushiswap',
         ],
         prohibitedAssets: ['meme_coins', 'experimental_tokens'],
         riskLimits: {
-          maxDailyLoss: 0.05,   // 5% daily loss limit
-          maxWeeklyLoss: 0.15,  // 15% weekly loss limit
-          maxMonthlyLoss: 0.30, // 30% monthly loss limit
+          maxDailyLoss: 0.05, // 5% daily loss limit
+          maxWeeklyLoss: 0.15, // 15% weekly loss limit
+          maxMonthlyLoss: 0.3, // 30% monthly loss limit
         },
         liquidityRequirements: {
-          minimumCashReserve: 0.1,    // 10% cash reserve
-          maxIlliquidPositions: 0.2,  // 20% illiquid positions
+          minimumCashReserve: 0.1, // 10% cash reserve
+          maxIlliquidPositions: 0.2, // 20% illiquid positions
         },
       },
     };
@@ -314,10 +328,7 @@ export class DeFiPortfolioBenchmarkRunner {
 
       // Calculate final results
       const finalPortfolio = this.activePortfolios.get(benchmarkId)!;
-      const performanceMetrics = this.calculatePerformanceMetrics(
-        initialPortfolio,
-        finalPortfolio
-      );
+      const performanceMetrics = this.calculatePerformanceMetrics(initialPortfolio, finalPortfolio);
 
       const result: BenchmarkResult = {
         benchmarkId,
@@ -332,7 +343,8 @@ export class DeFiPortfolioBenchmarkRunner {
           initial: initialPortfolio.totalValue,
           final: finalPortfolio.totalValue,
           change: finalPortfolio.totalValue - initialPortfolio.totalValue,
-          percentChange: (finalPortfolio.totalValue - initialPortfolio.totalValue) / initialPortfolio.totalValue,
+          percentChange:
+            (finalPortfolio.totalValue - initialPortfolio.totalValue) / initialPortfolio.totalValue,
         },
         performanceMetrics: finalPortfolio.performanceMetrics,
         riskMetrics: finalPortfolio.riskMetrics,
@@ -348,9 +360,10 @@ export class DeFiPortfolioBenchmarkRunner {
         await this.messageBus.cleanupBenchmark(benchmarkId);
       }
 
-      logger.info(`DeFi benchmark completed: ${benchmarkId} - Score: ${result.finalScore.toFixed(2)}`);
+      logger.info(
+        `DeFi benchmark completed: ${benchmarkId} - Score: ${result.finalScore.toFixed(2)}`
+      );
       return result;
-
     } catch (error) {
       logger.error(`DeFi benchmark failed: ${benchmarkId}`, error);
       throw error;
@@ -562,11 +575,7 @@ export class DeFiPortfolioBenchmarkRunner {
         });
 
         // Execute the task
-        const executionResult = await this.taskExecutor.executeTask(
-          runtime,
-          taskId,
-          channelId
-        );
+        const executionResult = await this.taskExecutor.executeTask(runtime, taskId, channelId);
 
         // Update portfolio state based on task result
         await this.updatePortfolioFromTask(benchmarkId, task, executionResult);
@@ -591,17 +600,12 @@ export class DeFiPortfolioBenchmarkRunner {
 
         // Notify progress if channel available
         if (channelId) {
-          await this.messageBus.sendMessage(
-            channelId,
-            'benchmark-runner',
-            {
-              text: `Task "${task.name}" completed: ${executionResult.success ? '✅ SUCCESS' : '❌ FAILED'} (Score: ${(executionResult.score * 100).toFixed(1)}%)`,
-              source: 'defi-benchmark',
-              metadata: { taskResult, benchmarkId },
-            }
-          );
+          await this.messageBus.sendMessage(channelId, 'benchmark-runner', {
+            text: `Task "${task.name}" completed: ${executionResult.success ? '✅ SUCCESS' : '❌ FAILED'} (Score: ${(executionResult.score * 100).toFixed(1)}%)`,
+            source: 'defi-benchmark',
+            metadata: { taskResult, benchmarkId },
+          });
         }
-
       } catch (error) {
         logger.error(`DeFi task failed: ${task.name}`, error);
         results.push({
@@ -638,7 +642,7 @@ export class DeFiPortfolioBenchmarkRunner {
     } else if (result.success && task.maxBudget > 0) {
       // Transaction-based task - update positions and cash
       portfolio.cashReserve = Math.max(0, portfolio.cashReserve - result.totalCost);
-      
+
       // Add simulated position based on task type
       if (task.type === 'yield_optimization') {
         portfolio.positions.push({
@@ -657,8 +661,8 @@ export class DeFiPortfolioBenchmarkRunner {
     }
 
     // Update total value
-    portfolio.totalValue = portfolio.cashReserve + 
-      portfolio.positions.reduce((sum, pos) => sum + pos.value, 0);
+    portfolio.totalValue =
+      portfolio.cashReserve + portfolio.positions.reduce((sum, pos) => sum + pos.value, 0);
 
     // Recalculate metrics
     this.updatePortfolioMetrics(portfolio);
@@ -670,13 +674,13 @@ export class DeFiPortfolioBenchmarkRunner {
   private updatePortfolioMetrics(portfolio: DeFiPortfolioState): void {
     // Simplified metrics calculation
     // In real implementation, this would use proper financial calculations
-    
+
     const totalValue = portfolio.totalValue;
     const initialValue = 1000; // Assume $1000 initial for calculation
-    
+
     portfolio.performanceMetrics = {
       totalReturn: (totalValue - initialValue) / initialValue,
-      annualizedReturn: ((totalValue / initialValue) ** (365.25 / 1)) - 1, // Assume 1-day period
+      annualizedReturn: (totalValue / initialValue) ** (365.25 / 1) - 1, // Assume 1-day period
       sharpeRatio: 1.5, // Simplified
       maxDrawdown: -0.05, // 5% max drawdown assumption
       volatility: 0.15, // 15% volatility assumption
@@ -715,9 +719,12 @@ export class DeFiPortfolioBenchmarkRunner {
     let score = 0;
 
     // Performance scoring (70% weight)
-    const perfScore = 
+    const perfScore =
       this.scoreMetric(performanceMetrics.totalReturn, benchmark.scoring.performance.totalReturn) +
-      this.scoreMetric(performanceMetrics.sharpeRatio, benchmark.scoring.performance.riskAdjustedReturn) +
+      this.scoreMetric(
+        performanceMetrics.sharpeRatio,
+        benchmark.scoring.performance.riskAdjustedReturn
+      ) +
       this.scoreMetric(-performanceMetrics.maxDrawdown, benchmark.scoring.performance.maxDrawdown) +
       this.scoreMetric(1 - performanceMetrics.volatility, benchmark.scoring.performance.volatility);
 
@@ -725,8 +732,8 @@ export class DeFiPortfolioBenchmarkRunner {
 
     // Task execution scoring (30% weight)
     const taskScore = taskResults.reduce((sum, result) => {
-      const task = benchmark.tasks.find(t => t.id === result.taskId);
-      return sum + (result.score * (task?.weight || 0));
+      const task = benchmark.tasks.find((t) => t.id === result.taskId);
+      return sum + result.score * (task?.weight || 0);
     }, 0);
 
     score += taskScore * 0.3;

@@ -2,7 +2,7 @@
  * Integration tests for AgentServer class
  */
 
-import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AgentServer } from '../index';
 import { logger, type UUID, ChannelType } from '@elizaos/core';
 import type { ServerOptions } from '../index';
@@ -23,16 +23,10 @@ class MockAgentRuntime {
   }
 
   async initialize() {
-        // Mock successful initialization
-        return Promise.resolve();
-      }
-      agentId: string;
-      character: any;
-      adapter: any;
-      plugins: any[];
-    },
-  };
-});
+    // Mock successful initialization
+    return Promise.resolve();
+  }
+}
 
 vi.mock('@elizaos/plugin-sql', () => ({
   createDatabaseAdapter: vi.fn(() => ({

@@ -279,10 +279,10 @@ const browserNavigateAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
-    _responses: Memory[]
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
+    _responses?: Memory[]
   ) => {
     try {
       logger.info('Handling BROWSER_NAVIGATE action');
@@ -341,7 +341,7 @@ const browserNavigateAction: Action = {
         source: message.content.source,
       };
 
-      await callback(responseContent);
+      await callback?.(responseContent);
       return responseContent;
     } catch (error) {
       logger.error('Error in BROWSER_NAVIGATE action:', error);
@@ -402,7 +402,7 @@ const browserBackAction: Action = {
   similes: ['GO_BACK', 'PREVIOUS_PAGE', 'BACK_BUTTON'],
   description: 'Navigate back in browser history',
 
-  validate: async (runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const service = runtime.getService(StagehandService.serviceType) as StagehandService;
     const session = await service?.getCurrentSession();
     return session !== undefined;
@@ -411,10 +411,10 @@ const browserBackAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
-    _responses: Memory[]
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
+    _responses?: Memory[]
   ) => {
     try {
       logger.info('Handling BROWSER_BACK action');
@@ -445,7 +445,7 @@ const browserBackAction: Action = {
         source: message.content.source,
       };
 
-      await callback(responseContent);
+      await callback?.(responseContent);
       return responseContent;
     } catch (error) {
       logger.error('Error in BROWSER_BACK action:', error);
@@ -483,7 +483,7 @@ const browserForwardAction: Action = {
   similes: ['GO_FORWARD', 'NEXT_PAGE', 'FORWARD_BUTTON'],
   description: 'Navigate forward in browser history',
 
-  validate: async (runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const service = runtime.getService(StagehandService.serviceType) as StagehandService;
     const session = await service?.getCurrentSession();
     return session !== undefined;
@@ -492,10 +492,10 @@ const browserForwardAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
-    _responses: Memory[]
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
+    _responses?: Memory[]
   ) => {
     try {
       logger.info('Handling BROWSER_FORWARD action');
@@ -519,7 +519,7 @@ const browserForwardAction: Action = {
         source: message.content.source,
       };
 
-      await callback(responseContent);
+      await callback?.(responseContent);
       return responseContent;
     } catch (error) {
       logger.error('Error in BROWSER_FORWARD action:', error);
@@ -556,7 +556,7 @@ const browserRefreshAction: Action = {
   similes: ['RELOAD_PAGE', 'REFRESH_PAGE', 'RELOAD', 'REFRESH'],
   description: 'Refresh the current browser page',
 
-  validate: async (runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const service = runtime.getService(StagehandService.serviceType) as StagehandService;
     const session = await service?.getCurrentSession();
     return session !== undefined;
@@ -565,10 +565,10 @@ const browserRefreshAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
-    _responses: Memory[]
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
+    _responses?: Memory[]
   ) => {
     try {
       logger.info('Handling BROWSER_REFRESH action');
@@ -592,7 +592,7 @@ const browserRefreshAction: Action = {
         source: message.content.source,
       };
 
-      await callback(responseContent);
+      await callback?.(responseContent);
       return responseContent;
     } catch (error) {
       logger.error('Error in BROWSER_REFRESH action:', error);
@@ -629,7 +629,7 @@ const browserClickAction: Action = {
   similes: ['CLICK_ELEMENT', 'CLICK_BUTTON', 'CLICK_LINK', 'CLICK_ON'],
   description: 'Click on an element in the browser using natural language description',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, _state: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const service = runtime.getService(StagehandService.serviceType) as StagehandService;
     const session = await service?.getCurrentSession();
     if (!session) return false;
@@ -642,10 +642,10 @@ const browserClickAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
-    _responses: Memory[]
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
+    _responses?: Memory[]
   ) => {
     try {
       logger.info('Handling BROWSER_CLICK action');
@@ -672,7 +672,7 @@ const browserClickAction: Action = {
         source: message.content.source,
       };
 
-      await callback(responseContent);
+      await callback?.(responseContent);
       return responseContent;
     } catch (error) {
       logger.error('Error in BROWSER_CLICK action:', error);
@@ -709,7 +709,7 @@ const browserTypeAction: Action = {
   similes: ['TYPE_TEXT', 'ENTER_TEXT', 'FILL_FIELD', 'INPUT_TEXT'],
   description: 'Type text into an input field or element',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, _state: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const service = runtime.getService(StagehandService.serviceType) as StagehandService;
     const session = await service?.getCurrentSession();
     if (!session) return false;
@@ -726,10 +726,10 @@ const browserTypeAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
-    _responses: Memory[]
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
+    _responses?: Memory[]
   ) => {
     try {
       logger.info('Handling BROWSER_TYPE action');
@@ -764,7 +764,7 @@ const browserTypeAction: Action = {
         source: message.content.source,
       };
 
-      await callback(responseContent);
+      await callback?.(responseContent);
       return responseContent;
     } catch (error) {
       logger.error('Error in BROWSER_TYPE action:', error);
@@ -801,7 +801,7 @@ const browserSelectAction: Action = {
   similes: ['SELECT_OPTION', 'CHOOSE_FROM_DROPDOWN', 'PICK_OPTION'],
   description: 'Select an option from a dropdown or select element',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, _state: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const service = runtime.getService(StagehandService.serviceType) as StagehandService;
     const session = await service?.getCurrentSession();
     if (!session) return false;
@@ -813,10 +813,10 @@ const browserSelectAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
-    _responses: Memory[]
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
+    _responses?: Memory[]
   ) => {
     try {
       logger.info('Handling BROWSER_SELECT action');
@@ -852,7 +852,7 @@ const browserSelectAction: Action = {
         source: message.content.source,
       };
 
-      await callback(responseContent);
+      await callback?.(responseContent);
       return responseContent;
     } catch (error) {
       logger.error('Error in BROWSER_SELECT action:', error);
@@ -889,7 +889,7 @@ const browserExtractAction: Action = {
   similes: ['GET_TEXT', 'EXTRACT_DATA', 'READ_CONTENT', 'SCRAPE_TEXT'],
   description: 'Extract text or data from the current page',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, _state: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const service = runtime.getService(StagehandService.serviceType) as StagehandService;
     const session = await service?.getCurrentSession();
     if (!session) return false;
@@ -906,10 +906,10 @@ const browserExtractAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
-    _responses: Memory[]
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
+    _responses?: Memory[]
   ) => {
     try {
       logger.info('Handling BROWSER_EXTRACT action');
@@ -942,7 +942,7 @@ const browserExtractAction: Action = {
         data: extractedData,
       };
 
-      await callback(responseContent);
+      await callback?.(responseContent);
       return responseContent;
     } catch (error) {
       logger.error('Error in BROWSER_EXTRACT action:', error);
@@ -979,7 +979,7 @@ const browserScreenshotAction: Action = {
   similes: ['TAKE_SCREENSHOT', 'CAPTURE_PAGE', 'SCREENSHOT_PAGE'],
   description: 'Take a screenshot of the current page',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, _state: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const service = runtime.getService(StagehandService.serviceType) as StagehandService;
     const session = await service?.getCurrentSession();
     if (!session) return false;
@@ -991,10 +991,10 @@ const browserScreenshotAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
-    _responses: Memory[]
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
+    _responses?: Memory[]
   ) => {
     try {
       logger.info('Handling BROWSER_SCREENSHOT action');
@@ -1025,7 +1025,7 @@ const browserScreenshotAction: Action = {
         },
       };
 
-      await callback(responseContent);
+      await callback?.(responseContent);
       return responseContent;
     } catch (error) {
       logger.error('Error in BROWSER_SCREENSHOT action:', error);
@@ -1062,7 +1062,7 @@ const browserSolveCaptchaAction: Action = {
   similes: ['SOLVE_CAPTCHA', 'HANDLE_CAPTCHA', 'BYPASS_CAPTCHA'],
   description: 'Detect and solve CAPTCHA on the current page',
 
-  validate: async (runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const service = runtime.getService(StagehandService.serviceType) as StagehandService;
     const session = await service?.getCurrentSession();
     if (!session) return false;
@@ -1074,10 +1074,10 @@ const browserSolveCaptchaAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
-    _responses: Memory[]
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
+    _responses?: Memory[]
   ) => {
     try {
       logger.info('Handling BROWSER_SOLVE_CAPTCHA action');
@@ -1101,7 +1101,7 @@ const browserSolveCaptchaAction: Action = {
         data: { solved },
       };
 
-      await callback(responseContent);
+      await callback?.(responseContent);
       return responseContent;
     } catch (error) {
       logger.error('Error in BROWSER_SOLVE_CAPTCHA action:', error);
@@ -1137,7 +1137,7 @@ const browserStateProvider: Provider = {
   name: 'BROWSER_STATE',
   description: 'Provides current browser state information',
 
-  get: async (runtime: IAgentRuntime, _message: Memory, _state: State): Promise<ProviderResult> => {
+  get: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<ProviderResult> => {
     const service = runtime.getService(StagehandService.serviceType) as StagehandService;
     const session = await service?.getCurrentSession();
 

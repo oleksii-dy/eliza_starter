@@ -152,24 +152,25 @@ async function listBenchmarks(options: any): Promise<void> {
 
   try {
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer(mockRuntime);
+    const server = new AgentServer();
     const runner = new ScenarioRunner(server, mockRuntime);
 
     const benchmarks = runner.getAvailableBenchmarks();
 
     const filteredBenchmarks = benchmarks
-      .filter(benchmark => {
+      .filter((benchmark) => {
         if (options.category && benchmark.category !== options.category) return false;
         if (options.difficulty && benchmark.difficulty !== options.difficulty) return false;
         return true;
       })
-      .map(benchmark => ({
+      .map((benchmark) => ({
         ID: benchmark.id,
         Name: benchmark.name,
         Category: benchmark.category,
         Difficulty: benchmark.difficulty,
         'Est. Cost (USD)': `$${benchmark.estimatedCost.min}-${benchmark.estimatedCost.max}`,
-        Description: benchmark.description.substring(0, 60) + (benchmark.description.length > 60 ? '...' : ''),
+        Description:
+          benchmark.description.substring(0, 60) + (benchmark.description.length > 60 ? '...' : ''),
       }));
 
     if (filteredBenchmarks.length === 0) {
@@ -181,7 +182,6 @@ async function listBenchmarks(options: any): Promise<void> {
     console.log(`\nFound ${filteredBenchmarks.length} available benchmarks`);
     console.log('Use "elizaos benchmark register" to register your agent');
     console.log('Use "elizaos benchmark run" to execute a benchmark\n');
-
   } catch (error) {
     console.error('❌ Error listing benchmarks:', error);
     process.exit(1);
@@ -196,10 +196,10 @@ async function registerAgent(options: AgentRegistrationOptions): Promise<void> {
 
   try {
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer(mockRuntime);
+    const server = new AgentServer();
     const runner = new ScenarioRunner(server, mockRuntime);
 
-    const capabilities = options.capabilities.split(',').map(c => c.trim());
+    const capabilities = options.capabilities.split(',').map((c) => c.trim());
     const maxCost = parseFloat(options.maxCost.toString());
 
     const agentId = await runner.registerExternalAgent({
@@ -222,7 +222,6 @@ async function registerAgent(options: AgentRegistrationOptions): Promise<void> {
     console.log('1. Use "elizaos benchmark validate" to test your agent');
     console.log('2. Use "elizaos benchmark run" to execute benchmarks');
     console.log('3. Monitor progress with "elizaos benchmark monitor"\n');
-
   } catch (error) {
     console.error('❌ Error registering agent:', error);
     process.exit(1);
@@ -237,7 +236,7 @@ async function runBenchmark(options: BenchmarkRunOptions): Promise<void> {
 
   try {
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer(mockRuntime);
+    const server = new AgentServer();
     const runner = new ScenarioRunner(server, mockRuntime);
 
     // Parse parameters
@@ -282,18 +281,33 @@ async function runBenchmark(options: BenchmarkRunOptions): Promise<void> {
 
     // Display results
     console.log('\n✅ Benchmark completed successfully!\n');
-    
+
     const resultsData = [
       { Metric: 'Overall Score', Value: `${(result.score.overallScore * 100).toFixed(1)}%` },
       { Metric: 'Rank', Value: `#${result.score.ranking.overall}` },
       { Metric: 'Percentile', Value: `${result.score.percentile.toFixed(1)}th` },
       { Metric: 'Total Cost', Value: `$${result.benchmarkResult.totalCost.toFixed(2)}` },
       { Metric: 'Duration', Value: `${(result.benchmarkResult.duration / 1000).toFixed(0)}s` },
-      { Metric: 'Technical Score', Value: `${(result.score.categoryScores.technical * 100).toFixed(1)}%` },
-      { Metric: 'Economic Score', Value: `${(result.score.categoryScores.economic * 100).toFixed(1)}%` },
-      { Metric: 'Efficiency Score', Value: `${(result.score.categoryScores.efficiency * 100).toFixed(1)}%` },
-      { Metric: 'Reliability Score', Value: `${(result.score.categoryScores.reliability * 100).toFixed(1)}%` },
-      { Metric: 'Innovation Score', Value: `${(result.score.categoryScores.innovation * 100).toFixed(1)}%` }
+      {
+        Metric: 'Technical Score',
+        Value: `${(result.score.categoryScores.technical * 100).toFixed(1)}%`,
+      },
+      {
+        Metric: 'Economic Score',
+        Value: `${(result.score.categoryScores.economic * 100).toFixed(1)}%`,
+      },
+      {
+        Metric: 'Efficiency Score',
+        Value: `${(result.score.categoryScores.efficiency * 100).toFixed(1)}%`,
+      },
+      {
+        Metric: 'Reliability Score',
+        Value: `${(result.score.categoryScores.reliability * 100).toFixed(1)}%`,
+      },
+      {
+        Metric: 'Innovation Score',
+        Value: `${(result.score.categoryScores.innovation * 100).toFixed(1)}%`,
+      },
     ];
 
     console.table(resultsData);
@@ -307,7 +321,6 @@ async function runBenchmark(options: BenchmarkRunOptions): Promise<void> {
 
     console.log(`\n🏆 Leaderboard Position: #${result.score.ranking.overall}`);
     console.log('Use "elizaos benchmark leaderboard" to see full rankings\n');
-
   } catch (error) {
     console.error('❌ Error running benchmark:', error);
     process.exit(1);
@@ -322,17 +335,19 @@ async function showLeaderboard(options: any): Promise<void> {
 
   try {
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer(mockRuntime);
+    const server = new AgentServer();
     const runner = new ScenarioRunner(server, mockRuntime);
 
-    const benchmarkTypes = options.benchmark ? [options.benchmark] : ['defi_portfolio', 'ecommerce_store'];
+    const benchmarkTypes = options.benchmark
+      ? [options.benchmark]
+      : ['defi_portfolio', 'ecommerce_store'];
     const limit = parseInt(options.limit) || 10;
 
     for (const benchmarkType of benchmarkTypes) {
       const leaderboard = await runner.getBenchmarkLeaderboard(benchmarkType, limit);
-      
+
       console.log(`${benchmarkType.toUpperCase()} LEADERBOARD`);
-      
+
       if (options.format === 'json') {
         console.log(JSON.stringify(leaderboard, null, 2));
         continue;
@@ -353,7 +368,6 @@ async function showLeaderboard(options: any): Promise<void> {
       }
       console.log('');
     }
-
   } catch (error) {
     console.error('❌ Error showing leaderboard:', error);
     process.exit(1);
@@ -368,7 +382,7 @@ async function showAgentHistory(options: any): Promise<void> {
 
   try {
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer(mockRuntime);
+    const server = new AgentServer();
     const runner = new ScenarioRunner(server, mockRuntime);
 
     const history = await runner.getAgentBenchmarkHistory(options.agent);
@@ -380,7 +394,7 @@ async function showAgentHistory(options: any): Promise<void> {
       return;
     }
 
-    const historyData = recentHistory.map(entry => ({
+    const historyData = recentHistory.map((entry) => ({
       Date: new Date(entry.timestamp).toLocaleString(),
       Benchmark: entry.benchmarkType,
       Score: `${(entry.overallScore * 100).toFixed(1)}%`,
@@ -395,7 +409,6 @@ async function showAgentHistory(options: any): Promise<void> {
     }
 
     console.log(`\nShowing ${recentHistory.length} of ${history.length} total benchmark runs\n`);
-
   } catch (error) {
     console.error('❌ Error showing agent history:', error);
     process.exit(1);
@@ -412,7 +425,7 @@ async function showStats(options: any): Promise<void> {
 
     try {
       const mockRuntime = createMockRuntime();
-      const server = new AgentServer(mockRuntime);
+      const server = new AgentServer();
       const runner = new ScenarioRunner(server, mockRuntime);
 
       const stats = await runner.getBenchmarkStats();
@@ -431,7 +444,7 @@ async function showStats(options: any): Promise<void> {
         { Metric: 'Cost Tracker Status', Value: stats.platformStatus.costTracker },
         { Metric: 'Message Bus Status', Value: stats.platformStatus.messageBus },
         { Metric: 'Task Executor Status', Value: stats.platformStatus.taskExecutor },
-        { Metric: 'Scoring System Status', Value: stats.platformStatus.scoringSystem }
+        { Metric: 'Scoring System Status', Value: stats.platformStatus.scoringSystem },
       ];
 
       console.table(statsData);
@@ -440,7 +453,6 @@ async function showStats(options: any): Promise<void> {
       if (options.watch) {
         console.log('\n⏱️  Refreshing in 30 seconds... (Press Ctrl+C to exit)');
       }
-
     } catch (error) {
       console.error('❌ Error showing stats:', error);
       if (!options.watch) process.exit(1);
@@ -451,7 +463,7 @@ async function showStats(options: any): Promise<void> {
 
   if (options.watch) {
     const interval = setInterval(refreshStats, 30000);
-    
+
     process.on('SIGINT', () => {
       clearInterval(interval);
       console.log('\n\nMonitoring stopped.\n');
@@ -469,7 +481,7 @@ async function monitorBenchmarks(options: any): Promise<void> {
 
   try {
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer(mockRuntime);
+    const server = new AgentServer();
     const runner = new ScenarioRunner(server, mockRuntime);
 
     // Start real-time monitoring
@@ -478,7 +490,7 @@ async function monitorBenchmarks(options: any): Promise<void> {
     // This would be a real-time stream in a full implementation
     console.log('✅ Real-time monitoring started');
     console.log('📊 Monitoring benchmarks...');
-    
+
     // Keep the process alive
     process.on('SIGINT', async () => {
       console.log('\n\nStopping monitoring...');
@@ -491,7 +503,6 @@ async function monitorBenchmarks(options: any): Promise<void> {
     setInterval(() => {
       // Keep alive
     }, 1000);
-
   } catch (error) {
     console.error('❌ Error starting monitoring:', error);
     process.exit(1);
@@ -508,7 +519,7 @@ async function validateAgent(options: any): Promise<void> {
     console.log('Running validation checks...');
 
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer(mockRuntime);
+    const server = new AgentServer();
     const runner = new ScenarioRunner(server, mockRuntime);
 
     // Perform actual validation checks
@@ -519,7 +530,7 @@ async function validateAgent(options: any): Promise<void> {
       includeConnectivityCheck: true,
     });
 
-    const validationData = validationResults.checks.map(check => ({
+    const validationData = validationResults.checks.map((check) => ({
       Check: check.name,
       Status: check.passed ? '✅ PASS' : '❌ FAIL',
       Details: check.details || check.error || 'No details',
@@ -527,15 +538,15 @@ async function validateAgent(options: any): Promise<void> {
 
     console.table(validationData);
 
-    const passedChecks = validationResults.checks.filter(c => c.passed).length;
+    const passedChecks = validationResults.checks.filter((c) => c.passed).length;
     const totalChecks = validationResults.checks.length;
 
     console.log(`\nValidation Results: ${passedChecks}/${totalChecks} checks passed`);
-    
+
     if (validationResults.overall.passed) {
       console.log('\n✅ Agent validation successful!');
       console.log('Your agent is ready for benchmarking.\n');
-      
+
       if (validationResults.recommendations.length > 0) {
         console.log('💡 Recommendations:');
         validationResults.recommendations.forEach((rec, i) => {
@@ -546,7 +557,7 @@ async function validateAgent(options: any): Promise<void> {
     } else {
       console.log('\n❌ Agent validation failed!');
       console.log('Please fix the issues above before running benchmarks.\n');
-      
+
       if (validationResults.criticalIssues.length > 0) {
         console.log('⚠️  Critical Issues:');
         validationResults.criticalIssues.forEach((issue, i) => {
@@ -554,10 +565,9 @@ async function validateAgent(options: any): Promise<void> {
         });
         console.log('');
       }
-      
+
       process.exit(1);
     }
-
   } catch (error) {
     console.error('❌ Error validating agent:', error);
     console.log('\nThis could indicate:');
