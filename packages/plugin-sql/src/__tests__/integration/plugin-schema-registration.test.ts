@@ -27,7 +27,14 @@ describe('Plugin Schema Registration Tests', () => {
 
   afterEach(() => {
     // Clear any test schemas between tests to avoid conflicts
-    const testTables = ['test_plugin_table', 'test_dependent_table', 'test_vector_table', 'circular_table_1', 'circular_table_2', 'test_unique_table'];
+    const testTables = [
+      'test_plugin_table',
+      'test_dependent_table',
+      'test_vector_table',
+      'circular_table_1',
+      'circular_table_2',
+      'test_unique_table',
+    ];
     for (const tableName of testTables) {
       // Force remove the table from registry
       (schemaRegistry as any).tables.delete(tableName);
@@ -69,13 +76,17 @@ describe('Plugin Schema Registration Tests', () => {
 
       // Create the table through the schema registry
       const db = adapter.getDatabase();
-      await schemaRegistry.createTables(db, adapter instanceof PgliteDatabaseAdapter ? 'pglite' : 'postgres');
+      await schemaRegistry.createTables(
+        db,
+        adapter instanceof PgliteDatabaseAdapter ? 'pglite' : 'postgres'
+      );
 
       // Verify the table exists and is usable
       const testId = uuidv4();
-      const insertSql = adapter instanceof PgliteDatabaseAdapter
-        ? `INSERT INTO test_plugin_table (id, agent_id, test_data) VALUES ('${testId}', '${testAgentId}', '{"test": true}')`
-        : `INSERT INTO test_plugin_table (id, agent_id, test_data) VALUES ('${testId}', '${testAgentId}', '{"test": true}')`;
+      const insertSql =
+        adapter instanceof PgliteDatabaseAdapter
+          ? `INSERT INTO test_plugin_table (id, agent_id, test_data) VALUES ('${testId}', '${testAgentId}', '{"test": true}')`
+          : `INSERT INTO test_plugin_table (id, agent_id, test_data) VALUES ('${testId}', '${testAgentId}', '{"test": true}')`;
 
       await db.execute(sql.raw(insertSql));
 
@@ -141,8 +152,8 @@ describe('Plugin Schema Registration Tests', () => {
 
       // Get tables in dependency order
       const orderedTables = schemaRegistry.getTablesInOrder();
-      const testPluginIndex = orderedTables.findIndex(t => t.name === 'test_plugin_table');
-      const dependentIndex = orderedTables.findIndex(t => t.name === 'test_dependent_table');
+      const testPluginIndex = orderedTables.findIndex((t) => t.name === 'test_plugin_table');
+      const dependentIndex = orderedTables.findIndex((t) => t.name === 'test_dependent_table');
 
       // Verify dependency order is correct
       expect(testPluginIndex).toBeGreaterThanOrEqual(0);
@@ -241,7 +252,10 @@ describe('Plugin Schema Registration Tests', () => {
 
       // This should not throw regardless of vector support
       await expect(async () => {
-        await schemaRegistry.createTables(db, adapter instanceof PgliteDatabaseAdapter ? 'pglite' : 'postgres');
+        await schemaRegistry.createTables(
+          db,
+          adapter instanceof PgliteDatabaseAdapter ? 'pglite' : 'postgres'
+        );
       }).not.toThrow();
 
       // Verify table exists

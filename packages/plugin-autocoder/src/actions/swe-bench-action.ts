@@ -193,16 +193,16 @@ function formatStatsResponse(stats: any): string {
 
 **By Language**:
 ${Object.entries(stats.byLanguage)
-  .sort((a, b) => (b[1] as number) - (a[1] as number))
-  .map(([lang, count]) => `- ${lang}: ${count}`)
-  .join('\n')}
+    .sort((a, b) => (b[1] as number) - (a[1] as number))
+    .map(([lang, count]) => `- ${lang}: ${count}`)
+    .join('\n')}
 
 **Top Repositories**:
 ${Object.entries(stats.byRepo)
-  .sort((a, b) => (b[1] as number) - (a[1] as number))
-  .slice(0, 10)
-  .map(([repo, count]) => `- ${repo}: ${count}`)
-  .join('\n')}
+    .sort((a, b) => (b[1] as number) - (a[1] as number))
+    .slice(0, 10)
+    .map(([repo, count]) => `- ${repo}: ${count}`)
+    .join('\n')}
 
 **Test Coverage**:
 - With tests: ${stats.withTests} (${((stats.withTests / stats.total) * 100).toFixed(1)}%)
@@ -237,8 +237,8 @@ function formatBenchmarkSummary(report: any): string {
 
 **Success by Complexity**:
 ${Object.entries(results.summary.success_by_complexity)
-  .map(([complexity, rate]) => `- ${complexity}: ${((rate as number) * 100).toFixed(1)}%`)
-  .join('\n')}
+    .map(([complexity, rate]) => `- ${complexity}: ${((rate as number) * 100).toFixed(1)}%`)
+    .join('\n')}
 
 ${
   results.summary.common_errors.length > 0
@@ -251,9 +251,9 @@ ${results.summary.common_errors.map((e) => `- ${e.error}: ${e.count} occurrences
 
 **Top Results**:
 ${results.per_instance_results
-  .slice(0, 5)
-  .map((r) => `- ${r.instance_id}: ${r.resolved ? '✅ Resolved' : '❌ Failed'}`)
-  .join('\n')}
+    .slice(0, 5)
+    .map((r) => `- ${r.instance_id}: ${r.resolved ? '✅ Resolved' : '❌ Failed'}`)
+    .join('\n')}
 
 Full report saved to: ${report.logs_dir || '.swe-bench-work/reports'}`;
 }

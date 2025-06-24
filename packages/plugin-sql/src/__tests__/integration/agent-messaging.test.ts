@@ -130,11 +130,17 @@ describe('Agent Messaging with PGLite', () => {
     // Create a conversation
     const messages = [
       { entity: userId, text: 'What is the weather like today?' },
-      { entity: testAgentId, text: 'I don\'t have access to real-time weather data, but I can help you find weather information.' },
+      {
+        entity: testAgentId,
+        text: "I don't have access to real-time weather data, but I can help you find weather information.",
+      },
       { entity: userId, text: 'How can I check the weather?' },
-      { entity: testAgentId, text: 'You can check weather websites like weather.com or use weather apps on your phone.' },
+      {
+        entity: testAgentId,
+        text: 'You can check weather websites like weather.com or use weather apps on your phone.',
+      },
       { entity: userId, text: 'Thanks for the help!' },
-      { entity: testAgentId, text: 'You\'re welcome! Is there anything else I can help you with?' },
+      { entity: testAgentId, text: "You're welcome! Is there anything else I can help you with?" },
     ];
 
     // Store all messages
@@ -148,7 +154,7 @@ describe('Agent Messaging with PGLite', () => {
           text: messages[i].text,
           source: messages[i].entity === userId ? 'user' : 'agent',
         },
-        createdAt: Date.now() + (i * 1000), // Space messages 1 second apart
+        createdAt: Date.now() + i * 1000, // Space messages 1 second apart
       };
 
       await adapter.createMemory(message, 'messages');
@@ -214,7 +220,9 @@ describe('Agent Messaging with PGLite', () => {
     const isPGLite = adapter.constructor.name === 'PgliteDatabaseAdapter';
 
     if (isPGLite) {
-      console.log('[Test] Note: In-memory PGLite loses data on shutdown. In production, use file-based storage.');
+      console.log(
+        '[Test] Note: In-memory PGLite loses data on shutdown. In production, use file-based storage.'
+      );
     }
 
     // Re-initialize the adapter
@@ -317,7 +325,10 @@ describe('Agent Messaging with PGLite', () => {
     const testMessages = [
       { text: 'Tell me about artificial intelligence', keywords: ['artificial', 'intelligence'] },
       { text: 'What is machine learning?', keywords: ['machine', 'learning'] },
-      { text: 'How does natural language processing work?', keywords: ['natural', 'language', 'processing'] },
+      {
+        text: 'How does natural language processing work?',
+        keywords: ['natural', 'language', 'processing'],
+      },
       { text: 'Can you explain deep learning?', keywords: ['deep', 'learning'] },
     ];
 
@@ -356,7 +367,7 @@ describe('Agent Messaging with PGLite', () => {
     expect(allMessages).toHaveLength(4);
 
     // Verify message content
-    const messageTexts = allMessages.map(m => m.content.text);
+    const messageTexts = allMessages.map((m) => m.content.text);
     for (const testMsg of testMessages) {
       expect(messageTexts).toContain(testMsg.text);
     }

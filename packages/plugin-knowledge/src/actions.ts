@@ -344,13 +344,13 @@ export const processKnowledgeAction: Action = {
       return {
         data: {
           actionName: 'PROCESS_KNOWLEDGE',
-          processedCount: processedCount,
+          processedCount,
           successCount: results.filter((r) => r.success).length,
           results,
         },
         values: {
           success: true,
-          processedCount: processedCount,
+          processedCount,
           successCount: results.filter((r) => r.success).length,
         },
       };
@@ -384,7 +384,8 @@ export const processKnowledgeAction: Action = {
  */
 export const searchKnowledgeAction: Action = {
   name: 'SEARCH_KNOWLEDGE',
-  description: 'Search the knowledge base for specific information. Can be chained with ADVANCED_KNOWLEDGE_SEARCH for more detailed results or EXPORT_KNOWLEDGE to export search results',
+  description:
+    'Search the knowledge base for specific information. Can be chained with ADVANCED_KNOWLEDGE_SEARCH for more detailed results or EXPORT_KNOWLEDGE to export search results',
 
   similes: [
     'search knowledge',
@@ -582,7 +583,8 @@ export const searchKnowledgeAction: Action = {
  */
 export const advancedSearchAction: Action = {
   name: 'ADVANCED_KNOWLEDGE_SEARCH',
-  description: 'Perform advanced search with filters, sorting, and pagination. Can be chained with EXPORT_KNOWLEDGE to export filtered results or KNOWLEDGE_ANALYTICS to analyze search patterns',
+  description:
+    'Perform advanced search with filters, sorting, and pagination. Can be chained with EXPORT_KNOWLEDGE to export filtered results or KNOWLEDGE_ANALYTICS to analyze search patterns',
 
   similes: [
     'advanced search',
@@ -753,7 +755,8 @@ export const advancedSearchAction: Action = {
  */
 export const knowledgeAnalyticsAction: Action = {
   name: 'KNOWLEDGE_ANALYTICS',
-  description: 'Get analytics and insights about the knowledge base. Can be chained with PROCESS_KNOWLEDGE to see updated stats after ingestion or EXPORT_KNOWLEDGE to export analytics data',
+  description:
+    'Get analytics and insights about the knowledge base. Can be chained with PROCESS_KNOWLEDGE to see updated stats after ingestion or EXPORT_KNOWLEDGE to export analytics data',
 
   similes: [
     'knowledge stats',
@@ -832,8 +835,8 @@ export const knowledgeAnalyticsAction: Action = {
 
 📁 Content Types:
 ${Object.entries(analytics.contentTypes)
-    .map(([type, count]) => `  • ${type}: ${count} documents`)
-    .join('\n')}
+  .map(([type, count]) => `  • ${type}: ${count} documents`)
+  .join('\n')}
 
 ${
   analytics.queryStats.totalQueries > 0
@@ -889,7 +892,8 @@ ${
  */
 export const exportKnowledgeAction: Action = {
   name: 'EXPORT_KNOWLEDGE',
-  description: 'Export knowledge base to various formats. Can be chained with SEARCH_KNOWLEDGE or ADVANCED_KNOWLEDGE_SEARCH to export filtered results',
+  description:
+    'Export knowledge base to various formats. Can be chained with SEARCH_KNOWLEDGE or ADVANCED_KNOWLEDGE_SEARCH to export filtered results',
 
   similes: ['export knowledge', 'download knowledge', 'backup knowledge', 'save knowledge to file'],
 
@@ -1004,7 +1008,8 @@ export const exportKnowledgeAction: Action = {
  */
 export const ingestGitHubAction: Action = {
   name: 'INGEST_GITHUB_REPO',
-  description: 'Ingest knowledge from a GitHub repository with optional subdirectory filtering. Can be chained with SEARCH_KNOWLEDGE to verify ingestion or KNOWLEDGE_ANALYTICS to see updated repository stats',
+  description:
+    'Ingest knowledge from a GitHub repository with optional subdirectory filtering. Can be chained with SEARCH_KNOWLEDGE to verify ingestion or KNOWLEDGE_ANALYTICS to see updated repository stats',
 
   similes: [
     'ingest github',
@@ -1201,7 +1206,8 @@ export const ingestGitHubAction: Action = {
  */
 export const ingestWebPageAction: Action = {
   name: 'INGEST_WEB_PAGE',
-  description: 'Extract and ingest knowledge from a web page URL. Can be chained with SEARCH_KNOWLEDGE to find ingested content or KNOWLEDGE_ANALYTICS to see updated stats',
+  description:
+    'Extract and ingest knowledge from a web page URL. Can be chained with SEARCH_KNOWLEDGE to find ingested content or KNOWLEDGE_ANALYTICS to see updated stats',
 
   similes: [
     'ingest web page',

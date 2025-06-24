@@ -930,17 +930,17 @@ class Tokenizer {
       .map((token) => (this.stemming ? this.stemWord(token) : token));
     const stats: TokenizationStats = includeStats
       ? {
-        originalWordCount: originalWords.length,
-        stopWordsRemoved: originalWords.length - tokens.length, // This might be incorrect if stemming changes token count
-        stemmedWords: this.stemming ? tokens.length : 0,
-        processingTimeMs: Date.now() - startTime,
-      }
+          originalWordCount: originalWords.length,
+          stopWordsRemoved: originalWords.length - tokens.length, // This might be incorrect if stemming changes token count
+          stemmedWords: this.stemming ? tokens.length : 0,
+          processingTimeMs: Date.now() - startTime,
+        }
       : {
-        originalWordCount: 0,
-        stopWordsRemoved: 0,
-        stemmedWords: 0,
-        processingTimeMs: 0,
-      };
+          originalWordCount: 0,
+          stopWordsRemoved: 0,
+          stemmedWords: 0,
+          processingTimeMs: 0,
+        };
     return { tokens, stats };
   }
 

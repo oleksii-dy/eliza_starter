@@ -205,7 +205,9 @@ export class DrizzleSchemaIntrospector {
 
     // Parse columns directly from table object properties
     for (const [key, value] of Object.entries(table)) {
-      if (key === '_' || key === 'enableRLS' || typeof value !== 'object' || !value) {continue;}
+      if (key === '_' || key === 'enableRLS' || typeof value !== 'object' || !value) {
+        continue;
+      }
 
       const col = value as any;
       // logger.debug(`[INTROSPECTOR] Examining column ${key}:`, {
@@ -349,9 +351,13 @@ export class DrizzleSchemaIntrospector {
                 localColumns = ['entity_id'];
               } else if (tableName.includes('complex')) {
                 // Complex table has multiple foreign keys
-                if (index === 0) {localColumns = ['base_id'];}
-                else if (index === 1) {localColumns = ['dependent_id'];}
-                else if (index === 2) {localColumns = ['vector_id'];}
+                if (index === 0) {
+                  localColumns = ['base_id'];
+                } else if (index === 1) {
+                  localColumns = ['dependent_id'];
+                } else if (index === 2) {
+                  localColumns = ['vector_id'];
+                }
               }
             }
 
@@ -421,7 +427,9 @@ export class DrizzleSchemaIntrospector {
       referenceKeys: reference ? Object.keys(reference) : [],
     });
 
-    if (!reference) {return null;}
+    if (!reference) {
+      return null;
+    }
 
     // Method 1: Direct table name access
     if (reference.table && reference.table._ && reference.table._.name) {
@@ -846,7 +854,9 @@ export class DrizzleSchemaIntrospector {
   }
 
   private formatDefaultValue(defaultValue: any): string | undefined {
-    if (defaultValue === undefined || defaultValue === null) {return undefined;}
+    if (defaultValue === undefined || defaultValue === null) {
+      return undefined;
+    }
 
     // logger.debug(`[INTROSPECTOR] Formatting default value:`, {
     //   type: typeof defaultValue,
@@ -864,8 +874,12 @@ export class DrizzleSchemaIntrospector {
       if (defaultValue.queryChunks && Array.isArray(defaultValue.queryChunks)) {
         const result = defaultValue.queryChunks
           .map((c: any) => {
-            if (typeof c === 'string') {return c;}
-            if (c && c.value !== undefined) {return c.value;}
+            if (typeof c === 'string') {
+              return c;
+            }
+            if (c && c.value !== undefined) {
+              return c.value;
+            }
             return '';
           })
           .join('');
@@ -914,9 +928,15 @@ export class DrizzleSchemaIntrospector {
       .map((col) => {
         let def = `"${col.name}" ${col.type}`;
         // Only add PRIMARY KEY for single column primary keys if no composite primary key exists
-        if (col.primaryKey && !tableDef.compositePrimaryKey) {def += ' PRIMARY KEY';}
-        if (col.notNull && !col.primaryKey) {def += ' NOT NULL';}
-        if (col.unique) {def += ' UNIQUE';}
+        if (col.primaryKey && !tableDef.compositePrimaryKey) {
+          def += ' PRIMARY KEY';
+        }
+        if (col.notNull && !col.primaryKey) {
+          def += ' NOT NULL';
+        }
+        if (col.unique) {
+          def += ' UNIQUE';
+        }
         if (col.defaultValue) {
           // Handle different types of defaults
           if (col.defaultValue === 'now()' || col.defaultValue.includes('now()')) {
@@ -969,7 +989,8 @@ export class DrizzleSchemaIntrospector {
         `ADD CONSTRAINT "${fk.name}" ` +
         `FOREIGN KEY ("${fk.columns.join('", "')}") ` +
         `REFERENCES "${schemaName}"."${fk.referencedTable}" ("${fk.referencedColumns.join('", "')}")${
-          fk.onDelete ? ` ON DELETE ${fk.onDelete.toUpperCase()}` : ''}`
+          fk.onDelete ? ` ON DELETE ${fk.onDelete.toUpperCase()}` : ''
+        }`
     );
   }
 }
@@ -1003,7 +1024,9 @@ export class PluginNamespaceManager {
   }
 
   async ensureNamespace(schemaName: string): Promise<void> {
-    if (schemaName === 'public') {return;}
+    if (schemaName === 'public') {
+      return;
+    }
     await this.db.execute(sql.raw(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`));
   }
 
@@ -1296,7 +1319,9 @@ export async function runPluginMigrations(
     logger.debug('[CUSTOM MIGRATOR] Phase 1: Creating tables...');
     for (const tableName of sortedTableNames) {
       const tableDef = tableDefinitions.get(tableName);
-      if (!tableDef) {continue;}
+      if (!tableDef) {
+        continue;
+      }
 
       const tableExists = existingTables.includes(tableDef.name);
       logger.debug(`[CUSTOM MIGRATOR] Table ${tableDef.name} exists: ${tableExists}`);
@@ -1324,7 +1349,9 @@ export async function runPluginMigrations(
     logger.debug('[CUSTOM MIGRATOR] Phase 2: Adding constraints...');
     for (const tableName of sortedTableNames) {
       const tableDef = tableDefinitions.get(tableName);
-      if (!tableDef) {continue;}
+      if (!tableDef) {
+        continue;
+      }
 
       // Add constraints if table has foreign keys OR check constraints
       if (tableDef.foreignKeys.length > 0 || tableDef.checkConstraints.length > 0) {

@@ -79,7 +79,7 @@ export const hyperfyAmbientSpeechAction = {
       return {
         text: existing[0].text || '',
         values: { ambientSpoken: true, speechText: existing[0].text },
-        data: { source: 'hyperfy', action: 'HYPERFY_AMBIENT_SPEECH' }
+        data: { source: 'hyperfy', action: 'HYPERFY_AMBIENT_SPEECH' },
       };
     }
 
@@ -109,11 +109,11 @@ export const hyperfyAmbientSpeechAction = {
     return {
       text: responseContent.text,
       values: { ambientSpoken: true, speechText: responseContent.text },
-      data: { 
-        source: 'hyperfy', 
+      data: {
+        source: 'hyperfy',
         action: 'HYPERFY_AMBIENT_SPEECH',
-        thought: responseContent.thought
-      }
+        thought: responseContent.thought,
+      },
     };
   },
   examples: [
@@ -125,7 +125,8 @@ export const hyperfyAmbientSpeechAction = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'I notice something intriguing in the environment - I should comment on it aloud',
+          thought:
+            'I notice something intriguing in the environment - I should comment on it aloud',
           text: "That floating crystal looks ancient... wonder what it's guarding.",
           actions: ['HYPERFY_AMBIENT_SPEECH'],
         },

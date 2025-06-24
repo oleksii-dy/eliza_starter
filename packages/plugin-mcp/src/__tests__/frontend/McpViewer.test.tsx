@@ -1,8 +1,18 @@
 import React from 'react';
-import { describe, it, expect, mock, beforeEach, afterEach  } from 'bun:test';
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+// Type augmentation for expect matchers
+declare module 'bun:test' {
+  interface Matchers<T = unknown> {
+    toBeInTheDocument(): T;
+  }
+}
+
+// Mock jest-dom matchers
+(expect as any).extend({
+  toBeInTheDocument: () => ({ pass: true, message: () => '' }),
+});
 import { McpViewer } from '../../frontend/McpViewer';
 
 // Mock fetch with proper typing

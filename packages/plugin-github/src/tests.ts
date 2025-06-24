@@ -48,7 +48,7 @@ async function ensureGitHubService(runtime: IAgentRuntime): Promise<GitHubServic
         logger.info('No service map found, overriding getService method...');
         // Override getService for this test run
         const originalGetService = runtime.getService.bind(runtime);
-        runtime.getService = function <T extends Service> (serviceName: string): T | null {
+        runtime.getService = function <T extends Service>(serviceName: string): T | null {
           if (serviceName === 'github' || serviceName === GitHubService.serviceType) {
             return newService as any as T;
           }

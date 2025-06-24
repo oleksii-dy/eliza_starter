@@ -1,6 +1,6 @@
 import { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 import { GitHubService } from '../services/github';
-import { mock, expect  } from 'bun:test';
+import { mock, expect } from 'bun:test';
 
 // Define types inline since they're not exported from types.ts
 interface Repository {
@@ -138,7 +138,10 @@ export class TestRepoManager {
   }
 
   async seedWithTestData(repo: Repository): Promise<void> {
-    const { owner: { login }, name } = repo;
+    const {
+      owner: { login },
+      name,
+    } = repo;
 
     // Create some test files
     await this.service.createOrUpdateFile(
@@ -397,7 +400,7 @@ export const waitForCondition = async (
     if (Date.now() - startTime > timeout) {
       throw new Error('Timeout waiting for condition');
     }
-    await new Promise(resolve => setTimeout(resolve, interval));
+    await new Promise((resolve) => setTimeout(resolve, interval));
   }
 };
 

@@ -170,7 +170,7 @@ export const followRoomAction: Action = {
       );
 
       return {
-        text: shouldFollow 
+        text: shouldFollow
           ? `Now following room ${room.name || 'this channel'} - will participate actively`
           : `Decided not to follow room ${room.name || 'this channel'}`,
         values: {

@@ -26,9 +26,13 @@ export async function testRealResearch(runtime: IAgentRuntime) {
   const checkInterval = setInterval(async () => {
     checkCount++;
     const current = await service.getProject(project1.id);
-    if (!current) {return;}
+    if (!current) {
+      return;
+    }
 
-    logger.info(`Progress: Phase=${current.phase}, Sources=${current.sources.length}, Findings=${current.findings.length}`);
+    logger.info(
+      `Progress: Phase=${current.phase}, Sources=${current.sources.length}, Findings=${current.findings.length}`
+    );
 
     // Sample a finding if available
     if (current.findings.length > 0 && checkCount === 1) {
@@ -43,7 +47,9 @@ export async function testRealResearch(runtime: IAgentRuntime) {
 
       if (current.status === 'completed') {
         logger.success('✅ Research completed successfully!');
-        logger.info(`Final results: ${current.sources.length} sources, ${current.findings.length} findings`);
+        logger.info(
+          `Final results: ${current.sources.length} sources, ${current.findings.length} findings`
+        );
 
         if (current.report) {
           logger.info(`Report generated with ${current.report.sections.length} sections`);

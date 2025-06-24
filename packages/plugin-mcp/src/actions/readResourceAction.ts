@@ -75,12 +75,13 @@ export const readResourceAction: Action = {
     'ACCESS_RESOURCE',
     'ACCESS_MCP_RESOURCE',
   ],
-  description: 'Reads a resource from an MCP server and returns its content for further processing. Supports action chaining by providing structured resource data that can be analyzed, transformed, or used by subsequent actions.',
+  description:
+    'Reads a resource from an MCP server and returns its content for further processing. Supports action chaining by providing structured resource data that can be analyzed, transformed, or used by subsequent actions.',
 
   effects: {
     provides: ['resourceContent', 'resourceMetadata', 'resourceUri'],
     requires: ['mcpService'],
-    modifies: ['workingMemory']
+    modifies: ['workingMemory'],
   },
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
@@ -158,7 +159,7 @@ export const readResourceAction: Action = {
         return {
           text: 'No appropriate MCP resource available for this request',
           values: { noResourceAvailable: true },
-          data: { errorType: 'NO_RESOURCE_AVAILABLE' }
+          data: { errorType: 'NO_RESOURCE_AVAILABLE' },
         };
       }
 
@@ -188,20 +189,20 @@ export const readResourceAction: Action = {
           resourceUri: uri,
           serverName,
           resourceMetadata: resourceMeta,
-          success: true
+          success: true,
         },
         data: {
           mcpResourceRead: {
             server: serverName,
-            uri: uri,
+            uri,
             contentLength: resourceContent.length,
             metadata: resourceMeta,
-            timestamp: new Date().toISOString()
-          }
-        }
+            timestamp: new Date().toISOString(),
+          },
+        },
       };
     } catch (error) {
-      const errorHandled = await handleMcpError(
+      const _errorHandled = await handleMcpError(
         composedState,
         mcpProvider,
         error,
@@ -214,12 +215,12 @@ export const readResourceAction: Action = {
         text: `Failed to read MCP resource: ${error instanceof Error ? error.message : 'Unknown error'}`,
         values: {
           error: error instanceof Error ? error.message : 'Unknown error',
-          success: false
+          success: false,
         },
         data: {
           errorType: 'MCP_RESOURCE_ERROR',
-          errorDetails: error instanceof Error ? error.stack : undefined
-        }
+          errorDetails: error instanceof Error ? error.stack : undefined,
+        },
       };
     }
   },
@@ -242,7 +243,7 @@ export const readResourceAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          text: "Based on the documentation, ElizaOS installation requires Node.js 23+ and Git. For Windows users, WSL 2 is required. The quickest setup is: `git clone https://github.com/elizaos/eliza-starter.git && cd eliza-starter && cp .env.example .env && bun i && bun run build && bun start`. Access the web interface at http://localhost:3000 once started.",
+          text: 'Based on the documentation, ElizaOS installation requires Node.js 23+ and Git. For Windows users, WSL 2 is required. The quickest setup is: `git clone https://github.com/elizaos/eliza-starter.git && cd eliza-starter && cp .env.example .env && bun i && bun run build && bun start`. Access the web interface at http://localhost:3000 once started.',
         },
       },
     ],
@@ -257,7 +258,8 @@ export const readResourceAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll read the API documentation first, then create a summary of the authentication endpoints.",
-          thought: 'I need to chain two actions: first read the API documentation resource, then analyze and summarize the authentication-related content.',
+          thought:
+            'I need to chain two actions: first read the API documentation resource, then analyze and summarize the authentication-related content.',
           actions: ['READ_RESOURCE'],
         },
       },
@@ -265,14 +267,15 @@ export const readResourceAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Retrieved the API documentation successfully. Now analyzing the authentication endpoints to create a summary.',
-          thought: 'The resource content contains comprehensive API documentation. I can now extract and summarize the authentication-related endpoints from this data.',
+          thought:
+            'The resource content contains comprehensive API documentation. I can now extract and summarize the authentication-related endpoints from this data.',
           actions: ['ANALYZE_TEXT'],
         },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'Here\'s a summary of the authentication endpoints from the API documentation:\n\n**Authentication Endpoints:**\n- POST /auth/login - User login with credentials\n- POST /auth/refresh - Refresh access token\n- POST /auth/logout - User logout\n- GET /auth/me - Get current user profile\n- POST /auth/register - New user registration\n\nAll endpoints except registration require Bearer token authentication in the Authorization header.',
+          text: "Here's a summary of the authentication endpoints from the API documentation:\n\n**Authentication Endpoints:**\n- POST /auth/login - User login with credentials\n- POST /auth/refresh - Refresh access token\n- POST /auth/logout - User logout\n- GET /auth/me - Get current user profile\n- POST /auth/register - New user registration\n\nAll endpoints except registration require Bearer token authentication in the Authorization header.",
         },
       },
     ],
@@ -287,7 +290,8 @@ export const readResourceAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll retrieve the configuration file, update the database settings, and save the changes.",
-          thought: 'This requires a three-step workflow: 1) Read the config resource, 2) Modify database settings, 3) Write back the updated config. Each step depends on the previous one.',
+          thought:
+            'This requires a three-step workflow: 1) Read the config resource, 2) Modify database settings, 3) Write back the updated config. Each step depends on the previous one.',
           actions: ['READ_RESOURCE'],
         },
       },
@@ -295,7 +299,8 @@ export const readResourceAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Configuration file retrieved successfully. Now updating the database settings.',
-          thought: 'Got the config resource content. I can now parse and modify the database settings within this configuration data.',
+          thought:
+            'Got the config resource content. I can now parse and modify the database settings within this configuration data.',
           actions: ['UPDATE_CONFIG'],
         },
       },
@@ -303,7 +308,8 @@ export const readResourceAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Database settings updated in the configuration. Now saving the updated configuration back.',
-          thought: 'Configuration has been modified with new database settings. Now I need to save this updated content back to the resource or file system.',
+          thought:
+            'Configuration has been modified with new database settings. Now I need to save this updated content back to the resource or file system.',
           actions: ['SAVE_RESOURCE'],
         },
       },

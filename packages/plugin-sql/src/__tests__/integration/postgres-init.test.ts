@@ -56,7 +56,9 @@ describe('PostgreSQL Initialization Tests', () => {
 
       const postgresUrl = process.env.POSTGRES_URL!;
       (mockRuntime.getSetting as any).mockImplementation((key: string) => {
-        if (key === 'POSTGRES_URL') {return postgresUrl;}
+        if (key === 'POSTGRES_URL') {
+          return postgresUrl;
+        }
         return undefined;
       });
 
@@ -98,7 +100,9 @@ describe('PostgreSQL Initialization Tests', () => {
     // Use a proper temporary directory that actually exists
     const pglitePath = join(tmpdir(), `eliza-test-pglite-${Date.now()}`);
     (mockRuntime.getSetting as any).mockImplementation((key: string) => {
-      if (key === 'PGLITE_PATH') {return pglitePath;}
+      if (key === 'PGLITE_PATH') {
+        return pglitePath;
+      }
       return undefined;
     });
 
@@ -117,7 +121,9 @@ describe('PostgreSQL Initialization Tests', () => {
     // Use a proper temporary directory that actually exists
     const databasePath = join(tmpdir(), `eliza-test-db-${Date.now()}`);
     (mockRuntime.getSetting as any).mockImplementation((key: string) => {
-      if (key === 'DATABASE_PATH') {return databasePath;}
+      if (key === 'DATABASE_PATH') {
+        return databasePath;
+      }
       return undefined;
     });
 

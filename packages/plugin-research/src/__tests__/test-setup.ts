@@ -13,10 +13,10 @@ export function verifyApiKeys(): void {
     'SERPER_API_KEY',
     'SERPAPI_API_KEY',
     'OPENAI_API_KEY',
-    'FIRECRAWL_API_KEY'
+    'FIRECRAWL_API_KEY',
   ];
 
-  const missingKeys = requiredKeys.filter(key => !process.env[key]);
+  const missingKeys = requiredKeys.filter((key) => !process.env[key]);
 
   if (missingKeys.length > 0) {
     console.warn('⚠️  Missing API keys for E2E tests:', missingKeys.join(', '));

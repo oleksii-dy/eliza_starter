@@ -872,8 +872,8 @@ async function testCascadeDeletionWithComplexStructure(
     content: `# Complete ElizaOS Developer Guide
 
 ${Array.from(
-    { length: 50 },
-    (_, i) => `
+  { length: 50 },
+  (_, i) => `
 ## Section ${i + 1}: Feature Overview
 
 This section covers feature ${i + 1} in detail. Each section contains substantial content to ensure proper fragmentation during document processing.
@@ -890,7 +890,7 @@ Common issues and solutions for feature ${i + 1}, including debugging tips and p
 ### Subsection ${i + 1}.4: Advanced Configuration
 Advanced configuration options for feature ${i + 1}, including expert-level settings and customization possibilities.
 `
-  ).join('')}
+).join('')}
 
 ## Conclusion
 

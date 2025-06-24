@@ -9,7 +9,9 @@ export function loadResearchConfig(runtime: IAgentRuntime): ResearchConfig {
 
   // Validate required AI model access
   if (!runtime.useModel) {
-    throw new Error('[ResearchConfig] AI model access is required for research operations. Ensure the runtime is properly initialized with AI model access.');
+    throw new Error(
+      '[ResearchConfig] AI model access is required for research operations. Ensure the runtime is properly initialized with AI model access.'
+    );
   }
 
   const config: ResearchConfig = {
@@ -18,7 +20,9 @@ export function loadResearchConfig(runtime: IAgentRuntime): ResearchConfig {
     timeout: parseInt(runtime.getSetting('RESEARCH_TIMEOUT') || '600000'), // 10 minutes
     enableCitations: runtime.getSetting('RESEARCH_ENABLE_CITATIONS') !== 'false',
     enableImages: runtime.getSetting('RESEARCH_ENABLE_IMAGES') === 'true',
-    searchProviders: (runtime.getSetting('RESEARCH_SEARCH_PROVIDERS') || 'web,academic').split(',').map((s: string) => s.trim()),
+    searchProviders: (runtime.getSetting('RESEARCH_SEARCH_PROVIDERS') || 'web,academic')
+      .split(',')
+      .map((s: string) => s.trim()),
     language: runtime.getSetting('RESEARCH_LANGUAGE') || 'en',
     researchDepth: parseResearchDepth(runtime.getSetting('RESEARCH_DEPTH') || 'deep'),
     domain: parseResearchDomain(runtime.getSetting('RESEARCH_DOMAIN') || 'general'),
@@ -37,7 +41,7 @@ export function loadResearchConfig(runtime: IAgentRuntime): ResearchConfig {
     researchDepth: config.researchDepth,
     domain: config.domain,
     searchProviders: config.searchProviders,
-    evaluationEnabled: config.evaluationEnabled
+    evaluationEnabled: config.evaluationEnabled,
   });
 
   return config;
@@ -86,7 +90,8 @@ function validateResearchConfig(config: ResearchConfig): void {
     errors.push('maxDepth must be between 1 and 10');
   }
 
-  if (config.timeout < 30000 || config.timeout > 1800000) { // 30 seconds to 30 minutes
+  if (config.timeout < 30000 || config.timeout > 1800000) {
+    // 30 seconds to 30 minutes
     errors.push('timeout must be between 30000ms (30 seconds) and 1800000ms (30 minutes)');
   }
 
@@ -144,7 +149,7 @@ export function validateSearchProviderConfig(config: ResearchConfig, runtime: IA
       case 'web':
         // Check if at least one web search provider is available
         const webProviders = ['TAVILY_API_KEY', 'SERPER_API_KEY', 'EXA_API_KEY', 'SERPAPI_API_KEY'];
-        const hasWebProvider = webProviders.some(key => runtime.getSetting(key));
+        const hasWebProvider = webProviders.some((key) => runtime.getSetting(key));
         if (!hasWebProvider) {
           missingKeys.push(`At least one of: ${webProviders.join(', ')}`);
         }
@@ -165,7 +170,9 @@ export function validateSearchProviderConfig(config: ResearchConfig, runtime: IA
   }
 
   if (missingKeys.length > 0) {
-    throw new Error(`[ResearchConfig] Missing required API keys for configured search providers: ${missingKeys.join(', ')}`);
+    throw new Error(
+      `[ResearchConfig] Missing required API keys for configured search providers: ${missingKeys.join(', ')}`
+    );
   }
 
   logger.info('[ResearchConfig] All search provider requirements validated');

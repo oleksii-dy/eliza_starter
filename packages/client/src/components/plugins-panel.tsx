@@ -29,6 +29,7 @@ import {
 } from '../config/voice-models';
 import { Button } from './ui/button';
 import PluginComponentsPanel from './plugin-components-panel';
+import PluginDefaultsPanel from './plugin-defaults-panel';
 
 interface PluginsPanelProps {
   characterValue: Agent;
@@ -74,6 +75,7 @@ export default function PluginsPanel({
   const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [isComponentsDialogOpen, setIsComponentsDialogOpen] = useState(false);
+  const [isDefaultsDialogOpen, setIsDefaultsDialogOpen] = useState(false);
 
   // Ensure we always have arrays and normalize plugin names
   const safeCharacterPlugins = useMemo(() => {
@@ -346,6 +348,13 @@ export default function PluginsPanel({
                   >
                     Configure Plugin Components...
                   </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => setIsDefaultsDialogOpen(true)}
+                  >
+                    Security & Defaults Configuration...
+                  </Button>
                 </div>
               )}
 
@@ -407,6 +416,14 @@ export default function PluginsPanel({
         plugins={safeCharacterPlugins}
         isOpen={isComponentsDialogOpen}
         onClose={() => setIsComponentsDialogOpen(false)}
+      />
+
+      {/* Plugin Defaults & Security Configuration Dialog */}
+      <PluginDefaultsPanel
+        agentId={characterValue?.id || ''}
+        plugins={safeCharacterPlugins}
+        isOpen={isDefaultsDialogOpen}
+        onClose={() => setIsDefaultsDialogOpen(false)}
       />
     </div>
   );

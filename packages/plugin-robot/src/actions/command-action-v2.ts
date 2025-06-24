@@ -243,8 +243,8 @@ const validate: Validator = async (runtime: IAgentRuntime, message: Memory) => {
 const handler: Handler = async (
   runtime: IAgentRuntime,
   message: Memory,
-  state?: State,
-  options?: { [key: string]: unknown },
+  _state?: State,
+  _options?: { [key: string]: unknown },
   callback?: HandlerCallback
 ) => {
   const robotService = runtime.getService<RobotServiceV2>(RobotServiceType.ROBOT);

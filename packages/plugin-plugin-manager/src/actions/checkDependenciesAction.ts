@@ -172,7 +172,7 @@ export const checkDependenciesAction: Action = {
         },
       };
     } catch (_error) {
-      elizaLogger.error('[checkDependenciesAction] Error checking dependencies:', error);
+      elizaLogger.error('[checkDependenciesAction] Error checking dependencies:', _error);
 
       const errorMessage = `Error checking dependencies: ${_error instanceof Error ? _error.message : String(_error)}`;
 

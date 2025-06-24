@@ -87,7 +87,7 @@ export class SerpAPISearchProvider {
             language: this.config.language || 'en',
             type: 'knowledge_graph',
             // Store kgmid in a generic property
-            ...kg.kgmid ? { kgmid: kg.kgmid } : {},
+            ...(kg.kgmid ? { kgmid: kg.kgmid } : {}),
           },
         });
       }
@@ -95,20 +95,22 @@ export class SerpAPISearchProvider {
       // Add organic results
       if (data.organic_results) {
         results.push(
-          ...data.organic_results.slice(0, maxResults || this.config.num).map((result: any, index: number) => ({
-            title: result.title || 'Untitled',
-            url: result.link,
-            snippet: result.snippet || '',
-            score: 0.8 - index * 0.05,
-            provider: 'serpapi',
-            metadata: {
-              language: this.config.language || 'en',
-              position: result.position,
-              date: result.date,
-              source: result.source,
-              cached_page_link: result.cached_page_link,
-            },
-          }))
+          ...data.organic_results
+            .slice(0, maxResults || this.config.num)
+            .map((result: any, index: number) => ({
+              title: result.title || 'Untitled',
+              url: result.link,
+              snippet: result.snippet || '',
+              score: 0.8 - index * 0.05,
+              provider: 'serpapi',
+              metadata: {
+                language: this.config.language || 'en',
+                position: result.position,
+                date: result.date,
+                source: result.source,
+                cached_page_link: result.cached_page_link,
+              },
+            }))
         );
       }
 
@@ -235,7 +237,10 @@ export class SerpAPISearchProvider {
     }
   }
 
-  async searchImages(query: string, maxResults?: number): Promise<Array<{ url: string; title: string; source: string }>> {
+  async searchImages(
+    query: string,
+    maxResults?: number
+  ): Promise<Array<{ url: string; title: string; source: string }>> {
     try {
       logger.info(`[SerpAPI] Searching images for: ${query}`);
 

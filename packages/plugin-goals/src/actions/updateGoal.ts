@@ -441,7 +441,7 @@ export const updateGoalAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'I\'ve updated your goal to "Learn Spanish fluently". Now let me show you all your goals.',
-          thought: "The user wants to modify an existing goal and then see their complete goal list. I need to chain UPDATE_GOAL with LIST_GOALS to show the modification took effect in the context of all their goals.",
+          thought: 'The user wants to modify an existing goal and then see their complete goal list. I need to chain UPDATE_GOAL with LIST_GOALS to show the modification took effect in the context of all their goals.',
           actions: ['UPDATE_GOAL', 'LIST_GOALS'],
         },
       },

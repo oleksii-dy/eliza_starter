@@ -28,10 +28,16 @@ process.env.USE_PGLITE_FOR_TESTS = 'true';
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[TEST SETUP] Unhandled Rejection at:', promise, 'reason:', reason);
   if (reason instanceof Error && reason.message.includes('Aborted()')) {
-    console.error('[TEST SETUP] WebAssembly abort detected - this may be due to concurrent PGLite instances');
+    console.error(
+      '[TEST SETUP] WebAssembly abort detected - this may be due to concurrent PGLite instances'
+    );
   }
 });
 
 // console.log('[TEST SETUP] Cleared PostgreSQL environment variables');
-console.log('[TEST SETUP] Tests will use', process.env.POSTGRES_URL ? 'PostgreSQL' : 'PGLite', 'for database operations');
+console.log(
+  '[TEST SETUP] Tests will use',
+  process.env.POSTGRES_URL ? 'PostgreSQL' : 'PGLite',
+  'for database operations'
+);
 console.log('[TEST SETUP] WebAssembly is available:', typeof WebAssembly !== 'undefined');

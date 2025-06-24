@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, afterAll } from 'bun:test';
+import { describe, it, expect, mock, beforeAll, afterAll } from 'bun:test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { logger, IAgentRuntime, Plugin } from '@elizaos/core';

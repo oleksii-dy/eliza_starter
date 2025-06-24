@@ -22,7 +22,7 @@ class RateLimiter {
       second: 1000,
       minute: 60000,
       hour: 3600000,
-      day: 86400000
+      day: 86400000,
     };
 
     this.refillRate = intervalMs[config.interval] / config.tokensPerInterval;
@@ -53,7 +53,7 @@ class RateLimiter {
   async removeTokens(count: number): Promise<void> {
     while (!(await this.tryRemoveTokens(count))) {
       // Wait for tokens to become available
-      await new Promise(resolve => setTimeout(resolve, this.refillRate));
+      await new Promise((resolve) => setTimeout(resolve, this.refillRate));
     }
   }
 
@@ -159,9 +159,11 @@ export class AdaptiveRateLimiter extends RateLimitedProvider {
 
         // Exponential backoff based on error count
         const backoffMs = Math.min(60000, 1000 * Math.pow(2, this.errorCount));
-        logger.warn(`[AdaptiveRateLimiter] Backing off for ${backoffMs}ms after ${this.errorCount} rate limit errors`);
+        logger.warn(
+          `[AdaptiveRateLimiter] Backing off for ${backoffMs}ms after ${this.errorCount} rate limit errors`
+        );
 
-        await new Promise(resolve => setTimeout(resolve, backoffMs));
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
 
         // Retry once after backoff
         return super.search(query, maxResults);

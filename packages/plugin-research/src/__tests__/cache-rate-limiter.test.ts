@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { CachedSearchProvider, withCache } from '../integrations/cache';
-import { RateLimitedProvider, AdaptiveRateLimiter, createRateLimitedProvider } from '../integrations/rate-limiter';
+import {
+  RateLimitedProvider,
+  AdaptiveRateLimiter,
+  createRateLimitedProvider,
+} from '../integrations/rate-limiter';
 import { SearchProvider } from '../integrations/rate-limiter';
 import { SearchResult } from '../types';
 
@@ -29,7 +33,7 @@ describe('CachedSearchProvider', () => {
         snippet: 'Test snippet 1',
         score: 0.9,
         provider: 'mock',
-        metadata: { type: 'web', language: 'en' }
+        metadata: { type: 'web', language: 'en' },
       },
       {
         title: 'Test Result 2',
@@ -37,14 +41,14 @@ describe('CachedSearchProvider', () => {
         snippet: 'Test snippet 2',
         score: 0.8,
         provider: 'mock',
-        metadata: { type: 'web', language: 'en' }
-      }
+        metadata: { type: 'web', language: 'en' },
+      },
     ];
 
     mockProvider = new MockSearchProvider(mockResults);
     cachedProvider = new CachedSearchProvider(mockProvider, {
       ttlMinutes: 60,
-      maxSize: 100
+      maxSize: 100,
     });
   });
 
@@ -64,7 +68,7 @@ describe('CachedSearchProvider', () => {
     // Create provider with very short TTL
     const shortTTLProvider = new CachedSearchProvider(mockProvider, {
       ttlMinutes: 0.001, // Very short TTL (0.06 seconds)
-      maxSize: 100
+      maxSize: 100,
     });
 
     // First search
@@ -72,7 +76,7 @@ describe('CachedSearchProvider', () => {
     expect(mockProvider.searchCount).toBe(1);
 
     // Wait for TTL to expire
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Should hit provider again
     await shortTTLProvider.search('test query');
@@ -122,14 +126,21 @@ describe('RateLimitedProvider', () => {
 
   beforeEach(() => {
     mockProvider = new MockSearchProvider([
-      { title: 'Result', url: 'https://example.com', snippet: 'Test', score: 0.9, provider: 'mock', metadata: { language: 'en' } }
+      {
+        title: 'Result',
+        url: 'https://example.com',
+        snippet: 'Test',
+        score: 0.9,
+        provider: 'mock',
+        metadata: { language: 'en' },
+      },
     ]);
   });
 
   it('should allow requests within rate limit', async () => {
     rateLimitedProvider = new RateLimitedProvider(mockProvider, {
       tokensPerInterval: 3,
-      interval: 'minute'
+      interval: 'minute',
     });
 
     // Make 3 requests - all should succeed immediately
@@ -143,7 +154,7 @@ describe('RateLimitedProvider', () => {
   it('should block when rate limit exceeded', async () => {
     rateLimitedProvider = new RateLimitedProvider(mockProvider, {
       tokensPerInterval: 2,
-      interval: 'second'
+      interval: 'second',
     });
 
     // First two requests succeed
@@ -163,7 +174,7 @@ describe('RateLimitedProvider', () => {
 
   it('should work with createRateLimitedProvider helper', async () => {
     const limited = createRateLimitedProvider(mockProvider, {
-      requestsPerMinute: 60
+      requestsPerMinute: 60,
     });
 
     await limited.search('query1');
@@ -174,7 +185,7 @@ describe('RateLimitedProvider', () => {
 
   it('should handle per-hour limits', async () => {
     const limited = createRateLimitedProvider(mockProvider, {
-      requestsPerHour: 3600
+      requestsPerHour: 3600,
     });
 
     // Should allow many requests
@@ -186,7 +197,7 @@ describe('RateLimitedProvider', () => {
 
   it('should handle per-day limits', async () => {
     const limited = createRateLimitedProvider(mockProvider, {
-      requestsPerDay: 86400
+      requestsPerDay: 86400,
     });
 
     // Should allow many requests
@@ -203,12 +214,19 @@ describe('AdaptiveRateLimiter', () => {
 
   beforeEach(() => {
     mockProvider = new MockSearchProvider([
-      { title: 'Result', url: 'https://example.com', snippet: 'Test', score: 0.9, provider: 'mock', metadata: { language: 'en' } }
+      {
+        title: 'Result',
+        url: 'https://example.com',
+        snippet: 'Test',
+        score: 0.9,
+        provider: 'mock',
+        metadata: { language: 'en' },
+      },
     ]);
 
     adaptiveLimiter = new AdaptiveRateLimiter(mockProvider, {
       tokensPerInterval: 10,
-      interval: 'minute'
+      interval: 'minute',
     });
   });
 
@@ -222,20 +240,22 @@ describe('AdaptiveRateLimiter', () => {
         if (this.searchCount === 1) {
           throw new Error('429 rate limit exceeded');
         }
-        return [{
-          title: 'Success after rate limit',
-          url: 'https://example.com',
-          snippet: 'Worked on retry',
-          score: 0.9,
-          provider: 'mock',
-          metadata: { language: 'en' }
-        }];
-      }
+        return [
+          {
+            title: 'Success after rate limit',
+            url: 'https://example.com',
+            snippet: 'Worked on retry',
+            score: 0.9,
+            provider: 'mock',
+            metadata: { language: 'en' },
+          },
+        ];
+      },
     };
 
     const limiter = new AdaptiveRateLimiter(errorProvider, {
       tokensPerInterval: 100,
-      interval: 'minute'
+      interval: 'minute',
     });
 
     // Should succeed after one retry
@@ -256,19 +276,21 @@ describe('AdaptiveRateLimiter', () => {
 
   it('should reduce error count on success', async () => {
     // Test that successful requests reduce error count
-    const mockResults = [{
-      title: 'Success',
-      url: 'https://example.com',
-      snippet: 'Test result',
-      score: 0.9,
-      provider: 'mock',
-      metadata: { language: 'en' }
-    }];
+    const mockResults = [
+      {
+        title: 'Success',
+        url: 'https://example.com',
+        snippet: 'Test result',
+        score: 0.9,
+        provider: 'mock',
+        metadata: { language: 'en' },
+      },
+    ];
 
     const successProvider = new MockSearchProvider(mockResults);
     const limiter = new AdaptiveRateLimiter(successProvider, {
       tokensPerInterval: 100,
-      interval: 'minute'
+      interval: 'minute',
     });
 
     // Make successful requests
@@ -284,12 +306,19 @@ describe('AdaptiveRateLimiter', () => {
 describe('Combined Cache and Rate Limiting', () => {
   it('should work together', async () => {
     const mockProvider = new MockSearchProvider([
-      { title: 'Result', url: 'https://example.com', snippet: 'Test', score: 0.9, provider: 'mock', metadata: { language: 'en' } }
+      {
+        title: 'Result',
+        url: 'https://example.com',
+        snippet: 'Test',
+        score: 0.9,
+        provider: 'mock',
+        metadata: { language: 'en' },
+      },
     ]);
 
     // Apply rate limiting first, then caching
     const rateLimited = createRateLimitedProvider(mockProvider, {
-      requestsPerMinute: 60
+      requestsPerMinute: 60,
     });
     const cached = withCache(rateLimited, 30);
 

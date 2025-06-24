@@ -21,18 +21,37 @@ process.env.FILE_LOGGING = 'true';
 const runtime = {
   getSetting: (key: string) => {
     // File logging
-    if (key === 'FILE_LOGGING') {return 'true';}
+    if (key === 'FILE_LOGGING') {
+      return 'true';
+    }
 
     // Real API keys
-    if (key === 'TAVILY_API_KEY') {return process.env.TAVILY_API_KEY || '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';}
-    if (key === 'EXA_API_KEY') {return process.env.EXA_API_KEY || '267d9e0d-8617-444f-b1bf-612f3bf431f0';}
-    if (key === 'SERPAPI_API_KEY') {return process.env.SERPAPI_API_KEY || '301e99e18e27bb7d0ddee79a86168f251b08925f9b260962573f45c77134b9f6';}
-    if (key === 'FIRECRAWL_API_KEY') {return process.env.FIRECRAWL_API_KEY || 'fc-857417811665460e92716b92e08ec398';}
-    if (key === 'SEMANTIC_SCHOLAR_API_KEY') {return process.env.SEMANTIC_SCHOLAR_API_KEY || 'XQRDiSXgS59uq91YOLadF2You3c4XFvW92Ysx2vxOJ';}
+    if (key === 'TAVILY_API_KEY') {
+      return process.env.TAVILY_API_KEY || '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';
+    }
+    if (key === 'EXA_API_KEY') {
+      return process.env.EXA_API_KEY || '267d9e0d-8617-444f-b1bf-612f3bf431f0';
+    }
+    if (key === 'SERPAPI_API_KEY') {
+      return (
+        process.env.SERPAPI_API_KEY ||
+        '301e99e18e27bb7d0ddee79a86168f251b08925f9b260962573f45c77134b9f6'
+      );
+    }
+    if (key === 'FIRECRAWL_API_KEY') {
+      return process.env.FIRECRAWL_API_KEY || 'fc-857417811665460e92716b92e08ec398';
+    }
+    if (key === 'SEMANTIC_SCHOLAR_API_KEY') {
+      return process.env.SEMANTIC_SCHOLAR_API_KEY || 'XQRDiSXgS59uq91YOLadF2You3c4XFvW92Ysx2vxOJ';
+    }
 
     // Model settings
-    if (key === 'OPENAI_API_KEY') {return process.env.OPENAI_API_KEY;}
-    if (key === 'ANTHROPIC_API_KEY') {return process.env.ANTHROPIC_API_KEY;}
+    if (key === 'OPENAI_API_KEY') {
+      return process.env.OPENAI_API_KEY;
+    }
+    if (key === 'ANTHROPIC_API_KEY') {
+      return process.env.ANTHROPIC_API_KEY;
+    }
 
     return process.env[key] || null;
   },
@@ -46,23 +65,49 @@ const runtime = {
     // Domain classification based on query content
     if (prompt.includes('research domain')) {
       const query = prompt.toLowerCase();
-      if (query.includes('climate') || query.includes('environment')) {return 'environmental_science';}
-      if (query.includes('ai') || query.includes('machine learning') || query.includes('artificial intelligence')) {return 'computer_science';}
-      if (query.includes('medicine') || query.includes('health') || query.includes('disease')) {return 'medicine';}
-      if (query.includes('physics') || query.includes('quantum')) {return 'physics';}
-      if (query.includes('business') || query.includes('market') || query.includes('economy')) {return 'economics';}
-      if (query.includes('psychology') || query.includes('mental') || query.includes('behavior')) {return 'psychology';}
+      if (query.includes('climate') || query.includes('environment')) {
+        return 'environmental_science';
+      }
+      if (
+        query.includes('ai') ||
+        query.includes('machine learning') ||
+        query.includes('artificial intelligence')
+      ) {
+        return 'computer_science';
+      }
+      if (query.includes('medicine') || query.includes('health') || query.includes('disease')) {
+        return 'medicine';
+      }
+      if (query.includes('physics') || query.includes('quantum')) {
+        return 'physics';
+      }
+      if (query.includes('business') || query.includes('market') || query.includes('economy')) {
+        return 'economics';
+      }
+      if (query.includes('psychology') || query.includes('mental') || query.includes('behavior')) {
+        return 'psychology';
+      }
       return 'general';
     }
 
     // Task type classification
     if (prompt.includes('task type')) {
       const query = prompt.toLowerCase();
-      if (query.includes('compare') || query.includes('versus') || query.includes('difference')) {return 'comparative';}
-      if (query.includes('analyze') || query.includes('analysis')) {return 'analytical';}
-      if (query.includes('predict') || query.includes('future') || query.includes('forecast')) {return 'predictive';}
-      if (query.includes('evaluate') || query.includes('assess')) {return 'evaluative';}
-      if (query.includes('explore') || query.includes('discover')) {return 'exploratory';}
+      if (query.includes('compare') || query.includes('versus') || query.includes('difference')) {
+        return 'comparative';
+      }
+      if (query.includes('analyze') || query.includes('analysis')) {
+        return 'analytical';
+      }
+      if (query.includes('predict') || query.includes('future') || query.includes('forecast')) {
+        return 'predictive';
+      }
+      if (query.includes('evaluate') || query.includes('assess')) {
+        return 'evaluative';
+      }
+      if (query.includes('explore') || query.includes('discover')) {
+        return 'exploratory';
+      }
       return 'synthetic';
     }
 
@@ -112,7 +157,7 @@ const runtime = {
         `"${baseQuery}" filetype:pdf`,
         `${baseQuery} site:scholar.google.com`,
         `${baseQuery} site:arxiv.org`,
-        `${baseQuery} site:pubmed.ncbi.nlm.nih.gov`
+        `${baseQuery} site:pubmed.ncbi.nlm.nih.gov`,
       ];
 
       return queries.slice(0, 5).join('\n');
@@ -121,9 +166,15 @@ const runtime = {
     // Relevance scoring
     if (prompt.includes('relevance')) {
       // Analyze content relevance
-      if (prompt.includes('directly addresses') || prompt.includes('highly relevant')) {return '0.95';}
-      if (prompt.includes('related') || prompt.includes('relevant')) {return '0.85';}
-      if (prompt.includes('tangential') || prompt.includes('somewhat')) {return '0.65';}
+      if (prompt.includes('directly addresses') || prompt.includes('highly relevant')) {
+        return '0.95';
+      }
+      if (prompt.includes('related') || prompt.includes('relevant')) {
+        return '0.85';
+      }
+      if (prompt.includes('tangential') || prompt.includes('somewhat')) {
+        return '0.65';
+      }
       return '0.75';
     }
 
@@ -173,7 +224,9 @@ const runtime = {
 
 async function runDeepResearch() {
   console.log('🧠 ElizaOS Deep Research Engine\n');
-  console.log('📊 Competing with OpenAI Deep Research by performing comprehensive, multi-source analysis\n');
+  console.log(
+    '📊 Competing with OpenAI Deep Research by performing comprehensive, multi-source analysis\n'
+  );
   console.log('🔍 Using real search providers: Tavily, Exa, SerpAPI, Academic Search\n');
   console.log('📁 File logging enabled - detailed reports saved to research_logs/\n');
 
@@ -183,15 +236,18 @@ async function runDeepResearch() {
   // High-quality research queries that require deep investigation
   const researchQueries = [
     {
-      query: 'What are the latest breakthroughs in quantum computing and their implications for cryptography and computational complexity theory?',
+      query:
+        'What are the latest breakthroughs in quantum computing and their implications for cryptography and computational complexity theory?',
       description: 'Cutting-edge technology research requiring technical depth',
     },
     {
-      query: 'Analyze the effectiveness of mRNA vaccine technology beyond COVID-19: current clinical trials, challenges, and future therapeutic applications',
+      query:
+        'Analyze the effectiveness of mRNA vaccine technology beyond COVID-19: current clinical trials, challenges, and future therapeutic applications',
       description: 'Medical research requiring scientific rigor',
     },
     {
-      query: 'Compare the environmental and economic impacts of different renewable energy storage technologies for grid-scale deployment',
+      query:
+        'Compare the environmental and economic impacts of different renewable energy storage technologies for grid-scale deployment',
       description: 'Comparative analysis requiring data synthesis',
     },
   ];
@@ -228,10 +284,12 @@ async function runDeepResearch() {
       const maxChecks = 120; // 2 minutes max
 
       while (checkCount < maxChecks) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         const currentProject = await service.getProject(project.id);
-        if (!currentProject) {break;}
+        if (!currentProject) {
+          break;
+        }
 
         // Show phase changes
         if (currentProject.phase !== lastPhase) {
@@ -241,7 +299,9 @@ async function runDeepResearch() {
 
         // Show progress indicators
         if (currentProject.sources.length > 0) {
-          process.stdout.write(`\r   Sources: ${currentProject.sources.length} | Findings: ${currentProject.findings.length} | Status: ${currentProject.status}`);
+          process.stdout.write(
+            `\r   Sources: ${currentProject.sources.length} | Findings: ${currentProject.findings.length} | Status: ${currentProject.status}`
+          );
         }
 
         // Check if completed
@@ -282,7 +342,6 @@ async function runDeepResearch() {
 
         console.log('\n📁 Full report saved to research_logs/');
       }
-
     } catch (error) {
       console.error(`\n❌ Deep research failed: ${error}`);
       console.error('Stack:', error instanceof Error ? error.stack : 'No stack trace');
@@ -291,7 +350,7 @@ async function runDeepResearch() {
     // Pause between research projects
     if (i < researchQueries.length - 1) {
       console.log('\n⏸️  Pausing before next research project...');
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 3000));
     }
   }
 
@@ -302,9 +361,9 @@ async function runDeepResearch() {
   try {
     const logsDir = path.join(process.cwd(), 'research_logs');
     const files = await fs.readdir(logsDir);
-    const todayFiles = files.filter(f => f.includes(new Date().toISOString().split('T')[0]));
-    const mdFiles = todayFiles.filter(f => f.endsWith('.md')).sort();
-    const jsonFiles = todayFiles.filter(f => f.endsWith('.json')).sort();
+    const todayFiles = files.filter((f) => f.includes(new Date().toISOString().split('T')[0]));
+    const mdFiles = todayFiles.filter((f) => f.endsWith('.md')).sort();
+    const jsonFiles = todayFiles.filter((f) => f.endsWith('.json')).sort();
 
     if (mdFiles.length > 0) {
       console.log('📄 Research Reports (Markdown):');
@@ -320,7 +379,9 @@ async function runDeepResearch() {
       console.log('\n💡 View reports with:');
       console.log(`   cat research_logs/${mdFiles[0]}`);
       console.log('\n💡 Analyze JSON data:');
-      console.log(`   cat research_logs/${jsonFiles[0]} | jq '.findings[] | {content, confidence}'`);
+      console.log(
+        `   cat research_logs/${jsonFiles[0]} | jq '.findings[] | {content, confidence}'`
+      );
 
       // Show report quality metrics
       console.log('\n📈 Research Quality Indicators:');
@@ -339,7 +400,6 @@ async function runDeepResearch() {
         }
       }
     }
-
   } catch (error) {
     console.log('Unable to read research outputs');
   }

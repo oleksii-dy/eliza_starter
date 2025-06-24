@@ -32,7 +32,7 @@ export async function createTestPGLiteInstance(options: PGliteOptions): Promise<
 
       // Add delay between attempts
       if (attempt > 1) {
-        await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+        await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
       }
 
       const instance = new PGlite(options);
@@ -48,6 +48,6 @@ export async function createTestPGLiteInstance(options: PGliteOptions): Promise<
 
   throw new Error(
     `Test PGLite initialization failed after ${maxRetries} attempts. ` +
-    `Last error: ${lastError?.message}`
+      `Last error: ${lastError?.message}`
   );
 }

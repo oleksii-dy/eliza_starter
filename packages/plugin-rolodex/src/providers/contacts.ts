@@ -4,7 +4,7 @@ import { RolodexService } from '../services/RolodexService';
 export const contactsProvider: Provider = {
   name: 'CONTACTS',
   description: 'Provides contact information from the rolodex',
-  get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
+  get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
     try {
       const rolodexService = runtime.getService('rolodex') as RolodexService;
       if (!rolodexService) {

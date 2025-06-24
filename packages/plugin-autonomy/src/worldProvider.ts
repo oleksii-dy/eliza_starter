@@ -52,21 +52,21 @@ export const autonomousWorldProvider: Provider = {
 
       const worldInfo = world
         ? {
-            id: world.id,
-            name: world.name,
-            serverId: world.serverId,
-            agentId: world.agentId,
-          }
+          id: world.id,
+          name: world.name,
+          serverId: world.serverId,
+          agentId: world.agentId,
+        }
         : null;
 
       const roomInfo = room
         ? {
-            id: room.id,
-            name: room.name,
-            type: room.type,
-            worldId: room.worldId,
-            source: room.source,
-          }
+          id: room.id,
+          name: room.name,
+          type: room.type,
+          worldId: room.worldId,
+          source: room.source,
+        }
         : null;
 
       const statusText = [

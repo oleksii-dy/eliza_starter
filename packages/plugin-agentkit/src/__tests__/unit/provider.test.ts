@@ -4,7 +4,7 @@ import { createMockRuntime, createMockMemory, createMockState } from '../test-ut
 import type { IAgentRuntime } from '../../types/core.d';
 import agentkitPlugin from '../../index';
 import { AgentKitService } from '../../services/AgentKitService';
-import { CustodialWalletService } from '../../services/CustodialWalletService';
+import { CustodialWalletService as _CustodialWalletService } from '../../services/CustodialWalletService';
 
 describe('walletProvider', () => {
   let mockRuntime: IAgentRuntime;
@@ -149,8 +149,6 @@ describe('AgentKit Plugin Provider', () => {
 
     const agentKitService = new AgentKitServiceClass(mockRuntime);
     expect(agentKitService).toBeInstanceOf(AgentKitService);
-
-
   });
 
   it('should handle missing environment variables gracefully', async () => {

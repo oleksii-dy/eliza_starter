@@ -197,11 +197,7 @@ describe('WalletRepository', () => {
     it('should remove wallet permission', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      await repository.removePermission(
-        'wallet-123' as UUID,
-        'entity-456' as UUID,
-        'transfer'
-      );
+      await repository.removePermission('wallet-123' as UUID, 'entity-456' as UUID, 'transfer');
 
       expect(mockDb.run).toHaveBeenCalledWith(
         expect.stringContaining('DELETE FROM wallet_permissions'),
@@ -265,11 +261,7 @@ describe('WalletRepository', () => {
     it('should update transaction status', async () => {
       mockDb.run.mockResolvedValue({ changes: 1 });
 
-      await repository.updateTransactionStatus(
-        'tx-123' as UUID,
-        'confirmed',
-        '0xhash123'
-      );
+      await repository.updateTransactionStatus('tx-123' as UUID, 'confirmed', '0xhash123');
 
       expect(mockDb.run).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE wallet_transactions SET status = ?'),
@@ -326,7 +318,7 @@ describe('WalletRepository', () => {
 /**
  * Helper function to create test wallet with defaults
  */
-function createTestWallet(overrides: Partial<CustodialWallet> = {}): CustodialWallet {
+function _createTestWallet(overrides: Partial<CustodialWallet> = {}): CustodialWallet {
   return {
     id: randomUUID() as UUID,
     address: `0x${randomUUID().replace(/-/g, '').slice(0, 40)}`,

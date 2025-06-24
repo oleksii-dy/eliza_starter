@@ -21,10 +21,7 @@ describe('SQL Plugin E2E Scenarios', () => {
     console.log('[SCENARIO SETUP] Creating isolated test environment...');
 
     // Create isolated test database with runtime
-    const setup = await createIsolatedTestDatabase(
-      `scenario_tests_${Date.now()}`,
-      []
-    );
+    const setup = await createIsolatedTestDatabase(`scenario_tests_${Date.now()}`, []);
 
     // Use the runtime, testAgentId, and cleanup from the setup
     runtime = setup.runtime;
@@ -125,9 +122,13 @@ describe('SQL Plugin E2E Scenarios', () => {
       });
 
       expect(conversationMemories.length).toBe(3);
-      expect(conversationMemories.some(m => m.content.text?.includes('Dynamic tables work!'))).toBe(true);
-      expect(conversationMemories.some(m => m.content.text?.includes('List all hello world'))).toBe(true);
-      expect(conversationMemories.some(m => m.content.text?.includes('Hola Mundo'))).toBe(true);
+      expect(
+        conversationMemories.some((m) => m.content.text?.includes('Dynamic tables work!'))
+      ).toBe(true);
+      expect(
+        conversationMemories.some((m) => m.content.text?.includes('List all hello world'))
+      ).toBe(true);
+      expect(conversationMemories.some((m) => m.content.text?.includes('Hola Mundo'))).toBe(true);
 
       console.log('[SCENARIO 1] ✅ Dynamic table creation workflow completed successfully');
     });
@@ -233,8 +234,8 @@ describe('SQL Plugin E2E Scenarios', () => {
       });
 
       expect(relationships.length).toBeGreaterThan(0);
-      const foundRelationship = relationships.find(r =>
-        r.sourceEntityId === agent1Id && r.targetEntityId === agent2Id
+      const foundRelationship = relationships.find(
+        (r) => r.sourceEntityId === agent1Id && r.targetEntityId === agent2Id
       );
       expect(foundRelationship).toBeDefined();
       expect(foundRelationship?.metadata.project).toBe('shared-database-test');
@@ -321,22 +322,25 @@ describe('SQL Plugin E2E Scenarios', () => {
       ];
 
       for (const text of projectMemories) {
-        await runtime.createMemory({
-          id: uuidv4() as UUID,
-          entityId: projectManagerId,
-          agentId: testAgentId,
-          roomId: projectRoomId,
-          content: {
-            text,
-            source: 'project-knowledge',
+        await runtime.createMemory(
+          {
+            id: uuidv4() as UUID,
+            entityId: projectManagerId,
+            agentId: testAgentId,
+            roomId: projectRoomId,
+            content: {
+              text,
+              source: 'project-knowledge',
+            },
+            embedding: Array(384).fill(Math.random()), // Simulate real embeddings
+            metadata: {
+              type: 'knowledge',
+              category: 'project_documentation',
+            },
+            createdAt: Date.now(),
           },
-          embedding: Array(384).fill(Math.random()), // Simulate real embeddings
-          metadata: {
-            type: 'knowledge',
-            category: 'project_documentation',
-          },
-          createdAt: Date.now(),
-        }, 'facts');
+          'facts'
+        );
       }
 
       // Scenario Step 3: Test semantic search capabilities
@@ -358,8 +362,8 @@ describe('SQL Plugin E2E Scenarios', () => {
       const projectComponents = await runtime.getComponents(projectManagerId);
       expect(projectComponents.length).toBe(2);
 
-      const statusComponent = projectComponents.find(c => c.type === 'project_status');
-      const metricsComponent = projectComponents.find(c => c.type === 'project_metrics');
+      const statusComponent = projectComponents.find((c) => c.type === 'project_status');
+      const metricsComponent = projectComponents.find((c) => c.type === 'project_metrics');
 
       expect(statusComponent).toBeDefined();
       expect(metricsComponent).toBeDefined();
@@ -408,27 +412,30 @@ describe('SQL Plugin E2E Scenarios', () => {
       console.log('[SCENARIO 4.2] Testing concurrent operations');
 
       const concurrentPromises = Array.from({ length: 5 }, (_, i) =>
-        runtime.createMemory({
-          id: uuidv4() as UUID,
-          entityId: testUserId,
-          agentId: testAgentId,
-          roomId: edgeCaseRoomId,
-          content: {
-            text: `Concurrent message ${i + 1}`,
-            source: 'concurrency-test',
+        runtime.createMemory(
+          {
+            id: uuidv4() as UUID,
+            entityId: testUserId,
+            agentId: testAgentId,
+            roomId: edgeCaseRoomId,
+            content: {
+              text: `Concurrent message ${i + 1}`,
+              source: 'concurrency-test',
+            },
+            metadata: {
+              type: 'message',
+              concurrent: true,
+              index: i,
+            },
+            createdAt: Date.now() + i, // Slight time differences
           },
-          metadata: {
-            type: 'message',
-            concurrent: true,
-            index: i,
-          },
-          createdAt: Date.now() + i, // Slight time differences
-        }, 'messages')
+          'messages'
+        )
       );
 
       const concurrentResults = await Promise.all(concurrentPromises);
       expect(concurrentResults.length).toBe(5);
-      concurrentResults.forEach(result => expect(typeof result).toBe('string'));
+      concurrentResults.forEach((result) => expect(typeof result).toBe('string'));
 
       // Scenario Step 3: Test large data operations
       console.log('[SCENARIO 4.3] Testing bulk operations');
@@ -448,26 +455,29 @@ describe('SQL Plugin E2E Scenarios', () => {
 
       const bulkResults = await Promise.all(bulkEntities);
       expect(bulkResults.length).toBe(20);
-      bulkResults.forEach(result => expect(result).toBe(true));
+      bulkResults.forEach((result) => expect(result).toBe(true));
 
       // Scenario Step 4: Test memory with special characters and edge cases
       console.log('[SCENARIO 4.4] Testing special character handling');
 
-      const specialCharMemory = await runtime.createMemory({
-        id: uuidv4() as UUID,
-        entityId: testUserId,
-        agentId: testAgentId,
-        roomId: edgeCaseRoomId,
-        content: {
-          text: 'Special chars: 🎉 中文 العربية ñoño "quotes" \'apostrophe\' <html>&amp;</html>',
-          source: 'special-char-test',
+      const specialCharMemory = await runtime.createMemory(
+        {
+          id: uuidv4() as UUID,
+          entityId: testUserId,
+          agentId: testAgentId,
+          roomId: edgeCaseRoomId,
+          content: {
+            text: 'Special chars: 🎉 中文 العربية ñoño "quotes" \'apostrophe\' <html>&amp;</html>',
+            source: 'special-char-test',
+          },
+          metadata: {
+            type: 'message',
+            specialChars: true,
+          },
+          createdAt: Date.now(),
         },
-        metadata: {
-          type: 'message',
-          specialChars: true,
-        },
-        createdAt: Date.now(),
-      }, 'messages');
+        'messages'
+      );
 
       expect(typeof specialCharMemory).toBe('string');
 
@@ -477,9 +487,8 @@ describe('SQL Plugin E2E Scenarios', () => {
         tableName: 'messages',
       });
 
-      const foundSpecial = retrievedSpecial.find(m =>
-        m.content.text?.includes('🎉') &&
-        m.content.text?.includes('中文')
+      const foundSpecial = retrievedSpecial.find(
+        (m) => m.content.text?.includes('🎉') && m.content.text?.includes('中文')
       );
       expect(foundSpecial).toBeDefined();
 
@@ -513,23 +522,26 @@ describe('SQL Plugin E2E Scenarios', () => {
       const memoryCount = 100;
 
       const performancePromises = Array.from({ length: memoryCount }, (_, i) =>
-        runtime.createMemory({
-          id: uuidv4() as UUID,
-          entityId: performanceUserId,
-          agentId: testAgentId,
-          roomId: performanceRoomId,
-          content: {
-            text: `Performance test message ${i} with enough content to simulate realistic usage patterns`,
-            source: 'performance-test',
+        runtime.createMemory(
+          {
+            id: uuidv4() as UUID,
+            entityId: performanceUserId,
+            agentId: testAgentId,
+            roomId: performanceRoomId,
+            content: {
+              text: `Performance test message ${i} with enough content to simulate realistic usage patterns`,
+              source: 'performance-test',
+            },
+            metadata: {
+              type: 'message',
+              performanceTest: true,
+              index: i,
+              timestamp: Date.now(),
+            },
+            createdAt: Date.now() + i,
           },
-          metadata: {
-            type: 'message',
-            performanceTest: true,
-            index: i,
-            timestamp: Date.now(),
-          },
-          createdAt: Date.now() + i,
-        }, 'messages')
+          'messages'
+        )
       );
 
       await Promise.all(performancePromises);
@@ -568,22 +580,24 @@ describe('SQL Plugin E2E Scenarios', () => {
         const targetId = uuidv4() as UUID;
 
         // Create entity first
-        return runtime.createEntity({
-          id: targetId,
-          names: [`Perf Target ${i}`],
-          agentId: testAgentId,
-        }).then(() =>
-          runtime.createRelationship({
-            sourceEntityId: performanceUserId,
-            targetEntityId: targetId,
-            tags: ['performance-test', `batch-${Math.floor(i / 5)}`],
-            metadata: {
-              index: i,
-              created: Date.now(),
-              testType: 'performance',
-            },
+        return runtime
+          .createEntity({
+            id: targetId,
+            names: [`Perf Target ${i}`],
+            agentId: testAgentId,
           })
-        );
+          .then(() =>
+            runtime.createRelationship({
+              sourceEntityId: performanceUserId,
+              targetEntityId: targetId,
+              tags: ['performance-test', `batch-${Math.floor(i / 5)}`],
+              metadata: {
+                index: i,
+                created: Date.now(),
+                testType: 'performance',
+              },
+            })
+          );
       });
 
       const relationshipResults = await Promise.all(relationshipPromises);
@@ -591,10 +605,12 @@ describe('SQL Plugin E2E Scenarios', () => {
       const relationshipDuration = relationshipEndTime - relationshipStartTime;
 
       expect(relationshipResults.length).toBe(relationshipCount);
-      relationshipResults.forEach(result => expect(result).toBe(true));
+      relationshipResults.forEach((result) => expect(result).toBe(true));
       expect(relationshipDuration).toBeLessThan(3000); // Should create 20 relationships in < 3 seconds
 
-      console.log(`[SCENARIO 5.3] Created ${relationshipCount} relationships in ${relationshipDuration}ms`);
+      console.log(
+        `[SCENARIO 5.3] Created ${relationshipCount} relationships in ${relationshipDuration}ms`
+      );
 
       console.log('[SCENARIO 5] ✅ Performance and scalability tests completed successfully');
     });

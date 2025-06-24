@@ -340,10 +340,7 @@ export class ResearchService extends Service {
         }
       }
     } catch (error) {
-      logger.warn(
-        'Error using embeddings for domain classification, falling back to LLM:',
-        error
-      );
+      logger.warn('Error using embeddings for domain classification, falling back to LLM:', error);
     }
 
     // Fallback: Use LLM classification
@@ -354,8 +351,8 @@ Query: "${query}"
 
 Available domains:
 ${Object.values(ResearchDomain)
-    .map((d) => `- ${d}`)
-    .join('\n')}
+  .map((d) => `- ${d}`)
+  .join('\n')}
 
 Consider:
 - Primary subject matter and field of study
@@ -405,10 +402,7 @@ Respond with ONLY the domain name from the list above. Be precise.`;
 
         logger.warn(`Could not extract domain from LLM response: ${domainText}`);
       } catch (error) {
-        logger.warn(
-          'Error using LLM for domain extraction, falling back to heuristics:',
-          error
-        );
+        logger.warn('Error using LLM for domain extraction, falling back to heuristics:', error);
       }
     }
 
@@ -452,7 +446,9 @@ Respond with ONLY the domain name from the list above. Be precise.`;
   }
 
   private calculateCosineSimilarity(a: number[], b: number[]): number {
-    if (a.length !== b.length) {return 0;}
+    if (a.length !== b.length) {
+      return 0;
+    }
 
     let dotProduct = 0;
     let normA = 0;
@@ -779,11 +775,21 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
         }
 
         // Check for keyword matches
-        if (taskText.includes('compar')) {return TaskType.COMPARATIVE;}
-        if (taskText.includes('analy')) {return TaskType.ANALYTICAL;}
-        if (taskText.includes('synth')) {return TaskType.SYNTHETIC;}
-        if (taskText.includes('eval')) {return TaskType.EVALUATIVE;}
-        if (taskText.includes('pred') || taskText.includes('forecast')) {return TaskType.PREDICTIVE;}
+        if (taskText.includes('compar')) {
+          return TaskType.COMPARATIVE;
+        }
+        if (taskText.includes('analy')) {
+          return TaskType.ANALYTICAL;
+        }
+        if (taskText.includes('synth')) {
+          return TaskType.SYNTHETIC;
+        }
+        if (taskText.includes('eval')) {
+          return TaskType.EVALUATIVE;
+        }
+        if (taskText.includes('pred') || taskText.includes('forecast')) {
+          return TaskType.PREDICTIVE;
+        }
 
         // Check for test/mock responses
         if (taskText.includes('mock') || taskText.includes('test')) {
@@ -804,7 +810,9 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
 
   private async startResearch(projectId: string, config: ResearchConfig): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) {return;}
+    if (!project) {
+      return;
+    }
 
     const controller = new AbortController();
     this.activeResearch.set(projectId, controller);
@@ -845,10 +853,7 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
           await this.updatePhase(project, ResearchPhase.EVALUATING);
           await this.evaluateProject(project.id);
         } catch (evalError) {
-          logger.warn(
-            '[ResearchService] Evaluation failed, but research completed:',
-            evalError
-          );
+          logger.warn('[ResearchService] Evaluation failed, but research completed:', evalError);
           // Don't fail the entire research if evaluation fails
         }
       }
@@ -984,7 +989,9 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
     const relevanceScores = new Map<string, any>();
 
     for (const result of allResults) {
-      if (signal.aborted) {break;}
+      if (signal.aborted) {
+        break;
+      }
       const relevanceScore = await this.relevanceAnalyzer.scoreSearchResultRelevance(
         result,
         queryAnalysis
@@ -1017,7 +1024,9 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
 
     // Process main results
     for (const result of mainResults) {
-      if (signal.aborted) {break;}
+      if (signal.aborted) {
+        break;
+      }
 
       const source = await this.processSearchResult(result, project);
       if (source) {
@@ -1027,14 +1036,18 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
 
     // Execute sub-queries
     for (const subQuery of queryPlan.subQueries) {
-      if (signal.aborted) {break;}
+      if (signal.aborted) {
+        break;
+      }
 
       // Check dependencies
       const dependenciesMet = subQuery.dependsOn.every(
         (depId) => queryPlan.subQueries.find((sq) => sq.id === depId)?.completed
       );
 
-      if (!dependenciesMet) {continue;}
+      if (!dependenciesMet) {
+        continue;
+      }
 
       const subResults = await webProvider.search(
         subQuery.query,
@@ -1042,7 +1055,9 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
       );
 
       for (const result of subResults) {
-        if (signal.aborted) {break;}
+        if (signal.aborted) {
+          break;
+        }
 
         const source = await this.processSearchResult(result, project);
         if (source) {
@@ -1171,8 +1186,12 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
     }
 
     // Adjust based on metadata
-    if (result.metadata?.author) {baseScore += 0.05;}
-    if (result.metadata?.publishDate) {baseScore += 0.05;}
+    if (result.metadata?.author) {
+      baseScore += 0.05;
+    }
+    if (result.metadata?.publishDate) {
+      baseScore += 0.05;
+    }
 
     return Math.min(baseScore, 1.0);
   }
@@ -1192,7 +1211,9 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
     const searchProvider = this.searchProviderFactory.getProvider(config.searchProviders[0]);
 
     for (const query of refinedQueries) {
-      if (signal.aborted) {break;}
+      if (signal.aborted) {
+        break;
+      }
 
       const results = await searchProvider.search(query, Math.floor(config.maxSearchResults / 3));
 
@@ -1370,9 +1391,7 @@ Format as JSON array:
     const sanitizedContent = this.sanitizeContentForLLM(content);
 
     if (!sanitizedContent || sanitizedContent.length < 50) {
-      logger.warn(
-        `[ResearchService] Content too short for claim extraction from ${source.title}`
-      );
+      logger.warn(`[ResearchService] Content too short for claim extraction from ${source.title}`);
       return [];
     }
 
@@ -1458,9 +1477,7 @@ Format as JSON array:
   }
 
   private async synthesizeFindings(project: ResearchProject): Promise<void> {
-    logger.info(
-      `[ResearchService] Starting synthesis for ${project.findings.length} findings`
-    );
+    logger.info(`[ResearchService] Starting synthesis for ${project.findings.length} findings`);
 
     // Group findings by category
     const categories = new Map<string, ResearchFinding[]>();
@@ -1527,8 +1544,8 @@ Task Type: ${project.metadata.taskType}
 
 Category Analyses:
 ${Object.entries(categoryAnalysis)
-    .map(([cat, analysis]) => `${cat}:\n${analysis}`)
-    .join('\n\n')}
+  .map(([cat, analysis]) => `${cat}:\n${analysis}`)
+  .join('\n\n')}
 
 Create a comprehensive synthesis that:
 1. Answers the original research question
@@ -1551,9 +1568,7 @@ Create a comprehensive synthesis that:
 
   private async generateReport(project: ResearchProject): Promise<void> {
     try {
-      logger.info(
-        `[ResearchService] Generating comprehensive report for project ${project.id}`
-      );
+      logger.info(`[ResearchService] Generating comprehensive report for project ${project.id}`);
 
       // Use new prompt templates for better structure
       const queryAnalysis = await this.analyzeQueryForReport(project);
@@ -2317,7 +2332,9 @@ Maintain the academic tone and ensure all claims are well-supported by the sourc
 
     for (const [sourceId, content] of detailedContent.entries()) {
       const source = project.sources.find((s) => s.id === sourceId);
-      if (!source) {continue;}
+      if (!source) {
+        continue;
+      }
 
       const findings = project.findings.filter((f) => f.source.id === sourceId);
 
@@ -2398,7 +2415,9 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
     const processedUrls = new Set<string>();
 
     for (const source of project.sources) {
-      if (processedUrls.has(source.url)) {continue;}
+      if (processedUrls.has(source.url)) {
+        continue;
+      }
       processedUrls.add(source.url);
 
       const authors = source.author?.join(', ') || 'Unknown';
@@ -2514,7 +2533,9 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
   }
 
   private exportAsMarkdown(project: ResearchProject): string {
-    if (!project.report) {return '';}
+    if (!project.report) {
+      return '';
+    }
 
     let markdown = `# ${project.report.title}\n\n`;
     markdown += `**Generated:** ${new Date(project.report.generatedAt).toISOString()}\n\n`;
@@ -2535,7 +2556,9 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
   }
 
   private exportAsDeepResearchBench(project: ResearchProject): DeepResearchBenchResult {
-    if (!project.report) {throw new Error('Report not generated');}
+    if (!project.report) {
+      throw new Error('Report not generated');
+    }
 
     const article = project.report.sections.map((s) => `${s.heading}\n\n${s.content}`).join('\n\n');
 
@@ -2550,29 +2573,29 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
         modelVersion: 'eliza-research-1.0',
         evaluationScores: project.report.evaluationMetrics
           ? {
-            race: project.report.evaluationMetrics.raceScore,
-            fact: project.report.evaluationMetrics.factScore,
-          }
+              race: project.report.evaluationMetrics.raceScore,
+              fact: project.report.evaluationMetrics.factScore,
+            }
           : {
-            race: {
-              overall: 0,
-              comprehensiveness: 0,
-              depth: 0,
-              instructionFollowing: 0,
-              readability: 0,
-              breakdown: [],
+              race: {
+                overall: 0,
+                comprehensiveness: 0,
+                depth: 0,
+                instructionFollowing: 0,
+                readability: 0,
+                breakdown: [],
+              },
+              fact: {
+                citationAccuracy: 0,
+                effectiveCitations: 0,
+                totalCitations: 0,
+                verifiedCitations: 0,
+                disputedCitations: 0,
+                citationCoverage: 0,
+                sourceCredibility: 0,
+                breakdown: [],
+              },
             },
-            fact: {
-              citationAccuracy: 0,
-              effectiveCitations: 0,
-              totalCitations: 0,
-              verifiedCitations: 0,
-              disputedCitations: 0,
-              citationCoverage: 0,
-              sourceCredibility: 0,
-              breakdown: [],
-            },
-          },
       },
     };
   }
@@ -2674,7 +2697,9 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
    * excess whitespace, and special characters that might interfere
    */
   private sanitizeContentForLLM(content: string): string {
-    if (!content) {return '';}
+    if (!content) {
+      return '';
+    }
 
     // Decode HTML entities
     const htmlEntities: Record<string, string> = {
@@ -2746,7 +2771,9 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
 
   async addRefinedQueries(projectId: string, queries: string[]): Promise<void> {
     const project = this.projects.get(projectId);
-    if (!project) {throw new Error('Project not found');}
+    if (!project) {
+      throw new Error('Project not found');
+    }
 
     // Add as new sub-queries
     const newSubQueries = queries.map((query, index) => ({
@@ -3126,9 +3153,7 @@ Format as JSON array with at least one finding if the content is relevant:
       }
 
       // If no findings extracted, try a simpler approach
-      logger.warn(
-        `[ResearchService] No valid findings extracted via JSON for ${source.title}`
-      );
+      logger.warn(`[ResearchService] No valid findings extracted via JSON for ${source.title}`);
 
       // Fallback: Create a single finding if content seems relevant
       if (sanitizedContent.length > 100) {
@@ -3200,7 +3225,6 @@ Format as JSON array with at least one finding if the content is relevant:
     }
     this.activeResearch.clear();
     // Explicitly return void
-
   }
 
   async getProject(projectId: string): Promise<ResearchProject | undefined> {

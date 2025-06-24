@@ -50,16 +50,18 @@ async function runStartupCycleTest() {
     // Create test data
     console.log('💾 Creating test data...');
     const testEntityId = 'startup-test-entity';
-    await adapter1.createEntities([{
-      id: testEntityId,
-      names: ['Startup Test Entity'],
-      metadata: {
-        startup: 1,
-        timestamp: Date.now(),
-        message: 'Data from first startup'
+    await adapter1.createEntities([
+      {
+        id: testEntityId,
+        names: ['Startup Test Entity'],
+        metadata: {
+          startup: 1,
+          timestamp: Date.now(),
+          message: 'Data from first startup',
+        },
+        agentId: runtime1.agentId,
       },
-      agentId: runtime1.agentId,
-    }]);
+    ]);
 
     // Verify data creation
     const entities1 = await adapter1.getEntitiesByIds([testEntityId]);
@@ -72,7 +74,7 @@ async function runStartupCycleTest() {
 
     // Wait a moment (simulating user stopping the app)
     console.log('⏱️  Waiting 2 seconds...');
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // ========== SECOND STARTUP (This is where the error occurs) ==========
     console.log('\n📦 SECOND STARTUP - Creating new runtime...');
@@ -105,7 +107,6 @@ async function runStartupCycleTest() {
     console.log('\n🎉 STARTUP CYCLE TEST COMPLETED SUCCESSFULLY!');
     console.log('✅ No WebAssembly abort errors occurred');
     console.log('✅ Data persisted through restart cycle');
-
   } catch (error) {
     console.error('\n❌ STARTUP CYCLE TEST FAILED:');
     console.error('Error:', error.message);
@@ -134,7 +135,7 @@ async function runStartupCycleTest() {
 
 // Run the test
 console.log('🚀 Starting startup cycle test...');
-runStartupCycleTest().catch(error => {
+runStartupCycleTest().catch((error) => {
   console.error('💥 Test failed:', error.message);
   process.exit(1);
 });

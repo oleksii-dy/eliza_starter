@@ -467,9 +467,9 @@ async function getKnowledgeDocumentsHandler(req: any, res: any, runtime: IAgentR
     const cleanMemories = includeEmbedding
       ? filteredMemories
       : filteredMemories.map((memory: Memory) => ({
-        ...memory,
-        embedding: undefined,
-      }));
+          ...memory,
+          embedding: undefined,
+        }));
     sendSuccess(res, {
       memories: cleanMemories,
       urlFiltered: fileUrls ? true : false,
@@ -752,12 +752,12 @@ async function getKnowledgeChunksHandler(req: any, res: any, runtime: IAgentRunt
     // Filter chunks by documentId if provided
     const filteredChunks = documentId
       ? chunks.filter(
-        (chunk) =>
-          chunk.metadata &&
+          (chunk) =>
+            chunk.metadata &&
             typeof chunk.metadata === 'object' &&
             'documentId' in chunk.metadata &&
             chunk.metadata.documentId === documentId
-      )
+        )
       : chunks;
 
     sendSuccess(res, { chunks: filteredChunks });

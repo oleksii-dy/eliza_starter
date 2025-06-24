@@ -647,37 +647,39 @@ function generateLargeTechnicalDocument(
   for (let i = 1; i <= sections; i++) {
     doc += `## Section ${i}: ${content} Analysis\n\n`;
     doc += `This section covers detailed ${content} information for ${version}. `;
-    doc += `It includes comprehensive explanations, technical details, and practical examples. `;
-    doc += `The content is designed to test the knowledge system's ability to handle large documents `;
-    doc += `with multiple sections and complex information structures.\n\n`;
+    doc += 'It includes comprehensive explanations, technical details, and practical examples. ';
+    doc +=
+      "The content is designed to test the knowledge system's ability to handle large documents ";
+    doc += 'with multiple sections and complex information structures.\n\n';
 
     doc += `### Subsection ${i}.1: Core Concepts\n\n`;
-    doc += `Key concepts in this area include fundamental principles, best practices, and `;
-    doc += `implementation strategies. These concepts form the foundation for understanding `;
-    doc += `the more advanced topics covered in subsequent sections.\n\n`;
+    doc += 'Key concepts in this area include fundamental principles, best practices, and ';
+    doc += 'implementation strategies. These concepts form the foundation for understanding ';
+    doc += 'the more advanced topics covered in subsequent sections.\n\n';
 
     doc += `### Subsection ${i}.2: Technical Implementation\n\n`;
     doc += `Technical implementation details for ${content} in ${version} include specific `;
-    doc += `algorithms, data structures, and architectural patterns. This information is `;
-    doc += `crucial for developers and system architects working with this technology.\n\n`;
+    doc += 'algorithms, data structures, and architectural patterns. This information is ';
+    doc += 'crucial for developers and system architects working with this technology.\n\n';
 
     doc += `### Subsection ${i}.3: Performance Considerations\n\n`;
     doc += `Performance optimization techniques and considerations for ${content} systems `;
-    doc += `include memory management, computational efficiency, and scalability factors. `;
-    doc += `These aspects are essential for production deployments.\n\n`;
+    doc += 'include memory management, computational efficiency, and scalability factors. ';
+    doc += 'These aspects are essential for production deployments.\n\n';
 
     if (i % 10 === 0) {
       doc += `## Checkpoint ${i / 10}: Summary and Review\n\n`;
       doc += `This checkpoint summarizes the key points covered in sections ${i - 9} through ${i}. `;
       doc += `It provides a comprehensive review of the ${content} concepts and their practical `;
-      doc += `applications in real-world scenarios.\n\n`;
+      doc += 'applications in real-world scenarios.\n\n';
     }
   }
 
-  doc += `## Conclusion\n\n`;
+  doc += '## Conclusion\n\n';
   doc += `This document has covered comprehensive ${content} information across ${sections} sections. `;
   doc += `The ${version} implementation provides robust functionality for knowledge management and `;
-  doc += `demonstrates the system's capability to handle complex, multi-section documents effectively.\n`;
+  doc +=
+    "demonstrates the system's capability to handle complex, multi-section documents effectively.\n";
 
   return doc;
 }
@@ -692,15 +694,16 @@ function generateComplexDocument(identifier: string, paragraphs: number, theme: 
   for (let i = 1; i <= paragraphs; i++) {
     doc += `## Section ${i}: ${theme} Details\n\n`;
     doc += `Paragraph ${i} contains specific information about ${theme} in the context of ${identifier}. `;
-    doc += `This content includes technical specifications, implementation guidelines, and `;
+    doc += 'This content includes technical specifications, implementation guidelines, and ';
     doc += `best practices for working with ${theme} systems. The information is structured `;
-    doc += `to provide comprehensive coverage of the topic while maintaining clarity and precision.\n\n`;
+    doc +=
+      'to provide comprehensive coverage of the topic while maintaining clarity and precision.\n\n';
 
     if (i % 5 === 0) {
       doc += `### Technical Deep Dive ${i / 5}\n\n`;
       doc += `This section provides an in-depth analysis of ${theme} implementation strategies. `;
-      doc += `It covers advanced topics, performance optimizations, and integration patterns `;
-      doc += `that are essential for professional development work.\n\n`;
+      doc += 'It covers advanced topics, performance optimizations, and integration patterns ';
+      doc += 'that are essential for professional development work.\n\n';
     }
   }
 

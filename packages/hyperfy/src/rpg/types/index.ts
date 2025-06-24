@@ -665,3 +665,370 @@ export interface ItemValue {
   stack: ItemStack;
   value: number;
 }
+
+// Grand Exchange types
+export enum OfferType {
+  BUY = 'buy',
+  SELL = 'sell'
+}
+
+export enum OfferStatus {
+  PENDING = 'pending',
+  PARTIAL = 'partial',
+  COMPLETE = 'complete',
+  CANCELLED = 'cancelled'
+}
+
+export interface GrandExchangeOffer {
+  id: string;
+  playerId: string;
+  type: OfferType;
+  itemId: number;
+  quantity: number;
+  pricePerItem: number;
+  quantityFulfilled: number;
+  status: OfferStatus;
+  createdAt: number;
+  updatedAt: number;
+  completedAt?: number;
+  cancelledAt?: number;
+}
+
+export interface GrandExchangeComponent extends Component {
+  type: 'grandExchange';
+
+  offers: GrandExchangeOffer[];
+  maxOffers: number;
+  offerHistory: GrandExchangeOffer[];
+  collectItems: ItemStack[];
+  collectGold: number;
+}
+
+export interface MarketData {
+  itemId: number;
+  currentPrice: number;
+  averagePrice: number;
+  volume24h: number;
+  priceChange24h: number;
+  buyOffers: number;
+  sellOffers: number;
+  lastTrade: number;
+  priceHistory: Array<{
+    timestamp: number;
+    price: number;
+    volume: number;
+  }>;
+}
+
+// Clan System types
+export enum ClanRank {
+  RECRUIT = 'recruit',
+  CORPORAL = 'corporal',
+  SERGEANT = 'sergeant',
+  LIEUTENANT = 'lieutenant',
+  CAPTAIN = 'captain',
+  GENERAL = 'general',
+  ADMIN = 'admin',
+  DEPUTY_OWNER = 'deputy_owner',
+  OWNER = 'owner'
+}
+
+export interface ClanMember {
+  playerId: string;
+  username: string;
+  rank: ClanRank;
+  joinedAt: number;
+  lastSeen: number;
+  contributions: number;
+  clanXp: number;
+}
+
+export interface Clan {
+  id: string;
+  name: string;
+  tag: string;
+  description: string;
+  owner: string;
+  created: number;
+  members: Map<string, ClanMember>;
+  maxMembers: number;
+  level: number;
+  experience: number;
+  treasury: number;
+
+  // Settings
+  settings: {
+    joinType: 'open' | 'invite' | 'closed';
+    minCombatLevel: number;
+    minTotalLevel: number;
+    kickInactiveDays: number;
+    clanColor: string;
+    motd: string; // Message of the day
+  };
+
+  // Features
+  features: {
+    citadel: boolean;
+    clanWars: boolean;
+    clanChat: boolean;
+    events: boolean;
+  };
+
+  // Permissions by rank
+  permissions: Map<ClanRank, ClanPermissions>;
+}
+
+export interface ClanPermissions {
+  invite: boolean;
+  kick: boolean;
+  promote: boolean;
+  demote: boolean;
+  accessTreasury: boolean;
+  editSettings: boolean;
+  startWars: boolean;
+  editMotd: boolean;
+  manageCitadel: boolean;
+}
+
+export interface ClanComponent extends Component {
+  type: 'clan';
+
+  clanId: string | null;
+  rank: ClanRank | null;
+  invites: string[]; // Clan IDs
+  joinedAt: number;
+  contributions: number;
+  clanXp: number;
+  lastClanChat: number;
+}
+
+// Minigame types
+export enum MinigameType {
+  CASTLE_WARS = 'castle_wars',
+  PEST_CONTROL = 'pest_control',
+  FIGHT_CAVES = 'fight_caves',
+  BARROWS = 'barrows'
+}
+
+export interface MinigameSession {
+  id: string;
+  type: MinigameType;
+  players: string[];
+  teams?: Map<string, string[]>; // Team name -> player IDs
+  startTime: number;
+  endTime?: number;
+  status: 'waiting' | 'in_progress' | 'completed';
+
+  // Minigame-specific data
+  data: any;
+}
+
+export interface CastleWarsData {
+  saradominScore: number;
+  zamorakScore: number;
+  flagCarriers: {
+    saradomin: string | null;
+    zamorak: string | null;
+  };
+  barricades: Array<{
+    team: 'saradomin' | 'zamorak';
+    position: Vector3;
+    health: number;
+  }>;
+  timeRemaining: number;
+}
+
+export interface PestControlData {
+  portals: Array<{
+    id: string;
+    color: 'purple' | 'blue' | 'yellow' | 'red';
+    health: number;
+    maxHealth: number;
+    position: Vector3;
+    shielded: boolean;
+  }>;
+  knightHealth: number;
+  knightMaxHealth: number;
+  voidKnightPosition: Vector3;
+  pestCount: number;
+  waveNumber: number;
+}
+
+export interface FightCavesData {
+  wave: number;
+  maxWave: number;
+  enemies: Array<{
+    type: 'tz-kih' | 'tz-kek' | 'tok-xil' | 'yt-mejkot' | 'ket-zek' | 'tzTok-jad';
+    health: number;
+    position: Vector3;
+  }>;
+  healersSpawned: boolean;
+  playerDeaths: number;
+  startSupplies: ItemStack[];
+}
+
+export interface BarrowsData {
+  cryptsLooted: Array<'ahrim' | 'dharok' | 'guthan' | 'karil' | 'torag' | 'verac'>;
+  brothersKilled: string[];
+  tunnelBrother: string;
+  rewardPotential: number;
+  chestLooted: boolean;
+  tunnelDoors: Map<string, boolean>; // Door ID -> is open
+}
+
+export interface MinigameComponent extends Component {
+  type: 'minigame';
+
+  currentMinigame: MinigameType | null;
+  sessionId: string | null;
+  team: string | null;
+
+  // Stats
+  stats: Map<MinigameType, MinigameStats>;
+
+  // Rewards
+  points: Map<MinigameType, number>;
+  unlockedRewards: string[];
+}
+
+export interface MinigameStats {
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  bestScore: number;
+  totalScore: number;
+  achievements: string[];
+  personalBest: any; // Minigame-specific
+}
+
+// Construction types
+export interface ConstructionRoom {
+  id: string;
+  type: RoomType;
+  rotation: number; // 0, 90, 180, 270 degrees
+  level: number; // Floor level
+  furniture: Map<string, Furniture>;
+  doors: Map<string, boolean>; // Direction -> has door
+  hotspots: Map<string, HotspotType>;
+}
+
+export enum RoomType {
+  GARDEN = 'garden',
+  PARLOUR = 'parlour',
+  KITCHEN = 'kitchen',
+  DINING_ROOM = 'dining_room',
+  WORKSHOP = 'workshop',
+  BEDROOM = 'bedroom',
+  HALL = 'hall',
+  GAMES_ROOM = 'games_room',
+  COMBAT_ROOM = 'combat_room',
+  QUEST_HALL = 'quest_hall',
+  STUDY = 'study',
+  COSTUME_ROOM = 'costume_room',
+  CHAPEL = 'chapel',
+  PORTAL_CHAMBER = 'portal_chamber',
+  FORMAL_GARDEN = 'formal_garden',
+  THRONE_ROOM = 'throne_room',
+  OUBLIETTE = 'oubliette',
+  DUNGEON = 'dungeon',
+  TREASURE_ROOM = 'treasure_room'
+}
+
+export enum HotspotType {
+  DECORATION = 'decoration',
+  SEATING = 'seating',
+  TABLE = 'table',
+  STORAGE = 'storage',
+  LIGHTING = 'lighting',
+  RUG = 'rug',
+  ALTAR = 'altar',
+  PORTAL = 'portal',
+  GUARD = 'guard',
+  TROPHY = 'trophy',
+  SKILL = 'skill',
+  GAMES = 'games'
+}
+
+export interface Furniture {
+  id: string;
+  itemId: number;
+  name: string;
+  hotspotType: HotspotType;
+  level: number;
+  experience: number;
+  materials: ItemStack[];
+  effects?: FurnitureEffect[];
+  interactable: boolean;
+}
+
+export interface FurnitureEffect {
+  type: 'teleport' | 'restore' | 'bank' | 'altar' | 'range' | 'repair' | 'pet_house';
+  data: any;
+}
+
+export interface PlayerHouse {
+  id: string;
+  ownerId: string;
+  location: 'rimmington' | 'taverley' | 'pollnivneach' | 'hosidius' | 'rellekka' | 'brimhaven' | 'yanille';
+
+  // Layout
+  layout: Map<string, ConstructionRoom>; // "x,y,z" -> Room
+  maxRooms: number;
+  maxFloors: number;
+
+  // Settings
+  settings: {
+    locked: boolean;
+    buildMode: boolean;
+    pvpEnabled: boolean;
+    teleportInside: boolean;
+    renderDistance: number;
+    theme: 'basic' | 'fancy' | 'ancient';
+  };
+
+  // Servants
+  servant: {
+    type: 'none' | 'rick' | 'maid' | 'cook' | 'butler' | 'demon_butler';
+    taskQueue: ServantTask[];
+    lastPayment: number;
+  };
+
+  // Visitors
+  visitors: string[];
+  maxVisitors: number;
+
+  // Dungeon
+  dungeonMonsters: Array<{
+    type: string;
+    position: Vector3;
+    respawnTime: number;
+  }>;
+}
+
+export interface ServantTask {
+  type: 'bank' | 'sawmill' | 'unnote' | 'fetch';
+  items: ItemStack[];
+  completionTime: number;
+}
+
+export interface ConstructionComponent extends Component {
+  type: 'construction';
+
+  level: number;
+  experience: number;
+
+  // House
+  houseId: string | null;
+  inHouse: boolean;
+  buildMode: boolean;
+
+  // Furniture owned (for flatpacks)
+  flatpacks: Map<number, number>; // Item ID -> quantity
+
+  // Current build
+  currentBuild: {
+    roomType: RoomType | null;
+    position: Vector3 | null;
+    rotation: number;
+  } | null;
+}

@@ -16,7 +16,8 @@ import { CreateRepositoryOptions, GitHubRepository } from '../types';
 export const getRepositoryAction: Action = {
   name: 'GET_GITHUB_REPOSITORY',
   similes: ['CHECK_REPO', 'FETCH_REPOSITORY', 'REPO_INFO', 'INSPECT_REPO'],
-  description: 'Retrieves information about a GitHub repository including stats, language, and metadata. Can be chained with LIST_GITHUB_ISSUES or LIST_GITHUB_PULL_REQUESTS to explore repository content',
+  description:
+    'Retrieves information about a GitHub repository including stats, language, and metadata. Can be chained with LIST_GITHUB_ISSUES or LIST_GITHUB_PULL_REQUESTS to explore repository content',
 
   validate: async (
     runtime: IAgentRuntime,
@@ -168,7 +169,8 @@ URL: ${repository.html_url}`,
 export const listRepositoriesAction: Action = {
   name: 'LIST_GITHUB_REPOSITORIES',
   similes: ['LIST_REPOS', 'MY_REPOSITORIES', 'SHOW_REPOS'],
-  description: 'Lists GitHub repositories for the authenticated user with stats and metadata. Can be chained with GET_GITHUB_REPOSITORY to inspect specific repositories or CREATE_GITHUB_REPOSITORY to add new ones',
+  description:
+    'Lists GitHub repositories for the authenticated user with stats and metadata. Can be chained with GET_GITHUB_REPOSITORY to inspect specific repositories or CREATE_GITHUB_REPOSITORY to add new ones',
 
   validate: async (
     runtime: IAgentRuntime,
@@ -314,7 +316,8 @@ export const listRepositoriesAction: Action = {
 export const createRepositoryAction: Action = {
   name: 'CREATE_GITHUB_REPOSITORY',
   similes: ['NEW_REPO', 'MAKE_REPOSITORY', 'CREATE_REPO'],
-  description: 'Creates a new GitHub repository with optional description and privacy settings. Can be chained with CREATE_GITHUB_ISSUE to add initial issues or LIST_GITHUB_REPOSITORIES to view all repositories',
+  description:
+    'Creates a new GitHub repository with optional description and privacy settings. Can be chained with CREATE_GITHUB_ISSUE to add initial issues or LIST_GITHUB_REPOSITORIES to view all repositories',
 
   validate: async (
     runtime: IAgentRuntime,
@@ -485,7 +488,8 @@ Clone URL: ${repository.clone_url}`,
 export const searchRepositoriesAction: Action = {
   name: 'SEARCH_GITHUB_REPOSITORIES',
   similes: ['FIND_REPOS', 'SEARCH_REPOS', 'REPO_SEARCH'],
-  description: 'Searches for GitHub repositories based on query with sorting and filtering options. Can be chained with GET_GITHUB_REPOSITORY to inspect specific results or GET_GITHUB_ACTIVITY to check repository activity',
+  description:
+    'Searches for GitHub repositories based on query with sorting and filtering options. Can be chained with GET_GITHUB_REPOSITORY to inspect specific results or GET_GITHUB_ACTIVITY to check repository activity',
 
   validate: async (
     runtime: IAgentRuntime,

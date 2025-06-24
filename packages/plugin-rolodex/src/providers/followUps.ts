@@ -4,7 +4,7 @@ import { FollowUpManager } from '../managers';
 export const followUpsProvider: Provider = {
   name: 'FOLLOW_UPS',
   description: 'Provides information about upcoming follow-ups and reminders',
-  get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
+  get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
     try {
       const followUpService = runtime.getService('followup') as unknown as FollowUpManager;
       if (!followUpService) {

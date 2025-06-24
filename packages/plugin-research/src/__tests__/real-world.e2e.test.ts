@@ -37,7 +37,9 @@ async function monitorResearch(
 
   while (Date.now() - startTime < timeout) {
     const project = await service.getProject(projectId);
-    if (!project) {return null;}
+    if (!project) {
+      return null;
+    }
 
     // Log phase changes
     if (project.phase !== lastPhase) {
@@ -68,7 +70,9 @@ export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Pr
   logger.info('🔨 Starting Real-World Test: Feature Development Research');
 
   const service = runtime.getService<ResearchService>('research');
-  if (!service) {throw new Error('Research service not available');}
+  if (!service) {
+    throw new Error('Research service not available');
+  }
 
   // Scenario: Developer needs to implement WebSocket real-time features
   const queries = [
@@ -162,9 +166,7 @@ export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Pr
 
   // Simulate decision-making based on research
   if (hasImplementationDetails && hasSecurityInfo && hasPerformanceInfo) {
-    logger.success(
-      '✅ Research provides comprehensive information for feature implementation'
-    );
+    logger.success('✅ Research provides comprehensive information for feature implementation');
   } else {
     logger.warn('⚠️  Some aspects missing - may need additional research');
   }
@@ -177,7 +179,9 @@ export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Prom
   logger.info('👤 Starting Real-World Test: Person Background Research');
 
   const service = runtime.getService<ResearchService>('research');
-  if (!service) {throw new Error('Research service not available');}
+  if (!service) {
+    throw new Error('Research service not available');
+  }
 
   // Scenario: Researching a potential technical advisor or hire
   const personQuery = 'Andrej Karpathy AI research contributions Tesla OpenAI recent projects 2024';
@@ -205,7 +209,9 @@ export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Prom
     },
   });
 
-  if (!result) {throw new Error('Person research failed to complete');}
+  if (!result) {
+    throw new Error('Person research failed to complete');
+  }
 
   // Analyze findings for key information
   const findings = result.findings;
@@ -256,9 +262,7 @@ export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Prom
   });
 
   logger.info('📋 Person Background Research Results:');
-  logger.info(
-    `- Professional history coverage: Tesla=${hasTeslaInfo}, OpenAI=${hasOpenAIInfo}`
-  );
+  logger.info(`- Professional history coverage: Tesla=${hasTeslaInfo}, OpenAI=${hasOpenAIInfo}`);
   logger.info(`- Education info found: ${hasEducation}`);
   logger.info(`- Recent activity (2023-2024): ${hasRecentActivity}`);
   logger.info(`- Technical contributions: ${hasTechnicalWork}`);
@@ -294,7 +298,9 @@ export async function testBreakingNewsResearch(runtime: IAgentRuntime): Promise<
   logger.info('📰 Starting Real-World Test: Breaking News Research');
 
   const service = runtime.getService<ResearchService>('research');
-  if (!service) {throw new Error('Research service not available');}
+  if (!service) {
+    throw new Error('Research service not available');
+  }
 
   // Scenario: Researching breaking AI news
   const newsQuery =
@@ -329,7 +335,9 @@ export async function testBreakingNewsResearch(runtime: IAgentRuntime): Promise<
     },
   });
 
-  if (!result) {throw new Error('News research failed to complete');}
+  if (!result) {
+    throw new Error('News research failed to complete');
+  }
 
   // Analyze news findings
   const findings = result.findings;
@@ -446,7 +454,9 @@ export async function testMarketIntelligenceResearch(runtime: IAgentRuntime): Pr
   logger.info('📈 Starting Real-World Test: Market Intelligence Research');
 
   const service = runtime.getService<ResearchService>('research');
-  if (!service) {throw new Error('Research service not available');}
+  if (!service) {
+    throw new Error('Research service not available');
+  }
 
   // Scenario: Analyzing the AI agent framework market
   const marketQuery =
@@ -467,7 +477,9 @@ export async function testMarketIntelligenceResearch(runtime: IAgentRuntime): Pr
     },
   });
 
-  if (!result) {throw new Error('Market research failed to complete');}
+  if (!result) {
+    throw new Error('Market research failed to complete');
+  }
 
   // Market analysis
   const findings = result.findings;
@@ -498,10 +510,18 @@ export async function testMarketIntelligenceResearch(runtime: IAgentRuntime): Pr
 
       // Extract features
       if (content.includes('feature') || content.includes('capability')) {
-        if (content.includes('memory')) {features.push('memory');}
-        if (content.includes('tool') || content.includes('function')) {features.push('tools');}
-        if (content.includes('chain') || content.includes('workflow')) {features.push('workflow');}
-        if (content.includes('llm') || content.includes('model')) {features.push('multi-llm');}
+        if (content.includes('memory')) {
+          features.push('memory');
+        }
+        if (content.includes('tool') || content.includes('function')) {
+          features.push('tools');
+        }
+        if (content.includes('chain') || content.includes('workflow')) {
+          features.push('workflow');
+        }
+        if (content.includes('llm') || content.includes('model')) {
+          features.push('multi-llm');
+        }
       }
 
       // Check for pricing info
@@ -598,7 +618,9 @@ export async function testProblemSolvingResearch(runtime: IAgentRuntime): Promis
   logger.info('🔧 Starting Real-World Test: Technical Problem Solving Research');
 
   const service = runtime.getService<ResearchService>('research');
-  if (!service) {throw new Error('Research service not available');}
+  if (!service) {
+    throw new Error('Research service not available');
+  }
 
   // Scenario: Debugging a complex technical issue
   const problemQuery =
@@ -621,7 +643,9 @@ export async function testProblemSolvingResearch(runtime: IAgentRuntime): Promis
     },
   });
 
-  if (!result) {throw new Error('Problem solving research failed to complete');}
+  if (!result) {
+    throw new Error('Problem solving research failed to complete');
+  }
 
   // Analyze debugging findings
   const findings = result.findings;

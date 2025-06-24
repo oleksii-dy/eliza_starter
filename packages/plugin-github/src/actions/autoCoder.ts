@@ -404,8 +404,8 @@ I recommend having a human developer review this issue.`,
 ### 🔧 Changes Made
 
 ${codeGeneration.changes
-    .map((change) => `- **${change.action.toUpperCase()}** \`${change.file}\`: ${change.reasoning}`)
-    .join('\n')}
+  .map((change) => `- **${change.action.toUpperCase()}** \`${change.file}\`: ${change.reasoning}`)
+  .join('\n')}
 
 ### 🧪 Testing ${codeGeneration.testingNeeded ? 'Required' : 'Recommended'}
 

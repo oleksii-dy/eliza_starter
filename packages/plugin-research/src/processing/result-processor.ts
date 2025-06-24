@@ -73,8 +73,8 @@ export class SearchResultProcessor {
 
     logger.info(
       `Result processing completed in ${duration}ms: ` +
-      `${processed.length} final results (removed ${duplicatesRemoved} duplicates, ` +
-      `${qualityFiltered} low-quality), diversity: ${diversityScore.toFixed(2)}`
+        `${processed.length} final results (removed ${duplicatesRemoved} duplicates, ` +
+        `${qualityFiltered} low-quality), diversity: ${diversityScore.toFixed(2)}`
     );
 
     return {
@@ -123,18 +123,20 @@ export class SearchResultProcessor {
       'amazon.com',
       'ebay.com',
       'alibaba.com',
-      'etsy.com'
+      'etsy.com',
     ];
 
-    return results.filter(result => {
-      if (!result.url) {return true;}
+    return results.filter((result) => {
+      if (!result.url) {
+        return true;
+      }
 
       try {
         const url = new URL(result.url);
         const domain = url.hostname.toLowerCase().replace(/^www\./, '');
 
-        const isBlacklisted = blacklistedDomains.some(blacklisted =>
-          domain === blacklisted || domain.endsWith(`.${blacklisted}`)
+        const isBlacklisted = blacklistedDomains.some(
+          (blacklisted) => domain === blacklisted || domain.endsWith(`.${blacklisted}`)
         );
 
         if (isBlacklisted) {
@@ -152,7 +154,7 @@ export class SearchResultProcessor {
   }
 
   private filterByQuality(results: SearchResult[]): SearchResult[] {
-    return results.filter(result => {
+    return results.filter((result) => {
       // Basic quality checks
       if (!result.title || !result.content || result.content.length < 50) {
         return false;
@@ -173,7 +175,9 @@ export class SearchResultProcessor {
   }
 
   private isLowQualityContent(result: SearchResult): boolean {
-    if (!result.content) {return true;}
+    if (!result.content) {
+      return true;
+    }
     const content = result.content.toLowerCase();
     const title = result.title.toLowerCase();
 
@@ -191,24 +195,30 @@ export class SearchResultProcessor {
       'xxx',
     ];
 
-    if (spamIndicators.some(indicator => content.includes(indicator) || title.includes(indicator))) {
+    if (
+      spamIndicators.some((indicator) => content.includes(indicator) || title.includes(indicator))
+    ) {
       return true;
     }
 
     // Check for very repetitive content
     const words = content.split(/\s+/);
-    const wordCounts = words.reduce((counts, word) => {
-      counts[word] = (counts[word] || 0) + 1;
-      return counts;
-    }, {} as Record<string, number>);
+    const wordCounts = words.reduce(
+      (counts, word) => {
+        counts[word] = (counts[word] || 0) + 1;
+        return counts;
+      },
+      {} as Record<string, number>
+    );
 
     const maxRepetition = Math.max(...Object.values(wordCounts));
-    if (maxRepetition > words.length * 0.1) { // More than 10% repetition
+    if (maxRepetition > words.length * 0.1) {
+      // More than 10% repetition
       return true;
     }
 
     // Check for insufficient substantive content
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    const sentences = content.split(/[.!?]+/).filter((s) => s.trim().length > 10);
     if (sentences.length < 3) {
       return true;
     }
@@ -266,10 +276,20 @@ export class SearchResultProcessor {
 
   private calculateTextSimilarity(text1: string, text2: string): number {
     // Simple Jaccard similarity based on word overlap
-    const words1 = new Set(text1.toLowerCase().split(/\s+/).filter(w => w.length > 2));
-    const words2 = new Set(text2.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+    const words1 = new Set(
+      text1
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((w) => w.length > 2)
+    );
+    const words2 = new Set(
+      text2
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((w) => w.length > 2)
+    );
 
-    const intersection = new Set([...words1].filter(w => words2.has(w)));
+    const intersection = new Set([...words1].filter((w) => words2.has(w)));
     const union = new Set([...words1, ...words2]);
 
     return union.size === 0 ? 0 : intersection.size / union.size;
@@ -292,7 +312,11 @@ export class SearchResultProcessor {
     }
 
     // Prefer longer, more substantive content
-    if (newResult.content && existing.content && newResult.content.length > existing.content.length * 1.5) {
+    if (
+      newResult.content &&
+      existing.content &&
+      newResult.content.length > existing.content.length * 1.5
+    ) {
       return true;
     }
 
@@ -307,7 +331,9 @@ export class SearchResultProcessor {
 
     // Try to extract from content
     if (result.content) {
-      const dateMatches = result.content.match(/\b(20\d{2}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]20\d{2})\b/);
+      const dateMatches = result.content.match(
+        /\b(20\d{2}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]20\d{2})\b/
+      );
       if (dateMatches) {
         return new Date(dateMatches[0]);
       }
@@ -317,38 +343,40 @@ export class SearchResultProcessor {
   }
 
   private rankResults(results: SearchResult[]): SearchResult[] {
-    return results.map(result => {
-      let score = result.score || 0.5;
+    return results
+      .map((result) => {
+        let score = result.score || 0.5;
 
-      // Boost academic sources
-      if (result.provider === 'academic' || this.isAcademicSource(result)) {
-        score *= 1.3;
-      }
+        // Boost academic sources
+        if (result.provider === 'academic' || this.isAcademicSource(result)) {
+          score *= 1.3;
+        }
 
-      // Boost reputable domains
-      if (this.isReputableDomain(result.url)) {
-        score *= 1.2;
-      }
+        // Boost reputable domains
+        if (this.isReputableDomain(result.url)) {
+          score *= 1.2;
+        }
 
-      // Boost recent content
-      const date = this.extractDate(result);
-      if (date) {
-        const ageInDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
-        if (ageInDays < 365) {
+        // Boost recent content
+        const date = this.extractDate(result);
+        if (date) {
+          const ageInDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+          if (ageInDays < 365) {
+            score *= 1.1;
+          }
+        }
+
+        // Boost longer, more comprehensive content
+        if (result.content && result.content.length > 2000) {
           score *= 1.1;
         }
-      }
 
-      // Boost longer, more comprehensive content
-      if (result.content && result.content.length > 2000) {
-        score *= 1.1;
-      }
-
-      return {
-        ...result,
-        score: Math.min(score, 1.0), // Cap at 1.0
-      };
-    }).sort((a, b) => (b.score || 0) - (a.score || 0));
+        return {
+          ...result,
+          score: Math.min(score, 1.0), // Cap at 1.0
+        };
+      })
+      .sort((a, b) => (b.score || 0) - (a.score || 0));
   }
 
   private isAcademicSource(result: SearchResult): boolean {
@@ -367,7 +395,7 @@ export class SearchResultProcessor {
       '.ac.uk',
     ];
 
-    return academicDomains.some(domain => result.url.includes(domain));
+    return academicDomains.some((domain) => result.url.includes(domain));
   }
 
   private isReputableDomain(url: string): boolean {
@@ -389,7 +417,7 @@ export class SearchResultProcessor {
       'stackoverflow.com',
     ];
 
-    return reputableDomains.some(domain => url.includes(domain));
+    return reputableDomains.some((domain) => url.includes(domain));
   }
 
   private optimizeForDiversity(results: SearchResult[]): SearchResult[] {
@@ -417,7 +445,8 @@ export class SearchResultProcessor {
         diversityPenalty *= 0.9;
       }
 
-      const adjustedScore = (result.score || 0.5) *
+      const adjustedScore =
+        (result.score || 0.5) *
         (1 - this.config.diversityWeight + this.config.diversityWeight * diversityPenalty);
 
       diversified.push({
@@ -433,10 +462,12 @@ export class SearchResultProcessor {
   }
 
   private calculateDiversityScore(results: SearchResult[]): number {
-    if (results.length === 0) {return 0;}
+    if (results.length === 0) {
+      return 0;
+    }
 
-    const domains = new Set(results.map(r => new URL(r.url).hostname));
-    const providers = new Set(results.map(r => r.provider));
+    const domains = new Set(results.map((r) => new URL(r.url).hostname));
+    const providers = new Set(results.map((r) => r.provider));
 
     // Calculate diversity as ratio of unique domains/providers to total results
     const domainDiversity = domains.size / results.length;

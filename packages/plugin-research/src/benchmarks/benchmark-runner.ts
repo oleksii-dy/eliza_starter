@@ -1,6 +1,12 @@
 import { IAgentRuntime, logger } from '@elizaos/core';
 import { ResearchService } from '../service';
-import { EvaluationMetrics, EvaluationResults, ResearchProject, DeepResearchBenchResult, ResearchStatus } from '../types';
+import {
+  EvaluationMetrics,
+  EvaluationResults,
+  ResearchProject,
+  DeepResearchBenchResult,
+  ResearchStatus,
+} from '../types';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -98,14 +104,11 @@ export class BenchmarkRunner {
 
       try {
         // Create research project
-        const project = await this.researchService.createResearchProject(
-          benchmarkQuery.query,
-          {
-            domain: benchmarkQuery.domain as any,
-            researchDepth: benchmarkQuery.depth as any,
-            timeout: benchmarkQuery.maxDurationMs || config.timeoutMs,
-          }
-        );
+        const project = await this.researchService.createResearchProject(benchmarkQuery.query, {
+          domain: benchmarkQuery.domain as any,
+          researchDepth: benchmarkQuery.depth as any,
+          timeout: benchmarkQuery.maxDurationMs || config.timeoutMs,
+        });
 
         // Wait for completion with timeout
         const completedProject = await this.waitForCompletion(
@@ -125,21 +128,29 @@ export class BenchmarkRunner {
           const evalMetrics = completedProject.evaluation as unknown as EvaluationMetrics;
           if (evalMetrics.raceScore) {
             raceScore = evalMetrics.raceScore.overall;
-            if (raceScore !== undefined) {raceScores.push(raceScore);}
+            if (raceScore !== undefined) {
+              raceScores.push(raceScore);
+            }
           }
           if (evalMetrics.factScore) {
             factScore = evalMetrics.factScore.citationAccuracy;
-            if (factScore !== undefined) {factScores.push(factScore);}
+            if (factScore !== undefined) {
+              factScores.push(factScore);
+            }
           }
         } else if (completedProject.evaluationResults) {
           // EvaluationResults format (from service)
           if (completedProject.evaluationResults.raceEvaluation?.scores) {
             raceScore = completedProject.evaluationResults.raceEvaluation.scores.overall;
-            if (raceScore !== undefined) {raceScores.push(raceScore);}
+            if (raceScore !== undefined) {
+              raceScores.push(raceScore);
+            }
           }
           if (completedProject.evaluationResults.factEvaluation?.scores) {
             factScore = completedProject.evaluationResults.factEvaluation.scores.citationAccuracy;
-            if (factScore !== undefined) {factScores.push(factScore);}
+            if (factScore !== undefined) {
+              factScores.push(factScore);
+            }
           }
         }
 
@@ -153,7 +164,7 @@ export class BenchmarkRunner {
             raceScore: completedProject.evaluationResults.raceEvaluation?.scores,
             factScore: completedProject.evaluationResults.factEvaluation?.scores,
             timestamp: completedProject.evaluationResults.timestamp,
-            evaluatorVersion: '1.0.0'
+            evaluatorVersion: '1.0.0',
           };
         }
 
@@ -176,7 +187,6 @@ export class BenchmarkRunner {
           sources: sourcesFound,
           raceScore,
         });
-
       } catch (error) {
         const queryDuration = Date.now() - queryStartTime;
         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -197,13 +207,11 @@ export class BenchmarkRunner {
     }
 
     // Calculate summary
-    const averageRaceScore = raceScores.length > 0
-      ? raceScores.reduce((a, b) => a + b, 0) / raceScores.length
-      : undefined;
+    const averageRaceScore =
+      raceScores.length > 0 ? raceScores.reduce((a, b) => a + b, 0) / raceScores.length : undefined;
 
-    const averageFactScore = factScores.length > 0
-      ? factScores.reduce((a, b) => a + b, 0) / factScores.length
-      : undefined;
+    const averageFactScore =
+      factScores.length > 0 ? factScores.reduce((a, b) => a + b, 0) / factScores.length : undefined;
 
     const summary: BenchmarkSummary = {
       totalQueries: config.queries.length,
@@ -276,24 +284,36 @@ export class BenchmarkRunner {
         throw new Error(`Project failed: ${project.error || 'Unknown error'}`);
       }
 
-      await new Promise(resolve => setTimeout(resolve, checkInterval));
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
       checks++;
     }
 
     throw new Error(`Project ${projectId} timed out after ${timeoutMs}ms`);
   }
 
-  private calculateQualityGrade(raceScore?: number, factScore?: number): 'A' | 'B' | 'C' | 'D' | 'F' {
-    if (!raceScore && !factScore) {return 'F';}
+  private calculateQualityGrade(
+    raceScore?: number,
+    factScore?: number
+  ): 'A' | 'B' | 'C' | 'D' | 'F' {
+    if (!raceScore && !factScore) {
+      return 'F';
+    }
 
-    const avgScore = raceScore && factScore
-      ? (raceScore + factScore) / 2
-      : (raceScore || factScore || 0);
+    const avgScore =
+      raceScore && factScore ? (raceScore + factScore) / 2 : raceScore || factScore || 0;
 
-    if (avgScore >= 0.9) {return 'A';}
-    if (avgScore >= 0.8) {return 'B';}
-    if (avgScore >= 0.7) {return 'C';}
-    if (avgScore >= 0.6) {return 'D';}
+    if (avgScore >= 0.9) {
+      return 'A';
+    }
+    if (avgScore >= 0.8) {
+      return 'B';
+    }
+    if (avgScore >= 0.7) {
+      return 'C';
+    }
+    if (avgScore >= 0.6) {
+      return 'D';
+    }
     return 'F';
   }
 
@@ -360,7 +380,7 @@ export class BenchmarkRunner {
 
 ## Detailed Results
 
-${result.queries.map(query => this.formatQueryResult(query)).join('\n\n')}
+${result.queries.map((query) => this.formatQueryResult(query)).join('\n\n')}
 
 ## Performance Analysis
 
@@ -368,14 +388,14 @@ ${result.queries.map(query => this.formatQueryResult(query)).join('\n\n')}
 ${this.generateQualityDistribution(result.queries)}
 
 ### Duration Analysis
-- **Fastest Query:** ${Math.min(...result.queries.map(q => q.duration)) / 1000}s
-- **Slowest Query:** ${Math.max(...result.queries.map(q => q.duration)) / 1000}s
-- **Standard Deviation:** ${this.calculateStandardDeviation(result.queries.map(q => q.duration)) / 1000}s
+- **Fastest Query:** ${Math.min(...result.queries.map((q) => q.duration)) / 1000}s
+- **Slowest Query:** ${Math.max(...result.queries.map((q) => q.duration)) / 1000}s
+- **Standard Deviation:** ${this.calculateStandardDeviation(result.queries.map((q) => q.duration)) / 1000}s
 
 ### Source Analysis
-- **Most Sources:** ${Math.max(...result.queries.map(q => q.sourcesFound))}
-- **Fewest Sources:** ${Math.min(...result.queries.map(q => q.sourcesFound))}
-- **Source Standard Deviation:** ${this.calculateStandardDeviation(result.queries.map(q => q.sourcesFound))}
+- **Most Sources:** ${Math.max(...result.queries.map((q) => q.sourcesFound))}
+- **Fewest Sources:** ${Math.min(...result.queries.map((q) => q.sourcesFound))}
+- **Source Standard Deviation:** ${this.calculateStandardDeviation(result.queries.map((q) => q.sourcesFound))}
 
 ---
 *Generated by ElizaOS Research Plugin v1.0*
@@ -404,7 +424,7 @@ ${query.error ? `**Error:** ${query.error}  ` : ''}`;
   private generateQualityDistribution(queries: QueryResult[]): string {
     const grades = { A: 0, B: 0, C: 0, D: 0, F: 0 };
 
-    queries.forEach(query => {
+    queries.forEach((query) => {
       if (query.evaluation?.raceScore) {
         const grade = this.calculateQualityGrade(query.evaluation.raceScore.overall);
         grades[grade]++;
@@ -431,7 +451,7 @@ ${query.error ? `**Error:** ${query.error}  ` : ''}`;
   async loadPreviousResults(outputDir: string): Promise<BenchmarkResult[]> {
     try {
       const files = await fs.readdir(outputDir);
-      const jsonFiles = files.filter(f => f.endsWith('.json') && !f.includes('_report'));
+      const jsonFiles = files.filter((f) => f.endsWith('.json') && !f.includes('_report'));
 
       const results: BenchmarkResult[] = [];
 

@@ -52,7 +52,8 @@ export const getPullRequestAction: Action = {
         runtime.getSetting('GITHUB_OWNER');
       const repo =
         options.repo || prMatch?.[2] || ownerRepoMatch?.[2] || state?.github?.lastRepository?.name;
-      const pull_number = options.pull_number || parseInt(prMatch?.[3] || prNumMatch?.[1] || '0', 10);
+      const pull_number =
+        options.pull_number || parseInt(prMatch?.[3] || prNumMatch?.[1] || '0', 10);
 
       if (!owner || !repo || !pull_number) {
         throw new Error(

@@ -303,9 +303,9 @@ export class ExtendedScenarioRunner {
 
       const timeout = step.timeout
         ? setTimeout(() => {
-          child.kill();
-          reject(new Error(`Command timed out after ${step.timeout}ms`));
-        }, step.timeout)
+            child.kill();
+            reject(new Error(`Command timed out after ${step.timeout}ms`));
+          }, step.timeout)
         : null;
 
       child.on('close', (code) => {

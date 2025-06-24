@@ -28,7 +28,8 @@ Response format:
 export const startTunnelAction: Action = {
   name: 'START_TUNNEL',
   similes: ['OPEN_TUNNEL', 'CREATE_TUNNEL', 'NGROK_START', 'TUNNEL_UP'],
-  description: 'Start an ngrok tunnel to expose a local port to the internet. Supports action chaining by providing tunnel metadata that can be used for webhook configuration, API testing, or remote access workflows.',
+  description:
+    'Start an ngrok tunnel to expose a local port to the internet. Supports action chaining by providing tunnel metadata that can be used for webhook configuration, API testing, or remote access workflows.',
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
     const tunnelService = runtime.getService('tunnel') as ITunnelService;
     if (!tunnelService) {
@@ -61,7 +62,7 @@ export const startTunnelAction: Action = {
       return {
         text: 'Tunnel service is not available. Please ensure the ngrok plugin is properly configured.',
         values: { success: false, error: 'service_unavailable' },
-        data: { action: 'START_TUNNEL' }
+        data: { action: 'START_TUNNEL' },
       };
     }
 
@@ -75,7 +76,7 @@ export const startTunnelAction: Action = {
       return {
         text: 'Tunnel is already active. Please stop the existing tunnel before starting a new one.',
         values: { success: false, error: 'tunnel_already_active' },
-        data: { action: 'START_TUNNEL' }
+        data: { action: 'START_TUNNEL' },
       };
     }
 
@@ -136,7 +137,7 @@ export const startTunnelAction: Action = {
           success: true,
           tunnelUrl: url,
           port,
-          isActive: true
+          isActive: true,
         },
         data: {
           action: 'START_TUNNEL',
@@ -144,9 +145,9 @@ export const startTunnelAction: Action = {
             url,
             port,
             startedAt: new Date().toISOString(),
-            provider: 'ngrok'
-          }
-        }
+            provider: 'ngrok',
+          },
+        },
       };
     } catch (error: any) {
       elizaLogger.error('Failed to start tunnel:', error);
@@ -165,13 +166,13 @@ export const startTunnelAction: Action = {
         text: `❌ Failed to start ngrok tunnel: ${error.message}\n\nPlease make sure ngrok is installed and configured properly.`,
         values: {
           success: false,
-          error: error.message
+          error: error.message,
         },
         data: {
           action: 'START_TUNNEL',
           errorType: 'tunnel_start_failed',
-          errorDetails: error.stack
-        }
+          errorDetails: error.stack,
+        },
       };
     }
   },
@@ -201,8 +202,9 @@ export const startTunnelAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll start an ngrok tunnel for your API server and then test the webhook endpoint.',
-          thought: 'User wants to expose their API server and test webhooks - I should create the tunnel first, then use the public URL for webhook testing.',
+          text: "I'll start an ngrok tunnel for your API server and then test the webhook endpoint.",
+          thought:
+            'User wants to expose their API server and test webhooks - I should create the tunnel first, then use the public URL for webhook testing.',
           actions: ['START_TUNNEL'],
         },
       },
@@ -210,7 +212,8 @@ export const startTunnelAction: Action = {
         name: '{{agent}}',
         content: {
           text: '✅ Ngrok tunnel started successfully!\n\n🌐 Public URL: https://xyz789.ngrok.io\n🔌 Local Port: 3000\n\nNow testing the webhook endpoint...',
-          thought: 'Tunnel is active and I have the public URL. I can now test the webhook endpoint using this external URL.',
+          thought:
+            'Tunnel is active and I have the public URL. I can now test the webhook endpoint using this external URL.',
           actions: ['TEST_WEBHOOK'],
         },
       },
@@ -225,8 +228,9 @@ export const startTunnelAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll start the ngrok tunnel on port 4000 and then share the public URL with your team.',
-          thought: 'User wants to expose their local service and share the link - I need to start the tunnel first, then send a message with the URL.',
+          text: "I'll start the ngrok tunnel on port 4000 and then share the public URL with your team.",
+          thought:
+            'User wants to expose their local service and share the link - I need to start the tunnel first, then send a message with the URL.',
           actions: ['START_TUNNEL'],
         },
       },
@@ -234,7 +238,8 @@ export const startTunnelAction: Action = {
         name: '{{agent}}',
         content: {
           text: '✅ Ngrok tunnel started successfully on port 4000! Now sharing the link with your team.',
-          thought: 'Tunnel is up and running. I can now send a message to the team chat with the public URL.',
+          thought:
+            'Tunnel is up and running. I can now send a message to the team chat with the public URL.',
           actions: ['SEND_MESSAGE'],
         },
       },

@@ -323,7 +323,7 @@ export const cancelGoalAction: Action = {
         name: '{{agent}}',
         content: {
           text: '✅ Cancelled goal: "Finish taxes". Now let me show you your remaining goals.',
-          thought: "The user wants to remove a goal and see their updated goal list. I need to chain CANCEL_GOAL with LIST_GOALS to remove the unwanted goal and then display the current active goals.",
+          thought: 'The user wants to remove a goal and see their updated goal list. I need to chain CANCEL_GOAL with LIST_GOALS to remove the unwanted goal and then display the current active goals.',
           actions: ['CANCEL_GOAL', 'LIST_GOALS'],
         },
       },

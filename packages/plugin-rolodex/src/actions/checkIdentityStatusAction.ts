@@ -1,5 +1,4 @@
 import {
-  ModelType,
   logger,
   type Action,
   type IAgentRuntime,
@@ -106,7 +105,7 @@ export const checkIdentityStatusAction: Action = {
 
       // Get verified and unverified platforms
       const verifiedPlatforms = Object.entries(platforms)
-        .filter(([platform, identity]) => (identity as any).verified)
+        .filter(([_platform, identity]) => (identity as any).verified)
         .map(([platform, identity]) => ({
           platform,
           name: (identity as any).metadata?.name || (identity as any).platformId || (identity as any).handle,
@@ -114,7 +113,7 @@ export const checkIdentityStatusAction: Action = {
         }));
 
       const unverifiedPlatforms = Object.entries(platforms)
-        .filter(([platform, identity]) => !(identity as any).verified)
+        .filter(([_platform, identity]) => !(identity as any).verified)
         .map(([platform, identity]) => ({
           platform,
           name: (identity as any).metadata?.name || (identity as any).platformId || (identity as any).handle,

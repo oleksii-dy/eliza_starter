@@ -179,7 +179,7 @@ export const nameEntityAction: Action = {
         }
 
         logger.info(`[NameEntityAction] Assigned name "${name}" to entity ${targetPerson.id}`);
-        
+
         return {
           text,
           values: {

@@ -8,18 +8,11 @@ import {
   type IAgentRuntime,
   type Memory,
   type State,
-  parseKeyValueXml,
-  composePromptFromState,
-  findEntityByName,
-  asUUID,
   type HandlerCallback,
   type ActionResult,
   type UUID,
-  stringToUuid,
 } from '@elizaos/core';
 import { RolodexService } from '../services';
-import type { FollowUp } from '../types';
-import { z } from 'zod';
 
 const scheduleFollowUpTemplate = `# Schedule Follow-up
 
@@ -94,7 +87,7 @@ export const scheduleFollowUpAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     // Check if service is available
     const rolodexService = runtime.getService('rolodex') as RolodexService;
 
@@ -176,7 +169,7 @@ export const scheduleFollowUpAction: Action = {
       let followUpInfo;
       try {
         followUpInfo = JSON.parse(response as string);
-      } catch (parseError) {
+      } catch (_parseError) {
         logger.warn('[ScheduleFollowUp] Failed to parse follow-up information from response');
         // Fallback: create a basic follow-up
         followUpInfo = {
@@ -202,7 +195,7 @@ export const scheduleFollowUpAction: Action = {
               createdFrom: 'conversation',
             },
           });
-          entityId = newEntity.id;
+          entityId = newEntity.id!;
         }
       } else {
         // Use the message sender as the entity

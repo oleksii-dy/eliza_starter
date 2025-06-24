@@ -51,7 +51,8 @@ export class PlaywrightContentExtractor {
       });
 
       this.context = await this.browser.newContext({
-        userAgent: this.config.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        userAgent:
+          this.config.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         viewport: this.config.viewport,
         javaScriptEnabled: this.config.enableJavaScript,
         bypassCSP: true,
@@ -102,7 +103,7 @@ export class PlaywrightContentExtractor {
       await page.setExtraHTTPHeaders({
         'Accept-Language': 'en-US,en;q=0.9',
         'Accept-Encoding': 'gzip, deflate, br',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
       });
 
       // Navigate to the page
@@ -118,7 +119,9 @@ export class PlaywrightContentExtractor {
       const content = await this.extractPageContent(page);
 
       const duration = Date.now() - startTime;
-      logger.info(`[Playwright] Content extracted in ${duration}ms (${content.content.length} characters)`);
+      logger.info(
+        `[Playwright] Content extracted in ${duration}ms (${content.content.length} characters)`
+      );
 
       return content;
     } catch (error) {
@@ -128,7 +131,7 @@ export class PlaywrightContentExtractor {
       // Retry logic
       if (retryCount < (this.config.maxRetries || 3)) {
         logger.info(`[Playwright] Retrying extraction (attempt ${retryCount + 1})`);
-        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (retryCount + 1)));
         return this.extractContent(url, retryCount + 1);
       }
 
@@ -194,7 +197,9 @@ export class PlaywrightContentExtractor {
       scripts.forEach((el: Element) => el.remove());
 
       // @ts-ignore - This runs in browser context
-      const unwanted = document.querySelectorAll('nav, footer, aside, .sidebar, .advertisement, .ad');
+      const unwanted = document.querySelectorAll(
+        'nav, footer, aside, .sidebar, .advertisement, .ad'
+      );
       unwanted.forEach((el: Element) => el.remove());
 
       // Try to find main content areas
@@ -206,7 +211,7 @@ export class PlaywrightContentExtractor {
         '.content',
         '.post',
         '.entry-content',
-        'body'
+        'body',
       ];
 
       for (const selector of contentSelectors) {
@@ -251,8 +256,8 @@ export class PlaywrightContentExtractor {
     const links = await page.evaluate(() => {
       const anchors = document.querySelectorAll('a[href]');
       return Array.from(anchors)
-        .map(a => (a as any).href)
-        .filter(href => href && !href.startsWith('#') && !href.startsWith('javascript:'));
+        .map((a) => (a as any).href)
+        .filter((href) => href && !href.startsWith('#') && !href.startsWith('javascript:'));
     });
 
     // Extract images
@@ -260,8 +265,8 @@ export class PlaywrightContentExtractor {
     const images = await page.evaluate(() => {
       const imgs = document.querySelectorAll('img[src]');
       return Array.from(imgs)
-        .map(img => (img as any).src)
-        .filter(src => src && !src.includes('data:image'));
+        .map((img) => (img as any).src)
+        .filter((src) => src && !src.includes('data:image'));
     });
 
     // Convert to markdown using cheerio
@@ -292,13 +297,15 @@ export class PlaywrightContentExtractor {
 
     // Process lists
     $('ul, ol').each((_, elem) => {
-      $(elem).find('li').each((index, li) => {
-        const text = $(li).text().trim();
-        if (text) {
-          const bullet = elem.tagName === 'ol' ? `${index + 1}.` : '-';
-          markdown += `${bullet} ${text}\n`;
-        }
-      });
+      $(elem)
+        .find('li')
+        .each((index, li) => {
+          const text = $(li).text().trim();
+          if (text) {
+            const bullet = elem.tagName === 'ol' ? `${index + 1}.` : '-';
+            markdown += `${bullet} ${text}\n`;
+          }
+        });
       markdown += '\n';
     });
 

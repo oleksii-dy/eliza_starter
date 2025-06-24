@@ -1,46 +1,82 @@
-import knex from 'knex';
-import type { Knex } from 'knex';
+import { Database } from 'bun:sqlite';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
+import { eq, and } from 'drizzle-orm';
 import moment from 'moment';
+import * as schema from './db-schema';
 
-let db: Knex | undefined;
+export type DB = ReturnType<typeof drizzle<typeof schema>>;
+let db: DB | undefined;
 
-export async function getDB(path: string): Promise<Knex> {
+export async function getDB(path: string): Promise<DB> {
   if (!db) {
-    db = knex({
-      client: 'better-sqlite3',
-      connection: {
-        filename: path,
-      },
-      useNullAsDefault: true,
-    });
-    await migrate(db);
+    const sqlite = new Database(path);
+    db = drizzle(sqlite, { schema });
+    await migrate(db, sqlite);
   }
   return db;
 }
 
-async function migrate(db: Knex): Promise<void> {
-  // ensure we have our config table
-  const exists = await db.schema.hasTable('config');
-  if (!exists) {
-    await db.schema.createTable('config', table => {
-      table.string('key').primary();
-      table.string('value');
-    });
-    await db('config').insert({ key: 'version', value: '0' });
+async function migrate(db: DB, sqlite: Database): Promise<void> {
+  // Create tables if they don't exist
+  sqlite.run(`
+    CREATE TABLE IF NOT EXISTS config (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    )
+  `);
+
+  // Check if this is a fresh database
+  const tables = sqlite.query("SELECT name FROM sqlite_master WHERE type='table'").all();
+  const tableNames = tables.map((t: any) => t.name);
+
+  if (!tableNames.includes('config') || tableNames.length === 1) {
+    // Fresh database, create all tables
+    sqlite.run(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        avatar TEXT,
+        roles TEXT NOT NULL DEFAULT '',
+        createdAt TEXT NOT NULL
+      )
+    `);
+
+    sqlite.run(`
+      CREATE TABLE IF NOT EXISTS blueprints (
+        id TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      )
+    `);
+
+    sqlite.run(`
+      CREATE TABLE IF NOT EXISTS entities (
+        id TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      )
+    `);
+
+    // Set initial version
+    await db.insert(schema.config).values({ key: 'version', value: '0' }).onConflictDoNothing();
   }
-  // get current version
-  const versionRow = await db('config').where('key', 'version').first();
-  let version = parseInt(versionRow.value);
-  // run any new migrations
+
+  // Get current version
+  const versionRow = await db.select().from(schema.config).where(eq(schema.config.key, 'version')).get();
+  let version = parseInt(versionRow?.value || '0');
+
+  // Run any new migrations
   for (let i = version; i < migrations.length; i++) {
     console.log(`running migration #${i + 1}...`);
     const migration = migrations[i];
     if (migration) {
-      await migration(db);
+      await migration(db, sqlite);
     }
-    await db('config')
-      .where('key', 'version')
-      .update('value', (i + 1).toString());
+    await db.update(schema.config)
+      .set({ value: (i + 1).toString() })
+      .where(eq(schema.config.key, 'version'));
     version = i + 1;
   }
 }
@@ -48,107 +84,109 @@ async function migrate(db: Knex): Promise<void> {
 /**
  * NOTE: always append new migrations and never modify pre-existing ones!
  */
-const migrations: Array<(db: Knex) => Promise<void>> = [
+const migrations: Array<(db: DB, sqlite: Database) => Promise<void>> = [
   // add users table
-  async db => {
-    await db.schema.createTable('users', table => {
-      table.string('id').primary();
-      table.string('name').notNullable();
-      table.string('roles').notNullable();
-      table.timestamp('createdAt').notNullable();
-    });
+  async (db, sqlite) => {
+    sqlite.run(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        roles TEXT NOT NULL,
+        createdAt TEXT NOT NULL
+      )
+    `);
   },
   // add blueprints & entities tables
-  async db => {
-    await db.schema.createTable('blueprints', table => {
-      table.string('id').primary();
-      table.text('data').notNullable();
-      table.timestamp('createdAt').notNullable();
-      table.timestamp('updatedAt').notNullable();
-    });
-    await db.schema.createTable('entities', table => {
-      table.string('id').primary();
-      table.text('data').notNullable();
-      table.timestamp('createdAt').notNullable();
-      table.timestamp('updatedAt').notNullable();
-    });
+  async (db, sqlite) => {
+    sqlite.run(`
+      CREATE TABLE IF NOT EXISTS blueprints (
+        id TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      )
+    `);
+    sqlite.run(`
+      CREATE TABLE IF NOT EXISTS entities (
+        id TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      )
+    `);
   },
   // add blueprint.version field
-  async db => {
+  async (db, sqlite) => {
     const now = moment().toISOString();
-    const blueprints = await db('blueprints');
+    const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
       if (data.version === undefined) {
         data.version = 0;
-        await db('blueprints')
-          .where('id', blueprint.id)
-          .update({
+        await db.update(schema.blueprints)
+          .set({
             data: JSON.stringify(data),
             updatedAt: now,
-          });
+          })
+          .where(eq(schema.blueprints.id, blueprint.id));
       }
     }
   },
   // add user.vrm field
-  async db => {
-    await db.schema.alterTable('users', table => {
-      table.string('vrm').nullable();
-    });
+  async (db, sqlite) => {
+    sqlite.run('ALTER TABLE users ADD COLUMN vrm TEXT');
   },
   // add blueprint.config field
-  async db => {
-    const blueprints = await db('blueprints');
+  async (db, sqlite) => {
+    const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
       if (data.config === undefined) {
         data.config = {};
-        await db('blueprints')
-          .where('id', blueprint.id)
-          .update({
+        await db.update(schema.blueprints)
+          .set({
             data: JSON.stringify(data),
-          });
+          })
+          .where(eq(schema.blueprints.id, blueprint.id));
       }
     }
   },
   // rename user.vrm -> user.avatar
-  async db => {
-    await db.schema.alterTable('users', table => {
-      table.renameColumn('vrm', 'avatar');
-    });
+  async (db, sqlite) => {
+    sqlite.run('ALTER TABLE users RENAME COLUMN vrm TO avatar');
   },
   // add blueprint.preload field
-  async db => {
-    const blueprints = await db('blueprints');
+  async (db, sqlite) => {
+    const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
       if (data.preload === undefined) {
         data.preload = false;
-        await db('blueprints')
-          .where('id', blueprint.id)
-          .update({
+        await db.update(schema.blueprints)
+          .set({
             data: JSON.stringify(data),
-          });
+          })
+          .where(eq(schema.blueprints.id, blueprint.id));
       }
     }
   },
   // blueprint.config -> blueprint.props
-  async db => {
-    const blueprints = await db('blueprints');
+  async (db, sqlite) => {
+    const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
       data.props = data.config;
       delete data.config;
-      await db('blueprints')
-        .where('id', blueprint.id)
-        .update({
+      await db.update(schema.blueprints)
+        .set({
           data: JSON.stringify(data),
-        });
+        })
+        .where(eq(schema.blueprints.id, blueprint.id));
     }
   },
   // add blueprint.public and blueprint.locked fields
-  async db => {
-    const blueprints = await db('blueprints');
+  async (db, sqlite) => {
+    const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
       let changed;
@@ -161,17 +199,17 @@ const migrations: Array<(db: Knex) => Promise<void>> = [
         changed = true;
       }
       if (changed) {
-        await db('blueprints')
-          .where('id', blueprint.id)
-          .update({
+        await db.update(schema.blueprints)
+          .set({
             data: JSON.stringify(data),
-          });
+          })
+          .where(eq(schema.blueprints.id, blueprint.id));
       }
     }
   },
   // add blueprint.unique field
-  async db => {
-    const blueprints = await db('blueprints');
+  async (db, sqlite) => {
+    const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
       let changed;
@@ -180,50 +218,50 @@ const migrations: Array<(db: Knex) => Promise<void>> = [
         changed = true;
       }
       if (changed) {
-        await db('blueprints')
-          .where('id', blueprint.id)
-          .update({
+        await db.update(schema.blueprints)
+          .set({
             data: JSON.stringify(data),
-          });
+          })
+          .where(eq(schema.blueprints.id, blueprint.id));
       }
     }
   },
   // rename config key to settings
-  async db => {
-    const config = await db('config').where('key', 'config').first();
-    if (config) {
-      const settings = config.value;
-      await db('config').insert({ key: 'settings', value: settings });
-      await db('config').where('key', 'config').delete();
+  async (db, sqlite) => {
+    const configRow = await db.select().from(schema.config).where(eq(schema.config.key, 'config')).get();
+    if (configRow) {
+      const settings = configRow.value;
+      await db.insert(schema.config).values({ key: 'settings', value: settings }).onConflictDoNothing();
+      await db.delete(schema.config).where(eq(schema.config.key, 'config'));
     }
   },
   // add blueprint.disabled field
-  async db => {
-    const blueprints = await db('blueprints');
+  async (db, sqlite) => {
+    const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
       if (data.disabled === undefined) {
         data.disabled = false;
-        await db('blueprints')
-          .where('id', blueprint.id)
-          .update({
+        await db.update(schema.blueprints)
+          .set({
             data: JSON.stringify(data),
-          });
+          })
+          .where(eq(schema.blueprints.id, blueprint.id));
       }
     }
   },
   // add entity.scale field
-  async db => {
-    const entities = await db('entities');
+  async (db, sqlite) => {
+    const entities = await db.select().from(schema.entities);
     for (const entity of entities) {
       const data = JSON.parse(entity.data);
       if (!data.scale) {
         data.scale = [1, 1, 1];
-        await db('entities')
-          .where('id', entity.id)
-          .update({
+        await db.update(schema.entities)
+          .set({
             data: JSON.stringify(data),
-          });
+          })
+          .where(eq(schema.entities.id, entity.id));
       }
     }
   },

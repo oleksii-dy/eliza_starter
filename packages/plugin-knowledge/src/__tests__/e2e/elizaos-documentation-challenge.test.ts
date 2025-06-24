@@ -882,7 +882,7 @@ try {
 
   console.log(`✓ Loaded ${loadResult.successful} comprehensive ElizaOS documentation files`);
   console.log(
-    `✓ Documentation covers: Architecture, Plugin Development, Testing, Troubleshooting, API Reference\n`
+    '✓ Documentation covers: Architecture, Plugin Development, Testing, Troubleshooting, API Reference\n'
   );
 }
 

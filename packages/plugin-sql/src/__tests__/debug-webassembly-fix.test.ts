@@ -49,7 +49,6 @@ describe('PGLite WebAssembly Fix Tests', () => {
 
       await instance.close();
       console.log('✅ PGLite basic functionality test passed');
-
     } catch (error) {
       console.log('❌ PGLite initialization with fix failed:', error.message);
 
@@ -95,7 +94,6 @@ describe('PGLite WebAssembly Fix Tests', () => {
 
       await instance.close();
       console.log('✅ Production-like functionality test passed');
-
     } catch (error) {
       console.log('❌ Production-like initialization failed:', error.message);
 

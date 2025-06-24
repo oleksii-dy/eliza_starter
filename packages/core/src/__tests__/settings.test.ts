@@ -40,8 +40,9 @@ describe('settings utilities', () => {
     mock.restore();
 
     // Set up scoped mocks for this test
-    spyOn(entities, 'createUniqueUuid')
-      .mockImplementation((_runtime: any, serverId: any) => `world-${serverId}` as UUID);
+    spyOn(entities, 'createUniqueUuid').mockImplementation(
+      (_runtime: any, serverId: any) => `world-${serverId}` as UUID
+    );
 
     // Mock logger if it doesn't have the methods
     if (logger_module.logger) {
@@ -180,18 +181,18 @@ describe('settings utilities', () => {
     });
 
     it('should return boolean values as is', () => {
-      expect(encryptStringValue(true as any, salt)).toBe(true);
-      expect(encryptStringValue(false as any, salt)).toBe(false);
+      expect(encryptStringValue(true as any, salt)).toEqual(true);
+      expect(encryptStringValue(false as any, salt)).toEqual(false);
     });
 
     it('should return number values as is', () => {
-      expect(encryptStringValue(123 as any, salt)).toBe(123);
-      expect(encryptStringValue(0 as any, salt)).toBe(0);
+      expect(encryptStringValue(123 as any, salt)).toEqual(123);
+      expect(encryptStringValue(0 as any, salt)).toEqual(0);
     });
 
     it('should return non-string objects as is', () => {
       const obj = { key: 'value' };
-      expect(encryptStringValue(obj as any, salt)).toBe(obj);
+      expect(encryptStringValue(obj as any, salt)).toEqual(obj);
     });
 
     it('should not re-encrypt already encrypted values', () => {
@@ -227,17 +228,17 @@ describe('settings utilities', () => {
     });
 
     it('should return boolean values as is', () => {
-      expect(decryptStringValue(true as any, salt)).toBe(true);
-      expect(decryptStringValue(false as any, salt)).toBe(false);
+      expect(decryptStringValue(true as any, salt)).toEqual(true);
+      expect(decryptStringValue(false as any, salt)).toEqual(false);
     });
 
     it('should return number values as is', () => {
-      expect(decryptStringValue(123 as any, salt)).toBe(123);
+      expect(decryptStringValue(123 as any, salt)).toEqual(123);
     });
 
     it('should return non-string objects as is', () => {
       const obj = { key: 'value' };
-      expect(decryptStringValue(obj as any, salt)).toBe(obj);
+      expect(decryptStringValue(obj as any, salt)).toEqual(obj);
     });
 
     it('should return original value if not in encrypted format', () => {

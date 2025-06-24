@@ -11,14 +11,14 @@ export const debugEvaluator: Evaluator = {
   name: 'DEBUG_EVALUATOR',
   description: 'Debug evaluator to test if evaluators are running',
   examples: [],
-  validate: async (runtime, message, state) => {
+  validate: async (runtime, message, _state) => {
     logger.info('[DEBUG_EVALUATOR] Validate called', {
       messageId: message.id,
       hasText: !!message.content?.text,
     });
     return true; // Always run
   },
-  handler: async (runtime, message, state): Promise<ActionResult> => {
+  handler: async (runtime, message, _state): Promise<ActionResult> => {
     logger.info('[DEBUG_EVALUATOR] Handler executed!', {
       messageId: message.id,
       text: message.content?.text?.substring(0, 50) || 'No text',

@@ -6,9 +6,12 @@ async function testPGLiteWithEmbeddings() {
   console.log('Starting PGLite test...');
 
   const agentId = uuid();
-  const adapter = await createDatabaseAdapter({
-    dataDir: ':memory:'
-  }, agentId);
+  const adapter = await createDatabaseAdapter(
+    {
+      dataDir: ':memory:',
+    },
+    agentId
+  );
 
   try {
     // Initialize the adapter
@@ -28,22 +31,25 @@ async function testPGLiteWithEmbeddings() {
       name: 'Test Agent',
       status: 'active',
       createdAt: Date.now(),
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
     });
 
     console.log('✅ Agent created:', created);
 
     // Try to create a memory
     console.log('Creating test memory...');
-    const memoryId = await adapter.createMemory({
-      id: uuid(),
-      entityId: agentId,
-      agentId,
-      roomId: uuid(),
-      content: {
-        text: 'Test memory content'
-      }
-    }, 'messages');
+    const memoryId = await adapter.createMemory(
+      {
+        id: uuid(),
+        entityId: agentId,
+        agentId,
+        roomId: uuid(),
+        content: {
+          text: 'Test memory content',
+        },
+      },
+      'messages'
+    );
 
     console.log('✅ Memory created with ID:', memoryId);
 

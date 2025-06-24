@@ -4,9 +4,7 @@ import { Octokit } from '@octokit/rest';
 import type { IAgentRuntime } from '@elizaos/core';
 
 // Mock Octokit
-mock.module('@octokit/rest', () => ({
-  Octokit: mock(),
-}));
+mock.module('@octokit/rest');
 
 describe('PR and Branch Management Tests', () => {
   let mockRuntime: any;
@@ -191,7 +189,8 @@ describe('PR and Branch Management Tests', () => {
     };
 
     // Mock Octokit constructor
-    mock(Octokit).mockImplementation(() => mockOctokit as any);
+    const OctokitMock = mock().mockImplementation(() => mockOctokit as any);
+    // Note: Cannot reassign Octokit import directly
 
     // Create mock runtime
     mockRuntime = {

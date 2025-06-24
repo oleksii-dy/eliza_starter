@@ -762,4 +762,80 @@ export const apiClient = {
       inSync: boolean;
     };
   }> => fetcher({ url: `/agents/${agentId}/configurations/${pluginName}/runtime-status` }),
+
+  // Plugin defaults and risk assessment
+  getPluginDefaults: (
+    pluginName: string
+  ): Promise<{
+    success: boolean;
+    data: {
+      category: string;
+      riskLevel: string;
+      serviceDefaults: boolean;
+      providerDefaults: boolean;
+      evaluatorDefaults: boolean;
+      actionDefaults: boolean;
+      customDefaults?: Record<string, { enabled: boolean; disabledReason?: string }>;
+      recommendations: string[];
+    };
+  }> => fetcher({ url: `/plugins/${pluginName}/defaults` }),
+
+  getAllPluginDefaults: (): Promise<{
+    success: boolean;
+    data: {
+      [pluginName: string]: {
+        category: string;
+        riskLevel: string;
+        serviceDefaults: boolean;
+        providerDefaults: boolean;
+        evaluatorDefaults: boolean;
+        actionDefaults: boolean;
+        customDefaults?: Record<string, { enabled: boolean; disabledReason?: string }>;
+        recommendations: string[];
+      };
+    };
+  }> => fetcher({ url: `/plugins/defaults` }),
+
+  applyPluginDefaults: (
+    agentId: string,
+    pluginName: string
+  ): Promise<{
+    success: boolean;
+    data: { message: string; appliedConfiguration: Record<string, unknown> };
+  }> => fetcher({
+    url: `/agents/${agentId}/configurations/${pluginName}/apply-defaults`,
+    method: 'POST',
+  }),
+
+  applyAllPluginDefaults: (
+    agentId: string,
+    plugins: string[]
+  ): Promise<{
+    success: boolean;
+    data: { message: string; appliedCount: number; failedPlugins: string[] };
+  }> => fetcher({
+    url: `/agents/${agentId}/configurations/apply-all-defaults`,
+    method: 'POST',
+    body: { plugins },
+  }),
+
+  updatePluginClassification: (
+    pluginName: string,
+    classification: {
+      category?: string;
+      riskLevel?: string;
+      serviceDefaults?: boolean;
+      providerDefaults?: boolean;
+      evaluatorDefaults?: boolean;
+      actionDefaults?: boolean;
+      customDefaults?: Record<string, { enabled: boolean; disabledReason?: string }>;
+    }
+  ): Promise<{
+    success: boolean;
+    data: { message: string; updatedClassification: Record<string, unknown> };
+  }> => fetcher({
+    url: `/plugins/${pluginName}/classification`,
+    method: 'PUT',
+    body: classification,
+  }),
 };

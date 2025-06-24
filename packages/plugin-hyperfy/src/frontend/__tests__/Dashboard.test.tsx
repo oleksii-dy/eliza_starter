@@ -5,7 +5,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, it, expect, mock, beforeEach  } from 'bun:test';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { HyperfyDashboard } from '../HyperfyDashboard';
 
 // Mock fetch with proper typing

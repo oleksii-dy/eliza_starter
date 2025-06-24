@@ -213,7 +213,7 @@ export const voteAction = {
         name: '{{agent}}',
         content: {
           text: "I'll vote FOR the treasury proposal and queue it for execution if it passes.",
-          thought: "Complete governance participation: cast my vote to support the proposal, then monitor results and queue for execution if approved. This ensures full follow-through on governance decisions.",
+          thought: 'Complete governance participation: cast my vote to support the proposal, then monitor results and queue for execution if approved. This ensures full follow-through on governance decisions.',
           actions: ['EVM_GOVERNANCE_VOTE', 'EVM_GOVERNANCE_QUEUE'],
         },
       },

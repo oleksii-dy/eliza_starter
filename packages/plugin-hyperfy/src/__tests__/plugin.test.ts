@@ -1,4 +1,14 @@
-import { describe, expect, it, mock, spyOn, beforeEach, afterEach, beforeAll, afterAll } from 'bun:test';
+import {
+  describe,
+  expect,
+  it,
+  mock,
+  spyOn,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from 'bun:test';
 import { hyperfyPlugin } from '../index';
 import { HyperfyService } from '../service';
 import { ModelType, logger } from '@elizaos/core';

@@ -311,7 +311,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
     try {
       // PGLite uses PostgreSQL's information_schema
       const result = await this.db.execute(
-        sql.raw('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\'')
+        sql.raw("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
       );
 
       // Handle different result formats from different database adapters

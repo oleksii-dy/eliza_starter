@@ -292,7 +292,9 @@ export class NPMSearchProvider {
   async getPackage(packageName: string): Promise<SearchResult | null> {
     try {
       const pkg = await this.getPackageDetails(packageName);
-      if (!pkg) {return null;}
+      if (!pkg) {
+        return null;
+      }
 
       // Create a mock search item for conversion
       const mockSearchItem = {

@@ -1,5 +1,5 @@
 import { mock } from 'bun:test';
-import type { IAgentRuntime as CoreIAgentRuntime, Memory, State, UUID } from '@elizaos/core';
+import type { IAgentRuntime as _CoreIAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 import type { CustodialWallet } from '../types/wallet';
 import type { IAgentRuntime } from '../types/core.d';
 

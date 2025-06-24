@@ -52,11 +52,11 @@ export const ignoreAction: Action = {
       // Pass the agent's original response content (thought, IGNORE action, etc.)
       await callback(responses[0].content);
     }
-    
+
     return {
       text: '',
       values: { ignored: true, reason: 'conversation_ended_or_inappropriate' },
-      data: { action: 'IGNORE', hasResponse: !!responses?.[0]?.content }
+      data: { action: 'IGNORE', hasResponse: !!responses?.[0]?.content },
     };
   },
   examples: [
@@ -67,10 +67,10 @@ export const ignoreAction: Action = {
       },
       {
         name: '{{agent}}',
-        content: { 
+        content: {
           thought: 'User is being hostile and inappropriate - I should ignore this message',
-          text: '', 
-          actions: ['IGNORE'] 
+          text: '',
+          actions: ['IGNORE'],
         },
       },
     ],
@@ -82,10 +82,10 @@ export const ignoreAction: Action = {
       },
       {
         name: '{{agent}}',
-        content: { 
+        content: {
           thought: 'User is being rude and dismissive - best to ignore this',
-          text: '', 
-          actions: ['IGNORE'] 
+          text: '',
+          actions: ['IGNORE'],
         },
       },
     ],
@@ -113,13 +113,14 @@ export const ignoreAction: Action = {
         name: '{{agent}}',
         content: { text: 'See ya' },
       },
-      { 
-        name: '{{agent}}', 
-        content: { 
-          thought: 'Conversation has naturally concluded with goodbyes - no need to respond further',
-          text: '', 
-          actions: ['IGNORE'] 
-        }
+      {
+        name: '{{agent}}',
+        content: {
+          thought:
+            'Conversation has naturally concluded with goodbyes - no need to respond further',
+          text: '',
+          actions: ['IGNORE'],
+        },
       },
     ],
 
@@ -138,10 +139,11 @@ export const ignoreAction: Action = {
       },
       {
         name: '{{agent}}',
-        content: { 
-          thought: 'User said goodbye and I responded - conversation is over, no need for further response',
-          text: '', 
-          actions: ['IGNORE'] 
+        content: {
+          thought:
+            'User said goodbye and I responded - conversation is over, no need for further response',
+          text: '',
+          actions: ['IGNORE'],
         },
       },
     ],
@@ -157,10 +159,11 @@ export const ignoreAction: Action = {
       },
       {
         name: '{{user}}',
-        content: { 
-          thought: 'User said goodbye and I responded - conversation is over, no need for further response',
-          text: '', 
-          actions: ['IGNORE'] 
+        content: {
+          thought:
+            'User said goodbye and I responded - conversation is over, no need for further response',
+          text: '',
+          actions: ['IGNORE'],
         },
       },
     ],
@@ -183,13 +186,14 @@ export const ignoreAction: Action = {
         name: '{{user}}',
         content: { text: 'PLEASE shut up' },
       },
-      { 
-        name: '{{agent}}', 
-        content: { 
-          thought: 'User is being persistently rude and asking me to shut up - I should ignore this behavior',
-          text: '', 
-          actions: ['IGNORE'] 
-        } 
+      {
+        name: '{{agent}}',
+        content: {
+          thought:
+            'User is being persistently rude and asking me to shut up - I should ignore this behavior',
+          text: '',
+          actions: ['IGNORE'],
+        },
       },
     ],
     [
@@ -246,7 +250,8 @@ export const ignoreAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User is making inappropriate sexual advances - I should call this out and ignore',
+          thought:
+            'User is making inappropriate sexual advances - I should call this out and ignore',
           text: 'thats inappropriate',
           actions: ['IGNORE'],
         },

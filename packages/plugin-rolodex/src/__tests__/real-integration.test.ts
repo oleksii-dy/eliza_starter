@@ -118,7 +118,7 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       const alice = aliceResults[0];
 
       // Get Alice's relationships
-      const relationships = await rolodexService.getRelationships(alice.id);
+      const relationships = await rolodexService.getRelationships(alice.id!);
       expect(relationships.length).toBeGreaterThan(0);
 
       // Should have management relationships
@@ -152,16 +152,16 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       const emma = emmaResults[0];
 
       // Check relationships from both sides
-      const davidRels = await rolodexService.getRelationships(david.id);
-      const emmaRels = await rolodexService.getRelationships(emma.id);
+      const davidRels = await rolodexService.getRelationships(david.id!);
+      const emmaRels = await rolodexService.getRelationships(emma.id!);
 
       // Both should have relationships
       expect(davidRels.length).toBeGreaterThan(0);
       expect(emmaRels.length).toBeGreaterThan(0);
 
       // Relationships should reference each other
-      const davidToEmma = davidRels.find(r => r.targetEntityId === emma.id);
-      const emmaToDavid = emmaRels.find(r => r.targetEntityId === david.id);
+      const davidToEmma = davidRels.find(r => r.targetEntityId === emma.id!);
+      const emmaToDavid = emmaRels.find(r => r.targetEntityId === david.id!);
 
       expect(davidToEmma).toBeDefined();
       expect(emmaToDavid).toBeDefined();
@@ -236,7 +236,7 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       });
 
       // Get trust score
-      const trustScore = await rolodexService.getTrustScore(entity.id);
+      const trustScore = await rolodexService.getTrustScore(entity.id!);
 
       // Trust score should exist (if trust service is available)
       // or be null (if trust service is not available)

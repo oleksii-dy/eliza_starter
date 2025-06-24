@@ -13,7 +13,8 @@ import {
 export const getTunnelStatusAction: Action = {
   name: 'GET_TUNNEL_STATUS',
   similes: ['TUNNEL_STATUS', 'CHECK_TUNNEL', 'NGROK_STATUS', 'TUNNEL_INFO'],
-  description: 'Get the current status of the ngrok tunnel including URL, port, and uptime information. Supports action chaining by providing tunnel metadata for monitoring workflows, health checks, or conditional tunnel management.',
+  description:
+    'Get the current status of the ngrok tunnel including URL, port, and uptime information. Supports action chaining by providing tunnel metadata for monitoring workflows, health checks, or conditional tunnel management.',
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
     const tunnelService = runtime.getService('tunnel') as ITunnelService;
     return !!tunnelService;
@@ -76,16 +77,16 @@ export const getTunnelStatusAction: Action = {
           tunnelUrl: status.url,
           port: status.port,
           uptime: response.uptime,
-          provider: status.provider
+          provider: status.provider,
         },
         data: {
           action: 'GET_TUNNEL_STATUS',
           tunnelStatus: {
             ...status,
             uptime: response.uptime,
-            checkedAt: new Date().toISOString()
-          }
-        }
+            checkedAt: new Date().toISOString(),
+          },
+        },
       };
     } catch (error: any) {
       elizaLogger.error('Failed to get tunnel status:', error);
@@ -104,13 +105,13 @@ export const getTunnelStatusAction: Action = {
         text: `❌ Failed to get tunnel status: ${error.message}`,
         values: {
           success: false,
-          error: error.message
+          error: error.message,
         },
         data: {
           action: 'GET_TUNNEL_STATUS',
           errorType: 'status_check_failed',
-          errorDetails: error.stack
-        }
+          errorDetails: error.stack,
+        },
       };
     }
   },
@@ -134,22 +135,24 @@ export const getTunnelStatusAction: Action = {
       {
         name: '{{user}}',
         content: {
-          text: 'Check tunnel status and restart it if it\'s been running too long',
+          text: "Check tunnel status and restart it if it's been running too long",
         },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll check the current tunnel status and restart it if needed.',
-          thought: 'User wants me to monitor tunnel uptime and restart if necessary - I should check status first, then decide whether to restart based on uptime.',
+          text: "I'll check the current tunnel status and restart it if needed.",
+          thought:
+            'User wants me to monitor tunnel uptime and restart if necessary - I should check status first, then decide whether to restart based on uptime.',
           actions: ['GET_TUNNEL_STATUS'],
         },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'Tunnel has been running for 2 hours. That seems like a long time - I\'ll restart it for optimal performance.',
-          thought: 'Status shows the tunnel has been up for 2 hours, which is quite long. I should stop and restart it as requested.',
+          text: "Tunnel has been running for 2 hours. That seems like a long time - I'll restart it for optimal performance.",
+          thought:
+            'Status shows the tunnel has been up for 2 hours, which is quite long. I should stop and restart it as requested.',
           actions: ['STOP_TUNNEL'],
         },
       },
@@ -157,7 +160,8 @@ export const getTunnelStatusAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Tunnel stopped. Now starting a fresh tunnel...',
-          thought: 'Old tunnel is down, now I can start a new fresh tunnel for optimal performance.',
+          thought:
+            'Old tunnel is down, now I can start a new fresh tunnel for optimal performance.',
           actions: ['START_TUNNEL'],
         },
       },
@@ -172,8 +176,9 @@ export const getTunnelStatusAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll check the current tunnel status and then update the webhook URLs.',
-          thought: 'User needs the current tunnel URL for webhook configuration - I should get the status first, then update webhooks with the public URL.',
+          text: "I'll check the current tunnel status and then update the webhook URLs.",
+          thought:
+            'User needs the current tunnel URL for webhook configuration - I should get the status first, then update webhooks with the public URL.',
           actions: ['GET_TUNNEL_STATUS'],
         },
       },
@@ -181,7 +186,8 @@ export const getTunnelStatusAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Tunnel is active at https://abc123.ngrok.io. Now updating webhook URLs...',
-          thought: 'I have the current tunnel URL from the status check. I can now update the webhook configurations with this public URL.',
+          thought:
+            'I have the current tunnel URL from the status check. I can now update the webhook configurations with this public URL.',
           actions: ['UPDATE_WEBHOOKS'],
         },
       },

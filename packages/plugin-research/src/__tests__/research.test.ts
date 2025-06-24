@@ -4,32 +4,35 @@ import { ResearchStatus, ResearchPhase, ResearchProject } from '../types';
 import { IAgentRuntime, ModelType } from '@elizaos/core';
 
 // Mock runtime
-const createMockRuntime = () => ({
-  getSetting: mock((key: string) => {
-    const settings: Record<string, string> = {
-      RESEARCH_MAX_RESULTS: '10',
-      RESEARCH_TIMEOUT: '300000',
-      RESEARCH_ENABLE_CITATIONS: 'true',
-      RESEARCH_ENABLE_IMAGES: 'true',
-      RESEARCH_LANGUAGE: 'en',
-      // Provide mock API keys to satisfy validation
-      EXA_API_KEY: 'mock-exa-api-key',
-      TAVILY_API_KEY: 'mock-tavily-api-key',
-      SERPER_API_KEY: 'mock-serper-api-key',
-      SERPAPI_API_KEY: 'mock-serpapi-api-key',
-      OPENAI_API_KEY: 'mock-openai-api-key',
-      FIRECRAWL_API_KEY: 'mock-firecrawl-api-key',
-    };
-    return settings[key] || '';
-  }),
-  useModel: mock(async (type: any, params: any) => {
-    // Mock LLM responses based on the prompt
-    const content = params.messages?.[1]?.content || params.messages?.[0]?.content || '';
+const createMockRuntime = () =>
+  ({
+    getSetting: mock((key: string) => {
+      const settings: Record<string, string> = {
+        RESEARCH_MAX_RESULTS: '10',
+        RESEARCH_TIMEOUT: '300000',
+        RESEARCH_ENABLE_CITATIONS: 'true',
+        RESEARCH_ENABLE_IMAGES: 'true',
+        RESEARCH_LANGUAGE: 'en',
+        // Provide mock API keys to satisfy validation
+        EXA_API_KEY: 'mock-exa-api-key',
+        TAVILY_API_KEY: 'mock-tavily-api-key',
+        SERPER_API_KEY: 'mock-serper-api-key',
+        SERPAPI_API_KEY: 'mock-serpapi-api-key',
+        OPENAI_API_KEY: 'mock-openai-api-key',
+        FIRECRAWL_API_KEY: 'mock-firecrawl-api-key',
+      };
+      return settings[key] || '';
+    }),
+    useModel: mock(async (type: any, params: any) => {
+      // Mock LLM responses based on the prompt
+      const content = params.messages?.[1]?.content || params.messages?.[0]?.content || '';
 
-    // Handle sub-query generation - match the actual prompt pattern
-    if (content.includes('Generate sub-queries for this research task') ||
-        content.includes('Generate 3-7 specific sub-queries')) {
-      return `PURPOSE: Find the most recent quantum computing advances and breakthroughs
+      // Handle sub-query generation - match the actual prompt pattern
+      if (
+        content.includes('Generate sub-queries for this research task') ||
+        content.includes('Generate 3-7 specific sub-queries')
+      ) {
+        return `PURPOSE: Find the most recent quantum computing advances and breakthroughs
 QUERY: quantum computing breakthroughs 2024
 TYPE: factual
 PRIORITY: high
@@ -47,10 +50,10 @@ PURPOSE: Explore practical applications in industry
 QUERY: quantum computing commercial applications
 TYPE: practical
 PRIORITY: medium`;
-    }
+      }
 
-    if (content.includes('Generate a comprehensive search strategy')) {
-      return `Sub-Query 1:
+      if (content.includes('Generate a comprehensive search strategy')) {
+        return `Sub-Query 1:
 QUERY: quantum computing breakthroughs 2024
 PURPOSE: Find the most recent quantum computing advances and breakthroughs
 PRIORITY: critical
@@ -63,22 +66,22 @@ PURPOSE: Research current quantum error correction techniques
 PRIORITY: high
 EXPECTED_SOURCES: research papers, technical documentation
 KEYWORDS: error correction, quantum, stability`;
-    }
-    if (content.includes('research plan')) {
-      return 'Research plan: 1. Search for recent developments 2. Analyze key findings 3. Synthesize information';
-    }
-    if (content.includes('relevance')) {
-      return '0.85';
-    }
-    if (content.includes('Analyze')) {
-      return 'Key insights: Significant breakthroughs in quantum error correction';
-    }
-    if (content.includes('report')) {
-      return 'Executive Summary: This research explores recent quantum computing advances...';
-    }
-    return 'Mock response';
-  }),
-} as unknown as IAgentRuntime);
+      }
+      if (content.includes('research plan')) {
+        return 'Research plan: 1. Search for recent developments 2. Analyze key findings 3. Synthesize information';
+      }
+      if (content.includes('relevance')) {
+        return '0.85';
+      }
+      if (content.includes('Analyze')) {
+        return 'Key insights: Significant breakthroughs in quantum error correction';
+      }
+      if (content.includes('report')) {
+        return 'Executive Summary: This research explores recent quantum computing advances...';
+      }
+      return 'Mock response';
+    }),
+  }) as unknown as IAgentRuntime;
 
 describe('ResearchService', () => {
   let runtime: IAgentRuntime;
@@ -110,7 +113,11 @@ describe('ResearchService', () => {
       expect(project.id).toBeDefined();
       expect(project.query).toBe(query);
       expect([ResearchStatus.PENDING, ResearchStatus.ACTIVE]).toContain(project.status);
-      expect([ResearchPhase.INITIALIZATION, ResearchPhase.PLANNING, ResearchPhase.SEARCHING]).toContain(project.phase);
+      expect([
+        ResearchPhase.INITIALIZATION,
+        ResearchPhase.PLANNING,
+        ResearchPhase.SEARCHING,
+      ]).toContain(project.phase);
       expect(project.findings).toEqual([]);
       expect(project.sources).toEqual([]);
     });
@@ -145,14 +152,14 @@ describe('ResearchService', () => {
       const project = await service.createResearchProject('active query');
 
       // Wait a bit for the project to start
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Check if it's active or already completed (both are valid)
       const activeProjects = await service.getActiveProjects();
       const projectStatus = await service.getProject(project.id);
 
       // Either the project should be in active projects, or it should have completed/failed
-      const isActive = activeProjects.some(p => p.id === project.id);
+      const isActive = activeProjects.some((p) => p.id === project.id);
       const isCompleted = projectStatus?.status === ResearchStatus.COMPLETED;
       const isFailed = projectStatus?.status === ResearchStatus.FAILED;
       const isPending = projectStatus?.status === ResearchStatus.PENDING;
@@ -165,7 +172,7 @@ describe('ResearchService', () => {
       const project = await service.createResearchProject('pausable query');
 
       // Wait for project to become active
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       await service.pauseResearch(project.id);
       const paused = await service.getProject(project.id);
@@ -192,12 +199,16 @@ describe('ResearchService', () => {
       // Check phases over time
       for (let i = 0; i < 10; i++) {
         await checkPhase();
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
       expect(phases.length).toBeGreaterThanOrEqual(1);
       // First observed phase should be one of the early phases
-      const earlyPhases = [ResearchPhase.INITIALIZATION, ResearchPhase.PLANNING, ResearchPhase.SEARCHING];
+      const earlyPhases = [
+        ResearchPhase.INITIALIZATION,
+        ResearchPhase.PLANNING,
+        ResearchPhase.SEARCHING,
+      ];
       expect(earlyPhases).toContain(phases[0]);
     });
   });

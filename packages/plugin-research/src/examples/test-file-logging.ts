@@ -15,8 +15,12 @@ process.env.FILE_LOGGING = 'true';
 // Create a simple runtime
 const runtime = {
   getSetting: (key: string) => {
-    if (key === 'FILE_LOGGING') {return 'true';}
-    if (key === 'TAVILY_API_KEY') {return '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';}
+    if (key === 'FILE_LOGGING') {
+      return 'true';
+    }
+    if (key === 'TAVILY_API_KEY') {
+      return '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';
+    }
     return null;
   },
   useModel: async () => 'Mock response',
@@ -81,7 +85,8 @@ async function testFileLogging() {
     findings: [
       {
         id: uuidv4(),
-        content: 'Large language models have shown significant improvements in reasoning capabilities.',
+        content:
+          'Large language models have shown significant improvements in reasoning capabilities.',
         source: source1,
         relevance: 0.95,
         confidence: 0.9,
@@ -132,10 +137,12 @@ async function testFileLogging() {
       domain: 'computer_science',
       taskType: 'analytical',
       depth: 'comprehensive',
-      synthesis: 'The year 2024 has witnessed remarkable advances in artificial intelligence, particularly in large language models and multimodal systems. LLMs have demonstrated enhanced reasoning capabilities, while multimodal systems have achieved unprecedented integration across different data types.',
+      synthesis:
+        'The year 2024 has witnessed remarkable advances in artificial intelligence, particularly in large language models and multimodal systems. LLMs have demonstrated enhanced reasoning capabilities, while multimodal systems have achieved unprecedented integration across different data types.',
       categoryAnalysis: {
         llm: 'Large language models have evolved to show emergent reasoning abilities, with improvements in mathematical problem-solving and logical deduction.',
-        multimodal: 'Multimodal AI represents a significant leap forward, enabling systems to understand and generate content across multiple modalities seamlessly.',
+        multimodal:
+          'Multimodal AI represents a significant leap forward, enabling systems to understand and generate content across multiple modalities seamlessly.',
       },
     },
     report: null,
@@ -157,17 +164,17 @@ async function testFileLogging() {
     const files = await fs.readdir(logsDir);
     console.log('📁 Files created in research_logs/:');
 
-    const mdFiles = files.filter(f => f.endsWith('.md'));
-    const jsonFiles = files.filter(f => f.endsWith('.json'));
+    const mdFiles = files.filter((f) => f.endsWith('.md'));
+    const jsonFiles = files.filter((f) => f.endsWith('.json'));
 
     if (mdFiles.length > 0) {
       console.log('\nMarkdown files:');
-      mdFiles.forEach(file => console.log(`  📄 ${file}`));
+      mdFiles.forEach((file) => console.log(`  📄 ${file}`));
     }
 
     if (jsonFiles.length > 0) {
       console.log('\nJSON files:');
-      jsonFiles.forEach(file => console.log(`  📊 ${file}`));
+      jsonFiles.forEach((file) => console.log(`  📊 ${file}`));
     }
 
     // Read and display the first markdown file
@@ -189,7 +196,6 @@ async function testFileLogging() {
       console.log('\n💡 To view the full report, run:');
       console.log(`   cat research_logs/${mdFiles[0]}`);
     }
-
   } catch (error) {
     console.error('❌ Error checking files:', error);
   }

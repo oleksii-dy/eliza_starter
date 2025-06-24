@@ -277,9 +277,7 @@ Format as JSON:
     gaps: string[];
     recommendations: string[];
   }> {
-    logger.info(
-      `[RelevanceAnalyzer] Verifying query answering for ${findings.length} findings`
-    );
+    logger.info(`[RelevanceAnalyzer] Verifying query answering for ${findings.length} findings`);
 
     const findingSummaries = findings
       .slice(0, 20) // Limit for prompt size
@@ -374,7 +372,9 @@ Format as JSON:
   }
 
   private calculateKeywordScore(text: string, keywords: string[]): number {
-    if (!keywords.length) {return 0.5;}
+    if (!keywords.length) {
+      return 0.5;
+    }
 
     const lowerText = text.toLowerCase();
     const matches = keywords.filter((keyword) => lowerText.includes(keyword.toLowerCase()));

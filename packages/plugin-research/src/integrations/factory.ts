@@ -102,23 +102,25 @@ class GitHubSearchWrapper implements SearchProvider {
       });
 
       if (repos?.items) {
-        results.push(...repos.items.map((repo: any) => ({
-          title: repo.full_name,
-          url: repo.html_url,
-          snippet: repo.description || 'No description',
-          content: `${repo.description || ''}\nStars: ${repo.stargazers_count} | Language: ${repo.language || 'N/A'}`,
-          score: Math.min(1.0, repo.stargazers_count / 10000), // Normalize by star count
-          provider: 'github',
-          metadata: {
-            type: 'repository',
-            language: repo.language,
-            stars: repo.stargazers_count,
-            forks: repo.forks_count,
-            openIssues: repo.open_issues_count,
-            updatedAt: repo.updated_at,
-            owner: repo.owner?.login,
-          },
-        })));
+        results.push(
+          ...repos.items.map((repo: any) => ({
+            title: repo.full_name,
+            url: repo.html_url,
+            snippet: repo.description || 'No description',
+            content: `${repo.description || ''}\nStars: ${repo.stargazers_count} | Language: ${repo.language || 'N/A'}`,
+            score: Math.min(1.0, repo.stargazers_count / 10000), // Normalize by star count
+            provider: 'github',
+            metadata: {
+              type: 'repository',
+              language: repo.language,
+              stars: repo.stargazers_count,
+              forks: repo.forks_count,
+              openIssues: repo.open_issues_count,
+              updatedAt: repo.updated_at,
+              owner: repo.owner?.login,
+            },
+          }))
+        );
       }
 
       // Search issues if we have room for more results
@@ -129,23 +131,25 @@ class GitHubSearchWrapper implements SearchProvider {
         });
 
         if (issues?.items) {
-          results.push(...issues.items.map((issue: any) => ({
-            title: issue.title,
-            url: issue.html_url,
-            snippet: issue.body ? `${issue.body.substring(0, 200)}...` : 'No description',
-            content: `${issue.title}\n${issue.body || ''}`,
-            score: issue.comments / 50, // Normalize by comment count
-            provider: 'github',
-            metadata: {
-              type: 'issue',
-              state: issue.state,
-              comments: issue.comments,
-              author: issue.user?.login,
-              createdAt: issue.created_at,
-              updatedAt: issue.updated_at,
-              number: issue.number,
-            },
-          })));
+          results.push(
+            ...issues.items.map((issue: any) => ({
+              title: issue.title,
+              url: issue.html_url,
+              snippet: issue.body ? `${issue.body.substring(0, 200)}...` : 'No description',
+              content: `${issue.title}\n${issue.body || ''}`,
+              score: issue.comments / 50, // Normalize by comment count
+              provider: 'github',
+              metadata: {
+                type: 'issue',
+                state: issue.state,
+                comments: issue.comments,
+                author: issue.user?.login,
+                createdAt: issue.created_at,
+                updatedAt: issue.updated_at,
+                number: issue.number,
+              },
+            }))
+          );
         }
       }
 
@@ -170,8 +174,9 @@ class StagehandContentExtractor implements ContentExtractor {
 
       // Cast to any to access custom methods
       const stagehand = stagehandService as any;
-      const session = await stagehand.getCurrentSession?.() ||
-                     await stagehand.createSession?.(`extract-${Date.now()}`);
+      const session =
+        (await stagehand.getCurrentSession?.()) ||
+        (await stagehand.createSession?.(`extract-${Date.now()}`));
 
       if (!session) {
         return { content: '', title: undefined, metadata: undefined };
@@ -182,14 +187,15 @@ class StagehandContentExtractor implements ContentExtractor {
 
       // Extract main content using AI
       const extracted = await session.stagehand.extract({
-        instruction: 'Extract the main article content, title, and any important metadata. Exclude navigation, ads, and sidebars.',
+        instruction:
+          'Extract the main article content, title, and any important metadata. Exclude navigation, ads, and sidebars.',
         schema: {
           title: 'string',
           content: 'string',
           author: 'string?',
           publishDate: 'string?',
-          description: 'string?'
-        }
+          description: 'string?',
+        },
       });
 
       return {
@@ -198,8 +204,8 @@ class StagehandContentExtractor implements ContentExtractor {
         metadata: {
           author: extracted.author,
           publishDate: extracted.publishDate,
-          description: extracted.description
-        }
+          description: extracted.description,
+        },
       };
     } catch (error) {
       logger.error('Stagehand content extraction error:', error);
@@ -214,25 +220,33 @@ export function createSearchProvider(type: string, runtime: any): SearchProvider
   switch (type) {
     case 'tavily':
       if (!apiKey) {
-        throw new Error('TAVILY_API_KEY is required for Tavily search provider. Please configure this environment variable.');
+        throw new Error(
+          'TAVILY_API_KEY is required for Tavily search provider. Please configure this environment variable.'
+        );
       }
       return new TavilySearchProvider({ apiKey });
 
     case 'serper':
       if (!apiKey) {
-        throw new Error('SERPER_API_KEY is required for Serper search provider. Please configure this environment variable.');
+        throw new Error(
+          'SERPER_API_KEY is required for Serper search provider. Please configure this environment variable.'
+        );
       }
       return new SerperSearchProvider({ apiKey });
 
     case 'exa':
       if (!apiKey) {
-        throw new Error('EXA_API_KEY is required for Exa search provider. Please configure this environment variable.');
+        throw new Error(
+          'EXA_API_KEY is required for Exa search provider. Please configure this environment variable.'
+        );
       }
       return new ExaSearchProvider({ apiKey });
 
     case 'serpapi':
       if (!apiKey) {
-        throw new Error('SERPAPI_API_KEY is required for SerpAPI search provider. Please configure this environment variable.');
+        throw new Error(
+          'SERPAPI_API_KEY is required for SerpAPI search provider. Please configure this environment variable.'
+        );
       }
       return new SerpAPISearchProvider({ apiKey });
 
@@ -263,7 +277,7 @@ export function createSearchProvider(type: string, runtime: any): SearchProvider
           searchDepth: 'advanced',
           includeRawContent: true,
           maxResults: 50,
-          includeAnswer: true
+          includeAnswer: true,
         });
       }
 
@@ -284,7 +298,9 @@ export function createSearchProvider(type: string, runtime: any): SearchProvider
         }
       }
 
-      throw new Error('No web search provider configured. RECOMMENDED: Set TAVILY_API_KEY for optimal search results. Alternatives: EXA_API_KEY, SERPAPI_API_KEY, or SERPER_API_KEY.');
+      throw new Error(
+        'No web search provider configured. RECOMMENDED: Set TAVILY_API_KEY for optimal search results. Alternatives: EXA_API_KEY, SERPAPI_API_KEY, or SERPER_API_KEY.'
+      );
   }
 }
 
@@ -329,7 +345,9 @@ class RobustContentExtractor implements ContentExtractor {
     // STRATEGY: Prefer Tavily's built-in content when available
     // Only use additional extractors if Tavily content is insufficient
     logger.debug(`Content extraction requested for: ${url}`);
-    logger.info('ℹ️ Note: Tavily search provider includes high-quality content via raw_content field');
+    logger.info(
+      'ℹ️ Note: Tavily search provider includes high-quality content via raw_content field'
+    );
 
     for (let i = 0; i < this.extractors.length; i++) {
       const extractor = this.extractors[i];
@@ -341,7 +359,9 @@ class RobustContentExtractor implements ContentExtractor {
 
         // Validate result quality - more lenient for Tavily-first strategy
         if (result && result.content && result.content.trim().length > 50) {
-          logger.info(`Successfully extracted content with ${extractorName} (${result.content.length} chars)`);
+          logger.info(
+            `Successfully extracted content with ${extractorName} (${result.content.length} chars)`
+          );
 
           // Add extraction metadata
           result.metadata = {
@@ -350,12 +370,14 @@ class RobustContentExtractor implements ContentExtractor {
             extractionTime: Date.now(),
             contentLength: result.content.length,
             url,
-            strategy: 'backup_extraction' // This is backup to Tavily
+            strategy: 'backup_extraction', // This is backup to Tavily
           };
 
           return result;
         } else {
-          logger.warn(`${extractorName} returned insufficient content (${result?.content?.length || 0} chars)`);
+          logger.warn(
+            `${extractorName} returned insufficient content (${result?.content?.length || 0} chars)`
+          );
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
@@ -365,8 +387,13 @@ class RobustContentExtractor implements ContentExtractor {
     }
 
     // All extractors failed
-    logger.error(`All content extractors failed for ${url}. Errors:`, errors.map(e => e.message));
-    logger.info('💡 This is expected when Tavily already provides sufficient content via raw_content');
+    logger.error(
+      `All content extractors failed for ${url}. Errors:`,
+      errors.map((e) => e.message)
+    );
+    logger.info(
+      '💡 This is expected when Tavily already provides sufficient content via raw_content'
+    );
 
     // Return minimal result with error info
     return {
@@ -375,10 +402,10 @@ class RobustContentExtractor implements ContentExtractor {
       metadata: {
         extractionFailed: true,
         url,
-        errors: errors.map(e => e.message),
+        errors: errors.map((e) => e.message),
         extractionTime: Date.now(),
-        note: 'Tavily search provider typically includes rich content via raw_content field'
-      }
+        note: 'Tavily search provider typically includes rich content via raw_content field',
+      },
     };
   }
 }
@@ -399,7 +426,7 @@ export function createAcademicSearchProvider(runtime: IAgentRuntime): SearchProv
   // Wrap with rate limiting but SKIP caching to avoid cross-contamination issues
   const rateLimited = new RateLimitedSearchProvider(provider, {
     tokensPerInterval: 100, // Academic sources allow more requests
-    interval: 'minute'
+    interval: 'minute',
   });
 
   // DISABLED: Caching can cause cross-contamination between different research projects

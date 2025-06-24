@@ -571,18 +571,18 @@ Only return the JSON object, no other text.
       requirements: Array.isArray(extracted.requirements)
         ? extracted.requirements
         : [
-            'Implement functionality as described',
-            'Follow coding best practices',
-            'Add proper error handling',
-            'Include comprehensive tests',
-          ],
+          'Implement functionality as described',
+          'Follow coding best practices',
+          'Add proper error handling',
+          'Include comprehensive tests',
+        ],
       requiredSecrets: Array.isArray(extracted.requiredSecrets)
         ? extracted.requiredSecrets
         : ['GITHUB_TOKEN'],
       requiredRoles: Array.isArray(extracted.requiredRoles)
         ? extracted.requiredRoles.filter((role: string) =>
-            ['coder', 'reviewer', 'tester'].includes(role)
-          )
+          ['coder', 'reviewer', 'tester'].includes(role)
+        )
         : ['coder', 'reviewer'],
       priority: ['low', 'medium', 'high', 'critical'].includes(extracted.priority)
         ? extracted.priority

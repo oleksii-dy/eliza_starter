@@ -5,25 +5,29 @@ import { z } from 'zod';
 // Firecrawl API response schema
 const FirecrawlResponseSchema = z.object({
   success: z.boolean(),
-  data: z.object({
-    content: z.string().optional(),
-    markdown: z.string().optional(),
-    html: z.string().optional(),
-    metadata: z.object({
-      title: z.string().optional(),
-      description: z.string().optional(),
-      language: z.string().optional(),
-      keywords: z.string().optional(),
-      robots: z.string().optional(),
-      ogTitle: z.string().optional(),
-      ogDescription: z.string().optional(),
-      ogImage: z.string().optional(),
-      ogUrl: z.string().optional(),
-      canonical: z.string().optional(),
-    }).optional(),
-    links: z.array(z.string()).optional(),
-    images: z.array(z.string()).optional(),
-  }).optional(),
+  data: z
+    .object({
+      content: z.string().optional(),
+      markdown: z.string().optional(),
+      html: z.string().optional(),
+      metadata: z
+        .object({
+          title: z.string().optional(),
+          description: z.string().optional(),
+          language: z.string().optional(),
+          keywords: z.string().optional(),
+          robots: z.string().optional(),
+          ogTitle: z.string().optional(),
+          ogDescription: z.string().optional(),
+          ogImage: z.string().optional(),
+          ogUrl: z.string().optional(),
+          canonical: z.string().optional(),
+        })
+        .optional(),
+      links: z.array(z.string()).optional(),
+      images: z.array(z.string()).optional(),
+    })
+    .optional(),
   error: z.string().optional(),
 });
 
@@ -90,12 +94,26 @@ export class FirecrawlContentExtractor {
           formats: this.getFormats(),
           waitFor: this.config.waitFor,
           screenshot: this.config.screenshot,
-          includeTags: ['main', 'article', 'section', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'code', 'pre'],
+          includeTags: [
+            'main',
+            'article',
+            'section',
+            'p',
+            'h1',
+            'h2',
+            'h3',
+            'h4',
+            'h5',
+            'h6',
+            'li',
+            'code',
+            'pre',
+          ],
           excludeTags: ['nav', 'footer', 'aside', 'script', 'style'],
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
           timeout: this.config.timeout,
@@ -173,10 +191,10 @@ export class FirecrawlContentExtractor {
     const batchSize = 5;
     for (let i = 0; i < urls.length; i += batchSize) {
       const batch = urls.slice(i, i + batchSize);
-      const batchPromises = batch.map(url =>
+      const batchPromises = batch.map((url) =>
         this.extractContent(url)
-          .then(content => ({ url, content }))
-          .catch(error => {
+          .then((content) => ({ url, content }))
+          .catch((error) => {
             logger.error(`[Firecrawl] Failed to extract ${url}:`, error);
             return { url, content: null };
           })
@@ -189,14 +207,17 @@ export class FirecrawlContentExtractor {
 
       // Add delay between batches to respect rate limits
       if (i + batchSize < urls.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 
     return results;
   }
 
-  async crawlSite(startUrl: string, maxPages: number = 50): Promise<Map<string, ExtractedContent | null>> {
+  async crawlSite(
+    startUrl: string,
+    maxPages: number = 50
+  ): Promise<Map<string, ExtractedContent | null>> {
     try {
       logger.info(`[Firecrawl] Starting site crawl from: ${startUrl}`);
 
@@ -216,7 +237,7 @@ export class FirecrawlContentExtractor {
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
           timeout: (this.config.timeout || 60000) * 2, // Longer timeout for crawls
@@ -238,20 +259,20 @@ export class FirecrawlContentExtractor {
     }
   }
 
-  private async pollCrawlJob(jobId: string, maxPages: number): Promise<Map<string, ExtractedContent | null>> {
+  private async pollCrawlJob(
+    jobId: string,
+    maxPages: number
+  ): Promise<Map<string, ExtractedContent | null>> {
     const maxAttempts = 60; // 5 minutes max
     const pollInterval = 5000; // 5 seconds
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
-        const response = await axios.get(
-          `${this.baseUrl}/crawl/status/${jobId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${this.apiKey}`,
-            },
-          }
-        );
+        const response = await axios.get(`${this.baseUrl}/crawl/status/${jobId}`, {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+          },
+        });
 
         const { status, data } = response.data;
 
@@ -276,7 +297,7 @@ export class FirecrawlContentExtractor {
         }
 
         // Still processing
-        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        await new Promise((resolve) => setTimeout(resolve, pollInterval));
       } catch (error) {
         logger.error('[Firecrawl] Error polling crawl job:', error);
         return new Map();
@@ -289,8 +310,12 @@ export class FirecrawlContentExtractor {
 
   private getFormats(): string[] {
     const formats: string[] = ['text'];
-    if (this.config.includeMarkdown) {formats.push('markdown');}
-    if (this.config.includeHtml) {formats.push('html');}
+    if (this.config.includeMarkdown) {
+      formats.push('markdown');
+    }
+    if (this.config.includeHtml) {
+      formats.push('html');
+    }
     return formats;
   }
 
@@ -298,7 +323,7 @@ export class FirecrawlContentExtractor {
   async getUsage(): Promise<{ used: number; limit: number; remaining: number } | null> {
     try {
       const response = await axios.get(`${this.baseUrl}/usage`, {
-        headers: { 'Authorization': `Bearer ${this.apiKey}` },
+        headers: { Authorization: `Bearer ${this.apiKey}` },
       });
 
       return {

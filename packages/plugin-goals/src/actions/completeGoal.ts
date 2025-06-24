@@ -174,7 +174,7 @@ If none match well, return 0.`;
         name: '{{agent}}',
         content: {
           text: '🎉 Congratulations! Goal achieved: "Learn French fluently"! Now I\'ll create your new Spanish learning goal.',
-          thought: "The user has completed one goal and wants to start another. I need to chain COMPLETE_GOAL with CREATE_GOAL to mark the achievement and seamlessly transition to the new learning objective.",
+          thought: 'The user has completed one goal and wants to start another. I need to chain COMPLETE_GOAL with CREATE_GOAL to mark the achievement and seamlessly transition to the new learning objective.',
           actions: ['COMPLETE_GOAL', 'CREATE_GOAL'],
         },
       },

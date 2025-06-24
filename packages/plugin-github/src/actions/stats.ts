@@ -121,8 +121,8 @@ Total Commits: ${totalCommits}
 
 Top Contributors:
 ${topContributors
-    .map((c: any) => `• @${c.author?.login || 'unknown'} - ${c.total} commits`)
-    .join('\n')}
+  .map((c: any) => `• @${c.author?.login || 'unknown'} - ${c.total} commits`)
+  .join('\n')}
 
 **Recent Activity (Last 4 weeks):**
 Total Commits: ${recentCommits}
@@ -309,15 +309,15 @@ export const getRepositoryTrafficAction: Action = {
 
 **Popular Content:**
 ${paths
-    .slice(0, 5)
-    .map((p: any) => `• ${p.path} - ${p.count} views (${p.uniques} unique)`)
-    .join('\n')}
+  .slice(0, 5)
+  .map((p: any) => `• ${p.path} - ${p.count} views (${p.uniques} unique)`)
+  .join('\n')}
 
 **Top Referrers:**
 ${referrers
-    .slice(0, 5)
-    .map((r: any) => `• ${r.referrer} - ${r.count} views (${r.uniques} unique)`)
-    .join('\n')}`,
+  .slice(0, 5)
+  .map((r: any) => `• ${r.referrer} - ${r.count} views (${r.uniques} unique)`)
+  .join('\n')}`,
           actions: ['GET_GITHUB_REPO_TRAFFIC'],
           source: message.content.source,
         };

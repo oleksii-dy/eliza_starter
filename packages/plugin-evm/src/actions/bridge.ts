@@ -832,7 +832,7 @@ export const bridgeAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll bridge 1 ETH from Ethereum to Base with gas optimization, then swap it for USDC on Base.",
-          thought: "Two-step cross-chain strategy: first move ETH to Base for lower fees, then swap for USDC. The bridge enables access to cheaper swap operations on Base.",
+          thought: 'Two-step cross-chain strategy: first move ETH to Base for lower fees, then swap for USDC. The bridge enables access to cheaper swap operations on Base.',
           actions: ['EVM_BRIDGE_TOKENS', 'EVM_SWAP_TOKENS'],
         },
       },
@@ -849,7 +849,7 @@ export const bridgeAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll execute your arbitrage strategy: swap ETH to USDC on Ethereum, bridge to Polygon, then swap back to capture the price difference.",
-          thought: "Complex arbitrage workflow: convert to stable asset for price comparison, bridge to target chain, then execute the arbitrage swap. Sequential operations to capture cross-chain price differences.",
+          thought: 'Complex arbitrage workflow: convert to stable asset for price comparison, bridge to target chain, then execute the arbitrage swap. Sequential operations to capture cross-chain price differences.',
           actions: ['EVM_SWAP_TOKENS', 'EVM_BRIDGE_TOKENS', 'EVM_SWAP_TOKENS'],
         },
       },
@@ -887,7 +887,7 @@ export const bridgeAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll bridge your ETH to Arbitrum for arbitrage. After bridging, I can help you swap on Arbitrum where you might find better rates due to lower gas fees.",
-          thought: "Arbitrage preparation: moving ETH to Arbitrum where lower gas fees enable more profitable arbitrage trades. The bridge positions assets for fee-efficient trading.",
+          thought: 'Arbitrage preparation: moving ETH to Arbitrum where lower gas fees enable more profitable arbitrage trades. The bridge positions assets for fee-efficient trading.',
           action: 'EVM_BRIDGE_TOKENS',
           workflowContext: {
             step: 'arbitrage-bridge',
@@ -908,7 +908,7 @@ export const bridgeAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll help you consolidate your assets on Polygon for unified portfolio management. This will give you access to low-cost DeFi operations and better portfolio tracking.",
-          thought: "Portfolio consolidation strategy: moving all assets to Polygon for centralized management and low-fee operations. The bridge unifies scattered assets across chains.",
+          thought: 'Portfolio consolidation strategy: moving all assets to Polygon for centralized management and low-fee operations. The bridge unifies scattered assets across chains.',
           action: 'EVM_BRIDGE_TOKENS',
           workflowContext: {
             step: 'consolidate-chains',
@@ -929,7 +929,7 @@ export const bridgeAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll bridge your USDT to Base first, then help you swap for other tokens. Base offers significantly lower transaction fees, making this a cost-effective strategy for trading.",
-          thought: "Fee optimization workflow: move stablecoins to Base first for dramatically lower swap fees. The bridge enables cost-effective trading operations on the L2.",
+          thought: 'Fee optimization workflow: move stablecoins to Base first for dramatically lower swap fees. The bridge enables cost-effective trading operations on the L2.',
           action: 'EVM_BRIDGE_TOKENS',
           workflowContext: {
             step: 'multi-chain-swap',

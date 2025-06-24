@@ -214,9 +214,9 @@ export class UnifiedMigrator {
           error:
             vectorError instanceof Error
               ? {
-                message: vectorError.message,
-                stack: vectorError.stack?.split('\n').slice(0, 5),
-              }
+                  message: vectorError.message,
+                  stack: vectorError.stack?.split('\n').slice(0, 5),
+                }
               : String(vectorError),
         });
         logger.warn(
@@ -406,7 +406,7 @@ export class UnifiedMigrator {
               } else if (this.dbType === 'pglite') {
                 const tables = await this.db.execute(
                   sql.raw(
-                    'SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\''
+                    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
                   )
                 );
                 logger.warn('[UnifiedMigrator] Available PGLite tables:', tables);

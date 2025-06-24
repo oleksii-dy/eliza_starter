@@ -25,12 +25,14 @@ export { RangedSystem } from './systems/RangedSystem';
 export { DeathRespawnSystem } from './systems/DeathRespawnSystem';
 export { PvPSystem } from './systems/PvPSystem';
 export { PlayerHomesSystem } from './systems/PlayerHomesSystem';
+export { VisualRepresentationSystem } from './systems/VisualRepresentationSystem';
 
 // Export entities
 export { RPGEntity } from './entities/RPGEntity';
 
 // Export examples
 export { runCombatDemo } from './examples/combat-demo';
+export { runVisualDemo } from './examples/visual-demo';
 
 // Plugin definition
 export const HyperfyRPGPlugin = {
@@ -56,6 +58,7 @@ export const HyperfyRPGPlugin = {
     { name: 'deathRespawn', System: () => import('./systems/DeathRespawnSystem').then(m => m.DeathRespawnSystem) },
     { name: 'pvp', System: () => import('./systems/PvPSystem').then(m => m.PvPSystem) },
     { name: 'playerHomes', System: () => import('./systems/PlayerHomesSystem').then(m => m.PlayerHomesSystem) },
+    { name: 'visualRepresentation', System: () => import('./systems/VisualRepresentationSystem').then(m => m.VisualRepresentationSystem) },
   ],
 
   // Plugin initialization

@@ -2,7 +2,7 @@ import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import { AgentKitService } from '../../../services/AgentKitService';
 import { createMockRuntime } from '../../test-utils';
 import type { IAgentRuntime } from '../../../types/core.d';
-import { AgentKit } from '@coinbase/agentkit';
+import { AgentKit as _AgentKit } from '@coinbase/agentkit';
 
 // Mock the fs module
 const mockFs = {
@@ -146,8 +146,6 @@ describe('AgentKitService', () => {
       expect(() => service.getAgentKit()).toThrow('AgentKit not initialized');
     });
   });
-
-
 
   describe('stop', () => {
     it('should clean up resources', async () => {

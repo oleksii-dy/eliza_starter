@@ -19,19 +19,25 @@ const PyPIPackageSchema = z.object({
     classifiers: z.array(z.string()).optional(),
     project_urls: z.record(z.string()).optional(),
   }),
-  urls: z.array(z.object({
-    filename: z.string(),
-    url: z.string(),
-    upload_time: z.string().optional(),
-  })).optional(),
+  urls: z
+    .array(
+      z.object({
+        filename: z.string(),
+        url: z.string(),
+        upload_time: z.string().optional(),
+      })
+    )
+    .optional(),
 });
 
 const PyPISearchSchema = z.object({
-  projects: z.array(z.object({
-    name: z.string(),
-    version: z.string(),
-    description: z.string().optional(),
-  })),
+  projects: z.array(
+    z.object({
+      name: z.string(),
+      version: z.string(),
+      description: z.string().optional(),
+    })
+  ),
 });
 
 export interface PyPIConfig {
@@ -77,9 +83,7 @@ export class PyPISearchProvider {
       });
 
       // Extract package names from search results
-      const packageMatches = searchResponse.data.match(
-        /href="\/project\/([^\/]+)\//g
-      ) || [];
+      const packageMatches = searchResponse.data.match(/href="\/project\/([^\/]+)\//g) || [];
 
       const packages = packageMatches
         .map((match: string) => {
@@ -111,9 +115,13 @@ export class PyPISearchProvider {
 
       // Wrap the error to prevent serialization issues
       if (axios.isAxiosError(error)) {
-        throw new Error(`PyPI search failed: ${error.message} (${error.response?.status || 'no status'})`);
+        throw new Error(
+          `PyPI search failed: ${error.message} (${error.response?.status || 'no status'})`
+        );
       }
-      throw new Error(`PyPI search failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `PyPI search failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -131,8 +139,10 @@ export class PyPISearchProvider {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         logger.debug(`[PyPI] Package ${packageName} not found`);
       } else {
-        logger.warn(`[PyPI] Failed to get details for ${packageName}:`,
-          error instanceof Error ? error.message : String(error));
+        logger.warn(
+          `[PyPI] Failed to get details for ${packageName}:`,
+          error instanceof Error ? error.message : String(error)
+        );
       }
       return null;
     }
@@ -155,11 +165,12 @@ export class PyPISearchProvider {
     let classifiers = '';
     if (this.config.includeClassifiers && info.classifiers) {
       const relevantClassifiers = info.classifiers
-        .filter((c: string) =>
-          c.includes('Development Status') ||
-          c.includes('Intended Audience') ||
-          c.includes('Programming Language') ||
-          c.includes('Topic')
+        .filter(
+          (c: string) =>
+            c.includes('Development Status') ||
+            c.includes('Intended Audience') ||
+            c.includes('Programming Language') ||
+            c.includes('Topic')
         )
         .slice(0, 5);
 
@@ -173,7 +184,7 @@ export class PyPISearchProvider {
       url: packageUrl,
       snippet: description.substring(0, 300) + (description.length > 300 ? '...' : ''),
       content: description + classifiers,
-      score: Math.max(0.1, 1.0 - (index * 0.05)), // Decrease score based on result order
+      score: Math.max(0.1, 1.0 - index * 0.05), // Decrease score based on result order
       provider: 'pypi',
       metadata: {
         language: 'python',
@@ -190,7 +201,9 @@ export class PyPISearchProvider {
   async getPackage(packageName: string): Promise<SearchResult | null> {
     try {
       const pkg = await this.getPackageDetails(packageName);
-      if (!pkg) {return null;}
+      if (!pkg) {
+        return null;
+      }
 
       return this.convertToSearchResult(pkg, 0);
     } catch (error) {

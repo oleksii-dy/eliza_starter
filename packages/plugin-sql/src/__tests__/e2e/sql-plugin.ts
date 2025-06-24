@@ -314,7 +314,7 @@ export class SqlPluginTestSuite implements TestSuite {
 
         // Get participants
         const participants = await runtime.getParticipantsForRoom(roomId);
-        const hasParticipant = participants.some(p => p === entityId);
+        const hasParticipant = participants.some((p) => p === entityId);
 
         if (!hasParticipant) {
           throw new Error('Participant not found in room');
@@ -325,7 +325,7 @@ export class SqlPluginTestSuite implements TestSuite {
 
         // Verify removal
         const afterRemoval = await runtime.getParticipantsForRoom(roomId);
-        const stillHasParticipant = afterRemoval.some(p => p === entityId);
+        const stillHasParticipant = afterRemoval.some((p) => p === entityId);
 
         if (stillHasParticipant) {
           throw new Error('Participant was not removed');
@@ -355,12 +355,14 @@ export class SqlPluginTestSuite implements TestSuite {
 
         // Verify all entities were created
         const entities = await runtime.getEntitiesForAgent(runtime.agentId);
-        const concurrentEntities = entities.filter(e =>
-          e.names.some(n => n.startsWith('Concurrent Entity'))
+        const concurrentEntities = entities.filter((e) =>
+          e.names.some((n) => n.startsWith('Concurrent Entity'))
         );
 
         if (concurrentEntities.length < 5) {
-          throw new Error(`Expected at least 5 concurrent entities, found ${concurrentEntities.length}`);
+          throw new Error(
+            `Expected at least 5 concurrent entities, found ${concurrentEntities.length}`
+          );
         }
 
         console.log('✅ Successfully handled concurrent operations');

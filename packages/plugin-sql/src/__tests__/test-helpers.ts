@@ -100,7 +100,7 @@ export async function createTestDatabase(
         await adapter.close();
         connectionRegistry.removeAdapter(agentId);
         // Wait for cleanup to complete
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       };
 
       return { adapter, runtime, cleanup };
@@ -170,7 +170,7 @@ export async function createTestDatabase(
     await adapter.close();
     connectionRegistry.removeAdapter(agentId);
     // Wait for cleanup to complete
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   };
 
   return { adapter, runtime, cleanup };
@@ -277,7 +277,7 @@ export async function createIsolatedTestDatabase(
         await adapter.close();
         connectionRegistry.removeAdapter(testAgentId);
         // Wait for cleanup to complete
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       };
 
       return { adapter, runtime, cleanup, testAgentId };
@@ -348,7 +348,7 @@ export async function createIsolatedTestDatabase(
     await adapter.close();
     connectionRegistry.removeAdapter(testAgentId);
     // Wait for cleanup to complete
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   };
 
   return { adapter, runtime, cleanup, testAgentId };

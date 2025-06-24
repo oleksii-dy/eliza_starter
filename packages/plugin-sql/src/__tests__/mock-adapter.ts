@@ -9,7 +9,7 @@ import type {
   Room,
   Task,
   UUID,
-  World
+  World,
 } from '@elizaos/core';
 
 /**
@@ -68,7 +68,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
   }
 
   async getEntityByIds(ids: UUID[]): Promise<Entity[]> {
-    return ids.map(id => this.entities.get(id)).filter(Boolean) as Entity[];
+    return ids.map((id) => this.entities.get(id)).filter(Boolean) as Entity[];
   }
 
   async updateEntity(entity: Entity): Promise<void> {
@@ -82,27 +82,25 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
   }
 
   async searchEntitiesByName(name: string): Promise<Entity[]> {
-    return Array.from(this.entities.values()).filter(e =>
-      e.names.some(n => n.toLowerCase().includes(name.toLowerCase()))
+    return Array.from(this.entities.values()).filter((e) =>
+      e.names.some((n) => n.toLowerCase().includes(name.toLowerCase()))
     );
   }
 
   async getEntitiesByNames(names: string[]): Promise<Entity[]> {
-    return Array.from(this.entities.values()).filter(e =>
-      e.names.some(n => names.includes(n))
-    );
+    return Array.from(this.entities.values()).filter((e) => e.names.some((n) => names.includes(n)));
   }
 
   async getEntitiesForRoom(roomId: UUID): Promise<Entity[]> {
     const participantEntityIds = Array.from(this.participants.values())
-      .filter(p => p.roomId === roomId)
-      .map(p => p.entityId);
+      .filter((p) => p.roomId === roomId)
+      .map((p) => p.entityId);
     return this.getEntityByIds(participantEntityIds);
   }
 
   // Memory operations
   async createMemory(memory: Memory, tableName?: string): Promise<UUID> {
-    const id = memory.id || `memory-${Date.now()}-${Math.random()}` as UUID;
+    const id = memory.id || (`memory-${Date.now()}-${Math.random()}` as UUID);
     this.memories.set(id, { ...memory, id });
     return id;
   }
@@ -118,11 +116,13 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     tableName?: string;
   }): Promise<Memory[]> {
     const memories = Array.from(this.memories.values())
-      .filter(m => m.roomId === params.roomId)
+      .filter((m) => m.roomId === params.roomId)
       .slice(0, params.count || 100);
-    return params.unique ? memories.filter((m, i, arr) =>
-      arr.findIndex(other => other.content.text === m.content.text) === i
-    ) : memories;
+    return params.unique
+      ? memories.filter(
+          (m, i, arr) => arr.findIndex((other) => other.content.text === m.content.text) === i
+        )
+      : memories;
   }
 
   async searchMemories(params: {
@@ -133,7 +133,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
   }): Promise<Memory[]> {
     // Simple text-based search for mock
     return Array.from(this.memories.values())
-      .filter(m => !params.roomId || m.roomId === params.roomId)
+      .filter((m) => !params.roomId || m.roomId === params.roomId)
       .slice(0, params.count || 10);
   }
 
@@ -165,7 +165,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     const key = `${relationship.sourceEntityId}-${relationship.targetEntityId}`;
     this.relationships.set(key, {
       ...relationship,
-      id: relationship.id || `rel-${Date.now()}` as UUID,
+      id: relationship.id || (`rel-${Date.now()}` as UUID),
     });
     return true;
   }
@@ -178,14 +178,11 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     return this.relationships.get(key) || null;
   }
 
-  async getRelationships(params: {
-    entityId: UUID;
-    tags?: string[];
-  }): Promise<Relationship[]> {
-    return Array.from(this.relationships.values()).filter(rel => {
-      const matchesEntity = rel.sourceEntityId === params.entityId ||
-                           rel.targetEntityId === params.entityId;
-      const matchesTags = !params.tags || params.tags.some(tag => rel.tags.includes(tag));
+  async getRelationships(params: { entityId: UUID; tags?: string[] }): Promise<Relationship[]> {
+    return Array.from(this.relationships.values()).filter((rel) => {
+      const matchesEntity =
+        rel.sourceEntityId === params.entityId || rel.targetEntityId === params.entityId;
+      const matchesTags = !params.tags || params.tags.some((tag) => rel.tags.includes(tag));
       return matchesEntity && matchesTags;
     });
   }
@@ -199,7 +196,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
 
   // Room operations
   async createRoom(room: Room): Promise<UUID> {
-    const id = room.id || `room-${Date.now()}` as UUID;
+    const id = room.id || (`room-${Date.now()}` as UUID);
     this.rooms.set(id, { ...room, id });
     return id;
   }
@@ -209,9 +206,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
   }
 
   async getRooms(worldId?: UUID): Promise<Room[]> {
-    return Array.from(this.rooms.values()).filter(r =>
-      !worldId || r.worldId === worldId
-    );
+    return Array.from(this.rooms.values()).filter((r) => !worldId || r.worldId === worldId);
   }
 
   async updateRoom(room: Room): Promise<void> {
@@ -238,14 +233,14 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
 
   async getParticipantsForRoom(roomId: UUID): Promise<UUID[]> {
     return Array.from(this.participants.values())
-      .filter(p => p.roomId === roomId)
-      .map(p => p.entityId);
+      .filter((p) => p.roomId === roomId)
+      .map((p) => p.entityId);
   }
 
   async getRoomsForParticipant(entityId: UUID): Promise<UUID[]> {
     return Array.from(this.participants.values())
-      .filter(p => p.entityId === entityId)
-      .map(p => p.roomId);
+      .filter((p) => p.entityId === entityId)
+      .map((p) => p.roomId);
   }
 
   async getParticipantUserState(): Promise<string | null> {
@@ -269,7 +264,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
   }
 
   async getComponents(entityId: UUID): Promise<Component[]> {
-    return Array.from(this.components.values()).filter(c => c.entityId === entityId);
+    return Array.from(this.components.values()).filter((c) => c.entityId === entityId);
   }
 
   async updateComponent(component: Component): Promise<void> {
@@ -291,7 +286,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
 
   // World operations
   async createWorld(world: World): Promise<UUID> {
-    const id = world.id || `world-${Date.now()}` as UUID;
+    const id = world.id || (`world-${Date.now()}` as UUID);
     this.worlds.set(id, { ...world, id });
     return id;
   }
@@ -316,7 +311,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
 
   // Task operations
   async createTask(task: Task): Promise<UUID> {
-    const id = task.id || `task-${Date.now()}` as UUID;
+    const id = task.id || (`task-${Date.now()}` as UUID);
     this.tasks.set(id, { ...task, id });
     return id;
   }
@@ -326,9 +321,9 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
   }
 
   async getTasks(params: { roomId?: UUID; tags?: string[] }): Promise<Task[]> {
-    return Array.from(this.tasks.values()).filter(task => {
+    return Array.from(this.tasks.values()).filter((task) => {
       const matchesRoom = !params.roomId || task.roomId === params.roomId;
-      const matchesTags = !params.tags || params.tags.some(tag => task.tags.includes(tag));
+      const matchesTags = !params.tags || params.tags.some((tag) => task.tags.includes(tag));
       return matchesRoom && matchesTags;
     });
   }

@@ -67,7 +67,7 @@ export const runBenchmarkAction: Action = {
     ],
   ] as ActionExample[][],
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State) => {
     // Check if we're in testing/development mode
     const isTestMode =
       process.env.ELIZA_TESTING === 'true' ||

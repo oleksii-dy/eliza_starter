@@ -65,3 +65,5 @@ visual-test-results.log
 visual-test-summary.json
 test-results/
 playwright-report/
+# Drizzle
+drizzle/

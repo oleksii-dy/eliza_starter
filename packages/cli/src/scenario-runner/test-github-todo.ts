@@ -10,7 +10,6 @@ import {
 } from '@elizaos/core';
 import githubPlugin from '@elizaos/plugin-github';
 import messageHandlingPlugin from '@elizaos/plugin-message-handling';
-// @ts-expect-error - plugin-todo module has no type declarations
 import TodoPlugin from '@elizaos/plugin-todo';
 import { AgentServer } from '@elizaos/server';
 import chalk from 'chalk';

@@ -27,7 +27,8 @@ config();
 const TEST_QUERY = {
   id: 'deep-research-test-001',
   domain: ResearchDomain.COMPUTER_SCIENCE,
-  query: 'Analyze the security and privacy implications of federated learning in healthcare applications. Compare different privacy-preserving techniques including differential privacy, homomorphic encryption, and secure multi-party computation.',
+  query:
+    'Analyze the security and privacy implications of federated learning in healthcare applications. Compare different privacy-preserving techniques including differential privacy, homomorphic encryption, and secure multi-party computation.',
   expectedDepth: ResearchDepth.PHD_LEVEL,
   minimumRequirements: {
     sources: 15,
@@ -35,8 +36,8 @@ const TEST_QUERY = {
     findings: 20,
     wordCount: 3000,
     raceScore: 0.65,
-    factScore: 0.70
-  }
+    factScore: 0.7,
+  },
 };
 
 // Check API availability and log status
@@ -71,7 +72,6 @@ function checkApiAvailability(): void {
   }
 }
 
-
 // Monitor research progress
 async function monitorResearch(
   service: ResearchService,
@@ -104,7 +104,7 @@ async function monitorResearch(
       throw new Error(`Research failed: ${project.error || 'Unknown error'}`);
     }
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
   throw new Error('Research timeout after 5 minutes');
@@ -141,11 +141,16 @@ async function runBenchmarkEvaluation(project: any): Promise<any> {
     }
 
     // Parse results
-    const resultFile = path.join(process.cwd(), 'deep_research_bench', 'results', 'race_result.txt');
+    const resultFile = path.join(
+      process.cwd(),
+      'deep_research_bench',
+      'results',
+      'race_result.txt'
+    );
     const results = await fs.readFile(resultFile, 'utf-8');
 
     const scores: Record<string, number> = {};
-    results.split('\n').forEach(line => {
+    results.split('\n').forEach((line) => {
       const [key, value] = line.split(':');
       if (key && value) {
         scores[key.trim()] = parseFloat(value.trim());
@@ -184,7 +189,10 @@ async function runSingleBenchmark() {
       for (let i = 0; i < allMessages.length; i++) {
         const msg = allMessages[i]?.content || '';
         if (msg.toLowerCase().includes('synthesis') || msg.toLowerCase().includes('synthesize')) {
-          console.log(`[DEBUG] SYNTHESIS PROMPT FOUND in message ${i}:`, `${msg.substring(0, 200)}...`);
+          console.log(
+            `[DEBUG] SYNTHESIS PROMPT FOUND in message ${i}:`,
+            `${msg.substring(0, 200)}...`
+          );
         }
       }
 
@@ -197,23 +205,26 @@ async function runSingleBenchmark() {
         // Return valid JSON for finding extraction
         return JSON.stringify([
           {
-            'content': 'Federated learning preserves privacy by keeping data distributed across healthcare institutions, only sharing model updates rather than raw patient data.',
-            'relevance': 0.9,
-            'confidence': 0.8,
-            'category': 'privacy_technique'
+            content:
+              'Federated learning preserves privacy by keeping data distributed across healthcare institutions, only sharing model updates rather than raw patient data.',
+            relevance: 0.9,
+            confidence: 0.8,
+            category: 'privacy_technique',
           },
           {
-            'content': 'Differential privacy adds calibrated noise to model parameters to prevent reconstruction of individual patient records while maintaining model utility.',
-            'relevance': 0.85,
-            'confidence': 0.9,
-            'category': 'privacy_technique'
+            content:
+              'Differential privacy adds calibrated noise to model parameters to prevent reconstruction of individual patient records while maintaining model utility.',
+            relevance: 0.85,
+            confidence: 0.9,
+            category: 'privacy_technique',
           },
           {
-            'content': 'Homomorphic encryption allows computations on encrypted data, enabling secure federated learning without revealing sensitive healthcare information.',
-            'relevance': 0.9,
-            'confidence': 0.85,
-            'category': 'privacy_technique'
-          }
+            content:
+              'Homomorphic encryption allows computations on encrypted data, enabling secure federated learning without revealing sensitive healthcare information.',
+            relevance: 0.9,
+            confidence: 0.85,
+            category: 'privacy_technique',
+          },
         ]);
       }
 
@@ -221,11 +232,12 @@ async function runSingleBenchmark() {
       if (prompt.includes('Format as JSON:') && prompt.includes('queryAlignment')) {
         // Return high relevance scores for our test findings
         return JSON.stringify({
-          'queryAlignment': 0.9,
-          'topicRelevance': 0.85,
-          'specificity': 0.8,
-          'reasoning': 'This finding directly addresses privacy-preserving techniques in federated learning healthcare applications as requested in the query.',
-          'score': 0.85
+          queryAlignment: 0.9,
+          topicRelevance: 0.85,
+          specificity: 0.8,
+          reasoning:
+            'This finding directly addresses privacy-preserving techniques in federated learning healthcare applications as requested in the query.',
+          score: 0.85,
         });
       }
 
@@ -233,15 +245,21 @@ async function runSingleBenchmark() {
       if (prompt.includes('fact-checker extracting verifiable claims')) {
         return JSON.stringify([
           {
-            'statement': 'Federated learning enables collaborative machine learning without sharing raw healthcare data',
-            'evidence': ['Distributed model training', 'Privacy preservation', 'Healthcare applications'],
-            'confidence': 0.9
+            statement:
+              'Federated learning enables collaborative machine learning without sharing raw healthcare data',
+            evidence: [
+              'Distributed model training',
+              'Privacy preservation',
+              'Healthcare applications',
+            ],
+            confidence: 0.9,
           },
           {
-            'statement': 'Differential privacy provides mathematical guarantees for privacy protection',
-            'evidence': ['Noise injection', 'Privacy budget', 'Utility preservation'],
-            'confidence': 0.85
-          }
+            statement:
+              'Differential privacy provides mathematical guarantees for privacy protection',
+            evidence: ['Noise injection', 'Privacy budget', 'Utility preservation'],
+            confidence: 0.85,
+          },
         ]);
       }
 
@@ -264,7 +282,10 @@ async function runSingleBenchmark() {
       }
 
       // Detailed Category Analysis
-      if (prompt.includes('Create a comprehensive analysis for the category') && prompt.includes('800-1200 word analysis')) {
+      if (
+        prompt.includes('Create a comprehensive analysis for the category') &&
+        prompt.includes('800-1200 word analysis')
+      ) {
         const category = prompt.match(/category "([^"]+)"/)?.[1] || 'unknown';
         console.log(`[DEBUG] Detailed category analysis detected for: ${category}`);
         return `# ${category.charAt(0).toUpperCase() + category.slice(1)} in Federated Learning for Healthcare
@@ -449,7 +470,10 @@ Research funding agencies should prioritize interdisciplinary research that comb
       }
 
       // Check for category synthesis specifically
-      if (prompt.includes('Synthesize these') && prompt.includes('findings into a coherent summary')) {
+      if (
+        prompt.includes('Synthesize these') &&
+        prompt.includes('findings into a coherent summary')
+      ) {
         console.log('[DEBUG] Category synthesis detected');
         return 'This category demonstrates significant advancements in privacy-preserving techniques for federated learning in healthcare. The findings reveal three key approaches: differential privacy provides mathematical guarantees through noise injection, homomorphic encryption enables computation on encrypted data, and secure multi-party computation allows collaborative learning without data sharing. These techniques can be combined to create robust privacy frameworks for sensitive healthcare applications.';
       }
@@ -473,7 +497,11 @@ Future research should focus on optimizing the trade-offs between privacy guaran
       }
 
       // Handle section enhancement prompts
-      if (prompt.includes('Enhance this research section with detailed analysis from additional source material')) {
+      if (
+        prompt.includes(
+          'Enhance this research section with detailed analysis from additional source material'
+        )
+      ) {
         const sectionName = prompt.match(/Original Section: "([^"]+)"/)?.[1] || 'Unknown Section';
         console.log(`[DEBUG] Section enhancement detected for: ${sectionName}`);
         return `# Enhanced ${sectionName}
@@ -566,7 +594,10 @@ The methodological approach employed in this source represents an advancement ov
 
       // Log what prompts are falling through to the default case
       if (prompt.length > 100) {
-        console.log('[DEBUG] Unhandled prompt falling to default response:', `${prompt.substring(0, 200)}...`);
+        console.log(
+          '[DEBUG] Unhandled prompt falling to default response:',
+          `${prompt.substring(0, 200)}...`
+        );
       }
 
       // Return mock text response for other calls
@@ -627,20 +658,29 @@ The methodological approach employed in this source represents an advancement ov
 
     // Analyze results
     console.log('📈 Results Analysis:');
-    console.log(`- Total Sources: ${finalProject.sources.length} (Required: ${TEST_QUERY.minimumRequirements.sources})`);
-
-    const academicSources = finalProject.sources.filter((s: any) =>
-      s.type === 'academic' ||
-      s.url.includes('arxiv.org') ||
-      s.url.includes('pubmed') ||
-      s.url.includes('.edu')
+    console.log(
+      `- Total Sources: ${finalProject.sources.length} (Required: ${TEST_QUERY.minimumRequirements.sources})`
     );
-    console.log(`- Academic Sources: ${academicSources.length} (Required: ${TEST_QUERY.minimumRequirements.academicSources})`);
 
-    console.log(`- Key Findings: ${finalProject.findings.length} (Required: ${TEST_QUERY.minimumRequirements.findings})`);
+    const academicSources = finalProject.sources.filter(
+      (s: any) =>
+        s.type === 'academic' ||
+        s.url.includes('arxiv.org') ||
+        s.url.includes('pubmed') ||
+        s.url.includes('.edu')
+    );
+    console.log(
+      `- Academic Sources: ${academicSources.length} (Required: ${TEST_QUERY.minimumRequirements.academicSources})`
+    );
+
+    console.log(
+      `- Key Findings: ${finalProject.findings.length} (Required: ${TEST_QUERY.minimumRequirements.findings})`
+    );
 
     if (finalProject.report) {
-      console.log(`- Word Count: ${finalProject.report.wordCount} (Required: ${TEST_QUERY.minimumRequirements.wordCount})`);
+      console.log(
+        `- Word Count: ${finalProject.report.wordCount} (Required: ${TEST_QUERY.minimumRequirements.wordCount})`
+      );
       console.log(`- Citations: ${finalProject.report.citations.length}`);
       console.log(`- Bibliography: ${finalProject.report.bibliography.length}`);
     }
@@ -654,28 +694,39 @@ The methodological approach employed in this source represents an advancement ov
     if (finalProject.sources.length >= TEST_QUERY.minimumRequirements.sources) {
       passed.push('✅ Source count meets requirement');
     } else {
-      failed.push(`❌ Insufficient sources: ${finalProject.sources.length} < ${TEST_QUERY.minimumRequirements.sources}`);
+      failed.push(
+        `❌ Insufficient sources: ${finalProject.sources.length} < ${TEST_QUERY.minimumRequirements.sources}`
+      );
     }
 
     // Check academic sources
     if (academicSources.length >= TEST_QUERY.minimumRequirements.academicSources) {
       passed.push('✅ Academic source count meets requirement');
     } else {
-      failed.push(`❌ Insufficient academic sources: ${academicSources.length} < ${TEST_QUERY.minimumRequirements.academicSources}`);
+      failed.push(
+        `❌ Insufficient academic sources: ${academicSources.length} < ${TEST_QUERY.minimumRequirements.academicSources}`
+      );
     }
 
     // Check findings
     if (finalProject.findings.length >= TEST_QUERY.minimumRequirements.findings) {
       passed.push('✅ Finding count meets requirement');
     } else {
-      failed.push(`❌ Insufficient findings: ${finalProject.findings.length} < ${TEST_QUERY.minimumRequirements.findings}`);
+      failed.push(
+        `❌ Insufficient findings: ${finalProject.findings.length} < ${TEST_QUERY.minimumRequirements.findings}`
+      );
     }
 
     // Check word count
-    if (finalProject.report && finalProject.report.wordCount >= TEST_QUERY.minimumRequirements.wordCount) {
+    if (
+      finalProject.report &&
+      finalProject.report.wordCount >= TEST_QUERY.minimumRequirements.wordCount
+    ) {
       passed.push('✅ Word count meets requirement');
     } else {
-      failed.push(`❌ Insufficient word count: ${finalProject.report?.wordCount || 0} < ${TEST_QUERY.minimumRequirements.wordCount}`);
+      failed.push(
+        `❌ Insufficient word count: ${finalProject.report?.wordCount || 0} < ${TEST_QUERY.minimumRequirements.wordCount}`
+      );
     }
 
     // Run benchmark evaluation if available
@@ -690,14 +741,16 @@ The methodological approach employed in this source represents an advancement ov
       if (benchmarkScores['Overall Score'] >= TEST_QUERY.minimumRequirements.raceScore) {
         passed.push('✅ RACE score meets requirement');
       } else {
-        failed.push(`❌ Low RACE score: ${benchmarkScores['Overall Score']} < ${TEST_QUERY.minimumRequirements.raceScore}`);
+        failed.push(
+          `❌ Low RACE score: ${benchmarkScores['Overall Score']} < ${TEST_QUERY.minimumRequirements.raceScore}`
+        );
       }
     }
 
     // Final verdict
     console.log('\n📋 Test Summary:');
-    passed.forEach(p => console.log(p));
-    failed.forEach(f => console.log(f));
+    passed.forEach((p) => console.log(p));
+    failed.forEach((f) => console.log(f));
 
     if (failed.length === 0) {
       console.log('\n🎉 All quality requirements met! The research plugin is working correctly.');
@@ -712,16 +765,22 @@ The methodological approach employed in this source represents an advancement ov
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const resultFile = path.join(resultsDir, `benchmark_${timestamp}.json`);
 
-    await fs.writeFile(resultFile, JSON.stringify({
-      testQuery: TEST_QUERY,
-      project: finalProject,
-      benchmarkScores,
-      validation: { passed, failed },
-      timestamp: new Date().toISOString()
-    }, null, 2));
+    await fs.writeFile(
+      resultFile,
+      JSON.stringify(
+        {
+          testQuery: TEST_QUERY,
+          project: finalProject,
+          benchmarkScores,
+          validation: { passed, failed },
+          timestamp: new Date().toISOString(),
+        },
+        null,
+        2
+      )
+    );
 
     console.log(`\n📁 Detailed results saved to: ${resultFile}`);
-
   } catch (error) {
     console.error('\n❌ Test failed:', error);
     process.exit(1);
@@ -729,7 +788,7 @@ The methodological approach employed in this source represents an advancement ov
 }
 
 // Run the benchmark
-runSingleBenchmark().catch(error => {
+runSingleBenchmark().catch((error) => {
   console.error('Fatal error:', error);
   process.exit(1);
 });

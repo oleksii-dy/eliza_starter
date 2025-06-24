@@ -41,7 +41,7 @@ const relationshipSchema = z.object({
  * 'relationships' is an array of objects following the relationshipSchema.
  */
 
-const reflectionSchema = z.object({
+const _reflectionSchema = z.object({
   // reflection: z.string(),
   facts: z.array(
     z.object({
@@ -318,7 +318,7 @@ async function handler(
           sourceEntityId: sourceId,
           targetEntityId: targetId,
           tags: relationship.tags,
-          context: {
+          metadata: {
             interactions: 1,
             ...relationship.metadata,
           },

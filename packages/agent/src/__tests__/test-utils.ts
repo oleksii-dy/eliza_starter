@@ -1,4 +1,4 @@
-import { mock } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
 import { Content, IAgentRuntime, Memory, State, logger } from '@elizaos/core';
 import {
   createMockRuntime as createCoreMockRuntime,
@@ -110,10 +110,10 @@ export { documentTestResult, runCoreActionTests };
 
 // Add spy on logger for common usage in tests
 export function setupLoggerSpies() {
-  mock.spyOn(logger, 'info').mockImplementation(() => {});
-  mock.spyOn(logger, 'error').mockImplementation(() => {});
-  mock.spyOn(logger, 'warn').mockImplementation(() => {});
-  mock.spyOn(logger, 'debug').mockImplementation(() => {});
+  spyOn(logger, 'info').mockImplementation(() => {});
+  spyOn(logger, 'error').mockImplementation(() => {});
+  spyOn(logger, 'warn').mockImplementation(() => {});
+  spyOn(logger, 'debug').mockImplementation(() => {});
 
   // allow tests to restore originals
   return () => mock.restore();

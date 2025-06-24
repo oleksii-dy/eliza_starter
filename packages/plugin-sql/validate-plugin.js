@@ -21,7 +21,10 @@ try {
 
 try {
   console.log('\n🔍 Testing Postgres adapter creation...');
-  const pgAdapter = createDatabaseAdapter({ postgresUrl: 'postgresql://localhost:5432/test' }, agentId);
+  const pgAdapter = createDatabaseAdapter(
+    { postgresUrl: 'postgresql://localhost:5432/test' },
+    agentId
+  );
   console.log('Postgres adapter created:', pgAdapter?.constructor?.name);
 } catch (error) {
   console.error('❌ Postgres adapter creation failed:', error.message);

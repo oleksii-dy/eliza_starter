@@ -54,9 +54,9 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
       extensions: isTest
         ? {}
         : {
-          vector,
-          fuzzystrmatch,
-        },
+            vector,
+            fuzzystrmatch,
+          },
       relaxedDurability: true,
       // Additional stability options for testing
       ...(isTest && {

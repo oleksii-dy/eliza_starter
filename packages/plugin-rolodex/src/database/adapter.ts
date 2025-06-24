@@ -2,13 +2,13 @@ import { logger, stringToUuid } from '@elizaos/core';
 import type { EntityProfile, FollowUp, TrustEvent, InteractionEvent } from '../types';
 import { type IAgentRuntime, type UUID, type Relationship, asUUID } from '@elizaos/core';
 import {
-  SCHEMA_SQL,
-  type DbEntity,
-  type DbEntityPlatform,
-  type DbRelationship,
-  type DbInteraction,
-  type DbFollowUp,
-  type DbTrustEvent,
+// SCHEMA_SQL, // Currently unused
+// type DbEntity, // Currently unused
+// type DbEntityPlatform, // Currently unused
+// type DbRelationship, // Currently unused
+// type DbInteraction, // Currently unused
+// type DbFollowUp, // Currently unused
+// type DbTrustEvent, // Currently unused
 } from './schema';
 
 export class DatabaseAdapter {
@@ -466,7 +466,7 @@ export class DatabaseAdapter {
       if (existingWorld) {
         return worldId;
       }
-    } catch (error) {
+    } catch (_error) {
       // World doesn't exist, create it
     }
 

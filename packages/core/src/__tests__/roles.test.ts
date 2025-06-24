@@ -11,15 +11,16 @@ describe('roles utilities', () => {
     mock.restore();
 
     // Set up scoped mocks for this test
-    spyOn(entities, 'createUniqueUuid')
-      .mockImplementation((_runtime, serverId) => `unique-${serverId}` as UUID);
+    spyOn(entities, 'createUniqueUuid').mockImplementation(
+      (_runtime: any, serverId: any) => `unique-${serverId}` as UUID
+    );
 
     // Mock logger if it doesn't have the methods
     if (logger_module.logger) {
       const methods = ['error', 'info', 'warn', 'debug'];
       methods.forEach((method) => {
         if (typeof logger_module.logger[method] === 'function') {
-          spyOn(logger_module.logger, method).mockImplementation(() => {});
+          logger_module.logger[method] = mock(() => {});
         } else {
           logger_module.logger[method] = mock(() => {});
         }

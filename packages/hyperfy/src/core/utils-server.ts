@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import { ENV } from './env';
+import { ENV_SERVER } from './env-server';
 
 /**
  *
@@ -21,7 +21,7 @@ export async function hashFile(file: Buffer | string): Promise<string> {
  * JSON Web Tokens
  */
 
-const jwtSecret = ENV.JWT_SECRET || 'default-secret-for-dev';
+const jwtSecret = ENV_SERVER.JWT_SECRET || 'default-secret-for-dev';
 
 export function createJWT(data: any): Promise<string> {
   return new Promise((resolve, reject) => {

@@ -439,13 +439,16 @@ export class SkillsSystem extends System {
       }
     }
 
-    // Check for active XP events
-    const activeEvents = (this.world as any).getSystem?.('events')?.getActiveEvents() || [];
-    for (const event of activeEvents) {
-      if (event.type === 'double_xp') {
-        modifier *= 2;
-      } else if (event.type === 'bonus_xp' && event.skills?.includes(skill)) {
-        modifier += event.bonusRate || 0.5;
+    // Check for active XP events (if events system exists)
+    const eventsSystem = (this.world as any).getSystem?.('events');
+    if (eventsSystem && typeof eventsSystem.getActiveEvents === 'function') {
+      const activeEvents = eventsSystem.getActiveEvents() || [];
+      for (const event of activeEvents) {
+        if (event.type === 'double_xp') {
+          modifier *= 2;
+        } else if (event.type === 'bonus_xp' && event.skills?.includes(skill)) {
+          modifier += event.bonusRate || 0.5;
+        }
       }
     }
 

@@ -1,11 +1,7 @@
 import { IAgentRuntime, logger } from '@elizaos/core';
 import crypto from 'crypto';
 import { RESEARCH_PROMPTS, formatPrompt, getPromptConfig } from '../prompts/research-prompts';
-import {
-  FactualClaim,
-  ResearchSource,
-  VerificationStatus
-} from '../types';
+import { FactualClaim, ResearchSource, VerificationStatus } from '../types';
 
 export interface VerificationEvidence {
   sourceUrl: string;
@@ -96,7 +92,9 @@ export class ClaimVerifier {
     // Cache the result
     this.verificationCache.set(cacheKey, result);
 
-    logger.info(`[ClaimVerifier] Verification complete: ${result.overallVerificationStatus} (${result.aggregateConfidence})`);
+    logger.info(
+      `[ClaimVerifier] Verification complete: ${result.overallVerificationStatus} (${result.aggregateConfidence})`
+    );
 
     return result;
   }
@@ -132,7 +130,7 @@ export class ClaimVerifier {
         claim: claim.statement,
         sourceUrl: source.url,
         evidence: claim.supportingEvidence.join(' '),
-        sourceContent: relevantExcerpt
+        sourceContent: relevantExcerpt,
       });
 
       const config = getPromptConfig('verification');
@@ -140,9 +138,9 @@ export class ClaimVerifier {
         messages: [
           {
             role: 'system',
-            content: 'You are a rigorous fact-checker. Be extremely strict about verification.'
+            content: 'You are a rigorous fact-checker. Be extremely strict about verification.',
           },
-          { role: 'user', content: verificationPrompt }
+          { role: 'user', content: verificationPrompt },
         ],
         temperature: config.temperature,
         max_tokens: config.maxTokens || 1500,
@@ -155,9 +153,8 @@ export class ClaimVerifier {
         relevantExcerpt,
         supports: result.status === 'VERIFIED' || result.status === 'PARTIAL',
         confidence: result.confidence,
-        reasoning: result.reasoning
+        reasoning: result.reasoning,
       };
-
     } catch (error) {
       logger.error(`[ClaimVerifier] Error verifying against ${source.url}:`, error);
       return {
@@ -165,7 +162,7 @@ export class ClaimVerifier {
         relevantExcerpt: '',
         supports: false,
         confidence: 0,
-        reasoning: 'Failed to verify due to extraction error'
+        reasoning: 'Failed to verify due to extraction error',
       };
     }
   }
@@ -174,13 +171,16 @@ export class ClaimVerifier {
    * Find the most relevant excerpt from source content
    */
   private findRelevantExcerpt(claim: string, content: string): string {
-    const claimTerms = claim.toLowerCase().split(/\s+/).filter(term => term.length > 3);
+    const claimTerms = claim
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((term) => term.length > 3);
     const sentences = content.split(/[.!?]+/);
 
     // Score each sentence by term overlap
-    const scoredSentences = sentences.map(sentence => {
+    const scoredSentences = sentences.map((sentence) => {
       const sentenceLower = sentence.toLowerCase();
-      const termMatches = claimTerms.filter(term => sentenceLower.includes(term)).length;
+      const termMatches = claimTerms.filter((term) => sentenceLower.includes(term)).length;
       const score = termMatches / claimTerms.length;
       return { sentence, score };
     });
@@ -219,19 +219,21 @@ export class ClaimVerifier {
     const claimTerms = this.extractKeyTerms(claim.statement);
 
     return allSources
-      .filter(source => source.id !== excludeSource.id)
-      .map(source => {
+      .filter((source) => source.id !== excludeSource.id)
+      .map((source) => {
         // Score relevance based on term overlap
-        const sourceText = (`${source.title} ${source.snippet}`).toLowerCase();
-        const matchCount = claimTerms.filter(term => sourceText.includes(term.toLowerCase())).length;
+        const sourceText = `${source.title} ${source.snippet}`.toLowerCase();
+        const matchCount = claimTerms.filter((term) =>
+          sourceText.includes(term.toLowerCase())
+        ).length;
         const relevanceScore = matchCount / claimTerms.length;
 
         return { source, relevanceScore };
       })
-      .filter(item => item.relevanceScore > 0.3)
+      .filter((item) => item.relevanceScore > 0.3)
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
       .slice(0, 5) // Top 5 most relevant
-      .map(item => item.source);
+      .map((item) => item.source);
   }
 
   /**
@@ -239,12 +241,36 @@ export class ClaimVerifier {
    */
   private extractKeyTerms(claim: string): string[] {
     // Remove common words and extract significant terms
-    const stopWords = new Set(['the', 'is', 'at', 'which', 'on', 'and', 'a', 'an', 'as', 'are', 'was', 'were', 'been', 'be', 'have', 'has', 'had', 'that', 'with', 'for', 'of', 'in', 'to']);
+    const stopWords = new Set([
+      'the',
+      'is',
+      'at',
+      'which',
+      'on',
+      'and',
+      'a',
+      'an',
+      'as',
+      'are',
+      'was',
+      'were',
+      'been',
+      'be',
+      'have',
+      'has',
+      'had',
+      'that',
+      'with',
+      'for',
+      'of',
+      'in',
+      'to',
+    ]);
 
     return claim
       .split(/\s+/)
-      .map(word => word.toLowerCase().replace(/[^a-z0-9]/g, ''))
-      .filter(word => word.length > 3 && !stopWords.has(word));
+      .map((word) => word.toLowerCase().replace(/[^a-z0-9]/g, ''))
+      .filter((word) => word.length > 3 && !stopWords.has(word));
   }
 
   /**
@@ -266,26 +292,28 @@ export class ClaimVerifier {
           return {
             status: parsed.status || 'UNVERIFIED',
             confidence: parsed.confidence || 0,
-            reasoning: parsed.reasoning || parsed.justification || ''
+            reasoning: parsed.reasoning || parsed.justification || '',
           };
         }
       }
 
       // Fallback: Extract from text
-      const statusMatch = content.match(/Status:\s*(VERIFIED|PARTIALLY_VERIFIED|UNVERIFIED|CONTRADICTED)/i);
+      const statusMatch = content.match(
+        /Status:\s*(VERIFIED|PARTIALLY_VERIFIED|UNVERIFIED|CONTRADICTED)/i
+      );
       const confidenceMatch = content.match(/Confidence:\s*([0-9.]+)/i);
 
       return {
         status: statusMatch?.[1] || 'UNVERIFIED',
         confidence: confidenceMatch ? parseFloat(confidenceMatch[1]) : 0,
-        reasoning: content
+        reasoning: content,
       };
     } catch (error) {
       logger.error('[ClaimVerifier] Error parsing verification response:', error);
       return {
         status: 'UNVERIFIED',
         confidence: 0,
-        reasoning: 'Failed to parse verification response'
+        reasoning: 'Failed to parse verification response',
       };
     }
   }
@@ -346,7 +374,7 @@ export class ClaimVerifier {
       contradictingEvidence,
       overallVerificationStatus: overallStatus,
       aggregateConfidence,
-      consensusLevel
+      consensusLevel,
     };
   }
 
@@ -379,9 +407,7 @@ export class ClaimVerifier {
     for (let i = 0; i < claims.length; i += batchSize) {
       const batch = claims.slice(i, i + batchSize);
       const batchResults = await Promise.all(
-        batch.map(({ claim, primarySource }) =>
-          this.verifyClaim(claim, primarySource, allSources)
-        )
+        batch.map(({ claim, primarySource }) => this.verifyClaim(claim, primarySource, allSources))
       );
       results.push(...batchResults);
     }

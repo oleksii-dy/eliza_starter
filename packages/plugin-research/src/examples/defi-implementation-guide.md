@@ -10,7 +10,10 @@ This guide demonstrates how to implement and use the Deep Research plugin's DeFi
 
 ```typescript
 import { IAgentRuntime } from '@elizaos/core';
-import { executeDeFiScenario, DEFI_SCENARIOS } from '@elizaos/plugin-research/scenarios/defi-scenarios';
+import {
+  executeDeFiScenario,
+  DEFI_SCENARIOS,
+} from '@elizaos/plugin-research/scenarios/defi-scenarios';
 
 async function securityResearch(runtime: IAgentRuntime) {
   // Start a security research project
@@ -19,9 +22,9 @@ async function securityResearch(runtime: IAgentRuntime) {
     DEFI_SCENARIOS.SMART_CONTRACT_SECURITY,
     'Aave v3 reentrancy vulnerabilities 2024'
   );
-  
+
   console.log(`Research started: ${project.id}`);
-  
+
   // Monitor progress
   const service = runtime.getService('research');
   const status = await service.getProject(project.id);
@@ -38,16 +41,13 @@ async function yieldAnalysis(runtime: IAgentRuntime) {
     DEFI_SCENARIOS.YIELD_FARMING_OPTIMIZATION,
     'Arbitrum Optimism stablecoin yield farming low risk'
   );
-  
+
   // Wait for completion
-  await new Promise(resolve => setTimeout(resolve, 30000));
-  
+  await new Promise((resolve) => setTimeout(resolve, 30000));
+
   // Get the report
-  const report = generateScenarioReport(
-    DEFI_SCENARIOS.YIELD_FARMING_OPTIMIZATION,
-    project
-  );
-  
+  const report = generateScenarioReport(DEFI_SCENARIOS.YIELD_FARMING_OPTIMIZATION, project);
+
   console.log(report);
 }
 ```
@@ -60,8 +60,8 @@ Conducts deep security analysis of DeFi protocols.
 
 ```typescript
 // Example usage in chat
-User: "Research security vulnerabilities in Aave v3"
-Assistant: "I'll conduct a comprehensive security analysis of Aave v3."
+User: 'Research security vulnerabilities in Aave v3';
+Assistant: "I'll conduct a comprehensive security analysis of Aave v3.";
 // Triggers defi_security_research action
 ```
 
@@ -71,8 +71,8 @@ Analyzes yield farming opportunities across chains.
 
 ```typescript
 // Example usage
-User: "Find the best yield farming opportunities on Arbitrum and Optimism"
-Assistant: "I'll analyze yield farming opportunities on Arbitrum and Optimism."
+User: 'Find the best yield farming opportunities on Arbitrum and Optimism';
+Assistant: "I'll analyze yield farming opportunities on Arbitrum and Optimism.";
 // Triggers analyze_yield_farming action
 ```
 
@@ -82,8 +82,8 @@ Researches MEV strategies and protection mechanisms.
 
 ```typescript
 // Example usage
-User: "Research MEV protection strategies for DEX trading"
-Assistant: "I'll research MEV protection strategies and their implementations."
+User: 'Research MEV protection strategies for DEX trading';
+Assistant: "I'll research MEV protection strategies and their implementations.";
 // Triggers research_mev action
 ```
 
@@ -93,8 +93,8 @@ Provides Solidity gas optimization techniques.
 
 ```typescript
 // Example usage
-User: "Show me Solidity gas optimization techniques"
-Assistant: "I'll research advanced gas optimization techniques for Solidity."
+User: 'Show me Solidity gas optimization techniques';
+Assistant: "I'll research advanced gas optimization techniques for Solidity.";
 // Triggers analyze_gas_optimization action
 ```
 
@@ -104,8 +104,8 @@ Analyzes cross-chain bridge security.
 
 ```typescript
 // Example usage
-User: "Analyze LayerZero bridge security architecture"
-Assistant: "I'll analyze LayerZero's cross-chain bridge security architecture."
+User: 'Analyze LayerZero bridge security architecture';
+Assistant: "I'll analyze LayerZero's cross-chain bridge security architecture.";
 // Triggers analyze_bridge_security action
 ```
 
@@ -115,8 +115,8 @@ Runs analysis across multiple DeFi areas.
 
 ```typescript
 // Example usage
-User: "Do a comprehensive DeFi analysis covering security, yield, and MEV"
-Assistant: "I'll conduct a comprehensive DeFi analysis across multiple areas."
+User: 'Do a comprehensive DeFi analysis covering security, yield, and MEV';
+Assistant: "I'll conduct a comprehensive DeFi analysis across multiple areas.";
 // Triggers comprehensive_defi_analysis action
 ```
 
@@ -126,8 +126,8 @@ Sets up real-time monitoring for DeFi events.
 
 ```typescript
 // Example usage
-User: "Set up monitoring for DeFi security incidents"
-Assistant: "I'll set up real-time monitoring for DeFi security incidents."
+User: 'Set up monitoring for DeFi security incidents';
+Assistant: "I'll set up real-time monitoring for DeFi security incidents.";
 // Triggers setup_defi_monitoring action
 ```
 
@@ -136,10 +136,10 @@ Assistant: "I'll set up real-time monitoring for DeFi security incidents."
 ### Custom Security Analysis with Report Generation
 
 ```typescript
-import { 
-  executeDeFiScenario, 
+import {
+  executeDeFiScenario,
   DEFI_SCENARIOS,
-  generateScenarioReport 
+  generateScenarioReport,
 } from '@elizaos/plugin-research/scenarios/defi-scenarios';
 
 async function customSecurityAnalysis(runtime: IAgentRuntime) {
@@ -149,34 +149,31 @@ async function customSecurityAnalysis(runtime: IAgentRuntime) {
     DEFI_SCENARIOS.SMART_CONTRACT_SECURITY,
     'Flash loan reentrancy attacks Compound Finance 2024'
   );
-  
+
   // Wait for research to complete
   let completed = false;
   while (!completed) {
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
     const status = await runtime.getService('research').getProject(project.id);
     completed = status.status === 'completed';
   }
-  
+
   // Generate specialized security report
-  const report = generateScenarioReport(
-    DEFI_SCENARIOS.SMART_CONTRACT_SECURITY,
-    project
-  );
-  
+  const report = generateScenarioReport(DEFI_SCENARIOS.SMART_CONTRACT_SECURITY, project);
+
   // Extract critical findings
   const criticalFindings = project.findings
-    .filter(f => f.relevance > 0.8)
-    .map(f => ({
+    .filter((f) => f.relevance > 0.8)
+    .map((f) => ({
       content: f.content,
       source: f.sourceId,
-      relevance: f.relevance
+      relevance: f.relevance,
     }));
-  
+
   return {
     report,
     criticalFindings,
-    vulnerabilitiesFound: criticalFindings.length
+    vulnerabilitiesFound: criticalFindings.length,
   };
 }
 ```
@@ -192,18 +189,18 @@ async function batchDeFiResearch(runtime: IAgentRuntime) {
     DEFI_SCENARIOS.SMART_CONTRACT_SECURITY,
     DEFI_SCENARIOS.YIELD_FARMING_OPTIMIZATION,
     DEFI_SCENARIOS.MEV_RESEARCH,
-    DEFI_SCENARIOS.GAS_OPTIMIZATION
+    DEFI_SCENARIOS.GAS_OPTIMIZATION,
   ];
-  
+
   const results = await executeDeFiScenarioBatch(runtime, scenarios);
-  
+
   // Process results
   for (const [scenario, project] of results) {
     console.log(`Scenario: ${scenario}`);
     console.log(`Findings: ${project.findings.length}`);
     console.log(`Sources: ${project.sources.length}`);
   }
-  
+
   return results;
 }
 ```
@@ -215,33 +212,33 @@ import { setupDeFiMonitoring } from '@elizaos/plugin-research/scenarios/defi-sce
 
 async function monitorDeFiSecurity(runtime: IAgentRuntime) {
   const monitoring = await setupDeFiMonitoring(runtime, {
-    scenarios: [
-      DEFI_SCENARIOS.SMART_CONTRACT_SECURITY,
-      DEFI_SCENARIOS.MEV_RESEARCH
-    ],
+    scenarios: [DEFI_SCENARIOS.SMART_CONTRACT_SECURITY, DEFI_SCENARIOS.MEV_RESEARCH],
     interval: 5 * 60 * 1000, // 5 minutes
     alertThreshold: 0.8, // High relevance only
     onAlert: (project, finding) => {
       console.log('🚨 DEFI ALERT:', {
         topic: project.query,
         relevance: finding.relevance,
-        finding: finding.content.substring(0, 200)
+        finding: finding.content.substring(0, 200),
       });
-      
+
       // Send alert to Discord/Telegram/etc
       notifySecurityTeam({
         severity: 'high',
         protocol: extractProtocolFromQuery(project.query),
-        finding: finding
+        finding: finding,
       });
-    }
+    },
   });
-  
+
   // Stop monitoring after 24 hours
-  setTimeout(() => {
-    clearInterval(monitoring);
-    console.log('Monitoring stopped');
-  }, 24 * 60 * 60 * 1000);
+  setTimeout(
+    () => {
+      clearInterval(monitoring);
+      console.log('Monitoring stopped');
+    },
+    24 * 60 * 60 * 1000
+  );
 }
 ```
 
@@ -256,22 +253,19 @@ async function generateFullReport(runtime: IAgentRuntime) {
     DEFI_SCENARIOS.YIELD_FARMING_OPTIMIZATION,
     DEFI_SCENARIOS.MEV_RESEARCH,
     DEFI_SCENARIOS.GAS_OPTIMIZATION,
-    DEFI_SCENARIOS.CROSS_CHAIN_BRIDGES
+    DEFI_SCENARIOS.CROSS_CHAIN_BRIDGES,
   ];
-  
+
   const report = await generateComprehensiveDeFiReport(runtime, scenarios);
-  
+
   // Save report to file
   const fs = require('fs');
-  fs.writeFileSync(
-    `defi-report-${new Date().toISOString()}.md`,
-    report
-  );
-  
+  fs.writeFileSync(`defi-report-${new Date().toISOString()}.md`, report);
+
   // Extract key metrics
   const metrics = extractMetricsFromReport(report);
   console.log('Report Metrics:', metrics);
-  
+
   return report;
 }
 ```
@@ -289,17 +283,17 @@ export default {
   plugins: [researchPlugin],
   settings: {
     voice: {
-      model: 'en_US-male-medium'
-    }
+      model: 'en_US-male-medium',
+    },
   },
   bio: [
     'Expert in DeFi security analysis and research',
     'Specializes in smart contract vulnerabilities',
     'Provides yield farming optimization strategies',
-    'Analyzes MEV and cross-chain bridge security'
+    'Analyzes MEV and cross-chain bridge security',
   ],
   modelProvider: 'openai',
-  model: 'gpt-4-turbo-preview'
+  model: 'gpt-4-turbo-preview',
 };
 ```
 
@@ -313,31 +307,21 @@ import { researchPlugin } from '@elizaos/plugin-research';
 class DeFiResearchAgent extends Agent {
   async onMessage(message: Message) {
     // Custom logic for DeFi-specific messages
-    if (message.content.includes('vulnerability') || 
-        message.content.includes('exploit')) {
+    if (message.content.includes('vulnerability') || message.content.includes('exploit')) {
       // Automatically trigger security research
-      await this.runtime.processAction(
-        'defi_security_research',
-        message
-      );
+      await this.runtime.processAction('defi_security_research', message);
     }
-    
+
     // Continue with normal processing
     return super.onMessage(message);
   }
-  
+
   async generateDailyReport() {
     // Generate daily DeFi security report
-    const scenarios = [
-      DEFI_SCENARIOS.SMART_CONTRACT_SECURITY,
-      DEFI_SCENARIOS.MEV_RESEARCH
-    ];
-    
-    const report = await generateComprehensiveDeFiReport(
-      this.runtime,
-      scenarios
-    );
-    
+    const scenarios = [DEFI_SCENARIOS.SMART_CONTRACT_SECURITY, DEFI_SCENARIOS.MEV_RESEARCH];
+
+    const report = await generateComprehensiveDeFiReport(this.runtime, scenarios);
+
     // Post to Discord/Telegram
     await this.postToChannel(report);
   }
@@ -350,25 +334,21 @@ class DeFiResearchAgent extends Agent {
 
 ```typescript
 // Good: Specific and targeted
-const query = "Aave v3 flash loan reentrancy vulnerabilities 2024";
+const query = 'Aave v3 flash loan reentrancy vulnerabilities 2024';
 
 // Less effective: Too broad
-const query = "DeFi vulnerabilities";
+const query = 'DeFi vulnerabilities';
 ```
 
 ### 2. Error Handling
 
 ```typescript
 try {
-  const project = await executeDeFiScenario(
-    runtime,
-    DEFI_SCENARIOS.SMART_CONTRACT_SECURITY,
-    query
-  );
+  const project = await executeDeFiScenario(runtime, DEFI_SCENARIOS.SMART_CONTRACT_SECURITY, query);
 } catch (error) {
   if (error.message.includes('rate limit')) {
     // Wait and retry
-    await new Promise(resolve => setTimeout(resolve, 60000));
+    await new Promise((resolve) => setTimeout(resolve, 60000));
     return retry();
   }
   throw error;
@@ -384,7 +364,7 @@ const results = await executeDeFiScenarioBatch(runtime, scenarios);
 // Add delays between requests
 for (const scenario of scenarios) {
   await executeDeFiScenario(runtime, scenario);
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 }
 ```
 
@@ -395,20 +375,21 @@ const cache = new Map();
 
 async function getCachedOrResearch(scenario, query) {
   const cacheKey = `${scenario}-${query}`;
-  
+
   if (cache.has(cacheKey)) {
     const cached = cache.get(cacheKey);
-    if (Date.now() - cached.timestamp < 3600000) { // 1 hour
+    if (Date.now() - cached.timestamp < 3600000) {
+      // 1 hour
       return cached.data;
     }
   }
-  
+
   const result = await executeDeFiScenario(runtime, scenario, query);
   cache.set(cacheKey, {
     data: result,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
-  
+
   return result;
 }
 ```
@@ -418,11 +399,13 @@ async function getCachedOrResearch(scenario, query) {
 ### Common Issues
 
 1. **Rate Limiting**
+
    - Add delays between requests
    - Use batch operations
    - Implement exponential backoff
 
 2. **Memory Usage**
+
    - Process large reports in chunks
    - Clear completed projects periodically
    - Use streaming for real-time monitoring
@@ -451,4 +434,4 @@ See the [API documentation](./api-integration.md) for detailed method signatures
 
 ## Examples Repository
 
-For more examples, visit: https://github.com/elizaos/plugin-research-examples 
+For more examples, visit: https://github.com/elizaos/plugin-research-examples

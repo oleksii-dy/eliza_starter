@@ -4,7 +4,7 @@
  * Tests core functionality without complex timing scenarios
  */
 
-import { describe, it, expect, vi, beforeEach } from 'bun:test';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import {
   TrainingError,
   ConfigurationError,

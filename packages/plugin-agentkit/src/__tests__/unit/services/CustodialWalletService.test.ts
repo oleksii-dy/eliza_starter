@@ -2,7 +2,7 @@ import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { CustodialWalletService } from '../../../services/CustodialWalletService';
 import { createMockRuntime, createMockWallet } from '../../test-utils';
 import type { IAgentRuntime } from '../../../types/core.d';
-import type { CustodialWallet } from '../../../types/wallet';
+import type { CustodialWallet as _CustodialWallet } from '../../../types/wallet';
 
 describe('CustodialWalletService', () => {
   let service: CustodialWalletService;
@@ -59,10 +59,12 @@ describe('CustodialWalletService', () => {
       expect(wallet).toBeDefined();
       expect(wallet.name).toBe(walletData.name);
       expect(wallet.ownerId).toBe(walletData.ownerId);
-      expect(mockRepository.saveWallet).toHaveBeenCalledWith(expect.objectContaining({
-        name: walletData.name,
-        ownerId: walletData.ownerId,
-      }));
+      expect(mockRepository.saveWallet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: walletData.name,
+          ownerId: walletData.ownerId,
+        })
+      );
     });
 
     it('should get a wallet by ID', async () => {
@@ -90,12 +92,14 @@ describe('CustodialWalletService', () => {
     it('should check permissions correctly', async () => {
       const wallet = createMockWallet({
         ownerId: 'owner-123' as any,
-        permissions: [{
-          entityId: 'controller-456' as any,
-          type: 'transfer',
-          grantedAt: Date.now(),
-          grantedBy: 'owner-123' as any,
-        }],
+        permissions: [
+          {
+            entityId: 'controller-456' as any,
+            type: 'transfer',
+            grantedAt: Date.now(),
+            grantedBy: 'owner-123' as any,
+          },
+        ],
       });
       mockRepository.getWallet.mockResolvedValueOnce(wallet);
 
@@ -106,7 +110,9 @@ describe('CustodialWalletService', () => {
 
       // Controller should have transfer permission
       mockRepository.getWallet.mockResolvedValueOnce(wallet);
-      expect(await service.hasPermission(wallet.id, 'controller-456' as any, 'transfer')).toBe(true);
+      expect(await service.hasPermission(wallet.id, 'controller-456' as any, 'transfer')).toBe(
+        true
+      );
 
       // Controller should not have admin permission
       mockRepository.getWallet.mockResolvedValueOnce(wallet);

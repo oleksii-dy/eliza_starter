@@ -7,6 +7,7 @@ import { LootSystem } from '../rpg/systems/LootSystem';
 import { SpawningSystem } from '../rpg/systems/SpawningSystem';
 import { SkillsSystem } from '../rpg/systems/SkillsSystem';
 import { MovementSystem } from '../rpg/systems/MovementSystem';
+import { VisualRepresentationSystem } from '../rpg/systems/VisualRepresentationSystem';
 
 // Create a minimal test world that supports RPG entities
 export async function createTestWorld(options?: any): Promise<World> {
@@ -45,7 +46,19 @@ export async function createTestWorld(options?: any): Promise<World> {
       addActor() {},
       world: { gravity: { x: 0, y: -9.81, z: 0 } }
     } as any,
-    stage: {} as any,
+    stage: {
+      scene: {
+        add(node: any) {
+          // Mock adding to scene
+          return true;
+        },
+        remove(node: any) {
+          // Mock removing from scene
+          return true;
+        }
+      },
+      dirtyNodes: new Set()
+    } as any,
 
     // Entities system
     entities: {
@@ -143,6 +156,7 @@ export async function createTestWorld(options?: any): Promise<World> {
       this.register('spawning', SpawningSystem);
       this.register('skills', SkillsSystem);
       this.register('movement', MovementSystem);
+      this.register('visualRepresentation', VisualRepresentationSystem);
 
       // Initialize all systems
       for (const system of systems) {

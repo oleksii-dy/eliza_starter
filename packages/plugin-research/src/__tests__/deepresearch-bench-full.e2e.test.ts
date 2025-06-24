@@ -55,8 +55,14 @@ export class DeepResearchBenchFullSuite implements TestSuite {
         }
 
         // Load benchmark data
-        const dataPath = path.join(__dirname, '../../deep_research_bench/data/prompt_data/query.jsonl');
-        const dataExists = await fs.access(dataPath).then(() => true).catch(() => false);
+        const dataPath = path.join(
+          __dirname,
+          '../../deep_research_bench/data/prompt_data/query.jsonl'
+        );
+        const dataExists = await fs
+          .access(dataPath)
+          .then(() => true)
+          .catch(() => false);
 
         if (!dataExists) {
           throw new Error(`Benchmark data not found at: ${dataPath}`);
@@ -65,13 +71,11 @@ export class DeepResearchBenchFullSuite implements TestSuite {
         const queryData = await fs.readFile(dataPath, 'utf-8');
         const allQueries: BenchmarkQuery[] = queryData
           .split('\n')
-          .filter(line => line.trim())
-          .map(line => JSON.parse(line));
+          .filter((line) => line.trim())
+          .map((line) => JSON.parse(line));
 
         // Get first 5 English queries
-        const queries = allQueries
-          .filter(q => q.language === 'en')
-          .slice(0, 5);
+        const queries = allQueries.filter((q) => q.language === 'en').slice(0, 5);
 
         console.log(`\n📝 Processing ${queries.length} English queries`);
 
@@ -93,13 +97,15 @@ export class DeepResearchBenchFullSuite implements TestSuite {
           console.log(`\n${'─'.repeat(80)}`);
           console.log(`📊 Query ${i + 1}/${queries.length} - ID: ${query.id}`);
           console.log(`📝 Topic: ${query.topic}`);
-          console.log(`📝 Query: ${query.prompt.substring(0, 150)}${query.prompt.length > 150 ? '...' : ''}`);
+          console.log(
+            `📝 Query: ${query.prompt.substring(0, 150)}${query.prompt.length > 150 ? '...' : ''}`
+          );
           console.log(`${'─'.repeat(80)}\n`);
 
           const startTime = Date.now();
           const result: BenchmarkResult = {
             queryId: query.id,
-            success: false
+            success: false,
           };
 
           try {
@@ -244,15 +250,21 @@ export class DeepResearchBenchFullSuite implements TestSuite {
                   if (race) {
                     console.log('\n📊 RACE Evaluation:');
                     console.log(`  - Overall: ${(race.overall * 100).toFixed(1)}%`);
-                    console.log(`  - Comprehensiveness: ${(race.comprehensiveness * 100).toFixed(1)}%`);
+                    console.log(
+                      `  - Comprehensiveness: ${(race.comprehensiveness * 100).toFixed(1)}%`
+                    );
                     console.log(`  - Depth: ${(race.depth * 100).toFixed(1)}%`);
-                    console.log(`  - Instruction Following: ${(race.instructionFollowing * 100).toFixed(1)}%`);
+                    console.log(
+                      `  - Instruction Following: ${(race.instructionFollowing * 100).toFixed(1)}%`
+                    );
                     console.log(`  - Readability: ${(race.readability * 100).toFixed(1)}%`);
                   }
 
                   if (fact) {
                     console.log('\n📊 FACT Evaluation:');
-                    console.log(`  - Citation Accuracy: ${(fact.citationAccuracy * 100).toFixed(1)}%`);
+                    console.log(
+                      `  - Citation Accuracy: ${(fact.citationAccuracy * 100).toFixed(1)}%`
+                    );
                     console.log(`  - Total Citations: ${fact.totalCitations}`);
                     console.log(`  - Verified Citations: ${fact.verifiedCitations}`);
                   }
@@ -268,14 +280,13 @@ export class DeepResearchBenchFullSuite implements TestSuite {
                 console.log(`⏳ Processing... (${Math.round(elapsed / 1000)}s elapsed)`);
               }
 
-              await new Promise(resolve => setTimeout(resolve, checkInterval));
+              await new Promise((resolve) => setTimeout(resolve, checkInterval));
               elapsed += checkInterval;
             }
 
             if (elapsed >= timeout) {
               throw new Error('Research timed out');
             }
-
           } catch (error) {
             result.error = error instanceof Error ? error.message : String(error);
             console.error(`\n❌ Error: ${result.error}`);
@@ -289,17 +300,22 @@ export class DeepResearchBenchFullSuite implements TestSuite {
         console.log('📊 BENCHMARK SUMMARY');
         console.log('='.repeat(80));
 
-        const successful = results.filter(r => r.success);
-        const successRate = (successful.length / results.length * 100).toFixed(1);
+        const successful = results.filter((r) => r.success);
+        const successRate = ((successful.length / results.length) * 100).toFixed(1);
 
         console.log(`\n✅ Success Rate: ${successful.length}/${results.length} (${successRate}%)`);
 
         if (successful.length > 0) {
-          const avgWordCount = successful.reduce((sum, r) => sum + (r.wordCount || 0), 0) / successful.length;
-          const avgCitations = successful.reduce((sum, r) => sum + (r.citations || 0), 0) / successful.length;
-          const avgSources = successful.reduce((sum, r) => sum + (r.sources || 0), 0) / successful.length;
-          const avgFindings = successful.reduce((sum, r) => sum + (r.findings || 0), 0) / successful.length;
-          const avgDuration = successful.reduce((sum, r) => sum + (r.duration || 0), 0) / successful.length;
+          const avgWordCount =
+            successful.reduce((sum, r) => sum + (r.wordCount || 0), 0) / successful.length;
+          const avgCitations =
+            successful.reduce((sum, r) => sum + (r.citations || 0), 0) / successful.length;
+          const avgSources =
+            successful.reduce((sum, r) => sum + (r.sources || 0), 0) / successful.length;
+          const avgFindings =
+            successful.reduce((sum, r) => sum + (r.findings || 0), 0) / successful.length;
+          const avgDuration =
+            successful.reduce((sum, r) => sum + (r.duration || 0), 0) / successful.length;
 
           console.log('\n📊 Average Metrics (successful runs):');
           console.log(`  - Word Count: ${Math.round(avgWordCount)}`);
@@ -310,7 +326,7 @@ export class DeepResearchBenchFullSuite implements TestSuite {
         }
 
         // Failed queries
-        const failed = results.filter(r => !r.success);
+        const failed = results.filter((r) => !r.success);
         if (failed.length > 0) {
           console.log('\n❌ Failed Queries:');
           for (const f of failed) {
@@ -320,27 +336,40 @@ export class DeepResearchBenchFullSuite implements TestSuite {
 
         // Save summary
         const summaryPath = path.join(outputDir, 'benchmark_summary.json');
-        await fs.writeFile(summaryPath, JSON.stringify({
-          timestamp: new Date().toISOString(),
-          totalQueries: results.length,
-          successful: successful.length,
-          successRate: parseFloat(successRate),
-          results
-        }, null, 2));
+        await fs.writeFile(
+          summaryPath,
+          JSON.stringify(
+            {
+              timestamp: new Date().toISOString(),
+              totalQueries: results.length,
+              successful: successful.length,
+              successRate: parseFloat(successRate),
+              results,
+            },
+            null,
+            2
+          )
+        );
 
         console.log(`\n📁 Summary saved to: ${summaryPath}`);
 
         // Target metrics
         console.log('\n🎯 DeepResearch Bench Targets:');
         console.log(`  - Success Rate: 100% (current: ${successRate}%)`);
-        console.log(`  - Min Word Count: 3000 (avg: ${successful.length > 0 ? Math.round(successful.reduce((sum, r) => sum + (r.wordCount || 0), 0) / successful.length) : 0})`);
-        console.log(`  - Min Citations: 30 (avg: ${successful.length > 0 ? Math.round(successful.reduce((sum, r) => sum + (r.citations || 0), 0) / successful.length) : 0})`);
+        console.log(
+          `  - Min Word Count: 3000 (avg: ${successful.length > 0 ? Math.round(successful.reduce((sum, r) => sum + (r.wordCount || 0), 0) / successful.length) : 0})`
+        );
+        console.log(
+          `  - Min Citations: 30 (avg: ${successful.length > 0 ? Math.round(successful.reduce((sum, r) => sum + (r.citations || 0), 0) / successful.length) : 0})`
+        );
 
         console.log('\n✅ Benchmark evaluation complete!');
 
         // Fail the test if success rate is below 100%
         if (successful.length < results.length) {
-          throw new Error(`Only ${successful.length}/${results.length} queries succeeded. Target is 100% success rate.`);
+          throw new Error(
+            `Only ${successful.length}/${results.length} queries succeeded. Target is 100% success rate.`
+          );
         }
       },
     },

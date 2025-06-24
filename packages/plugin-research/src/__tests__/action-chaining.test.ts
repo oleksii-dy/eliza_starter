@@ -58,7 +58,9 @@ function createSimpleRuntime(serviceOverrides?: Partial<ResearchService>): IAgen
       return settings[key] || null;
     },
     getService: (name: string) => {
-      if (name === 'research') {return researchService;}
+      if (name === 'research') {
+        return researchService;
+      }
       return null;
     },
     useModel: async (modelType: any, params: any) => {

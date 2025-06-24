@@ -5,7 +5,11 @@ import {
   addWalletControllerAction,
   listCustodialWalletsAction,
 } from '../../../actions/custodial-wallet';
-import { createMockRuntime, createMockMemory, createMockState } from '../../test-utils';
+import {
+  createMockRuntime as _createMockRuntime,
+  createMockMemory as _createMockMemory,
+  createMockState as _createMockState,
+} from '../../test-utils';
 import type { Memory, State, UUID, HandlerCallback } from '@elizaos/core';
 import type { IAgentRuntime } from '../../../types/core.d';
 import type { CustodialWallet } from '../../../types/wallet';

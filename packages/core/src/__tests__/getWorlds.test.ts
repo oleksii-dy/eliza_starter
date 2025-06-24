@@ -1,4 +1,4 @@
-import { describe, expect, beforeEach, it, mock } from 'bun:test';
+import { describe, expect, beforeEach, it, mock, spyOn } from 'bun:test';
 import { AgentRuntime } from '../runtime';
 import type { Character, IDatabaseAdapter, World, UUID, GetWorldsOptions } from '../types';
 
@@ -311,10 +311,8 @@ describe('getWorlds functionality', () => {
 
   describe('Database adapter integration', () => {
     it('should call adapter.getWorlds with correct parameters', async () => {
-      const originalGetWorlds = mockAdapter.getWorlds;
-      const getWorldsSpy = mock();
+      const getWorldsSpy = spyOn(mockAdapter, 'getWorlds');
       getWorldsSpy.mockResolvedValue([]);
-      mockAdapter.getWorlds = getWorldsSpy;
 
       const options: GetWorldsOptions = {
         serverId: 'test-server',
@@ -329,14 +327,12 @@ describe('getWorlds functionality', () => {
         limit: 5,
       });
 
-      mockAdapter.getWorlds = originalGetWorlds;
+      getWorldsSpy.mockRestore();
     });
 
     it('should include agentId from runtime', async () => {
-      const originalGetWorlds = mockAdapter.getWorlds;
-      const getWorldsSpy = mock();
+      const getWorldsSpy = spyOn(mockAdapter, 'getWorlds');
       getWorldsSpy.mockResolvedValue([]);
-      mockAdapter.getWorlds = getWorldsSpy;
 
       await runtime.getWorlds({});
 
@@ -344,7 +340,7 @@ describe('getWorlds functionality', () => {
         agentId: 'agent-1',
       });
 
-      mockAdapter.getWorlds = originalGetWorlds;
+      getWorldsSpy.mockRestore();
     });
   });
 });

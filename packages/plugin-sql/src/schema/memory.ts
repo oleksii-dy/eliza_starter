@@ -34,11 +34,18 @@ function createMemoryTable() {
         factory.index('idx_memories_entity_id').on(table.entityId),
         factory.index('idx_memories_agent_id').on(table.agentId),
         factory.index('idx_memories_room_id').on(table.roomId),
-        factory.index('idx_memories_metadata_type').on(factory.jsonFieldAccess(table.metadata, 'type')),
-        factory.index('idx_memories_document_id').on(factory.jsonFieldAccess(table.metadata, 'documentId')),
+        factory
+          .index('idx_memories_metadata_type')
+          .on(factory.jsonFieldAccess(table.metadata, 'type')),
+        factory
+          .index('idx_memories_document_id')
+          .on(factory.jsonFieldAccess(table.metadata, 'documentId')),
         factory
           .index('idx_fragments_order')
-          .on(factory.jsonFieldAccess(table.metadata, 'documentId'), factory.jsonFieldAccess(table.metadata, 'position')),
+          .on(
+            factory.jsonFieldAccess(table.metadata, 'documentId'),
+            factory.jsonFieldAccess(table.metadata, 'position')
+          ),
         factory.check(
           'fragment_metadata_check',
           sql`

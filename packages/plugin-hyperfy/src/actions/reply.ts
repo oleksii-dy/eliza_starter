@@ -105,7 +105,7 @@ export const replyAction = {
       return {
         text: existingReplies[0].text || '',
         values: { replied: true, replyText: existingReplies[0].text },
-        data: { source: 'hyperfy', action: 'REPLY' }
+        data: { source: 'hyperfy', action: 'REPLY' },
       };
     }
 
@@ -135,7 +135,7 @@ export const replyAction = {
     return {
       text: responseContent.text,
       values: { replied: true, replyText: responseContent.text },
-      data: { source: 'hyperfy', action: 'REPLY', thought: responseContent.thought }
+      data: { source: 'hyperfy', action: 'REPLY', thought: responseContent.thought },
     };
   },
   examples: [

@@ -419,7 +419,7 @@ export const confirmGoalAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll create a one-off goal: 'Finish taxes' with Priority 2, Due April 15. After you confirm, I'll show you all your goals.",
-          thought: "The user wants to create a goal with confirmation and then see their complete goal list. I need to chain CREATE_GOAL, CONFIRM_GOAL, and LIST_GOALS to handle the full workflow from creation through confirmation to viewing the updated list.",
+          thought: 'The user wants to create a goal with confirmation and then see their complete goal list. I need to chain CREATE_GOAL, CONFIRM_GOAL, and LIST_GOALS to handle the full workflow from creation through confirmation to viewing the updated list.',
           actions: ['CREATE_GOAL_PREVIEW'],
         },
       },

@@ -12,6 +12,7 @@ import { MovementSystem } from '../rpg/systems/MovementSystem';
 import { ConfigLoader } from '../rpg/config/ConfigLoader';
 import { Config } from '../core/config';
 import { removeGraphicsSystemsForTesting, setupTestEnvironment } from './helpers/test-setup';
+import { CombatStyle } from '../rpg/types';
 
 export interface RealTestWorldOptions extends Partial<WorldOptions> {
   enablePhysics?: boolean;
@@ -139,37 +140,97 @@ export class RealTestScenario {
     }
 
     // Add standard player components
+    // Merge stats and skills into the stats component as expected by SkillsSystem
+    const defaultStats = {
+      hitpoints: { current: 100, max: 100, level: 10, xp: 0 },
+      attack: { level: 1, xp: 0 },
+      strength: { level: 1, xp: 0 },
+      defense: { level: 1, xp: 0 },
+      ranged: { level: 1, xp: 0 },
+      magic: { level: 1, xp: 0 },
+      prayer: { level: 1, xp: 0, points: 10, maxPoints: 10 },
+      combatBonuses: {
+        attackStab: 0,
+        attackSlash: 0,
+        attackCrush: 0,
+        attackMagic: 0,
+        attackRanged: 0,
+        defenseStab: 0,
+        defenseSlash: 0,
+        defenseCrush: 0,
+        defenseMagic: 0,
+        defenseRanged: 0,
+        meleeStrength: 0,
+        rangedStrength: 0,
+        magicDamage: 0,
+        prayerBonus: 0
+      },
+      combatLevel: 3,
+      totalLevel: 32
+    };
+
+    // Merge any skills from options into stats
+    if (options?.skills) {
+      Object.assign(defaultStats, options.skills);
+    }
+
     player.addComponent('stats', {
-      hitpoints: { current: 100, max: 100 },
-      attack: { current: 10, max: 10 },
-      strength: { current: 10, max: 10 },
-      defence: { current: 10, max: 10 },
-      speed: { current: 5, max: 5 },
-      combatLevel: 1,
+      ...defaultStats,
       ...options?.stats
     });
 
     player.addComponent('inventory', {
-      items: new Map(),
-      capacity: 28,
-      gold: 100,
+      items: new Array(28).fill(null),
+      maxSlots: 28,
+      equipment: {
+        head: null,
+        cape: null,
+        amulet: null,
+        weapon: null,
+        body: null,
+        shield: null,
+        legs: null,
+        gloves: null,
+        boots: null,
+        ring: null,
+        ammo: null
+      },
+      totalWeight: 0,
+      equipmentBonuses: {
+        attackStab: 0,
+        attackSlash: 0,
+        attackCrush: 0,
+        attackMagic: 0,
+        attackRanged: 0,
+        defenseStab: 0,
+        defenseSlash: 0,
+        defenseCrush: 0,
+        defenseMagic: 0,
+        defenseRanged: 0,
+        meleeStrength: 0,
+        rangedStrength: 0,
+        magicDamage: 0,
+        prayerBonus: 0
+      },
       ...options?.inventory
-    });
-
-    player.addComponent('skills', {
-      attack: { level: 1, experience: 0 },
-      strength: { level: 1, experience: 0 },
-      defence: { level: 1, experience: 0 },
-      hitpoints: { level: 10, experience: 0 },
-      ...options?.skills
     });
 
     player.addComponent('combat', {
       inCombat: false,
       target: null,
-      lastAttack: 0,
-      attackCooldown: 4000,
-      combatStyle: 'melee',
+      lastAttackTime: 0,
+      attackSpeed: 4,
+      combatStyle: CombatStyle.ACCURATE,
+      autoRetaliate: true,
+      hitSplatQueue: [],
+      animationQueue: [],
+      specialAttackEnergy: 100,
+      specialAttackActive: false,
+      protectionPrayers: {
+        melee: false,
+        ranged: false,
+        magic: false
+      },
       ...options?.combat
     });
 
@@ -189,7 +250,7 @@ export class RealTestScenario {
   }
 
   async spawnNPC(definitionId: number, position?: any): Promise<any> {
-    const npcSystem = (this.world as any).npc;
+    const npcSystem = this.world.getSystem('npc') as any;
     if (!npcSystem) {
       throw new Error('NPC system not available');
     }

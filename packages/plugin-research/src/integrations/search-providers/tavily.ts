@@ -25,7 +25,7 @@ const TavilyResponseSchema = z.object({
         z.object({
           url: z.string(),
           description: z.string().optional(),
-        })
+        }),
       ])
     )
     .optional(),

@@ -12,7 +12,7 @@ import { logger } from '@elizaos/core';
 const mockRuntime = {
   getSetting: (key: string) => {
     const settings: Record<string, string | undefined> = {
-      'GITHUB_TOKEN': process.env.GITHUB_TOKEN,
+      GITHUB_TOKEN: process.env.GITHUB_TOKEN,
     };
     return settings[key] || null;
   },
@@ -27,15 +27,16 @@ const mockRuntime = {
               {
                 full_name: 'microsoft/TypeScript',
                 html_url: 'https://github.com/microsoft/TypeScript',
-                description: 'TypeScript is a superset of JavaScript that compiles to clean JavaScript output.',
+                description:
+                  'TypeScript is a superset of JavaScript that compiles to clean JavaScript output.',
                 stargazers_count: 89000,
                 language: 'TypeScript',
                 forks_count: 12000,
                 open_issues_count: 5000,
                 updated_at: '2024-01-01T00:00:00Z',
-                owner: { login: 'microsoft' }
-              }
-            ]
+                owner: { login: 'microsoft' },
+              },
+            ],
           };
         },
         searchIssues: async (query: string, options: any) => {
@@ -51,15 +52,15 @@ const mockRuntime = {
                 user: { login: 'developer123' },
                 created_at: '2024-01-01T00:00:00Z',
                 updated_at: '2024-01-01T00:00:00Z',
-                number: 12345
-              }
-            ]
+                number: 12345,
+              },
+            ],
           };
-        }
+        },
       };
     }
     return null;
-  }
+  },
 } as any;
 
 async function testPyPISearch() {
@@ -125,7 +126,10 @@ async function testGitHubSearch() {
       }
     }
   } catch (error) {
-    console.error('❌ GitHub search failed:', error instanceof Error ? error.message : String(error));
+    console.error(
+      '❌ GitHub search failed:',
+      error instanceof Error ? error.message : String(error)
+    );
   }
 }
 
@@ -140,7 +144,9 @@ async function testPackageSpecificSearches() {
       console.log(`✅ PyPI specific package: ${tensorflowResult.title}`);
     }
   } catch (error) {
-    console.log(`⚠️  PyPI specific package test failed: ${error instanceof Error ? error.message : String(error)}`);
+    console.log(
+      `⚠️  PyPI specific package test failed: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 
   // Test NPM specific package
@@ -151,7 +157,9 @@ async function testPackageSpecificSearches() {
       console.log(`✅ NPM specific package: ${reactResult.title}`);
     }
   } catch (error) {
-    console.log(`⚠️  NPM specific package test failed: ${error instanceof Error ? error.message : String(error)}`);
+    console.log(
+      `⚠️  NPM specific package test failed: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 

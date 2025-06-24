@@ -325,7 +325,7 @@ export class EntityTracker {
     recentlyLeft: number;
     people: number;
     objects: number;
-  } {
+    } {
     const entities = Array.from(this.worldState.entities.values());
     return {
       totalEntities: entities.length,

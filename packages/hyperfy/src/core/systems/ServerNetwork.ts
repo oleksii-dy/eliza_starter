@@ -1,5 +1,6 @@
 import { isNumber } from 'lodash-es';
 import moment from 'moment';
+import { eq } from 'drizzle-orm';
 
 import type { Blueprint, World } from '../../types/index.js';
 import { writePacket } from '../packets.js';
@@ -8,6 +9,9 @@ import { createJWT, verifyJWT } from '../utils-server.js';
 import { addRole, hasRole, removeRole, serializeRoles, uuid } from '../utils.js';
 import { System } from './System.js';
 import { ENV } from '../env.js';
+import { ENV_SERVER } from '../env-server.js';
+import type { DB } from '../../server/db.js';
+import * as schema from '../../server/db-schema.js';
 
 const SAVE_INTERVAL = parseInt(ENV.SAVE_INTERVAL || '60'); // seconds
 const PING_RATE = 1; // seconds
@@ -66,7 +70,7 @@ export class ServerNetwork extends System {
   dirtyApps: Set<string>;
   isServer: boolean;
   queue: QueueItem[];
-  db: any; // Knex database instance
+  db!: DB; // Drizzle database instance
   spawn: SpawnData;
 
   constructor(world: World) {
@@ -89,18 +93,18 @@ export class ServerNetwork extends System {
 
   async start(): Promise<void> {
     // get spawn
-    const spawnRow = await this.db('config').where('key', 'spawn').first();
+    const spawnRow = await this.db.select().from(schema.config).where(eq(schema.config.key, 'spawn')).get();
     this.spawn = JSON.parse(spawnRow?.value || defaultSpawn);
 
     // hydrate blueprints
-    const blueprints = await this.db('blueprints');
+    const blueprints = await this.db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
       (this.world as any).blueprints.add(data, true);
     }
 
     // hydrate entities
-    const entities = await this.db('entities');
+    const entities = await this.db.select().from(schema.entities);
     for (const entity of entities) {
       const data = JSON.parse(entity.data);
       data.state = {};
@@ -108,7 +112,7 @@ export class ServerNetwork extends System {
     }
 
     // hydrate settings
-    const settingsRow = await this.db('config').where('key', 'settings').first();
+    const settingsRow = await this.db.select().from(schema.config).where(eq(schema.config.key, 'settings')).get();
     try {
       const settings = JSON.parse(settingsRow?.value || '{}');
       (this.world as any).settings.deserialize(settings);
@@ -194,14 +198,20 @@ export class ServerNetwork extends System {
       if (!blueprint) {continue;}
 
       try {
-        const record = {
-          id: blueprint.id,
-          data: JSON.stringify(blueprint),
-        };
-        await this.db('blueprints')
-          .insert({ ...record, createdAt: now, updatedAt: now })
-          .onConflict('id')
-          .merge({ ...record, updatedAt: now });
+        await this.db.insert(schema.blueprints)
+          .values({
+            id: blueprint.id,
+            data: JSON.stringify(blueprint),
+            createdAt: now,
+            updatedAt: now
+          })
+          .onConflictDoUpdate({
+            target: schema.blueprints.id,
+            set: {
+              data: JSON.stringify(blueprint),
+              updatedAt: now
+            }
+          });
         counts.upsertedBlueprints++;
         this.dirtyBlueprints.delete(id);
       } catch (err) {
@@ -221,14 +231,20 @@ export class ServerNetwork extends System {
         try {
           const data = JSON.parse(JSON.stringify(entity.data)); // Deep clone alternative
           data.state = null;
-          const record = {
-            id: entity.data.id,
-            data: JSON.stringify(entity.data),
-          };
-          await this.db('entities')
-            .insert({ ...record, createdAt: now, updatedAt: now })
-            .onConflict('id')
-            .merge({ ...record, updatedAt: now });
+          await this.db.insert(schema.entities)
+            .values({
+              id: entity.data.id,
+              data: JSON.stringify(entity.data),
+              createdAt: now,
+              updatedAt: now
+            })
+            .onConflictDoUpdate({
+              target: schema.entities.id,
+              set: {
+                data: JSON.stringify(entity.data),
+                updatedAt: now
+              }
+            });
           counts.upsertedApps++;
           this.dirtyApps.delete(id);
         } catch (err) {
@@ -237,7 +253,7 @@ export class ServerNetwork extends System {
         }
       } else {
         // it was removed
-        await this.db('entities').where('id', id).delete();
+        await this.db.delete(schema.entities).where(eq(schema.entities.id, id));
         counts.deletedApps++;
         this.dirtyApps.delete(id);
       }
@@ -258,14 +274,16 @@ export class ServerNetwork extends System {
   saveSettings = async (): Promise<void> => {
     const data = (this.world as any).settings.serialize();
     const value = JSON.stringify(data);
-    await this.db('config')
-      .insert({
+    await this.db.insert(schema.config)
+      .values({
         key: 'settings',
         value,
       })
-      .onConflict('key')
-      .merge({
-        value,
+      .onConflictDoUpdate({
+        target: schema.config.key,
+        set: {
+          value,
+        }
       });
   };
 
@@ -298,7 +316,7 @@ export class ServerNetwork extends System {
       if (authToken) {
         try {
           const { userId } = await verifyJWT(authToken);
-          user = await this.db('users').where('id', userId).first();
+          user = await this.db.select().from(schema.users).where(eq(schema.users.id, userId)).get();
         } catch (err) {
           console.error('failed to read authToken:', authToken);
         }
@@ -311,7 +329,10 @@ export class ServerNetwork extends System {
           roles: '',
           createdAt: moment().toISOString(),
         };
-        await this.db('users').insert(user);
+        await this.db.insert(schema.users).values({
+          ...user,
+          roles: typeof user.roles === 'string' ? user.roles : user.roles.join(',')
+        });
         authToken = await createJWT({ userId: user.id });
       }
 
@@ -330,7 +351,7 @@ export class ServerNetwork extends System {
 
       // if there is no admin code, everyone is a temporary admin (eg for local dev)
       // all roles prefixed with `~` are temporary and not persisted to db
-      if (!ENV.ADMIN_CODE) {
+      if (!ENV_SERVER.ADMIN_CODE) {
         (user.roles as string[]).push('~admin');
       }
 
@@ -399,7 +420,7 @@ export class ServerNetwork extends System {
     // become admin command
     if (cmd === 'admin') {
       const code = arg1;
-      if (ENV.ADMIN_CODE && ENV.ADMIN_CODE === code) {
+      if (ENV_SERVER.ADMIN_CODE && ENV_SERVER.ADMIN_CODE === code) {
         const id = player.data.id;
         const userId = player.data.userId;
         const roles = player.data.roles;
@@ -418,9 +439,9 @@ export class ServerNetwork extends System {
           body: granting ? 'Admin granted!' : 'Admin revoked!',
           createdAt: moment().toISOString(),
         });
-        await this.db('users')
-          .where('id', userId)
-          .update({ roles: serializeRoles(roles) });
+        await this.db.update(schema.users)
+          .set({ roles: serializeRoles(roles) })
+          .where(eq(schema.users.id, userId));
       }
     }
 
@@ -439,7 +460,9 @@ export class ServerNetwork extends System {
           body: `Name set to ${name}!`,
           createdAt: moment().toISOString(),
         });
-        await this.db('users').where('id', userId).update({ name });
+        await this.db.update(schema.users)
+          .set({ name })
+          .where(eq(schema.users.id, userId));
       }
     }
 
@@ -538,7 +561,9 @@ export class ServerNetwork extends System {
         changed = true;
       }
       if (changed) {
-        await this.db('users').where('id', entity.data.userId).update(changes);
+        await this.db.update(schema.users)
+          .set(changes)
+          .where(eq(schema.users.id, entity.data.userId));
       }
     }
   };
@@ -583,14 +608,16 @@ export class ServerNetwork extends System {
       return;
     }
     const data = JSON.stringify(this.spawn);
-    await this.db('config')
-      .insert({
+    await this.db.insert(schema.config)
+      .values({
         key: 'spawn',
         value: data,
       })
-      .onConflict('key')
-      .merge({
-        value: data,
+      .onConflictDoUpdate({
+        target: schema.config.key,
+        set: {
+          value: data,
+        }
       });
     socket.send('chatAdded', {
       id: uuid(),

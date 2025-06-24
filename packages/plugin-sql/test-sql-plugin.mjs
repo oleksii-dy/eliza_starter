@@ -22,10 +22,7 @@ async function testSQLPlugin() {
     console.log('   ✅ Plugin structure is correct\n');
 
     console.log('2. Testing database adapter creation:');
-    const adapter = createDatabaseAdapter(
-      { dataDir: path.join(testDir, 'db') },
-      testAgentId
-    );
+    const adapter = createDatabaseAdapter({ dataDir: path.join(testDir, 'db') }, testAgentId);
     console.log('   Adapter type:', adapter.constructor.name);
     console.log('   ✅ Database adapter created successfully\n');
 
@@ -109,7 +106,6 @@ async function testSQLPlugin() {
 
     // Cleanup
     await fs.rm(testDir, { recursive: true, force: true });
-
   } catch (error) {
     console.error('\n❌ Test failed:', error);
     console.error('Stack:', error.stack);

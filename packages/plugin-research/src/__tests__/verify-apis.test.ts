@@ -46,7 +46,9 @@ describe('API Verification', () => {
 
     // Test Academic (expect failure with current key)
     try {
-      const academic = new AcademicSearchProvider({ semanticScholarApiKey: API_KEYS.SEMANTIC_SCHOLAR });
+      const academic = new AcademicSearchProvider({
+        semanticScholarApiKey: API_KEYS.SEMANTIC_SCHOLAR,
+      });
       const academicResults = await academic.search('test', 1);
       results.academic = academicResults.length > 0;
     } catch (e) {
@@ -66,11 +68,13 @@ describe('API Verification', () => {
     console.log(`Tavily: ${results.tavily ? '✅ Working' : '❌ Failed'}`);
     console.log(`Exa: ${results.exa ? '✅ Working' : '❌ Failed'}`);
     console.log(`SerpAPI: ${results.serpapi ? '✅ Working' : '❌ Failed'}`);
-    console.log(`Semantic Scholar: ${results.academic ? '✅ Working' : '❌ Failed (403 - Invalid API key)'}`);
+    console.log(
+      `Semantic Scholar: ${results.academic ? '✅ Working' : '❌ Failed (403 - Invalid API key)'}`
+    );
     console.log(`Firecrawl: ${results.firecrawl ? '✅ Working' : '❌ Failed'}`);
     console.log('==================\n');
 
-    const workingCount = Object.values(results).filter(v => v).length;
+    const workingCount = Object.values(results).filter((v) => v).length;
     console.log(`Total: ${workingCount}/5 APIs working`);
 
     // We expect at least 4 out of 5 to work (Semantic Scholar key is invalid)

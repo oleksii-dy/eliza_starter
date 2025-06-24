@@ -59,7 +59,10 @@ describe('Search Providers - Real Implementation Tests', () => {
         expect(results.length).toBe(0);
       } catch (error) {
         // Handle network errors gracefully
-        console.warn('NPM search failed:', error instanceof Error ? error.message : 'Unknown error');
+        console.warn(
+          'NPM search failed:',
+          error instanceof Error ? error.message : 'Unknown error'
+        );
         expect(true).toBe(true); // Skip test on network failure
       }
     });
@@ -82,7 +85,10 @@ describe('Search Providers - Real Implementation Tests', () => {
         }
       } catch (error) {
         // Handle network errors gracefully
-        console.warn('NPM search failed:', error instanceof Error ? error.message : 'Unknown error');
+        console.warn(
+          'NPM search failed:',
+          error instanceof Error ? error.message : 'Unknown error'
+        );
         expect(true).toBe(true); // Skip test on network failure
       }
     }, 10000);
@@ -108,7 +114,10 @@ describe('Search Providers - Real Implementation Tests', () => {
         expect(results.length).toBe(0);
       } catch (error) {
         // Handle network errors gracefully
-        console.warn('PyPI search failed:', error instanceof Error ? error.message : 'Unknown error');
+        console.warn(
+          'PyPI search failed:',
+          error instanceof Error ? error.message : 'Unknown error'
+        );
         expect(true).toBe(true); // Skip test on network failure
       }
     });
@@ -131,7 +140,10 @@ describe('Search Providers - Real Implementation Tests', () => {
         }
       } catch (error) {
         // Handle network errors gracefully
-        console.warn('PyPI search failed:', error instanceof Error ? error.message : 'Unknown error');
+        console.warn(
+          'PyPI search failed:',
+          error instanceof Error ? error.message : 'Unknown error'
+        );
         expect(true).toBe(true); // Skip test on network failure
       }
     }, 10000);
@@ -166,7 +178,10 @@ describe('Search Providers - Real Implementation Tests', () => {
         }
       } catch (error) {
         // Handle network errors gracefully
-        console.warn('Search consistency test failed:', error instanceof Error ? error.message : 'Unknown error');
+        console.warn(
+          'Search consistency test failed:',
+          error instanceof Error ? error.message : 'Unknown error'
+        );
         expect(true).toBe(true); // Skip test on network failure
       }
     }, 15000);

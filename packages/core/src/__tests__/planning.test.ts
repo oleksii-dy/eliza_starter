@@ -392,9 +392,9 @@ describe('Planning System', () => {
       const order = getExecutionOrder(plan);
 
       expect(order).toHaveLength(3);
-      expect(order[0]).toEqual(['1']);
-      expect(order[1]).toEqual(['2']);
-      expect(order[2]).toEqual(['3']);
+      expect(order[0]).toEqual(['1' as UUID]);
+      expect(order[1]).toEqual(['2' as UUID]);
+      expect(order[2]).toEqual(['3' as UUID]);
     });
 
     it('should determine correct execution order for parallel plans', () => {

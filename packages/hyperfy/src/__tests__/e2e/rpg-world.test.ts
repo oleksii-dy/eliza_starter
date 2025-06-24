@@ -1,19 +1,19 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
-import { World, Entity as BaseEntity } from '../../types'
-import { ConfigLoader } from '../../rpg/config/ConfigLoader'
-import { CombatSystem } from '../../rpg/systems/CombatSystem'
-import { InventorySystem } from '../../rpg/systems/InventorySystem'
-import { NPCSystem } from '../../rpg/systems/NPCSystem'
-import { LootSystem } from '../../rpg/systems/LootSystem'
-import { SkillsSystem } from '../../rpg/systems/SkillsSystem'
-import { QuestSystem } from '../../rpg/systems/QuestSystem'
-import { SpawningSystem } from '../../rpg/systems/SpawningSystem'
-import { MovementSystem } from '../../rpg/systems/MovementSystem'
-import { BankingSystem } from '../../rpg/systems/BankingSystem'
-import { ItemRegistry } from '../../rpg/systems/inventory/ItemRegistry'
-import { LootTableManager } from '../../rpg/systems/loot/LootTableManager'
-import { RPGEntity } from '../../rpg/entities/RPGEntity'
-import { NPCEntity } from '../../rpg/entities/NPCEntity'
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { World, Entity as BaseEntity } from '../../types';
+import { ConfigLoader } from '../../rpg/config/ConfigLoader';
+import { CombatSystem } from '../../rpg/systems/CombatSystem';
+import { InventorySystem } from '../../rpg/systems/InventorySystem';
+import { NPCSystem } from '../../rpg/systems/NPCSystem';
+import { LootSystem } from '../../rpg/systems/LootSystem';
+import { SkillsSystem } from '../../rpg/systems/SkillsSystem';
+import { QuestSystem } from '../../rpg/systems/QuestSystem';
+import { SpawningSystem } from '../../rpg/systems/SpawningSystem';
+import { MovementSystem } from '../../rpg/systems/MovementSystem';
+import { BankingSystem } from '../../rpg/systems/BankingSystem';
+import { ItemRegistry } from '../../rpg/systems/inventory/ItemRegistry';
+import { LootTableManager } from '../../rpg/systems/loot/LootTableManager';
+import { RPGEntity } from '../../rpg/entities/RPGEntity';
+import { NPCEntity } from '../../rpg/entities/NPCEntity';
 import {
   NPCType,
   NPCBehavior,
@@ -28,7 +28,7 @@ import {
   NPCDefinition,
   PlayerEntity,
   EquipmentSlot,
-} from '../../rpg/types'
+} from '../../rpg/types';
 
 // Mock visual representations using primitives
 const VISUAL_PRIMITIVES = {
@@ -47,26 +47,26 @@ const VISUAL_PRIMITIVES = {
   spawnMarker: { type: 'torus', color: 0xff00ff, scale: 0.5 },
   bank: { type: 'box', color: 0x996633, scale: { x: 3, y: 2, z: 3 } },
   shop: { type: 'box', color: 0x3366ff, scale: { x: 2, y: 2, z: 2 } },
-}
+};
 
 describe('RPG World End-to-End Tests', () => {
-  let world: World
-  let configLoader: ConfigLoader
-  let itemRegistry: ItemRegistry
-  let lootTableManager: LootTableManager
-  let combatSystem: CombatSystem
-  let inventorySystem: InventorySystem
-  let npcSystem: NPCSystem
-  let lootSystem: LootSystem
-  let skillsSystem: SkillsSystem
-  let questSystem: QuestSystem
-  let spawningSystem: SpawningSystem
-  let movementSystem: MovementSystem
-  let bankingSystem: BankingSystem
+  let world: World;
+  let configLoader: ConfigLoader;
+  let itemRegistry: ItemRegistry;
+  let lootTableManager: LootTableManager;
+  let combatSystem: CombatSystem;
+  let inventorySystem: InventorySystem;
+  let npcSystem: NPCSystem;
+  let lootSystem: LootSystem;
+  let skillsSystem: SkillsSystem;
+  let questSystem: QuestSystem;
+  let spawningSystem: SpawningSystem;
+  let movementSystem: MovementSystem;
+  let bankingSystem: BankingSystem;
 
   beforeEach(async () => {
     // Create handlers map for events
-    const eventHandlers = new Map<string, Function[]>()
+    const eventHandlers = new Map<string, Function[]>();
 
     // Create mock world
     world = {
@@ -80,49 +80,49 @@ describe('RPG World End-to-End Tests', () => {
             id: options?.id || `entity-${Date.now()}`,
             name,
             ...options,
-          }
-          world.entities.items.set(entity.id, entity)
-          world.events.emit('entity:created', { entityId: entity.id })
-          return entity
+          };
+          world.entities.items.set(entity.id, entity);
+          world.events.emit('entity:created', { entityId: entity.id });
+          return entity;
         },
         remove: (id: string) => {
-          world.entities.items.delete(id)
+          world.entities.items.delete(id);
         },
       },
       events: {
         emit: (event: string, data?: any) => {
-          const handlers = eventHandlers.get(event) || []
-          handlers.forEach(handler => handler(data))
+          const handlers = eventHandlers.get(event) || [];
+          handlers.forEach(handler => handler(data));
         },
         on: (event: string, handler: (data: any) => void) => {
           if (!eventHandlers.has(event)) {
-            eventHandlers.set(event, [])
+            eventHandlers.set(event, []);
           }
-          eventHandlers.get(event)!.push(handler)
+          eventHandlers.get(event)!.push(handler);
         },
         off: (event: string, handler?: (data: any) => void) => {
           if (!handler) {
-            eventHandlers.delete(event)
+            eventHandlers.delete(event);
           } else {
-            const handlers = eventHandlers.get(event) || []
-            const index = handlers.indexOf(handler)
+            const handlers = eventHandlers.get(event) || [];
+            const index = handlers.indexOf(handler);
             if (index !== -1) {
-              handlers.splice(index, 1)
+              handlers.splice(index, 1);
             }
           }
         },
       },
-    } as any
+    } as any;
 
     // Initialize systems
-    configLoader = ConfigLoader.getInstance()
-    configLoader.enableTestMode()
+    configLoader = ConfigLoader.getInstance();
+    configLoader.enableTestMode();
 
-    itemRegistry = new ItemRegistry()
-    lootTableManager = new LootTableManager()
+    itemRegistry = new ItemRegistry();
+    lootTableManager = new LootTableManager();
 
     // Register items
-    const items = configLoader.getAllItems()
+    const items = configLoader.getAllItems();
     Object.values(items).forEach(item => {
       const itemDef: ItemDefinition = {
         id: item.id,
@@ -136,12 +136,12 @@ describe('RPG World End-to-End Tests', () => {
         members: false,
         model: '',
         icon: '',
-      }
-      itemRegistry.register(itemDef)
-    })
+      };
+      itemRegistry.register(itemDef);
+    });
 
     // Register loot tables
-    const lootTables = configLoader.getAllLootTables()
+    const lootTables = configLoader.getAllLootTables();
     Object.values(lootTables).forEach(table => {
       lootTableManager.register({
         id: table.id,
@@ -153,31 +153,31 @@ describe('RPG World End-to-End Tests', () => {
           rarity: drop.chance > 0.5 ? 'common' : drop.chance > 0.1 ? 'uncommon' : ('rare' as any),
         })),
         rareDropTable: false,
-      })
-    })
+      });
+    });
 
     // Initialize all systems - they all only take world as parameter
-    combatSystem = new CombatSystem(world)
-    inventorySystem = new InventorySystem(world)
-    npcSystem = new NPCSystem(world)
-    lootSystem = new LootSystem(world)
-    skillsSystem = new SkillsSystem(world)
-    questSystem = new QuestSystem(world)
-    spawningSystem = new SpawningSystem(world)
-    movementSystem = new MovementSystem(world)
-    bankingSystem = new BankingSystem(world)
+    combatSystem = new CombatSystem(world);
+    inventorySystem = new InventorySystem(world);
+    npcSystem = new NPCSystem(world);
+    lootSystem = new LootSystem(world);
+    skillsSystem = new SkillsSystem(world);
+    questSystem = new QuestSystem(world);
+    spawningSystem = new SpawningSystem(world);
+    movementSystem = new MovementSystem(world);
+    bankingSystem = new BankingSystem(world);
 
     // Initialize all systems
-    await combatSystem.init({})
-    await inventorySystem.init({})
-    await npcSystem.init({})
-    await lootSystem.init({})
-    await skillsSystem.init({})
-    await questSystem.init({})
-    await spawningSystem.init({})
-    await movementSystem.init({})
-    await bankingSystem.init({})
-  })
+    await combatSystem.init({});
+    await inventorySystem.init({});
+    await npcSystem.init({});
+    await lootSystem.init({});
+    await skillsSystem.init({});
+    await questSystem.init({});
+    await spawningSystem.init({});
+    await movementSystem.init({});
+    await bankingSystem.init({});
+  });
 
   describe('Complete Game Loop', () => {
     it('should handle player spawning and initial setup', () => {
@@ -187,7 +187,7 @@ describe('RPG World End-to-End Tests', () => {
         name: 'TestPlayer',
         position: { x: 0, y: 0, z: 0 },
         visual: VISUAL_PRIMITIVES.guard, // Use guard model for player
-      })
+      });
 
       // Add stats component manually
       player.addComponent('stats', {
@@ -217,7 +217,7 @@ describe('RPG World End-to-End Tests', () => {
         },
         combatLevel: 3,
         totalLevel: 7,
-      })
+      });
 
       // Add movement component for position
       player.addComponent('movement', {
@@ -238,27 +238,27 @@ describe('RPG World End-to-End Tests', () => {
         teleportDestination: null,
         teleportTime: 0,
         teleportAnimation: '',
-      })
+      });
 
       // Add player to world entities
-      world.entities.items.set(player.id, player)
-      world.events.emit('entity:created', { entityId: player.id })
+      world.entities.items.set(player.id, player);
+      world.events.emit('entity:created', { entityId: player.id });
 
       // Check player components with type assertions
-      const stats = player.getComponent<StatsComponent>('stats')
-      expect(stats).toBeDefined()
+      const stats = player.getComponent<StatsComponent>('stats');
+      expect(stats).toBeDefined();
       if (stats) {
-        expect(stats.hitpoints?.current).toBe(10)
-        expect(stats.combatLevel).toBe(3)
+        expect(stats.hitpoints?.current).toBe(10);
+        expect(stats.combatLevel).toBe(3);
       }
 
-      const inventory = player.getComponent<InventoryComponent>('inventory')
-      expect(inventory).toBeDefined()
+      const inventory = player.getComponent<InventoryComponent>('inventory');
+      expect(inventory).toBeDefined();
       if (inventory) {
-        expect(inventory.items).toBeDefined()
-        expect(inventory.items.length).toBe(28)
+        expect(inventory.items).toBeDefined();
+        expect(inventory.items.length).toBe(28);
       }
-    })
+    });
 
     it('should spawn NPCs in the world', async () => {
       // Create NPCs manually to test spawning behavior
@@ -278,15 +278,15 @@ describe('RPG World End-to-End Tests', () => {
         aggressionRange: 10,
         respawnTime: 30,
         wanderRadius: 5,
-      }
+      };
 
       const goblin = new NPCEntity(world, 'goblin-spawn-1', {
         position: { x: 50, y: 0, z: 50 },
         definition: goblinDef,
-      })
+      });
 
-      world.entities.items.set(goblin.id, goblin)
-      world.events.emit('entity:created', { entityId: goblin.id })
+      world.entities.items.set(goblin.id, goblin);
+      world.events.emit('entity:created', { entityId: goblin.id });
 
       // Create guard
       const guardDef: NPCDefinition = {
@@ -298,31 +298,31 @@ describe('RPG World End-to-End Tests', () => {
         level: 21,
         combatLevel: 21,
         maxHitpoints: 190,
-      }
+      };
 
       const guard = new NPCEntity(world, 'guard-spawn-1', {
         position: { x: 0, y: 0, z: 0 },
         definition: guardDef,
-      })
+      });
 
-      world.entities.items.set(guard.id, guard)
-      world.events.emit('entity:created', { entityId: guard.id })
+      world.entities.items.set(guard.id, guard);
+      world.events.emit('entity:created', { entityId: guard.id });
 
       // Check NPCs were created
-      const npcs = Array.from(world.entities.items.values()).filter(e => e.hasComponent && e.hasComponent('npc'))
+      const npcs = Array.from(world.entities.items.values()).filter(e => e.hasComponent && e.hasComponent('npc'));
 
-      expect(npcs.length).toBe(2)
+      expect(npcs.length).toBe(2);
 
       // Verify goblin properties
-      const goblinNPC = goblin.getComponent<NPCComponent>('npc')
-      expect(goblinNPC?.npcType).toBe(NPCType.MONSTER)
-      expect(goblinNPC?.behavior).toBe(NPCBehavior.AGGRESSIVE)
+      const goblinNPC = goblin.getComponent<NPCComponent>('npc');
+      expect(goblinNPC?.npcType).toBe(NPCType.MONSTER);
+      expect(goblinNPC?.behavior).toBe(NPCBehavior.AGGRESSIVE);
 
       // Verify guard properties
-      const guardNPC = guard.getComponent<NPCComponent>('npc')
-      expect(guardNPC?.npcType).toBe(NPCType.GUARD)
-      expect(guardNPC?.behavior).toBe(NPCBehavior.DEFENSIVE)
-    })
+      const guardNPC = guard.getComponent<NPCComponent>('npc');
+      expect(guardNPC?.npcType).toBe(NPCType.GUARD);
+      expect(guardNPC?.behavior).toBe(NPCBehavior.DEFENSIVE);
+    });
 
     it('should handle complete combat scenario', async () => {
       // Create player
@@ -330,13 +330,13 @@ describe('RPG World End-to-End Tests', () => {
         id: 'player-1',
         name: 'TestPlayer',
         position: { x: 0, y: 0, z: 0 },
-      })
-      world.entities.items.set(player.id, player)
-      world.events.emit('entity:created', { entityId: player.id })
+      });
+      world.entities.items.set(player.id, player);
+      world.events.emit('entity:created', { entityId: player.id });
 
       // Give player some equipment
-      inventorySystem.addItem(player.id, 1301, 1) // Rune scimitar
-      inventorySystem.equipItem(player as any, 0, EquipmentSlot.WEAPON)
+      inventorySystem.addItem(player.id, 1301, 1); // Rune scimitar
+      inventorySystem.equipItem(player as any, 0, EquipmentSlot.WEAPON);
 
       // Create goblin with proper definition
       const goblinDef: NPCDefinition = {
@@ -361,62 +361,62 @@ describe('RPG World End-to-End Tests', () => {
         lootTable: 'goblin_drops',
         respawnTime: 30,
         wanderRadius: 5,
-      }
+      };
 
       const goblin = new NPCEntity(world, 'goblin-1', {
         position: { x: 5, y: 0, z: 5 },
         definition: goblinDef,
-      })
-      world.entities.items.set(goblin.id, goblin)
-      world.events.emit('entity:created', { entityId: goblin.id })
+      });
+      world.entities.items.set(goblin.id, goblin);
+      world.events.emit('entity:created', { entityId: goblin.id });
 
       // Player attacks goblin
-      combatSystem.initiateAttack(player.id, goblin.id)
+      combatSystem.initiateAttack(player.id, goblin.id);
 
-      expect(combatSystem.isInCombat(player.id)).toBe(true)
-      expect(combatSystem.isInCombat(goblin.id)).toBe(true)
+      expect(combatSystem.isInCombat(player.id)).toBe(true);
+      expect(combatSystem.isInCombat(goblin.id)).toBe(true);
 
       // Simulate combat ticks until goblin dies
-      const maxTicks = 20
-      let ticks = 0
-      let goblinDied = false
+      const maxTicks = 20;
+      let ticks = 0;
+      let goblinDied = false;
 
       while (ticks < maxTicks && !goblinDied) {
-        combatSystem.update(ticks * 600) // 600ms per tick
+        combatSystem.update(ticks * 600); // 600ms per tick
 
-        const goblinStats = goblin.getComponent<StatsComponent>('stats')
+        const goblinStats = goblin.getComponent<StatsComponent>('stats');
         if (goblinStats && goblinStats.hitpoints && goblinStats.hitpoints.current <= 0) {
-          goblinDied = true
+          goblinDied = true;
         }
-        ticks++
+        ticks++;
       }
 
-      expect(goblinDied).toBe(true)
+      expect(goblinDied).toBe(true);
 
       // Check loot was dropped
-      const lootDrops = Array.from(world.entities.items.values()).filter(e => e.hasComponent && e.hasComponent('loot'))
+      const lootDrops = Array.from(world.entities.items.values()).filter(e => e.hasComponent && e.hasComponent('loot'));
 
-      expect(lootDrops.length).toBeGreaterThan(0)
+      expect(lootDrops.length).toBeGreaterThan(0);
 
       // Player picks up loot
-      const loot = lootDrops[0]
-      const lootComp = loot.getComponent<LootComponent>('loot')
+      const loot = lootDrops[0];
+      const lootComp = loot.getComponent<LootComponent>('loot');
       if (lootComp && lootComp.items) {
         // Pick up the loot items
         lootComp.items.forEach(lootItem => {
           if (lootItem) {
-            inventorySystem.addItem(player.id, lootItem.itemId, lootItem.quantity)
+            inventorySystem.addItem(player.id, lootItem.itemId, lootItem.quantity);
           }
-        })
+        });
 
         // Remove loot entity
-        world.entities.items.delete(loot.id)
+        world.entities.items.delete(loot.id);
 
         // Check player received items
-        const playerInventory = player.getComponent<InventoryComponent>('inventory')
-        expect(playerInventory?.items.some(item => item !== null)).toBe(true)
+        const playerInventory = player.getComponent<InventoryComponent>('inventory');
+        expect(playerInventory?.items.some(item => item !== null)).toBe(true);
       }
-    })
+    });
 
     it('should handle shopping interaction', () => {
       // Create player
@@ -424,12 +424,12 @@ describe('RPG World End-to-End Tests', () => {
         id: 'player-1',
         name: 'TestPlayer',
         position: { x: 0, y: 0, z: 0 },
-      })
-      world.entities.items.set(player.id, player)
-      world.events.emit('entity:created', { entityId: player.id })
+      });
+      world.entities.items.set(player.id, player);
+      world.events.emit('entity:created', { entityId: player.id });
 
       // Give player coins
-      inventorySystem.addItem(player.id, 995, 10000) // 10k coins
+      inventorySystem.addItem(player.id, 995, 10000); // 10k coins
 
       // Create shop NPC with proper definition
       const shopDef: NPCDefinition = {
@@ -450,52 +450,52 @@ describe('RPG World End-to-End Tests', () => {
           restock: true,
           restockTime: 60,
         },
-      }
+      };
 
       const shopkeeper = new NPCEntity(world, 'shop-1', {
         position: { x: 10, y: 0, z: 10 },
         definition: shopDef,
-      })
-      world.entities.items.set(shopkeeper.id, shopkeeper)
-      world.events.emit('entity:created', { entityId: shopkeeper.id })
+      });
+      world.entities.items.set(shopkeeper.id, shopkeeper);
+      world.events.emit('entity:created', { entityId: shopkeeper.id });
 
       // Check shop exists
-      const npcComp = shopkeeper.getComponent<NPCComponent>('npc')
-      const shopData = npcComp?.shop
-      expect(shopData).toBeDefined()
+      const npcComp = shopkeeper.getComponent<NPCComponent>('npc');
+      const shopData = npcComp?.shop;
+      expect(shopData).toBeDefined();
 
       // Buy items from shop using internal method
-      const shopInv = shopkeeper.getComponent<InventoryComponent>('inventory')
+      const shopInv = shopkeeper.getComponent<InventoryComponent>('inventory');
       if (shopInv && shopInv.items && shopInv.items[0]) {
-        const item = shopInv.items[0]
+        const item = shopInv.items[0];
         if (item) {
           // Simulate buying item by transferring from shop to player
-          const itemDef = itemRegistry.get(item.itemId)
+          const itemDef = itemRegistry.get(item.itemId);
           if (itemDef) {
-            const price = Math.floor((itemDef.value || 0) * (shopData?.buyModifier || 1))
+            const price = Math.floor((itemDef.value || 0) * (shopData?.buyModifier || 1));
 
             // Remove coins from player
-            const coinSlot = (inventorySystem as any).findItemSlot(player.id, 995)
+            const coinSlot = (inventorySystem as any).findItemSlot(player.id, 995);
             if (coinSlot >= 0) {
-              ;(inventorySystem as any).removeItem(player.id, coinSlot, price)
+              ;(inventorySystem as any).removeItem(player.id, coinSlot, price);
             }
 
             // Add item to player
-            inventorySystem.addItem(player.id, item.itemId, 1)
+            inventorySystem.addItem(player.id, item.itemId, 1);
 
             // Check player received item
-            const playerInv = player.getComponent<InventoryComponent>('inventory')
-            const hasItem = playerInv?.items.some(i => i?.itemId === item.itemId)
-            expect(hasItem).toBe(true)
+            const playerInv = player.getComponent<InventoryComponent>('inventory');
+            const hasItem = playerInv?.items.some(i => i?.itemId === item.itemId);
+            expect(hasItem).toBe(true);
 
             // Check player coins reduced
             const coinCount =
-              playerInv?.items.filter(i => i?.itemId === 995).reduce((sum, i) => sum + (i?.quantity || 0), 0) || 0
-            expect(coinCount).toBeLessThan(10000)
+              playerInv?.items.filter(i => i?.itemId === 995).reduce((sum, i) => sum + (i?.quantity || 0), 0) || 0;
+            expect(coinCount).toBeLessThan(10000);
           }
         }
       }
-    })
+    });
 
     it('should handle quest progression', () => {
       // Create player
@@ -503,37 +503,37 @@ describe('RPG World End-to-End Tests', () => {
         id: 'player-1',
         name: 'TestPlayer',
         position: { x: 0, y: 0, z: 0 },
-      })
-      world.entities.items.set(player.id, player)
-      world.events.emit('entity:created', { entityId: player.id })
+      });
+      world.entities.items.set(player.id, player);
+      world.events.emit('entity:created', { entityId: player.id });
 
       // Start tutorial quest
-      const questStarted = questSystem.startQuest(player as any, 'tutorial')
-      expect(questStarted).toBe(true)
+      const questStarted = questSystem.startQuest(player as any, 'tutorial');
+      expect(questStarted).toBe(true);
 
       // Check quest is active
-      const activeQuests = questSystem.getActiveQuests(player as any)
-      expect(activeQuests.length).toBeGreaterThan(0)
-      expect(activeQuests[0]?.id).toBe('tutorial')
+      const activeQuests = questSystem.getActiveQuests(player as any);
+      expect(activeQuests.length).toBeGreaterThan(0);
+      expect(activeQuests[0]?.id).toBe('tutorial');
 
       // Complete objectives
-      questSystem.handleNPCTalk(player as any, 'npc_survival_guide')
-      questSystem.handleNPCKill(player as any, 'npc_giant_rat')
+      questSystem.handleNPCTalk(player as any, 'npc_survival_guide');
+      questSystem.handleNPCKill(player as any, 'npc_giant_rat');
 
       // Simulate collecting logs
-      inventorySystem.addItem(player.id, 1, 3) // Add 3 logs
+      inventorySystem.addItem(player.id, 1, 3); // Add 3 logs
       questSystem.handleItemCollected(player as any, 'item_logs', 3)
 
       // 2. Chop tree (gain woodcutting xp)
       ;(skillsSystem as any).grantXP(player.id, 'woodcutting', 25)
 
       // 3. Light fire (gain firemaking xp)
-      ;(skillsSystem as any).grantXP(player.id, 'firemaking', 25)
+      ;(skillsSystem as any).grantXP(player.id, 'firemaking', 25);
 
       // Check quest completion
-      const completedQuests = questSystem.getCompletedQuests(player as any)
-      expect(completedQuests.some(q => q.id === 'tutorial')).toBe(true)
-    })
+      const completedQuests = questSystem.getCompletedQuests(player as any);
+      expect(completedQuests.some(q => q.id === 'tutorial')).toBe(true);
+    });
 
     it('should handle banking operations', () => {
       // Create player
@@ -541,21 +541,21 @@ describe('RPG World End-to-End Tests', () => {
         id: 'player-1',
         name: 'TestPlayer',
         position: { x: 0, y: 0, z: 0 },
-      })
-      world.entities.items.set(player.id, player)
-      world.events.emit('entity:created', { entityId: player.id })
+      });
+      world.entities.items.set(player.id, player);
+      world.events.emit('entity:created', { entityId: player.id });
 
       // Give player items
-      inventorySystem.addItem(player.id, 1301, 5) // 5 rune scimitars
-      inventorySystem.addItem(player.id, 995, 50000) // 50k coins
+      inventorySystem.addItem(player.id, 1301, 5); // 5 rune scimitars
+      inventorySystem.addItem(player.id, 995, 50000); // 50k coins
 
       // This test demonstrates banking would work if implemented
       // Since BankingSystem requires specific bank entities and components,
       // we'll skip the actual implementation test
 
       // Verify systems are initialized
-      expect(bankingSystem).toBeDefined()
-      expect(inventorySystem).toBeDefined()
+      expect(bankingSystem).toBeDefined();
+      expect(inventorySystem).toBeDefined();
 
       // In a real implementation, we would:
       // 1. Create a bank entity with proper components
@@ -565,10 +565,10 @@ describe('RPG World End-to-End Tests', () => {
       // 5. Close the bank
 
       // For now, just verify player has items that could be banked
-      const inventory = player.getComponent<InventoryComponent>('inventory')
-      expect(inventory).toBeDefined()
-      expect(inventory?.items).toBeDefined()
-    })
+      const inventory = player.getComponent<InventoryComponent>('inventory');
+      expect(inventory).toBeDefined();
+      expect(inventory?.items).toBeDefined();
+    });
 
     it('should handle death and respawn', async () => {
       // Create player
@@ -576,13 +576,13 @@ describe('RPG World End-to-End Tests', () => {
         id: 'player-1',
         name: 'TestPlayer',
         position: { x: 50, y: 0, z: 50 },
-      })
-      world.entities.items.set(player.id, player)
-      world.events.emit('entity:created', { entityId: player.id })
+      });
+      world.entities.items.set(player.id, player);
+      world.events.emit('entity:created', { entityId: player.id });
 
       // Give player valuable items
-      inventorySystem.addItem(player.id, 1301, 1) // Rune scimitar
-      inventorySystem.addItem(player.id, 995, 100000) // 100k coins
+      inventorySystem.addItem(player.id, 1301, 1); // Rune scimitar
+      inventorySystem.addItem(player.id, 995, 100000); // 100k coins
 
       // Create powerful NPC
       const bossDef: NPCDefinition = {
@@ -607,44 +607,44 @@ describe('RPG World End-to-End Tests', () => {
         lootTable: 'hill_giant_drops',
         respawnTime: 120,
         wanderRadius: 8,
-      }
+      };
 
       const boss = new NPCEntity(world, 'boss-1', {
         position: { x: 55, y: 0, z: 55 },
         definition: bossDef,
-      })
-      world.entities.items.set(boss.id, boss)
-      world.events.emit('entity:created', { entityId: boss.id })
+      });
+      world.entities.items.set(boss.id, boss);
+      world.events.emit('entity:created', { entityId: boss.id });
 
       // Make boss kill player instantly
-      const playerStats = player.getComponent<StatsComponent>('stats')
+      const playerStats = player.getComponent<StatsComponent>('stats');
       if (playerStats) {
-        playerStats.hitpoints.current = 1
+        playerStats.hitpoints.current = 1;
       }
 
       // Boss attacks player
-      combatSystem.initiateAttack(boss.id, player.id)
-      combatSystem.update(0)
+      combatSystem.initiateAttack(boss.id, player.id);
+      combatSystem.update(0);
 
       // Check player died
-      expect(playerStats?.hitpoints.current).toBe(0)
+      expect(playerStats?.hitpoints.current).toBe(0);
 
       // Check death component
-      const death = player.getComponent<DeathComponent>('death')
-      expect(death).toBeDefined()
-      expect(death?.isDead).toBe(true)
-      expect(death?.deathLocation).toEqual({ x: 50, y: 0, z: 50 })
+      const death = player.getComponent<DeathComponent>('death');
+      expect(death).toBeDefined();
+      expect(death?.isDead).toBe(true);
+      expect(death?.deathLocation).toEqual({ x: 50, y: 0, z: 50 });
 
       // Respawn player
-      world.events.emit('player:respawn', { playerId: player.id })
+      world.events.emit('player:respawn', { playerId: player.id });
 
       // Check player respawned
-      expect(player.position).toEqual({ x: 0, y: 0, z: 0 }) // Default spawn
+      expect(player.position).toEqual({ x: 0, y: 0, z: 0 }); // Default spawn
       if (playerStats && playerStats.hitpoints) {
-        expect(playerStats.hitpoints.current).toBe(playerStats.hitpoints.max)
+        expect(playerStats.hitpoints.current).toBe(playerStats.hitpoints.max);
       }
-      expect(death?.isDead).toBe(false)
-    })
+      expect(death?.isDead).toBe(false);
+    });
 
     it('should handle movement and pathfinding', () => {
       // Create player
@@ -652,9 +652,9 @@ describe('RPG World End-to-End Tests', () => {
         id: 'player-1',
         name: 'TestPlayer',
         position: { x: 0, y: 0, z: 0 },
-      })
-      world.entities.items.set(player.id, player)
-      world.events.emit('entity:created', { entityId: player.id })
+      });
+      world.entities.items.set(player.id, player);
+      world.events.emit('entity:created', { entityId: player.id });
 
       // Add movement component if missing
       if (!player.hasComponent('movement')) {
@@ -676,38 +676,38 @@ describe('RPG World End-to-End Tests', () => {
           teleportDestination: null,
           teleportTime: 0,
           teleportAnimation: '',
-        })
+        });
       }
 
       // Move player to destination
-      const destination = { x: 5, y: 0, z: 2 }
-      const movement = player.getComponent<MovementComponent>('movement')
+      const destination = { x: 5, y: 0, z: 2 };
+      const movement = player.getComponent<MovementComponent>('movement');
       if (movement) {
-        movement.destination = destination
-        movement.isMoving = true
+        movement.destination = destination;
+        movement.isMoving = true;
         movement.path = [
           { x: 1, y: 0, z: 0 },
           { x: 2, y: 0, z: 0 },
           { x: 3, y: 0, z: 1 },
           { x: 4, y: 0, z: 2 },
           { x: 5, y: 0, z: 2 },
-        ]
+        ];
       }
 
-      expect(movement?.destination).toEqual(destination)
-      expect(movement?.path.length).toBeGreaterThan(0)
+      expect(movement?.destination).toEqual(destination);
+      expect(movement?.path.length).toBeGreaterThan(0);
 
       // Simulate movement update
       if (movement && movement.path.length > 0) {
-        movement.position = movement.path[movement.path.length - 1]
-        movement.isMoving = false
-        movement.destination = null
+        movement.position = movement.path[movement.path.length - 1];
+        movement.isMoving = false;
+        movement.destination = null;
       }
 
       // Check player moved
-      expect(movement?.position.x).toBe(5)
-      expect(movement?.position.z).toBe(2)
-    })
+      expect(movement?.position.x).toBe(5);
+      expect(movement?.position.z).toBe(2);
+    });
 
     it('should handle skill training', () => {
       // Create player
@@ -715,7 +715,7 @@ describe('RPG World End-to-End Tests', () => {
         id: 'player-1',
         name: 'TestPlayer',
         position: { x: 0, y: 0, z: 0 },
-      })
+      });
 
       // Add stats component
       player.addComponent('stats', {
@@ -745,35 +745,35 @@ describe('RPG World End-to-End Tests', () => {
         },
         combatLevel: 3,
         totalLevel: 7,
-      })
+      });
 
-      world.entities.items.set(player.id, player)
-      world.events.emit('entity:created', { entityId: player.id })
+      world.entities.items.set(player.id, player);
+      world.events.emit('entity:created', { entityId: player.id });
 
-      const stats = player.getComponent<StatsComponent>('stats')
+      const stats = player.getComponent<StatsComponent>('stats');
 
       // Train attack skill
-      const initialAttackXp = stats?.attack?.xp || 0
+      const initialAttackXp = stats?.attack?.xp || 0;
       const initialAttackLevel = stats?.attack?.level || 1
 
       // Add experience using internal method
-      ;(skillsSystem as any).grantXP(player.id, 'attack', 1000)
+      ;(skillsSystem as any).grantXP(player.id, 'attack', 1000);
 
       // Get stats again to check update
-      const updatedStats = player.getComponent<StatsComponent>('stats')
-      expect(updatedStats?.attack?.xp).toBe(initialAttackXp + 1000)
+      const updatedStats = player.getComponent<StatsComponent>('stats');
+      expect(updatedStats?.attack?.xp).toBe(initialAttackXp + 1000);
 
       // Check if leveled up
-      const newLevel = skillsSystem.getLevelForXP(updatedStats?.attack?.xp || 0)
+      const newLevel = skillsSystem.getLevelForXP(updatedStats?.attack?.xp || 0);
       if (newLevel > initialAttackLevel) {
-        expect(updatedStats?.attack?.level).toBe(newLevel)
+        expect(updatedStats?.attack?.level).toBe(newLevel);
 
         // Check combat level recalculation
-        const newCombatLevel = skillsSystem.getCombatLevel(updatedStats!)
-        expect(updatedStats?.combatLevel).toBe(newCombatLevel)
+        const newCombatLevel = skillsSystem.getCombatLevel(updatedStats!);
+        expect(updatedStats?.combatLevel).toBe(newCombatLevel);
       }
-    })
-  })
+    });
+  });
 
   describe('World Persistence', () => {
     it('should save and load world state', () => {
@@ -782,14 +782,14 @@ describe('RPG World End-to-End Tests', () => {
         id: 'player-1',
         name: 'TestPlayer',
         position: { x: 10, y: 0, z: 20 },
-      })
-      world.entities.items.set(player.id, player)
-      world.events.emit('entity:created', { entityId: player.id })
+      });
+      world.entities.items.set(player.id, player);
+      world.events.emit('entity:created', { entityId: player.id });
 
       // Add items and progress
       inventorySystem.addItem(player.id, 995, 50000)
-      ;(skillsSystem as any).grantXP(player.id, 'attack', 5000)
-      questSystem.startQuest(player as any, 'tutorial')
+      ;(skillsSystem as any).grantXP(player.id, 'attack', 5000);
+      questSystem.startQuest(player as any, 'tutorial');
 
       // Serialize world state
       const worldState = {
@@ -802,33 +802,33 @@ describe('RPG World End-to-End Tests', () => {
             data: comp.data,
           })),
         })),
-      }
+      };
 
       // Clear world
-      world.entities.items.clear()
+      world.entities.items.clear();
 
       // Restore world state
       worldState.entities.forEach(entityData => {
-        const entity = new RPGEntity(world, entityData.type, entityData.data)
+        const entity = new RPGEntity(world, entityData.type, entityData.data);
         entityData.components.forEach(compData => {
-          entity.addComponent(compData.type, compData.data)
-        })
-        world.entities.items.set(entity.id, entity)
-        world.events.emit('entity:created', { entityId: entity.id })
-      })
+          entity.addComponent(compData.type, compData.data);
+        });
+        world.entities.items.set(entity.id, entity);
+        world.events.emit('entity:created', { entityId: entity.id });
+      });
 
       // Verify restoration
-      const restoredPlayer = world.entities.get('player-1')
-      expect(restoredPlayer).toBeDefined()
-      expect(restoredPlayer?.position).toEqual({ x: 10, y: 0, z: 20 })
-      const coinCount = (inventorySystem as any).countItems('player-1', 995)
-      expect(coinCount).toBe(50000)
-    })
-  })
+      const restoredPlayer = world.entities.get('player-1');
+      expect(restoredPlayer).toBeDefined();
+      expect(restoredPlayer?.position).toEqual({ x: 10, y: 0, z: 20 });
+      const coinCount = (inventorySystem as any).countItems('player-1', 995);
+      expect(coinCount).toBe(50000);
+    });
+  });
 
   describe('Performance and Scalability', () => {
     it('should handle many entities efficiently', () => {
-      const startTime = Date.now()
+      const startTime = Date.now();
 
       // Spawn 100 NPCs
       for (let i = 0; i < 100; i++) {
@@ -854,7 +854,7 @@ describe('RPG World End-to-End Tests', () => {
           lootTable: 'goblin_drops',
           respawnTime: 30,
           wanderRadius: 5,
-        }
+        };
 
         const npc = new NPCEntity(world, `npc-${i}`, {
           position: {
@@ -863,9 +863,9 @@ describe('RPG World End-to-End Tests', () => {
             z: Math.random() * 200 - 100,
           },
           definition: goblinDef,
-        })
-        world.entities.items.set(npc.id, npc)
-        world.events.emit('entity:created', { entityId: npc.id })
+        });
+        world.entities.items.set(npc.id, npc);
+        world.events.emit('entity:created', { entityId: npc.id });
       }
 
       // Create 10 players
@@ -878,25 +878,25 @@ describe('RPG World End-to-End Tests', () => {
             y: 0,
             z: Math.random() * 50,
           },
-        })
-        world.entities.items.set(player.id, player)
-        world.events.emit('entity:created', { entityId: player.id })
+        });
+        world.entities.items.set(player.id, player);
+        world.events.emit('entity:created', { entityId: player.id });
       }
 
       // Update all systems
-      const updateStart = Date.now()
-      combatSystem.update(0)
-      movementSystem.update(0)
-      npcSystem.update(0)
-      spawningSystem.update(0)
-      const updateEnd = Date.now()
+      const updateStart = Date.now();
+      combatSystem.update(0);
+      movementSystem.update(0);
+      npcSystem.update(0);
+      spawningSystem.update(0);
+      const updateEnd = Date.now();
 
       // Performance checks
-      expect(updateEnd - updateStart).toBeLessThan(100) // Should update in less than 100ms
-      expect(world.entities.items.size).toBe(110)
+      expect(updateEnd - updateStart).toBeLessThan(100); // Should update in less than 100ms
+      expect(world.entities.items.size).toBe(110);
 
-      const totalTime = Date.now() - startTime
-      expect(totalTime).toBeLessThan(1000) // Total operation under 1 second
-    })
-  })
-})
+      const totalTime = Date.now() - startTime;
+      expect(totalTime).toBeLessThan(1000); // Total operation under 1 second
+    });
+  });
+});

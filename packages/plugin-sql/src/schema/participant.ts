@@ -17,10 +17,12 @@ function createParticipantTable() {
     agentId: factory.uuid('agent_id').notNull(),
     lastReadAt: factory.timestamp('last_read_at', { mode: 'date' }),
     userState: factory.text('user_state'),
-    createdAt: factory.timestamp('created_at', { mode: 'date' })
+    createdAt: factory
+      .timestamp('created_at', { mode: 'date' })
       .default(factory.defaultTimestamp())
       .notNull(),
-    updatedAt: factory.timestamp('updated_at', { mode: 'date' })
+    updatedAt: factory
+      .timestamp('updated_at', { mode: 'date' })
       .default(factory.defaultTimestamp())
       .notNull(),
   };

@@ -1,4 +1,4 @@
-import { mock  } from 'bun:test';
+import { mock } from 'bun:test';
 import type { IAgentRuntime, Memory, State, UUID, Provider, Action, Service } from '@elizaos/core';
 
 /**

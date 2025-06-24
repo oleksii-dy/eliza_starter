@@ -190,7 +190,7 @@ describe('DeepResearch Bench Integration', () => {
       };
 
       const outputFile = path.join(outputDir, 'test_results.jsonl');
-      await fs.writeFile(outputFile, JSON.stringify(testResult) + '\n');
+      await fs.writeFile(outputFile, `${JSON.stringify(testResult)}\n`);
 
       // Verify file was created
       const exists = await fs
@@ -231,7 +231,7 @@ describe('DeepResearch Bench Integration', () => {
       console.log('Benchmark Metrics:');
       console.log(`  Average Duration: ${avgDuration}ms`);
       console.log(`  Average Sources: ${avgSources}`);
-      console.log(`  Research Quality: Comprehensive`);
+      console.log('  Research Quality: Comprehensive');
 
       expect(avgSources).toBeGreaterThanOrEqual(20); // Should use many sources for quality
     });

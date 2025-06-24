@@ -128,7 +128,7 @@ export const echoAction: Action = {
       }
 
       logger.info(`Echo action completed successfully. Echoed: "${formattedText}"`);
-      
+
       return {
         text: formattedText,
         values: {

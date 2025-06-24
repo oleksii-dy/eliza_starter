@@ -12,11 +12,11 @@ Plugins define their tables using the `TableSchema` interface:
 
 ```typescript
 interface TableSchema {
-  name: string;              // Table name
-  pluginName: string;        // Your plugin name
-  sql: string;               // CREATE TABLE SQL statement
-  dependencies?: string[];   // Other tables this depends on
-  fallbackSql?: string;      // Alternative SQL (e.g., when vector extension unavailable)
+  name: string; // Table name
+  pluginName: string; // Your plugin name
+  sql: string; // CREATE TABLE SQL statement
+  dependencies?: string[]; // Other tables this depends on
+  fallbackSql?: string; // Alternative SQL (e.g., when vector extension unavailable)
 }
 ```
 
@@ -83,16 +83,16 @@ import { MY_PLUGIN_TABLES } from './tables';
 export const myPlugin: Plugin = {
   name: 'my-plugin',
   description: 'My custom plugin',
-  
+
   init: async (config: any, runtime: IAgentRuntime) => {
     // If the adapter supports table registration
     if (runtime.adapter?.registerPluginTables) {
       await runtime.adapter.registerPluginTables(MY_PLUGIN_TABLES);
     }
-    
+
     // Your other initialization code
   },
-  
+
   // ... other plugin properties
 };
 ```
@@ -125,11 +125,13 @@ If your tables depend on other tables (including core tables), specify them:
 Consider both database types when designing your tables:
 
 **PostgreSQL-specific features:**
+
 - Vector types (with pgvector extension)
 - Advanced indexes
 - Foreign key constraints
 
 **PGLite-compatible approach:**
+
 ```typescript
 // For PGLite compatibility, use TEXT instead of UUID
 {
@@ -166,10 +168,10 @@ describe('My Plugin Tables', () => {
   it('should create plugin tables', async () => {
     // Register your tables
     schemaRegistry.registerTables(MY_PLUGIN_TABLES);
-    
+
     // Create tables
     await schemaRegistry.createTables(db, 'pglite');
-    
+
     // Test table operations
     // ... your tests
   });

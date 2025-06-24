@@ -30,6 +30,7 @@ export class NPCSystem extends System {
   private behaviorManager: NPCBehaviorManager;
   private dialogueManager: NPCDialogueManager;
   private spawnManager: NPCSpawnManager;
+  private visualSystem: any; // VisualRepresentationSystem
 
   // Configuration
   private readonly INTERACTION_RANGE = 3;
@@ -52,6 +53,9 @@ export class NPCSystem extends System {
    */
   override async init(_options: any): Promise<void> {
     this.logger.info('Initializing...');
+
+    // Get visual representation system
+    this.visualSystem = (this.world as any).getSystem?.('visualRepresentation');
 
     // Initialize sub-managers
     this.behaviorManager.init();
@@ -434,6 +438,15 @@ export class NPCSystem extends System {
 
     // Add to world entities
     (this.world.entities as any).items.set(npc.id, npc);
+
+    // Create visual representation
+    if (this.visualSystem) {
+      const npcComponent = npc.getComponent<NPCComponent>('npc');
+      if (npcComponent) {
+        // Use the NPC name to determine visual type
+        this.visualSystem.createVisual(npc, npcComponent.name.toLowerCase());
+      }
+    }
 
     // Emit event
     this.world.events.emit('npc:spawned', {

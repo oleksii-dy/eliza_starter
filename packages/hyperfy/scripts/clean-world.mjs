@@ -1,7 +1,9 @@
 import 'dotenv-flow/config';
 import fs from 'fs-extra';
 import path from 'path';
-import Knex from 'knex';
+import { Database } from 'bun:sqlite';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
+import { eq } from 'drizzle-orm';
 import moment from 'moment';
 import { fileURLToPath } from 'url';
 
@@ -14,32 +16,31 @@ const rootDir = path.join(__dirname, '../');
 const worldDir = path.join(rootDir, world);
 const assetsDir = path.join(worldDir, '/assets');
 
-const db = Knex({
-  client: 'better-sqlite3',
-  connection: {
-    filename: `./${world}/db.sqlite`,
-  },
-  useNullAsDefault: true,
-});
+// Dynamic import for the schema since this is a .mjs file
+const schemaModule = await import('../build/server/db-schema.js');
+const schema = schemaModule;
+
+const sqlite = new Database(`./${world}/db.sqlite`);
+const db = drizzle(sqlite, { schema });
 
 // TODO: run any missing migrations first?
 
 const blueprints = new Set();
-const blueprintRows = await db('blueprints');
+const blueprintRows = await db.select().from(schema.blueprints);
 for (const row of blueprintRows) {
   const blueprint = JSON.parse(row.data);
   blueprints.add(blueprint);
 }
 
 const entities = [];
-const entityRows = await db('entities');
+const entityRows = await db.select().from(schema.entities);
 for (const row of entityRows) {
   const entity = JSON.parse(row.data);
   entities.push(entity);
 }
 
 const vrms = new Set();
-const userRows = await db('users').select('avatar');
+const userRows = await db.select({ avatar: schema.users.avatar }).from(schema.users);
 for (const user of userRows) {
   if (!user.avatar) {continue;}
   const avatar = user.avatar.replace('asset://', '');
@@ -63,7 +64,7 @@ for (const file of files) {
 let worldImage;
 let worldModel;
 let worldAvatar;
-let settings = await db('config').where('key', 'settings').first();
+let settings = await db.select().from(schema.config).where(eq(schema.config.key, 'settings')).get();
 if (settings) {
   settings = JSON.parse(settings.value);
   if (settings.image) {worldImage = settings.image.url.replace('asset://', '');}
@@ -88,7 +89,7 @@ console.log(`deleting ${blueprintsToDelete.length} blueprints`);
 for (const blueprint of blueprintsToDelete) {
   blueprints.delete(blueprint);
   if (!DRY_RUN) {
-    await db('blueprints').where('id', blueprint.id).delete();
+    await db.delete(schema.blueprints).where(eq(schema.blueprints.id, blueprint.id));
   }
   console.log('delete blueprint:', blueprint.id);
 }
@@ -150,4 +151,5 @@ for (const fileAsset of filesToDelete) {
   console.log('delete asset:', fileAsset);
 }
 
+sqlite.close();
 process.exit();

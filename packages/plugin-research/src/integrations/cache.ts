@@ -22,7 +22,9 @@ class SimpleLRUCache<K, V> {
 
   get(key: K): V | undefined {
     const item = this.cache.get(key);
-    if (!item) {return undefined;}
+    if (!item) {
+      return undefined;
+    }
 
     // Check if expired
     if (Date.now() - item.timestamp > this.ttl) {

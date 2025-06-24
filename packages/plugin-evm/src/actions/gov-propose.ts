@@ -198,12 +198,12 @@ export const proposeAction = {
         name: '{{agent}}',
         content: {
           text: 'I\'ll create the fee update proposal and then cast a vote for it.',
-          thought: "Complete governance participation: create the proposal first to initiate the democratic process, then cast my vote to support the change. This demonstrates full engagement in governance.",
+          thought: 'Complete governance participation: create the proposal first to initiate the democratic process, then cast my vote to support the change. This demonstrates full engagement in governance.',
           actions: ['EVM_GOVERNANCE_PROPOSE', 'EVM_GOVERNANCE_VOTE'],
         },
       },
     ],
-    // Multi-action: Check + Propose workflow  
+    // Multi-action: Check + Propose workflow
     [
       {
         name: '{{user}}',
@@ -248,7 +248,7 @@ export const proposeAction = {
         name: '{{agent}}',
         content: {
           text: 'I\'ll create the protocol parameter update proposal and then help you vote on it once it becomes active.',
-          thought: "Full governance workflow: proposing protocol changes requires creating the proposal first, then participating in the voting process. This ensures proper democratic governance.",
+          thought: 'Full governance workflow: proposing protocol changes requires creating the proposal first, then participating in the voting process. This ensures proper democratic governance.',
           action: 'EVM_GOVERNANCE_PROPOSE',
           workflowContext: {
             step: 'governance-initiation',
@@ -269,7 +269,7 @@ export const proposeAction = {
         name: '{{agent}}',
         content: {
           text: 'I\'ll create the treasury funding proposal and then help coordinate community voting efforts.',
-          thought: "Community governance coordination: create the proposal first to define the funding request, then organize community support for democratic approval.",
+          thought: 'Community governance coordination: create the proposal first to define the funding request, then organize community support for democratic approval.',
           action: 'EVM_GOVERNANCE_PROPOSE',
           workflowContext: {
             step: 'community-governance',

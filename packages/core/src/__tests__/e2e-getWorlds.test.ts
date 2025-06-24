@@ -334,11 +334,11 @@ describe('End-to-End getWorlds API test', () => {
       averageRoomsPerWorld:
         allWorlds.length > 0
           ? allWorlds.reduce(
-            (sum, world) =>
-              sum +
+              (sum, world) =>
+                sum +
                 (typeof world.metadata?.roomCount === 'number' ? world.metadata.roomCount : 0),
-            0
-          ) / allWorlds.length
+              0
+            ) / allWorlds.length
           : 0,
     };
 

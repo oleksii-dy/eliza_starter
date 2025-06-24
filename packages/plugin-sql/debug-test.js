@@ -11,7 +11,7 @@ async function debug() {
       id: '12345678-1234-1234-1234-123456789012',
       names: ['Debug Entity'],
       metadata: { test: true },
-      agentId: adapter.agentId
+      agentId: adapter.agentId,
     };
 
     const created = await adapter.createEntities([testEntity]);
@@ -21,7 +21,6 @@ async function debug() {
     const retrieved = await adapter.getEntitiesByIds([testEntity.id]);
     console.log('Retrieved result:', retrieved);
     console.log('Retrieved length:', retrieved?.length);
-
   } catch (error) {
     console.error('Error:', error);
   } finally {

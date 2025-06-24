@@ -174,14 +174,8 @@ function getDefaultDataDir(): string {
     return process.env.PGLITE_DATA_DIR;
   }
 
-  try {
-    // Dynamic import of path-manager utility
-    const pathManagerModule = await import('@elizaos/core/utils/path-manager');
-    return pathManagerModule.getDatabasePath();
-  } catch {
-    // Fallback to in-memory if path-manager is not available
-    return ':memory:';
-  }
+  // Use fallback path without dynamic import to avoid ESLint issues
+  return './.eliza/.elizadb';
 }
 
 /**

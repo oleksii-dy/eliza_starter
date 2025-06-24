@@ -40,7 +40,7 @@ function levenshteinDistance(str1: string, str2: string): number {
 }
 
 // Helper function to find entity by name with fuzzy matching
-async function findEntityByName(
+async function _findEntityByName(
   runtime: IAgentRuntime,
   searchName: string,
   roomId?: UUID
@@ -95,7 +95,7 @@ async function findEntityByName(
   }
 }
 
-const findEntityTemplate = `
+const _findEntityTemplate = `
 # Task: Find Entity
 
 You are tasked with finding a specific entity (person, organization, or system) that the user is looking for.
@@ -280,7 +280,7 @@ export const findEntityAction: Action = {
   ],
 };
 
-function extractSearchQuery(text: string): string | null {
+function _extractSearchQuery(text: string): string | null {
   // Remove common stop words and extract the main search term
   const patterns = [
     /find\s+(.+?)(?:\s+for\s+me)?$/i,
@@ -309,7 +309,7 @@ function extractSearchQuery(text: string): string | null {
   return null;
 }
 
-function formatEntityDetails(entity: any, components: any[], relationships: any[]): string {
+function _formatEntityDetails(entity: any, components: any[], relationships: any[]): string {
   let details = `**${entity.names[0]}**\n`;
   details += `- ID: ${entity.id}\n`;
   details += `- Names: ${entity.names.join(', ')}\n`;
@@ -329,7 +329,7 @@ function formatEntityDetails(entity: any, components: any[], relationships: any[
   return details;
 }
 
-function formatEntityList(entities: any[]): string {
+function _formatEntityList(entities: any[]): string {
   return entities
     .slice(0, 10) // Limit to 10 entities
     .map((entity, index) => {
@@ -338,7 +338,7 @@ function formatEntityList(entities: any[]): string {
     .join('\n');
 }
 
-function formatRecentMessages(state?: State): string {
+function _formatRecentMessages(state?: State): string {
   if (!state?.text) {return 'No recent message context available.';}
   return state.text.slice(-500); // Last 500 chars
 }
@@ -348,7 +348,7 @@ interface SearchResult {
   score: number;
 }
 
-function searchEntitiesFuzzy(entities: any[], query: string): SearchResult[] {
+function _searchEntitiesFuzzy(entities: any[], query: string): SearchResult[] {
   const queryLower = query.toLowerCase();
   const results: SearchResult[] = [];
 

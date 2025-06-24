@@ -124,7 +124,7 @@ export class RealRobotAdapter extends BaseRobotInterface {
       this.connected = true;
 
       // Enable all servos
-      for (const [jointName, servoId] of Object.entries(JOINT_SERVO_MAP)) {
+      for (const [_jointName, servoId] of Object.entries(JOINT_SERVO_MAP)) {
         await this.serialProtocol.enableServo(servoId);
       }
 

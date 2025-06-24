@@ -58,6 +58,7 @@ import {
 } from './planning';
 import type { ActionPlan, PlanningContext, PlanExecutionResult } from './types/planning';
 import { ConfigurationManager } from './managers/ConfigurationManager.js';
+import { ComponentDefaultsManager } from './managers/ComponentDefaultsManager.js';
 import { CharacterConfigurationSource } from './configuration/CharacterConfigurationSource.js';
 import type { ConfigurablePlugin } from './types/plugin';
 
@@ -195,6 +196,7 @@ export class AgentRuntime implements IAgentRuntime {
 
   // Configuration management
   private configurationManager: ConfigurationManager;
+  private componentDefaultsManager: ComponentDefaultsManager;
 
   constructor(opts: {
     conversationLength?: number;
@@ -243,6 +245,9 @@ export class AgentRuntime implements IAgentRuntime {
 
     // Initialize configuration manager
     this.configurationManager = new ConfigurationManager();
+    
+    // Initialize component defaults manager
+    this.componentDefaultsManager = new ComponentDefaultsManager(this);
   }
 
   /**
@@ -300,25 +305,53 @@ export class AgentRuntime implements IAgentRuntime {
       `Success: Plugin ${plugin.name} added to active plugins for ${this.character.name}(${this.agentId}).`
     );
 
-    // Initialize plugin configuration if it's a configurable plugin
+    // Initialize plugin configuration with intelligent defaults
     const configurablePlugin = plugin as ConfigurablePlugin;
-    if (
+    const hasConfigurableComponents =
       configurablePlugin.configurableActions ||
       configurablePlugin.configurableProviders ||
-      configurablePlugin.configurableEvaluators
-    ) {
-      this.configurationManager.initializePluginConfiguration(configurablePlugin);
-    }
+      configurablePlugin.configurableEvaluators ||
+      configurablePlugin.configurableServices;
 
-    // Check for unified component system support
     const hasUnifiedComponents =
       (plugin as any).components && Array.isArray((plugin as any).components);
-    if (hasUnifiedComponents) {
-      this.configurationManager.initializeUnifiedPluginConfiguration(
-        plugin.name,
-        (plugin as any).components,
-        configurablePlugin.config?.defaultEnabled ?? true
-      );
+
+    // Initialize configuration using defaults manager if no existing configuration
+    if (hasConfigurableComponents || hasUnifiedComponents) {
+      const existingConfig = this.configurationManager.getPluginConfiguration(plugin.name);
+
+      if (!existingConfig) {
+        // Use DefaultConfigurationSource to generate intelligent defaults
+        const { DefaultConfigurationSource } = await import(
+          './configuration/DefaultConfigurationSource.js'
+        );
+        const defaultSource = new DefaultConfigurationSource();
+        const defaultConfig = defaultSource.generateDefaultForPlugin(plugin.name, plugin);
+
+        // Apply the default configuration
+        await this.configurationManager.setOverride('runtime', plugin.name, defaultConfig);
+
+        this.logger.info(
+          `Generated intelligent defaults for plugin ${plugin.name}: ` +
+            `${Object.keys(defaultConfig.actions).length} actions, ` +
+            `${Object.keys(defaultConfig.providers).length} providers, ` +
+            `${Object.keys(defaultConfig.evaluators || {}).length} evaluators, ` +
+            `${Object.keys(defaultConfig.services || {}).length} services`
+        );
+      }
+
+      // Initialize using existing flow for backwards compatibility
+      if (hasConfigurableComponents) {
+        this.configurationManager.initializePluginConfiguration(configurablePlugin);
+      }
+
+      if (hasUnifiedComponents) {
+        this.configurationManager.initializeUnifiedPluginConfiguration(
+          plugin.name,
+          (plugin as any).components,
+          configurablePlugin.config?.defaultEnabled ?? true
+        );
+      }
     }
 
     if (plugin.init) {
@@ -1208,11 +1241,11 @@ export class AgentRuntime implements IAgentRuntime {
               ('values' in result || 'data' in result || 'text' in result)
                 ? (result as ActionResult)
                 : {
-                  data: {
-                    actionName: action.name,
-                    legacyResult: result,
-                  },
-                };
+                    data: {
+                      actionName: action.name,
+                      legacyResult: result,
+                    },
+                  };
 
             actionResults.push(actionResult);
 
@@ -2095,8 +2128,8 @@ export class AgentRuntime implements IAgentRuntime {
         `[useModel] ${modelKey} output (took ${Number(elapsedTime.toFixed(2)).toLocaleString()}ms):`,
         Array.isArray(response)
           ? `${JSON.stringify(response.slice(0, 5))}...${JSON.stringify(response.slice(-5))} (${
-            response.length
-          } items)`
+              response.length
+            } items)`
           : JSON.stringify(response, safeReplacer(), 2).replace(/\\n/g, '\n')
       );
 
@@ -2124,9 +2157,9 @@ export class AgentRuntime implements IAgentRuntime {
             provider: provider || this.models.get(modelKey)?.[0]?.provider || 'unknown',
             actionContext: this.currentActionContext
               ? {
-                actionName: this.currentActionContext.actionName,
-                actionId: this.currentActionContext.actionId,
-              }
+                  actionName: this.currentActionContext.actionName,
+                  actionId: this.currentActionContext.actionId,
+                }
               : undefined,
           },
           type: `prompt:${modelKey}`,
@@ -3027,59 +3060,59 @@ export class AgentRuntime implements IAgentRuntime {
       enabled: config.enabled,
       actions: config.actions
         ? Object.fromEntries(
-          Object.entries(config.actions).map(([name, conf]) => [
-            name,
-            {
-              enabled: conf.enabled,
-              overrideLevel: conf.overrideLevel || ('runtime' as const),
-              overrideReason: conf.overrideReason,
-              settings: conf.settings || {},
-              lastModified: conf.lastModified || new Date(),
-            },
-          ])
-        )
+            Object.entries(config.actions).map(([name, conf]) => [
+              name,
+              {
+                enabled: conf.enabled,
+                overrideLevel: conf.overrideLevel || ('runtime' as const),
+                overrideReason: conf.overrideReason,
+                settings: conf.settings || {},
+                lastModified: conf.lastModified || new Date(),
+              },
+            ])
+          )
         : undefined,
       providers: config.providers
         ? Object.fromEntries(
-          Object.entries(config.providers).map(([name, conf]) => [
-            name,
-            {
-              enabled: conf.enabled,
-              overrideLevel: conf.overrideLevel || ('runtime' as const),
-              overrideReason: conf.overrideReason,
-              settings: conf.settings || {},
-              lastModified: conf.lastModified || new Date(),
-            },
-          ])
-        )
+            Object.entries(config.providers).map(([name, conf]) => [
+              name,
+              {
+                enabled: conf.enabled,
+                overrideLevel: conf.overrideLevel || ('runtime' as const),
+                overrideReason: conf.overrideReason,
+                settings: conf.settings || {},
+                lastModified: conf.lastModified || new Date(),
+              },
+            ])
+          )
         : undefined,
       evaluators: config.evaluators
         ? Object.fromEntries(
-          Object.entries(config.evaluators).map(([name, conf]) => [
-            name,
-            {
-              enabled: conf.enabled,
-              overrideLevel: conf.overrideLevel || ('runtime' as const),
-              overrideReason: conf.overrideReason,
-              settings: conf.settings || {},
-              lastModified: conf.lastModified || new Date(),
-            },
-          ])
-        )
+            Object.entries(config.evaluators).map(([name, conf]) => [
+              name,
+              {
+                enabled: conf.enabled,
+                overrideLevel: conf.overrideLevel || ('runtime' as const),
+                overrideReason: conf.overrideReason,
+                settings: conf.settings || {},
+                lastModified: conf.lastModified || new Date(),
+              },
+            ])
+          )
         : undefined,
       services: config.services
         ? Object.fromEntries(
-          Object.entries(config.services).map(([name, conf]) => [
-            name,
-            {
-              enabled: conf.enabled,
-              overrideLevel: conf.overrideLevel || ('runtime' as const),
-              overrideReason: conf.overrideReason,
-              settings: conf.settings || {},
-              lastModified: conf.lastModified || new Date(),
-            },
-          ])
-        )
+            Object.entries(config.services).map(([name, conf]) => [
+              name,
+              {
+                enabled: conf.enabled,
+                overrideLevel: conf.overrideLevel || ('runtime' as const),
+                overrideReason: conf.overrideReason,
+                settings: conf.settings || {},
+                lastModified: conf.lastModified || new Date(),
+              },
+            ])
+          )
         : undefined,
     };
 
@@ -3467,37 +3500,159 @@ export class AgentRuntime implements IAgentRuntime {
 
   /**
    * Enable a specific component dynamically
+   * Updates configuration AND registers the component if provided
    */
   async enableComponent(
     pluginName: string,
     componentName: string,
     componentType: 'action' | 'provider' | 'evaluator' | 'service',
-    _component: any
+    component?: any
   ): Promise<void> {
-    // Enable the component in configuration
+    // First, enable the component in configuration
     const config = {
       [`${componentType}s`]: {
         [componentName]: { enabled: true },
       },
     };
     await this.configurePlugin(pluginName, config);
+
+    // If component object is provided, register it dynamically
+    if (component) {
+      try {
+        switch (componentType) {
+          case 'action':
+            if (!this.actions.find(a => a.name === componentName)) {
+              this.registerAction(component);
+              this.logger.info(`Dynamically enabled action: ${componentName} from plugin ${pluginName}`);
+            }
+            break;
+          case 'provider':
+            if (!this.providers.find(p => p.name === componentName)) {
+              this.registerProvider(component);
+              this.logger.info(`Dynamically enabled provider: ${componentName} from plugin ${pluginName}`);
+            }
+            break;
+          case 'evaluator':
+            if (!this.evaluators.find(e => e.name === componentName)) {
+              this.registerEvaluator(component);
+              this.logger.info(`Dynamically enabled evaluator: ${componentName} from plugin ${pluginName}`);
+            }
+            break;
+          case 'service':
+            const serviceName = component.serviceName || component.name;
+            if (!this.services.has(serviceName)) {
+              await this.registerService(component);
+              this.logger.info(`Dynamically enabled service: ${componentName} from plugin ${pluginName}`);
+            }
+            break;
+        }
+      } catch (error) {
+        this.logger.error(`Failed to register component ${componentName}:`, error);
+        // Revert configuration change on failure
+        const revertConfig = {
+          [`${componentType}s`]: {
+            [componentName]: { enabled: false },
+          },
+        };
+        await this.configurePlugin(pluginName, revertConfig);
+        throw new Error(`Failed to enable component ${componentName}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
   }
 
   /**
    * Disable a specific component dynamically
+   * Updates configuration AND unregisters the component from runtime
    */
   async disableComponent(
     pluginName: string,
     componentName: string,
     componentType: 'action' | 'provider' | 'evaluator' | 'service'
   ): Promise<void> {
-    // Disable the component in configuration
+    // First, disable the component in configuration
     const config = {
       [`${componentType}s`]: {
         [componentName]: { enabled: false },
       },
     };
     await this.configurePlugin(pluginName, config);
+
+    // Unregister the component from runtime
+    try {
+      switch (componentType) {
+        case 'action':
+          const actionIndex = this.actions.findIndex(a => a.name === componentName);
+          if (actionIndex !== -1) {
+            this.actions.splice(actionIndex, 1);
+            this.logger.info(`Dynamically disabled action: ${componentName} from plugin ${pluginName}`);
+          }
+          break;
+        case 'provider':
+          const providerIndex = this.providers.findIndex(p => p.name === componentName);
+          if (providerIndex !== -1) {
+            this.providers.splice(providerIndex, 1);
+            this.logger.info(`Dynamically disabled provider: ${componentName} from plugin ${pluginName}`);
+          }
+          break;
+        case 'evaluator':
+          const evaluatorIndex = this.evaluators.findIndex(e => e.name === componentName);
+          if (evaluatorIndex !== -1) {
+            this.evaluators.splice(evaluatorIndex, 1);
+            this.logger.info(`Dynamically disabled evaluator: ${componentName} from plugin ${pluginName}`);
+          }
+          break;
+        case 'service':
+          const serviceName = componentName;
+          if (this.services.has(serviceName)) {
+            const service = this.services.get(serviceName);
+            try {
+              if (service && typeof service.stop === 'function') {
+                await service.stop();
+              }
+            } catch (stopError) {
+              this.logger.warn(`Error stopping service ${serviceName}:`, stopError);
+            }
+            this.services.delete(serviceName);
+            this.serviceTypes.delete(serviceName);
+            this.logger.info(`Dynamically disabled service: ${componentName} from plugin ${pluginName}`);
+          }
+          break;
+      }
+    } catch (error) {
+      this.logger.error(`Failed to unregister component ${componentName}:`, error);
+      throw new Error(`Failed to disable component ${componentName}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * Get component instance if it exists in runtime
+   */
+  getComponent(
+    componentName: string,
+    componentType: 'action' | 'provider' | 'evaluator' | 'service'
+  ): any | null {
+    switch (componentType) {
+      case 'action':
+        return this.actions.find(a => a.name === componentName) || null;
+      case 'provider':
+        return this.providers.find(p => p.name === componentName) || null;
+      case 'evaluator':
+        return this.evaluators.find(e => e.name === componentName) || null;
+      case 'service':
+        return this.services.get(componentName) || null;
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Check if component is currently registered in runtime
+   */
+  isComponentRegistered(
+    componentName: string,
+    componentType: 'action' | 'provider' | 'evaluator' | 'service'
+  ): boolean {
+    return this.getComponent(componentName, componentType) !== null;
   }
 
   // ====================================================================

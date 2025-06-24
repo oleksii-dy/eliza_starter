@@ -177,9 +177,11 @@ export class SerperSearchProvider {
         } else if (axiosError.response?.status === 403) {
           logger.error('[Serper] Forbidden - check API key permissions', {
             data: axiosError.response?.data,
-            headers: axiosError.response?.headers
+            headers: axiosError.response?.headers,
           });
-          throw new Error(`Serper API access forbidden: ${JSON.stringify(axiosError.response?.data)}`);
+          throw new Error(
+            `Serper API access forbidden: ${JSON.stringify(axiosError.response?.data)}`
+          );
         } else if (axiosError.code === 'ECONNABORTED') {
           logger.error(`[Serper] Request timeout after ${duration}ms`);
           throw new Error('Serper search timeout');
@@ -276,11 +278,13 @@ export class SerperSearchProvider {
         }
       );
 
-      return response.data.images?.map((img: any) => ({
-        url: img.imageUrl,
-        title: img.title,
-        source: img.source,
-      })) || [];
+      return (
+        response.data.images?.map((img: any) => ({
+          url: img.imageUrl,
+          title: img.title,
+          source: img.source,
+        })) || []
+      );
     } catch (error) {
       logger.error('[Serper] Image search error:', error);
       throw error;

@@ -41,9 +41,7 @@ export class AcademicSearchProvider {
     }
 
     // Sort by relevance score and limit results
-    return results
-      .sort((a, b) => b.score - a.score)
-      .slice(0, maxResults);
+    return results.sort((a, b) => b.score - a.score).slice(0, maxResults);
   }
 
   private async searchSemanticScholar(query: string, limit: number): Promise<SearchResult[]> {
@@ -240,16 +238,21 @@ export class AcademicSearchProvider {
     let score = 0.7; // Base score for academic papers
 
     // Boost for citation count
-    if (paper.citationCount > 100) {score += 0.1;}
-    else if (paper.citationCount > 50) {score += 0.05;}
+    if (paper.citationCount > 100) {
+      score += 0.1;
+    } else if (paper.citationCount > 50) {
+      score += 0.05;
+    }
 
     // Boost for recent papers
-    if (paper.year && paper.year >= new Date().getFullYear() - 2) {score += 0.05;}
+    if (paper.year && paper.year >= new Date().getFullYear() - 2) {
+      score += 0.05;
+    }
 
     // Boost for title match
     const queryTerms = query.toLowerCase().split(' ');
     const titleLower = paper.title?.toLowerCase() || '';
-    const matchCount = queryTerms.filter(term => titleLower.includes(term)).length;
+    const matchCount = queryTerms.filter((term) => titleLower.includes(term)).length;
     score += (matchCount / queryTerms.length) * 0.1;
 
     return Math.min(score, 1.0);
@@ -258,13 +261,17 @@ export class AcademicSearchProvider {
   private calculateCrossRefScore(item: any, query: string): number {
     let score = 0.65; // Base score
 
-    if (item['cited-by-count'] > 50) {score += 0.1;}
-    if (item.abstract) {score += 0.1;}
+    if (item['cited-by-count'] > 50) {
+      score += 0.1;
+    }
+    if (item.abstract) {
+      score += 0.1;
+    }
 
     // Title relevance
     const queryTerms = query.toLowerCase().split(' ');
     const titleLower = (item.title?.[0] || '').toLowerCase();
-    const matchCount = queryTerms.filter(term => titleLower.includes(term)).length;
+    const matchCount = queryTerms.filter((term) => titleLower.includes(term)).length;
     score += (matchCount / queryTerms.length) * 0.15;
 
     return Math.min(score, 1.0);
@@ -282,7 +289,9 @@ export class AcademicSearchProvider {
 
     for (const authorXml of authorMatches) {
       const name = this.extractXmlValue(authorXml, 'name');
-      if (name) {authors.push(name);}
+      if (name) {
+        authors.push(name);
+      }
     }
 
     return authors;

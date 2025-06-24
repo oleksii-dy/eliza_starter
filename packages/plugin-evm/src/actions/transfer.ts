@@ -411,7 +411,7 @@ export const transferAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll transfer 1 ETH to your trading wallet first, then swap it for USDC.",
-          thought: "The user wants to move ETH and then swap it. I need to transfer first to get the funds positioned correctly, then execute the swap. This is a common DeFi workflow pattern.",
+          thought: 'The user wants to move ETH and then swap it. I need to transfer first to get the funds positioned correctly, then execute the swap. This is a common DeFi workflow pattern.',
           actions: ['EVM_TRANSFER_TOKENS', 'EVM_SWAP_TOKENS'],
         },
       },
@@ -428,7 +428,7 @@ export const transferAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll transfer your USDC to the bridge wallet and then bridge it to Polygon for lower fees.",
-          thought: "This requires two steps: first consolidate USDC to a bridge wallet, then execute the cross-chain bridge. The transfer prepares the funds for the bridge operation.",
+          thought: 'This requires two steps: first consolidate USDC to a bridge wallet, then execute the cross-chain bridge. The transfer prepares the funds for the bridge operation.',
           actions: ['EVM_TRANSFER_TOKENS', 'EVM_BRIDGE_TOKENS'],
         },
       },
@@ -460,7 +460,7 @@ export const transferAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll transfer 0.5 ETH to prepare for your DeFi farming strategy. After the transfer, I can help you swap it for the farming tokens you need.",
-          thought: "User is starting a DeFi farming workflow. The transfer is the first step to position funds correctly before swapping for farming tokens. I should remember this context for the next action.",
+          thought: 'User is starting a DeFi farming workflow. The transfer is the first step to position funds correctly before swapping for farming tokens. I should remember this context for the next action.',
           action: 'EVM_TRANSFER_TOKENS',
           workflowContext: {
             step: 'prepare-swap',
@@ -481,7 +481,7 @@ export const transferAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll transfer your ETH first, then bridge it to Base to take advantage of lower transaction fees. This is a great strategy for frequent transactions.",
-          thought: "This is a cross-chain fee optimization strategy. First transfer to consolidate, then bridge to a cheaper L2. The transfer sets up the bridge operation.",
+          thought: 'This is a cross-chain fee optimization strategy. First transfer to consolidate, then bridge to a cheaper L2. The transfer sets up the bridge operation.',
           action: 'EVM_TRANSFER_TOKENS',
           workflowContext: {
             step: 'prepare-bridge',
@@ -502,7 +502,7 @@ export const transferAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll help you consolidate funds from multiple wallets and then swap them for stablecoins. This is a good strategy for portfolio management and risk reduction.",
-          thought: "Portfolio rebalancing workflow: consolidate scattered funds first, then convert to stablecoins for risk management. The transfer aggregates assets before the swap.",
+          thought: 'Portfolio rebalancing workflow: consolidate scattered funds first, then convert to stablecoins for risk management. The transfer aggregates assets before the swap.',
           action: 'EVM_TRANSFER_TOKENS',
           workflowContext: {
             step: 'consolidate-funds',

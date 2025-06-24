@@ -3,7 +3,6 @@ import type { World } from '../../types';
 import type {
   NPCEntity,
   PlayerEntity,
-  RPGEntity,
   Vector3,
   Entity
 } from '../types';
@@ -18,6 +17,7 @@ import {
 import { CircularSpawnArea } from './spawning/CircularSpawnArea';
 import { SpatialIndex } from './spawning/SpatialIndex';
 import { SpawnConditionChecker } from './spawning/SpawnConditionChecker';
+import { RPGEntity } from '../entities/RPGEntity';
 
 // Re-export SpawnConditions from SpawnConditionChecker to avoid duplication
 type SpawnConditions = {
@@ -97,6 +97,7 @@ export class SpawningSystem extends System {
   private spawnQueue: SpawnTask[] = [];
   private spatialIndex: SpatialIndex<Spawner>;
   private conditionChecker: SpawnConditionChecker;
+  private visualSystem: any; // VisualRepresentationSystem
 
   // Configuration
   private readonly DEFAULT_ACTIVATION_RANGE = 50;
@@ -115,6 +116,9 @@ export class SpawningSystem extends System {
    */
   override async init(_options: any): Promise<void> {
     console.log('[SpawningSystem] Initializing...');
+
+    // Get visual representation system
+    this.visualSystem = (this.world as any).getSystem?.('visualRepresentation');
 
     // Listen for entity death
     this.world.events.on('entity:death', (event: any) => {
@@ -434,7 +438,7 @@ export class SpawningSystem extends System {
   ): RPGEntity | null {
     switch (spawner.type) {
       case SpawnerType.NPC:
-        return this.createNPC(definition, position, spawner);
+        return this.createNPC(definition, position, spawner) as RPGEntity | null;
       case SpawnerType.RESOURCE:
         return this.spawnResource(definition, position, spawner);
       case SpawnerType.CHEST:
@@ -476,25 +480,15 @@ export class SpawningSystem extends System {
     const resourceId = `resource_${Date.now()}_${Math.random()}`;
 
     // Create resource entity
-    const resource = {
+    const resource = new RPGEntity(this.world, 'resource', {
       id: resourceId,
       type: 'resource',
-      position: { ...position },
-      data: {
-        id: resourceId,
-        resourceType: definition.entityType,
-        spawnPointId: spawner.id,
-        depleted: false,
-        respawnTime: spawner.respawnTime || 60000 // 1 minute default
-      },
-      components: new Map(),
-      getComponent(type: string) {
-        return this.components.get(type) || null;
-      },
-      hasComponent(type: string) {
-        return this.components.has(type);
-      }
-    } as RPGEntity;
+      position,
+      resourceType: definition.entityType,
+      spawnPointId: spawner.id,
+      depleted: false,
+      respawnTime: spawner.respawnTime || 60000 // 1 minute default
+    });
 
     // Add resource component
     const resourceComponent = {
@@ -527,6 +521,11 @@ export class SpawningSystem extends System {
     // Add to world
     (this.world as any).entities?.items?.set(resourceId, resource) ||
     ((this.world as any).entities = new Map()).set(resourceId, resource);
+
+    // Create visual representation
+    if (this.visualSystem) {
+      this.visualSystem.createVisual(resource, definition.entityType);
+    }
 
     return resource;
   }
@@ -580,25 +579,15 @@ export class SpawningSystem extends System {
     const chestId = `chest_${Date.now()}_${Math.random()}`;
 
     // Create chest entity
-    const chest = {
+    const chest = new RPGEntity(this.world, 'chest', {
       id: chestId,
       type: 'chest',
-      position: { ...position },
-      data: {
-        id: chestId,
-        chestType: definition.entityType,
-        spawnPointId: spawner.id,
-        locked: definition.metadata?.locked || false,
-        keyRequired: definition.metadata?.keyRequired || null
-      },
-      components: new Map(),
-      getComponent(type: string) {
-        return this.components.get(type) || null;
-      },
-      hasComponent(type: string) {
-        return this.components.has(type);
-      }
-    } as RPGEntity;
+      position,
+      chestType: definition.entityType,
+      spawnPointId: spawner.id,
+      locked: definition.metadata?.locked || false,
+      keyRequired: definition.metadata?.keyRequired || null
+    });
 
     // Add chest component
     const chestComponent = {
@@ -630,6 +619,11 @@ export class SpawningSystem extends System {
     (this.world as any).entities?.items?.set(chestId, chest) ||
     ((this.world as any).entities = new Map()).set(chestId, chest);
 
+    // Create visual representation
+    if (this.visualSystem) {
+      this.visualSystem.createVisual(chest, 'chest');
+    }
+
     return chest;
   }
 
@@ -655,23 +649,13 @@ export class SpawningSystem extends System {
     if (!bossDef) {return null;}
 
     // Create boss entity
-    const boss = {
+    const boss = new RPGEntity(this.world, 'npc', {
       id: bossId,
       type: 'npc',
-      position: { ...position },
-      data: {
-        id: bossId,
-        npcId: bossDef.id,
-        spawnPointId: spawner.id
-      },
-      components: new Map(),
-      getComponent(type: string) {
-        return this.components.get(type) || null;
-      },
-      hasComponent(type: string) {
-        return this.components.has(type);
-      }
-    } as RPGEntity;
+      position,
+      npcId: bossDef.id,
+      spawnPointId: spawner.id
+    });
 
     // Add NPC component with boss stats
     const npcComponent = {
@@ -748,6 +732,11 @@ export class SpawningSystem extends System {
     // Add to world
     (this.world as any).entities?.items?.set(bossId, boss) ||
     ((this.world as any).entities = new Map()).set(bossId, boss);
+
+    // Create visual representation
+    if (this.visualSystem) {
+      this.visualSystem.createVisual(boss, definition.entityType);
+    }
 
     // Announce boss spawn
     this.emit('boss:spawned', {

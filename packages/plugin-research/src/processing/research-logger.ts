@@ -472,20 +472,20 @@ ${session.summary.recommendations.map((rec) => `- ${rec}`).join('\n')}
 
 ## Search Details
 ${session.searchLogs
-    .map(
-      (log, i) => `
+  .map(
+    (log, i) => `
 ### Search ${i + 1}: ${log.query}
 - Provider: ${log.provider}
 - Results: ${log.resultsCount}
 - Relevant: ${log.results.filter((r) => (r.relevanceScore?.score || 0) >= 0.6).length}
 `
-    )
-    .join('\n')}
+  )
+  .join('\n')}
 
 ## Content Extraction
 ${session.extractionLogs
-    .map(
-      (log, i) => `
+  .map(
+    (log, i) => `
 ### Extraction ${i + 1}: ${log.sourceTitle}
 - URL: ${log.url}
 - Method: ${log.method}
@@ -493,8 +493,8 @@ ${session.extractionLogs
 - Content Length: ${log.contentLength} chars
 ${log.error ? `- Error: ${log.error}` : ''}
 `
-    )
-    .join('\n')}
+  )
+  .join('\n')}
 `;
   }
 

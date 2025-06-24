@@ -88,12 +88,11 @@ export class SWEBenchService {
         implementation,
         testPassed,
         duration: Date.now() - startTime,
-        tokenUsage: 0 // TODO: Track actual usage
+        tokenUsage: 0, // TODO: Track actual usage
       };
 
       this.results.set(taskId, result);
       return result;
-
     } catch (error) {
       logger.error(`[SWEBench] Task ${taskId} failed:`, error);
       throw error;
@@ -111,7 +110,7 @@ export class SWEBenchService {
     const config: Partial<ResearchConfig> = {
       researchDepth: this.getDepthForDifficulty(task.difficulty),
       maxDepth: task.difficulty === 'hard' ? 3 : 1,
-      maxSearchResults: task.difficulty === 'hard' ? 30 : 20
+      maxSearchResults: task.difficulty === 'hard' ? 30 : 20,
     };
 
     // Start research project
@@ -121,7 +120,7 @@ export class SWEBenchService {
     const projectId = project.id;
     let currentProject = project;
     do {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       const updated = await this.researchService.getProject(projectId);
       if (updated) {
         currentProject = updated;
@@ -140,7 +139,7 @@ export class SWEBenchService {
       task.description,
       `Repository: ${task.repository}`,
       task.files.length > 0 ? `Related files: ${task.files.join(', ')}` : '',
-      `Expected: ${task.expectedBehavior}`
+      `Expected: ${task.expectedBehavior}`,
     ].filter(Boolean);
 
     return parts.join('. ');
@@ -169,10 +168,14 @@ export class SWEBenchService {
    */
   private getDepthForDifficulty(difficulty: string): ResearchDepth {
     switch (difficulty) {
-      case 'easy': return ResearchDepth.SURFACE;
-      case 'medium': return ResearchDepth.MODERATE;
-      case 'hard': return ResearchDepth.DEEP;
-      default: return ResearchDepth.MODERATE;
+      case 'easy':
+        return ResearchDepth.SURFACE;
+      case 'medium':
+        return ResearchDepth.MODERATE;
+      case 'hard':
+        return ResearchDepth.DEEP;
+      default:
+        return ResearchDepth.MODERATE;
     }
   }
 
@@ -181,11 +184,16 @@ export class SWEBenchService {
    */
   private getTaskTypeForCategory(category: string): TaskType {
     switch (category) {
-      case 'bug_fix': return TaskType.ANALYTICAL;
-      case 'feature': return TaskType.EXPLORATORY;
-      case 'refactor': return TaskType.EVALUATIVE;
-      case 'documentation': return TaskType.SYNTHETIC;
-      default: return TaskType.EXPLORATORY;
+      case 'bug_fix':
+        return TaskType.ANALYTICAL;
+      case 'feature':
+        return TaskType.EXPLORATORY;
+      case 'refactor':
+        return TaskType.EVALUATIVE;
+      case 'documentation':
+        return TaskType.SYNTHETIC;
+      default:
+        return TaskType.EXPLORATORY;
     }
   }
 
@@ -197,11 +205,12 @@ export class SWEBenchService {
       {
         id: 'ts-express-middleware',
         repository: 'expressjs/express',
-        description: 'Research how to implement custom TypeScript middleware in Express with proper type safety',
+        description:
+          'Research how to implement custom TypeScript middleware in Express with proper type safety',
         files: ['lib/router/index.js', 'lib/middleware/init.js'],
         expectedBehavior: 'Understand middleware typing patterns and best practices',
         category: 'feature',
-        difficulty: 'medium'
+        difficulty: 'medium',
       },
       {
         id: 'ts-typeorm-relations',
@@ -210,25 +219,25 @@ export class SWEBenchService {
         files: ['src/decorator/relations/ManyToMany.ts', 'src/metadata/RelationMetadata.ts'],
         expectedBehavior: 'Understand how to implement complex relations with TypeORM',
         category: 'feature',
-        difficulty: 'hard'
+        difficulty: 'hard',
       },
       {
         id: 'ts-zod-validation',
         repository: 'colinhacks/zod',
         description: 'Research how Zod implements recursive schema validation',
         files: ['src/types.ts', 'src/ZodError.ts'],
-        expectedBehavior: 'Understand Zod\'s validation architecture',
+        expectedBehavior: "Understand Zod's validation architecture",
         category: 'bug_fix',
-        difficulty: 'medium'
+        difficulty: 'medium',
       },
       {
         id: 'ts-prisma-migrations',
         repository: 'prisma/prisma',
         description: 'Research Prisma migration system and how it handles schema changes',
         files: ['packages/migrate/src/commands/MigrateDev.ts'],
-        expectedBehavior: 'Understand Prisma\'s migration strategy',
+        expectedBehavior: "Understand Prisma's migration strategy",
         category: 'refactor',
-        difficulty: 'hard'
+        difficulty: 'hard',
       },
       {
         id: 'ts-async-patterns',
@@ -237,8 +246,8 @@ export class SWEBenchService {
         files: ['lib/async_hooks.js', 'lib/internal/async_hooks.js'],
         expectedBehavior: 'Document async error handling patterns',
         category: 'documentation',
-        difficulty: 'easy'
-      }
+        difficulty: 'easy',
+      },
     ];
 
     for (const task of defaultTasks) {
@@ -269,9 +278,9 @@ export class SWEBenchService {
     passRate: number;
     avgDuration: number;
     avgTokenUsage: number;
-    } {
+  } {
     const results = Array.from(this.results.values());
-    const passed = results.filter(r => r.testPassed === true).length;
+    const passed = results.filter((r) => r.testPassed === true).length;
     const totalDuration = results.reduce((sum, r) => sum + r.duration, 0);
     const totalTokens = results.reduce((sum, r) => sum + r.tokenUsage, 0);
 
@@ -280,7 +289,7 @@ export class SWEBenchService {
       completedTasks: results.length,
       passRate: results.length > 0 ? passed / results.length : 0,
       avgDuration: results.length > 0 ? totalDuration / results.length : 0,
-      avgTokenUsage: results.length > 0 ? totalTokens / results.length : 0
+      avgTokenUsage: results.length > 0 ? totalTokens / results.length : 0,
     };
   }
 }

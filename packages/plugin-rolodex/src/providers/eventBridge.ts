@@ -6,7 +6,7 @@ export const eventBridgeProvider: Provider = {
   description: 'Provides status and capabilities of the cross-plugin event bridge system',
   position: 10, // Run late in the provider chain
 
-  get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
+  get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
     try {
       // Get EventBridge service instance
       const eventBridge = runtime.getService('event-bridge') as unknown as EventBridge;

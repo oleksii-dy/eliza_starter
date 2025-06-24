@@ -1,7 +1,6 @@
 // Vision actions for scene analysis and image capture
 import {
   type Action,
-  type ActionExample,
   type ActionResult,
   type IAgentRuntime,
   type Memory,
@@ -651,7 +650,7 @@ export const setVisionModeAction: Action = {
           data: {
             actionName: 'SET_VISION_MODE',
             error: 'Invalid or missing vision mode',
-            messageText: messageText,
+            messageText,
           },
         };
       }
@@ -687,18 +686,18 @@ export const setVisionModeAction: Action = {
       }
 
       return {
-        text: text,
+        text,
         values: {
           success: true,
           visionServiceAvailable: true,
           previousMode: currentMode,
-          newMode: newMode,
+          newMode,
           modeChanged: currentMode !== newMode,
         },
         data: {
           actionName: 'SET_VISION_MODE',
           previousMode: currentMode,
-          newMode: newMode,
+          newMode,
           modeDescription: text,
         },
       };

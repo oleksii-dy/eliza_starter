@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import { EmoteManager } from '../../managers/emote-manager';
 import { createMockRuntime } from '../test-utils';
 import { createMockWorld } from '../helpers/mock-world';

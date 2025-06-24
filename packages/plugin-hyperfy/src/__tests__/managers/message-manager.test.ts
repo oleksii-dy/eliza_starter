@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'bun:test';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { MessageManager } from '../../managers/message-manager';
 import { createMockRuntime } from '../test-utils';
 import { createMockWorld } from '../helpers/mock-world';

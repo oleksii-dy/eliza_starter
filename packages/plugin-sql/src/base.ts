@@ -368,7 +368,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    * This provides better error handling than throwing on constraint violations
    */
   protected isConstraintViolationError(error: any): boolean {
-    if (!error) {return false;}
+    if (!error) {
+      return false;
+    }
 
     const errorMessage = error.message || String(error);
     const errorCode = error.code || error.constraint;
@@ -406,13 +408,17 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    * Check if an error is specifically a schema mismatch (missing column, etc.)
    */
   protected isSchemaMismatchError(error: any): boolean {
-    if (!error) {return false;}
+    if (!error) {
+      return false;
+    }
 
     const errorMessage = error.message || String(error);
     const errorCode = error.code;
 
     // Check for PostgreSQL "column does not exist" errors
-    if (errorCode === '42703') {return true;}
+    if (errorCode === '42703') {
+      return true;
+    }
 
     // Check for common schema mismatch messages
     const schemaMismatchMessages = [
@@ -435,7 +441,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    * Check if an error is a database connection error
    */
   protected isDatabaseConnectionError(error: any): boolean {
-    if (!error) {return false;}
+    if (!error) {
+      return false;
+    }
 
     const errorMessage = error.message || String(error);
     const errorCode = error.code;
@@ -477,13 +485,17 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    * Check if an error is a missing table/relation error
    */
   protected isTableMissingError(error: any): boolean {
-    if (!error) {return false;}
+    if (!error) {
+      return false;
+    }
 
     const errorMessage = error.message || String(error);
     const errorCode = error.code;
 
     // PostgreSQL relation does not exist error code
-    if (errorCode === '42P01') {return true;}
+    if (errorCode === '42P01') {
+      return true;
+    }
 
     // Check for common table missing messages
     const tableMissingMessages = [
@@ -622,7 +634,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         // Handle different result formats from different database adapters
         const rows = Array.isArray(result) ? result : result.rows || [];
 
-        if (rows.length === 0) {return null;}
+        if (rows.length === 0) {
+          return null;
+        }
 
         const row = rows[0];
 
@@ -825,7 +839,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
               'The database schema may be out of sync. Try recreating the database or running migrations.',
           });
           // Return false instead of throwing to allow graceful handling
-          logger.warn(`Agent creation failed due to schema mismatch, returning false to allow graceful handling: ${errorMessage}`);
+          logger.warn(
+            `Agent creation failed due to schema mismatch, returning false to allow graceful handling: ${errorMessage}`
+          );
           return false;
         }
 
@@ -845,7 +861,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         // For database connection errors or table missing errors, return false instead of throwing
         // This allows the runtime to handle the error gracefully
         if (this.isDatabaseConnectionError(error) || this.isTableMissingError(error)) {
-          logger.warn(`Agent creation failed due to database issue, returning false to allow graceful handling: ${errorMessage}`);
+          logger.warn(
+            `Agent creation failed due to database issue, returning false to allow graceful handling: ${errorMessage}`
+          );
           return false;
         }
 
@@ -1072,7 +1090,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
               !errorMessage.includes('does not exist') &&
               !errorMessage.includes('no such table')
             ) {
-              logger.debug('[DB] Cache table might not have agent_id column or doesn\'t exist');
+              logger.debug("[DB] Cache table might not have agent_id column or doesn't exist");
             }
           }
 
@@ -1166,7 +1184,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         // Handle different result formats from different database adapters
         const rows = Array.isArray(result) ? result : result.rows || [];
 
-        if (rows.length === 0) {return 0;}
+        if (rows.length === 0) {
+          return 0;
+        }
 
         const countValue = rows[0]?.count;
 
@@ -1226,7 +1246,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
   async getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null> {
     return this.withDatabase(async () => {
       try {
-        if (entityIds.length === 0) {return [];}
+        if (entityIds.length === 0) {
+          return [];
+        }
 
         // Ensure entities table is ready before proceeding
         await this.ensureTablesReady(['entities']);
@@ -1274,13 +1296,13 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
             FROM entities e
             LEFT JOIN components c ON c.entity_id = e.id
             WHERE ${
-  this.isPGLiteAdapter()
-    ? sql`e.id IN (${sql.join(
-      entityIds.map((id) => sql`${id}`),
-      sql`, `
-    )})`
-    : sql`e.id = ANY(${entityIds}::uuid[])`
-}
+              this.isPGLiteAdapter()
+                ? sql`e.id IN (${sql.join(
+                    entityIds.map((id) => sql`${id}`),
+                    sql`, `
+                  )})`
+                : sql`e.id = ANY(${entityIds}::uuid[])`
+            }
           `);
         }
 
@@ -1319,7 +1341,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
   }
 
   private processEntityResults(result: any[]): Entity[] {
-    if (result.length === 0) {return [];}
+    if (result.length === 0) {
+      return [];
+    }
 
     // Group components by entity
     const entities: Record<UUID, Entity> = {};
@@ -1327,7 +1351,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
     for (const e of result) {
       const key = e.entity.id;
       entities[key] = e.entity;
-      if (entityComponents[key] === undefined) {entityComponents[key] = [];}
+      if (entityComponents[key] === undefined) {
+        entityComponents[key] = [];
+      }
       if (e.components) {
         // Handle both single component and array of components
         const componentsArray = Array.isArray(e.components) ? e.components : [e.components];
@@ -1344,7 +1370,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
   private processRawEntityResults(result: any): Entity[] {
     // Handle different result formats from different database adapters
     const rows = Array.isArray(result) ? result : result.rows || [];
-    if (rows.length === 0) {return [];}
+    if (rows.length === 0) {
+      return [];
+    }
 
     // Group components by entity
     const entities: Record<UUID, Entity> = {};
@@ -1423,7 +1451,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       const entitiesByIdMap = new Map<UUID, Entity>();
 
       for (const row of result) {
-        if (!row.entity) {continue;}
+        if (!row.entity) {
+          continue;
+        }
 
         const entityId = row.entity.id as UUID;
         if (!entitiesByIdMap.has(entityId)) {
@@ -1732,7 +1762,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         .from(componentTable)
         .where(and(...conditions));
 
-      if (result.length === 0) {return null;}
+      if (result.length === 0) {
+        return null;
+      }
 
       const component = result[0];
 
@@ -1784,7 +1816,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         .from(componentTable)
         .where(and(...conditions));
 
-      if (result.length === 0) {return [];}
+      if (result.length === 0) {
+        return [];
+      }
 
       const components = result.map((component) => ({
         ...component,
@@ -1869,7 +1903,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
   }): Promise<Memory[]> {
     const { entityId, agentId, roomId, worldId, tableName, count, unique, start, end } = params;
 
-    if (!tableName) {throw new Error('tableName is required');}
+    if (!tableName) {
+      throw new Error('tableName is required');
+    }
 
     return this.withDatabase(async () => {
       const conditions = [eq(memoryTable.type, tableName)];
@@ -1969,7 +2005,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
     limit?: number;
   }): Promise<Memory[]> {
     return this.withDatabase(async () => {
-      if (params.roomIds.length === 0) {return [];}
+      if (params.roomIds.length === 0) {
+        return [];
+      }
 
       const conditions = [
         eq(memoryTable.type, params.tableName),
@@ -2024,7 +2062,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           .where(eq(memoryTable.id, id))
           .limit(1);
 
-        if (memoryResult.length === 0) {return null;}
+        if (memoryResult.length === 0) {
+          return null;
+        }
 
         const memoryRow = memoryResult[0];
 
@@ -2127,7 +2167,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    */
   async getMemoriesByIds(memoryIds: UUID[], tableName?: string): Promise<Memory[]> {
     return this.withDatabase(async () => {
-      if (memoryIds.length === 0) {return [];}
+      if (memoryIds.length === 0) {
+        return [];
+      }
 
       const conditions = [inArray(memoryTable.id, memoryIds)];
 
@@ -2166,7 +2208,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
                 } else if (typeof rawEmbedding === 'string') {
                   try {
                     embeddingsMap.set(embRow.memory_id, JSON.parse(rawEmbedding));
-                  } catch {}
+                  } catch {
+                    // Ignore invalid JSON
+                  }
                 }
               }
             }
@@ -2439,7 +2483,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         createdAt: new Date(log.createdAt),
       }));
 
-      if (logs.length === 0) {return [];}
+      if (logs.length === 0) {
+        return [];
+      }
 
       return logs;
     });
@@ -2990,7 +3036,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    * @returns {Promise<number>} A Promise that resolves to the number of memories.
    */
   async countMemories(roomId: UUID, unique = true, tableName = ''): Promise<number> {
-    if (!tableName) {throw new Error('tableName is required');}
+    if (!tableName) {
+      throw new Error('tableName is required');
+    }
 
     return this.withDatabase(async () => {
       const conditions = [eq(memoryTable.roomId, roomId), eq(memoryTable.type, tableName)];
@@ -3119,7 +3167,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    * @returns {Promise<void>} A Promise that resolves when the room is deleted.
    */
   async deleteRoom(roomId: UUID): Promise<void> {
-    if (!roomId) {throw new Error('Room ID is required');}
+    if (!roomId) {
+      throw new Error('Room ID is required');
+    }
     return this.withDatabase(async () => {
       await this.db.transaction(async (tx) => {
         await tx.delete(roomTable).where(eq(roomTable.id, roomId));
@@ -3671,7 +3721,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
             eq(relationshipTable.targetEntityId, targetEntityId)
           )
         );
-      if (result.length === 0) {return null;}
+      if (result.length === 0) {
+        return null;
+      }
       const relationship = result[0];
       return {
         ...relationship,
@@ -3683,9 +3735,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           ? relationship.tags
           : typeof relationship.tags === 'string' && relationship.tags.startsWith('{')
             ? relationship.tags
-              .slice(1, -1)
-              .split(',')
-              .map((tag: string) => tag.replace(/^"|"$/g, ''))
+                .slice(1, -1)
+                .split(',')
+                .map((tag: string) => tag.replace(/^"|"$/g, ''))
             : (relationship.tags ?? []),
         metadata: (relationship.metadata as { [key: string]: unknown }) ?? {},
         createdAt: relationship.created_at
@@ -3728,9 +3780,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           ? relationship.tags
           : typeof relationship.tags === 'string' && relationship.tags.startsWith('{')
             ? relationship.tags
-              .slice(1, -1)
-              .split(',')
-              .map((tag: string) => tag.replace(/^"|"$/g, ''))
+                .slice(1, -1)
+                .split(',')
+                .map((tag: string) => tag.replace(/^"|"$/g, ''))
             : (relationship.tags ?? []),
         metadata:
           typeof relationship.metadata === 'string'
@@ -3746,7 +3798,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       // Filter by tags in memory for all databases
       if (tags && tags.length > 0) {
         relationships = relationships.filter((rel) => {
-          if (!rel.tags || !Array.isArray(rel.tags)) {return false;}
+          if (!rel.tags || !Array.isArray(rel.tags)) {
+            return false;
+          }
           return tags.some((tag) => rel.tags.includes(tag));
         });
       }
@@ -4035,7 +4089,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
 
           // Filter by tags in memory
           const filteredTasks = allTasks.filter((task) => {
-            if (!task.tags || !Array.isArray(task.tags)) {return false;}
+            if (!task.tags || !Array.isArray(task.tags)) {
+              return false;
+            }
             return params.tags!.every((tag) => task.tags.includes(tag));
           });
 
@@ -4059,10 +4115,10 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
                 ...(params.roomId ? [eq(tasksTable.roomId, params.roomId)] : []),
                 ...(params.tags && params.tags.length > 0
                   ? [
-                    sql`${tasksTable.tags} @> ARRAY[${sql.raw(
-                      params.tags.map((t) => `'${t.replace(/'/g, "''")}'`).join(', ')
-                    )}]::text[]`,
-                  ]
+                      sql`${tasksTable.tags} @> ARRAY[${sql.raw(
+                        params.tags.map((t) => `'${t.replace(/'/g, "''")}'`).join(', ')
+                      )}]::text[]`,
+                    ]
                   : [])
               )
             );
@@ -4151,11 +4207,21 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         const updateValues: Partial<Task> = {};
 
         // Add fields to update if they exist in the partial task object
-        if (task.name !== undefined) {updateValues.name = task.name;}
-        if (task.description !== undefined) {updateValues.description = task.description;}
-        if (task.roomId !== undefined) {updateValues.roomId = task.roomId;}
-        if (task.worldId !== undefined) {updateValues.worldId = task.worldId;}
-        if (task.tags !== undefined) {updateValues.tags = task.tags;}
+        if (task.name !== undefined) {
+          updateValues.name = task.name;
+        }
+        if (task.description !== undefined) {
+          updateValues.description = task.description;
+        }
+        if (task.roomId !== undefined) {
+          updateValues.roomId = task.roomId;
+        }
+        if (task.worldId !== undefined) {
+          updateValues.worldId = task.worldId;
+        }
+        if (task.tags !== undefined) {
+          updateValues.tags = task.tags;
+        }
 
         // Always update the updatedAt timestamp as a Date
         (updateValues as any).updatedAt = new Date();
@@ -4331,7 +4397,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       createdAt: Date;
       updatedAt: Date;
     }>
-    > {
+  > {
     return this.withDatabase(async () => {
       try {
         const results = await this.db.select().from(messageServerTable);
@@ -4382,14 +4448,14 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         .limit(1);
       return results.length > 0
         ? {
-          id: results[0].id as UUID,
-          name: results[0].name,
-          sourceType: results[0].sourceType,
-          sourceId: results[0].sourceId || undefined,
-          metadata: results[0].metadata || undefined,
-          createdAt: results[0].createdAt,
-          updatedAt: results[0].updatedAt,
-        }
+            id: results[0].id as UUID,
+            name: results[0].name,
+            sourceType: results[0].sourceType,
+            sourceId: results[0].sourceId || undefined,
+            metadata: results[0].metadata || undefined,
+            createdAt: results[0].createdAt,
+            updatedAt: results[0].updatedAt,
+          }
         : null;
     });
   }
@@ -4530,17 +4596,17 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         .limit(1);
       return results.length > 0
         ? {
-          id: results[0].id as UUID,
-          serverId: results[0].serverId as UUID,
-          name: results[0].name,
-          type: results[0].type,
-          sourceType: results[0].sourceType || undefined,
-          sourceId: results[0].sourceId || undefined,
-          topic: results[0].topic || undefined,
-          metadata: results[0].metadata || undefined,
-          createdAt: results[0].createdAt,
-          updatedAt: results[0].updatedAt,
-        }
+            id: results[0].id as UUID,
+            serverId: results[0].serverId as UUID,
+            name: results[0].name,
+            type: results[0].type,
+            sourceType: results[0].sourceType || undefined,
+            sourceId: results[0].sourceId || undefined,
+            topic: results[0].topic || undefined,
+            metadata: results[0].metadata || undefined,
+            createdAt: results[0].createdAt,
+            updatedAt: results[0].updatedAt,
+          }
         : null;
     });
   }
@@ -4677,8 +4743,12 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       await this.db.transaction(async (tx) => {
         // Update channel details
         const updateData: any = { updatedAt: now };
-        if (updates.name !== undefined) {updateData.name = updates.name;}
-        if (updates.metadata !== undefined) {updateData.metadata = updates.metadata;}
+        if (updates.name !== undefined) {
+          updateData.name = updates.name;
+        }
+        if (updates.metadata !== undefined) {
+          updateData.metadata = updates.metadata;
+        }
 
         await tx.update(channelTable).set(updateData).where(eq(channelTable.id, channelId));
 
@@ -4737,7 +4807,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    */
   async addChannelParticipants(channelId: UUID, userIds: UUID[]): Promise<void> {
     return this.withDatabase(async () => {
-      if (!userIds || userIds.length === 0) {return;}
+      if (!userIds || userIds.length === 0) {
+        return;
+      }
 
       const participantValues = userIds.map((userId) => ({
         channelId,

@@ -5,7 +5,7 @@ export const entitiesProvider: Provider = {
   name: 'entities',
   description: 'Provides information about tracked entities',
 
-  get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
+  get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
     try {
       const entityService = runtime.getService('entity') as RolodexService;
       if (!entityService) {

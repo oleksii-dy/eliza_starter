@@ -171,7 +171,7 @@ export const queueAction = {
         name: '{{agent}}',
         content: {
           text: "I'll queue proposal 123 and execute it after the timelock period expires.",
-          thought: "Complete governance implementation: first queue the approved proposal for the timelock period, then execute it to implement the changes. This follows the full governance security process.",
+          thought: 'Complete governance implementation: first queue the approved proposal for the timelock period, then execute it to implement the changes. This follows the full governance security process.',
           actions: ['EVM_GOVERNANCE_QUEUE', 'EVM_GOVERNANCE_EXECUTE'],
         },
       },
@@ -204,7 +204,7 @@ export const queueAction = {
         name: '{{agent}}',
         content: {
           text: "I'll queue the passed proposal for execution. This begins the security timelock period before the changes can be implemented.",
-          thought: "Governance security step: proposal passed voting, now needs to be queued for the mandatory timelock period. This gives the community time to review before execution.",
+          thought: 'Governance security step: proposal passed voting, now needs to be queued for the mandatory timelock period. This gives the community time to review before execution.',
           action: 'EVM_GOVERNANCE_QUEUE',
           workflowContext: {
             step: 'governance-queue',
@@ -246,7 +246,7 @@ export const queueAction = {
         name: '{{agent}}',
         content: {
           text: "I'll queue the treasury proposal and provide execution timing information for community awareness.",
-          thought: "Community coordination: treasury proposals affect everyone, so queuing needs to be followed by clear communication about when execution will occur.",
+          thought: 'Community coordination: treasury proposals affect everyone, so queuing needs to be followed by clear communication about when execution will occur.',
           action: 'EVM_GOVERNANCE_QUEUE',
           workflowContext: {
             step: 'community-notification',

@@ -162,14 +162,14 @@ export const checkPluginConfigurationAction: Action = {
         },
       };
     } catch (_error) {
-      logger.error('[CHECK_PLUGIN_CONFIGURATION] Error:', error);
+      logger.error('[CHECK_PLUGIN_CONFIGURATION] Error:', _error);
 
       await callback?.({
         text: `Error checking plugin configuration: ${_error instanceof Error ? _error.message : String(_error)}`,
         actions: ['CHECK_PLUGIN_CONFIGURATION'],
       });
 
-      throw error;
+      throw _error;
     }
   },
 };

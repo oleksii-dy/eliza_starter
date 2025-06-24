@@ -1,7 +1,6 @@
 import { IAgentRuntime, logger, asUUID, UUID } from '@elizaos/core';
 import type { Address, Hash, Hex } from 'viem';
-import { keccak256, encodePacked, toHex } from 'viem';
-import { sign } from 'viem/accounts';
+import { keccak256, encodePacked } from 'viem';
 import { WalletDatabaseService } from '../core/database/service';
 import { decrypt, encrypt } from '../core/security/encryption';
 import type {

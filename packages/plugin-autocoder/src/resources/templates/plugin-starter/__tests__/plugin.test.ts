@@ -1,4 +1,4 @@
-import { describe, expect, it, mock, beforeEach, afterEach, beforeAll, afterAll } from 'bun:test';
+import { describe, expect, it, mock, spyOn, beforeEach, afterEach, beforeAll, afterAll } from 'bun:test';
 import { starterPlugin, StarterService } from '../src/index';
 import { ModelType, logger } from '@elizaos/core';
 import dotenv from 'dotenv';
@@ -8,10 +8,10 @@ dotenv.config();
 
 // Need to spy on logger for documentation
 beforeAll(() => {
-  mock.spyOn(logger, 'info');
-  mock.spyOn(logger, 'error');
-  mock.spyOn(logger, 'warn');
-  mock.spyOn(logger, 'debug');
+  spyOn(logger, 'info');
+  spyOn(logger, 'error');
+  spyOn(logger, 'warn');
+  spyOn(logger, 'debug');
 });
 
 afterAll(() => {
@@ -157,7 +157,7 @@ describe('StarterService', () => {
     runtime.registerService(StarterService.serviceType, service);
 
     // Spy on the real service's stop method
-    const stopSpy = mock.spyOn(service, 'stop');
+    const stopSpy = spyOn(service, 'stop');
 
     // Call the static stop method
     await StarterService.stop(runtime as any);

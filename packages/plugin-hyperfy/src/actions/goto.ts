@@ -102,7 +102,7 @@ export const hyperfyGotoEntityAction: Action = {
       return {
         text: 'Error: Cannot navigate. Hyperfy connection/controls unavailable.',
         values: { success: false, error: 'service_unavailable' },
-        data: { action: 'HYPERFY_GOTO_ENTITY' }
+        data: { action: 'HYPERFY_GOTO_ENTITY' },
       };
     }
 
@@ -128,7 +128,7 @@ export const hyperfyGotoEntityAction: Action = {
       return {
         text: errorResponse.text,
         values: { success: false, error: 'extraction_failed' },
-        data: { action: 'HYPERFY_GOTO_ENTITY', thought: errorResponse.thought }
+        data: { action: 'HYPERFY_GOTO_ENTITY', thought: errorResponse.thought },
       };
     }
 
@@ -142,7 +142,7 @@ export const hyperfyGotoEntityAction: Action = {
       return {
         text: invalidResponse.text,
         values: { success: false, error: 'invalid_navigation_target' },
-        data: { action: 'HYPERFY_GOTO_ENTITY', thought: invalidResponse.thought }
+        data: { action: 'HYPERFY_GOTO_ENTITY', thought: invalidResponse.thought },
       };
     }
 
@@ -169,11 +169,11 @@ export const hyperfyGotoEntityAction: Action = {
             source: 'hyperfy',
           };
           await callback(successResponse);
-          
+
           return {
             text: successResponse.text,
             values: { success: true, navigationType: 'entity', targetEntity: entityId, entityName },
-            data: { action: 'HYPERFY_GOTO_ENTITY', targetEntityId: entityId }
+            data: { action: 'HYPERFY_GOTO_ENTITY', targetEntityId: entityId },
           };
           break;
         }
@@ -193,11 +193,11 @@ export const hyperfyGotoEntityAction: Action = {
             source: 'hyperfy',
           };
           await callback(positionResponse);
-          
+
           return {
             text: positionResponse.text,
             values: { success: true, navigationType: 'position', targetPosition: pos },
-            data: { action: 'HYPERFY_GOTO_ENTITY', targetX: pos.x, targetZ: pos.z }
+            data: { action: 'HYPERFY_GOTO_ENTITY', targetX: pos.x, targetZ: pos.z },
           };
           break;
         }
@@ -212,11 +212,11 @@ export const hyperfyGotoEntityAction: Action = {
         metadata: { error: 'navigation_error', detail: error.message },
       };
       await callback(navigationErrorResponse);
-      
+
       return {
         text: navigationErrorResponse.text,
         values: { success: false, error: 'navigation_error', detail: error.message },
-        data: { action: 'HYPERFY_GOTO_ENTITY' }
+        data: { action: 'HYPERFY_GOTO_ENTITY' },
       };
     }
   },
@@ -227,7 +227,8 @@ export const hyperfyGotoEntityAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User wants me to go to Bob - I need to find Bob\'s entity in the world and navigate there',
+          thought:
+            "User wants me to go to Bob - I need to find Bob's entity in the world and navigate there",
           text: 'Navigating towards Bob...',
           actions: ['HYPERFY_GOTO_ENTITY'],
           source: 'hyperfy',
@@ -239,7 +240,8 @@ export const hyperfyGotoEntityAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User is asking me to navigate to a specific entity ID - I should move to that location',
+          thought:
+            'User is asking me to navigate to a specific entity ID - I should move to that location',
           text: 'Navigating towards entity abcdef...',
           actions: ['HYPERFY_GOTO_ENTITY'],
           source: 'hyperfy',
@@ -251,9 +253,9 @@ export const hyperfyGotoEntityAction: Action = {
       { name: '{{user}}', content: { text: 'Go to the missing chair' } },
       {
         name: '{{agent}}',
-        content: { 
+        content: {
           thought: 'I cannot find any chair entity in the current world state',
-          text: 'Error: Cannot navigate. Could not find location for entity chair999.' 
+          text: 'Error: Cannot navigate. Could not find location for entity chair999.',
         },
       },
     ],

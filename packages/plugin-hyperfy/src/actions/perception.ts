@@ -186,7 +186,7 @@ export const hyperfyScenePerceptionAction: Action = {
       return {
         text: 'Unable to observe environment. Hyperfy world not available.',
         values: { success: false, error: 'world_unavailable' },
-        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' },
       };
     }
 
@@ -197,7 +197,7 @@ export const hyperfyScenePerceptionAction: Action = {
       return {
         text: 'Unable to capture visual. Screenshot service not available.',
         values: { success: false, error: 'screenshot_service_unavailable' },
-        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' },
       };
     }
 
@@ -223,7 +223,7 @@ export const hyperfyScenePerceptionAction: Action = {
       return {
         text: 'Unable to determine how to observe the scene.',
         values: { success: false, error: 'selector_failure' },
-        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' },
       };
     }
 
@@ -240,7 +240,7 @@ export const hyperfyScenePerceptionAction: Action = {
       return {
         text: selection?.parameter || 'Can you clarify what you want me to observe?',
         values: { success: false, needsClarification: true },
-        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' },
       };
     }
 
@@ -258,7 +258,7 @@ export const hyperfyScenePerceptionAction: Action = {
       return {
         text: parameter || 'Can you clarify what you want me to observe?',
         values: { success: false, needsClarification: true },
-        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' },
       };
     }
 
@@ -304,7 +304,7 @@ export const hyperfyScenePerceptionAction: Action = {
       return {
         text: 'Unable to capture visual snapshot.',
         values: { success: false, error: 'snapshot_failure', snapshotType },
-        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' },
       };
     }
 
@@ -333,7 +333,7 @@ export const hyperfyScenePerceptionAction: Action = {
       return {
         text: 'Unable to analyze the visual scene.',
         values: { success: false, error: 'vision_failure' },
-        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' },
       };
     }
 
@@ -377,7 +377,7 @@ export const hyperfyScenePerceptionAction: Action = {
       return {
         text: 'Unable to generate response to visual scene.',
         values: { success: false, error: 'text_large_failure' },
-        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' },
       };
     }
 
@@ -394,7 +394,7 @@ export const hyperfyScenePerceptionAction: Action = {
       return {
         text: 'Unable to process response.',
         values: { success: false, error: 'xml_parse_failure' },
-        data: { action: 'HYPERFY_SCENE_PERCEPTION' }
+        data: { action: 'HYPERFY_SCENE_PERCEPTION' },
       };
     }
 
@@ -408,22 +408,22 @@ export const hyperfyScenePerceptionAction: Action = {
       };
       await callback(finalResponse);
     }
-    
+
     return {
       text: parsed.text || '',
-      values: { 
-        success: true, 
-        snapshotType, 
+      values: {
+        success: true,
+        snapshotType,
         hasEmote: !!parsed.emote,
-        sceneAnalyzed: true
+        sceneAnalyzed: true,
       },
-      data: { 
+      data: {
         action: 'HYPERFY_SCENE_PERCEPTION',
         snapshotType,
         sceneDescription,
         thought: parsed.thought,
-        emote: parsed.emote
-      }
+        emote: parsed.emote,
+      },
     };
   },
 
@@ -434,7 +434,8 @@ export const hyperfyScenePerceptionAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User wants me to observe my current surroundings - I should take a comprehensive look around',
+          thought:
+            'User wants me to observe my current surroundings - I should take a comprehensive look around',
           text: 'Looking around...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -462,7 +463,8 @@ export const hyperfyScenePerceptionAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User wants me to do a tactical scan - I should look around carefully for potential dangers',
+          thought:
+            'User wants me to do a tactical scan - I should look around carefully for potential dangers',
           text: 'Scanning the surroundings now...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -479,7 +481,8 @@ export const hyperfyScenePerceptionAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User wants me to examine a specific object - I should focus my vision on the glowing statue',
+          thought:
+            'User wants me to examine a specific object - I should focus my vision on the glowing statue',
           text: 'Inspecting the statue...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -507,7 +510,8 @@ export const hyperfyScenePerceptionAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User is asking about interesting things nearby - I should do a general observation',
+          thought:
+            'User is asking about interesting things nearby - I should do a general observation',
           text: 'Let me check the surroundings...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -541,7 +545,8 @@ export const hyperfyScenePerceptionAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User feels unsafe and wants me to check for threats - I should do a careful scan',
+          thought:
+            'User feels unsafe and wants me to check for threats - I should do a careful scan',
           text: 'Doing a quick scan...',
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',
@@ -572,7 +577,8 @@ export const hyperfyScenePerceptionAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User wants me to check what\'s hidden behind a specific object - I should focus on that area',
+          thought:
+            "User wants me to check what's hidden behind a specific object - I should focus on that area",
           text: "I'll take a look behind it...",
           actions: ['HYPERFY_SCENE_PERCEPTION'],
           source: 'hyperfy',

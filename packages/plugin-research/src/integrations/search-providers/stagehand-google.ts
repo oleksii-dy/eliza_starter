@@ -11,8 +11,9 @@ export class StagehandGoogleSearchProvider {
       logger.info(`[StagehandGoogle] Searching for: ${query}`);
 
       // Get or create a Stagehand session
-      const session = await this.stagehandService.getCurrentSession() ||
-                     await this.stagehandService.createSession(`search-${Date.now()}`);
+      const session =
+        (await this.stagehandService.getCurrentSession()) ||
+        (await this.stagehandService.createSession(`search-${Date.now()}`));
 
       // Navigate to Google
       await session.page.goto('https://www.google.com', { waitUntil: 'networkidle' });
@@ -28,7 +29,7 @@ export class StagehandGoogleSearchProvider {
       await session.stagehand.act({
         action: 'type',
         selector: 'textarea[name="q"], input[name="q"]',
-        text: query
+        text: query,
       });
 
       // Submit search
@@ -41,12 +42,14 @@ export class StagehandGoogleSearchProvider {
                      For each result, get the title, URL, and snippet/description. 
                      Skip ads, "People also ask", and other non-organic results.`,
         schema: {
-          results: [{
-            title: 'string',
-            url: 'string',
-            snippet: 'string'
-          }]
-        }
+          results: [
+            {
+              title: 'string',
+              url: 'string',
+              snippet: 'string',
+            },
+          ],
+        },
       });
 
       if (!searchResults.results || searchResults.results.length === 0) {
@@ -64,7 +67,7 @@ export class StagehandGoogleSearchProvider {
               items.push({
                 title: titleElement.textContent || '',
                 url: linkElement.getAttribute('href') || '',
-                snippet: snippetElement?.textContent || ''
+                snippet: snippetElement?.textContent || '',
               });
             }
           });
@@ -76,9 +79,10 @@ export class StagehandGoogleSearchProvider {
         return results.slice(0, maxResults);
       }
 
-      logger.info(`[StagehandGoogle] Found ${searchResults.results.length} results via AI extraction`);
+      logger.info(
+        `[StagehandGoogle] Found ${searchResults.results.length} results via AI extraction`
+      );
       return searchResults.results.slice(0, maxResults);
-
     } catch (error) {
       logger.error('[StagehandGoogle] Search error:', error);
       throw error;

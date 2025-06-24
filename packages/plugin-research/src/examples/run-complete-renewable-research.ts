@@ -198,7 +198,9 @@ async function runCompleteResearch() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const current = await service.getProject(project.id);
-      if (!current) {break;}
+      if (!current) {
+        break;
+      }
 
       // Log progress every 5 seconds or when counts change
       if (
@@ -264,9 +266,7 @@ async function runCompleteResearch() {
           logger.info(`    • Storage: ${contentAnalysis.hasStorage ? '✅' : '❌'}`);
           logger.info(`    • Battery: ${contentAnalysis.hasBattery ? '✅' : '❌'}`);
           logger.info(`    • Renewable: ${contentAnalysis.hasRenewable ? '✅' : '❌'}`);
-          logger.info(
-            `    • Environmental: ${contentAnalysis.hasEnvironmental ? '✅' : '❌'}`
-          );
+          logger.info(`    • Environmental: ${contentAnalysis.hasEnvironmental ? '✅' : '❌'}`);
           logger.info(`    • Economic: ${contentAnalysis.hasEconomic ? '✅' : '❌'}`);
           logger.info(`    • Grid: ${contentAnalysis.hasGrid ? '✅' : '❌'}`);
 
@@ -289,9 +289,7 @@ async function runCompleteResearch() {
               '\n⚠️  PARTIAL: Report contains some relevant content but may be incomplete'
             );
           } else {
-            logger.error(
-              '\n❌ FAIL: Report does NOT contain relevant renewable energy content'
-            );
+            logger.error('\n❌ FAIL: Report does NOT contain relevant renewable energy content');
           }
         } else {
           logger.warn('⚠️  Research completed but no report generated');

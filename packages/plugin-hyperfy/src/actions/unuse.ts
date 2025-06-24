@@ -40,7 +40,7 @@ export const hyperfyUnuseItemAction: Action = {
       return {
         text: 'Error: Cannot unuse item. Required systems are unavailable.',
         values: { success: false, error: 'systems_unavailable' },
-        data: { action: 'HYPERFY_UNUSE_ITEM' }
+        data: { action: 'HYPERFY_UNUSE_ITEM' },
       };
     }
 
@@ -56,11 +56,11 @@ export const hyperfyUnuseItemAction: Action = {
       };
       await callback(successResponse);
     }
-    
+
     return {
       text: 'Item released.',
       values: { success: true, status: 'released' },
-      data: { action: 'HYPERFY_UNUSE_ITEM' }
+      data: { action: 'HYPERFY_UNUSE_ITEM' },
     };
   },
   examples: [
@@ -68,11 +68,11 @@ export const hyperfyUnuseItemAction: Action = {
       { name: '{{user}}', content: { text: 'Drop it now.' } },
       {
         name: '{{agent}}',
-        content: { 
-          thought: 'User wants me to drop whatever I\'m currently holding or interacting with',
-          text: 'Item released.', 
-          actions: ['HYPERFY_UNUSE_ITEM'], 
-          source: 'hyperfy' 
+        content: {
+          thought: "User wants me to drop whatever I'm currently holding or interacting with",
+          text: 'Item released.',
+          actions: ['HYPERFY_UNUSE_ITEM'],
+          source: 'hyperfy',
         },
       },
     ],
@@ -80,11 +80,11 @@ export const hyperfyUnuseItemAction: Action = {
       { name: '{{user}}', content: { text: 'Stop using that.' } },
       {
         name: '{{agent}}',
-        content: { 
+        content: {
           thought: 'User wants me to stop my current interaction and release the item',
-          text: 'Item released.', 
-          actions: ['HYPERFY_UNUSE_ITEM'], 
-          source: 'hyperfy' 
+          text: 'Item released.',
+          actions: ['HYPERFY_UNUSE_ITEM'],
+          source: 'hyperfy',
         },
       },
     ],

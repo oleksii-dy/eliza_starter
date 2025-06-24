@@ -42,7 +42,7 @@ export const hyperfyStopMovingAction: Action = {
       return {
         text: 'Error: Cannot stop movement. Hyperfy connection/controls unavailable.',
         values: { success: false, error: 'controls_unavailable' },
-        data: { action: 'HYPERFY_STOP_MOVING' }
+        data: { action: 'HYPERFY_STOP_MOVING' },
       };
     }
 
@@ -53,7 +53,7 @@ export const hyperfyStopMovingAction: Action = {
       return {
         text: 'Error: Stop functionality not available in controls.',
         values: { success: false, error: 'stop_function_unavailable' },
-        data: { action: 'HYPERFY_STOP_MOVING' }
+        data: { action: 'HYPERFY_STOP_MOVING' },
       };
     }
 
@@ -72,22 +72,22 @@ export const hyperfyStopMovingAction: Action = {
         };
         await callback(successResponse);
       }
-      
+
       return {
         text: '',
         values: { success: true, status: 'movement_stopped', reason },
-        data: { action: 'HYPERFY_STOP_MOVING', reason }
+        data: { action: 'HYPERFY_STOP_MOVING', reason },
       };
     } catch (error: any) {
       logger.error('Error during HYPERFY_STOP_MOVING:', error);
       if (callback) {
         await callback({ text: `Error stopping movement: ${error.message}` });
       }
-      
+
       return {
         text: `Error stopping movement: ${error.message}`,
         values: { success: false, error: 'stop_execution_failed', detail: error.message },
-        data: { action: 'HYPERFY_STOP_MOVING' }
+        data: { action: 'HYPERFY_STOP_MOVING' },
       };
     }
   },
@@ -97,7 +97,8 @@ export const hyperfyStopMovingAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User wants me to halt my current movement - I should stop all navigation actions',
+          thought:
+            'User wants me to halt my current movement - I should stop all navigation actions',
           text: 'Stopped current movement. Reason: stop action called',
           actions: ['HYPERFY_STOP_MOVING'],
           source: 'hyperfy',

@@ -33,7 +33,6 @@ async function test() {
     // Try with exec instead of query
     await db.exec(agentsSQL);
     console.log('✓ Agents table works with exec too');
-
   } catch (error) {
     console.error('✗ Error:', error.message);
     console.error('Full error:', error);

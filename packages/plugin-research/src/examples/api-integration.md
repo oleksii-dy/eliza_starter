@@ -80,14 +80,16 @@ export class SerperSearchProvider {
       );
 
       const results: SearchResult[] = [];
-      
+
       // Process organic results
       if (response.data.organic) {
-        results.push(...response.data.organic.map((result: any) => ({
-          title: result.title,
-          url: result.link,
-          snippet: result.snippet,
-        })));
+        results.push(
+          ...response.data.organic.map((result: any) => ({
+            title: result.title,
+            url: result.link,
+            snippet: result.snippet,
+          }))
+        );
       }
 
       // Include knowledge graph if available
@@ -127,7 +129,7 @@ export class BraveSearchProvider {
     try {
       const response = await axios.get(this.baseUrl, {
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'X-Subscription-Token': this.apiKey,
         },
         params: {
@@ -174,7 +176,7 @@ export class FirecrawlContentExtractor {
         { url },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
           },
         }
       );
@@ -199,33 +201,33 @@ import { chromium } from 'playwright';
 export class BrowserContentExtractor {
   async extractContent(url: string): Promise<string | null> {
     let browser;
-    
+
     try {
       browser = await chromium.launch({ headless: true });
       const page = await browser.newPage();
-      
+
       // Set a reasonable timeout
       await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
-      
+
       // Wait for content to load
       await page.waitForSelector('body', { timeout: 10000 });
-      
+
       // Extract main content
       const content = await page.evaluate(() => {
         // Remove script and style elements
         const scripts = document.querySelectorAll('script, style');
-        scripts.forEach(el => el.remove());
-        
+        scripts.forEach((el) => el.remove());
+
         // Try to find main content areas
-        const mainContent = 
+        const mainContent =
           document.querySelector('main')?.innerText ||
           document.querySelector('article')?.innerText ||
           document.querySelector('[role="main"]')?.innerText ||
           document.body.innerText;
-        
+
         return mainContent;
       });
-      
+
       return content;
     } catch (error) {
       console.error('Browser extraction error:', error);
@@ -257,17 +259,17 @@ export class ResearchService extends Service {
 
   constructor(runtime: IAgentRuntime, config?: ResearchConfig) {
     super(runtime);
-    
+
     // Initialize search provider based on available API keys
     const tavilyKey = runtime.getSetting('TAVILY_API_KEY');
     const serperKey = runtime.getSetting('SERPER_API_KEY');
-    
+
     if (tavilyKey) {
       this.searchProvider = new TavilySearchProvider(tavilyKey);
     } else if (serperKey) {
       this.searchProvider = new SerperSearchProvider(serperKey);
     }
-    
+
     // Initialize content extractor
     const firecrawlKey = runtime.getSetting('FIRECRAWL_API_KEY');
     if (firecrawlKey) {
@@ -281,7 +283,7 @@ export class ResearchService extends Service {
     if (this.searchProvider) {
       return this.searchProvider.search(query, this.researchConfig.maxSearchResults);
     }
-    
+
     // Fallback to mock results if no provider configured
     return this.generateMockResults(query);
   }
@@ -290,7 +292,7 @@ export class ResearchService extends Service {
     if (this.contentExtractor) {
       return this.contentExtractor.extractContent(url);
     }
-    
+
     // Fallback to mock content
     return this.generateMockContent(url);
   }
@@ -320,6 +322,7 @@ RESEARCH_LANGUAGE=en
 ## Production Deployment Considerations
 
 ### 1. Rate Limiting
+
 Most APIs have rate limits. Implement rate limiting:
 
 ```typescript
@@ -327,14 +330,14 @@ import { RateLimiter } from 'limiter';
 
 class RateLimitedSearchProvider {
   private limiter: RateLimiter;
-  
+
   constructor(requestsPerMinute: number = 60) {
     this.limiter = new RateLimiter({
       tokensPerInterval: requestsPerMinute,
       interval: 'minute',
     });
   }
-  
+
   async search(query: string): Promise<SearchResult[]> {
     await this.limiter.removeTokens(1);
     return this.performSearch(query);
@@ -343,6 +346,7 @@ class RateLimitedSearchProvider {
 ```
 
 ### 2. Caching
+
 Cache search results to reduce API calls:
 
 ```typescript
@@ -350,18 +354,18 @@ import { LRUCache } from 'lru-cache';
 
 class CachedSearchProvider {
   private cache: LRUCache<string, SearchResult[]>;
-  
+
   constructor() {
     this.cache = new LRUCache({
       max: 1000,
       ttl: 1000 * 60 * 60, // 1 hour
     });
   }
-  
+
   async search(query: string): Promise<SearchResult[]> {
     const cached = this.cache.get(query);
     if (cached) return cached;
-    
+
     const results = await this.performSearch(query);
     this.cache.set(query, results);
     return results;
@@ -370,12 +374,13 @@ class CachedSearchProvider {
 ```
 
 ### 3. Error Handling and Fallbacks
+
 Implement robust error handling with fallbacks:
 
 ```typescript
 class ResilientSearchService {
   private providers: SearchProvider[] = [];
-  
+
   async search(query: string): Promise<SearchResult[]> {
     for (const provider of this.providers) {
       try {
@@ -386,7 +391,7 @@ class ResilientSearchService {
         // Continue to next provider
       }
     }
-    
+
     // All providers failed, return empty results
     return [];
   }
@@ -403,24 +408,22 @@ import { ResearchService } from '../service';
 
 describe('Real API Integration Tests', () => {
   let service: ResearchService;
-  
+
   beforeAll(() => {
     // Ensure API keys are set in environment
     if (!process.env.TAVILY_API_KEY && !process.env.SERPER_API_KEY) {
       throw new Error('No search API keys configured for testing');
     }
-    
+
     service = new ResearchService(runtime);
   });
-  
+
   it('should perform real web search', async () => {
-    const project = await service.createResearchProject(
-      'Latest TypeScript features in 2024'
-    );
-    
+    const project = await service.createResearchProject('Latest TypeScript features in 2024');
+
     // Wait for research to complete
     await waitForCompletion(project.id, 120000); // 2 minutes
-    
+
     const completed = await service.getProject(project.id);
     expect(completed.sources.length).toBeGreaterThan(0);
     expect(completed.findings.length).toBeGreaterThan(0);
@@ -452,7 +455,7 @@ const searchDuration = new Histogram({
 class MonitoredSearchProvider {
   async search(query: string): Promise<SearchResult[]> {
     const timer = searchDuration.startTimer({ provider: this.name });
-    
+
     try {
       const results = await this.performSearch(query);
       searchCounter.inc({ provider: this.name, status: 'success' });
@@ -481,18 +484,18 @@ Implement cost tracking and budgets:
 class CostAwareSearchService {
   private monthlyBudget: number;
   private currentSpend: number = 0;
-  
+
   async search(query: string): Promise<SearchResult[]> {
     const estimatedCost = this.calculateSearchCost();
-    
+
     if (this.currentSpend + estimatedCost > this.monthlyBudget) {
       throw new Error('Monthly search budget exceeded');
     }
-    
+
     const results = await this.performSearch(query);
     this.currentSpend += estimatedCost;
-    
+
     return results;
   }
 }
-``` 
+```

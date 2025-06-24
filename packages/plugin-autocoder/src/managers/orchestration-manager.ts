@@ -2113,8 +2113,8 @@ ${project.dependencyManifest.required.map((d: any) => `- ${d.name}: ${d.reason}`
 
 **Service Interfaces Available:**
 ${Array.from(project.dependencyManifest.serviceInterfaces.values())
-  .map((s: any) => `### ${s.name}\n\`\`\`typescript\n${s.interface}\n\`\`\``)
-  .join('\n\n')}
+    .map((s: any) => `### ${s.name}\n\`\`\`typescript\n${s.interface}\n\`\`\``)
+    .join('\n\n')}
 
 ${examplesText}
 
@@ -3000,8 +3000,8 @@ ${requiredDeps.map((d: any) => `- ${d.name}: ${d.reason}`).join('\n')}
 
 **Service Interfaces Available:**
 ${Array.from(serviceInterfaces.values())
-  .map((s: any) => `### ${s.name}\n\`\`\`typescript\n${s.interface}\n\`\`\``)
-  .join('\n\n')}
+    .map((s: any) => `### ${s.name}\n\`\`\`typescript\n${s.interface}\n\`\`\``)
+    .join('\n\n')}
 
 **Required Type Imports:**
 \`\`\`typescript

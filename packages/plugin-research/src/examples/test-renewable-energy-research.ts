@@ -178,7 +178,9 @@ async function testRenewableEnergyResearch() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const currentProject = await service.getProject(project.id);
-      if (!currentProject) {break;}
+      if (!currentProject) {
+        break;
+      }
 
       logger.info(
         `Progress: ${currentProject.phase} - Sources: ${currentProject.sources.length}, Findings: ${currentProject.findings.length}`

@@ -57,7 +57,9 @@ function createTestRuntime(): IAgentRuntime {
       return settings[key] || null;
     },
     getService: (name: string) => {
-      if (name === 'research') {return researchService;}
+      if (name === 'research') {
+        return researchService;
+      }
       return null;
     },
     useModel: async () => 'mock response',

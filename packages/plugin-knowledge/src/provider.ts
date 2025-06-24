@@ -28,9 +28,9 @@ export const knowledgeProvider: Provider = {
     let knowledge = `${
       firstFiveKnowledgeItems && firstFiveKnowledgeItems.length > 0
         ? addHeader(
-          '# Knowledge',
-          firstFiveKnowledgeItems.map((knowledge) => `- ${knowledge.content.text}`).join('\n')
-        )
+            '# Knowledge',
+            firstFiveKnowledgeItems.map((knowledge) => `- ${knowledge.content.text}`).join('\n')
+          )
         : ''
     }\n`;
 

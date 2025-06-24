@@ -245,14 +245,13 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
     return super.getAllWorlds();
   }
 
-
   /**
    * List all tables in the PostgreSQL database
    */
   protected async listTables(): Promise<string[]> {
     try {
       const result = await this.db.execute(
-        sql.raw('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\'')
+        sql.raw("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
       );
 
       return result.map((row: any) => row.table_name);

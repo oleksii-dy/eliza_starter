@@ -9,7 +9,7 @@ import {
   type Entity,
   type Relationship,
   type Room,
-  ChannelType
+  ChannelType,
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { createDatabaseAdapter } from '../../index';
@@ -46,7 +46,7 @@ describe('Database Adapter Real Runtime Integration', () => {
         plugins: ['@elizaos/plugin-sql'],
         settings: {
           testMode: true,
-          runtimeIntegration: 'enabled'
+          runtimeIntegration: 'enabled',
         },
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -145,7 +145,7 @@ describe('Database Adapter Real Runtime Integration', () => {
         content: {
           text: 'This is a test memory for runtime integration',
           type: 'message',
-          source: 'runtime-test'
+          source: 'runtime-test',
         },
         embedding: Array(384).fill(0.1), // Use actual embedding vector
         createdAt: Date.now(),
@@ -169,7 +169,7 @@ describe('Database Adapter Real Runtime Integration', () => {
       });
 
       expect(memories.length).toBeGreaterThan(0);
-      const foundMemory = memories.find(m => m.content.text === testMemory.content.text);
+      const foundMemory = memories.find((m) => m.content.text === testMemory.content.text);
       expect(foundMemory).toBeDefined();
       expect(foundMemory?.embedding).toBeDefined();
       expect(foundMemory?.embedding?.length).toBe(384);
@@ -180,37 +180,40 @@ describe('Database Adapter Real Runtime Integration', () => {
       const testMemories = [
         {
           text: 'The weather is sunny and warm today',
-          embedding: Array(384).fill(0.9)
+          embedding: Array(384).fill(0.9),
         },
         {
           text: 'I love reading books about science fiction',
-          embedding: Array(384).fill(0.5)
+          embedding: Array(384).fill(0.5),
         },
         {
           text: 'Today is a beautiful sunny day for outdoor activities',
-          embedding: Array(384).fill(0.8) // Similar to first memory
-        }
+          embedding: Array(384).fill(0.8), // Similar to first memory
+        },
       ];
 
       // Create memories through runtime
       for (const mem of testMemories) {
-        await runtime.createMemory({
-          id: uuidv4() as UUID,
-          entityId: testEntityId,
-          agentId: testAgentId,
-          roomId: testRoomId,
-          content: {
-            text: mem.text,
-            type: 'message',
-            source: 'search-test'
+        await runtime.createMemory(
+          {
+            id: uuidv4() as UUID,
+            entityId: testEntityId,
+            agentId: testAgentId,
+            roomId: testRoomId,
+            content: {
+              text: mem.text,
+              type: 'message',
+              source: 'search-test',
+            },
+            embedding: mem.embedding,
+            createdAt: Date.now(),
+            unique: true,
+            metadata: {
+              type: 'message', // Required field for memory table schema
+            },
           },
-          embedding: mem.embedding,
-          createdAt: Date.now(),
-          unique: true,
-          metadata: {
-            type: 'message', // Required field for memory table schema
-          },
-        }, 'messages'); // Add tableName parameter
+          'messages'
+        ); // Add tableName parameter
       }
 
       // Search with query similar to weather memories
@@ -226,8 +229,8 @@ describe('Database Adapter Real Runtime Integration', () => {
       expect(searchResults.length).toBeGreaterThan(0);
 
       // Results should include weather-related memories
-      const weatherMemories = searchResults.filter(m =>
-        m.content.text?.includes('sunny') || m.content.text?.includes('weather')
+      const weatherMemories = searchResults.filter(
+        (m) => m.content.text?.includes('sunny') || m.content.text?.includes('weather')
       );
       expect(weatherMemories.length).toBeGreaterThan(0);
     });
@@ -272,8 +275,8 @@ describe('Database Adapter Real Runtime Integration', () => {
           skills: ['TypeScript', 'Machine Learning', 'Database Design'],
           preferences: {
             theme: 'dark',
-            notifications: true
-          }
+            notifications: true,
+          },
         },
         createdAt: Date.now(),
       };
@@ -301,16 +304,16 @@ describe('Database Adapter Real Runtime Integration', () => {
       const components = [
         {
           type: 'profile',
-          data: { bio: 'Test bio', location: 'Test location' }
+          data: { bio: 'Test bio', location: 'Test location' },
         },
         {
           type: 'preferences',
-          data: { theme: 'dark', language: 'en', notifications: true }
+          data: { theme: 'dark', language: 'en', notifications: true },
         },
         {
           type: 'activity',
-          data: { lastSeen: Date.now(), messageCount: 42, joinedAt: Date.now() - 86400000 }
-        }
+          data: { lastSeen: Date.now(), messageCount: 42, joinedAt: Date.now() - 86400000 },
+        },
       ];
 
       // Create all components
@@ -333,7 +336,7 @@ describe('Database Adapter Real Runtime Integration', () => {
       expect(allComponents.length).toBe(3);
 
       // Verify each component type exists
-      const componentTypes = allComponents.map(c => c.type);
+      const componentTypes = allComponents.map((c) => c.type);
       expect(componentTypes).toContain('profile');
       expect(componentTypes).toContain('preferences');
       expect(componentTypes).toContain('activity');
@@ -376,7 +379,7 @@ describe('Database Adapter Real Runtime Integration', () => {
           trust: 0.9,
           interactions: 15,
           lastInteraction: Date.now(),
-          context: 'work project collaboration'
+          context: 'work project collaboration',
         },
         createdAt: new Date().toISOString(),
       };
@@ -396,8 +399,8 @@ describe('Database Adapter Real Runtime Integration', () => {
       });
 
       expect(relationships.length).toBeGreaterThan(0);
-      const foundRel = relationships.find(r =>
-        r.sourceEntityId === entity1Id && r.targetEntityId === entity2Id
+      const foundRel = relationships.find(
+        (r) => r.sourceEntityId === entity1Id && r.targetEntityId === entity2Id
       );
 
       expect(foundRel).toBeDefined();
@@ -482,28 +485,26 @@ describe('Database Adapter Real Runtime Integration', () => {
           metadata: {
             index: i,
             batchTest: true,
-            createdInBulk: Date.now()
+            createdInBulk: Date.now(),
           },
         };
         entities.push(entity);
       }
 
       // Create all entities through runtime
-      const results = await Promise.all(
-        entities.map(entity => runtime.createEntity(entity))
-      );
+      const results = await Promise.all(entities.map((entity) => runtime.createEntity(entity)));
 
       const endTime = Date.now();
       const duration = endTime - startTime;
 
       // All should succeed
-      results.forEach(result => expect(result).toBe(true));
+      results.forEach((result) => expect(result).toBe(true));
 
       // Should complete in reasonable time (less than 5 seconds for 50 entities)
       expect(duration).toBeLessThan(5000);
 
       // Verify all entities were created
-      const entityIds = entities.map(e => e.id);
+      const entityIds = entities.map((e) => e.id);
       const retrieved = await runtime.getEntityByIds(entityIds);
       expect(retrieved.length).toBe(numEntities);
     });
@@ -525,12 +526,12 @@ describe('Database Adapter Real Runtime Integration', () => {
 
       // All should complete successfully
       const results = await Promise.all(promises);
-      results.forEach(result => expect(result).toBe(true));
+      results.forEach((result) => expect(result).toBe(true));
 
       // Verify no corruption occurred by checking all results completed successfully
       // Since the entities aren't associated with a specific room, use a simpler verification
       expect(results.length).toBe(concurrentOps);
-      results.forEach(result => expect(result).toBe(true));
+      results.forEach((result) => expect(result).toBe(true));
     });
   });
 });

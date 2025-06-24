@@ -117,7 +117,7 @@ describe('Runtime Integration Tests', () => {
       // Retrieve entity
       const retrievedEntity = await mockRuntime.getEntityById(entityId as any);
       expect(retrievedEntity).toBeDefined();
-      expect(retrievedEntity!.id).toBe(entityId);
+      expect(retrievedEntity!.id).toBe(entityId as any);
 
       // Create component for entity
       const component = {

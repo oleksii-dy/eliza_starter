@@ -430,7 +430,7 @@ export class MockRobotAdapter extends BaseRobotInterface {
 
   // Private helper methods
   private async executeMoveJoint(command: RobotCommand): Promise<ExecutionResult> {
-    const { target, amount, speed, duration } = command.parameters || {};
+    const { target, amount, speed, duration: _duration } = command.parameters || {};
 
     if (!target) {
       return {

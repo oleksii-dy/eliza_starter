@@ -4,11 +4,8 @@ import {
   type Evaluator,
   type IAgentRuntime,
   type Memory,
-  type State,
   type UUID,
-  type Relationship,
   type Entity,
-  type ActionResult,
   asUUID,
 } from '@elizaos/core';
 import { RolodexService } from '../services/RolodexService';
@@ -122,14 +119,18 @@ Return empty array [] if no clear relationships are found.`;
         if (rel.source && rel.target && rel.interaction && rel.confidence > 0.5) {
           try {
             // Get existing relationship if any
-            const existing = await relationshipService.getDimensionValues(rel.source, rel.target);
+            const existing = await relationshipService.getRelationshipMatrix(rel.source, rel.target);
 
             // Analyze the interaction
             await relationshipService.analyzeInteraction(
               rel.source,
               rel.target,
               rel.interaction,
-              existing || undefined
+              {
+                roomId: message.roomId,
+                messageId: message.id,
+                timestamp: new Date(),
+              }
             );
 
             logger.info(`Extracted relationship: ${rel.source} <-> ${rel.target}`);
@@ -145,7 +146,7 @@ Return empty array [] if no clear relationships are found.`;
 
   examples: [
     {
-      metadata: 'Extract relationships from conversation between Alice and Bob',
+      prompt: 'Extract relationships from conversation between Alice and Bob',
       messages: [
         {
           name: 'Alice',
@@ -159,7 +160,7 @@ Return empty array [] if no clear relationships are found.`;
       outcome: 'Identifies professional/collaborative relationship between Alice and Bob',
     },
     {
-      metadata: 'Extract friendship from user statement',
+      prompt: 'Extract friendship from user statement',
       messages: [
         {
           name: 'User',
@@ -419,7 +420,7 @@ function analyzeInteraction(messagesA: Memory[], messagesB: Memory[]): Relations
     indicators: indicators.map((ind) => ({
       type: ind.type,
       sentiment: ind.sentiment,
-      metadata: ind.context.substring(0, 30),
+      metadata: ind.metadata.substring(0, 30),
     })),
   });
 
@@ -646,7 +647,7 @@ async function createOrUpdateMentionedEntity(
       names: [person.name],
       metadata: {
         mentionedBy,
-        mentionContext: person?.context,
+        mentionContext: person?.metadata,
         attributes: person.attributes,
         createdFrom: 'mention',
       },
@@ -657,7 +658,7 @@ async function createOrUpdateMentionedEntity(
     const mentions = (metadata.mentions || []) as any[];
     mentions.push({
       by: mentionedBy,
-      metadata: person?.context,
+      metadata: person?.metadata,
       timestamp: Date.now(),
     });
     metadata.mentions = mentions;

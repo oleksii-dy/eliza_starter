@@ -13,7 +13,6 @@ import {
 
 import {
   type Action,
-  type ActionExample,
   type Component,
   composePromptFromState,
   findEntityByName,
@@ -210,7 +209,7 @@ export const updateEntityAction: Action = {
       let existingComponent: Component | null = null;
 
       // Generate component data using the combined template
-      const prompt = composePromptFromState(componentTemplate, state);
+      const prompt = composePromptFromState({ template: componentTemplate, state });
 
       const result = await runtime.useModel(ModelType.TEXT_LARGE, {
         prompt,

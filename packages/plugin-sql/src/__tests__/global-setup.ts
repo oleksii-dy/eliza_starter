@@ -7,7 +7,7 @@ export async function setup() {
   await PGliteClientManager.forceCleanupAll();
 
   // Wait additional time for WebAssembly cleanup
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
   console.log('[GLOBAL SETUP] Test environment ready');
 }
@@ -19,7 +19,7 @@ export async function teardown() {
   await PGliteClientManager.forceCleanupAll();
 
   // Wait for complete cleanup
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  await new Promise((resolve) => setTimeout(resolve, 3000));
 
   console.log('[GLOBAL TEARDOWN] Cleanup complete');
 }

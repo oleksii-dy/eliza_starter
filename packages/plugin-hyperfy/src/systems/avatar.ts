@@ -115,7 +115,6 @@ export class AgentAvatar extends Node {
 
   tick(delta: number) {
     if (!this.mixer) {
-      return;
     }
     // Mixer update logic
   }

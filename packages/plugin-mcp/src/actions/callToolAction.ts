@@ -28,12 +28,13 @@ export const callToolAction: Action = {
     'INVOKE_TOOL',
     'INVOKE_MCP_TOOL',
   ],
-  description: 'Calls a tool from an MCP server to perform a specific task. Supports action chaining by returning structured results that can be used by subsequent actions for complex MCP workflows.',
+  description:
+    'Calls a tool from an MCP server to perform a specific task. Supports action chaining by returning structured results that can be used by subsequent actions for complex MCP workflows.',
 
   effects: {
     provides: ['toolResult', 'toolOutput', 'toolMetadata'],
     requires: ['mcpService'],
-    modifies: ['workingMemory']
+    modifies: ['workingMemory'],
   },
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
@@ -80,7 +81,7 @@ export const callToolAction: Action = {
         return {
           text: 'No appropriate MCP tool available for this request',
           values: { noToolAvailable: true },
-          data: { errorType: 'NO_TOOL_AVAILABLE' }
+          data: { errorType: 'NO_TOOL_AVAILABLE' },
         };
       }
       const { serverName, toolName, reasoning } = toolSelectionName;
@@ -105,7 +106,7 @@ export const callToolAction: Action = {
         return {
           text: 'Unable to determine appropriate arguments for the selected tool',
           values: { noArgumentsAvailable: true },
-          data: { errorType: 'NO_TOOL_ARGUMENTS', serverName, toolName }
+          data: { errorType: 'NO_TOOL_ARGUMENTS', serverName, toolName },
         };
       }
       logger.info(
@@ -149,7 +150,7 @@ export const callToolAction: Action = {
           toolName,
           toolArguments: toolSelectionArgument.toolArguments,
           hasAttachments,
-          success: true
+          success: true,
         },
         data: {
           mcpToolCall: {
@@ -158,22 +159,30 @@ export const callToolAction: Action = {
             arguments: toolSelectionArgument.toolArguments,
             output: toolOutput,
             attachments: hasAttachments ? attachments : undefined,
-            timestamp: new Date().toISOString()
-          }
-        }
+            timestamp: new Date().toISOString(),
+          },
+        },
       };
     } catch (error) {
-      const errorHandled = await handleMcpError(composedState, mcpProvider, error, runtime, message, 'tool', callback);
+      const _errorHandled = await handleMcpError(
+        composedState,
+        mcpProvider,
+        error,
+        runtime,
+        message,
+        'tool',
+        callback
+      );
       return {
         text: `Failed to execute MCP tool: ${error instanceof Error ? error.message : 'Unknown error'}`,
         values: {
           error: error instanceof Error ? error.message : 'Unknown error',
-          success: false
+          success: false,
         },
         data: {
           errorType: 'MCP_TOOL_ERROR',
-          errorDetails: error instanceof Error ? error.stack : undefined
-        }
+          errorDetails: error instanceof Error ? error.stack : undefined,
+        },
       };
     }
   },
@@ -211,7 +220,8 @@ export const callToolAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll get the current AAPL stock price first, then calculate the percentage change.",
-          thought: 'I need to chain two actions: first get the stock price data, then use that result to calculate the percentage change.',
+          thought:
+            'I need to chain two actions: first get the stock price data, then use that result to calculate the percentage change.',
           actions: ['CALL_TOOL'],
         },
       },
@@ -219,14 +229,15 @@ export const callToolAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Current AAPL price is $185.25. Now let me calculate the percentage change from yesterday.',
-          thought: 'Got the stock data successfully. The tool returned current price and previous close. I can now calculate the percentage change using this data.',
+          thought:
+            'Got the stock data successfully. The tool returned current price and previous close. I can now calculate the percentage change using this data.',
           actions: ['CALCULATE_PERCENTAGE'],
         },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'AAPL is currently trading at $185.25, which represents a 2.3% increase from yesterday\'s closing price of $181.09.',
+          text: "AAPL is currently trading at $185.25, which represents a 2.3% increase from yesterday's closing price of $181.09.",
         },
       },
     ],
@@ -234,14 +245,15 @@ export const callToolAction: Action = {
       {
         name: '{{user}}',
         content: {
-          text: 'Create a new file with today\'s weather data and then send it via email',
+          text: "Create a new file with today's weather data and then send it via email",
         },
       },
       {
         name: '{{agent}}',
         content: {
           text: "I'll fetch today's weather data first, then create a file and email it to you.",
-          thought: 'This requires a three-step workflow: 1) Get weather data via MCP tool, 2) Create file with the data, 3) Send email with attachment. The results from each step will inform the next.',
+          thought:
+            'This requires a three-step workflow: 1) Get weather data via MCP tool, 2) Create file with the data, 3) Send email with attachment. The results from each step will inform the next.',
           actions: ['CALL_TOOL'],
         },
       },
@@ -249,22 +261,24 @@ export const callToolAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Retrieved weather data successfully. Now creating a file with this information.',
-          thought: 'Weather data obtained from MCP tool. The result contains temperature, humidity, and forecast data that I can now format into a file.',
+          thought:
+            'Weather data obtained from MCP tool. The result contains temperature, humidity, and forecast data that I can now format into a file.',
           actions: ['CREATE_FILE'],
         },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'File created with today\'s weather data. Now sending it via email.',
-          thought: 'File successfully created with the weather data from the MCP tool result. Now I can attach and send this file via email.',
+          text: "File created with today's weather data. Now sending it via email.",
+          thought:
+            'File successfully created with the weather data from the MCP tool result. Now I can attach and send this file via email.',
           actions: ['SEND_EMAIL'],
         },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ve successfully created a weather report file with today\'s data and sent it to your email. The file contains current temperature, humidity, wind conditions, and the 5-day forecast.',
+          text: "I've successfully created a weather report file with today's data and sent it to your email. The file contains current temperature, humidity, wind conditions, and the 5-day forecast.",
         },
       },
     ],

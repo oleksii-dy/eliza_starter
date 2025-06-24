@@ -21,7 +21,8 @@ const db = drizzle(pglite);
 
 // Create the tables with our current simple migrator schema
 console.log('🔧 Creating entities table...');
-await db.execute(sql.raw(`
+await db.execute(
+  sql.raw(`
   CREATE TABLE IF NOT EXISTS entities (
     id TEXT PRIMARY KEY,
     names TEXT NOT NULL DEFAULT '[]',
@@ -29,10 +30,12 @@ await db.execute(sql.raw(`
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     metadata TEXT DEFAULT '{}'
   )
-`));
+`)
+);
 
 console.log('🔧 Creating components table with case-sensitive names...');
-await db.execute(sql.raw(`
+await db.execute(
+  sql.raw(`
   CREATE TABLE IF NOT EXISTS components (
     id TEXT PRIMARY KEY,
     entityid TEXT NOT NULL,
@@ -44,17 +47,20 @@ await db.execute(sql.raw(`
     data TEXT DEFAULT '{}',
     createdat TEXT DEFAULT CURRENT_TIMESTAMP
   )
-`));
+`)
+);
 
 // First, let's check what columns actually exist
 console.log('🔧 Checking components table columns...');
 try {
-  const columnsResult = await db.execute(sql.raw(`
+  const columnsResult = await db.execute(
+    sql.raw(`
     SELECT column_name, data_type 
     FROM information_schema.columns 
     WHERE table_name = 'components' 
     ORDER BY ordinal_position
-  `));
+  `)
+  );
   console.log('🔧 Components columns:', columnsResult.rows);
 } catch (error) {
   console.error('🔧 Failed to check columns:', error.message);
@@ -80,12 +86,14 @@ try {
 // Test simple join without parameters
 console.log('🔧 Testing simple join without parameters...');
 try {
-  const result = await db.execute(sql.raw(`
+  const result = await db.execute(
+    sql.raw(`
     SELECT e.id, c.entityid 
     FROM entities e 
     LEFT JOIN components c ON c.entityid = e.id 
     LIMIT 1
-  `));
+  `)
+  );
   console.log('🔧 Simple join works! Result:', result.rows);
 } catch (error) {
   console.error('🔧 Simple join failed:', error.message);
@@ -95,12 +103,17 @@ try {
 console.log('🔧 Testing parameterized query with Drizzle placeholders...');
 try {
   const testId = '00000000-0000-0000-0000-000000000000';
-  const result = await db.execute(sql.raw(`
+  const result = await db.execute(
+    sql.raw(
+      `
     SELECT 
       entities.id
     FROM entities 
     WHERE entities.id = ${sql.placeholder('id')}
-  `, { id: testId }));
+  `,
+      { id: testId }
+    )
+  );
 
   console.log('🔧 SUCCESS: Drizzle parameterized query worked! Result:', result.rows);
 } catch (error) {
@@ -113,12 +126,15 @@ console.log('🔧 Testing direct PGLite parameterized query...');
 try {
   const testId = '00000000-0000-0000-0000-000000000000';
   const connection = db.config.client; // Get the raw PGLite connection
-  const result = await connection.query(`
+  const result = await connection.query(
+    `
     SELECT 
       entities.id
     FROM entities 
     WHERE entities.id = $1
-  `, [testId]);
+  `,
+    [testId]
+  );
 
   console.log('🔧 SUCCESS: Direct PGLite query worked! Result:', result.rows);
 } catch (error) {
@@ -129,11 +145,16 @@ try {
 // Test parameterized query with IN clause
 console.log('🔧 Testing parameterized IN query...');
 try {
-  const result = await db.execute(sql.raw(`
+  const result = await db.execute(
+    sql.raw(
+      `
     SELECT entities.id
     FROM entities 
     WHERE entities.id IN ($1)
-  `, ['00000000-0000-0000-0000-000000000000']));
+  `,
+      ['00000000-0000-0000-0000-000000000000']
+    )
+  );
 
   console.log('🔧 SUCCESS: Parameterized IN query worked! Result:', result.rows);
 } catch (error) {
@@ -144,7 +165,9 @@ try {
 // Now test the exact query that's failing
 console.log('🔧 Testing the original problematic join query...');
 try {
-  const result = await db.execute(sql.raw(`
+  const result = await db.execute(
+    sql.raw(
+      `
     select 
       "entities"."id", 
       "entities"."agent_id", 
@@ -163,7 +186,10 @@ try {
     from "entities" 
     left join "components" on "components"."entityId" = "entities"."id" 
     where "entities"."id" in ($1)
-  `, ['00000000-0000-0000-0000-000000000000']));
+  `,
+      ['00000000-0000-0000-0000-000000000000']
+    )
+  );
 
   console.log('🔧 SUCCESS: Original query worked! Result:', result);
 } catch (error) {

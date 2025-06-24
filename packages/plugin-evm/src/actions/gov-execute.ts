@@ -174,7 +174,7 @@ export const executeAction = {
         name: '{{agent}}',
         content: {
           text: "I'll execute proposal 123 and monitor the transaction results to ensure successful completion.",
-          thought: "Governance execution requires careful monitoring. First execute the proposal, then verify the execution completed successfully and the intended changes took effect.",
+          thought: 'Governance execution requires careful monitoring. First execute the proposal, then verify the execution completed successfully and the intended changes took effect.',
           actions: ['EVM_GOVERNANCE_EXECUTE', 'MONITOR_TRANSACTION'],
         },
       },
@@ -207,7 +207,7 @@ export const executeAction = {
         name: '{{agent}}',
         content: {
           text: "I'll execute the queued proposal and verify that the governance changes have been successfully implemented.",
-          thought: "Final step in governance workflow: execute the queued proposal and confirm the protocol changes are live. This completes the democratic governance process.",
+          thought: 'Final step in governance workflow: execute the queued proposal and confirm the protocol changes are live. This completes the democratic governance process.',
           action: 'EVM_GOVERNANCE_EXECUTE',
           workflowContext: {
             step: 'governance-completion',

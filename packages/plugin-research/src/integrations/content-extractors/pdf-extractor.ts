@@ -138,7 +138,9 @@ export class PDFExtractor {
       title: info.Title,
       author: info.Author ? [info.Author] : undefined,
       subject: info.Subject,
-      keywords: info.Keywords ? info.Keywords.split(/[,;]/).map((k: string) => k.trim()) : undefined,
+      keywords: info.Keywords
+        ? info.Keywords.split(/[,;]/).map((k: string) => k.trim())
+        : undefined,
       creator: info.Creator,
       producer: info.Producer,
       creationDate: info.CreationDate ? new Date(info.CreationDate) : undefined,
@@ -150,37 +152,49 @@ export class PDFExtractor {
     const structure: AcademicPaperStructure = {};
 
     // Extract abstract
-    const abstractMatch = text.match(/abstract[:\s]*\n([\s\S]*?)(?=\n\s*(?:introduction|keywords|1\.|i\.))/i);
+    const abstractMatch = text.match(
+      /abstract[:\s]*\n([\s\S]*?)(?=\n\s*(?:introduction|keywords|1\.|i\.))/i
+    );
     if (abstractMatch) {
       structure.abstract = this.cleanText(abstractMatch[1]);
     }
 
     // Extract introduction
-    const introMatch = text.match(/(?:1\.|i\.|\n)\s*introduction[:\s]*\n([\s\S]*?)(?=\n\s*(?:2\.|ii\.|method|related))/i);
+    const introMatch = text.match(
+      /(?:1\.|i\.|\n)\s*introduction[:\s]*\n([\s\S]*?)(?=\n\s*(?:2\.|ii\.|method|related))/i
+    );
     if (introMatch) {
       structure.introduction = this.cleanText(introMatch[1]);
     }
 
     // Extract methodology
-    const methodMatch = text.match(/(?:method|methodology|approach)[:\s]*\n([\s\S]*?)(?=\n\s*(?:\d\.|results|experiment))/i);
+    const methodMatch = text.match(
+      /(?:method|methodology|approach)[:\s]*\n([\s\S]*?)(?=\n\s*(?:\d\.|results|experiment))/i
+    );
     if (methodMatch) {
       structure.methodology = this.cleanText(methodMatch[1]);
     }
 
     // Extract results
-    const resultsMatch = text.match(/(?:results|findings|experiments)[:\s]*\n([\s\S]*?)(?=\n\s*(?:discussion|conclusion|\d\.))/i);
+    const resultsMatch = text.match(
+      /(?:results|findings|experiments)[:\s]*\n([\s\S]*?)(?=\n\s*(?:discussion|conclusion|\d\.))/i
+    );
     if (resultsMatch) {
       structure.results = this.cleanText(resultsMatch[1]);
     }
 
     // Extract discussion
-    const discussionMatch = text.match(/discussion[:\s]*\n([\s\S]*?)(?=\n\s*(?:conclusion|acknowledgment|references))/i);
+    const discussionMatch = text.match(
+      /discussion[:\s]*\n([\s\S]*?)(?=\n\s*(?:conclusion|acknowledgment|references))/i
+    );
     if (discussionMatch) {
       structure.discussion = this.cleanText(discussionMatch[1]);
     }
 
     // Extract conclusion
-    const conclusionMatch = text.match(/conclusion[:\s]*\n([\s\S]*?)(?=\n\s*(?:references|acknowledgment|appendix))/i);
+    const conclusionMatch = text.match(
+      /conclusion[:\s]*\n([\s\S]*?)(?=\n\s*(?:references|acknowledgment|appendix))/i
+    );
     if (conclusionMatch) {
       structure.conclusion = this.cleanText(conclusionMatch[1]);
     }
@@ -192,8 +206,12 @@ export class PDFExtractor {
     const references: Reference[] = [];
 
     // Find references section
-    const refMatch = text.match(/(?:references|bibliography)[:\s]*\n([\s\S]*?)(?=\n\s*(?:appendix|$))/i);
-    if (!refMatch) {return references;}
+    const refMatch = text.match(
+      /(?:references|bibliography)[:\s]*\n([\s\S]*?)(?=\n\s*(?:appendix|$))/i
+    );
+    if (!refMatch) {
+      return references;
+    }
 
     const refText = refMatch[1];
 
@@ -201,10 +219,14 @@ export class PDFExtractor {
     const refLines = refText.split(/\n(?:\[\d+\]|\d+\.|\•)/);
 
     for (const line of refLines) {
-      if (line.trim().length < 20) {continue;} // Skip short lines
+      if (line.trim().length < 20) {
+        continue;
+      } // Skip short lines
 
       const ref = this.parseReference(line.trim());
-      if (ref) {references.push(ref);}
+      if (ref) {
+        references.push(ref);
+      }
     }
 
     return references;
@@ -217,7 +239,9 @@ export class PDFExtractor {
     };
 
     // Extract DOI
-    const doiMatch = text.match(/(?:doi:|https?:\/\/doi\.org\/)(10\.\d{4,}\/[-._;()\/:a-zA-Z0-9]+)/i);
+    const doiMatch = text.match(
+      /(?:doi:|https?:\/\/doi\.org\/)(10\.\d{4,}\/[-._;()\/:a-zA-Z0-9]+)/i
+    );
     if (doiMatch) {
       ref.doi = doiMatch[1];
     }
@@ -231,7 +255,7 @@ export class PDFExtractor {
     // Extract authors (before year or first period)
     const authorsMatch = text.match(/^([^.(]+?)(?:\s*\(\d{4}\)|\.)/);
     if (authorsMatch) {
-      ref.authors = authorsMatch[1].split(/,|&|and/).map(a => a.trim());
+      ref.authors = authorsMatch[1].split(/,|&|and/).map((a) => a.trim());
     }
 
     // Extract title (usually in quotes or after year)
@@ -241,7 +265,9 @@ export class PDFExtractor {
     }
 
     // Extract journal (often in italics or after "In")
-    const journalMatch = text.match(/(?:In\s+|[.,]\s*)([A-Z][^,.(]+(?:Journal|Conference|Proceedings|Review)[^,.]*)/);
+    const journalMatch = text.match(
+      /(?:In\s+|[.,]\s*)([A-Z][^,.(]+(?:Journal|Conference|Proceedings|Review)[^,.]*)/
+    );
     if (journalMatch) {
       ref.journal = journalMatch[1].trim();
     }
@@ -303,11 +329,21 @@ export class PDFExtractor {
       sections.push('## References\n');
       for (const ref of references) {
         const parts = [];
-        if (ref.authors?.length) {parts.push(ref.authors.join(', '));}
-        if (ref.year) {parts.push(`(${ref.year})`);}
-        if (ref.title) {parts.push(`"${ref.title}"`);}
-        if (ref.journal) {parts.push(ref.journal);}
-        if (ref.doi) {parts.push(`DOI: ${ref.doi}`);}
+        if (ref.authors?.length) {
+          parts.push(ref.authors.join(', '));
+        }
+        if (ref.year) {
+          parts.push(`(${ref.year})`);
+        }
+        if (ref.title) {
+          parts.push(`"${ref.title}"`);
+        }
+        if (ref.journal) {
+          parts.push(ref.journal);
+        }
+        if (ref.doi) {
+          parts.push(`DOI: ${ref.doi}`);
+        }
 
         sections.push(`- ${parts.join('. ')}\n`);
       }
@@ -343,8 +379,8 @@ export class PDFExtractor {
 
   // Check if URL points to a PDF
   static isPDFUrl(url: string): boolean {
-    return url.toLowerCase().endsWith('.pdf') ||
-           url.includes('pdf') ||
-           url.includes('arxiv.org/pdf/');
+    return (
+      url.toLowerCase().endsWith('.pdf') || url.includes('pdf') || url.includes('arxiv.org/pdf/')
+    );
   }
 }

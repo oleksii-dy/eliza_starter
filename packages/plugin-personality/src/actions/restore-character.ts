@@ -1,4 +1,4 @@
-import type { Action, ActionExample, ActionResult, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';
+import type { Action, ActionResult, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';
 import { logger } from '@elizaos/core';
 import type { CharacterFileManager } from '../services/character-file-manager.js';
 

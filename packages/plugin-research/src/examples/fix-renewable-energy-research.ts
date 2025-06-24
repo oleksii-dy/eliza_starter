@@ -45,9 +45,7 @@ async function testTavilyDirectly() {
         r.snippet?.toLowerCase().includes('renewable')
     );
 
-    logger.info(
-      `\n${relevantResults.length} out of ${results.length} results appear relevant`
-    );
+    logger.info(`\n${relevantResults.length} out of ${results.length} results appear relevant`);
   } catch (error) {
     logger.error('Tavily search failed:', error);
   }
@@ -143,7 +141,9 @@ async function testWithMinimalRuntime() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const current = await service.getProject(project.id);
-      if (!current) {break;}
+      if (!current) {
+        break;
+      }
 
       if (attempts % 5 === 0) {
         logger.info(

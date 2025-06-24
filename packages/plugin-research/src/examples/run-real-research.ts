@@ -19,7 +19,9 @@ process.env.FILE_LOGGING = 'true';
 // Create runtime with real API keys - NO HARD-CODED FALLBACKS
 const runtime = {
   getSetting: (key: string) => {
-    if (key === 'FILE_LOGGING') {return 'true';}
+    if (key === 'FILE_LOGGING') {
+      return 'true';
+    }
     const value = process.env[key];
     if (!value) {
       console.warn(`⚠️  Environment variable ${key} not found`);
@@ -28,7 +30,9 @@ const runtime = {
   },
   useModel: async (type: any, params: any) => {
     // This example file should be updated to use real API calls
-    throw new Error('This example file needs to be updated to use real LLM APIs. Use the real-runtime.ts implementation instead.');
+    throw new Error(
+      'This example file needs to be updated to use real LLM APIs. Use the real-runtime.ts implementation instead.'
+    );
   },
   logger: {
     info: console.log,
@@ -50,7 +54,7 @@ async function runRealResearch() {
   const queries = [
     'What are the latest breakthroughs in AI and machine learning in 2024?',
     'Compare the environmental policies of Nordic countries',
-    'Analyze the impact of remote work on productivity post-pandemic'
+    'Analyze the impact of remote work on productivity post-pandemic',
   ];
 
   console.log(`Running ${queries.length} research projects...\n`);
@@ -78,11 +82,13 @@ async function runRealResearch() {
       const maxAttempts = 30; // 30 seconds max
 
       while (!completed && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         const currentProject = await service.getProject(project.id);
 
         if (currentProject) {
-          process.stdout.write(`\r📍 Status: ${currentProject.status} | Phase: ${currentProject.phase || 'N/A'}`);
+          process.stdout.write(
+            `\r📍 Status: ${currentProject.status} | Phase: ${currentProject.phase || 'N/A'}`
+          );
 
           if (currentProject.status === 'completed' || currentProject.status === 'failed') {
             completed = true;
@@ -108,14 +114,13 @@ async function runRealResearch() {
         // The report should already be saved by the service
         console.log('\n📁 Files saved to research_logs/ directory');
       }
-
     } catch (error) {
       console.error(`\n❌ Error with research: ${error}`);
     }
 
     // Small delay between research projects
     if (i < queries.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
 
@@ -126,11 +131,11 @@ async function runRealResearch() {
   try {
     const logsDir = path.join(process.cwd(), 'research_logs');
     const files = await fs.readdir(logsDir);
-    const mdFiles = files.filter(f => f.endsWith('.md')).sort();
+    const mdFiles = files.filter((f) => f.endsWith('.md')).sort();
 
     if (mdFiles.length > 0) {
       console.log('Markdown Reports:');
-      mdFiles.forEach(file => {
+      mdFiles.forEach((file) => {
         console.log(`  📄 ${file}`);
       });
 

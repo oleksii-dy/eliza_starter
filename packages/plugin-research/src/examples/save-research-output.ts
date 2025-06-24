@@ -47,7 +47,7 @@ async function saveResearchOutputs() {
 
   // Wait for research to complete (in real usage, this would take longer)
   console.log('\n2️⃣ Waiting for research to complete...');
-  await new Promise(resolve => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   // Get the updated project
   const completedProject = await service.getProject(project.id);
@@ -91,7 +91,9 @@ async function saveResearchOutputs() {
       query: project.query,
       status: completedProject.status,
       createdAt: new Date(project.createdAt).toISOString(),
-      completedAt: completedProject.completedAt ? new Date(completedProject.completedAt).toISOString() : null,
+      completedAt: completedProject.completedAt
+        ? new Date(completedProject.completedAt).toISOString()
+        : null,
       domain: completedProject.metadata.domain,
       taskType: completedProject.metadata.taskType,
       sourceCount: completedProject.sources.length,
@@ -113,14 +115,13 @@ Key Findings: ${completedProject.findings.length}
 
 Top Findings:
 ${completedProject.findings
-    .sort((a, b) => b.relevance - a.relevance)
-    .slice(0, 5)
-    .map((f, i) => `${i + 1}. ${f.content.substring(0, 150)}...`)
-    .join('\n')}
+  .sort((a, b) => b.relevance - a.relevance)
+  .slice(0, 5)
+  .map((f, i) => `${i + 1}. ${f.content.substring(0, 150)}...`)
+  .join('\n')}
 `;
     await fs.writeFile(summaryPath, summary, 'utf-8');
     console.log(`   ✅ Summary saved to: ${summaryPath}`);
-
   } catch (error) {
     console.error('❌ Error saving outputs:', error);
   }

@@ -494,11 +494,3 @@ export interface KnowledgeSourceMetadata extends Record<string, any> {
   userAgent?: string;
   processingDuration?: number;
 }
-
-/**
- * Extended KnowledgeItem that includes similarity score for search results
- */
-export interface KnowledgeSearchResult extends KnowledgeItem {
-  /** Similarity score from vector search (0-1, where 1 is most similar) */
-  similarity?: number;
-}

@@ -333,10 +333,18 @@ Respond with just the option name.`;
         .trim()
         .toLowerCase();
 
-      if (focus.includes('historical')) {return TemporalFocus.HISTORICAL;}
-      if (focus.includes('current')) {return TemporalFocus.CURRENT;}
-      if (focus.includes('recent')) {return TemporalFocus.RECENT;}
-      if (focus.includes('future')) {return TemporalFocus.FUTURE_ORIENTED;}
+      if (focus.includes('historical')) {
+        return TemporalFocus.HISTORICAL;
+      }
+      if (focus.includes('current')) {
+        return TemporalFocus.CURRENT;
+      }
+      if (focus.includes('recent')) {
+        return TemporalFocus.RECENT;
+      }
+      if (focus.includes('future')) {
+        return TemporalFocus.FUTURE_ORIENTED;
+      }
 
       return undefined;
     } catch (error) {
@@ -515,23 +523,37 @@ Separate each sub-query with ---`;
 
   private parseResultType(type: string): ResultType {
     const normalized = type.toLowerCase().trim();
-    if (normalized.includes('statistical')) {return ResultType.STATISTICAL;}
-    if (normalized.includes('theoretical')) {return ResultType.THEORETICAL;}
-    if (normalized.includes('practical')) {return ResultType.PRACTICAL;}
-    if (normalized.includes('comparative')) {return ResultType.COMPARATIVE;}
+    if (normalized.includes('statistical')) {
+      return ResultType.STATISTICAL;
+    }
+    if (normalized.includes('theoretical')) {
+      return ResultType.THEORETICAL;
+    }
+    if (normalized.includes('practical')) {
+      return ResultType.PRACTICAL;
+    }
+    if (normalized.includes('comparative')) {
+      return ResultType.COMPARATIVE;
+    }
     return ResultType.FACTUAL;
   }
 
   private parsePriority(priority: string): number {
     const normalized = priority.toLowerCase().trim();
-    if (normalized === 'high') {return 3;}
-    if (normalized === 'low') {return 1;}
+    if (normalized === 'high') {
+      return 3;
+    }
+    if (normalized === 'low') {
+      return 1;
+    }
     return 2; // medium
   }
 
   private determineDependencies(index: number, existingQueries: SubQuery[]): string[] {
     // First query has no dependencies
-    if (index === 0) {return [];}
+    if (index === 0) {
+      return [];
+    }
 
     // Comparative queries might depend on factual queries
     // This is a simplified logic - in production, would use more sophisticated dependency analysis

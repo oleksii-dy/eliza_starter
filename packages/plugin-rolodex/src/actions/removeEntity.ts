@@ -9,11 +9,10 @@ import {
   composePromptFromState,
   type HandlerCallback,
   type Entity,
-  type Relationship,
   type ActionResult,
   type UUID,
 } from '@elizaos/core';
-import { type StandardActionResult, EntityNotFoundError, WorldNotFoundError } from '../types';
+import { EntityNotFoundError, WorldNotFoundError } from '../types';
 import { findBestMatch } from '../utils/stringDistance';
 
 const removeEntityTemplate = `# Remove Entity from Network
@@ -176,7 +175,7 @@ export const removeEntityAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const hasIntent = message.content.text
       ?.toLowerCase()
       .match(
@@ -192,7 +191,7 @@ export const removeEntityAction: Action = {
     _options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
-    const startTime = Date.now();
+    const _startTime = Date.now();
 
     try {
       // Build proper state for prompt composition
@@ -213,7 +212,7 @@ export const removeEntityAction: Action = {
       };
 
       // Compose prompt to extract removal criteria
-      const prompt = composePromptFromState(removeEntityTemplate, state);
+      const prompt = composePromptFromState({ template: removeEntityTemplate, state });
 
       // Use LLM to extract removal criteria
       const response = await runtime.useModel(ModelType.TEXT_SMALL, {

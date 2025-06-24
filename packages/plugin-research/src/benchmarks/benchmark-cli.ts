@@ -2,7 +2,11 @@
 
 import { logger } from '@elizaos/core';
 import { BenchmarkRunner } from './benchmark-runner';
-import { STANDARD_BENCHMARKS, getBenchmarkByName, getAllBenchmarkNames } from './standard-benchmarks';
+import {
+  STANDARD_BENCHMARKS,
+  getBenchmarkByName,
+  getAllBenchmarkNames,
+} from './standard-benchmarks';
 import { ResearchService } from '../service';
 import fs from 'fs/promises';
 import path from 'path';
@@ -49,7 +53,9 @@ class CLIRuntime {
     // This is a simplified mock - in real usage, you'd connect to your AI model
     if (process.env.OPENAI_API_KEY) {
       // Could integrate with OpenAI here
-      throw new Error('CLI mode: Please implement AI model integration for full benchmark functionality');
+      throw new Error(
+        'CLI mode: Please implement AI model integration for full benchmark functionality'
+      );
     }
 
     throw new Error('CLI mode: No AI model available. Set OPENAI_API_KEY or ANTHROPIC_API_KEY');
@@ -126,7 +132,9 @@ Examples:
   benchmark-cli results --latest
 
 Available Benchmarks:
-  ${getAllBenchmarkNames().map(name => `  ${name}`).join('\n')}
+  ${getAllBenchmarkNames()
+    .map((name) => `  ${name}`)
+    .join('\n')}
 
 Environment Variables:
   TAVILY_API_KEY         API key for Tavily search
@@ -200,7 +208,9 @@ async function runBenchmark(benchmarkName: string, additionalArgs: string[]) {
 
     console.log('\n🎉 Benchmark completed successfully!');
     console.log(`⏱️  Total duration: ${(duration / 1000).toFixed(1)}s`);
-    console.log(`✅ Success rate: ${((result.summary.successfulQueries / result.summary.totalQueries) * 100).toFixed(1)}%`);
+    console.log(
+      `✅ Success rate: ${((result.summary.successfulQueries / result.summary.totalQueries) * 100).toFixed(1)}%`
+    );
     console.log(`📊 Quality grade: ${result.summary.qualityGrade}`);
     console.log(`📁 Results saved to: ${config.outputDir}`);
 
@@ -211,7 +221,6 @@ async function runBenchmark(benchmarkName: string, additionalArgs: string[]) {
     if (result.summary.averageFactScore) {
       console.log(`📚 Average FACT score: ${(result.summary.averageFactScore * 100).toFixed(1)}%`);
     }
-
   } catch (error) {
     console.error('\n❌ Benchmark failed:', error);
     process.exit(1);
@@ -223,7 +232,7 @@ async function showResults(args: string[]) {
 
   try {
     const files = await fs.readdir(outputDir);
-    const reportFiles = files.filter(f => f.endsWith('_report.md'));
+    const reportFiles = files.filter((f) => f.endsWith('_report.md'));
 
     if (reportFiles.length === 0) {
       console.log('No benchmark results found');
@@ -241,20 +250,22 @@ async function showResults(args: string[]) {
       // List all reports
       console.log('Available benchmark reports:\n');
 
-      reportFiles.sort().reverse().forEach(file => {
-        const parts = file.replace('_report.md', '').split('_');
-        const runId = parts.pop();
-        const benchmarkId = parts.join('_');
+      reportFiles
+        .sort()
+        .reverse()
+        .forEach((file) => {
+          const parts = file.replace('_report.md', '').split('_');
+          const runId = parts.pop();
+          const benchmarkId = parts.join('_');
 
-        console.log(`📊 ${benchmarkId}`);
-        console.log(`   Run ID: ${runId}`);
-        console.log(`   File: ${file}`);
-        console.log('');
-      });
+          console.log(`📊 ${benchmarkId}`);
+          console.log(`   Run ID: ${runId}`);
+          console.log(`   File: ${file}`);
+          console.log('');
+        });
 
       console.log('Use --latest to view the most recent report');
     }
-
   } catch (error) {
     console.error('Failed to read results:', error);
   }
@@ -265,17 +276,19 @@ async function validateEnvironment() {
   const searchProviders = ['TAVILY_API_KEY', 'SERPER_API_KEY', 'EXA_API_KEY', 'SERPAPI_API_KEY'];
 
   // Check for at least one AI model key
-  const hasAIKey = required.some(key => process.env[key]);
+  const hasAIKey = required.some((key) => process.env[key]);
   if (!hasAIKey) {
     console.warn('⚠️  Warning: No AI model API key found');
     console.warn('   Set OPENAI_API_KEY or ANTHROPIC_API_KEY for full functionality');
   }
 
   // Check for at least one search provider
-  const hasSearchKey = searchProviders.some(key => process.env[key]);
+  const hasSearchKey = searchProviders.some((key) => process.env[key]);
   if (!hasSearchKey) {
     console.warn('⚠️  Warning: No search provider API key found');
-    console.warn('   Set at least one of: TAVILY_API_KEY, SERPER_API_KEY, EXA_API_KEY, SERPAPI_API_KEY');
+    console.warn(
+      '   Set at least one of: TAVILY_API_KEY, SERPER_API_KEY, EXA_API_KEY, SERPAPI_API_KEY'
+    );
   }
 
   if (!hasAIKey || !hasSearchKey) {
@@ -285,7 +298,7 @@ async function validateEnvironment() {
 
 // Run the CLI
 if (require.main === module) {
-  main().catch(error => {
+  main().catch((error) => {
     console.error('CLI Error:', error);
     process.exit(1);
   });

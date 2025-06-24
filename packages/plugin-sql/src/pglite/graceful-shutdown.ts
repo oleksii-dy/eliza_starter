@@ -9,22 +9,22 @@ export class PGliteGracefulShutdown {
   private static shutdownCallbacks: (() => Promise<void>)[] = [];
 
   /**
-     * Register a callback to be called during shutdown
-     */
+   * Register a callback to be called during shutdown
+   */
   static registerShutdownCallback(callback: () => Promise<void>): void {
     this.shutdownCallbacks.push(callback);
   }
 
   /**
-     * Check if shutdown is in progress
-     */
+   * Check if shutdown is in progress
+   */
   static getIsShuttingDown(): boolean {
     return isShuttingDown;
   }
 
   /**
-     * Wait for shutdown to complete
-     */
+   * Wait for shutdown to complete
+   */
   static async waitForShutdown(): Promise<void> {
     if (shutdownPromise) {
       await shutdownPromise;
@@ -32,8 +32,8 @@ export class PGliteGracefulShutdown {
   }
 
   /**
-     * Initiate graceful shutdown
-     */
+   * Initiate graceful shutdown
+   */
   static async shutdown(): Promise<void> {
     if (isShuttingDown) {
       return this.waitForShutdown();
@@ -61,8 +61,8 @@ export class PGliteGracefulShutdown {
   }
 
   /**
-     * Reset shutdown state (for testing)
-     */
+   * Reset shutdown state (for testing)
+   */
   static reset(): void {
     isShuttingDown = false;
     shutdownPromise = null;

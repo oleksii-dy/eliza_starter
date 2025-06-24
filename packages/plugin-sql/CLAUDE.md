@@ -17,19 +17,23 @@ FORCE_PGLITE=true                                            # Force PGLite for 
 ## Database Adapters
 
 ### PostgreSQL (Production)
+
 - Full PostgreSQL with vector search (pgvector extension)
 - Connection pooling and retry logic
 - Requires `POSTGRES_URL` environment variable
 - Production-ready with comprehensive error handling
 
 ### PGLite (Development)
+
 - Embedded PostgreSQL running in Node.js process
 - WebAssembly-based, no external database required
 - Data stored in `PGLITE_DATA_DIR` (default: `./.eliza/.elizadb`)
 - Perfect for development and testing
 
 ### Adaptive Selection
+
 The plugin automatically chooses the best adapter:
+
 1. PostgreSQL if `POSTGRES_URL` is available
 2. PGLite if WebAssembly compatibility passes
 3. Fallback to PostgreSQL with error handling
@@ -37,11 +41,12 @@ The plugin automatically chooses the best adapter:
 ## Core Database Schema
 
 ### Essential Tables
+
 ```sql
 -- Agent configurations
 agents (id, character, enabled, created_at, updated_at)
 
--- Users and participants  
+-- Users and participants
 entities (id, names, metadata, agent_id, components)
 
 -- Conversation history with embeddings
@@ -72,35 +77,40 @@ tasks (id, name, updated_at, metadata, description, room_id, world_id, entity_id
 ## Vector Embedding Support
 
 ### Supported Dimensions
+
 ```typescript
 const VECTOR_DIMS = {
-  SMALL: 384,    // Basic embeddings
-  MEDIUM: 512,   // Standard embeddings
-  LARGE: 768,    // OpenAI text-embedding-ada-002
-  XL: 1024,      // Large model embeddings
-  XXL: 1536,     // OpenAI text-embedding-3-small/large
-  XXXL: 3072     // Maximum dimension support
+  SMALL: 384, // Basic embeddings
+  MEDIUM: 512, // Standard embeddings
+  LARGE: 768, // OpenAI text-embedding-ada-002
+  XL: 1024, // Large model embeddings
+  XXL: 1536, // OpenAI text-embedding-3-small/large
+  XXXL: 3072, // Maximum dimension support
 };
 ```
 
 ### Usage
+
 ```typescript
 // Create memory with embedding
-await runtime.createMemory({
-  entityId: userId,
-  roomId: roomId,
-  content: { text: 'Important information' },
-  embedding: await runtime.useModel(ModelType.TEXT_EMBEDDING, {
-    text: 'Important information'
-  })
-}, 'facts');
+await runtime.createMemory(
+  {
+    entityId: userId,
+    roomId: roomId,
+    content: { text: 'Important information' },
+    embedding: await runtime.useModel(ModelType.TEXT_EMBEDDING, {
+      text: 'Important information',
+    }),
+  },
+  'facts'
+);
 
 // Semantic search
 const relevant = await runtime.searchMemories({
   embedding: queryEmbedding,
   roomId: roomId,
   match_threshold: 0.7,
-  count: 5
+  count: 5,
 });
 ```
 
@@ -113,27 +123,29 @@ const relevant = await runtime.searchMemories({
 import { plugin as sqlPlugin } from '@elizaos/plugin-sql';
 
 export default {
-  agents: [{
-    character: myCharacter,
-    plugins: [sqlPlugin], // Database adapter
-  }]
+  agents: [
+    {
+      character: myCharacter,
+      plugins: [sqlPlugin], // Database adapter
+    },
+  ],
 };
 ```
 
 ## Manual Adapter Creation
 
 ```typescript
-import { 
-  createDatabaseAdapter, 
-  createAdaptiveDatabaseAdapterV2 
-} from '@elizaos/plugin-sql';
+import { createDatabaseAdapter, createAdaptiveDatabaseAdapterV2 } from '@elizaos/plugin-sql';
 
 // Adaptive adapter (recommended)
-const adapter = await createAdaptiveDatabaseAdapterV2({
-  postgresUrl: process.env.POSTGRES_URL,
-  dataDir: process.env.PGLITE_DATA_DIR,
-  fallbackToPostgres: true
-}, agentId);
+const adapter = await createAdaptiveDatabaseAdapterV2(
+  {
+    postgresUrl: process.env.POSTGRES_URL,
+    dataDir: process.env.PGLITE_DATA_DIR,
+    fallbackToPostgres: true,
+  },
+  agentId
+);
 
 // Direct adapter creation
 const pgAdapter = await createDatabaseAdapter('postgresql', agentId);
@@ -143,23 +155,27 @@ const pgliteAdapter = await createDatabaseAdapter('pglite', agentId);
 ## Database Operations
 
 ### Memory Management
+
 ```typescript
 // Create memory
-await adapter.createMemory({
-  id: memoryId,
-  entityId: userId,
-  agentId: runtime.agentId,
-  roomId: roomId,
-  content: { text: 'User preferences', type: 'preference' },
-  embedding: embeddingVector,
-  unique: true
-}, 'facts');
+await adapter.createMemory(
+  {
+    id: memoryId,
+    entityId: userId,
+    agentId: runtime.agentId,
+    roomId: roomId,
+    content: { text: 'User preferences', type: 'preference' },
+    embedding: embeddingVector,
+    unique: true,
+  },
+  'facts'
+);
 
 // Get memories
 const memories = await adapter.getMemories({
   roomId: roomId,
   count: 50,
-  unique: true
+  unique: true,
 });
 
 // Search by embedding
@@ -167,7 +183,7 @@ const similar = await adapter.searchMemories({
   embedding: queryVector,
   roomId: roomId,
   match_threshold: 0.8,
-  count: 10
+  count: 10,
 });
 
 // Delete memories
@@ -176,12 +192,13 @@ await adapter.deleteAllMemories(roomId, 'messages');
 ```
 
 ### Entity Operations
+
 ```typescript
 // Create entity
 const entityId = await adapter.createEntity({
   names: ['John Doe'],
   metadata: { platform: 'discord', username: 'johndoe#1234' },
-  agentId: runtime.agentId
+  agentId: runtime.agentId,
 });
 
 // Get entity
@@ -194,20 +211,21 @@ await adapter.createComponent({
   agentId: runtime.agentId,
   roomId: roomId,
   type: 'profile',
-  data: { bio: 'Software developer', location: 'SF' }
+  data: { bio: 'Software developer', location: 'SF' },
 });
 
 const profile = await adapter.getComponent(entityId, 'profile');
 ```
 
 ### Room & Participant Management
+
 ```typescript
 // Create room
 const roomId = await adapter.createRoom({
   name: 'general-chat',
   source: 'discord',
   type: 'GROUP',
-  worldId: worldId
+  worldId: worldId,
 });
 
 // Manage participants
@@ -222,6 +240,7 @@ const participants = await adapter.getParticipantsForRoom(roomId);
 ```
 
 ### World Management
+
 ```typescript
 // Create world
 const worldId = await adapter.createWorld({
@@ -230,8 +249,8 @@ const worldId = await adapter.createWorld({
   serverId: 'discord-server-123',
   metadata: {
     ownership: { ownerId: ownerEntityId },
-    roles: { [adminEntityId]: 'ADMIN' }
-  }
+    roles: { [adminEntityId]: 'ADMIN' },
+  },
 });
 
 // Get worlds
@@ -242,6 +261,7 @@ const allWorlds = await adapter.getAllWorlds();
 ## Connection Management
 
 ### Singleton Pattern
+
 ```typescript
 // Connections are managed globally to prevent duplicates
 const manager = PostgresManager.getInstance();
@@ -254,6 +274,7 @@ process.on('SIGINT', () => {
 ```
 
 ### Retry Logic
+
 ```typescript
 // Built-in exponential backoff
 protected async withRetry<T>(operation: () => Promise<T>): Promise<T> {
@@ -265,6 +286,7 @@ protected async withRetry<T>(operation: () => Promise<T>): Promise<T> {
 ## Schema Extensions
 
 ### Plugin Table Registration
+
 ```typescript
 import { schemaRegistry } from '@elizaos/plugin-sql';
 
@@ -282,24 +304,27 @@ await schemaRegistry.registerPluginTables([
       id TEXT PRIMARY KEY,
       data TEXT NOT NULL,
       created_at INTEGER DEFAULT (strftime('%s', 'now'))
-    )` // PGLite compatibility
-  }
+    )`, // PGLite compatibility
+  },
 ]);
 ```
 
 ## Performance Features
 
 ### Indexing
+
 - Vector similarity search optimized with pgvector
 - B-tree indexes on frequently queried columns
 - Composite indexes for complex queries
 
 ### Caching
+
 - Connection pooling for PostgreSQL
 - Query result caching where appropriate
 - Singleton pattern prevents duplicate connections
 
 ### Optimizations
+
 - Bulk operations for entity/memory creation
 - Efficient participant state management
 - Optimized vector similarity queries
@@ -307,6 +332,7 @@ await schemaRegistry.registerPluginTables([
 ## Development & Testing
 
 ### Testing Configuration
+
 ```bash
 # Use PGLite for tests
 FORCE_PGLITE=true
@@ -317,6 +343,7 @@ elizaos test
 ```
 
 ### Development Setup
+
 ```bash
 # PostgreSQL development
 docker run -d \
@@ -333,12 +360,14 @@ export POSTGRES_URL="postgresql://eliza:eliza@localhost:5432/eliza"
 ## Migration System
 
 ### Auto-Migration
+
 - Schema automatically created on first run
 - Plugin tables registered during initialization
 - Version tracking and dependency management
 - Safe concurrent migration with locking
 
 ### Manual Migration
+
 ```typescript
 import { unifiedMigrator } from '@elizaos/plugin-sql';
 

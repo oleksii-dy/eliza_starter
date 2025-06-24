@@ -13,16 +13,15 @@ interface ImportMetaEnv {
   readonly WORLD?: string
   readonly SAVE_INTERVAL?: string
   readonly ENABLE_RPG?: string
-  readonly JWT_SECRET?: string
-  readonly ADMIN_CODE?: string
   readonly NODE_ENV?: string
   readonly VITEST?: string
 
-  // LiveKit
+  // LiveKit (client-safe variables only)
   readonly LIVEKIT_URL?: string
   readonly LIVEKIT_WS_URL?: string
   readonly LIVEKIT_API_KEY?: string
-  readonly LIVEKIT_API_SECRET?: string
+  // Note: LIVEKIT_API_SECRET, JWT_SECRET, and ADMIN_CODE are server-only
+  // and should not be exposed to the client
 
   // Public variables
   readonly PUBLIC_API_URL?: string

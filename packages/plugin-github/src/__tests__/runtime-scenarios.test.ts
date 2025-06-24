@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'bun:test';
+import { describe, expect, it, mock, beforeEach } from 'bun:test';
 import { githubPlugin, GitHubService } from '../index';
 import { IAgentRuntime, Memory, State, UUID, AgentRuntime, logger } from '@elizaos/core';
 

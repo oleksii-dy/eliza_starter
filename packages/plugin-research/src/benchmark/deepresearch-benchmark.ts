@@ -59,7 +59,7 @@ export class DeepResearchBenchmark {
       } catch {
         return {
           success: false,
-          error: `Benchmark directory not found: ${this.benchmarkPath}`
+          error: `Benchmark directory not found: ${this.benchmarkPath}`,
         };
       }
 
@@ -70,29 +70,31 @@ export class DeepResearchBenchmark {
       } catch {
         return {
           success: false,
-          error: `Main benchmark script not found: ${mainScript}`
+          error: `Main benchmark script not found: ${mainScript}`,
         };
       }
 
       // Check if requirements are installed
       try {
-        await execAsync(`cd "${this.benchmarkPath}" && ${this.pythonPath} -c "import tqdm, openai, requests"`);
+        await execAsync(
+          `cd "${this.benchmarkPath}" && ${this.pythonPath} -c "import tqdm, openai, requests"`
+        );
       } catch (error) {
         return {
           success: false,
-          error: `Python dependencies not installed. Run: cd ${this.benchmarkPath} && pip install -r requirements.txt`
+          error: `Python dependencies not installed. Run: cd ${this.benchmarkPath} && pip install -r requirements.txt`,
         };
       }
 
       return {
         success: true,
         pythonVersion: pythonVersion.trim(),
-        benchmarkPath: this.benchmarkPath
+        benchmarkPath: this.benchmarkPath,
       };
     } catch (error) {
       return {
         success: false,
-        error: `Setup check failed: ${error instanceof Error ? error.message : String(error)}`
+        error: `Setup check failed: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
   }
@@ -132,7 +134,7 @@ export class DeepResearchBenchmark {
 
     // Create the article content from report sections
     const article = project.report.sections
-      .map(section => `${section.heading}\n\n${section.content}`)
+      .map((section) => `${section.heading}\n\n${section.content}`)
       .join('\n\n');
 
     return {
@@ -144,29 +146,31 @@ export class DeepResearchBenchmark {
         taskType: project.metadata.taskType,
         generatedAt: new Date().toISOString(),
         modelVersion: 'elizaos-research-1.0',
-        evaluationScores: project.report.evaluationMetrics ? {
-          race: project.report.evaluationMetrics.raceScore,
-          fact: project.report.evaluationMetrics.factScore,
-        } : {
-          race: {
-            overall: 0,
-            comprehensiveness: 0,
-            depth: 0,
-            instructionFollowing: 0,
-            readability: 0,
-            breakdown: [],
-          },
-          fact: {
-            citationAccuracy: 0,
-            effectiveCitations: 0,
-            totalCitations: 0,
-            verifiedCitations: 0,
-            disputedCitations: 0,
-            citationCoverage: 0,
-            sourceCredibility: 0,
-            breakdown: [],
-          },
-        },
+        evaluationScores: project.report.evaluationMetrics
+          ? {
+              race: project.report.evaluationMetrics.raceScore,
+              fact: project.report.evaluationMetrics.factScore,
+            }
+          : {
+              race: {
+                overall: 0,
+                comprehensiveness: 0,
+                depth: 0,
+                instructionFollowing: 0,
+                readability: 0,
+                breakdown: [],
+              },
+              fact: {
+                citationAccuracy: 0,
+                effectiveCitations: 0,
+                totalCitations: 0,
+                verifiedCitations: 0,
+                disputedCitations: 0,
+                citationCoverage: 0,
+                sourceCredibility: 0,
+                breakdown: [],
+              },
+            },
       },
     };
   }
@@ -174,7 +178,10 @@ export class DeepResearchBenchmark {
   /**
    * Save a research project in the format expected by the benchmark
    */
-  private async saveProjectForBenchmark(project: ResearchProject, modelName: string): Promise<string> {
+  private async saveProjectForBenchmark(
+    project: ResearchProject,
+    modelName: string
+  ): Promise<string> {
     const benchmarkData = this.convertProjectToBenchmarkFormat(project);
 
     // Create model directory
@@ -215,7 +222,7 @@ export class DeepResearchBenchmark {
 
       const { stdout, stderr } = await execAsync(command, {
         timeout: 300000, // 5 minutes
-        maxBuffer: 1024 * 1024 * 10 // 10MB buffer
+        maxBuffer: 1024 * 1024 * 10, // 10MB buffer
       });
 
       if (stderr && stderr.includes('ERROR')) {
@@ -230,7 +237,6 @@ export class DeepResearchBenchmark {
 
       logger.info('Benchmark results:', results);
       return results;
-
     } catch (error) {
       logger.error('Benchmark evaluation failed:', error);
       throw error;
@@ -247,11 +253,11 @@ export class DeepResearchBenchmark {
 
       const results: any = {
         timestamp: new Date().toISOString(),
-        modelName: 'elizaos-research-agent'
+        modelName: 'elizaos-research-agent',
       };
 
       for (const line of lines) {
-        const [key, value] = line.split(':').map(s => s.trim());
+        const [key, value] = line.split(':').map((s) => s.trim());
         if (key && value) {
           const numValue = parseFloat(value);
           if (!isNaN(numValue)) {
@@ -277,7 +283,13 @@ export class DeepResearchBenchmark {
       }
 
       // Validate that we got all required scores
-      const requiredFields = ['comprehensiveness', 'insight', 'instructionFollowing', 'readability', 'overallScore'];
+      const requiredFields = [
+        'comprehensiveness',
+        'insight',
+        'instructionFollowing',
+        'readability',
+        'overallScore',
+      ];
       for (const field of requiredFields) {
         if (results[field] === undefined) {
           throw new Error(`Missing required field in benchmark results: ${field}`);
@@ -285,10 +297,11 @@ export class DeepResearchBenchmark {
       }
 
       return results as BenchmarkResult;
-
     } catch (error) {
       logger.error('Failed to parse benchmark results:', error);
-      throw new Error(`Failed to parse benchmark results: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to parse benchmark results: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -303,7 +316,9 @@ export class DeepResearchBenchmark {
 
     for (let i = 0; i < projects.length; i++) {
       const project = projects[i];
-      logger.info(`Evaluating project ${i + 1}/${projects.length}: ${project.query.substring(0, 50)}...`);
+      logger.info(
+        `Evaluating project ${i + 1}/${projects.length}: ${project.query.substring(0, 50)}...`
+      );
 
       try {
         const result = await this.evaluateProject(project, `${modelName}-${i}`);
@@ -335,29 +350,29 @@ export class DeepResearchBenchmark {
       const content = await fs.readFile(rawResultsFile, 'utf-8');
       const lines = content.trim().split('\n');
 
-      const scores = lines
-        .map(line => JSON.parse(line))
-        .filter(result => !result.error); // Filter out failed evaluations
+      const scores = lines.map((line) => JSON.parse(line)).filter((result) => !result.error); // Filter out failed evaluations
 
       if (scores.length === 0) {
         throw new Error('No successful evaluations found');
       }
 
       const avgScores = {
-        comprehensiveness: scores.reduce((sum, s) => sum + (s.comprehensiveness || 0), 0) / scores.length,
+        comprehensiveness:
+          scores.reduce((sum, s) => sum + (s.comprehensiveness || 0), 0) / scores.length,
         insight: scores.reduce((sum, s) => sum + (s.insight || 0), 0) / scores.length,
-        instructionFollowing: scores.reduce((sum, s) => sum + (s.instruction_following || 0), 0) / scores.length,
+        instructionFollowing:
+          scores.reduce((sum, s) => sum + (s.instruction_following || 0), 0) / scores.length,
         readability: scores.reduce((sum, s) => sum + (s.readability || 0), 0) / scores.length,
       };
 
-      const averageScore = scores.reduce((sum, s) => sum + (s.overall_score || 0), 0) / scores.length;
+      const averageScore =
+        scores.reduce((sum, s) => sum + (s.overall_score || 0), 0) / scores.length;
 
       return {
         averageScore,
         totalEvaluations: scores.length,
-        scoreBreakdown: avgScores
+        scoreBreakdown: avgScores,
       };
-
     } catch (error) {
       logger.error('Failed to get benchmark stats:', error);
       throw error;

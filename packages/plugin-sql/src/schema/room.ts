@@ -21,10 +21,12 @@ function createRoomTable() {
     type: factory.text('type').notNull(),
     source: factory.text('source').notNull(),
     metadata: factory.json('metadata'),
-    createdAt: factory.timestamp('created_at', { mode: 'date' })
+    createdAt: factory
+      .timestamp('created_at', { mode: 'date' })
       .default(factory.defaultTimestamp())
       .notNull(),
-    updatedAt: factory.timestamp('updated_at', { mode: 'date' })
+    updatedAt: factory
+      .timestamp('updated_at', { mode: 'date' })
       .default(factory.defaultTimestamp())
       .notNull(),
   };

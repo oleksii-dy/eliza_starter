@@ -23,9 +23,7 @@ export const researchPlugin: Plugin = {
   providers: researchProviders,
   schema: researchSchema,
 
-  tests: [
-    deepResearchBenchSimplifiedTests
-  ],
+  tests: [deepResearchBenchSimplifiedTests],
 
   init: async (config: Record<string, string>, runtime: any) => {
     // Ensure API keys from environment are available
@@ -36,7 +34,7 @@ export const researchPlugin: Plugin = {
       'SERPAPI_API_KEY',
       'OPENAI_API_KEY',
       'FIRECRAWL_API_KEY',
-      'SEMANTIC_SCHOLAR_API_KEY'
+      'SEMANTIC_SCHOLAR_API_KEY',
     ];
 
     // Copy environment variables to runtime settings if not already set
@@ -50,7 +48,7 @@ export const researchPlugin: Plugin = {
     }
 
     console.log('Research plugin initialized with API key configuration');
-  }
+  },
 };
 
 export default researchPlugin;

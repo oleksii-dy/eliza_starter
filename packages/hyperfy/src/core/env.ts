@@ -39,14 +39,12 @@ export const ENV = {
   SAVE_INTERVAL: getEnvVar('SAVE_INTERVAL', '60')!,
   ENABLE_RPG: getEnvVar('ENABLE_RPG', 'false')!,
 
-  // Authentication
-  JWT_SECRET: getEnvVar('JWT_SECRET', '')!,
-  ADMIN_CODE: getEnvVar('ADMIN_CODE'),
-
-  // LiveKit configuration
+  // LiveKit configuration (client-safe)
   LIVEKIT_URL: getEnvVar('LIVEKIT_URL') || getEnvVar('LIVEKIT_WS_URL'),
   LIVEKIT_API_KEY: getEnvVar('LIVEKIT_API_KEY'),
-  LIVEKIT_API_SECRET: getEnvVar('LIVEKIT_API_SECRET'),
+
+  // Note: Sensitive variables like JWT_SECRET, ADMIN_CODE, and LIVEKIT_API_SECRET
+  // are now in env-server.ts and should only be imported on the server side
 
   // Public environment variables (exposed to client)
   PUBLIC_API_URL: getEnvVar('PUBLIC_API_URL'),

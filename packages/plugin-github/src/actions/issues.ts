@@ -436,10 +436,10 @@ State: ${issue.state}
 Author: @${issue.user?.login || 'unknown'}
 Created: ${new Date(issue.created_at).toLocaleDateString()}
 Labels: ${
-  issue.labels
-    ?.map((label: any) => (typeof label === 'string' ? label : label.name || ''))
-    .join(', ') || 'None'
-}
+          issue.labels
+            ?.map((label: any) => (typeof label === 'string' ? label : label.name || ''))
+            .join(', ') || 'None'
+        }
 
 ${issue.body || 'No description provided'}
 

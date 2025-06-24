@@ -4,7 +4,7 @@
  * Tests the comprehensive error handling system with real scenarios
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import {
   TrainingError,
   ConfigurationError,

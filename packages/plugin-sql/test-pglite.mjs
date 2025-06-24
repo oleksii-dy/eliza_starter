@@ -9,7 +9,7 @@ async function test() {
     console.log('✓ Simple table works');
 
     // Test 2: Table with defaults
-    await db.query('CREATE TABLE test2 (id TEXT PRIMARY KEY, name TEXT DEFAULT \'test\')');
+    await db.query("CREATE TABLE test2 (id TEXT PRIMARY KEY, name TEXT DEFAULT 'test')");
     console.log('✓ Table with DEFAULT works');
 
     // Test 3: Table with JSONB
@@ -27,7 +27,6 @@ async function test() {
     // Test 5: Complex defaults like the agents table
     await db.query("CREATE TABLE test5 (id TEXT PRIMARY KEY, settings TEXT DEFAULT '{}')");
     console.log('✓ Complex defaults work');
-
   } catch (error) {
     console.error('✗ Error:', error.message);
   }

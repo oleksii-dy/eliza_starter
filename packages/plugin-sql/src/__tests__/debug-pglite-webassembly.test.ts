@@ -23,7 +23,6 @@ describe('PGLite WebAssembly Debug Tests', () => {
       await instance.exec('INSERT INTO test VALUES (1)');
       const result = await instance.query('SELECT * FROM test');
       expect(result.rows.length).toBe(1);
-
     } catch (error) {
       console.error('❌ PGLite without extensions failed:', error.message);
       throw error;
@@ -57,10 +56,9 @@ describe('PGLite WebAssembly Debug Tests', () => {
       // Test vector functionality
       await instance.exec('CREATE EXTENSION IF NOT EXISTS vector');
       await instance.exec('CREATE TABLE test_vector (id INTEGER, vec vector(3))');
-      await instance.exec('INSERT INTO test_vector VALUES (1, \'[1,2,3]\')');
+      await instance.exec("INSERT INTO test_vector VALUES (1, '[1,2,3]')");
       const result = await instance.query('SELECT * FROM test_vector');
       expect(result.rows.length).toBe(1);
-
     } catch (error) {
       console.error('❌ PGLite with vector extension failed:', error.message);
       throw error;
@@ -93,9 +91,8 @@ describe('PGLite WebAssembly Debug Tests', () => {
 
       // Test fuzzystrmatch functionality
       await instance.exec('CREATE EXTENSION IF NOT EXISTS fuzzystrmatch');
-      const result = await instance.query('SELECT levenshtein(\'hello\', \'world\')');
+      const result = await instance.query("SELECT levenshtein('hello', 'world')");
       expect(result.rows.length).toBe(1);
-
     } catch (error) {
       console.error('❌ PGLite with fuzzystrmatch extension failed:', error.message);
       throw error;
@@ -131,14 +128,13 @@ describe('PGLite WebAssembly Debug Tests', () => {
       await instance.exec('CREATE EXTENSION IF NOT EXISTS vector');
       await instance.exec('CREATE EXTENSION IF NOT EXISTS fuzzystrmatch');
       await instance.exec('CREATE TABLE test_both (id INTEGER, vec vector(3))');
-      await instance.exec('INSERT INTO test_both VALUES (1, \'[1,2,3]\')');
+      await instance.exec("INSERT INTO test_both VALUES (1, '[1,2,3]')");
 
       const vectorResult = await instance.query('SELECT * FROM test_both');
-      const fuzzyResult = await instance.query('SELECT levenshtein(\'hello\', \'world\')');
+      const fuzzyResult = await instance.query("SELECT levenshtein('hello', 'world')");
 
       expect(vectorResult.rows.length).toBe(1);
       expect(fuzzyResult.rows.length).toBe(1);
-
     } catch (error) {
       console.error('❌ PGLite with both extensions failed:', error.message);
       throw error;
@@ -171,11 +167,10 @@ describe('PGLite WebAssembly Debug Tests', () => {
         instances.push(instance);
 
         // Add small delay between instances
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       console.log('✅ Rapid instance creation works');
-
     } catch (error) {
       console.error('❌ Rapid instance creation failed:', error.message);
       throw error;

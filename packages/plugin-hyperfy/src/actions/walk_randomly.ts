@@ -49,7 +49,7 @@ export const hyperfyWalkRandomlyAction: Action = {
       return {
         text: 'Error: Cannot wander. Hyperfy connection/controls unavailable.',
         values: { success: false, error: 'connection_unavailable' },
-        data: { action: 'HYPERFY_WALK_RANDOMLY' }
+        data: { action: 'HYPERFY_WALK_RANDOMLY' },
       };
     }
 
@@ -65,7 +65,7 @@ export const hyperfyWalkRandomlyAction: Action = {
       return {
         text: 'Error: Wander functionality not available in controls.',
         values: { success: false, error: 'wander_function_unavailable' },
-        data: { action: 'HYPERFY_WALK_RANDOMLY' }
+        data: { action: 'HYPERFY_WALK_RANDOMLY' },
       };
     }
 
@@ -80,13 +80,13 @@ export const hyperfyWalkRandomlyAction: Action = {
         return {
           text: 'Stopped wandering.',
           values: { success: true, command: 'stop', wasWandering: true },
-          data: { action: 'HYPERFY_WALK_RANDOMLY', status: 'stopped' }
+          data: { action: 'HYPERFY_WALK_RANDOMLY', status: 'stopped' },
         };
       } else {
         return {
           text: 'Was not wandering.',
           values: { success: true, command: 'stop', wasWandering: false },
-          data: { action: 'HYPERFY_WALK_RANDOMLY', status: 'already_stopped' }
+          data: { action: 'HYPERFY_WALK_RANDOMLY', status: 'already_stopped' },
         };
       }
     } else {
@@ -102,11 +102,11 @@ export const hyperfyWalkRandomlyAction: Action = {
         };
         await callback(startResponse);
       }
-      
+
       return {
         text: '',
         values: { success: true, command: 'start', intervalMs, maxDistance },
-        data: { action: 'HYPERFY_WALK_RANDOMLY', status: 'started', intervalMs, maxDistance }
+        data: { action: 'HYPERFY_WALK_RANDOMLY', status: 'started', intervalMs, maxDistance },
       };
     }
   },
@@ -116,7 +116,8 @@ export const hyperfyWalkRandomlyAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User wants me to start wandering around the area - I should begin random movement',
+          thought:
+            'User wants me to start wandering around the area - I should begin random movement',
           text: 'Starting to wander randomly... (New target every ~5.0s)',
           actions: ['HYPERFY_WALK_RANDOMLY'],
           source: 'hyperfy',
@@ -140,7 +141,8 @@ export const hyperfyWalkRandomlyAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User wants me to stop my random movement - I should halt the wandering behavior',
+          thought:
+            'User wants me to stop my random movement - I should halt the wandering behavior',
           text: 'Stopped wandering.',
           actions: ['HYPERFY_WALK_RANDOMLY'],
           source: 'hyperfy',

@@ -25,7 +25,8 @@ interface BenchmarkScenario {
 const BENCHMARK_SCENARIOS: BenchmarkScenario[] = [
   {
     name: 'Computer Science - Federated Learning',
-    query: 'Analyze the security and privacy implications of federated learning in healthcare applications. Compare different privacy-preserving techniques including differential privacy, homomorphic encryption, and secure multi-party computation.',
+    query:
+      'Analyze the security and privacy implications of federated learning in healthcare applications. Compare different privacy-preserving techniques including differential privacy, homomorphic encryption, and secure multi-party computation.',
     domain: ResearchDomain.COMPUTER_SCIENCE,
     expectedSources: 15,
     expectedWords: 3000,
@@ -35,7 +36,8 @@ const BENCHMARK_SCENARIOS: BenchmarkScenario[] = [
   },
   {
     name: 'Physics - Quantum Computing',
-    query: 'What are the latest breakthroughs in quantum computing hardware and their implications for cryptography and computational complexity?',
+    query:
+      'What are the latest breakthroughs in quantum computing hardware and their implications for cryptography and computational complexity?',
     domain: ResearchDomain.PHYSICS,
     expectedSources: 12,
     expectedWords: 2500,
@@ -45,7 +47,8 @@ const BENCHMARK_SCENARIOS: BenchmarkScenario[] = [
   },
   {
     name: 'Medicine - mRNA Vaccines',
-    query: 'Analyze the effectiveness of mRNA vaccine technology for infectious diseases beyond COVID-19, including safety profiles and future applications.',
+    query:
+      'Analyze the effectiveness of mRNA vaccine technology for infectious diseases beyond COVID-19, including safety profiles and future applications.',
     domain: ResearchDomain.MEDICINE,
     expectedSources: 15,
     expectedWords: 3000,
@@ -55,7 +58,8 @@ const BENCHMARK_SCENARIOS: BenchmarkScenario[] = [
   },
   {
     name: 'General - Renewable Energy',
-    query: 'Compare the environmental and economic impacts of different renewable energy storage technologies for grid-scale deployment.',
+    query:
+      'Compare the environmental and economic impacts of different renewable energy storage technologies for grid-scale deployment.',
     domain: ResearchDomain.GENERAL,
     expectedSources: 10,
     expectedWords: 2000,
@@ -65,14 +69,15 @@ const BENCHMARK_SCENARIOS: BenchmarkScenario[] = [
   },
   {
     name: 'Economics - Digital Currency',
-    query: 'Evaluate the economic impact of central bank digital currencies (CBDCs) on monetary policy and financial stability.',
+    query:
+      'Evaluate the economic impact of central bank digital currencies (CBDCs) on monetary policy and financial stability.',
     domain: ResearchDomain.ECONOMICS,
     expectedSources: 12,
     expectedWords: 2500,
     expectedRaceScore: 0.6,
     expectedFactScore: 0.65,
     timeoutMs: 450000, // 7.5 minutes
-  }
+  },
 ];
 
 interface BenchmarkResult {
@@ -113,8 +118,12 @@ class MultiBenchmarkRunner {
       const scenario = BENCHMARK_SCENARIOS[i];
       console.log(`\n📋 Scenario ${i + 1}/${BENCHMARK_SCENARIOS.length}: ${scenario.name}`);
       console.log(`🔍 Query: ${scenario.query.substring(0, 100)}...`);
-      console.log(`📊 Expected: ${scenario.expectedSources} sources, ${scenario.expectedWords} words`);
-      console.log(`🎯 Target RACE: ${scenario.expectedRaceScore}, FACT: ${scenario.expectedFactScore}`);
+      console.log(
+        `📊 Expected: ${scenario.expectedSources} sources, ${scenario.expectedWords} words`
+      );
+      console.log(
+        `🎯 Target RACE: ${scenario.expectedRaceScore}, FACT: ${scenario.expectedFactScore}`
+      );
 
       const result = await this.runSingleBenchmark(scenario);
       results.push(result);
@@ -124,7 +133,7 @@ class MultiBenchmarkRunner {
       // Brief pause between tests
       if (i < BENCHMARK_SCENARIOS.length - 1) {
         console.log('\n⏳ Waiting 30 seconds before next test...');
-        await new Promise(resolve => setTimeout(resolve, 30000));
+        await new Promise((resolve) => setTimeout(resolve, 30000));
       }
     }
 
@@ -177,7 +186,13 @@ class MultiBenchmarkRunner {
         factScore = completedProject.metadata.evaluationMetrics.factScore?.citationAccuracy;
       }
 
-      const quality = this.assessQuality(scenario, actualSources, actualWords, raceScore, factScore);
+      const quality = this.assessQuality(
+        scenario,
+        actualSources,
+        actualWords,
+        raceScore,
+        factScore
+      );
 
       return {
         scenario,
@@ -190,7 +205,6 @@ class MultiBenchmarkRunner {
         projectId: project.id,
         quality,
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
 
@@ -229,14 +243,14 @@ class MultiBenchmarkRunner {
         throw new Error(`Research failed: ${project.error}`);
       }
 
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
+      await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
 
     return null; // Timeout
   }
 
   private countWords(text: string): number {
-    return text.split(/\s+/).filter(word => word.length > 0).length;
+    return text.split(/\s+/).filter((word) => word.length > 0).length;
   }
 
   private assessQuality(
@@ -284,14 +298,30 @@ class MultiBenchmarkRunner {
     const maxPoints = 8;
     const qualityRatio = qualityPoints / maxPoints;
 
-    if (qualityRatio >= 0.8) {return 'excellent';}
-    if (qualityRatio >= 0.6) {return 'good';}
-    if (qualityRatio >= 0.4) {return 'fair';}
+    if (qualityRatio >= 0.8) {
+      return 'excellent';
+    }
+    if (qualityRatio >= 0.6) {
+      return 'good';
+    }
+    if (qualityRatio >= 0.4) {
+      return 'fair';
+    }
     return 'poor';
   }
 
   private printBenchmarkResult(result: BenchmarkResult): void {
-    const { scenario, success, actualSources, actualWords, raceScore, factScore, duration, quality, error } = result;
+    const {
+      scenario,
+      success,
+      actualSources,
+      actualWords,
+      raceScore,
+      factScore,
+      duration,
+      quality,
+      error,
+    } = result;
 
     console.log(`\n📊 Results for "${scenario.name}":`);
 
@@ -302,23 +332,26 @@ class MultiBenchmarkRunner {
 
       if (raceScore !== undefined) {
         const raceStatus = raceScore >= scenario.expectedRaceScore ? '✅' : '⚠️';
-        console.log(`${raceStatus} RACE Score: ${(raceScore * 100).toFixed(1)}% (target: ${(scenario.expectedRaceScore * 100).toFixed(1)}%)`);
+        console.log(
+          `${raceStatus} RACE Score: ${(raceScore * 100).toFixed(1)}% (target: ${(scenario.expectedRaceScore * 100).toFixed(1)}%)`
+        );
       }
 
       if (factScore !== undefined) {
         const factStatus = factScore >= scenario.expectedFactScore ? '✅' : '⚠️';
-        console.log(`${factStatus} FACT Score: ${(factScore * 100).toFixed(1)}% (target: ${(scenario.expectedFactScore * 100).toFixed(1)}%)`);
+        console.log(
+          `${factStatus} FACT Score: ${(factScore * 100).toFixed(1)}% (target: ${(scenario.expectedFactScore * 100).toFixed(1)}%)`
+        );
       }
 
       const qualityEmoji = {
         excellent: '🏆',
         good: '👍',
         fair: '👌',
-        poor: '👎'
+        poor: '👎',
       }[quality];
 
       console.log(`${qualityEmoji} Overall Quality: ${quality.toUpperCase()}`);
-
     } else {
       console.log(`❌ FAILED (${(duration / 1000).toFixed(1)}s)`);
       console.log(`💥 Error: ${error}`);
@@ -330,13 +363,16 @@ class MultiBenchmarkRunner {
     console.log('🏆 MULTI-BENCHMARK SUMMARY REPORT');
     console.log('='.repeat(80));
 
-    const successful = results.filter(r => r.success);
+    const successful = results.filter((r) => r.success);
     const successRate = (successful.length / results.length) * 100;
 
-    console.log(`📊 Success Rate: ${successful.length}/${results.length} (${successRate.toFixed(1)}%)`);
+    console.log(
+      `📊 Success Rate: ${successful.length}/${results.length} (${successRate.toFixed(1)}%)`
+    );
 
     if (successful.length > 0) {
-      const avgSources = successful.reduce((sum, r) => sum + r.actualSources, 0) / successful.length;
+      const avgSources =
+        successful.reduce((sum, r) => sum + r.actualSources, 0) / successful.length;
       const avgWords = successful.reduce((sum, r) => sum + r.actualWords, 0) / successful.length;
       const avgDuration = successful.reduce((sum, r) => sum + r.duration, 0) / successful.length;
 
@@ -344,8 +380,12 @@ class MultiBenchmarkRunner {
       console.log(`📝 Average Words: ${avgWords.toFixed(0)}`);
       console.log(`⏱️  Average Duration: ${(avgDuration / 1000).toFixed(1)}s`);
 
-      const raceScores = successful.filter(r => r.raceScore !== undefined).map(r => r.raceScore!);
-      const factScores = successful.filter(r => r.factScore !== undefined).map(r => r.factScore!);
+      const raceScores = successful
+        .filter((r) => r.raceScore !== undefined)
+        .map((r) => r.raceScore!);
+      const factScores = successful
+        .filter((r) => r.factScore !== undefined)
+        .map((r) => r.factScore!);
 
       if (raceScores.length > 0) {
         const avgRace = raceScores.reduce((sum, s) => sum + s, 0) / raceScores.length;
@@ -359,10 +399,13 @@ class MultiBenchmarkRunner {
     }
 
     // Quality distribution
-    const qualityCounts = results.reduce((counts, r) => {
-      counts[r.quality] = (counts[r.quality] || 0) + 1;
-      return counts;
-    }, {} as Record<string, number>);
+    const qualityCounts = results.reduce(
+      (counts, r) => {
+        counts[r.quality] = (counts[r.quality] || 0) + 1;
+        return counts;
+      },
+      {} as Record<string, number>
+    );
 
     console.log('\n📈 Quality Distribution:');
     console.log(`🏆 Excellent: ${qualityCounts.excellent || 0}`);
@@ -375,13 +418,15 @@ class MultiBenchmarkRunner {
     if (successRate < 80) {
       console.log('⚠️  Consider increasing timeout limits for complex queries');
     }
-    if (successful.some(r => r.actualSources < r.scenario.expectedSources * 0.8)) {
-      console.log('⚠️  Some scenarios have insufficient source coverage - consider expanding search providers');
+    if (successful.some((r) => r.actualSources < r.scenario.expectedSources * 0.8)) {
+      console.log(
+        '⚠️  Some scenarios have insufficient source coverage - consider expanding search providers'
+      );
     }
-    if (successful.some(r => r.raceScore && r.raceScore < 0.6)) {
+    if (successful.some((r) => r.raceScore && r.raceScore < 0.6)) {
       console.log('⚠️  RACE scores need improvement - focus on comprehensiveness and depth');
     }
-    if (successful.some(r => r.factScore && r.factScore < 0.6)) {
+    if (successful.some((r) => r.factScore && r.factScore < 0.6)) {
       console.log('⚠️  FACT scores need improvement - enhance citation accuracy and verification');
     }
 
@@ -415,9 +460,8 @@ async function main() {
     runner.printSummaryReport(results);
 
     // Exit with appropriate code
-    const successRate = results.filter(r => r.success).length / results.length;
+    const successRate = results.filter((r) => r.success).length / results.length;
     process.exit(successRate >= 0.8 ? 0 : 1);
-
   } catch (error) {
     console.error('❌ Multi-benchmark test failed:', error);
     process.exit(1);

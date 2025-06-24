@@ -32,10 +32,10 @@
     "preview:vite": "vite preview",
     "dev:legacy": "node scripts/build.mjs --dev",
     "build:legacy": "node scripts/build.mjs",
-    "start": "node build/index.js",
+    "start": "bun build/index.js",
     "world:clean": "node scripts/clean-world.mjs",
-    "rpg:server": "npm run build && node build/server/rpg-server.js",
-    "rpg:dev": "npm run dev && node build/server/rpg-server.js",
+    "rpg:server": "npm run build && bun build/server/rpg-server.js",
+    "rpg:dev": "npm run dev && bun build/server/rpg-server.js",
     "viewer:dev": "node scripts/build-viewer.mjs --dev",
     "viewer:build": "node scripts/build-viewer.mjs",
     "client:dev": "node scripts/build-client.mjs --dev",
@@ -62,7 +62,10 @@
     "build:types": "bun run typecheck && tsc --emitDeclarationOnly && dts-bundle-generator -o build/index.d.ts src/server/index.ts",
     "dev:no-typecheck": "node scripts/build-dev.mjs --no-typecheck",
     "build:no-typecheck": "node scripts/build-production.mjs --no-typecheck",
-    "clean": "rm -rf build dist"
+    "clean": "rm -rf build dist",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "files": [
     "build/lib/",
@@ -76,9 +79,10 @@
     "@fastify/static": "^8.0.1",
     "@fastify/websocket": "^11.0.1",
     "@pixiv/three-vrm": "^3.3.3",
-    "better-sqlite3": "^11.7.2",
     "d3": "^7.9.0",
     "dotenv-flow": "^4.1.0",
+    "drizzle-kit": "^0.31.2",
+    "drizzle-orm": "^0.44.2",
     "esbuild-plugin-polyfill-node": "^0.3.0",
     "eventemitter3": "^5.0.1",
     "fastify": "^5.0.0",
@@ -86,7 +90,6 @@
     "fs-extra": "^11.2.0",
     "hls.js": "^1.6.1",
     "jsonwebtoken": "^9.0.2",
-    "knex": "^3.1.0",
     "livekit-client": "^2.9.9",
     "livekit-server-sdk": "^2.11.0",
     "lodash-es": "^4.17.21",
@@ -138,6 +141,7 @@
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7"
   },
+
   "engines": {
     "npm": ">=10.0.0",
     "node": "22.11.0"

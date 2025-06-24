@@ -101,10 +101,10 @@ const OODAMonitor: React.FC<OODAMonitorProps> = ({ apiUrl = 'http://localhost:30
               className={`
                 px-4 py-2 rounded-lg text-sm font-medium transition-all
                 ${
-                  context.phase === phase
-                    ? 'text-white shadow-lg transform scale-105'
-                    : 'text-gray-600 bg-gray-100'
-                }
+            context.phase === phase
+              ? 'text-white shadow-lg transform scale-105'
+              : 'text-gray-600 bg-gray-100'
+            }
               `}
               style={{
                 backgroundColor: context.phase === phase ? getPhaseColor(phase) : undefined,

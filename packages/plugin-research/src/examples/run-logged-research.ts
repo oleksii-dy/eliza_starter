@@ -21,13 +21,26 @@ process.env.FILE_LOGGING = 'true';
 const runtime = {
   getSetting: (key: string) => {
     // Enable file logging
-    if (key === 'FILE_LOGGING') {return 'true';}
+    if (key === 'FILE_LOGGING') {
+      return 'true';
+    }
 
     // API keys
-    if (key === 'TAVILY_API_KEY') {return process.env.TAVILY_API_KEY || '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';}
-    if (key === 'EXA_API_KEY') {return process.env.EXA_API_KEY || '267d9e0d-8617-444f-b1bf-612f3bf431f0';}
-    if (key === 'SERPAPI_API_KEY') {return process.env.SERPAPI_API_KEY || '301e99e18e27bb7d0ddee79a86168f251b08925f9b260962573f45c77134b9f6';}
-    if (key === 'FIRECRAWL_API_KEY') {return process.env.FIRECRAWL_API_KEY || 'fc-857417811665460e92716b92e08ec398';}
+    if (key === 'TAVILY_API_KEY') {
+      return process.env.TAVILY_API_KEY || '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';
+    }
+    if (key === 'EXA_API_KEY') {
+      return process.env.EXA_API_KEY || '267d9e0d-8617-444f-b1bf-612f3bf431f0';
+    }
+    if (key === 'SERPAPI_API_KEY') {
+      return (
+        process.env.SERPAPI_API_KEY ||
+        '301e99e18e27bb7d0ddee79a86168f251b08925f9b260962573f45c77134b9f6'
+      );
+    }
+    if (key === 'FIRECRAWL_API_KEY') {
+      return process.env.FIRECRAWL_API_KEY || 'fc-857417811665460e92716b92e08ec398';
+    }
 
     return process.env[key] || null;
   },
@@ -37,10 +50,16 @@ const runtime = {
 
     // Domain classification
     if (prompt.includes('research domain')) {
-      if (prompt.toLowerCase().includes('climate') || prompt.toLowerCase().includes('environment')) {
+      if (
+        prompt.toLowerCase().includes('climate') ||
+        prompt.toLowerCase().includes('environment')
+      ) {
         return 'environmental_science';
       }
-      if (prompt.toLowerCase().includes('ai') || prompt.toLowerCase().includes('machine learning')) {
+      if (
+        prompt.toLowerCase().includes('ai') ||
+        prompt.toLowerCase().includes('machine learning')
+      ) {
         return 'computer_science';
       }
       if (prompt.toLowerCase().includes('productivity') || prompt.toLowerCase().includes('work')) {
@@ -51,9 +70,15 @@ const runtime = {
 
     // Task type classification
     if (prompt.includes('task type')) {
-      if (prompt.toLowerCase().includes('compare')) {return 'comparative';}
-      if (prompt.toLowerCase().includes('analyze')) {return 'analytical';}
-      if (prompt.toLowerCase().includes('explore')) {return 'exploratory';}
+      if (prompt.toLowerCase().includes('compare')) {
+        return 'comparative';
+      }
+      if (prompt.toLowerCase().includes('analyze')) {
+        return 'analytical';
+      }
+      if (prompt.toLowerCase().includes('explore')) {
+        return 'exploratory';
+      }
       return 'analytical';
     }
 
@@ -193,15 +218,17 @@ async function runLoggedResearch() {
           category: 'primary',
           timestamp: Date.now(),
           citations: [],
-          factualClaims: [{
-            id: `claim-${i}-1`,
-            statement: 'Recent developments show positive trends',
-            supportingEvidence: ['Multiple studies confirm this trend'],
-            sourceUrls: [mockSources[0].url],
-            verificationStatus: VerificationStatus.VERIFIED,
-            confidenceScore: 0.9,
-            relatedClaims: [],
-          }],
+          factualClaims: [
+            {
+              id: `claim-${i}-1`,
+              statement: 'Recent developments show positive trends',
+              supportingEvidence: ['Multiple studies confirm this trend'],
+              sourceUrls: [mockSources[0].url],
+              verificationStatus: VerificationStatus.VERIFIED,
+              confidenceScore: 0.9,
+              relatedClaims: [],
+            },
+          ],
           relatedFindings: [],
           verificationStatus: VerificationStatus.VERIFIED,
           extractionMethod: 'automated',
@@ -215,15 +242,17 @@ async function runLoggedResearch() {
           category: 'analysis',
           timestamp: Date.now(),
           citations: [],
-          factualClaims: [{
-            id: `claim-${i}-2`,
-            statement: 'Expert consensus supports these findings',
-            supportingEvidence: ['Leading researchers agree on the implications'],
-            sourceUrls: [mockSources[1].url],
-            verificationStatus: VerificationStatus.VERIFIED,
-            confidenceScore: 0.85,
-            relatedClaims: [],
-          }],
+          factualClaims: [
+            {
+              id: `claim-${i}-2`,
+              statement: 'Expert consensus supports these findings',
+              supportingEvidence: ['Leading researchers agree on the implications'],
+              sourceUrls: [mockSources[1].url],
+              verificationStatus: VerificationStatus.VERIFIED,
+              confidenceScore: 0.85,
+              relatedClaims: [],
+            },
+          ],
           relatedFindings: [],
           verificationStatus: VerificationStatus.VERIFIED,
           extractionMethod: 'automated',
@@ -233,7 +262,7 @@ async function runLoggedResearch() {
       project.findings.push(...mockFindings);
 
       // Update project metadata
-      project.metadata.synthesis = `Research into "${query}" reveals important developments. ${mockFindings.map(f => f.content).join(' ')}`;
+      project.metadata.synthesis = `Research into "${query}" reveals important developments. ${mockFindings.map((f) => f.content).join(' ')}`;
       project.metadata.categoryAnalysis = {
         primary: 'Primary research findings indicate strong progress in the field.',
         analysis: 'Expert analysis confirms the significance of these developments.',
@@ -251,14 +280,13 @@ async function runLoggedResearch() {
       console.log(`📑 Sources Found: ${project.sources.length}`);
       console.log(`💡 Key Findings: ${project.findings.length}`);
       console.log('📝 Report saved to research_logs/');
-
     } catch (error) {
       console.error(`\n❌ Error with research: ${error}`);
     }
 
     // Small delay between projects
     if (i < queries.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
 
@@ -269,19 +297,19 @@ async function runLoggedResearch() {
   try {
     const logsDir = path.join(process.cwd(), 'research_logs');
     const files = await fs.readdir(logsDir);
-    const mdFiles = files.filter(f => f.endsWith('.md')).sort();
-    const jsonFiles = files.filter(f => f.endsWith('.json')).sort();
+    const mdFiles = files.filter((f) => f.endsWith('.md')).sort();
+    const jsonFiles = files.filter((f) => f.endsWith('.json')).sort();
 
     if (mdFiles.length > 0) {
       console.log('📄 Markdown Reports:');
-      mdFiles.forEach(file => {
+      mdFiles.forEach((file) => {
         console.log(`   - ${file}`);
       });
     }
 
     if (jsonFiles.length > 0) {
       console.log('\n📊 JSON Data Files:');
-      jsonFiles.forEach(file => {
+      jsonFiles.forEach((file) => {
         console.log(`   - ${file}`);
       });
     }
@@ -292,7 +320,6 @@ async function runLoggedResearch() {
 
     console.log('\n💡 To analyze JSON data:');
     console.log('   cat research_logs/<filename>.json | jq .');
-
   } catch (error) {
     console.log('No files found in research_logs/');
   }

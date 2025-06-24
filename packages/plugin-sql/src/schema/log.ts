@@ -16,10 +16,12 @@ function createLogTable() {
     agentId: factory.uuid('agent_id').notNull(),
     body: factory.json('body').notNull().default({}),
     type: factory.text('type').notNull(),
-    createdAt: factory.timestamp('created_at', { mode: 'date' })
+    createdAt: factory
+      .timestamp('created_at', { mode: 'date' })
       .default(factory.defaultTimestamp())
       .notNull(),
-    updatedAt: factory.timestamp('updated_at', { mode: 'date' })
+    updatedAt: factory
+      .timestamp('updated_at', { mode: 'date' })
       .default(factory.defaultTimestamp())
       .notNull(),
   };

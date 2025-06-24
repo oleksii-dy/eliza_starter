@@ -24,7 +24,7 @@ describe('PostgreSQL E2E Tests', () => {
     await adapter.init();
 
     // Add a small delay to ensure tables are fully ready
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     return { adapter, agentId };
   };

@@ -75,7 +75,9 @@ describe('Unified Migrator - Simple Hello World Test', () => {
       }
 
       // Create a direct connection to verify tables
-      const schemaName = `test_unified_migrator_simple_${Date.now()}`.replace(/-/g, '_').slice(0, 63);
+      const schemaName = `test_unified_migrator_simple_${Date.now()}`
+        .replace(/-/g, '_')
+        .slice(0, 63);
       const sql_ = postgres(process.env.POSTGRES_URL);
       const directDb = drizzle(sql_);
 

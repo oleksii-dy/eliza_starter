@@ -37,7 +37,9 @@ try {
 
 try {
   console.log('🔧 DEBUG: About to test CREATE TABLE...');
-  const result = await db.execute(sql.raw('CREATE TABLE IF NOT EXISTS test_table (id TEXT PRIMARY KEY)'));
+  const result = await db.execute(
+    sql.raw('CREATE TABLE IF NOT EXISTS test_table (id TEXT PRIMARY KEY)')
+  );
   console.log('🔧 DEBUG: CREATE TABLE success, result:', result);
 } catch (error) {
   console.error('🔧 DEBUG: CREATE TABLE failed');

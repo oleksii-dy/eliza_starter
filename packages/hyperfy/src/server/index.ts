@@ -19,6 +19,7 @@ import multipart from '@fastify/multipart';
 import { createServerWorld } from '../core/createServerWorld';
 import { createRPGServerWorld } from '../core/createRPGServerWorld';
 import { hashFile } from '../core/utils-server';
+import { ENV_SERVER } from '../core/env-server';
 import { getDB } from './db';
 import { Storage } from './Storage';
 import { initCollections } from './collections';
@@ -216,7 +217,7 @@ fastify.get('/status', async (_request, reply) => {
   try {
     const status = {
       uptime: Math.round(world.time),
-      protected: ENV.ADMIN_CODE !== undefined,
+      protected: ENV_SERVER.ADMIN_CODE !== undefined,
       connectedUsers: [] as Array<{
         id: any
         position: any

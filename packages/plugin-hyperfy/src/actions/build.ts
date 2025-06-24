@@ -192,7 +192,7 @@ export const hyperfyEditEntityAction: Action = {
       return {
         text: 'Error: Cannot perform scene edits. Required systems unavailable.',
         values: { success: false, error: 'service_unavailable' },
-        data: { action: 'HYPERFY_EDIT_ENTITY' }
+        data: { action: 'HYPERFY_EDIT_ENTITY' },
       };
     }
 
@@ -231,7 +231,7 @@ export const hyperfyEditEntityAction: Action = {
       return {
         text: 'Sorry, I could not understand the scene editing instructions.',
         values: { success: false, error: 'instruction_parsing_failed' },
-        data: { action: 'HYPERFY_EDIT_ENTITY' }
+        data: { action: 'HYPERFY_EDIT_ENTITY' },
       };
     }
 
@@ -306,7 +306,7 @@ export const hyperfyEditEntityAction: Action = {
       return {
         text: errorResponse.text,
         values: { success: true, summaryFailed: true },
-        data: { action: 'HYPERFY_EDIT_ENTITY', thought: errorResponse.thought }
+        data: { action: 'HYPERFY_EDIT_ENTITY', thought: errorResponse.thought },
       };
     }
 
@@ -321,7 +321,7 @@ export const hyperfyEditEntityAction: Action = {
       return {
         text: parseErrorResponse.text,
         values: { success: true, parseError: true },
-        data: { action: 'HYPERFY_EDIT_ENTITY', thought: parseErrorResponse.thought }
+        data: { action: 'HYPERFY_EDIT_ENTITY', thought: parseErrorResponse.thought },
       };
     }
 
@@ -331,22 +331,22 @@ export const hyperfyEditEntityAction: Action = {
       text: response.text || 'Scene updates complete!',
       emote: response.emote || '',
     };
-    
+
     await callback(finalResponse);
 
     return {
       text: finalResponse.text,
-      values: { 
-        success: true, 
+      values: {
+        success: true,
         operationsCompleted: operationResults.operations.length,
-        summary: summaryText
+        summary: summaryText,
       },
-      data: { 
-        action: 'HYPERFY_EDIT_ENTITY', 
+      data: {
+        action: 'HYPERFY_EDIT_ENTITY',
         operations: operationResults.operations,
         thought: finalResponse.thought,
-        emote: finalResponse.emote
-      }
+        emote: finalResponse.emote,
+      },
     };
   },
   examples: [
@@ -355,7 +355,8 @@ export const hyperfyEditEntityAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User wants me to duplicate a block and place it above the water - I need to find the block entity and position it correctly',
+          thought:
+            'User wants me to duplicate a block and place it above the water - I need to find the block entity and position it correctly',
           text: 'Duplicating block and placing it on top of water...',
           actions: ['HYPERFY_EDIT_ENTITY'],
           source: 'hyperfy',
@@ -367,7 +368,8 @@ export const hyperfyEditEntityAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'I need to translate the tree entity to a position adjacent to the house - this will require finding both entities and calculating the new position',
+          thought:
+            'I need to translate the tree entity to a position adjacent to the house - this will require finding both entities and calculating the new position',
           text: 'Moving tree entity beside the house...',
           actions: ['HYPERFY_EDIT_ENTITY'],
           source: 'hyperfy',
@@ -379,7 +381,8 @@ export const hyperfyEditEntityAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          thought: 'User wants me to remove a floating cube from the scene - I need to identify the cube entity and delete it',
+          thought:
+            'User wants me to remove a floating cube from the scene - I need to identify the cube entity and delete it',
           text: 'Deleting the floating cube entity...',
           actions: ['HYPERFY_EDIT_ENTITY'],
           source: 'hyperfy',

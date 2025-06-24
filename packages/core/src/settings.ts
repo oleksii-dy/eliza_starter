@@ -64,7 +64,7 @@ export function getSalt(): string {
  * @param {string} salt - The salt to use for encryption
  * @returns {string} - The encrypted value in 'iv:encrypted' format
  */
-export function encryptStringValue(value: string, salt: string): string {
+export function encryptStringValue(value: any, salt: string): any {
   // Check if value is undefined or null
   if (value === undefined || value === null) {
     logger.debug('Attempted to encrypt undefined or null value');
@@ -116,7 +116,7 @@ export function encryptStringValue(value: string, salt: string): string {
  * @param {string} salt - The salt to use for decryption
  * @returns {string} - The decrypted string value
  */
-export function decryptStringValue(value: string, salt: string): string {
+export function decryptStringValue(value: any, salt: string): any {
   try {
     // Check if value is undefined or null
     if (value === undefined || value === null) {

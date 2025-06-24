@@ -70,7 +70,9 @@ export class RACEEvaluator {
     try {
       // Check if we have useModel available
       if (!this.runtime.useModel) {
-        throw new Error(`[RACEEvaluator] Model is required for ${dimension} evaluation but runtime.useModel is not available. Ensure the runtime is properly initialized with AI model access.`);
+        throw new Error(
+          `[RACEEvaluator] Model is required for ${dimension} evaluation but runtime.useModel is not available. Ensure the runtime is properly initialized with AI model access.`
+        );
       }
 
       const reportContent = this.extractReportContent(report);
@@ -79,14 +81,16 @@ export class RACEEvaluator {
       // Convert rubric items to string format if they're objects
       let rubricText = '';
       if (Array.isArray(criteriaDefinition.rubric)) {
-        rubricText = criteriaDefinition.rubric.map((item: any, i: number) => {
-          if (typeof item === 'string') {
-            return `${i + 1}. ${item}`;
-          } else if (item.description) {
-            return `${item.score || i}. ${item.description}`;
-          }
-          return `${i + 1}. Criterion ${i + 1}`;
-        }).join('\n');
+        rubricText = criteriaDefinition.rubric
+          .map((item: any, i: number) => {
+            if (typeof item === 'string') {
+              return `${i + 1}. ${item}`;
+            } else if (item.description) {
+              return `${item.score || i}. ${item.description}`;
+            }
+            return `${i + 1}. Criterion ${i + 1}`;
+          })
+          .join('\n');
       }
 
       const prompt = `Evaluate this research report on the ${dimension} dimension.
@@ -120,9 +124,9 @@ Respond with JSON:
         messages: [
           {
             role: 'system',
-            content: 'You are an expert research evaluator. Provide a balanced, fair assessment.'
+            content: 'You are an expert research evaluator. Provide a balanced, fair assessment.',
           },
-          { role: 'user', content: prompt }
+          { role: 'user', content: prompt },
         ],
         temperature: 0.3,
         max_tokens: 1000,
@@ -205,7 +209,9 @@ export class FACTEvaluator {
   private async extractFactualClaims(project: ResearchProject): Promise<FactualClaim[]> {
     const claims: FactualClaim[] = [];
 
-    if (!project.report) {return claims;}
+    if (!project.report) {
+      return claims;
+    }
 
     // Extract claims from report sections
     for (const section of project.report.sections) {
@@ -229,7 +235,9 @@ export class FACTEvaluator {
   ): Promise<FactualClaim[]> {
     // Check if we have a model available
     if (!this.runtime.useModel) {
-      throw new Error('[FACTEvaluator] Model is required for claim extraction but runtime.useModel is not available. Ensure the runtime is properly initialized with AI model access.');
+      throw new Error(
+        '[FACTEvaluator] Model is required for claim extraction but runtime.useModel is not available. Ensure the runtime is properly initialized with AI model access.'
+      );
     }
 
     const prompt = `Extract factual claims and their citations from this text.
@@ -238,7 +246,10 @@ Text:
 ${text.substring(0, 3000)}
 
 Available Citations:
-${citations.slice(0, 10).map((c, i) => `[${i + 1}] ${c.source.url}`).join('\n')}
+${citations
+  .slice(0, 10)
+  .map((c, i) => `[${i + 1}] ${c.source.url}`)
+  .join('\n')}
 
 For each factual claim in the text:
 1. Extract the exact statement
@@ -261,9 +272,9 @@ Extract 3-5 key claims maximum.`;
         messages: [
           {
             role: 'system',
-            content: 'You are a fact extraction expert. Extract only clear, verifiable claims.'
+            content: 'You are a fact extraction expert. Extract only clear, verifiable claims.',
           },
-          { role: 'user', content: prompt }
+          { role: 'user', content: prompt },
         ],
         temperature: 0.2,
         max_tokens: 1500,
@@ -311,7 +322,9 @@ Extract 3-5 key claims maximum.`;
   private async verifySingleClaim(claim: FactualClaim): Promise<boolean> {
     // If no model available, fail with clear error
     if (!this.runtime.useModel) {
-      throw new Error('[FACTEvaluator] Model is required for claim verification but runtime.useModel is not available. Ensure the runtime is properly initialized with AI model access.');
+      throw new Error(
+        '[FACTEvaluator] Model is required for claim verification but runtime.useModel is not available. Ensure the runtime is properly initialized with AI model access.'
+      );
     }
 
     // In a real implementation, this would:
@@ -319,7 +332,9 @@ Extract 3-5 key claims maximum.`;
     // 2. Check if the content supports the claim
     // For now, we'll use a simplified verification
 
-    if (!claim.sourceUrls || claim.sourceUrls.length === 0 || !claim.statement) {return false;}
+    if (!claim.sourceUrls || claim.sourceUrls.length === 0 || !claim.statement) {
+      return false;
+    }
 
     const prompt = `Does this evidence support the claim?
 
@@ -334,9 +349,9 @@ Answer with just "yes" or "no".`;
         messages: [
           {
             role: 'system',
-            content: 'You are a fact verifier. Answer only yes or no.'
+            content: 'You are a fact verifier. Answer only yes or no.',
           },
-          { role: 'user', content: prompt }
+          { role: 'user', content: prompt },
         ],
         temperature: 0.1,
         max_tokens: 10,

@@ -52,30 +52,36 @@ Agent: "I'll start a deep research project on the performance differences betwee
 # Research Report: Performance comparison of Next.js 14 App Router vs Pages Router
 
 ## Executive Summary
+
 This research analyzed 12 sources to compare the performance characteristics of Next.js 14's App Router versus the traditional Pages Router. Key findings indicate that App Router offers superior performance for dynamic applications with frequent data updates, while Pages Router maintains advantages for static content delivery.
 
 ## Key Performance Findings
 
 ### 1. Initial Load Performance
+
 - **App Router**: 15-20% slower initial bundle size due to React Server Components runtime
 - **Pages Router**: Faster initial load for static pages (average 1.2s vs 1.5s)
 
 ### 2. Runtime Performance
+
 - **App Router**: Better runtime performance with streaming SSR
 - **Pages Router**: More predictable performance profile
 
 ### 3. Build Performance
+
 - **App Router**: Faster incremental builds (30% improvement)
 - **Pages Router**: Better full build times for large applications
 
 ## Recommendations
+
 - Use App Router for: Dynamic applications, real-time features, complex data requirements
 - Use Pages Router for: Static sites, blogs, marketing pages
 
 ## Sources
+
 1. [Vercel Official Benchmarks](https://vercel.com/blog/next-14-performance) - Official performance metrics
 2. [Web.dev Case Study](https://web.dev/next-js-performance) - Real-world migration analysis
-[... additional sources ...]
+   [... additional sources ...]
 ```
 
 ## 2. Market Research Scenario
@@ -90,7 +96,7 @@ const researchConfig = {
   language: 'en',
   scope: 'Focus on clinical applications, regulatory developments, and market size',
   enableImages: true,
-  searchProviders: ['tavily', 'serper']
+  searchProviders: ['tavily', 'serper'],
 };
 ```
 
@@ -115,11 +121,12 @@ const academicConfig = {
   enableCitations: true,
   citationStyle: 'APA',
   maxSearchResults: 30,
-  prioritizePeerReviewed: true
+  prioritizePeerReviewed: true,
 };
 ```
 
 ### Expected Sources
+
 - ArXiv preprints
 - Nature/Science publications
 - IEEE Quantum Computing proceedings
@@ -133,7 +140,7 @@ const academicConfig = {
 
 ```typescript
 // User request
-User: "Research and compare the APIs and pricing of OpenAI, Anthropic, Google, and Cohere"
+User: 'Research and compare the APIs and pricing of OpenAI, Anthropic, Google, and Cohere';
 
 // Research focus areas
 const competitiveAnalysis = {
@@ -144,19 +151,21 @@ const competitiveAnalysis = {
     'Rate limits',
     'Model capabilities',
     'Documentation quality',
-    'SDK support'
-  ]
+    'SDK support',
+  ],
 };
 ```
 
 ### Expected Deliverables
 
 1. **Comparison Matrix**
+
    - Feature availability across providers
    - Pricing tiers and token costs
    - Rate limits and quotas
 
 2. **Technical Analysis**
+
    - API design patterns
    - Authentication methods
    - Error handling approaches
@@ -177,7 +186,7 @@ const realtimeConfig = {
   maxAge: 24, // Only sources from last 24 hours
   searchProviders: ['news', 'financial'],
   updateFrequency: 'hourly',
-  alertOnMajorDevelopments: true
+  alertOnMajorDevelopments: true,
 };
 ```
 
@@ -205,18 +214,20 @@ const productResearch = {
     - Production challenges
   `,
   includeCodeExamples: true,
-  prioritizeRecentContent: true
+  prioritizeRecentContent: true,
 };
 ```
 
 ### Expected Sections
 
 1. **Architecture Patterns**
+
    - Hybrid search approaches
    - Reranking strategies
    - Cache optimization
 
 2. **Implementation Details**
+
    - Code examples from GitHub
    - Performance benchmarks
    - Cost analysis
@@ -246,7 +257,7 @@ const assessQuality = (project: ResearchProject): ResearchQualityMetrics => {
     informationCompleteness: assessTopicCoverage(project.findings),
     findingRelevance: measureRelevanceScore(project.findings, project.query),
     citationAccuracy: verifyCitations(project.report.citations),
-    reportCoherence: analyzeReportStructure(project.report)
+    reportCoherence: analyzeReportStructure(project.report),
   };
 };
 ```
@@ -259,28 +270,30 @@ const assessQuality = (project: ResearchProject): ResearchQualityMetrics => {
 // Respond to Slack message with research
 app.message(/research (.+)/, async ({ message, say }) => {
   const topic = message.text.match(/research (.+)/)[1];
-  
+
   const project = await researchService.createProject(topic);
   await say(`Starting research on: ${topic}`);
-  
+
   // Send updates as research progresses
   researchService.on('progress', async (update) => {
     await say(`Research update: ${update.phase} - ${update.progress}%`);
   });
-  
+
   // Send final report
   researchService.on('complete', async (project) => {
     await say({
       text: 'Research complete!',
-      attachments: [{
-        title: project.report.title,
-        text: project.report.summary,
-        fields: project.report.sections.map(s => ({
-          title: s.heading,
-          value: s.content.substring(0, 500) + '...',
-          short: false
-        }))
-      }]
+      attachments: [
+        {
+          title: project.report.title,
+          text: project.report.summary,
+          fields: project.report.sections.map((s) => ({
+            title: s.heading,
+            value: s.content.substring(0, 500) + '...',
+            short: false,
+          })),
+        },
+      ],
     });
   });
 });
@@ -292,39 +305,41 @@ app.message(/research (.+)/, async ({ message, say }) => {
 client.on('messageCreate', async (message) => {
   if (message.content.startsWith('!research')) {
     const topic = message.content.replace('!research', '').trim();
-    
+
     const embed = new EmbedBuilder()
       .setTitle('Research Started')
       .setDescription(`Researching: ${topic}`)
-      .setColor(0x0099FF);
-    
+      .setColor(0x0099ff);
+
     const reply = await message.reply({ embeds: [embed] });
-    
+
     const project = await researchService.createProject(topic);
-    
+
     // Update embed with progress
     const updateInterval = setInterval(async () => {
       const status = await researchService.getProjectStatus(project.id);
-      
+
       embed.setFields([
         { name: 'Status', value: status.status, inline: true },
         { name: 'Phase', value: status.currentPhase, inline: true },
-        { name: 'Progress', value: `${status.progress}%`, inline: true }
+        { name: 'Progress', value: `${status.progress}%`, inline: true },
       ]);
-      
+
       await reply.edit({ embeds: [embed] });
-      
+
       if (status.status === 'completed') {
         clearInterval(updateInterval);
         // Send full report as file
         const report = await researchService.getReport(project.id);
         const buffer = Buffer.from(report.markdown, 'utf-8');
         await message.channel.send({
-          content: 'Research complete! Here\'s your report:',
-          files: [{
-            attachment: buffer,
-            name: `research-${topic.replace(/\s+/g, '-')}.md`
-          }]
+          content: "Research complete! Here's your report:",
+          files: [
+            {
+              attachment: buffer,
+              name: `research-${topic.replace(/\s+/g, '-')}.md`,
+            },
+          ],
         });
       }
     }, 5000);
@@ -339,15 +354,11 @@ client.on('messageCreate', async (message) => {
 ```typescript
 // Compare multiple topics
 const comparativeResearch = async (topics: string[]) => {
-  const projects = await Promise.all(
-    topics.map(topic => researchService.createProject(topic))
-  );
-  
+  const projects = await Promise.all(topics.map((topic) => researchService.createProject(topic)));
+
   // Wait for all to complete
-  await Promise.all(
-    projects.map(p => waitForCompletion(p.id))
-  );
-  
+  await Promise.all(projects.map((p) => waitForCompletion(p.id)));
+
   // Generate comparative analysis
   const comparison = await synthesizeComparison(projects);
   return comparison;
@@ -356,7 +367,7 @@ const comparativeResearch = async (topics: string[]) => {
 // Example usage
 const frameworks = ['React', 'Vue', 'Angular', 'Svelte'];
 const comparison = await comparativeResearch(
-  frameworks.map(f => `${f} performance benchmarks 2024`)
+  frameworks.map((f) => `${f} performance benchmarks 2024`)
 );
 ```
 
@@ -369,14 +380,14 @@ const scheduleResearch = (topic: string, schedule: string) => {
     const project = await researchService.createProject(
       `${topic} - updates for ${new Date().toDateString()}`
     );
-    
+
     await waitForCompletion(project.id);
-    
+
     // Send report to stakeholders
     await emailService.send({
       to: stakeholders,
       subject: `Daily Research Update: ${topic}`,
-      body: project.report.markdown
+      body: project.report.markdown,
     });
   });
 };
@@ -393,16 +404,14 @@ const researchPipeline = async (initialTopic: string) => {
   // Stage 1: Broad research
   const overview = await researchService.createProject(initialTopic);
   await waitForCompletion(overview.id);
-  
+
   // Stage 2: Deep dive into top findings
   const keyAreas = extractKeyAreas(overview.report);
-  const deepDives = await Promise.all(
-    keyAreas.map(area => researchService.createProject(area))
-  );
-  
+  const deepDives = await Promise.all(keyAreas.map((area) => researchService.createProject(area)));
+
   // Stage 3: Synthesize all research
   const synthesis = await createSynthesisReport([overview, ...deepDives]);
-  
+
   return synthesis;
 };
-``` 
+```

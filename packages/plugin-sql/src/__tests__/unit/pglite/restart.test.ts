@@ -51,12 +51,14 @@ describe('PGLite Restart and Recovery Tests', () => {
 
       // Create some test data
       const entityId = `restart-entity-${Date.now()}` as UUID;
-      await adapter1.createEntities([{
-        id: entityId,
-        names: ['Restart Test Entity'],
-        metadata: { session: 1 },
-        agentId: testAgentId,
-      }]);
+      await adapter1.createEntities([
+        {
+          id: entityId,
+          names: ['Restart Test Entity'],
+          metadata: { session: 1 },
+          agentId: testAgentId,
+        },
+      ]);
 
       // Verify creation
       const entities1 = await adapter1.getEntitiesByIds([entityId]);
@@ -101,12 +103,14 @@ describe('PGLite Restart and Recovery Tests', () => {
 
       // Create test data
       const entityId = `delayed-entity-${Date.now()}` as UUID;
-      await adapter1.createEntities([{
-        id: entityId,
-        names: ['Delayed Restart Entity'],
-        metadata: { session: 1 },
-        agentId: testAgentId,
-      }]);
+      await adapter1.createEntities([
+        {
+          id: entityId,
+          names: ['Delayed Restart Entity'],
+          metadata: { session: 1 },
+          agentId: testAgentId,
+        },
+      ]);
 
       // Close
       await adapter1.close();
@@ -114,7 +118,7 @@ describe('PGLite Restart and Recovery Tests', () => {
 
       // Wait for proper cleanup (3 seconds as per CLEANUP_DELAY)
       console.log('Waiting for WebAssembly cleanup...');
-      await new Promise(resolve => setTimeout(resolve, 3500));
+      await new Promise((resolve) => setTimeout(resolve, 3500));
 
       // Second session
       const manager2 = connectionRegistry.getPGLiteManager(testDataDir);
@@ -148,12 +152,14 @@ describe('PGLite Restart and Recovery Tests', () => {
 
         if (i === 0) {
           // Create data on first iteration
-          await adapter.createEntities([{
-            id: entityId,
-            names: ['Rapid Restart Entity'],
-            metadata: { iteration: i + 1 },
-            agentId: testAgentId,
-          }]);
+          await adapter.createEntities([
+            {
+              id: entityId,
+              names: ['Rapid Restart Entity'],
+              metadata: { iteration: i + 1 },
+              agentId: testAgentId,
+            },
+          ]);
         } else {
           // Update data on subsequent iterations
           await adapter.updateEntity({
@@ -175,7 +181,7 @@ describe('PGLite Restart and Recovery Tests', () => {
 
         // Small delay between iterations (less than cleanup delay)
         if (i < 2) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
       }
     });
@@ -192,19 +198,21 @@ describe('PGLite Restart and Recovery Tests', () => {
 
       // Create test data
       const entityId = `crash-entity-${Date.now()}` as UUID;
-      await adapter1.createEntities([{
-        id: entityId,
-        names: ['Crash Test Entity'],
-        metadata: { session: 1 },
-        agentId: testAgentId,
-      }]);
+      await adapter1.createEntities([
+        {
+          id: entityId,
+          names: ['Crash Test Entity'],
+          metadata: { session: 1 },
+          agentId: testAgentId,
+        },
+      ]);
 
       // Simulate crash - NO close() calls
       // Just clear references (simulating process termination)
       connectionRegistry.clearAll();
 
       // Wait a bit to simulate restart after crash
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Second session - recovery
       const manager2 = connectionRegistry.getPGLiteManager(testDataDir);
@@ -232,12 +240,14 @@ describe('PGLite Restart and Recovery Tests', () => {
       const adapter1 = new PgliteDatabaseAdapter('agent-1' as UUID, manager1, testDataDir);
       await adapter1.init();
 
-      await adapter1.createEntities([{
-        id: 'entity-1' as UUID,
-        names: ['Entity 1'],
-        metadata: {},
-        agentId: 'agent-1' as UUID,
-      }]);
+      await adapter1.createEntities([
+        {
+          id: 'entity-1' as UUID,
+          names: ['Entity 1'],
+          metadata: {},
+          agentId: 'agent-1' as UUID,
+        },
+      ]);
 
       // Close
       await adapter1.close();
@@ -278,7 +288,7 @@ describe('PGLite Restart and Recovery Tests', () => {
       }
 
       // Clean up all adapters
-      await Promise.all(adapters.map(adapter => adapter.close()));
+      await Promise.all(adapters.map((adapter) => adapter.close()));
     });
   });
 
@@ -330,12 +340,14 @@ describe('PGLite Restart and Recovery Tests', () => {
 
       // Perform some operations to generate metrics
       for (let i = 0; i < 5; i++) {
-        await adapter1.createEntities([{
-          id: `perf-entity-${i}` as UUID,
-          names: [`Performance Entity ${i}`],
-          metadata: {},
-          agentId: testAgentId,
-        }]);
+        await adapter1.createEntities([
+          {
+            id: `perf-entity-${i}` as UUID,
+            names: [`Performance Entity ${i}`],
+            metadata: {},
+            agentId: testAgentId,
+          },
+        ]);
       }
 
       // Close
@@ -343,7 +355,7 @@ describe('PGLite Restart and Recovery Tests', () => {
       connectionRegistry.clearAll();
 
       // Wait for cleanup
-      await new Promise(resolve => setTimeout(resolve, 3500));
+      await new Promise((resolve) => setTimeout(resolve, 3500));
 
       // Second session - new manager, new stats
       const manager2 = connectionRegistry.getPGLiteManager(testDataDir);

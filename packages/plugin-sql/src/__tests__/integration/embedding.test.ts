@@ -88,14 +88,16 @@ describe('Embedding Integration Tests', () => {
         embeddingLength: retrieved?.embedding?.length,
         content: retrieved?.content,
       });
-      
+
       // Check if embeddings table has the data
       if (memoryId) {
         const db = adapter.getDatabase();
-        const embeddingRows = await db.execute(sql.raw(`SELECT * FROM embeddings WHERE memory_id = '${memoryId}'`));
+        const embeddingRows = await db.execute(
+          sql.raw(`SELECT * FROM embeddings WHERE memory_id = '${memoryId}'`)
+        );
         console.log('Embedding rows:', embeddingRows);
       }
-      
+
       expect(retrieved).toBeDefined();
       expect(retrieved?.embedding).toBeDefined();
       expect(retrieved?.embedding?.length).toBe(384);

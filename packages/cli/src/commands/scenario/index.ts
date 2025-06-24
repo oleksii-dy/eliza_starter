@@ -104,9 +104,8 @@ scenarioCommand
         logger.info('Loading standalone scenarios from @elizaos/scenarios...');
 
         try {
-          // Dynamically import scenarios from the scenarios package
-          const scenariosModule = await import('@elizaos/scenarios');
           // @ts-expect-error - scenarios module may not be available
+          const scenariosModule = await import('@elizaos/scenarios');
           const { allScenarios, getScenarioById } = scenariosModule || {
             allScenarios: [],
             getScenarioById: () => null,

@@ -945,7 +945,7 @@ export const swapAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll swap 1 WETH for USDC on Arbitrum first, then bridge the USDC to Base for lower fees.",
-          thought: "This is a cross-chain optimization strategy. First convert to stablecoins on Arbitrum, then bridge to Base where fees are even lower. The swap prepares the right asset for bridging.",
+          thought: 'This is a cross-chain optimization strategy. First convert to stablecoins on Arbitrum, then bridge to Base where fees are even lower. The swap prepares the right asset for bridging.',
           actions: ['EVM_SWAP_TOKENS', 'EVM_BRIDGE_TOKENS'],
         },
       },
@@ -962,7 +962,7 @@ export const swapAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll swap 50% of your ETH to USDC and then transfer it to your cold wallet for safekeeping.",
-          thought: "Risk management workflow: convert volatile ETH to stable USDC, then secure it in cold storage. The swap reduces portfolio volatility before the secure transfer.",
+          thought: 'Risk management workflow: convert volatile ETH to stable USDC, then secure it in cold storage. The swap reduces portfolio volatility before the secure transfer.',
           actions: ['EVM_SWAP_TOKENS', 'EVM_TRANSFER_TOKENS'],
         },
       },
@@ -978,7 +978,7 @@ export const swapAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll execute your yield farming strategy: first swap ETH to USDC, then bridge to Base.",
-          thought: "Yield farming preparation: convert ETH to USDC for stable farming pairs, then move to Base for lower fee farming operations. Sequential setup for DeFi strategy.",
+          thought: 'Yield farming preparation: convert ETH to USDC for stable farming pairs, then move to Base for lower fee farming operations. Sequential setup for DeFi strategy.',
           actions: ['EVM_SWAP_TOKENS', 'EVM_BRIDGE_TOKENS'],
         },
       },
@@ -995,7 +995,7 @@ export const swapAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll swap ETH to USDC for your arbitrage strategy. After the swap, I can help bridge to Polygon to capture the price difference.",
-          thought: "Cross-chain arbitrage setup: convert to USDC first to enable price comparison and movement between chains. The swap standardizes the asset for arbitrage execution.",
+          thought: 'Cross-chain arbitrage setup: convert to USDC first to enable price comparison and movement between chains. The swap standardizes the asset for arbitrage execution.',
           action: 'EVM_SWAP_TOKENS',
           workflowContext: {
             step: 'arbitrage-swap',
@@ -1017,7 +1017,7 @@ export const swapAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll help rebalance your portfolio by swapping 50% of your ETH to stablecoins. This will reduce volatility and create opportunities for yield generation.",
-          thought: "Portfolio risk management: converting 50% of volatile ETH exposure to stable assets. This rebalancing reduces overall portfolio volatility while maintaining upside exposure.",
+          thought: 'Portfolio risk management: converting 50% of volatile ETH exposure to stable assets. This rebalancing reduces overall portfolio volatility while maintaining upside exposure.',
           action: 'EVM_SWAP_TOKENS',
           workflowContext: {
             step: 'rebalance-swap',
@@ -1039,7 +1039,7 @@ export const swapAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll swap your tokens to prepare for Uniswap liquidity provision. After the swap, I can help you add liquidity and start earning trading fees.",
-          thought: "Liquidity farming preparation: need to get the right token ratio for Uniswap pairs. The swap positions tokens correctly for liquidity provision and fee earning.",
+          thought: 'Liquidity farming preparation: need to get the right token ratio for Uniswap pairs. The swap positions tokens correctly for liquidity provision and fee earning.',
           action: 'EVM_SWAP_TOKENS',
           workflowContext: {
             step: 'farming-prep',

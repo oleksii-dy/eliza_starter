@@ -39,12 +39,12 @@ export class ExaSearchProvider {
           numResults: maxResults || 10,
           text: true, // Get text content
           summary: {
-            query: 'Key points and main findings'
+            query: 'Key points and main findings',
           },
           highlights: {
             numSentences: 3,
-            highlightsPerUrl: 2
-          }
+            highlightsPerUrl: 2,
+          },
         },
         {
           headers: {
@@ -63,7 +63,7 @@ export class ExaSearchProvider {
         title: result.title || 'Untitled',
         url: result.url,
         snippet: result.summary || result.text?.substring(0, 200) || 'No description available',
-        score: result.score || (0.95 - index * 0.05),
+        score: result.score || 0.95 - index * 0.05,
         provider: 'exa',
         metadata: {
           language: this.config.language || 'en',
@@ -81,7 +81,9 @@ export class ExaSearchProvider {
       return results;
     } catch (error: any) {
       if (error.response) {
-        logger.error(`[Exa] API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+        logger.error(
+          `[Exa] API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`
+        );
         if (error.response.status === 401) {
           throw new Error('Invalid Exa API key');
         }
@@ -108,12 +110,12 @@ export class ExaSearchProvider {
           numResults: maxResults || 10,
           text: true,
           summary: {
-            query: 'Main contributions and findings'
+            query: 'Main contributions and findings',
           },
           highlights: {
             numSentences: 5,
-            highlightsPerUrl: 3
-          }
+            highlightsPerUrl: 3,
+          },
         },
         {
           headers: {
@@ -132,7 +134,7 @@ export class ExaSearchProvider {
         title: result.title || 'Untitled',
         url: result.url,
         snippet: result.summary || result.text?.substring(0, 300) || 'No abstract available',
-        score: result.score || (0.95 - index * 0.03),
+        score: result.score || 0.95 - index * 0.03,
         provider: 'exa',
         metadata: {
           language: 'en',
@@ -164,8 +166,8 @@ export class ExaSearchProvider {
           numResults: maxResults || 10,
           text: true,
           summary: {
-            query: 'Key similarities and main points'
-          }
+            query: 'Key similarities and main points',
+          },
         },
         {
           headers: {
@@ -184,7 +186,7 @@ export class ExaSearchProvider {
         title: result.title || 'Untitled',
         url: result.url,
         snippet: result.summary || result.text?.substring(0, 200) || 'No description available',
-        score: result.score || (0.9 - index * 0.05),
+        score: result.score || 0.9 - index * 0.05,
         provider: 'exa',
         metadata: {
           language: 'en',

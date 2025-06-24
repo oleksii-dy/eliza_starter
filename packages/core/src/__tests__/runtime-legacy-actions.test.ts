@@ -385,6 +385,8 @@ describe('Runtime - Legacy Action Return Values', () => {
 
       // Working memory should not be updated for void returns
       expect(updateWorkingMemorySpy).not.toHaveBeenCalled();
+
+      updateWorkingMemorySpy.mockRestore();
     });
 
     it('should update working memory for proper ActionResult returns', async () => {
@@ -424,6 +426,8 @@ describe('Runtime - Legacy Action Return Values', () => {
           data: { result: 'success' },
         })
       );
+
+      updateWorkingMemorySpy.mockRestore();
     });
   });
 

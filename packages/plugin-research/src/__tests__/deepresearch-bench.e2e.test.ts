@@ -26,15 +26,21 @@ export class DeepResearchBenchSuite implements TestSuite {
       name: 'Run benchmark queries',
       fn: async (runtime: any) => {
         console.log('🚀 Starting DeepResearch Benchmark with ElizaOS runtime');
-        console.log('=' .repeat(60));
+        console.log('='.repeat(60));
 
         // Get benchmark parameters from environment
         const limit = parseInt(process.env.BENCH_LIMIT || '5');
         const lang = process.env.BENCH_LANG || 'en';
 
         // Check if data file exists
-        const dataPath = path.join(__dirname, '../../deep_research_bench/data/prompt_data/query.jsonl');
-        const dataExists = await fs.access(dataPath).then(() => true).catch(() => false);
+        const dataPath = path.join(
+          __dirname,
+          '../../deep_research_bench/data/prompt_data/query.jsonl'
+        );
+        const dataExists = await fs
+          .access(dataPath)
+          .then(() => true)
+          .catch(() => false);
 
         if (!dataExists) {
           console.error(`❌ Benchmark data not found at: ${dataPath}`);
@@ -46,9 +52,9 @@ export class DeepResearchBenchSuite implements TestSuite {
         const queryData = await fs.readFile(dataPath, 'utf-8');
         const queries: BenchmarkQuery[] = queryData
           .split('\n')
-          .filter(line => line.trim())
-          .map(line => JSON.parse(line))
-          .filter(q => q.language === lang)
+          .filter((line) => line.trim())
+          .map((line) => JSON.parse(line))
+          .filter((q) => q.language === lang)
           .slice(0, limit);
 
         console.log(`📝 Found ${queries.length} ${lang} queries to process`);
@@ -138,7 +144,9 @@ export class DeepResearchBenchSuite implements TestSuite {
                 // Log performance metrics
                 if (updated.metadata?.performanceMetrics) {
                   const metrics = updated.metadata.performanceMetrics;
-                  console.log(`📊 Performance: ${metrics.sourcesProcessed} sources, ${metrics.searchQueries} queries`);
+                  console.log(
+                    `📊 Performance: ${metrics.sourcesProcessed} sources, ${metrics.searchQueries} queries`
+                  );
                 }
 
                 break;
@@ -152,14 +160,13 @@ export class DeepResearchBenchSuite implements TestSuite {
                 console.log(`⏳ Still processing... (${elapsed / 1000}s elapsed)`);
               }
 
-              await new Promise(resolve => setTimeout(resolve, checkInterval));
+              await new Promise((resolve) => setTimeout(resolve, checkInterval));
               elapsed += checkInterval;
             }
 
             if (elapsed >= timeout) {
               console.error(`❌ Research timed out after ${timeout / 1000}s`);
             }
-
           } catch (error) {
             console.error(`❌ Error processing query ${query.id}:`, error);
           }

@@ -6,7 +6,7 @@ import {
   type Memory,
   type Entity,
   type Relationship,
-  ChannelType
+  ChannelType,
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { createIsolatedTestDatabase } from '../test-helpers';
@@ -35,10 +35,7 @@ describe('SQL Plugin Production Validation', () => {
   beforeAll(async () => {
     console.log('[PRODUCTION VALIDATION] Setting up production test environment...');
 
-    const setup = await createIsolatedTestDatabase(
-      `production_validation_${Date.now()}`,
-      []
-    );
+    const setup = await createIsolatedTestDatabase(`production_validation_${Date.now()}`, []);
 
     adapter = setup.adapter;
     runtime = setup.runtime;
@@ -90,32 +87,35 @@ describe('SQL Plugin Production Validation', () => {
         const batch = Math.min(batchSize, memoryCount - i);
         const batchPromises = Array.from({ length: batch }, (_, j) => {
           const index = i + j;
-          return runtime.createMemory({
-            id: uuidv4() as UUID,
-            entityId,
-            agentId: testAgentId,
-            roomId,
-            content: {
-              text: `Performance test memory ${index} with sufficient content to simulate realistic usage patterns in production environments`,
-              source: 'performance-test',
-              type: 'message',
+          return runtime.createMemory(
+            {
+              id: uuidv4() as UUID,
+              entityId,
+              agentId: testAgentId,
+              roomId,
+              content: {
+                text: `Performance test memory ${index} with sufficient content to simulate realistic usage patterns in production environments`,
+                source: 'performance-test',
+                type: 'message',
+              },
+              embedding: Array(384).fill(Math.random()), // Simulate real embeddings
+              metadata: {
+                type: 'message',
+                performanceTest: true,
+                index,
+                batchNumber: Math.floor(i / batchSize),
+              },
+              createdAt: Date.now() + index,
             },
-            embedding: Array(384).fill(Math.random()), // Simulate real embeddings
-            metadata: {
-              type: 'message',
-              performanceTest: true,
-              index,
-              batchNumber: Math.floor(i / batchSize),
-            },
-            createdAt: Date.now() + index,
-          }, 'messages');
+            'messages'
+          );
         });
 
         await Promise.all(batchPromises);
 
         // Brief pause between batches to prevent overwhelming
         if (i + batch < memoryCount) {
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
         }
       }
 
@@ -151,7 +151,9 @@ describe('SQL Plugin Production Validation', () => {
       });
       const searchTime = Date.now() - searchStartTime;
 
-      console.log(`[PERFORMANCE] Semantic search completed in ${searchTime}ms, found ${searchResults.length} results`);
+      console.log(
+        `[PERFORMANCE] Semantic search completed in ${searchTime}ms, found ${searchResults.length} results`
+      );
       expect(searchTime).toBeLessThan(3000); // Search should complete within 3 seconds
     });
 
@@ -185,23 +187,26 @@ describe('SQL Plugin Production Validation', () => {
             });
 
           case 1: // Memory creation
-            return runtime.createMemory({
-              id: uuidv4() as UUID,
-              entityId: testAgentId,
-              agentId: testAgentId,
-              roomId,
-              content: {
-                text: `Concurrent memory ${i}`,
-                source: 'concurrency-test',
-                type: 'message',
+            return runtime.createMemory(
+              {
+                id: uuidv4() as UUID,
+                entityId: testAgentId,
+                agentId: testAgentId,
+                roomId,
+                content: {
+                  text: `Concurrent memory ${i}`,
+                  source: 'concurrency-test',
+                  type: 'message',
+                },
+                metadata: {
+                  type: 'message',
+                  concurrencyTest: true,
+                  index: i,
+                },
+                createdAt: Date.now() + i,
               },
-              metadata: {
-                type: 'message',
-                concurrencyTest: true,
-                index: i,
-              },
-              createdAt: Date.now() + i,
-            }, 'messages');
+              'messages'
+            );
 
           case 2: // Relationship creation
             return (async () => {
@@ -261,20 +266,27 @@ describe('SQL Plugin Production Validation', () => {
       const results = await Promise.allSettled(promises);
       const concurrencyTime = Date.now() - startTime;
 
-      console.log(`[CONCURRENCY] Completed ${concurrentOperations} operations in ${concurrencyTime}ms`);
+      console.log(
+        `[CONCURRENCY] Completed ${concurrentOperations} operations in ${concurrencyTime}ms`
+      );
 
       // Analyze results
-      const successful = results.filter(r => r.status === 'fulfilled').length;
-      const failed = results.filter(r => r.status === 'rejected').length;
+      const successful = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.filter((r) => r.status === 'rejected').length;
 
-      console.log(`[CONCURRENCY] Success rate: ${successful}/${concurrentOperations} (${(successful/concurrentOperations*100).toFixed(1)}%)`);
+      console.log(
+        `[CONCURRENCY] Success rate: ${successful}/${concurrentOperations} (${((successful / concurrentOperations) * 100).toFixed(1)}%)`
+      );
 
       // At least 95% should succeed
       expect(successful / concurrentOperations).toBeGreaterThanOrEqual(0.95);
 
       if (failed > 0) {
-        console.warn(`[CONCURRENCY] ${failed} operations failed:`,
-          results.filter(r => r.status === 'rejected').map(r => (r as PromiseRejectedResult).reason)
+        console.warn(
+          `[CONCURRENCY] ${failed} operations failed:`,
+          results
+            .filter((r) => r.status === 'rejected')
+            .map((r) => (r as PromiseRejectedResult).reason)
         );
       }
 
@@ -340,14 +352,16 @@ describe('SQL Plugin Production Validation', () => {
         if (i > 0 && i % 50 === 0) {
           const currentMemory = process.memoryUsage();
           const heapIncrease = currentMemory.heapUsed - initialMemory.heapUsed;
-          console.log(`[MEMORY TEST] After ${i} entities: Heap increased by ${(heapIncrease / 1024 / 1024).toFixed(1)}MB`);
+          console.log(
+            `[MEMORY TEST] After ${i} entities: Heap increased by ${(heapIncrease / 1024 / 1024).toFixed(1)}MB`
+          );
         }
       }
 
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
       const finalMemory = process.memoryUsage();
@@ -401,19 +415,22 @@ describe('SQL Plugin Production Validation', () => {
       expect(duplicateResult).toBe(false); // Should fail gracefully, not throw
 
       // Test handling of invalid references
-      const invalidMemoryResult = await runtime.createMemory({
-        id: uuidv4() as UUID,
-        entityId: uuidv4() as UUID, // Non-existent entity
-        agentId: testAgentId,
-        roomId,
-        content: {
-          text: 'Memory with invalid entity reference',
-          source: 'error-test',
-          type: 'message',
+      const invalidMemoryResult = await runtime.createMemory(
+        {
+          id: uuidv4() as UUID,
+          entityId: uuidv4() as UUID, // Non-existent entity
+          agentId: testAgentId,
+          roomId,
+          content: {
+            text: 'Memory with invalid entity reference',
+            source: 'error-test',
+            type: 'message',
+          },
+          metadata: { type: 'message' },
+          createdAt: Date.now(),
         },
-        metadata: { type: 'message' },
-        createdAt: Date.now(),
-      }, 'messages');
+        'messages'
+      );
 
       // Should handle invalid references gracefully
       expect(typeof invalidMemoryResult).toBe('string');
@@ -450,7 +467,9 @@ describe('SQL Plugin Production Validation', () => {
         agentId: testAgentId,
       });
 
-      console.log(`[STRESS TEST] Running ${stressOperations} concurrent operations on shared resources...`);
+      console.log(
+        `[STRESS TEST] Running ${stressOperations} concurrent operations on shared resources...`
+      );
 
       // Create multiple operations that could potentially conflict
       const stressPromises = Array.from({ length: stressOperations }, (_, i) => {
@@ -459,7 +478,8 @@ describe('SQL Plugin Production Validation', () => {
         return (async () => {
           try {
             switch (operationType) {
-              case 0: { // Update shared entity relationships
+              case 0: {
+                // Update shared entity relationships
                 const targetId = uuidv4() as UUID;
                 await runtime.createEntity({
                   id: targetId,
@@ -475,27 +495,32 @@ describe('SQL Plugin Production Validation', () => {
                 });
               }
 
-              case 1: { // Create memories referencing shared entity
-                return runtime.createMemory({
-                  id: uuidv4() as UUID,
-                  entityId: sharedEntityId,
-                  agentId: testAgentId,
-                  roomId,
-                  content: {
-                    text: `Stress test memory ${i} referencing shared entity`,
-                    source: 'stress-test',
-                    type: 'message',
+              case 1: {
+                // Create memories referencing shared entity
+                return runtime.createMemory(
+                  {
+                    id: uuidv4() as UUID,
+                    entityId: sharedEntityId,
+                    agentId: testAgentId,
+                    roomId,
+                    content: {
+                      text: `Stress test memory ${i} referencing shared entity`,
+                      source: 'stress-test',
+                      type: 'message',
+                    },
+                    metadata: {
+                      type: 'message',
+                      stressTest: true,
+                      index: i,
+                    },
+                    createdAt: Date.now() + i,
                   },
-                  metadata: {
-                    type: 'message',
-                    stressTest: true,
-                    index: i,
-                  },
-                  createdAt: Date.now() + i,
-                }, 'messages');
+                  'messages'
+                );
               }
 
-              case 2: { // Create components for shared entity
+              case 2: {
+                // Create components for shared entity
                 return runtime.createComponent({
                   id: uuidv4() as UUID,
                   entityId: sharedEntityId,
@@ -524,8 +549,8 @@ describe('SQL Plugin Production Validation', () => {
       });
 
       const stressResults = await Promise.allSettled(stressPromises);
-      const successfulOps = stressResults.filter(r =>
-        r.status === 'fulfilled' && (r as PromiseFulfilledResult<any>).value !== false
+      const successfulOps = stressResults.filter(
+        (r) => r.status === 'fulfilled' && (r as PromiseFulfilledResult<any>).value !== false
       ).length;
 
       console.log(`[STRESS TEST] Successful operations: ${successfulOps}/${stressOperations}`);
@@ -546,7 +571,9 @@ describe('SQL Plugin Production Validation', () => {
 
       const components = await runtime.getComponents(sharedEntityId);
 
-      console.log(`[STRESS TEST] Data integrity check: ${relationships.length} relationships, ${memories.length} memories, ${components.length} components`);
+      console.log(
+        `[STRESS TEST] Data integrity check: ${relationships.length} relationships, ${memories.length} memories, ${components.length} components`
+      );
 
       // All created data should be retrievable and consistent
       expect(relationships.length).toBeGreaterThan(0);
@@ -567,38 +594,44 @@ describe('SQL Plugin Production Validation', () => {
       expect(testEntity).toBe(true);
 
       // Test foreign key constraints work
-      const validMemory = await runtime.createMemory({
-        id: uuidv4() as UUID,
-        entityId: testAgentId, // Use existing entity
-        agentId: testAgentId,
-        roomId: uuidv4() as UUID, // This should work even with non-existent room
-        content: {
-          text: 'Schema validation memory',
-          source: 'schema-test',
-          type: 'message',
+      const validMemory = await runtime.createMemory(
+        {
+          id: uuidv4() as UUID,
+          entityId: testAgentId, // Use existing entity
+          agentId: testAgentId,
+          roomId: uuidv4() as UUID, // This should work even with non-existent room
+          content: {
+            text: 'Schema validation memory',
+            source: 'schema-test',
+            type: 'message',
+          },
+          metadata: { type: 'message' },
+          createdAt: Date.now(),
         },
-        metadata: { type: 'message' },
-        createdAt: Date.now(),
-      }, 'messages');
+        'messages'
+      );
 
       expect(typeof validMemory).toBe('string');
 
       // Test that required fields are enforced
       try {
         // This should either succeed or fail gracefully depending on implementation
-        const result = await runtime.createMemory({
-          id: uuidv4() as UUID,
-          entityId: testAgentId,
-          agentId: testAgentId,
-          roomId: uuidv4() as UUID,
-          content: {
-            text: '', // Empty text should be allowed
-            source: 'schema-test',
-            type: 'message',
+        const result = await runtime.createMemory(
+          {
+            id: uuidv4() as UUID,
+            entityId: testAgentId,
+            agentId: testAgentId,
+            roomId: uuidv4() as UUID,
+            content: {
+              text: '', // Empty text should be allowed
+              source: 'schema-test',
+              type: 'message',
+            },
+            metadata: { type: 'message' },
+            createdAt: Date.now(),
           },
-          metadata: { type: 'message' },
-          createdAt: Date.now(),
-        }, 'messages');
+          'messages'
+        );
 
         expect(typeof result).toBe('string');
       } catch (error) {
@@ -621,7 +654,9 @@ describe('SQL Plugin Production Validation', () => {
         type: ChannelType.GROUP,
       });
 
-      console.log(`[PRODUCTION LOAD] Simulating ${numUsers} users with ${messagesPerUser} messages each...`);
+      console.log(
+        `[PRODUCTION LOAD] Simulating ${numUsers} users with ${messagesPerUser} messages each...`
+      );
 
       const startTime = Date.now();
 
@@ -649,25 +684,28 @@ describe('SQL Plugin Production Validation', () => {
       // Create messages from each user
       const messagePromises = userIds.flatMap((userId, userIndex) =>
         Array.from({ length: messagesPerUser }, (_, msgIndex) =>
-          runtime.createMemory({
-            id: uuidv4() as UUID,
-            entityId: userId,
-            agentId: testAgentId,
-            roomId,
-            content: {
-              text: `Message ${msgIndex + 1} from user ${userIndex + 1}: This is a realistic message with enough content to simulate real usage patterns.`,
-              source: 'production-load-test',
-              type: 'message',
+          runtime.createMemory(
+            {
+              id: uuidv4() as UUID,
+              entityId: userId,
+              agentId: testAgentId,
+              roomId,
+              content: {
+                text: `Message ${msgIndex + 1} from user ${userIndex + 1}: This is a realistic message with enough content to simulate real usage patterns.`,
+                source: 'production-load-test',
+                type: 'message',
+              },
+              embedding: Array(384).fill(Math.random()),
+              metadata: {
+                type: 'message',
+                userIndex,
+                messageIndex: msgIndex,
+                productionLoad: true,
+              },
+              createdAt: Date.now() + (userIndex * messagesPerUser + msgIndex),
             },
-            embedding: Array(384).fill(Math.random()),
-            metadata: {
-              type: 'message',
-              userIndex,
-              messageIndex: msgIndex,
-              productionLoad: true,
-            },
-            createdAt: Date.now() + (userIndex * messagesPerUser + msgIndex),
-          }, 'messages')
+            'messages'
+          )
         )
       );
 
@@ -675,7 +713,9 @@ describe('SQL Plugin Production Validation', () => {
       const totalTime = Date.now() - startTime;
 
       const totalMessages = numUsers * messagesPerUser;
-      console.log(`[PRODUCTION LOAD] Created ${totalMessages} messages from ${numUsers} users in ${totalTime}ms`);
+      console.log(
+        `[PRODUCTION LOAD] Created ${totalMessages} messages from ${numUsers} users in ${totalTime}ms`
+      );
 
       // Performance expectations for production loads
       const messagesPerSecond = totalMessages / (totalTime / 1000);
@@ -693,7 +733,9 @@ describe('SQL Plugin Production Validation', () => {
       });
       const queryTime = Date.now() - queryStartTime;
 
-      console.log(`[PRODUCTION LOAD] Queried ${recentMessages.length} recent messages in ${queryTime}ms`);
+      console.log(
+        `[PRODUCTION LOAD] Queried ${recentMessages.length} recent messages in ${queryTime}ms`
+      );
       expect(queryTime).toBeLessThan(2000); // Should query within 2 seconds
 
       // Test search performance
@@ -707,7 +749,9 @@ describe('SQL Plugin Production Validation', () => {
       });
       const searchTime = Date.now() - searchStartTime;
 
-      console.log(`[PRODUCTION LOAD] Search found ${searchResults.length} results in ${searchTime}ms`);
+      console.log(
+        `[PRODUCTION LOAD] Search found ${searchResults.length} results in ${searchTime}ms`
+      );
       expect(searchTime).toBeLessThan(3000); // Search should complete within 3 seconds
     });
   });

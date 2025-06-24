@@ -3,6 +3,7 @@ import { AccessToken, TrackSource } from 'livekit-server-sdk';
 import { System } from './System';
 import { uuid } from '../utils';
 import { ENV } from '../env';
+import { ENV_SERVER } from '../env-server';
 
 export class ServerLiveKit extends System {
   private roomId: string;
@@ -16,7 +17,7 @@ export class ServerLiveKit extends System {
     this.roomId = uuid();
     this.wsUrl = ENV.LIVEKIT_URL;
     this.apiKey = ENV.LIVEKIT_API_KEY;
-    this.apiSecret = ENV.LIVEKIT_API_SECRET;
+    this.apiSecret = ENV_SERVER.LIVEKIT_API_SECRET;
     this.enabled = !!(this.wsUrl && this.apiKey && this.apiSecret);
   }
 

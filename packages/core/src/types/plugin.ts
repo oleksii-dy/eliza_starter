@@ -142,7 +142,10 @@ export interface ComponentConfig {
   /** Mark as experimental/beta feature */
   experimental?: boolean;
 
-  /** Description of why this is disabled by default */
+  /** Additional settings */
+  settings?: Record<string, any>;
+
+  /** Reason why disabled */
   disabledReason?: string;
 }
 
@@ -353,6 +356,7 @@ export interface IConfigurationManager {
 }
 
 import { WalletCapability } from './universal-wallet';
+export { WalletCapability };
 
 /**
  * Plugin component configuration for enabling/disabling actions and providers

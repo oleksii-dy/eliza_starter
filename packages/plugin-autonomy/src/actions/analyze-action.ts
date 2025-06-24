@@ -199,10 +199,10 @@ Provide actionable insights about:
 
 **File Distribution:**
 ${Object.entries(analysis.structure)
-  .sort(([, a], [, b]) => b - a)
-  .slice(0, 5)
-  .map(([ext, count]) => `- ${ext || 'no extension'}: ${count} files`)
-  .join('\n')}
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([ext, count]) => `- ${ext || 'no extension'}: ${count} files`)
+    .join('\n')}
 
 **Key Dependencies:** ${Object.keys(analysis.dependencies).slice(0, 5).join(', ') || 'None found'}
 

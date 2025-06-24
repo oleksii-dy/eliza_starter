@@ -27,7 +27,8 @@ Hyperfy is an open-source framework for building interactive 3D virtual worlds. 
 
 ### Prerequisites
 
-- Node.js 22.11.0+ (via [nvm](https://github.com/nvm-sh/nvm) or direct install)
+- **Bun** (required) - Install from [bun.sh](https://bun.sh). The project uses Bun's native SQLite module.
+- Node.js 22.11.0+ (for build scripts) - via [nvm](https://github.com/nvm-sh/nvm) or direct install
 
 ### Installation
 
@@ -39,11 +40,11 @@ cd my-world
 # Copy example environment settings
 cp .env.example .env
 
-# Install dependencies
-npm install
+# Install dependencies (use Bun for faster installation)
+bun install  # or npm install
 
 # Start the development server
-npm run dev
+bun run dev  # or npm run dev
 ```
 
 ### Docker Deployment
@@ -241,11 +242,11 @@ npm run build
 ### 3. Start the RPG Server
 
 ```bash
-# Run the RPG server
-node dist/server/rpg-server.js
+# Run the RPG server with Bun
+bun dist/server/rpg-server.js
 
 # Or with environment variables
-PORT=3000 WS_PORT=3001 node dist/server/rpg-server.js
+PORT=3000 WS_PORT=3001 bun dist/server/rpg-server.js
 ```
 
 ### 4. Connect with Client

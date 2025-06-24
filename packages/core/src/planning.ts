@@ -291,9 +291,9 @@ export function parsePlan(response: string): ActionPlan {
       dependencies,
       expectedOutcome: expectedOutcomeMatch
         ? {
-          success: true,
-          data: { outcome: expectedOutcomeMatch[1].trim() },
-        }
+            success: true,
+            data: { outcome: expectedOutcomeMatch[1].trim() },
+          }
         : undefined,
     });
   }
