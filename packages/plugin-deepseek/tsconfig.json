@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json", // Inherit from root tsconfig
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "baseUrl": ".", // Ensure baseUrl is set for path resolution if needed
+    "lib": ["ESNext"],
+    // Module settings should align with tsup output and package.json type
+    "module": "ESNext", // Or "NodeNext" if preferred for modern Node.js ESM
+    "moduleResolution": "Bundler", // Recommended for modern TS with ESM
+    "allowImportingTsExtensions": true,
+    "noEmit": true, // Important: tsup handles emission, tsc here is for type checking
+    "isolatedModules": true, // Good practice for build tools like tsup
+    "types": ["node", "vitest/globals"] // Add vitest types for testing
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "exclude": ["node_modules", "dist", "src/__tests__/**/*test.ts", "src/__tests__/**/*.spec.ts"]
+}

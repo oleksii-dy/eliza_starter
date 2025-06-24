@@ -1,0 +1,95 @@
+{
+  "name": "@elizaos/plugin-deepseek",
+  "description": "A plugin for integrating DeepSeek AI models with ElizaOS.",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "packageType": "plugin",
+  "platform": "node",
+  "license": "Apache-2.0",
+  "author": "Jules for ElizaOS",
+  "keywords": [
+    "plugin",
+    "elizaos",
+    "deepseek",
+    "llm"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elizaos/eliza.git",
+    "directory": "packages/plugin-deepseek"
+  },
+  "homepage": "https://elizaos.ai",
+  "bugs": {
+    "url": "https://github.com/elizaos/eliza/issues"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    ".npmignore",
+    "package.json",
+    "tsup.config.ts",
+    "src"
+  ],
+  "dependencies": {
+    "@elizaos/core": "^1.0.0",
+    "undici": "^6.19.2",
+    "zod": "3.24.2"
+  },
+  "peerDependencies": {},
+  "devDependencies": {
+    "@elizaos/cli": "^1.0.0",
+    "dotenv": "16.4.5",
+    "prettier": "3.5.3",
+    "tsup": "8.5.0",
+    "typescript": "5.8.2",
+    "@types/node": "^20.12.12",
+    "vitest": "^1.6.0"
+  },
+  "scripts": {
+    "dev": "tsup src/index.ts --format esm --watch --onSuccess \"bun run build:declarations\"",
+    "build": "tsup && bun run build:declarations",
+    "build:declarations": "tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "lint": "prettier --write ./src",
+    "test": "bun test",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check ./src"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "resolutions": {
+    "zod": "3.24.2"
+  },
+  "agentConfig": {
+    "pluginType": "elizaos:plugin:1.0.0",
+    "pluginParameters": {
+      "DEEPSEEK_API_KEY": {
+        "type": "string",
+        "description": "API key for the DeepSeek service."
+      },
+      "DEEPSEEK_BASE_URL": {
+        "type": "string",
+        "description": "Optional base URL for the DeepSeek API.",
+        "optional": true
+      },
+      "DEEPSEEK_CHAT_MODEL": {
+        "type": "string",
+        "description": "Default chat model to use for DeepSeek.",
+        "optional": true
+      }
+    }
+  }
+}

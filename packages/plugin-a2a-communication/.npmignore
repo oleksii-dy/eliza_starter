@@ -1,0 +1,42 @@
+# Compiled output
+dist/
+# Source files (if you only want to publish dist)
+# src/
+
+# Node modules
+node_modules/
+
+# Typescript specific
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Test files
+src/__tests__/
+tests/
+*.test.ts
+*.spec.ts
+
+# Config files that might contain secrets or are dev-specific
+.env
+.env.*
+!/.env.example
+
+# IDE / OS files
+.vscode/
+.idea/
+.DS_Store
+*.log
+*.tgz
+
+# Bun specific
+bun.lockb
+
+# Other
+coverage/
+.nyc_output/
+.prettierignore
+.eslintignore
+.eslintrc.js
+prettier.config.js
+vitest.config.ts
+scratchpad.md

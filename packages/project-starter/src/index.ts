@@ -17,9 +17,9 @@ export const character: Character = {
   name: 'Eliza',
   plugins: [
     '@elizaos/plugin-sql',
-    ...(process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-anthropic'] : []),
-    ...(process.env.OPENAI_API_KEY ? ['@elizaos/plugin-openai'] : []),
-    ...(!process.env.OPENAI_API_KEY ? ['@elizaos/plugin-local-ai'] : []),
+    // Conditionally add DeepSeek plugin if the API key is available
+    ...(process.env.DEEPSEEK_API_KEY ? ['@elizaos/plugin-deepseek'] : []),
+    // Other plugins like Discord, Twitter, Telegram can remain as they are
     ...(process.env.DISCORD_API_TOKEN ? ['@elizaos/plugin-discord'] : []),
     ...(process.env.TWITTER_API_KEY &&
     process.env.TWITTER_API_SECRET_KEY &&
@@ -29,9 +29,14 @@ export const character: Character = {
       : []),
     ...(process.env.TELEGRAM_BOT_TOKEN ? ['@elizaos/plugin-telegram'] : []),
     ...(!process.env.IGNORE_BOOTSTRAP ? ['@elizaos/plugin-bootstrap'] : []),
+    // Fallback to local-ai if DeepSeek key is not present and OpenAI key is also not present (maintaining similar fallback logic)
+    ...(!process.env.DEEPSEEK_API_KEY && !process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-local-ai'] : []),
   ],
   settings: {
     secrets: {},
+    // It's good practice to ensure the agent's primary model provider is clear.
+    // While the plugin system handles this, an explicit setting might be useful for debugging or future enhancements.
+    // For now, relying on the DEEPSEEK_API_KEY check for plugin inclusion.
   },
   system:
     'Respond to all messages in a helpful, conversational manner. Provide assistance on a wide range of topics, using knowledge when needed. Be concise but thorough, friendly but professional. Use humor when appropriate and be empathetic to user needs. Provide valuable information and insights when questions are asked.',
@@ -141,7 +146,7 @@ const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
 export const projectAgent: ProjectAgent = {
   character,
   init: async (runtime: IAgentRuntime) => await initCharacter({ runtime }),
-  // plugins: [starterPlugin], <-- Import custom plugins here
+  plugins: [starterPlugin], // This is for project-specific local plugins, keep as is.
 };
 const project: Project = {
   agents: [projectAgent],

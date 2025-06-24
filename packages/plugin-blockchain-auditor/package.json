@@ -1,0 +1,93 @@
+{
+  "name": "@elizaos/plugin-blockchain-auditor",
+  "description": "A plugin for ElizaOS agents to perform blockchain smart contract audits using external tools.",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "packageType": "plugin",
+  "platform": "node",
+  "license": "Apache-2.0",
+  "author": "Jules for ElizaOS",
+  "keywords": [
+    "plugin",
+    "elizaos",
+    "blockchain",
+    "audit",
+    "foundry",
+    "slither",
+    "smart-contracts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elizaos/eliza.git",
+    "directory": "packages/plugin-blockchain-auditor"
+  },
+  "homepage": "https://elizaos.ai",
+  "bugs": {
+    "url": "https://github.com/elizaos/eliza/issues"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    ".npmignore",
+    "package.json",
+    "tsup.config.ts",
+    "src"
+  ],
+  "dependencies": {
+    "@elizaos/core": "^1.0.0",
+    "zod": "3.24.2"
+    // child_process is built-in, no need to add here
+  },
+  "peerDependencies": {},
+  "devDependencies": {
+    "@elizaos/cli": "^1.0.0",
+    "dotenv": "16.4.5",
+    "prettier": "3.5.3",
+    "tsup": "8.5.0",
+    "typescript": "5.8.2",
+    "@types/node": "^20.12.12",
+    "vitest": "^1.6.0"
+  },
+  "scripts": {
+    "dev": "tsup src/index.ts --format esm --watch",
+    "build": "tsup",
+    "lint": "prettier --write ./src",
+    "test": "bun test",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check ./src"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "resolutions": {
+    "zod": "3.24.2"
+  },
+  "agentConfig": {
+    "pluginType": "elizaos:plugin:1.0.0",
+    "pluginParameters": {
+      "FORGE_PATH": {
+        "type": "string",
+        "description": "Optional path to the 'forge' executable if not in system PATH.",
+        "optional": true
+      },
+      "SLITHER_PATH": {
+        "type": "string",
+        "description": "Optional path to the 'slither' executable if not in system PATH.",
+        "optional": true
+      }
+    }
+  }
+}

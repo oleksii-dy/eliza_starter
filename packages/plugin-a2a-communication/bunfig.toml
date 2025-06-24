@@ -1,0 +1,12 @@
+# Bun configuration file for @elizaos/plugin-a2a-communication
+
+[test]
+coverage = true
+# preload = ["./src/__tests__/setup.ts"] # if you have a global test setup
+
+# External modules that should not be bundled by default if `bun build` was used directly
+# external = ["@elizaos/core", "zod", "uuid"]
+# However, tsup.config.ts handles bundling for publishing, so this might be less critical here.
+
+# Log level for Bun's own logging (not application logs)
+# logLevel = "debug"

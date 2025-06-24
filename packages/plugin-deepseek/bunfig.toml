@@ -1,0 +1,117 @@
+# Bun configuration file for @elizaos/plugin-deepseek
+
+# Specifies the default test runner to use.
+# testRunner = "vitest"
+
+# Defines global preload scripts for tests.
+# preload = ["./tests/setup.ts"]
+
+# Specifies module resolution order.
+# modules = ["node_modules"]
+
+# Defines aliases for module paths.
+# alias = { "@/*": "./src/*" }
+
+# Specifies loader configurations for different file types.
+# loader = { ".ts" = "ts" }
+
+# Defines macro configurations.
+# macros = { "version" = "\"0.1.0\"" }
+
+# Specifies the minimum Bun version required.
+# Sourced from the root bun.lockb if not specified.
+# bundler = "0.6.0"
+
+# Specifies the target environment for builds.
+# target = "bun"
+
+# Specifies the public path for assets.
+# publicPath = "/assets/"
+
+# Specifies external modules that should not be bundled.
+# external = ["react", "react-dom"]
+
+# Specifies entry points for the application.
+# entrypoints = ["./src/index.ts"]
+
+# Specifies the output directory for builds.
+# outdir = "./dist"
+
+# Specifies naming conventions for output files.
+# naming = "[dir]/[name].[ext]"
+
+# Specifies code splitting configuration.
+# splitting = false
+
+# Specifies tree shaking configuration.
+# treeshake = true
+
+# Specifies minification configuration.
+# minify = false
+
+# Specifies sourcemap configuration.
+# sourcemap = "none"
+
+# Specifies whether to disable typechecking.
+# disableTypes = false
+# disableReactJSXRuntime = false
+# disableEsModuleLexer = false
+# disableAutoImport = false
+
+# Specifies whether to disable CSS extraction.
+# disableCssExtraction = false
+# disableRuntimePathResolution = false
+
+# Specifies runtime environment variables.
+# define = { "process.env.NODE_ENV": "\"development\"" }
+
+# Specifies asset naming conventions.
+# assetNaming = "[name]-[hash].[ext]"
+
+# Specifies whether to disable scope hoisting.
+# disableScopeHoisting = false
+# disableModuleConcatenation = false
+
+# Specifies whether to disable CSS modules.
+# disableCssModules = false
+# disablePostcss = false
+
+# Specifies whether to disable HTML rewriting.
+# disableHtmlRewriting = false
+
+# Specifies whether to disable asset relocation.
+# disableAssetRelocation = false
+
+# Specifies whether to disable JavaScript parsing.
+# disableJavaScriptParsing = false
+
+# Specifies the root directory for the project.
+# root = "."
+# jsx = "automatic"
+
+# Log level for Bun's own logging (not application logs)
+# logLevel = "debug" # "info", "warn", "error"
+# minifyWhitespace = true
+# minifyIdentifiers = true
+# minifySyntax = true
+# assetLoaders = []
+# conditions = []
+# mainFields = ["module", "main"]
+# resolveExtensions = [".tsx", ".ts", ".jsx", ".js", ".json"]
+# sourcemap = "inline"
+# splitting = true
+# watch = false
+# external = ["@elizaos/core", "zod"]
+
+# Example: If using vitest for tests
+[test]
+# preload = ["./src/__tests__/setup.ts"] # if you have a setup file for tests
+coverage = true
+# reportCoverage = true
+# reporters = ["default", "json"]
+# coverageReporters = ["text", "json", "html"]
+# watch = false
+
+# [macros]
+# IS_PRODUCTION = "process.env.NODE_ENV === 'production'"
+# VERSION = "require('./package.json').version"

@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json", // Inherit from the main tsconfig.json
+  "compilerOptions": {
+    "noEmit": false, // Allow emitting files for the build
+    "emitDeclarationOnly": true, // Only emit .d.ts files, tsup handles .js
+    "declaration": true,
+    "declarationDir": "./dist", // Output directory for declaration files
+    "isolatedModules": false // tsup might work better with this off for declarations
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/__tests__",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}

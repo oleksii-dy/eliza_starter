@@ -1,0 +1,88 @@
+{
+  "name": "@elizaos/plugin-a2a-communication",
+  "description": "A plugin for basic Agent-to-Agent (A2A) communication in ElizaOS.",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "packageType": "plugin",
+  "platform": "node",
+  "license": "Apache-2.0",
+  "author": "Jules for ElizaOS",
+  "keywords": [
+    "plugin",
+    "elizaos",
+    "a2a",
+    "communication",
+    "multi-agent"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elizaos/eliza.git",
+    "directory": "packages/plugin-a2a-communication"
+  },
+  "homepage": "https://elizaos.ai",
+  "bugs": {
+    "url": "https://github.com/elizaos/eliza/issues"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    ".npmignore",
+    "package.json",
+    "tsup.config.ts",
+    "src"
+  ],
+  "dependencies": {
+    "@elizaos/core": "^1.0.0",
+    "uuid": "^10.0.0", // For generating unique message IDs
+    "zod": "3.24.2" // For validating A2A message structure if needed
+  },
+  "peerDependencies": {},
+  "devDependencies": {
+    "@elizaos/cli": "^1.0.0",
+    "@types/uuid": "^10.0.0",
+    "dotenv": "16.4.5",
+    "prettier": "3.5.3",
+    "tsup": "8.5.0",
+    "typescript": "5.8.2",
+    "@types/node": "^20.12.12",
+    "vitest": "^1.6.0"
+  },
+  "scripts": {
+    "dev": "tsup src/index.ts --format esm --watch",
+    "build": "tsup",
+    "lint": "prettier --write ./src",
+    "test": "bun test",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check ./src"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "resolutions": {
+    "zod": "3.24.2"
+  },
+  "agentConfig": {
+    "pluginType": "elizaos:plugin:1.0.0",
+    "pluginParameters": {
+      "A2A_MESSAGE_BUS_TYPE": {
+        "type": "string",
+        "description": "Type of message bus to use (e.g., 'in-memory', 'redis' - initially 'in-memory').",
+        "optional": true,
+        "default": "in-memory"
+      }
+    }
+  }
+}
