@@ -239,14 +239,14 @@ export const checkPluginHealthAction: Action = {
         },
       };
     } catch (_error) {
-      logger.error('[CHECK_PLUGIN_HEALTH] Error:', error);
+      logger.error('[CHECK_PLUGIN_HEALTH] Error:', _error);
 
       await callback?.({
         text: `Error checking plugin health: ${_error instanceof Error ? _error.message : String(_error)}`,
         actions: ['CHECK_PLUGIN_HEALTH'],
       });
 
-      throw error;
+      throw _error;
     }
   },
 };

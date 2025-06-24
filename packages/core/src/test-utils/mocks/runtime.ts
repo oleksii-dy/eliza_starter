@@ -254,12 +254,6 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
     deleteTask: mock().mockResolvedValue(undefined),
 
     // Trust/Identity/Payment providers
-    getTrustProvider: mock().mockReturnValue(null),
-    registerTrustProvider: mock(),
-    getIdentityManager: mock().mockReturnValue(null),
-    registerIdentityManager: mock(),
-    getPaymentProvider: mock().mockReturnValue(null),
-    registerPaymentProvider: mock(),
 
     // Planning
     generatePlan: mock().mockResolvedValue({

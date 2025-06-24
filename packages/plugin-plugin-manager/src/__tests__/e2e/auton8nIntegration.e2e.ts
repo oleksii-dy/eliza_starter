@@ -242,9 +242,9 @@ export const auton8nIntegrationTests: TestCase[] = [
               console.log('[Auton8n] Workflow step succeeded');
             }
           } catch (_error) {
-            console.log(`[Auton8n] Attempt ${attempts} failed:`, error);
+            console.log(`[Auton8n] Attempt ${attempts} failed:`, _error);
             if (attempts === maxAttempts) {
-              throw error;
+              throw _error;
             }
           }
         }
@@ -253,7 +253,7 @@ export const auton8nIntegrationTests: TestCase[] = [
         await pluginManager.unloadPlugin({ pluginId });
         console.log('[Auton8n] Workflow completed with recovery');
       } catch (_error) {
-        console.log('[Auton8n] Workflow failed after all attempts:', error);
+        console.log('[Auton8n] Workflow failed after all attempts:', );_error)
 
         // Recovery: suggest alternative plugins
         const alternatives = await pluginManager.searchPlugins('alternative workflow');

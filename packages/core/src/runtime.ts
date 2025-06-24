@@ -58,7 +58,6 @@ import {
 } from './planning';
 import type { ActionPlan, PlanningContext, PlanExecutionResult } from './types/planning';
 import { ConfigurationManager } from './managers/ConfigurationManager.js';
-import { ComponentDefaultsManager } from './managers/ComponentDefaultsManager.js';
 import { CharacterConfigurationSource } from './configuration/CharacterConfigurationSource.js';
 import type { ConfigurablePlugin } from './types/plugin';
 
@@ -165,10 +164,6 @@ export class AgentRuntime implements IAgentRuntime {
   private sendHandlers = new Map<string, SendHandlerFunction>();
   private eventHandlers: Map<string, ((data: any) => void)[]> = new Map();
 
-  // Core interface providers
-  private trustProvider: import('./types/trust').ITrustProvider | null = null;
-  private identityManager: import('./types/identity').IIdentityManager | null = null;
-  private paymentProvider: import('./types/payment').IPaymentProvider | null = null;
 
   // A map of all plugins available to the runtime, keyed by name, for dependency resolution.
   private allAvailablePlugins = new Map<string, Plugin>();
@@ -196,7 +191,6 @@ export class AgentRuntime implements IAgentRuntime {
 
   // Configuration management
   private configurationManager: ConfigurationManager;
-  private componentDefaultsManager: ComponentDefaultsManager;
 
   constructor(opts: {
     conversationLength?: number;
@@ -245,9 +239,6 @@ export class AgentRuntime implements IAgentRuntime {
 
     // Initialize configuration manager
     this.configurationManager = new ConfigurationManager();
-    
-    // Initialize component defaults manager
-    this.componentDefaultsManager = new ComponentDefaultsManager(this);
   }
 
   /**
@@ -1980,42 +1971,6 @@ export class AgentRuntime implements IAgentRuntime {
     }
   }
 
-  // Core interface provider methods
-  getTrustProvider(): import('./types/trust').ITrustProvider | null {
-    return this.trustProvider;
-  }
-
-  registerTrustProvider(provider: import('./types/trust').ITrustProvider): void {
-    if (this.trustProvider) {
-      this.logger.warn('Trust provider is already registered. Replacing existing provider.');
-    }
-    this.trustProvider = provider;
-    this.logger.debug('Trust provider registered successfully');
-  }
-
-  getIdentityManager(): import('./types/identity').IIdentityManager | null {
-    return this.identityManager;
-  }
-
-  registerIdentityManager(manager: import('./types/identity').IIdentityManager): void {
-    if (this.identityManager) {
-      this.logger.warn('Identity manager is already registered. Replacing existing manager.');
-    }
-    this.identityManager = manager;
-    this.logger.debug('Identity manager registered successfully');
-  }
-
-  getPaymentProvider(): import('./types/payment').IPaymentProvider | null {
-    return this.paymentProvider;
-  }
-
-  registerPaymentProvider(provider: import('./types/payment').IPaymentProvider): void {
-    if (this.paymentProvider) {
-      this.logger.warn('Payment provider is already registered. Replacing existing provider.');
-    }
-    this.paymentProvider = provider;
-    this.logger.debug('Payment provider registered successfully');
-  }
 
   registerModel(
     modelType: ModelTypeName,
@@ -3521,28 +3476,36 @@ export class AgentRuntime implements IAgentRuntime {
       try {
         switch (componentType) {
           case 'action':
-            if (!this.actions.find(a => a.name === componentName)) {
+            if (!this.actions.find((a) => a.name === componentName)) {
               this.registerAction(component);
-              this.logger.info(`Dynamically enabled action: ${componentName} from plugin ${pluginName}`);
+              this.logger.info(
+                `Dynamically enabled action: ${componentName} from plugin ${pluginName}`
+              );
             }
             break;
           case 'provider':
-            if (!this.providers.find(p => p.name === componentName)) {
+            if (!this.providers.find((p) => p.name === componentName)) {
               this.registerProvider(component);
-              this.logger.info(`Dynamically enabled provider: ${componentName} from plugin ${pluginName}`);
+              this.logger.info(
+                `Dynamically enabled provider: ${componentName} from plugin ${pluginName}`
+              );
             }
             break;
           case 'evaluator':
-            if (!this.evaluators.find(e => e.name === componentName)) {
+            if (!this.evaluators.find((e) => e.name === componentName)) {
               this.registerEvaluator(component);
-              this.logger.info(`Dynamically enabled evaluator: ${componentName} from plugin ${pluginName}`);
+              this.logger.info(
+                `Dynamically enabled evaluator: ${componentName} from plugin ${pluginName}`
+              );
             }
             break;
           case 'service':
             const serviceName = component.serviceName || component.name;
             if (!this.services.has(serviceName)) {
               await this.registerService(component);
-              this.logger.info(`Dynamically enabled service: ${componentName} from plugin ${pluginName}`);
+              this.logger.info(
+                `Dynamically enabled service: ${componentName} from plugin ${pluginName}`
+              );
             }
             break;
         }
@@ -3555,7 +3518,9 @@ export class AgentRuntime implements IAgentRuntime {
           },
         };
         await this.configurePlugin(pluginName, revertConfig);
-        throw new Error(`Failed to enable component ${componentName}: ${error instanceof Error ? error.message : String(error)}`);
+        throw new Error(
+          `Failed to enable component ${componentName}: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     }
   }
@@ -3581,30 +3546,36 @@ export class AgentRuntime implements IAgentRuntime {
     try {
       switch (componentType) {
         case 'action':
-          const actionIndex = this.actions.findIndex(a => a.name === componentName);
+          const actionIndex = this.actions.findIndex((a) => a.name === componentName);
           if (actionIndex !== -1) {
             this.actions.splice(actionIndex, 1);
-            this.logger.info(`Dynamically disabled action: ${componentName} from plugin ${pluginName}`);
+            this.logger.info(
+              `Dynamically disabled action: ${componentName} from plugin ${pluginName}`
+            );
           }
           break;
         case 'provider':
-          const providerIndex = this.providers.findIndex(p => p.name === componentName);
+          const providerIndex = this.providers.findIndex((p) => p.name === componentName);
           if (providerIndex !== -1) {
             this.providers.splice(providerIndex, 1);
-            this.logger.info(`Dynamically disabled provider: ${componentName} from plugin ${pluginName}`);
+            this.logger.info(
+              `Dynamically disabled provider: ${componentName} from plugin ${pluginName}`
+            );
           }
           break;
         case 'evaluator':
-          const evaluatorIndex = this.evaluators.findIndex(e => e.name === componentName);
+          const evaluatorIndex = this.evaluators.findIndex((e) => e.name === componentName);
           if (evaluatorIndex !== -1) {
             this.evaluators.splice(evaluatorIndex, 1);
-            this.logger.info(`Dynamically disabled evaluator: ${componentName} from plugin ${pluginName}`);
+            this.logger.info(
+              `Dynamically disabled evaluator: ${componentName} from plugin ${pluginName}`
+            );
           }
           break;
         case 'service':
-          const serviceName = componentName;
-          if (this.services.has(serviceName)) {
-            const service = this.services.get(serviceName);
+          const serviceName = componentName as ServiceTypeName;
+          if (this.services.has(serviceName as ServiceTypeName)) {
+            const service = this.services.get(serviceName as ServiceTypeName);
             try {
               if (service && typeof service.stop === 'function') {
                 await service.stop();
@@ -3612,34 +3583,38 @@ export class AgentRuntime implements IAgentRuntime {
             } catch (stopError) {
               this.logger.warn(`Error stopping service ${serviceName}:`, stopError);
             }
-            this.services.delete(serviceName);
-            this.serviceTypes.delete(serviceName);
-            this.logger.info(`Dynamically disabled service: ${componentName} from plugin ${pluginName}`);
+            this.services.delete(serviceName as ServiceTypeName);
+            this.serviceTypes.delete(serviceName as ServiceTypeName);
+            this.logger.info(
+              `Dynamically disabled service: ${componentName} from plugin ${pluginName}`
+            );
           }
           break;
       }
     } catch (error) {
       this.logger.error(`Failed to unregister component ${componentName}:`, error);
-      throw new Error(`Failed to disable component ${componentName}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to disable component ${componentName}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
   /**
    * Get component instance if it exists in runtime
    */
-  getComponent(
+  getComponentInstance(
     componentName: string,
     componentType: 'action' | 'provider' | 'evaluator' | 'service'
   ): any | null {
     switch (componentType) {
       case 'action':
-        return this.actions.find(a => a.name === componentName) || null;
+        return this.actions.find((a) => a.name === componentName) || null;
       case 'provider':
-        return this.providers.find(p => p.name === componentName) || null;
+        return this.providers.find((p) => p.name === componentName) || null;
       case 'evaluator':
-        return this.evaluators.find(e => e.name === componentName) || null;
+        return this.evaluators.find((e) => e.name === componentName) || null;
       case 'service':
-        return this.services.get(componentName) || null;
+        return this.services.get(componentName as ServiceTypeName) || null;
       default:
         return null;
     }
@@ -3652,7 +3627,7 @@ export class AgentRuntime implements IAgentRuntime {
     componentName: string,
     componentType: 'action' | 'provider' | 'evaluator' | 'service'
   ): boolean {
-    return this.getComponent(componentName, componentType) !== null;
+    return this.getComponentInstance(componentName, componentType) !== null;
   }
 
   // ====================================================================

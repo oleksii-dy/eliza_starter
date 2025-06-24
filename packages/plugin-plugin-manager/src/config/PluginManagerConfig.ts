@@ -93,7 +93,7 @@ export class ConfigurationManager {
 
       elizaLogger.info('[ConfigurationManager] Initialized with custom configuration');
     } catch (_error) {
-      elizaLogger.warn('[ConfigurationManager] Using default configuration', error);
+      elizaLogger.warn('[ConfigurationManager] Using default configuration', _error);
     }
   }
 
@@ -106,7 +106,7 @@ export class ConfigurationManager {
       this.config = PluginManagerConfigSchema.parse(rawConfig);
     } catch (_error) {
       if ((_error as any).code !== 'ENOENT') {
-        throw error;
+        throw _error;
       }
     }
   }

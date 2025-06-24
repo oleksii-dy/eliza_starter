@@ -114,8 +114,8 @@ export class RegistryManager {
 
       return results;
     } catch (_error) {
-      elizaLogger.error('[RegistryManager] Search failed:', error);
-      throw error;
+      elizaLogger.error('[RegistryManager] Search failed:', );_error)
+      throw _error;
     }
   }
 
@@ -177,8 +177,8 @@ export class RegistryManager {
 
       return pluginInfo;
     } catch (_error) {
-      elizaLogger.error('[RegistryManager] Failed to get plugin info:', error);
-      throw error;
+      elizaLogger.error('[RegistryManager] Failed to get plugin info:', );_error)
+      throw _error;
     }
   }
 

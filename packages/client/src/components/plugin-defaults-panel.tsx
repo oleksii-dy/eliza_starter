@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +11,6 @@ import {
   ChevronRight,
   Shield,
   ShieldAlert,
-  ShieldCheck,
   AlertTriangle,
   CheckCircle,
   Info,
@@ -30,7 +28,6 @@ import clsx from 'clsx';
 import {
   usePluginConfigurations,
   useUpdatePluginConfiguration,
-  useToggleComponent,
 } from '@/hooks/use-plugin-configurations';
 import { apiClient as api } from '@/lib/api';
 
@@ -117,9 +114,8 @@ export default function PluginDefaultsPanel({
   const [expandedPlugins, setExpandedPlugins] = useState<Set<string>>(new Set());
   const [pluginDefaults, setPluginDefaults] = useState<Record<string, PluginDefaults>>({});
 
-  const { data: configurations = {}, isLoading } = usePluginConfigurations(agentId);
+  const { data: configurations = {} } = usePluginConfigurations(agentId);
   const updatePluginConfiguration = useUpdatePluginConfiguration();
-  const toggleComponent = useToggleComponent();
 
   // Load plugin defaults on mount
   useMemo(() => {

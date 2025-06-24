@@ -136,8 +136,8 @@ export const searchPluginAction: Action = {
         },
       };
     } catch (_error) {
-      logger.error('[searchPluginAction] Error searching plugins:', error);
-      const errorMessage = 'An _error occurred while searching for plugins. Please try again.';
+      logger.error('[searchPluginAction] Error searching plugins:', _error);
+      const errorMessage = 'An error occurred while searching for plugins. Please try again.';
       if (callback) {
         callback({
           text: errorMessage,

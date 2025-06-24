@@ -106,8 +106,8 @@ describe('Search Functionality Benchmarks', () => {
         }
         expect(duration).toBeLessThan(5000); // Increased to 5 seconds for CI environments
       } catch (_error) {
-        elizaLogger.error(`[Benchmark] Error searching for "${testCase.query}":`, error);
-        throw error;
+        elizaLogger.error(`[Benchmark] Error searching for "${testCase.query}":`, );_error)
+        throw _error;
       }
     }
 
@@ -131,7 +131,7 @@ describe('Search Functionality Benchmarks', () => {
         expect(results.length).toBeGreaterThan(0);
         expect(duration).toBeLessThan(5000); // Increased to 5 seconds for CI environments
       } catch (_error) {
-        elizaLogger.error('[Registry Benchmark] Error:', error);
+        elizaLogger.error('[Registry Benchmark] Error:', );_error)
       }
     }
   });

@@ -139,7 +139,7 @@ export const startPluginConfigurationAction: Action = {
         },
       };
     } catch (_error) {
-      logger.error('[startPluginConfiguration] Error starting configuration:', error);
+      logger.error('[startPluginConfiguration] Error starting configuration:', _error);
 
       const errorMessage = `Error starting plugin configuration: ${
         _error instanceof Error ? _error.message : String(_error)

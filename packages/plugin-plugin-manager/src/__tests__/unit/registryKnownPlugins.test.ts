@@ -30,7 +30,7 @@ describe('Registry Known Plugins Validation', () => {
         `[Registry Test] Loaded ${Object.keys(registryData).length} plugins from registry`
       );
     } catch (_error) {
-      elizaLogger.error('[Registry Test] Failed to load registry:', error);
+      elizaLogger.error('[Registry Test] Failed to load registry:', _error);
     }
   });
 

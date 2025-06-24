@@ -162,14 +162,14 @@ export const listRegistryPluginsAction: Action = {
         },
       };
     } catch (_error) {
-      logger.error('[LIST_REGISTRY_PLUGINS] Error:', error);
+      logger.error('[LIST_REGISTRY_PLUGINS] Error:', _error);
 
       await callback?.({
         text: `Error listing registry plugins: ${_error instanceof Error ? _error.message : String(_error)}`,
         actions: ['LIST_REGISTRY_PLUGINS'],
       });
 
-      throw error;
+      throw _error;
     }
   },
 };

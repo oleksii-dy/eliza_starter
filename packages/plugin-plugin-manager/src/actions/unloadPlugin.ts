@@ -149,7 +149,7 @@ export const unloadPluginAction: Action = {
         },
       };
     } catch (_error) {
-      logger.error('[unloadPluginAction] Error unloading plugin:', error);
+      logger.error('[unloadPluginAction] Error unloading plugin:', _error);
 
       // Check if it's because it's an original plugin
       const errorMessage = _error instanceof Error ? _error.message : String(_error);

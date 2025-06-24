@@ -219,7 +219,7 @@ export class HealthMonitoringManager {
       return result;
     } catch (_error) {
       this.recordError(pluginId, _error as Error);
-      throw error;
+      throw _error;
     }
   }
 
@@ -541,13 +541,13 @@ export class HealthMonitoringManager {
 
       // Check for errors
       const errorCount = this.errorCounts.get(`plugin_${pluginId}`) || 0;
-      if (_errorCount > 10) {
+      if (errorCount > 10) {
         status = HealthStatus.UNHEALTHY;
-        message = `High _error rate: ${errorCount} errors`;
+        message = `High error rate: ${errorCount} errors`;
         details.errorCount = errorCount;
-      } else if (_errorCount > 5) {
+      } else if (errorCount > 5) {
         status = HealthStatus.WARNING;
-        message = `Elevated _error rate: ${errorCount} errors`;
+        message = `Elevated error rate: ${errorCount} errors`;
         details.errorCount = errorCount;
       }
 

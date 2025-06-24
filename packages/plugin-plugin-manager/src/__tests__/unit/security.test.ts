@@ -204,9 +204,9 @@ describe('Security Tests', () => {
         await pluginManagerService.setPluginConfig('test-plugin', nonSensitiveConfig);
         // If we get here, the test passed
       } catch (_error) {
-        // If it throws, log the _error to understand what's happening
-        console.error('Unexpected _error in setPluginConfig:', error);
-        throw error;
+        // If it throws, log the error to understand what's happening
+        console.error('Unexpected error in setPluginConfig:', _error);
+        throw _error;
       }
 
       // Verify the mock was called (setConfig delegates to saveConfiguration internally)

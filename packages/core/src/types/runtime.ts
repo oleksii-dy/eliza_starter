@@ -46,15 +46,6 @@ export interface IAgentRuntime extends IDatabaseAdapter {
 
   registerService(service: typeof Service): Promise<void>;
 
-  // Core interface providers
-  getTrustProvider(): import('./trust').ITrustProvider | null;
-  registerTrustProvider(provider: import('./trust').ITrustProvider): void;
-
-  getIdentityManager(): import('./identity').IIdentityManager | null;
-  registerIdentityManager(manager: import('./identity').IIdentityManager): void;
-
-  getPaymentProvider(): import('./payment').IPaymentProvider | null;
-  registerPaymentProvider(provider: import('./payment').IPaymentProvider): void;
 
   /**
    * Get the configuration manager for plugin component configuration

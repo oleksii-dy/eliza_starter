@@ -275,7 +275,7 @@ export class DependencyResolverManager {
         }
       }
     } catch (_error) {
-      elizaLogger.error('[DependencyResolver] Error checking version constraints', error);
+      elizaLogger.error('[DependencyResolver] Error checking version constraints', _error);
     }
 
     return null;

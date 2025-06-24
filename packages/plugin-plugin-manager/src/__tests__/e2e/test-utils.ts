@@ -156,6 +156,6 @@ export async function sendMessageWithTimeoutHandling(
       console.log('No agent response (expected in test environment without LLM)');
       return null;
     }
-    throw error; // Re-throw other errors
+    throw _error; // Re-throw other errors
   }
 }
