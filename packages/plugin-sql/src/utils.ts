@@ -78,5 +78,5 @@ export function resolvePgliteDir(dir?: string, fallbackDir?: string): string {
     return newPath;
   }
 
-  return path.normalize(resolved);
+  return resolved;
 }
