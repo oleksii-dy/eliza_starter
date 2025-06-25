@@ -1024,11 +1024,11 @@ export class PluginNamespaceManager {
     try {
       const res = await this.db.execute(
         sql.raw(
-          `SELECT constraint_name 
-           FROM information_schema.table_constraints 
-           WHERE table_schema = '${schemaName}' 
-           AND table_name = '${tableName}' 
-           AND constraint_name = '${constraintName}' 
+          `SELECT constraint_name
+           FROM information_schema.table_constraints
+           WHERE table_schema = '${schemaName}'
+           AND table_name = '${tableName}'
+           AND constraint_name = '${constraintName}'
            AND constraint_type = 'FOREIGN KEY'`
         )
       );
@@ -1047,11 +1047,11 @@ export class PluginNamespaceManager {
     try {
       const res = await this.db.execute(
         sql.raw(
-          `SELECT constraint_name 
-           FROM information_schema.table_constraints 
-           WHERE table_schema = '${schemaName}' 
-           AND table_name = '${tableName}' 
-           AND constraint_name = '${constraintName}' 
+          `SELECT constraint_name
+           FROM information_schema.table_constraints
+           WHERE table_schema = '${schemaName}'
+           AND table_name = '${tableName}'
+           AND constraint_name = '${constraintName}'
            AND constraint_type = 'CHECK'`
         )
       );
@@ -1070,11 +1070,11 @@ export class PluginNamespaceManager {
     try {
       const res = await this.db.execute(
         sql.raw(
-          `SELECT constraint_name 
-           FROM information_schema.table_constraints 
-           WHERE table_schema = '${schemaName}' 
-           AND table_name = '${tableName}' 
-           AND constraint_name = '${constraintName}' 
+          `SELECT constraint_name
+           FROM information_schema.table_constraints
+           WHERE table_schema = '${schemaName}'
+           AND table_name = '${tableName}'
+           AND constraint_name = '${constraintName}'
            AND constraint_type = 'UNIQUE'`
         )
       );
@@ -1171,19 +1171,48 @@ export class ExtensionManager {
   constructor(private db: DrizzleDB) {}
 
   async installRequiredExtensions(requiredExtensions: string[]): Promise<void> {
+    logger.debug(
+      `[EXTENSION MANAGER] Starting installation of ${requiredExtensions.length} extensions: ${requiredExtensions.join(', ')}`
+    );
+    logger.debug(`[EXTENSION MANAGER] Platform: ${process.platform}`);
+
     for (const extension of requiredExtensions) {
+      logger.debug(`[EXTENSION MANAGER] Installing extension: ${extension}`);
       try {
-        await this.db.execute(sql.raw(`CREATE EXTENSION IF NOT EXISTS "${extension}"`));
+        const sql_query = `CREATE EXTENSION IF NOT EXISTS "${extension}"`;
+        logger.debug(`[EXTENSION MANAGER] Executing SQL: ${sql_query}`);
+        await this.db.execute(sql.raw(sql_query));
+        logger.debug(`[EXTENSION MANAGER] Successfully installed extension: ${extension}`);
       } catch (error) {
         const errorDetails = extractErrorDetails(error);
-        logger.warn(`Could not install extension ${extension}: ${errorDetails.message}`);
+        logger.error(
+          `[EXTENSION MANAGER] Failed to install extension ${extension}: ${errorDetails.message}`
+        );
+        logger.error(
+          `[EXTENSION MANAGER] Error type: ${typeof error}, constructor: ${error?.constructor?.name}`
+        );
         if (errorDetails.stack) {
-          logger.debug(
-            `[CUSTOM MIGRATOR] Extension installation stack trace: ${errorDetails.stack}`
+          logger.error(
+            `[EXTENSION MANAGER] Extension installation stack trace: ${errorDetails.stack}`
           );
+        }
+        // Log additional error properties that might give us clues
+        if (error && typeof error === 'object') {
+          logger.error(`[EXTENSION MANAGER] Error object keys: ${Object.keys(error).join(', ')}`);
+          if ('code' in error) {
+            logger.error(`[EXTENSION MANAGER] Error code: ${error.code}`);
+          }
+          if ('errno' in error) {
+            logger.error(`[EXTENSION MANAGER] Error errno: ${error.errno}`);
+          }
+          if ('path' in error) {
+            logger.error(`[EXTENSION MANAGER] Error path: ${error.path}`);
+          }
         }
       }
     }
+
+    logger.debug(`[EXTENSION MANAGER] Completed extension installation process`);
   }
 }
 
@@ -1251,6 +1280,10 @@ export async function runPluginMigrations(
   const namespaceManager = new PluginNamespaceManager(db);
   const introspector = new DrizzleSchemaIntrospector();
   const extensionManager = new ExtensionManager(db);
+
+  logger.debug(`[CUSTOM MIGRATOR] About to install extensions for plugin: ${pluginName}`);
+  logger.debug(`[CUSTOM MIGRATOR] Platform: ${process.platform}`);
+  logger.debug(`[CUSTOM MIGRATOR] Extensions to install: vector, fuzzystrmatch`);
 
   await extensionManager.installRequiredExtensions(['vector', 'fuzzystrmatch']);
   const schemaName = await namespaceManager.getPluginSchema(pluginName);
