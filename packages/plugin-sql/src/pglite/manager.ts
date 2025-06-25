@@ -2,6 +2,7 @@ import { PGlite, type PGliteOptions } from '@electric-sql/pglite';
 import { fuzzystrmatch } from '@electric-sql/pglite/contrib/fuzzystrmatch';
 import { vector } from '@electric-sql/pglite/vector';
 import type { IDatabaseClientManager } from '../types';
+import path from 'node:path';
 
 /**
  * Class representing a database client manager for PGlite.
@@ -17,8 +18,13 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
    * @param {PGliteOptions} options - The options to configure the PGlite client.
    */
   constructor(options: PGliteOptions) {
+    // Normalize the dataDir path if it exists to handle Windows paths correctly
+    const normalizedOptions = options.dataDir
+      ? { ...options, dataDir: path.normalize(options.dataDir) }
+      : options;
+
     this.client = new PGlite({
-      ...options,
+      ...normalizedOptions,
       extensions: {
         vector,
         fuzzystrmatch,

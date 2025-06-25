@@ -10,9 +10,9 @@ import path from 'node:path';
  */
 export function expandTildePath(filepath: string): string {
   if (filepath && filepath.startsWith('~')) {
-    return path.join(process.cwd(), filepath.slice(1));
+    return path.normalize(path.join(process.cwd(), filepath.slice(1)));
   }
-  return filepath;
+  return path.normalize(filepath);
 }
 
 /**
@@ -71,12 +71,12 @@ export function resolvePgliteDir(dir?: string, fallbackDir?: string): string {
 
   // Automatically migrate legacy path (<cwd>/.elizadb) to new location (<cwd>/.eliza/.elizadb)
   const resolved = expandTildePath(base);
-  const legacyPath = path.join(process.cwd(), '.elizadb');
+  const legacyPath = path.normalize(path.join(process.cwd(), '.elizadb'));
   if (resolved === legacyPath) {
-    const newPath = path.join(process.cwd(), '.eliza', '.elizadb');
+    const newPath = path.normalize(path.join(process.cwd(), '.eliza', '.elizadb'));
     process.env.PGLITE_DATA_DIR = newPath;
     return newPath;
   }
 
-  return resolved;
+  return path.normalize(resolved);
 }

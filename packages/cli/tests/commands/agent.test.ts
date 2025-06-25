@@ -92,7 +92,7 @@ describe('ElizaOS Agent Commands', () => {
           env: {
             ...process.env,
             LOG_LEVEL: 'debug',
-            PGLITE_DATA_DIR: `${testTmpDir}/elizadb`,
+            PGLITE_DATA_DIR: join(testTmpDir, 'elizadb'),
             NODE_OPTIONS: '--max-old-space-size=4096',
             SERVER_HOST: '127.0.0.1',
           },
