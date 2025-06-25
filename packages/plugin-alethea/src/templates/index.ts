@@ -83,3 +83,25 @@ Output only a JSON object with the parameters (agentId, amount) or {"error": "re
 `;
 
 export const fusePodWithAliAgentTemplate = `You are an AI assistant. Your task is to extract parameters for fusing a Level 5 Pod NFT with an ALI Agent.\n\nReview the recent messages:\n<recent_messages>\n{{recentMessages}}\n</recent_messages>\n\nBased on the conversation, identify:\n- agentId: The ALI Agent ID (contract address) to fuse the Pod with (required, string starting with 0x)\n- podId: The Token ID of the Level 5 Pod NFT to be fused (required, string representing a number)\n- podContractAddress: The contract address of the Pod NFT (optional, string starting with 0x, if specified by user; otherwise, an environment variable or default might be used by the system if applicable for Pods).\n\nLook for:\n- ALI Agent contract addresses (0x...)\n- Pod NFT Token IDs (numeric values, can be quoted strings)\n- Pod NFT contract addresses if explicitly mentioned (0x...)\n\nOutput only a JSON object with the parameters (agentId, podId, podContractAddress) or {\"error\": \"reason\"}.\n`;
+
+export const distributeHiveTokensTemplate = `You are an AI assistant. Your task is to extract parameters for distributing hive tokens.\n`;
+
+export const createLiquidityPoolTemplate = `You are an AI assistant. Your task is to extract parameters for creating a liquidity pool.\n`;
+
+export const deployAliAgentTokenTemplate = `You are an AI assistant. Your task is to extract parameters for deploying an ali agent token.\n`;
+
+export const deployHiveUtilityTokenTemplate = `You are an AI assistant. Your task is to extract parameters for distributing hive utility tokens.\n`;
+
+export const executeAirdropTemplate = `You are an AI assistant. Your task is to extract parameters for executing airdrop.\n`;
+
+export const createHiveTemplate = `You are an AI assistant. Your task is to extract parameters for creating hive.\n`;
+
+export const updateHiveUriTemplate = `You are an AI assistant. Your task is to extract parameters for updating hive uri.\n`;
+
+export const joinHiveTemplate = `You are an AI assistant. Your task is to extract parameters for joining hive.\n`;
+
+export const leaveHiveTemplate = `You are an AI assistant. Your task is to extract parameters for leaving hive.\n`;
+
+export const getLinkedAssetDetailsTemplate = `You are an AI assistant. Your task is to extract parameters for getting linked asset details.\n`;
+
+export const participateInVoteTemplate = `You are an AI assistant. Your task is to extract parameters for participating in vote.\n`;

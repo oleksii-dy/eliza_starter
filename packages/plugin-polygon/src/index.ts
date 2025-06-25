@@ -19,47 +19,47 @@ process.on('unhandledRejection', (reason, promise) => {
   // Don't crash, just log the error and continue
 });
 
-import { transferPolygonAction } from './actions/transfer.js';
-import { delegateL1Action } from './actions/delegateL1.js';
-import { getCheckpointStatusAction } from './actions/getCheckpointStatus.js';
-import { getValidatorInfoAction } from './actions/getValidatorInfo.js';
-import { getDelegatorInfoAction } from './actions/getDelegatorInfo.js';
-import { withdrawRewardsAction } from './actions/withdrawRewardsL1.js';
-import { bridgeDepositAction } from './actions/bridgeDeposit.js';
-import { getL2BlockNumberAction } from './actions/getL2BlockNumber.js';
-import { getMaticBalanceAction } from './actions/getMaticBalance.js';
-import { getPolygonGasEstimatesAction } from './actions/getPolygonGasEstimates.js';
-import { undelegateL1Action } from './actions/undelegateL1.js';
-import { restakeRewardsL1Action } from './actions/restakeRewardsL1.js';
-import { isL2BlockCheckpointedAction } from './actions/isL2BlockCheckpointed.js';
+import { transferPolygonAction } from './actions/transfer.ts';
+import { delegateL1Action } from './actions/delegateL1.ts';
+import { getCheckpointStatusAction } from './actions/getCheckpointStatus.ts';
+import { getValidatorInfoAction } from './actions/getValidatorInfo.ts';
+import { getDelegatorInfoAction } from './actions/getDelegatorInfo.ts';
+import { withdrawRewardsAction } from './actions/withdrawRewardsL1.ts';
+import { bridgeDepositAction } from './actions/bridgeDeposit.ts';
+import { getL2BlockNumberAction } from './actions/getL2BlockNumber.ts';
+import { getMaticBalanceAction } from './actions/getMaticBalance.ts';
+import { getPolygonGasEstimatesAction } from './actions/getPolygonGasEstimates.ts';
+import { undelegateL1Action } from './actions/undelegateL1.ts';
+import { restakeRewardsL1Action } from './actions/restakeRewardsL1.ts';
+import { isL2BlockCheckpointedAction } from './actions/isL2BlockCheckpointed.ts';
 // Heimdall read-only query actions
-import { heimdallValidatorInfoAction } from './actions/heimdallValidatorInfoAction.js';
-import { heimdallValidatorSetAction } from './actions/heimdallValidatorSetAction.js';
-import { heimdallCheckpointStatusAction } from './actions/heimdallCheckpointStatusAction.js';
-// import { getNativeBalanceAction, getERC20BalanceAction } from './actions/getBalanceInfo.js';
-import { getUSDCBalanceAction, getWETHBalanceAction } from './actions/getBalanceInfo.js';
-import { getBlockNumberAction, getBlockDetailsAction } from './actions/getBlockInfo.js';
-import { getPolygonBlockDetailsAction } from './actions/getPolygonBlockDetails.js';
-import { proposeGovernanceAction } from './actions/proposeGovernance.js';
-import { executeGovernanceAction } from './actions/executeGovernance.js';
-import { voteGovernanceAction } from './actions/voteGovernance.js';
-import { queueGovernanceAction } from './actions/queueGovernance.js';
-import { swapPolygonAction } from './actions/swap.js';
+import { heimdallValidatorInfoAction } from './actions/heimdallValidatorInfoAction.ts';
+import { heimdallValidatorSetAction } from './actions/heimdallValidatorSetAction.ts';
+import { heimdallCheckpointStatusAction } from './actions/heimdallCheckpointStatusAction.ts';
+// import { getNativeBalanceAction, getERC20BalanceAction } from './actions/getBalanceInfo.ts';
+import { getUSDCBalanceAction, getWETHBalanceAction } from './actions/getBalanceInfo.ts';
+import { getBlockNumberAction, getBlockDetailsAction } from './actions/getBlockInfo.ts';
+import { getPolygonBlockDetailsAction } from './actions/getPolygonBlockDetails.ts';
+import { proposeGovernanceAction } from './actions/proposeGovernance.ts';
+import { executeGovernanceAction } from './actions/executeGovernance.ts';
+import { voteGovernanceAction } from './actions/voteGovernance.ts';
+import { queueGovernanceAction } from './actions/queueGovernance.ts';
+import { swapAction } from './actions/swap.ts';
 
 import {
   WalletProvider,
   initWalletProvider,
   polygonWalletProvider,
-} from './providers/PolygonWalletProvider.js';
+} from './providers/PolygonWalletProvider.ts';
 import {
   PolygonRpcService,
   type ValidatorInfo,
   type DelegatorInfo,
   ValidatorStatus,
-} from './services/PolygonRpcService.js';
-import { HeimdallService } from './services/HeimdallService.js';
-import { getGasPriceEstimates, type GasPriceEstimates } from './services/GasService.js';
-import { parseBigIntString } from './utils.js'; // Import from utils
+} from './services/PolygonRpcService.ts';
+import { HeimdallService } from './services/HeimdallService.ts';
+import { getGasPriceEstimates, type GasPriceEstimates } from './services/GasService.ts';
+import { parseBigIntString } from './utils.ts'; // Import from utils
 
 // --- Configuration Schema --- //
 const configSchema = z.object({
@@ -100,7 +100,7 @@ const polygonActions: Action[] = [
   executeGovernanceAction,
   voteGovernanceAction,
   queueGovernanceAction,
-  swapPolygonAction,
+  swapAction,
 ];
 
 // Debug logging for action registration

@@ -1,0 +1,50 @@
+name: eliza
+version: 0.11.1
+tee: tdx
+kind: container
+resources:
+  memory: 16384
+  cpus: 1
+  storage:
+    kind: disk-persistent
+    size: 10000
+artifacts:
+  firmware: https://github.com/oasisprotocol/oasis-boot/releases/download/v0.4.1/ovmf.tdx.fd#db47100a7d6a0c1f6983be224137c3f8d7cb09b63bb1c7a5ee7829d8e994a42f
+  kernel: https://github.com/oasisprotocol/oasis-boot/releases/download/v0.4.1/stage1.bin#06e12cba9b2423b4dd5916f4d84bf9c043f30041ab03aa74006f46ef9c129d22
+  stage2: https://github.com/oasisprotocol/oasis-boot/releases/download/v0.4.1/stage2-podman.tar.bz2#6f2487aa064460384309a58c858ffea9316e739331b5c36789bb2f61117869d6
+  container:
+    runtime: https://github.com/oasisprotocol/oasis-sdk/releases/download/rofl-containers%2Fv0.4.2/rofl-containers#0cbaa4c0c1b35c5ed41156868bee9f3726f52eeedc01b3060d3b2eb67d76f546
+    compose: rofl-compose.yaml
+deployments:
+  default:
+    app_id: rofl1qpkplp3uq5yage4kunt0ylmulett0arzwcdjvc8u
+    network: testnet
+    paratime: sapphire
+    admin: myaccount
+    trust_root:
+      height: 25857131
+      hash: ff2cc312fdd541a46184040a57499f2ff25f11f208f45636ebf27f3c1f68c570
+    policy:
+      quotes:
+        pcs:
+          tcb_validity_period: 30
+          min_tcb_evaluation_data_number: 18
+          tdx: {}
+      enclaves:
+        - qY3NqWPmHNy/bgdEw1n+rEt5TfA978TrA1tq0jjxEZwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+        - n1wgLip/cu4XExwpKzC+CtoLnYlbW/BaTbdIn4tVYU8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+      endorsements:
+        - any: {}
+      fees: endorsing_node
+      max_expiration: 3
+    secrets:
+      - name: CHARACTERS
+        value: pGJwa1ggfj0NBRwrlKOtUEUiQSVeJakTJUXfstZ8+8ulZJnDn0VkbmFtZVgav6agaw0PtiRbkDkl8+mLBsto83NpVnwhw5Flbm9uY2VPKymKWhD3ilH7IFOkdlhjZXZhbHVlWDhCP2XqHBAmZA8eP4AjcAyNXNzhD/xCsTG3mbBQvaqqY5JF1Z66IlaqHN9s3nYLv7d9FJxvvKUIMA==
+      - name: SERVER_PORT
+        value: pGJwa1ggkHPbc5A8TdFfXibeKMpNhpvtErxCufyZS5H16R7ObFFkbmFtZVgb/vT+PeNqA5/zaWDclgaq8aaZHTVWigFWBDCBZW5vbmNlT2m21PUpEzs18n1bz4vN5mV2YWx1ZVR7sv6bPMgZxPG/UDYb6NuPU/3LSA==
+      - name: UI_PORT
+        value: pGJwa1gglQLsycuw+HaqFB2JAOQAm0A4nUO7FsWXKqCJNJNRInFkbmFtZVc3uCVtSUQ45M6SMcDI+fDn9hJtYUIcFGVub25jZU+lz1Jmi/qsk4jfGPnRzI9ldmFsdWVUMkwxb0MHGDf/TB3nhUCtfMRmsRo=
+      - name: UI_SERVER_URL
+        value: pGJwa1ggiy2WZVFv05dQA+D/ziRSFXci6+NuASbDnoE9WhV7BmZkbmFtZVgdSM+XlzEPBSXGUGYCqhiDz7BYRNcDuBoZ0w0r+y5lbm9uY2VPs+Db03TF4uKtemosqo3VZXZhbHVlWDnq9eXjKC3VRk/lrjhYNd+p0KYeikgjhi6uY+2xQvS6gvu35AZTz1PzRG4kg+6T+SfUqXkJZ1hzjV4=
+      - name: OPENAI_API_KEY
+        value: pGJwa1gg1rJLIGM27ox4lr5rbAVlJy8ycXDDxGRtW7TNLsEbPnJkbmFtZVgeyY7+qt3Eynj/T3YdDgh06L4myQJa6Lp0y8MSgqmNZW5vbmNlT1pzFtfJ66yYrdw1Ir/W0WV2YWx1ZVi0ih2P4HhUdnkrFqgDe6FSwOaAbE+5zYS7E5fJ/A/Nf+DbN/O8iHXfDnoFk/y3lkD1BG+WDcWO+l/kkkuPPumVCQA8Ei64QjSPRFsPKeGoHfh9MI+eAvKQ4gvp9X3gDK44+e7zWPaojQb0nt3a6jhoRy55tdnw2RX5mX0ybMYBw+se1a74qW2LFqpweQASZdcV5PZPRFTMpEWvT3IVXej1Awl7+TXvwTw908eV6oHwUBZoxqU4

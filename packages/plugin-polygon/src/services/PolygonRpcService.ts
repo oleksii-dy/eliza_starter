@@ -64,7 +64,7 @@ export class PolygonRpcService extends Service {
   capabilityDescription =
     'Provides access to Ethereum (L1) and Polygon (L2) JSON-RPC nodes and L1 staking operations.';
 
-  private runtime: IAgentRuntime;
+  runtime: IAgentRuntime;
   private l1Provider: EthersProvider | null = null;
   private l2Provider: EthersProvider | null = null;
   private l1Signer: Signer | null = null; // Added L1 Signer

@@ -1,0 +1,19 @@
+services:
+  realityspiral:
+    restart: always
+    image: ghcr.io/elizaos/eliza:staging
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+      - "5173:5173"
+    environment:
+      - CHARACTERS=${CHARACTERS}
+      - SERVER_PORT=${SERVER_PORT}
+      - UI_PORT=${UI_PORT}
+      - UI_SERVER_URL=${UI_SERVER_URL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - /run/rofl-appd.sock:/run/rofl-appd.sock

@@ -19,9 +19,11 @@ import {
   type Route,
   type LiFiStep,
   type ChainKey,
+  SDKBaseConfig,
+  ExecutionOptions,
 } from '@lifi/sdk';
 import { parseUnits, formatUnits, type Address, type Hex, parseAbi, type Chain } from 'viem';
-import { WalletProvider, initWalletProvider } from '../providers/PolygonWalletProvider';
+import { WalletProvider, initWalletProvider } from '../providers/PolygonWalletProvider.ts';
 
 interface SwapParams {
   chain: string; // e.g., "polygon"
@@ -71,7 +73,7 @@ const swapTemplate = {
 const tokenDecimalsAbi = parseAbi(['function decimals() view returns (uint8)']);
 
 class PolygonSwapActionRunner {
-  private lifiConfig;
+  private lifiConfig: SDKBaseConfig;
   private walletProvider: WalletProvider;
 
   constructor(walletProvider: WalletProvider) {
@@ -159,7 +161,7 @@ class PolygonSwapActionRunner {
     const bestRoute: Route = routesResult.routes[0];
     logger.debug('Executing LiFi swap route:', JSON.stringify(bestRoute, null, 2));
 
-    const execution = await executeRoute(bestRoute, this.lifiConfig);
+    const execution = await executeRoute(bestRoute, this.lifiConfig as ExecutionOptions);
 
     const process = execution.steps[0]?.execution?.process[0];
 
@@ -234,9 +236,9 @@ export const swapAction: Action = {
     logger.info('Handling POLYGON_SWAP_TOKENS for message:', message.id);
     try {
       const walletProvider = await initWalletProvider(runtime);
-      const actionRunner = new PolygonSwapActionRunner(walletProvider);
+      const actionRunner = new PolygonSwapActionRunner(walletProvider as WalletProvider);
       const prompt = composePromptFromState({
-        state,
+        state: state as State,
         template: swapTemplate as unknown as TemplateType,
       });
       const modelResponse = await runtime.useModel(ModelType.LARGE, { prompt });
@@ -307,36 +309,28 @@ export const swapAction: Action = {
     }
   },
   examples: [
-    {
-      name: '{{user1}}',
-      content: {
-        text: 'Swap 100 USDC for DAI on Polygon.',
-        context:
-          'Current token mapping: USDC is 0x2791bca1f2de4661ed88a30c99a7a9449aa84174, DAI is 0x8f3cf7ad23cd3cadbd9735df95802323922a03c1.',
-      },
-      content_type: 'text/plain',
-      source: {
-        type: 'api',
-        id: 'user-123',
-      },
-    },
-    {
-      name: '{{user2}}',
-      content: {
-        text: 'Swapping 100 USDC for DAI on Polygon.',
-        action: 'POLYGON_SWAP_TOKENS',
-        params: {
-          chain: 'polygon',
-          fromToken: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
-          toToken: '0x8f3cf7ad23cd3cadbd9735df95802323922a03c1',
-          amount: '100',
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'Swap 100 USDC for DAI on Polygon.',
+          context:
+            'Current token mapping: USDC is 0x2791bca1f2de4661ed88a30c99a7a9449aa84174, DAI is 0x8f3cf7ad23cd3cadbd9735df95802323922a03c1.',
         },
       },
-      content_type: 'application/json',
-      source: {
-        type: 'api',
-        id: 'agent-456',
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Swapping 100 USDC for DAI on Polygon.',
+          action: 'POLYGON_SWAP_TOKENS',
+          params: {
+            chain: 'polygon',
+            fromToken: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+            toToken: '0x8f3cf7ad23cd3cadbd9735df95802323922a03c1',
+            amount: '100',
+          },
+        },
       },
-    },
-  ] as ActionExample[],
+    ],
+  ],
 };
