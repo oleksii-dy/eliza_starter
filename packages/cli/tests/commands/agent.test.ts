@@ -215,9 +215,9 @@ describe('ElizaOS Agent Commands', () => {
       throw error;
     }
 
-    // Pre-load additional test characters (ada is already loaded by server)
+    // Pre-load test characters (including ada which needs to be explicitly loaded as an agent)
     const charactersDir = join(scriptDir, 'test-characters');
-    for (const character of ['max', 'shaw']) {
+    for (const character of ['ada', 'max', 'shaw']) {
       const characterPath = join(charactersDir, `${character}.json`);
       console.log(`[DEBUG] Loading character: ${character}`);
 
@@ -241,8 +241,9 @@ describe('ElizaOS Agent Commands', () => {
       }
     }
 
-    // Give characters time to register
-    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+    // Give characters time to register with increased wait for Windows
+    const registrationWait = process.platform === 'win32' ? 5000 : TEST_TIMEOUTS.SHORT_WAIT;
+    await new Promise((resolve) => setTimeout(resolve, registrationWait));
   });
 
   afterAll(async () => {
