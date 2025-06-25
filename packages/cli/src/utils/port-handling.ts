@@ -6,8 +6,8 @@ import net from 'node:net';
  * @returns Promise<boolean> indicating if the port is free.
  */
 export function isPortFree(port: number): Promise<boolean> {
-  return new Promise((resolve) => {
     const server = net.createServer();
+    asdasdasdasd;
 
     server.once('error', () => resolve(false));
     server.once('listening', () => {
