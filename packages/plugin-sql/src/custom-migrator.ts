@@ -1263,32 +1263,107 @@ export async function runPluginMigrations(
   schema: any
 ): Promise<void> {
   logger.debug(`[CUSTOM MIGRATOR] Starting migration for plugin: ${pluginName}`);
+  logger.debug(`[CUSTOM MIGRATOR] Platform: ${process.platform}`);
+  logger.debug(`[CUSTOM MIGRATOR] Process PID: ${process.pid}`);
 
-  // Test database connection first
+  // Test database connection first with enhanced error handling
+  logger.debug(`[CUSTOM MIGRATOR] Testing database connection...`);
   try {
-    await db.execute(sql.raw('SELECT 1'));
-    logger.debug('[CUSTOM MIGRATOR] Database connection verified');
+    const startTime = Date.now();
+    const result = await db.execute(sql.raw('SELECT 1 as test'));
+    const endTime = Date.now();
+    logger.debug(`[CUSTOM MIGRATOR] Database connection verified in ${endTime - startTime}ms`);
+    logger.debug(`[CUSTOM MIGRATOR] Connection test result:`, result);
   } catch (error) {
     const errorDetails = extractErrorDetails(error);
     logger.error(`[CUSTOM MIGRATOR] Database connection failed: ${errorDetails.message}`);
+    logger.error(
+      `[CUSTOM MIGRATOR] Error type: ${typeof error}, constructor: ${error?.constructor?.name}`
+    );
     if (errorDetails.stack) {
       logger.error(`[CUSTOM MIGRATOR] Stack trace: ${errorDetails.stack}`);
     }
+
+    // Log additional error properties for Windows debugging
+    if (error && typeof error === 'object') {
+      logger.error(`[CUSTOM MIGRATOR] Error object keys: ${Object.keys(error).join(', ')}`);
+      if ('code' in error) {
+        logger.error(`[CUSTOM MIGRATOR] Error code: ${error.code}`);
+      }
+      if ('errno' in error) {
+        logger.error(`[CUSTOM MIGRATOR] Error errno: ${error.errno}`);
+      }
+      if ('path' in error) {
+        logger.error(`[CUSTOM MIGRATOR] Error path: ${error.path}`);
+      }
+    }
+
+    // On Windows, try to provide more context about the failure
+    if (process.platform === 'win32') {
+      logger.error(
+        `[CUSTOM MIGRATOR] Windows-specific error detected. This may be related to PGLite WASM file access issues.`
+      );
+    }
+
     throw new Error(`Database connection failed: ${errorDetails.message}`);
   }
 
+  logger.debug(`[CUSTOM MIGRATOR] Creating manager instances...`);
   const namespaceManager = new PluginNamespaceManager(db);
   const introspector = new DrizzleSchemaIntrospector();
   const extensionManager = new ExtensionManager(db);
+  logger.debug(`[CUSTOM MIGRATOR] Manager instances created successfully`);
 
-  logger.debug(`[CUSTOM MIGRATOR] About to install extensions for plugin: ${pluginName}`);
-  logger.debug(`[CUSTOM MIGRATOR] Platform: ${process.platform}`);
-  logger.debug(`[CUSTOM MIGRATOR] Extensions to install: vector, fuzzystrmatch`);
+  let schemaName: string;
+  let existingTables: string[];
 
-  await extensionManager.installRequiredExtensions(['vector', 'fuzzystrmatch']);
-  const schemaName = await namespaceManager.getPluginSchema(pluginName);
-  await namespaceManager.ensureNamespace(schemaName);
-  const existingTables = await namespaceManager.introspectExistingTables(schemaName);
+  // Step 1: Install extensions with error isolation
+  try {
+    logger.debug(`[CUSTOM MIGRATOR] About to install extensions for plugin: ${pluginName}`);
+    logger.debug(`[CUSTOM MIGRATOR] Platform: ${process.platform}`);
+    logger.debug(`[CUSTOM MIGRATOR] Extensions to install: vector, fuzzystrmatch`);
+    await extensionManager.installRequiredExtensions(['vector', 'fuzzystrmatch']);
+    logger.debug(`[CUSTOM MIGRATOR] Extensions installed successfully`);
+  } catch (error) {
+    const errorDetails = extractErrorDetails(error);
+    logger.error(`[CUSTOM MIGRATOR] Extension installation failed: ${errorDetails.message}`);
+    throw new Error(`Extension installation failed: ${errorDetails.message}`);
+  }
+
+  // Step 2: Get plugin schema with error isolation
+  try {
+    logger.debug(`[CUSTOM MIGRATOR] Getting plugin schema for: ${pluginName}`);
+    schemaName = await namespaceManager.getPluginSchema(pluginName);
+    logger.debug(`[CUSTOM MIGRATOR] Plugin schema obtained: ${schemaName}`);
+  } catch (error) {
+    const errorDetails = extractErrorDetails(error);
+    logger.error(`[CUSTOM MIGRATOR] Getting plugin schema failed: ${errorDetails.message}`);
+    throw new Error(`Getting plugin schema failed: ${errorDetails.message}`);
+  }
+
+  // Step 3: Ensure namespace with error isolation
+  try {
+    logger.debug(`[CUSTOM MIGRATOR] Ensuring namespace: ${schemaName}`);
+    await namespaceManager.ensureNamespace(schemaName);
+    logger.debug(`[CUSTOM MIGRATOR] Namespace ensured successfully`);
+  } catch (error) {
+    const errorDetails = extractErrorDetails(error);
+    logger.error(`[CUSTOM MIGRATOR] Ensuring namespace failed: ${errorDetails.message}`);
+    throw new Error(`Ensuring namespace failed: ${errorDetails.message}`);
+  }
+
+  // Step 4: Introspect existing tables with error isolation
+  try {
+    logger.debug(`[CUSTOM MIGRATOR] Introspecting existing tables in schema: ${schemaName}`);
+    existingTables = await namespaceManager.introspectExistingTables(schemaName);
+    logger.debug(
+      `[CUSTOM MIGRATOR] Found ${existingTables.length} existing tables: ${existingTables.join(', ')}`
+    );
+  } catch (error) {
+    const errorDetails = extractErrorDetails(error);
+    logger.error(`[CUSTOM MIGRATOR] Table introspection failed: ${errorDetails.message}`);
+    throw new Error(`Table introspection failed: ${errorDetails.message}`);
+  }
 
   // logger.debug(`[CUSTOM MIGRATOR] Schema name: ${schemaName}`);
   // logger.debug(`[CUSTOM MIGRATOR] Existing tables:`, existingTables);
