@@ -17,9 +17,9 @@ export function expandTildePath(
   if (filepath && filepath.startsWith('~')) {
     // If ~ means project root, use projectRootForTilde. If it means OS home, os.homedir() would be used.
     // Assuming ~ means project root in this context based on previous behavior with cwd.
-    return path.join(projectRootForTilde, filepath.slice(1));
+    return path.normalize(path.join(projectRootForTilde, filepath.slice(1)));
   }
-  return filepath;
+  return path.normalize(filepath);
 }
 
 /**
