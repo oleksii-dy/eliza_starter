@@ -13,6 +13,18 @@ import { attachmentsProvider } from '../providers/attachments';
 import { providersProvider } from '../providers/providers';
 import { recentMessagesProvider } from '../providers/recentMessages';
 
+// Mock getEntityDetails from @elizaos/core
+mock.module('@elizaos/core', () => ({
+  ...require('@elizaos/core'),
+  getEntityDetails: mock().mockResolvedValue([
+    {
+      id: 'test-entity-id',
+      names: ['Test User'],
+      metadata: { userName: 'Test User' },
+    },
+  ]),
+}));
+
 describe('Providers Provider', () => {
   let mockRuntime: IAgentRuntime;
   let mockMessage: Memory;
@@ -70,7 +82,7 @@ describe('Providers Provider', () => {
 });
 
 describe('Recent Messages Provider', () => {
-  let mockRuntime: MockRuntime;
+  let mockRuntime: IAgentRuntime;
   let mockMessage: Memory;
   let mockState: State;
   let mockMessages: Memory[];
@@ -110,7 +122,7 @@ describe('Recent Messages Provider', () => {
         names: ['Test User'],
         metadata: { userName: 'Test User' },
       }),
-    });
+    }) as unknown as IAgentRuntime;
     mockMessage = createMockMemory() as Memory;
     mockState = createMockState() as State;
   });
@@ -165,7 +177,7 @@ describe('Recent Messages Provider', () => {
 });
 
 describe('Attachments Provider', () => {
-  let mockRuntime: MockRuntime;
+  let mockRuntime: IAgentRuntime;
   let mockMessage: Memory;
   let mockState: State;
 

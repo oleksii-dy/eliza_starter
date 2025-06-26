@@ -64,6 +64,14 @@ export function setupActionTest(
     registerAction: mock(),
     startRun: mock().mockReturnValue('test-run-id'),
     finishRun: mock().mockResolvedValue(undefined),
+    addEmbeddingToMemory: mock().mockResolvedValue(undefined),
+    getConversationLength: mock().mockReturnValue(10),
+    getRoomsForParticipants: mock().mockResolvedValue([]),
+    getEntityById: mock().mockResolvedValue({
+      id: 'test-entity-id',
+      names: ['Test User'],
+      metadata: { userName: 'Test User' },
+    }),
     composeState: mock().mockResolvedValue({
       values: {},
       data: {},

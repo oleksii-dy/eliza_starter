@@ -14,6 +14,31 @@ describe('Message Handling Plugin Integration', () => {
       composeState: mock().mockResolvedValue({}),
       registerProvider: mock(),
       registerAction: mock(),
+      addEmbeddingToMemory: mock().mockResolvedValue(undefined),
+      createMemory: mock().mockResolvedValue(true),
+      startRun: mock().mockReturnValue('test-run-id'),
+      finishRun: mock().mockResolvedValue(undefined),
+      emitEvent: mock().mockResolvedValue(undefined),
+      useModel: mock().mockResolvedValue(
+        JSON.stringify({
+          action: 'RESPOND',
+          providers: [],
+          reasoning: 'Test response',
+        })
+      ),
+      getConversationLength: mock().mockReturnValue(10),
+      getRoomsForParticipants: mock().mockResolvedValue([]),
+      getMemoriesByRoomIds: mock().mockResolvedValue([]),
+      getEntityById: mock().mockResolvedValue({
+        id: 'test-entity-id',
+        names: ['Test User'],
+        metadata: { userName: 'Test User' },
+      }),
+      getRoom: mock().mockResolvedValue({
+        id: 'test-room-id',
+        type: 'GROUP',
+      }),
+      getMemories: mock().mockResolvedValue([]),
     }) as unknown as IAgentRuntime;
   });
 
