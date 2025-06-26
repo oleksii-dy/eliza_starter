@@ -4,6 +4,7 @@
     "@elizaos/plugin-sql",
     "@elizaos/plugin-openai",
     "@elizaos/plugin-bootstrap",
+    "@elizaos/plugin-rofl",
     "@elizaos/plugin-alethea",
     "@elizaos/plugin-polygon",
     "@elizaos/plugin-polygon-zkevm",
