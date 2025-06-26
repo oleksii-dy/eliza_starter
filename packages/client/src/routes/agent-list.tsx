@@ -6,8 +6,12 @@ const AgentList: React.FC = () => {
   const { data, isLoading, error } = useAgents();
   const agents = data?.data?.agents || [];
 
-  if (isLoading) return <div>Loading agents...</div>;
-  if (error) return <div>Error loading agents: {(error as Error).message}</div>;
+  if (isLoading) {
+    return <div>Loading agents...</div>;
+  }
+  if (error) {
+    return <div>Error loading agents: {(error as Error).message}</div>;
+  }
 
   return (
     <div className="p-4">

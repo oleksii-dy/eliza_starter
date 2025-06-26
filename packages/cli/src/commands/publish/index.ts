@@ -44,7 +44,7 @@ export const publish = new Command()
   .option('--npm', 'publish to npm only (skip GitHub and registry)', false)
   .option('-t, --test', 'test publish process without making changes', false)
   .option('-d, --dry-run', 'generate registry files locally without publishing', false)
-  .option('-sr, --skip-registry', 'skip publishing to the registry', false)
+  .option('--skip-registry', 'skip publishing to the registry', false)
   .hook('preAction', async () => {
     await displayBanner();
   })
@@ -325,7 +325,7 @@ export const publish = new Command()
 
       // Handle dry run mode (create local registry files)
       if (opts.dryRun) {
-        console.info(`Running dry run for plugin registry publication...`);
+        console.info('Running dry run for plugin registry publication...');
 
         // Save package to local registry
         const success = await savePackageToRegistry(packageMetadata, true);
@@ -344,7 +344,7 @@ export const publish = new Command()
       }
 
       if (opts.test) {
-        console.info(`Running plugin publish tests...`);
+        console.info('Running plugin publish tests...');
 
         if (opts.npm) {
           console.info('\nTesting npm publishing:');
@@ -391,7 +391,7 @@ export const publish = new Command()
       let registryPrUrl: string | null = null;
 
       // Step 1: Publish to npm (always, unless we add a --skip-npm flag later)
-      console.info(`Publishing plugin to npm...`);
+      console.info('Publishing plugin to npm...');
       await publishToNpm(cwd, packageJson, npmUsername);
 
       // Add npm package info to metadata

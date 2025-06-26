@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
-import { mock, spyOn } from 'bun:test';
+import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test';
 import { getUserServerRole, findWorldsForOwner } from '../roles';
 import { Role, type IAgentRuntime, type UUID, type World } from '../types';
 import * as entities from '../entities';
@@ -13,7 +12,7 @@ describe('roles utilities', () => {
 
     // Set up scoped mocks for this test
     spyOn(entities, 'createUniqueUuid').mockImplementation(
-      (_runtime, serverId) => `unique-${serverId}` as UUID
+      (_runtime: any, serverId: any) => `unique-${serverId}` as UUID
     );
 
     // Mock logger if it doesn't have the methods
@@ -21,7 +20,7 @@ describe('roles utilities', () => {
       const methods = ['error', 'info', 'warn', 'debug'];
       methods.forEach((method) => {
         if (typeof logger_module.logger[method] === 'function') {
-          spyOn(logger_module.logger, method).mockImplementation(() => {});
+          logger_module.logger[method] = mock(() => {});
         } else {
           logger_module.logger[method] = mock(() => {});
         }

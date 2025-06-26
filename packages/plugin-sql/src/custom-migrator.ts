@@ -125,7 +125,7 @@ export class DrizzleSchemaIntrospector {
     // });
 
     if (!table) {
-      logger.debug(`[INTROSPECTOR] No table provided, using fallback: unknown_table`);
+      logger.debug('[INTROSPECTOR] No table provided, using fallback: unknown_table');
       return 'unknown_table';
     }
 
@@ -205,7 +205,9 @@ export class DrizzleSchemaIntrospector {
 
     // Parse columns directly from table object properties
     for (const [key, value] of Object.entries(table)) {
-      if (key === '_' || key === 'enableRLS' || typeof value !== 'object' || !value) continue;
+      if (key === '_' || key === 'enableRLS' || typeof value !== 'object' || !value) {
+        continue;
+      }
 
       const col = value as any;
       // logger.debug(`[INTROSPECTOR] Examining column ${key}:`, {
@@ -349,9 +351,13 @@ export class DrizzleSchemaIntrospector {
                 localColumns = ['entity_id'];
               } else if (tableName.includes('complex')) {
                 // Complex table has multiple foreign keys
-                if (index === 0) localColumns = ['base_id'];
-                else if (index === 1) localColumns = ['dependent_id'];
-                else if (index === 2) localColumns = ['vector_id'];
+                if (index === 0) {
+                  localColumns = ['base_id'];
+                } else if (index === 1) {
+                  localColumns = ['dependent_id'];
+                } else if (index === 2) {
+                  localColumns = ['vector_id'];
+                }
               }
             }
 
@@ -363,7 +369,7 @@ export class DrizzleSchemaIntrospector {
             // Final safety check: ensure referencedTableName is a string, not an object
             if (typeof referencedTableName === 'object' && referencedTableName !== null) {
               logger.debug(
-                `[INTROSPECTOR] WARNING: referencedTableName is an object, extracting string name`
+                '[INTROSPECTOR] WARNING: referencedTableName is an object, extracting string name'
               );
               referencedTableName = this.getTableName(referencedTableName, '');
             }
@@ -378,7 +384,7 @@ export class DrizzleSchemaIntrospector {
                 name: `${this.getTableName(table, '')}_${localColumns.join('_')}_fkey`,
                 columns: localColumns,
                 referencedTable: referencedTableName, // Now guaranteed to be a string
-                referencedColumns: referencedColumns,
+                referencedColumns,
                 onDelete: fk.onDelete || 'no action',
               };
 
@@ -386,7 +392,7 @@ export class DrizzleSchemaIntrospector {
               // logger.debug(`[INTROSPECTOR] Created foreign key:`, foreignKey);
             } else {
               logger.debug(
-                `[INTROSPECTOR] Skipping foreign key due to unresolved table name or missing columns:`,
+                '[INTROSPECTOR] Skipping foreign key due to unresolved table name or missing columns:',
                 {
                   referencedTableName,
                   localColumns,
@@ -395,17 +401,17 @@ export class DrizzleSchemaIntrospector {
               );
             }
           } catch (error) {
-            logger.debug(`[INTROSPECTOR] Error processing foreign key reference:`, error);
+            logger.debug('[INTROSPECTOR] Error processing foreign key reference:', error);
           }
         }
       }
     } else {
-      logger.debug(`[INTROSPECTOR] No inline foreign keys found, trying fallback methods`);
+      logger.debug('[INTROSPECTOR] No inline foreign keys found, trying fallback methods');
     }
 
     // Fallback: Try to extract from table config if no inline FKs found
     if (foreignKeys.length === 0 && tableConfig) {
-      logger.debug(`[INTROSPECTOR] Using fallback foreign key parsing`);
+      logger.debug('[INTROSPECTOR] Using fallback foreign key parsing');
       // Add any additional fallback logic here if needed
     }
 
@@ -414,14 +420,16 @@ export class DrizzleSchemaIntrospector {
   }
 
   private extractReferencedTableName(reference: any): string | null {
-    logger.debug(`[INTROSPECTOR] Extracting referenced table name from:`, {
+    logger.debug('[INTROSPECTOR] Extracting referenced table name from:', {
       type: typeof reference,
       hasTable: !!(reference && reference.table),
       tableType: reference && reference.table ? typeof reference.table : undefined,
       referenceKeys: reference ? Object.keys(reference) : [],
     });
 
-    if (!reference) return null;
+    if (!reference) {
+      return null;
+    }
 
     // Method 1: Direct table name access
     if (reference.table && reference.table._ && reference.table._.name) {
@@ -467,7 +475,7 @@ export class DrizzleSchemaIntrospector {
           return this.extractReferencedTableName({ table: referencedColumn.table });
         }
       } catch (error) {
-        logger.debug(`[INTROSPECTOR] Error calling reference function:`, error);
+        logger.debug('[INTROSPECTOR] Error calling reference function:', error);
       }
     }
 
@@ -496,7 +504,7 @@ export class DrizzleSchemaIntrospector {
       }
     }
 
-    logger.debug(`[INTROSPECTOR] Could not extract table name from reference`);
+    logger.debug('[INTROSPECTOR] Could not extract table name from reference');
     return null;
   }
 
@@ -504,12 +512,12 @@ export class DrizzleSchemaIntrospector {
     const indexes: IndexDefinition[] = [];
     const tableConfig = table._;
 
-    logger.debug(`[INTROSPECTOR] Parsing indexes. Has table._:`, !!tableConfig);
+    logger.debug('[INTROSPECTOR] Parsing indexes. Has table._:', !!tableConfig);
 
     // Check for indexes in the standard location
     if (tableConfig && tableConfig.indexes) {
       logger.debug(
-        `[INTROSPECTOR] Found indexes in table config:`,
+        '[INTROSPECTOR] Found indexes in table config:',
         Object.keys(tableConfig.indexes)
       );
       for (const [indexName, index] of Object.entries(tableConfig.indexes)) {
@@ -520,14 +528,14 @@ export class DrizzleSchemaIntrospector {
 
     // Also check for unique constraints in the extraConfigBuilder
     if (tableConfig && tableConfig.extraConfigBuilder) {
-      logger.debug(`[INTROSPECTOR] Found extraConfigBuilder, attempting to extract constraints`);
+      logger.debug('[INTROSPECTOR] Found extraConfigBuilder, attempting to extract constraints');
       try {
         const extraConfig = tableConfig.extraConfigBuilder(table);
 
         if (Array.isArray(extraConfig)) {
           logger.debug(`[INTROSPECTOR] ExtraConfig has ${extraConfig.length} items`);
           for (const item of extraConfig) {
-            logger.debug(`[INTROSPECTOR] ExtraConfig item:`, {
+            logger.debug('[INTROSPECTOR] ExtraConfig item:', {
               hasUnderscore: !!item._,
               unique: item._ && item._.unique,
               name: item._ && item._.name,
@@ -549,7 +557,7 @@ export class DrizzleSchemaIntrospector {
           }
         }
       } catch (error) {
-        logger.debug(`[INTROSPECTOR] Could not parse extra config for table constraints:`, error);
+        logger.debug('[INTROSPECTOR] Could not parse extra config for table constraints:', error);
       }
     }
 
@@ -595,13 +603,13 @@ export class DrizzleSchemaIntrospector {
           }
         }
       } catch (error) {
-        logger.debug(`[INTROSPECTOR] Error checking symbols:`, error);
+        logger.debug('[INTROSPECTOR] Error checking symbols:', error);
       }
     }
 
     // Enhanced: Try to extract constraints from table structure patterns
     if (indexes.length === 0) {
-      logger.debug(`[INTROSPECTOR] Still no constraints found, trying pattern-based extraction`);
+      logger.debug('[INTROSPECTOR] Still no constraints found, trying pattern-based extraction');
 
       // Check if this is a test table that should have constraints
       const tableName = this.getTableName(table, '');
@@ -612,7 +620,7 @@ export class DrizzleSchemaIntrospector {
           columns: ['name'],
           unique: true,
         });
-        logger.debug(`[INTROSPECTOR] Added pattern-based unique constraint for base_entities`);
+        logger.debug('[INTROSPECTOR] Added pattern-based unique constraint for base_entities');
       } else if (tableName.includes('dependent_entities')) {
         // Add expected dependent_entities unique constraint
         indexes.push({
@@ -620,7 +628,7 @@ export class DrizzleSchemaIntrospector {
           columns: ['base_id', 'type'],
           unique: true,
         });
-        logger.debug(`[INTROSPECTOR] Added pattern-based unique constraint for dependent_entities`);
+        logger.debug('[INTROSPECTOR] Added pattern-based unique constraint for dependent_entities');
       } else if (tableName.includes('complex_relations')) {
         // Add expected complex_relations unique constraint
         indexes.push({
@@ -628,7 +636,7 @@ export class DrizzleSchemaIntrospector {
           columns: ['base_id', 'dependent_id'],
           unique: true,
         });
-        logger.debug(`[INTROSPECTOR] Added pattern-based unique constraint for complex_relations`);
+        logger.debug('[INTROSPECTOR] Added pattern-based unique constraint for complex_relations');
       }
     }
 
@@ -640,7 +648,7 @@ export class DrizzleSchemaIntrospector {
     const checkConstraints: { name: string; expression: string }[] = [];
     const tableConfig = table._;
 
-    logger.debug(`[INTROSPECTOR] Parsing check constraints. Has table._:`, !!tableConfig);
+    logger.debug('[INTROSPECTOR] Parsing check constraints. Has table._:', !!tableConfig);
 
     // Check for check constraints in extraConfigBuilder
     if (tableConfig && tableConfig.extraConfigBuilder) {
@@ -658,7 +666,7 @@ export class DrizzleSchemaIntrospector {
           }
         }
       } catch (error) {
-        logger.debug(`[INTROSPECTOR] Could not parse check constraints:`, error);
+        logger.debug('[INTROSPECTOR] Could not parse check constraints:', error);
       }
     }
 
@@ -669,13 +677,13 @@ export class DrizzleSchemaIntrospector {
         name: 'value_positive',
         expression: 'value >= 0',
       });
-      logger.debug(`[INTROSPECTOR] Added pattern-based check constraint for dependent_entities`);
+      logger.debug('[INTROSPECTOR] Added pattern-based check constraint for dependent_entities');
     } else if (tableName.includes('complex_relations')) {
       checkConstraints.push({
         name: 'strength_range',
         expression: 'strength >= 1 AND strength <= 10',
       });
-      logger.debug(`[INTROSPECTOR] Added pattern-based check constraint for complex_relations`);
+      logger.debug('[INTROSPECTOR] Added pattern-based check constraint for complex_relations');
     }
 
     logger.debug(
@@ -754,7 +762,7 @@ export class DrizzleSchemaIntrospector {
           }
         }
       } catch (error) {
-        logger.debug(`[INTROSPECTOR] Could not parse composite primary key:`, error);
+        logger.debug('[INTROSPECTOR] Could not parse composite primary key:', error);
       }
     }
 
@@ -846,7 +854,9 @@ export class DrizzleSchemaIntrospector {
   }
 
   private formatDefaultValue(defaultValue: any): string | undefined {
-    if (defaultValue === undefined || defaultValue === null) return undefined;
+    if (defaultValue === undefined || defaultValue === null) {
+      return undefined;
+    }
 
     // logger.debug(`[INTROSPECTOR] Formatting default value:`, {
     //   type: typeof defaultValue,
@@ -864,8 +874,12 @@ export class DrizzleSchemaIntrospector {
       if (defaultValue.queryChunks && Array.isArray(defaultValue.queryChunks)) {
         const result = defaultValue.queryChunks
           .map((c: any) => {
-            if (typeof c === 'string') return c;
-            if (c && c.value !== undefined) return c.value;
+            if (typeof c === 'string') {
+              return c;
+            }
+            if (c && c.value !== undefined) {
+              return c.value;
+            }
             return '';
           })
           .join('');
@@ -904,7 +918,7 @@ export class DrizzleSchemaIntrospector {
       return defaultValue.toString();
     }
 
-    logger.debug(`[INTROSPECTOR] Could not format default value, returning undefined`);
+    logger.debug('[INTROSPECTOR] Could not format default value, returning undefined');
     return undefined;
   }
 
@@ -914,9 +928,15 @@ export class DrizzleSchemaIntrospector {
       .map((col) => {
         let def = `"${col.name}" ${col.type}`;
         // Only add PRIMARY KEY for single column primary keys if no composite primary key exists
-        if (col.primaryKey && !tableDef.compositePrimaryKey) def += ' PRIMARY KEY';
-        if (col.notNull && !col.primaryKey) def += ' NOT NULL';
-        if (col.unique) def += ' UNIQUE';
+        if (col.primaryKey && !tableDef.compositePrimaryKey) {
+          def += ' PRIMARY KEY';
+        }
+        if (col.notNull && !col.primaryKey) {
+          def += ' NOT NULL';
+        }
+        if (col.unique) {
+          def += ' UNIQUE';
+        }
         if (col.defaultValue) {
           // Handle different types of defaults
           if (col.defaultValue === 'now()' || col.defaultValue.includes('now()')) {
@@ -968,8 +988,9 @@ export class DrizzleSchemaIntrospector {
         `ALTER TABLE "${schemaName}"."${tableDef.name}" ` +
         `ADD CONSTRAINT "${fk.name}" ` +
         `FOREIGN KEY ("${fk.columns.join('", "')}") ` +
-        `REFERENCES "${schemaName}"."${fk.referencedTable}" ("${fk.referencedColumns.join('", "')}")` +
-        (fk.onDelete ? ` ON DELETE ${fk.onDelete.toUpperCase()}` : '')
+        `REFERENCES "${schemaName}"."${fk.referencedTable}" ("${fk.referencedColumns.join('", "')}")${
+          fk.onDelete ? ` ON DELETE ${fk.onDelete.toUpperCase()}` : ''
+        }`
     );
   }
 }
@@ -1003,7 +1024,9 @@ export class PluginNamespaceManager {
   }
 
   async ensureNamespace(schemaName: string): Promise<void> {
-    if (schemaName === 'public') return;
+    if (schemaName === 'public') {
+      return;
+    }
     await this.db.execute(sql.raw(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`));
   }
 
@@ -1293,10 +1316,12 @@ export async function runPluginMigrations(
 
   try {
     // Phase 1: Create all tables without foreign key constraints
-    logger.debug(`[CUSTOM MIGRATOR] Phase 1: Creating tables...`);
+    logger.debug('[CUSTOM MIGRATOR] Phase 1: Creating tables...');
     for (const tableName of sortedTableNames) {
       const tableDef = tableDefinitions.get(tableName);
-      if (!tableDef) continue;
+      if (!tableDef) {
+        continue;
+      }
 
       const tableExists = existingTables.includes(tableDef.name);
       logger.debug(`[CUSTOM MIGRATOR] Table ${tableDef.name} exists: ${tableExists}`);
@@ -1321,10 +1346,12 @@ export async function runPluginMigrations(
     }
 
     // Phase 2: Add constraints (foreign keys, check constraints, etc.)
-    logger.debug(`[CUSTOM MIGRATOR] Phase 2: Adding constraints...`);
+    logger.debug('[CUSTOM MIGRATOR] Phase 2: Adding constraints...');
     for (const tableName of sortedTableNames) {
       const tableDef = tableDefinitions.get(tableName);
-      if (!tableDef) continue;
+      if (!tableDef) {
+        continue;
+      }
 
       // Add constraints if table has foreign keys OR check constraints
       if (tableDef.foreignKeys.length > 0 || tableDef.checkConstraints.length > 0) {

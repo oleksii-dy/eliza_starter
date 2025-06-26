@@ -3,7 +3,7 @@
  * This runs at the very beginning to prevent dependency loading issues
  */
 
-import { mock } from 'bun:test';
+import { mock  } from 'bun:test';
 
 // Set up global environment variables for testing
 process.env.NODE_ENV = 'test';
@@ -13,11 +13,11 @@ process.env.ELIZA_NONINTERACTIVE = 'true';
 mock.module('multer', () => {
   console.log('Mocking multer module...');
   const mockMulter = () => ({
-    single: () => (req: any, res: any, next: any) => next(),
-    array: () => (req: any, res: any, next: any) => next(),
-    fields: () => (req: any, res: any, next: any) => next(),
-    none: () => (req: any, res: any, next: any) => next(),
-    any: () => (req: any, res: any, next: any) => next(),
+    single: () => (_req: any, _res: any, next: any) => next(),
+    array: () => (_req: any, _res: any, next: any) => next(),
+    fields: () => (_req: any, _res: any, next: any) => next(),
+    none: () => (_req: any, _res: any, next: any) => next(),
+    any: () => (_req: any, _res: any, next: any) => next(),
   });
 
   (mockMulter as any).diskStorage = () => ({});

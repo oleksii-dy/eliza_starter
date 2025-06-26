@@ -1,36 +1,39 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { PGlite } from '@electric-sql/pglite';
-import { PGliteClientManager } from '../../pglite/manager';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
-import { DatabaseMigrationService } from '../../migration-service';
-import * as schema from '../../schema';
-import type { UUID } from '@elizaos/core';
+import { UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { PgAdapter } from '../../pg/adapter';
+import { PgManager } from '../../pg/manager';
 
 describe('PostgreSQL Adapter Integration Tests', () => {
-  let adapter: PgliteDatabaseAdapter;
-  let manager: PGliteClientManager;
+  let adapter: PgAdapter;
+  let manager: PgManager;
   let cleanup: () => Promise<void>;
   let agentId: UUID;
 
   beforeEach(async () => {
+    // Skip test if no PostgreSQL URL is provided
+    if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
+      throw new Error(
+        'PostgreSQL connection required for tests. Please set POSTGRES_URL or TEST_POSTGRES_URL environment variable.'
+      );
+    }
+
+    const postgresUrl = process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL!;
+
     agentId = uuidv4() as UUID;
-    const client = new PGlite();
-    manager = new PGliteClientManager(client);
-    adapter = new PgliteDatabaseAdapter(agentId, manager);
+    manager = new PgManager({
+      connectionString: postgresUrl,
+      ssl: false,
+    });
+    await manager.connect();
+    adapter = new PgAdapter(agentId, manager);
     await adapter.init();
 
-    // Run migrations
-    const migrationService = new DatabaseMigrationService();
-    const db = adapter.getDatabase();
-    await migrationService.initializeWithDatabase(db);
-    migrationService.discoverAndRegisterPluginSchemas([
-      { name: '@elizaos/plugin-sql', description: 'SQL plugin', schema },
-    ]);
-    await migrationService.runAllPluginMigrations();
+    // Migrations are handled automatically by the adapter's UnifiedMigrator
 
     cleanup = async () => {
       await adapter.close();
+      await manager.close();
     };
   });
 
@@ -146,10 +149,11 @@ describe('PostgreSQL Adapter Integration Tests', () => {
     });
 
     it('should handle query failures', async () => {
-      // PGLite adapter init doesn't actually run queries, so we test a different operation
-      const mockClient = new PGlite();
-      const mockManager = new PGliteClientManager(mockClient as any);
-      const mockAdapter = new PgliteDatabaseAdapter(uuidv4() as UUID, mockManager);
+      // PostgreSQL adapter init establishes the connection and runs migrations
+      const tempPostgresUrl = process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL!;
+      const mockManager = new PgManager({ connectionString: tempPostgresUrl, ssl: false });
+      await mockManager.connect();
+      const mockAdapter = new PgAdapter(uuidv4() as UUID, mockManager);
 
       // Close the manager to simulate a connection issue
       await mockManager.close();

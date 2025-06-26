@@ -1,5 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach } from 'bun:test';
-import { mock } from 'bun:test';
+import { describe, expect, it, beforeEach, afterEach, mock } from 'bun:test';
 import { createLogger, logger, elizaLogger } from '../logger';
 
 // Mock environment variables
@@ -11,12 +10,8 @@ const mockEnv = {
   LOG_DIAGNOSTIC: '',
 };
 
-// Mock pino-pretty
-mock.module('pino-pretty', () => ({
-  default: mock(() => ({
-    write: mock(),
-  })),
-}));
+// Note: pino-pretty mocking removed as it's not compatible with Bun test runner
+// The logger tests will run with actual pino-pretty module
 
 describe('Logger', () => {
   let originalEnv: NodeJS.ProcessEnv;
@@ -26,7 +21,7 @@ describe('Logger', () => {
     originalEnv = { ...process.env };
     // Reset environment variables
     Object.keys(mockEnv).forEach((key) => {
-      process.env[key] = mockEnv[key];
+      process.env[key] = mockEnv[key as keyof typeof mockEnv];
     });
     mock.restore();
   });

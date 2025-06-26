@@ -55,7 +55,7 @@ export async function removePlugin(plugin: string): Promise<void> {
       execError.stderr.includes('not found')
     ) {
       logger.info(
-        `'bun remove' indicated package was not found. Continuing with directory removal attempt.`
+        "'bun remove' indicated package was not found. Continuing with directory removal attempt."
       );
     } else {
       handleError(execError);

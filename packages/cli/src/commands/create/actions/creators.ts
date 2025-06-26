@@ -6,6 +6,8 @@ import * as clack from '@clack/prompts';
 import colors from 'yoctocolors';
 import { processPluginName, validateTargetDirectory } from '../utils';
 import { installDependencies, setupProjectEnvironment } from './setup';
+import { spawn } from 'child_process';
+import path from 'path';
 
 /**
  * Creates a new plugin with the specified name and configuration.
@@ -52,10 +54,10 @@ export async function createPlugin(
   await installDependencies(pluginTargetDir);
 
   console.info(`\n${colors.green('✓')} Plugin "${pluginDirName}" created successfully!`);
-  console.info(`\nNext steps:`);
+  console.info('\nNext steps:');
   console.info(`  cd ${pluginDirName}`);
-  console.info(`  bun run build`);
-  console.info(`  bun run test\n`);
+  console.info('  bun run build');
+  console.info('  bun run test\n');
 }
 
 /**
@@ -106,7 +108,7 @@ export async function createAgent(
     console.info(`\n${colors.green('✓')} Agent "${agentName}" created successfully!`);
   }
   console.info(`Agent character created successfully at: ${agentFilePath}`);
-  console.info(`\nTo use this agent:`);
+  console.info('\nTo use this agent:');
   console.info(`  elizaos agent start --path ${agentFilePath}\n`);
 }
 
@@ -152,9 +154,62 @@ export async function createTEEProject(
   await buildProject(teeTargetDir);
 
   console.info(`\n${colors.green('✓')} TEE project "${projectName}" created successfully!`);
-  console.info(`\nNext steps:`);
+
+  // Display documentation link
+  console.info(`\n${colors.cyan('📚 Learn more about ElizaOS:')}`);
+  console.info(`   ${colors.blue('https://eliza.how')}\n`);
+
+  // Always show manual start instructions to prevent hanging
+  console.info('\nTo start your TEE project:');
   console.info(`  cd ${projectName}`);
-  console.info(`  bun run dev\n`);
+  console.info('  bun run dev\n');
+
+  // In non-interactive mode or test mode, don't auto-start to prevent hanging
+  if (process.env.ELIZA_TEST_MODE === 'true' || isNonInteractive) {
+    return;
+  }
+
+  // Only offer to auto-start in interactive mode
+  const shouldStart = await clack.confirm({
+    message: 'Would you like to start your TEE project now? (This will keep the terminal busy)',
+    initialValue: false, // Default to false to prevent accidental hanging
+  });
+
+  if (clack.isCancel(shouldStart) || !shouldStart) {
+    return;
+  }
+
+  console.info(`\n${colors.cyan('Starting your ElizaOS TEE project...')}`);
+  console.info(
+    `${colors.yellow('Note: This will keep the terminal busy. Press Ctrl+C to exit.')}\n`
+  );
+
+  // Start the project in the current process to provide immediate feedback
+  const startProcess = spawn('bun', ['run', 'dev'], {
+    cwd: path.resolve(teeTargetDir),
+    stdio: 'inherit', // Inherit stdio for interactive feedback
+    shell: true,
+  });
+
+  // Handle process events
+  startProcess.on('error', (error) => {
+    console.error(`\n${colors.red('Failed to start the TEE project:')}`);
+    console.error(error.message);
+    process.exit(1);
+  });
+
+  startProcess.on('exit', (code) => {
+    if (code !== 0) {
+      console.error(`\n${colors.red('TEE project exited with code')} ${code}`);
+      process.exit(code || 1);
+    }
+  });
+
+  // Wait for the process to complete (or be killed by user)
+  await new Promise<void>((resolve, reject) => {
+    startProcess.on('exit', resolve);
+    startProcess.on('error', reject);
+  });
 }
 
 /**
@@ -201,7 +256,62 @@ export async function createProject(
 
   const displayName = projectName === '.' ? 'Project' : `Project "${projectName}"`;
   console.info(`\n${colors.green('✓')} ${displayName} initialized successfully!`);
-  console.info(`\nNext steps:`);
-  console.info(`  cd ${projectName}`);
-  console.info(`  bun run dev\n`);
+
+  // Display documentation link
+  console.info(`\n${colors.cyan('📚 Learn more about ElizaOS:')}`);
+  console.info(`   ${colors.blue('https://eliza.how')}\n`);
+
+  // Always show manual start instructions to prevent hanging
+  console.info('\nTo start your project:');
+  if (projectName !== '.') {
+    console.info(`  cd ${projectName}`);
+  }
+  console.info('  bun run dev\n');
+
+  // In non-interactive mode or test mode, don't auto-start to prevent hanging
+  if (process.env.ELIZA_TEST_MODE === 'true' || isNonInteractive) {
+    return;
+  }
+
+  // Only offer to auto-start in interactive mode
+  const shouldStart = await clack.confirm({
+    message: 'Would you like to start your project now? (This will keep the terminal busy)',
+    initialValue: false, // Default to false to prevent accidental hanging
+  });
+
+  if (clack.isCancel(shouldStart) || !shouldStart) {
+    return;
+  }
+
+  console.info(`\n${colors.cyan('Starting your ElizaOS project...')}`);
+  console.info(
+    `${colors.yellow('Note: This will keep the terminal busy. Press Ctrl+C to exit.')}\n`
+  );
+
+  // Start the project in the current process to provide immediate feedback
+  const startProcess = spawn('bun', ['run', 'dev'], {
+    cwd: path.resolve(projectTargetDir),
+    stdio: 'inherit', // Inherit stdio for interactive feedback
+    shell: true,
+  });
+
+  // Handle process events
+  startProcess.on('error', (error) => {
+    console.error(`\n${colors.red('Failed to start the project:')}`);
+    console.error(error.message);
+    process.exit(1);
+  });
+
+  startProcess.on('exit', (code) => {
+    if (code !== 0) {
+      console.error(`\n${colors.red('Project exited with code')} ${code}`);
+      process.exit(code || 1);
+    }
+  });
+
+  // Wait for the process to complete (or be killed by user)
+  await new Promise<void>((resolve, reject) => {
+    startProcess.on('exit', resolve);
+    startProcess.on('error', reject);
+  });
 }

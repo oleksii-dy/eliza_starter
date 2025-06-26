@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Relationship, Entity, Agent, UUID } from '@elizaos/core';
+import type { Relationship, Entity, Agent, UUID } from '@elizaos/core';
 
 // Test IDs for relationship tests
 export const relationshipTestAgentId = uuidv4() as UUID;

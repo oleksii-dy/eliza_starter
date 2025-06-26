@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import ConfirmationDialog from '@/components/confirmation-dialog';
 
 interface ConfirmationOptions {
   title: string;
@@ -43,7 +42,7 @@ export function useConfirmation() {
       confirmationState.onConfirm();
     }
     handleOpenChange(false);
-  }, [confirmationState.onConfirm, handleOpenChange]);
+  }, [confirmationState, handleOpenChange]);
 
   return {
     confirm,

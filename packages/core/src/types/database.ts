@@ -46,6 +46,9 @@ export interface IDatabaseAdapter {
   /** Check if the database connection is ready */
   isReady(): Promise<boolean>;
 
+  /** Wait for the database to be ready */
+  waitForReady?(timeoutMs?: number): Promise<void>;
+
   /** Close database connection */
   close(): Promise<void>;
 
@@ -65,7 +68,7 @@ export interface IDatabaseAdapter {
   ensureEmbeddingDimension(dimension: number): Promise<void>;
 
   /** Get entity by IDs */
-  getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null>;
+  getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null>;
 
   /** Get entities for room */
   getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]>;
@@ -176,6 +179,22 @@ export interface IDatabaseAdapter {
   removeWorld(id: UUID): Promise<void>;
 
   getAllWorlds(): Promise<World[]>;
+
+  /**
+   * Retrieve worlds for an agent with optional filtering and pagination
+   * @param params Query parameters including agentId and filtering options
+   * @returns Promise resolving to an array of World objects
+   */
+  getWorlds(params: {
+    agentId: UUID;
+    serverId?: string;
+    name?: string;
+    activeOnly?: boolean;
+    limit?: number;
+    offset?: number;
+    orderBy?: 'name' | 'createdAt' | 'lastActivityAt';
+    orderDirection?: 'asc' | 'desc';
+  }): Promise<World[]>;
 
   updateWorld(world: World): Promise<void>;
 

@@ -1,6 +1,7 @@
 [test]
 # Test timeout in milliseconds
-timeout = 60000
+# Increased for integration tests with real server instances
+timeout = 180000
 
 # Test directory patterns
 root = "src"
@@ -14,3 +15,7 @@ env = "node"
 # Path aliases (matches tsconfig.json paths)
 [test.alias]
 "@/src" = "./src"
+
+coverage-exclude = [
+  "**/dist/**",
+]

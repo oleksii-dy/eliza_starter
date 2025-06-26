@@ -5,16 +5,18 @@ import {
   PoolInfo,
   TokenBalance,
   TransactionResult,
-  Service,
 } from '@elizaos/core';
 
 export class DummyLpService extends ILpService {
+  static readonly serviceName = 'LP_POOL';
+  static override readonly serviceType = ILpService.serviceType;
+
   public getDexName(): string {
     return 'dummy';
   }
 
-  static async start(runtime: IAgentRuntime): Promise<DummyLpService> {
-    const service = new DummyLpService(runtime);
+  static async start(_runtime: IAgentRuntime): Promise<DummyLpService> {
+    const service = new DummyLpService(_runtime);
     return service;
   }
 
@@ -25,7 +27,7 @@ export class DummyLpService extends ILpService {
     }
   }
 
-  async start(runtime: IAgentRuntime): Promise<void> {
+  async start(_runtime: IAgentRuntime): Promise<void> {
     console.log('[DummyLpService] started.');
   }
 
@@ -70,12 +72,20 @@ export class DummyLpService extends ILpService {
     ];
 
     return pools.filter((p) => {
-      if (!tokenAMint && !tokenBMint) return true;
+      if (!tokenAMint && !tokenBMint) {
+        return true;
+      }
       const hasTokenA = p.tokenA.mint === tokenAMint || p.tokenB.mint === tokenAMint;
       const hasTokenB = p.tokenA.mint === tokenBMint || p.tokenB.mint === tokenBMint;
-      if (tokenAMint && tokenBMint) return hasTokenA && hasTokenB;
-      if (tokenAMint) return hasTokenA;
-      if (tokenBMint) return hasTokenB;
+      if (tokenAMint && tokenBMint) {
+        return hasTokenA && hasTokenB;
+      }
+      if (tokenAMint) {
+        return hasTokenA;
+      }
+      if (tokenBMint) {
+        return hasTokenB;
+      }
       return false;
     });
   }
@@ -151,7 +161,7 @@ export class DummyLpService extends ILpService {
         symbol: 'DUMMY-LP',
         uiAmount: 100,
         decimals: 6,
-        name: `Dummy LP Token`,
+        name: 'Dummy LP Token',
       },
       underlyingTokens: [
         {

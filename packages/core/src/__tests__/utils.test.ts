@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, setSystemTime, mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { Content, Entity, IAgentRuntime, Memory, ModelType, State } from '../types';
 import * as utils from '../utils';
 import {
@@ -81,43 +81,55 @@ describe('Utils Comprehensive Tests', () => {
   });
 
   describe('formatTimestamp', () => {
+    const fixedTime = new Date('2024-01-15T12:00:00Z');
+    let originalDate: DateConstructor;
+
     beforeEach(() => {
-      // Mock Date.now() to ensure consistent tests
-      setSystemTime(new Date('2024-01-15T12:00:00Z'));
+      // Mock Date constructor to return fixed time
+      originalDate = globalThis.Date;
+      globalThis.Date = class extends originalDate {
+        constructor(...args: any[]) {
+          if (args.length === 0) {
+            super(fixedTime.toISOString());
+          } else {
+            super(...(args as [any]));
+          }
+        }
+        static now() {
+          return fixedTime.getTime();
+        }
+      } as any;
     });
 
     afterEach(() => {
-      setSystemTime(); // Reset to real time
+      // Restore original Date
+      globalThis.Date = originalDate;
     });
 
     it("should return 'just now' for recent timestamps", () => {
-      const now = Date.now();
-      expect(formatTimestamp(now)).toBe('just now');
-      expect(formatTimestamp(now - 30000)).toBe('just now'); // 30 seconds ago
-      expect(formatTimestamp(now - 59999)).toBe('just now'); // Just under 1 minute
+      expect(formatTimestamp(fixedTime.getTime())).toBe('just now');
+      expect(formatTimestamp(fixedTime.getTime() - 30000)).toBe('just now'); // 30 seconds ago
+      expect(formatTimestamp(fixedTime.getTime() - 59999)).toBe('just now'); // Just under 1 minute
     });
 
     it('should return minutes ago for timestamps within an hour', () => {
-      const now = Date.now();
-      expect(formatTimestamp(now - 60000)).toBe('1 minute ago');
-      expect(formatTimestamp(now - 120000)).toBe('2 minutes ago');
-      expect(formatTimestamp(now - 1800000)).toBe('30 minutes ago');
-      expect(formatTimestamp(now - 3599000)).toBe('59 minutes ago');
+      expect(formatTimestamp(fixedTime.getTime() - 60000)).toBe('1 minute ago');
+      expect(formatTimestamp(fixedTime.getTime() - 120000)).toBe('2 minutes ago');
+      expect(formatTimestamp(fixedTime.getTime() - 1800000)).toBe('30 minutes ago');
+      expect(formatTimestamp(fixedTime.getTime() - 3599000)).toBe('59 minutes ago');
     });
 
     it('should return hours ago for timestamps within 24 hours', () => {
-      const now = Date.now();
-      expect(formatTimestamp(now - 3600000)).toBe('1 hour ago');
-      expect(formatTimestamp(now - 7200000)).toBe('2 hours ago');
-      expect(formatTimestamp(now - 43200000)).toBe('12 hours ago');
-      expect(formatTimestamp(now - 86399000)).toBe('23 hours ago');
+      expect(formatTimestamp(fixedTime.getTime() - 3600000)).toBe('1 hour ago');
+      expect(formatTimestamp(fixedTime.getTime() - 7200000)).toBe('2 hours ago');
+      expect(formatTimestamp(fixedTime.getTime() - 43200000)).toBe('12 hours ago');
+      expect(formatTimestamp(fixedTime.getTime() - 86399000)).toBe('23 hours ago');
     });
 
     it('should return days ago for older timestamps', () => {
-      const now = Date.now();
-      expect(formatTimestamp(now - 86400000)).toBe('1 day ago');
-      expect(formatTimestamp(now - 172800000)).toBe('2 days ago');
-      expect(formatTimestamp(now - 604800000)).toBe('7 days ago');
+      expect(formatTimestamp(fixedTime.getTime() - 86400000)).toBe('1 day ago');
+      expect(formatTimestamp(fixedTime.getTime() - 172800000)).toBe('2 days ago');
+      expect(formatTimestamp(fixedTime.getTime() - 604800000)).toBe('7 days ago');
     });
   });
 
@@ -242,7 +254,7 @@ describe('Utils Comprehensive Tests', () => {
     });
 
     it('should respect chunk overlap', async () => {
-      const text = 'Word1 Word2 Word3 Word4 Word5 ' + 'Word6 '.repeat(100);
+      const text = `Word1 Word2 Word3 Word4 Word5 ${'Word6 '.repeat(100)}`;
       const chunks = await splitChunks(text, 50, 10);
 
       expect(chunks.length).toBeGreaterThan(1);
@@ -254,7 +266,7 @@ describe('Utils Comprehensive Tests', () => {
 
     beforeEach(() => {
       mockRuntime = {
-        useModel: mock(async (type, params) => {
+        useModel: mock(async (type: any, params: any) => {
           if (type === 'TEXT_TOKENIZER_ENCODE') {
             // Simple mock: each word is a token
             return params.prompt.split(' ');
@@ -788,7 +800,7 @@ describe('Utils Comprehensive Tests', () => {
         role: 'developer',
         task: 'write tests',
       };
-      const template = `Hello {{name}}, as a {{role}}, please {{task}}.`;
+      const template = 'Hello {{name}}, as a {{role}}, please {{task}}.';
 
       const result = composePrompt({ state, template });
 
@@ -799,7 +811,7 @@ describe('Utils Comprehensive Tests', () => {
       const state = {
         name: 'Bob',
       };
-      const template = `Hello {{name}}, your role is {{role}}.`;
+      const template = 'Hello {{name}}, your role is {{role}}.';
 
       const result = composePrompt({ state, template });
 
@@ -809,7 +821,7 @@ describe('Utils Comprehensive Tests', () => {
 
     it('should handle empty state', () => {
       const state = {};
-      const template = `Template with {{placeholder}}.`;
+      const template = 'Template with {{placeholder}}.';
 
       const result = composePrompt({ state, template });
 
@@ -821,7 +833,7 @@ describe('Utils Comprehensive Tests', () => {
       const state = {
         word: 'test',
       };
-      const template = `{{word}} {{word}} {{word}}`;
+      const template = '{{word}} {{word}} {{word}}';
 
       const result = composePrompt({ state, template });
 
@@ -868,7 +880,7 @@ describe('Utils Comprehensive Tests', () => {
         text: '',
       };
 
-      const template = `Bio: {{bio}}\nLore: {{lore}}\nRecent: {{recentMessages}}`;
+      const template = 'Bio: {{bio}}\nLore: {{lore}}\nRecent: {{recentMessages}}';
 
       const result = composePromptFromState({ state: mockState, template });
 
@@ -883,7 +895,6 @@ describe('Utils Comprehensive Tests', () => {
         agentId: 'agent-123' as any,
         roomId: 'room-123' as any,
         bio: 'Assistant bio',
-        lore: 'Assistant lore',
         senderName: 'User',
         actors: '',
         actorsData: [
@@ -904,7 +915,7 @@ describe('Utils Comprehensive Tests', () => {
         text: '',
       };
 
-      const template = `Actors: {{actors}}\nSender: {{senderName}}`;
+      const template = 'Actors: {{actors}}\nSender: {{senderName}}';
 
       const result = composePromptFromState({ state: mockState, template });
 
@@ -919,7 +930,6 @@ describe('Utils Comprehensive Tests', () => {
         agentId: 'agent-123' as any,
         roomId: 'room-123' as any,
         bio: '',
-        lore: '',
         senderName: '',
         actors: '',
         actorsData: [],
@@ -929,7 +939,7 @@ describe('Utils Comprehensive Tests', () => {
         text: '',
       };
 
-      const template = `Bio: {{bio}}\nMissing: {{missingProp}}`;
+      const template = 'Bio: {{bio}}\nMissing: {{missingProp}}';
 
       const result = composePromptFromState({ state: mockState, template });
 
@@ -1031,20 +1041,16 @@ describe('Utils Comprehensive Tests', () => {
   });
 
   it('composePrompt inserts state values', () => {
-    //const spy = vi.spyOn(utils, 'composeRandomUser').mockImplementation((t) => t);
     const out = utils.composePrompt({ state: { a: 'x' }, template: 'Hello {{a}}' });
     expect(out).toBe('Hello x');
-    //spy.mockRestore();
   });
 
   it('composePromptFromState flattens state values', () => {
-    //const spy = vi.spyOn(utils, 'composeRandomUser').mockImplementation((t) => t);
     const out = utils.composePromptFromState({
       state: { values: { b: 'y' }, data: {}, text: '', c: 'z' },
       template: '{{b}} {{c}}',
     });
     expect(out).toBe('y z');
-    //spy.mockRestore();
   });
 
   it('formatPosts formats conversation text', () => {
@@ -1076,8 +1082,12 @@ describe('Utils Comprehensive Tests', () => {
     const runtime = {
       useModel: mock(
         async (type: (typeof ModelType)[keyof typeof ModelType], { prompt, tokens }: any) => {
-          if (type === ModelType.TEXT_TOKENIZER_ENCODE) return prompt.split(' ');
-          if (type === ModelType.TEXT_TOKENIZER_DECODE) return tokens.join(' ');
+          if (type === ModelType.TEXT_TOKENIZER_ENCODE) {
+            return prompt.split(' ');
+          }
+          if (type === ModelType.TEXT_TOKENIZER_DECODE) {
+            return tokens.join(' ');
+          }
           return [];
         }
       ),

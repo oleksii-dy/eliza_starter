@@ -1,4 +1,4 @@
-import { describe, expect, it, spyOn, beforeAll, afterAll } from 'bun:test';
+import { describe, it, expect, beforeAll, afterAll, spyOn } from 'bun:test';
 import plugin from '../plugin';
 import { ModelType, logger } from '@elizaos/core';
 import type { IAgentRuntime } from '@elizaos/core';

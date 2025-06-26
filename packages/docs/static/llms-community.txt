@@ -10274,7 +10274,7 @@ bun test
 
 ## File: packages/docs/static/packages/plugins/bootstrap.md
 `````markdown
-# @elizaos/plugin-bootstrap
+# @elizaos/plugin-message-handling
 
 ## Purpose
 
@@ -10290,7 +10290,7 @@ A plugin providing core functionality and basic actions for ElizaOS agents, enab
 ## Installation
 
 ```bash
-bun install @elizaos/plugin-bootstrap
+bun install @elizaos/plugin-message-handling
 ```
 
 ## Integration
@@ -17579,7 +17579,6 @@ Define your agent's personality and communication style:
 {
   "username": "handle", // Character's username/handle
   "system": "System prompt text", // Custom system prompt
-  "lore": [], // Additional background/history
   "knowledge": [
     // Knowledge base entries
     "Direct string knowledge",
@@ -17589,7 +17588,6 @@ Define your agent's personality and communication style:
   "messageExamples": [], // Example conversations
   "postExamples": [], // Example social posts
   "topics": [], // Areas of expertise
-  "adjectives": [] // Character traits
 }
 ```
 

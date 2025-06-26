@@ -1,6 +1,6 @@
 import {
+  AgentRuntime,
   ChannelType,
-  Content,
   MemoryType,
   type Entity,
   type Memory,
@@ -9,11 +9,9 @@ import {
   type UUID,
   type World,
 } from '@elizaos/core';
-import { v4 } from 'uuid';
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'bun:test';
-import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
-import { embeddingTable, memoryTable } from '../../schema';
+import { v4, v4 as uuidv4 } from 'uuid';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { PgAdapter } from '../../pg/adapter';
 import { createTestDatabase } from '../test-helpers';
 import {
   documentMemoryId,
@@ -24,9 +22,14 @@ import {
   memoryTestMemories,
   memoryTestMemoriesWithEmbedding,
 } from './seed';
+import { sql } from 'drizzle-orm';
+
+// Set test environment flag
+process.env.ELIZA_TESTING_PLUGIN = 'true';
 
 describe('Memory Integration Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
+  let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
   let testRoomId: UUID;
@@ -35,21 +38,37 @@ describe('Memory Integration Tests', () => {
 
   beforeAll(async () => {
     try {
-      // Use random UUIDs to avoid conflicts
-      testAgentId = v4() as UUID;
+      // Create the test database first
+      const initialAgentId = v4() as UUID;
+      ({ adapter, runtime, cleanup } = await createTestDatabase(initialAgentId));
+
+      // Get the actual agentId from the adapter
+      testAgentId = (adapter as any).agentId;
+
+      // Generate other test IDs
       testRoomId = v4() as UUID;
       testEntityId = v4() as UUID;
       testWorldId = v4() as UUID;
 
-      ({ adapter, cleanup } = await createTestDatabase(testAgentId));
+      // Log the IDs for debugging
+      console.log('Test IDs:', {
+        testAgentId,
+        adapterAgentId: (adapter as any).agentId,
+        testEntityId,
+        testRoomId,
+        testWorldId,
+      });
 
       console.log('ADAPTER IS', adapter);
+
+      // Ensure the adapter is configured for 384-dimensional embeddings
+      await adapter.ensureEmbeddingDimension(384);
 
       await adapter.createWorld({
         id: testWorldId,
         agentId: testAgentId,
         name: 'Test World',
-        serverId: 'test-server',
+        serverId: uuidv4() as UUID,
       } as World);
       await adapter.createRooms([
         {
@@ -69,7 +88,7 @@ describe('Memory Integration Tests', () => {
       console.error('Failed to create test database for memory tests:', error);
       throw error; // Fail the test instead of continuing
     }
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {
@@ -81,8 +100,8 @@ describe('Memory Integration Tests', () => {
     // Clean up memories and embeddings before each test
     const db = adapter.getDatabase();
     // Delete embeddings first due to foreign key constraints
-    await db.delete(embeddingTable);
-    await db.delete(memoryTable);
+    await db.execute(sql`DELETE FROM embeddings`);
+    await db.execute(sql`DELETE FROM memories`);
   });
 
   const createTestMemory = (
@@ -118,8 +137,8 @@ describe('Memory Integration Tests', () => {
     // Clean up memories after each test to ensure isolation
     const db = adapter.getDatabase();
     // Delete in correct order to avoid foreign key constraint violations
-    await db.delete(embeddingTable);
-    await db.delete(memoryTable);
+    await db.execute(sql`DELETE FROM embeddings`);
+    await db.execute(sql`DELETE FROM memories`);
   });
 
   describe('Memory CRUD Operations', () => {
@@ -201,7 +220,7 @@ describe('Memory Integration Tests', () => {
       // Verify only content changed, embedding and metadata preserved
       const afterContentUpdate = await adapter.getMemoryById(memoryId);
       expect(afterContentUpdate?.content.text).toBe('This is updated content only');
-      expect(afterContentUpdate?.embedding).toEqual(memory.embedding as number[]);
+      expect(afterContentUpdate?.embedding).toEqual(memory.embedding);
       expect(afterContentUpdate?.metadata).toEqual(memory.metadata);
 
       // Update only one field in metadata
@@ -285,7 +304,7 @@ describe('Memory Integration Tests', () => {
 
       // Verify metadata was updated and content preserved
       const afterSourceUpdate = await adapter.getMemoryById(memoryId);
-      expect(afterSourceUpdate?.content).toEqual(afterContentTextUpdate?.content as Content);
+      expect(afterSourceUpdate?.content).toEqual(afterContentTextUpdate?.content);
       expect(afterSourceUpdate?.metadata?.type).toBe('test-original');
       expect(afterSourceUpdate?.metadata?.source).toBe('updated-source');
       expect(afterSourceUpdate?.metadata?.tags).toEqual(['original', 'test']);
@@ -369,26 +388,31 @@ describe('Memory Integration Tests', () => {
 
   describe('Memory Search Operations', () => {
     it('should search memories by embedding similarity', async () => {
+      // Ensure the adapter is configured for 384-dimensional embeddings
+      await adapter.ensureEmbeddingDimension(384);
+
       const baseEmbedding = Array.from({ length: 384 }, () => Math.random());
-      const memory1: Partial<Memory> = {
+      const memory1: Memory = {
         id: v4() as UUID,
         content: { text: 'memory 1' },
         createdAt: new Date().getTime(),
         embedding: baseEmbedding,
+        agentId: testAgentId,
+        roomId: testRoomId,
+        entityId: testEntityId,
+        unique: false,
       };
-      memory1.agentId = testAgentId;
-      memory1.roomId = testRoomId;
-      memory1.entityId = testEntityId;
-      await adapter.createMemory(memory1 as Memory, 'search');
+
+      await adapter.createMemory(memory1, 'memories');
 
       const results = await adapter.searchMemoriesByEmbedding(baseEmbedding, {
-        tableName: 'search',
+        tableName: 'memories',
         roomId: testRoomId,
         count: 1,
       });
 
       expect(results.length).toBe(1);
-      expect(results[0].id).toBe(memory1.id as UUID);
+      expect(results[0].id).toBe(memory1.id);
       expect(results[0].similarity).toBeGreaterThan(0.99);
     });
   });
@@ -479,12 +503,12 @@ describe('Memory Integration Tests', () => {
       expect(retrievedMemory).not.toBeNull();
 
       // Verify all fields were properly mapped
-      expect(retrievedMemory!.id).toBe(testMemory.id as UUID);
+      expect(retrievedMemory!.id).toBe(testMemory.id);
       expect(retrievedMemory!.entityId).toBe(testMemory.entityId);
       expect(retrievedMemory!.roomId).toBe(testMemory.roomId);
       expect(retrievedMemory!.agentId).toBe(testMemory.agentId);
-      expect(retrievedMemory!.content.text).toBe(testMemory.content.text as string);
-      expect(retrievedMemory!.metadata?.type).toBe(testMemory.metadata?.type as string);
+      expect(retrievedMemory!.content.text).toBe(testMemory.content.text);
+      expect(retrievedMemory!.metadata?.type).toBe(testMemory.metadata?.type);
     });
 
     it('should handle partial Memory objects in mapToMemoryModel', async () => {
@@ -593,5 +617,3 @@ describe('Memory Integration Tests', () => {
     });
   });
 });
-
-// Import tables at the end to avoid circular dependencies if needed in this file

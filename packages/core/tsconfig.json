@@ -3,13 +3,20 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "types": ["node", "bun-types"],
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "allowUnusedLabels": true
+    "types": [],
+    "typeRoots": ["./src/types", "../../node_modules/@types"],
+    "strict": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./.tsbuildinfo",
+    "emitDeclarationOnly": false,
+    "noEmit": false
   },
-  "include": ["src/**/*", "../plugin-local-ai/src/types", "src/__tests__"]
+  "include": ["src/**/*", "src/types/**/*.d.ts"],
+  "exclude": ["dist", "node_modules", "src/**/*.test.ts", "src/__tests__/**/*", "src/auth/*.test.ts"]
 }

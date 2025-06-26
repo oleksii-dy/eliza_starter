@@ -48,13 +48,11 @@ export default function AgentRoute() {
         messageExamples: agentDataResponse.data.messageExamples || [],
         postExamples: agentDataResponse.data.postExamples || [],
         topics: agentDataResponse.data.topics || [],
-        adjectives: agentDataResponse.data.adjectives || [],
         knowledge: agentDataResponse.data.knowledge || [],
         plugins: agentDataResponse.data.plugins || [],
         settings: agentDataResponse.data.settings || {},
-        secrets: (agentDataResponse.data as any).secrets || {},
+        secrets: (agentDataResponse.data as { secrets?: Record<string, unknown> }).secrets || {},
         style: agentDataResponse.data.style || {},
-        templates: agentDataResponse.data.templates || {},
         enabled:
           typeof agentDataResponse.data.enabled === 'boolean'
             ? agentDataResponse.data.enabled
@@ -70,13 +68,16 @@ export default function AgentRoute() {
       } as Agent)
     : undefined;
 
-  if (!agentId) return <div className="p-4">Agent ID not provided.</div>;
-  if (isLoadingAgent || !agentFromHook)
+  if (!agentId) {
+    return <div className="p-4">Agent ID not provided.</div>;
+  }
+  if (isLoadingAgent || !agentFromHook) {
     return (
       <div className="p-4 flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
+  }
 
   const isActive = agentFromHook.status === CoreAgentStatusEnum.ACTIVE;
   const isStarting = isAgentStarting(agentFromHook.id);

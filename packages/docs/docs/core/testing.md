@@ -2,13 +2,13 @@
 sidebar_position: 12
 title: Testing Providers, Actions & Evaluators
 description: Learn how to write component and end-to-end tests for ElizaOS primitives
-keywords: [testing, providers, actions, evaluators, vitest, e2e]
+keywords: [testing, providers, actions, evaluators, bun:test, e2e]
 image: /img/cli.jpg
 ---
 
 # 🧪 Testing Core Primitives
 
-ElizaOS encourages thorough testing of providers, actions and evaluators. Component tests use **Vitest**, while scenario tests run through the ElizaOS runtime.
+ElizaOS encourages thorough testing of providers, actions and evaluators. Component tests use **bun:test**, while scenario tests run through the ElizaOS runtime.
 
 ## Component Tests
 
@@ -16,12 +16,12 @@ For unit style tests, import helpers from the bootstrap plugin test utilities
 and call the primitive directly.
 
 ```ts
-import { describe, it, expect } from 'vitest';
-import { timeProvider } from '@elizaos/plugin-bootstrap';
+import { describe, it, expect } from 'bun:test';
+import { timeProvider } from '@elizaos/plugin-message-handling';
 import {
   createMockRuntime,
   createMockMemory,
-} from '@elizaos/plugin-bootstrap/__tests__/test-utils';
+} from '@elizaos/plugin-message-handling/__tests__/test-utils';
 
 describe('time provider', () => {
   it('returns a time string', async () => {
@@ -40,7 +40,7 @@ receives a running `IAgentRuntime` instance.
 
 ```ts
 import type { TestSuite } from '@elizaos/core';
-import { bootstrapPlugin } from '@elizaos/plugin-bootstrap';
+import { bootstrapPlugin } from '@elizaos/plugin-message-handling';
 
 export class BootstrapSuite implements TestSuite {
   name = 'bootstrap_example';

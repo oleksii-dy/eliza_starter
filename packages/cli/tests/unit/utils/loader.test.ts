@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, afterEach, mock } from 'bun:test';
+import { describe, expect, test, beforeEach, mock } from 'bun:test';
 import fs from 'node:fs';
 import {
   tryLoadFile,
@@ -41,7 +41,6 @@ describe('Character Loader', () => {
     messageExamples: [],
     postExamples: [],
     topics: ['AI', 'Testing'],
-    adjectives: ['helpful', 'reliable'],
     knowledge: [],
     plugins: [],
     settings: {},
@@ -202,10 +201,11 @@ describe('Character Loader', () => {
 
   describe('loadCharactersFromUrl', () => {
     const mockFetch = mock();
-    global.fetch = mockFetch;
+    (mockFetch as any).preconnect = mock();
+    global.fetch = mockFetch as any;
 
     beforeEach(() => {
-      mockFetch /* .mockClear() - TODO: bun equivalent */;
+      // mockFetch.mockClear() - TODO: bun equivalent
     });
 
     test('should load single character from URL', async () => {
@@ -306,10 +306,11 @@ describe('Character Loader', () => {
 
       try {
         await loadCharacter('/path/to/no-name.json');
-        expect.fail('Should have thrown an error');
+        throw new Error('Should have thrown an error');
       } catch (error) {
-        expect(error.message).toContain('Character validation failed');
-        expect(error.message).toContain('name');
+        const err = error as Error;
+        expect(err.message).toContain('Character validation failed');
+        expect(err.message).toContain('name');
       }
     });
   });

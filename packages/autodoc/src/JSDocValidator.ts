@@ -80,7 +80,7 @@ export class JSDocValidator {
     try {
       parse(code, this.parserOptions);
       return true;
-    } catch (_error) {
+    } catch {
       return false;
     }
   }

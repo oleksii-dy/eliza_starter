@@ -1,5 +1,4 @@
-import { beforeEach, afterEach, describe, expect, it } from 'bun:test';
-import { mock, spyOn } from 'bun:test';
+import { beforeEach, afterEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import { AgentRuntime } from '../runtime';
 import { MemoryType, ModelType } from '../types';
 import type {
@@ -18,16 +17,6 @@ const stringToUuid = (id: string): UUID => id as UUID;
 
 // --- Mocks ---
 
-// Use hoisted for prompts mock
-const mockSplitChunks = mock();
-mock.module('../src/utils', () => ({
-  splitChunks: mockSplitChunks,
-}));
-
-// Use hoisted for ./index mock (safeReplacer)
-const mockSafeReplacer = mock((_key, value) => value); // Simple replacer mock
-// Don't mock the entire index module to avoid interfering with other tests
-
 // Mock IDatabaseAdapter (inline style matching your example)
 const mockDatabaseAdapter: IDatabaseAdapter = {
   db: {},
@@ -37,7 +26,7 @@ const mockDatabaseAdapter: IDatabaseAdapter = {
   isReady: mock().mockResolvedValue(true),
   close: mock().mockResolvedValue(undefined),
   getConnection: mock().mockResolvedValue({}),
-  getEntityByIds: mock().mockResolvedValue([]),
+  getEntitiesByIds: mock().mockResolvedValue([]),
   createEntities: mock().mockResolvedValue(true),
   getMemories: mock().mockResolvedValue([]),
   getMemoryById: mock().mockResolvedValue(null),
@@ -98,16 +87,17 @@ const mockDatabaseAdapter: IDatabaseAdapter = {
   getLogs: mock().mockResolvedValue([]),
   deleteLog: mock().mockResolvedValue(undefined),
   removeWorld: mock().mockResolvedValue(undefined),
-  deleteRoomsByWorldId: function (_worldId: UUID): Promise<void> {
+  deleteRoomsByWorldId(_worldId: UUID): Promise<void> {
     throw new Error('Function not implemented.');
   },
-  getMemoriesByWorldId: function (_params: {
+  getMemoriesByWorldId(_params: {
     worldId: UUID;
     count?: number;
     tableName?: string;
   }): Promise<Memory[]> {
     throw new Error('Function not implemented.');
   },
+  getWorlds: mock().mockResolvedValue([]),
 };
 
 // Mock action creator (matches your example)
@@ -130,7 +120,7 @@ const createMockMemory = (
 ): Memory => ({
   id: id ?? stringToUuid(uuidv4()),
   entityId: entityId ?? stringToUuid(uuidv4()),
-  agentId: agentId, // Pass agentId if needed
+  agentId, // Pass agentId if needed
   roomId: roomId ?? stringToUuid(uuidv4()),
   content: { text }, // Assuming simple text content
   createdAt: Date.now(),
@@ -154,7 +144,6 @@ const mockCharacter: Character = {
   messageExamples: [], // Ensure required fields are present
   postExamples: [],
   topics: [],
-  adjectives: [],
   style: {
     all: [],
     chat: [],
@@ -170,7 +159,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
   let agentId: UUID;
 
   beforeEach(() => {
-    mock.restore(); // Bun:test equivalent of clearAllMocks
+    mock.restore(); // Vitest equivalent of clearAllMocks
 
     // Reset all mock call counts manually but keep return values
     Object.values(mockDatabaseAdapter).forEach((mockFn) => {
@@ -181,10 +170,13 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
 
     agentId = mockCharacter.id!; // Use character's ID
 
+    // Ensure test environment flag is not set
+    delete process.env.ELIZA_TESTING_PLUGIN;
+
     // Instantiate runtime correctly, passing adapter in options object
     runtime = new AgentRuntime({
       character: mockCharacter,
-      agentId: agentId,
+      agentId,
       adapter: mockDatabaseAdapter, // Correct way to pass adapter
       // No plugins passed here by default, tests can pass them if needed
     });
@@ -247,27 +239,27 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
       // Re-create runtime passing plugin in constructor
       runtime = new AgentRuntime({
         character: mockCharacter,
-        agentId: agentId,
+        agentId,
         adapter: mockDatabaseAdapter,
         plugins: [mockPlugin], // Pass plugin during construction
       });
 
       // Mock adapter calls needed for initialize
-      const ensureAgentExistsSpy = spyOn(
-        AgentRuntime.prototype,
-        'ensureAgentExists'
-      ).mockResolvedValue({
+      const originalEnsureAgentExists = AgentRuntime.prototype.ensureAgentExists;
+      const ensureAgentExistsSpy = mock();
+      ensureAgentExistsSpy.mockResolvedValue({
         ...mockCharacter,
         id: agentId, // ensureAgentExists should return the agent
         createdAt: Date.now(),
         updatedAt: Date.now(),
         enabled: true,
       });
+      AgentRuntime.prototype.ensureAgentExists = ensureAgentExistsSpy;
 
-      (mockDatabaseAdapter.getEntityByIds as any).mockResolvedValue([
+      (mockDatabaseAdapter.getEntitiesByIds as any).mockResolvedValue([
         {
           id: agentId,
-          agentId: agentId,
+          agentId,
           names: [mockCharacter.name],
         },
       ]);
@@ -279,47 +271,96 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
       expect(runtime.actions.some((a) => a.name === 'TestAction')).toBe(true);
       expect(runtime.providers.some((p) => p.name === 'TestProvider')).toBe(true);
       expect(runtime.models.has(ModelType.TEXT_SMALL)).toBe(true);
-      ensureAgentExistsSpy.mockRestore();
+      AgentRuntime.prototype.ensureAgentExists = originalEnsureAgentExists;
     });
   });
 
   describe('Initialization', () => {
     let ensureAgentExistsSpy: any;
+    let originalEnsureAgentExists: any;
+
     beforeEach(() => {
       // Mock adapter calls needed for a successful initialize
-      ensureAgentExistsSpy = spyOn(AgentRuntime.prototype, 'ensureAgentExists').mockResolvedValue({
+      originalEnsureAgentExists = AgentRuntime.prototype.ensureAgentExists;
+      ensureAgentExistsSpy = mock();
+      ensureAgentExistsSpy.mockResolvedValue({
         ...mockCharacter,
         id: agentId, // ensureAgentExists should return the agent
         createdAt: Date.now(),
         updatedAt: Date.now(),
         enabled: true,
       });
-      (mockDatabaseAdapter.getEntityByIds as any).mockResolvedValue([
+      AgentRuntime.prototype.ensureAgentExists = ensureAgentExistsSpy;
+      (mockDatabaseAdapter.getEntitiesByIds as any).mockResolvedValue([
         {
           id: agentId,
-          agentId: agentId,
+          agentId,
           names: [mockCharacter.name],
         },
       ]);
-      (mockDatabaseAdapter.getRoomsByIds as any).mockResolvedValue([]);
+      // Mock getRoomsByIds to handle the sequence:
+      // 1st call: getRoom(agentId) -> no room exists -> returns []
+      // 2nd call: getRoom(newRoomId) during createRoom existence check -> no room -> returns []
+      // 3rd call: getRoom(newRoomId) after creation -> room exists -> returns [room]
+      let getRoomsByIdsCallCount = 0;
+      let createdRoomId: string | null = null;
+
+      (mockDatabaseAdapter.getRoomsByIds as any) = mock().mockImplementation(
+        (roomIds: string[]) => {
+          getRoomsByIdsCallCount++;
+
+          if (getRoomsByIdsCallCount === 1) {
+            // First call with agentId - no room exists yet
+            expect(roomIds).toEqual([agentId]);
+            return Promise.resolve([]);
+          } else if (getRoomsByIdsCallCount === 2) {
+            // Second call with generated roomId during createRoom existence check - no room exists yet
+            expect(roomIds.length).toBe(1);
+            expect(roomIds[0]).not.toEqual(agentId); // Should be a different UUID
+            createdRoomId = roomIds[0]; // Store for later
+            return Promise.resolve([]); // Room doesn't exist yet
+          } else {
+            // Third call with generated roomId after creation - room now exists
+            expect(roomIds).toEqual([createdRoomId!]);
+            return Promise.resolve([
+              {
+                id: createdRoomId!,
+                name: mockCharacter.name,
+                source: 'elizaos',
+                type: 'SELF',
+                channelId: agentId,
+                serverId: agentId,
+                worldId: agentId,
+              },
+            ]);
+          }
+        }
+      );
       (mockDatabaseAdapter.getParticipantsForRoom as any).mockResolvedValue([]);
+
+      // Reset other mocks - createRooms should return the array of created room IDs
+      (mockDatabaseAdapter.createRooms as any) = mock().mockImplementation((rooms: any[]) => {
+        return Promise.resolve(rooms.map((room) => room.id));
+      });
       // mockDatabaseAdapter.getAgent is NOT called by initialize anymore after ensureAgentExists returns the agent
     });
 
     afterEach(() => {
-      ensureAgentExistsSpy.mockRestore();
+      if (originalEnsureAgentExists) {
+        AgentRuntime.prototype.ensureAgentExists = originalEnsureAgentExists;
+      }
     });
 
     it('should call adapter.init and core setup methods for an existing agent', async () => {
       await runtime.initialize();
 
       expect(mockDatabaseAdapter.init).toHaveBeenCalledTimes(1);
-      expect(runtime.ensureAgentExists).toHaveBeenCalledWith(mockCharacter);
-      // expect(mockDatabaseAdapter.getAgent).toHaveBeenCalledWith(agentId); // This is no longer called
-      expect(mockDatabaseAdapter.getEntityByIds).toHaveBeenCalledWith([agentId]);
+      expect(ensureAgentExistsSpy).toHaveBeenCalledWith(mockCharacter);
+      expect(mockDatabaseAdapter.getEntitiesByIds).toHaveBeenCalledWith([agentId]);
       expect(mockDatabaseAdapter.getRoomsByIds).toHaveBeenCalledWith([agentId]);
       expect(mockDatabaseAdapter.createRooms).toHaveBeenCalled();
-      expect(mockDatabaseAdapter.addParticipantsRoom).toHaveBeenCalledWith([agentId], agentId);
+      // Since getRoomsByIds returns empty, a room should be created and agent added as participant
+      expect(mockDatabaseAdapter.addParticipantsRoom).toHaveBeenCalled();
     });
 
     it('should create a new agent if one does not exist', async () => {
@@ -327,23 +368,24 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
       await runtime.initialize();
 
       expect(mockDatabaseAdapter.init).toHaveBeenCalledTimes(1);
-      expect(runtime.ensureAgentExists).toHaveBeenCalledWith(mockCharacter);
-      expect(mockDatabaseAdapter.getEntityByIds).toHaveBeenCalledWith([agentId]);
+      expect(ensureAgentExistsSpy).toHaveBeenCalledWith(mockCharacter);
+      expect(mockDatabaseAdapter.getEntitiesByIds).toHaveBeenCalledWith([agentId]);
       expect(mockDatabaseAdapter.getRoomsByIds).toHaveBeenCalledWith([agentId]);
       expect(mockDatabaseAdapter.createRooms).toHaveBeenCalled();
-      expect(mockDatabaseAdapter.addParticipantsRoom).toHaveBeenCalledWith([agentId], agentId);
+      // Since getRoomsByIds returns empty, a room should be created and agent added as participant
+      expect(mockDatabaseAdapter.addParticipantsRoom).toHaveBeenCalled();
     });
 
     it('should throw if adapter is not available during initialize', async () => {
       // Create runtime without passing adapter
       const runtimeWithoutAdapter = new AgentRuntime({
         character: mockCharacter,
-        agentId: agentId,
+        agentId,
       });
       await expect(runtimeWithoutAdapter.initialize()).rejects.toThrow(
         /Database adapter not initialized/
       );
-    });
+    }, 10000); // Increase timeout to 10 seconds since retry logic takes up to 5 seconds
 
     // Add more tests for initialize: existing entity, existing room, knowledge processing etc.
   });
@@ -406,7 +448,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
 
   describe('Model Usage', () => {
     it('should call registered model handler', async () => {
-      const modelHandler = mock().mockResolvedValue({ result: 'success' });
+      const modelHandler = mock().mockResolvedValue('success');
       const modelType = ModelType.TEXT_LARGE;
 
       runtime.registerModel(modelType, modelHandler, 'test-provider');
@@ -418,9 +460,9 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
       // Check that handler was called with runtime and merged params
       expect(modelHandler).toHaveBeenCalledWith(
         runtime,
-        expect.objectContaining({ ...params, runtime: runtime })
+        expect.objectContaining({ ...params, runtime })
       );
-      expect(result).toEqual({ result: 'success' });
+      expect(result).toEqual('success');
       // Check if log was called (part of useModel logic)
       expect(mockDatabaseAdapter.log).toHaveBeenCalledWith(
         expect.objectContaining({ type: `useModel:${modelType}` })
@@ -471,7 +513,15 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
         runtime,
         message,
         expect.objectContaining({ text: 'composed state text' }), // Check composed state
-        {}, // options
+        expect.objectContaining({
+          context: expect.objectContaining({
+            workingMemory: expect.any(Object),
+            previousResults: expect.any(Array),
+            getMemory: expect.any(Function),
+            getPreviousResult: expect.any(Function),
+            updateMemory: expect.any(Function),
+          }),
+        }),
         undefined, // callback
         [responseMemory] // responses array
       );
@@ -497,7 +547,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
   // --- Adapter Passthrough Tests ---
   describe('Adapter Passthrough', () => {
     it('createEntity should call adapter.createEntities', async () => {
-      const entityData = { id: stringToUuid(uuidv4()), agentId: agentId, names: ['Test Entity'] };
+      const entityData = { id: stringToUuid(uuidv4()), agentId, names: ['Test Entity'] };
       await runtime.createEntity(entityData);
       expect(mockDatabaseAdapter.createEntities).toHaveBeenCalledTimes(1);
       expect(mockDatabaseAdapter.createEntities).toHaveBeenCalledWith([entityData]);

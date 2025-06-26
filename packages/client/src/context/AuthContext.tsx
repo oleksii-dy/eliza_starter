@@ -1,6 +1,6 @@
 import { createContext, useState, useContext, ReactNode, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ApiKeyDialog } from '@/components/api-key-dialog';
+import { ApiKeyDialog } from '@/components/ApiKeyDialog';
 import clientLogger from '@/lib/logger';
 
 interface AuthContextType {
@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

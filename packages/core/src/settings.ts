@@ -28,34 +28,54 @@ export function createSettingFromConfig(configSetting: Omit<Setting, 'value'>): 
     usageDescription: configSetting.usageDescription || '',
     value: null,
     required: configSetting.required,
-    validation: configSetting.validation || null,
+    validation: configSetting.validation || undefined,
     public: configSetting.public || false,
     secret: configSetting.secret || false,
     dependsOn: configSetting.dependsOn || [],
-    onSetAction: configSetting.onSetAction || null,
-    visibleIf: configSetting.visibleIf || null,
+    onSetAction: configSetting.onSetAction || undefined,
+    visibleIf: configSetting.visibleIf || undefined,
   };
 }
 
 /**
  * Retrieves the salt based on env variable SECRET_SALT
  *
+ * SECURITY: A strong, unique salt is required for secure encryption
+ *
  * @returns {string} The salt for the agent.
  */
 export function getSalt(): string {
   const secretSalt =
-    (typeof process !== 'undefined'
-      ? process.env.SECRET_SALT
-      : (import.meta as any).env.SECRET_SALT) || 'secretsalt';
+    typeof process !== 'undefined'
+      ? process.env?.SECRET_SALT
+      : (import.meta as any).env?.SECRET_SALT;
 
   if (!secretSalt) {
-    logger.error('SECRET_SALT is not set');
+    throw new Error(
+      'SECURITY ERROR: SECRET_SALT environment variable is required. ' +
+        'Please generate a strong, unique salt for secure encryption. ' +
+        'Use a cryptographically secure random string of at least 32 characters.'
+    );
   }
 
-  const salt = secretSalt;
+  // Validate salt strength
+  if (secretSalt.length < 16) {
+    throw new Error(
+      'SECURITY ERROR: SECRET_SALT is too short. Please use at least 16 characters for adequate security.'
+    );
+  }
 
-  logger.debug(`Generated salt with length: ${salt.length} (truncated for security)`);
-  return salt;
+  // Check for weak salts
+  const weakSalts = ['secretsalt', 'salt', 'secret', 'password', '123456'];
+  if (weakSalts.includes(secretSalt.toLowerCase())) {
+    throw new Error(
+      'SECURITY ERROR: SECRET_SALT is too weak. Please use a strong, randomly generated salt.'
+    );
+  }
+
+  // Don't log salt information for security
+  logger.debug('Salt configuration validated');
+  return secretSalt;
 }
 
 /**
@@ -64,7 +84,7 @@ export function getSalt(): string {
  * @param {string} salt - The salt to use for encryption
  * @returns {string} - The encrypted value in 'iv:encrypted' format
  */
-export function encryptStringValue(value: string, salt: string): string {
+export function encryptStringValue(value: any, salt: string): any {
   // Check if value is undefined or null
   if (value === undefined || value === null) {
     logger.debug('Attempted to encrypt undefined or null value');
@@ -92,7 +112,7 @@ export function encryptStringValue(value: string, salt: string): string {
         logger.debug('Value appears to be already encrypted, skipping re-encryption');
         return value;
       }
-    } catch (e) {
+    } catch (_e) {
       // Not a valid hex string, proceed with encryption
     }
   }
@@ -103,8 +123,8 @@ export function encryptStringValue(value: string, salt: string): string {
 
   // Encrypt the value
   const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-  let encrypted = cipher.update(value, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
+  let encrypted = cipher.update(value, 'utf8', 'hex') as string;
+  encrypted += cipher.final('hex') as string;
 
   // Store IV with the encrypted value so we can decrypt it later
   return `${iv.toString('hex')}:${encrypted}`;
@@ -116,7 +136,7 @@ export function encryptStringValue(value: string, salt: string): string {
  * @param {string} salt - The salt to use for decryption
  * @returns {string} - The decrypted string value
  */
-export function decryptStringValue(value: string, salt: string): string {
+export function decryptStringValue(value: any, salt: string): any {
   try {
     // Check if value is undefined or null
     if (value === undefined || value === null) {
@@ -160,8 +180,8 @@ export function decryptStringValue(value: string, salt: string): string {
 
     // Decrypt the value
     const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8') as string;
+    decrypted += decipher.final('utf8') as string;
 
     return decrypted;
   } catch (error) {
@@ -350,7 +370,6 @@ export function encryptedCharacter(character: Character): Character {
 /**
  * Decrypts sensitive data in a Character object
  * @param {Character} character - The character object with encrypted secrets
- * @param {IAgentRuntime} runtime - The runtime information needed for salt generation
  * @returns {Character} - A copy of the character with decrypted secrets
  */
 export function decryptedCharacter(character: Character, _runtime: IAgentRuntime): Character {

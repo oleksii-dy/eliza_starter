@@ -1,4 +1,4 @@
-import { describe, expect, it, spyOn, beforeEach, afterEach, beforeAll, afterAll } from 'bun:test';
+import { describe, it, expect, beforeAll, afterAll, spyOn } from 'bun:test';
 import plugin from '../plugin';
 import { ModelType, logger } from '@elizaos/core';
 import { StarterService } from '../plugin';
@@ -20,7 +20,7 @@ afterAll(() => {
 });
 
 // Helper function to document test results
-function documentTestResult(testName: string, result: any, error: Error | null = null) {
+function documentTestResult(testName: string, result: unknown, error: Error | null = null) {
   // Clean, useful test documentation for developers
   logger.info(`✓ Testing: ${testName}`);
 
@@ -47,8 +47,8 @@ function documentTestResult(testName: string, result: any, error: Error | null =
           const more = keys.length > 3 ? ` +${keys.length - 3} more` : '';
           logger.info(`  → {${preview}${more}}`);
         }
-      } catch (e) {
-        logger.info(`  → [Complex object]`);
+      } catch (_e) {
+        logger.info('  → [Complex object]');
       }
     }
   }
@@ -66,7 +66,7 @@ function createRealRuntime() {
           name: 'Test Character',
           system: 'You are a helpful assistant for testing.',
         },
-      } as any);
+      } as ConstructorParameters<typeof StarterService>[0]);
     }
     return null;
   };
@@ -78,13 +78,13 @@ function createRealRuntime() {
       plugins: [],
       settings: {},
     },
-    getSetting: (key: string) => null,
+    getSetting: (_key: string) => null,
     models: plugin.models,
     db: {
-      get: async (key: string) => null,
-      set: async (key: string, value: any) => true,
-      delete: async (key: string) => true,
-      getKeys: async (pattern: string) => [],
+      get: async (_key: string) => null,
+      set: async (_key: string, _value: unknown) => true,
+      delete: async (_key: string) => true,
+      getKeys: async (_pattern: string) => [],
     },
     getService: (serviceType: string) => {
       // Get from cache or create new
@@ -94,7 +94,7 @@ function createRealRuntime() {
 
       return services.get(serviceType);
     },
-    registerService: (serviceType: string, service: any) => {
+    registerService: (serviceType: string, service: unknown) => {
       services.set(serviceType, service);
     },
   };
@@ -223,6 +223,7 @@ describe('Plugin Models', () => {
 
       try {
         logger.info('Using OpenAI for TEXT_SMALL model');
+
         result = await plugin.models[ModelType.TEXT_SMALL](runtime as any, { prompt: 'test' });
 
         // Check that we get a non-empty string response
@@ -247,6 +248,7 @@ describe('StarterService', () => {
 
     try {
       logger.info('Using OpenAI for TEXT_SMALL model');
+
       startResult = await StarterService.start(runtime as any);
 
       expect(startResult).toBeDefined();
@@ -273,6 +275,7 @@ describe('StarterService', () => {
     const runtime = createRealRuntime();
 
     // First registration should succeed
+
     const result1 = await StarterService.start(runtime as any);
     expect(result1).toBeTruthy();
 
@@ -280,6 +283,7 @@ describe('StarterService', () => {
 
     try {
       // Second registration should fail
+
       await StarterService.start(runtime as any);
       expect(true).toBe(false); // Should not reach here
     } catch (e) {
@@ -303,6 +307,7 @@ describe('StarterService', () => {
 
     try {
       // Register a real service first
+
       const service = new StarterService(runtime as any);
       runtime.registerService(StarterService.serviceType, service);
 
@@ -310,6 +315,7 @@ describe('StarterService', () => {
       const stopSpy = spyOn(service, 'stop');
 
       // Call the static stop method
+
       await StarterService.stop(runtime as any);
 
       // Verify the service's stop method was called
@@ -336,7 +342,6 @@ describe('StarterService', () => {
 
     try {
       // We'll patch the getService function to ensure it returns null
-      const originalGetService = runtime.getService;
       runtime.getService = () => null;
 
       await StarterService.stop(runtime as any);
@@ -365,6 +370,7 @@ describe('StarterService', () => {
     const runtime = createRealRuntime();
 
     // First start the service
+
     const startResult = await StarterService.start(runtime as any);
     expect(startResult).toBeTruthy();
 
@@ -373,6 +379,7 @@ describe('StarterService', () => {
 
     try {
       // Then stop it
+
       await StarterService.stop(runtime as any);
       stopSuccess = true;
     } catch (e) {

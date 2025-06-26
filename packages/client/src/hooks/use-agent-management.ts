@@ -15,8 +15,8 @@ import { useToast } from './use-toast';
  * @returns Object with functions for starting and stopping agents, checking agent status, and lists of agents in starting and stopping processes.
  */
 export function useAgentManagement() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const _navigate = useNavigate();
+  const _queryClient = useQueryClient();
   const { toast } = useToast();
 
   // Mutations for starting and stopping agents
@@ -116,7 +116,9 @@ export function useAgentManagement() {
    * Check if an agent is currently starting
    */
   const isAgentStarting = (agentId: UUID | undefined | null) => {
-    if (!agentId) return false;
+    if (!agentId) {
+      return false;
+    }
     return startingAgents.includes(agentId);
   };
 
@@ -124,7 +126,9 @@ export function useAgentManagement() {
    * Check if an agent is currently stopping
    */
   const isAgentStopping = (agentId: UUID | undefined | null) => {
-    if (!agentId) return false;
+    if (!agentId) {
+      return false;
+    }
     return stoppingAgents.includes(agentId);
   };
 

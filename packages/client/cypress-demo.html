@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElizaOS Client Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 40px 0;
+        }
+        .header h1 {
+            font-size: 3rem;
+            margin: 0;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            box-sizing: border-box;
+            transition: transform 0.3s ease;
+        }
+        .sidebar.collapsed {
+            transform: translateX(-200px);
+        }
+        .sidebar-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        .main-content {
+            margin-left: 270px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+        .agent-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .agent-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .add-agent-button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        .add-agent-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3);
+        }
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .mobile-menu-button {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        .chat-input {
+            position: fixed;
+            bottom: 20px;
+            left: 270px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            padding: 15px 20px;
+            color: white;
+            font-size: 16px;
+            transition: left 0.3s ease;
+        }
+        .chat-input.expanded {
+            left: 70px;
+        }
+        .chat-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .chat-input {
+                left: 20px;
+            }
+            .mobile-menu-button {
+                display: block;
+            }
+            .sidebar-toggle {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="connection-status" data-testid="connection-status">
+            🟢 Connected
+        </div>
+
+        <button class="sidebar-toggle" data-testid="sidebar-toggle" onclick="toggleSidebar()">
+            ☰
+        </button>
+
+        <button class="mobile-menu-button" data-testid="mobile-menu-button" onclick="toggleMobileSidebar()">
+            ☰
+        </button>
+
+        <div class="sidebar" data-testid="app-sidebar" id="sidebar">
+            <h3>ElizaOS Agents</h3>
+            <button class="add-agent-button" data-testid="add-agent-button" onclick="addAgent()">
+                ➕ Add New Agent
+            </button>
+            
+            <div class="agent-card" data-testid="agent-card" onclick="selectAgent('Agent 1')">
+                <h4>🤖 Ada - Assistant</h4>
+                <p>General purpose AI assistant</p>
+            </div>
+            
+            <div class="agent-card" data-testid="agent-card" onclick="selectAgent('Agent 2')">
+                <h4>🎨 Creative Writer</h4>
+                <p>Creative writing and storytelling</p>
+            </div>
+            
+            <div class="agent-card" data-testid="agent-card" onclick="selectAgent('Agent 3')">
+                <h4>💼 Business Analyst</h4>
+                <p>Business intelligence and analysis</p>
+            </div>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <div class="header">
+                <h1>ElizaOS</h1>
+                <p>Multi-Agent AI Framework</p>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 30px; margin: 20px 0;">
+                <h2>🚀 Welcome to ElizaOS</h2>
+                <p>Select an agent from the sidebar to start chatting, or create a new agent to get started.</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 30px;">
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px;">
+                        <h3>🤖 AI Agents</h3>
+                        <p>Create and manage multiple AI personalities</p>
+                    </div>
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px;">
+                        <h3>💬 Chat Interface</h3>
+                        <p>Real-time conversation with your agents</p>
+                    </div>
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px;">
+                        <h3>🔧 Customization</h3>
+                        <p>Configure agent behavior and responses</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <input type="text" class="chat-input" id="chatInput" placeholder="Type a message to your agent..." onkeypress="handleChatInput(event)">
+    </div>
+
+    <script>
+        let sidebarCollapsed = false;
+        let selectedAgent = null;
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const chatInput = document.getElementById('chatInput');
+            
+            sidebarCollapsed = !sidebarCollapsed;
+            
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                chatInput.classList.add('expanded');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
+                chatInput.classList.remove('expanded');
+            }
+        }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        function selectAgent(agentName) {
+            selectedAgent = agentName;
+            document.querySelector('.header h1').textContent = `Chatting with ${agentName}`;
+            
+            // Close mobile sidebar if open
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.remove('open');
+            
+            // Update chat input placeholder
+            document.getElementById('chatInput').placeholder = `Type a message to ${agentName}...`;
+        }
+
+        function addAgent() {
+            const agentName = prompt('Enter agent name:');
+            if (agentName) {
+                alert(`Agent "${agentName}" would be created in a real application!`);
+            }
+        }
+
+        function handleChatInput(event) {
+            if (event.key === 'Enter') {
+                const message = event.target.value.trim();
+                if (message) {
+                    if (selectedAgent) {
+                        alert(`Message sent to ${selectedAgent}: "${message}"`);
+                    } else {
+                        alert('Please select an agent first!');
+                    }
+                    event.target.value = '';
+                }
+            }
+        }
+
+        // Simulate connection status changes
+        setTimeout(() => {
+            const status = document.querySelector('[data-testid="connection-status"]');
+            status.textContent = '🟡 Connecting...';
+            status.style.background = '#FF9800';
+            
+            setTimeout(() => {
+                status.textContent = '🟢 Connected';
+                status.style.background = '#4CAF50';
+            }, 2000);
+        }, 3000);
+    </script>
+</body>
+</html>

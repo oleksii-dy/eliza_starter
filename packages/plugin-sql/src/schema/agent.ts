@@ -1,75 +1,76 @@
-import type { MessageExample } from '@elizaos/core';
-import { sql } from 'drizzle-orm';
-import { boolean, jsonb, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import { getSchemaFactory, createLazyTableProxy } from './factory';
+
+/**
+ * Lazy-loaded agent table definition.
+ * This function returns the agent table schema when called,
+ * ensuring the database type is set before schema creation.
+ */
+function createAgentTable() {
+  const factory = getSchemaFactory();
+
+  const tableColumns = {
+    id: (() => {
+      const defaultUuid = factory.defaultRandomUuid();
+      const column = factory.uuid('id').primaryKey();
+      return defaultUuid ? column.default(defaultUuid) : column;
+    })(),
+    createdAt: factory.timestamp('created_at').notNull().default(factory.defaultTimestamp()),
+    updatedAt: factory.timestamp('updated_at').notNull().default(factory.defaultTimestamp()),
+    name: factory.text('name').notNull(),
+    username: factory.text('username'),
+    bio: factory.text('bio').notNull(),
+    system: factory.text('system'),
+    topics: factory.json('topics').$type<string[]>().default([]),
+    knowledge: factory.json('knowledge').$type<string[]>().default([]),
+    messageExamples: factory.json('message_examples').$type<any[]>().default([]),
+    postExamples: factory.json('post_examples').$type<string[]>().default([]),
+    style: factory
+      .json('style')
+      .$type<{ all?: string[]; chat?: string[]; post?: string[] }>()
+      .default({}),
+    styleAll: factory.json('style_all').$type<string[]>().default([]),
+    styleChat: factory.json('style_chat').$type<string[]>().default([]),
+    stylePost: factory.json('style_post').$type<string[]>().default([]),
+    enabled: factory.boolean('enabled').default(true),
+    status: factory.text('status').default('active'),
+    settings: factory
+      .json('settings')
+      .$type<{
+        secrets?: Record<string, string>;
+        intiface?: boolean;
+        imageSettings?: {
+          steps?: number;
+          width?: number;
+          height?: number;
+          negativePrompt?: string;
+          numIterations?: number;
+          guidanceScale?: number;
+          seed?: number;
+          modelId?: string;
+          jobId?: string;
+          count?: number;
+          stylePreset?: string;
+          [key: string]: any;
+        };
+        voice?: {
+          model?: string;
+          url?: string;
+          elevenlabsVoiceId?: string;
+        };
+        model?: string;
+        embeddingModel?: string;
+      }>()
+      .default({}),
+    plugins: factory.json('plugins').$type<string[]>().default([]),
+  };
+
+  return factory.table('agents', tableColumns, (table) => ({
+    nameIdx: factory.index('agents_name_idx').on(table.name),
+  }));
+}
 
 /**
  * Represents a table for storing agent data.
- *
- * @type {Table}
+ * Uses lazy initialization to ensure proper database type configuration.
  */
-export const agentTable = pgTable(
-  'agents',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    enabled: boolean('enabled').default(true).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .default(sql`now()`)
-      .notNull(),
-
-    updatedAt: timestamp('updated_at', { withTimezone: true })
-      .default(sql`now()`)
-      .notNull(),
-
-    // Character
-    name: text('name').notNull(),
-    username: text('username'),
-    system: text('system').default(''),
-    bio: jsonb('bio')
-      .$type<string | string[]>()
-      .default(sql`'[]'::jsonb`),
-    messageExamples: jsonb('message_examples')
-      .$type<MessageExample[][]>()
-      .default(sql`'[]'::jsonb`)
-      .notNull(),
-    postExamples: jsonb('post_examples')
-      .$type<string[]>()
-      .default(sql`'[]'::jsonb`)
-      .notNull(),
-    topics: jsonb('topics')
-      .$type<string[]>()
-      .default(sql`'[]'::jsonb`)
-      .notNull(),
-    adjectives: jsonb('adjectives')
-      .$type<string[]>()
-      .default(sql`'[]'::jsonb`)
-      .notNull(),
-    knowledge: jsonb('knowledge')
-      .$type<(string | { path: string; shared?: boolean })[]>()
-      .default(sql`'[]'::jsonb`)
-      .notNull(),
-    plugins: jsonb('plugins')
-      .$type<string[]>()
-      .default(sql`'[]'::jsonb`)
-      .notNull(),
-    settings: jsonb('settings')
-      .$type<{
-        secrets?: { [key: string]: string | boolean | number };
-        [key: string]: unknown;
-      }>()
-      .default(sql`'{}'::jsonb`)
-      .notNull(),
-    style: jsonb('style')
-      .$type<{
-        all?: string[];
-        chat?: string[];
-        post?: string[];
-      }>()
-      .default(sql`'{}'::jsonb`)
-      .notNull(),
-  },
-  (table) => {
-    return {
-      nameUnique: unique('name_unique').on(table.name),
-    };
-  }
-);
+export const agentTable = createLazyTableProxy(createAgentTable);

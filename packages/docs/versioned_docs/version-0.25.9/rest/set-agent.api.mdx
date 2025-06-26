@@ -164,18 +164,6 @@ Updates an existing agent or creates a new one with the specified configuration
         ></SchemaItem>
         <SchemaItem
           collapsible={false}
-          name={'adjectives'}
-          required={false}
-          schemaName={'string[]'}
-          qualifierMessage={undefined}
-          schema={{
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Personality traits of the character',
-          }}
-        ></SchemaItem>
-        <SchemaItem
-          collapsible={false}
           name={'knowledge'}
           required={false}
           schemaName={'string[]'}
@@ -353,18 +341,6 @@ Updates an existing agent or creates a new one with the specified configuration
                                 type: 'array',
                                 items: { type: 'string' },
                                 description: 'Topics the character is knowledgeable about',
-                              }}
-                            ></SchemaItem>
-                            <SchemaItem
-                              collapsible={false}
-                              name={'adjectives'}
-                              required={false}
-                              schemaName={'string[]'}
-                              qualifierMessage={undefined}
-                              schema={{
-                                type: 'array',
-                                items: { type: 'string' },
-                                description: 'Personality traits of the character',
                               }}
                             ></SchemaItem>
                             <SchemaItem

@@ -1,7 +1,7 @@
 /**
  * Seed data for cache integration tests
  */
-import { type UUID, AgentStatus, type Agent } from '@elizaos/core';
+import { AgentStatus, type UUID, type Agent } from '@elizaos/core';
 import { v4 } from 'uuid';
 
 /**
@@ -20,7 +20,6 @@ export const cacheTestAgentSettings = {
   messageExamples: [],
   postExamples: [],
   topics: [],
-  adjectives: [],
   knowledge: [],
   plugins: [],
   settings: {

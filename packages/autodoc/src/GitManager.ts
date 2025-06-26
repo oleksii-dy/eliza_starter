@@ -152,7 +152,7 @@ export class GitManager {
         owner: this.repository.owner,
         repo: this.repository.name,
         path: filePath,
-        message: message,
+        message,
         content: Buffer.from(content).toString('base64'),
         sha: (data as any).sha,
         branch: branchName,
@@ -165,7 +165,7 @@ export class GitManager {
           owner: this.repository.owner,
           repo: this.repository.name,
           path: filePath,
-          message: message,
+          message,
           content: Buffer.from(content).toString('base64'),
           branch: branchName,
         });

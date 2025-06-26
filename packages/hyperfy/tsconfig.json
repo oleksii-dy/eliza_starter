@@ -1,0 +1,85 @@
+{
+  "compilerOptions": {
+    // Language and Environment
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    
+    // Type Checking
+    "strict": true,
+    
+    // Modules
+    "baseUrl": ".",
+    "paths": {
+      "*": ["src/types/*"]
+    },
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    
+    // Emit
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./build",
+    "removeComments": false,
+    "importHelpers": true,
+    "downlevelIteration": true,
+    
+    // JavaScript Support
+    "allowJs": true,
+    "checkJs": false,
+
+    "noImplicitAny": false,
+    
+    // Interop Constraints
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    // Skip Lib Check - needed due to conflicting types from parent directories
+    "skipLibCheck": true,
+    
+    // Advanced
+    "types": ["node", "bun-types", "three"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  },
+  "include": [
+    "src/**/*",
+    "src/types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "src/**/*.test.ts",
+    "src/**/__tests__/**/*",
+    "src/rpg/systems/ClanSystem.ts",
+    "src/rpg/systems/BankingSystem.ts",
+    "src/rpg/systems/combat/DamageCalculator.ts",
+    "src/rpg/systems/combat/HitCalculator.ts",
+    "src/rpg/systems/ConstructionSystem.ts",
+    "src/rpg/systems/NPCSystem.ts",
+    "src/rpg/systems/PlayerHomesSystem.ts",
+    "src/rpg/systems/PvPSystem.ts",
+    "src/rpg/systems/QuestSystem.ts",
+    "src/rpg/systems/RPGTestingSystem.ts",
+    "src/rpg/systems/SkillsSystem.ts",
+    "src/rpg/systems/SpawningSystem.ts",
+    "src/rpg/systems/InventorySystem.ts",
+    "src/rpg/systems/inventory/EquipmentBonusCalculator.ts",
+    "src/rpg/systems/inventory/ItemRegistry.ts",
+    "src/rpg/systems/spawning/CircularSpawnArea.ts",
+    "src/rpg/systems/spawning/SpawnConditionChecker.ts",
+    "src/rpg/systems/npc/NPCDialogueManager.ts",
+    "src/rpg/testing/scenarios/**/*",
+    "src/rpg/examples/**/*"
+  ],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
+} 

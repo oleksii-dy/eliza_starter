@@ -1,4 +1,4 @@
-import { GROUP_CHAT_SOURCE, USER_NAME } from '@/constants';
+import { USER_NAME } from '@/constants';
 import { apiClient } from '@/lib/api';
 import type { Agent, Content, Memory, UUID, Memory as CoreMemory } from '@elizaos/core';
 import {
@@ -7,13 +7,10 @@ import {
   useQueryClient,
   useQueries,
   UseQueryResult,
-  type DefinedUseQueryResult,
-  type UndefinedInitialDataOptions,
-  type UseQueryOptions,
 } from '@tanstack/react-query';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from './use-toast';
-import { getEntityId, randomUUID, moment } from '@/lib/utils';
+import { getEntityId } from '@/lib/utils';
 import type {
   ServerMessage,
   AgentWithStatus,
@@ -22,23 +19,6 @@ import type {
 } from '@/types';
 import clientLogger from '@/lib/logger';
 import { useNavigate } from 'react-router-dom';
-
-/**
- * Represents content with additional user information.
- * @typedef {Object} ContentWithUser
- * @property {string} name - The name of the user.
- * @property {number} createdAt - The timestamp when the content was created.
- * @property {boolean} [isLoading] - Optional flag indicating if the content is currently loading.
- * @property {string} [worldId] - Optional ID of the world associated with the content.
- * @property {string} [id] - Optional ID field.
- */
-type ContentWithUser = Content & {
-  name: string;
-  createdAt: number;
-  isLoading?: boolean;
-  worldId?: string;
-  id?: string; // Add optional ID field
-};
 
 // AgentLog type from the API
 type AgentLog = {
@@ -51,8 +31,8 @@ type AgentLog = {
   body?: {
     modelType?: string;
     modelKey?: string;
-    params?: any;
-    response?: any;
+    params?: Record<string, unknown>;
+    response?: Record<string, unknown>;
     usage?: {
       prompt_tokens?: number;
       completion_tokens?: number;
@@ -60,7 +40,7 @@ type AgentLog = {
     };
   };
   createdAt?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 // Constants for stale times
@@ -351,11 +331,11 @@ export function useChannelMessages(
         // If it's not a number or string, but exists (e.g. could be a Date object from some contexts)
         // Attempt to convert. This is less likely if types are strict from server.
         try {
-          const dateObjTimestamp = new Date(sm.createdAt as any).getTime();
+          const dateObjTimestamp = new Date(sm.createdAt as string | number | Date).getTime();
           if (!isNaN(dateObjTimestamp)) {
             timestamp = dateObjTimestamp;
           }
-        } catch (e) {
+        } catch {
           clientLogger.warn(
             '[transformServerMessageToUiMessage] Could not process createdAt (unknown type):',
             sm.createdAt,
@@ -375,9 +355,9 @@ export function useChannelMessages(
             'Agent'
           : USER_NAME,
         senderId: sm.authorId,
-        isAgent: isAgent,
+        isAgent,
         createdAt: timestamp,
-        attachments: sm.metadata?.attachments as any[],
+        attachments: sm.metadata?.attachments as unknown[],
         thought: isAgent ? sm.metadata?.thought : undefined,
         actions: isAgent ? sm.metadata?.actions : undefined,
         channelId: sm.channelId,
@@ -438,9 +418,8 @@ export function useChannelMessages(
         setInternalIsLoading(false);
         setIsFetchingMore(false);
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [channelId, transformServerMessageToUiMessage, initialServerId]
+    [channelId, transformServerMessageToUiMessage, initialServerId, oldestMessageTimestamp]
   ); // Add initialServerId to deps
 
   useEffect(() => {
@@ -460,7 +439,6 @@ export function useChannelMessages(
       setHasMoreMessages(true);
       setInternalIsLoading(false); // No channel, so not loading anything
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channelId, fetchMessages]); // fetchMessages is memoized with useCallback
 
   const fetchNextPage = async () => {
@@ -572,8 +550,7 @@ export function useDeleteLog() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: ({ agentId, logId }: { agentId: string; logId: string }) =>
-      apiClient.deleteLog(logId),
+    mutationFn: ({ logId }: { agentId: string; logId: string }) => apiClient.deleteLog(logId),
 
     onMutate: async ({ agentId, logId }) => {
       // Optimistically update the UI by removing the log from the cache
@@ -581,8 +558,8 @@ export function useDeleteLog() {
 
       // Update cache if we have the data
       if (previousLogs) {
-        queryClient.setQueryData(['agentActions', agentId], (oldData: any) =>
-          oldData.filter((log: any) => log.id !== logId)
+        queryClient.setQueryData(['agentActions', agentId], (oldData: unknown) =>
+          (oldData as { id: string }[]).filter((log) => log.id !== logId)
         );
       }
 
@@ -639,16 +616,6 @@ export function useAgentMemories(
         tableName,
         includeEmbedding
       ); // Pass channelId
-      console.log('Agent memories result:', {
-        agentId,
-        tableName,
-        includeEmbedding,
-        channelId, // Log channelId instead of roomId
-        result,
-        dataLength: result.data?.memories?.length,
-        firstMemory: result.data?.memories?.[0],
-        hasEmbeddings: (result.data?.memories || []).some((m: any) => m.embedding?.length > 0),
-      });
       // Handle response format
       return result.data?.memories || [];
     },
@@ -912,7 +879,9 @@ export function useAgentInternalActions(
   return useQuery<AgentLog[], Error>({
     queryKey: ['agentInternalActions', agentId, agentPerspectiveRoomId],
     queryFn: async () => {
-      if (!agentId) return []; // Or throw error, depending on desired behavior for null agentId
+      if (!agentId) {
+        return [];
+      } // Or throw error, depending on desired behavior for null agentId
       const response = await apiClient.getAgentLogs(agentId, {
         // Uses getAgentLogs
         roomId: agentPerspectiveRoomId ?? undefined, // Pass undefined if null
@@ -965,7 +934,9 @@ export function useAgentInternalMemories(
       includeEmbedding,
     ],
     queryFn: async () => {
-      if (!agentId || !agentPerspectiveRoomId) return Promise.resolve([]);
+      if (!agentId || !agentPerspectiveRoomId) {
+        return Promise.resolve([]);
+      }
       const response = await apiClient.getAgentInternalMemories(
         agentId,
         agentPerspectiveRoomId,
@@ -1091,7 +1062,9 @@ export function useChannels(serverId: UUID | undefined, options = {}) {
   return useQuery<{ data: { channels: ClientMessageChannel[] } }>({
     queryKey: ['channels', serverId],
     queryFn: () => {
-      if (!serverId) return Promise.resolve({ data: { channels: [] } }); // Handle undefined serverId case for queryFn
+      if (!serverId) {
+        return Promise.resolve({ data: { channels: [] } });
+      } // Handle undefined serverId case for queryFn
       return apiClient.getChannelsForServer(serverId);
     },
     enabled: !!serverId,
@@ -1107,7 +1080,9 @@ export function useChannelDetails(channelId: UUID | undefined, options = {}) {
   return useQuery<{ success: boolean; data: ClientMessageChannel | null }>({
     queryKey: ['channelDetails', channelId],
     queryFn: () => {
-      if (!channelId) return Promise.resolve({ success: true, data: null });
+      if (!channelId) {
+        return Promise.resolve({ success: true, data: null });
+      }
       return apiClient.getChannelDetails(channelId);
     },
     enabled: !!channelId,
@@ -1123,7 +1098,9 @@ export function useChannelParticipants(channelId: UUID | undefined, options = {}
   return useQuery<{ success: boolean; data: UUID[] }>({
     queryKey: ['channelParticipants', channelId],
     queryFn: () => {
-      if (!channelId) return Promise.resolve({ success: true, data: [] });
+      if (!channelId) {
+        return Promise.resolve({ success: true, data: [] });
+      }
       return apiClient.getChannelParticipants(channelId);
     },
     enabled: !!channelId,
@@ -1134,7 +1111,7 @@ export function useChannelParticipants(channelId: UUID | undefined, options = {}
 }
 
 export function useDeleteChannelMessage() {
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   const { toast } = useToast();
   return useMutation<
     { channelId: UUID; messageId: UUID },
@@ -1145,7 +1122,7 @@ export function useDeleteChannelMessage() {
       await apiClient.deleteChannelMessage(channelId, messageId);
       return { channelId, messageId };
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (_data, _variables) => {
       toast({
         title: 'Message Deleted',
         description: 'Message removed successfully.',

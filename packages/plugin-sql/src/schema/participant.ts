@@ -1,48 +1,42 @@
-import { sql } from 'drizzle-orm';
-import { foreignKey, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { agentTable } from './agent';
-import { entityTable } from './entity';
-import { roomTable } from './room';
+import { getSchemaFactory, createLazyTableProxy } from './factory';
 
 /**
- * Defines the schema for the "participants" table in the database.
- *
- * @type {import('knex').TableBuilder}
+ * Lazy-loaded participant table definition.
+ * This function returns the participant table schema when called,
+ * ensuring the database type is set before schema creation.
+ * Foreign key references are removed to avoid circular dependencies.
+ * The database constraints will be enforced at the application level.
+
  */
-export const participantTable = pgTable(
-  'participants',
-  {
-    id: uuid('id')
-      .notNull()
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .default(sql`now()`)
+function createParticipantTable() {
+  const factory = getSchemaFactory();
+
+  const tableColumns = {
+    entityId: factory.uuid('entity_id').notNull(),
+    roomId: factory.uuid('room_id').notNull(),
+    agentId: factory.uuid('agent_id').notNull(),
+    lastReadAt: factory.timestamp('last_read_at', { mode: 'date' }),
+    userState: factory.text('user_state'),
+    createdAt: factory
+      .timestamp('created_at', { mode: 'date' })
+      .default(factory.defaultTimestamp())
       .notNull(),
-    entityId: uuid('entityId').references(() => entityTable.id, {
-      onDelete: 'cascade',
-    }),
-    roomId: uuid('roomId').references(() => roomTable.id, {
-      onDelete: 'cascade',
-    }),
-    agentId: uuid('agentId').references(() => agentTable.id, {
-      onDelete: 'cascade',
-    }),
-    roomState: text('roomState'),
-  },
-  (table) => [
-    // unique("participants_user_room_agent_unique").on(table.entityId, table.roomId, table.agentId),
-    index('idx_participants_user').on(table.entityId),
-    index('idx_participants_room').on(table.roomId),
-    foreignKey({
-      name: 'fk_room',
-      columns: [table.roomId],
-      foreignColumns: [roomTable.id],
-    }).onDelete('cascade'),
-    foreignKey({
-      name: 'fk_user',
-      columns: [table.entityId],
-      foreignColumns: [entityTable.id],
-    }).onDelete('cascade'),
-  ]
-);
+    updatedAt: factory
+      .timestamp('updated_at', { mode: 'date' })
+      .default(factory.defaultTimestamp())
+      .notNull(),
+  };
+
+  return factory.table('participants', tableColumns, (table) => ({
+    pk: factory.primaryKey({ columns: [table.entityId, table.roomId] }),
+    entityIdx: factory.index('participants_entity_id_idx').on(table.entityId),
+    roomIdx: factory.index('participants_room_id_idx').on(table.roomId),
+    agentIdx: factory.index('participants_agent_id_idx').on(table.agentId),
+  }));
+}
+
+/**
+ * Represents a table for storing participant data.
+ * Uses lazy initialization to ensure proper database type configuration.
+ */
+export const participantTable = createLazyTableProxy(createParticipantTable);

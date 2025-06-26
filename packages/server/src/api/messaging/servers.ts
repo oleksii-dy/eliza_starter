@@ -1,6 +1,6 @@
 import { logger, validateUuid, type UUID } from '@elizaos/core';
 import express from 'express';
-import internalMessageBus from '../../bus';
+import internalMessageBus from '../../MessageBus';
 import type { AgentServer } from '../../index';
 
 const DEFAULT_SERVER_ID = '00000000-0000-0000-0000-000000000000' as UUID;

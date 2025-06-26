@@ -1,6 +1,6 @@
 {
   "name": "@elizaos/server",
-  "version": "1.0.10",
+  "version": "1.0.12",
   "description": "ElizaOS Server - Core server infrastructure for ElizaOS agents",
   "publishConfig": {
     "access": "public",
@@ -29,13 +29,14 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsup",
-    "type-check": "tsc --project tsconfig.build.json --noEmit",
-    "lint": "prettier --write ./src",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src",
+    "dev": "bun run build.ts --watch",
+    "build": "bun run typecheck && bun run build.ts",
+    "build:full": "NODE_OPTIONS='--max-old-space-size=4096' bun run typecheck && NODE_OPTIONS='--max-old-space-size=4096' tsup",
+    "typecheck": "NODE_OPTIONS='--max-old-space-size=4096' tsc --project tsconfig.build.json --noEmit",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "lint:check": "eslint src && prettier --check ./src",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "test": "bun test src/**/*.test.ts",
+    "test": "elizaos test",
     "test:unit": "bun test src/**/*.test.ts --exclude **/integration/**",
     "test:integration": "bun test src/__tests__/integration/**/*.test.ts",
     "test:coverage": "bun test --coverage",
@@ -44,17 +45,24 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
     "dotenv": "^16.5.0",
+    "eslint": "^9.22.0",
     "prettier": "3.5.3",
-    "tsup": "8.5.0",
+    "supertest": "^7.0.0",
+    "@types/supertest": "^6.0.2",
     "tsx": "4.19.4",
-    "typescript": "^5.5.4",
+    "typescript": "5.8.3",
     "which": "^4.0.0",
     "ws": "^8.18.0"
   },
   "gitHead": "d5bd5c43bfebeb7ac02f9e029f924cb6cd5c2ec7",
   "dependencies": {
     "@elizaos/core": "workspace:*",
+    "@elizaos/plugin-e2b": "workspace:*",
+    "@elizaos/plugin-message-handling": "workspace:*",
+    "@elizaos/plugin-local-ai": "latest",
     "@elizaos/plugin-sql": "workspace:*",
     "@types/express": "^5.0.2",
     "@types/express-fileupload": "^1.5.1",
@@ -63,6 +71,7 @@
     "express-fileupload": "^1.5.1",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
+    "jose": "^5.9.6",
     "path-to-regexp": "^8.2.0",
     "socket.io": "^4.8.1"
   }

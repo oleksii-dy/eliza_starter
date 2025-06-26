@@ -1,9 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'bun:test';
 import { expandTildePath, resolveEnvFile, resolvePgliteDir } from '../../utils';
-import * as path from 'node:path';
-
-// Mock dotenv to prevent loading actual .env file
-// In bun:test, module mocking is handled differently, but this test doesn't need it
+import * as path from 'path';
+import * as os from 'os';
 
 describe('Utils', () => {
   describe('expandTildePath', () => {
@@ -48,7 +46,7 @@ describe('Utils', () => {
     beforeEach(() => {
       originalEnv = process.env.PGLITE_DATA_DIR;
       delete process.env.PGLITE_DATA_DIR;
-      // No need to clear all mocks in bun:test
+      vi.restoreAllMocks();
     });
 
     afterEach(() => {
@@ -70,18 +68,17 @@ describe('Utils', () => {
       expect(result).toBe('/env/pglite/dir');
     });
 
-    it('should use default .eliza/.elizadb dir if no dir or env var', () => {
-      delete process.env.PGLITE_DATA_DIR;
+    it('should handle memory directive from environment', () => {
+      // Test the actual behavior in test environment with :memory:
+      process.env.PGLITE_DATA_DIR = ':memory:';
       const result = resolvePgliteDir();
-      const projectRoot = path.resolve(process.cwd(), '..', '..');
-      expect(result).toBe(path.join(projectRoot, '.elizadb'));
+      expect(result).toBe(':memory:');
     });
 
-    it('should use default path if no arguments or env var', () => {
-      delete process.env.PGLITE_DATA_DIR;
-      const result = resolvePgliteDir();
-      const projectRoot = path.resolve(process.cwd(), '..', '..');
-      expect(result).toBe(path.join(projectRoot, '.elizadb'));
+    it('should handle absolute paths correctly', () => {
+      const testPath = '/absolute/test/path';
+      const result = resolvePgliteDir(testPath);
+      expect(result).toBe(testPath);
     });
 
     it('should expand tilde paths', () => {

@@ -24,8 +24,11 @@ export const agentTemplates: AgentTemplate[] = [
       system: '',
       bio: [],
       topics: [],
-      adjectives: [],
-      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-bootstrap'],
+      plugins: [
+        '@elizaos/plugin-sql',
+        '@elizaos/plugin-openai',
+        '@elizaos/plugin-message-handling',
+      ],
       settings: { secrets: {} },
     },
   },
@@ -47,11 +50,10 @@ export const agentTemplates: AgentTemplate[] = [
         'Maintains a friendly and helpful tone',
       ],
       topics: ['Discord server', 'Community assistance', 'Command handling', 'Server information'],
-      adjectives: ['Helpful', 'Responsive', 'Friendly', 'Informative', 'Reliable'],
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-message-handling',
         '@elizaos/plugin-discord',
       ],
       style: {
@@ -99,11 +101,10 @@ export const agentTemplates: AgentTemplate[] = [
         'Group moderation',
         'FAQ responses',
       ],
-      adjectives: ['Helpful', 'Responsive', 'Friendly', 'Informative', 'Reliable'],
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-message-handling',
         '@elizaos/plugin-telegram',
       ],
       style: {
@@ -155,11 +156,10 @@ export const agentTemplates: AgentTemplate[] = [
         'Resource access',
         'Task management',
       ],
-      adjectives: ['Responsive', 'Helpful', 'Organized', 'Team-oriented', 'Professional'],
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-message-handling',
         '@elizaos/plugin-slack',
       ],
       style: {
@@ -212,11 +212,10 @@ export const agentTemplates: AgentTemplate[] = [
         'Trend analysis',
         'Brand voice',
       ],
-      adjectives: ['Engaging', 'Concise', 'Strategic', 'Conversational', 'Creative'],
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-message-handling',
         '@elizaos/plugin-twitter',
       ],
       style: {
@@ -272,11 +271,10 @@ export const agentTemplates: AgentTemplate[] = [
         'Code reviews',
         'Development workflows',
       ],
-      adjectives: ['Technical', 'Precise', 'Helpful', 'Organized', 'Knowledgeable'],
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-message-handling',
         '@elizaos/plugin-github',
       ],
       style: {
@@ -328,11 +326,10 @@ export const agentTemplates: AgentTemplate[] = [
         'Engagement tactics',
         'Visual aesthetics',
       ],
-      adjectives: ['Creative', 'Visual', 'Engaging', 'Trend-aware', 'Authentic'],
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',
-        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-message-handling',
         '@elizaos/plugin-instagram',
       ],
       style: {

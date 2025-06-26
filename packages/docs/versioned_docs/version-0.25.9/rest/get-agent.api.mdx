@@ -190,18 +190,7 @@ Returns detailed information about a specific agent
                                 description: 'Topics the character is knowledgeable about',
                               }}
                             ></SchemaItem>
-                            <SchemaItem
-                              collapsible={false}
-                              name={'adjectives'}
-                              required={false}
-                              schemaName={'string[]'}
-                              qualifierMessage={undefined}
-                              schema={{
-                                type: 'array',
-                                items: { type: 'string' },
-                                description: 'Personality traits of the character',
-                              }}
-                            ></SchemaItem>
+
                             <SchemaItem
                               collapsible={false}
                               name={'knowledge'}
@@ -319,5 +308,6 @@ Returns detailed information about a specific agent
         </div>
       </TabItem>
     </ApiTabs>
+
   </div>
 </div>

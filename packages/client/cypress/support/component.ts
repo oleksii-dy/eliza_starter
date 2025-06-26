@@ -19,34 +19,34 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 
 // Import polyfills
 import { Buffer } from 'buffer';
-// @ts-ignore
+// @ts-expect-error -- Browser polyfill for process
 import process from 'process/browser';
 
 // Mock environment variables to prevent errors
-(globalThis as any).process = process;
-(globalThis as any).process.env = {
+(globalThis as unknown).process = process;
+(globalThis as unknown).process.env = {
   SENTRY_DSN: '',
   NODE_ENV: 'test',
   ...process.env,
 };
-(globalThis as any).process.versions = {
+(globalThis as unknown).process.versions = {
   node: '18.0.0',
 };
 
 // Add Buffer polyfill globally
-(globalThis as any).Buffer = Buffer;
+(globalThis as unknown).Buffer = Buffer;
 if (typeof window !== 'undefined') {
-  (window as any).Buffer = Buffer;
+  (window as unknown).Buffer = Buffer;
 }
 
 // Fix for Radix UI components - they need proper React import
 if (typeof window !== 'undefined') {
-  (window as any).React = React;
+  (window as unknown).React = React;
 }
 
 // Ensure React is properly available globally
 if (typeof globalThis !== 'undefined') {
-  (globalThis as any).React = React;
+  (globalThis as unknown).React = React;
 }
 
 // Remove duplicate declarations - they're already in types.d.ts

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { SocketIOManager } from '@/lib/socketio-manager';
-import type {
-  MessageBroadcastData,
-  MessageCompleteData,
-  ControlMessageData,
-  MessageDeletedData,
-  ChannelClearedData,
-  ChannelDeletedData,
+import {
+  SocketIOManager,
+  type MessageBroadcastData,
+  type MessageCompleteData,
+  type ControlMessageData,
+  type MessageDeletedData,
+  type ChannelClearedData,
+  type ChannelDeletedData,
 } from '@/lib/socketio-manager';
 import { UUID, Agent, ChannelType } from '@elizaos/core';
 import type { UiMessage } from './use-query-hooks';
@@ -49,9 +49,9 @@ export function useSocketChat({
       text: string,
       serverId: UUID,
       source: string,
-      attachments?: any[],
+      attachments?: unknown[],
       tempMessageId?: string,
-      metadata?: Record<string, any>,
+      metadata?: Record<string, unknown>,
       overrideChannelId?: UUID
     ) => {
       const channelIdToUse = overrideChannelId || channelId;
@@ -117,7 +117,9 @@ export function useSocketChat({
         JSON.stringify(data)
       );
       const msgChannelId = data.channelId || data.roomId;
-      if (msgChannelId !== channelId) return;
+      if (msgChannelId !== channelId) {
+        return;
+      }
       const isCurrentUser = data.senderId === currentUserId;
 
       // Unified message handling for both DM and GROUP
@@ -126,9 +128,11 @@ export function useSocketChat({
           ? data.senderId === contextId
           : allAgents.some((agent) => agent.id === data.senderId);
 
-      if (!isCurrentUser && isTargetAgent) onInputDisabledChange(false);
+      if (!isCurrentUser && isTargetAgent) {
+        onInputDisabledChange(false);
+      }
 
-      const clientMessageId = (data as any).clientMessageId;
+      const clientMessageId = (data as { clientMessageId?: string }).clientMessageId;
       if (clientMessageId && isCurrentUser) {
         // Update optimistic message with server response
         onUpdateMessage(clientMessageId, {
@@ -177,14 +181,19 @@ export function useSocketChat({
 
     const handleMessageComplete = (data: MessageCompleteData) => {
       const completeChannelId = data.channelId || data.roomId;
-      if (completeChannelId === channelId) onInputDisabledChange(false);
+      if (completeChannelId === channelId) {
+        onInputDisabledChange(false);
+      }
     };
 
     const handleControlMessage = (data: ControlMessageData) => {
       const ctrlChannelId = data.channelId || data.roomId;
       if (ctrlChannelId === channelId) {
-        if (data.action === 'disable_input') onInputDisabledChange(true);
-        else if (data.action === 'enable_input') onInputDisabledChange(false);
+        if (data.action === 'disable_input') {
+          onInputDisabledChange(true);
+        } else if (data.action === 'enable_input') {
+          onInputDisabledChange(false);
+        }
       }
     };
 
@@ -254,6 +263,7 @@ export function useSocketChat({
     function detachSubscriptions(subscriptions: Array<{ detach: () => void } | undefined>) {
       subscriptions.forEach((sub) => sub?.detach());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channelId, currentUserId, socketIOManager]);
 
   return {

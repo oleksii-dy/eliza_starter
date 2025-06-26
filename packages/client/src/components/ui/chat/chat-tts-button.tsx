@@ -46,7 +46,9 @@ export default function ChatTtsButton({ agentId, text }: { agentId: string; text
   };
 
   const execute = () => {
-    if (mutation?.isPending) return;
+    if (mutation?.isPending) {
+      return;
+    }
 
     if (playing) {
       stop();

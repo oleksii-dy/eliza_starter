@@ -74,7 +74,7 @@ describe('Database Operations Integration Tests', () => {
         id: channelId,
         name: 'Concurrent Test Channel',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId,
         metadata: {},
       });
 
@@ -116,7 +116,7 @@ describe('Database Operations Integration Tests', () => {
         id: channelId,
         name: 'Integrity Test Channel',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId,
         metadata: {},
       });
 
@@ -171,7 +171,7 @@ describe('Database Operations Integration Tests', () => {
           id: channelId,
           name: 'Participant Test Channel',
           type: ChannelType.GROUP,
-          messageServerId: serverId,
+          serverId,
           metadata: {},
         },
         participants.slice(0, 2) // First two participants
@@ -201,7 +201,7 @@ describe('Database Operations Integration Tests', () => {
         id: channelId,
         name: 'Query Test Channel',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId,
         metadata: {},
       });
 
@@ -268,7 +268,7 @@ describe('Database Operations Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Server Channel',
         type: ChannelType.GROUP,
-        messageServerId: newServer.id,
+        serverId: newServer.id,
         metadata: {},
       });
 
@@ -311,14 +311,14 @@ describe('Database Operations Integration Tests', () => {
         id: channelId,
         name: 'Bulk Test Channel',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId,
         metadata: {},
       });
 
       const startTime = Date.now();
 
       // Create 100 messages
-      const bulkPromises = [];
+      const bulkPromises: Promise<any>[] = [];
       for (let i = 0; i < 100; i++) {
         bulkPromises.push(
           agentServer.createMessage({
@@ -348,13 +348,13 @@ describe('Database Operations Integration Tests', () => {
       const serverId = '00000000-0000-0000-0000-000000000000' as UUID;
 
       // Create multiple channels
-      const channelPromises = [];
+      const channelPromises: Promise<any>[] = [];
       for (let i = 0; i < 20; i++) {
         channelPromises.push(
           agentServer.createChannel({
             name: `Large Set Channel ${i}`,
             type: ChannelType.GROUP,
-            messageServerId: serverId,
+            serverId,
             metadata: { index: i },
           }) as never
         );
@@ -391,7 +391,7 @@ describe('Database Operations Integration Tests', () => {
         await agentServer.createChannel({
           name: 'Invalid Server Channel',
           type: ChannelType.GROUP,
-          messageServerId: nonExistentServerId,
+          serverId: nonExistentServerId,
           metadata: {},
         });
       } catch (error: any) {

@@ -1,26 +1,33 @@
-import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
-import { agentTable } from './agent';
+import { getSchemaFactory, createLazyTableProxy } from './factory';
 
 /**
- * Represents a table schema for tasks in the database.
- *
- * @type {PgTable}
+ * Lazy-loaded tasks table definition.
+ * This function returns the tasks table schema when called,
+ * ensuring the database type is set before schema creation.
+ * Foreign key references are removed to avoid circular dependencies.
+ * The database constraints will be enforced at the application level.
  */
-export const taskTable = pgTable('tasks', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
-  description: text('description'),
-  roomId: uuid('roomId'),
-  worldId: uuid('worldId'),
-  entityId: uuid('entityId'),
-  agentId: uuid('agent_id')
-    .notNull()
-    .references(() => agentTable.id, { onDelete: 'cascade' }),
-  tags: text('tags')
-    .array()
-    .default(sql`'{}'::text[]`),
-  metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+function createTasksTable() {
+  const factory = getSchemaFactory();
+
+  return factory.table('tasks', {
+    id: factory.uuid('id').primaryKey().notNull(),
+    name: factory.text('name').notNull(),
+    description: factory.text('description').notNull(),
+    createdAt: factory.timestamp('created_at').default(factory.defaultTimestamp()).notNull(),
+    updatedAt: factory.timestamp('updated_at').default(factory.defaultTimestamp()).notNull(),
+    agentId: factory.uuid('agent_id').notNull(),
+    roomId: factory.uuid('room_id'),
+    worldId: factory.uuid('world_id'),
+    entityId: factory.uuid('entity_id'),
+    metadata: factory.json('metadata').default(factory.defaultJsonObject()).notNull(),
+    tags: factory.textArray('tags').default(factory.defaultTextArray()).notNull(),
+  });
+}
+
+/**
+ * Represents the tasks table in the database.
+ * Uses lazy initialization to ensure proper database type configuration.
+
+ */
+export const tasksTable = createLazyTableProxy(createTasksTable);

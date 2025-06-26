@@ -1,11 +1,15 @@
 node_modules
 /out
 
+**:memory:**
+
 .env
 .env.production
 .env.local
 .env.bak
 .env_main
+
+.env.test
 
 .idea
 .zed

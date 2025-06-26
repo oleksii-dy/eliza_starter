@@ -11,7 +11,13 @@ import { REGISTRY_ORG, REGISTRY_REPO, REGISTRY_URL, RAW_REGISTRY_URL } from './c
 const ELIZA_DIR = path.join(process.cwd(), '.eliza');
 const REGISTRY_SETTINGS_FILE = path.join(ELIZA_DIR, 'registrysettings.json');
 // Use resolveEnvFile to match how credentials are saved, with fallback to ~/.eliza/.env
-const ENV_FILE = resolveEnvFile() || path.join(ELIZA_DIR, '.env');
+let ENV_FILE: string | undefined;
+function getEnvFile(): string {
+  if (!ENV_FILE) {
+    ENV_FILE = resolveEnvFile() || path.join(ELIZA_DIR, '.env');
+  }
+  return ENV_FILE;
+}
 const REGISTRY_CACHE_FILE = path.join(ELIZA_DIR, 'registry-cache.json');
 
 const REQUIRED_ENV_VARS = ['GITHUB_TOKEN'] as const;
@@ -44,7 +50,7 @@ export interface DataDirStatus {
 export async function ensureElizaDir() {
   try {
     await fs.mkdir(ELIZA_DIR, { recursive: true });
-  } catch (error) {
+  } catch {
     // Directory already exists
   }
 }
@@ -55,7 +61,7 @@ export async function getRegistrySettings(): Promise<RegistrySettings> {
   try {
     const content = await fs.readFile(REGISTRY_SETTINGS_FILE, 'utf-8');
     return JSON.parse(content);
-  } catch (error) {
+  } catch {
     // Return default settings if file doesn't exist
     return {
       defaultRegistry: REGISTRY_REPO,
@@ -70,10 +76,10 @@ export async function saveRegistrySettings(settings: RegistrySettings) {
 
 export async function getEnvVar(key: string): Promise<string | undefined> {
   try {
-    const envContent = await fs.readFile(ENV_FILE, 'utf-8');
+    const envContent = await fs.readFile(getEnvFile(), 'utf-8');
     const env = dotenv.parse(envContent);
     return env[key];
-  } catch (error) {
+  } catch {
     return undefined;
   }
 }
@@ -83,8 +89,8 @@ export async function setEnvVar(key: string, value: string) {
 
   let envContent = '';
   try {
-    envContent = await fs.readFile(ENV_FILE, 'utf-8');
-  } catch (error) {
+    envContent = await fs.readFile(getEnvFile(), 'utf-8');
+  } catch {
     // File doesn't exist yet
   }
 
@@ -95,7 +101,7 @@ export async function setEnvVar(key: string, value: string) {
     .map(([k, v]) => `${k}=${v}`)
     .join('\n');
 
-  await fs.writeFile(ENV_FILE, newContent);
+  await fs.writeFile(getEnvFile(), newContent);
 }
 
 export async function getGitHubToken(): Promise<string | undefined> {
@@ -130,10 +136,10 @@ export async function setGitHubToken(token: string) {
     // Read existing .env file or create a new one
     let envContent = '';
     try {
-      if (existsSync(ENV_FILE)) {
-        envContent = await fs.readFile(ENV_FILE, 'utf-8');
+      if (existsSync(getEnvFile())) {
+        envContent = await fs.readFile(getEnvFile(), 'utf-8');
       }
-    } catch (error) {
+    } catch {
       // File doesn't exist, create it with empty content
       envContent = '# Eliza environment variables\n\n';
     }
@@ -151,7 +157,7 @@ export async function setGitHubToken(token: string) {
     }
 
     // Write back to file
-    await fs.writeFile(ENV_FILE, newContent);
+    await fs.writeFile(getEnvFile(), newContent);
 
     // Also update process.env for immediate use
     process.env.GITHUB_TOKEN = token;
@@ -194,7 +200,7 @@ interface PluginMetadata {
 // Default registry data for offline use or when GitHub is unavailable
 const DEFAULT_REGISTRY: Record<string, string> = {
   '@elizaos/plugin-anthropic': 'github:elizaos-plugins/plugin-anthropic',
-  '@elizaos/plugin-bootstrap': 'github:elizaos-plugins/plugin-bootstrap',
+  '@elizaos/plugin-message-handling': 'github:elizaos-plugins/plugin-message-handling',
   '@elizaos/plugin-browser': 'github:elizaos-plugins/plugin-browser',
   '@elizaos/plugin-discord': 'github:elizaos-plugins/plugin-discord',
   '@elizaos/plugin-elevenlabs': 'github:elizaos-plugins/plugin-elevenlabs',
@@ -599,9 +605,8 @@ export async function getPackageDetails(packageName: string): Promise<{
     const packageUrl = `${REGISTRY_URL.replace('index.json', '')}packages/${normalizedName}.json`;
 
     // Use agent only if https_proxy is defined
-    const requestOptions: RequestInit = {};
+    const requestOptions: Record<string, any> = {};
     if (process.env.https_proxy) {
-      // @ts-ignore - HttpsProxyAgent is not in the RequestInit type, but is used by node-fetch
       requestOptions.agent = new HttpsProxyAgent(process.env.https_proxy);
     }
 
@@ -691,7 +696,7 @@ export async function checkDataDir(): Promise<DataDirStatus> {
 
   // Check .env file
   try {
-    const envContent = await fs.readFile(ENV_FILE, 'utf-8');
+    const envContent = await fs.readFile(getEnvFile(), 'utf-8');
     const env = dotenv.parse(envContent);
     status.env.exists = true;
     status.env.missingKeys = REQUIRED_ENV_VARS.filter((key) => !env[key]);
@@ -719,9 +724,9 @@ export async function initializeDataDir(): Promise<void> {
 
   // Initialize .env if it doesn't exist
   try {
-    await fs.access(ENV_FILE);
+    await fs.access(getEnvFile());
   } catch {
-    await fs.writeFile(ENV_FILE, '');
+    await fs.writeFile(getEnvFile(), '');
   }
 
   // Initialize settings if they don't exist

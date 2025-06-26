@@ -23,8 +23,8 @@ export function createGroupMemoryRouter(
       return sendError(res, 400, 'BAD_REQUEST', 'agentIds must be a non-empty array');
     }
 
-    let results: Room[] = [];
-    let errors: {
+    const results: Room[] = [];
+    const errors: {
       agentId: UUID;
       code: string;
       message: string;

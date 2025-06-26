@@ -1,4 +1,4 @@
-import { describe, expect, it, spyOn, beforeAll, afterAll } from 'bun:test';
+import { describe, it, expect, mock, beforeAll, afterAll } from 'bun:test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { logger, IAgentRuntime, Plugin } from '@elizaos/core';
@@ -9,10 +9,10 @@ import * as os from 'node:os';
 
 // Set up spies on logger
 beforeAll(() => {
-  spyOn(logger, 'info');
-  spyOn(logger, 'error');
-  spyOn(logger, 'warn');
-  spyOn(logger, 'debug');
+  mock.spyOn(logger, 'info');
+  mock.spyOn(logger, 'error');
+  mock.spyOn(logger, 'warn');
+  mock.spyOn(logger, 'debug');
 });
 
 afterAll(() => {

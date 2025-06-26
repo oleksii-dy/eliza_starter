@@ -1,13 +1,13 @@
 import { Separator } from '@/components/ui/separator';
-import CopyButton from '@/components/copy-button';
-import DeleteButton from '@/components/delete-button';
-import RetryButton from '@/components/retry-button';
-import MediaContent from '@/components/media-content';
-import ProfileOverlay from '@/components/profile-overlay';
+import CopyButton from '@/components/CopyButton';
+import DeleteButton from '@/components/DeleteButton';
+import RetryButton from '@/components/RetryButton';
+import MediaContent from '@/components/MediaContent';
+import ProfileOverlay from '@/components/ProfileOverlay';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import ConfirmationDialog from '@/components/confirmation-dialog';
+import ConfirmationDialog from '@/components/ConfirmationDialog';
 import { useConfirmation } from '@/hooks/use-confirmation';
 import { ChatBubbleMessage, ChatBubbleTimestamp } from '@/components/ui/chat/chat-bubble';
 import ChatTtsButton from '@/components/ui/chat/chat-tts-button';
@@ -16,7 +16,7 @@ import { AnimatedMarkdown } from '@/components/ui/chat/animated-markdown';
 import { useAutoScroll } from '@/components/ui/chat/hooks/useAutoScroll';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SplitButton, type SplitButtonAction } from '@/components/ui/split-button';
+import { SplitButton } from '@/components/ui/split-button';
 import { CHAT_SOURCE, GROUP_CHAT_SOURCE, USER_NAME } from '@/constants';
 import { useFileUpload } from '@/hooks/use-file-upload';
 import {
@@ -42,12 +42,14 @@ import {
   moment,
   randomUUID,
 } from '@/lib/utils';
-import type { Agent, Media, UUID } from '@elizaos/core';
 import {
   AgentStatus,
   ChannelType,
   ContentType as CoreContentType,
   validateUuid,
+  type Agent,
+  type Media,
+  type UUID,
 } from '@elizaos/core';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { useQueryClient } from '@tanstack/react-query';
@@ -58,18 +60,16 @@ import {
   History,
   Info,
   Loader2,
-  MessageSquarePlus,
   PanelRight,
   PanelRightClose,
   Plus,
   Trash2,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import AIWriter from 'react-aiwriter';
-import { AgentSidebar } from './agent-sidebar';
+import { AgentSidebar } from './AgentSidebar';
 import { ChatInputArea } from './ChatInputArea';
 import { ChatMessageListComponent } from './ChatMessageListComponent';
-import GroupPanel from './group-panel';
+import GroupPanel from './GroupPanel';
 
 import {
   DropdownMenu,
@@ -127,8 +127,8 @@ export function MessageContent({
   onRetry,
   isUser,
   getAgentInMessage,
-  agentAvatarMap,
-  chatType,
+  _agentAvatarMap,
+  _chatType,
 }: {
   message: UiMessage;
   agentForTts?: Agent | Partial<Agent> | null;
@@ -137,8 +137,8 @@ export function MessageContent({
   onRetry?: (messageText: string) => void;
   isUser: boolean;
   getAgentInMessage?: (agentId: UUID) => Partial<Agent> | undefined;
-  agentAvatarMap?: Record<UUID, string | null>;
-  chatType?: ChannelType;
+  _agentAvatarMap?: Record<UUID, string | null>;
+  _chatType?: ChannelType;
 }) {
   const agentData =
     !isUser && getAgentInMessage ? getAgentInMessage(message.senderId) : agentForTts;
@@ -170,7 +170,9 @@ export function MessageContent({
 
         <div className="py-2">
           {(() => {
-            if (!message.text) return null;
+            if (!message.text) {
+              return null;
+            }
 
             const mediaInfos = parseMediaFromText(message.text);
             const attachmentUrls = new Set(
@@ -311,13 +313,17 @@ export default function Chat({
   );
 
   // Convert AgentWithStatus to Agent, ensuring required fields have defaults
-  const targetAgentData: Agent | undefined = agentDataResponse?.data
-    ? ({
-        ...agentDataResponse.data,
-        createdAt: agentDataResponse.data.createdAt || Date.now(),
-        updatedAt: agentDataResponse.data.updatedAt || Date.now(),
-      } as Agent)
-    : undefined;
+  const targetAgentData: Agent | undefined = useMemo(
+    () =>
+      agentDataResponse?.data
+        ? ({
+            ...agentDataResponse.data,
+            createdAt: agentDataResponse.data.createdAt || Date.now(),
+            updatedAt: agentDataResponse.data.updatedAt || Date.now(),
+          } as Agent)
+        : undefined,
+    [agentDataResponse?.data]
+  );
 
   // Use the new hooks for DM channel management
   const { data: agentDmChannels = [], isLoading: isLoadingAgentDmChannels } = useDmChannelsForAgent(
@@ -336,11 +342,13 @@ export default function Chat({
   const participants = participantsData?.data;
 
   const { data: agentsResponse } = useAgentsWithDetails();
-  const allAgents = agentsResponse?.agents || [];
+  const allAgents = useMemo(() => agentsResponse?.agents || [], [agentsResponse?.agents]);
 
   // Get agents in the current group
   const groupAgents = useMemo(() => {
-    if (chatType !== ChannelType.GROUP || !participants) return [];
+    if (chatType !== ChannelType.GROUP || !participants) {
+      return [];
+    }
     return participants
       .map((pId) => allAgents.find((a) => a.id === pId))
       .filter(Boolean) as Agent[];
@@ -350,7 +358,9 @@ export default function Chat({
     () =>
       allAgents.reduce(
         (acc, agent) => {
-          if (agent.id && agent.settings?.avatar) acc[agent.id] = agent.settings.avatar;
+          if (agent.id && agent.settings?.avatar) {
+            acc[agent.id] = agent.settings.avatar;
+          }
           return acc;
         },
         {} as Record<UUID, string | null>
@@ -387,7 +397,9 @@ export default function Chat({
   // Handle DM channel creation
   const handleNewDmChannel = useCallback(
     async (agentIdForNewChannel: UUID | undefined) => {
-      if (!agentIdForNewChannel || chatType !== 'DM') return;
+      if (!agentIdForNewChannel || chatType !== 'DM') {
+        return;
+      }
       const newChatName = `Chat - ${moment().format('MMM D, HH:mm:ss')}`;
       clientLogger.info(
         `[Chat] Creating new distinct DM channel with agent ${agentIdForNewChannel}, name: "${newChatName}"`
@@ -430,10 +442,13 @@ export default function Chat({
 
   // Handle DM channel deletion
   const handleDeleteCurrentDmChannel = useCallback(() => {
-    if (chatType !== ChannelType.DM || !chatState.currentDmChannelId || !targetAgentData?.id)
+    if (chatType !== ChannelType.DM || !chatState.currentDmChannelId || !targetAgentData?.id) {
       return;
+    }
     const channelToDelete = agentDmChannels.find((ch) => ch.id === chatState.currentDmChannelId);
-    if (!channelToDelete) return;
+    if (!channelToDelete) {
+      return;
+    }
 
     confirm(
       {
@@ -694,11 +709,15 @@ export default function Chat({
     onAddMessage: (message: UiMessage) => {
       addMessage(message);
       updateChatTitle();
-      if (message.isAgent) safeScrollToBottom();
+      if (message.isAgent) {
+        safeScrollToBottom();
+      }
     },
     onUpdateMessage: (messageId: string, updates: Partial<UiMessage>) => {
       updateMessage(messageId, updates);
-      if (!updates.isLoading && updates.isLoading !== undefined) safeScrollToBottom();
+      if (!updates.isLoading && updates.isLoading !== undefined) {
+        safeScrollToBottom();
+      }
     },
     onDeleteMessage: (messageId: string) => {
       removeMessage(messageId);
@@ -707,7 +726,10 @@ export default function Chat({
       // Clear the local message list immediately for instant UI response
       clearMessages();
     },
-    onInputDisabledChange: (disabled: boolean) => updateChatState({ inputDisabled: disabled }),
+    onInputDisabledChange: (disabled: boolean) => {
+      inputDisabledRef.current = disabled;
+      updateChatState({ inputDisabled: disabled });
+    },
   });
 
   const {
@@ -779,8 +801,9 @@ export default function Chat({
       !finalServerIdForHooks ||
       !currentClientEntityId ||
       (chatType === ChannelType.DM && !targetAgentData?.id)
-    )
+    ) {
       return;
+    }
 
     const tempMessageId = randomUUID() as UUID;
     let messageText = chatState.input.trim();
@@ -803,22 +826,26 @@ export default function Chat({
       source: chatType === ChannelType.DM ? CHAT_SOURCE : GROUP_CHAT_SOURCE,
       attachments: optimisticAttachments,
     };
-    if (messageText || currentSelectedFiles.length > 0) addMessage(optimisticUiMessage);
+    if (messageText || currentSelectedFiles.length > 0) {
+      addMessage(optimisticUiMessage);
+    }
     safeScrollToBottom();
     try {
       let processedUiAttachments: Media[] = [];
       if (currentSelectedFiles.length > 0) {
         const { uploaded, failed, blobUrls } = await uploadFiles(currentSelectedFiles);
         processedUiAttachments = uploaded;
-        if (failed.length > 0)
+        if (failed.length > 0) {
           updateMessage(tempMessageId, {
             attachments: optimisticUiMessage.attachments?.filter(
               (att) => !failed.some((f) => f.file.id === att.id)
             ),
           });
+        }
         cleanupBlobUrls(blobUrls);
-        if (!messageText.trim() && processedUiAttachments.length > 0)
+        if (!messageText.trim() && processedUiAttachments.length > 0) {
           messageText = `Shared ${processedUiAttachments.length} file(s).`;
+        }
       }
       const mediaInfosFromText = parseMediaFromText(currentInputVal);
       const textMediaAttachments: Media[] = mediaInfosFromText.map(
@@ -837,7 +864,7 @@ export default function Chat({
       );
       const finalAttachments = [...processedUiAttachments, ...textMediaAttachments];
       const finalTextContent =
-        messageText || (finalAttachments.length > 0 ? `Shared content.` : '');
+        messageText || (finalAttachments.length > 0 ? 'Shared content.' : '');
       if (!finalTextContent.trim() && finalAttachments.length === 0) {
         updateChatState({ inputDisabled: false });
         removeMessage(tempMessageId);
@@ -873,7 +900,9 @@ export default function Chat({
   };
 
   const handleDeleteMessage = (messageId: string) => {
-    if (!finalChannelIdForHooks || !messageId) return;
+    if (!finalChannelIdForHooks || !messageId) {
+      return;
+    }
     const validMessageId = validateUuid(messageId);
     if (validMessageId) {
       // Immediately remove message from UI for optimistic update
@@ -910,14 +939,18 @@ export default function Chat({
     safeScrollToBottom();
 
     try {
+      if (!finalServerIdForHooks || !finalChannelIdForHooks) {
+        throw new Error('Missing server ID or channel ID');
+      }
+
       await sendMessage(
         finalTextContent,
-        finalServerIdForHooks!,
+        finalServerIdForHooks,
         chatType === ChannelType.DM ? CHAT_SOURCE : GROUP_CHAT_SOURCE,
         message.attachments,
         retryMessageId,
         undefined,
-        finalChannelIdForHooks!
+        finalChannelIdForHooks
       );
     } catch (error) {
       clientLogger.error('Error sending message or uploading files:', error);
@@ -935,7 +968,9 @@ export default function Chat({
   };
 
   const handleClearChat = () => {
-    if (!finalChannelIdForHooks) return;
+    if (!finalChannelIdForHooks) {
+      return;
+    }
     const confirmMessage =
       chatType === ChannelType.DM
         ? `Clear all messages in this chat with ${targetAgentData?.name}?`
@@ -1231,7 +1266,9 @@ export default function Chat({
                   {
                     label: 'Delete Group',
                     onClick: () => {
-                      if (!finalChannelIdForHooks || !finalServerIdForHooks) return;
+                      if (!finalChannelIdForHooks || !finalServerIdForHooks) {
+                        return;
+                      }
                       confirm(
                         {
                           title: 'Delete Group',

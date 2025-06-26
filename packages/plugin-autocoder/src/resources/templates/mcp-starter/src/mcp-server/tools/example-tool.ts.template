@@ -1,0 +1,32 @@
+import { CallToolRequest, CallToolResult, ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
+
+export const {{TOOL_NAME}}Tool = {
+  name: '{{TOOL_NAME}}',
+  description: '{{TOOL_DESCRIPTION}}',
+  inputSchema: {
+    type: 'object',
+    properties: {{TOOL_PARAMETERS}},
+    required: {{TOOL_REQUIRED_PARAMS}}
+  },
+  async execute(request: CallToolRequest): Promise<CallToolResult> {
+    try {
+      const params = request.params.arguments || {};
+      
+      {{TOOL_IMPLEMENTATION}}
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({{TOOL_RESULT_VAR}}, null, 2)
+          }
+        ]
+      };
+    } catch (error) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Error executing {{TOOL_NAME}}: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+};

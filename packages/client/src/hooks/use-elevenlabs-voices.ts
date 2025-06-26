@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { elevenLabsVoiceModels } from '@/config/voice-models';
-import type { VoiceModel } from '@/config/voice-models';
+import { elevenLabsVoiceModels, type VoiceModel } from '@/config/voice-models';
 
 // TODO: Move this to a shared config file, or the 11labs plugin once plugin categories are implemented
 

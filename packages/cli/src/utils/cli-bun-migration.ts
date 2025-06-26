@@ -8,7 +8,7 @@ export async function isBunAvailable(): Promise<boolean> {
   try {
     await execa('bun', ['--version'], { stdio: 'ignore' });
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -23,7 +23,7 @@ export async function isCliInstalledViaNpm(): Promise<boolean> {
       stdio: 'pipe',
     });
     return stdout.includes('@elizaos/cli');
-  } catch (error) {
+  } catch {
     // Also check if the current elizaos command points to npm installation
     try {
       const { stdout: whichOutput } = await execa('which', ['elizaos'], { stdio: 'pipe' });

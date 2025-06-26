@@ -1,55 +1,44 @@
-import { sql } from 'drizzle-orm';
-import {
-  foreignKey,
-  index,
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-  unique,
-  uuid,
-} from 'drizzle-orm/pg-core';
-import { agentTable } from './agent';
-import { entityTable } from './entity';
+import { getSchemaFactory, createLazyTableProxy } from './factory';
 
 /**
- * Defines the relationshipTable containing information about relationships between entities and agents.
- * @type {import('knex').TableBuilder}
+ * Lazy-loaded relationship table definition.
+ * This function returns the relationship table schema when called,
+ * ensuring the database type is set before schema creation.
+ * Foreign key references are removed to avoid circular dependencies.
  */
-export const relationshipTable = pgTable(
-  'relationships',
-  {
-    id: uuid('id')
-      .notNull()
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .default(sql`now()`)
+function createRelationshipTable() {
+  const factory = getSchemaFactory();
+
+  const tableColumns = {
+    id: factory.uuid('id').primaryKey(),
+    sourceEntityId: factory.uuid('source_entity_id').notNull(),
+    targetEntityId: factory.uuid('target_entity_id').notNull(),
+    agentId: factory.uuid('agent_id').notNull(),
+    tags: factory.textArray('tags').default([]),
+    metadata: factory.json('metadata').default({}),
+    createdAt: factory
+      .timestamp('created_at', { mode: 'date' })
+      .default(factory.defaultTimestamp())
       .notNull(),
-    sourceEntityId: uuid('sourceEntityId')
-      .notNull()
-      .references(() => entityTable.id, { onDelete: 'cascade' }),
-    targetEntityId: uuid('targetEntityId')
-      .notNull()
-      .references(() => entityTable.id, { onDelete: 'cascade' }),
-    agentId: uuid('agentId')
-      .notNull()
-      .references(() => agentTable.id, { onDelete: 'cascade' }),
-    tags: text('tags').array(),
-    metadata: jsonb('metadata'),
-  },
-  (table) => [
-    index('idx_relationships_users').on(table.sourceEntityId, table.targetEntityId),
-    unique('unique_relationship').on(table.sourceEntityId, table.targetEntityId, table.agentId),
-    foreignKey({
-      name: 'fk_user_a',
-      columns: [table.sourceEntityId],
-      foreignColumns: [entityTable.id],
-    }).onDelete('cascade'),
-    foreignKey({
-      name: 'fk_user_b',
-      columns: [table.targetEntityId],
-      foreignColumns: [entityTable.id],
-    }).onDelete('cascade'),
-  ]
-);
+    updatedAt: factory
+      .timestamp('updated_at', { mode: 'date' })
+      .default(factory.defaultTimestamp())
+      .notNull(),
+    relationshipType: factory.text('relationship_type'),
+    strength: factory.integer('strength'),
+    lastInteractionAt: factory.timestamp('last_interaction_at', { mode: 'date' }),
+    nextFollowUpAt: factory.timestamp('next_follow_up_at', { mode: 'date' }),
+  };
+
+  return factory.table('relationships', tableColumns, (table) => ({
+    sourceIdx: factory.index('relationships_source_entity_id_idx').on(table.sourceEntityId),
+    targetIdx: factory.index('relationships_target_entity_id_idx').on(table.targetEntityId),
+    agentIdx: factory.index('relationships_agent_id_idx').on(table.agentId),
+  }));
+}
+
+/**
+ * Represents a table for storing relationship data.
+ * Uses lazy initialization to ensure proper database type configuration.
+ */
+export const relationshipTable = createLazyTableProxy(createRelationshipTable);

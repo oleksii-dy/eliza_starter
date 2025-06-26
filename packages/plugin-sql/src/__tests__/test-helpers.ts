@@ -1,24 +1,22 @@
 import type { Plugin, UUID } from '@elizaos/core';
-import { AgentRuntime } from '@elizaos/core';
+import { AgentRuntime, AgentStatus, stringToUuid } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { v4 } from 'uuid';
-import { plugin as sqlPlugin } from '../index';
-import { DatabaseMigrationService } from '../migration-service';
-import { PgDatabaseAdapter } from '../pg/adapter';
-import { PostgresConnectionManager } from '../pg/manager';
-import { PgliteDatabaseAdapter } from '../pglite/adapter';
-import { PGliteClientManager } from '../pglite/manager';
+import { v4 as uuidv4 } from 'uuid';
+
+// Import unified system components
+import sqlPlugin, { connectionRegistry } from '../index';
+import { PgAdapter } from '../pg/adapter';
+import { PgManager } from '../pg/manager';
 import { mockCharacter } from './fixtures';
 
 /**
- * Creates a fully initialized, in-memory PGlite database adapter and a corresponding
- * AgentRuntime instance for testing purposes. It uses the dynamic migration system
- * to set up the schema for the core SQL plugin and any additional plugins provided.
- *
- * This is the standard helper for all integration tests in `plugin-sql`.
+ * Creates a fully initialized PostgreSQL database adapter and a corresponding AgentRuntime instance
+ * for testing purposes. Uses the unified migration system and connection registry to
+ * set up the schema for the core SQL plugin and any additional plugins provided.
  *
  * @param testAgentId - The UUID to use for the agent runtime and adapter.
  * @param testPlugins - An array of additional plugins to load and migrate.
@@ -27,187 +25,164 @@ import { mockCharacter } from './fixtures';
 export async function createTestDatabase(
   testAgentId: UUID,
   testPlugins: Plugin[] = []
-): Promise<{
-  adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
-  runtime: AgentRuntime;
-  cleanup: () => Promise<void>;
-}> {
-  if (process.env.POSTGRES_URL) {
-    // PostgreSQL testing
-    console.log('[TEST] Using PostgreSQL for test database');
-    const connectionManager = new PostgresConnectionManager(process.env.POSTGRES_URL);
-    const adapter = new PgDatabaseAdapter(testAgentId, connectionManager);
-    await adapter.init();
-
-    const runtime = new AgentRuntime({
-      character: { ...mockCharacter, id: undefined },
-      agentId: testAgentId,
-      plugins: [sqlPlugin, ...testPlugins],
-    });
-    runtime.registerDatabaseAdapter(adapter);
-
-    const schemaName = `test_${testAgentId.replace(/-/g, '_')}`;
-    const db = connectionManager.getDatabase();
-
-    // Drop schema if it exists to ensure clean state
-    await db.execute(sql.raw(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`));
-    await db.execute(sql.raw(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`));
-    await db.execute(sql.raw(`SET search_path TO ${schemaName}, public`));
-
-    const migrationService = new DatabaseMigrationService();
-    await migrationService.initializeWithDatabase(db);
-    migrationService.discoverAndRegisterPluginSchemas([sqlPlugin, ...testPlugins]);
-    await migrationService.runAllPluginMigrations();
-
-    await adapter.createAgent({
-      id: testAgentId,
-      ...mockCharacter,
-    } as any);
-
-    const cleanup = async () => {
-      await db.execute(sql.raw(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`));
-      await adapter.close();
-    };
-
-    return { adapter, runtime, cleanup };
-  } else {
-    // PGlite testing
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'eliza-test-'));
-    const connectionManager = new PGliteClientManager({ dataDir: tempDir });
-    await connectionManager.initialize();
-    const adapter = new PgliteDatabaseAdapter(testAgentId, connectionManager);
-    await adapter.init();
-
-    const runtime = new AgentRuntime({
-      character: { ...mockCharacter, id: undefined },
-      agentId: testAgentId,
-      plugins: [sqlPlugin, ...testPlugins],
-    });
-    runtime.registerDatabaseAdapter(adapter);
-
-    const migrationService = new DatabaseMigrationService();
-    await migrationService.initializeWithDatabase(adapter.getDatabase());
-    migrationService.discoverAndRegisterPluginSchemas([sqlPlugin, ...testPlugins]);
-    await migrationService.runAllPluginMigrations();
-
-    await adapter.createAgent({
-      id: testAgentId,
-      ...mockCharacter,
-    } as any);
-
-    const cleanup = async () => {
-      await adapter.close();
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    };
-
-    return { adapter, runtime, cleanup };
+): Promise<{ adapter: PgAdapter; runtime: AgentRuntime; cleanup: () => Promise<void> }> {
+  // Skip test if no PostgreSQL URL is provided
+  if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
+    throw new Error(
+      'PostgreSQL connection required for tests. Please set POSTGRES_URL or TEST_POSTGRES_URL environment variable.'
+    );
   }
+
+  const postgresUrl = process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL!;
+
+  const manager = new PgManager({
+    connectionString: postgresUrl,
+    ssl: false,
+  });
+
+  await manager.connect();
+
+  const adapter = new PgAdapter(testAgentId, manager);
+  await adapter.init();
+
+  // Register adapter in connection registry
+  connectionRegistry.registerAdapter(testAgentId, adapter);
+
+  // Create AgentRuntime with the adapter
+  const runtime = new AgentRuntime({
+    agentId: testAgentId,
+    token: '',
+    character: mockCharacter,
+    databaseAdapter: adapter,
+  });
+
+  await runtime.initialize();
+
+  // Initialize all test plugins
+  const allPlugins = [sqlPlugin, ...testPlugins];
+  for (const plugin of allPlugins) {
+    if (plugin.init) {
+      await plugin.init({}, runtime);
+    }
+  }
+
+  const cleanup = async () => {
+    try {
+      // Clean up test data
+      await adapter.query('DELETE FROM memories WHERE agent_id = $1', [testAgentId]);
+      await adapter.query('DELETE FROM entities WHERE agent_id = $1', [testAgentId]);
+      await adapter.query('DELETE FROM rooms WHERE agent_id = $1', [testAgentId]);
+      await adapter.query('DELETE FROM agents WHERE id = $1', [testAgentId]);
+
+      connectionRegistry.removeAdapter(testAgentId);
+      await adapter.close();
+      await manager.close();
+    } catch (error) {
+      console.warn('Error during test cleanup:', error);
+    }
+  };
+
+  return { adapter, runtime, cleanup };
 }
 
 /**
- * Creates a properly isolated test database with automatic cleanup.
- * This function ensures each test has its own isolated database state.
- *
- * @param testName - A unique name for this test to ensure isolation
- * @param testPlugins - Additional plugins to load
- * @returns Database adapter, runtime, and cleanup function
+ * Creates an isolated test database for testing purposes.
+ * This is a simplified version that only creates the adapter.
  */
 export async function createIsolatedTestDatabase(
-  testName: string,
-  testPlugins: Plugin[] = []
-): Promise<{
-  adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
-  runtime: AgentRuntime;
-  cleanup: () => Promise<void>;
-  testAgentId: UUID;
-}> {
-  // Generate a unique agent ID for this test
-  const testAgentId = v4() as UUID;
-  const testId = testName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+  testName: string
+): Promise<{ adapter: PgAdapter; cleanup: () => Promise<void> }> {
+  // Skip test if no PostgreSQL URL is provided
+  if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
+    throw new Error(
+      'PostgreSQL connection required for tests. Please set POSTGRES_URL or TEST_POSTGRES_URL environment variable.'
+    );
+  }
 
-  if (process.env.POSTGRES_URL) {
-    // PostgreSQL - use unique schema per test
-    const schemaName = `test_${testId}_${Date.now()}`;
-    console.log(`[TEST] Creating isolated PostgreSQL schema: ${schemaName}`);
+  const testAgentId = stringToUuid(`test-${testName}-${Date.now()}`);
+  const postgresUrl = process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL!;
 
-    const connectionManager = new PostgresConnectionManager(process.env.POSTGRES_URL);
-    const adapter = new PgDatabaseAdapter(testAgentId, connectionManager);
-    await adapter.init();
+  const manager = new PgManager({
+    connectionString: postgresUrl,
+    ssl: false,
+  });
 
-    const runtime = new AgentRuntime({
-      character: { ...mockCharacter, id: undefined },
-      agentId: testAgentId,
-      plugins: [sqlPlugin, ...testPlugins],
-    });
-    runtime.registerDatabaseAdapter(adapter);
+  await manager.connect();
 
-    const db = connectionManager.getDatabase();
+  const adapter = new PgAdapter(testAgentId, manager);
+  await adapter.init();
 
-    // Create isolated schema
-    await db.execute(sql.raw(`CREATE SCHEMA ${schemaName}`));
-    // Include public in search path so we can access the vector extension
-    await db.execute(sql.raw(`SET search_path TO ${schemaName}, public`));
+  const cleanup = async () => {
+    try {
+      // Clean up test data
+      await adapter.query('DELETE FROM memories WHERE agent_id = $1', [testAgentId]);
+      await adapter.query('DELETE FROM entities WHERE agent_id = $1', [testAgentId]);
+      await adapter.query('DELETE FROM rooms WHERE agent_id = $1', [testAgentId]);
+      await adapter.query('DELETE FROM agents WHERE id = $1', [testAgentId]);
 
-    // Run migrations in isolated schema
-    const migrationService = new DatabaseMigrationService();
-    await migrationService.initializeWithDatabase(db);
-    migrationService.discoverAndRegisterPluginSchemas([sqlPlugin, ...testPlugins]);
-    await migrationService.runAllPluginMigrations();
-
-    // Create test agent
-    await adapter.createAgent({
-      id: testAgentId,
-      ...mockCharacter,
-    } as any);
-
-    const cleanup = async () => {
-      try {
-        await db.execute(sql.raw(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`));
-      } catch (error) {
-        console.error(`[TEST] Failed to drop schema ${schemaName}:`, error);
-      }
       await adapter.close();
-    };
+      await manager.close();
+    } catch (error) {
+      console.warn('Error during isolated test cleanup:', error);
+    }
+  };
 
-    return { adapter, runtime, cleanup, testAgentId };
-  } else {
-    // PGLite - use unique directory per test
-    const tempDir = path.join(os.tmpdir(), `eliza-test-${testId}-${Date.now()}`);
-    console.log(`[TEST] Creating isolated PGLite database: ${tempDir}`);
+  return { adapter, cleanup };
+}
 
-    const connectionManager = new PGliteClientManager({ dataDir: tempDir });
-    await connectionManager.initialize();
-    const adapter = new PgliteDatabaseAdapter(testAgentId, connectionManager);
-    await adapter.init();
+/**
+ * Creates a test database adapter for testing with PostgreSQL.
+ * Uses environment variables to determine connection.
+ */
+export async function createTestAdapter(agentId?: UUID): Promise<PgAdapter> {
+  const testAgentId = agentId || stringToUuid(`test-${Date.now()}`);
 
-    const runtime = new AgentRuntime({
-      character: { ...mockCharacter, id: undefined },
-      agentId: testAgentId,
-      plugins: [sqlPlugin, ...testPlugins],
-    });
-    runtime.registerDatabaseAdapter(adapter);
+  // Skip if no PostgreSQL URL is provided
+  if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
+    throw new Error(
+      'PostgreSQL connection required for tests. Please set POSTGRES_URL or TEST_POSTGRES_URL environment variable.'
+    );
+  }
 
-    // Run migrations
-    const migrationService = new DatabaseMigrationService();
-    await migrationService.initializeWithDatabase(adapter.getDatabase());
-    migrationService.discoverAndRegisterPluginSchemas([sqlPlugin, ...testPlugins]);
-    await migrationService.runAllPluginMigrations();
+  const postgresUrl = process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL!;
 
-    // Create test agent
-    await adapter.createAgent({
-      id: testAgentId,
-      ...mockCharacter,
-    } as any);
+  const manager = new PgManager({
+    connectionString: postgresUrl,
+    ssl: false,
+  });
 
-    const cleanup = async () => {
-      await adapter.close();
-      try {
-        fs.rmSync(tempDir, { recursive: true, force: true });
-      } catch (error) {
-        console.error(`[TEST] Failed to remove temp directory ${tempDir}:`, error);
-      }
-    };
+  await manager.connect();
 
-    return { adapter, runtime, cleanup, testAgentId };
+  const adapter = new PgAdapter(testAgentId, manager);
+  await adapter.init();
+
+  return adapter;
+}
+
+/**
+ * Helper to skip tests when PostgreSQL is not available
+ */
+export function skipIfNoPostgres(): boolean {
+  return !process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL;
+}
+
+/**
+ * Get the connection string for tests
+ */
+export function getTestConnectionString(): string {
+  return process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL || '';
+}
+
+/**
+ * Clean up test data for a specific agent
+ */
+export async function cleanupTestData(adapter: PgAdapter, agentId: UUID): Promise<void> {
+  try {
+    await adapter.query('DELETE FROM memories WHERE agent_id = $1', [agentId]);
+    await adapter.query('DELETE FROM entities WHERE agent_id = $1', [agentId]);
+    await adapter.query('DELETE FROM rooms WHERE agent_id = $1', [agentId]);
+    await adapter.query('DELETE FROM agents WHERE id = $1', [agentId]);
+  } catch (error) {
+    console.warn('Error cleaning up test data:', error);
   }
 }

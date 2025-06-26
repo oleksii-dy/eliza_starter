@@ -1,21 +1,23 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { createIsolatedTestDatabase } from '../test-helpers';
 import { v4 as uuidv4 } from 'uuid';
-import type { Entity, UUID } from '@elizaos/core';
+import type { Entity, UUID, AgentRuntime } from '@elizaos/core';
 import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
 
 describe('Entity Methods Integration Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter | PgDatabaseAdapter;
+  let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
 
   beforeAll(async () => {
     const setup = await createIsolatedTestDatabase('entity-methods');
     adapter = setup.adapter;
+    runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {
@@ -36,14 +38,14 @@ describe('Entity Methods Integration Tests', () => {
       await adapter.createEntities([entity]);
 
       // Verify it exists
-      let retrieved = await adapter.getEntityByIds([entity.id!]);
+      let retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved).toHaveLength(1);
 
       // Delete entity
       await adapter.deleteEntity(entity.id!);
 
       // Verify it's deleted
-      retrieved = await adapter.getEntityByIds([entity.id!]);
+      retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved).toHaveLength(0);
     });
 

@@ -1,7 +1,15 @@
-import { describe, expect, it, spyOn, beforeEach, afterAll, beforeAll } from 'bun:test';
+import { describe, expect, it, spyOn, beforeEach, afterAll, beforeAll, Mock } from 'bun:test';
 import { starterPlugin, StarterService } from '../index';
 import { createMockRuntime, setupLoggerSpies, MockRuntime } from './test-utils';
-import { HandlerCallback, IAgentRuntime, Memory, State, UUID, logger } from '@elizaos/core';
+import {
+  HandlerCallback,
+  IAgentRuntime,
+  Memory,
+  State,
+  UUID,
+  logger,
+  Service,
+} from '@elizaos/core';
 
 /**
  * Integration tests demonstrate how multiple components of the plugin work together.
@@ -33,7 +41,7 @@ describe('Integration: HelloWorld Action with StarterService', () => {
     };
 
     // Create a mock runtime with a spied getService method
-    const getServiceImpl = (serviceType) => {
+    const getServiceImpl = (serviceType: string) => {
       if (serviceType === 'starter') {
         return mockService;
       }
@@ -41,7 +49,7 @@ describe('Integration: HelloWorld Action with StarterService', () => {
     };
 
     mockRuntime = createMockRuntime({
-      getService: getServiceImpl,
+      getService: getServiceImpl as Mock<(serviceType: string) => any>,
     });
   });
 
@@ -70,8 +78,8 @@ describe('Integration: HelloWorld Action with StarterService', () => {
     };
 
     // Create a mock callback to capture the response
-    const callbackCalls = [];
-    const callbackFn = (...args) => {
+    const callbackCalls: any[][] = [];
+    const callbackFn = (...args: any[]) => {
       callbackCalls.push(args);
     };
 
@@ -107,10 +115,10 @@ describe('Integration: Plugin initialization and service registration', () => {
     const mockRuntime = createMockRuntime();
 
     // Create and install a mock registerService
-    const registerServiceCalls = [];
-    mockRuntime.registerService = (type, service) => {
+    const registerServiceCalls: any[] = [];
+    mockRuntime.registerService = ((type: any, service: any) => {
       registerServiceCalls.push({ type, service });
-    };
+    }) as Mock<(...args: any[]) => any>;
 
     // Run a minimal simulation of the plugin initialization process
     if (starterPlugin.init) {
@@ -123,12 +131,14 @@ describe('Integration: Plugin initialization and service registration', () => {
       // because unit tests don't run the full agent initialization flow
       if (starterPlugin.services) {
         const StarterServiceClass = starterPlugin.services[0];
-        const serviceInstance = await StarterServiceClass.start(
-          mockRuntime as unknown as IAgentRuntime
-        );
+        const serviceClass =
+          typeof StarterServiceClass === 'function'
+            ? StarterServiceClass
+            : StarterServiceClass.component;
+        const serviceInstance = await serviceClass.start(mockRuntime as unknown as IAgentRuntime);
 
         // Register the Service class to match the core API
-        mockRuntime.registerService(StarterServiceClass);
+        mockRuntime.registerService(serviceClass);
       }
 
       // Now verify the service was registered with the runtime

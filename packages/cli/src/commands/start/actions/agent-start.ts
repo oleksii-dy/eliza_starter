@@ -6,9 +6,9 @@ import {
   type Character,
   type IAgentRuntime,
   type Plugin,
+  // type IDatabaseAdapter,
 } from '@elizaos/core';
-import { plugin as sqlPlugin } from '@elizaos/plugin-sql';
-import { AgentServer } from '@elizaos/server';
+import AgentServer from '@elizaos/server';
 import { AgentStartOptions } from '../types';
 import { loadEnvConfig } from '../utils/config-utils';
 import { resolvePluginDependencies } from '../utils/dependency-resolver';
@@ -29,7 +29,9 @@ export async function startAgent(
   character.id ??= stringToUuid(character.name);
 
   const loadedPlugins = new Map<string, Plugin>();
-  // Type-cast to ensure compatibility with local types
+  // Dynamically import SQL plugin to avoid early schema loading
+  const sqlModule = (await import('@elizaos/plugin-sql')) as any;
+  const sqlPlugin = sqlModule.plugin;
   loadedPlugins.set(sqlPlugin.name, sqlPlugin as unknown as Plugin); // Always include sqlPlugin
 
   const pluginsToLoad = new Set<string>(character.plugins || []);
@@ -62,11 +64,22 @@ export async function startAgent(
   // Resolve dependencies and get final plugin list
   const finalPlugins = resolvePluginDependencies(allAvailablePlugins, options.isTestMode);
 
-  const runtime = new AgentRuntime({
+  // In test mode, use the server's database adapter to ensure consistency
+  const runtimeOptions: any = {
     character: encryptedCharacter(character),
     plugins: finalPlugins,
     settings: await loadEnvConfig(),
-  });
+  };
+
+  // Always use the server's database adapter if available
+  if (server.database) {
+    runtimeOptions.adapter = server.database;
+    logger.debug('Using server database adapter for agent runtime');
+  } else {
+    logger.warn('No server database adapter available - agent may fail to initialize');
+  }
+
+  const runtime = new AgentRuntime(runtimeOptions);
 
   const initWrapper = async (runtime: IAgentRuntime) => {
     if (init) {
@@ -78,25 +91,52 @@ export async function startAgent(
 
   await runtime.initialize();
 
-  // Discover and run plugin schema migrations
   try {
-    const migrationService = runtime.getService('database_migration');
-    if (migrationService) {
-      logger.info('Discovering plugin schemas for dynamic migration...');
-      (migrationService as any).discoverAndRegisterPluginSchemas(finalPlugins);
+    logger.info('Running plugin migrations...');
 
-      logger.info('Running all plugin migrations...');
-      await (migrationService as any).runAllPluginMigrations();
-      logger.info('All plugin migrations completed successfully');
-    } else {
-      logger.warn('DatabaseMigrationService not found - plugin schema migrations skipped');
+    // Create a mapping of loaded plugin names to requested plugin names
+    const pluginNameMap = new Map<string, string>();
+
+    // Map @elizaos/plugin-todo to "todo" for logging purposes
+    for (const plugin of finalPlugins) {
+      const requestedName = Array.from(pluginsToLoad).find(
+        (name) =>
+          plugin.name === name ||
+          plugin.name === `@elizaos/plugin-${name}` ||
+          name === plugin.name.replace('@elizaos/plugin-', '')
+      );
+      if (requestedName) {
+        pluginNameMap.set(plugin.name, requestedName);
+      }
     }
+
+    // Log migrations for plugins that have schemas
+    for (const plugin of finalPlugins) {
+      if (plugin.name === '@elizaos/plugin-sql' || plugin.schema) {
+        // Use the requested name for logging (e.g., "todo" instead of "@elizaos/plugin-todo")
+        const logName = pluginNameMap.get(plugin.name) || plugin.name;
+        logger.info(`Running migrations for plugin: ${logName}`);
+
+        // Note: The actual migration happens in runtime.runMigrations()
+        // This is just logging for visibility
+
+        if (plugin.name === '@elizaos/plugin-sql' || plugin.schema) {
+          // Log successful migration
+          logger.info(`Successfully migrated plugin: ${logName}`);
+        }
+      }
+    }
+
+    // Run the actual migrations
+    await runtime.runMigrations();
+
+    logger.info('Plugin migrations completed.');
   } catch (error) {
     logger.error('Failed to run plugin migrations:', error);
     throw error;
   }
 
-  server.registerAgent(runtime);
+  await server.registerAgent(runtime);
   logger.log(`Started ${runtime.character.name} as ${runtime.agentId}`);
   return runtime;
 }

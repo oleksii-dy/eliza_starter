@@ -1,0 +1,12 @@
+.turbo
+dist
+node_modules
+
+.eliza
+.elizadb
+.elizadb*
+.env
+.cursor
+coverage
+cypress/screenshots
+docs

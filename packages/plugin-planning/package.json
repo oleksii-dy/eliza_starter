@@ -1,0 +1,37 @@
+{
+  "name": "@elizaos/plugin-planning",
+  "version": "0.1.0",
+  "description": "Planning and execution plugin for ElizaOS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "npm run typecheck && tsup src/index.ts --format esm --dts --external @elizaos/core",
+    "dev": "bun run build.ts --watch",
+    "test": "elizaos test",
+    "test:coverage": "bun test --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\"",
+    "benchmark": "tsx scripts/run-benchmarks.ts",
+    "benchmark:verbose": "tsx scripts/run-benchmarks.ts --verbose",
+    "benchmark:quick": "tsx scripts/run-benchmarks.ts --max-tests 20 --timeout 30000",
+    "benchmark:realm": "tsx scripts/run-realm-benchmark.ts"
+  },
+  "dependencies": {
+    "@elizaos/core": "workspace:*",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "5.8.3",
+    "uuid": "^11.1.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "license": "MIT"
+}

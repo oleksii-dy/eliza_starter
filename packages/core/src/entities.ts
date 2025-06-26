@@ -1,6 +1,6 @@
 import { stringToUuid } from './index';
 import { logger } from './logger';
-import { composePrompt, parseJSONObjectFromText } from './utils';
+import { composePrompt, parseKeyValueXml } from './utils';
 import {
   type Entity,
   type IAgentRuntime,
@@ -43,20 +43,21 @@ Agent: {{agentName}} (ID: {{agentId}})
 5. If multiple matches exist, use context to disambiguate
 6. Consider recent interactions and relationship strength when resolving ambiguity
 
-Return a JSON object with:
-\`\`\`json
-{
-  "entityId": "exact-id-if-known-otherwise-null",
-  "type": "EXACT_MATCH | USERNAME_MATCH | NAME_MATCH | RELATIONSHIP_MATCH | AMBIGUOUS | UNKNOWN",
-  "matches": [{
-    "name": "matched-name",
-    "reason": "why this entity matches"
-  }]
-}
-\`\`\`
+Return an XML object with these fields:
+<response>
+  <entityId>Exact entity ID if known, otherwise empty</entityId>
+  <type>EXACT_MATCH, USERNAME_MATCH, NAME_MATCH, RELATIONSHIP_MATCH, AMBIGUOUS, or UNKNOWN</type>
+  <matchName>First matched name</matchName>
+  <matchReason>Reason for the match</matchReason>
+</response>
 
-Make sure to include the \`\`\`json\`\`\` tags around the JSON object.
-`;
+## Example Output Format
+<response>
+  <entityId>uuid-123-456</entityId>
+  <type>EXACT_MATCH</type>
+  <matchName>john_doe</matchName>
+  <matchReason>Username matches exactly</matchReason>
+</response>`;
 
 /**
  * Get recent interactions between a source entity and candidate entities in a specific room.
@@ -75,7 +76,7 @@ async function getRecentInteractions(
   roomId: UUID,
   relationships: Relationship[]
 ): Promise<{ entity: Entity; interactions: Memory[]; count: number }[]> {
-  const results = [];
+  const results: { entity: Entity; interactions: Memory[]; count: number }[] = [];
 
   // Get recent messages from the room - just for context
   const recentMessages = await runtime.getMemories({
@@ -151,7 +152,9 @@ export async function findEntityByName(
   // Filter components for each entity based on permissions
   const filteredEntities = await Promise.all(
     entitiesInRoom.map(async (entity) => {
-      if (!entity.components) return entity;
+      if (!entity.components) {
+        return entity;
+      }
 
       // Get world roles if we have a world
       const worldRoles = world?.metadata?.roles || {};
@@ -159,16 +162,22 @@ export async function findEntityByName(
       // Filter components based on permissions
       entity.components = entity.components.filter((component) => {
         // 1. Pass if sourceEntityId matches the requesting entity
-        if (component.sourceEntityId === message.entityId) return true;
+        if (component.sourceEntityId === message.entityId) {
+          return true;
+        }
 
         // 2. Pass if sourceEntityId is an owner/admin of the current world
         if (world && component.sourceEntityId) {
           const sourceRole = worldRoles[component.sourceEntityId];
-          if (sourceRole === 'OWNER' || sourceRole === 'ADMIN') return true;
+          if (sourceRole === 'OWNER' || sourceRole === 'ADMIN') {
+            return true;
+          }
         }
 
         // 3. Pass if sourceEntityId is the agentId
-        if (component.sourceEntityId === runtime.agentId) return true;
+        if (component.sourceEntityId === runtime.agentId) {
+          return true;
+        }
 
         // Filter out components that don't meet any criteria
         return false;
@@ -226,7 +235,7 @@ export async function findEntityByName(
   });
 
   // Parse LLM response
-  const resolution = parseJSONObjectFromText(result);
+  const resolution = parseKeyValueXml(result);
   if (!resolution) {
     logger.warn('Failed to parse entity resolution result');
     return null;
@@ -240,12 +249,18 @@ export async function findEntityByName(
       if (entity.components) {
         const worldRoles = world?.metadata?.roles || {};
         entity.components = entity.components.filter((component) => {
-          if (component.sourceEntityId === message.entityId) return true;
+          if (component.sourceEntityId === message.entityId) {
+            return true;
+          }
           if (world && component.sourceEntityId) {
             const sourceRole = worldRoles[component.sourceEntityId];
-            if (sourceRole === 'OWNER' || sourceRole === 'ADMIN') return true;
+            if (sourceRole === 'OWNER' || sourceRole === 'ADMIN') {
+              return true;
+            }
           }
-          if (component.sourceEntityId === runtime.agentId) return true;
+          if (component.sourceEntityId === runtime.agentId) {
+            return true;
+          }
           return false;
         });
       }
@@ -254,13 +269,15 @@ export async function findEntityByName(
   }
 
   // For username/name/relationship matches, search through all entities
-  if (resolution.matches?.[0]?.name) {
-    const matchName = resolution.matches[0].name.toLowerCase();
+  if (resolution.matchName) {
+    const matchName = resolution.matchName.toLowerCase();
 
     // Find matching entity by username/handle in components or by name
     const matchingEntity = allEntities.find((entity) => {
       // Check names
-      if (entity.names.some((n) => n.toLowerCase() === matchName)) return true;
+      if (entity.names.some((n) => n.toLowerCase() === matchName)) {
+        return true;
+      }
 
       // Check components for username/handle match
       return entity.components?.some(
@@ -293,7 +310,7 @@ export async function findEntityByName(
  * @param {UUID|string} baseUserId - The base user ID to use in generating the UUID.
  * @returns {UUID} - The unique UUID generated based on the runtime and base user ID.
  */
-export const createUniqueUuid = (runtime, baseUserId: UUID | string): UUID => {
+export const createUniqueUuid = (runtime: IAgentRuntime, baseUserId: UUID | string): UUID => {
   // If the base user ID is the agent ID, return it directly
   if (baseUserId === runtime.agentId) {
     return runtime.agentId;
@@ -336,16 +353,18 @@ export async function getEntityDetails({
 
   // Process entities in a single pass
   for (const entity of roomEntities) {
-    if (uniqueEntities.has(entity.id)) continue;
+    if (uniqueEntities.has(entity.id)) {
+      continue;
+    }
 
     // Merge component data more efficiently
-    const allData = {};
+    const allData: Record<string, any> = {};
     for (const component of entity.components || []) {
       Object.assign(allData, component.data);
     }
 
     // Process merged data
-    const mergedData = {};
+    const mergedData: Record<string, any> = {};
     for (const [key, value] of Object.entries(allData)) {
       if (!mergedData[key]) {
         mergedData[key] = value;
@@ -364,7 +383,7 @@ export async function getEntityDetails({
     uniqueEntities.set(entity.id, {
       id: entity.id,
       name: room?.source
-        ? (entity.metadata[room.source] as { name?: string })?.name || entity.names[0]
+        ? (entity.metadata?.[room.source] as { name?: string })?.name || entity.names[0]
         : entity.names[0],
       names: entity.names,
       data: JSON.stringify({ ...mergedData, ...entity.metadata }),
@@ -392,4 +411,87 @@ export function formatEntities({ entities }: { entities: Entity[] }) {
     return header;
   });
   return entityStrings.join('\n');
+}
+
+/**
+ * Calculate relationship strength based on interaction patterns
+ *
+ * @param {Object} params - Parameters for calculating relationship strength
+ * @param {number} params.interactionCount - Total number of interactions
+ * @param {string} params.lastInteractionAt - ISO timestamp of last interaction
+ * @param {number} params.messageQuality - Average quality score of messages (0-10)
+ * @param {string} params.relationshipType - Type of relationship
+ * @returns {number} Relationship strength score (0-100)
+ */
+export function calculateRelationshipStrength({
+  interactionCount,
+  lastInteractionAt,
+  messageQuality = 5,
+  relationshipType = 'acquaintance',
+}: {
+  interactionCount: number;
+  lastInteractionAt?: string;
+  messageQuality?: number;
+  relationshipType?: string;
+}): number {
+  // Base score from interaction count (max 40 points)
+  const interactionScore = Math.min(interactionCount * 2, 40);
+
+  // Recency score (max 30 points)
+  let recencyScore = 0;
+  if (lastInteractionAt) {
+    const daysSinceLastInteraction =
+      (Date.now() - new Date(lastInteractionAt).getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSinceLastInteraction < 1) {
+      recencyScore = 30;
+    } else if (daysSinceLastInteraction < 7) {
+      recencyScore = 25;
+    } else if (daysSinceLastInteraction < 30) {
+      recencyScore = 20;
+    } else if (daysSinceLastInteraction < 90) {
+      recencyScore = 10;
+    } else {
+      recencyScore = 5;
+    }
+  }
+
+  // Quality score (max 20 points)
+  const qualityScore = (messageQuality / 10) * 20;
+
+  // Relationship type bonus (max 10 points)
+  const relationshipBonus =
+    {
+      family: 10,
+      friend: 8,
+      colleague: 6,
+      acquaintance: 4,
+      unknown: 0,
+    }[relationshipType] || 0;
+
+  // Calculate total strength
+  const totalStrength = interactionScore + recencyScore + qualityScore + relationshipBonus;
+
+  // Return clamped value between 0 and 100
+  return Math.max(0, Math.min(100, Math.round(totalStrength)));
+}
+
+/**
+ * Entity lifecycle event types
+ */
+export enum EntityLifecycleEvent {
+  CREATED = 'entity:created',
+  UPDATED = 'entity:updated',
+  MERGED = 'entity:merged',
+  RESOLVED = 'entity:resolved',
+}
+
+/**
+ * Entity event data structure
+ */
+export interface EntityEventData {
+  entity: Entity;
+  previousEntity?: Entity;
+  mergedEntities?: Entity[];
+  source?: string;
+  confidence?: number;
 }

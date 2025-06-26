@@ -1,7 +1,7 @@
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { validateUuid, logger, createUniqueUuid } from '@elizaos/core';
 import express from 'express';
-import { sendError, sendSuccess } from '../shared/response-utils';
+import { sendError, sendSuccess } from '../shared/responseUtils';
 
 /**
  * Agent world management operations

@@ -6,7 +6,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'bun:test'
 import { AgentServer, CentralRootMessage } from '../../index';
 import type { IAgentRuntime, UUID, Character } from '@elizaos/core';
 import { ChannelType, AgentRuntime } from '@elizaos/core';
-import { createDatabaseAdapter } from '@elizaos/plugin-sql';
+// Database adapter created through server initialization
 import path from 'node:path';
 import fs from 'node:fs';
 
@@ -33,23 +33,14 @@ describe('Agent-Server Interaction Integration Tests', () => {
       name: 'Agent One',
       bio: ['First test agent'],
       topics: [],
-      clients: [],
       plugins: [],
       settings: {
-        model: 'gpt-4',
         secrets: {},
       },
-      modelProvider: 'openai',
     } as Character;
 
-    const db1 = createDatabaseAdapter(
-      {
-        dataDir: testDbPath,
-      },
-      'agent-1' as UUID
-    );
-
-    await db1.init();
+    // Database adapter will be created through server initialization
+    const db1 = agentServer.database;
 
     agent1 = new AgentRuntime({
       agentId: 'agent-1' as UUID,
@@ -64,23 +55,15 @@ describe('Agent-Server Interaction Integration Tests', () => {
       name: 'Agent Two',
       bio: ['Second test agent'],
       topics: [],
-      clients: [],
       plugins: [],
       settings: {
         model: 'gpt-3.5-turbo',
         secrets: {},
       },
-      modelProvider: 'openai',
     } as Character;
 
-    const db2 = createDatabaseAdapter(
-      {
-        dataDir: testDbPath,
-      },
-      'agent-2' as UUID
-    );
-
-    await db2.init();
+    // Database adapter will be created through server initialization
+    const db2 = agentServer.database;
 
     agent2 = new AgentRuntime({
       agentId: 'agent-2' as UUID,
@@ -213,14 +196,14 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Test Channel',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId,
         metadata: {},
       });
 
       expect(channel).toBeDefined();
       expect(channel.name).toBe('Test Channel');
       expect(channel.type).toBe(ChannelType.GROUP);
-      expect(channel.messageServerId).toBe(serverId);
+      expect(channel.serverId).toBe(serverId);
 
       // Verify channel was created
       const channelDetails = await agentServer.getChannelDetails(channel.id);
@@ -236,7 +219,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
         {
           name: 'Group Chat',
           type: ChannelType.GROUP,
-          messageServerId: serverId,
+          serverId,
           metadata: {},
         },
         [userId1, userId2]
@@ -252,7 +235,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Empty Channel',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId,
         metadata: {},
       });
 
@@ -267,7 +250,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Original Name',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId,
         metadata: { original: true },
       });
 
@@ -284,7 +267,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'To Be Deleted',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId,
         metadata: {},
       });
 
@@ -321,7 +304,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Message Test Channel',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId,
         metadata: {},
       });
       channelId = channel.id;

@@ -53,7 +53,7 @@ export async function ensureBunAvailable(): Promise<boolean> {
     const { execa } = await import('execa');
     await execa('bun', ['--version'], { stdio: 'ignore' });
     return true;
-  } catch (error) {
+  } catch {
     displayBunInstallationTips();
     return false;
   }

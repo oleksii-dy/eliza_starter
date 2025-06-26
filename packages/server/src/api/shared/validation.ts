@@ -1,6 +1,9 @@
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { validateUuid, logger } from '@elizaos/core';
 
+// Re-export validation utilities from middleware
+export { validateRequest, CommonSchemas } from '../../middleware/ValidationMiddleware';
+
 /**
  * Validates and retrieves an agent runtime from the agents map
  */

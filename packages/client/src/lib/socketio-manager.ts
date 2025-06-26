@@ -15,17 +15,17 @@ export type MessageBroadcastData = {
   createdAt: number;
   source: string;
   name: string; // Required for ContentWithUser compatibility
-  attachments?: any[];
+  attachments?: unknown[];
   thought?: string; // Agent's thought process
   actions?: string[]; // Actions taken by the agent
   prompt?: string; // The LLM prompt used to generate this message
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export type MessageCompleteData = {
   channelId: string;
   roomId?: string; // Deprecated - for backward compatibility only
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 // Define type for control messages
@@ -34,7 +34,7 @@ export type ControlMessageData = {
   target?: string;
   channelId: string;
   roomId?: string; // Deprecated - for backward compatibility only
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 // Define type for message deletion events
@@ -42,21 +42,21 @@ export type MessageDeletedData = {
   messageId: string;
   channelId: string;
   roomId?: string; // Deprecated - for backward compatibility only
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 // Define type for channel cleared events
 export type ChannelClearedData = {
   channelId: string;
   roomId?: string; // Deprecated - for backward compatibility only
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 // Define type for channel deleted events
 export type ChannelDeletedData = {
   channelId: string;
   roomId?: string; // Deprecated - for backward compatibility only
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 // Define type for log stream messages
@@ -73,7 +73,7 @@ export type LogStreamData = {
 
 // A simple class that provides EventEmitter-like interface using Evt internally
 class EventAdapter {
-  private events: Record<string, Evt<any>> = {};
+  private events: Record<string, Evt<unknown>> = {};
 
   constructor() {
     // Initialize common events
@@ -86,7 +86,7 @@ class EventAdapter {
     this.events.logStream = Evt.create<LogStreamData>();
   }
 
-  on(eventName: string, listener: (...args: any[]) => void) {
+  on(eventName: string, listener: (...args: unknown[]) => void) {
     if (!this.events[eventName]) {
       this.events[eventName] = Evt.create();
     }
@@ -95,7 +95,7 @@ class EventAdapter {
     return this;
   }
 
-  off(eventName: string, listener: (...args: any[]) => void) {
+  off(eventName: string, listener: (...args: unknown[]) => void) {
     if (this.events[eventName]) {
       const handlers = this.events[eventName].getHandlers();
       for (const handler of handlers) {
@@ -107,14 +107,14 @@ class EventAdapter {
     return this;
   }
 
-  emit(eventName: string, ...args: any[]) {
+  emit(eventName: string, ...args: unknown[]) {
     if (this.events[eventName]) {
       this.events[eventName].post(args.length === 1 ? args[0] : args);
     }
     return this;
   }
 
-  once(eventName: string, listener: (...args: any[]) => void) {
+  once(eventName: string, listener: (...args: unknown[]) => void) {
     if (!this.events[eventName]) {
       this.events[eventName] = Evt.create();
     }
@@ -125,12 +125,14 @@ class EventAdapter {
 
   // For checking if EventEmitter has listeners
   listenerCount(eventName: string): number {
-    if (!this.events[eventName]) return 0;
+    if (!this.events[eventName]) {
+      return 0;
+    }
     return this.events[eventName].getHandlers().length;
   }
 
   // Used only for internal access to the Evt instances
-  _getEvt(eventName: string): Evt<any> | undefined {
+  _getEvt(eventName: string): Evt<unknown> | undefined {
     return this.events[eventName];
   }
 }
@@ -211,7 +213,7 @@ export class SocketIOManager extends EventAdapter {
     }
 
     // Create a single socket connection
-    const fullURL = window.location.origin + '/';
+    const fullURL = `${window.location.origin}/`;
     clientLogger.info('connecting to', fullURL);
     this.socket = io(fullURL, {
       autoConnect: true,
@@ -249,7 +251,7 @@ export class SocketIOManager extends EventAdapter {
     });
 
     this.socket.on('messageBroadcast', (data: MessageBroadcastData) => {
-      clientLogger.info(`[SocketIO] Message broadcast received:`, data);
+      clientLogger.info('[SocketIO] Message broadcast received:', data);
 
       // Log the full data structure to understand formats
       clientLogger.debug('[SocketIO] Message broadcast data structure:', {
@@ -282,7 +284,7 @@ export class SocketIOManager extends EventAdapter {
         // Post the message to the event for UI updates
         this.emit('messageBroadcast', {
           ...data,
-          channelId: channelId, // Ensure channelId is always set
+          channelId, // Ensure channelId is always set
           roomId: channelId, // Keep roomId for backward compatibility
           name: data.senderName, // Required for ContentWithUser compatibility in some older UI parts
         });
@@ -300,7 +302,7 @@ export class SocketIOManager extends EventAdapter {
 
     // Listen for control messages
     this.socket.on('controlMessage', (data) => {
-      clientLogger.info(`[SocketIO] Control message received:`, data);
+      clientLogger.info('[SocketIO] Control message received:', data);
 
       // Check if this is for one of our active channels
       const channelId = data.channelId || data.roomId; // Handle both new and old message format
@@ -310,7 +312,7 @@ export class SocketIOManager extends EventAdapter {
         // Emit the control message event
         this.emit('controlMessage', {
           ...data,
-          channelId: channelId, // Ensure channelId is always set
+          channelId, // Ensure channelId is always set
           roomId: channelId, // Keep roomId for backward compatibility
         });
       } else {
@@ -323,7 +325,7 @@ export class SocketIOManager extends EventAdapter {
 
     // Listen for message deletion events
     this.socket.on('messageDeleted', (data) => {
-      clientLogger.debug(`[SocketIO] Message deleted event received:`, data);
+      clientLogger.debug('[SocketIO] Message deleted event received:', data);
 
       // Check if this is for one of our active channels
       const channelId = data.channelId || data.roomId; // Handle both new and old message format
@@ -333,7 +335,7 @@ export class SocketIOManager extends EventAdapter {
         // Emit the message deleted event
         this.emit('messageDeleted', {
           ...data,
-          channelId: channelId, // Ensure channelId is always set
+          channelId, // Ensure channelId is always set
           roomId: channelId, // Deprecated: Retained for backward compatibility with older clients
         });
       } else {
@@ -346,7 +348,7 @@ export class SocketIOManager extends EventAdapter {
 
     // Listen for channel cleared events
     this.socket.on('channelCleared', (data) => {
-      clientLogger.info(`[SocketIO] Channel cleared event received:`, data);
+      clientLogger.info('[SocketIO] Channel cleared event received:', data);
 
       // Check if this is for one of our active channels
       const channelId = data.channelId || data.roomId; // Handle both new and old message format
@@ -356,7 +358,7 @@ export class SocketIOManager extends EventAdapter {
         // Emit the channel cleared event
         this.emit('channelCleared', {
           ...data,
-          channelId: channelId, // Ensure channelId is always set
+          channelId, // Ensure channelId is always set
           roomId: channelId, // Keep roomId for backward compatibility
         });
       } else {
@@ -369,7 +371,7 @@ export class SocketIOManager extends EventAdapter {
 
     // Listen for channel deleted events
     this.socket.on('channelDeleted', (data) => {
-      clientLogger.info(`[SocketIO] Channel deleted event received:`, data);
+      clientLogger.info('[SocketIO] Channel deleted event received:', data);
 
       // Check if this is for one of our active channels
       const channelId = data.channelId || data.roomId; // Handle both new and old message format
@@ -379,7 +381,7 @@ export class SocketIOManager extends EventAdapter {
         // Emit the channel deleted event (same as cleared for now)
         this.emit('channelDeleted', {
           ...data,
-          channelId: channelId, // Ensure channelId is always set
+          channelId, // Ensure channelId is always set
           roomId: channelId, // Keep roomId for backward compatibility
         });
       } else {
@@ -463,7 +465,7 @@ export class SocketIOManager extends EventAdapter {
     this.socket.emit('message', {
       type: SOCKET_MESSAGE_TYPE.ROOM_JOINING,
       payload: {
-        channelId: channelId,
+        channelId,
         roomId: channelId, // Keep for backward compatibility
         entityId: this.clientEntityId,
       },
@@ -523,9 +525,9 @@ export class SocketIOManager extends EventAdapter {
     channelId: string,
     serverId: string,
     source: string,
-    attachments?: any[],
+    attachments?: unknown[],
     messageId?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     if (!this.socket) {
       clientLogger.error('[SocketIO] Cannot send message: socket not initialized');
@@ -551,9 +553,9 @@ export class SocketIOManager extends EventAdapter {
         senderId: this.clientEntityId,
         senderName: USER_NAME,
         message,
-        channelId: channelId,
+        channelId,
         roomId: channelId, // Keep for backward compatibility
-        serverId: serverId, // Client uses serverId, not worldId
+        serverId, // Client uses serverId, not worldId
         messageId: finalMessageId,
         source,
         attachments,

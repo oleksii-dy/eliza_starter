@@ -143,13 +143,13 @@ export class PluginCreator {
       // Step 6: Copy to current directory
       const targetPath = await this.copyToCWD();
 
-      logger.info(`✅ Plugin successfully created!`);
+      logger.info('✅ Plugin successfully created!');
       logger.info(`📁 Plugin location: ${targetPath}`);
-      logger.info(`\n📌 Next steps:`);
+      logger.info('\n📌 Next steps:');
       logger.info(`1. cd ${path.basename(targetPath)}`);
-      logger.info(`2. Review the generated code`);
-      logger.info(`3. Run tests: bun test`);
-      logger.info(`4. Add to your ElizaOS project\n`);
+      logger.info('2. Review the generated code');
+      logger.info('3. Run tests: bun test');
+      logger.info('4. Add to your ElizaOS project\n');
 
       return {
         success: true,
@@ -307,7 +307,7 @@ export class PluginCreator {
           stdio: 'pipe',
         }
       );
-    } catch (error) {
+    } catch {
       // Fallback to manual creation if elizaos create fails
       logger.warn('Failed to use elizaos create, creating structure manually');
       await this.createPluginStructureManually(pluginName);
@@ -480,7 +480,7 @@ This plugin MUST work with both Pglite and PostgreSQL. The specification must in
 ### 2. Import Requirements (MANDATORY)
 - ALL imports must come from @elizaos/core ONLY
 - NO imports from @elizaos/plugin, @elizaos/types, @elizaos/logger (these don't exist)
-- Use: import { Plugin, Action, AgentRuntime, logger, Memory, State } from '@elizaos/core'
+- Use: import { Plugin, Action, AgentRuntime, logger, Memory } from '@elizaos/core'
 
 ## Task
 Generate a detailed technical specification that includes:
@@ -604,15 +604,13 @@ import {
   AgentRuntime,
   logger,
   Memory,
-  State,
-  Content,
   HandlerCallback,
   Service,
 } from '@elizaos/core';
 
 // ❌ WRONG - These packages don't exist
 import { logger } from '@elizaos/logger';
-import { Action } from '@elizaos/types';
+// import { Action } from '@elizaos/types'; // Unused import
 import { PgliteDatabaseAdapter } from '@elizaos/plugin-sql';
 \`\`\`
 
@@ -808,7 +806,8 @@ Remember: Database compatibility is MANDATORY - the plugin MUST work with both P
   }
 
   private async runClaudeCode(): Promise<void> {
-    const prompt = `Please read the PLUGIN_SPEC.md file in this repository and implement the complete plugin as specified. Create all components, tests, and ensure everything is production-ready with no stubs or incomplete code.`;
+    const prompt =
+      'Please read the PLUGIN_SPEC.md file in this repository and implement the complete plugin as specified. Create all components, tests, and ensure everything is production-ready with no stubs or incomplete code.';
     await this.runClaudeCodeWithPrompt(prompt);
   }
 
@@ -901,7 +900,7 @@ Make all necessary changes to fix the issues and ensure the plugin builds and al
 
       return { success: true };
     } catch (error: any) {
-      const errorOutput = (error.stdout || '') + '\n' + (error.stderr || '');
+      const errorOutput = `${error.stdout || ''}\n${error.stderr || ''}`;
       logger.error('Build failed:', errorOutput);
       return { success: false, errors: errorOutput };
     }
@@ -919,7 +918,7 @@ Make all necessary changes to fix the issues and ensure the plugin builds and al
 
       return { success: true };
     } catch (error: any) {
-      const errorOutput = (error.stdout || '') + '\n' + (error.stderr || '');
+      const errorOutput = `${error.stdout || ''}\n${error.stderr || ''}`;
       logger.error('Tests failed:', errorOutput);
       return { success: false, errors: errorOutput };
     }
@@ -1029,7 +1028,9 @@ If ANY of the CRITICAL requirements fail, the plugin is NOT production ready.`;
     const files = await fs.readdir(this.pluginPath!, { recursive: true });
 
     for (const file of files) {
-      if (typeof file !== 'string') continue;
+      if (typeof file !== 'string') {
+        continue;
+      }
 
       const filePath = path.join(this.pluginPath!, file);
       const stat = await fs.stat(filePath);
@@ -1083,9 +1084,9 @@ If ANY of the CRITICAL requirements fail, the plugin is NOT production ready.`;
       const lines = result.stdout.split('\n');
       const dataLine = lines[1];
       const parts = dataLine.split(/\s+/);
-      const availableKB = parseInt(parts[3]);
+      const availableKB = parseInt(parts[3], 10);
       return availableKB / 1024 / 1024; // Convert to GB
-    } catch (error) {
+    } catch {
       logger.warn('Could not check disk space, proceeding anyway');
       return MIN_DISK_SPACE_GB + 1;
     }

@@ -1,0 +1,53 @@
+{
+  "name": "@elizaos/plugin-crossmint",
+  "version": "0.1.7",
+  "description": "CrossMint enterprise blockchain platform plugin with X.402 payment protocol support",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
+    "test:watch": "bun test --watch",
+    "test:integration": "CROSSMINT_API_KEY=$CROSSMINT_API_KEY bun test src/__tests__/e2e/",
+    "test:debug": "node test-utils/test-production.mjs"
+  },
+  "dependencies": {
+    "@elizaos/core": "workspace:*",
+    "@crossmint/server-sdk": "^1.2.27",
+    "axios": "^1.6.0",
+    "node-fetch": "^3.3.2",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/uuid": "^10.0.0",
+    "typescript": "5.8.3"
+  },
+  "keywords": [
+    "eliza",
+    "plugin",
+    "crossmint",
+    "blockchain",
+    "payments",
+    "x402",
+    "mpc",
+    "enterprise",
+    "web3"
+  ],
+  "author": "ElizaOS",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elizaos/eliza.git",
+    "directory": "packages/plugin-crossmint"
+  }
+}

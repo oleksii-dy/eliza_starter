@@ -2,7 +2,7 @@ import { validateUuid, logger } from '@elizaos/core';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { channelUpload, validateMediaFile, processUploadedFile } from '../shared/uploads';
-import { cleanupUploadedFile } from '../shared/file-utils';
+import { cleanupUploadedFile } from '../shared/fileUtils';
 import type fileUpload from 'express-fileupload';
 
 // Using express-fileupload file type

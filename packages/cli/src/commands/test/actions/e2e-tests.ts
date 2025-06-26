@@ -1,21 +1,39 @@
 import { loadProject } from '@/src/project';
-import { AgentServer, jsonToCharacter, loadCharacterTryPath } from '@elizaos/server';
+import AgentServer from '@elizaos/server';
+// Dynamic imports for utilities that may not be properly exported
+let jsonToCharacter: any;
+let loadCharacterTryPath: any;
 import {
   buildProject,
-  findNextAvailablePort,
+  findAvailablePortInRange,
+  isPortFree,
   promptForEnvVars,
   TestRunner,
   UserEnvironment,
 } from '@/src/utils';
 import { type DirectoryInfo } from '@/src/utils/directory-detection';
-import { logger, type IAgentRuntime, type ProjectAgent } from '@elizaos/core';
+import { logger, type IAgentRuntime, type ProjectAgent, type UUID } from '@elizaos/core';
 import * as dotenv from 'dotenv';
 import * as fs from 'node:fs';
 import path from 'node:path';
 import { getElizaCharacter } from '@/src/characters/eliza';
 import { startAgent } from '@/src/commands/start';
 import { E2ETestOptions, TestResult } from '../types';
-import { findMonorepoRoot, processFilterName } from '../utils/project-utils';
+import { processFilterName } from '../utils/project-utils';
+import { v4 as uuidv4 } from 'uuid';
+
+// Dynamic loader for server utilities
+async function loadServerUtilities() {
+  if (!jsonToCharacter || !loadCharacterTryPath) {
+    try {
+      const serverModule = await import('@elizaos/server');
+      jsonToCharacter = (serverModule as any).jsonToCharacter;
+      loadCharacterTryPath = (serverModule as any).loadCharacterTryPath;
+    } catch (error) {
+      logger.warn('Could not load server utilities:', error);
+    }
+  }
+}
 
 /**
  * Function that runs the end-to-end tests.
@@ -27,6 +45,9 @@ export async function runE2eTests(
   options: E2ETestOptions,
   projectInfo: DirectoryInfo
 ): Promise<TestResult> {
+  // Load server utilities dynamically
+  await loadServerUtilities();
+
   // Build the project or plugin first unless skip-build is specified
   if (!options.skipBuild) {
     try {
@@ -34,10 +55,10 @@ export async function runE2eTests(
       const isPlugin = projectInfo.type === 'elizaos-plugin';
       logger.info(`Building ${isPlugin ? 'plugin' : 'project'}...`);
       await buildProject(cwd, isPlugin);
-      logger.info(`Build completed successfully`);
+      logger.info('Build completed successfully');
     } catch (buildError) {
       logger.error(`Build error: ${buildError}`);
-      logger.warn(`Attempting to continue with tests despite build error`);
+      logger.warn('Attempting to continue with tests despite build error');
     }
   }
 
@@ -56,6 +77,19 @@ export async function runE2eTests(
     const envInfo = await UserEnvironment.getInstanceInfo();
     const envFilePath = envInfo.paths.envFilePath;
 
+    // For E2E tests, always use PGLite for better isolation and reliability
+    // Store original URLs and force PGLite usage by unsetting all PostgreSQL-related env vars
+    const originalPostgresUrl = process.env.POSTGRES_URL;
+    const originalDatabaseUrl = process.env.DATABASE_URL;
+
+    delete process.env.POSTGRES_URL;
+    delete process.env.DATABASE_URL;
+
+    // Set E2E test mode BEFORE loading environment to prevent overrides
+    process.env.NODE_ENV = 'test';
+    process.env.VITEST = 'true';
+    process.env.FORCE_PGLITE = 'true'; // Signal to force PGLite usage
+
     console.info('Setting up environment...');
     console.info(`Eliza directory: ${elizaDir}`);
     console.info(`Database directory: ${elizaDbDir}`);
@@ -67,7 +101,7 @@ export async function runE2eTests(
       console.info(`Cleaning up existing database directory: ${elizaDbDir}`);
       try {
         fs.rmSync(elizaDbDir, { recursive: true, force: true });
-        console.info(`Successfully cleaned up existing database directory`);
+        console.info('Successfully cleaned up existing database directory');
       } catch (error) {
         console.warn(`Failed to clean up existing database directory: ${error}`);
         // Continue anyway, the initialization might handle it
@@ -125,6 +159,20 @@ export async function runE2eTests(
         postgresUrl,
       });
       logger.info('Server initialized successfully');
+
+      // Ensure core tables exist before proceeding
+      if (server.database) {
+        logger.info('Ensuring core database tables exist...');
+        try {
+          // The SQL plugin should have already created tables during server initialization
+          // but we'll double-check here for test reliability
+          const agents = await server.database.getAgents();
+          logger.info(`Database ready, found ${agents.length} existing agents`);
+        } catch (dbError) {
+          logger.warn('Database tables may not be fully initialized yet:', dbError);
+          // Continue anyway - the runtime initialization will handle missing tables
+        }
+      }
     } catch (initError) {
       logger.error('Server initialization failed:', initError);
       throw initError;
@@ -133,8 +181,13 @@ export async function runE2eTests(
     let project;
     try {
       logger.info('Attempting to load project or plugin...');
-      // Resolve path from monorepo root, not cwd
-      const monorepoRoot = findMonorepoRoot(process.cwd());
+      // Resolve path from monorepo root, not cwd (using centralized detection)
+      const monorepoRoot = UserEnvironment.getInstance().findMonorepoRoot(process.cwd());
+      if (!monorepoRoot) {
+        throw new Error(
+          'Could not find monorepo root. Make sure to run tests from within the Eliza project.'
+        );
+      }
       const targetPath = testPath ? path.resolve(monorepoRoot, testPath) : process.cwd();
       project = await loadProject(targetPath);
 
@@ -148,7 +201,7 @@ export async function runE2eTests(
 
       // Set up server properties
       logger.info('Setting up server properties...');
-      server.startAgent = async (character) => {
+      server.startAgent = async (character: any) => {
         logger.info(`Starting agent for character ${character.name}`);
         return startAgent(character, server!, undefined, [], { isTestMode: true });
       };
@@ -156,24 +209,69 @@ export async function runE2eTests(
       server.jsonToCharacter = jsonToCharacter;
       logger.info('Server properties set up');
 
-      const desiredPort = options.port || Number.parseInt(process.env.SERVER_PORT || '3000');
-      const serverPort = await findNextAvailablePort(desiredPort);
+      const desiredPort = options.port || Number.parseInt(process.env.SERVER_PORT || '3000', 10);
 
-      if (serverPort !== desiredPort) {
-        logger.warn(`Port ${desiredPort} is in use for testing, using port ${serverPort} instead.`);
+      // For tests, try to find a port in a reasonable range to avoid conflicts
+      let serverPort: number;
+      try {
+        // Try the desired port first
+        if (await isPortFree(desiredPort)) {
+          serverPort = desiredPort;
+        } else {
+          // If the desired port is taken, find one in a range
+          // Use a random offset to reduce conflicts when multiple tests run concurrently
+          const randomOffset = Math.floor(Math.random() * 10) * 10; // 0, 10, 20, ... 90
+          const testPortStart = Math.max(desiredPort + 1 + randomOffset, 3001);
+          const testPortEnd = testPortStart + 20; // Try 20 ports in the range
+
+          logger.info(
+            `Port ${desiredPort} is busy, searching for available port in range ${testPortStart}-${testPortEnd}...`
+          );
+
+          serverPort = await findAvailablePortInRange(testPortStart, testPortEnd);
+          logger.warn(
+            `Port ${desiredPort} is in use for testing, using port ${serverPort} instead.`
+          );
+        }
+      } catch (portError) {
+        logger.error(`Failed to find available port: ${portError}`);
+        // Try one more time with a different range
+        try {
+          const fallbackStart = 4000 + Math.floor(Math.random() * 1000);
+          logger.info(`Trying fallback port range ${fallbackStart}-${fallbackStart + 50}...`);
+          serverPort = await findAvailablePortInRange(fallbackStart, fallbackStart + 50);
+          logger.warn(`Using fallback port ${serverPort} for testing.`);
+        } catch {
+          throw new Error(
+            'Could not find an available port for testing. Please free up some ports or specify a different port with --port'
+          );
+        }
       }
 
-      logger.info('Starting server...');
+      logger.info(`Starting server on port ${serverPort}...`);
       try {
         await server.start(serverPort);
-        logger.info('Server started successfully on port', serverPort);
+        logger.info(`Server started successfully on port ${serverPort}`);
       } catch (error) {
         logger.error('Error starting server:', error);
         if (error instanceof Error) {
           logger.error('Error details:', error.message);
           logger.error('Stack trace:', error.stack);
+
+          // If port is in use, this shouldn't happen since we checked availability
+          // but if it does, throw the error with helpful message
+          if (error.message && error.message.includes('EADDRINUSE')) {
+            throw new Error(
+              `Port ${serverPort} became unavailable between check and server start. ` +
+                'This might happen if multiple tests are running. ' +
+                'Try running tests sequentially or use --port to specify a different port.'
+            );
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
         }
-        throw error;
       }
 
       try {
@@ -188,8 +286,6 @@ export async function runE2eTests(
         if (project.isPlugin || project.agents.length === 0) {
           // Set environment variable to signal this is a direct plugin test
           // The TestRunner uses this to identify direct plugin tests
-          process.env.ELIZA_TESTING_PLUGIN = 'true';
-
           logger.info('Using default Eliza character as test agent');
           try {
             const pluginUnderTest = project.pluginModule;
@@ -198,23 +294,54 @@ export async function runE2eTests(
             }
             const defaultElizaCharacter = getElizaCharacter();
 
+            // Ensure the test agent character has a valid ID
+            // Use a deterministic ID for tests to avoid the default server ID issue
+            const testAgentId = uuidv4() as UUID;
+            const testCharacter = {
+              ...defaultElizaCharacter,
+              id: testAgentId,
+            };
+
+            // For E2E tests, force PGLite by clearing any PostgreSQL URLs from character settings
+            if (testCharacter.settings?.POSTGRES_URL) {
+              delete testCharacter.settings.POSTGRES_URL;
+            }
+            if (testCharacter.secrets?.POSTGRES_URL) {
+              delete testCharacter.secrets.POSTGRES_URL;
+            }
+            if (testCharacter.settings?.DATABASE_URL) {
+              delete testCharacter.settings.DATABASE_URL;
+            }
+            if (testCharacter.secrets?.DATABASE_URL) {
+              delete testCharacter.secrets.DATABASE_URL;
+            }
+
+            // Also clear any nested secrets object in settings
+            if (testCharacter.settings?.secrets) {
+              if (testCharacter.settings.secrets.POSTGRES_URL) {
+                delete testCharacter.settings.secrets.POSTGRES_URL;
+              }
+              if (testCharacter.settings.secrets.DATABASE_URL) {
+                delete testCharacter.settings.secrets.DATABASE_URL;
+              }
+            }
+
             // The startAgent function now handles all dependency resolution,
             // including testDependencies when isTestMode is true.
             const runtime = await startAgent(
-              defaultElizaCharacter,
+              testCharacter,
               server,
               undefined, // No custom init for default test setup
               [pluginUnderTest], // Pass the local plugin module directly
               { isTestMode: true }
             );
 
-            server.registerAgent(runtime); // Ensure server knows about the runtime
             runtimes.push(runtime);
 
             // Pass all loaded plugins to the projectAgent so TestRunner can identify
             // which one is the plugin under test vs dependencies
             projectAgents.push({
-              character: defaultElizaCharacter,
+              character: testCharacter,
               plugins: runtime.plugins, // Pass all plugins, not just the one under test
             });
 
@@ -229,6 +356,20 @@ export async function runE2eTests(
             try {
               // Make a copy of the original character to avoid modifying the project configuration
               const originalCharacter = { ...agent.character };
+
+              // For E2E tests, force PGLite by clearing any PostgreSQL URLs from character settings
+              if (originalCharacter.settings?.POSTGRES_URL) {
+                delete originalCharacter.settings.POSTGRES_URL;
+              }
+              if (originalCharacter.secrets?.POSTGRES_URL) {
+                delete originalCharacter.secrets.POSTGRES_URL;
+              }
+              if (originalCharacter.settings?.DATABASE_URL) {
+                delete originalCharacter.settings.DATABASE_URL;
+              }
+              if (originalCharacter.secrets?.DATABASE_URL) {
+                delete originalCharacter.secrets.DATABASE_URL;
+              }
 
               logger.debug(`Starting agent: ${originalCharacter.name}`);
 
@@ -266,6 +407,8 @@ export async function runE2eTests(
         // Run tests for each agent
         let totalFailed = 0;
         let anyTestsFound = false;
+        let isPluginWithoutTests = false;
+
         for (let i = 0; i < runtimes.length; i++) {
           const runtime = runtimes[i];
           const projectAgent = projectAgents[i];
@@ -292,15 +435,22 @@ export async function runE2eTests(
             skipProjectTests: currentDirInfo.type !== 'elizaos-project',
             skipE2eTests: false, // Always allow E2E tests
           });
+
           totalFailed += results.failed;
           if (results.hasTests) {
             anyTestsFound = true;
           }
+
+          // Check if this is a plugin without tests
+          if (project.isPlugin && results.failed === 1 && results.total === 0) {
+            isPluginWithoutTests = true;
+          }
         }
 
-        // Return success (false) if no tests were found, or if tests ran but none failed
-        // This aligns with standard testing tools behavior
-        return { failed: anyTestsFound ? totalFailed > 0 : false };
+        // Return failure if:
+        // 1. We're testing a plugin but it has no tests
+        // 2. Tests were found and some failed
+        return { failed: isPluginWithoutTests || (anyTestsFound && totalFailed > 0) };
       } catch (error) {
         logger.error('Error in runE2eTests:', error);
         if (error instanceof Error) {
@@ -317,17 +467,28 @@ export async function runE2eTests(
         }
         return { failed: true };
       } finally {
-        // Clean up the ELIZA_TESTING_PLUGIN environment variable
-        if (process.env.ELIZA_TESTING_PLUGIN) {
-          delete process.env.ELIZA_TESTING_PLUGIN;
+        // Clean up database directory after tests complete
+        // MOVED TO AFTER SERVER STOP TO AVOID DATABASE CORRUPTION
+
+        // Stop the server to prevent hanging
+        if (server) {
+          try {
+            logger.info('Stopping test server...');
+            // Give any remaining async operations time to complete
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            await server.stop();
+            logger.info('Test server stopped successfully');
+          } catch (stopError) {
+            logger.warn('Error stopping test server:', stopError);
+          }
         }
 
-        // Clean up database directory after tests complete
+        // Clean up database directory after server is stopped
         try {
           if (fs.existsSync(elizaDbDir)) {
             console.info(`Cleaning up test database directory: ${elizaDbDir}`);
             fs.rmSync(elizaDbDir, { recursive: true, force: true });
-            console.info(`Successfully cleaned up test database directory`);
+            console.info('Successfully cleaned up test database directory');
           }
           // Also clean up the parent test directory if it's empty
           const testDir = path.dirname(elizaDbDir);
@@ -338,6 +499,15 @@ export async function runE2eTests(
           console.warn(`Failed to clean up test database directory: ${cleanupError}`);
           // Don't fail the test run due to cleanup issues
         }
+
+        // Restore original environment variables
+        if (originalPostgresUrl !== undefined) {
+          process.env.POSTGRES_URL = originalPostgresUrl;
+        }
+        if (originalDatabaseUrl !== undefined) {
+          process.env.DATABASE_URL = originalDatabaseUrl;
+        }
+        delete process.env.FORCE_PGLITE;
       }
     } catch (error) {
       logger.error('Error in runE2eTests:', error);

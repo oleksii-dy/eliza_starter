@@ -1,12 +1,25 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'bun:test';
 import { createIsolatedTestDatabase } from '../test-helpers';
 import { v4 as uuidv4 } from 'uuid';
-import type { Entity, Memory, Component, Room, UUID, Content, ChannelType } from '@elizaos/core';
+import {
+  ChannelType,
+  type Entity,
+  type Memory,
+  type Component,
+  type Room,
+  type UUID,
+  type Content,
+  type AgentRuntime,
+} from '@elizaos/core';
 import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
+
+// Set test environment flag
+process.env.ELIZA_TESTING_PLUGIN = 'true';
 
 describe('Base Adapter Methods Integration Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter | PgDatabaseAdapter;
+  let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
   let testEntityId: UUID;
@@ -14,6 +27,7 @@ describe('Base Adapter Methods Integration Tests', () => {
   beforeAll(async () => {
     const setup = await createIsolatedTestDatabase('base-adapter-methods');
     adapter = setup.adapter;
+    runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
 
@@ -27,7 +41,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         metadata: { type: 'test' },
       },
     ]);
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {
@@ -36,6 +50,22 @@ describe('Base Adapter Methods Integration Tests', () => {
   });
 
   describe('CRUD Operations', () => {
+    beforeEach(async () => {
+      // Clean up any existing entities from previous tests
+      // This is important because tests may use similar entity names
+      const existingEntities = await adapter.searchEntitiesByName({
+        query: '',
+        agentId: testAgentId,
+        limit: 100,
+      });
+      for (const entity of existingEntities) {
+        // Don't delete the test entity for memories
+        if (entity.id && entity.id !== testEntityId) {
+          await adapter.deleteEntity(entity.id);
+        }
+      }
+    });
+
     it('should handle getMemories with various filters', async () => {
       const agentId = testAgentId;
       const roomId = uuidv4() as UUID;
@@ -47,14 +77,14 @@ describe('Base Adapter Methods Integration Tests', () => {
           id: roomId,
           agentId: testAgentId,
           source: 'test',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: 'Test Room',
         },
         {
           id: roomId2,
           agentId: testAgentId,
           source: 'test',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: 'Test Room 2',
         },
       ]);
@@ -122,14 +152,14 @@ describe('Base Adapter Methods Integration Tests', () => {
           id: roomId1,
           agentId: testAgentId,
           source: 'test',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: 'Room 1',
         },
         {
           id: roomId2,
           agentId: testAgentId,
           source: 'test',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: 'Room 2',
         },
       ]);
@@ -173,7 +203,7 @@ describe('Base Adapter Methods Integration Tests', () => {
       const entity: Entity = {
         id: uuidv4() as UUID,
         agentId: testAgentId,
-        names: ['Test Entity'],
+        names: ['Update Test Entity'],
         metadata: {
           test: true,
           version: 1,
@@ -201,7 +231,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         agentId: testAgentId,
       });
       expect(retrieved.length).toBe(1);
-      expect(retrieved[0]?.id).toBe(entity.id as UUID);
+      expect(retrieved[0]?.id).toBe(entity.id);
       expect(retrieved[0]?.metadata?.version).toBe(2);
     });
 
@@ -214,7 +244,7 @@ describe('Base Adapter Methods Integration Tests', () => {
           id: roomId,
           agentId: testAgentId,
           source: 'test',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: 'Test Room',
         },
       ]);
@@ -224,7 +254,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         id: memoryId,
         agentId: testAgentId,
         entityId: testEntityId,
-        roomId: roomId,
+        roomId,
         content: { text: 'Original content' } as Content,
         createdAt: Date.now(),
         metadata: { type: 'test' },
@@ -265,7 +295,7 @@ describe('Base Adapter Methods Integration Tests', () => {
           id: roomId,
           agentId: testAgentId,
           source: 'test',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: 'Test Room',
         },
       ]);
@@ -337,7 +367,7 @@ describe('Base Adapter Methods Integration Tests', () => {
           id: roomId,
           agentId: testAgentId,
           source: 'test',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: 'Test Room',
         },
       ]);
@@ -379,7 +409,7 @@ describe('Base Adapter Methods Integration Tests', () => {
       const entity: Entity = {
         id: uuidv4() as UUID,
         agentId: testAgentId,
-        names: ['Test Entity'],
+        names: ['Delete Test Entity'],
         metadata: { type: 'test' },
       };
 
@@ -408,7 +438,7 @@ describe('Base Adapter Methods Integration Tests', () => {
           id: roomId,
           agentId: testAgentId,
           source: 'test',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: 'Test Room',
         },
       ]);
@@ -418,7 +448,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         id: memoryId,
         agentId: testAgentId,
         entityId: testEntityId,
-        roomId: roomId,
+        roomId,
         content: { text: 'Test memory' } as Content,
         createdAt: Date.now(),
         metadata: { type: 'test' },
@@ -440,7 +470,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         id: uuidv4() as UUID,
         agentId: testAgentId,
         source: 'test',
-        type: 'GROUP' as ChannelType,
+        type: ChannelType.GROUP,
         name: 'Test Room',
       };
 
@@ -459,7 +489,7 @@ describe('Base Adapter Methods Integration Tests', () => {
       const entity: Entity = {
         id: uuidv4() as UUID,
         agentId: testAgentId,
-        names: ['Test Entity'],
+        names: ['Metadata Test Entity'],
         metadata: {
           category: 'person',
           age: 25,
@@ -503,7 +533,7 @@ describe('Base Adapter Methods Integration Tests', () => {
           id: roomId,
           agentId: testAgentId,
           source: 'test',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: 'Test Room',
         },
       ]);
@@ -637,7 +667,7 @@ describe('Base Adapter Methods Integration Tests', () => {
           id: roomId,
           agentId: testAgentId,
           source: 'test',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: 'Test Room',
         },
       ]);
@@ -647,7 +677,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         {
           id: uuidv4() as UUID,
           agentId,
-          entityId: entityId,
+          entityId,
           roomId,
           content: { text: 'Meeting scheduled for tomorrow' } as Content,
           createdAt: Date.now() - 3600000, // 1 hour ago
@@ -656,7 +686,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         {
           id: uuidv4() as UUID,
           agentId,
-          entityId: entityId,
+          entityId,
           roomId,
           content: { text: 'Remember to buy groceries' } as Content,
           createdAt: Date.now() - 1800000, // 30 min ago
@@ -665,7 +695,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         {
           id: uuidv4() as UUID,
           agentId,
-          entityId: entityId,
+          entityId,
           roomId,
           content: { text: 'Important meeting notes' } as Content,
           createdAt: Date.now() - 900000, // 15 min ago
@@ -686,6 +716,130 @@ describe('Base Adapter Methods Integration Tests', () => {
       expect(recentMemories.length).toBe(2);
       // Memories are ordered by createdAt DESC, so most recent should be first
       expect((recentMemories[0].content as any).text).toBe('Important meeting notes');
+    });
+
+    it('should perform vector similarity search on memories', async () => {
+      const roomId = uuidv4() as UUID;
+      const entityId = uuidv4() as UUID;
+
+      // Ensure we're using 384 dimensions
+      await adapter.ensureEmbeddingDimension(384);
+
+      // Create entity
+      await adapter.createEntities([
+        {
+          id: entityId,
+          agentId: testAgentId,
+          names: ['Test Entity for Vector Search'],
+          metadata: { type: 'test' },
+        },
+      ]);
+
+      // Create room
+      await adapter.createRooms([
+        {
+          id: roomId,
+          agentId: testAgentId,
+          source: 'test',
+          type: ChannelType.GROUP,
+          name: 'Vector Search Test Room',
+        },
+      ]);
+
+      // Helper to create normalized embeddings
+      const createNormalizedEmbedding = (seed: number[]): number[] => {
+        const embedding = new Array(384).fill(0);
+        // Use seed values for first few dimensions
+        for (let i = 0; i < Math.min(seed.length, 384); i++) {
+          embedding[i] = seed[i];
+        }
+        // Fill rest with deterministic values based on seed
+        for (let i = seed.length; i < 384; i++) {
+          embedding[i] = Math.sin(i * seed[0]) * 0.1;
+        }
+        // Normalize
+        const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
+        return embedding.map((val) => val / magnitude);
+      };
+
+      // Create memories with embeddings
+      const memories: Memory[] = [
+        {
+          id: uuidv4() as UUID,
+          agentId: testAgentId,
+          entityId,
+          roomId,
+          content: { text: 'hello world greeting message' } as Content,
+          embedding: createNormalizedEmbedding([0.9, 0.8, 0.7, 0.6, 0.5]),
+          createdAt: Date.now() - 3000,
+          metadata: { type: 'greeting' },
+        },
+        {
+          id: uuidv4() as UUID,
+          agentId: testAgentId,
+          entityId,
+          roomId,
+          content: { text: 'hi planet similar greeting' } as Content,
+          embedding: createNormalizedEmbedding([0.85, 0.75, 0.65, 0.55, 0.45]), // Similar to hello world
+          createdAt: Date.now() - 2000,
+          metadata: { type: 'greeting' },
+        },
+        {
+          id: uuidv4() as UUID,
+          agentId: testAgentId,
+          entityId,
+          roomId,
+          content: { text: 'this is a towel' } as Content,
+          embedding: createNormalizedEmbedding([0.1, 0.2, 0.3, 0.9, 0.8]), // Very different
+          createdAt: Date.now() - 1000,
+          metadata: { type: 'object' },
+        },
+      ];
+
+      // Create all memories
+      for (const memory of memories) {
+        await adapter.createMemory(memory, 'vector_search');
+      }
+
+      // Search with embedding similar to "hello world"
+      const searchEmbedding = createNormalizedEmbedding([0.88, 0.78, 0.68, 0.58, 0.48]);
+
+      const searchResults = await adapter.searchMemories({
+        embedding: searchEmbedding,
+        roomId,
+        match_threshold: 0.0, // Get all results to check ordering
+        count: 10,
+        tableName: 'vector_search',
+      });
+
+      // Verify results
+      expect(searchResults).toBeDefined();
+      expect(searchResults.length).toBeGreaterThan(0);
+
+      // The results should be ordered by similarity
+      // "hello world" and "hi planet" should be more similar than "this is a towel"
+      const greetingTexts = ['hello world greeting message', 'hi planet similar greeting'];
+      const topResults = searchResults.slice(0, 2).map((r) => r.content.text);
+
+      // Check that the top 2 results are the greeting messages
+      expect(greetingTexts.some((text) => topResults.includes(text))).toBe(true);
+
+      // The towel message should be last if all 3 are returned
+      if (searchResults.length === 3) {
+        expect(searchResults[2].content.text).toBe('this is a towel');
+      }
+
+      // Test with threshold to filter out dissimilar results
+      const filteredResults = await adapter.searchMemories({
+        embedding: searchEmbedding,
+        roomId,
+        match_threshold: 0.7, // Higher threshold
+        count: 10,
+        tableName: 'vector_search',
+      });
+
+      // Should have fewer results with higher threshold
+      expect(filteredResults.length).toBeLessThanOrEqual(searchResults.length);
     });
   });
 

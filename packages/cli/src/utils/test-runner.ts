@@ -3,20 +3,19 @@ import {
   type Plugin,
   type ProjectAgent,
   type TestSuite,
-  logger,
+  // logger,
 } from '@elizaos/core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 // Ensure logger has all required methods with fallbacks
-const safeLogger = {
-  debug: logger?.debug || console.log,
-  info: logger?.info || console.log,
-  warn: logger?.warn || console.warn,
-  error: logger?.error || console.error,
-  success: logger?.success || console.log,
-};
+// const _safeLogger = {
+//   info: logger?.info || console.log,
+//   warn: logger?.warn || console.warn,
+//   error: logger?.error || console.error,
+//   success: logger?.success || console.log,
+// };
 
 interface TestStats {
   total: number;
@@ -33,12 +32,31 @@ interface TestOptions {
   skipE2eTests?: boolean;
 }
 
+// Create a simple console-based logger for tests to avoid pino issues
+const createTestLogger = () => {
+  const log = (level: string, message: string, ...args: any[]) => {
+    const timestamp = new Date().toISOString();
+    const prefix = `[${timestamp}] ${level}:`;
+    console.log(prefix, message, ...args);
+  };
+
+  return {
+    info: (message: string, ...args: any[]) => log('INFO', message, ...args),
+    warn: (message: string, ...args: any[]) => log('WARN', message, ...args),
+    error: (message: string, ...args: any[]) => log('ERROR', message, ...args),
+    debug: (message: string, ...args: any[]) => log('DEBUG', message, ...args),
+    success: (message: string, ...args: any[]) => log('SUCCESS', message, ...args),
+    log: (message: string, ...args: any[]) => log('LOG', message, ...args),
+  };
+};
+
 export class TestRunner {
   private runtime: IAgentRuntime;
   private projectAgent?: ProjectAgent;
   private stats: TestStats;
   private isDirectPluginTest: boolean;
   private pluginUnderTest?: Plugin;
+  private logger: ReturnType<typeof createTestLogger>;
 
   constructor(runtime: IAgentRuntime, projectAgent?: ProjectAgent) {
     this.runtime = runtime;
@@ -51,47 +69,43 @@ export class TestRunner {
       hasTests: false,
     };
 
-    // Check if this is a direct plugin test (the agent was created specifically for testing a plugin)
-    // We can identify this in a few ways:
-    // 1. If we have exactly one plugin and the character name refers to the plugin
-    // 2. If we're in a directory containing a plugin and this agent is being used to test it
-    // 3. If the agent has special naming indicating it's for testing a specific plugin
-    // 4. If ELIZA_TESTING_PLUGIN environment variable is set
+    // Use a simple console logger for tests to avoid pino initialization issues
+    this.logger = createTestLogger();
 
-    // When testing a plugin directly, the plugin being tested is passed in projectAgent.plugins
-    // but it might not be the first one due to dependency loading (e.g., sql plugin is always first)
-    const testingPlugin = process.env.ELIZA_TESTING_PLUGIN === 'true';
+    if (projectAgent?.plugins) {
+      let foundPlugin: Plugin | undefined;
+      try {
+        const packageJsonPath = path.join(process.cwd(), 'package.json');
+        if (fs.existsSync(packageJsonPath)) {
+          const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+          const currentPackageName = pkg.name;
+          // Find the loaded plugin that matches the package name
+          foundPlugin = projectAgent.plugins.find((p) => p.name === currentPackageName);
+        }
+      } catch (error) {
+        this.logger.warn(`Could not read package.json to determine plugin under test: ${error}`);
+      }
 
-    if (testingPlugin && projectAgent?.plugins) {
-      // Find the plugin that's not a core plugin (like sql)
-      const corePlugins = ['@elizaos/plugin-sql'];
-      const nonCorePlugins = projectAgent.plugins.filter(
-        (plugin) => !corePlugins.includes(plugin.name)
-      );
+      // Fallback for safety, but the above should be primary
+      if (!foundPlugin) {
+        const corePlugins = ['sql'];
+        const nonCorePlugins = projectAgent.plugins.filter(
+          (plugin) => !corePlugins.includes(plugin.name)
+        );
+        if (nonCorePlugins.length > 0) {
+          foundPlugin = nonCorePlugins[0];
+        }
+      }
 
-      if (nonCorePlugins.length > 0) {
-        // Store the actual plugin being tested
-        this.pluginUnderTest = nonCorePlugins[0];
+      if (foundPlugin) {
+        this.pluginUnderTest = foundPlugin;
         this.isDirectPluginTest = true;
-        safeLogger.debug(
-          `Direct plugin test detected - will only run tests for plugin: ${this.pluginUnderTest.name}`
+        this.logger.debug(
+          `Direct plugin test detected - running tests for: ${this.pluginUnderTest.name}`
         );
       } else {
         this.isDirectPluginTest = false;
       }
-    } else if (
-      projectAgent?.plugins?.length === 1 &&
-      (projectAgent.character.name.includes(`Test Agent for ${projectAgent.plugins[0].name}`) ||
-        (projectAgent.character.name.toLowerCase().includes('test') &&
-          projectAgent.character.name
-            .toLowerCase()
-            .includes(projectAgent.plugins[0].name.toLowerCase())))
-    ) {
-      this.pluginUnderTest = projectAgent.plugins[0];
-      this.isDirectPluginTest = true;
-      safeLogger.debug(
-        `Direct plugin test detected - will only run tests for plugin: ${this.pluginUnderTest.name}`
-      );
     } else {
       this.isDirectPluginTest = false;
     }
@@ -104,7 +118,9 @@ export class TestRunner {
    * @returns True if the name matches the filter or if no filter is specified
    */
   private matchesFilter(name: string, filter?: string): boolean {
-    if (!filter) return true;
+    if (!filter) {
+      return true;
+    }
 
     // Process filter name consistently
     let processedFilter = filter;
@@ -123,7 +139,7 @@ export class TestRunner {
    * @param suite The test suite to run
    */
   private async runTestSuite(suite: TestSuite) {
-    safeLogger.info(`\nRunning test suite: ${suite.name}`);
+    this.logger.info(`\nRunning test suite: ${suite.name}`);
 
     if (suite.tests.length > 0) {
       this.stats.hasTests = true; // Mark that we found tests
@@ -133,14 +149,14 @@ export class TestRunner {
       this.stats.total++;
 
       try {
-        safeLogger.info(`  Running test: ${test.name}`);
+        this.logger.info(`  Running test: ${test.name}`);
         await test.fn(this.runtime);
         this.stats.passed++;
-        safeLogger.success(`  [✓] ${test.name}`);
+        this.logger.success(`  [✓] ${test.name}`);
       } catch (error) {
         this.stats.failed++;
-        safeLogger.error(`  [X] ${test.name}`);
-        safeLogger.error(`    ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.error(`  [X] ${test.name}`);
+        this.logger.error(`    ${error instanceof Error ? error.message : String(error)}`);
       }
     }
   }
@@ -151,12 +167,12 @@ export class TestRunner {
   private async runProjectTests(options: TestOptions) {
     if (!this.projectAgent?.tests || options.skipProjectTests || this.isDirectPluginTest) {
       if (this.isDirectPluginTest) {
-        safeLogger.info('Skipping project tests when directly testing a plugin');
+        this.logger.info('Skipping project tests when directly testing a plugin');
       }
       return;
     }
 
-    safeLogger.info('\nRunning project tests...');
+    this.logger.info('\nRunning project tests...');
 
     const testSuites = Array.isArray(this.projectAgent.tests)
       ? this.projectAgent.tests
@@ -169,7 +185,7 @@ export class TestRunner {
 
       // Apply filter if specified
       if (!this.matchesFilter(suite.name, options.filter)) {
-        safeLogger.info(
+        this.logger.info(
           `Skipping test suite "${suite.name}" (doesn't match filter "${options.filter}")`
         );
         this.stats.skipped++;
@@ -191,17 +207,17 @@ export class TestRunner {
 
     // Only run plugin tests when we're actually in a plugin directory
     if (this.isDirectPluginTest) {
-      safeLogger.info('\nRunning plugin tests...');
+      this.logger.info('\nRunning plugin tests...');
 
       // When directly testing a plugin, we test only that plugin
       const plugin = this.pluginUnderTest;
-      if (!plugin || !plugin.tests) {
-        safeLogger.info(`No tests found for this plugin (${plugin?.name || 'unknown plugin'})`);
-        safeLogger.info(
+      if (!plugin || !plugin.tests || (Array.isArray(plugin.tests) && plugin.tests.length === 0)) {
+        this.logger.error(`No tests found for plugin: ${plugin?.name || 'unknown plugin'}`);
+        this.logger.info(
           "To add tests to your plugin, include a 'tests' property with an array of test suites."
         );
-        safeLogger.info('Example:');
-        safeLogger.info(`
+        this.logger.info('Example:');
+        this.logger.info(`
 export const myPlugin = {
   name: "my-plugin",
   description: "My awesome plugin",
@@ -223,10 +239,13 @@ export const myPlugin = {
   ]
 };
 `);
+        // Mark as having tests but failed so we exit with error
+        this.stats.hasTests = true;
+        this.stats.failed = 1;
         return;
       }
 
-      safeLogger.info(`Found test suites for plugin: ${plugin.name}`);
+      this.logger.info(`Found test suites for plugin: ${plugin.name}`);
 
       // Handle both single suite and array of suites
       const testSuites = Array.isArray(plugin.tests) ? plugin.tests : [plugin.tests];
@@ -238,7 +257,7 @@ export const myPlugin = {
 
         // Apply filter if specified
         if (!this.matchesFilter(suite.name, options.filter)) {
-          safeLogger.info(
+          this.logger.info(
             `Skipping test suite "${suite.name}" because it doesn't match filter "${options.filter}"`
           );
           this.stats.skipped++;
@@ -249,7 +268,7 @@ export const myPlugin = {
       }
     } else {
       // This should not happen in the new logic since we properly scope tests by directory type
-      safeLogger.info('Plugin tests were requested but this is not a direct plugin test');
+      this.logger.info('Plugin tests were requested but this is not a direct plugin test');
     }
   }
 
@@ -258,7 +277,7 @@ export const myPlugin = {
    */
   private async runE2eTests(options: TestOptions) {
     if (options.skipE2eTests) {
-      safeLogger.info('Skipping e2e tests (--skip-e2e-tests flag)');
+      this.logger.info('Skipping e2e tests (--skip-e2e-tests flag)');
       return;
     }
 
@@ -266,11 +285,11 @@ export const myPlugin = {
       // Check for e2e directory
       const e2eDir = path.join(process.cwd(), 'e2e');
       if (!fs.existsSync(e2eDir)) {
-        safeLogger.debug('No e2e directory found, skipping e2e tests');
+        this.logger.debug('No e2e directory found, skipping e2e tests');
         return;
       }
 
-      safeLogger.info('\nRunning e2e tests...');
+      this.logger.info('\nRunning e2e tests...');
 
       // Get all .ts files in the e2e directory
       const walk = (dir: string): string[] =>
@@ -286,11 +305,11 @@ export const myPlugin = {
       const testFiles = walk(e2eDir);
 
       if (testFiles.length === 0) {
-        safeLogger.info('No e2e test files found');
+        this.logger.info('No e2e test files found');
         return;
       }
 
-      safeLogger.info(`Found ${testFiles.length} e2e test files`);
+      this.logger.info(`Found ${testFiles.length} e2e test files`);
 
       // Check if we have compiled dist versions
       const distE2eDir = path.join(process.cwd(), 'dist', 'e2e');
@@ -302,7 +321,7 @@ export const myPlugin = {
           // Get the file name for logging
           const fileName = path.basename(testFile);
           const fileNameWithoutExt = path.basename(testFile, '.test.ts');
-          safeLogger.info(`Loading test file: ${fileName}`);
+          this.logger.info(`Loading test file: ${fileName}`);
 
           // Check if we should try to load from the dist directory instead
           let moduleImportPath = testFile;
@@ -311,16 +330,16 @@ export const myPlugin = {
             const distFile = path.join(distE2eDir, `${fileNameWithoutExt}.test.js`);
             if (fs.existsSync(distFile)) {
               moduleImportPath = distFile;
-              safeLogger.debug(`Using compiled version from ${distFile}`);
+              this.logger.debug(`Using compiled version from ${distFile}`);
             } else {
               // Fall back to TS file, which might fail
-              safeLogger.warn(
+              this.logger.warn(
                 `No compiled version found for ${fileName}, attempting to import TypeScript directly (may fail)`
               );
             }
           } else {
-            safeLogger.warn(
-              `No dist/e2e directory found. E2E tests should be compiled first. Import may fail.`
+            this.logger.warn(
+              'No dist/e2e directory found. E2E tests should be compiled first. Import may fail.'
             );
           }
 
@@ -329,9 +348,9 @@ export const myPlugin = {
           try {
             testModule = await import(pathToFileURL(moduleImportPath).href);
           } catch (importError) {
-            safeLogger.error(`Failed to import test file ${fileName}:`, importError);
-            safeLogger.info(
-              `Make sure your e2e tests are properly compiled with 'npm run build' or 'bun run build'`
+            this.logger.error(`Failed to import test file ${fileName}:`, importError);
+            this.logger.info(
+              "Make sure your e2e tests are properly compiled with 'npm run build' or 'bun run build'"
             );
             this.stats.failed++;
             continue;
@@ -341,7 +360,7 @@ export const myPlugin = {
           const testSuite = testModule.default;
 
           if (!testSuite || !testSuite.tests) {
-            safeLogger.warn(`No valid test suite found in ${fileName}`);
+            this.logger.warn(`No valid test suite found in ${fileName}`);
             continue;
           }
 
@@ -361,7 +380,7 @@ export const myPlugin = {
               : false;
 
             if (!matchesFileName && !matchesSuiteName) {
-              safeLogger.info(
+              this.logger.info(
                 `Skipping test suite "${testSuite.name || 'unnamed'}" in ${fileName} (doesn't match filter "${options.filter}")`
               );
               this.stats.skipped++;
@@ -372,12 +391,12 @@ export const myPlugin = {
           // Run the test suite
           await this.runTestSuite(testSuite);
         } catch (error) {
-          safeLogger.error(`Error running tests from ${testFile}:`, error);
+          this.logger.error(`Error running tests from ${testFile}:`, error);
           this.stats.failed++;
         }
       }
     } catch (error) {
-      safeLogger.error(`Error running e2e tests:`, error);
+      this.logger.error('Error running e2e tests:', error);
     }
   }
 
@@ -397,9 +416,14 @@ export const myPlugin = {
 
     // Log summary
     if (!this.stats.hasTests) {
-      safeLogger.info('\nNo test files found, exiting with code 0');
+      this.logger.info('\nNo test files found, exiting with code 0');
+    } else if (this.isDirectPluginTest && this.stats.failed === 1 && this.stats.total === 0) {
+      // Special case: plugin has no tests defined
+      this.logger.error(
+        '\nTest Summary: Plugin has no tests defined. Please add tests to your plugin.'
+      );
     } else {
-      safeLogger.info(
+      this.logger.info(
         `\nTest Summary: ${this.stats.passed} passed, ${this.stats.failed} failed, ${this.stats.skipped} skipped`
       );
     }

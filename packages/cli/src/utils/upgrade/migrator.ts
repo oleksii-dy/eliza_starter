@@ -110,7 +110,7 @@ export class PluginMigrator {
       await this.initializeAnthropic();
 
       // Check disk space
-      spinner.text = `Checking disk space...`;
+      spinner.text = 'Checking disk space...';
       await this.checkDiskSpace();
 
       // Check for Claude Code
@@ -153,30 +153,30 @@ export class PluginMigrator {
       let skipGeneration = false;
 
       if (await fs.pathExists(claudeMdPath)) {
-        spinner.info(`CLAUDE.md already exists. Skipping generation.`);
+        spinner.info('CLAUDE.md already exists. Skipping generation.');
         skipGeneration = true;
       }
 
       if (!skipGeneration) {
         // Step 4: Analyze repository
-        spinner.text = `Analyzing repository structure...`;
+        spinner.text = 'Analyzing repository structure...';
         const context = await this.analyzeRepository();
-        spinner.succeed(`Repository analyzed`);
+        spinner.succeed('Repository analyzed');
 
         // Step 5: Generate migration strategy
-        spinner.text = `Generating migration strategy...`;
+        spinner.text = 'Generating migration strategy...';
         const specificStrategy = await this.generateMigrationStrategy(context);
-        spinner.succeed(`Migration strategy generated`);
+        spinner.succeed('Migration strategy generated');
 
         // Step 6: Create CLAUDE.md
-        spinner.text = `Creating migration instructions...`;
+        spinner.text = 'Creating migration instructions...';
         await this.createMigrationInstructions(specificStrategy);
-        spinner.succeed(`Migration instructions created`);
+        spinner.succeed('Migration instructions created');
       }
 
       // Step 7: Run migration with test loop
       if (!this.options.skipTests) {
-        spinner.text = `Running migration with test validation...`;
+        spinner.text = 'Running migration with test validation...';
         const migrationSuccess = await this.runMigrationWithTestLoop();
 
         if (!migrationSuccess) {
@@ -184,9 +184,9 @@ export class PluginMigrator {
         }
       } else {
         // Just run Claude Code once without test validation
-        spinner.text = `Running migration (tests skipped)...`;
+        spinner.text = 'Running migration (tests skipped)...';
         await this.runClaudeCode();
-        spinner.succeed(`Migration applied (test validation skipped)`);
+        spinner.succeed('Migration applied (test validation skipped)');
       }
 
       // Step 8: Track changed files
@@ -194,14 +194,14 @@ export class PluginMigrator {
 
       // Step 9: Production validation loop
       if (!this.options.skipValidation) {
-        spinner.text = `Validating migration for production readiness...`;
+        spinner.text = 'Validating migration for production readiness...';
         const validationSuccess = await this.runProductionValidationLoop();
 
         if (!validationSuccess) {
           throw new Error('Migration not production ready after maximum revision iterations');
         }
       } else {
-        spinner.info(`Production validation skipped`);
+        spinner.info('Production validation skipped');
       }
 
       // Step 10: Push branch
@@ -387,7 +387,7 @@ export class PluginMigrator {
 
       return { success: true };
     } catch (error: any) {
-      const errorOutput = (error.stdout || '') + '\n' + (error.stderr || '');
+      const errorOutput = `${error.stdout || ''}\n${error.stderr || ''}`;
       logger.error('Test execution failed:', errorOutput);
       return { success: false, errors: errorOutput };
     }
@@ -484,13 +484,13 @@ Respond with a JSON object:
           let truncatedTokens = 0;
 
           for (const line of lines) {
-            const lineTokens = encoder.encode(line + '\n').length;
+            const lineTokens = encoder.encode(`${line}\n`).length;
             if (truncatedTokens + lineTokens > MAX_TOKENS * 0.8) {
               // Use 80% of MAX_TOKENS for single file
               truncatedContent += '\n... (file truncated due to size) ...';
               break;
             }
-            truncatedContent += line + '\n';
+            truncatedContent += `${line}\n`;
             truncatedTokens += lineTokens;
           }
 
@@ -498,7 +498,9 @@ Respond with a JSON object:
           fileTokens = truncatedTokens;
         }
 
-        if (totalTokens + fileTokens > MAX_TOKENS) break;
+        if (totalTokens + fileTokens > MAX_TOKENS) {
+          break;
+        }
 
         content += `\n### File: ${file}\n\`\`\`typescript\n${fileContent}\n\`\`\`\n`;
         totalTokens += fileTokens;
@@ -599,7 +601,7 @@ Make all necessary changes to fix the issues and ensure the migration is complet
         this.git = simpleGit(this.repoPath);
         try {
           await this.git.fetch();
-        } catch (fetchError) {
+        } catch (_fetchError) {
           await fs.remove(this.repoPath);
           await simpleGit().clone(input, this.repoPath);
           this.git = simpleGit(this.repoPath);
@@ -611,9 +613,13 @@ Make all necessary changes to fix the issues and ensure the migration is complet
 
       const branches = await this.git.branch();
       if (branches.all.includes('remotes/origin/0.x') || branches.all.includes('0.x')) {
-        if (branches.current !== '0.x') await this.git.checkout('0.x');
+        if (branches.current !== '0.x') {
+          await this.git.checkout('0.x');
+        }
       } else if (branches.all.includes('remotes/origin/main') || branches.all.includes('main')) {
-        if (branches.current !== 'main') await this.git.checkout('main');
+        if (branches.current !== 'main') {
+          await this.git.checkout('main');
+        }
       }
     } else {
       this.repoPath = path.resolve(input);
@@ -681,12 +687,16 @@ Make all necessary changes to fix the issues and ensure the migration is complet
     const sortedFiles = sourceFiles.sort((a, b) => {
       const depthA = a.split('/').length;
       const depthB = b.split('/').length;
-      if (depthA !== depthB) return depthA - depthB;
+      if (depthA !== depthB) {
+        return depthA - depthB;
+      }
       return a.localeCompare(b);
     });
 
     for (const file of sortedFiles) {
-      if (file === files.index?.path) continue;
+      if (file === files.index?.path) {
+        continue;
+      }
       const filePath = path.join(this.repoPath!, file);
 
       // Check file size before reading
@@ -706,17 +716,23 @@ Make all necessary changes to fix the issues and ensure the migration is complet
       }
 
       const fileTokens = encoder.encode(content).length;
-      if (totalTokens + fileTokens > MAX_TOKENS) break;
+      if (totalTokens + fileTokens > MAX_TOKENS) {
+        break;
+      }
       files.sourceFiles.push({ path: file, content });
       totalTokens += fileTokens;
     }
 
     let context = '';
-    if (files.readme) context += '# README.md\n\n' + files.readme + '\n\n';
-    if (files.packageJson)
-      context += '# package.json\n\n```json\n' + files.packageJson + '\n```\n\n';
-    if (files.index)
+    if (files.readme) {
+      context += `# README.md\n\n${files.readme}\n\n`;
+    }
+    if (files.packageJson) {
+      context += `# package.json\n\n\`\`\`json\n${files.packageJson}\n\`\`\`\n\n`;
+    }
+    if (files.index) {
       context += `# ${files.index.path}\n\n\`\`\`typescript\n${files.index.content}\n\`\`\`\n\n`;
+    }
     for (const file of files.sourceFiles) {
       context += `# ${file.path}\n\n\`\`\`typescript\n${file.content}\n\`\`\`\n\n`;
     }
@@ -796,9 +812,7 @@ Format your response as a clear, actionable migration plan.`;
   private async createMigrationInstructions(specificStrategy: string): Promise<void> {
     const baseClaude = await fs.readFile(path.join(__dirname, './CLAUDE.md'), 'utf-8');
 
-    const combinedInstructions =
-      baseClaude +
-      `
+    const combinedInstructions = `${baseClaude}
 
 ## SPECIFIC MIGRATION STRATEGY FOR THIS PLUGIN
 
@@ -835,7 +849,7 @@ The goal is a fully migrated, tested, and working 1.x plugin.
       if (currentBranch !== BRANCH_NAME) {
         try {
           await this.git.checkout(BRANCH_NAME);
-        } catch (e) {
+        } catch (_e) {
           await this.git.fetch('origin', BRANCH_NAME).catch(() => {});
           await this.git.deleteLocalBranch(BRANCH_NAME, true).catch(() => {});
           await this.git.checkoutBranch(BRANCH_NAME, `origin/${BRANCH_NAME}`).catch(async () => {
@@ -850,7 +864,8 @@ The goal is a fully migrated, tested, and working 1.x plugin.
   }
 
   private async runClaudeCode(): Promise<void> {
-    const migrationPrompt = `Please read the CLAUDE.md file in this repository and execute all the migration steps described there. Apply all changes systematically, create all tests, and ensure everything works.`;
+    const migrationPrompt =
+      'Please read the CLAUDE.md file in this repository and execute all the migration steps described there. Apply all changes systematically, create all tests, and ensure everything works.';
     await this.runClaudeCodeWithPrompt(migrationPrompt);
   }
 
@@ -869,16 +884,18 @@ The goal is a fully migrated, tested, and working 1.x plugin.
       const lines = result.stdout.split('\n');
       const dataLine = lines[1]; // Second line contains the data
       const parts = dataLine.split(/\s+/);
-      const availableKB = parseInt(parts[3]);
+      const availableKB = parseInt(parts[3], 10);
       return availableKB / 1024 / 1024; // Convert to GB
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Could not check disk space, proceeding anyway');
       return MIN_DISK_SPACE_GB + 1; // Assume enough space if check fails
     }
   }
 
   private async createLockFile(): Promise<void> {
-    if (!this.repoPath) return;
+    if (!this.repoPath) {
+      return;
+    }
 
     this.lockFilePath = path.join(this.repoPath, LOCK_FILE_NAME);
 
@@ -886,10 +903,10 @@ The goal is a fully migrated, tested, and working 1.x plugin.
     if (await fs.pathExists(this.lockFilePath)) {
       const lockData = await fs.readFile(this.lockFilePath, 'utf-8');
       throw new Error(
-        `Another migration is already running on this repository.\n` +
+        'Another migration is already running on this repository.\n' +
           `Lock file: ${this.lockFilePath}\n` +
           `Lock data: ${lockData}\n` +
-          `If this is an error, manually delete the lock file and try again.`
+          'If this is an error, manually delete the lock file and try again.'
       );
     }
 

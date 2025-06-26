@@ -1,108 +1,80 @@
-import { relations, sql } from 'drizzle-orm';
-import {
-  boolean,
-  check,
-  foreignKey,
-  index,
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core';
-import { agentTable } from './agent';
-import { embeddingTable } from './embedding';
-import { entityTable } from './entity';
-import { roomTable } from './room';
+import { sql } from 'drizzle-orm';
+import { getSchemaFactory, createLazyTableProxy } from './factory';
 
 /**
- * Definition of the memory table in the database.
- *
- * @param {string} tableName - The name of the table.
- * @param {object} columns - An object containing the column definitions.
- * @param {function} indexes - A function that defines the indexes for the table.
- * @returns {object} - The memory table object.
- */
-export const memoryTable = pgTable(
-  'memories',
-  {
-    id: uuid('id').primaryKey().notNull(),
-    type: text('type').notNull(),
-    createdAt: timestamp('createdAt')
-      .default(sql`now()`)
-      .notNull(),
-    content: jsonb('content').notNull(),
-    entityId: uuid('entityId').references(() => entityTable.id, {
-      onDelete: 'cascade',
-    }),
-    agentId: uuid('agentId')
-      .references(() => agentTable.id, {
-        onDelete: 'cascade',
-      })
-      .notNull(),
-    roomId: uuid('roomId').references(() => roomTable.id, {
-      onDelete: 'cascade',
-    }),
-    worldId: uuid('worldId'),
-    // .references(() => worldTable.id, {
-    //   onDelete: 'set null',
-    // }),
-    unique: boolean('unique').default(true).notNull(),
-    metadata: jsonb('metadata').default({}).notNull(),
-  },
-  (table) => [
-    index('idx_memories_type_room').on(table.type, table.roomId),
-    index('idx_memories_world_id').on(table.worldId),
-    foreignKey({
-      name: 'fk_room',
-      columns: [table.roomId],
-      foreignColumns: [roomTable.id],
-    }).onDelete('cascade'),
-    foreignKey({
-      name: 'fk_user',
-      columns: [table.entityId],
-      foreignColumns: [entityTable.id],
-    }).onDelete('cascade'),
-    foreignKey({
-      name: 'fk_agent',
-      columns: [table.agentId],
-      foreignColumns: [agentTable.id],
-    }).onDelete('cascade'),
-    // foreignKey({
-    //   name: 'fk_world',
-    //   columns: [table.worldId],
-    //   foreignColumns: [worldTable.id],
-    // }).onDelete('set null'),
-    index('idx_memories_metadata_type').on(sql`((metadata->>'type'))`),
-    index('idx_memories_document_id').on(sql`((metadata->>'documentId'))`),
-    index('idx_fragments_order').on(
-      sql`((metadata->>'documentId'))`,
-      sql`((metadata->>'position'))`
-    ),
-    check(
-      'fragment_metadata_check',
-      sql`
-            CASE 
-                WHEN metadata->>'type' = 'fragment' THEN
-                    metadata ? 'documentId' AND 
-                    metadata ? 'position'
-                ELSE true
-            END
-        `
-    ),
-    check(
-      'document_metadata_check',
-      sql`
-            CASE 
-                WHEN metadata->>'type' = 'document' THEN
-                    metadata ? 'timestamp'
-                ELSE true
-            END
-        `
-    ),
-  ]
-);
+ * Lazy-loaded memory table definition.
+ * This function returns the memory table schema when called,
+ * ensuring the database type is set before schema creation.
+ * Foreign key references are removed to avoid circular dependencies.
+ * The database constraints will be enforced at the application level.
 
-export const memoryRelations = relations(memoryTable, ({ one }) => ({
-  embedding: one(embeddingTable),
-}));
+ */
+function createMemoryTable() {
+  const factory = getSchemaFactory();
+
+  return factory.table(
+    'memories',
+    {
+      id: factory.uuid('id').primaryKey().notNull(),
+      type: factory.text('type').notNull(),
+      createdAt: factory.timestamp('created_at').default(factory.defaultTimestamp()).notNull(),
+      content: factory.json('content').notNull(),
+      entityId: factory.uuid('entity_id'),
+      agentId: factory.uuid('agent_id').notNull(),
+      roomId: factory.uuid('room_id'),
+      worldId: factory.uuid('world_id'),
+      unique: factory.boolean('unique').default(true).notNull(),
+      metadata: factory.json('metadata').default(factory.defaultJsonObject()).notNull(),
+    },
+    (table) => {
+      // Use factory methods for database-agnostic constraints
+      return [
+        factory.index('idx_memories_type_room').on(table.type, table.roomId),
+        factory.index('idx_memories_world_id').on(table.worldId),
+        factory.index('idx_memories_entity_id').on(table.entityId),
+        factory.index('idx_memories_agent_id').on(table.agentId),
+        factory.index('idx_memories_room_id').on(table.roomId),
+        factory
+          .index('idx_memories_metadata_type')
+          .on(factory.jsonFieldAccess(table.metadata, 'type')),
+        factory
+          .index('idx_memories_document_id')
+          .on(factory.jsonFieldAccess(table.metadata, 'documentId')),
+        factory
+          .index('idx_fragments_order')
+          .on(
+            factory.jsonFieldAccess(table.metadata, 'documentId'),
+            factory.jsonFieldAccess(table.metadata, 'position')
+          ),
+        factory.check(
+          'fragment_metadata_check',
+          sql`
+                CASE 
+                    WHEN ${factory.jsonFieldAccess(table.metadata, 'type')} = 'fragment' THEN
+                        ${factory.jsonFieldExists(table.metadata, 'documentId')} AND 
+                        ${factory.jsonFieldExists(table.metadata, 'position')}
+                    ELSE true
+                END
+            `
+        ),
+        factory.check(
+          'document_metadata_check',
+          sql`
+                CASE 
+                    WHEN ${factory.jsonFieldAccess(table.metadata, 'type')} = 'document' THEN
+                        ${factory.jsonFieldExists(table.metadata, 'timestamp')}
+                    ELSE true
+                END
+            `
+        ),
+      ];
+    }
+  );
+}
+
+/**
+ * Represents the memory table in the database.
+ * Uses lazy initialization to ensure proper database type configuration.
+
+ */
+export const memoryTable = createLazyTableProxy(createMemoryTable);

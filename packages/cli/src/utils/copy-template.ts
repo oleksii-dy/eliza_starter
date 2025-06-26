@@ -9,6 +9,78 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
+ * Check if a directory is within a workspace context and find workspace root
+ */
+function getWorkspaceInfo(targetDir: string): { isInWorkspace: boolean; workspaceRoot?: string } {
+  try {
+    let currentDir = path.resolve(targetDir);
+
+    // Walk up the directory tree looking for a workspace root
+    while (currentDir !== path.dirname(currentDir)) {
+      const packageJsonPath = path.join(currentDir, 'package.json');
+      if (existsSync(packageJsonPath)) {
+        try {
+          const packageJson = JSON.parse(require('fs').readFileSync(packageJsonPath, 'utf-8'));
+          // Check for workspace configuration
+          if (packageJson.workspaces || packageJson.bun?.workspace) {
+            return { isInWorkspace: true, workspaceRoot: currentDir };
+          }
+        } catch {
+          // Ignore invalid package.json files
+        }
+      }
+      currentDir = path.dirname(currentDir);
+    }
+
+    return { isInWorkspace: false };
+  } catch {
+    return { isInWorkspace: false };
+  }
+}
+
+/**
+ * Check if a directory is within a workspace context
+ */
+// function isInWorkspace(targetDir: string): boolean {
+//   return getWorkspaceInfo(targetDir).isInWorkspace;
+// }
+
+/**
+ * Find the path to a workspace package
+ */
+function findWorkspacePackagePath(packageName: string, workspaceRoot: string): string | null {
+  try {
+    // Convert package name to directory name (e.g., @elizaos/plugin-message-handling -> plugin-message-handling)
+    const dirName = packageName.replace('@elizaos/', '');
+
+    // Check common workspace locations
+    const possiblePaths = [
+      path.join(workspaceRoot, 'packages', dirName),
+      path.join(workspaceRoot, 'packages', dirName.replace('plugin-', '')),
+      path.join(workspaceRoot, 'plugin-specification', dirName),
+    ];
+
+    for (const possiblePath of possiblePaths) {
+      const packageJsonPath = path.join(possiblePath, 'package.json');
+      if (existsSync(packageJsonPath)) {
+        try {
+          const pkgJson = JSON.parse(require('fs').readFileSync(packageJsonPath, 'utf-8'));
+          if (pkgJson.name === packageName) {
+            return possiblePath;
+          }
+        } catch {
+          // Ignore invalid package.json files
+        }
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Copy a directory recursively
  */
 /**
@@ -164,13 +236,13 @@ export async function copyTemplate(
 
   try {
     // Get the CLI package version for dependency updates
-    const cliPackageJsonPath = path.resolve(
-      path.dirname(require.resolve('@elizaos/cli/package.json')),
-      'package.json'
-    );
+    // const cliPackageJsonPath = path.resolve(
+    //   path.dirname(require.resolve('@elizaos/cli/package.json')),
+    //   'package.json'
+    // );
 
-    const cliPackageJson = JSON.parse(await fs.readFile(cliPackageJsonPath, 'utf8'));
-    const cliPackageVersion = cliPackageJson.version;
+    // const cliPackageJson = JSON.parse(await fs.readFile(cliPackageJsonPath, 'utf8'));
+    // const _cliPackageVersion = cliPackageJson.version;
 
     const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
 
@@ -180,12 +252,89 @@ export async function copyTemplate(
       logger.debug('Removed private field from template package.json');
     }
 
+    // Get workspace information
+    const workspaceInfo = getWorkspaceInfo(targetDir);
+    const isOutsideWorkspace = !workspaceInfo.isInWorkspace;
+
+    // Only use published versions if we're truly outside the workspace OR in CI/production environments
+    const isProductionEnvironment =
+      process.env.CI === 'true' || process.env.NODE_ENV === 'production';
+
+    // Additional check: if target directory is in a system tmp path (not workspace temp)
+    const isSystemTempDirectory =
+      targetDir.includes('/tmp/') ||
+      targetDir.includes('/var/folders/') ||
+      targetDir.startsWith(require('os').tmpdir());
+
+    // For workspace dependencies that don't exist as published packages, use file: protocol when inside workspace
+    const shouldUseFileProtocol =
+      workspaceInfo.isInWorkspace && !isProductionEnvironment && !isSystemTempDirectory;
+
+    // Check if we're in a test environment
+    const isTestEnvironment =
+      process.env.NODE_ENV === 'test' ||
+      process.env.VITEST === 'true' ||
+      process.env.ELIZA_TEST_MODE === 'true';
+
+    // Define which packages are published to npm vs workspace-only
+    const publishedPackages = [
+      '@elizaos/cli',
+      '@elizaos/plugin-discord',
+      // Note: @elizaos/core, @elizaos/plugin-sql, and @elizaos/plugin-message-handling are currently workspace-only, not published to npm
+    ];
+
+    const isPublishedPackage = (packageName: string): boolean => {
+      return publishedPackages.includes(packageName);
+    };
+
     // Only update dependency versions - leave everything else unchanged
     if (packageJson.dependencies) {
       for (const depName of Object.keys(packageJson.dependencies)) {
         if (depName.startsWith('@elizaos/')) {
-          logger.info(`Setting ${depName} to use version ${cliPackageVersion}`);
-          packageJson.dependencies[depName] = 'latest';
+          // Remove plugin-sql in test environments (use in-memory database instead)
+          if (isTestEnvironment && depName === '@elizaos/plugin-sql') {
+            logger.info(`Removing ${depName} for test environment (using in-memory database)`);
+            delete packageJson.dependencies[depName];
+            continue;
+          }
+
+          if (
+            isPublishedPackage(depName) ||
+            (isOutsideWorkspace && !isTestEnvironment) ||
+            (isProductionEnvironment && !isTestEnvironment) ||
+            (isSystemTempDirectory && !isTestEnvironment)
+          ) {
+            logger.info(
+              `Setting ${depName} to use published version: latest (outside=${isOutsideWorkspace}, production=${isProductionEnvironment}, systemTemp=${isSystemTempDirectory}, test=${isTestEnvironment})`
+            );
+            packageJson.dependencies[depName] = 'latest';
+          } else if (
+            isTestEnvironment &&
+            (isOutsideWorkspace || isSystemTempDirectory) &&
+            !isPublishedPackage(depName)
+          ) {
+            // In test environment, skip workspace-only packages that would fail resolution
+            logger.info(
+              `Removing workspace-only dependency ${depName} in test environment (outside workspace or system temp)`
+            );
+            delete packageJson.dependencies[depName];
+            continue;
+          } else if (shouldUseFileProtocol && workspaceInfo.workspaceRoot) {
+            // Use file: protocol for workspace-only packages to avoid workspace resolution issues
+            const packagePath = findWorkspacePackagePath(depName, workspaceInfo.workspaceRoot);
+            if (packagePath) {
+              logger.info(`Setting ${depName} to use file path: ${packagePath}`);
+              packageJson.dependencies[depName] = `file:${packagePath}`;
+            } else {
+              logger.info(
+                `Setting ${depName} to use workspace version: workspace:* (package path not found)`
+              );
+              packageJson.dependencies[depName] = 'workspace:*';
+            }
+          } else {
+            logger.info(`Setting ${depName} to use workspace version: workspace:*`);
+            packageJson.dependencies[depName] = 'workspace:*';
+          }
         }
       }
     }
@@ -193,8 +342,52 @@ export async function copyTemplate(
     if (packageJson.devDependencies) {
       for (const depName of Object.keys(packageJson.devDependencies)) {
         if (depName.startsWith('@elizaos/')) {
-          logger.info(`Setting dev dependency ${depName} to use version ${cliPackageVersion}`);
-          packageJson.devDependencies[depName] = 'latest';
+          // Remove plugin-sql in test environments (use in-memory database instead)
+          if (isTestEnvironment && depName === '@elizaos/plugin-sql') {
+            logger.info(
+              `Removing dev dependency ${depName} for test environment (using in-memory database)`
+            );
+            delete packageJson.devDependencies[depName];
+            continue;
+          }
+
+          if (
+            isPublishedPackage(depName) ||
+            (isOutsideWorkspace && !isTestEnvironment) ||
+            (isProductionEnvironment && !isTestEnvironment) ||
+            (isSystemTempDirectory && !isTestEnvironment)
+          ) {
+            logger.info(
+              `Setting dev dependency ${depName} to use published version: latest (outside=${isOutsideWorkspace}, production=${isProductionEnvironment}, systemTemp=${isSystemTempDirectory}, test=${isTestEnvironment})`
+            );
+            packageJson.devDependencies[depName] = 'latest';
+          } else if (
+            isTestEnvironment &&
+            (isOutsideWorkspace || isSystemTempDirectory) &&
+            !isPublishedPackage(depName)
+          ) {
+            // In test environment, skip workspace-only packages that would fail resolution
+            logger.info(
+              `Removing workspace-only dev dependency ${depName} in test environment (outside workspace or system temp)`
+            );
+            delete packageJson.devDependencies[depName];
+            continue;
+          } else if (shouldUseFileProtocol && workspaceInfo.workspaceRoot) {
+            // Use file: protocol for workspace-only packages to avoid workspace resolution issues
+            const packagePath = findWorkspacePackagePath(depName, workspaceInfo.workspaceRoot);
+            if (packagePath) {
+              logger.info(`Setting dev dependency ${depName} to use file path: ${packagePath}`);
+              packageJson.devDependencies[depName] = `file:${packagePath}`;
+            } else {
+              logger.info(
+                `Setting dev dependency ${depName} to use workspace version: workspace:* (package path not found)`
+              );
+              packageJson.devDependencies[depName] = 'workspace:*';
+            }
+          } else {
+            logger.info(`Setting dev dependency ${depName} to use workspace version: workspace:*`);
+            packageJson.devDependencies[depName] = 'workspace:*';
+          }
         }
       }
     }

@@ -48,7 +48,7 @@ export async function checkServer(opts: OptionValues) {
       throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
     }
     logger.success('ElizaOS server is running');
-  } catch (error) {
+  } catch {
     logger.error('Unable to connect to ElizaOS server, likely not running or not accessible!');
     process.exit(1);
   }

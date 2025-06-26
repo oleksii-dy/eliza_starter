@@ -1,0 +1,16 @@
+{
+  "scripts": {
+    "test:runtime": "jest --config jest.config.runtime.js --runInBand",
+    "test:runtime:watch": "jest --config jest.config.runtime.js --runInBand --watch",
+    "test:runtime:coverage": "jest --config jest.config.runtime.js --runInBand --coverage",
+    "test:runtime:billing": "jest --config jest.config.runtime.js --runInBand --testPathPattern='billing.*runtime'",
+    "test:runtime:debug": "jest --config jest.config.runtime.js --runInBand --verbose --detectOpenHandles",
+    "test:runtime:ci": "jest --config jest.config.runtime.js --runInBand --coverage --ci --watchAll=false",
+    "test:all:billing": "npm run test:integration && npm run test:runtime",
+    "test:billing:complete": "npm run test:integration:billing && npm run test:runtime:billing"
+  },
+  "devDependencies": {
+    "@elizaos/core": "workspace:*",
+    "@elizaos/server": "workspace:*"
+  }
+}

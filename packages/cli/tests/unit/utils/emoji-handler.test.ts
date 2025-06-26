@@ -105,7 +105,7 @@ describe('emoji-handler', () => {
     });
 
     it('should handle unknown emoji key', () => {
-      // @ts-ignore - testing invalid key
+      // @ts-expect-error - testing invalid key
       expect(getEmoji('invalid-key')).toBe('');
       // expect(logger.warn).toHaveBeenCalledWith('Unknown emoji key: invalid-key'); // TODO: Fix for bun test
     });
@@ -288,7 +288,7 @@ describe('emoji-handler', () => {
       initializeEmojiSupport();
 
       // The initial call from module load might have been made
-      const callCount = logger.debug.mock.calls.length;
+      const callCount = (logger.debug as any).mock.calls.length;
       expect(callCount).toBeLessThanOrEqual(1);
     });
   });

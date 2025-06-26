@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { getContentTypeFromMimeType } from '@elizaos/core';
-import { UUID, Media, ChannelType } from '@elizaos/core';
+import { getContentTypeFromMimeType, UUID, Media, ChannelType } from '@elizaos/core';
 import { randomUUID } from '@/lib/utils';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -28,9 +27,10 @@ export function useFileUpload({ agentId, channelId, chatType }: UseFileUploadPro
 
   // Cleanup blob URLs on unmount
   useEffect(() => {
+    const blobUrls = blobUrlsRef.current;
     return () => {
-      blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-      blobUrlsRef.current.clear();
+      blobUrls.forEach((url) => URL.revokeObjectURL(url));
+      blobUrls.clear();
     };
   }, []);
 
@@ -74,7 +74,9 @@ export function useFileUpload({ agentId, channelId, chatType }: UseFileUploadPro
           new Map(combined.map((f) => [`${f.file.name}-${f.file.size}`, f])).values()
         );
       });
-      if (e.target) e.target.value = '';
+      if (e.target) {
+        e.target.value = '';
+      }
     },
     [selectedFiles]
   );
@@ -119,14 +121,16 @@ export function useFileUpload({ agentId, channelId, chatType }: UseFileUploadPro
       failed: Array<{ file: UploadingFile; error: string }>;
       blobUrls: string[];
     }> => {
-      if (!files.length) return { uploaded: [], failed: [], blobUrls: [] };
+      if (!files.length) {
+        return { uploaded: [], failed: [], blobUrls: [] };
+      }
 
       const uploadPromises = files.map(async (fileData) => {
         try {
           const uploadResult =
             chatType === ChannelType.DM && agentId
               ? await apiClient.uploadAgentMedia(agentId, fileData.file)
-              : await apiClient.uploadChannelMedia(channelId!, fileData.file);
+              : await apiClient.uploadChannelMedia(channelId as UUID, fileData.file);
 
           if (uploadResult.success) {
             return {
@@ -176,7 +180,9 @@ export function useFileUpload({ agentId, channelId, chatType }: UseFileUploadPro
 
       // Collect blob URLs for cleanup
       files.forEach((f) => {
-        if (f.blobUrl) blobUrls.push(f.blobUrl);
+        if (f.blobUrl) {
+          blobUrls.push(f.blobUrl);
+        }
       });
 
       return { uploaded, failed, blobUrls };

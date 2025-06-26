@@ -1,7 +1,7 @@
 /**
  * Seed data for log integration tests
  */
-import { type UUID, type Log, ChannelType, AgentStatus, type Agent } from '@elizaos/core';
+import { ChannelType, AgentStatus, type UUID, type Log, type Agent } from '@elizaos/core';
 import { v4 } from 'uuid';
 
 /**
@@ -20,7 +20,6 @@ export const logTestAgentSettings = {
   messageExamples: [],
   postExamples: [],
   topics: [],
-  adjectives: [],
   knowledge: [],
   plugins: [],
   settings: {

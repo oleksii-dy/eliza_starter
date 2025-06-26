@@ -35,7 +35,7 @@ export async function cleanupTestEnvironment(context: TestContext): Promise<void
   if (context.testTmpDir && context.testTmpDir.includes('eliza-test-')) {
     try {
       await rm(context.testTmpDir, { recursive: true });
-    } catch (e) {
+    } catch (_e) {
       // Ignore cleanup errors
     }
   }
@@ -48,17 +48,17 @@ export function safeChangeDirectory(targetDir: string): void {
   if (existsSync(targetDir)) {
     try {
       process.chdir(targetDir);
-    } catch (e) {
+    } catch (_e) {
       try {
         process.chdir(tmpdir());
-      } catch (e2) {
+      } catch (_e2) {
         // Ignore if we can't change to temp dir
       }
     }
   } else {
     try {
       process.chdir(tmpdir());
-    } catch (e) {
+    } catch (_e) {
       // Ignore if we can't change to temp dir
     }
   }
@@ -125,6 +125,11 @@ export function runCliCommand(
     platformOptions.timeout = timeout * 1.5; // 50% longer timeout for Windows
     platformOptions.killSignal = 'SIGKILL' as NodeJS.Signals;
     platformOptions.windowsHide = true;
+    platformOptions.env = {
+      ...process.env,
+      NODE_ENV: 'test',
+      ELIZA_TEST_MODE: 'true',
+    };
   } else if (process.platform === 'darwin') {
     // macOS specific options
     platformOptions.timeout = timeout * 1.25; // 25% longer timeout for macOS
@@ -135,9 +140,16 @@ export function runCliCommand(
       PATH: `/usr/local/bin:/opt/homebrew/bin:${process.env.PATH}`,
       LANG: 'en_US.UTF-8',
       LC_ALL: 'en_US.UTF-8',
+      NODE_ENV: 'test',
+      ELIZA_TEST_MODE: 'true',
     };
   } else {
     platformOptions.timeout = timeout;
+    platformOptions.env = {
+      ...process.env,
+      NODE_ENV: 'test',
+      ELIZA_TEST_MODE: 'true',
+    };
   }
 
   try {
@@ -180,6 +192,11 @@ export function runCliCommandSilently(
     platformOptions.timeout = timeout * 1.5;
     platformOptions.killSignal = 'SIGKILL' as NodeJS.Signals;
     platformOptions.windowsHide = true;
+    platformOptions.env = {
+      ...process.env,
+      NODE_ENV: 'test',
+      ELIZA_TEST_MODE: 'true',
+    };
   } else if (process.platform === 'darwin') {
     // macOS specific options
     platformOptions.timeout = timeout * 1.25; // 25% longer timeout for macOS
@@ -189,9 +206,16 @@ export function runCliCommandSilently(
       PATH: `/usr/local/bin:/opt/homebrew/bin:${process.env.PATH}`,
       LANG: 'en_US.UTF-8',
       LC_ALL: 'en_US.UTF-8',
+      NODE_ENV: 'test',
+      ELIZA_TEST_MODE: 'true',
     };
   } else {
     platformOptions.timeout = timeout;
+    platformOptions.env = {
+      ...process.env,
+      NODE_ENV: 'test',
+      ELIZA_TEST_MODE: 'true',
+    };
   }
 
   try {
@@ -229,6 +253,11 @@ export function expectCliCommandToFail(
     platformOptions.timeout = timeout * 1.5;
     platformOptions.killSignal = 'SIGKILL' as NodeJS.Signals;
     platformOptions.windowsHide = true;
+    platformOptions.env = {
+      ...process.env,
+      NODE_ENV: 'test',
+      ELIZA_TEST_MODE: 'true',
+    };
   } else if (process.platform === 'darwin') {
     // macOS specific options
     platformOptions.timeout = timeout * 1.25;
@@ -238,9 +267,16 @@ export function expectCliCommandToFail(
       PATH: `/usr/local/bin:/opt/homebrew/bin:${process.env.PATH}`,
       LANG: 'en_US.UTF-8',
       LC_ALL: 'en_US.UTF-8',
+      NODE_ENV: 'test',
+      ELIZA_TEST_MODE: 'true',
     };
   } else {
     platformOptions.timeout = timeout;
+    platformOptions.env = {
+      ...process.env,
+      NODE_ENV: 'test',
+      ELIZA_TEST_MODE: 'true',
+    };
   }
 
   try {
@@ -417,7 +453,7 @@ export async function waitForServerReady(
           const timeRemaining = maxWaitTime - (Date.now() - startTime);
           if (timeRemaining < maxWaitTime * 0.3) {
             // Less than 30% time remaining
-            console.log(`[DEBUG] Giving up on connection test, trying HTTP anyway...`);
+            console.log('[DEBUG] Giving up on connection test, trying HTTP anyway...');
           } else {
             await new Promise((resolve) => setTimeout(resolve, pollInterval));
             continue;
@@ -498,7 +534,7 @@ export async function killProcessOnPort(port: number): Promise<void> {
       for (const pid of pids) {
         try {
           execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
-        } catch (e) {
+        } catch (_e) {
           // Ignore if process is already dead
         }
       }
@@ -537,16 +573,16 @@ export async function killProcessOnPort(port: number): Promise<void> {
               console.log(`[DEBUG] Process ${pid} still running, sending SIGKILL`);
               execSync(`kill -9 ${pid}`, { stdio: 'ignore', timeout: 3000 });
               await new Promise((resolve) => setTimeout(resolve, 500));
-            } catch (e) {
+            } catch (_e) {
               // Process already dead, good
               console.log(`[DEBUG] Process ${pid} terminated gracefully`);
             }
-          } catch (e) {
+          } catch (_e) {
             // Process doesn't exist or already killed, ignore
             console.log(`[DEBUG] Process ${pid} not found or already terminated`);
           }
         }
-      } catch (e) {
+      } catch (_e) {
         // No processes found on port, which is fine
         console.log(`[DEBUG] No processes found on port ${port} (expected if port is free)`);
       }
@@ -562,11 +598,11 @@ export async function killProcessOnPort(port: number): Promise<void> {
     await new Promise((resolve) =>
       setTimeout(resolve, process.platform === 'darwin' ? 2000 : 1000)
     );
-  } catch (e) {
+  } catch (_e) {
     // Ignore port cleanup errors but log them for debugging
     console.log(
       `[DEBUG] Port cleanup for ${port} encountered error:`,
-      e instanceof Error ? e.message : 'unknown'
+      _e instanceof Error ? _e.message : 'unknown'
     );
   }
 }
@@ -592,7 +628,7 @@ export const crossPlatform = {
       } else {
         execSync(`rm -rf "${path}"`, { stdio: 'ignore' });
       }
-    } catch (e) {
+    } catch (_e) {
       // Ignore cleanup errors
     }
   },
@@ -604,12 +640,12 @@ export const crossPlatform = {
       } else {
         execSync(`rm -f "${path}"`, { stdio: 'ignore' });
       }
-    } catch (e) {
+    } catch (_e) {
       // Ignore cleanup errors
     }
   },
 
-  killProcessOnPort: killProcessOnPort,
+  killProcessOnPort,
 };
 
 /**
@@ -684,7 +720,7 @@ export class TestProcessManager {
         if (!wasGraceful && process.exitCode === null) {
           try {
             process.kill('SIGKILL');
-          } catch (e) {
+          } catch (_e) {
             // Process might already be dead
           }
         }

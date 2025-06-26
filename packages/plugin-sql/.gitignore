@@ -10,6 +10,8 @@ yarn-error.log*
 lerna-debug.log*
 .bun-debug.log*
 
+.elizadb-*
+
 # Caches
 
 .cache
@@ -175,7 +177,11 @@ dist
 # Finder (MacOS) folder config
 .DS_Store
 
-:memory:
+**:memory:**
 debug-cache-db
-./cursor
+.cursor
 coverage/
+.test-eliza
+.eliza*
+
+.test-*

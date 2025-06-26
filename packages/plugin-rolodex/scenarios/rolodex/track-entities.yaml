@@ -1,0 +1,38 @@
+name: "Track Entities"
+description: "Test basic entity tracking functionality"
+characters:
+  - user
+  - agent
+
+scenario:
+  - action: user
+    message: "I just met Sarah Chen at the conference. She's a product manager at Apple and really into AI ethics."
+    
+  - action: agent
+    expectation:
+      response:
+        contains: "tracked information about Sarah Chen"
+        
+  - action: user
+    message: "Who do I know at Apple?"
+    
+  - action: agent
+    expectation:
+      response:
+        contains: "Sarah Chen"
+        
+  - action: user
+    message: "I also met her colleague Bob Wilson, he's an engineer there working on ML infrastructure."
+    
+  - action: agent
+    expectation:
+      response:
+        contains: "tracked information about Bob Wilson"
+        
+  - action: user
+    message: "List all the people I know"
+    
+  - action: agent
+    expectation:
+      response:
+        contains: ["Sarah Chen", "Bob Wilson"] 

@@ -1,10 +1,10 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ChatInput } from '@/components/ui/chat/chat-input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { AudioRecorder } from '@/components/audio-recorder';
+import { AudioRecorder } from '@/components/AudioRecorder';
 import { Loader2, Paperclip, Send, FileText, X } from 'lucide-react';
-import { Agent, UUID, ChannelType } from '@elizaos/core';
+import { Agent, ChannelType } from '@elizaos/core';
 import type { UploadingFile } from '@/hooks/use-file-upload';
 
 interface ChatInputAreaProps {
@@ -142,7 +142,9 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                   size="icon"
                   className="h-8 w-8 sm:h-10 sm:w-10"
                   onClick={() => {
-                    if (fileInputRef.current) fileInputRef.current.click();
+                    if (fileInputRef.current) {
+                      fileInputRef.current.click();
+                    }
                   }}
                 >
                   <Paperclip className="size-3 sm:size-4" />

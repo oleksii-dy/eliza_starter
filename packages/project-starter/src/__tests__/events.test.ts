@@ -1,22 +1,22 @@
-import { describe, expect, it, spyOn, beforeEach } from 'bun:test';
+import { describe, expect, it, beforeEach, mock } from 'bun:test';
 import plugin from '../plugin';
 import { logger } from '@elizaos/core';
 
 // Mock logger
-spyOnmock('@elizaos/core', async () => {
-  const actual = await spyOnimportActual('@elizaos/core');
+mock.module('@elizaos/core', async () => {
+  const actual = await import('@elizaos/core');
   return {
     ...actual,
     logger: {
-      info: spyOnfn(),
-      error: spyOnfn(),
+      info: mock(),
+      error: mock(),
     },
   };
 });
 
 describe('Plugin Events', () => {
   beforeEach(() => {
-    spyOnclearAllMocks();
+    mock.restore();
   });
 
   it('should have events defined', () => {
@@ -34,15 +34,15 @@ describe('Plugin Events', () => {
       const messageHandler = plugin.events.MESSAGE_RECEIVED[0];
       expect(typeof messageHandler).toBe('function');
 
-      // Use any type to bypass strict type checking for testing
-      const mockParams: any = {
+      // Define mock parameters for testing
+      const mockParams = {
         message: {
           id: 'test-id',
           content: { text: 'Hello!' },
         },
         source: 'test',
         runtime: {},
-      };
+      } as unknown as Parameters<typeof messageHandler>[0];
 
       // Call the event handler
       await messageHandler(mockParams);
@@ -61,15 +61,15 @@ describe('Plugin Events', () => {
       const voiceHandler = plugin.events.VOICE_MESSAGE_RECEIVED[0];
       expect(typeof voiceHandler).toBe('function');
 
-      // Use any type to bypass strict type checking for testing
-      const mockParams: any = {
+      // Define mock parameters for testing
+      const mockParams = {
         message: {
           id: 'test-id',
           content: { text: 'Voice message!' },
         },
         source: 'test',
         runtime: {},
-      };
+      } as unknown as Parameters<typeof voiceHandler>[0];
 
       // Call the event handler
       await voiceHandler(mockParams);
@@ -88,8 +88,8 @@ describe('Plugin Events', () => {
       const connectedHandler = plugin.events.WORLD_CONNECTED[0];
       expect(typeof connectedHandler).toBe('function');
 
-      // Use any type to bypass strict type checking for testing
-      const mockParams: any = {
+      // Define mock parameters for testing
+      const mockParams = {
         world: {
           id: 'test-world-id',
           name: 'Test World',
@@ -98,7 +98,7 @@ describe('Plugin Events', () => {
         entities: [],
         source: 'test',
         runtime: {},
-      };
+      } as unknown as Parameters<typeof connectedHandler>[0];
 
       // Call the event handler
       await connectedHandler(mockParams);
@@ -117,8 +117,8 @@ describe('Plugin Events', () => {
       const joinedHandler = plugin.events.WORLD_JOINED[0];
       expect(typeof joinedHandler).toBe('function');
 
-      // Use any type to bypass strict type checking for testing
-      const mockParams: any = {
+      // Define mock parameters for testing
+      const mockParams = {
         world: {
           id: 'test-world-id',
           name: 'Test World',
@@ -131,7 +131,7 @@ describe('Plugin Events', () => {
         entities: [],
         source: 'test',
         runtime: {},
-      };
+      } as unknown as Parameters<typeof joinedHandler>[0];
 
       // Call the event handler
       await joinedHandler(mockParams);

@@ -7558,7 +7558,6 @@ Define your agent's personality and communication style:
 {
   "username": "handle", // Character's username/handle
   "system": "System prompt text", // Custom system prompt
-  "lore": [], // Additional background/history
   "knowledge": [
     // Knowledge base entries
     "Direct string knowledge",
@@ -7568,7 +7567,6 @@ Define your agent's personality and communication style:
   "messageExamples": [], // Example conversations
   "postExamples": [], // Example social posts
   "topics": [], // Areas of expertise
-  "adjectives": [] // Character traits
 }
 ```
 
@@ -8090,7 +8088,7 @@ Eliza is organized as a monorepo using Bun, Lerna, and Turbo for efficient packa
     -   `client/`: Client libraries for web interfaces
     -   `create-eliza/`: Project scaffolding tool
     -   `docs/`: Official documentation source files
-    -   `plugin-bootstrap/`: Core agent initialization (@elizaos/plugin-bootstrap)
+    -   `plugin-message-handling/`: Core agent initialization (@elizaos/plugin-message-handling)
         - Provides fundamental agent actions (reply, follow/unfollow, mute/unmute)
         - Implements core evaluators and providers
         - Handles message processing and world events
@@ -8195,7 +8193,7 @@ abstract runMigrations(migrationsPaths?: string[]): Promise<void>;
 abstract isReady(): Promise<boolean>;
 abstract close(): Promise<void>;
 abstract getConnection(): Promise<unknown>;
-abstract getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null>;
+abstract getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null>;
 abstract getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]>;
 abstract createEntities(entities: Entity[]): Promise<boolean>;
 abstract updateEntity(entity: Entity): Promise<void>;
@@ -8509,7 +8507,7 @@ async updateAgent(agentId: UUID, agent: Partial<Agent>): Promise<boolean>
 async deleteAgent(agentId: UUID): Promise<boolean>
 async ensureAgentExists(agent: Partial<Agent>): Promise<Agent>
 async getEntityById(entityId: UUID): Promise<Entity | null>
-async getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null>
+async getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null>
 async getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]>
 async createEntity(entity: Entity): Promise<boolean>
 async createEntities(entities: Entity[]): Promise<boolean>

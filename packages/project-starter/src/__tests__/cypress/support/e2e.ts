@@ -18,7 +18,7 @@ import './commands';
 import '@testing-library/cypress/add-commands';
 
 // E2E-specific configurations
-Cypress.on('uncaught:exception', (err, runnable) => {
+Cypress.on('uncaught:exception', (err, _runnable) => {
   // Prevent Cypress from failing the test on uncaught exceptions
   // This is useful for E2E tests where third-party scripts might throw errors
   console.error('Uncaught exception:', err);
@@ -121,10 +121,10 @@ Cypress.Commands.add('sendChatMessage', (message: string) => {
 Cypress.Commands.add('clearAppData', () => {
   cy.window().then((win) => {
     // Clear local storage
-    (win as any).localStorage.clear();
+    win.localStorage.clear();
 
     // Clear session storage
-    (win as any).sessionStorage.clear();
+    win.sessionStorage.clear();
 
     // Clear cookies
     cy.clearCookies();

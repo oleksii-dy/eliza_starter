@@ -105,7 +105,9 @@ const teeStarterPlugin: Plugin = {
 
       // Set all environment variables at once
       for (const [key, value] of Object.entries(validatedConfig)) {
-        if (value) process.env[key] = value;
+        if (value) {
+          process.env[key] = value;
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -121,10 +123,7 @@ const teeStarterPlugin: Plugin = {
       name: 'mr-tee-status-route',
       path: '/mr-tee-status',
       type: 'GET',
-      handler: async (
-        _req: Record<string, unknown>,
-        res: { json: (data: Record<string, unknown>) => void }
-      ) => {
+      handler: async (_req: any, res: any) => {
         res.json({
           message: 'Mr. TEE is operational, fool!',
           tee_mode: process.env.TEE_MODE || 'NOT SET',
@@ -143,17 +142,17 @@ const teeStarterPlugin: Plugin = {
       },
     ],
     VOICE_MESSAGE_RECEIVED: [
-      async (params) => {
+      async (_params) => {
         logger.info('[MR_TEE_PLUGIN] VOICE_MESSAGE_RECEIVED event');
       },
     ],
     WORLD_CONNECTED: [
-      async (params) => {
+      async (_params) => {
         logger.info('[MR_TEE_PLUGIN] WORLD_CONNECTED event');
       },
     ],
     WORLD_JOINED: [
-      async (params) => {
+      async (_params) => {
         logger.info('[MR_TEE_PLUGIN] WORLD_JOINED event');
       },
     ],

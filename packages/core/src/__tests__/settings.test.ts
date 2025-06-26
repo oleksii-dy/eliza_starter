@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
-import { mock, spyOn } from 'bun:test';
+import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test';
 import {
   createSettingFromConfig,
   getSalt,
@@ -42,7 +41,7 @@ describe('settings utilities', () => {
 
     // Set up scoped mocks for this test
     spyOn(entities, 'createUniqueUuid').mockImplementation(
-      (_runtime, serverId) => `world-${serverId}` as UUID
+      (_runtime: any, serverId: any) => `world-${serverId}` as UUID
     );
 
     // Mock logger if it doesn't have the methods
@@ -57,8 +56,8 @@ describe('settings utilities', () => {
       });
     }
 
-    // Mock process.env
-    process.env.SECRET_SALT = 'test-salt-value';
+    // Mock process.env with valid salt (16+ characters)
+    process.env.SECRET_SALT = 'test-salt-value-16-chars-long';
 
     mockRuntime = {
       agentId: 'agent-123' as any,
@@ -92,12 +91,12 @@ describe('settings utilities', () => {
         usageDescription: '',
         value: null,
         required: true,
-        validation: null,
+        validation: undefined,
         public: false,
         secret: false,
         dependsOn: [],
-        onSetAction: null,
-        visibleIf: null,
+        onSetAction: undefined,
+        visibleIf: undefined,
       });
     });
 
@@ -114,7 +113,7 @@ describe('settings utilities', () => {
         secret: true,
         dependsOn: ['OTHER_SETTING'],
         onSetAction: onSetActionFn,
-        visibleIf: (settings) => settings['OTHER_SETTING']?.value === 'enabled',
+        visibleIf: (settings: any) => settings['OTHER_SETTING']?.value === 'enabled',
       };
 
       const setting = createSettingFromConfig(cfg);
@@ -127,7 +126,7 @@ describe('settings utilities', () => {
       expect(setting.onSetAction).toBe(onSetActionFn);
       expect(setting.visibleIf).toBeInstanceOf(Function);
       expect(
-        setting.visibleIf({
+        setting.visibleIf?.({
           OTHER_SETTING: {
             name: 'OTHER_SETTING',
             description: 'Other setting',
@@ -139,7 +138,7 @@ describe('settings utilities', () => {
         })
       ).toBe(true);
       expect(
-        setting.visibleIf({
+        setting.visibleIf?.({
           OTHER_SETTING: {
             name: 'OTHER_SETTING',
             description: 'Other setting',
@@ -156,24 +155,19 @@ describe('settings utilities', () => {
   describe('getSalt', () => {
     it('should return salt from environment variable', () => {
       const salt = getSalt();
-      expect(salt).toBe('test-salt-value');
+      expect(salt).toBe('test-salt-value-16-chars-long');
     });
 
-    it('should use default salt when env variable is not set', () => {
+    it('should throw error when env variable is not set', () => {
       delete process.env.SECRET_SALT;
-      const salt = getSalt();
-      expect(salt).toBe('secretsalt');
-    });
-
-    it('should handle import.meta.env in non-node environments', () => {
-      // This test is skipped as it's difficult to properly simulate non-node environment
-      // without breaking other tests. The getSalt function is tested in other scenarios.
-      expect(true).toBe(true);
+      expect(() => getSalt()).toThrow(
+        'SECURITY ERROR: SECRET_SALT environment variable is required'
+      );
     });
   });
 
   describe('encryptStringValue', () => {
-    const salt = 'test-salt';
+    const salt = 'test-salt-16-chars-long';
 
     it('should encrypt a string value', () => {
       const encrypted = encryptStringValue('secret-value', salt);
@@ -188,18 +182,18 @@ describe('settings utilities', () => {
     });
 
     it('should return boolean values as is', () => {
-      expect(encryptStringValue(true as any, salt)).toBe(true);
-      expect(encryptStringValue(false as any, salt)).toBe(false);
+      expect(encryptStringValue(true as any, salt)).toEqual(true);
+      expect(encryptStringValue(false as any, salt)).toEqual(false);
     });
 
     it('should return number values as is', () => {
-      expect(encryptStringValue(123 as any, salt)).toBe(123);
-      expect(encryptStringValue(0 as any, salt)).toBe(0);
+      expect(encryptStringValue(123 as any, salt)).toEqual(123);
+      expect(encryptStringValue(0 as any, salt)).toEqual(0);
     });
 
     it('should return non-string objects as is', () => {
       const obj = { key: 'value' };
-      expect(encryptStringValue(obj as any, salt)).toBe(obj);
+      expect(encryptStringValue(obj as any, salt)).toEqual(obj);
     });
 
     it('should not re-encrypt already encrypted values', () => {
@@ -235,17 +229,17 @@ describe('settings utilities', () => {
     });
 
     it('should return boolean values as is', () => {
-      expect(decryptStringValue(true as any, salt)).toBe(true);
-      expect(decryptStringValue(false as any, salt)).toBe(false);
+      expect(decryptStringValue(true as any, salt)).toEqual(true);
+      expect(decryptStringValue(false as any, salt)).toEqual(false);
     });
 
     it('should return number values as is', () => {
-      expect(decryptStringValue(123 as any, salt)).toBe(123);
+      expect(decryptStringValue(123 as any, salt)).toEqual(123);
     });
 
     it('should return non-string objects as is', () => {
       const obj = { key: 'value' };
-      expect(decryptStringValue(obj as any, salt)).toBe(obj);
+      expect(decryptStringValue(obj as any, salt)).toEqual(obj);
     });
 
     it('should return original value if not in encrypted format', () => {
@@ -640,10 +634,11 @@ describe('settings utilities', () => {
 
       const encrypted = encryptedCharacter(character);
 
-      expect(encrypted.settings?.secrets?.['API_KEY']).not.toBe('secret-api-key');
-      expect(encrypted.settings?.secrets?.['API_KEY']).toContain(':');
-      expect(encrypted.settings?.secrets?.['PASSWORD']).not.toBe('secret-password');
-      expect(encrypted.settings?.secrets?.['PASSWORD']).toContain(':');
+      const secrets = encrypted.settings?.secrets as Record<string, any>;
+      expect(secrets?.['API_KEY']).not.toBe('secret-api-key');
+      expect(secrets?.['API_KEY']).toContain(':');
+      expect(secrets?.['PASSWORD']).not.toBe('secret-password');
+      expect(secrets?.['PASSWORD']).toContain(':');
     });
 
     it('should encrypt character.secrets', () => {
@@ -711,8 +706,9 @@ describe('settings utilities', () => {
 
       const decrypted = decryptedCharacter(character, mockRuntime);
 
-      expect(decrypted.settings?.secrets?.['API_KEY']).toBe('secret-api-key');
-      expect(decrypted.settings?.secrets?.['PASSWORD']).toBe('secret-password');
+      const secrets = decrypted.settings?.secrets as Record<string, any>;
+      expect(secrets?.['API_KEY']).toBe('secret-api-key');
+      expect(secrets?.['PASSWORD']).toBe('secret-password');
     });
 
     it('should decrypt character.secrets', () => {

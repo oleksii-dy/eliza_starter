@@ -1,19 +1,22 @@
-import { ChannelType, type UUID } from '@elizaos/core';
+import { AgentRuntime, ChannelType, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
 import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
 import { createIsolatedTestDatabase } from '../test-helpers';
 
 describe('Messaging Integration Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter | PgDatabaseAdapter;
+  let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
   let serverId: UUID;
+  let channelId: UUID;
 
   beforeAll(async () => {
     const setup = await createIsolatedTestDatabase('messaging-tests');
     adapter = setup.adapter;
+    runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
 
@@ -23,7 +26,7 @@ describe('Messaging Integration Tests', () => {
       sourceType: 'test',
     });
     serverId = server.id;
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {
@@ -34,7 +37,7 @@ describe('Messaging Integration Tests', () => {
   describe('Message Server Tests', () => {
     it('should create and retrieve a message channel', async () => {
       const channelData = {
-        messageServerId: serverId,
+        serverId,
         name: 'test-channel',
         type: ChannelType.GROUP,
       };
@@ -50,7 +53,7 @@ describe('Messaging Integration Tests', () => {
     it('should create and retrieve a message', async () => {
       const channel = await adapter.createChannel(
         {
-          messageServerId: serverId,
+          serverId,
           name: 'message-channel',
           type: ChannelType.GROUP,
         },
@@ -73,7 +76,7 @@ describe('Messaging Integration Tests', () => {
     it('should add and retrieve channel participants', async () => {
       const channel = await adapter.createChannel(
         {
-          messageServerId: serverId,
+          serverId,
           name: 'participant-channel',
           type: ChannelType.GROUP,
         },
@@ -92,23 +95,6 @@ describe('Messaging Integration Tests', () => {
     it('should add and retrieve agents for a server', async () => {
       const agent1 = uuidv4() as UUID;
       const agent2 = uuidv4() as UUID;
-
-      // Create the agents first before adding them to server
-      await adapter.createAgent({
-        id: agent1,
-        name: 'Test Agent 1',
-        bio: 'Test agent bio',
-        createdAt: new Date().getTime(),
-        updatedAt: new Date().getTime(),
-      });
-      await adapter.createAgent({
-        id: agent2,
-        name: 'Test Agent 2',
-        bio: 'Test agent bio',
-        createdAt: new Date().getTime(),
-        updatedAt: new Date().getTime(),
-      });
-
       await adapter.addAgentToServer(serverId, agent1);
       await adapter.addAgentToServer(serverId, agent2);
 

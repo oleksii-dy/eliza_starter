@@ -9,7 +9,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 export class DummyTokenDataService extends Service implements ITokenDataService {
-  readonly serviceName = 'dummy-token-data';
+  static readonly serviceName = 'TOKEN_DATA';
   static readonly serviceType = ServiceType.TOKEN_DATA;
   readonly capabilityDescription =
     'Provides dummy token data for testing and development purposes.';
@@ -24,10 +24,10 @@ export class DummyTokenDataService extends Service implements ITokenDataService 
     const symbol = query ? query.toUpperCase() : randomAddress.substring(2, 6).toUpperCase();
     return {
       id: `${chain}:${randomAddress}`,
-      symbol: symbol,
+      symbol,
       name: `Dummy Token ${symbol}`,
       address: randomAddress,
-      chain: chain,
+      chain,
       sourceProvider: 'dummy',
       price: Math.random() * 100,
       priceChange24hPercent: (Math.random() - 0.5) * 20,

@@ -39,7 +39,7 @@ export async function getNpmUsername(): Promise<string> {
       console.info(`Logged in as: ${newUser}`);
       return newUser;
     }
-  } catch (error) {
+  } catch {
     // Not logged in, prompt for login
     console.info('Not logged into NPM. Please login to continue...');
     try {
@@ -50,7 +50,7 @@ export async function getNpmUsername(): Promise<string> {
       const username = stdout.trim();
       console.info(`Successfully logged in as: ${username}`);
       return username;
-    } catch (loginError) {
+    } catch {
       console.error('NPM login failed. Registry compliance requires a valid NPM account.');
       process.exit(1);
     }

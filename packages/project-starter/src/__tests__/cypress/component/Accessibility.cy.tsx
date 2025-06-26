@@ -4,8 +4,14 @@ import '../../../frontend/index.css';
 /**
  * Example accessible form component
  */
-const AccessibleForm: React.FC<{ onSubmit: (data: any) => void }> = ({ onSubmit }) => {
-  const [formData, setFormData] = React.useState({
+interface FormData {
+  name: string;
+  email: string;
+  message: string;
+}
+
+const AccessibleForm: React.FC<{ onSubmit: (data: FormData) => void }> = ({ onSubmit }) => {
+  const [formData, setFormData] = React.useState<FormData>({
     name: '',
     email: '',
     message: '',
@@ -16,8 +22,12 @@ const AccessibleForm: React.FC<{ onSubmit: (data: any) => void }> = ({ onSubmit 
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name) newErrors.name = 'Name is required';
-    if (!formData.email) newErrors.email = 'Email is required';
+    if (!formData.name) {
+      newErrors.name = 'Name is required';
+    }
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    }
     if (formData.email && !formData.email.includes('@')) {
       newErrors.email = 'Please enter a valid email';
     }

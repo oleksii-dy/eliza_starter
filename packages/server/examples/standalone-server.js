@@ -19,10 +19,7 @@ const exampleCharacter = {
     'A friendly AI assistant designed to help users with various tasks.',
     'Knowledgeable across many domains and eager to help.',
   ],
-  lore: [
-    'Created to demonstrate the standalone server functionality.',
-    'Represents the modular architecture of ElizaOS.',
-  ],
+
   messageExamples: [
     [
       {
@@ -40,18 +37,17 @@ const exampleCharacter = {
     ],
   ],
   postExamples: [],
-  people: [],
+  people: []
   topics: ['general assistance', 'questions', 'help'],
-  style: {
-    all: [
-      'be helpful and concise',
-      'provide clear explanations',
-      'ask clarifying questions when needed',
-    ],
-    chat: ['be conversational and friendly', 'use a warm, approachable tone'],
-    post: ['be informative and engaging'],
-  },
-  adjectives: ['helpful', 'knowledgeable', 'friendly', 'reliable'],
+      style: {
+        all: [
+            'be helpful and concise',
+            'provide clear explanations',
+            'ask clarifying questions when needed',
+        ],
+        chat: ['be conversational and friendly', 'use a warm, approachable tone'],
+        post: ['be informative and engaging'],
+    },
 };
 
 async function main() {
@@ -66,7 +62,7 @@ async function main() {
     console.log('⚙️  Initializing server with database and services...');
     await server.initialize({
       dataDir: './data', // Optional custom data directory
-      middlewares: [], // Optional custom middlewares
+      middlewares: [] // Optional custom middlewares
       // postgresUrl: process.env.DATABASE_URL // Optional PostgreSQL connection
     });
 

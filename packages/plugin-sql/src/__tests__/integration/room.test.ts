@@ -1,13 +1,13 @@
-import { type Room, type UUID, AgentRuntime, ChannelType } from '@elizaos/core';
+import { AgentRuntime, ChannelType, type Room, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'bun:test';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
 import { roomTable } from '../../schema';
 import { createIsolatedTestDatabase } from '../test-helpers';
 
 describe('Room Integration Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter | PgDatabaseAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -26,9 +26,9 @@ describe('Room Integration Tests', () => {
       id: testWorldId,
       agentId: testAgentId,
       name: 'Test World',
-      serverId: 'test-server',
+      serverId: uuidv4() as UUID,
     });
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {

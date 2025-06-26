@@ -9,36 +9,77 @@ import { CodeBlock, CodeBlockCode } from './code-block';
 interface MarkdownProps {
   children: string;
   className?: string;
-  components?: Record<string, React.ComponentType<any>>;
+  components?: Record<string, React.ComponentType<React.HTMLAttributes<HTMLElement>>>;
   variant?: 'user' | 'agent';
 }
 
-const createComponents = (variant: 'user' | 'agent' = 'agent') => ({
+interface PreProps extends React.HTMLAttributes<HTMLPreElement> {
+  children?: React.ReactNode;
+}
+
+interface CodeProps extends React.HTMLAttributes<HTMLElement> {
+  children?: React.ReactNode;
+  inline?: boolean;
+}
+
+interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  children?: React.ReactNode;
+}
+
+interface ParagraphProps extends React.HTMLAttributes<HTMLParagraphElement> {
+  children?: React.ReactNode;
+}
+
+interface ListProps extends React.HTMLAttributes<HTMLUListElement | HTMLOListElement> {
+  children?: React.ReactNode;
+}
+
+interface _ListItemProps extends React.HTMLAttributes<HTMLLIElement> {
+  children?: React.ReactNode;
+}
+
+interface BlockquoteProps extends React.HTMLAttributes<HTMLQuoteElement> {
+  children?: React.ReactNode;
+}
+
+interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
+  children?: React.ReactNode;
+}
+
+interface TableCellProps extends React.HTMLAttributes<HTMLTableCellElement> {
+  children?: React.ReactNode;
+}
+
+interface AnchorProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+  children?: React.ReactNode;
+}
+
+const createComponents = (_variant: 'user' | 'agent' = 'agent') => ({
   // Code blocks
-  pre: ({ children, className, ...props }: any) => {
+  pre: ({ children, className, ...props }: PreProps) => {
     // Check if this contains a code element with a language class
-    const hasCodeWithLanguage = React.Children.toArray(children).some((child: any) => {
+    const hasCodeWithLanguage = React.Children.toArray(children).some((child: React.ReactNode) => {
       return (
         React.isValidElement(child) &&
-        (child.props as any)?.className &&
-        /language-\w+/.test((child.props as any).className)
+        (child as React.ReactElement).props?.className &&
+        /language-\w+/.test((child as React.ReactElement).props.className)
       );
     });
 
     if (hasCodeWithLanguage) {
       // Find the code element
-      const codeChild = React.Children.toArray(children).find((child: any) => {
+      const codeChild = React.Children.toArray(children).find((child: React.ReactNode) => {
         return (
           React.isValidElement(child) &&
-          (child.props as any)?.className &&
-          /language-\w+/.test((child.props as any).className)
+          (child as React.ReactElement).props?.className &&
+          /language-\w+/.test((child as React.ReactElement).props.className)
         );
       }) as React.ReactElement;
 
-      const codeClassName = (codeChild.props as any).className || '';
+      const codeClassName = (codeChild as React.ReactElement).props.className || '';
       const languageMatch = codeClassName.match(/language-(\w+)/);
       const language = languageMatch ? languageMatch[1] : 'text';
-      const code = String((codeChild.props as any).children || '').trim();
+      const code = String((codeChild as React.ReactElement).props.children || '').trim();
 
       return (
         <CodeBlock>
@@ -67,7 +108,7 @@ const createComponents = (variant: 'user' | 'agent' = 'agent') => ({
   },
 
   // Inline code
-  code: ({ className, children, ...props }: any) => {
+  code: ({ className, children, ...props }: CodeProps) => {
     // If this has a language class, it's likely part of a code block handled by pre above
     const hasLanguage = className && /language-\w+/.test(className);
 
@@ -95,22 +136,22 @@ const createComponents = (variant: 'user' | 'agent' = 'agent') => ({
   },
 
   // Headers
-  h1: ({ className, ...props }: any) => (
+  h1: ({ className, ...props }: HeadingProps) => (
     <h1 className={cn('mt-2 scroll-m-20 text-xl font-bold tracking-tight', className)} {...props} />
   ),
-  h2: ({ className, ...props }: any) => (
+  h2: ({ className, ...props }: HeadingProps) => (
     <h2
       className={cn('mt-2 scroll-m-20 text-lg font-semibold tracking-tight', className)}
       {...props}
     />
   ),
-  h3: ({ className, ...props }: any) => (
+  h3: ({ className, ...props }: HeadingProps) => (
     <h3
       className={cn('mt-2 scroll-m-20 text-base font-semibold tracking-tight', className)}
       {...props}
     />
   ),
-  h4: ({ className, ...props }: any) => (
+  h4: ({ className, ...props }: HeadingProps) => (
     <h4
       className={cn('mt-2 scroll-m-20 text-sm font-semibold tracking-tight', className)}
       {...props}
@@ -118,18 +159,20 @@ const createComponents = (variant: 'user' | 'agent' = 'agent') => ({
   ),
 
   // Paragraphs
-  p: ({ className, ...props }: any) => <p className={cn('leading-7', className)} {...props} />,
+  p: ({ className, ...props }: ParagraphProps) => (
+    <p className={cn('leading-7', className)} {...props} />
+  ),
 
   // Lists
-  ul: ({ className, ...props }: any) => (
+  ul: ({ className, ...props }: ListProps) => (
     <ul className={cn('my-2 ml-6 list-disc [&>li]:mt-1', className)} {...props} />
   ),
-  ol: ({ className, ...props }: any) => (
+  ol: ({ className, ...props }: ListProps) => (
     <ol className={cn('my-2 ml-6 list-decimal [&>li]:mt-1', className)} {...props} />
   ),
 
   // Links
-  a: ({ className, ...props }: any) => (
+  a: ({ className, ...props }: AnchorProps) => (
     <a
       className={cn('font-medium text-primary underline underline-offset-4', className)}
       {...props}
@@ -137,7 +180,7 @@ const createComponents = (variant: 'user' | 'agent' = 'agent') => ({
   ),
 
   // Blockquotes
-  blockquote: ({ className, ...props }: any) => (
+  blockquote: ({ className, ...props }: BlockquoteProps) => (
     <blockquote
       className={cn('mt-2 border-l-2 border-muted-foreground/20 pl-6 italic', className)}
       {...props}
@@ -145,12 +188,12 @@ const createComponents = (variant: 'user' | 'agent' = 'agent') => ({
   ),
 
   // Tables
-  table: ({ className, ...props }: any) => (
+  table: ({ className, ...props }: TableProps) => (
     <div className="my-2 w-full overflow-y-auto">
       <table className={cn('w-full', className)} {...props} />
     </div>
   ),
-  th: ({ className, ...props }: any) => (
+  th: ({ className, ...props }: TableCellProps) => (
     <th
       className={cn(
         'border border-muted-foreground/20 px-4 py-2 text-left font-bold [&[align=center]]:text-center [&[align=right]]:text-right',
@@ -159,7 +202,7 @@ const createComponents = (variant: 'user' | 'agent' = 'agent') => ({
       {...props}
     />
   ),
-  td: ({ className, ...props }: any) => (
+  td: ({ className, ...props }: TableCellProps) => (
     <td
       className={cn(
         'border border-muted-foreground/20 px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right',
@@ -170,20 +213,24 @@ const createComponents = (variant: 'user' | 'agent' = 'agent') => ({
   ),
 
   // Images
-  img: ({ className, alt, ...props }: any) => (
+  img: ({ className, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => (
     <img className={cn('rounded-md', className)} alt={alt} {...props} />
   ),
 
   // Horizontal rule
-  hr: ({ ...props }: any) => <hr className="my-4 border-muted-foreground/20" {...props} />,
+  hr: ({ ...props }: React.HTMLAttributes<HTMLHRElement>) => (
+    <hr className="my-4 border-muted-foreground/20" {...props} />
+  ),
 
   // Strong/Bold
-  strong: ({ className, ...props }: any) => (
+  strong: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
     <strong className={cn('font-semibold', className)} {...props} />
   ),
 
   // Emphasis/Italic
-  em: ({ className, ...props }: any) => <em className={cn('italic', className)} {...props} />,
+  em: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
+    <em className={cn('italic', className)} {...props} />
+  ),
 });
 
 const Markdown = React.memo<MarkdownProps>(

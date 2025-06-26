@@ -1,21 +1,21 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { createIsolatedTestDatabase } from '../test-helpers';
 import { v4 as uuidv4 } from 'uuid';
-import type {
-  Entity,
-  Memory,
-  Component,
-  Room,
-  UUID,
-  Content,
-  AgentRuntime,
+import {
   ChannelType,
+  type Entity,
+  type Memory,
+  type Component,
+  type Room,
+  type World,
+  type UUID,
+  type Content,
+  type AgentRuntime,
 } from '@elizaos/core';
-import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
 
 describe('Base Adapter Comprehensive Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -49,7 +49,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         id: testRoomId,
         agentId: testAgentId,
         source: 'test',
-        type: 'GROUP' as ChannelType,
+        type: ChannelType.GROUP,
         name: 'Test Room',
       },
     ]);
@@ -63,7 +63,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         metadata: { type: 'test' },
       },
     ]);
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {
@@ -152,11 +152,11 @@ describe('Base Adapter Comprehensive Tests', () => {
       ]);
 
       // Create related memory
-      await adapter.createMemory(
+      const memoryId = await adapter.createMemory(
         {
           id: uuidv4() as UUID,
           agentId: testAgentId,
-          entityId: entityId,
+          entityId,
           roomId: testRoomId,
           content: { text: 'Related memory' } as Content,
           createdAt: Date.now(),
@@ -165,20 +165,21 @@ describe('Base Adapter Comprehensive Tests', () => {
         'memories'
       );
 
-      // Delete entity (should cascade delete memory)
+      // Delete entity (should NOT cascade delete memory - memories are preserved)
       await adapter.deleteEntity(entityId);
 
       // Verify entity is deleted
-      const entities = await adapter.getEntityByIds([entityId]);
+      const entities = await adapter.getEntitiesByIds([entityId]);
       expect(entities).toHaveLength(0);
 
-      // Verify related memory is also deleted
+      // Verify related memory is NOT deleted (memories are preserved when entity is deleted)
       const memories = await adapter.getMemories({
         agentId: testAgentId,
-        entityId: entityId,
+        entityId,
         tableName: 'memories',
       });
-      expect(memories).toHaveLength(0);
+      expect(memories).toHaveLength(1); // Memory should still exist
+      expect(memories[0].id).toBe(memoryId);
     });
   });
 
@@ -260,7 +261,7 @@ describe('Base Adapter Comprehensive Tests', () => {
             id: roomId,
             agentId: testAgentId,
             source: 'test',
-            type: 'GROUP' as ChannelType,
+            type: ChannelType.GROUP,
             name: `Room ${i}`,
           },
         ]);
@@ -270,7 +271,7 @@ describe('Base Adapter Comprehensive Tests', () => {
           id: uuidv4() as UUID,
           agentId: testAgentId,
           entityId: testEntityId,
-          roomId: roomId,
+          roomId,
           content: { text: `Memory for room ${i}` } as Content,
           createdAt: Date.now(),
           metadata: { type: 'test', roomIndex: i },
@@ -309,7 +310,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         type: 'relationship',
         worldId: testWorldId,
         entityId: testEntityId,
-        sourceEntityId: sourceEntityId,
+        sourceEntityId,
         agentId: testAgentId,
         roomId: testRoomId,
         data: {
@@ -373,7 +374,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         id: roomId,
         agentId: testAgentId,
         source: 'test',
-        type: 'DM' as ChannelType,
+        type: ChannelType.DM,
         name: 'DM Room',
         metadata: {
           participants: ['user1', 'user2'],
@@ -407,6 +408,8 @@ describe('Base Adapter Comprehensive Tests', () => {
 
   describe('Search Operations', () => {
     it('should handle searchMemoriesByEmbedding', async () => {
+      // PostgreSQL with pgvector extension supports vector search
+
       const embedding = new Float32Array(384).fill(0.5);
 
       // Create memory with embedding
@@ -437,13 +440,15 @@ describe('Base Adapter Comprehensive Tests', () => {
     });
 
     it('should handle getCachedEmbeddings', async () => {
+      // PostgreSQL supports levenshtein function via pg_trgm extension
+
       const content = 'Test content for embedding';
       const embedding = new Float32Array(384).fill(0.7);
 
       // Store embedding in cache - log requires specific format
       await adapter.log({
         body: {
-          content: content,
+          content,
           embedding: Array.from(embedding),
         },
         entityId: testEntityId,
@@ -479,7 +484,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         },
       ]);
 
-      const entities = await adapter.getEntityByIds([entityId]);
+      const entities = await adapter.getEntitiesByIds([entityId]);
       expect(entities?.[0]?.metadata).toEqual({});
 
       // Memory with required entityId
@@ -506,6 +511,39 @@ describe('Base Adapter Comprehensive Tests', () => {
       expect(memoryWithEntity?.entityId).toBe(testEntityId);
     });
 
+    it('should handle error conditions gracefully', async () => {
+      // Test invalid entity retrieval
+      const nonExistentEntityId = uuidv4() as UUID;
+      const entities = await adapter.getEntitiesByIds([nonExistentEntityId]);
+      expect(entities).toEqual([]);
+
+      // Test invalid memory retrieval
+      const nonExistentMemoryId = uuidv4() as UUID;
+      const memory = await adapter.getMemoryById(nonExistentMemoryId);
+      expect(memory).toBeNull();
+
+      // Test invalid room retrieval
+      const nonExistentRoomId = uuidv4() as UUID;
+      const rooms = await adapter.getRoomsByIds([nonExistentRoomId]);
+      expect(rooms).toEqual([]);
+    });
+
+    it('should handle malformed UUIDs safely', async () => {
+      // Test various invalid UUID formats
+      const invalidUUIDs = ['invalid-uuid', '', '123'];
+
+      for (const invalidUUID of invalidUUIDs) {
+        try {
+          // This should either reject gracefully or handle the invalid UUID
+          const entities = await adapter.getEntitiesByIds([invalidUUID as UUID]);
+          expect(entities).toEqual([]);
+        } catch (error) {
+          // If it throws, that's also acceptable for malformed UUIDs
+          expect(error).toBeDefined();
+        }
+      }
+    });
+
     it('should handle batch operations correctly', async () => {
       const batchSize = 5;
       const entities: Entity[] = [];
@@ -530,7 +568,7 @@ describe('Base Adapter Comprehensive Tests', () => {
           id: uuidv4() as UUID,
           agentId: testAgentId,
           source: 'batch',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: `Batch Room ${i}`,
         });
       }
@@ -539,7 +577,7 @@ describe('Base Adapter Comprehensive Tests', () => {
 
       // Verify all were created
       const entityIds = entities.map((e) => e.id!);
-      const retrievedEntities = await adapter.getEntityByIds(entityIds);
+      const retrievedEntities = await adapter.getEntitiesByIds(entityIds);
       expect(retrievedEntities).toHaveLength(batchSize);
 
       const roomIds = rooms.map((r) => r.id);

@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
+import { describe, it, mock, expect, beforeEach, afterEach } from 'bun:test';
 import { TestRunner } from '../../../src/utils/test-runner';
 import type { IAgentRuntime, Plugin, ProjectAgent, Character } from '@elizaos/core';
 
 // Mock the logger
-mock.module('@elizaos/core', async (importOriginal) => {
-  const actual = (await importOriginal()) as any;
+mock.module('@elizaos/core', async () => {
+  const actual = ({}) as any;
   return {
     ...actual,
     logger: {
@@ -207,7 +207,7 @@ describe('TestRunner Plugin Isolation', () => {
       expect(sqlTests?.fn).not.toHaveBeenCalled();
 
       // Target plugin tests should have been called
-      const targetTests = targetPlugin.tests?.[0]?.tests;
+      // const targetTests = targetPlugin.tests?.[0]?.tests;
       // expect(targetTests?.[0]?.fn).toHaveBeenCalled(); // TODO: Fix for bun test
       // expect(targetTests?.[1]?.fn).toHaveBeenCalled(); // TODO: Fix for bun test
     });
@@ -252,7 +252,7 @@ describe('TestRunner Plugin Isolation', () => {
 
       // Only plugin test should run
       expect(results.total).toBe(1);
-      const pluginTests = targetPlugin.tests?.[0]?.tests?.[0];
+      // const pluginTests = targetPlugin.tests?.[0]?.tests?.[0];
       // expect(pluginTests?.fn).toHaveBeenCalled(); // TODO: Fix for bun test
 
       // Project test should not run
@@ -322,7 +322,7 @@ describe('TestRunner Plugin Isolation', () => {
       // Only Suite A test should run
       expect(results.total).toBe(1);
       expect(results.skipped).toBe(1);
-      const suiteATests = targetPlugin.tests?.[0]?.tests?.[0];
+      // const suiteATests = targetPlugin.tests?.[0]?.tests?.[0];
       const suiteBTests = targetPlugin.tests?.[1]?.tests?.[0];
       // expect(suiteATests?.fn).toHaveBeenCalled(); // TODO: Fix for bun test
       expect(suiteBTests?.fn).not.toHaveBeenCalled();

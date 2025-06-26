@@ -113,8 +113,8 @@ export async function ensurePluginBuilt(context: PluginContext): Promise<boolean
     }
   }
 
-  logger.error(`Plugin not built and no build script found in package.json`);
-  logger.info(`Add a "build" script to package.json or run 'bun run build' manually`);
+  logger.error('Plugin not built and no build script found in package.json');
+  logger.info('Add a "build" script to package.json or run \'bun run build\' manually');
   return false;
 }
 
@@ -131,7 +131,7 @@ export function provideLocalPluginGuidance(pluginName: string, context: PluginCo
   if (context.needsBuild) {
     logger.info('To fix this issue:');
     logger.info('1. Build the plugin: bun run build');
-    logger.info('2. Verify the output exists at: ' + context.localPath);
+    logger.info(`2. Verify the output exists at: ${context.localPath}`);
     logger.info('3. Re-run the test command');
   } else {
     logger.info('Plugin appears to be built but failed to load.');

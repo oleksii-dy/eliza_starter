@@ -1,5 +1,4 @@
 /// <reference types="cypress" />
-/// <reference path="../../../cypress/support/types.d.ts" />
 
 import React from 'react';
 import { Badge, badgeVariants } from './badge';

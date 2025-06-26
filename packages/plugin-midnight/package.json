@@ -1,0 +1,110 @@
+{
+  "name": "@elizaos/plugin-midnight",
+  "description": "Midnight Network integration for secure agent communication and payments",
+  "version": "1.0.12",
+  "type": "module",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "packageType": "plugin",
+  "platform": "node",
+  "license": "UNLICENSED",
+  "author": "${GITHUB_USERNAME}",
+  "keywords": [
+    "plugin",
+    "elizaos"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "${REPO_URL}"
+  },
+  "homepage": "https://elizaos.ai",
+  "bugs": {
+    "url": "https://github.com/${GITHUB_USERNAME}/${PLUGINNAME}/issues"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    ".npmignore",
+    "package.json",
+    "tsup.config.ts"
+  ],
+  "dependencies": {
+    "@elizaos/core": "workspace:*",
+    "@midnight-ntwrk/compact-runtime": "0.8.1",
+    "@midnight-ntwrk/dapp-connector-api": "3.0.0",
+    "@midnight-ntwrk/ledger": "4.0.0",
+    "@midnight-ntwrk/midnight-js-contracts": "2.0.2",
+    "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "2.0.2",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "2.0.2",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "2.0.2",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "2.0.2",
+    "@midnight-ntwrk/midnight-js-network-id": "2.0.2",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "2.0.2",
+    "@midnight-ntwrk/midnight-js-types": "2.0.2",
+    "@midnight-ntwrk/midnight-js-utils": "2.0.2",
+    "@midnight-ntwrk/wallet": "5.0.0",
+    "@midnight-ntwrk/wallet-api": "5.0.0",
+    "fp-ts": "^2.16.1",
+    "io-ts": "^2.2.20",
+    "pino": "^8.16.0",
+    "pino-pretty": "^10.2.3",
+    "rxjs": "^7.8.1",
+    "@tanstack/react-query": "^5.80.7",
+    "clsx": "^2.1.1",
+    "tailwindcss": "^4.1.10",
+    "tailwind-merge": "^3.3.1",
+    "vite": "^6.3.5",
+    "zod": "^3.25.67"
+  },
+  "peerDependencies": {},
+  "devDependencies": {
+    "@cypress/react": "^9.0.1",
+    "@elizaos/cli": "workspace:*",
+    "@tailwindcss/vite": "^4.1.10",
+    "@vitejs/plugin-react-swc": "^3.10.2",
+    "cypress": "^14.5.0",
+    "dotenv": "16.4.5",
+    "prettier": "3.5.3",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "5.8.3"
+  },
+  "scripts": {
+    "start": "elizaos start",
+    "dev": "elizaos dev",
+    "build": "tsc --noEmit && vite build && bun run build.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix && prettier --write .",
+    "lint:check": "eslint . --ext .js,.jsx,.ts,.tsx && prettier --check .",
+    "test": "elizaos test",
+    "publish": "elizaos publish",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "resolutions": {
+    "zod": "3.25.67"
+  },
+  "agentConfig": {
+    "pluginType": "elizaos:plugin:1.0.0",
+    "pluginParameters": {
+      "API_KEY": {
+        "type": "string",
+        "description": "API key for the service"
+      }
+    }
+  },
+  "gitHead": "d5bd5c43bfebeb7ac02f9e029f924cb6cd5c2ec7"
+}

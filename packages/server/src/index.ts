@@ -1,4 +1,5 @@
 import {
+  AgentStatus,
   type Character,
   DatabaseAdapter,
   type IAgentRuntime,
@@ -16,16 +17,12 @@ import path, { basename, dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Server as SocketIOServer } from 'socket.io';
 import { createApiRouter, createPluginRouteHandler, setupSocketIO } from './api/index.js';
-import { apiKeyAuthMiddleware } from './authMiddleware.js';
-import { messageBusConnectorPlugin } from './services/message.js';
-import { loadCharacterTryPath, jsonToCharacter } from './loader.js';
+import { enhancedAuthMiddleware } from './AuthMiddleware.js';
+import { messageBusConnectorPlugin } from './services/MessageBusService.js';
+import { loadCharacterTryPath, jsonToCharacter } from './CharacterLoader.js';
 
-import {
-  createDatabaseAdapter,
-  DatabaseMigrationService,
-  plugin as sqlPlugin,
-} from '@elizaos/plugin-sql';
-import internalMessageBus from './bus.js';
+import { createAdaptiveDatabaseAdapterV2 } from '@elizaos/plugin-sql';
+import internalMessageBus from './MessageBus.js';
 import type {
   CentralRootMessage,
   MessageChannel,
@@ -35,6 +32,7 @@ import type {
 import { existsSync } from 'node:fs';
 import { resolveEnvFile } from './api/system/environment.js';
 import dotenv from 'dotenv';
+import { sql } from 'drizzle-orm';
 
 /**
  * Expands a file path starting with `~` to the project directory.
@@ -65,16 +63,29 @@ export function expandTildePath(filepath: string): string {
 }
 
 export function resolvePgliteDir(dir?: string, fallbackDir?: string): string {
-  const envPath = resolveEnvFile();
-  if (existsSync(envPath)) {
-    dotenv.config({ path: envPath });
+  // For E2E tests, don't reload environment to avoid restoring PostgreSQL URLs
+  if (process.env.FORCE_PGLITE !== 'true') {
+    const envPath = resolveEnvFile();
+    if (existsSync(envPath)) {
+      dotenv.config({ path: envPath });
+    }
   }
 
-  const base =
-    dir ??
-    process.env.PGLITE_DATA_DIR ??
-    fallbackDir ??
-    path.join(process.cwd(), '.eliza', '.elizadb');
+  // Use centralized path management for database directory
+  let base: string;
+  if (dir) {
+    base = dir;
+  } else if (process.env.PGLITE_DATA_DIR) {
+    base = process.env.PGLITE_DATA_DIR;
+  } else {
+    try {
+      const { getDatabasePath } = require('@elizaos/core/utils/path-manager');
+      base = getDatabasePath();
+    } catch {
+      // Fallback to original behavior if path-manager is not available
+      base = fallbackDir ?? path.join(process.cwd(), '.eliza', '.elizadb');
+    }
+  }
 
   // Automatically migrate legacy path (<cwd>/.elizadb) to new location (<cwd>/.eliza/.elizadb)
   const resolved = expandTildePath(base);
@@ -173,53 +184,60 @@ export class AgentServer {
 
       const agentDataDir = await resolvePgliteDir(options?.dataDir);
       logger.info(`[INIT] Database Dir for SQL plugin: ${agentDataDir}`);
-      this.database = createDatabaseAdapter(
-        {
-          dataDir: agentDataDir,
-          postgresUrl: options?.postgresUrl,
-        },
-        '00000000-0000-0000-0000-000000000002'
-      ) as DatabaseAdapter;
-      await this.database.init();
-      logger.success('Consolidated database initialized successfully');
 
-      // Run migrations for the SQL plugin schema
-      logger.info('[INIT] Running database migrations for messaging tables...');
-      try {
-        const migrationService = new DatabaseMigrationService();
+      // Define migration agent ID
+      const migrationAgentId = '00000000-0000-0000-0000-000000000000' as UUID;
 
-        // Get the underlying database instance
-        const db = (this.database as any).getDatabase();
-        await migrationService.initializeWithDatabase(db);
+      // Initialize database adapter
+      logger.info('[INIT] Initializing database adapter...');
 
-        // Register the SQL plugin schema
-        migrationService.discoverAndRegisterPluginSchemas([sqlPlugin]);
-
-        // Run the migrations
-        await migrationService.runAllPluginMigrations();
-
-        logger.success('[INIT] Database migrations completed successfully');
-      } catch (migrationError) {
-        logger.error('[INIT] Failed to run database migrations:', migrationError);
-        throw new Error(
-          `Database migration failed: ${migrationError instanceof Error ? migrationError.message : String(migrationError)}`
-        );
+      // For E2E tests, force PGLite usage by ignoring PostgreSQL URLs
+      let postgresUrl = process.env.POSTGRES_URL || options?.postgresUrl;
+      if (process.env.FORCE_PGLITE === 'true') {
+        logger.info('[INIT] FORCE_PGLITE detected, ignoring PostgreSQL URL for testing');
+        postgresUrl = undefined;
       }
 
-      // Add a small delay to ensure database is fully ready
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      this.database = (await createAdaptiveDatabaseAdapterV2(
+        {
+          ...(postgresUrl && { postgresUrl }),
+        },
+        migrationAgentId
+      )) as DatabaseAdapter;
 
-      // Ensure default server exists
-      logger.info('[INIT] Ensuring default server exists...');
-      await this.ensureDefaultServer();
-      logger.success('[INIT] Default server setup complete');
+      // Initialize the adapter
+      await this.database.init();
+      logger.success('[INIT] Database adapter initialized');
+
+      // Run database migrations to ensure schema is up to date
+      try {
+        logger.info('[INIT] Running database migrations...');
+
+        // Check if the adapter has a migrate method
+        if (typeof (this.database as any).migrate === 'function') {
+          await (this.database as any).migrate();
+          logger.success('[INIT] Database migrations completed');
+        } else {
+          logger.info('[INIT] Database adapter does not support migrations, skipping');
+        }
+
+        // Add a small delay to ensure tables are ready
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Now ensure the default server exists
+        logger.info('[INIT] Ensuring default server exists...');
+        await this.ensureDefaultServer();
+        logger.success('[INIT] Default server ensured');
+      } catch (error) {
+        logger.error('[INIT] Failed to initialize database:', error);
+        throw error;
+      }
 
       await this.initializeServer(options);
       await new Promise((resolve) => setTimeout(resolve, 250));
       this.isInitialized = true;
     } catch (error) {
       logger.error('Failed to initialize AgentServer (async operations):', error);
-      console.trace(error);
       throw error;
     }
   }
@@ -228,8 +246,16 @@ export class AgentServer {
     try {
       // Check if the default server exists
       logger.info('[AgentServer] Checking for default server...');
-      const servers = await (this.database as any).getMessageServers();
-      logger.debug(`[AgentServer] Found ${servers.length} existing servers`);
+      let servers: any[] = [];
+      try {
+        servers = await (this.database as any).getMessageServers();
+        logger.debug(`[AgentServer] Found ${servers.length} existing servers`);
+      } catch (_error) {
+        logger.warn(
+          'Message servers table not yet created during initialization, returning empty array'
+        );
+        servers = [];
+      }
 
       // Log all existing servers for debugging
       servers.forEach((s: any) => {
@@ -247,9 +273,9 @@ export class AgentServer {
 
         // Use raw SQL to ensure the server is created with the exact ID
         try {
-          await (this.database as any).db.execute(`
-            INSERT INTO message_servers (id, name, source_type, created_at, updated_at)
-            VALUES ('00000000-0000-0000-0000-000000000000', 'Default Server', 'eliza_default', NOW(), NOW())
+          await (this.database as any).db.execute(sql`
+            INSERT INTO message_servers (id, name, source_type, source_id, metadata, created_at, updated_at)
+            VALUES (${'00000000-0000-0000-0000-000000000000'}, ${'Default Server'}, ${'eliza_default'}, ${null}, ${{}}, ${new Date()}, ${new Date()})
             ON CONFLICT (id) DO NOTHING
           `);
           logger.success('[AgentServer] Default server created via raw SQL');
@@ -333,7 +359,7 @@ export class AgentServer {
                   connectSrc: ["'self'", 'ws:', 'wss:', 'https:', 'http:'],
                   mediaSrc: ["'self'", 'blob:', 'data:'],
                   objectSrc: ["'none'"],
-                  frameSrc: ["'none'"],
+                  frameSrc: ["'self'"],
                   baseUri: ["'self'"],
                   formAction: ["'self'"],
                   // upgrade-insecure-requests is added by helmet automatically
@@ -403,7 +429,7 @@ export class AgentServer {
       ); // Enable CORS
       this.app.use(
         bodyParser.json({
-          limit: process.env.EXPRESS_MAX_PAYLOAD || '100kb',
+          limit: process.env.EXPRESS_MAX_PAYLOAD || '10mb',
         })
       ); // Parse JSON bodies
 
@@ -424,19 +450,31 @@ export class AgentServer {
         })
       );
 
-      // Optional Authentication Middleware
+      // Enhanced Authentication Middleware (JWT + Legacy API Key)
       const serverAuthToken = process.env.ELIZA_SERVER_AUTH_TOKEN;
-      if (serverAuthToken) {
-        logger.info('Server authentication enabled. Requires X-API-KEY header for /api routes.');
-        // Apply middleware only to /api paths
+      const sharedJwtSecret = process.env.SHARED_JWT_SECRET || process.env.JWT_SECRET;
+
+      if (serverAuthToken || sharedJwtSecret) {
+        logger.info(
+          'Server authentication enabled. Supports JWT tokens and legacy X-API-KEY authentication for /api routes.'
+        );
+        // Apply enhanced middleware to /api paths - supports both JWT and legacy API key
         this.app.use('/api', (req, res, next) => {
-          apiKeyAuthMiddleware(req, res, next);
+          enhancedAuthMiddleware(req, res, next);
         });
       } else {
         logger.warn(
-          'Server authentication is disabled. Set ELIZA_SERVER_AUTH_TOKEN environment variable to enable.'
+          'Server authentication is disabled. Set ELIZA_SERVER_AUTH_TOKEN or SHARED_JWT_SECRET environment variable to enable.'
         );
       }
+
+      // Security validation middleware - applied to all /api routes
+      const { securityValidation, contentLengthValidation } = await import(
+        './middleware/ValidationMiddleware'
+      );
+      logger.info('Applying security validation middleware to all API routes');
+      this.app.use('/api', securityValidation);
+      this.app.use('/api', contentLengthValidation(10 * 1024 * 1024)); // 10MB limit for API requests
 
       const uploadsBasePath = path.join(process.cwd(), '.eliza', 'data', 'uploads', 'agents');
       const generatedBasePath = path.join(process.cwd(), '.eliza', 'data', 'generated');
@@ -589,6 +627,52 @@ export class AgentServer {
       const clientPath = path.resolve(__dirname, '../../cli/dist');
       this.app.use(express.static(clientPath, staticOptions));
 
+      // *** NEW: Special route for iframe embedding ***
+      this.app.get('/admin', (req: express.Request, res: express.Response): void => {
+        const isEmbed = req.query.embed === 'true';
+        const token = req.query.token;
+
+        if (isEmbed && token) {
+          // For iframe embedding, we need to verify the JWT token
+          logger.info('Serving embedded admin interface with token authentication');
+
+          // Set headers to allow iframe embedding from the platform
+          res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+          res.setHeader(
+            'Content-Security-Policy',
+            "frame-ancestors 'self' http://localhost:3333 https://*.elizaos.com"
+          );
+
+          // Add token info to the HTML for client-side use
+          const html = `<!DOCTYPE html>
+<html>
+<head>
+    <title>ElizaOS Agent Management</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+        // Store token for API calls
+        window.__ELIZA_TOKEN__ = '${token}';
+        window.__ELIZA_EMBED__ = true;
+        // Redirect to main interface with token in hash
+        window.location.href = '/#/embed?token=' + encodeURIComponent('${token}');
+    </script>
+</head>
+<body>
+    <div>Loading ElizaOS Agent Management...</div>
+</body>
+</html>`;
+
+          res.setHeader('Content-Type', 'text/html');
+          res.send(html);
+          return;
+        }
+
+        // Regular admin access - serve the normal SPA
+        const cliDistPath = path.resolve(__dirname, '../../cli/dist');
+        res.sendFile(path.join(cliDistPath, 'index.html'));
+      });
+
       // *** NEW: Mount the plugin route handler BEFORE static serving ***
       const pluginRouteHandler = createPluginRouteHandler(this.agents);
       this.app.use(pluginRouteHandler);
@@ -613,7 +697,7 @@ export class AgentServer {
           next();
         },
         apiRouter,
-        (err: any, req: Request, res: Response) => {
+        (err: any, req: Request, res: Response, _next: express.NextFunction) => {
           logger.error(`API error: ${req.method} ${req.path}`, err);
           res.status(500).json({
             success: false,
@@ -696,8 +780,63 @@ export class AgentServer {
         throw new Error('Runtime missing character configuration');
       }
 
+      // Default server is now ensured during initialization
+      if (this.agents.size === 0) {
+        logger.info('[AgentServer] First agent registration');
+        try {
+          // No need to ensure default server here anymore
+          logger.debug('[AgentServer] Default server already exists from initialization');
+        } catch (_error) {
+          logger.warn(
+            '[AgentServer] Could not ensure default server, it will be created when tables are ready'
+          );
+        }
+      }
+
       this.agents.set(runtime.agentId, runtime);
       logger.debug(`Agent ${runtime.character.name} (${runtime.agentId}) added to agents map`);
+
+      // **FIX: Persist agent to database**
+      if (this.database) {
+        try {
+          logger.info(`[AgentServer] Persisting agent ${runtime.character.name} to database...`);
+
+          // Create agent record in database
+          const agentData = {
+            id: runtime.agentId,
+            name: runtime.character.name,
+            bio: Array.isArray(runtime.character.bio)
+              ? runtime.character.bio
+              : [runtime.character.bio || ''],
+            system: runtime.character.system,
+            settings: runtime.character.settings || {},
+            plugins: runtime.character.plugins || [],
+            topics: runtime.character.topics || [],
+            knowledge: runtime.character.knowledge || [],
+            messageExamples: runtime.character.messageExamples || [],
+            postExamples: runtime.character.postExamples || [],
+            style: runtime.character.style || {},
+            enabled: true,
+            status: AgentStatus.ACTIVE,
+          };
+
+          const created = await this.database.createAgent(agentData);
+          if (created) {
+            logger.success(`[AgentServer] ✓ Agent ${runtime.character.name} persisted to database`);
+          } else {
+            logger.warn(
+              `[AgentServer] ⚠ Agent ${runtime.character.name} may already exist in database`
+            );
+          }
+        } catch (dbError) {
+          logger.error('[AgentServer] ✗ Failed to persist agent to database:', dbError);
+          // Don't throw - agent can still function in memory
+        }
+      } else {
+        logger.warn(
+          `[AgentServer] ⚠ Database not available - agent ${runtime.character.name} only exists in memory`
+        );
+      }
 
       // Auto-register the MessageBusConnector plugin
       try {
@@ -707,7 +846,7 @@ export class AgentServer {
             `[AgentServer] Automatically registered MessageBusConnector for agent ${runtime.character.name}`
           );
         } else {
-          logger.error(`[AgentServer] CRITICAL: MessageBusConnector plugin definition not found.`);
+          logger.error('[AgentServer] CRITICAL: MessageBusConnector plugin definition not found.');
         }
       } catch (e) {
         logger.error(
@@ -832,14 +971,9 @@ export class AgentServer {
           logger.success(
             `REST API bound to ${host}:${port}. If running locally, access it at http://localhost:${port}.`
           );
-          logger.debug(`Active agents: ${this.agents.size}`);
-          this.agents.forEach((agent, id) => {
-            logger.debug(`- Agent ${id}: ${agent.character.name}`);
-          });
+          console.log('\x1b[36m📚 Learn more at \x1b[1mhttps://eliza.how\x1b[22m\x1b[0m');
         })
         .on('error', (error: any) => {
-          logger.error(`Failed to bind server to ${host}:${port}:`, error);
-
           // Provide helpful error messages for common issues
           if (error.code === 'EADDRINUSE') {
             logger.error(
@@ -911,11 +1045,66 @@ export class AgentServer {
    * stops the database connection, and logs a success message.
    */
   public async stop(): Promise<void> {
+    logger.info('Stopping AgentServer...');
+
+    // Stop all agents first
+    if (this.agents.size > 0) {
+      logger.debug('Stopping all agents...');
+      const stopPromises: Promise<void>[] = [];
+      for (const [id, agent] of this.agents.entries()) {
+        try {
+          logger.debug(`Stopping agent ${id}`);
+          stopPromises.push(agent.stop());
+        } catch (error) {
+          logger.error(`Error stopping agent ${id}:`, error);
+        }
+      }
+      await Promise.allSettled(stopPromises);
+      this.agents.clear();
+      logger.debug('All agents stopped');
+    }
+
+    // Disconnect Socket.IO clients
+    if (this.socketIO) {
+      try {
+        logger.debug('Disconnecting Socket.IO clients...');
+        this.socketIO.disconnectSockets();
+        await new Promise<void>((resolve) => {
+          this.socketIO.close(() => {
+            logger.debug('Socket.IO closed');
+            resolve();
+          });
+        });
+      } catch (error) {
+        logger.error('Error closing Socket.IO:', error);
+      }
+    }
+
+    // Close database connection
+    if (this.database) {
+      try {
+        logger.debug('Closing database connection...');
+        await this.database.close();
+        logger.debug('Database closed');
+      } catch (error) {
+        logger.error('Error closing database:', error);
+      }
+    }
+
+    // Close HTTP server
     if (this.server) {
-      this.server.close(() => {
-        logger.success('Server stopped');
+      await new Promise<void>((resolve) => {
+        this.server.close(() => {
+          logger.debug('HTTP server closed');
+          resolve();
+        });
       });
     }
+
+    // Reset initialization flag
+    this.isInitialized = false;
+
+    logger.success('AgentServer stopped successfully');
   }
 
   // Central DB Data Access Methods
@@ -948,6 +1137,10 @@ export class AgentServer {
 
   async addParticipantsToChannel(channelId: UUID, userIds: UUID[]): Promise<void> {
     return (this.database as any).addChannelParticipants(channelId, userIds);
+  }
+
+  async addAgentToChannel(channelId: UUID, agentId: UUID): Promise<void> {
+    return (this.database as any).addChannelParticipants(channelId, [agentId]);
   }
 
   async getChannelsForServer(serverId: UUID): Promise<MessageChannel[]> {
@@ -989,9 +1182,9 @@ export class AgentServer {
   async findOrCreateCentralDmChannel(
     user1Id: UUID,
     user2Id: UUID,
-    messageServerId: UUID
+    serverId: UUID
   ): Promise<MessageChannel> {
-    return (this.database as any).findOrCreateDmChannel(user1Id, user2Id, messageServerId);
+    return (this.database as any).findOrCreateDmChannel(user1Id, user2Id, serverId);
   }
 
   async createMessage(
@@ -1006,7 +1199,7 @@ export class AgentServer {
       const messageForBus: MessageServiceStructure = {
         id: createdMessage.id,
         channel_id: createdMessage.channelId,
-        server_id: channel.messageServerId,
+        server_id: channel.serverId,
         author_id: createdMessage.authorId,
         content: createdMessage.content,
         raw_message: createdMessage.rawMessage,
@@ -1036,7 +1229,7 @@ export class AgentServer {
   async removeParticipantFromChannel(): Promise<void> {
     // Since we don't have a direct method for this, we'll need to handle it at the channel level
     logger.warn(
-      `[AgentServer] Remove participant operation not directly supported in database adapter`
+      '[AgentServer] Remove participant operation not directly supported in database adapter'
     );
   }
 
@@ -1085,14 +1278,45 @@ export class AgentServer {
   async getServersForAgent(agentId: UUID): Promise<UUID[]> {
     // This method isn't directly supported in the adapter, so we need to implement it differently
     const servers = await (this.database as any).getMessageServers();
-    const serverIds = [];
+    const serverIds: UUID[] = [];
     for (const server of servers) {
       const agents = await (this.database as any).getAgentsForServer(server.id);
       if (agents.includes(agentId)) {
-        serverIds.push(server.id as never);
+        serverIds.push(server.id as UUID);
       }
     }
     return serverIds;
+  }
+
+  /**
+   * Emit a WebSocket event to all connected clients
+   * @param event - The event name to emit
+   * @param data - The data to send with the event
+   */
+  emitToAll(event: string, data: any): void {
+    if (this.socketIO) {
+      this.socketIO.emit(event, data);
+      logger.debug(`[AgentServer] Emitted '${event}' event to all connected clients`);
+    } else {
+      logger.warn(`[AgentServer] Cannot emit '${event}' - SocketIO not initialized`);
+    }
+  }
+
+  /**
+   * Emit a WebSocket event to clients in a specific room/channel
+   * @param room - The room/channel to emit to
+   * @param event - The event name to emit
+   * @param data - The data to send with the event
+   */
+  emitToRoom(room: string, event: string, data: any): void {
+    if (this.socketIO) {
+      this.socketIO.to(room).emit(event, data);
+      logger.debug(`[AgentServer] Emitted '${event}' event to room '${room}'`);
+    } else {
+      logger.warn(
+        `[AgentServer] Cannot emit '${event}' to room '${room}' - SocketIO not initialized`
+      );
+    }
   }
 }
 
@@ -1105,7 +1329,7 @@ export {
   loadCharacterTryPath,
   hasValidRemoteUrls,
   loadCharacters,
-} from './loader';
+} from './CharacterLoader';
 
 // Export types
 export * from './types';

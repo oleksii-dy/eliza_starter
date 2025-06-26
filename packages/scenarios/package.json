@@ -1,0 +1,91 @@
+{
+  "name": "@elizaos/scenarios",
+  "version": "0.2.0",
+  "private": false,
+  "description": "Comprehensive test scenarios for ElizaOS agents and plugins",
+  "type": "module",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./test": {
+      "import": "./dist/test-runner.js",
+      "types": "./dist/test-runner.d.ts"
+    }
+  },
+  "bin": {
+    "scenario-runner": "./dist/test-runner.js"
+  },
+  "scripts": {
+    "build": "bun run typecheck && bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
+    "test:runner": "tsx src/test-runner.ts",
+    "lint": "eslint src --fix && prettier --write .",
+    "lint:check": "eslint src && prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@elizaos/core": "workspace:*",
+    "@elizaos/server": "workspace:*",
+    "@elizaos/plugin-sql": "workspace:*",
+    "@elizaos/plugin-planning": "workspace:*",
+    "@elizaos/plugin-knowledge": "workspace:*",
+    "@elizaos/plugin-tasks": "workspace:*",
+    "uuid": "^10.0.0",
+    "chalk": "^5.3.0",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.29.0",
+    "@types/node": "^22.10.2",
+    "@types/uuid": "^10.0.0",
+    "@types/yargs": "^17.0.33",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
+    "eslint": "^9.22.0",
+    "prettier": "3.5.3",
+    "rimraf": "^5.0.5",
+    "tsx": "^4.7.1",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.34.1"
+  },
+  "peerDependencies": {
+    "@elizaos/core": "*"
+  },
+  "keywords": [
+    "eliza",
+    "elizaos",
+    "ai",
+    "agent",
+    "scenarios",
+    "testing",
+    "plugin-testing",
+    "integration-testing"
+  ],
+  "author": "ElizaOS",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elizaos/eliza.git",
+    "directory": "packages/scenarios"
+  },
+  "bugs": {
+    "url": "https://github.com/elizaos/eliza/issues"
+  },
+  "homepage": "https://github.com/elizaos/eliza#readme",
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

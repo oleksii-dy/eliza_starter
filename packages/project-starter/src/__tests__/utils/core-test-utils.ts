@@ -1,6 +1,5 @@
-import { mock } from 'bun:test';
 import { composeActionExamples, formatActionNames, formatActions } from '@elizaos/core';
-import type { Action, Content, IAgentRuntime, Memory, State } from '@elizaos/core';
+import type { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { logger } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -85,42 +84,86 @@ export const runCoreActionTests = (actions: Action[]) => {
 /**
  * Creates a mock runtime for testing
  */
-export const createMockRuntime = (): IAgentRuntime => {
+export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime {
   return {
+    agentId: uuidv4(),
     character: {
       name: 'Test Character',
-      system: 'You are a helpful assistant for testing.',
+      system: 'Test system prompt',
+      modelProvider: 'openai',
     },
-    getSetting: (key: string) => null,
-    // Include real model functionality
-    models: {},
-    // Add real database functionality
-    db: {
-      get: async () => null,
-      set: async () => true,
-      delete: async () => true,
-      getKeys: async () => [],
-    },
-    // Add real memory functionality
-    memory: {
-      add: async () => {},
-      get: async () => null,
-      getByEntityId: async () => [],
-      getLatest: async () => null,
-      getRecentMessages: async () => [],
-      search: async () => [],
-    },
+    evaluators: [],
     actions: [],
     providers: [],
-    getService: mock(),
-    processActions: mock(),
-  } as any as IAgentRuntime;
-};
+    services: {},
+    memory: {},
+    messageManager: {},
+    state: {},
+    ...overrides,
+  } as unknown as IAgentRuntime;
+}
+
+/**
+ * Creates a mock state for testing
+ */
+export function createMockState(overrides: Partial<State> = {}): State {
+  return {
+    values: {},
+    data: {},
+    text: '',
+    ...overrides,
+  } as State;
+}
+
+/**
+ * Creates a mock Memory object for testing
+ *
+ * @param text - The message text
+ * @param overrides - Optional overrides for the default memory properties
+ * @returns A mock memory object
+ */
+export function createMockMemory(overrides: Partial<Memory> = {}): Memory {
+  const entityId = uuidv4();
+  const roomId = uuidv4();
+
+  return {
+    id: uuidv4(),
+    entityId,
+    roomId,
+    content: {
+      text: '',
+      source: 'test',
+    },
+    timestamp: Date.now(),
+    ...overrides,
+  } as Memory;
+}
+
+/**
+ * Creates a mock Message object for testing
+ *
+ * @param text - The message text
+ * @param overrides - Optional overrides for the default memory properties
+ * @returns A mock memory object
+ */
+export function createMockMessage(text: string, overrides: Partial<Memory> = {}): Memory {
+  return createMockMemory({
+    content: {
+      text,
+      source: 'project-starter-test',
+    },
+    ...overrides,
+  });
+}
 
 /**
  * Documents test results for logging and debugging
  */
-export const documentTestResult = (testName: string, result: any, error: Error | null = null) => {
+export const documentTestResult = (
+  testName: string,
+  result: unknown,
+  error: Error | null = null
+) => {
   // Clean, useful test documentation for developers
   logger.info(`✓ Testing: ${testName}`);
 
@@ -147,34 +190,9 @@ export const documentTestResult = (testName: string, result: any, error: Error |
           const more = keys.length > 3 ? ` +${keys.length - 3} more` : '';
           logger.info(`  → {${preview}${more}}`);
         }
-      } catch (e) {
-        logger.info(`  → [Complex object]`);
+      } catch (_e) {
+        logger.info('  → [Complex object]');
       }
     }
   }
-};
-
-/**
- * Creates a mock message for testing
- */
-export const createMockMessage = (text: string): Memory => {
-  return {
-    entityId: uuidv4(),
-    roomId: uuidv4(),
-    content: {
-      text,
-      source: 'test',
-    },
-  } as Memory;
-};
-
-/**
- * Creates a mock state for testing
- */
-export const createMockState = (): State => {
-  return {
-    values: {},
-    data: {},
-    text: '',
-  };
 };

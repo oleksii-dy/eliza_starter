@@ -77,7 +77,7 @@ export async function forkExists(token: string, repo: string, username: string):
     });
 
     return response.status === 200;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -133,7 +133,7 @@ export async function branchExists(
     });
 
     return response.status === 200;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -368,7 +368,7 @@ export async function getFileContent(
     }
 
     return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -459,7 +459,7 @@ export async function updateFile(
       if (repoCheck.status === 404) {
         logger.error(`Repository ${owner}/${repo} does not exist or is not accessible`);
       } else {
-        logger.info(`Repository exists, but path is likely invalid`);
+        logger.info('Repository exists, but path is likely invalid');
       }
     }
 
@@ -531,7 +531,7 @@ export async function getAuthenticatedUser(token: string): Promise<GitHubUserRes
     }
 
     return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -721,7 +721,7 @@ export async function ensureDirectory(
         logger.info(`Directory ${path} already exists`);
         return true;
       }
-    } catch (error) {
+    } catch {
       // Directory doesn't exist, we'll create it
       logger.info(`Directory ${path} doesn't exist, creating it`);
     }
@@ -885,7 +885,7 @@ export async function pushToGitHub(
         hasCorrectRemote = sanitizedRemoteUrl.includes(
           sanitizedRepoUrl.replace(/^https:\/\/.*?@/, '')
         );
-      } catch (error) {
+      } catch {
         // Remote doesn't exist or command failed, will set up remote later
         hasCorrectRemote = false;
       }
@@ -911,7 +911,7 @@ export async function pushToGitHub(
       try {
         await execa('git', ['rev-parse', '--verify', branch], { cwd });
         await execa('git', ['checkout', branch], { cwd });
-      } catch (error) {
+      } catch {
         // Branch doesn't exist, create it
         await execa('git', ['checkout', '-b', branch], { cwd });
         logger.info(`Created and switched to ${branch} branch`);
@@ -925,7 +925,7 @@ export async function pushToGitHub(
     // Set git user info if not already set
     try {
       await execa('git', ['config', 'user.email'], { cwd });
-    } catch (error) {
+    } catch {
       await execa('git', ['config', 'user.email', 'plugindev@elizaos.com'], { cwd });
       await execa('git', ['config', 'user.name', 'ElizaOS Plugin Dev'], { cwd });
       logger.info('Set git user info for commit');
@@ -935,7 +935,7 @@ export async function pushToGitHub(
     try {
       await execa('git', ['commit', '-m', 'Initial commit from ElizaOS CLI'], { cwd });
       logger.info('Committed changes');
-    } catch (error) {
+    } catch {
       // If no changes to commit, that's okay
       logger.info('No changes to commit');
     }

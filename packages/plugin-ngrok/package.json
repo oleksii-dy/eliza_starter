@@ -1,0 +1,107 @@
+{
+  "name": "@elizaos/plugin-ngrok",
+  "version": "0.25.6-alpha.1",
+  "description": "Ngrok tunnel plugin for ElizaOS framework",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "@elizaos/source": "./src/index.ts",
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun run typecheck && bun run build.ts src/index.ts --format esm --dts && vite build",
+    "test": "elizaos test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "test:unit": "bun test src/__tests__/unit",
+    "demo": "tsx demo/ngrok-demo.ts",
+    "demo:api": "tsx demo/api-server.ts",
+    "demo:full": "concurrently \"npm run demo:api\" \"npm run dev\"",
+    "clean": "rm -rf dist coverage",
+    "dev": "vite",
+    "dev:plugin": "tsup src/index.ts --watch",
+    "example": "ts-node src/example/main.ts",
+    "lint": "eslint src --fix && prettier --write .",
+    "lint:check": "eslint src && prettier --check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@elizaos/core": "workspace:*",
+    "@elizaos/plugin-anthropic": "1.0.3",
+    "@ngrok/ngrok": "^1.5.1",
+    "@radix-ui/react-checkbox": "^1.1.2",
+    "@radix-ui/react-collapsible": "^1.1.2",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-separator": "^1.1.2",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-tabs": "^1.1.2",
+    "@tanstack/react-query": "^5.52.2",
+    "axios": "^1.7.2",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "express": "^4.19.2",
+    "lucide-react": "^0.417.0",
+    "minipass": "^7.1.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.4.0",
+    "tailwindcss-animate": "^1.0.7",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.17.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@tanstack/eslint-plugin-query": "^5.51.15",
+    "@types/bun": "^1.2.17",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^22.5.0",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.19",
+    "concurrently": "^8.2.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "esbuild": "^0.23.1",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "husky": "^9.1.4",
+    "jsdom": "^25.0.0",
+    "lint-staged": "^15.2.10",
+    "postcss": "^8.4.51",
+    "prettier": "^3.0.0",
+    "tailwindcss": "^3.4.10",
+    "typescript": "5.8.3",
+    "vite": "^5.4.1"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}

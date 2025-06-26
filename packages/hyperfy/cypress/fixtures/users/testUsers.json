@@ -1,0 +1,30 @@
+{
+  "testUser": {
+    "username": "testuser",
+    "password": "Test123!",
+    "email": "test@hyperfy.io",
+    "id": "user-test-001",
+    "role": "player"
+  },
+  "adminUser": {
+    "username": "admin",
+    "password": "Admin123!",
+    "email": "admin@hyperfy.io",
+    "id": "user-admin-001",
+    "role": "admin"
+  },
+  "player1": {
+    "username": "player1",
+    "password": "Player123!",
+    "email": "player1@hyperfy.io",
+    "id": "user-player-001",
+    "role": "player"
+  },
+  "player2": {
+    "username": "player2",
+    "password": "Player123!",
+    "email": "player2@hyperfy.io",
+    "id": "user-player-002",
+    "role": "player"
+  }
+} 

@@ -13,7 +13,6 @@ export function displayAgent(data: Partial<Agent>, title = 'Agent Review'): void
 
   // Display sections
   displaySection('Bio', Array.isArray(data.bio) ? data.bio : data.bio ? [data.bio] : undefined);
-  displaySection('Adjectives', data.adjectives);
   displaySection('Topics', data.topics);
   displaySection('Plugins', data.plugins);
 
@@ -56,7 +55,9 @@ function formatConversation(conversation: MessageExample[]): string {
  * Displays a section with a title and list of items
  */
 function displaySection(title: string, items: string[] | undefined): void {
-  if (!items || items.length === 0) return;
+  if (!items || items.length === 0) {
+    return;
+  }
 
   console.log(`\n${colors.cyan(`${title}:`)}`);
   for (const item of items) {

@@ -7,7 +7,7 @@ import { io as ioClient, Socket as ClientSocket } from 'socket.io-client';
 import { AgentServer } from '../../index';
 import type { IAgentRuntime, UUID, Character } from '@elizaos/core';
 import { SOCKET_MESSAGE_TYPE, ChannelType, AgentRuntime } from '@elizaos/core';
-import { createDatabaseAdapter } from '@elizaos/plugin-sql';
+// Database adapter will be created through server initialization
 import path from 'node:path';
 import fs from 'node:fs';
 
@@ -54,24 +54,14 @@ describe('Socket.IO End-to-End Message Flow', () => {
       name: 'Test Agent',
       bio: ['Test bio'],
       topics: [],
-      clients: [],
       plugins: [],
       settings: {
-        model: 'gpt-4',
         secrets: {},
       },
-      modelProvider: 'openai',
     } as Character;
 
-    // Create a real agent runtime for testing
-    const db = createDatabaseAdapter(
-      {
-        dataDir: testDbPath,
-      },
-      'test-agent-123' as UUID
-    );
-
-    await db.init();
+    // Database adapter will be created through server initialization
+    const db = agentServer.database;
 
     mockRuntime = new AgentRuntime({
       agentId: 'test-agent-123' as UUID,
@@ -87,14 +77,18 @@ describe('Socket.IO End-to-End Message Flow', () => {
     port = 3100;
     agentServer.start(port);
 
-    // Wait a bit for server to fully start
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Wait for server to fully start
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }); // Increase timeout to 60 seconds
 
   afterAll(async () => {
     // Close all connections
-    if (client1) client1.close();
-    if (client2) client2.close();
+    if (client1) {
+      client1.close();
+    }
+    if (client2) {
+      client2.close();
+    }
 
     // Stop server
     await agentServer.stop();
@@ -120,8 +114,12 @@ describe('Socket.IO End-to-End Message Flow', () => {
 
   afterEach(() => {
     // Disconnect clients after each test
-    if (client1.connected) client1.disconnect();
-    if (client2.connected) client2.disconnect();
+    if (client1.connected) {
+      client1.disconnect();
+    }
+    if (client2.connected) {
+      client2.disconnect();
+    }
   });
 
   describe('Connection and Channel Joining', () => {

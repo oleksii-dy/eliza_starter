@@ -8,13 +8,13 @@ import {
   type UUID,
 } from '@elizaos/core';
 import express from 'express';
-import internalMessageBus from '../../bus';
+import internalMessageBus from '../../MessageBus';
 import type { AgentServer } from '../../index';
 import type { MessageServiceStructure as MessageService } from '../../types';
-import { channelUpload, validateMediaFile, processUploadedFile } from '../../upload';
+import { channelUpload, validateMediaFile, processUploadedFile } from '../../UploadHandler';
 import { createUploadRateLimit, createFileSystemRateLimit } from '../shared/middleware';
 import { MAX_FILE_SIZE } from '../shared/constants';
-import { cleanupUploadedFile } from '../shared/file-utils';
+import { cleanupUploadedFile } from '../shared/fileUtils';
 import type fileUpload from 'express-fileupload';
 
 const DEFAULT_SERVER_ID = '00000000-0000-0000-0000-000000000000' as UUID;
@@ -110,7 +110,7 @@ export function createChannelsRouter(
 
             const channelData = {
               id: channelIdParam as UUID, // Use the specific channel ID from the URL
-              messageServerId: server_id as UUID,
+              serverId: server_id as UUID,
               name: isDmChannel
                 ? `DM ${channelIdParam.substring(0, 8)}`
                 : `Chat ${channelIdParam.substring(0, 8)}`,
@@ -303,25 +303,41 @@ export function createChannelsRouter(
 
   // POST /channels - Create a new central channel
   (router as any).post('/channels', async (req: express.Request, res: express.Response) => {
-    const { messageServerId, name, type, sourceType, sourceId, topic, metadata } = req.body;
+    const serverId = req.body.serverId as UUID;
+    const { name, type, sourceType, sourceId, metadata } = req.body;
+    const topic = req.body.topic ?? req.body.description;
 
-    if (!messageServerId || !name || !type) {
+    if (!serverId) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: messageServerId, name, type',
+        error: 'Missing required fields: serverId.',
       });
     }
 
-    if (!validateUuid(messageServerId)) {
+    if (!name) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid messageServerId format',
+        error: 'Missing required fields: name.',
+      });
+    }
+
+    if (!type) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: type.',
+      });
+    }
+
+    if (!validateUuid(serverId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid serverId format',
       });
     }
 
     try {
       const channel = await serverInstance.createChannel({
-        messageServerId: messageServerId as UUID,
+        serverId,
         name,
         type,
         sourceType,
@@ -398,7 +414,7 @@ export function createChannelsRouter(
       name,
       participantCentralUserIds,
       type = ChannelType.GROUP,
-      server_id,
+      server_id = DEFAULT_SERVER_ID, // Default to DEFAULT_SERVER_ID if not provided
       metadata,
     } = req.body;
 
@@ -414,13 +430,13 @@ export function createChannelsRouter(
       return res.status(400).json({
         success: false,
         error:
-          'Invalid payload. Required: name, server_id (UUID or "0"), participantCentralUserIds (array of UUIDs). Optional: type, metadata.',
+          'Invalid payload. Required: name, participantCentralUserIds (array of UUIDs). Optional: type, server_id (defaults to default server), metadata.',
       });
     }
 
     try {
       const channelData = {
-        messageServerId: server_id as UUID,
+        serverId: server_id as UUID,
         name,
         type: type as ChannelType,
         metadata: {
@@ -663,8 +679,8 @@ export function createChannelsRouter(
 
         // Then emit message_deleted event to internal bus for agent memory cleanup
         const deletedMessagePayload = {
-          messageId: messageId,
-          channelId: channelId,
+          messageId,
+          channelId,
         };
 
         internalMessageBus.emit('message_deleted', deletedMessagePayload);
@@ -675,8 +691,8 @@ export function createChannelsRouter(
         // Also, emit an event via SocketIO to inform clients about the deletion
         if (serverInstance.socketIO) {
           serverInstance.socketIO.to(channelId).emit('messageDeleted', {
-            messageId: messageId,
-            channelId: channelId,
+            messageId,
+            channelId,
           });
         }
         res.status(204).send();
@@ -704,7 +720,7 @@ export function createChannelsRouter(
 
         // Emit to internal bus for agent memory cleanup
         const channelClearedPayload = {
-          channelId: channelId,
+          channelId,
         };
         internalMessageBus.emit('channel_cleared', channelClearedPayload);
         logger.info(
@@ -714,7 +730,7 @@ export function createChannelsRouter(
         // Also, emit an event via SocketIO to inform clients about the channel clear
         if (serverInstance.socketIO) {
           serverInstance.socketIO.to(channelId).emit('channelCleared', {
-            channelId: channelId,
+            channelId,
           });
         }
         res.status(204).send();
@@ -743,7 +759,7 @@ export function createChannelsRouter(
         // Emit an event via SocketIO to inform clients about the channel update
         if (serverInstance.socketIO) {
           serverInstance.socketIO.to(channelId).emit('channelUpdated', {
-            channelId: channelId,
+            channelId,
             updates: updatedChannel,
           });
         }
@@ -776,7 +792,7 @@ export function createChannelsRouter(
 
         // Emit to internal bus for agent memory cleanup (same as clear messages)
         const channelClearedPayload = {
-          channelId: channelId,
+          channelId,
         };
         internalMessageBus.emit('channel_cleared', channelClearedPayload);
         logger.info(
@@ -786,7 +802,7 @@ export function createChannelsRouter(
         // Emit an event via SocketIO to inform clients about the channel deletion
         if (serverInstance.socketIO) {
           serverInstance.socketIO.to(channelId).emit('channelDeleted', {
-            channelId: channelId,
+            channelId,
           });
         }
         res.status(204).send();
@@ -948,7 +964,7 @@ export function createChannelsRouter(
             recentMessages,
             values: {},
             data: {},
-            text: recentMessages,
+            text: '',
           },
           template: `
 Based on the conversation below, generate a short, descriptive title for this chat. The title should capture the main topic or theme of the discussion.

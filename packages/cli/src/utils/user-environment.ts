@@ -210,7 +210,7 @@ export class UserEnvironment {
         execSync(command, { stdio: 'ignore' });
         isGlobalCheck = true;
       }
-    } catch (error) {
+    } catch (_error) {
       // Package not found globally
       isGlobalCheck = false;
     }
@@ -256,7 +256,7 @@ export class UserEnvironment {
               }
             }
           }
-        } catch (e) {
+        } catch (_e) {
           // Ignore errors like permission denied, continue search
         }
       }
@@ -355,7 +355,9 @@ export class UserEnvironment {
 
         if (existsSync(monoRepoPackagePath)) {
           const packageJson = JSON.parse(await fs.readFile(monoRepoPackagePath, 'utf8'));
-          if (packageJson.version) return packageJson.version;
+          if (packageJson.version) {
+            return packageJson.version;
+          }
         }
       }
 
@@ -404,7 +406,9 @@ export class UserEnvironment {
    */
   public async getLocalPackages(): Promise<string[]> {
     const { monorepoRoot } = await this.getPathInfo();
-    if (!monorepoRoot) return [];
+    if (!monorepoRoot) {
+      return [];
+    }
 
     try {
       const packagesDirEntries = await fs.readdir(path.join(monorepoRoot, 'packages'), {

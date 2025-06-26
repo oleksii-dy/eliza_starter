@@ -21,7 +21,6 @@ export const generateMockAgent = (overrides?: Partial<Agent>): Agent => {
     messageExamples: overrides?.messageExamples || [],
     postExamples: overrides?.postExamples || [],
     topics: overrides?.topics || ['testing', 'automation'],
-    adjectives: overrides?.adjectives || ['helpful', 'friendly'],
     knowledge: overrides?.knowledge || [],
     plugins: overrides?.plugins || [],
     settings: overrides?.settings || {
@@ -30,7 +29,6 @@ export const generateMockAgent = (overrides?: Partial<Agent>): Agent => {
     secrets: overrides?.secrets || {},
     style: overrides?.style || {},
     system: overrides?.system,
-    templates: overrides?.templates || {},
     enabled: overrides?.enabled ?? true,
     status: overrides?.status || AgentStatus.INACTIVE,
     createdAt: overrides?.createdAt || Date.now(),
@@ -41,7 +39,7 @@ export const generateMockAgent = (overrides?: Partial<Agent>): Agent => {
 
 // Generate valid UUID
 export const generateUUID = (): UUID => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
@@ -61,7 +59,7 @@ export const mockAPIResponses = {
     }),
   },
   messages: {
-    success: (messages: any[] = []) => ({
+    success: (messages: unknown[] = []) => ({
       statusCode: 200,
       body: { messages, success: true },
     }),

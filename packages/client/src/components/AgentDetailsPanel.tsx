@@ -2,8 +2,7 @@ import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import type { Agent } from '@elizaos/core';
-import { AgentStatus } from '@elizaos/core';
+import { AgentStatus, type Agent } from '@elizaos/core';
 
 interface AgentDetailsPanelProps {
   agent: Agent;
@@ -60,20 +59,6 @@ export default function AgentDetailsPanel({ agent }: AgentDetailsPanelProps) {
                   {agent.topics.map((topic, idx) => (
                     <Badge key={idx} variant="outline" className="text-xs">
                       {topic}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Adjectives */}
-            {agent.adjectives && agent.adjectives.length > 0 && (
-              <div>
-                <h4 className="font-medium text-sm mb-2">Personality Traits</h4>
-                <div className="flex flex-wrap gap-1">
-                  {agent.adjectives.map((adj, idx) => (
-                    <Badge key={idx} variant="secondary" className="text-xs">
-                      {adj}
                     </Badge>
                   ))}
                 </div>

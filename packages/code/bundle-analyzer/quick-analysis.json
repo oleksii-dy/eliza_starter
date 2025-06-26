@@ -1,0 +1,79 @@
+{
+  "fileStats": {
+    "totalLines": 70361,
+    "imports": 17,
+    "requires": 2,
+    "exports": 1,
+    "functions": 1754,
+    "classes": 180,
+    "webpackPatterns": 0,
+    "minifiedVariables": 142
+  },
+  "detectedLibraries": {
+    "zod": 627,
+    "react": 214,
+    "lodash": 44,
+    "vue": 18,
+    "commander": 16,
+    "yargs": 14,
+    "chalk": 8,
+    "axios": 7,
+    "moment": 1
+  },
+  "businessPatterns": {
+    "config": 510,
+    "utils": 15,
+    "database": 331,
+    "business_logic": 499,
+    "auth": 167,
+    "api_calls": 257,
+    "validation": 49
+  },
+  "npmDependencies": [
+    "assert",
+    "crypto",
+    "fs",
+    "http",
+    "https",
+    "inspector",
+    "node:fs",
+    "node:os",
+    "node:path",
+    "node:process",
+    "node:stream",
+    "node:tty",
+    "os",
+    "path",
+    "stream",
+    "url",
+    "util",
+    "zlib"
+  ],
+  "analysis": {
+    "isWebpackBundle": false,
+    "isMinified": true,
+    "hasBusinessLogic": true,
+    "primaryLibraries": [
+      {
+        "library": "zod",
+        "occurrences": 627
+      },
+      {
+        "library": "react",
+        "occurrences": 214
+      },
+      {
+        "library": "lodash",
+        "occurrences": 44
+      },
+      {
+        "library": "vue",
+        "occurrences": 18
+      },
+      {
+        "library": "commander",
+        "occurrences": 16
+      }
+    ]
+  }
+}

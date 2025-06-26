@@ -34,7 +34,7 @@ if (app && !app.document.head.querySelector('[data-hide-command-log-request]')) 
 }
 
 // Prevent Cypress from failing tests on uncaught exceptions
-Cypress.on('uncaught:exception', (err, runnable) => {
+Cypress.on('uncaught:exception', (err, _runnable) => {
   // Return false to prevent the error from failing the test
   // You might want to log these errors for debugging
   console.error('Uncaught exception:', err);

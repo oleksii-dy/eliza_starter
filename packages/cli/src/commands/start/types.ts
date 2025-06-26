@@ -1,5 +1,5 @@
 import { type Character, type IAgentRuntime, type Plugin } from '@elizaos/core';
-import { type AgentServer } from '@elizaos/server';
+import { type default as AgentServer } from '@elizaos/server';
 
 /**
  * Start command options and interfaces
@@ -11,6 +11,11 @@ import { type AgentServer } from '@elizaos/server';
 export interface StartOptions {
   port?: number;
   configDir?: string;
+  timeout?: number; // Duration in seconds to run before shutdown
+  testMode?: boolean; // Run in test mode (exits after initialization)
+  autonomous?: boolean; // Enable autonomous mode
+  adminPort?: number; // Admin interface port
+  saveLogsTo?: string; // Directory to save logs
 }
 
 /**

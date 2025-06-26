@@ -2,6 +2,21 @@ import type { Memory } from './memory';
 import type { Content } from './primitives';
 import type { IAgentRuntime } from './runtime';
 import type { State } from './state';
+import type { ActionResult } from './planning';
+
+/**
+ * Base interface for plugin components (actions, providers, evaluators)
+ */
+export interface PluginComponent {
+  /** Component name */
+  name: string;
+
+  /** Detailed description */
+  description?: string;
+
+  /** Whether this component is enabled by default (defaults to true if not specified) */
+  enabled?: boolean;
+}
 
 /**
  * Example content with associated user for demonstration purposes
@@ -29,7 +44,7 @@ export type Handler = (
   options?: { [key: string]: unknown },
   callback?: HandlerCallback,
   responses?: Memory[]
-) => Promise<unknown>;
+) => Promise<ActionResult | void | boolean | null>;
 
 /**
  * Validator function type for actions/evaluators
@@ -43,12 +58,12 @@ export type Validator = (
 /**
  * Represents an action the agent can perform
  */
-export interface Action {
+export interface Action extends PluginComponent {
+  /** Detailed description (required for actions) */
+  description: string;
+
   /** Similar action descriptions */
   similes?: string[];
-
-  /** Detailed description */
-  description: string;
 
   /** Example usages */
   examples?: ActionExample[][];
@@ -56,11 +71,18 @@ export interface Action {
   /** Handler function */
   handler: Handler;
 
-  /** Action name */
-  name: string;
-
   /** Validation function */
   validate: Validator;
+
+  /** Optional effects for planning - defines what this action provides, requires, and modifies */
+  effects?: {
+    provides: string[]; // What this action provides
+    requires: string[]; // What this action needs
+    modifies: string[]; // What state it changes
+  };
+
+  /** Optional cost estimation for planning */
+  estimateCost?: (params: any) => number;
 }
 
 /**
@@ -80,12 +102,12 @@ export interface EvaluationExample {
 /**
  * Evaluator for assessing agent responses
  */
-export interface Evaluator {
+export interface Evaluator extends PluginComponent {
+  /** Detailed description (required for evaluators) */
+  description: string;
+
   /** Whether to always run */
   alwaysRun?: boolean;
-
-  /** Detailed description */
-  description: string;
 
   /** Similar evaluator descriptions */
   similes?: string[];
@@ -95,9 +117,6 @@ export interface Evaluator {
 
   /** Handler function */
   handler: Handler;
-
-  /** Evaluator name */
-  name: string;
 
   /** Validation function */
   validate: Validator;
@@ -116,13 +135,7 @@ export interface ProviderResult {
 /**
  * Provider for external data/services
  */
-export interface Provider {
-  /** Provider name */
-  name: string;
-
-  /** Description of the provider */
-  description?: string;
-
+export interface Provider extends PluginComponent {
   /** Whether the provider is dynamic */
   dynamic?: boolean;
 

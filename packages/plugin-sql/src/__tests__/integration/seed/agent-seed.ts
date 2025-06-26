@@ -1,7 +1,7 @@
 /**
  * Seed data for agent integration tests
  */
-import { type Agent } from '@elizaos/core';
+import type { Agent } from '@elizaos/core';
 
 /**
  * Test agent data used across agent integration tests

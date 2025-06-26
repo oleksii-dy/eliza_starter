@@ -2,38 +2,17 @@
  * Unit tests for MessageBusService
  */
 
-import { describe, it, expect, beforeEach, mock, afterEach, jest } from 'bun:test';
-import { MessageBusService } from '../services/message';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
+import { MessageBusService } from '../services/MessageBusService';
 import { createMockAgentRuntime } from './test-utils/mocks';
 import { EventType, type IAgentRuntime, type UUID } from '@elizaos/core';
 import { logger } from '@elizaos/core';
-import internalMessageBus from '../bus';
+import internalMessageBus from '../MessageBus';
 
-// Mock the internal message bus
-mock.module('../bus', () => ({
-  default: {
-    on: jest.fn(),
-    off: jest.fn(),
-    emit: jest.fn(),
-  },
-}));
-
-// Mock logger
-mock.module('@elizaos/core', async () => {
-  const actual = await import('@elizaos/core');
-  return {
-    ...actual,
-    logger: {
-      info: jest.fn(),
-      debug: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    },
-  };
-});
+// Mock dependencies removed due to timeout issues in Bun
 
 // Mock fetch
-const mockFetch = jest.fn() as any;
+const mockFetch = mock() as any;
 global.fetch = mockFetch;
 
 describe('MessageBusService', () => {
@@ -44,27 +23,27 @@ describe('MessageBusService', () => {
     mockRuntime = createMockAgentRuntime();
 
     // Mock runtime database methods
-    mockRuntime.ensureWorldExists = jest.fn().mockReturnValue(Promise.resolve(undefined));
-    mockRuntime.ensureRoomExists = jest.fn().mockReturnValue(Promise.resolve(undefined));
-    mockRuntime.getEntityById = jest.fn().mockReturnValue(Promise.resolve(null));
-    mockRuntime.createEntity = jest.fn().mockReturnValue(Promise.resolve(undefined));
-    mockRuntime.getMemoryById = jest.fn().mockReturnValue(Promise.resolve(null));
-    mockRuntime.createMemory = jest.fn().mockReturnValue(Promise.resolve('mem-123'));
-    mockRuntime.getRoom = jest.fn().mockReturnValue(
+    mockRuntime.ensureWorldExists = mock().mockReturnValue(Promise.resolve(undefined));
+    mockRuntime.ensureRoomExists = mock().mockReturnValue(Promise.resolve(undefined));
+    mockRuntime.getEntityById = mock().mockReturnValue(Promise.resolve(null));
+    mockRuntime.createEntity = mock().mockReturnValue(Promise.resolve(undefined));
+    mockRuntime.getMemoryById = mock().mockReturnValue(Promise.resolve(null));
+    mockRuntime.createMemory = mock().mockReturnValue(Promise.resolve('mem-123'));
+    mockRuntime.getRoom = mock().mockReturnValue(
       Promise.resolve({
         channelId: '456e7890-e89b-12d3-a456-426614174000',
         serverId: '789e1234-e89b-12d3-a456-426614174000',
       })
     );
-    mockRuntime.getWorld = jest
-      .fn()
-      .mockReturnValue(Promise.resolve({ serverId: '789e1234-e89b-12d3-a456-426614174000' }));
-    mockRuntime.getMemoriesByRoomIds = jest.fn().mockReturnValue(Promise.resolve([]));
-    mockRuntime.emitEvent = jest.fn().mockReturnValue(Promise.resolve(undefined));
-    mockRuntime.getSetting = jest.fn().mockReturnValue('http://localhost:3000');
+    mockRuntime.getWorld = mock().mockReturnValue(
+      Promise.resolve({ serverId: '789e1234-e89b-12d3-a456-426614174000' })
+    );
+    mockRuntime.getMemoriesByRoomIds = mock().mockReturnValue(Promise.resolve([]));
+    mockRuntime.emitEvent = mock().mockReturnValue(Promise.resolve(undefined));
+    mockRuntime.getSetting = mock().mockReturnValue('http://localhost:3000');
 
     // Mock successful fetch responses
-    mockFetch.mockImplementation((url) => {
+    mockFetch.mockImplementation((url: string) => {
       // Mock central servers channels endpoint
       if (url.includes('/api/messaging/central-servers/') && url.includes('/channels')) {
         return Promise.resolve({
@@ -167,7 +146,7 @@ describe('MessageBusService', () => {
     it('should handle new messages from the bus', async () => {
       // Get the handler that was registered
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'new_message'
+        (call: any) => call[0] === 'new_message'
       )[1];
 
       const testMessage = {
@@ -201,7 +180,7 @@ describe('MessageBusService', () => {
 
     it('should skip messages from self', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'new_message'
+        (call: any) => call[0] === 'new_message'
       )[1];
 
       const testMessage = {
@@ -232,7 +211,7 @@ describe('MessageBusService', () => {
 
     it('should skip messages if agent not in channel', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'new_message'
+        (call: any) => call[0] === 'new_message'
       )[1];
 
       const testMessage = {
@@ -250,7 +229,7 @@ describe('MessageBusService', () => {
 
       // Clear previous mocks and set up specific mock for this test
       mockFetch.mockClear();
-      mockFetch.mockImplementation((url) => {
+      mockFetch.mockImplementation((url: string) => {
         if (url.includes('/api/messaging/central-channels/') && url.includes('/participants')) {
           return Promise.resolve({
             ok: true,
@@ -289,7 +268,7 @@ describe('MessageBusService', () => {
 
     it('should handle message processing errors gracefully', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'new_message'
+        (call: any) => call[0] === 'new_message'
       )[1];
 
       const testMessage = {
@@ -307,7 +286,7 @@ describe('MessageBusService', () => {
 
       // Clear previous mocks and set up error mock for this test
       mockFetch.mockClear();
-      mockFetch.mockImplementation((url) => {
+      mockFetch.mockImplementation((url: string) => {
         if (url.includes('/api/messaging/central-channels/') && url.includes('/participants')) {
           return Promise.reject(new Error('Network error'));
         }
@@ -329,7 +308,7 @@ describe('MessageBusService', () => {
   describe('message deletion handling', () => {
     it('should handle message deletion events', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'message_deleted'
+        (call: any) => call[0] === 'message_deleted'
       )[1];
 
       const deleteData = {
@@ -337,7 +316,7 @@ describe('MessageBusService', () => {
       };
 
       // Mock existing memory
-      mockRuntime.getMemoryById = jest.fn().mockResolvedValueOnce({
+      mockRuntime.getMemoryById = mock().mockResolvedValueOnce({
         id: 'mem-123',
         content: { text: 'Test message' },
       });
@@ -358,7 +337,7 @@ describe('MessageBusService', () => {
 
     it('should handle deletion when message not found', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'message_deleted'
+        (call: any) => call[0] === 'message_deleted'
       )[1];
 
       const deleteData = {
@@ -366,7 +345,7 @@ describe('MessageBusService', () => {
       };
 
       // Mock no memory found
-      mockRuntime.getMemoryById = jest.fn().mockResolvedValueOnce(null);
+      mockRuntime.getMemoryById = mock().mockResolvedValueOnce(null);
 
       await handler(deleteData);
 
@@ -379,7 +358,7 @@ describe('MessageBusService', () => {
   describe('channel clearing', () => {
     it('should handle channel clear events', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'channel_cleared'
+        (call: any) => call[0] === 'channel_cleared'
       )[1];
 
       const clearData = {
@@ -387,7 +366,7 @@ describe('MessageBusService', () => {
       };
 
       // Mock memories in channel
-      mockRuntime.getMemoriesByRoomIds = jest.fn().mockResolvedValueOnce([
+      mockRuntime.getMemoriesByRoomIds = mock().mockResolvedValueOnce([
         { id: 'mem-1', content: { text: 'Message 1' } },
         { id: 'mem-2', content: { text: 'Message 2' } },
       ]);
@@ -411,7 +390,7 @@ describe('MessageBusService', () => {
   describe('server agent updates', () => {
     it('should handle agent added to server', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'server_agent_update'
+        (call: any) => call[0] === 'server_agent_update'
       )[1];
 
       const updateData = {
@@ -429,7 +408,7 @@ describe('MessageBusService', () => {
 
     it('should handle agent removed from server', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'server_agent_update'
+        (call: any) => call[0] === 'server_agent_update'
       )[1];
 
       const updateData = {
@@ -447,7 +426,7 @@ describe('MessageBusService', () => {
 
     it('should ignore updates for other agents', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'server_agent_update'
+        (call: any) => call[0] === 'server_agent_update'
       )[1];
 
       const updateData = {

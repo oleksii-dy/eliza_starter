@@ -1,38 +1,45 @@
-import { sql } from 'drizzle-orm';
-import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { agentTable } from './agent';
-import { entityTable } from './entity';
-import { roomTable } from './room';
-import { worldTable } from './world';
+import { getSchemaFactory, createLazyTableProxy } from './factory';
+
+/**
+ * Lazy-loaded component table definition.
+ * This function returns the component table schema when called,
+ * ensuring the database type is set before schema creation.
+ * Foreign key references are removed to avoid circular dependencies.
+ * The database constraints will be enforced at the application level.
+
+ */
+function createComponentTable() {
+  const factory = getSchemaFactory();
+
+  return factory.table(
+    'components',
+    {
+      id: factory.uuid('id').primaryKey().notNull(),
+      entityId: factory.uuid('entity_id').notNull(),
+      agentId: factory.uuid('agent_id').notNull(),
+      roomId: factory.uuid('room_id').notNull(),
+      worldId: factory.uuid('world_id').notNull(),
+      sourceEntityId: factory.uuid('source_entity_id').notNull(),
+      type: factory.text('type').notNull(),
+      createdAt: factory.timestamp('created_at').default(factory.defaultTimestamp()).notNull(),
+      data: factory.json('data').notNull(),
+    },
+    (table) => {
+      return [
+        factory.index('idx_components_entity').on(table.entityId),
+        factory.index('idx_components_agent').on(table.agentId),
+        factory.index('idx_components_room').on(table.roomId),
+        factory.index('idx_components_world').on(table.worldId),
+        factory.index('idx_components_source_entity').on(table.sourceEntityId),
+        factory.index('idx_components_type').on(table.type),
+      ];
+    }
+  );
+}
 
 /**
  * Represents a component table in the database.
+ * Uses lazy initialization to ensure proper database type configuration.
+
  */
-export const componentTable = pgTable('components', {
-  id: uuid('id')
-    .primaryKey()
-    .default(sql`gen_random_uuid()`)
-    .notNull(),
-
-  // Foreign keys
-  entityId: uuid('entityId')
-    .references(() => entityTable.id, { onDelete: 'cascade' })
-    .notNull(),
-  agentId: uuid('agentId')
-    .references(() => agentTable.id, { onDelete: 'cascade' })
-    .notNull(),
-  roomId: uuid('roomId')
-    .references(() => roomTable.id, { onDelete: 'cascade' })
-    .notNull(),
-  worldId: uuid('worldId').references(() => worldTable.id, { onDelete: 'cascade' }),
-  sourceEntityId: uuid('sourceEntityId').references(() => entityTable.id, { onDelete: 'cascade' }),
-
-  // Data
-  type: text('type').notNull(),
-  data: jsonb('data').default(sql`'{}'::jsonb`),
-
-  // Timestamps
-  createdAt: timestamp('createdAt')
-    .default(sql`now()`)
-    .notNull(),
-});
+export const componentTable = createLazyTableProxy(createComponentTable);

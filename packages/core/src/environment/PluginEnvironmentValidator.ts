@@ -1,0 +1,172 @@
+import type {
+  PluginEnvironmentValidation,
+  AgentConfigParameter,
+  PluginScenario,
+} from '../types/scenario';
+import type { IAgentRuntime } from '../types/runtime';
+// import { logger } from '../logger';
+
+/**
+ * Validates plugin environment requirements for scenarios
+ */
+export class PluginEnvironmentValidator {
+  /**
+   * Validates environment variables for a single plugin
+   */
+  static async validatePluginEnvironment(
+    pluginName: string,
+    runtime: IAgentRuntime
+  ): Promise<PluginEnvironmentValidation> {
+    const result: PluginEnvironmentValidation = {
+      isValid: true,
+      missingVars: [],
+      warnings: [],
+      pluginName,
+    };
+
+    try {
+      // Get plugin configuration from package.json
+      const agentConfig = await this.getPluginAgentConfig(pluginName, runtime);
+
+      if (!agentConfig?.pluginParameters) {
+        // No environment requirements found
+        return result;
+      }
+
+      // Check each required environment variable
+      for (const [varName, config] of Object.entries(agentConfig.pluginParameters)) {
+        const value = runtime.getSetting(varName);
+
+        if (config.required && (!value || value === '')) {
+          result.isValid = false;
+          result.missingVars.push(varName);
+        } else if (!config.required && (!value || value === '')) {
+          result.warnings.push(`Optional environment variable ${varName} is not set`);
+        }
+
+        // Validate type if value exists
+        if (value && config.type) {
+          const typeValid = this.validateEnvironmentVariableType(value, config.type);
+          if (!typeValid) {
+            result.warnings.push(
+              `Environment variable ${varName} has invalid type (expected ${config.type})`
+            );
+          }
+        }
+      }
+    } catch (error) {
+      result.warnings.push(
+        `Failed to validate plugin ${pluginName}: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * Validates environment requirements for all plugins used by scenario characters
+   */
+  static async validateScenarioEnvironment(
+    scenario: PluginScenario,
+    runtime: IAgentRuntime
+  ): Promise<PluginEnvironmentValidation[]> {
+    const results: PluginEnvironmentValidation[] = [];
+    const allPlugins = new Set<string>();
+
+    // Collect all unique plugins from all characters
+    for (const character of scenario.characters) {
+      for (const plugin of character.plugins) {
+        allPlugins.add(plugin);
+      }
+    }
+
+    // Validate each plugin
+    for (const pluginName of allPlugins) {
+      const validation = await this.validatePluginEnvironment(pluginName, runtime);
+      results.push(validation);
+    }
+
+    // Update scenario with computed requirements
+    scenario.requiredEnvVars = this.extractRequiredVariables(results);
+
+    return results;
+  }
+
+  /**
+   * Determines if a scenario can run based on environment validation
+   */
+  static canScenarioRun(validations: PluginEnvironmentValidation[]): boolean {
+    return validations.every((validation) => validation.isValid);
+  }
+
+  /**
+   * Gets environment requirements summary for a scenario
+   */
+  static getEnvironmentSummary(validations: PluginEnvironmentValidation[]): {
+    allValid: boolean;
+    missingCount: number;
+    warningCount: number;
+    missingVars: string[];
+    affectedPlugins: string[];
+  } {
+    const missingVars = validations.flatMap((v) => v.missingVars);
+    const warningCount = validations.reduce((count, v) => count + v.warnings.length, 0);
+    const affectedPlugins = validations.filter((v) => !v.isValid).map((v) => v.pluginName);
+
+    return {
+      allValid: validations.every((v) => v.isValid),
+      missingCount: missingVars.length,
+      warningCount,
+      missingVars,
+      affectedPlugins,
+    };
+  }
+
+  /**
+   * Attempts to get plugin agentConfig from package.json
+   */
+  private static async getPluginAgentConfig(
+    _pluginName: string,
+    _runtime: IAgentRuntime
+  ): Promise<{ pluginParameters?: Record<string, AgentConfigParameter> } | null> {
+    // Platform-specific checks
+    if (typeof process !== 'undefined' && process.versions?.node) {
+      // Skip in browser environments
+      return null;
+    }
+
+    // In browser environments, always return null
+    return null;
+  }
+
+  /**
+   * Validates that an environment variable matches the expected type
+   */
+  private static validateEnvironmentVariableType(value: any, expectedType: string): boolean {
+    switch (expectedType.toLowerCase()) {
+      case 'string':
+        return typeof value === 'string';
+      case 'number':
+        return !isNaN(Number(value));
+      case 'boolean':
+        return value === 'true' || value === 'false' || typeof value === 'boolean';
+      default:
+        return true; // Unknown type, assume valid
+    }
+  }
+
+  /**
+   * Extracts all required environment variables from validation results
+   */
+  private static extractRequiredVariables(validations: PluginEnvironmentValidation[]): string[] {
+    const required = new Set<string>();
+
+    for (const validation of validations) {
+      for (const varName of validation.missingVars) {
+        required.add(varName);
+      }
+    }
+
+    return Array.from(required);
+  }
+}

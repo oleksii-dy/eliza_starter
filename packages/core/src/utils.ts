@@ -22,16 +22,18 @@ import { ModelType, UUID, ContentType } from './types';
  * @param  tpl  Handlebars template source
  * @return      Transformed template
  */
-function upgradeDoubleToTriple(tpl) {
+function upgradeDoubleToTriple(tpl: string) {
   return tpl.replace(
     // ────────╮ negative-LB: not already "{{{"
     //          │   {{     ─ opening braces
     //          │    ╰──── negative-LA: not {, #, /, !, >
     //          ▼
     /(?<!{){{(?![{#\/!>])([\s\S]*?)}}/g,
-    (_match, inner) => {
+    (_match: string, inner: string) => {
       // keep the block keyword {{else}} unchanged
-      if (inner.trim() === 'else') return `{{${inner}}}`;
+      if (inner.trim() === 'else') {
+        return `{{${inner}}}`;
+      }
       return `{{{${inner}}}}`;
     }
   );
@@ -113,7 +115,7 @@ export const composePromptFromState = ({
   const filteredKeys = stateKeys.filter((key) => !['text', 'values', 'data'].includes(key));
 
   // this flattens out key/values in text/values/data
-  const filteredState = filteredKeys.reduce((acc, key) => {
+  const filteredState = filteredKeys.reduce((acc: Record<string, any>, key) => {
     acc[key] = state[key];
     return acc;
   }, {});
@@ -200,14 +202,15 @@ export const formatPosts = ({
 
   // Sort messages within each roomId by createdAt (oldest to newest)
   Object.values(groupedMessages).forEach((roomMessages) => {
-    roomMessages.sort((a, b) => a.createdAt - b.createdAt);
+    roomMessages.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
   });
 
   // Sort rooms by the newest message's createdAt
-  const sortedRooms = Object.entries(groupedMessages).sort(
-    ([, messagesA], [, messagesB]) =>
-      messagesB[messagesB.length - 1].createdAt - messagesA[messagesA.length - 1].createdAt
-  );
+  const sortedRooms = Object.entries(groupedMessages).sort(([, messagesA], [, messagesB]) => {
+    const lastMessageA = messagesB[messagesB.length - 1];
+    const lastMessageB = messagesA[messagesA.length - 1];
+    return (lastMessageB?.createdAt ?? 0) - (lastMessageA?.createdAt ?? 0);
+  });
 
   const formattedPosts = sortedRooms.map(([roomId, roomMessages]) => {
     const messageStrings = roomMessages
@@ -224,7 +227,7 @@ export const formatPosts = ({
         return `Name: ${userName} (@${displayName} EntityID:${message.entityId})
 MessageID: ${message.id}${message.content.inReplyTo ? `\nIn reply to: ${message.content.inReplyTo}` : ''}
 Source: ${message.content.source}
-Date: ${formatTimestamp(message.createdAt)}
+Date: ${formatTimestamp(message.createdAt ?? Date.now())}
 Text:
 ${message.content.text}`;
       });
@@ -271,12 +274,12 @@ export const formatMessages = ({
               .join(', ')})`
           : null;
 
-      const messageTime = new Date(message.createdAt);
+      const messageTime = new Date(message.createdAt ?? Date.now());
       const hours = messageTime.getHours().toString().padStart(2, '0');
       const minutes = messageTime.getMinutes().toString().padStart(2, '0');
       const timeString = `${hours}:${minutes}`;
 
-      const timestamp = formatTimestamp(message.createdAt);
+      const timestamp = formatTimestamp(message.createdAt ?? Date.now());
 
       // const shortId = message.entityId.slice(-5);
 
@@ -340,11 +343,13 @@ const jsonBlockPattern = /```json\n([\s\S]*?)\n```/;
  * @returns An object with key-value pairs extracted from the XML, or null if parsing fails.
  */
 export function parseKeyValueXml(text: string): Record<string, any> | null {
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
 
   // First, try to find a specific <response> block (the one we actually want)
   // Use a more permissive regex to handle cases where there might be multiple XML blocks
-  let xmlBlockMatch = text.match(/<response>([\s\S]*?)<\/response>/);
+  const xmlBlockMatch = text.match(/<response>([\s\S]*?)<\/response>/);
   let xmlContent: string;
 
   if (xmlBlockMatch) {
@@ -355,7 +360,7 @@ export function parseKeyValueXml(text: string): Record<string, any> | null {
     const fallbackMatch = text.match(/<(\w+)>([\s\S]*?)<\/\1>/);
     if (!fallbackMatch) {
       logger.warn('Could not find XML block in text');
-      logger.debug('Text content:', text.substring(0, 200) + '...');
+      logger.debug('Text content:', `${text.substring(0, 200)}...`);
       return null;
     }
     xmlContent = fallbackMatch[2];
@@ -398,7 +403,7 @@ export function parseKeyValueXml(text: string): Record<string, any> | null {
   // Return null if no key-value pairs were found
   if (Object.keys(result).length === 0) {
     logger.warn('No key-value pairs extracted from XML content');
-    logger.debug('XML content was:', xmlContent.substring(0, 200) + '...');
+    logger.debug('XML content was:', `${xmlContent.substring(0, 200)}...`);
     return null;
   }
 
@@ -537,12 +542,18 @@ export async function splitChunks(content: string, chunkSize = 512, bleed = 20):
  * Trims the provided text prompt to a specified token limit using a tokenizer model and type.
  */
 export async function trimTokens(prompt: string, maxTokens: number, runtime: IAgentRuntime) {
-  if (!prompt) throw new Error('Trim tokens received a null prompt');
+  if (!prompt) {
+    throw new Error('Trim tokens received a null prompt');
+  }
 
   // if prompt is less than of maxtokens / 5, skip
-  if (prompt.length < maxTokens / 5) return prompt;
+  if (prompt.length < maxTokens / 5) {
+    return prompt;
+  }
 
-  if (maxTokens <= 0) throw new Error('maxTokens must be positive');
+  if (maxTokens <= 0) {
+    throw new Error('maxTokens must be positive');
+  }
 
   const tokens = await runtime.useModel(ModelType.TEXT_TOKENIZER_ENCODE, {
     prompt,
@@ -585,7 +596,9 @@ export function safeReplacer() {
  * @returns {boolean} - Returns `true` for affirmative inputs, `false` for negative or unrecognized inputs
  */
 export function parseBooleanFromText(value: string | undefined | null): boolean {
-  if (!value) return false;
+  if (!value) {
+    return false;
+  }
 
   const affirmative = ['YES', 'Y', 'TRUE', 'T', '1', 'ON', 'ENABLE'];
   const negative = ['NO', 'N', 'FALSE', 'F', '0', 'OFF', 'DISABLE'];
@@ -665,11 +678,23 @@ export function stringToUuid(target: string | number): UUID {
 }
 
 export const getContentTypeFromMimeType = (mimeType: string): ContentType | undefined => {
-  if (mimeType.startsWith('image/')) return ContentType.IMAGE;
-  if (mimeType.startsWith('video/')) return ContentType.VIDEO;
-  if (mimeType.startsWith('audio/')) return ContentType.AUDIO;
-  if (mimeType.includes('pdf') || mimeType.includes('document') || mimeType.startsWith('text/')) {
-    return ContentType.DOCUMENT;
-  }
-  return undefined;
+  const mimeTypeMap: Record<string, ContentType> = {
+    'text/plain': ContentType.DOCUMENT,
+    'text/html': ContentType.DOCUMENT,
+    'image/jpeg': ContentType.IMAGE,
+    'image/jpg': ContentType.IMAGE,
+    'image/png': ContentType.IMAGE,
+    'image/gif': ContentType.IMAGE,
+    'image/webp': ContentType.IMAGE,
+    'audio/mpeg': ContentType.AUDIO,
+    'audio/wav': ContentType.AUDIO,
+    'audio/ogg': ContentType.AUDIO,
+    'video/mp4': ContentType.VIDEO,
+    'video/mpeg': ContentType.VIDEO,
+    'video/webm': ContentType.VIDEO,
+  };
+  return mimeTypeMap[mimeType.toLowerCase()];
 };
+
+// Temp utilities have been moved to individual packages that need them
+// This export has been removed to reduce core package dependencies

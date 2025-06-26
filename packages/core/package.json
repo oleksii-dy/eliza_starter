@@ -1,29 +1,25 @@
 {
   "name": "@elizaos/core",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bun": "./src/index.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
+      "bun": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       }
     },
-    "./v1": {
+    "./test-utils": {
       "import": {
-        "types": "./dist/specs/v1/index.d.ts",
-        "default": "./dist/specs/v1/index.js"
-      }
-    },
-    "./v2": {
-      "import": {
-        "types": "./dist/specs/v2/index.d.ts",
-        "default": "./dist/specs/v2/index.js"
+        "types": "./dist/test-utils/index.d.ts",
+        "default": "./dist/test-utils/index.js"
       }
     }
   },
@@ -31,25 +27,30 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "watch": "tsc --watch",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' bun run build.ts",
+    "build:full": "NODE_OPTIONS='--max-old-space-size=4096' bun run typecheck && NODE_OPTIONS='--max-old-space-size=4096' bun run build.ts",
+    "watch": "NODE_OPTIONS='--max-old-space-size=4096' tsc --watch",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "dev": "tsup --watch",
-    "build:docs": "cd docs && bun run build",
-    "test": "bun test --coverage",
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' bun run build.ts --watch",
+    "build:docs": "cd docs && NODE_OPTIONS='--max-old-space-size=4096' bun run build",
+    "test": "bun test",
     "test:coverage": "bun test --coverage",
     "test:watch": "bun test --watch",
+    "typecheck": "NODE_OPTIONS='--max-old-space-size=4096' tsc --noEmit",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "lint:check": "eslint src && prettier --check ./src",
     "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src",
-    "lint": "prettier --write ./src"
+    "format:check": "prettier --check ./src"
   },
   "author": "ElizaOS",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^24.0.3",
+    "@types/bun": "^1.2.17",
     "@types/uuid": "10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
+    "eslint": "^9.22.0",
     "prettier": "3.5.3",
-    "tsup": "8.5.0",
     "typescript": "5.8.3"
   },
   "dependencies": {
@@ -67,8 +68,8 @@
     "pino-pretty": "^13.0.0",
     "stream-browserify": "^3.0.0",
     "unique-names-generator": "4.7.1",
-    "uuid": "11.1.0",
-    "zod": "^3.24.4"
+    "uuid": "11.0.3",
+    "zod": "3.25.67"
   },
   "publishConfig": {
     "access": "public"

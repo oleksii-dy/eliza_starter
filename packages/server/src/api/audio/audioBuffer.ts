@@ -43,10 +43,12 @@ export interface AudioProcessingResult {
 }
 
 export async function convertToAudioBuffer(speechResponse: any): Promise<Buffer>;
+// eslint-disable-next-line no-redeclare
 export async function convertToAudioBuffer(
   speechResponse: any,
   detectMimeType: true
 ): Promise<AudioProcessingResult>;
+// eslint-disable-next-line no-redeclare
 export async function convertToAudioBuffer(
   speechResponse: any,
   detectMimeType?: boolean
@@ -57,14 +59,19 @@ export async function convertToAudioBuffer(
     resultBuffer = speechResponse;
   } else if (typeof speechResponse?.getReader === 'function') {
     // Handle Web ReadableStream
+
     const reader = (speechResponse as ReadableStream<Uint8Array>).getReader();
     const chunks: Uint8Array[] = [];
 
     try {
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
-        if (value) chunks.push(value);
+        if (done) {
+          break;
+        }
+        if (value) {
+          chunks.push(value);
+        }
       }
       resultBuffer = Buffer.concat(chunks);
     } finally {

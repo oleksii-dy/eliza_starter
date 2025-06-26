@@ -1,13 +1,13 @@
-import { type Entity, type UUID, AgentRuntime } from '@elizaos/core';
+import { AgentRuntime, type Entity, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'bun:test';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
 import { entityTable } from '../../schema';
 import { createIsolatedTestDatabase } from '../test-helpers';
 
 describe('Entity Integration Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter | PgDatabaseAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -18,7 +18,7 @@ describe('Entity Integration Tests', () => {
     runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {
@@ -29,8 +29,10 @@ describe('Entity Integration Tests', () => {
   describe('Entity Tests', () => {
     beforeEach(async () => {
       // Clear entities before each test to ensure a clean slate
-      const db = adapter.getDatabase();
-      await db.delete(entityTable);
+      if (adapter && adapter.getDatabase) {
+        const db = adapter.getDatabase();
+        await db.delete(entityTable);
+      }
     });
 
     it('should create and retrieve a basic entity', async () => {
@@ -45,14 +47,14 @@ describe('Entity Integration Tests', () => {
       const result = await adapter.createEntities([entity]);
       expect(result).toBe(true);
 
-      const retrieved = await adapter.getEntityByIds([entityId]);
+      const retrieved = await adapter.getEntitiesByIds([entityId]);
       expect(retrieved).not.toBeNull();
       expect(retrieved?.[0]?.id).toBe(entityId);
     });
 
     it('should return empty array when retrieving non-existent entities', async () => {
       const nonExistentId = uuidv4() as UUID;
-      const retrieved = await adapter.getEntityByIds([nonExistentId]);
+      const retrieved = await adapter.getEntitiesByIds([nonExistentId]);
       expect(retrieved).toEqual([]);
     });
 
@@ -71,7 +73,7 @@ describe('Entity Integration Tests', () => {
       const updatedEntity = { ...entity, names: ['Updated Name'], metadata: { updated: 'data' } };
       await adapter.updateEntity(updatedEntity);
 
-      const retrieved = await adapter.getEntityByIds([entityId]);
+      const retrieved = await adapter.getEntitiesByIds([entityId]);
       expect(retrieved).not.toBeNull();
       expect(retrieved?.[0]?.names).toEqual(['Updated Name']);
       expect(retrieved?.[0]?.metadata).toEqual({ updated: 'data' });
@@ -98,7 +100,7 @@ describe('Entity Integration Tests', () => {
       const result = await adapter.createEntities(entities);
       expect(result).toBe(true);
 
-      const retrieved = await adapter.getEntityByIds([entity1Id, entity2Id]);
+      const retrieved = await adapter.getEntitiesByIds([entity1Id, entity2Id]);
       expect(retrieved).not.toBeNull();
       expect(retrieved?.length).toBe(2);
     });
@@ -115,7 +117,7 @@ describe('Entity Integration Tests', () => {
       const result = await adapter.createEntities([entity]);
       expect(result).toBe(true);
 
-      const retrieved = await adapter.getEntityByIds([entityId]);
+      const retrieved = await adapter.getEntitiesByIds([entityId]);
       expect(retrieved).not.toBeNull();
       expect(retrieved?.[0]?.names).toEqual(['Primary Name', 'Alias 1', 'Alias 2']);
     });
@@ -131,7 +133,7 @@ describe('Entity Integration Tests', () => {
       const result = await adapter.createEntities([entity]);
       expect(result).toBe(true);
 
-      const retrieved = await adapter.getEntityByIds([entityId]);
+      const retrieved = await adapter.getEntitiesByIds([entityId]);
       expect(retrieved).not.toBeNull();
       expect(retrieved?.[0]?.metadata).toEqual({}); // Assuming default is an empty object
     });

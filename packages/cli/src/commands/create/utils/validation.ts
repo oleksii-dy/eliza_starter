@@ -95,7 +95,7 @@ export function processPluginName(name: string): {
 } {
   try {
     // Remove common prefixes and suffixes
-    let processedName = name
+    const processedName = name
       .replace(/^(eliza-?|elizaos-?|plugin-?)/i, '')
       .replace(/(-?plugin|-?eliza|-?elizaos)$/i, '')
       .toLowerCase()

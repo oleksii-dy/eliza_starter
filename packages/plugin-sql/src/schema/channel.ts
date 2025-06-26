@@ -1,22 +1,33 @@
-import { pgTable, text, jsonb, timestamp } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
-import { messageServerTable } from './messageServer';
+import { getSchemaFactory, createLazyTableProxy } from './factory';
 
-export const channelTable = pgTable('channels', {
-  id: text('id').primaryKey(), // UUID stored as text
-  messageServerId: text('server_id')
-    .notNull()
-    .references(() => messageServerTable.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  type: text('type').notNull(), // Store ChannelType enum values as text
-  sourceType: text('source_type'),
-  sourceId: text('source_id'),
-  topic: text('topic'),
-  metadata: jsonb('metadata'),
-  createdAt: timestamp('created_at', { mode: 'date' })
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
-  updatedAt: timestamp('updated_at', { mode: 'date' })
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
-});
+/**
+ * Lazy-loaded channel table definition.
+ * This function returns the channel table schema when called,
+ * ensuring the database type is set before schema creation.
+ * Foreign key references are removed to avoid circular dependencies.
+ * The database constraints will be enforced at the application level.
+
+ */
+function createChannelTable() {
+  const factory = getSchemaFactory();
+
+  return factory.table('channels', {
+    id: factory.uuid('id').primaryKey().notNull(),
+    serverId: factory.uuid('server_id').notNull(),
+    createdAt: factory.timestamp('created_at').notNull().default(factory.defaultTimestamp()),
+    updatedAt: factory.timestamp('updated_at').notNull().default(factory.defaultTimestamp()),
+    name: factory.text('name').notNull(),
+    type: factory.text('type').notNull(),
+    sourceType: factory.text('source_type'),
+    sourceId: factory.text('source_id'),
+    topic: factory.text('topic'),
+    metadata: factory.json('metadata').default(factory.defaultJsonObject()).notNull(),
+  });
+}
+
+/**
+ * Represents a channel table in the database.
+ * Uses lazy initialization to ensure proper database type configuration.
+
+ */
+export const channelTable = createLazyTableProxy(createChannelTable);

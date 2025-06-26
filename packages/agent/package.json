@@ -1,0 +1,87 @@
+{
+  "name": "@elizaos/agent",
+  "description": "The one and only.",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": [
+    "project",
+    "elizaos"
+  ],
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@elizaos/cli": "workspace:*",
+    "@elizaos/core": "workspace:*",
+    "@elizaos/plugin-dummy-services": "workspace:*",
+    "@elizaos/plugin-knowledge": "workspace:*",
+    "@elizaos/plugin-message-handling": "workspace:*",
+    "@elizaos/plugin-planning": "workspace:*",
+    "@elizaos/plugin-sql": "workspace:*",
+    "@tanstack/react-query": "^5.29.0",
+    "clsx": "^2.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss": "^4.1.10",
+    "zod": "3.25.67"
+  },
+  "devDependencies": {
+    "@cypress/react": "^9.0.1",
+    "@cypress/vite-dev-server": "^6.0.3",
+    "@testing-library/cypress": "^10.0.3",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "cypress": "^14.4.1",
+    "eslint": "^9.22.0",
+    "prettier": "3.5.3",
+    "typescript": "5.8.3",
+    "vite": "^6.0.1"
+  },
+  "scripts": {
+    "start": "elizaos start",
+    "dev": "elizaos dev",
+    "build": "npm run typecheck && vite build && npm run build:post",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "lint:check": "eslint src && prettier --check ./src",
+    "typecheck": "tsc --noEmit --project tsconfig.build.json",
+    "typecheck:watch": "tsc --noEmit --watch",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
+    "test:watch": "bun test --watch",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check ./src",
+    "check-all": "bun run typecheck && bun run format:check && bun run test",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run --component",
+    "cy:test": "cypress run --component --reporter spec",
+    "cypress:component": "cypress run --component",
+    "cypress:e2e": "cypress run --e2e",
+    "cypress:open": "cypress open",
+    "build:post": "node build.ts"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "b165ad83e5f7a21bc1edbd83374ca087e3cd6b33"
+}

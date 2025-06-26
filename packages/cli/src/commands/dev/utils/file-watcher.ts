@@ -44,7 +44,7 @@ function findTsFiles(dir: string, watchDir: string): string[] {
         results.push(path.relative(watchDir, fullPath));
       }
     }
-  } catch (error) {
+  } catch {
     // Ignore errors for directories we can't read
   }
 

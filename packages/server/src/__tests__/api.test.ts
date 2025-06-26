@@ -2,7 +2,7 @@
  * API endpoint basic tests
  */
 
-import { describe, it, expect, mock, beforeEach, afterEach, jest } from 'bun:test';
+import { describe, it, expect, mock, beforeEach, afterEach, spyOn } from 'bun:test';
 import express from 'express';
 import http from 'node:http';
 import { AgentServer } from '../index';
@@ -13,18 +13,18 @@ mock.module('@elizaos/core', async () => {
   return {
     ...actual,
     logger: {
-      warn: jest.fn(),
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-      success: jest.fn(),
+      warn: mock(),
+      info: mock(),
+      error: mock(),
+      debug: mock(),
+      success: mock(),
     },
     Service: class MockService {
       constructor() {}
       async initialize() {}
       async cleanup() {}
     },
-    createUniqueUuid: jest.fn(() => '123e4567-e89b-12d3-a456-426614174000'),
+    createUniqueUuid: mock(() => '123e4567-e89b-12d3-a456-426614174000'),
     ChannelType: {
       DIRECT: 'direct',
       GROUP: 'group',
@@ -38,77 +38,130 @@ mock.module('@elizaos/core', async () => {
       AGENT_UPDATE: 'agent_update',
       CONNECTION: 'connection',
     },
+    AgentRuntime: class MockAgentRuntime {
+      constructor(config: any) {
+        this.agentId = config.agentId;
+        this.character = config.character;
+        this.adapter = config.adapter;
+        this.plugins = config.plugins || [];
+      }
+      async initialize() {
+        // Mock successful initialization
+        return Promise.resolve();
+      }
+      agentId: string;
+      character: any;
+      adapter: any;
+      plugins: any[];
+    },
   };
 });
 
 mock.module('@elizaos/plugin-sql', () => ({
-  createDatabaseAdapter: jest.fn(() => ({
-    init: jest.fn(() => Promise.resolve(undefined)),
-    close: jest.fn(() => Promise.resolve(undefined)),
-    getDatabase: jest.fn(() => ({
-      execute: jest.fn(() => Promise.resolve([])),
+  createDatabaseAdapter: mock(() => ({
+    // Core database methods
+    init: mock().mockResolvedValue(undefined),
+    close: mock().mockResolvedValue(undefined),
+    getDatabase: mock(() => ({
+      execute: mock().mockResolvedValue([]),
     })),
-    getMessageServers: jest
-      .fn()
-      .mockReturnValue(
-        Promise.resolve([{ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' }])
-      ),
-    createMessageServer: jest.fn(() =>
-      Promise.resolve({ id: '00000000-0000-0000-0000-000000000000' })
-    ),
-    getAgentsForServer: jest.fn(() => Promise.resolve([])),
-    addAgentToServer: jest.fn(() => Promise.resolve(undefined)),
-    db: { execute: jest.fn(() => Promise.resolve([])) },
+    db: { execute: mock().mockResolvedValue([]) },
+    isReady: mock().mockResolvedValue(true),
+    runMigrations: mock().mockResolvedValue(undefined),
+
+    // Agent management
+    getAgents: mock().mockResolvedValue([]),
+    getAgent: mock().mockResolvedValue({
+      id: '00000000-0000-0000-0000-000000000000',
+      name: 'MigrationAgent',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+    createAgent: mock().mockResolvedValue(true),
+    updateAgent: mock().mockResolvedValue(true),
+    deleteAgent: mock().mockResolvedValue(true),
+
+    // Entity management
+    getEntityById: mock().mockResolvedValue(null),
+    getEntitiesByIds: mock().mockResolvedValue([]),
+    getEntitiesForRoom: mock().mockResolvedValue([]),
+    createEntity: mock().mockResolvedValue('test-entity-id'),
+    createEntities: mock().mockResolvedValue(true),
+    updateEntity: mock().mockResolvedValue(undefined),
+
+    // Message server management
+    getMessageServers: mock().mockResolvedValue([
+      { id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' },
+    ]),
+    createMessageServer: mock().mockResolvedValue({ id: '00000000-0000-0000-0000-000000000000' }),
+    getAgentsForServer: mock().mockResolvedValue([]),
+    addAgentToServer: mock().mockResolvedValue(undefined),
+
+    // Add other methods as needed by tests
+    getMemories: mock().mockResolvedValue([]),
+    createMemory: mock().mockResolvedValue('test-memory-id'),
+    searchMemories: mock().mockResolvedValue([]),
   })),
-  DatabaseMigrationService: jest.fn(() => ({
-    initializeWithDatabase: jest.fn(() => Promise.resolve(undefined)),
-    discoverAndRegisterPluginSchemas: jest.fn(),
-    runAllPluginMigrations: jest.fn(() => Promise.resolve(undefined)),
+  DatabaseMigrationService: mock(() => ({
+    initializeWithDatabase: mock(() => Promise.resolve(undefined)),
+    discoverAndRegisterPluginSchemas: mock(),
+    runAllPluginMigrations: mock(() => Promise.resolve(undefined)),
   })),
-  plugin: {},
+  plugin: {
+    name: '@elizaos/plugin-sql',
+    description: 'SQL database plugin',
+    actions: [],
+    providers: [],
+    evaluators: [],
+    services: [],
+  },
 }));
 
 mock.module('node:fs', () => ({
   default: {
-    mkdirSync: jest.fn(),
-    existsSync: jest.fn(() => true),
-    readFileSync: jest.fn(() => '{}'),
-    writeFileSync: jest.fn(),
+    mkdirSync: mock(),
+    existsSync: mock(() => true),
+    readFileSync: mock(() => '{}'),
+    writeFileSync: mock(),
   },
-  mkdirSync: jest.fn(),
-  existsSync: jest.fn(() => true),
-  readFileSync: jest.fn(() => '{}'),
-  writeFileSync: jest.fn(),
+  mkdirSync: mock(),
+  existsSync: mock(() => true),
+  readFileSync: mock(() => '{}'),
+  writeFileSync: mock(),
 }));
 
 // Mock Socket.IO
 mock.module('socket.io', () => ({
-  Server: jest.fn(() => ({
-    on: jest.fn(),
-    emit: jest.fn(),
-    to: jest.fn(() => ({
-      emit: jest.fn(),
+  Server: mock(() => ({
+    on: mock(),
+    emit: mock(),
+    to: mock(() => ({
+      emit: mock(),
     })),
-    close: jest.fn((callback) => {
-      if (callback) callback();
+    close: mock((callback) => {
+      if (callback) {
+        callback();
+      }
     }),
   })),
 }));
 
 // Skip socket.io initialization for API tests
 mock.module('../src/socketio/index', () => ({
-  setupSocketIO: jest.fn(() => ({
-    on: jest.fn(),
-    emit: jest.fn(),
-    to: jest.fn(() => ({
-      emit: jest.fn(),
+  setupSocketIO: mock(() => ({
+    on: mock(),
+    emit: mock(),
+    to: mock(() => ({
+      emit: mock(),
     })),
-    close: jest.fn((callback) => {
-      if (callback) callback();
+    close: mock((callback) => {
+      if (callback) {
+        callback();
+      }
     }),
   })),
-  SocketIORouter: jest.fn(() => ({
-    setupListeners: jest.fn(),
+  SocketIORouter: mock(() => ({
+    setupListeners: mock(),
   })),
 }));
 
@@ -122,23 +175,27 @@ describe('API Server Functionality', () => {
 
     // Mock HTTP server with all methods Socket.IO expects
     mockServer = {
-      listen: jest.fn((_port, callback) => {
-        if (callback) callback();
+      listen: mock((_port, callback) => {
+        if (callback) {
+          callback();
+        }
       }),
-      close: jest.fn((callback) => {
-        if (callback) callback();
+      close: mock((callback) => {
+        if (callback) {
+          callback();
+        }
       }),
-      listeners: jest.fn(() => []),
-      removeAllListeners: jest.fn(),
-      on: jest.fn(),
-      once: jest.fn(),
-      emit: jest.fn(),
-      address: jest.fn(() => ({ port: 3000 })),
+      listeners: mock(() => []),
+      removeAllListeners: mock(),
+      on: mock(),
+      once: mock(),
+      emit: mock(),
+      address: mock(() => ({ port: 3000 })),
       timeout: 0,
       keepAliveTimeout: 5000,
     };
 
-    jest.spyOn(http, 'createServer').mockReturnValue(mockServer as any);
+    spyOn(http, 'createServer').mockReturnValue(mockServer as any);
 
     server = new AgentServer();
     await server.initialize();
@@ -152,49 +209,76 @@ describe('API Server Functionality', () => {
   });
 
   describe('Express App Configuration', () => {
-    it('should create and configure express app', () => {
-      expect(app).toBeDefined();
+    it('should create and configure express app with middleware', () => {
+      expect(app).toBeTruthy();
       expect(typeof app.listen).toBe('function');
       expect(typeof app.use).toBe('function');
-      // _router might not exist immediately after initialization
-      expect(app._router !== undefined || app.router !== undefined).toBe(true);
-    });
 
-    it('should have middleware configured', () => {
-      // Test that basic middleware functions exist
+      // Test that middleware registration works
+      const testMiddleware = mock((_req, _res, next) => next());
+      server.registerMiddleware(testMiddleware);
+
+      // The middleware should be registered
       expect(typeof server.registerMiddleware).toBe('function');
     });
   });
 
-  describe('Agent Management API Structure', () => {
-    it('should have agent management capabilities', () => {
-      expect(typeof server.registerAgent).toBe('function');
-      expect(typeof server.unregisterAgent).toBe('function');
-      expect(server['agents']).toBeDefined();
+  describe('Agent Management API', () => {
+    it('should manage agent registry correctly', async () => {
       expect(server['agents'] instanceof Map).toBe(true);
-    });
+      expect(server['agents'].size).toBe(0);
 
-    it('should initialize with empty agent registry', () => {
+      // Test agent registration
+      const mockRuntime = {
+        agentId: '123e4567-e89b-12d3-a456-426614174000' as any,
+        character: { name: 'TestAgent' },
+        registerPlugin: mock().mockResolvedValue(undefined),
+        plugins: [],
+      } as any;
+
+      // Mock database methods
+      server.database = {
+        ...server.database,
+        getMessageServers: mock().mockResolvedValue([]),
+        addAgentToServer: mock().mockResolvedValue(undefined),
+        db: { execute: mock().mockResolvedValue([]) },
+      } as any;
+
+      await server.registerAgent(mockRuntime);
+      expect(server['agents'].size).toBe(1);
+      expect(server['agents'].has(mockRuntime.agentId)).toBe(true);
+
+      // Test agent unregistration
+      server.unregisterAgent(mockRuntime.agentId);
       expect(server['agents'].size).toBe(0);
     });
   });
 
   describe('Database Integration', () => {
-    it('should have database configured', () => {
-      expect(server.database).toBeDefined();
+    it('should initialize database with proper methods', async () => {
+      expect(server.database).toBeTruthy();
       expect(typeof server.database.init).toBe('function');
       expect(typeof (server.database as any).getMessageServers).toBe('function');
+
+      // Test that database can perform operations
+      const servers = await (server.database as any).getMessageServers();
+      expect(Array.isArray(servers)).toBe(true);
     });
   });
 
   describe('Server Lifecycle', () => {
-    it('should be initialized after setup', () => {
+    it('should handle initialization and shutdown correctly', async () => {
       expect(server.isInitialized).toBe(true);
-    });
+      expect(server.app).toBeTruthy();
+      expect(server.database).toBeTruthy();
 
-    it('should have proper server structure', () => {
-      expect(server.app).toBeDefined();
-      expect(server.database).toBeDefined();
+      // Test server start
+      await server.start(3001);
+      expect(mockServer.listen).toHaveBeenCalledWith(3001, expect.any(Function));
+
+      // Test server stop
+      await server.stop();
+      expect(mockServer.close).toHaveBeenCalled();
     });
   });
 });

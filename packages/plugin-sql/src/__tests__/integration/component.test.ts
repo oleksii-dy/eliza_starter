@@ -1,21 +1,21 @@
 import {
   AgentRuntime,
   ChannelType,
+  stringToUuid,
   type Component,
   type Entity,
   type Room,
   type UUID,
   type World,
-  stringToUuid,
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
 import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
 import { createIsolatedTestDatabase } from '../test-helpers';
 
 describe('Component Integration Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter | PgDatabaseAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -41,7 +41,7 @@ describe('Component Integration Tests', () => {
       id: testWorldId,
       agentId: testAgentId,
       name: 'Test World',
-      serverId: 'test-server',
+      serverId: uuidv4() as UUID,
     } as World);
     await adapter.createRooms([
       {
@@ -56,7 +56,7 @@ describe('Component Integration Tests', () => {
       { id: testEntityId, agentId: testAgentId, names: ['Test Entity'] } as Entity,
       { id: testSourceEntityId, agentId: testAgentId, names: ['Source Entity'] } as Entity,
     ]);
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {

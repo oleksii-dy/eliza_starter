@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Test files that might have different rules
+**/*.test.ts
+**/*.spec.ts
+
+# Database files
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+*.log 

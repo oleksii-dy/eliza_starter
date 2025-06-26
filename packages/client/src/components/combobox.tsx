@@ -29,7 +29,6 @@ export default function MultiSelectCombobox({
 
   // Apply initialSelected when it changes - improved to handle both initial load and updates
   useEffect(() => {
-    console.log('[MultiSelectCombobox] initialSelected changed:', initialSelected);
     setSelected(initialSelected);
   }, [initialSelected]);
 
@@ -55,7 +54,7 @@ export default function MultiSelectCombobox({
   };
 
   // Helper function to find option in selected array
-  const findSelectedOption = (option: Option): Option | undefined => {
+  const _findSelectedOption = (option: Option): Option | undefined => {
     return selected.find((item) => {
       if (option.id && item.id) {
         return item.id === option.id;
@@ -65,7 +64,6 @@ export default function MultiSelectCombobox({
   };
 
   const toggleSelection = (option: Option) => {
-    console.log('[MultiSelectCombobox] toggleSelection called with:', option);
     setSelected((prev) => {
       const isCurrentlySelected = isOptionSelected(option);
       let newSelection: Option[];
@@ -83,8 +81,9 @@ export default function MultiSelectCombobox({
         newSelection = [...prev, option];
       }
 
-      console.log('[MultiSelectCombobox] New selection:', newSelection);
-      if (onSelect) onSelect(newSelection);
+      if (onSelect) {
+        onSelect(newSelection);
+      }
       return newSelection;
     });
   };
@@ -97,7 +96,9 @@ export default function MultiSelectCombobox({
         }
         return item.label !== option.label;
       });
-      if (onSelect) onSelect(newSelection);
+      if (onSelect) {
+        onSelect(newSelection);
+      }
       return newSelection;
     });
   };
@@ -105,7 +106,9 @@ export default function MultiSelectCombobox({
   const removeExtraSelections = () => {
     setSelected((prev) => {
       const newSelection = prev.slice(0, 3); // Keep only the first 3
-      if (onSelect) onSelect(newSelection);
+      if (onSelect) {
+        onSelect(newSelection);
+      }
       return newSelection;
     });
   };

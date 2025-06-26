@@ -1,21 +1,23 @@
-import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'bun:test';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'bun:test';
 import { createIsolatedTestDatabase } from '../test-helpers';
 import { v4 as uuidv4 } from 'uuid';
-import type { Entity, UUID, Metadata } from '@elizaos/core';
+import type { Entity, UUID, AgentRuntime } from '@elizaos/core';
 import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
 
 describe('Entity CRUD Operations', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter | PgDatabaseAdapter;
+  let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
 
   beforeAll(async () => {
     const setup = await createIsolatedTestDatabase('entity-crud');
     adapter = setup.adapter;
+    runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {
@@ -49,9 +51,9 @@ describe('Entity CRUD Operations', () => {
       const result = await adapter.createEntities([entity]);
       expect(result).toBe(true);
 
-      const retrieved = await adapter.getEntityByIds([entity.id!]);
+      const retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved).toHaveLength(1);
-      expect(retrieved![0].id).toBe(entity.id as UUID);
+      expect(retrieved![0].id).toBe(entity.id);
     });
 
     it('should update an entity', async () => {
@@ -72,7 +74,7 @@ describe('Entity CRUD Operations', () => {
 
       await adapter.updateEntity(updatedEntity);
 
-      const retrieved = await adapter.getEntityByIds([entity.id!]);
+      const retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved![0].names).toContain('Updated Name');
       expect(retrieved![0].metadata?.version).toBe(2);
     });
@@ -88,14 +90,14 @@ describe('Entity CRUD Operations', () => {
       await adapter.createEntities([entity]);
 
       // Verify it exists
-      let retrieved = await adapter.getEntityByIds([entity.id!]);
+      let retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved).toHaveLength(1);
 
       // Delete it
       await adapter.deleteEntity(entity.id!);
 
       // Verify it's gone
-      retrieved = await adapter.getEntityByIds([entity.id!]);
+      retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved).toHaveLength(0);
     });
   });
@@ -194,8 +196,8 @@ describe('Entity CRUD Operations', () => {
 
       await adapter.createEntities([entity]);
 
-      const retrieved = await adapter.getEntityByIds([entity.id!]);
-      expect(retrieved![0].metadata).toEqual(entity.metadata as Metadata);
+      const retrieved = await adapter.getEntitiesByIds([entity.id!]);
+      expect(retrieved![0].metadata).toEqual(entity.metadata);
       expect((retrieved![0].metadata?.nested as any)?.array).toEqual([1, 2, 3]);
     });
 
@@ -233,7 +235,7 @@ describe('Entity CRUD Operations', () => {
 
       // Verify all were created
       const entityIds = entities.map((e) => e.id!);
-      const retrieved = await adapter.getEntityByIds(entityIds);
+      const retrieved = await adapter.getEntitiesByIds(entityIds);
       expect(retrieved).toHaveLength(5);
 
       // Delete all entities
@@ -242,7 +244,7 @@ describe('Entity CRUD Operations', () => {
       }
 
       // Verify all were deleted
-      const afterDelete = await adapter.getEntityByIds(entityIds);
+      const afterDelete = await adapter.getEntitiesByIds(entityIds);
       expect(afterDelete).toHaveLength(0);
     });
   });
@@ -282,7 +284,7 @@ describe('Entity CRUD Operations', () => {
       await adapter.updateEntity(entity);
 
       // Entity should not exist
-      const retrieved = await adapter.getEntityByIds([entity.id!]);
+      const retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved).toHaveLength(0);
     });
 
@@ -333,7 +335,7 @@ describe('Entity CRUD Operations', () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0].id).toBe(entity.id as UUID);
+      expect(results[0].id).toBe(entity.id);
     });
   });
 });

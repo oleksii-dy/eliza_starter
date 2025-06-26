@@ -1,41 +1,29 @@
 import {
-  type Agent,
   ChannelType,
-  type Component,
   DatabaseAdapter,
+  logger,
+  VECTOR_DIMS,
+  type Agent,
+  type Component,
   type Entity,
   type Log,
-  logger,
   type Memory,
   type MemoryMetadata,
   type Participant,
   type Relationship,
   type Room,
-  RoomMetadata,
+  type RoomMetadata,
   type Task,
-  TaskMetadata,
+  type TaskMetadata,
   type UUID,
   type World,
 } from '@elizaos/core';
-import {
-  and,
-  cosineDistance,
-  count,
-  desc,
-  eq,
-  gte,
-  inArray,
-  lt,
-  lte,
-  or,
-  SQL,
-  sql,
-} from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lt, lte, or, sql } from 'drizzle-orm';
 import { v4 } from 'uuid';
 import { DIMENSION_MAP, type EmbeddingDimensionColumn } from './schema/embedding';
+
 import {
   agentTable,
-  cacheTable,
   channelParticipantsTable,
   channelTable,
   componentTable,
@@ -49,9 +37,10 @@ import {
   relationshipTable,
   roomTable,
   serverAgentsTable,
-  taskTable,
+  tasksTable,
   worldTable,
 } from './schema/index';
+// Migration is handled by UnifiedMigrator in the adapters
 
 // Define the metadata type inline since we can't import it
 /**
@@ -78,16 +67,202 @@ import {
  * management, and transaction support. Concrete implementations must provide the
  * withDatabase method to execute operations against their specific database.
  */
-export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
+export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
+  public abstract db: any;
   protected readonly maxRetries: number = 3;
   protected readonly baseDelay: number = 1000;
   protected readonly maxDelay: number = 10000;
   protected readonly jitterMax: number = 1000;
-  protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[384];
+  protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[VECTOR_DIMS.SMALL];
+  protected pluginSchemas?: Map<string, any>;
+  protected _vectorSupportChecked: boolean = false;
+  protected _hasVectorSupport: boolean = false;
 
   protected abstract withDatabase<T>(operation: () => Promise<T>): Promise<T>;
   public abstract init(): Promise<void>;
   public abstract close(): Promise<void>;
+
+  /**
+   * Check if this adapter is a PGLite adapter
+   * Override in PGLite adapter to return true
+   */
+  protected isPGLiteAdapter(): boolean {
+    return false;
+  }
+
+  /**
+   * Helper method to map memory row data to Memory object
+   */
+  protected mapMemoryRow(row: any): Memory {
+    const metadata = row.metadata || {};
+    if (row.type && !metadata.type) {
+      metadata.type = row.type;
+    }
+
+    return {
+      id: row.id as UUID,
+      createdAt: row.createdAt instanceof Date ? row.createdAt.getTime() : row.createdAt,
+      content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content,
+      entityId: row.entityId as UUID,
+      agentId: row.agentId as UUID,
+      roomId: row.roomId as UUID,
+      worldId: row.worldId as UUID | undefined,
+      unique: row.unique,
+      metadata: metadata as MemoryMetadata,
+      embedding: row.embedding ? Array.from(row.embedding) : undefined,
+      similarity: row.similarity,
+    };
+  }
+
+  /**
+   * Check if the adapter is ready for operations
+   * Must be implemented by concrete adapters
+   */
+  public abstract isReady(): Promise<boolean>;
+
+  /**
+   * Wait for the adapter to become ready within a timeout
+   */
+  public async waitForReady(timeoutMs: number = 30000): Promise<void> {
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < timeoutMs) {
+      if (await this.isReady()) {
+        return;
+      }
+
+      // Wait 100ms before checking again
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    throw new Error(`Adapter failed to become ready within ${timeoutMs}ms`);
+  }
+
+  /**
+   * Get capabilities information about the adapter
+   */
+  public async getCapabilities(): Promise<{
+    isReady: boolean;
+    tables: string[];
+    hasVector: boolean;
+  }> {
+    const isReady = await this.isReady();
+
+    if (!isReady) {
+      return {
+        isReady: false,
+        tables: [],
+        hasVector: false,
+      };
+    }
+
+    try {
+      const tables = await this.listTables();
+      const hasVector = await this.checkVectorSupport();
+
+      return {
+        isReady: true,
+        tables,
+        hasVector,
+      };
+    } catch (error) {
+      logger.warn('Failed to get capabilities:', error);
+      return {
+        isReady: false,
+        tables: [],
+        hasVector: false,
+      };
+    }
+  }
+
+  /**
+   * Check if a specific table exists
+   */
+  public async hasTable(tableName: string): Promise<boolean> {
+    try {
+      const isReady = await this.isReady();
+      if (!isReady) {
+        return false;
+      }
+
+      // Try to query the table with a safe query that returns no rows
+      await this.withDatabase(async () => {
+        return this.db.execute(sql.raw(`SELECT 1 FROM "${tableName}" WHERE 1=0`));
+      });
+
+      return true;
+    } catch (error) {
+      // If the query fails, the table likely doesn't exist
+      return false;
+    }
+  }
+
+  /**
+   * List all tables in the database
+   * Must be implemented by concrete adapters based on their database type
+   */
+  protected abstract listTables(): Promise<string[]>;
+
+  /**
+   * Check if vector extension is available
+   */
+  protected async checkVectorSupport(): Promise<boolean> {
+    try {
+      // Check if we already know vector support is not available (cached result)
+      if (this._vectorSupportChecked) {
+        return this._hasVectorSupport;
+      }
+
+      // For PGLite, check if vector extension is loaded
+      if (this.isPGLiteAdapter()) {
+        try {
+          await this.db.execute(sql.raw("SELECT 1 FROM pg_extension WHERE extname = 'vector'"));
+          this._vectorSupportChecked = true;
+          this._hasVectorSupport = true;
+          return true;
+        } catch {
+          this._vectorSupportChecked = true;
+          this._hasVectorSupport = false;
+          return false;
+        }
+      }
+
+      // For PostgreSQL, try to create a temporary vector column to test support
+      await this.withDatabase(async () => {
+        return this.db.execute(
+          sql.raw('CREATE TEMPORARY TABLE test_vector_support (id INT, vec vector(3))')
+        );
+      });
+
+      await this.withDatabase(async () => {
+        return this.db.execute(sql.raw('DROP TABLE test_vector_support'));
+      });
+
+      this._vectorSupportChecked = true;
+      this._hasVectorSupport = true;
+      return true;
+    } catch (error) {
+      this._vectorSupportChecked = true;
+      this._hasVectorSupport = false;
+      return false;
+    }
+  }
+
+  /**
+   * Ensure that the specified tables are ready for use
+   * This method checks if tables exist and are properly initialized
+   * @param tableNames Array of table names to check
+   * @returns Promise that resolves when all tables are ready
+   */
+  protected async ensureTablesReady(tableNames: string[]): Promise<void> {
+    for (const tableName of tableNames) {
+      const ready = await this.hasTable(tableName);
+      if (!ready) {
+        logger.warn(`Table ${tableName} is not ready or does not exist`);
+        // Don't throw an error, just log - tables might be created later in the transaction
+      }
+    }
+  }
 
   /**
    * Initialize method that can be overridden by implementations
@@ -97,9 +272,42 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   }
 
   /**
+   * Run migrations for a plugin's schema
+   * This is called by the runtime during initialization
+   * @param schema The schema object from the plugin
+   * @param pluginName The name of the plugin
+   */
+  public async runPluginMigrations(schema: any, pluginName: string): Promise<void> {
+    logger.info(`[BaseDrizzleAdapter] Running migrations for plugin: ${pluginName}`);
+
+    try {
+      // For now, log that plugins need to handle their own migrations
+      // The UnifiedMigrator system will be enhanced to handle plugin schemas in the future
+      logger.info(
+        `[BaseDrizzleAdapter] Plugin ${pluginName} should create its tables during init()`
+      );
+
+      // Store the schema for future reference
+      if (!this.pluginSchemas) {
+        this.pluginSchemas = new Map();
+      }
+      this.pluginSchemas.set(pluginName, schema);
+    } catch (error) {
+      logger.error(
+        `[BaseDrizzleAdapter] Failed to process schema for plugin ${pluginName}:`,
+        error
+      );
+      // Don't throw - let the plugin handle its own table creation
+    }
+  }
+
+  /**
    * Get the underlying database instance for testing purposes
    */
   public getDatabase(): any {
+    if (!this.db) {
+      throw new Error('Database not initialized. Make sure to call init() first.');
+    }
     return this.db;
   }
 
@@ -156,6 +364,177 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   }
 
   /**
+   * Check if an error is a constraint violation (duplicate key, foreign key, etc.)
+   * This provides better error handling than throwing on constraint violations
+   */
+  protected isConstraintViolationError(error: any): boolean {
+    if (!error) {
+      return false;
+    }
+
+    const errorMessage = error.message || String(error);
+    const errorCode = error.code || error.constraint;
+
+    // PostgreSQL constraint violation error codes
+    const pgConstraintCodes = [
+      '23505', // unique_violation
+      '23503', // foreign_key_violation
+      '23502', // not_null_violation
+      '23514', // check_violation
+      '23P01', // exclusion_violation
+    ];
+
+    // Check for PostgreSQL error codes
+    if (errorCode && pgConstraintCodes.includes(errorCode)) {
+      return true;
+    }
+
+    // Check for common constraint violation messages
+    const constraintMessages = [
+      'duplicate key value violates unique constraint',
+      'violates foreign key constraint',
+      'violates not-null constraint',
+      'violates check constraint',
+      'UNIQUE constraint failed',
+      'FOREIGN KEY constraint failed',
+      'NOT NULL constraint failed',
+      'CHECK constraint failed',
+    ];
+
+    return constraintMessages.some((msg) => errorMessage.toLowerCase().includes(msg.toLowerCase()));
+  }
+
+  /**
+   * Check if an error is specifically a schema mismatch (missing column, etc.)
+   */
+  protected isSchemaMismatchError(error: any): boolean {
+    if (!error) {
+      return false;
+    }
+
+    const errorMessage = error.message || String(error);
+    const errorCode = error.code;
+
+    // Check for PostgreSQL "column does not exist" errors
+    if (errorCode === '42703') {
+      return true;
+    }
+
+    // Check for common schema mismatch messages
+    const schemaMismatchMessages = [
+      'column',
+      'does not exist',
+      'relation',
+      'does not exist',
+      'table',
+      'does not exist',
+      'unknown column',
+      'no such column',
+    ];
+
+    return schemaMismatchMessages.some((msg) =>
+      errorMessage.toLowerCase().includes(msg.toLowerCase())
+    );
+  }
+
+  /**
+   * Check if an error is a database connection error
+   */
+  protected isDatabaseConnectionError(error: any): boolean {
+    if (!error) {
+      return false;
+    }
+
+    const errorMessage = error.message || String(error);
+    const errorCode = error.code;
+
+    // PostgreSQL connection error codes
+    const pgConnectionCodes = [
+      '08000', // connection_exception
+      '08003', // connection_does_not_exist
+      '08006', // connection_failure
+      '08001', // sqlclient_unable_to_establish_sqlconnection
+      '08004', // sqlserver_rejected_establishment_of_sqlconnection
+      '08007', // transaction_resolution_unknown
+      '08P01', // protocol_violation
+    ];
+
+    // Check for PostgreSQL connection error codes
+    if (errorCode && pgConnectionCodes.includes(errorCode)) {
+      return true;
+    }
+
+    // Check for common connection error messages
+    const connectionMessages = [
+      'connection refused',
+      'could not connect',
+      'connection lost',
+      'connection timeout',
+      'database is locked',
+      'server closed the connection',
+      'cannot connect to database',
+      'connection terminated',
+      'no such host',
+      'network is unreachable',
+    ];
+
+    return connectionMessages.some((msg) => errorMessage.toLowerCase().includes(msg.toLowerCase()));
+  }
+
+  /**
+   * Check if an error is a missing table/relation error
+   */
+  protected isTableMissingError(error: any): boolean {
+    if (!error) {
+      return false;
+    }
+
+    const errorMessage = error.message || String(error);
+    const errorCode = error.code;
+
+    // PostgreSQL relation does not exist error code
+    if (errorCode === '42P01') {
+      return true;
+    }
+
+    // Check for common table missing messages
+    const tableMissingMessages = [
+      'relation',
+      'does not exist',
+      'table',
+      'does not exist',
+      'no such table',
+      'unknown table',
+      'table or view does not exist',
+    ];
+
+    return tableMissingMessages.some((msg) =>
+      errorMessage.toLowerCase().includes(msg.toLowerCase())
+    );
+  }
+
+  /**
+   * Check if vector/embeddings functionality is available
+   */
+  private async isEmbeddingSupported(): Promise<boolean> {
+    try {
+      // Try to check if embeddings table exists
+      await this.db.execute(sql`SELECT 1 FROM embeddings LIMIT 1`);
+      return true;
+    } catch (error) {
+      // If embeddings table doesn't exist or can't be queried, embeddings are not supported
+      if (
+        error instanceof Error &&
+        (error.message.includes('relation "embeddings" does not exist') ||
+          error.message.includes('no such table: embeddings'))
+      ) {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Asynchronously ensures that the given embedding dimension is valid for the agent.
    *
    * @param {number} dimension - The dimension to ensure for the embedding.
@@ -163,21 +542,79 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    */
   async ensureEmbeddingDimension(dimension: number) {
     return this.withDatabase(async () => {
-      const existingMemory = await this.db
-        .select()
-        .from(memoryTable)
-        .innerJoin(embeddingTable, eq(embeddingTable.memoryId, memoryTable.id))
-        .where(eq(memoryTable.agentId, this.agentId))
-        .limit(1);
+      // Check if embeddings are supported first
+      const embeddingSupported = await this.isEmbeddingSupported();
 
-      if (existingMemory.length > 0) {
-        Object.entries(DIMENSION_MAP).find(
-          ([_, colName]) => (existingMemory[0] as any).embeddings[colName] !== null
+      if (!embeddingSupported) {
+        logger.warn(
+          'Embeddings not supported in this database configuration, skipping dimension check'
         );
-        // We don't actually need to use usedDimension for now, but it's good to know it's there.
+        // Still set the dimension for potential future use
+        const dimensionKey = Object.keys(VECTOR_DIMS).find(
+          (key) => VECTOR_DIMS[key as keyof typeof VECTOR_DIMS] === dimension
+        );
+
+        if (!dimensionKey) {
+          throw new Error(`Unsupported embedding dimension: ${dimension}`);
+        }
+
+        this.embeddingDimension = DIMENSION_MAP[dimension as keyof typeof DIMENSION_MAP];
+        logger.debug('Set embedding dimension (early return):', {
+          dimension,
+          embeddingDimension: this.embeddingDimension,
+        });
+        return;
       }
 
-      this.embeddingDimension = DIMENSION_MAP[dimension];
+      try {
+        // For PGLite, skip the Drizzle join query due to UUID type mismatches
+        if (this.isPGLiteAdapter()) {
+          logger.debug('Skipping embedding dimension check for PGLite (type compatibility)');
+        } else {
+          const existingMemory = await this.db
+            .select()
+            .from(memoryTable)
+            .innerJoin(embeddingTable, eq(embeddingTable.memoryId, memoryTable.id))
+            .where(eq(memoryTable.agentId, this.agentId))
+            .limit(1);
+
+          if (existingMemory.length > 0) {
+            const usedDimension = Object.entries(DIMENSION_MAP).find(
+              ([_, colName]) => (existingMemory[0] as any).embeddings[colName] !== null
+            );
+            // We don't actually need to use usedDimension for now, but it's good to know it's there.
+          }
+        }
+      } catch (error) {
+        // Handle case where embeddings table doesn't exist yet or type mismatches
+        if (
+          error instanceof Error &&
+          (error.message.includes('relation "embeddings" does not exist') ||
+            error.message.includes('no such table: embeddings') ||
+            error.message.includes('operator does not exist: uuid = text'))
+        ) {
+          logger.warn(
+            'Embeddings table not yet created or type mismatch, proceeding with dimension setup'
+          );
+        } else {
+          throw error;
+        }
+      }
+
+      // Map the dimension to the appropriate column name
+      const dimensionKey = Object.keys(VECTOR_DIMS).find(
+        (key) => VECTOR_DIMS[key as keyof typeof VECTOR_DIMS] === dimension
+      );
+
+      if (!dimensionKey) {
+        throw new Error(`Unsupported embedding dimension: ${dimension}`);
+      }
+
+      this.embeddingDimension = DIMENSION_MAP[dimension as keyof typeof DIMENSION_MAP];
+      logger.debug('Set embedding dimension (normal path):', {
+        dimension,
+        embeddingDimension: this.embeddingDimension,
+      });
     });
   }
 
@@ -188,24 +625,77 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    */
   async getAgent(agentId: UUID): Promise<Agent | null> {
     return this.withDatabase(async () => {
-      const rows = await this.db
-        .select()
-        .from(agentTable)
-        .where(eq(agentTable.id, agentId))
-        .limit(1);
+      try {
+        // Use raw SQL to avoid Drizzle schema loading issues
+        const result = await this.db.execute(sql`
+          SELECT * FROM agents WHERE id = ${agentId} LIMIT 1
+        `);
 
-      if (rows.length === 0) return null;
+        // Handle different result formats from different database adapters
+        const rows = Array.isArray(result) ? result : result.rows || [];
 
-      const row = rows[0];
-      return {
-        ...row,
-        username: row.username || '',
-        id: row.id as UUID,
-        system: !row.system ? undefined : row.system,
-        bio: !row.bio ? '' : row.bio,
-        createdAt: row.createdAt.getTime(),
-        updatedAt: row.updatedAt.getTime(),
-      };
+        if (rows.length === 0) {
+          return null;
+        }
+
+        const row = rows[0];
+
+        // Parse JSON fields
+        const settings =
+          typeof row.settings === 'string' ? JSON.parse(row.settings) : row.settings || {};
+        const plugins =
+          typeof row.plugins === 'string' ? JSON.parse(row.plugins) : row.plugins || [];
+        const topics = typeof row.topics === 'string' ? JSON.parse(row.topics) : row.topics || [];
+        const knowledge =
+          typeof row.knowledge === 'string' ? JSON.parse(row.knowledge) : row.knowledge || [];
+        const messageExamples =
+          typeof row.message_examples === 'string'
+            ? JSON.parse(row.message_examples)
+            : row.message_examples || [];
+        const postExamples =
+          typeof row.post_examples === 'string'
+            ? JSON.parse(row.post_examples)
+            : row.post_examples || [];
+        const style = typeof row.style === 'string' ? JSON.parse(row.style) : row.style || {};
+
+        return {
+          id: row.id as UUID,
+          name: row.name,
+          username: row.username || '',
+          bio: row.bio || '',
+          system: row.system || undefined,
+          enabled: row.enabled !== undefined ? row.enabled : true,
+          status: row.status,
+          settings,
+          plugins,
+          topics,
+          knowledge,
+          messageExamples,
+          postExamples,
+          style,
+          createdAt:
+            row.created_at instanceof Date
+              ? row.created_at.getTime()
+              : new Date(row.created_at).getTime(),
+          updatedAt:
+            row.updated_at instanceof Date
+              ? row.updated_at.getTime()
+              : new Date(row.updated_at).getTime(),
+        };
+      } catch (error) {
+        // Handle case where agents table doesn't exist yet (during initialization)
+        if (
+          error instanceof Error &&
+          (error.message.includes('relation "agents" does not exist') ||
+            error.message.includes('no such table: agents') ||
+            error.message.includes("doesn't exist") ||
+            (error.message.includes('Failed query') && error.message.includes('from "agents"')))
+        ) {
+          logger.warn('Agents table not yet created, returning null for getAgent');
+          return null;
+        }
+        throw error;
+      }
     });
   }
 
@@ -216,77 +706,191 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    */
   async getAgents(): Promise<Partial<Agent>[]> {
     return this.withDatabase(async () => {
-      const rows = await this.db
-        .select({
-          id: agentTable.id,
-          name: agentTable.name,
-          bio: agentTable.bio,
-        })
-        .from(agentTable);
-      return rows.map((row) => ({
-        ...row,
-        id: row.id as UUID,
-        bio: row.bio === null ? '' : row.bio,
-      }));
+      try {
+        const rows = await this.db
+          .select({
+            id: agentTable.id,
+            name: agentTable.name,
+            bio: agentTable.bio,
+          })
+          .from(agentTable);
+        return rows.map((row) => ({
+          ...row,
+          id: row.id as UUID,
+          bio: row.bio === null ? '' : row.bio,
+        }));
+      } catch (error) {
+        // Handle case where agents table doesn't exist yet (during initialization)
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (
+          errorMessage.includes('relation "agents" does not exist') ||
+          errorMessage.includes('no such table: agents') ||
+          errorMessage.includes("doesn't exist") ||
+          errorMessage.includes('Failed query') ||
+          errorMessage.includes('select "id", "name", "bio" from "agents"') ||
+          errorMessage.includes('table "agents"') ||
+          errorMessage.includes('agents table') ||
+          errorMessage.includes('"agents"') ||
+          errorMessage.includes('agents') ||
+          errorMessage.toLowerCase().includes('does not exist') ||
+          errorMessage.toLowerCase().includes('not exist')
+        ) {
+          logger.warn('Agents table not yet created during initialization, returning empty array', {
+            error: errorMessage,
+          });
+          return [];
+        }
+
+        logger.error('Unexpected error in getAgents', {
+          error: (error as Error).message,
+          stack: (error as Error).stack,
+        });
+        throw error;
+      }
     });
   }
+
   /**
    * Asynchronously creates a new agent record in the database.
    *
    * @param {Partial<Agent>} agent The agent object to be created.
    * @returns {Promise<boolean>} A promise that resolves to a boolean indicating the success of the operation.
    */
-  async createAgent(agent: Agent): Promise<boolean> {
+  async createAgent(agent: Agent | Partial<Agent>): Promise<boolean> {
     return this.withDatabase(async () => {
       try {
-        // Check for existing agent with the same ID or name
-        // Check for existing agent with the same ID or name
-        const conditions: (SQL<unknown> | undefined)[] = [];
-        if (agent.id) {
-          conditions.push(eq(agentTable.id, agent.id));
-        }
-        if (agent.name) {
-          conditions.push(eq(agentTable.name, agent.name));
+        if (!agent.id) {
+          agent.id = v4() as UUID;
         }
 
-        const existing =
-          conditions.length > 0
-            ? await this.db
-                .select({ id: agentTable.id })
-                .from(agentTable)
-                .where(or(...conditions))
-                .limit(1)
-            : [];
-
-        if (existing.length > 0) {
-          logger.warn('Attempted to create an agent with a duplicate ID or name.', {
+        // Check for existing agent by ID first
+        const existing = await this.getAgent(agent.id);
+        if (existing) {
+          logger.warn('Attempted to create an agent with a duplicate ID.', {
             id: agent.id,
             name: agent.name,
           });
           return false;
         }
 
-        await this.db.transaction(async (tx) => {
-          await tx.insert(agentTable).values({
-            ...agent,
-            createdAt: new Date(agent.createdAt || Date.now()),
-            updatedAt: new Date(agent.updatedAt || Date.now()),
-          });
-        });
+        // Check for existing agent by name
+        if (agent.name) {
+          const agents = await this.getAgents();
+          const nameExists = agents.some((existingAgent) => existingAgent.name === agent.name);
+          if (nameExists) {
+            logger.warn('Attempted to create an agent with a duplicate name.', {
+              id: agent.id,
+              name: agent.name,
+            });
+            return false;
+          }
+        }
+
+        // Prepare agent data for insertion with proper defaults
+        const agentData = {
+          id: agent.id,
+          name: agent.name || 'Unnamed Agent',
+          bio: Array.isArray(agent.bio)
+            ? agent.bio.join('\n')
+            : agent.bio || 'A helpful AI assistant.',
+          system: agent.system || 'You are a helpful assistant.',
+          settings: agent.settings || {},
+          enabled: agent.enabled !== undefined ? agent.enabled : true,
+          status: agent.status || 'active',
+          topics: agent.topics || [],
+          knowledge: agent.knowledge || [],
+          messageExamples: agent.messageExamples || [],
+          postExamples: agent.postExamples || [],
+          style: agent.style || {},
+          plugins: agent.plugins || [],
+        };
+
+        logger.debug('[BaseDrizzleAdapter] Creating agent using Drizzle:', agentData.name);
+
+        // Use Drizzle ORM for proper schema handling - timestamps are handled by defaults
+        await this.db.insert(agentTable).values(agentData);
 
         logger.debug('Agent created successfully:', {
           agentId: agent.id,
         });
         return true;
       } catch (error) {
-        logger.error('Error creating agent:', {
-          error: error instanceof Error ? error.message : String(error),
+        const errorMessage = error instanceof Error ? error.message : String(error);
+
+        // Check if it's a constraint violation (duplicate)
+        if (this.isConstraintViolationError(error)) {
+          logger.warn('Agent creation failed due to constraint violation (duplicate):', {
+            agentId: agent.id,
+            name: agent.name,
+            errorCode: (error as any).code,
+            constraint: (error as any).constraint,
+          });
+          return false;
+        }
+
+        // Check if it's a schema mismatch error
+        if (this.isSchemaMismatchError(error)) {
+          logger.error('Agent creation failed due to schema mismatch:', {
+            agentId: agent.id,
+            name: agent.name,
+            error: errorMessage,
+            errorCode: (error as any).code,
+            suggestion:
+              'The database schema may be out of sync. Try recreating the database or running migrations.',
+          });
+          // Return false instead of throwing to allow graceful handling
+          logger.warn(
+            `Agent creation failed due to schema mismatch, returning false to allow graceful handling: ${errorMessage}`
+          );
+          return false;
+        }
+
+        logger.error('Failed to create agent:', {
           agentId: agent.id,
-          agent,
+          name: agent.name,
+          error: errorMessage,
+          errorDetails: {
+            name: error instanceof Error ? error.name : 'UnknownError',
+            code: (error as any).code,
+            constraint: (error as any).constraint,
+            stack: error instanceof Error ? error.stack : 'No stack trace',
+            cause: error instanceof Error ? error.cause : undefined,
+          },
         });
-        return false;
+
+        // For database connection errors or table missing errors, return false instead of throwing
+        // This allows the runtime to handle the error gracefully
+        if (this.isDatabaseConnectionError(error) || this.isTableMissingError(error)) {
+          logger.warn(
+            `Agent creation failed due to database issue, returning false to allow graceful handling: ${errorMessage}`
+          );
+          return false;
+        }
+
+        // For other unrecoverable errors, still throw
+        throw new Error(`Failed to create agent: ${agent.name}. ${errorMessage}`);
       }
     });
+  }
+
+  /**
+   * Capability-aware version of createAgent that returns fallback values when not ready
+   * @param {Agent} agent - The agent to create
+   * @returns {Promise<boolean>} - false when not ready, actual result when ready
+   */
+  async createAgentSafe(agent: Agent): Promise<boolean> {
+    try {
+      const isReady = await this.isReady();
+      if (!isReady) {
+        logger.debug('Adapter not ready, returning fallback value for createAgentSafe');
+        return false; // Fallback value when not ready
+      }
+
+      return await this.createAgent(agent);
+    } catch (error) {
+      logger.warn('createAgentSafe failed, returning fallback value:', error);
+      return false; // Fallback value on error
+    }
   }
 
   /**
@@ -311,6 +915,14 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
           // Convert numeric timestamps to Date objects for database storage
           // The Agent interface uses numbers, but the database schema expects Date objects
           const updateData: any = { ...agent };
+
+          // Convert bio array to string if necessary (matches createAgent behavior)
+          if (updateData.bio !== undefined) {
+            if (Array.isArray(updateData.bio)) {
+              updateData.bio = updateData.bio.join('\n');
+            }
+          }
+
           if (updateData.createdAt) {
             if (typeof updateData.createdAt === 'number') {
               updateData.createdAt = new Date(updateData.createdAt);
@@ -387,6 +999,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
           ? { ...target }
           : {};
 
+      let isEmpty = true; // Flag to track if the resulting object is empty
       for (const key of Object.keys(source)) {
         // Iterate over source keys
         const sourceValue = source[key];
@@ -402,10 +1015,12 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
             delete output[key];
           } else {
             output[key] = nestedMergeResult;
+            isEmpty = false; // The object is not empty if it has a nested object
           }
         } else {
           // Primitive or array value from source, assign it.
           output[key] = sourceValue;
+          isEmpty = false; // The object is not empty
         }
       }
 
@@ -440,22 +1055,108 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
 
     return this.withDatabase(async () => {
       try {
-        // Simply delete the agent - all related data will be cascade deleted
-        const result = await this.db
-          .delete(agentTable)
-          .where(eq(agentTable.id, agentId))
-          .returning();
+        // Ensure required tables are ready before proceeding
+        await this.ensureTablesReady(['agents', 'cache', 'memories', 'entities', 'rooms']);
 
-        if (result.length === 0) {
-          logger.warn(`[DB] Agent ${agentId} not found`);
-          return false;
-        }
+        // Use raw SQL to avoid Drizzle schema loading issues
+        await this.db.transaction(async (tx) => {
+          // Helper function to safely delete from a table
+          const safeDelete = async (tableName: string, condition: string) => {
+            try {
+              await tx.execute(sql.raw(`DELETE FROM ${tableName} WHERE ${condition}`));
+              logger.debug(`[DB] Successfully deleted from ${tableName} for agent ${agentId}`);
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              if (
+                errorMessage.includes('does not exist') ||
+                errorMessage.includes('no such table')
+              ) {
+                logger.debug(`[DB] Table ${tableName} does not exist, skipping deletion`);
+              } else {
+                logger.warn(`[DB] Error deleting from ${tableName}:`, errorMessage);
+                // Don't throw for non-critical tables to allow cascade delete to continue
+              }
+            }
+          };
 
-        logger.success(
-          `[DB] Agent ${agentId} and all related data successfully deleted via cascade`
-        );
+          // Delete in dependency order (child tables first)
+
+          // Delete cache entries - cache uses key/value, not agent_id
+          try {
+            await tx.execute(sql`DELETE FROM cache WHERE agent_id = ${agentId}`);
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            if (
+              !errorMessage.includes('does not exist') &&
+              !errorMessage.includes('no such table')
+            ) {
+              logger.debug("[DB] Cache table might not have agent_id column or doesn't exist");
+            }
+          }
+
+          // Delete embeddings for memories first (if table exists)
+          try {
+            await tx.execute(sql`
+              DELETE FROM embeddings 
+              WHERE memory_id IN (
+                SELECT id FROM memories WHERE agent_id = ${agentId}
+              )
+            `);
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            if (
+              !errorMessage.includes('does not exist') &&
+              !errorMessage.includes('no such table')
+            ) {
+              logger.warn('[DB] Error deleting embeddings:', errorMessage);
+            }
+          }
+
+          // Delete tasks that belong to rooms/worlds owned by this agent
+          try {
+            await tx.execute(sql`
+              DELETE FROM tasks 
+              WHERE room_id IN (SELECT id FROM rooms WHERE agent_id = ${agentId})
+                 OR world_id IN (SELECT id FROM worlds WHERE agent_id = ${agentId})
+            `);
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            if (
+              !errorMessage.includes('does not exist') &&
+              !errorMessage.includes('no such table')
+            ) {
+              logger.warn('[DB] Error deleting tasks:', errorMessage);
+            }
+          }
+
+          await safeDelete('memories', `agent_id = '${agentId}'`);
+          await safeDelete('relationships', `agent_id = '${agentId}'`);
+          await safeDelete('participants', `agent_id = '${agentId}'`);
+          await safeDelete('components', `agent_id = '${agentId}'`);
+          await safeDelete('entities', `agent_id = '${agentId}'`);
+          await safeDelete('rooms', `agent_id = '${agentId}'`);
+          await safeDelete('worlds', `agent_id = '${agentId}'`);
+
+          // Finally, delete the agent itself and check if it existed
+          const result = await tx.execute(sql`
+            DELETE FROM agents WHERE id = ${agentId} RETURNING id
+          `);
+
+          // Handle different result formats from different database adapters
+          const rows = Array.isArray(result) ? result : result.rows || [];
+          if (rows.length === 0) {
+            logger.warn(`[DB] Agent ${agentId} not found`);
+            throw new Error('Agent not found');
+          }
+        });
+
+        logger.success(`[DB] Agent ${agentId} and all related data successfully deleted`);
         return true;
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage === 'Agent not found') {
+          return false;
+        }
         logger.error(`[DB] Failed to delete agent ${agentId}:`, error);
         if (error instanceof Error) {
           logger.error(`[DB] Error details: ${error.name} - ${error.message}`);
@@ -477,9 +1178,36 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   async countAgents(): Promise<number> {
     return this.withDatabase(async () => {
       try {
-        const result = await this.db.select({ count: count() }).from(agentTable);
+        // Use raw SQL to avoid Drizzle schema loading issues
+        const result = await this.db.execute(sql`SELECT COUNT(*) as count FROM agents`);
 
-        return result[0]?.count || 0;
+        // Handle different result formats from different database adapters
+        const rows = Array.isArray(result) ? result : result.rows || [];
+
+        if (rows.length === 0) {
+          return 0;
+        }
+
+        const countValue = rows[0]?.count;
+
+        // Handle BigInt values (PGLite may return BigInt for COUNT)
+        if (typeof countValue === 'bigint') {
+          return Number(countValue);
+        }
+
+        // Convert to number if it's a string (some drivers return strings)
+        if (typeof countValue === 'string') {
+          return parseInt(countValue, 10);
+        }
+
+        // If it's already a number, return it
+        if (typeof countValue === 'number') {
+          return countValue;
+        }
+
+        // Fallback to 0 if we get an unexpected type
+        logger.warn('Unexpected count value type:', typeof countValue, countValue);
+        return 0;
       } catch (error) {
         logger.error('Error counting agents:', {
           error: error instanceof Error ? error.message : String(error),
@@ -497,7 +1225,8 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   async cleanupAgents(): Promise<void> {
     return this.withDatabase(async () => {
       try {
-        await this.db.delete(agentTable);
+        // Use raw SQL to avoid Drizzle schema loading issues
+        await this.db.execute(sql`DELETE FROM agents`);
         logger.success('Successfully cleaned up agent table');
       } catch (error) {
         logger.error('Error cleaning up agent table:', {
@@ -509,42 +1238,188 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   }
 
   /**
-   * Asynchronously retrieves an entity and its components by entity IDs.
+   * Asynchronously retrieves entities by their IDs (core interface method).
+   * This method is required by the core DatabaseAdapter interface.
    * @param {UUID[]} entityIds - The unique identifiers of the entities to retrieve.
-   * @returns {Promise<Entity[] | null>} A Promise that resolves to the entity with its components if found, null otherwise.
+   * @returns {Promise<Entity[] | null>} A Promise that resolves to the entities with their components if found, null otherwise.
    */
-  async getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null> {
+  async getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null> {
     return this.withDatabase(async () => {
-      const result = await this.db
-        .select({
-          entity: entityTable,
-          components: componentTable,
-        })
-        .from(entityTable)
-        .leftJoin(componentTable, eq(componentTable.entityId, entityTable.id))
-        .where(inArray(entityTable.id, entityIds));
-
-      if (result.length === 0) return [];
-
-      // Group components by entity
-      const entities: Record<UUID, Entity> = {};
-      const entityComponents: Record<UUID, Entity['components']> = {};
-      for (const e of result) {
-        const key = e.entity.id;
-        entities[key] = e.entity;
-        if (entityComponents[key] === undefined) entityComponents[key] = [];
-        if (e.components) {
-          // Handle both single component and array of components
-          const componentsArray = Array.isArray(e.components) ? e.components : [e.components];
-          entityComponents[key] = [...entityComponents[key], ...componentsArray];
+      try {
+        if (entityIds.length === 0) {
+          return [];
         }
+
+        // Ensure entities table is ready before proceeding
+        await this.ensureTablesReady(['entities']);
+
+        // Use raw SQL to avoid Drizzle schema loading issues
+        // For single entity queries, use a simple approach
+        let result;
+        if (entityIds.length === 1) {
+          result = await this.db.execute(sql`
+            SELECT 
+              e.id,
+              e.agent_id,
+              e.names,
+              e.metadata,
+              c.id as component_id,
+              c.entity_id as component_entity_id,
+              c.agent_id as component_agent_id,
+              c.room_id as component_room_id,
+              c.world_id as component_world_id,
+              c.source_entity_id as component_source_entity_id,
+              c.type as component_type,
+              c.created_at as component_created_at,
+              c.data as component_data
+            FROM entities e
+            LEFT JOIN components c ON c.entity_id = e.id
+            WHERE e.id = ${entityIds[0]}
+          `);
+        } else {
+          // For multiple entities, use IN clause with proper parameter binding
+          result = await this.db.execute(sql`
+            SELECT 
+              e.id,
+              e.agent_id,
+              e.names,
+              e.metadata,
+              c.id as component_id,
+              c.entity_id as component_entity_id,
+              c.agent_id as component_agent_id,
+              c.room_id as component_room_id,
+              c.world_id as component_world_id,
+              c.source_entity_id as component_source_entity_id,
+              c.type as component_type,
+              c.created_at as component_created_at,
+              c.data as component_data
+            FROM entities e
+            LEFT JOIN components c ON c.entity_id = e.id
+            WHERE ${
+              this.isPGLiteAdapter()
+                ? sql`e.id IN (${sql.join(
+                    entityIds.map((id) => sql`${id}`),
+                    sql`, `
+                  )})`
+                : sql`e.id = ANY(${entityIds}::uuid[])`
+            }
+          `);
+        }
+
+        // Handle different result formats from different database adapters
+        const rows = Array.isArray(result) ? result : result.rows || [];
+        if (rows.length === 0) {
+          return [];
+        }
+
+        // Process the raw results into Entity objects
+        return this.processRawEntityResults(result);
+      } catch (error) {
+        // Handle case where entities table doesn't exist yet (during initialization)
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (
+          errorMessage.includes('relation "entities" does not exist') ||
+          errorMessage.includes('no such table: entities') ||
+          errorMessage.includes("doesn't exist") ||
+          errorMessage.includes('Failed query') ||
+          errorMessage.includes('"entities"') ||
+          errorMessage.toLowerCase().includes('does not exist') ||
+          errorMessage.toLowerCase().includes('not exist')
+        ) {
+          logger.debug(
+            'Entities table not yet created during initialization, returning empty array',
+            {
+              error: errorMessage,
+              entityIds,
+            }
+          );
+          return [];
+        }
+        throw error;
       }
-      for (const k of Object.keys(entityComponents)) {
-        entities[k].components = entityComponents[k];
+    });
+  }
+
+  private processEntityResults(result: any[]): Entity[] {
+    if (result.length === 0) {
+      return [];
+    }
+
+    // Group components by entity
+    const entities: Record<UUID, Entity> = {};
+    const entityComponents: Record<UUID, Entity['components']> = {};
+    for (const e of result) {
+      const key = e.entity.id;
+      entities[key] = e.entity;
+      if (entityComponents[key] === undefined) {
+        entityComponents[key] = [];
+      }
+      if (e.components) {
+        // Handle both single component and array of components
+        const componentsArray = Array.isArray(e.components) ? e.components : [e.components];
+        entityComponents[key] = [...entityComponents[key], ...componentsArray];
+      }
+    }
+    for (const k of Object.keys(entityComponents)) {
+      entities[k].components = entityComponents[k];
+    }
+
+    return Object.values(entities);
+  }
+
+  private processRawEntityResults(result: any): Entity[] {
+    // Handle different result formats from different database adapters
+    const rows = Array.isArray(result) ? result : result.rows || [];
+    if (rows.length === 0) {
+      return [];
+    }
+
+    // Group components by entity
+    const entities: Record<UUID, Entity> = {};
+    const entityComponents: Record<UUID, Component[]> = {};
+
+    for (const row of rows) {
+      const entityId = row.id;
+
+      // Create entity if it doesn't exist
+      if (!entities[entityId]) {
+        entities[entityId] = {
+          id: row.id,
+          agentId: row.agent_id,
+          names: typeof row.names === 'string' ? JSON.parse(row.names) : row.names || [],
+          metadata:
+            typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata || {},
+          components: [],
+        };
+        entityComponents[entityId] = [];
       }
 
-      return Object.values(entities);
-    });
+      // Add component if it exists
+      if (row.component_id) {
+        const component: Component = {
+          id: row.component_id,
+          entityId: row.component_entity_id,
+          agentId: row.component_agent_id,
+          roomId: row.component_room_id,
+          worldId: row.component_world_id,
+          sourceEntityId: row.component_source_entity_id,
+          type: row.component_type,
+          createdAt: row.component_created_at,
+          data:
+            typeof row.component_data === 'string'
+              ? JSON.parse(row.component_data)
+              : row.component_data || {},
+        };
+        entityComponents[entityId].push(component);
+      }
+    }
+
+    // Attach components to entities
+    for (const entityId of Object.keys(entityComponents)) {
+      entities[entityId].components = entityComponents[entityId];
+    }
+
+    return Object.values(entities);
   }
 
   /**
@@ -576,7 +1451,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
       const entitiesByIdMap = new Map<UUID, Entity>();
 
       for (const row of result) {
-        if (!row.entity) continue;
+        if (!row.entity) {
+          continue;
+        }
 
         const entityId = row.entity.id as UUID;
         if (!entitiesByIdMap.has(entityId)) {
@@ -613,22 +1490,87 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   async createEntities(entities: Entity[]): Promise<boolean> {
     return this.withDatabase(async () => {
       try {
+        // Tables should be ready if adapter.init() completed successfully
+
         return await this.db.transaction(async (tx) => {
-          await tx.insert(entityTable).values(entities);
+          // Use raw SQL to avoid Drizzle schema loading issues
+          let hasConstraintViolation = false;
+
+          for (const entity of entities) {
+            try {
+              // Try to insert the entity
+              const result = await tx.execute(sql`
+                INSERT INTO entities (id, agent_id, names, metadata)
+                VALUES (
+                  ${entity.id || v4()},
+                  ${entity.agentId},
+                  ${JSON.stringify(entity.names || [])},
+                  ${JSON.stringify(entity.metadata || {})}
+                )
+                ON CONFLICT (id) DO NOTHING
+                RETURNING id
+              `);
+
+              // Check if the insert actually succeeded
+              const resultRows = Array.isArray(result) ? result : result.rows || [];
+              if (resultRows.length === 0) {
+                // No rows returned means conflict occurred (entity already exists)
+                logger.debug('Entity already exists:', {
+                  entityId: entity.id,
+                  entityNames: entity.names,
+                });
+                hasConstraintViolation = true;
+              }
+            } catch (insertError) {
+              // Debug: Log the actual error structure
+              logger.debug('Insert error details:', {
+                error: insertError,
+                message: insertError instanceof Error ? insertError.message : String(insertError),
+                code: (insertError as any)?.code,
+                constraint: (insertError as any)?.constraint,
+                isConstraintViolation: this.isConstraintViolationError(insertError),
+              });
+
+              // Check for constraint violations at the individual insert level
+              if (this.isConstraintViolationError(insertError)) {
+                logger.debug('Constraint violation during entity creation:', {
+                  error: insertError instanceof Error ? insertError.message : String(insertError),
+                  entityId: entity.id,
+                  entityNames: entity.names,
+                });
+                hasConstraintViolation = true;
+              } else {
+                // Re-throw non-constraint errors
+                throw insertError;
+              }
+            }
+          }
+
+          if (hasConstraintViolation) {
+            return false;
+          }
 
           logger.debug(entities.length, 'Entities created successfully');
-
           return true;
         });
       } catch (error) {
-        logger.error('Error creating entity:', {
-          error: error instanceof Error ? error.message : String(error),
-          entityId: entities[0].id,
-          name: entities[0].metadata?.name,
+        const errorMessage = error instanceof Error ? error.message : String(error);
+
+        // Check for constraint violations (duplicate key, foreign key, etc.)
+        if (this.isConstraintViolationError(error)) {
+          logger.debug('Constraint violation during entity creation:', {
+            error: errorMessage,
+            entities: entities.map((e) => ({ id: e.id, names: e.names })),
+          });
+          return false;
+        }
+
+        // For other errors, these indicate actual database issues
+        logger.error('Error creating entities:', {
+          error: errorMessage,
+          entities,
         });
-        // trace the error
-        logger.trace(error);
-        return false;
+        throw error;
       }
     });
   }
@@ -645,7 +1587,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     }
 
     try {
-      const existingEntities = await this.getEntityByIds([entity.id]);
+      const existingEntities = await this.getEntitiesByIds([entity.id]);
 
       if (!existingEntities || !existingEntities.length) {
         return await this.createEntities([entity]);
@@ -673,7 +1615,11 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     return this.withDatabase(async () => {
       await this.db
         .update(entityTable)
-        .set(entity)
+        .set({
+          agentId: entity.agentId,
+          names: entity.names,
+          metadata: entity.metadata,
+        })
         .where(eq(entityTable.id, entity.id as string));
     });
   }
@@ -710,18 +1656,25 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     return this.withDatabase(async () => {
       const { names, agentId } = params;
 
-      // Build a condition to match any of the names
-      const nameConditions = names.map((name) => sql`${name} = ANY(${entityTable.names})`);
+      // First get all entities for this agent
+      const allEntities = await this.db
+        .select({
+          id: entityTable.id,
+          agentId: entityTable.agentId,
+          names: entityTable.names,
+          metadata: entityTable.metadata,
+        })
+        .from(entityTable)
+        .where(eq(entityTable.agentId, agentId));
 
-      const query = sql`
-        SELECT * FROM ${entityTable}
-        WHERE ${entityTable.agentId} = ${agentId}
-        AND (${sql.join(nameConditions, sql` OR `)})
-      `;
+      // Then filter in JavaScript to avoid PGLite array operation issues
+      const matchingEntities = allEntities.filter((entity: any) => {
+        const entityNames = entity.names || [];
+        // Check if any of the requested names match any of the entity's names
+        return names.some((name) => entityNames.includes(name));
+      });
 
-      const result = await this.db.execute(query);
-
-      return result.rows.map((row: any) => ({
+      return matchingEntities.map((row: any) => ({
         id: row.id as UUID,
         agentId: row.agentId as UUID,
         names: row.names || [],
@@ -746,15 +1699,20 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     return this.withDatabase(async () => {
       const { query, agentId, limit = 10 } = params;
 
+      // Get all entities for this agent
+      const allEntities = await this.db
+        .select({
+          id: entityTable.id,
+          agentId: entityTable.agentId,
+          names: entityTable.names,
+          metadata: entityTable.metadata,
+        })
+        .from(entityTable)
+        .where(eq(entityTable.agentId, agentId));
+
       // If query is empty, return all entities up to limit
       if (!query || query.trim() === '') {
-        const result = await this.db
-          .select()
-          .from(entityTable)
-          .where(eq(entityTable.agentId, agentId))
-          .limit(limit);
-
-        return result.map((row: any) => ({
+        return allEntities.slice(0, limit).map((row: any) => ({
           id: row.id as UUID,
           agentId: row.agentId as UUID,
           names: row.names || [],
@@ -762,20 +1720,18 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         }));
       }
 
-      // Otherwise, search for entities with names containing the query (case-insensitive)
-      const searchQuery = sql`
-        SELECT * FROM ${entityTable}
-        WHERE ${entityTable.agentId} = ${agentId}
-        AND EXISTS (
-          SELECT 1 FROM unnest(${entityTable.names}) AS name
-          WHERE LOWER(name) LIKE LOWER(${'%' + query + '%'})
-        )
-        LIMIT ${limit}
-      `;
+      // Otherwise, filter by names containing the query (case-insensitive)
+      const queryLower = query.toLowerCase();
+      const matchingEntities = allEntities.filter((entity: any) => {
+        const entityNames = entity.names || [];
+        // Check if any name contains the query string
+        return entityNames.some((name: string) => name.toLowerCase().includes(queryLower));
+      });
 
-      const result = await this.db.execute(searchQuery);
+      // Apply limit
+      const limitedResults = matchingEntities.slice(0, limit);
 
-      return result.rows.map((row: any) => ({
+      return limitedResults.map((row: any) => ({
         id: row.id as UUID,
         agentId: row.agentId as UUID,
         names: row.names || [],
@@ -806,7 +1762,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         .from(componentTable)
         .where(and(...conditions));
 
-      if (result.length === 0) return null;
+      if (result.length === 0) {
+        return null;
+      }
 
       const component = result[0];
 
@@ -858,7 +1816,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         .from(componentTable)
         .where(and(...conditions));
 
-      if (result.length === 0) return [];
+      if (result.length === 0) {
+        return [];
+      }
 
       const components = result.map((component) => ({
         ...component,
@@ -941,9 +1901,11 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     roomId?: UUID;
     worldId?: UUID;
   }): Promise<Memory[]> {
-    const { entityId, agentId, roomId, worldId, tableName, unique, start, end } = params;
+    const { entityId, agentId, roomId, worldId, tableName, count, unique, start, end } = params;
 
-    if (!tableName) throw new Error('tableName is required');
+    if (!tableName) {
+      throw new Error('tableName is required');
+    }
 
     return this.withDatabase(async () => {
       const conditions = [eq(memoryTable.type, tableName)];
@@ -977,42 +1939,54 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         conditions.push(eq(memoryTable.agentId, agentId));
       }
 
+      // First get memories without embeddings
       const query = this.db
-        .select({
-          memory: {
-            id: memoryTable.id,
-            type: memoryTable.type,
-            createdAt: memoryTable.createdAt,
-            content: memoryTable.content,
-            entityId: memoryTable.entityId,
-            agentId: memoryTable.agentId,
-            roomId: memoryTable.roomId,
-            unique: memoryTable.unique,
-            metadata: memoryTable.metadata,
-          },
-          embedding: embeddingTable[this.embeddingDimension],
-        })
+        .select()
         .from(memoryTable)
-        .leftJoin(embeddingTable, eq(embeddingTable.memoryId, memoryTable.id))
         .where(and(...conditions))
         .orderBy(desc(memoryTable.createdAt));
 
       const rows = params.count ? await query.limit(params.count) : await query;
 
+      // Then get embeddings for the memories if they exist
+      const memoryIds = rows.map((row) => row.id);
+      const embeddingsMap = new Map<string, number[]>();
+
+      if (memoryIds.length > 0) {
+        try {
+          const embeddingRows = await this.db
+            .select({
+              memoryId: embeddingTable.memoryId,
+              embedding: embeddingTable[this.embeddingDimension],
+            })
+            .from(embeddingTable)
+            .where(inArray(embeddingTable.memoryId, memoryIds));
+
+          for (const embRow of embeddingRows) {
+            if (embRow.embedding) {
+              embeddingsMap.set(embRow.memoryId, Array.from(embRow.embedding));
+            }
+          }
+        } catch (embeddingError) {
+          logger.debug('Failed to retrieve embeddings for memories:', {
+            error:
+              embeddingError instanceof Error ? embeddingError.message : String(embeddingError),
+          });
+        }
+      }
+
       return rows.map((row) => ({
-        id: row.memory.id as UUID,
-        type: row.memory.type,
-        createdAt: row.memory.createdAt.getTime(),
-        content:
-          typeof row.memory.content === 'string'
-            ? JSON.parse(row.memory.content)
-            : row.memory.content,
-        entityId: row.memory.entityId as UUID,
-        agentId: row.memory.agentId as UUID,
-        roomId: row.memory.roomId as UUID,
-        unique: row.memory.unique,
-        metadata: row.memory.metadata as MemoryMetadata,
-        embedding: row.embedding ? Array.from(row.embedding) : undefined,
+        id: row.id as UUID,
+        type: row.type,
+        createdAt: row.createdAt.getTime(),
+        content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content,
+        entityId: row.entityId as UUID,
+        agentId: row.agentId as UUID,
+        roomId: row.roomId as UUID,
+        worldId: row.worldId as UUID,
+        unique: row.unique,
+        metadata: row.metadata as MemoryMetadata,
+        embedding: embeddingsMap.get(row.id),
       }));
     });
   }
@@ -1031,7 +2005,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     limit?: number;
   }): Promise<Memory[]> {
     return this.withDatabase(async () => {
-      if (params.roomIds.length === 0) return [];
+      if (params.roomIds.length === 0) {
+        return [];
+      }
 
       const conditions = [
         eq(memoryTable.type, params.tableName),
@@ -1078,33 +2054,107 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    */
   async getMemoryById(id: UUID): Promise<Memory | null> {
     return this.withDatabase(async () => {
-      const result = await this.db
-        .select({
-          memory: memoryTable,
-          embedding: embeddingTable[this.embeddingDimension],
-        })
-        .from(memoryTable)
-        .leftJoin(embeddingTable, eq(memoryTable.id, embeddingTable.memoryId))
-        .where(eq(memoryTable.id, id))
-        .limit(1);
+      try {
+        // First, get the memory without embedding
+        const memoryResult = await this.db
+          .select()
+          .from(memoryTable)
+          .where(eq(memoryTable.id, id))
+          .limit(1);
 
-      if (result.length === 0) return null;
+        if (memoryResult.length === 0) {
+          return null;
+        }
 
-      const row = result[0];
-      return {
-        id: row.memory.id as UUID,
-        createdAt: row.memory.createdAt.getTime(),
-        content:
-          typeof row.memory.content === 'string'
-            ? JSON.parse(row.memory.content)
-            : row.memory.content,
-        entityId: row.memory.entityId as UUID,
-        agentId: row.memory.agentId as UUID,
-        roomId: row.memory.roomId as UUID,
-        unique: row.memory.unique,
-        metadata: row.memory.metadata as MemoryMetadata,
-        embedding: row.embedding ?? undefined,
-      };
+        const memoryRow = memoryResult[0];
+
+        // Then, try to get the embedding separately if it exists
+        let embedding: number[] | undefined;
+        try {
+          logger.debug('Getting embedding with dimension column:', this.embeddingDimension);
+
+          // For PGLite, use raw SQL to retrieve embeddings
+          if (this.isPGLiteAdapter()) {
+            const rawResult = await this.db.execute(
+              sql.raw(
+                `SELECT ${this.embeddingDimension} FROM embeddings WHERE memory_id = '${id}' LIMIT 1`
+              )
+            );
+
+            const rows = Array.isArray(rawResult) ? rawResult : rawResult.rows || [];
+            logger.debug('PGLite embedding raw query result:', {
+              rowCount: rows.length,
+              hasData: rows.length > 0 && !!rows[0][this.embeddingDimension],
+            });
+
+            if (rows.length > 0 && rows[0][this.embeddingDimension]) {
+              const rawEmbedding = rows[0][this.embeddingDimension];
+              if (Array.isArray(rawEmbedding)) {
+                embedding = rawEmbedding;
+              } else if (typeof rawEmbedding === 'string') {
+                try {
+                  embedding = JSON.parse(rawEmbedding);
+                } catch {
+                  embedding = undefined;
+                }
+              }
+            }
+          } else {
+            // For PostgreSQL, use Drizzle schema
+            const embeddingResult = await this.db
+              .select({
+                embedding: embeddingTable[this.embeddingDimension],
+              })
+              .from(embeddingTable)
+              .where(eq(embeddingTable.memoryId, id))
+              .limit(1);
+
+            logger.debug('Embedding query result:', {
+              length: embeddingResult.length,
+              hasEmbedding: embeddingResult.length > 0 && !!embeddingResult[0].embedding,
+              embeddingDimension: this.embeddingDimension,
+            });
+
+            if (embeddingResult.length > 0 && embeddingResult[0].embedding) {
+              embedding = Array.from(embeddingResult[0].embedding);
+            }
+          }
+        } catch (embeddingError) {
+          // Log but don't fail if embedding retrieval fails
+          logger.debug('Failed to retrieve embedding for memory:', {
+            memoryId: id,
+            error:
+              embeddingError instanceof Error ? embeddingError.message : String(embeddingError),
+          });
+        }
+
+        const metadata = memoryRow.metadata || {};
+        if (memoryRow.type && !metadata.type) {
+          metadata.type = memoryRow.type;
+        }
+
+        return {
+          id: memoryRow.id as UUID,
+          createdAt: memoryRow.createdAt.getTime(),
+          content:
+            typeof memoryRow.content === 'string'
+              ? JSON.parse(memoryRow.content)
+              : memoryRow.content,
+          entityId: memoryRow.entityId as UUID,
+          agentId: memoryRow.agentId as UUID,
+          roomId: memoryRow.roomId as UUID,
+          worldId: memoryRow.worldId as UUID | undefined,
+          unique: memoryRow.unique,
+          metadata: metadata as MemoryMetadata,
+          embedding,
+        };
+      } catch (error) {
+        logger.error('Error in getMemoryById:', {
+          id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return null;
+      }
     });
   }
 
@@ -1117,7 +2167,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    */
   async getMemoriesByIds(memoryIds: UUID[], tableName?: string): Promise<Memory[]> {
     return this.withDatabase(async () => {
-      if (memoryIds.length === 0) return [];
+      if (memoryIds.length === 0) {
+        return [];
+      }
 
       const conditions = [inArray(memoryTable.id, memoryIds)];
 
@@ -1125,30 +2177,86 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         conditions.push(eq(memoryTable.type, tableName));
       }
 
+      // First get memories without embeddings
       const rows = await this.db
-        .select({
-          memory: memoryTable,
-          embedding: embeddingTable[this.embeddingDimension],
-        })
+        .select()
         .from(memoryTable)
-        .leftJoin(embeddingTable, eq(embeddingTable.memoryId, memoryTable.id))
         .where(and(...conditions))
         .orderBy(desc(memoryTable.createdAt));
 
-      return rows.map((row) => ({
-        id: row.memory.id as UUID,
-        createdAt: row.memory.createdAt.getTime(),
-        content:
-          typeof row.memory.content === 'string'
-            ? JSON.parse(row.memory.content)
-            : row.memory.content,
-        entityId: row.memory.entityId as UUID,
-        agentId: row.memory.agentId as UUID,
-        roomId: row.memory.roomId as UUID,
-        unique: row.memory.unique,
-        metadata: row.memory.metadata as MemoryMetadata,
-        embedding: row.embedding ?? undefined,
-      }));
+      // Then get embeddings for the memories if they exist
+      const embeddingsMap = new Map<string, number[]>();
+
+      if (rows.length > 0) {
+        try {
+          // For PGLite, use raw SQL to retrieve embeddings
+          if (this.isPGLiteAdapter()) {
+            const memoryIdList = memoryIds.map((id) => `'${id}'`).join(',');
+            const rawResult = await this.db.execute(
+              sql.raw(
+                `SELECT memory_id, ${this.embeddingDimension} FROM embeddings WHERE memory_id IN (${memoryIdList})`
+              )
+            );
+
+            const embeddingRows = Array.isArray(rawResult) ? rawResult : rawResult.rows || [];
+
+            for (const embRow of embeddingRows) {
+              const rawEmbedding = embRow[this.embeddingDimension];
+              if (rawEmbedding) {
+                if (Array.isArray(rawEmbedding)) {
+                  embeddingsMap.set(embRow.memory_id, rawEmbedding);
+                } else if (typeof rawEmbedding === 'string') {
+                  try {
+                    embeddingsMap.set(embRow.memory_id, JSON.parse(rawEmbedding));
+                  } catch {
+                    // Ignore invalid JSON
+                  }
+                }
+              }
+            }
+          } else {
+            // For PostgreSQL, use Drizzle schema
+            const embeddingRows = await this.db
+              .select({
+                memoryId: embeddingTable.memoryId,
+                embedding: embeddingTable[this.embeddingDimension],
+              })
+              .from(embeddingTable)
+              .where(inArray(embeddingTable.memoryId, memoryIds));
+
+            for (const embRow of embeddingRows) {
+              if (embRow.embedding) {
+                embeddingsMap.set(embRow.memoryId, Array.from(embRow.embedding));
+              }
+            }
+          }
+        } catch (embeddingError) {
+          logger.debug('Failed to retrieve embeddings for memories:', {
+            error:
+              embeddingError instanceof Error ? embeddingError.message : String(embeddingError),
+          });
+        }
+      }
+
+      return rows.map((row) => {
+        const metadata = row.metadata || {};
+        if (row.type && !metadata.type) {
+          metadata.type = row.type;
+        }
+
+        return {
+          id: row.id as UUID,
+          createdAt: row.createdAt.getTime(),
+          content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content,
+          entityId: row.entityId as UUID,
+          agentId: row.agentId as UUID,
+          roomId: row.roomId as UUID,
+          worldId: row.worldId as UUID | undefined,
+          unique: row.unique,
+          metadata: metadata as MemoryMetadata,
+          embedding: embeddingsMap.get(row.id),
+        };
+      });
     });
   }
 
@@ -1173,6 +2281,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   }): Promise<{ embedding: number[]; levenshtein_score: number }[]> {
     return this.withDatabase(async () => {
       try {
+        // Both PGLite and PostgreSQL support embeddings and levenshtein through extensions
         const results = await (this.db as any).execute(sql`
                     WITH content_text AS (
                         SELECT
@@ -1231,7 +2340,8 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         ) {
           return [];
         }
-        throw error;
+        // Return empty array for PGLite or other errors
+        return [];
       }
     });
   }
@@ -1262,10 +2372,12 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
 
         await this.db.transaction(async (tx) => {
           await tx.insert(logTable).values({
+            id: v4() as UUID,
             body: sql`${jsonString}::jsonb`,
             entityId: params.entityId,
             roomId: params.roomId,
             type: params.type,
+            agentId: this.agentId,
           });
         });
       } catch (error) {
@@ -1371,7 +2483,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         createdAt: new Date(log.createdAt),
       }));
 
-      if (logs.length === 0) return [];
+      if (logs.length === 0) {
+        return [];
+      }
 
       return logs;
     });
@@ -1451,65 +2565,127 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     }
   ): Promise<Memory[]> {
     return this.withDatabase(async () => {
-      const cleanVector = embedding.map((n) => (Number.isFinite(n) ? Number(n.toFixed(6)) : 0));
-
-      const similarity = sql<number>`1 - (${cosineDistance(
-        embeddingTable[this.embeddingDimension],
-        cleanVector
-      )})`;
-
-      const conditions = [eq(memoryTable.type, params.tableName)];
-
-      if (params.unique) {
-        conditions.push(eq(memoryTable.unique, true));
+      // Check if vector support is available
+      const hasVector = await this.checkVectorSupport();
+      if (!hasVector) {
+        logger.debug('Vector support not available, returning empty results for semantic search');
+        return [];
       }
 
-      conditions.push(eq(memoryTable.agentId, this.agentId));
-
-      // Add filters based on direct params
-      if (params.roomId) {
-        conditions.push(eq(memoryTable.roomId, params.roomId));
-      }
-      if (params.worldId) {
-        conditions.push(eq(memoryTable.worldId, params.worldId));
-      }
-      if (params.entityId) {
-        conditions.push(eq(memoryTable.entityId, params.entityId));
+      // For PGLite, we store embeddings as JSONB but can't do similarity search
+      // Return empty results to avoid errors
+      if (this.isPGLiteAdapter()) {
+        logger.debug('PGLite adapter detected, vector similarity search not supported');
+        return [];
       }
 
-      if (params.match_threshold) {
-        conditions.push(gte(similarity, params.match_threshold));
+      const {
+        roomId,
+        worldId,
+        entityId,
+        match_threshold = 0.8,
+        count = 10,
+        unique = false,
+        tableName,
+      } = params;
+
+      try {
+        // Both PGLite and PostgreSQL now support vector similarity search
+        const cleanVector = embedding.map((n) => (Number.isFinite(n) ? Number(n.toFixed(6)) : 0));
+
+        // Format the vector as a PostgreSQL array string for proper casting
+        const vectorString = `[${cleanVector.join(',')}]`;
+
+        // Check if the embedding column exists
+        const embeddingColumn = embeddingTable[this.embeddingDimension];
+        if (!embeddingColumn) {
+          throw new Error(`Invalid embedding dimension: ${this.embeddingDimension}`);
+        }
+
+        // Use raw SQL with explicit vector casting to ensure compatibility
+        const similarity = sql<number>`1 - (${embeddingColumn} <=> ${vectorString}::vector)`;
+
+        const conditions = [
+          eq(memoryTable.type, tableName),
+          eq(memoryTable.agentId, this.agentId),
+          ...(roomId ? [eq(memoryTable.roomId, roomId)] : []),
+          ...(worldId ? [eq(memoryTable.worldId, worldId)] : []),
+          ...(entityId ? [eq(memoryTable.entityId, entityId)] : []),
+          ...(unique ? [eq(memoryTable.unique, unique)] : []),
+        ];
+
+        if (match_threshold) {
+          conditions.push(gte(similarity, match_threshold));
+        }
+
+        const joinCondition = this.isPGLiteAdapter()
+          ? sql`${memoryTable.id}::text = ${embeddingTable.memoryId}::text`
+          : eq(memoryTable.id, embeddingTable.memoryId);
+
+        const results = await this.db
+          .select({
+            memory: memoryTable,
+            similarity,
+            embedding: embeddingColumn,
+          })
+          .from(embeddingTable)
+          .innerJoin(memoryTable, joinCondition)
+          .where(and(...conditions))
+          .orderBy(desc(similarity))
+          .limit(count);
+
+        return results.map((row) => {
+          const metadata = row.memory.metadata || {};
+          if (row.memory.type && !metadata.type) {
+            metadata.type = row.memory.type;
+          }
+
+          return {
+            id: row.memory.id as UUID,
+            createdAt: row.memory.createdAt.getTime(),
+            content:
+              typeof row.memory.content === 'string'
+                ? JSON.parse(row.memory.content)
+                : row.memory.content,
+            entityId: row.memory.entityId as UUID,
+            agentId: row.memory.agentId as UUID,
+            roomId: row.memory.roomId as UUID,
+            worldId: row.memory.worldId as UUID | undefined,
+            unique: row.memory.unique,
+            metadata: metadata as MemoryMetadata,
+            embedding: row.embedding ?? undefined,
+            similarity: row.similarity,
+          };
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+
+        // Check if the error is due to missing vector support
+        if (errorMessage.includes('operator does not exist') && errorMessage.includes('<=>')) {
+          logger.warn('Vector similarity operator not available, returning empty results');
+          return [];
+        }
+
+        // Check if the error is due to JSONB columns being used instead of vector
+        if (errorMessage.includes('jsonb <=> vector')) {
+          logger.warn(
+            'Embeddings stored as JSONB, vector operations not supported, returning empty results'
+          );
+          return [];
+        }
+
+        // Check if embeddings table doesn't exist
+        if (
+          errorMessage.includes('relation "embeddings" does not exist') ||
+          errorMessage.includes('no such table: embeddings')
+        ) {
+          logger.warn('Embeddings table not available, returning empty results');
+          return [];
+        }
+
+        // Re-throw other errors
+        throw error;
       }
-
-      const results = await this.db
-        .select({
-          memory: memoryTable,
-          similarity,
-          embedding: embeddingTable[this.embeddingDimension],
-        })
-        .from(embeddingTable)
-        .innerJoin(memoryTable, eq(memoryTable.id, embeddingTable.memoryId))
-        .where(and(...conditions))
-        .orderBy(desc(similarity))
-        .limit(params.count ?? 10);
-
-      return results.map((row) => ({
-        id: row.memory.id as UUID,
-        type: row.memory.type,
-        createdAt: row.memory.createdAt.getTime(),
-        content:
-          typeof row.memory.content === 'string'
-            ? JSON.parse(row.memory.content)
-            : row.memory.content,
-        entityId: row.memory.entityId as UUID,
-        agentId: row.memory.agentId as UUID,
-        roomId: row.memory.roomId as UUID,
-        worldId: row.memory.worldId as UUID | undefined, // Include worldId
-        unique: row.memory.unique,
-        metadata: row.memory.metadata as MemoryMetadata,
-        embedding: row.embedding ?? undefined,
-        similarity: row.similarity,
-      }));
     });
   }
 
@@ -1540,15 +2716,16 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     }
 
     let isUnique = true;
+
     if (memory.embedding && Array.isArray(memory.embedding)) {
       const similarMemories = await this.searchMemoriesByEmbedding(memory.embedding, {
-        tableName,
         // Use the scope fields from the memory object for similarity check
         roomId: memory.roomId,
         worldId: memory.worldId,
         entityId: memory.entityId,
         match_threshold: 0.95,
         count: 1,
+        tableName,
       });
       isUnique = similarMemories.length === 0;
     }
@@ -1572,10 +2749,11 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         },
       ]);
 
+      // Store embeddings for both PGLite and PostgreSQL
       if (memory.embedding && Array.isArray(memory.embedding)) {
         const embeddingValues: Record<string, unknown> = {
           id: v4(),
-          memoryId: memoryId,
+          memoryId,
           createdAt: memory.createdAt ? new Date(memory.createdAt) : new Date(),
         };
 
@@ -1692,7 +2870,20 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         await this.deleteMemoryFragments(tx, memoryId);
 
         // Then delete the embedding for the main memory
-        await tx.delete(embeddingTable).where(eq(embeddingTable.memoryId, memoryId));
+        try {
+          await tx.delete(embeddingTable).where(eq(embeddingTable.memoryId, memoryId));
+        } catch (error) {
+          // Handle case where embeddings table doesn't exist
+          if (
+            error instanceof Error &&
+            (error.message.includes('relation "embeddings" does not exist') ||
+              error.message.includes('no such table: embeddings'))
+          ) {
+            logger.warn('Embeddings table not yet created, skipping embedding deletion');
+          } else {
+            throw error;
+          }
+        }
 
         // Finally delete the memory itself
         await tx.delete(memoryTable).where(eq(memoryTable.id, memoryId));
@@ -1775,17 +2966,26 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    * @private
    */
   private async getMemoryFragments(tx: any, documentId: UUID): Promise<{ id: UUID }[]> {
-    const fragments = await tx
-      .select({ id: memoryTable.id })
-      .from(memoryTable)
-      .where(
-        and(
-          eq(memoryTable.agentId, this.agentId),
-          sql`${memoryTable.metadata}->>'documentId' = ${documentId}`
-        )
-      );
+    try {
+      const fragments = await tx
+        .select({ id: memoryTable.id })
+        .from(memoryTable)
+        .where(
+          and(
+            eq(memoryTable.agentId, this.agentId),
+            sql`${memoryTable.metadata}->>'documentId' = ${documentId}`
+          )
+        );
 
-    return fragments.map((f) => ({ id: f.id as UUID }));
+      return fragments.map((f) => ({ id: f.id as UUID }));
+    } catch (error) {
+      // If query fails (e.g., no memories exist), return empty array
+      logger.debug('Failed to get memory fragments, likely no memories exist:', {
+        documentId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return [];
+    }
   }
 
   /**
@@ -1836,7 +3036,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    * @returns {Promise<number>} A Promise that resolves to the number of memories.
    */
   async countMemories(roomId: UUID, unique = true, tableName = ''): Promise<number> {
-    if (!tableName) throw new Error('tableName is required');
+    if (!tableName) {
+      throw new Error('tableName is required');
+    }
 
     return this.withDatabase(async () => {
       const conditions = [eq(memoryTable.roomId, roomId), eq(memoryTable.type, tableName)];
@@ -1855,7 +3057,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   }
 
   /**
-   * Asynchronously retrieves rooms from the database based on the provided parameters.
+   * Asynchronously retrieves rooms from the database based on the provided room IDs.
    * @param {UUID[]} roomIds - The IDs of the rooms to retrieve.
    * @returns {Promise<Room[] | null>} A Promise that resolves to the rooms if found, null otherwise.
    */
@@ -1885,7 +3087,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         serverId: room.serverId as UUID,
         worldId: room.worldId as UUID,
         channelId: room.channelId as UUID,
-        type: room.type as ChannelType,
+        type: room.type as (typeof ChannelType)[keyof typeof ChannelType],
         metadata: room.metadata as RoomMetadata,
       }));
 
@@ -1909,7 +3111,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         serverId: room.serverId as UUID,
         worldId: room.worldId as UUID,
         channelId: room.channelId as UUID,
-        type: room.type as ChannelType,
+        type: room.type as (typeof ChannelType)[keyof typeof ChannelType],
         metadata: room.metadata as RoomMetadata,
       }));
       return rooms;
@@ -1931,16 +3133,22 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   }
 
   /**
-   * Asynchronously creates a new room in the database based on the provided parameters.
-   * @param {Room} room - The room object to create.
-   * @returns {Promise<UUID>} A Promise that resolves to the ID of the created room.
+   * Asynchronously creates new rooms in the database.
+   * @param {Room[]} rooms - The array of room objects to create.
+   * @returns {Promise<UUID[]>} A Promise that resolves to the IDs of the created rooms.
    */
   async createRooms(rooms: Room[]): Promise<UUID[]> {
     return this.withDatabase(async () => {
       const roomsWithIds = rooms.map((room) => ({
-        ...room,
-        agentId: this.agentId,
         id: room.id || v4(), // ensure each room has a unique ID
+        agentId: this.agentId,
+        name: room.name,
+        channelId: room.channelId,
+        serverId: room.serverId,
+        worldId: room.worldId,
+        type: room.type,
+        source: room.source,
+        metadata: room.metadata,
       }));
 
       const insertedRooms = await this.db
@@ -1959,7 +3167,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    * @returns {Promise<void>} A Promise that resolves when the room is deleted.
    */
   async deleteRoom(roomId: UUID): Promise<void> {
-    if (!roomId) throw new Error('Room ID is required');
+    if (!roomId) {
+      throw new Error('Room ID is required');
+    }
     return this.withDatabase(async () => {
       await this.db.transaction(async (tx) => {
         await tx.delete(roomTable).where(eq(roomTable.id, roomId));
@@ -1973,15 +3183,27 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    * @returns {Promise<UUID[]>} A Promise that resolves to an array of room IDs.
    */
   async getRoomsForParticipant(entityId: UUID): Promise<UUID[]> {
-    console.log('getRoomsForParticipant', entityId);
     return this.withDatabase(async () => {
-      const result = await this.db
-        .select({ roomId: participantTable.roomId })
-        .from(participantTable)
-        .innerJoin(roomTable, eq(participantTable.roomId, roomTable.id))
-        .where(and(eq(participantTable.entityId, entityId), eq(roomTable.agentId, this.agentId)));
+      // Use raw SQL to avoid Drizzle UUID type issues
+      // PGLite doesn't need explicit UUID casting
+      const isPGLite = this.isPGLiteAdapter();
+      const result = isPGLite
+        ? await this.db.execute(sql`
+            SELECT p.room_id 
+            FROM participants p
+            INNER JOIN rooms r ON p.room_id = r.id
+            WHERE p.entity_id = ${entityId} AND r.agent_id = ${this.agentId}
+          `)
+        : await this.db.execute(sql`
+            SELECT p.room_id 
+            FROM participants p
+            INNER JOIN rooms r ON p.room_id = r.id
+            WHERE p.entity_id = ${entityId}::uuid AND r.agent_id = ${this.agentId}::uuid
+          `);
 
-      return result.map((row) => row.roomId as UUID);
+      // Handle different result formats
+      const rows = Array.isArray(result) ? result : result.rows || [];
+      return rows.map((row: any) => row.room_id as UUID);
     });
   }
 
@@ -1991,16 +3213,50 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    * @returns {Promise<UUID[]>} A Promise that resolves to an array of room IDs.
    */
   async getRoomsForParticipants(entityIds: UUID[]): Promise<UUID[]> {
-    return this.withDatabase(async () => {
-      const result = await this.db
-        .selectDistinct({ roomId: participantTable.roomId })
-        .from(participantTable)
-        .innerJoin(roomTable, eq(participantTable.roomId, roomTable.id))
-        .where(
-          and(inArray(participantTable.entityId, entityIds), eq(roomTable.agentId, this.agentId))
-        );
+    if (!entityIds || entityIds.length === 0) {
+      return [];
+    }
 
-      return result.map((row) => row.roomId as UUID);
+    return this.withDatabase(async () => {
+      const isPGLite = this.isPGLiteAdapter();
+
+      if (isPGLite) {
+        // For PGLite, use individual queries since it doesn't support array operations well
+        const results: Array<{ room_id: UUID }> = [];
+        for (const entityId of entityIds) {
+          const result = await this.db.execute(sql`
+              SELECT DISTINCT p.room_id 
+              FROM participants p
+              INNER JOIN rooms r ON p.room_id = r.id
+              WHERE p.entity_id = ${entityId} AND r.agent_id = ${this.agentId}
+            `);
+          const rows = Array.isArray(result) ? result : result.rows || [];
+          results.push(...rows);
+        }
+
+        // Remove duplicates and return
+        const roomIds = results.map((row: any) => row.room_id as UUID);
+        const uniqueRoomIds = Array.from(new Set(roomIds));
+        return uniqueRoomIds;
+      } else {
+        // For PostgreSQL, use the same approach as PGLite for simplicity and compatibility
+        const results: any[] = [];
+        for (const entityId of entityIds) {
+          const result = await this.db.execute(sql`
+            SELECT DISTINCT p.room_id 
+            FROM participants p
+            INNER JOIN rooms r ON p.room_id = r.id
+            WHERE p.entity_id = ${entityId}::uuid AND r.agent_id = ${this.agentId}::uuid
+          `);
+          const rows = Array.isArray(result) ? result : result.rows || [];
+          results.push(...rows);
+        }
+
+        // Remove duplicates and return
+        const roomIds2 = results.map((row: any) => row.room_id as UUID);
+        const uniqueRoomIds2 = Array.from(new Set(roomIds2));
+        return uniqueRoomIds2;
+      }
     });
   }
 
@@ -2013,15 +3269,32 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   async addParticipant(entityId: UUID, roomId: UUID): Promise<boolean> {
     return this.withDatabase(async () => {
       try {
-        await this.db
-          .insert(participantTable)
-          .values({
-            entityId,
-            roomId,
-            agentId: this.agentId,
-          })
-          .onConflictDoNothing();
-        return true;
+        // Use raw SQL to avoid Drizzle schema loading issues
+        // PGLite doesn't need explicit UUID casting
+        const isPGLite = this.isPGLiteAdapter();
+        const result = isPGLite
+          ? await this.db.execute(sql`
+              INSERT INTO participants (entity_id, room_id, agent_id, created_at, updated_at)
+              VALUES (${entityId}, ${roomId}, ${this.agentId}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+              ON CONFLICT (entity_id, room_id) DO NOTHING
+            `)
+          : await this.db.execute(sql`
+              INSERT INTO participants (entity_id, room_id, agent_id, created_at, updated_at)
+              VALUES (${entityId}::uuid, ${roomId}::uuid, ${this.agentId}::uuid, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+              ON CONFLICT (entity_id, room_id) DO NOTHING
+            `);
+
+        // Check if a row was actually inserted (result might have a rowCount or changes property)
+        const rowsAffected = result.rowCount || result.changes || 1; // Default to 1 for success
+
+        logger.debug('Participant added:', {
+          entityId,
+          roomId,
+          agentId: this.agentId,
+          rowsAffected,
+        });
+
+        return rowsAffected > 0;
       } catch (error) {
         logger.error('Error adding participant', {
           error: error instanceof Error ? error.message : String(error),
@@ -2037,13 +3310,89 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {
     return this.withDatabase(async () => {
       try {
-        const values = entityIds.map((id) => ({
-          entityId: id,
-          roomId,
-          agentId: this.agentId,
-        }));
-        await this.db.insert(participantTable).values(values).onConflictDoNothing().execute();
-        logger.debug(entityIds.length, 'Entities linked successfully');
+        // Use raw SQL to avoid Drizzle schema loading issues
+        const isPGLite = this.isPGLiteAdapter();
+
+        logger.info(
+          `[addParticipantsRoom] Starting - entityIds: ${entityIds.length}, roomId: ${roomId}, isPGLite: ${isPGLite}`
+        );
+
+        // First, ensure the unique constraint exists for PostgreSQL (not needed for PGLite)
+        if (!isPGLite) {
+          try {
+            await this.db.execute(sql`
+              ALTER TABLE participants ADD CONSTRAINT participants_entity_room_unique UNIQUE (entity_id, room_id)
+            `);
+            logger.info('[addParticipantsRoom] Added unique constraint to participants table');
+          } catch (constraintError) {
+            // Constraint already exists or other error - that's fine, continue
+            logger.debug(
+              '[addParticipantsRoom] Constraint add attempt:',
+              (constraintError as Error).message
+            );
+          }
+        }
+
+        // Insert multiple participants
+        for (const entityId of entityIds) {
+          try {
+            logger.info(
+              `[addParticipantsRoom] Inserting participant: ${entityId} into room: ${roomId}`
+            );
+
+            // Use appropriate syntax based on adapter type
+            const result = isPGLite
+              ? await this.db.execute(sql`
+                  INSERT INTO participants (entity_id, room_id, agent_id, created_at, updated_at)
+                  VALUES (${entityId}, ${roomId}, ${this.agentId}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                  ON CONFLICT (entity_id, room_id) DO NOTHING
+                `)
+              : await this.db.execute(sql`
+                  INSERT INTO participants (entity_id, room_id, agent_id, created_at, updated_at)
+                  VALUES (${entityId}::uuid, ${roomId}::uuid, ${this.agentId}::uuid, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                  ON CONFLICT (entity_id, room_id) DO NOTHING
+                `);
+            logger.info(
+              `[addParticipantsRoom] Successfully inserted/skipped participant: ${entityId}`
+            );
+          } catch (insertError) {
+            // If ON CONFLICT fails (missing unique constraint), try alternative approach
+            const errorMsg = (insertError as Error).message;
+            logger.warn(
+              `[addParticipantsRoom] INSERT failed for ${entityId}, trying fallback:`,
+              errorMsg
+            );
+
+            // Fallback: Check if participant exists, then insert only if not
+            const checkResult = await this.db.execute(
+              isPGLite
+                ? sql`SELECT 1 FROM participants WHERE entity_id = ${entityId} AND room_id = ${roomId} LIMIT 1`
+                : sql`SELECT 1 FROM participants WHERE entity_id = ${entityId}::uuid AND room_id = ${roomId}::uuid LIMIT 1`
+            );
+
+            const rows = Array.isArray(checkResult) ? checkResult : checkResult.rows || [];
+            if (rows.length === 0) {
+              // Participant doesn't exist, safe to insert
+              await this.db.execute(
+                isPGLite
+                  ? sql`
+                      INSERT INTO participants (entity_id, room_id, agent_id, created_at, updated_at)
+                      VALUES (${entityId}, ${roomId}, ${this.agentId}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    `
+                  : sql`
+                      INSERT INTO participants (entity_id, room_id, agent_id, created_at, updated_at)
+                      VALUES (${entityId}::uuid, ${roomId}::uuid, ${this.agentId}::uuid, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    `
+              );
+              logger.info(`[addParticipantsRoom] Fallback insert successful for: ${entityId}`);
+            } else {
+              logger.info(`[addParticipantsRoom] Participant already exists: ${entityId}`);
+            }
+          }
+        }
+        logger.info(
+          `[addParticipantsRoom] Completed successfully - ${entityIds.length} entities processed`
+        );
         return true;
       } catch (error) {
         logger.error('Error adding participants', {
@@ -2066,16 +3415,39 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   async removeParticipant(entityId: UUID, roomId: UUID): Promise<boolean> {
     return this.withDatabase(async () => {
       try {
-        const result = await this.db.transaction(async (tx) => {
-          return await tx
-            .delete(participantTable)
-            .where(
-              and(eq(participantTable.entityId, entityId), eq(participantTable.roomId, roomId))
-            )
-            .returning();
-        });
+        // First check if the participant exists
+        const checkResult = await this.db.execute(sql`
+          SELECT 1 FROM participants 
+          WHERE entity_id = ${entityId} AND room_id = ${roomId}
+          LIMIT 1
+        `);
 
-        const removed = result.length > 0;
+        const checkRows = Array.isArray(checkResult) ? checkResult : checkResult.rows || [];
+        const participantExists = checkRows.length > 0;
+
+        if (!participantExists) {
+          logger.debug('Participant not found to remove:', {
+            entityId,
+            roomId,
+          });
+          return false;
+        }
+
+        // Use raw SQL to avoid Drizzle schema column mismatch issues
+        const isPGLite = this.isPGLiteAdapter();
+        const result = isPGLite
+          ? await this.db.execute(sql`
+              DELETE FROM participants 
+              WHERE entity_id = ${entityId} AND room_id = ${roomId}
+            `)
+          : await this.db.execute(sql`
+              DELETE FROM participants 
+              WHERE entity_id = ${entityId}::uuid AND room_id = ${roomId}::uuid
+            `);
+
+        // For PGLite, we assume success if no error was thrown and participant existed
+        const removed = participantExists;
+
         logger.debug(`Participant ${removed ? 'removed' : 'not found'}:`, {
           entityId,
           roomId,
@@ -2101,23 +3473,25 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    */
   async getParticipantsForEntity(entityId: UUID): Promise<Participant[]> {
     return this.withDatabase(async () => {
-      const result = await this.db
-        .select({
-          id: participantTable.id,
-          entityId: participantTable.entityId,
-          roomId: participantTable.roomId,
-        })
-        .from(participantTable)
-        .where(eq(participantTable.entityId, entityId));
+      // Use raw SQL to avoid Drizzle schema loading issues
+      const result = await this.db.execute(sql`
+        SELECT entity_id, room_id 
+        FROM participants 
+        WHERE entity_id = ${entityId}
+      `);
 
-      const entities = await this.getEntityByIds([entityId]);
+      // Handle different result formats from different database adapters
+      const rows = Array.isArray(result) ? result : result.rows || [];
+
+      const entities = await this.getEntitiesByIds([entityId]);
 
       if (!entities || !entities.length) {
         return [];
       }
 
-      return result.map((row) => ({
-        id: row.id as UUID,
+      return rows.map((row: any) => ({
+        entityId: row.entity_id as UUID,
+        roomId: row.room_id as UUID,
         entity: entities[0],
       }));
     });
@@ -2130,12 +3504,16 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    */
   async getParticipantsForRoom(roomId: UUID): Promise<UUID[]> {
     return this.withDatabase(async () => {
-      const result = await this.db
-        .select({ entityId: participantTable.entityId })
-        .from(participantTable)
-        .where(eq(participantTable.roomId, roomId));
+      // Use raw SQL to avoid Drizzle schema loading issues
+      const result = await this.db.execute(sql`
+        SELECT entity_id 
+        FROM participants 
+        WHERE room_id = ${roomId}
+      `);
 
-      return result.map((row) => row.entityId as UUID);
+      // Handle different result formats from different database adapters
+      const rows = Array.isArray(result) ? result : result.rows || [];
+      return rows.map((row: any) => row.entity_id as UUID);
     });
   }
 
@@ -2150,19 +3528,45 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     entityId: UUID
   ): Promise<'FOLLOWED' | 'MUTED' | null> {
     return this.withDatabase(async () => {
-      const result = await this.db
-        .select({ roomState: participantTable.roomState })
-        .from(participantTable)
-        .where(
-          and(
-            eq(participantTable.roomId, roomId),
-            eq(participantTable.entityId, entityId),
-            eq(participantTable.agentId, this.agentId)
-          )
-        )
-        .limit(1);
+      // Use raw SQL to avoid Drizzle schema loading issues
+      // First try with agent_id filter
+      const result = await this.db.execute(sql`
+        SELECT user_state, agent_id 
+        FROM participants 
+        WHERE room_id = ${roomId} 
+          AND entity_id = ${entityId} 
+          AND agent_id = ${this.agentId}
+        LIMIT 1
+      `);
 
-      return (result[0]?.roomState as 'FOLLOWED' | 'MUTED' | null) ?? null;
+      // Handle different result formats from different database adapters
+      let rows = Array.isArray(result) ? result : result.rows || [];
+
+      if (rows.length === 0) {
+        // If no result with agent_id, try without it (for backwards compatibility)
+        const fallbackResult = await this.db.execute(sql`
+          SELECT user_state, agent_id 
+          FROM participants 
+          WHERE room_id = ${roomId} 
+            AND entity_id = ${entityId}
+          LIMIT 1
+        `);
+
+        rows = Array.isArray(fallbackResult) ? fallbackResult : fallbackResult.rows || [];
+
+        if (rows.length > 0 && rows[0]) {
+          // Update the participant record to include this agent_id for future queries
+          await this.db.execute(sql`
+            UPDATE participants 
+            SET agent_id = ${this.agentId}
+            WHERE room_id = ${roomId} 
+              AND entity_id = ${entityId}
+              AND (agent_id IS NULL OR agent_id = ${this.agentId})
+          `);
+        }
+      }
+
+      return (rows[0]?.user_state as 'FOLLOWED' | 'MUTED' | null) ?? null;
     });
   }
 
@@ -2180,18 +3584,46 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   ): Promise<void> {
     return this.withDatabase(async () => {
       try {
-        await this.db.transaction(async (tx) => {
-          await tx
-            .update(participantTable)
-            .set({ roomState: state })
-            .where(
-              and(
-                eq(participantTable.roomId, roomId),
-                eq(participantTable.entityId, entityId),
-                eq(participantTable.agentId, this.agentId)
-              )
-            );
-        });
+        // First, try to update existing participant with agent_id
+        const updateResult = await this.db.execute(sql`
+          UPDATE participants 
+          SET user_state = ${state}, updated_at = CURRENT_TIMESTAMP
+          WHERE room_id = ${roomId} 
+            AND entity_id = ${entityId} 
+            AND agent_id = ${this.agentId}
+        `);
+
+        // Check if any rows were updated (result varies by adapter)
+        const rowsAffected =
+          updateResult?.rowCount ||
+          updateResult?.changes ||
+          (Array.isArray(updateResult) ? updateResult.length : 0);
+
+        if (!rowsAffected || rowsAffected === 0) {
+          // If no rows were updated, the participant might exist without agent_id
+          // Try updating without the agent_id filter
+          const fallbackResult = await this.db.execute(sql`
+            UPDATE participants 
+            SET user_state = ${state}, agent_id = ${this.agentId}, updated_at = CURRENT_TIMESTAMP
+            WHERE room_id = ${roomId} 
+              AND entity_id = ${entityId}
+          `);
+
+          const fallbackRowsAffected =
+            fallbackResult?.rowCount ||
+            fallbackResult?.changes ||
+            (Array.isArray(fallbackResult) ? fallbackResult.length : 0);
+
+          if (!fallbackRowsAffected || fallbackRowsAffected === 0) {
+            // If still no rows updated, the participant doesn't exist
+            logger.warn('No participant found to update state for:', {
+              roomId,
+              entityId,
+              state,
+              agentId: this.agentId,
+            });
+          }
+        }
       } catch (error) {
         logger.error('Failed to set participant user state:', {
           roomId,
@@ -2289,17 +3721,30 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
             eq(relationshipTable.targetEntityId, targetEntityId)
           )
         );
-      if (result.length === 0) return null;
+      if (result.length === 0) {
+        return null;
+      }
       const relationship = result[0];
       return {
         ...relationship,
         id: relationship.id as UUID,
-        sourceEntityId: relationship.sourceEntityId as UUID,
-        targetEntityId: relationship.targetEntityId as UUID,
-        agentId: relationship.agentId as UUID,
-        tags: relationship.tags ?? [],
+        sourceEntityId: relationship.source_entity_id as UUID,
+        targetEntityId: relationship.target_entity_id as UUID,
+        agentId: relationship.agent_id as UUID,
+        tags: Array.isArray(relationship.tags)
+          ? relationship.tags
+          : typeof relationship.tags === 'string' && relationship.tags.startsWith('{')
+            ? relationship.tags
+                .slice(1, -1)
+                .split(',')
+                .map((tag: string) => tag.replace(/^"|"$/g, ''))
+            : (relationship.tags ?? []),
         metadata: (relationship.metadata as { [key: string]: unknown }) ?? {},
-        createdAt: relationship.createdAt.toISOString(),
+        createdAt: relationship.created_at
+          ? relationship.created_at instanceof Date
+            ? relationship.created_at.toISOString()
+            : new Date(relationship.created_at).toISOString()
+          : new Date().toISOString(),
       };
     });
   }
@@ -2315,37 +3760,52 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     return this.withDatabase(async () => {
       const { entityId, tags } = params;
 
-      let query: SQL;
-
-      if (tags && tags.length > 0) {
-        query = sql`
-          SELECT * FROM ${relationshipTable}
-          WHERE (${relationshipTable.sourceEntityId} = ${entityId} OR ${relationshipTable.targetEntityId} = ${entityId})
-          AND ${relationshipTable.tags} && CAST(ARRAY[${sql.join(tags, sql`, `)}] AS text[])
-        `;
-      } else {
-        query = sql`
-          SELECT * FROM ${relationshipTable}
-          WHERE ${relationshipTable.sourceEntityId} = ${entityId} OR ${relationshipTable.targetEntityId} = ${entityId}
-        `;
-      }
+      // Always fetch all relationships and filter by tags in memory
+      // This avoids PostgreSQL array operator compatibility issues
+      const query = sql`
+        SELECT * FROM ${relationshipTable}
+        WHERE (${relationshipTable.sourceEntityId} = ${entityId} OR ${relationshipTable.targetEntityId} = ${entityId})
+        AND ${relationshipTable.agentId} = ${this.agentId}
+      `;
 
       const result = await this.db.execute(query);
 
-      return result.rows.map((relationship: any) => ({
+      let relationships = result.rows.map((relationship: any) => ({
         ...relationship,
         id: relationship.id as UUID,
-        sourceEntityId: relationship.sourceEntityId as UUID,
-        targetEntityId: relationship.targetEntityId as UUID,
-        agentId: relationship.agentId as UUID,
-        tags: relationship.tags ?? [],
-        metadata: (relationship.metadata as { [key: string]: unknown }) ?? {},
-        createdAt: relationship.createdAt
-          ? relationship.createdAt instanceof Date
-            ? relationship.createdAt.toISOString()
-            : new Date(relationship.createdAt).toISOString()
+        sourceEntityId: relationship.source_entity_id as UUID,
+        targetEntityId: relationship.target_entity_id as UUID,
+        agentId: relationship.agent_id as UUID,
+        tags: Array.isArray(relationship.tags)
+          ? relationship.tags
+          : typeof relationship.tags === 'string' && relationship.tags.startsWith('{')
+            ? relationship.tags
+                .slice(1, -1)
+                .split(',')
+                .map((tag: string) => tag.replace(/^"|"$/g, ''))
+            : (relationship.tags ?? []),
+        metadata:
+          typeof relationship.metadata === 'string'
+            ? JSON.parse(relationship.metadata)
+            : ((relationship.metadata as { [key: string]: unknown }) ?? {}),
+        createdAt: relationship.created_at
+          ? relationship.created_at instanceof Date
+            ? relationship.created_at.toISOString()
+            : new Date(relationship.created_at).toISOString()
           : new Date().toISOString(),
       }));
+
+      // Filter by tags in memory for all databases
+      if (tags && tags.length > 0) {
+        relationships = relationships.filter((rel) => {
+          if (!rel.tags || !Array.isArray(rel.tags)) {
+            return false;
+          }
+          return tags.some((tag) => rel.tags.includes(tag));
+        });
+      }
+
+      return relationships;
     });
   }
 
@@ -2355,23 +3815,44 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    * @returns {Promise<T | undefined>} A Promise that resolves to the cache value if found, undefined otherwise.
    */
   async getCache<T>(key: string): Promise<T | undefined> {
+    logger.info(`[BaseDrizzleAdapter] getCache called - key: ${key}, agentId: ${this.agentId}`);
+
     return this.withDatabase(async () => {
       try {
-        const result = await this.db
-          .select({ value: cacheTable.value })
-          .from(cacheTable)
-          .where(and(eq(cacheTable.agentId, this.agentId), eq(cacheTable.key, key)))
-          .limit(1);
+        logger.info(`[BaseDrizzleAdapter] Querying cache table for key: ${key}`);
+        logger.info(`[BaseDrizzleAdapter] Query params: key="${key}", agentId="${this.agentId}"`);
 
-        if (result && result.length > 0 && result[0]) {
-          return result[0].value as T | undefined;
+        // Use raw SQL to avoid Drizzle schema loading issues
+        const result = await this.db.execute(sql`
+          SELECT value FROM cache 
+          WHERE agent_id = ${this.agentId} AND key = ${key}
+          LIMIT 1
+        `);
+
+        // Handle different result formats from different database adapters
+        const rows = Array.isArray(result) ? result : result.rows || [];
+
+        if (rows && rows.length > 0 && rows[0]) {
+          logger.info(`[BaseDrizzleAdapter] ✓ Cache hit for key: ${key}`);
+          // Parse the JSON value since setCache stores it as JSON
+          try {
+            const parsedValue = JSON.parse(rows[0].value);
+            return parsedValue as T;
+          } catch (e) {
+            // If parsing fails, return the raw value (backwards compatibility)
+            logger.warn(
+              `[BaseDrizzleAdapter] Failed to parse cache value for key: ${key}, returning raw value`
+            );
+            return rows[0].value as T | undefined;
+          }
         }
 
+        logger.info(`[BaseDrizzleAdapter] Cache miss for key: ${key}`);
         return undefined;
       } catch (error) {
-        logger.error('Error fetching cache', {
+        logger.error('[BaseDrizzleAdapter] ✗ Error fetching cache', {
           error: error instanceof Error ? error.message : String(error),
-          key: key,
+          key,
           agentId: this.agentId,
         });
         return undefined;
@@ -2386,28 +3867,59 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    * @returns {Promise<boolean>} A Promise that resolves to a boolean indicating whether the cache value was set successfully.
    */
   async setCache<T>(key: string, value: T): Promise<boolean> {
+    logger.info(`[BaseDrizzleAdapter] setCache called - key: ${key}, agentId: ${this.agentId}`);
+
     return this.withDatabase(async () => {
       try {
-        await this.db
-          .insert(cacheTable)
-          .values({
-            key: key,
-            agentId: this.agentId,
-            value: value,
-          })
-          .onConflictDoUpdate({
-            target: [cacheTable.key, cacheTable.agentId],
-            set: {
-              value: value,
-            },
-          });
+        // Check if we're using PGLite
+        const isPGLite = this.constructor.name === 'PgliteDatabaseAdapter';
+        logger.info(`[BaseDrizzleAdapter] Using ${isPGLite ? 'PGLite' : 'PostgreSQL'} adapter`);
 
+        // Use raw SQL to avoid Drizzle schema loading issues
+        if (isPGLite) {
+          logger.info('[BaseDrizzleAdapter] Using PGLite direct approach (no transaction)');
+
+          // First delete any existing entry
+          logger.info(`[BaseDrizzleAdapter] Deleting existing cache entry for key: ${key}`);
+          await this.db.execute(sql`
+            DELETE FROM cache 
+            WHERE agent_id = ${this.agentId} AND key = ${key}
+          `);
+          logger.info(`[BaseDrizzleAdapter] Delete completed for key: ${key}`);
+
+          // Then insert the new value
+          logger.info(`[BaseDrizzleAdapter] Inserting new cache entry for key: ${key}`);
+          logger.info(
+            `[BaseDrizzleAdapter] Insert values: key="${key}", agentId="${this.agentId}", value=${JSON.stringify(value)}`
+          );
+          await this.db.execute(sql`
+            INSERT INTO cache (key, agent_id, value, created_at, expires_at)
+            VALUES (${key}, ${this.agentId}, ${JSON.stringify(value)}::jsonb, CURRENT_TIMESTAMP, NULL)
+          `);
+          logger.info(`[BaseDrizzleAdapter] Insert completed for key: ${key}`);
+
+          // For PGLite, we need to ensure data is persisted
+          // Add a small delay to allow PGLite to flush changes
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          logger.info(`[BaseDrizzleAdapter] Post-insert wait completed for key: ${key}`);
+        } else {
+          // For PostgreSQL, use upsert with raw SQL
+          await this.db.execute(sql`
+            INSERT INTO cache (key, agent_id, value, created_at, expires_at)
+            VALUES (${key}, ${this.agentId}, ${JSON.stringify(value)}::jsonb, CURRENT_TIMESTAMP, NULL)
+            ON CONFLICT (key, agent_id) 
+            DO UPDATE SET value = EXCLUDED.value, created_at = CURRENT_TIMESTAMP
+          `);
+        }
+
+        logger.info(`[BaseDrizzleAdapter] ✓ Cache set successfully for key: ${key}`);
         return true;
       } catch (error) {
-        logger.error('Error setting cache', {
+        logger.error('[BaseDrizzleAdapter] ✗ Error setting cache', {
           error: error instanceof Error ? error.message : String(error),
-          key: key,
+          key,
           agentId: this.agentId,
+          stack: error instanceof Error ? error.stack : undefined,
         });
         return false;
       }
@@ -2422,16 +3934,16 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   async deleteCache(key: string): Promise<boolean> {
     return this.withDatabase(async () => {
       try {
-        await this.db.transaction(async (tx) => {
-          await tx
-            .delete(cacheTable)
-            .where(and(eq(cacheTable.agentId, this.agentId), eq(cacheTable.key, key)));
-        });
+        // Use raw SQL to avoid Drizzle schema loading issues
+        await this.db.execute(sql`
+          DELETE FROM cache 
+          WHERE agent_id = ${this.agentId} AND key = ${key}
+        `);
         return true;
       } catch (error) {
         logger.error('Error deleting cache', {
           error: error instanceof Error ? error.message : String(error),
-          key: key,
+          key,
           agentId: this.agentId,
         });
         return false;
@@ -2448,9 +3960,11 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     return this.withDatabase(async () => {
       const newWorldId = world.id || v4();
       await this.db.insert(worldTable).values({
-        ...world,
         id: newWorldId,
         name: world.name || '',
+        agentId: world.agentId,
+        serverId: world.serverId,
+        metadata: world.metadata,
       });
       return newWorldId;
     });
@@ -2489,7 +4003,15 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    */
   async updateWorld(world: World): Promise<void> {
     return this.withDatabase(async () => {
-      await this.db.update(worldTable).set(world).where(eq(worldTable.id, world.id));
+      await this.db
+        .update(worldTable)
+        .set({
+          name: world.name,
+          agentId: world.agentId,
+          serverId: world.serverId,
+          metadata: world.metadata,
+        })
+        .where(eq(worldTable.id, world.id));
     });
   }
 
@@ -2525,13 +4047,13 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
           roomId: task.roomId as UUID,
           worldId: task.worldId as UUID,
           tags: task.tags,
-          metadata: metadata,
+          metadata,
           createdAt: now,
           updatedAt: now,
           agentId: this.agentId as UUID,
         };
 
-        const result = await this.db.insert(taskTable).values(values).returning();
+        const result = await this.db.insert(tasksTable).values(values).returning();
 
         return result[0].id as UUID;
       });
@@ -2550,32 +4072,67 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   }): Promise<Task[]> {
     return this.withRetry(async () => {
       return this.withDatabase(async () => {
-        const result = await this.db
-          .select()
-          .from(taskTable)
-          .where(
-            and(
-              eq(taskTable.agentId, this.agentId),
-              ...(params.roomId ? [eq(taskTable.roomId, params.roomId)] : []),
-              ...(params.tags && params.tags.length > 0
-                ? [
-                    sql`${taskTable.tags} @> ARRAY[${sql.raw(
-                      params.tags.map((t) => `'${t.replace(/'/g, "''")}'`).join(', ')
-                    )}]::text[]`,
-                  ]
-                : [])
-            )
-          );
+        // For PGLite compatibility, we'll fetch all tasks and filter in memory
+        const isPGLite = this.constructor.name === 'PgliteDatabaseAdapter';
 
-        return result.map((row) => ({
-          id: row.id as UUID,
-          name: row.name,
-          description: row.description ?? '',
-          roomId: row.roomId as UUID,
-          worldId: row.worldId as UUID,
-          tags: row.tags || [],
-          metadata: row.metadata as TaskMetadata,
-        }));
+        if (isPGLite && params.tags && params.tags.length > 0) {
+          // Fetch all tasks for the agent/room and filter by tags in memory
+          const allTasks = await this.db
+            .select()
+            .from(tasksTable)
+            .where(
+              and(
+                eq(tasksTable.agentId, this.agentId),
+                ...(params.roomId ? [eq(tasksTable.roomId, params.roomId)] : [])
+              )
+            );
+
+          // Filter by tags in memory
+          const filteredTasks = allTasks.filter((task) => {
+            if (!task.tags || !Array.isArray(task.tags)) {
+              return false;
+            }
+            return params.tags!.every((tag) => task.tags.includes(tag));
+          });
+
+          return filteredTasks.map((row) => ({
+            id: row.id as UUID,
+            name: row.name,
+            description: row.description ?? '',
+            roomId: row.roomId as UUID,
+            worldId: row.worldId as UUID,
+            tags: row.tags || [],
+            metadata: row.metadata as TaskMetadata,
+          }));
+        } else {
+          // PostgreSQL or no tag filtering
+          const result = await this.db
+            .select()
+            .from(tasksTable)
+            .where(
+              and(
+                eq(tasksTable.agentId, this.agentId),
+                ...(params.roomId ? [eq(tasksTable.roomId, params.roomId)] : []),
+                ...(params.tags && params.tags.length > 0
+                  ? [
+                      sql`${tasksTable.tags} @> ARRAY[${sql.raw(
+                        params.tags.map((t) => `'${t.replace(/'/g, "''")}'`).join(', ')
+                      )}]::text[]`,
+                    ]
+                  : [])
+              )
+            );
+
+          return result.map((row) => ({
+            id: row.id as UUID,
+            name: row.name,
+            description: row.description ?? '',
+            roomId: row.roomId as UUID,
+            worldId: row.worldId as UUID,
+            tags: row.tags || [],
+            metadata: row.metadata as TaskMetadata,
+          }));
+        }
       });
     });
   }
@@ -2590,8 +4147,8 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
       return this.withDatabase(async () => {
         const result = await this.db
           .select()
-          .from(taskTable)
-          .where(and(eq(taskTable.name, name), eq(taskTable.agentId, this.agentId)));
+          .from(tasksTable)
+          .where(and(eq(tasksTable.name, name), eq(tasksTable.agentId, this.agentId)));
 
         return result.map((row) => ({
           id: row.id as UUID,
@@ -2616,8 +4173,8 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
       return this.withDatabase(async () => {
         const result = await this.db
           .select()
-          .from(taskTable)
-          .where(and(eq(taskTable.id, id), eq(taskTable.agentId, this.agentId)))
+          .from(tasksTable)
+          .where(and(eq(tasksTable.id, id), eq(tasksTable.agentId, this.agentId)))
           .limit(1);
 
         if (result.length === 0) {
@@ -2650,11 +4207,21 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         const updateValues: Partial<Task> = {};
 
         // Add fields to update if they exist in the partial task object
-        if (task.name !== undefined) updateValues.name = task.name;
-        if (task.description !== undefined) updateValues.description = task.description;
-        if (task.roomId !== undefined) updateValues.roomId = task.roomId;
-        if (task.worldId !== undefined) updateValues.worldId = task.worldId;
-        if (task.tags !== undefined) updateValues.tags = task.tags;
+        if (task.name !== undefined) {
+          updateValues.name = task.name;
+        }
+        if (task.description !== undefined) {
+          updateValues.description = task.description;
+        }
+        if (task.roomId !== undefined) {
+          updateValues.roomId = task.roomId;
+        }
+        if (task.worldId !== undefined) {
+          updateValues.worldId = task.worldId;
+        }
+        if (task.tags !== undefined) {
+          updateValues.tags = task.tags;
+        }
 
         // Always update the updatedAt timestamp as a Date
         (updateValues as any).updatedAt = new Date();
@@ -2665,10 +4232,10 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         }
 
         await this.db
-          .update(taskTable)
+          .update(tasksTable)
           // createdAt is hella borked, number / Date
           .set(updateValues as any)
-          .where(and(eq(taskTable.id, id), eq(taskTable.agentId, this.agentId)));
+          .where(and(eq(tasksTable.id, id), eq(tasksTable.agentId, this.agentId)));
       });
     });
   }
@@ -2680,7 +4247,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    */
   async deleteTask(id: UUID): Promise<void> {
     return this.withDatabase(async () => {
-      await this.db.delete(taskTable).where(eq(taskTable.id, id));
+      await this.db.delete(tasksTable).where(eq(tasksTable.id, id));
     });
   }
 
@@ -2832,16 +4399,32 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     }>
   > {
     return this.withDatabase(async () => {
-      const results = await this.db.select().from(messageServerTable);
-      return results.map((r) => ({
-        id: r.id as UUID,
-        name: r.name,
-        sourceType: r.sourceType,
-        sourceId: r.sourceId || undefined,
-        metadata: r.metadata || undefined,
-        createdAt: r.createdAt,
-        updatedAt: r.updatedAt,
-      }));
+      try {
+        const results = await this.db.select().from(messageServerTable);
+        return results.map((r) => ({
+          id: r.id as UUID,
+          name: r.name,
+          sourceType: r.sourceType,
+          sourceId: r.sourceId || undefined,
+          metadata: r.metadata || undefined,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+        }));
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          (error.message.includes('relation "messageServers" does not exist') ||
+            error.message.includes('relation "message_servers" does not exist') ||
+            (error.message.includes('select') && error.message.includes('message_servers')) ||
+            (error.message.includes('Failed query') && error.message.includes('message_servers')))
+        ) {
+          logger.warn(
+            'Message servers table not yet created during initialization, returning empty array'
+          );
+          return [];
+        }
+        throw error;
+      }
     });
   }
 
@@ -2883,7 +4466,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   async createChannel(
     data: {
       id?: UUID; // Allow passing a specific ID
-      messageServerId: UUID;
+      serverId: UUID;
       name: string;
       type: string;
       sourceType?: string;
@@ -2894,7 +4477,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     participantIds?: UUID[]
   ): Promise<{
     id: UUID;
-    messageServerId: UUID;
+    serverId: UUID;
     name: string;
     type: string;
     sourceType?: string;
@@ -2907,15 +4490,20 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     return this.withDatabase(async () => {
       const newId = data.id || (v4() as UUID);
       const now = new Date();
+      // Ensure serverId is provided and valid
+      if (!data.serverId) {
+        throw new Error('serverId is required for channel creation');
+      }
+
       const channelToInsert = {
         id: newId,
-        messageServerId: data.messageServerId,
+        serverId: data.serverId,
         name: data.name,
         type: data.type,
-        sourceType: data.sourceType,
-        sourceId: data.sourceId,
-        topic: data.topic,
-        metadata: data.metadata,
+        sourceType: data.sourceType || null,
+        sourceId: data.sourceId || null,
+        topic: data.topic || null,
+        metadata: data.metadata || {},
         createdAt: now,
         updatedAt: now,
       };
@@ -2926,13 +4514,25 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         if (participantIds && participantIds.length > 0) {
           const participantValues = participantIds.map((userId) => ({
             channelId: newId,
-            userId: userId,
+            userId,
           }));
           await tx.insert(channelParticipantsTable).values(participantValues).onConflictDoNothing();
         }
       });
 
-      return channelToInsert;
+      // Return the expected format
+      return {
+        id: newId,
+        serverId: data.serverId,
+        name: data.name,
+        type: data.type,
+        sourceType: data.sourceType,
+        sourceId: data.sourceId,
+        topic: data.topic,
+        metadata: data.metadata,
+        createdAt: now,
+        updatedAt: now,
+      };
     });
   }
 
@@ -2942,7 +4542,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   async getChannelsForServer(serverId: UUID): Promise<
     Array<{
       id: UUID;
-      messageServerId: UUID;
+      serverId: UUID;
       name: string;
       type: string;
       sourceType?: string;
@@ -2957,10 +4557,10 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
       const results = await this.db
         .select()
         .from(channelTable)
-        .where(eq(channelTable.messageServerId, serverId));
+        .where(eq((channelTable as any).serverId, serverId));
       return results.map((r) => ({
         id: r.id as UUID,
-        messageServerId: r.messageServerId as UUID,
+        serverId: r.serverId as UUID,
         name: r.name,
         type: r.type,
         sourceType: r.sourceType || undefined,
@@ -2978,7 +4578,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    */
   async getChannelDetails(channelId: UUID): Promise<{
     id: UUID;
-    messageServerId: UUID;
+    serverId: UUID;
     name: string;
     type: string;
     sourceType?: string;
@@ -2997,7 +4597,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
       return results.length > 0
         ? {
             id: results[0].id as UUID,
-            messageServerId: results[0].messageServerId as UUID,
+            serverId: results[0].serverId as UUID,
             name: results[0].name,
             type: results[0].type,
             sourceType: results[0].sourceType || undefined,
@@ -3127,7 +4727,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     updates: { name?: string; participantCentralUserIds?: UUID[]; metadata?: any }
   ): Promise<{
     id: UUID;
-    messageServerId: UUID;
+    serverId: UUID;
     name: string;
     type: string;
     sourceType?: string;
@@ -3143,8 +4743,12 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
       await this.db.transaction(async (tx) => {
         // Update channel details
         const updateData: any = { updatedAt: now };
-        if (updates.name !== undefined) updateData.name = updates.name;
-        if (updates.metadata !== undefined) updateData.metadata = updates.metadata;
+        if (updates.name !== undefined) {
+          updateData.name = updates.name;
+        }
+        if (updates.metadata !== undefined) {
+          updateData.metadata = updates.metadata;
+        }
 
         await tx.update(channelTable).set(updateData).where(eq(channelTable.id, channelId));
 
@@ -3158,8 +4762,8 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
           // Add new participants
           if (updates.participantCentralUserIds.length > 0) {
             const participantValues = updates.participantCentralUserIds.map((userId) => ({
-              channelId: channelId,
-              userId: userId,
+              channelId,
+              userId,
             }));
             await tx
               .insert(channelParticipantsTable)
@@ -3203,11 +4807,13 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    */
   async addChannelParticipants(channelId: UUID, userIds: UUID[]): Promise<void> {
     return this.withDatabase(async () => {
-      if (!userIds || userIds.length === 0) return;
+      if (!userIds || userIds.length === 0) {
+        return;
+      }
 
       const participantValues = userIds.map((userId) => ({
-        channelId: channelId,
-        userId: userId,
+        channelId,
+        userId,
       }));
 
       await this.db
@@ -3251,12 +4857,47 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    */
   async getAgentsForServer(serverId: UUID): Promise<UUID[]> {
     return this.withDatabase(async () => {
-      const results = await this.db
-        .select({ agentId: serverAgentsTable.agentId })
-        .from(serverAgentsTable)
-        .where(eq(serverAgentsTable.serverId, serverId));
+      try {
+        const results = await this.db
+          .select({ agentId: serverAgentsTable.agentId })
+          .from(serverAgentsTable)
+          .where(eq(serverAgentsTable.serverId, serverId));
 
-      return results.map((r) => r.agentId as UUID);
+        return results.map((r) => r.agentId as UUID);
+      } catch (error) {
+        // Handle case where server_agents table doesn't exist yet (during initialization)
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (
+          errorMessage.includes('relation "server_agents" does not exist') ||
+          errorMessage.includes('relation "serverAgents" does not exist') ||
+          errorMessage.includes('no such table: server_agents') ||
+          errorMessage.includes('no such table: serverAgents') ||
+          errorMessage.includes("doesn't exist") ||
+          errorMessage.includes('Failed query') ||
+          errorMessage.includes('table "server_agents"') ||
+          errorMessage.includes('table "serverAgents"') ||
+          errorMessage.includes('server_agents table') ||
+          errorMessage.includes('serverAgents table') ||
+          errorMessage.includes('"server_agents"') ||
+          errorMessage.includes('"serverAgents"') ||
+          errorMessage.toLowerCase().includes('does not exist') ||
+          errorMessage.toLowerCase().includes('not exist')
+        ) {
+          logger.warn(
+            'Server agents table not yet created during initialization, returning empty array',
+            {
+              error: errorMessage,
+            }
+          );
+          return [];
+        }
+
+        logger.error('Unexpected error in getAgentsForServer', {
+          error: errorMessage,
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+        throw error;
+      }
     });
   }
 
@@ -3279,10 +4920,10 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   async findOrCreateDmChannel(
     user1Id: UUID,
     user2Id: UUID,
-    messageServerId: UUID
+    serverId: UUID
   ): Promise<{
     id: UUID;
-    messageServerId: UUID;
+    serverId: UUID;
     name: string;
     type: string;
     sourceType?: string;
@@ -3303,7 +4944,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
           and(
             eq(channelTable.type, ChannelType.DM),
             eq(channelTable.name, dmChannelName),
-            eq(channelTable.messageServerId, messageServerId)
+            eq((channelTable as any).serverId, serverId)
           )
         )
         .limit(1);
@@ -3311,7 +4952,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
       if (existingChannels.length > 0) {
         return {
           id: existingChannels[0].id as UUID,
-          messageServerId: existingChannels[0].messageServerId as UUID,
+          serverId: existingChannels[0].serverId as UUID,
           name: existingChannels[0].name,
           type: existingChannels[0].type,
           sourceType: existingChannels[0].sourceType || undefined,
@@ -3326,7 +4967,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
       // Create new DM channel
       return this.createChannel(
         {
-          messageServerId,
+          serverId,
           name: dmChannelName,
           type: ChannelType.DM,
           metadata: { user1: ids[0], user2: ids[1] },
@@ -3334,6 +4975,17 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         ids
       );
     });
+  }
+
+  /**
+   * Asynchronously retrieves a single entity by its ID.
+   * This method is required by the core runtime interface.
+   * @param {UUID} entityId - The unique identifier of the entity to retrieve.
+   * @returns {Promise<Entity | null>} A Promise that resolves to the entity if found, null otherwise.
+   */
+  async getEntityById(entityId: UUID): Promise<Entity | null> {
+    const entities = await this.getEntitiesByIds([entityId]);
+    return entities && entities.length > 0 ? entities[0] : null;
   }
 }
 

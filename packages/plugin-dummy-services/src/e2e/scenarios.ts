@@ -1,10 +1,9 @@
-import type { IAgentRuntime, TestSuite, IWalletService } from '@elizaos/core';
+import type { IAgentRuntime, TestSuite } from '@elizaos/core';
 import { ILpService, ServiceType } from '@elizaos/core';
 import { strict as assert } from 'node:assert';
 import { DummyLpService } from '../lp/service';
 import { DummyTokenDataService } from '../tokenData/service';
 import { DummyWalletService } from '../wallet/service';
-import { setupScenario } from './test-utils';
 
 export const dummyServicesScenariosSuite: TestSuite = {
   name: 'Dummy Services Plugin E2E Scenarios',

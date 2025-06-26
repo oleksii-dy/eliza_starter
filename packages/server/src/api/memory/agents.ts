@@ -2,7 +2,7 @@ import type { IAgentRuntime, UUID, Memory, MemoryMetadata } from '@elizaos/core'
 import { MemoryType, createUniqueUuid } from '@elizaos/core';
 import { validateUuid, logger } from '@elizaos/core';
 import express from 'express';
-import { sendError, sendSuccess } from '../shared/response-utils';
+import { sendError, sendSuccess } from '../shared/responseUtils';
 
 /**
  * Agent memory management functionality

@@ -13,6 +13,7 @@ import type {
   Task,
   UUID,
   World,
+  GetWorldsOptions,
 } from '../types';
 
 /**
@@ -100,6 +101,18 @@ class MockDatabaseAdapter extends DatabaseAdapter {
     throw new Error('Method not implemented.');
   }
   getAllWorlds(): Promise<World[]> {
+    throw new Error('Method not implemented.');
+  }
+  getWorlds(params: {
+    agentId: UUID;
+    serverId?: string;
+    name?: string;
+    activeOnly?: boolean;
+    limit?: number;
+    offset?: number;
+    orderBy?: 'name' | 'createdAt' | 'lastActivityAt';
+    orderDirection?: 'asc' | 'desc';
+  }): Promise<World[]> {
     throw new Error('Method not implemented.');
   }
   createWorld(world: World): Promise<UUID> {
@@ -199,7 +212,7 @@ class MockDatabaseAdapter extends DatabaseAdapter {
    */
   async getMemoriesByIds(memoryIds: UUID[], _tableName?: string): Promise<Memory[]> {
     return memoryIds.map((id) => ({
-      id: id,
+      id,
       content: { text: 'Test Memory' },
       roomId: 'room-id' as UUID,
       entityId: 'user-id' as UUID,
@@ -369,7 +382,7 @@ class MockDatabaseAdapter extends DatabaseAdapter {
     throw new Error('Method not implemented.');
   }
 
-  getEntityByIds(_entityIds: UUID[]): Promise<Entity[]> {
+  getEntitiesByIds(_entityIds: UUID[]): Promise<Entity[]> {
     throw new Error('Method not implemented.');
   }
 

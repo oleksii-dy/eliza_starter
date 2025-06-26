@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'bun:test';
 import { expandTildePath, resolveEnvFile, resolvePgliteDir } from '../../utils';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -123,8 +123,8 @@ describe('Utils Integration Tests', () => {
       delete process.env.PGLITE_DATA_DIR;
 
       const result = resolvePgliteDir();
-      expect(process.env.PGLITE_DATA_DIR).toBe('/from/env/file' as any);
-      expect(result).toBe('/from/env/file' as any);
+      expect(process.env.PGLITE_DATA_DIR).toBe('/from/env/file');
+      expect(result).toBe('/from/env/file');
     });
 
     it('should expand tilde paths', () => {

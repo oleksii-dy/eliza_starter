@@ -1,4 +1,4 @@
-import AgentCreator from '@/components/agent-creator';
+import AgentCreator from '@/components/AgentCreator';
 
 export default function AgentCreatorRoute() {
   return (

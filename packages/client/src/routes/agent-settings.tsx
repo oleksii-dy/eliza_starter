@@ -1,14 +1,13 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import AgentSettings from '@/components/agent-settings';
+import AgentSettings from '@/components/AgentSettings';
 import { useAgent } from '@/hooks/use-query-hooks';
-import { ArrowLeft } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function AgentSettingsRoute() {
   const { agentId } = useParams<{ agentId: string }>();
   const navigate = useNavigate();
-  const { data: agentData, isLoading } = useAgent(agentId!);
+  const { data: agentData, isLoading } = useAgent(agentId || '');
 
   if (isLoading) {
     return (
@@ -42,7 +41,7 @@ export default function AgentSettingsRoute() {
         <div className="bg-background rounded-lg border p-6">
           <AgentSettings
             agent={agent}
-            agentId={agentId!}
+            agentId={agentId || ''}
             onSaveComplete={() => {
               // After save, navigate back to home page
               navigate('/');

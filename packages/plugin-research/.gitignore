@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Test artifacts
+.elizadb-test/
+test-output.log
+coverage/
+*.log
+
+# Environment files
+.env
+.env.local
+.env.test
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# ElizaOS specific
+.eliza/
+
+.cursor
+
+deep_research_bench/
+research_logs/
+docs/
+benchmark_results/
+temp/
+test-deepresearch-results.jsonl
+.turbo
+.cursor
+.claude

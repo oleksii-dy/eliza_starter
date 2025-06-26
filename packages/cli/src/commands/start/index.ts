@@ -1,6 +1,7 @@
 import { displayBanner, handleError } from '@/src/utils';
 import { validatePort } from '@/src/utils/port-validation';
-import { loadCharacterTryPath } from '@elizaos/server';
+// Dynamic imports for utilities that may not be properly exported
+let loadCharacterTryPath: any;
 import { loadProject } from '@/src/project';
 import { logger, type Character, type ProjectAgent } from '@elizaos/core';
 import { Command } from 'commander';
@@ -9,6 +10,19 @@ import { StartOptions } from './types';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { loadEnvConfig } from './utils/config-utils';
+import { detectDirectoryType } from '@/src/utils/directory-detection';
+
+// Dynamic loader for server utilities
+async function loadServerUtilities() {
+  if (!loadCharacterTryPath) {
+    try {
+      const serverModule = await import('@elizaos/server');
+      loadCharacterTryPath = (serverModule as any).loadCharacterTryPath;
+    } catch (error) {
+      logger.warn('Could not load server utilities:', error);
+    }
+  }
+}
 
 export const start = new Command()
   .name('start')
@@ -16,6 +30,11 @@ export const start = new Command()
   .option('-c, --configure', 'Reconfigure services and AI models')
   .option('-p, --port <port>', 'Port to listen on', validatePort)
   .option('--character <paths...>', 'Character file(s) to use')
+  .option('-t, --timeout <seconds>', 'Run for specified duration (seconds)', parseInt)
+  .option('--test-mode', 'Run in test mode (exits after initialization)')
+  .option('--autonomous', 'Enable autonomous mode with OODA loop')
+  .option('--admin-port <port>', 'Admin interface port', parseInt)
+  .option('--save-logs-to <dir>', 'Directory to save logs')
   .hook('preAction', async () => {
     await displayBanner();
   })
@@ -24,7 +43,10 @@ export const start = new Command()
       // Load env config first before any character loading
       await loadEnvConfig();
 
-      let characters: Character[] = [];
+      // Load server utilities dynamically
+      await loadServerUtilities();
+
+      const characters: Character[] = [];
       let projectAgents: ProjectAgent[] = [];
 
       if (options.character && options.character.length > 0) {
@@ -57,10 +79,11 @@ export const start = new Command()
         // Try to load project agents if no character files specified
         try {
           const cwd = process.cwd();
-          const packageJsonPath = path.join(cwd, 'package.json');
+          const dirInfo = detectDirectoryType(cwd);
 
-          // Check if we're in a project directory
-          if (fs.existsSync(packageJsonPath)) {
+          // Check if we're in a directory that might contain agents - allow any directory with package.json
+          // except those explicitly detected as non-ElizaOS (covers projects, plugins, monorepos, etc.)
+          if (dirInfo.hasPackageJson && dirInfo.type !== 'non-elizaos-dir') {
             logger.info('No character files specified, attempting to load project agents...');
             const project = await loadProject(cwd);
 

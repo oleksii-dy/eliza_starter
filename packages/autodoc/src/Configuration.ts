@@ -156,7 +156,7 @@ export class Configuration implements Omit<ConfigurationData, 'rootDirectory'> {
     // Handle other inputs
     if (process.env.INPUT_PULL_NUMBER) {
       console.log('Setting pull number from env:', process.env.INPUT_PULL_NUMBER);
-      this.repository.pullNumber = Number.parseInt(process.env.INPUT_PULL_NUMBER);
+      this.repository.pullNumber = Number.parseInt(process.env.INPUT_PULL_NUMBER, 10);
     }
 
     this.excludedDirectories = this.parseCommaSeparatedInput(
@@ -171,7 +171,9 @@ export class Configuration implements Omit<ConfigurationData, 'rootDirectory'> {
   }
 
   private parseCommaSeparatedInput(input: string | undefined, defaultValue: string[]): string[] {
-    if (!input) return defaultValue;
+    if (!input) {
+      return defaultValue;
+    }
     return input
       .split(',')
       .map((item) => item.trim())

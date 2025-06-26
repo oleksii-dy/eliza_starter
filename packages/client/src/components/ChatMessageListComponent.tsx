@@ -5,8 +5,7 @@ import { ChatBubble } from '@/components/ui/chat/chat-bubble';
 import { MemoizedMessageContent } from './chat';
 import { UUID, Agent, ChannelType } from '@elizaos/core';
 import type { UiMessage } from '@/hooks/use-query-hooks';
-import { cn } from '@/lib/utils';
-import { getAgentAvatar } from '@/lib/utils';
+import { cn, getAgentAvatar } from '@/lib/utils';
 
 interface ChatMessageListComponentProps {
   messages: UiMessage[];

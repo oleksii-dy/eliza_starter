@@ -6,8 +6,6 @@ import path from 'node:path';
 import { ComponentTestOptions, TestResult } from '../types';
 import { processFilterName } from '../utils/project-utils';
 import { runTypeCheck } from '@/src/utils/testing/tsc-validator';
-// Bun test doesn't need separate config creation
-import { existsSync } from 'node:fs';
 
 /**
  * Run component tests using bun test
@@ -39,7 +37,7 @@ export async function runComponentTests(
     try {
       logger.info(`Building ${isPlugin ? 'plugin' : 'project'}...`);
       await buildProject(cwd, isPlugin);
-      logger.success(`Build completed successfully`);
+      logger.success('Build completed successfully');
     } catch (buildError) {
       logger.error(`Build failed: ${buildError}`);
       // Return immediately on build failure
@@ -49,26 +47,23 @@ export async function runComponentTests(
 
   logger.info('Running component tests...');
 
-  // Bun test uses built-in configuration
-
   return new Promise((resolve) => {
-    // Build command arguments
-    const args = ['test', '--passWithNoTests'];
+    const targetPath = testPath ? path.resolve(process.cwd(), '..', testPath) : process.cwd();
+
+    // Use bun test for all test execution
+    const args: string[] = ['test'];
 
     // Add filter if specified
     if (options.name) {
       const baseName = processFilterName(options.name);
       if (baseName) {
         logger.info(`Using test filter: ${baseName}`);
-        args.push('-t', baseName);
+        args.push('--test-name-pattern', baseName);
       }
     }
 
-    const targetPath = testPath ? path.resolve(process.cwd(), '..', testPath) : process.cwd();
-
-    // Bun test doesn't use separate config files
-
-    // Bun test automatically discovers test files
+    // Add passWithNoTests equivalent for bun
+    args.push('--passWithNoTests');
 
     logger.info(`Executing: bun ${args.join(' ')} in ${targetPath}`);
 
@@ -79,8 +74,8 @@ export async function runComponentTests(
       cwd: targetPath,
       env: {
         ...process.env,
-        FORCE_COLOR: '1', // Force color output
-        CI: 'false', // Ensure we're not in CI mode which might buffer
+        FORCE_COLOR: '1',
+        CI: 'false',
       },
     });
 

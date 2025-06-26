@@ -9,7 +9,13 @@
     }
   ],
   "compilerOptions": {
-    "lib": ["es2019", "dom"],
-    "baseUrl": "."
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   }
 }

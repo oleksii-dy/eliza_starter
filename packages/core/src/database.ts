@@ -29,7 +29,7 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
   /**
    * The database instance.
    */
-  db: DB;
+  abstract db: DB;
 
   /**
    * Initialize the database adapter.
@@ -73,7 +73,7 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
    * @param entityIds The UUIDs of the user account to retrieve.
    * @returns A Promise that resolves to the Entity object or null if not found.
    */
-  abstract getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null>;
+  abstract getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null>;
 
   abstract getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]>;
 
@@ -311,6 +311,22 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
   abstract getAllWorlds(): Promise<World[]>;
 
   /**
+   * Retrieve worlds for an agent with optional filtering and pagination
+   * @param params Query parameters including agentId and filtering options
+   * @returns Promise resolving to an array of World objects
+   */
+  abstract getWorlds(params: {
+    agentId: UUID;
+    serverId?: string;
+    name?: string;
+    activeOnly?: boolean;
+    limit?: number;
+    offset?: number;
+    orderBy?: 'name' | 'createdAt' | 'lastActivityAt';
+    orderDirection?: 'asc' | 'desc';
+  }): Promise<World[]>;
+
+  /**
    * Creates a new world in the database.
    * @param world The world object to create.
    * @returns A Promise that resolves to the UUID of the created world.
@@ -332,9 +348,9 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
   abstract removeWorld(id: UUID): Promise<void>;
 
   /**
-   * Retrieves the room ID for a given room, if it exists.
-   * @param roomId The UUID of the room to retrieve.
-   * @returns A Promise that resolves to the room ID or null if not found.
+   * Retrieves rooms by their IDs.
+   * @param roomIds The UUIDs of the rooms to retrieve.
+   * @returns A Promise that resolves to the rooms or null if not found.
    */
   abstract getRoomsByIds(roomIds: UUID[]): Promise<Room[] | null>;
 
@@ -346,9 +362,9 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
   abstract getRoomsByWorld(worldId: UUID): Promise<Room[]>;
 
   /**
-   * Creates a new rooms with an optional specified ID.
-   * @param roomId Optional UUID to assign to the new room.
-   * @returns A Promise that resolves to the UUID of the created rooms.
+   * Creates new rooms.
+   * @param rooms The array of room objects to create.
+   * @returns A Promise that resolves to the UUIDs of the created rooms.
    */
   abstract createRooms(rooms: Room[]): Promise<UUID[]>;
 
@@ -513,9 +529,8 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
 
   /**
    * Sets a value in the cache with the given key.
-   * @param params Object containing the cache key and value
    * @param key The key to store the value under
-   * @param value The string value to cache
+   * @param value The value to cache
    * @returns Promise resolving to true if the cache was set successfully
    */
   abstract setCache<T>(key: string, value: T): Promise<boolean>;

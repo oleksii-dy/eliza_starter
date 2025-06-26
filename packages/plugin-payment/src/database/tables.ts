@@ -1,0 +1,245 @@
+import type { TableSchema } from '@elizaos/plugin-sql';
+
+/**
+ * Payment plugin table definitions for the unified migration system
+ */
+export const PAYMENT_TABLES: TableSchema[] = [
+  {
+    name: 'payment_transactions',
+    pluginName: '@elizaos/plugin-payment',
+    sql: `CREATE TABLE IF NOT EXISTS "payment_transactions" (
+      "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      "payer_id" UUID NOT NULL,
+      "recipient_id" UUID,
+      "agent_id" UUID NOT NULL,
+      "amount" BIGINT NOT NULL,
+      "currency" TEXT NOT NULL,
+      "method" TEXT NOT NULL,
+      "status" TEXT NOT NULL,
+      "transaction_hash" TEXT,
+      "from_address" TEXT,
+      "to_address" TEXT,
+      "confirmations" INTEGER DEFAULT 0,
+      "gas_used" BIGINT,
+      "gas_price_wei" BIGINT,
+      "action_name" TEXT,
+      "metadata" JSONB DEFAULT '{}',
+      "error" TEXT,
+      "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "completed_at" TIMESTAMP,
+      "expires_at" TIMESTAMP
+    )`,
+    fallbackSql: `CREATE TABLE IF NOT EXISTS payment_transactions (
+      id TEXT PRIMARY KEY,
+      payer_id TEXT NOT NULL,
+      recipient_id TEXT,
+      agent_id TEXT NOT NULL,
+      amount TEXT NOT NULL,
+      currency TEXT NOT NULL,
+      method TEXT NOT NULL,
+      status TEXT NOT NULL,
+      transaction_hash TEXT,
+      from_address TEXT,
+      to_address TEXT,
+      confirmations INTEGER DEFAULT 0,
+      gas_used TEXT,
+      gas_price_wei TEXT,
+      action_name TEXT,
+      metadata TEXT DEFAULT '{}',
+      error TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      completed_at TIMESTAMP,
+      expires_at TIMESTAMP
+    )`,
+  },
+
+  {
+    name: 'payment_requests',
+    pluginName: '@elizaos/plugin-payment',
+    dependencies: ['payment_transactions'],
+    sql: `CREATE TABLE IF NOT EXISTS "payment_requests" (
+      "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      "transaction_id" UUID REFERENCES payment_transactions(id),
+      "user_id" UUID NOT NULL,
+      "agent_id" UUID NOT NULL,
+      "amount" BIGINT NOT NULL,
+      "method" TEXT NOT NULL,
+      "recipient_address" TEXT,
+      "requires_confirmation" BOOLEAN DEFAULT true,
+      "trust_required" BOOLEAN DEFAULT false,
+      "minimum_trust_level" INTEGER,
+      "metadata" JSONB DEFAULT '{}',
+      "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "expires_at" TIMESTAMP
+    )`,
+    fallbackSql: `CREATE TABLE IF NOT EXISTS payment_requests (
+      id TEXT PRIMARY KEY,
+      transaction_id TEXT REFERENCES payment_transactions(id),
+      user_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      amount TEXT NOT NULL,
+      method TEXT NOT NULL,
+      recipient_address TEXT,
+      requires_confirmation BOOLEAN DEFAULT true,
+      trust_required BOOLEAN DEFAULT false,
+      minimum_trust_level INTEGER,
+      metadata TEXT DEFAULT '{}',
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      expires_at TIMESTAMP
+    )`,
+  },
+
+  {
+    name: 'user_wallets',
+    pluginName: '@elizaos/plugin-payment',
+    sql: `CREATE TABLE IF NOT EXISTS "user_wallets" (
+      "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      "user_id" UUID NOT NULL,
+      "address" TEXT NOT NULL,
+      "network" TEXT NOT NULL,
+      "chain_id" INTEGER,
+      "encrypted_private_key" TEXT,
+      "is_active" BOOLEAN DEFAULT true,
+      "is_primary" BOOLEAN DEFAULT false,
+      "metadata" JSONB DEFAULT '{}',
+      "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updated_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, network, address)
+    )`,
+    fallbackSql: `CREATE TABLE IF NOT EXISTS user_wallets (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      address TEXT NOT NULL,
+      network TEXT NOT NULL,
+      chain_id INTEGER,
+      encrypted_private_key TEXT,
+      is_active BOOLEAN DEFAULT true,
+      is_primary BOOLEAN DEFAULT false,
+      metadata TEXT DEFAULT '{}',
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, network, address)
+    )`,
+  },
+
+  {
+    name: 'payment_settings',
+    pluginName: '@elizaos/plugin-payment',
+    sql: `CREATE TABLE IF NOT EXISTS "payment_settings" (
+      "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      "agent_id" UUID NOT NULL UNIQUE,
+      "auto_approval_enabled" BOOLEAN DEFAULT false,
+      "auto_approval_threshold" DECIMAL(10,2) DEFAULT 10.00,
+      "default_currency" TEXT DEFAULT 'USDC',
+      "require_confirmation" BOOLEAN DEFAULT true,
+      "trust_threshold" INTEGER DEFAULT 70,
+      "max_daily_spend" DECIMAL(10,2) DEFAULT 1000.00,
+      "preferred_networks" JSONB DEFAULT '["ethereum", "solana"]',
+      "fee_strategy" TEXT DEFAULT 'standard',
+      "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updated_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    fallbackSql: `CREATE TABLE IF NOT EXISTS payment_settings (
+      id TEXT PRIMARY KEY,
+      agent_id TEXT NOT NULL UNIQUE,
+      auto_approval_enabled BOOLEAN DEFAULT false,
+      auto_approval_threshold TEXT DEFAULT '10.00',
+      default_currency TEXT DEFAULT 'USDC',
+      require_confirmation BOOLEAN DEFAULT true,
+      trust_threshold INTEGER DEFAULT 70,
+      max_daily_spend TEXT DEFAULT '1000.00',
+      preferred_networks TEXT DEFAULT '["ethereum", "solana"]',
+      fee_strategy TEXT DEFAULT 'standard',
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+  },
+
+  {
+    name: 'daily_spending',
+    pluginName: '@elizaos/plugin-payment',
+    sql: `CREATE TABLE IF NOT EXISTS "daily_spending" (
+      "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      "user_id" UUID NOT NULL,
+      "date" TEXT NOT NULL,
+      "total_spent_usd" DECIMAL(10,2) DEFAULT 0.00,
+      "transaction_count" INTEGER DEFAULT 0,
+      "breakdown" JSONB DEFAULT '{}',
+      "updated_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, date)
+    )`,
+    fallbackSql: `CREATE TABLE IF NOT EXISTS daily_spending (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      date TEXT NOT NULL,
+      total_spent_usd TEXT DEFAULT '0.00',
+      transaction_count INTEGER DEFAULT 0,
+      breakdown TEXT DEFAULT '{}',
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, date)
+    )`,
+  },
+
+  {
+    name: 'price_cache',
+    pluginName: '@elizaos/plugin-payment',
+    sql: `CREATE TABLE IF NOT EXISTS "price_cache" (
+      "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      "token_address" TEXT NOT NULL,
+      "network" TEXT NOT NULL,
+      "symbol" TEXT NOT NULL,
+      "price_usd" DECIMAL(20,8) NOT NULL,
+      "price_change_24h" DECIMAL(10,2),
+      "volume_24h" DECIMAL(20,2),
+      "market_cap" DECIMAL(20,2),
+      "source" TEXT NOT NULL,
+      "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "expires_at" TIMESTAMP NOT NULL,
+      UNIQUE(token_address, network)
+    )`,
+    fallbackSql: `CREATE TABLE IF NOT EXISTS price_cache (
+      id TEXT PRIMARY KEY,
+      token_address TEXT NOT NULL,
+      network TEXT NOT NULL,
+      symbol TEXT NOT NULL,
+      price_usd TEXT NOT NULL,
+      price_change_24h TEXT,
+      volume_24h TEXT,
+      market_cap TEXT,
+      source TEXT NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      expires_at TIMESTAMP NOT NULL,
+      UNIQUE(token_address, network)
+    )`,
+  },
+
+  {
+    name: 'payment_webhooks',
+    pluginName: '@elizaos/plugin-payment',
+    dependencies: ['payment_transactions'],
+    sql: `CREATE TABLE IF NOT EXISTS "payment_webhooks" (
+      "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      "payment_id" UUID NOT NULL REFERENCES payment_transactions(id),
+      "url" TEXT NOT NULL,
+      "events" JSONB DEFAULT '["completed", "failed"]',
+      "retry_count" INTEGER DEFAULT 0,
+      "max_retries" INTEGER DEFAULT 3,
+      "last_attempt_at" TIMESTAMP,
+      "next_retry_at" TIMESTAMP,
+      "status" TEXT DEFAULT 'pending',
+      "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    fallbackSql: `CREATE TABLE IF NOT EXISTS payment_webhooks (
+      id TEXT PRIMARY KEY,
+      payment_id TEXT NOT NULL REFERENCES payment_transactions(id),
+      url TEXT NOT NULL,
+      events TEXT DEFAULT '["completed", "failed"]',
+      retry_count INTEGER DEFAULT 0,
+      max_retries INTEGER DEFAULT 3,
+      last_attempt_at TIMESTAMP,
+      next_retry_at TIMESTAMP,
+      status TEXT DEFAULT 'pending',
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+  },
+];

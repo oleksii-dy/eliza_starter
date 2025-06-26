@@ -7,8 +7,11 @@ import {
   integer as pgInteger,
   jsonb as pgJsonb,
   pgTable,
+  primaryKey as pgPrimaryKey,
+  real as pgReal,
   text as pgText,
   timestamp as pgTimestamp,
+  unique as pgUnique,
   uuid as pgUuid,
   vector as pgVector,
   type PgTableFn,
@@ -25,6 +28,7 @@ export type JsonColumn = ReturnType<typeof pgJsonb>;
 export type BooleanColumn = ReturnType<typeof pgBoolean>;
 export type TimestampColumn = ReturnType<typeof pgTimestamp>;
 export type IntegerColumn = ReturnType<typeof pgInteger>;
+export type RealColumn = ReturnType<typeof pgReal>;
 
 /**
  * Schema factory to create database-specific column types
@@ -64,12 +68,13 @@ export class SchemaFactory {
     return pgInteger(name);
   }
 
+  real(name: string) {
+    return pgReal(name);
+  }
+
   vector(name: string, dimensions: number) {
-    // Pglite may not support pgvector extension yet
-    // For compatibility, we'll store as JSONB for pglite
-    if (this.dbType === 'pglite') {
-      return pgJsonb(name);
-    }
+    // Both PostgreSQL and PGLite support pgvector extension when properly initialized
+    // PGLite requires the vector extension to be passed during initialization
     return pgVector(name, { dimensions });
   }
 
@@ -91,20 +96,70 @@ export class SchemaFactory {
     return pgForeignKey(config);
   }
 
+  unique(name?: string) {
+    // Both postgres and pglite support UNIQUE constraints
+    return pgUnique(name);
+  }
+
+  primaryKey(config: any) {
+    return pgPrimaryKey(config);
+  }
+
   // Helper for timestamp defaults
   defaultTimestamp() {
-    // Both postgres and pglite support NOW()
+    if (this.dbType === 'pglite') {
+      return sql`CURRENT_TIMESTAMP`;
+    }
     return sql`NOW()`;
   }
 
   // Helper for random UUID generation
   defaultRandomUuid() {
-    // Pglite may not have gen_random_uuid() extension
     if (this.dbType === 'pglite') {
-      // Will use application-level UUID generation
-      return undefined;
+      return undefined; // Application generates UUIDs
     }
     return sql`gen_random_uuid()`;
+  }
+
+  // Helper for JSON array defaults
+  defaultJsonArray() {
+    if (this.dbType === 'pglite') {
+      // PGLite may handle JSON differently
+      return sql`'[]'`;
+    }
+    return sql`'[]'::jsonb`;
+  }
+
+  // Helper for JSON object defaults
+  defaultJsonObject() {
+    if (this.dbType === 'pglite') {
+      // PGLite may handle JSON differently
+      return sql`'{}'`;
+    }
+    return sql`'{}'::jsonb`;
+  }
+
+  // Helper for text array defaults
+  defaultTextArray() {
+    if (this.dbType === 'pglite') {
+      // PGLite may handle array defaults differently
+      return sql`'{}'`;
+    }
+    return sql`'{}'::text[]`;
+  }
+
+  // Helper for JSON field access
+  jsonFieldAccess(column: any, field: string) {
+    // Use the ->> operator which works in both PostgreSQL and PGLite
+    // Field needs to be a string literal
+    return sql`${column}->>${sql.raw(`'${field}'`)}`;
+  }
+
+  // Helper for JSON field existence check
+  jsonFieldExists(column: any, field: string) {
+    // Use a method that works in both PostgreSQL and PGLite
+    // Field needs to be a string literal
+    return sql`${column}->>${sql.raw(`'${field}'`)} IS NOT NULL`;
   }
 }
 
@@ -117,8 +172,180 @@ export function setDatabaseType(dbType: DatabaseType) {
 
 export function getSchemaFactory(): SchemaFactory {
   if (!globalFactory) {
-    // Default to postgres for backward compatibility
     globalFactory = new SchemaFactory('postgres');
   }
   return globalFactory;
+}
+
+/**
+ * Helper function to create a lazy-loaded table proxy
+ * This ensures the table is only created when first accessed
+ * and properly forwards all property access
+ */
+export function createLazyTableProxy<T extends object>(createTableFn: () => T): T {
+  let cachedTable: T | null = null;
+  let isCreating = false;
+
+  // Create a simple object that will be the proxy target
+  const proxyTarget = {
+    _isLazyProxy: true,
+    _createTableFn: createTableFn,
+  } as any;
+
+  return new Proxy(proxyTarget, {
+    get(target, prop, receiver) {
+      // Prevent infinite recursion during table creation
+      if (isCreating) {
+        return undefined;
+      }
+
+      // Handle Symbol.for('drizzle:IsAlias') and other Drizzle internal symbols
+      if (typeof prop === 'symbol') {
+        if (!cachedTable && !isCreating) {
+          isCreating = true;
+          try {
+            cachedTable = createTableFn();
+          } finally {
+            isCreating = false;
+          }
+        }
+        return cachedTable ? (cachedTable as any)[prop] : undefined;
+      }
+
+      // Handle common string properties that might be accessed during inspection
+      if (prop === 'constructor' || prop === 'toString' || prop === 'valueOf') {
+        if (!cachedTable && !isCreating) {
+          isCreating = true;
+          try {
+            cachedTable = createTableFn();
+          } finally {
+            isCreating = false;
+          }
+        }
+        const value = cachedTable ? (cachedTable as any)[prop] : undefined;
+        return typeof value === 'function' ? value.bind(cachedTable) : value;
+      }
+
+      // For all other properties, create the table if needed
+      if (!cachedTable && !isCreating) {
+        isCreating = true;
+        try {
+          cachedTable = createTableFn();
+        } finally {
+          isCreating = false;
+        }
+      }
+
+      if (!cachedTable) {
+        return undefined;
+      }
+
+      const value = Reflect.get(cachedTable, prop, cachedTable);
+
+      // If the value is a function, bind it to the cached table
+      if (typeof value === 'function') {
+        return value.bind(cachedTable);
+      }
+
+      return value;
+    },
+    has(target, prop) {
+      if (isCreating) {
+        return false;
+      }
+      if (!cachedTable && !isCreating) {
+        isCreating = true;
+        try {
+          cachedTable = createTableFn();
+        } finally {
+          isCreating = false;
+        }
+      }
+      return cachedTable ? Reflect.has(cachedTable, prop) : false;
+    },
+    ownKeys(target) {
+      if (isCreating) {
+        return [];
+      }
+      if (!cachedTable && !isCreating) {
+        isCreating = true;
+        try {
+          cachedTable = createTableFn();
+        } finally {
+          isCreating = false;
+        }
+      }
+      return cachedTable ? Reflect.ownKeys(cachedTable) : [];
+    },
+    getOwnPropertyDescriptor(target, prop) {
+      if (isCreating) {
+        return undefined;
+      }
+      if (!cachedTable && !isCreating) {
+        isCreating = true;
+        try {
+          cachedTable = createTableFn();
+        } finally {
+          isCreating = false;
+        }
+      }
+      return cachedTable ? Reflect.getOwnPropertyDescriptor(cachedTable, prop) : undefined;
+    },
+    getPrototypeOf(target) {
+      if (isCreating) {
+        return null;
+      }
+      if (!cachedTable && !isCreating) {
+        isCreating = true;
+        try {
+          cachedTable = createTableFn();
+        } finally {
+          isCreating = false;
+        }
+      }
+      return cachedTable ? Reflect.getPrototypeOf(cachedTable) : null;
+    },
+    set(target, prop, value, receiver) {
+      if (isCreating) {
+        return false;
+      }
+      if (!cachedTable && !isCreating) {
+        isCreating = true;
+        try {
+          cachedTable = createTableFn();
+        } finally {
+          isCreating = false;
+        }
+      }
+      return cachedTable ? Reflect.set(cachedTable, prop, value, cachedTable) : false;
+    },
+    defineProperty(target, prop, descriptor) {
+      if (isCreating) {
+        return false;
+      }
+      if (!cachedTable && !isCreating) {
+        isCreating = true;
+        try {
+          cachedTable = createTableFn();
+        } finally {
+          isCreating = false;
+        }
+      }
+      return cachedTable ? Reflect.defineProperty(cachedTable, prop, descriptor) : false;
+    },
+    deleteProperty(target, prop) {
+      if (isCreating) {
+        return false;
+      }
+      if (!cachedTable && !isCreating) {
+        isCreating = true;
+        try {
+          cachedTable = createTableFn();
+        } finally {
+          isCreating = false;
+        }
+      }
+      return cachedTable ? Reflect.deleteProperty(cachedTable, prop) : false;
+    },
+  }) as T;
 }

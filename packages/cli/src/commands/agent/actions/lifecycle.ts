@@ -42,7 +42,7 @@ export async function startAgent(options: OptionValues): Promise<void> {
     }
 
     // API Endpoint: POST /agents
-    const response: Response = await (async () => {
+    const response = await (async () => {
       const payload: AgentStartPayload = {};
       const headers = { 'Content-Type': 'application/json' };
       const baseUrl = getAgentsBaseUrl(options);
@@ -65,7 +65,7 @@ export async function startAgent(options: OptionValues): Promise<void> {
         const data = await response.json();
 
         if (!data?.data?.character?.name) {
-          logger.error(`Unexpected response format:`, data);
+          logger.error('Unexpected response format:', data);
           return null;
         }
 
@@ -115,16 +115,11 @@ export async function startAgent(options: OptionValues): Promise<void> {
       }
 
       if (characterName) {
-        try {
-          const agentId = await resolveAgentId(characterName, options);
-          return await fetch(`${baseUrl}/${agentId}/start`, {
-            method: 'POST',
-            headers,
-          });
-        } catch (error) {
-          // If agent resolution fails, throw to the outer error handler
-          throw error;
-        }
+        const agentId = await resolveAgentId(characterName, options);
+        return await fetch(`${baseUrl}/${agentId}/start`, {
+          method: 'POST',
+          headers,
+        });
       }
 
       // Default behavior: Start a default agent if no specific option is provided
@@ -184,7 +179,7 @@ export async function startAgent(options: OptionValues): Promise<void> {
               `\nYou can create a new agent with: elizaos create -t agent ${agentName.toLowerCase()}`
             );
           }
-        } catch (error) {
+        } catch {
           // Ignore errors when showing agents
         }
 
@@ -255,7 +250,7 @@ export async function stopAgent(opts: OptionValues): Promise<void> {
             if (pids.length > 0) {
               await execAsync(`echo "${pids.join(' ')}" | xargs -r kill`);
             }
-          } catch (pgrepError) {
+          } catch {
             // pgrep returns exit code 1 when no processes match, which is expected
             // Only log actual errors, not "no processes found"
           }

@@ -149,7 +149,6 @@ Define interaction patterns:
 {
   "username": "handle", // Character's username/handle
   "system": "System prompt text", // Custom system prompt
-  "lore": [], // Additional background/history
   "knowledge": [
     // Knowledge base entries
     "Direct string knowledge",
@@ -158,8 +157,7 @@ Define interaction patterns:
   ],
   "messageExamples": [], // Example conversations
   "postExamples": [], // Example social posts
-  "topics": [], // Areas of expertise
-  "adjectives": [] // Character traits
+  "topics": [] // Areas of expertise
 }
 ```
 
@@ -170,12 +168,6 @@ Define interaction patterns:
 - List of subjects the character is interested in or knowledgeable about
 - Used to guide conversations and generate relevant content
 - Helps maintain character consistency
-
-#### Adjectives
-
-- Words that describe the character's traits and personality
-- Used for generating responses with a consistent tone
-- Can be used in "Mad Libs" style content generation
 
 ---
 
@@ -238,17 +230,9 @@ npx knowledge2character <character-file> <knowledge-file>
 ```json
 {
   "name": "Tech Helper",
-  "modelProvider": "anthropic",
-  "clients": ["discord"],
-  "plugins": [],
-  "settings": {
-    "ragKnowledge": true,
-    "voice": {
-      "model": "en_US-male-medium"
-    }
-  },
+  "plugins": ["@elizaos/plugin-sql", "@elizaos/plugin-anthropic", "@elizaos/plugin-openai"],
+  "settings": {},
   "bio": ["Friendly technical assistant", "Specializes in explaining complex topics simply"],
-  "lore": ["Pioneer in open-source AI development", "Advocate for AI accessibility"],
   "messageExamples": [
     [
       {
@@ -274,7 +258,6 @@ npx knowledge2character <character-file> <knowledge-file>
       "shared": true
     }
   ],
-  "adjectives": ["knowledgeable", "approachable", "practical"],
   "style": {
     "all": ["Clear", "Patient", "Educational"],
     "chat": ["Interactive", "Supportive"],

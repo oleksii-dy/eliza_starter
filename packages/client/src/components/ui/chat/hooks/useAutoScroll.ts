@@ -58,7 +58,7 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
       setScrollState({ isAtBottom: true, autoScrollEnabled: true });
       userHasScrolled.current = false;
     },
-    [stickToBottom.scrollToBottom, smooth]
+    [stickToBottom, smooth]
   );
 
   // Enhanced disable auto-scroll using StickToBottom
@@ -71,7 +71,7 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
         autoScrollEnabled: false, // Disable auto-scroll
       }));
     }
-  }, [stickToBottom.isAtBottom, stickToBottom.stopScroll]);
+  }, [stickToBottom]);
 
   return {
     scrollRef: stickToBottom.scrollRef,

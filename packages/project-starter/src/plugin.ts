@@ -63,7 +63,7 @@ const helloWorldAction: Action = {
     _runtime: IAgentRuntime,
     message: Memory,
     _state: State,
-    _options: any,
+    _options: Record<string, unknown>,
     callback: HandlerCallback,
     _responses: Memory[]
   ) => {
@@ -172,7 +172,9 @@ const plugin: Plugin = {
 
       // Set all environment variables at once
       for (const [key, value] of Object.entries(validatedConfig)) {
-        if (value) process.env[key] = value;
+        if (value) {
+          process.env[key] = value;
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -186,19 +188,19 @@ const plugin: Plugin = {
   models: {
     [ModelType.TEXT_SMALL]: async (
       _runtime,
-      { prompt, stopSequences = [] }: GenerateTextParams
+      { prompt: _prompt, stopSequences: _stopSequences = [] }: GenerateTextParams
     ) => {
       return 'Never gonna give you up, never gonna let you down, never gonna run around and desert you...';
     },
     [ModelType.TEXT_LARGE]: async (
       _runtime,
       {
-        prompt,
-        stopSequences = [],
-        maxTokens = 8192,
-        temperature = 0.7,
-        frequencyPenalty = 0.7,
-        presencePenalty = 0.7,
+        prompt: _prompt,
+        stopSequences: _stopSequences = [],
+        maxTokens: _maxTokens = 8192,
+        temperature: _temperature = 0.7,
+        frequencyPenalty: _frequencyPenalty = 0.7,
+        presencePenalty: _presencePenalty = 0.7,
       }: GenerateTextParams
     ) => {
       return 'Never gonna make you cry, never gonna say goodbye, never gonna tell a lie and hurt you...';
@@ -209,7 +211,7 @@ const plugin: Plugin = {
       name: 'helloworld',
       path: '/helloworld',
       type: 'GET',
-      handler: async (_req: any, res: any) => {
+      handler: async (_req: unknown, res: { json: (data: { message: string }) => void }) => {
         // send a response
         res.json({
           message: 'Hello World!',

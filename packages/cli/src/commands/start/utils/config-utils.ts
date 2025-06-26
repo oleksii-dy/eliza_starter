@@ -12,5 +12,14 @@ export async function loadEnvConfig(): Promise<RuntimeSettings> {
   if (envInfo.paths.envFilePath) {
     dotenv.config({ path: envInfo.paths.envFilePath });
   }
-  return process.env as RuntimeSettings;
+
+  const settings = { ...process.env } as RuntimeSettings;
+
+  // For E2E tests, force PGLite usage by removing PostgreSQL URLs
+  if (process.env.FORCE_PGLITE === 'true') {
+    delete settings.POSTGRES_URL;
+    delete settings.DATABASE_URL;
+  }
+
+  return settings;
 }

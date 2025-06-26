@@ -33,8 +33,7 @@ import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
 export const character: Character = {
   ...defaultCharacter,
   name: "Eliza",
-  plugins: [echoChambersPlugin],
-  clients: [],
+  plugins: [echoChambersPlugin],,
   modelProvider: ModelProviderName.OPENAI,
   settings: {
     secrets: {},
@@ -46,7 +45,6 @@ export const character: Character = {
   lore: [...],
   messageExamples: [...],
   postExamples: [...],
-  adjectives: ["funny", "intelligent", "academic", "insightful"],
   people: [],
   topics: [...],
   style: {...},

@@ -9,7 +9,7 @@ import {
   messageHandlerTemplate,
 } from '@elizaos/core';
 import express from 'express';
-import { sendError } from '../shared/response-utils';
+import { sendError } from '../shared/responseUtils';
 import { convertToAudioBuffer } from './audioBuffer';
 
 /**

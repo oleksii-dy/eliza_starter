@@ -7,7 +7,7 @@ const uuidSchema = z
   .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'Invalid UUID format');
 
 // Message content schema matching the Content interface
-const contentSchema = z
+const _contentSchema = z
   .object({
     text: z.string().optional(),
     thought: z.string().optional(),
@@ -21,12 +21,6 @@ const contentSchema = z
     channelType: z.string().optional(),
   })
   .passthrough(); // Allow additional properties
-
-// MessageExample schema
-const messageExampleSchema = z.object({
-  name: z.string(),
-  content: contentSchema,
-});
 
 // DirectoryItem schema
 const directoryItemSchema = z.object({
@@ -42,12 +36,6 @@ const knowledgeItemSchema = z.union([
     shared: z.boolean().optional(),
   }),
   directoryItemSchema,
-]);
-
-// TemplateType schema - can be string or function (we'll validate as string for JSON)
-const templateTypeSchema = z.union([
-  z.string(),
-  z.function().optional(), // Functions won't be in JSON but allowed in runtime
 ]);
 
 // Style configuration schema
@@ -72,19 +60,33 @@ export const characterSchema = z
     name: z.string().min(1, 'Character name is required'),
     username: z.string().optional(),
     system: z.string().optional(),
-    templates: z.record(templateTypeSchema).optional(),
     bio: z.union([z.string(), z.array(z.string())]),
-    messageExamples: z.array(z.array(messageExampleSchema)).optional(),
+    messageExamples: z
+      .array(
+        z.array(
+          z.object({
+            name: z.string(),
+            content: z.object({
+              text: z.string(),
+              action: z.string().optional(),
+              source: z.string().optional(),
+              url: z.string().optional(),
+              inReplyTo: z.string().optional(),
+              attachments: z.array(z.any()).optional(),
+            }),
+          })
+        )
+      )
+      .optional(),
     postExamples: z.array(z.string()).optional(),
     topics: z.array(z.string()).optional(),
-    adjectives: z.array(z.string()).optional(),
     knowledge: z.array(knowledgeItemSchema).optional(),
     plugins: z.array(z.string()).optional(),
     settings: settingsSchema,
     secrets: secretsSchema,
     style: styleSchema,
   })
-  .strict(); // Only allow known properties
+  .strict(); // Enable strict mode to reject unknown properties
 
 // Validation result type
 export interface CharacterValidationResult {

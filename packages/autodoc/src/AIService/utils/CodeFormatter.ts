@@ -32,7 +32,9 @@ export class CodeFormatter {
       sections.push('#### Classes');
       fileGroup.classes.forEach((c) => {
         sections.push(`##### \`${c.name}\``);
-        if (c.jsDoc) sections.push(this.formatJSDoc(c.jsDoc, c.code));
+        if (c.jsDoc) {
+          sections.push(this.formatJSDoc(c.jsDoc, c.code));
+        }
 
         // Add any methods belonging to this class
         const classMethods = fileGroup.methods.filter((m) => m.className === c.name);
@@ -52,7 +54,9 @@ export class CodeFormatter {
       sections.push('#### Interfaces');
       fileGroup.interfaces.forEach((i) => {
         sections.push(`##### \`${i.name}\``);
-        if (i.jsDoc) sections.push(this.formatJSDoc(i.jsDoc, i.code));
+        if (i.jsDoc) {
+          sections.push(this.formatJSDoc(i.jsDoc, i.code));
+        }
       });
     }
 
@@ -61,7 +65,9 @@ export class CodeFormatter {
       sections.push('#### Types');
       fileGroup.types.forEach((t) => {
         sections.push(`##### \`${t.name}\``);
-        if (t.jsDoc) sections.push(this.formatJSDoc(t.jsDoc, t.code));
+        if (t.jsDoc) {
+          sections.push(this.formatJSDoc(t.jsDoc, t.code));
+        }
       });
     }
 
@@ -70,7 +76,9 @@ export class CodeFormatter {
       sections.push('#### Functions');
       fileGroup.functions.forEach((f) => {
         sections.push(`##### \`${f.name}\``);
-        if (f.jsDoc) sections.push(this.formatJSDoc(f.jsDoc, f.code));
+        if (f.jsDoc) {
+          sections.push(this.formatJSDoc(f.jsDoc, f.code));
+        }
       });
     }
 
@@ -80,7 +88,9 @@ export class CodeFormatter {
       sections.push('#### Methods');
       standaloneMethods.forEach((m) => {
         sections.push(`##### \`${m.name}\``);
-        if (m.jsDoc) sections.push(this.formatJSDoc(m.jsDoc, m.code));
+        if (m.jsDoc) {
+          sections.push(this.formatJSDoc(m.jsDoc, m.code));
+        }
       });
     }
 
@@ -134,7 +144,9 @@ export class CodeFormatter {
   public formatFilePath(filePath: string): string {
     // Get relative path from src directory
     const srcIndex = filePath.indexOf('/src/');
-    if (srcIndex === -1) return filePath;
+    if (srcIndex === -1) {
+      return filePath;
+    }
 
     const relativePath = filePath.slice(srcIndex + 5); // +5 to skip '/src/'
     return relativePath;
@@ -172,7 +184,9 @@ export class CodeFormatter {
    * @returns {string} The truncated code block.
    */
   public truncateCodeBlock(code: string, maxLength = 8000): string {
-    if (code.length <= maxLength) return code;
+    if (code.length <= maxLength) {
+      return code;
+    }
 
     // Extract code blocks
     const codeBlockRegex = /```[\s\S]*?```/g;
