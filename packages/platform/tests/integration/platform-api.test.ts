@@ -62,7 +62,7 @@ describe('Platform API Tests', () => {
     process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://localhost:5432/elizaos_platform_test';
     
     // Initialize database
-    const database = getDatabase();
+    const database = await getDatabase();
     initializeDbProxy(database);
   });
 

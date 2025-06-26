@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { db } from '@/lib/database';
+import { db, getDatabase } from '@/lib/database';
 import { organizations, users, conversations, messages, memories } from '@/lib/database/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,11 +15,11 @@ import type { UUID, Memory, Content } from '@elizaos/core';
 // Mock implementation for testing - in real scenario this would be imported
 class PlatformDatabaseAdapter {
   private organizationId: string;
-  private db: typeof db;
+  private database: any;
 
-  constructor(organizationId: string) {
+  constructor(organizationId: string, database: any) {
     this.organizationId = organizationId;
-    this.db = db;
+    this.database = database;
   }
 
   private convertToElizaUUID(id: string): UUID {
@@ -54,7 +54,7 @@ class PlatformDatabaseAdapter {
     };
 
     if (tableName === 'facts' || tableName === 'memories') {
-      const [inserted] = await this.db
+      const [inserted] = await this.database
         .insert(memories)
         .values({
           ...platformMemory,
@@ -66,7 +66,7 @@ class PlatformDatabaseAdapter {
       
       return this.convertToElizaUUID(inserted.id);
     } else {
-      const [inserted] = await this.db
+      const [inserted] = await this.database
         .insert(messages)
         .values({
           ...platformMemory,
@@ -87,7 +87,7 @@ class PlatformDatabaseAdapter {
   }): Promise<Memory[]> {
     const searchTable = params.tableName === 'facts' ? memories : messages;
     
-    let query = this.db
+    let query = this.database
       .select()
       .from(searchTable)
       .where(eq(searchTable.organizationId, this.organizationId));
@@ -115,12 +115,15 @@ describe('ElizaOS Database Adapter Integration', () => {
   let testAgentId: string;
   let testConversationId: string;
   let adapter: PlatformDatabaseAdapter;
+  let database: any;
 
   beforeEach(async () => {
     // Only run in test environment
     if (process.env.NODE_ENV !== 'test') {
       throw new Error('These tests should only run in test environment');
     }
+
+    database = await getDatabase();
 
     // Generate test IDs
     testOrgId = uuidv4();
@@ -130,17 +133,17 @@ describe('ElizaOS Database Adapter Integration', () => {
 
     // Clean up any existing test data
     try {
-      await db.delete(memories).where(eq(memories.organizationId, testOrgId));
-      await db.delete(messages).where(eq(messages.organizationId, testOrgId));
-      await db.delete(conversations).where(eq(conversations.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.organizationId, testOrgId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database.delete(memories).where(eq(memories.organizationId, testOrgId));
+      await database.delete(messages).where(eq(messages.organizationId, testOrgId));
+      await database.delete(conversations).where(eq(conversations.organizationId, testOrgId));
+      await database.delete(users).where(eq(users.organizationId, testOrgId));
+      await database.delete(organizations).where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
 
     // Create test organization
-    await db.insert(organizations).values({
+    await database.insert(organizations).values({
       id: testOrgId,
       name: 'Test Organization',
       slug: `test-org-${testOrgId}`,
@@ -148,7 +151,7 @@ describe('ElizaOS Database Adapter Integration', () => {
     });
 
     // Create test user
-    await db.insert(users).values({
+    await database.insert(users).values({
       id: testUserId,
       organizationId: testOrgId,
       email: 'test@example.com',
@@ -158,7 +161,7 @@ describe('ElizaOS Database Adapter Integration', () => {
     });
 
     // Create test conversation
-    await db.insert(conversations).values({
+    await database.insert(conversations).values({
       id: testConversationId,
       organizationId: testOrgId,
       agentId: testAgentId,
@@ -167,17 +170,17 @@ describe('ElizaOS Database Adapter Integration', () => {
     });
 
     // Create adapter instance
-    adapter = new PlatformDatabaseAdapter(testOrgId);
+    adapter = new PlatformDatabaseAdapter(testOrgId, database);
   });
 
   afterEach(async () => {
     // Clean up test data
     try {
-      await db.delete(memories).where(eq(memories.organizationId, testOrgId));
-      await db.delete(messages).where(eq(messages.organizationId, testOrgId));
-      await db.delete(conversations).where(eq(conversations.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.organizationId, testOrgId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database.delete(memories).where(eq(memories.organizationId, testOrgId));
+      await database.delete(messages).where(eq(messages.organizationId, testOrgId));
+      await database.delete(conversations).where(eq(conversations.organizationId, testOrgId));
+      await database.delete(users).where(eq(users.organizationId, testOrgId));
+      await database.delete(organizations).where(eq(organizations.id, testOrgId));
     } catch (error) {
       console.warn('Error cleaning up test data:', error);
     }
@@ -353,13 +356,13 @@ describe('ElizaOS Database Adapter Integration', () => {
 
       // Create another org and adapter
       const otherOrgId = uuidv4();
-      await db.insert(organizations).values({
+      await database.insert(organizations).values({
         id: otherOrgId,
         name: 'Other Organization',
         slug: `other-org-${otherOrgId}`,
       });
 
-      const otherAdapter = new PlatformDatabaseAdapter(otherOrgId);
+      const otherAdapter = new PlatformDatabaseAdapter(otherOrgId, database);
 
       // Other adapter should not see our memories
       const otherMemories = await otherAdapter.getMemories({
@@ -378,7 +381,7 @@ describe('ElizaOS Database Adapter Integration', () => {
       expect(ourMemories).toHaveLength(1);
 
       // Cleanup
-      await db.delete(organizations).where(eq(organizations.id, otherOrgId));
+      await database.delete(organizations).where(eq(organizations.id, otherOrgId));
     });
   });
 });

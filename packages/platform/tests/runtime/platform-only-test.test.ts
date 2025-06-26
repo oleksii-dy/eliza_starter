@@ -3,8 +3,8 @@
  * These tests validate the platform functionality without relying on core runtime infrastructure
  */
 
-import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { db } from '@/lib/database';
+import { describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals';
+import { db, getDatabase } from '@/lib/database';
 import { users, organizations, apiKeys, creditTransactions, usageRecords } from '@/lib/database/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,14 +17,17 @@ describe('Platform Database Integration', () => {
   let testUserId: string;
   let testApiKey: string;
   let testApiKeyId: string;
+  let database: any;
 
   beforeAll(async () => {
+    database = await getDatabase();
+
     // Generate UUIDs for test data
     testOrgId = uuidv4();
     testUserId = uuidv4();
 
     // Create test organization
-    await db.insert(organizations).values({
+    await database.insert(organizations).values({
       id: testOrgId,
       name: 'Test Organization',
       slug: `test-org-platform-${Date.now()}`,
@@ -35,7 +38,7 @@ describe('Platform Database Integration', () => {
     });
 
     // Create test user
-    await db.insert(users).values({
+    await database.insert(users).values({
       id: testUserId,
       organizationId: testOrgId,
       email: 'test@platform.com',
@@ -49,11 +52,11 @@ describe('Platform Database Integration', () => {
   afterAll(async () => {
     try {
       // Clean up test data in correct order to handle foreign key constraints
-      await db.delete(usageRecords).where(eq(usageRecords.organizationId, testOrgId));
-      await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-      await db.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.id, testUserId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database.delete(usageRecords).where(eq(usageRecords.organizationId, testOrgId));
+      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
+      await database.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
+      await database.delete(users).where(eq(users.id, testUserId));
+      await database.delete(organizations).where(eq(organizations.id, testOrgId));
     } catch (error) {
       console.warn('Error cleaning up test data:', error);
     }

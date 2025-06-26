@@ -20,6 +20,7 @@ describe('Platform Runtime Integration', () => {
   let testUserId: string;
   let testApiKey: string;
   let testApiKeyId: string;
+  let database: any;
 
   beforeAll(async () => {
     // Ensure test environment
@@ -28,29 +29,31 @@ describe('Platform Runtime Integration', () => {
     }
     
     // Initialize database
-    const database = getDatabase();
+    const database = await getDatabase();
     initializeDbProxy(database);
     
     console.log('Platform runtime integration tests started');
   });
 
   beforeEach(async () => {
+    database = await getDatabase();
+
     // Generate UUIDs for test data
     testOrgId = uuidv4();
     testUserId = uuidv4();
 
     // Clean up test data (if any exist from previous runs)
     try {
-      await db.delete(usageRecords).where(eq(usageRecords.organizationId, testOrgId));
-      await db.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.organizationId, testOrgId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database.delete(usageRecords).where(eq(usageRecords.organizationId, testOrgId));
+      await database.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
+      await database.delete(users).where(eq(users.organizationId, testOrgId));
+      await database.delete(organizations).where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
 
     // Create test organization
-    const [org] = await db.insert(organizations).values({
+    const [org] = await database.insert(organizations).values({
       id: testOrgId,
       name: 'Test Organization',
       slug: `test-org-${testOrgId}`,
@@ -58,7 +61,7 @@ describe('Platform Runtime Integration', () => {
     }).returning();
 
     // Create test user
-    const [user] = await db.insert(users).values({
+    const [user] = await database.insert(users).values({
       id: testUserId,
       organizationId: testOrgId,
       email: 'test@example.com',
@@ -90,11 +93,11 @@ describe('Platform Runtime Integration', () => {
     // Clean up test data in correct order to avoid foreign key violations
     try {
       // Delete dependent records first
-      await db.delete(usageRecords).where(eq(usageRecords.organizationId, testOrgId));
-      await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-      await db.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.organizationId, testOrgId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database.delete(usageRecords).where(eq(usageRecords.organizationId, testOrgId));
+      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
+      await database.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
+      await database.delete(users).where(eq(users.organizationId, testOrgId));
+      await database.delete(organizations).where(eq(organizations.id, testOrgId));
     } catch (error) {
       console.warn('Error cleaning up test data:', error);
     }

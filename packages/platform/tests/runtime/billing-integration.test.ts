@@ -34,7 +34,7 @@ describe('Billing System Integration Tests', () => {
     }
 
     // Initialize database
-    const database = getDatabase();
+    const database = await getDatabase();
     initializeDbProxy(database);
 
     // Try to import CreditService conditionally
@@ -68,7 +68,7 @@ describe('Billing System Integration Tests', () => {
     testUserId = uuidv4();
 
     // Get database instance
-    const database = getDatabase();
+    const database = await getDatabase();
 
     // Clean up any existing test data
     try {
@@ -121,7 +121,7 @@ describe('Billing System Integration Tests', () => {
     if (testOrgId) {
       try {
         // Get database instance
-        const database = getDatabase();
+        const database = await getDatabase();
         
         // Clean up in correct order to avoid foreign key violations
         await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));

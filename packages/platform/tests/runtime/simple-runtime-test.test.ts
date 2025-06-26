@@ -7,7 +7,7 @@ import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { addCredits, deductCredits, getCreditBalance } from '../../lib/server/services/billing-service';
 import { getBillingConfig, getAgentLimitForTier } from '../../lib/billing/config';
 import { CreditService } from '../../lib/billing/credit-service';
-import { db } from '../../lib/database';
+import { db, getDatabase } from '../../lib/database';
 import { organizations, users, creditTransactions } from '../../lib/database/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,12 +15,15 @@ import { v4 as uuidv4 } from 'uuid';
 describe('Simple Runtime Integration', () => {
   let testOrgId: string;
   let testUserId: string;
+  let database: any;
 
   beforeEach(async () => {
     // Only run in test environment
     if (process.env.NODE_ENV !== 'test') {
       throw new Error('These tests should only run in test environment');
     }
+
+    database = await getDatabase();
 
     // Create unique test organization and user IDs with timestamp
     const timestamp = Date.now();
@@ -30,15 +33,15 @@ describe('Simple Runtime Integration', () => {
 
     try {
       // Clean up any existing test data more thoroughly
-      await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.organizationId, testOrgId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
+      await database.delete(users).where(eq(users.organizationId, testOrgId));
+      await database.delete(organizations).where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
 
     // Create test organization with explicit zero balance
-    await db.insert(organizations).values({
+    await database.insert(organizations).values({
       id: testOrgId,
       name: `Test Organization ${timestamp}`,
       slug: `test-org-${timestamp}-${randomId}`,
@@ -48,7 +51,7 @@ describe('Simple Runtime Integration', () => {
     });
 
     // Create test user
-    await db.insert(users).values({
+    await database.insert(users).values({
       id: testUserId,
       organizationId: testOrgId,
       email: `test-${timestamp}@example.com`,
@@ -62,7 +65,7 @@ describe('Simple Runtime Integration', () => {
     if (verifyBalance !== 0) {
       console.warn(`Test setup issue: Expected balance 0, got ${verifyBalance} for org ${testOrgId}`);
       // Force set to zero
-      await db.update(organizations)
+      await database.update(organizations)
         .set({ creditBalance: '0.00' })
         .where(eq(organizations.id, testOrgId));
     }
@@ -73,9 +76,9 @@ describe('Simple Runtime Integration', () => {
     if (testOrgId) {
       try {
         // Delete in reverse dependency order
-        await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-        await db.delete(users).where(eq(users.organizationId, testOrgId));
-        await db.delete(organizations).where(eq(organizations.id, testOrgId));
+        await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
+        await database.delete(users).where(eq(users.organizationId, testOrgId));
+        await database.delete(organizations).where(eq(organizations.id, testOrgId));
         
         // Verify organization was deleted
         const [remainingOrg] = await db
@@ -128,7 +131,7 @@ describe('Simple Runtime Integration', () => {
     test('should add credits to organization', async () => {
       // Force reset balance to zero before testing with multiple attempts
       for (let i = 0; i < 3; i++) {
-        await db.update(organizations)
+        await database.update(organizations)
           .set({ creditBalance: '0.00' })
           .where(eq(organizations.id, testOrgId));
         

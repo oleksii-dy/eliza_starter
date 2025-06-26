@@ -52,13 +52,15 @@ function createMockRequest(
 }
 
 describe('API Integration Tests', () => {
+  let database: any;
+
   beforeAll(async () => {
     // Set up test organization and user in database
-    const db = getDatabase();
+    database = await getDatabase();
 
     try {
       // Create test organization
-      await db.insert(organizations).values({
+      await database.insert(organizations).values({
         id: TEST_ORG_ID,
         name: 'Test Organization',
         slug: `test-org-${Date.now()}`,
@@ -67,7 +69,7 @@ describe('API Integration Tests', () => {
       });
 
       // Create test user
-      await db.insert(users).values({
+      await database.insert(users).values({
         id: TEST_USER_ID,
         organizationId: TEST_ORG_ID,
         email: TEST_USER_EMAIL,
@@ -90,22 +92,22 @@ describe('API Integration Tests', () => {
 
   afterAll(async () => {
     // Clean up test data in correct order to avoid foreign key violations
-    const db = getDatabase();
+    const db = await getDatabase();
     try {
       // Import agents table for cleanup
       const { agents } = require('../../lib/database/schema');
 
       // Delete dependent records first
-      await db.delete(usageRecords).where(eq(usageRecords.organizationId, TEST_ORG_ID));
-      await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, TEST_ORG_ID));
-      await db.delete(apiKeys).where(eq(apiKeys.organizationId, TEST_ORG_ID));
+      await database.delete(usageRecords).where(eq(usageRecords.organizationId, TEST_ORG_ID));
+      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, TEST_ORG_ID));
+      await database.delete(apiKeys).where(eq(apiKeys.organizationId, TEST_ORG_ID));
 
       // Delete agents that reference this user
-      await db.delete(agents).where(eq(agents.organizationId, TEST_ORG_ID));
+      await database.delete(agents).where(eq(agents.organizationId, TEST_ORG_ID));
 
       // Now safe to delete users and organizations
-      await db.delete(users).where(eq(users.id, TEST_USER_ID));
-      await db.delete(organizations).where(eq(organizations.id, TEST_ORG_ID));
+      await database.delete(users).where(eq(users.id, TEST_USER_ID));
+      await database.delete(organizations).where(eq(organizations.id, TEST_ORG_ID));
     } catch (error) {
       console.warn('Test cleanup failed:', error);
     }

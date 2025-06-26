@@ -22,7 +22,7 @@ import {
   getBillingConfig,
   getAgentLimitForTier,
 } from '../../lib/billing/config';
-import { db } from '../../lib/database';
+import { db, getDatabase } from '../../lib/database';
 import {
   organizations,
   users,
@@ -69,6 +69,7 @@ describe('Real Agent Billing Integration', () => {
   let testOrgId: string;
   let testUserId: string;
   let deployedAgentId: any = null;
+  let database: any;
 
   // Real test character for agent deployment
   const testCharacter: any = {
@@ -110,19 +111,21 @@ describe('Real Agent Billing Integration', () => {
     testOrgId = uuidv4();
     testUserId = uuidv4();
 
+    database = await getDatabase();
+
     try {
       // Clean up any existing test data
-      await db
+      await database
         .delete(creditTransactions)
         .where(eq(creditTransactions.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.organizationId, testOrgId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database.delete(users).where(eq(users.organizationId, testOrgId));
+      await database.delete(organizations).where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
 
     // Create test organization
-    await db.insert(organizations).values({
+    await database.insert(organizations).values({
       id: testOrgId,
       name: 'Billing Test Organization',
       slug: `billing-test-${testOrgId}`,
@@ -130,7 +133,7 @@ describe('Real Agent Billing Integration', () => {
     });
 
     // Create test user
-    await db.insert(users).values({
+    await database.insert(users).values({
       id: testUserId,
       organizationId: testOrgId,
       email: 'billing-test@example.com',
@@ -165,8 +168,8 @@ describe('Real Agent Billing Integration', () => {
       await db
         .delete(creditTransactions)
         .where(eq(creditTransactions.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.organizationId, testOrgId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database.delete(users).where(eq(users.organizationId, testOrgId));
+      await database.delete(organizations).where(eq(organizations.id, testOrgId));
     } catch (error) {
       console.warn('Error cleaning up test data:', error);
     }

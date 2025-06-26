@@ -3,7 +3,7 @@
  * Tests actual ElizaOS runtime functionality with platform API keys
  */
 
-import { db } from '@/lib/database';
+import { db, getDatabase } from '@/lib/database';
 import { apiKeys, creditTransactions, organizations, usageRecords, users } from '@/lib/database/schema';
 import { createApiKey } from '@/lib/server/services/api-key-service';
 import { addCredits } from '@/lib/server/services/billing-service';
@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Generate unique UUIDs for each test run
 let TEST_ORG_ID: string;
 let TEST_USER_ID: string;
+let database: any;
 
 describe('API Key Integration with ElizaOS Runtime', () => {
   let runtime: IAgentRuntime | null = null;
@@ -68,18 +69,20 @@ describe('API Key Integration with ElizaOS Runtime', () => {
     TEST_ORG_ID = uuidv4();
     TEST_USER_ID = uuidv4();
 
+    database = await getDatabase();
+
     // Clean up test data (in case of leftover data)
     try {
-      await db.delete(usageRecords).where(eq(usageRecords.organizationId, TEST_ORG_ID));
-      await db.delete(apiKeys).where(eq(apiKeys.organizationId, TEST_ORG_ID));
-      await db.delete(users).where(eq(users.organizationId, TEST_ORG_ID));
-      await db.delete(organizations).where(eq(organizations.id, TEST_ORG_ID));
+      await database.delete(usageRecords).where(eq(usageRecords.organizationId, TEST_ORG_ID));
+      await database.delete(apiKeys).where(eq(apiKeys.organizationId, TEST_ORG_ID));
+      await database.delete(users).where(eq(users.organizationId, TEST_ORG_ID));
+      await database.delete(organizations).where(eq(organizations.id, TEST_ORG_ID));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
 
     // Create test organization
-    const [org] = await db.insert(organizations).values({
+    const [org] = await database.insert(organizations).values({
       id: TEST_ORG_ID,
       name: 'Test Organization',
       slug: TEST_ORG_ID,
@@ -88,7 +91,7 @@ describe('API Key Integration with ElizaOS Runtime', () => {
     testOrgId = org.id;
 
     // Create test user
-    const [user] = await db.insert(users).values({
+    const [user] = await database.insert(users).values({
       id: TEST_USER_ID,
       organizationId: testOrgId,
       email: 'test@example.com',
@@ -122,7 +125,7 @@ describe('API Key Integration with ElizaOS Runtime', () => {
   describe('Database Integration', () => {
     test('should create and retrieve API keys', async () => {
       // Verify API key was created correctly
-      const [retrievedKey] = await db
+      const [retrievedKey] = await database
         .select()
         .from(apiKeys)
         .where(eq(apiKeys.id, testApiKeyId))
@@ -163,7 +166,7 @@ describe('API Key Integration with ElizaOS Runtime', () => {
       expect(usageId).toBeDefined();
 
       // Verify usage was recorded
-      const [usageRecord] = await db
+      const [usageRecord] = await database
         .select()
         .from(usageRecords)
         .where(eq(usageRecords.id, usageId))
@@ -199,7 +202,7 @@ describe('API Key Integration with ElizaOS Runtime', () => {
       expect(parseFloat(transaction.balanceAfter)).toBe(150.0); // 100 + 50
 
       // Verify organization balance was updated
-      const [org] = await db
+      const [org] = await database
         .select()
         .from(organizations)
         .where(eq(organizations.id, testOrgId))
@@ -286,7 +289,7 @@ describe('API Key Integration with ElizaOS Runtime', () => {
         });
 
         // Verify usage was tracked
-        const records = await db
+        const records = await database
           .select()
           .from(usageRecords)
           .where(eq(usageRecords.organizationId, testOrgId));
@@ -312,7 +315,7 @@ describe('API Key Integration with ElizaOS Runtime', () => {
       const startTime = Date.now();
 
       // 1. Validate API key (this would be done by middleware)
-      const [apiKeyRecord] = await db
+      const [apiKeyRecord] = await database
         .select()
         .from(apiKeys)
         .where(eq(apiKeys.id, testApiKeyId)) // Use the known API key ID for testing
@@ -360,7 +363,7 @@ describe('API Key Integration with ElizaOS Runtime', () => {
       expect(usageId).toBeDefined();
 
       // 5. Verify billing integration
-      const [orgAfter] = await db
+      const [orgAfter] = await database
         .select()
         .from(organizations)
         .where(eq(organizations.id, testOrgId))
@@ -370,7 +373,7 @@ describe('API Key Integration with ElizaOS Runtime', () => {
       expect(parseFloat(orgAfter.creditBalance)).toBe(100.0);
 
       // Verify all data was recorded correctly
-      const usageRecordsCount = await db
+      const usageRecordsCount = await database
         .select()
         .from(usageRecords)
         .where(eq(usageRecords.organizationId, testOrgId));
@@ -397,7 +400,7 @@ describe('API Key Integration with ElizaOS Runtime', () => {
       });
 
       // Verify error was tracked
-      const [errorRecord] = await db
+      const [errorRecord] = await database
         .select()
         .from(usageRecords)
         .where(eq(usageRecords.success, false))
@@ -442,7 +445,7 @@ describe('API Key Integration with ElizaOS Runtime', () => {
       expect(results.every(id => typeof id === 'string')).toBe(true);
 
       // Verify all records were created
-      const records = await db
+      const records = await database
         .select()
         .from(usageRecords)
         .where(eq(usageRecords.organizationId, testOrgId));
@@ -466,16 +469,17 @@ describe('API Key Integration with ElizaOS Runtime', () => {
 afterAll(async () => {
   // Clean up test data with proper foreign key constraint handling
   try {
+    if (!database) database = await getDatabase();
     // First, clean up dependent records
-    await db.delete(usageRecords).where(eq(usageRecords.organizationId, TEST_ORG_ID));
+    await database.delete(usageRecords).where(eq(usageRecords.organizationId, TEST_ORG_ID));
 
     // Clean up credit transactions before users (foreign key dependency)
-    await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, TEST_ORG_ID));
+    await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, TEST_ORG_ID));
 
     // Then clean up API keys and users
-    await db.delete(apiKeys).where(eq(apiKeys.organizationId, TEST_ORG_ID));
-    await db.delete(users).where(eq(users.organizationId, TEST_ORG_ID));
-    await db.delete(organizations).where(eq(organizations.id, TEST_ORG_ID));
+    await database.delete(apiKeys).where(eq(apiKeys.organizationId, TEST_ORG_ID));
+    await database.delete(users).where(eq(users.organizationId, TEST_ORG_ID));
+    await database.delete(organizations).where(eq(organizations.id, TEST_ORG_ID));
   } catch (error) {
     console.warn('Error cleaning up test data:', error);
   }

@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
-import { db } from '@/lib/database';
+import { db, getDatabase } from '@/lib/database';
 import { organizations, users, creditTransactions } from '@/lib/database/schema';
 import { getCreditBalance, addCredits, deductCredits } from '@/lib/server/services/billing-service';
 import { eq } from 'drizzle-orm';
@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 describe('Core Billing System Tests', () => {
   let testOrgId: string;
   let testUserId: string;
+  let database: any;
 
   beforeAll(async () => {
     // Ensure test environment
@@ -23,12 +24,14 @@ describe('Core Billing System Tests', () => {
   });
 
   beforeEach(async () => {
+    database = await getDatabase();
+
     // Generate UUIDs for test data
     testOrgId = uuidv4();
     testUserId = uuidv4();
 
     // Create test organization
-    const [org] = await db.insert(organizations).values({
+    const [org] = await database.insert(organizations).values({
       id: testOrgId,
       name: 'Test Billing Organization',
       slug: 'test-billing-org',
@@ -39,7 +42,7 @@ describe('Core Billing System Tests', () => {
     }).returning();
 
     // Create test user
-    const [user] = await db.insert(users).values({
+    const [user] = await database.insert(users).values({
       id: testUserId,
       organizationId: testOrgId,
       email: 'billing-test@example.com',
@@ -53,9 +56,9 @@ describe('Core Billing System Tests', () => {
     // Clean up test data if IDs are defined
     if (testOrgId) {
       try {
-        await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-        await db.delete(users).where(eq(users.organizationId, testOrgId));
-        await db.delete(organizations).where(eq(organizations.id, testOrgId));
+        await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
+        await database.delete(users).where(eq(users.organizationId, testOrgId));
+        await database.delete(organizations).where(eq(organizations.id, testOrgId));
       } catch (error) {
         // Ignore cleanup errors - test data may not exist
       }
@@ -65,7 +68,7 @@ describe('Core Billing System Tests', () => {
   afterAll(async () => {
     // Close database connections to prevent hanging tests
     try {
-      await db.$client?.end?.();
+      await database.$client?.end?.();
     } catch (error) {
       // Ignore connection close errors
     }

@@ -10,7 +10,7 @@ import { validateApiKey, createApiKey } from '../../lib/server/services/api-key-
 import { addCredits, deductCredits, getCreditBalance } from '../../lib/server/services/billing-service';
 import { setDatabaseContext, clearDatabaseContext } from '../../lib/database/context';
 import { CreditService } from '../../lib/billing/credit-service';
-import { db, initializeDatabase } from '../../lib/database';
+import { db, getDatabase, initializeDatabase } from '../../lib/database';
 import { organizations, users, apiKeys, creditTransactions } from '../../lib/database/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
@@ -20,6 +20,7 @@ describe('Comprehensive Security Testing', () => {
   let testOrgId: string;
   let testUserId: string;
   let testApiKey: string;
+  let database: any;
 
   beforeEach(async () => {
     // Only run in test environment
@@ -28,6 +29,7 @@ describe('Comprehensive Security Testing', () => {
     }
 
     // Initialize database
+    database = await getDatabase();
     await initializeDatabase();
 
     testOrgId = uuidv4();
@@ -35,16 +37,16 @@ describe('Comprehensive Security Testing', () => {
 
     // Clean up any existing test data
     try {
-      await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-      await db.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.organizationId, testOrgId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
+      await database.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
+      await database.delete(users).where(eq(users.organizationId, testOrgId));
+      await database.delete(organizations).where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors
     }
 
     // Create test organization
-    await db.insert(organizations).values({
+    await database.insert(organizations).values({
       id: testOrgId,
       name: 'Security Test Org',
       slug: `security-test-${testOrgId}`,
@@ -52,7 +54,7 @@ describe('Comprehensive Security Testing', () => {
     });
 
     // Create test user
-    await db.insert(users).values({
+    await database.insert(users).values({
       id: testUserId,
       organizationId: testOrgId,
       email: 'security-test@example.com',
@@ -75,10 +77,10 @@ describe('Comprehensive Security Testing', () => {
 
   afterEach(async () => {
     try {
-      await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-      await db.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.organizationId, testOrgId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
+      await database.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
+      await database.delete(users).where(eq(users.organizationId, testOrgId));
+      await database.delete(organizations).where(eq(organizations.id, testOrgId));
     } catch (error) {
       console.warn('Security test cleanup error:', error);
     }
@@ -308,7 +310,7 @@ describe('Comprehensive Security Testing', () => {
     test('should enforce organization isolation', async () => {
       // Create a second organization
       const otherOrgId = uuidv4();
-      await db.insert(organizations).values({
+      await database.insert(organizations).values({
         id: otherOrgId,
         name: 'Other Test Org',
         slug: `other-test-${otherOrgId}`,
@@ -332,7 +334,7 @@ describe('Comprehensive Security Testing', () => {
         await clearDatabaseContext();
       } finally {
         // Clean up
-        await db.delete(organizations).where(eq(organizations.id, otherOrgId));
+        await database.delete(organizations).where(eq(organizations.id, otherOrgId));
       }
     });
 
@@ -341,7 +343,7 @@ describe('Comprehensive Security Testing', () => {
       // This would typically check role-based access control
 
       const regularUser = uuidv4();
-      await db.insert(users).values({
+      await database.insert(users).values({
         id: regularUser,
         organizationId: testOrgId,
         email: 'regular@example.com',
@@ -361,7 +363,7 @@ describe('Comprehensive Security Testing', () => {
         // This depends on implementation - some operations might require admin role
         await clearDatabaseContext();
       } finally {
-        await db.delete(users).where(eq(users.id, regularUser));
+        await database.delete(users).where(eq(users.id, regularUser));
       }
     });
   });

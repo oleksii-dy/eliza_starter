@@ -25,7 +25,7 @@ describe('Credit Middleware Integration Tests', () => {
     }
     
     // Initialize database
-    const database = getDatabase();
+    const database = await getDatabase();
     initializeDbProxy(database);
     
     console.log('Credit middleware integration tests started');
@@ -37,7 +37,7 @@ describe('Credit Middleware Integration Tests', () => {
     testUserId = uuidv4();
 
     // Use the same database instance throughout
-    const database = getDatabase();
+    const database = await getDatabase();
     
     // Clean up any existing test data
     try {
@@ -87,7 +87,7 @@ describe('Credit Middleware Integration Tests', () => {
     // Clean up test data if IDs are defined
     if (testOrgId) {
       try {
-        const database = getDatabase();
+        const database = await getDatabase();
         await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
         await database.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
         await database.delete(users).where(eq(users.organizationId, testOrgId));
@@ -231,7 +231,7 @@ describe('Credit Middleware Integration Tests', () => {
       console.log('Insufficient test org ID:', insufficientOrgId);
       console.log('Main test org ID:', testOrgId);
       
-      const database = getDatabase();
+      const database = await getDatabase();
       
       // First cleanup any existing data for this org (shouldn't exist but safety first)
       try {
