@@ -96,7 +96,7 @@ mock.module('socket.io', () => ({
 }));
 
 // Skip socket.io initialization for API tests
-mock.module('../src/socketio/index', () => ({
+mock.module('../src/services/websocket', () => ({
   setupSocketIO: jest.fn(() => ({
     on: jest.fn(),
     emit: jest.fn(),

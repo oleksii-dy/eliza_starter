@@ -8,12 +8,11 @@ import {
   type UUID,
 } from '@elizaos/core';
 import express from 'express';
-import internalMessageBus from '../../bus';
+import internalMessageBus from '../../utils/bus.js';
 import type { AgentServer } from '../../index';
-import type { MessageServiceStructure as MessageService } from '../../types';
+import type { MessageServiceStructure as MessageService } from '../../types/messaging';
 import { createUploadRateLimit, createFileSystemRateLimit } from '../shared/middleware';
 import { MAX_FILE_SIZE, ALLOWED_MEDIA_MIME_TYPES } from '../shared/constants';
-import { cleanupUploadedFile } from '../shared/file-utils';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
@@ -28,11 +27,11 @@ const channelUploadMiddleware = multer({
     fileSize: MAX_FILE_SIZE,
     files: 1,
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     if (ALLOWED_MEDIA_MIME_TYPES.includes(file.mimetype as any)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type'), false);
+      cb(new Error('Invalid file type'));
     }
   },
 });

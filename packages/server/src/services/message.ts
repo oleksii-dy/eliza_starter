@@ -11,7 +11,7 @@ import {
   type Plugin,
   type UUID,
 } from '@elizaos/core';
-import internalMessageBus from '../bus'; // Import the bus
+import internalMessageBus from '../utils/bus.js'; // Import the bus
 
 // This interface defines the structure of messages coming from the server
 export interface MessageServiceMessage {

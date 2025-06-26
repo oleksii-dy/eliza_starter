@@ -5,7 +5,7 @@
  * to create a custom agent server without the CLI dependency.
  */
 
-import { AgentServer, ServerOptions, ServerMiddleware } from '@elizaos/server';
+import { createElizaServer, type ServerFactoryOptions, type ServerMiddleware } from '@elizaos/server';
 import { logger } from '@elizaos/core';
 import { Request, Response, NextFunction } from 'express';
 
@@ -26,7 +26,7 @@ const customLoggingMiddleware: ServerMiddleware = (
 };
 
 // Server configuration
-const serverOptions: ServerOptions = {
+const serverOptions: ServerFactoryOptions = {
   dataDir: './data/eliza-server',
   middlewares: [customLoggingMiddleware],
   // postgresUrl: process.env.DATABASE_URL, // Optional PostgreSQL
@@ -36,15 +36,11 @@ async function createStandaloneServer() {
   try {
     logger.info('🚀 Creating standalone ElizaOS server...');
 
-    // Create server instance
-    const server = new AgentServer();
-
-    // Initialize with options
-    logger.info('⚙️  Initializing server...');
-    await server.initialize(serverOptions);
+    // Create server instance using factory pattern
+    const serverInstance = await createElizaServer(serverOptions);
 
     // Register custom middleware if needed
-    server.registerMiddleware((req, res, next) => {
+    serverInstance.server.registerMiddleware((req, res, next) => {
       // Custom request processing
       res.setHeader('X-Powered-By', 'ElizaOS-Standalone');
       next();
@@ -52,7 +48,7 @@ async function createStandaloneServer() {
 
     logger.success('✅ Server initialized successfully');
 
-    return server;
+    return serverInstance;
   } catch (error) {
     logger.error('❌ Failed to create server:', error);
     throw error;
@@ -61,26 +57,19 @@ async function createStandaloneServer() {
 
 async function startServer() {
   try {
-    const server = await createStandaloneServer();
+    const serverInstance = await createStandaloneServer();
 
-    // Start server
+    // Start server using the factory's start method
     const port = parseInt(process.env.PORT || '3000');
     const host = process.env.HOST || 'localhost';
 
     logger.info(`🌐 Starting server on ${host}:${port}...`);
-    server.start(port);
-
-    // Log available endpoints
-    logger.info('📡 Available endpoints:');
-    logger.info(`   Dashboard: http://${host}:${port}/`);
-    logger.info(`   API: http://${host}:${port}/api/`);
-    logger.info(`   Health: http://${host}:${port}/api/health`);
-    logger.info(`   WebSocket: ws://${host}:${port}/`);
+    serverInstance.start(port, host);
 
     // Graceful shutdown
     const gracefulShutdown = async () => {
       logger.info('🛑 Graceful shutdown initiated...');
-      await server.stop();
+      await serverInstance.stop();
       logger.success('✅ Server stopped successfully');
       process.exit(0);
     };

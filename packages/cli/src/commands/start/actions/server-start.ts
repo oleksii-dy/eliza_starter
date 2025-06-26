@@ -1,7 +1,13 @@
 import { getElizaCharacter } from '@/src/characters/eliza';
-import { AgentServer, jsonToCharacter, loadCharacterTryPath } from '@elizaos/server';
-import { configureDatabaseSettings, findNextAvailablePort, resolvePgliteDir } from '@/src/utils';
-import { logger, type Character, type ProjectAgent } from '@elizaos/core';
+import { 
+  createElizaServer, 
+  jsonToCharacter, 
+  loadCharacterTryPath,
+  findNextAvailablePort,
+  type ServerFactoryOptions 
+} from '@elizaos/server';
+import { configureDatabaseSettings, resolvePgliteDir } from '@/src/utils';
+import { type Character, type ProjectAgent, logger } from '@elizaos/core';
 import { startAgent, stopAgent } from './agent-start';
 
 /**
@@ -17,29 +23,30 @@ export interface ServerStartOptions {
 /**
  * Start the agents and server
  *
- * Initializes the database, creates the server instance, configures port settings, and starts the specified agents or default Eliza character.
+ * Uses the new factory pattern to create a configured server instance and starts the specified agents or default Eliza character.
  */
 export async function startAgents(options: ServerStartOptions): Promise<void> {
-  const postgresUrl = await configureDatabaseSettings(options.configure);
-  if (postgresUrl) process.env.POSTGRES_URL = postgresUrl;
+  // Create server using the factory pattern with CLI-specific configuration
+  const serverInstance = await createElizaServer({
+    port: options.port,
+    configure: options.configure,
+    configureDatabaseFn: configureDatabaseSettings,
+    resolveDataDirFn: resolvePgliteDir,
+  });
 
-  const pgliteDataDir = postgresUrl ? undefined : await resolvePgliteDir();
+  // Get the underlying server for compatibility with agent-start functions
+  const server = serverInstance.server;
 
-  const server = new AgentServer();
-  await server.initialize({ dataDir: pgliteDataDir, postgresUrl: postgresUrl || undefined });
-
-  server.startAgent = (character) => startAgent(character, server);
-  server.stopAgent = (runtime) => stopAgent(runtime, server);
+  // Add character loading functions to server for compatibility
+  server.startAgent = (character: Character) => startAgent(character, server);
+  server.stopAgent = (runtime: any) => stopAgent(runtime, server);
   server.loadCharacterTryPath = loadCharacterTryPath;
   server.jsonToCharacter = jsonToCharacter;
 
-  const desiredPort = options.port || Number.parseInt(process.env.SERVER_PORT || '3000');
-  const serverPort = await findNextAvailablePort(desiredPort);
-  if (serverPort !== desiredPort) {
-    logger.warn(`Port ${desiredPort} is in use, using port ${serverPort} instead`);
-  }
-  process.env.SERVER_PORT = serverPort.toString();
-  server.start(serverPort);
+  // Start the server (port already resolved by factory)
+  const serverOptions = serverInstance.getServerOptions();
+  logger.info(`Starting server on ${serverOptions.host}:${serverOptions.port}`);
+  serverInstance.start();
 
   // If we have project agents, start them with their init functions
   if (options.projectAgents && options.projectAgents.length > 0) {

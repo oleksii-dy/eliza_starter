@@ -2,12 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import multer from 'multer';
 import { validateUuid, logger } from '@elizaos/core';
-import { createSecureUploadDir, sanitizeFilename } from './api/shared/file-utils.js';
+import { createSecureUploadDir, sanitizeFilename } from '../api/shared/file-utils.js';
 import {
   MAX_FILE_SIZE,
   ALLOWED_AUDIO_MIME_TYPES,
   ALLOWED_MEDIA_MIME_TYPES,
-} from './api/shared/constants.js';
+} from '../api/shared/constants.js';
 
 // Helper function to generate secure filename
 export function generateSecureFilename(originalName: string): string {
@@ -43,11 +43,11 @@ export const agentAudioUpload = () =>
       fileSize: MAX_FILE_SIZE,
       files: 1,
     },
-    fileFilter: (req, file, cb) => {
+    fileFilter: (_req, file, cb) => {
       if (ALLOWED_AUDIO_MIME_TYPES.includes(file.mimetype as any)) {
         cb(null, true);
       } else {
-        cb(new Error('Invalid audio file type'), false);
+        cb(new Error('Invalid audio file type'));
       }
     },
   });
@@ -59,11 +59,11 @@ export const agentMediaUpload = () =>
       fileSize: MAX_FILE_SIZE,
       files: 1,
     },
-    fileFilter: (req, file, cb) => {
+    fileFilter: (_req, file, cb) => {
       if (ALLOWED_MEDIA_MIME_TYPES.includes(file.mimetype as any)) {
         cb(null, true);
       } else {
-        cb(new Error('Invalid media file type'), false);
+        cb(new Error('Invalid media file type'));
       }
     },
   });
@@ -76,11 +76,11 @@ export const channelUpload = () =>
       fileSize: MAX_FILE_SIZE,
       files: 1,
     },
-    fileFilter: (req, file, cb) => {
+    fileFilter: (_req, file, cb) => {
       if (ALLOWED_MEDIA_MIME_TYPES.includes(file.mimetype as any)) {
         cb(null, true);
       } else {
-        cb(new Error('Invalid file type'), false);
+        cb(new Error('Invalid file type'));
       }
     },
   });

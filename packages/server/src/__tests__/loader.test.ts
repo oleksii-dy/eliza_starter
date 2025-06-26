@@ -12,7 +12,7 @@ import {
   loadCharacterTryPath,
   loadCharacters,
   hasValidRemoteUrls,
-} from '../loader';
+} from '../utils/character-loader.js';
 import { logger, UUID } from '@elizaos/core';
 
 const TEST_CHARACTER_URL =

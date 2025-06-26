@@ -104,8 +104,8 @@ mock.module('socket.io', () => ({
   })),
 }));
 
-// Mock the socketio module
-mock.module('../src/socketio/index', () => ({
+// Mock the websocket module
+mock.module('../src/services/websocket', () => ({
   setupSocketIO: jest.fn(() => ({
     on: jest.fn(),
     emit: jest.fn(),

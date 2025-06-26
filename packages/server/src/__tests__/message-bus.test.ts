@@ -7,10 +7,10 @@ import { MessageBusService } from '../services/message';
 import { createMockAgentRuntime } from './test-utils/mocks';
 import { EventType, type IAgentRuntime, type UUID } from '@elizaos/core';
 import { logger } from '@elizaos/core';
-import internalMessageBus from '../bus';
+import internalMessageBus from '../utils/bus.js';
 
 // Mock the internal message bus
-mock.module('../bus', () => ({
+mock.module('../utils/bus', () => ({
   default: {
     on: jest.fn(),
     off: jest.fn(),
