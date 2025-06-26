@@ -15,22 +15,41 @@ export function loadResearchConfig(runtime: IAgentRuntime): ResearchConfig {
   }
 
   const config: ResearchConfig = {
-    maxSearchResults: parseInt(runtime.getSetting('RESEARCH_MAX_RESULTS') || '50'),
-    maxDepth: parseInt(runtime.getSetting('RESEARCH_MAX_DEPTH') || '5'),
-    timeout: parseInt(runtime.getSetting('RESEARCH_TIMEOUT') || '600000'), // 10 minutes
-    enableCitations: runtime.getSetting('RESEARCH_ENABLE_CITATIONS') !== 'false',
+    maxSearchResults: parseInt(
+      runtime.getSetting('RESEARCH_MAX_RESULTS') || '50',
+      10
+    ),
+    maxDepth: parseInt(runtime.getSetting('RESEARCH_MAX_DEPTH') || '5', 10),
+    timeout: parseInt(runtime.getSetting('RESEARCH_TIMEOUT') || '600000', 10), // 10 minutes
+    enableCitations:
+      runtime.getSetting('RESEARCH_ENABLE_CITATIONS') !== 'false',
     enableImages: runtime.getSetting('RESEARCH_ENABLE_IMAGES') === 'true',
-    searchProviders: (runtime.getSetting('RESEARCH_SEARCH_PROVIDERS') || 'web,academic')
+    searchProviders: (
+      runtime.getSetting('RESEARCH_SEARCH_PROVIDERS') || 'web,academic'
+    )
       .split(',')
       .map((s: string) => s.trim()),
     language: runtime.getSetting('RESEARCH_LANGUAGE') || 'en',
-    researchDepth: parseResearchDepth(runtime.getSetting('RESEARCH_DEPTH') || 'deep'),
-    domain: parseResearchDomain(runtime.getSetting('RESEARCH_DOMAIN') || 'general'),
-    evaluationEnabled: runtime.getSetting('RESEARCH_EVALUATION_ENABLED') !== 'false',
+    researchDepth: parseResearchDepth(
+      runtime.getSetting('RESEARCH_DEPTH') || 'deep'
+    ),
+    domain: parseResearchDomain(
+      runtime.getSetting('RESEARCH_DOMAIN') || 'general'
+    ),
+    evaluationEnabled:
+      runtime.getSetting('RESEARCH_EVALUATION_ENABLED') !== 'false',
     cacheEnabled: runtime.getSetting('RESEARCH_CACHE_ENABLED') !== 'false',
-    parallelSearches: parseInt(runtime.getSetting('RESEARCH_PARALLEL_SEARCHES') || '10'),
-    retryAttempts: parseInt(runtime.getSetting('RESEARCH_RETRY_ATTEMPTS') || '3'),
-    qualityThreshold: parseFloat(runtime.getSetting('RESEARCH_QUALITY_THRESHOLD') || '0.7'),
+    parallelSearches: parseInt(
+      runtime.getSetting('RESEARCH_PARALLEL_SEARCHES') || '10',
+      10
+    ),
+    retryAttempts: parseInt(
+      runtime.getSetting('RESEARCH_RETRY_ATTEMPTS') || '3',
+      10
+    ),
+    qualityThreshold: parseFloat(
+      runtime.getSetting('RESEARCH_QUALITY_THRESHOLD') || '0.7'
+    ),
   };
 
   // Validate configuration
@@ -60,7 +79,9 @@ function parseResearchDepth(value: string): ResearchDepth {
     case 'phd_level':
       return ResearchDepth.PHD_LEVEL;
     default:
-      logger.warn(`[ResearchConfig] Unknown research depth: ${value}, defaulting to DEEP`);
+      logger.warn(
+        `[ResearchConfig] Unknown research depth: ${value}, defaulting to DEEP`
+      );
       return ResearchDepth.DEEP;
   }
 }
@@ -70,12 +91,17 @@ function parseResearchDomain(value: string): ResearchDomain {
 
   // Try to match to enum values
   for (const [key, enumValue] of Object.entries(ResearchDomain)) {
-    if (key.toLowerCase() === normalized || enumValue.toLowerCase() === normalized) {
+    if (
+      key.toLowerCase() === normalized ||
+      enumValue.toLowerCase() === normalized
+    ) {
       return enumValue as ResearchDomain;
     }
   }
 
-  logger.warn(`[ResearchConfig] Unknown research domain: ${value}, defaulting to GENERAL`);
+  logger.warn(
+    `[ResearchConfig] Unknown research domain: ${value}, defaulting to GENERAL`
+  );
   return ResearchDomain.GENERAL;
 }
 
@@ -92,7 +118,9 @@ function validateResearchConfig(config: ResearchConfig): void {
 
   if (config.timeout < 30000 || config.timeout > 1800000) {
     // 30 seconds to 30 minutes
-    errors.push('timeout must be between 30000ms (30 seconds) and 1800000ms (30 minutes)');
+    errors.push(
+      'timeout must be between 30000ms (30 seconds) and 1800000ms (30 minutes)'
+    );
   }
 
   if (config.parallelSearches < 1 || config.parallelSearches > 50) {
@@ -112,14 +140,19 @@ function validateResearchConfig(config: ResearchConfig): void {
   }
 
   if (errors.length > 0) {
-    throw new Error(`[ResearchConfig] Invalid configuration: ${errors.join(', ')}`);
+    throw new Error(
+      `[ResearchConfig] Invalid configuration: ${errors.join(', ')}`
+    );
   }
 }
 
 /**
  * Validates that required environment variables are available for configured search providers
  */
-export function validateSearchProviderConfig(config: ResearchConfig, runtime: IAgentRuntime): void {
+export function validateSearchProviderConfig(
+  config: ResearchConfig,
+  runtime: IAgentRuntime
+): void {
   logger.info('[ResearchConfig] Validating search provider configuration');
 
   const missingKeys: string[] = [];
@@ -148,8 +181,15 @@ export function validateSearchProviderConfig(config: ResearchConfig, runtime: IA
         break;
       case 'web':
         // Check if at least one web search provider is available
-        const webProviders = ['TAVILY_API_KEY', 'SERPER_API_KEY', 'EXA_API_KEY', 'SERPAPI_API_KEY'];
-        const hasWebProvider = webProviders.some((key) => runtime.getSetting(key));
+        const webProviders = [
+          'TAVILY_API_KEY',
+          'SERPER_API_KEY',
+          'EXA_API_KEY',
+          'SERPAPI_API_KEY',
+        ];
+        const hasWebProvider = webProviders.some((key) =>
+          runtime.getSetting(key)
+        );
         if (!hasWebProvider) {
           missingKeys.push(`At least one of: ${webProviders.join(', ')}`);
         }

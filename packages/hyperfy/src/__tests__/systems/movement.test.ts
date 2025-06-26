@@ -129,7 +129,7 @@ describe('MovementSystem', () => {
       // Start running movement
       movementSystem.moveEntity(mockPlayer.id, { x: 20, y: 0, z: 20 });
 
-      // Simulate update with delta time
+      // Simulate update with _delta time
       movementSystem.update(1.0); // 1 second
 
       // Energy should be drained

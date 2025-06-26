@@ -1,34 +1,35 @@
 const emitters: { [key: string]: ParticleEmitter | null } = {};
 
 import { DEG2RAD } from '../core/extras/general';
-import { Vector3, Quaternion, Matrix4, Color } from '../core/extras/three';
+import { THREE } from '../core/extras/three';
+import { Vector3Enhanced } from '../core/extras/Vector3Enhanced';
 
-const v1 = new Vector3();
-const v2 = new Vector3();
-const v3 = new Vector3();
-const v4 = new Vector3();
-const v5 = new Vector3();
-const q1 = new Quaternion();
-const q2 = new Quaternion();
-const q3 = new Quaternion();
-const m1 = new Matrix4();
-const color1 = new Color();
+const v1 = new Vector3Enhanced();
+const v2 = new Vector3Enhanced();
+const v3 = new Vector3Enhanced();
+const v4 = new Vector3Enhanced();
+const _v5 = new Vector3Enhanced();
+const q1 = new THREE.Quaternion();
+const q2 = new THREE.Quaternion();
+const _q3 = new THREE.Quaternion();
+const m1 = new THREE.Matrix4();
+const color1 = new THREE.Color();
 
-const xAxis = new Vector3(1, 0, 0);
-const yAxis = new Vector3(0, 1, 0);
-const zAxis = new Vector3(0, 0, 1);
+const xAxis = new Vector3Enhanced(1, 0, 0);
+const yAxis = new Vector3Enhanced(0, 1, 0);
+const zAxis = new Vector3Enhanced(0, 0, 1);
 
 interface Particle {
   age: number
   life: number
-  direction: Vector3
-  velocity: Vector3
+  direction: Vector3Enhanced
+  velocity: Vector3Enhanced
   distance: number
   speed: number
-  finalPosition: Vector3
+  finalPosition: Vector3Enhanced
   frameTime: number
   uv: number[]
-  position: Vector3
+  position: Vector3Enhanced
   rotation: number
   startRotation: number
   size: number
@@ -48,7 +49,7 @@ interface ParticleEmitter {
 }
 
 interface UpdateData {
-  delta: number
+  _delta: number
   camPosition: number[]
   matrixWorld: number[]
   aPosition: Float32Array
@@ -143,14 +144,14 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
   let elapsed = 0;
   const duration = config.duration;
   let newParticlesByTime = 0;
-  const newParticlesByDist = 0;
+  const _newParticlesByDist = 0;
   let emitting = config.emitting;
   let bursts = config.bursts.slice();
   let ended = false;
   const rateOverDistance = config.rateOverDistance;
   let distanceRemainder = 0;
-  let lastWorldPos: Vector3 | null = null;
-  const moveDir = new Vector3();
+  let lastWorldPos: Vector3Enhanced | null = null;
+  const moveDir = new Vector3Enhanced();
 
   const particles: Particle[] = [];
 
@@ -159,15 +160,15 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
     particles.push({
       age: 0,
       life: 0,
-      direction: new Vector3(),
-      velocity: new Vector3(),
+      direction: new Vector3Enhanced(),
+      velocity: new Vector3Enhanced(),
       distance: 0,
       speed: 10,
-      finalPosition: new Vector3(),
+      finalPosition: new Vector3Enhanced(),
       frameTime: 0,
       uv: [0, 0, 1, 1],
 
-      position: new Vector3(),
+      position: new Vector3Enhanced(),
       rotation: 0,
       startRotation: 0,
       size: 1,
@@ -192,9 +193,9 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
 
   const shape = createShape(config.shape);
   const spritesheet = createSpritesheet(config.spritesheet);
-  const force = config.force ? new Vector3().fromArray(config.force) : null;
-  const velocityLinear = config.velocityLinear ? new Vector3().fromArray(config.velocityLinear) : null;
-  const velocityOrbital = config.velocityOrbital ? new Vector3().fromArray(config.velocityOrbital) : null;
+  const force = config.force ? new Vector3Enhanced().fromArray(config.force) : null;
+  const velocityLinear = config.velocityLinear ? new Vector3Enhanced().fromArray(config.velocityLinear) : null;
+  const velocityOrbital = config.velocityOrbital ? new Vector3Enhanced().fromArray(config.velocityOrbital) : null;
   const velocityRadial = config.velocityRadial || null;
 
   const sizeOverLife = config.sizeOverLife ? createNumberCurve(config.sizeOverLife) : null;
@@ -252,7 +253,7 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
   }
 
   function update({
-    delta,
+    _delta,
     camPosition,
     matrixWorld,
     aPosition,
@@ -264,12 +265,12 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
     aEmissive,
     aUV,
   }: any) {
-    delta *= config.timescale;
+    _delta *= config.timescale;
     // console.time('update')
     // console.log('m1', matrixWorld)
     matrixWorld = m1.fromArray(matrixWorld);
     camPosition = v1.fromArray(camPosition);
-    elapsed += delta;
+    elapsed += _delta;
     // track move direction and distance
     const currWorldPos = v2.setFromMatrixPosition(matrixWorld);
     let distanceMoved;
@@ -293,7 +294,7 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
 
     // emit over time
     if (emitting) {
-      newParticlesByTime += config.rate * delta;
+      newParticlesByTime += config.rate * _delta;
       const amount = Math.floor(newParticlesByTime);
       if (amount > 0) {emit({ amount, matrixWorld });}
       newParticlesByTime -= amount;
@@ -324,10 +325,10 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
           const lerpFactor = (i + 1) / (particlesToEmit + 1);
 
           // Create a position vector along the path
-          const emitPosition = new Vector3().copy(lastWorldPos).lerp(currWorldPos, lerpFactor);
+          const emitPosition = new Vector3Enhanced().copy(lastWorldPos).lerp(currWorldPos, lerpFactor);
 
           // Create a temporary matrix with this position
-          const tempMatrix = new Matrix4().copy(matrixWorld);
+          const tempMatrix = new THREE.Matrix4().copy(matrixWorld);
           tempMatrix.setPosition(emitPosition as any);
 
           // Emit a single particle at this position
@@ -356,7 +357,7 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
     }
     // update particles
     for (const particle of particles) {
-      particle.age += delta;
+      particle.age += _delta;
       // skip if dead
       if (particle.age >= particle.life) {continue;}
       // get life progress (0 to 1)
@@ -364,12 +365,12 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
       // apply force (acceleration) to velocity
       if (force) {
         // F = ma, so a = F/m, but since we don't track mass, just use F as acceleration
-        v3.copy(force).multiplyScalar(delta);
+        v3.copy(force).multiplyScalar(_delta);
         particle.velocity.add(v3);
       }
       // linear velocity
       if (velocityLinear) {
-        v3.copy(velocityLinear).multiplyScalar(delta);
+        v3.copy(velocityLinear).multiplyScalar(_delta);
         if (config.space === 'world') {
           // Linear velocity is in world space, apply directly
           particle.position.add(v3);
@@ -386,17 +387,17 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
         // For each axis (X, Y, Z), rotate around that axis
         if (velocityOrbital.x !== 0) {
           // Rotate around X axis
-          q2.setFromAxisAngle(xAxis, velocityOrbital.x * delta);
+          q2.setFromAxisAngle(xAxis, velocityOrbital.x * _delta);
           v3.applyQuaternion(q2);
         }
         if (velocityOrbital.y !== 0) {
           // Rotate around Y axis
-          q2.setFromAxisAngle(yAxis, velocityOrbital.y * delta);
+          q2.setFromAxisAngle(yAxis, velocityOrbital.y * _delta);
           v3.applyQuaternion(q2);
         }
         if (velocityOrbital.z !== 0) {
           // Rotate around Z axis
-          q2.setFromAxisAngle(zAxis, velocityOrbital.z * delta);
+          q2.setFromAxisAngle(zAxis, velocityOrbital.z * _delta);
           v3.applyQuaternion(q2);
         }
         // Set particle position to emitter center + rotated offset
@@ -410,10 +411,10 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
           // Calculate tangential direction
           v4.crossVectors(
             velocityOrbital.x > 0
-              ? new Vector3(1, 0, 0)
+              ? new Vector3Enhanced(1, 0, 0)
               : velocityOrbital.y > 0
-                ? new Vector3(0, 1, 0)
-                : new Vector3(0, 0, 1),
+                ? new Vector3Enhanced(0, 1, 0)
+                : new Vector3Enhanced(0, 0, 1),
             v3
           ).normalize();
           // Adjust velocity in the tangential direction
@@ -428,16 +429,16 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
         if (v3.length() > 0.001) {
           // Normalize to get direction
           v3.normalize();
-          // Scale by radial velocity and delta time
-          v3.multiplyScalar(velocityRadial * delta);
+          // Scale by radial velocity and _delta time
+          v3.multiplyScalar(velocityRadial * _delta);
           // Move particle along this radial direction
           particle.position.add(v3);
           // Also add to velocity for consistency
-          particle.velocity.add(v3.divideScalar(delta));
+          particle.velocity.add(v3.divideScalar(_delta));
         }
       }
       // move particles based on current velocity
-      v3.copy(particle.velocity).multiplyScalar(delta);
+      v3.copy(particle.velocity).multiplyScalar(_delta);
       particle.position.add(v3);
       // size over life
       if (sizeOverLife) {
@@ -473,7 +474,7 @@ function createEmitter(config: EmitterConfig): ParticleEmitter {
 
       // spritesheet
       if (config.spritesheet) {
-        particle.uv = spritesheet(particle, delta);
+        particle.uv = spritesheet(particle, _delta);
       }
     }
     // looping or pausing
@@ -682,20 +683,20 @@ function toRGB(color: string) {
 
 function createShape(config: any) {
   const [type, ...args] = config;
-  const v = new Vector3();
-  const normal = new Vector3();
+  const _v = new Vector3Enhanced();
+  const normal = new Vector3Enhanced();
 
   switch (type) {
     case 'point':
       // Point shape - always at origin with upward direction
-      return (pos: Vector3, dir: Vector3) => {
+      return (pos: Vector3Enhanced, dir: Vector3Enhanced) => {
         pos.set(0, 0, 0);
         dir.set(0, 1, 0);
       };
 
     case 'sphere':
       // Sphere shape - position on or within sphere, direction points outward
-      return (pos: Vector3, dir: Vector3) => {
+      return (pos: Vector3Enhanced, dir: Vector3Enhanced) => {
         const [radius, thickness] = args;
         // Random point on unit sphere
         const u = Math.random();
@@ -714,7 +715,7 @@ function createShape(config: any) {
 
     case 'hemisphere':
       // Hemisphere shape - position on or within hemisphere, flat base on XZ plane
-      return (pos: Vector3, dir: Vector3) => {
+      return (pos: Vector3Enhanced, dir: Vector3Enhanced) => {
         const [radius, thickness] = args;
         // Random point on unit hemisphere (positive Y)
         const u = Math.random();
@@ -738,9 +739,9 @@ function createShape(config: any) {
 
     case 'cone':
       // Cone shape - position on base circle, direction based on cone angle
-      return (pos: Vector3, dir: Vector3) => {
-        let [baseRadius, thickness, angleFromCenter] = args;
-        angleFromCenter *= DEG2RAD;
+      return (pos: Vector3Enhanced, dir: Vector3Enhanced) => {
+        const [baseRadius, thickness, angleFromCenterDeg] = args;
+        const angleFromCenter = angleFromCenterDeg * DEG2RAD;
 
         // Random angle around the circle
         const angle = Math.random() * Math.PI * 2;
@@ -772,7 +773,7 @@ function createShape(config: any) {
 
     case 'box':
       // Box shape - position on or within box, direction points outward
-      return (pos: Vector3, dir: Vector3) => {
+      return (pos: Vector3Enhanced, dir: Vector3Enhanced) => {
         const [width, height, depth, thickness, origin, spherize] = args;
 
         // Handle different origin types: volume, edge, or shell
@@ -961,7 +962,7 @@ function createShape(config: any) {
 
     case 'circle':
       // Circle shape - position on or within circle in XZ plane
-      return (pos: Vector3, dir: Vector3) => {
+      return (pos: Vector3Enhanced, dir: Vector3Enhanced) => {
         const [radius, thickness, spherize] = args;
 
         // Random angle around the circle
@@ -997,7 +998,7 @@ function createShape(config: any) {
 
     case 'rectangle':
       // Rectangle shape - position on rectangular plane in XZ plane
-      return (pos: Vector3, dir: Vector3) => {
+      return (pos: Vector3Enhanced, dir: Vector3Enhanced) => {
         const [width, depth, thickness, spherize = false] = args;
 
         // Determine if on edge or inside based on thickness
@@ -1075,8 +1076,8 @@ function createSpritesheet(options: any) {
     const v1 = (rows - row) / rows; // inverted to start from top
     uvFrames.push([u0, v0, u1, v1]);
   }
-  return (particle: Particle, delta: number) => {
-    particle.frameTime += delta;
+  return (particle: Particle, _delta: number) => {
+    particle.frameTime += _delta;
     const frameDuration = 1 / frameRate;
     const rawFrame = particle.frameTime / frameDuration;
     let idx;

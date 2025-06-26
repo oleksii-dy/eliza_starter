@@ -4,7 +4,7 @@ import {
   RPGEntity,
   ItemStack,
   InventoryComponent
-} from '../types';
+} from '../types/index';
 
 export interface TradeOffer {
   playerId: string;
@@ -417,10 +417,10 @@ export class TradingSystem extends System {
   /**
    * Update loop - clean up expired trades
    */
-  public update(delta: number): void {
+  public update(_delta: number): void {
     const now = Date.now();
 
-    for (const [sessionId, session] of this.tradeSessions) {
+    for (const [_sessionId, session] of this.tradeSessions) {
       if (now - session.lastUpdate > this.TRADE_TIMEOUT) {
         this.cancelTrade(session.player1Id);
       }

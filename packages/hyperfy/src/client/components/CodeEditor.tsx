@@ -23,7 +23,7 @@ interface CodeEditorProps {
   onClose: () => void
 }
 
-export function CodeEditor({ app, blur, onClose }: CodeEditorProps) {
+export function CodeEditor({ app, blur, onClose: _onClose }: CodeEditorProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const resizeRef = useRef<HTMLDivElement | null>(null);
   const [nodes, setNodes] = useState(false);
@@ -34,10 +34,10 @@ export function CodeEditor({ app, blur, onClose }: CodeEditorProps) {
     if (!elem || !container) {return;}
 
     container.style.width = `${storage?.get('code-editor-width', 640) || 640}px`;
-    let active = false;
+    let _active = false;
     function onPointerDown(e: PointerEvent) {
       if (!elem) {return;}
-      active = true;
+      _active = true;
       elem.addEventListener('pointermove', onPointerMove);
       elem.addEventListener('pointerup', onPointerUp)
       ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -49,8 +49,8 @@ export function CodeEditor({ app, blur, onClose }: CodeEditorProps) {
       storage?.set('code-editor-width', newWidth);
     }
     function onPointerUp(e: PointerEvent) {
-      if (!elem) {return
-      ;}(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      if (!elem) {return;}
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
       elem.removeEventListener('pointermove', onPointerMove);
       elem.removeEventListener('pointerup', onPointerUp);
     }
@@ -149,7 +149,7 @@ export function CodeEditor({ app, blur, onClose }: CodeEditorProps) {
 function Editor({ app }: { app: any }) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const codeRef = useRef<string>('');
-  const [editor, setEditor] = useState<any>(null);
+  const [_editor, setEditor] = useState<any>(null);
   const save = async () => {
     const world = app.world;
     const blueprint = app.blueprint;
@@ -191,7 +191,7 @@ function Editor({ app }: { app: any }) {
         tabSize: 2,
         insertSpaces: true,
       });
-      editor.onDidChangeModelContent((event: any) => {
+      editor.onDidChangeModelContent((_event: any) => {
         codeRef.current = editor.getValue();
       });
       editor.addAction({
@@ -249,7 +249,7 @@ function Nodes({ app }: { app: any }) {
   const hasProperty = (obj: any, prop: string) => {
     try {
       return obj && typeof obj[prop] !== 'undefined';
-    } catch (err) {
+    } catch (_err) {
       return false;
     }
   };
@@ -457,29 +457,36 @@ function renderHierarchy(nodes: any[], depth = 0, selectedNode: any, setSelected
 let promise: Promise<any> | undefined;
 const load = () => {
   if (promise) {return promise;}
-  promise = new Promise(async resolve => {
+  promise = new Promise(resolve => {
     // init require
     (window as any).require = {
       paths: {
         vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.49.0/min/vs',
       },
     };
+
+    // Create async function to handle the async logic
+    const loadMonaco = async () => {
     // load loader
-    await new Promise<void>(resolve => {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.49.0/min/vs/loader.js'; // prettier-ignore
-      script.onload = () => resolve();
-      document.head.appendChild(script);
-    });
-    // load editor
-    await new Promise<void>(resolve => {
-      (window as any).require(['vs/editor/editor.main'], () => {
-        resolve();
+      await new Promise<void>(resolve => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.49.0/min/vs/loader.js'; // prettier-ignore
+        script.onload = () => resolve();
+        document.head.appendChild(script);
       });
-    })
-    ;(window as any).monaco.editor.defineTheme('default', darkPlusTheme)
-    ;(window as any).monaco.editor.setTheme('default');
-    resolve((window as any).monaco);
+      // load editor
+      await new Promise<void>(resolve => {
+        (window as any).require(['vs/editor/editor.main'], () => {
+          resolve();
+        });
+      })
+      ;(window as any).monaco.editor.defineTheme('default', darkPlusTheme)
+      ;(window as any).monaco.editor.setTheme('default');
+      resolve((window as any).monaco);
+    };
+
+    // Call the async function
+    loadMonaco().catch(console.error);
   });
   return promise;
 };

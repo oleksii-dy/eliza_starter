@@ -10,7 +10,9 @@ export const followUpRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing follow-up scheduling from conversation...');
 
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -32,7 +34,7 @@ export const followUpRuntimeTests: TestSuite = {
         };
 
         await (runtime as any).processMessage(message);
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
 
         // Check if Nancy was created
         const nancyResults = await entityGraphService.searchEntities('Nancy Chen');
@@ -66,7 +68,9 @@ export const followUpRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing multiple follow-up scheduling...');
 
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -92,7 +96,7 @@ export const followUpRuntimeTests: TestSuite = {
           };
 
           await (runtime as any).processMessage(message);
-          await new Promise(resolve => setTimeout(resolve, 2500));
+          await new Promise((resolve) => setTimeout(resolve, 2500));
         }
 
         // Get all follow-ups
@@ -103,9 +107,8 @@ export const followUpRuntimeTests: TestSuite = {
         console.log(`✓ Total follow-ups scheduled: ${allFollowUps.length}`);
 
         // Check for urgent follow-up
-        const urgentFollowUp = allFollowUps.find(f =>
-          f.message?.toLowerCase().includes('urgent') ||
-          f.metadata?.priority === 'high'
+        const urgentFollowUp = allFollowUps.find(
+          (f) => f.message?.toLowerCase().includes('urgent') || f.metadata?.priority === 'high'
         );
 
         if (urgentFollowUp) {
@@ -113,7 +116,7 @@ export const followUpRuntimeTests: TestSuite = {
         }
 
         // Verify different scheduled times
-        const scheduledDates = allFollowUps.map(f => new Date(f.scheduledFor).getTime());
+        const scheduledDates = allFollowUps.map((f) => new Date(f.scheduledFor).getTime());
         const uniqueDates = new Set(scheduledDates);
 
         console.log(`✓ Follow-ups scheduled for ${uniqueDates.size} different dates`);
@@ -127,7 +130,9 @@ export const followUpRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing follow-up completion tracking...');
 
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -168,7 +173,7 @@ export const followUpRuntimeTests: TestSuite = {
         };
 
         await (runtime as any).processMessage(completionMessage);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Check follow-up status
         const followUps = await entityGraphService.getUpcomingFollowUps({
@@ -179,7 +184,7 @@ export const followUpRuntimeTests: TestSuite = {
         console.log(`✓ Total follow-ups for Rachel: ${followUps.length}`);
 
         // Check if the follow-up was marked as completed
-        const completedFollowUp = followUps.find(f => f.id === followUp.id);
+        const completedFollowUp = followUps.find((f) => f.id === followUp.id);
         if (completedFollowUp) {
           console.log('✓ Follow-up status:', completedFollowUp.completed ? 'Completed' : 'Pending');
         }

@@ -10,9 +10,9 @@ const getServersRoute: Route = {
   type: 'GET',
   public: true,
   name: 'Get MCP Servers',
-  handler: async (req: Request, res: Response, runtime: IAgentRuntime) => {
+  handler: async (req: any, res: any, runtime: IAgentRuntime) => {
     try {
-      const mcpService = runtime.getService(MCP_SERVICE_NAME) as McpService;
+      const mcpService = runtime.getService<McpService>(MCP_SERVICE_NAME);
       if (!mcpService) {
         res.status(503).json({
           success: false,
@@ -66,12 +66,12 @@ const callToolRoute: Route = {
   type: 'POST',
   public: true,
   name: 'Call MCP Tool',
-  handler: async (req: Request, res: Response, runtime: IAgentRuntime) => {
+  handler: async (req: any, res: any, runtime: IAgentRuntime) => {
     try {
       const { serverName, toolName } = req.params;
       const { arguments: toolArgs } = req.body;
 
-      const mcpService = runtime.getService(MCP_SERVICE_NAME) as McpService;
+      const mcpService = runtime.getService<McpService>(MCP_SERVICE_NAME);
       if (!mcpService) {
         res.status(503).json({
           success: false,
@@ -106,7 +106,7 @@ const readResourceRoute: Route = {
   type: 'POST',
   public: true,
   name: 'Read MCP Resource',
-  handler: async (req: Request, res: Response, runtime: IAgentRuntime) => {
+  handler: async (req: any, res: any, runtime: IAgentRuntime) => {
     try {
       const { serverName } = req.params;
       const { uri } = req.body;
@@ -119,7 +119,7 @@ const readResourceRoute: Route = {
         return;
       }
 
-      const mcpService = runtime.getService(MCP_SERVICE_NAME) as McpService;
+      const mcpService = runtime.getService<McpService>(MCP_SERVICE_NAME);
       if (!mcpService) {
         res.status(503).json({
           success: false,
@@ -154,11 +154,11 @@ const reconnectServerRoute: Route = {
   type: 'POST',
   public: true,
   name: 'Reconnect MCP Server',
-  handler: async (req: Request, res: Response, runtime: IAgentRuntime) => {
+  handler: async (req: any, res: any, runtime: IAgentRuntime) => {
     try {
       const { serverName } = req.params;
 
-      const mcpService = runtime.getService(MCP_SERVICE_NAME) as McpService;
+      const mcpService = runtime.getService<McpService>(MCP_SERVICE_NAME);
       if (!mcpService) {
         res.status(503).json({
           success: false,
@@ -206,7 +206,7 @@ const viewerRoute: Route = {
   type: 'GET',
   public: true,
   name: 'MCP Viewer',
-  handler: async (req: Request, res: Response, _runtime: IAgentRuntime) => {
+  handler: async (req: any, res: any, _runtime: IAgentRuntime) => {
     try {
       // Serve the HTML page that loads the React app
       const htmlContent = `
@@ -267,7 +267,7 @@ const viewerBundleRoute: Route = {
   type: 'GET',
   public: true,
   name: 'MCP Viewer Bundle',
-  handler: async (req: Request, res: Response, _runtime: IAgentRuntime) => {
+  handler: async (req: any, res: any, _runtime: IAgentRuntime) => {
     try {
       // In production, this would serve the built React bundle
       // For development, we'll serve a module that dynamically imports the components

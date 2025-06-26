@@ -10,7 +10,7 @@ export class BuildManager {
     this.runtime = runtime;
   }
 
-  async translate(entityId, position: [number, number, number]) {
+  async translate(entityId: string, position: [number, number, number]) {
     const service = this.getService();
     if (!service) {
       return;
@@ -30,7 +30,7 @@ export class BuildManager {
     }
   }
 
-  async rotate(entityId, quaternion: [number, number, number, number]) {
+  async rotate(entityId: string, quaternion: [number, number, number, number]) {
     const service = this.getService();
     if (!service) {
       return;
@@ -50,7 +50,7 @@ export class BuildManager {
     }
   }
 
-  async scale(entityId, scale: [number, number, number]) {
+  async scale(entityId: string, scale: [number, number, number]) {
     const service = this.getService();
     if (!service) {
       return;
@@ -70,7 +70,7 @@ export class BuildManager {
     }
   }
 
-  async duplicate(entityId) {
+  async duplicate(entityId: string) {
     const service = this.getService();
     if (!service) {
       return;
@@ -81,7 +81,8 @@ export class BuildManager {
     }
     const entity = world.entities.items.get(entityId);
     if (!entity) {
-      return;
+      console.warn(`Entity ${entityId} not found for duplication`);
+      return Promise.resolve();
     }
 
     const controls = world.controls;
@@ -133,7 +134,7 @@ export class BuildManager {
     }
   }
 
-  async delete(entityId) {
+  async delete(entityId: string) {
     const service = this.getService();
     if (!service) {
       return;
@@ -168,57 +169,63 @@ export class BuildManager {
     const resolvedUrlurl = await resolveUrl(url, world);
     if (!resolvedUrlurl) {
       console.error(`Failed to resolve URL: ${url}`);
-      return;
+      return Promise.resolve();
     }
 
     let file;
 
-    const resp = await fetch(resolvedUrlurl);
-    const blob = await resp.blob();
-    const fileName = url.split('/').pop() || 'unknown';
-    file = new File([blob], fileName, {
-      type: resp.headers.get('content-type') || 'application/octet-stream',
-    });
-    if (!file) {
-      return;
-    }
+    try {
+      const resp = await fetch(resolvedUrlurl);
+      const blob = await resp.blob();
+      const fileName = url.split('/').pop() || 'unknown';
+      file = new File([blob], fileName, {
+        type: resp.headers.get('content-type') || 'application/octet-stream',
+      });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+      if (!file) {
+        return Promise.resolve();
+      }
 
-    const maxSize = world.network.maxUploadSize * 1024 * 1024;
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-    if (file.size > maxSize) {
-      console.error(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`);
-      return;
-    }
-    const validVec3 = (v: any): v is [number, number, number] =>
-      Array.isArray(v) && v.length === 3 && v.every((n) => typeof n === 'number');
+      const maxSize = world.network.maxUploadSize * 1024 * 1024;
 
-    const validQuat = (q: any): q is [number, number, number, number] =>
-      Array.isArray(q) && q.length === 4 && q.every((n) => typeof n === 'number');
+      if (file.size > maxSize) {
+        console.error(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`);
+        return Promise.resolve();
+      }
+      const validVec3 = (v: any): v is [number, number, number] =>
+        Array.isArray(v) && v.length === 3 && v.every((n) => typeof n === 'number');
 
-    position = validVec3(position) ? position : [0, 0, 0];
-    quaternion = validQuat(quaternion) ? quaternion : [0, 0, 0, 1];
+      const validQuat = (q: any): q is [number, number, number, number] =>
+        Array.isArray(q) && q.length === 4 && q.every((n) => typeof n === 'number');
 
-    const controls = world.controls;
-    if (controls) {
-      await controls.goto(position[0], position[2]);
-    }
+      position = validVec3(position) ? position : [0, 0, 0];
+      quaternion = validQuat(quaternion) ? quaternion : [0, 0, 0, 1];
 
-    const transform = {
-      position,
-      quaternion,
-    };
-    const ext = file.name.split('.').pop()?.toLowerCase();
-    if (ext === 'hyp') {
-      this.addApp(file, transform);
-    }
-    if (ext === 'glb' || ext === 'vrm') {
-      this.addModel(file, transform);
+      const controls = world.controls;
+      if (controls) {
+        await controls.goto(position[0], position[2]);
+      }
+
+      const transform = {
+        position,
+        quaternion,
+      };
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (ext === 'hyp') {
+        this.addApp(file, transform);
+      }
+      if (ext === 'glb' || ext === 'vrm') {
+        this.addModel(file, transform);
+      }
+    } catch (error) {
+      console.error(`Failed to import entity from ${url}:`, error);
+      return Promise.resolve();
     }
   }
 
-  async addApp(file, transform) {
+  async addApp(file: File, transform: any) {
     const service = this.getService();
     if (!service) {
       return;
@@ -262,7 +269,7 @@ export class BuildManager {
       state: {},
     };
     const app = (world.entities as any).add(data, true);
-    const promises = info.assets.map((asset) => {
+    const promises = info.assets.map((asset: any) => {
       return world.network.upload(asset.file);
     });
     try {
@@ -275,7 +282,7 @@ export class BuildManager {
     }
   }
 
-  async addModel(file, transform) {
+  async addModel(file: File, transform: any) {
     const service = this.getService();
     if (!service) {
       return;
@@ -333,7 +340,7 @@ export class BuildManager {
     app?.onUploaded?.();
   }
 
-  entityUpdate(entity) {
+  entityUpdate(entity: HyperfyEntity) {
     const service = this.getService();
     if (!service) {
       return;

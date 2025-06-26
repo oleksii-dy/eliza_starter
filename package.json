@@ -1,6 +1,6 @@
 {
   "name": "eliza",
-  "version": "1.0.12",
+  "version": "1.0.6",
   "module": "index.ts",
   "type": "module",
   "engines": {
@@ -13,16 +13,14 @@
     "start:app": "turbo run start --filter=./packages/app",
     "dev": "bun run scripts/dev-watch.js",
     "build:docs": "turbo run build --filter=@elizaos/docs",
-    "build": "turbo run build --filter=!@elizaos/docs --filter=!@elizaos/scenarios",
+    "build": "turbo run build --filter=!@elizaos/docs",
     "build:client": "turbo run build --filter=@elizaos/client",
     "format": "turbo run format --filter=./packages/*",
     "format:check": "turbo run format:check --filter=./packages/*",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo bun.lock* .eliza .elizadb && npx turbo run clean --filter=./packages/* && bun install && bun run build",
     "build:cli": "turbo run build --filter=@elizaos/cli --no-cache",
     "build:core": "turbo run build --filter=@elizaos/core --no-cache",
-    "typecheck": "turbo run typecheck --filter=./packages/*",
-    "lint": "NODE_OPTIONS='--max-old-space-size=16384' eslint . --fix && NODE_OPTIONS='--max-old-space-size=8192' prettier --write . && turbo run lint --filter=./packages/*",
-    "lint:check": "NODE_OPTIONS='--max-old-space-size=16384' eslint . && NODE_OPTIONS='--max-old-space-size=8192' prettier --check .",
+    "lint": "turbo run lint --filter=./packages/* && prettier --write . && prettier --check .",
     "pre-commit": "bun run scripts/pre-commit-lint.js",
     "release": "lerna version --no-private --force-publish --no-push --no-git-tag-version && bun run build && bun lint && lerna publish from-package --no-private --force-publish && bun lint",
     "release:alpha": "lerna publish prerelease --preid alpha --dist-tag alpha --no-private --force-publish --loglevel verbose",
@@ -33,11 +31,7 @@
     "docker:bash": "bash ./scripts/docker.sh bash",
     "docker:start": "bash ./scripts/docker.sh start",
     "docker": "bun docker:build && bun docker:run && bun docker:bash",
-    "test": "turbo run test --concurrency=1 --filter=!@elizaos/hyperfy --filter=!@elizaos/plugin-dummy-services",
-    "test:parallel": "turbo run test",
-    "test:client": "turbo run test --filter=./packages/client",
-    "test:core": "turbo run test --filter=./packages/core",
-    "test:app": "turbo run test --concurrency 1 --filter=./packages/app",
+    "test": "turbo run test --concurrency 1 --filter=!./packages/docs",
     "prepare": "husky"
   },
   "packageManager": "bun@1.2.15",
@@ -49,18 +43,12 @@
     "@types/bun": "latest",
     "@types/node": "^22.15.3",
     "@types/uuid": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.26.0",
-    "@typescript-eslint/parser": "^8.26.0",
     "bun": "^1.2.15",
-    "callsites": "^4.2.0",
-    "eslint": "^9.22.0",
     "husky": "^9.1.7",
     "lerna": "8.1.4",
-    "prettier": "3.5.3",
-    "queue-microtask": "1.2.3",
-    "tsup": "^8.5.0",
+    "tsup": "8.5.0",
     "turbo": "^2.5.4",
-    "typescript": "5.8.3"
+    "typescript": "5.8.2"
   },
   "resolutions": {
     "@nrwl/devkit": "19.8.4",
@@ -84,8 +72,6 @@
     "utf-8-validate"
   ],
   "dependencies": {
-    "@elizaos/plugin-message-handling": "workspace:*",
-    "helmet": "^8.1.0",
-    "zod": "3.23.8"
+    "helmet": "^8.1.0"
   }
 }

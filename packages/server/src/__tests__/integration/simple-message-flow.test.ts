@@ -6,7 +6,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { AgentServer } from '../../index';
 import type { IAgentRuntime, UUID, Character, Content, Memory } from '@elizaos/core';
 import { AgentRuntime, ChannelType } from '@elizaos/core';
-import { createDatabaseAdapter } from '@elizaos/plugin-sql';
+// Database adapter will be created through server initialization
 import path from 'node:path';
 import fs from 'node:fs';
 import { v4 as uuidv4 } from 'uuid';
@@ -50,13 +50,8 @@ describe('Simple Message Flow Test', () => {
       ],
     } as Character;
 
-    // Create database adapter
-    const db = await createDatabaseAdapter(
-      {
-        dataDir: testDbPath,
-      },
-      'simple-agent' as UUID
-    );
+    // Database adapter will be created through server initialization
+    const db = agentServer.database;
 
     // Create agent runtime with message handling plugin
     agent = new AgentRuntime({
@@ -160,7 +155,7 @@ describe('Simple Message Flow Test', () => {
     console.log('Emitting message through internal message bus...');
 
     // The MessageBusService should pick this up
-    const internalBus = require('../../bus').default;
+    const internalBus = require('../../MessageBus').default;
     internalBus.emit('new_message', {
       id: messageId,
       channel_id: channelId,
@@ -175,7 +170,7 @@ describe('Simple Message Flow Test', () => {
     });
 
     // Wait for the agent to process the message through the event system
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Check if the agent created a response message
     const messages = await agentServer.database.getMemories({
@@ -236,7 +231,7 @@ describe('Simple Message Flow Test', () => {
     );
 
     // Emit message through bus
-    const internalBus = require('../../bus').default;
+    const internalBus = require('../../MessageBus').default;
     internalBus.emit('new_message', {
       id: messageId,
       channel_id: channelId,
@@ -250,7 +245,7 @@ describe('Simple Message Flow Test', () => {
       metadata: {},
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Check for agent response
     const messages = await agentServer.database.getMemories({

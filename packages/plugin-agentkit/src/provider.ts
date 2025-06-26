@@ -29,7 +29,11 @@ export const walletProvider: Provider = {
       try {
         // The new SDK might expose wallet information differently
         // Try to access through various possible interfaces
-        const agentKitAny = agentKit as any;
+        const agentKitAny = agentKit as unknown as {
+          wallet?: { address?: string };
+          walletProvider?: { getAddress?(): Promise<string>; getNetwork?(): Promise<string> };
+          getWalletAddress?(): Promise<string>;
+        };
 
         if (agentKitAny.wallet?.address) {
           address = agentKitAny.wallet.address;
@@ -45,7 +49,7 @@ export const walletProvider: Provider = {
           networkInfo = `\nNetwork: ${network}`;
         }
       } catch (error) {
-        console.log('[AgentKit Provider] Error accessing wallet info:', error);
+        console.warn('[AgentKit Provider] Error accessing wallet info:', error);
       }
 
       return {

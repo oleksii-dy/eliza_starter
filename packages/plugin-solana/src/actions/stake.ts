@@ -8,7 +8,7 @@ import {
   type State,
   composePromptFromState,
   logger,
-  parseJSONObjectFromText,
+  parseKeyValueXml,
 } from '@elizaos/core';
 import {
   Connection,
@@ -24,15 +24,7 @@ import { getWalletKey } from '../keypairUtils';
 import { SolanaActionResult } from '../types';
 import { TransactionService } from '../services/TransactionService';
 
-const stakeTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
-
-Example response:
-\`\`\`json
-{
-    "amount": 1.5,
-    "validatorAddress": "7Np41oeYqPefeNQEHSv1UDhYrehxin3NStELsSKCT4K2"
-}
-\`\`\`
+const stakeTemplate = `Extract the following information about the requested staking from the user's message.
 
 {{recentMessages}}
 
@@ -40,11 +32,24 @@ Extract the following information about the requested staking:
 - Amount of SOL to stake
 - Validator address (optional - if not provided, we'll use a default)
 
-Respond with a JSON markdown block containing only the extracted values.`;
+Return an XML object with these fields:
+<response>
+  <amount>Amount of SOL to stake as a number</amount>
+  <validatorAddress>Validator address if provided</validatorAddress>
+</response>
+
+Use empty tags for any values that cannot be determined.
+
+## Example Output Format
+<response>
+  <amount>1.5</amount>
+  <validatorAddress>7Np41oeYqPefeNQEHSv1UDhYrehxin3NStELsSKCT4K2</validatorAddress>
+</response>`;
 
 export const stakeSOL: Action = {
   name: 'STAKE_SOL',
   similes: ['STAKE_SOLANA', 'DELEGATE_SOL', 'STAKE_TO_VALIDATOR', 'EARN_STAKING_REWARDS'],
+  enabled: false, // Disabled by default - potentially dangerous, can stake funds and lock them up
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     // Check if this is a system/agent action
     if (message.entityId === runtime.agentId) {
@@ -110,12 +115,22 @@ export const stakeSOL: Action = {
         prompt: stakePrompt,
       });
 
-      const response = parseJSONObjectFromText(result) as {
-        amount?: number;
-        validatorAddress?: string;
+      const parsedResult = parseKeyValueXml(result);
+      if (!parsedResult) {
+        callback?.({ text: 'Failed to parse staking parameters from request' });
+        return {
+          success: false,
+          message: 'Failed to parse staking parameters',
+          data: { error: 'Parse error' },
+        };
+      }
+
+      const response = {
+        amount: parseFloat(parsedResult.amount || '0'),
+        validatorAddress: parsedResult.validatorAddress,
       };
 
-      if (!response.amount || response.amount <= 0) {
+      if (!parsedResult.amount || response.amount <= 0) {
         callback?.({ text: 'Please specify a valid amount of SOL to stake' });
         return {
           success: false,

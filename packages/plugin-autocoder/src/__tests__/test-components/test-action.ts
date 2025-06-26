@@ -9,7 +9,7 @@ export const TEST_ACTION: Action = {
       { name: 'assistant', content: { text: 'Executing test action' } },
     ],
   ],
-  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+  validate: async (_runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     return message.content.text?.includes('test') || false;
   },
   handler: async (runtime: IAgentRuntime, message: Memory): Promise<ActionResult> => {

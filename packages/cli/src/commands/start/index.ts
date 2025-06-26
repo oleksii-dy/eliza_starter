@@ -1,6 +1,7 @@
 import { displayBanner, handleError } from '@/src/utils';
 import { validatePort } from '@/src/utils/port-validation';
-import { loadCharacterTryPath } from '@elizaos/server';
+// Dynamic imports for utilities that may not be properly exported
+let loadCharacterTryPath: any;
 import { loadProject } from '@/src/project';
 import { logger, type Character, type ProjectAgent } from '@elizaos/core';
 import { Command } from 'commander';
@@ -10,6 +11,18 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { loadEnvConfig } from './utils/config-utils';
 import { detectDirectoryType } from '@/src/utils/directory-detection';
+
+// Dynamic loader for server utilities
+async function loadServerUtilities() {
+  if (!loadCharacterTryPath) {
+    try {
+      const serverModule = await import('@elizaos/server');
+      loadCharacterTryPath = (serverModule as any).loadCharacterTryPath;
+    } catch (error) {
+      logger.warn('Could not load server utilities:', error);
+    }
+  }
+}
 
 export const start = new Command()
   .name('start')
@@ -29,6 +42,9 @@ export const start = new Command()
     try {
       // Load env config first before any character loading
       await loadEnvConfig();
+
+      // Load server utilities dynamically
+      await loadServerUtilities();
 
       const characters: Character[] = [];
       let projectAgents: ProjectAgent[] = [];

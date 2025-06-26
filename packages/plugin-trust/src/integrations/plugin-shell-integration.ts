@@ -27,7 +27,7 @@ export async function validateShellCommand(
       logger.warn('[ShellIntegration] Trust engine not available, denying shell access');
       return {
         allowed: false,
-        reason: 'Trust engine not available'
+        reason: 'Trust engine not available',
       };
     }
 
@@ -43,7 +43,7 @@ export async function validateShellCommand(
       evaluatorId: runtime.agentId,
       action: 'EXECUTE_SHELL_COMMAND',
       worldId: message.roomId,
-      roomId: message.roomId
+      roomId: message.roomId,
     };
 
     // Calculate trust
@@ -62,12 +62,12 @@ export async function validateShellCommand(
             command,
             trustScore: trustProfile.overallTrust,
             requiredTrust,
-            dangerLevel
+            dangerLevel,
           },
           details: {
             command,
-            reason: 'insufficient_trust'
-          }
+            reason: 'insufficient_trust',
+          },
         });
       }
 
@@ -80,7 +80,7 @@ export async function validateShellCommand(
           'Start with safer commands',
           `Your trust level: ${trustProfile.overallTrust.toFixed(1)}/100`,
           `Required for this command: ${requiredTrust}/100`,
-        ]
+        ],
       };
     }
 
@@ -94,15 +94,15 @@ export async function validateShellCommand(
           resource: 'system',
           context: {
             worldId: message.roomId,
-            roomId: message.roomId
-          }
+            roomId: message.roomId,
+          },
         });
 
         if (!permissionCheck.allowed) {
           return {
             allowed: false,
             reason: `Permission denied: ${permissionCheck.reason}`,
-            trustScore: trustProfile.overallTrust
+            trustScore: trustProfile.overallTrust,
           };
         }
       }
@@ -113,20 +113,19 @@ export async function validateShellCommand(
       userId: entityId,
       command: command.substring(0, 50),
       trustScore: trustProfile.overallTrust,
-      dangerLevel
+      dangerLevel,
     });
 
     return {
       allowed: true,
       reason: 'Shell command authorized',
-      trustScore: trustProfile.overallTrust
+      trustScore: trustProfile.overallTrust,
     };
-
   } catch (error) {
     logger.error('[ShellIntegration] Error validating shell command:', error);
     return {
       allowed: false,
-      reason: 'Trust validation error'
+      reason: 'Trust validation error',
     };
   }
 }
@@ -206,16 +205,24 @@ function assessCommandDanger(command: string): number {
 
   // Check patterns in order of danger
   for (const pattern of criticalPatterns) {
-    if (pattern.test(cmd)) {return 5;}
+    if (pattern.test(cmd)) {
+      return 5;
+    }
   }
   for (const pattern of highDangerPatterns) {
-    if (pattern.test(cmd)) {return 4;}
+    if (pattern.test(cmd)) {
+      return 4;
+    }
   }
   for (const pattern of mediumDangerPatterns) {
-    if (pattern.test(cmd)) {return 3;}
+    if (pattern.test(cmd)) {
+      return 3;
+    }
   }
   for (const pattern of lowDangerPatterns) {
-    if (pattern.test(cmd)) {return 2;}
+    if (pattern.test(cmd)) {
+      return 2;
+    }
   }
 
   // Default to safe (1) for simple commands like ls, ps, etc.
@@ -227,11 +234,11 @@ function assessCommandDanger(command: string): number {
  */
 function getDangerBasedTrustRequirement(dangerLevel: number): number {
   const trustMapping = {
-    1: 30,  // Safe commands: ls, ps, pwd
-    2: 50,  // Low danger: cp, mv, git
-    3: 70,  // Medium danger: chmod, sudo
-    4: 85,  // High danger: rm -rf, kill
-    5: 95,  // Critical: rm -rf /, shutdown
+    1: 30, // Safe commands: ls, ps, pwd
+    2: 50, // Low danger: cp, mv, git
+    3: 70, // Medium danger: chmod, sudo
+    4: 85, // High danger: rm -rf, kill
+    5: 95, // Critical: rm -rf /, shutdown
   };
 
   return trustMapping[dangerLevel as keyof typeof trustMapping] || 50;

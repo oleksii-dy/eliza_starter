@@ -1,3 +1,10 @@
+import {
+  type IAgentRuntime,
+  type Memory,
+  type State,
+  type Provider,
+  logger as elizaLogger,
+} from '@elizaos/core';
 import { EnhancedSecretManager } from '../enhanced-service';
 import type { SecretContext } from '../types';
 
@@ -6,10 +13,10 @@ export const secretsInfoProvider: Provider = {
   description:
     'Provides comprehensive inventory of available API keys and secrets across all permission levels when agent needs to assess configuration status or help users understand their secret management setup',
 
-  get: async (_runtime: IAgentRuntime, message: Memory, state?: State) => {
+  get: async (runtime: IAgentRuntime, message: Memory, _state?: State) => {
     elizaLogger.debug('[SecretsInfo] Fetching secrets information');
 
-    const secrets = runtime.get('SECRETS') as EnhancedSecretManager;
+    const secrets = runtime.getService<EnhancedSecretManager>('SECRETS');
     if (!secrets) {
       return {
         text: 'Secrets management service is not available',

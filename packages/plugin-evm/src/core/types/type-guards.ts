@@ -1,4 +1,4 @@
-import type { Address, Hex, Chain, TransactionRequest as ViemTransactionRequest } from 'viem';
+import type { Address, Hex, Chain } from 'viem';
 import type {
   WalletInstance,
   TransactionRequest,
@@ -6,7 +6,6 @@ import type {
   DefiPosition,
   NFTHolding,
   GasEstimation,
-  TransactionHistory,
 } from '../interfaces/IWalletService';
 
 // Additional types we'll define locally
@@ -48,7 +47,7 @@ import type {
   NFTActivity,
   NFTListingParams,
 } from '../../nft/nft-service';
-import type { BridgeRoute, BridgeQuote, BridgeParams } from '../../bridges/bridge-aggregator';
+import type { BridgeRoute, BridgeQuote, BridgeParams } from '../../cross-chain/bridge-aggregator';
 
 // Branded types for extra safety
 export type EVMAddress = Address & { readonly __brand: 'EVMAddress' };
@@ -275,7 +274,7 @@ export function isNFTMetadata(value: unknown): value is NFTMetadata {
     return false;
   }
 
-  const metadata = value as Record<string, unknown>;
+  const _metadata = value as Record<string, unknown>;
 
   // NFT metadata is flexible, just check it's an object
   return true;
@@ -349,11 +348,11 @@ export function validateChainId(chainId: number, name: string = 'chainId'): Chai
 
 export function validateAmount(
   amount: bigint | string | number,
-  name: string = 'amount',
+  name: string = 'amount'
 ): TokenAmount {
   try {
     return asTokenAmount(amount);
-  } catch (error) {
+  } catch (_error) {
     throw new Error(`Invalid ${name}: ${amount}`);
   }
 }
@@ -384,7 +383,7 @@ export function assertAddress(value: unknown, name: string = 'value'): asserts v
 
 export function assertTransactionHash(
   value: unknown,
-  name: string = 'value',
+  name: string = 'value'
 ): asserts value is TransactionHash {
   if (!isTransactionHash(value)) {
     throw new Error(`${name} must be a valid transaction hash, got: ${value}`);

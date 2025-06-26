@@ -14,10 +14,10 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { createDatabaseAdapter } from '../../index';
 import { createIsolatedTestDatabase } from '../test-helpers';
-import type { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import type { PgAdapter } from '../../pg/adapter';
 
 describe('Database Adapter Real Runtime Integration', () => {
-  let adapter: PgliteDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;

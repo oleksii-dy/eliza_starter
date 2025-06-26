@@ -25,7 +25,7 @@ export class TrustPluginE2ETests implements TestSuite {
         }
 
         console.log('✅ Trust plugin initialized successfully');
-      }
+      },
     },
 
     {
@@ -37,59 +37,52 @@ export class TrustPluginE2ETests implements TestSuite {
           'RECORD_TRUST_INTERACTION',
           'REQUEST_ELEVATION',
           'UPDATE_ROLE',
-          'UPDATE_TRUST_SETTINGS'
+          'UPDATE_TRUST_SETTINGS',
         ];
 
         for (const actionName of expectedActions) {
-          const action = runtime.actions.find(a => a.name === actionName);
+          const action = runtime.actions.find((a) => a.name === actionName);
           if (!action) {
             throw new Error(`Action ${actionName} not found`);
           }
         }
 
         console.log('✅ All trust actions registered successfully');
-      }
+      },
     },
 
     {
       name: 'Trust plugin registers all providers',
       fn: async (runtime: IAgentRuntime) => {
         // Verify all expected providers are registered
-        const expectedProviders = [
-          'trustProfile',
-          'securityStatus',
-          'roleProvider'
-        ];
+        const expectedProviders = ['trustProfile', 'securityStatus', 'roleProvider'];
 
         for (const providerName of expectedProviders) {
-          const provider = runtime.providers.find(p => p.name === providerName);
+          const provider = runtime.providers.find((p) => p.name === providerName);
           if (!provider) {
             throw new Error(`Provider ${providerName} not found`);
           }
         }
 
         console.log('✅ All trust providers registered successfully');
-      }
+      },
     },
 
     {
       name: 'Trust plugin registers evaluators',
       fn: async (runtime: IAgentRuntime) => {
         // Verify evaluators are registered
-        const expectedEvaluators = [
-          'trustChangeEvaluator',
-          'reflectionEvaluator'
-        ];
+        const expectedEvaluators = ['trustChangeEvaluator', 'reflectionEvaluator'];
 
         for (const evaluatorName of expectedEvaluators) {
-          const evaluator = runtime.evaluators.find(e => e.name === evaluatorName);
+          const evaluator = runtime.evaluators.find((e) => e.name === evaluatorName);
           if (!evaluator) {
             throw new Error(`Evaluator ${evaluatorName} not found`);
           }
         }
 
         console.log('✅ All trust evaluators registered successfully');
-      }
+      },
     },
 
     {
@@ -119,8 +112,8 @@ export class TrustPluginE2ETests implements TestSuite {
         }
 
         console.log('✅ Trust service basic functionality working');
-      }
-    }
+      },
+    },
   ];
 }
 

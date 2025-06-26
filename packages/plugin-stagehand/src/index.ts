@@ -102,7 +102,7 @@ export class StagehandService extends Service {
 
   static async stop(runtime: IAgentRuntime) {
     logger.info('Stopping Stagehand browser automation service');
-    const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+    const service = runtime.getService<StagehandService>(StagehandService.serviceType);
     if (!service) {
       throw new Error('Stagehand service not found');
     }
@@ -272,6 +272,7 @@ const browserNavigateAction: Action = {
   similes: ['GO_TO_URL', 'OPEN_WEBSITE', 'VISIT_PAGE', 'NAVIGATE_TO'],
   description:
     'Navigate the browser to a specified URL. Can be chained with BROWSER_EXTRACT to get content or BROWSER_SCREENSHOT to capture the page',
+  enabled: false, // Disabled by default - can access potentially malicious websites
 
   validate: async (_runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const url = extractUrl(message.content.text || '');
@@ -289,7 +290,7 @@ const browserNavigateAction: Action = {
     try {
       logger.info('Handling BROWSER_NAVIGATE action');
 
-      const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+      const service = runtime.getService<StagehandService>(StagehandService.serviceType);
       if (!service) {
         const error = new BrowserServiceNotAvailableError();
         handleBrowserError(error, callback, 'navigate to the requested page');
@@ -479,7 +480,7 @@ const browserBackAction: Action = {
     'Navigate back in browser history. Can be chained with BROWSER_EXTRACT to get content from the previous page or BROWSER_FORWARD to return',
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+    const service = runtime.getService<StagehandService>(StagehandService.serviceType);
     const session = await service?.getCurrentSession();
     return session !== undefined;
   },
@@ -495,7 +496,7 @@ const browserBackAction: Action = {
     try {
       logger.info('Handling BROWSER_BACK action');
 
-      const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+      const service = runtime.getService<StagehandService>(StagehandService.serviceType);
       if (!service) {
         const error = new BrowserServiceNotAvailableError();
         handleBrowserError(error, callback, 'go back to the previous page');
@@ -620,7 +621,7 @@ const browserForwardAction: Action = {
     'Navigate forward in browser history. Can be chained with BROWSER_BACK for navigation or BROWSER_EXTRACT to get content',
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+    const service = runtime.getService<StagehandService>(StagehandService.serviceType);
     const session = await service?.getCurrentSession();
     return session !== undefined;
   },
@@ -636,7 +637,10 @@ const browserForwardAction: Action = {
     try {
       logger.info('Handling BROWSER_FORWARD action');
 
-      const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+      const service = runtime.getService<StagehandService>(StagehandService.serviceType);
+      if (!service) {
+        throw new Error('StagehandService not available');
+      }
       const session = await service.getCurrentSession();
 
       if (!session) {
@@ -752,7 +756,7 @@ const browserRefreshAction: Action = {
     'Refresh the current browser page. Can be chained with BROWSER_EXTRACT to get updated content or BROWSER_SCREENSHOT to capture refreshed state',
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+    const service = runtime.getService<StagehandService>(StagehandService.serviceType);
     const session = await service?.getCurrentSession();
     return session !== undefined;
   },
@@ -768,7 +772,10 @@ const browserRefreshAction: Action = {
     try {
       logger.info('Handling BROWSER_REFRESH action');
 
-      const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+      const service = runtime.getService<StagehandService>(StagehandService.serviceType);
+      if (!service) {
+        throw new Error('StagehandService not available');
+      }
       const session = await service.getCurrentSession();
 
       if (!session) {
@@ -882,9 +889,10 @@ const browserClickAction: Action = {
   similes: ['CLICK_ELEMENT', 'CLICK_BUTTON', 'CLICK_LINK', 'CLICK_ON'],
   description:
     'Click on an element in the browser using natural language description. Can be chained with BROWSER_TYPE to fill forms or BROWSER_EXTRACT to get results after clicking',
+  enabled: false, // Disabled by default - can trigger unintended actions on websites
 
   validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
-    const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+    const service = runtime.getService<StagehandService>(StagehandService.serviceType);
     const session = await service?.getCurrentSession();
     if (!session) {
       return false;
@@ -906,7 +914,10 @@ const browserClickAction: Action = {
     try {
       logger.info('Handling BROWSER_CLICK action');
 
-      const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+      const service = runtime.getService<StagehandService>(StagehandService.serviceType);
+      if (!service) {
+        throw new Error('StagehandService not available');
+      }
       const session = await service.getCurrentSession();
 
       if (!session) {
@@ -1037,9 +1048,10 @@ const browserTypeAction: Action = {
   similes: ['TYPE_TEXT', 'ENTER_TEXT', 'FILL_FIELD', 'INPUT_TEXT'],
   description:
     'Type text into an input field or element. Can be chained with BROWSER_CLICK to select fields or BROWSER_SELECT to complete forms',
+  enabled: false, // Disabled by default - can input sensitive data or trigger unintended form submissions
 
   validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
-    const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+    const service = runtime.getService<StagehandService>(StagehandService.serviceType);
     const session = await service?.getCurrentSession();
     if (!session) {
       return false;
@@ -1065,7 +1077,10 @@ const browserTypeAction: Action = {
     try {
       logger.info('Handling BROWSER_TYPE action');
 
-      const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+      const service = runtime.getService<StagehandService>(StagehandService.serviceType);
+      if (!service) {
+        throw new Error('StagehandService not available');
+      }
       const session = await service.getCurrentSession();
 
       if (!session) {
@@ -1223,7 +1238,7 @@ const browserSelectAction: Action = {
     'Select an option from a dropdown or select element. Can be chained with BROWSER_TYPE for form filling or BROWSER_CLICK to submit forms',
 
   validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
-    const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+    const service = runtime.getService<StagehandService>(StagehandService.serviceType);
     const session = await service?.getCurrentSession();
     if (!session) {
       return false;
@@ -1244,7 +1259,10 @@ const browserSelectAction: Action = {
     try {
       logger.info('Handling BROWSER_SELECT action');
 
-      const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+      const service = runtime.getService<StagehandService>(StagehandService.serviceType);
+      if (!service) {
+        throw new Error('StagehandService not available');
+      }
       const session = await service.getCurrentSession();
 
       if (!session) {
@@ -1401,7 +1419,7 @@ const browserExtractAction: Action = {
     'Extract text or data from the current page. Can be chained with BROWSER_NAVIGATE to visit pages first or BROWSER_CLICK to extract after interactions',
 
   validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
-    const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+    const service = runtime.getService<StagehandService>(StagehandService.serviceType);
     const session = await service?.getCurrentSession();
     if (!session) {
       return false;
@@ -1427,7 +1445,10 @@ const browserExtractAction: Action = {
     try {
       logger.info('Handling BROWSER_EXTRACT action');
 
-      const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+      const service = runtime.getService<StagehandService>(StagehandService.serviceType);
+      if (!service) {
+        throw new Error('StagehandService not available');
+      }
       const session = await service.getCurrentSession();
 
       if (!session) {
@@ -1569,7 +1590,7 @@ const browserScreenshotAction: Action = {
     'Take a screenshot of the current page. Can be chained with BROWSER_NAVIGATE to capture specific pages or BROWSER_CLICK to capture after interactions',
 
   validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
-    const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+    const service = runtime.getService<StagehandService>(StagehandService.serviceType);
     const session = await service?.getCurrentSession();
     if (!session) {
       return false;
@@ -1590,7 +1611,10 @@ const browserScreenshotAction: Action = {
     try {
       logger.info('Handling BROWSER_SCREENSHOT action');
 
-      const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+      const service = runtime.getService<StagehandService>(StagehandService.serviceType);
+      if (!service) {
+        throw new Error('StagehandService not available');
+      }
       const session = await service.getCurrentSession();
 
       if (!session) {
@@ -1732,9 +1756,10 @@ const browserSolveCaptchaAction: Action = {
   similes: ['SOLVE_CAPTCHA', 'HANDLE_CAPTCHA', 'BYPASS_CAPTCHA'],
   description:
     'Detect and solve CAPTCHA on the current page. Can be chained with BROWSER_NAVIGATE to handle protected pages or BROWSER_CLICK to proceed after solving',
+  enabled: false, // Disabled by default - CAPTCHA bypassing can violate website terms of service
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+    const service = runtime.getService<StagehandService>(StagehandService.serviceType);
     const session = await service?.getCurrentSession();
     if (!session) {
       return false;
@@ -1755,7 +1780,10 @@ const browserSolveCaptchaAction: Action = {
     try {
       logger.info('Handling BROWSER_SOLVE_CAPTCHA action');
 
-      const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+      const service = runtime.getService<StagehandService>(StagehandService.serviceType);
+      if (!service) {
+        throw new Error('StagehandService not available');
+      }
       const session = await service.getCurrentSession();
 
       if (!session) {
@@ -1890,7 +1918,7 @@ const browserStateProvider: Provider = {
     _message: Memory,
     _state?: State
   ): Promise<ProviderResult> => {
-    const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+    const service = runtime.getService<StagehandService>(StagehandService.serviceType);
     const session = await service?.getCurrentSession();
 
     if (!session) {
@@ -1946,7 +1974,7 @@ const stagehandE2ETestSuite = {
     {
       name: 'should_navigate_to_url',
       fn: async (runtime: IAgentRuntime) => {
-        const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+        const service = runtime.getService<StagehandService>(StagehandService.serviceType);
         if (!service) {
           throw new Error('StagehandService not available');
         }
@@ -1977,7 +2005,7 @@ const stagehandE2ETestSuite = {
     {
       name: 'should_detect_and_handle_captcha',
       fn: async (runtime: IAgentRuntime) => {
-        const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+        const service = runtime.getService<StagehandService>(StagehandService.serviceType);
         if (!service) {
           throw new Error('StagehandService not available');
         }
@@ -2020,7 +2048,7 @@ const stagehandE2ETestSuite = {
           return;
         }
 
-        const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+        const service = runtime.getService<StagehandService>(StagehandService.serviceType);
         if (!service) {
           throw new Error('StagehandService not available');
         }
@@ -2171,7 +2199,7 @@ const stagehandE2ETestSuite = {
           return;
         }
 
-        const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+        const service = runtime.getService<StagehandService>(StagehandService.serviceType);
         if (!service) {
           throw new Error('StagehandService not available');
         }
@@ -2274,7 +2302,7 @@ const stagehandE2ETestSuite = {
           return;
         }
 
-        const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+        const service = runtime.getService<StagehandService>(StagehandService.serviceType);
         if (!service) {
           throw new Error('StagehandService not available');
         }
@@ -2446,7 +2474,7 @@ const stagehandE2ETestSuite = {
     {
       name: 'browser_actions_integration',
       fn: async (runtime: IAgentRuntime) => {
-        const service = runtime.getService(StagehandService.serviceType) as StagehandService;
+        const service = runtime.getService<StagehandService>(StagehandService.serviceType);
         if (!service) {
           throw new Error('StagehandService not available');
         }

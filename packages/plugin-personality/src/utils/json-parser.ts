@@ -11,22 +11,22 @@
 export function extractJsonFromResponse(response: string): any {
   // Remove markdown code blocks if present
   let cleaned = response.trim();
-  
+
   // Check for ```json or ``` markers
   if (cleaned.startsWith('```json')) {
     cleaned = cleaned.substring(7);
   } else if (cleaned.startsWith('```')) {
     cleaned = cleaned.substring(3);
   }
-  
+
   // Remove trailing ``` if present
   if (cleaned.endsWith('```')) {
     cleaned = cleaned.substring(0, cleaned.length - 3);
   }
-  
+
   // Trim any remaining whitespace
   cleaned = cleaned.trim();
-  
+
   // Try to parse the JSON
   try {
     return JSON.parse(cleaned);
@@ -38,4 +38,4 @@ export function extractJsonFromResponse(response: string): any {
     }
     throw error;
   }
-} 
+}

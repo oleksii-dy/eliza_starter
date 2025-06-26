@@ -58,7 +58,9 @@ class CLIRuntime {
       );
     }
 
-    throw new Error('CLI mode: No AI model available. Set OPENAI_API_KEY or ANTHROPIC_API_KEY');
+    throw new Error(
+      'CLI mode: No AI model available. Set OPENAI_API_KEY or ANTHROPIC_API_KEY'
+    );
   }
 
   // Additional required properties for IAgentRuntime interface
@@ -92,7 +94,10 @@ async function main() {
         if (args.length < 2) {
           console.error('Error: Please specify a benchmark name');
           console.error('Usage: benchmark-cli run <benchmark-name>');
-          console.error('Available benchmarks:', getAllBenchmarkNames().join(', '));
+          console.error(
+            'Available benchmarks:',
+            getAllBenchmarkNames().join(', ')
+          );
           process.exit(1);
         }
         await runBenchmark(args[1], args.slice(2));
@@ -215,11 +220,15 @@ async function runBenchmark(benchmarkName: string, additionalArgs: string[]) {
     console.log(`📁 Results saved to: ${config.outputDir}`);
 
     if (result.summary.averageRaceScore) {
-      console.log(`🎯 Average RACE score: ${(result.summary.averageRaceScore * 100).toFixed(1)}%`);
+      console.log(
+        `🎯 Average RACE score: ${(result.summary.averageRaceScore * 100).toFixed(1)}%`
+      );
     }
 
     if (result.summary.averageFactScore) {
-      console.log(`📚 Average FACT score: ${(result.summary.averageFactScore * 100).toFixed(1)}%`);
+      console.log(
+        `📚 Average FACT score: ${(result.summary.averageFactScore * 100).toFixed(1)}%`
+      );
     }
   } catch (error) {
     console.error('\n❌ Benchmark failed:', error);
@@ -244,7 +253,10 @@ async function showResults(args: string[]) {
     if (latest) {
       // Show the latest report
       const latestReport = reportFiles.sort().reverse()[0];
-      const content = await fs.readFile(path.join(outputDir, latestReport), 'utf-8');
+      const content = await fs.readFile(
+        path.join(outputDir, latestReport),
+        'utf-8'
+      );
       console.log(content);
     } else {
       // List all reports
@@ -273,13 +285,20 @@ async function showResults(args: string[]) {
 
 async function validateEnvironment() {
   const required = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY'];
-  const searchProviders = ['TAVILY_API_KEY', 'SERPER_API_KEY', 'EXA_API_KEY', 'SERPAPI_API_KEY'];
+  const searchProviders = [
+    'TAVILY_API_KEY',
+    'SERPER_API_KEY',
+    'EXA_API_KEY',
+    'SERPAPI_API_KEY',
+  ];
 
   // Check for at least one AI model key
   const hasAIKey = required.some((key) => process.env[key]);
   if (!hasAIKey) {
     console.warn('⚠️  Warning: No AI model API key found');
-    console.warn('   Set OPENAI_API_KEY or ANTHROPIC_API_KEY for full functionality');
+    console.warn(
+      '   Set OPENAI_API_KEY or ANTHROPIC_API_KEY for full functionality'
+    );
   }
 
   // Check for at least one search provider

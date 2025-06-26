@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-
+import { THREE } from '../extras/three';
+// Using THREE namespace types
 import { System } from './System';
 import { ControlPriorities } from '../extras/ControlPriorities';
 import { isTouch } from '../../client/utils';
@@ -13,13 +13,13 @@ const v1 = new THREE.Vector3();
 const v2 = new THREE.Vector3();
 const v3 = new THREE.Vector3();
 const v4 = new THREE.Vector3();
-const v5 = new THREE.Vector3();
+const _v5 = new THREE.Vector3();
 const q1 = new THREE.Quaternion();
 const e1 = new THREE.Euler(0, 0, 0, 'YXZ');
-const m1 = new THREE.Matrix4();
+const _m1 = new THREE.Matrix4();
 
 interface ActionNode {
-  worldPos: THREE.Vector3
+  worldPos: THREE.Vector3Type
   _distance: number
   _label: string
   _duration: number
@@ -28,12 +28,12 @@ interface ActionNode {
   _onCancel: () => void
   progress: number
   finished?: boolean
-  matrixWorld: THREE.Matrix4
+  matrixWorld: THREE.Matrix4Type
 }
 
 interface ActionHandler {
   start: (node: ActionNode) => void
-  update: (delta: number) => void
+  update: (_delta: number) => void
   stop: () => void
 }
 
@@ -46,8 +46,9 @@ export class ClientActions extends System {
   control: any;
 
   constructor(world: World) {
-    super(world)
-    ;(this.nodes = []), (this.cursor = 0);
+    super(world);
+    this.nodes = [];
+    this.cursor = 0;
     this.current = {
       node: null,
       distance: Infinity,
@@ -75,7 +76,7 @@ export class ClientActions extends System {
     }
   }
 
-  update(delta: number) {
+  update(_delta: number) {
     const cameraPos = this.world.rig.position;
 
     this.btnDown =
@@ -119,7 +120,7 @@ export class ClientActions extends System {
       this.action?.start(this.current.node!);
       this.emit('change', true);
     }
-    this.action?.update(delta);
+    this.action?.update(_delta);
   }
 
   destroy() {
@@ -169,7 +170,7 @@ function createAction(world: any): ActionHandler {
       draw(node._label, node.progress / node._duration);
       world.stage.scene.add(mesh);
     },
-    update(delta: number) {
+    update(_delta: number) {
       if (!node) {return;}
       let distance;
       if ((world as any).xr?.session) {
@@ -211,7 +212,7 @@ function createAction(world: any): ActionHandler {
             console.error('action.onStart:', err);
           }
         }
-        node.progress += delta;
+        node.progress += _delta;
         if (node.progress > node._duration) {node.progress = node._duration;}
         draw(node._label, node.progress / node._duration);
         if (node.progress === node._duration) {
@@ -231,7 +232,7 @@ function createAction(world: any): ActionHandler {
           }
           cancelled = true;
         }
-        node.progress -= delta;
+        node.progress -= _delta;
         if (node.progress < 0) {node.progress = 0;}
         draw(node._label, node.progress / node._duration);
       }
@@ -257,8 +258,8 @@ function createBoard(width: number, height: number, pxToMeters: number, world: a
   // console.log('board', canvas.width, canvas.height)
   const ctx = canvas.getContext('2d')!;
 
-  let texture: THREE.CanvasTexture | undefined;
-  let mesh: THREE.Mesh | undefined;
+  let texture: THREE.CanvasTextureType | undefined;
+  let mesh: THREE.MeshType | undefined;
 
   return {
     canvas,
@@ -330,7 +331,7 @@ function createBoard(width: number, height: number, pxToMeters: number, world: a
       texture = new THREE.CanvasTexture(canvas);
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = (world as any).graphics?.maxAnisotropy || 4;
-      // texture.minFilter = texture.magFilter = THREE.LinearFilter
+      // texture.minFilter = texture.magFilter = LinearFilter
       texture.minFilter = THREE.LinearFilter;
       texture.magFilter = THREE.LinearFilter;
       // texture.generateMipmaps = false

@@ -1,4 +1,4 @@
-import { logger, Service, type IAgentRuntime } from '@elizaos/core';
+import { elizaLogger as logger, Service, type IAgentRuntime } from '@elizaos/core';
 import { canGenerateEnvVar } from './generation';
 import type { EnvVarConfig, EnvVarMetadata } from './types';
 
@@ -402,7 +402,7 @@ export class EnvManagerService extends Service {
    * Static method to stop the service
    */
   static async stop(runtime: IAgentRuntime): Promise<void> {
-    const service = runtime.getService('ENV_MANAGER') as EnvManagerService;
+    const service = runtime.getService<EnvManagerService>('ENV_MANAGER');
     if (service) {
       await void service.stop();
     }

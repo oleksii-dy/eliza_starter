@@ -8,7 +8,7 @@ import {
   type State,
   composePromptFromState,
   logger,
-  parseJSONObjectFromText,
+  parseKeyValueXml,
 } from '@elizaos/core';
 import { PublicKey } from '@solana/web3.js';
 import { JupiterDexService } from '../services/JupiterDexService.js';
@@ -44,18 +44,7 @@ import type { SolanaActionResult } from '../types';
  *
  * Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
  */
-const swapTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
-
-Example response:
-\`\`\`json
-{
-    "inputTokenSymbol": "SOL",
-    "outputTokenSymbol": "USDC",
-    "inputTokenCA": "So11111111111111111111111111111111111111112",
-    "outputTokenCA": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    "amount": 1.5
-}
-\`\`\`
+const swapTemplate = `Extract the following information about the requested token swap from the user's message.
 
 {{recentMessages}}
 
@@ -70,7 +59,25 @@ Extract the following information about the requested token swap:
 - Output token contract address if provided
 - Amount to swap
 
-Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.`;
+Return an XML object with these fields:
+<response>
+  <inputTokenSymbol>Token symbol being sold (e.g., SOL)</inputTokenSymbol>
+  <outputTokenSymbol>Token symbol being bought (e.g., USDC)</outputTokenSymbol>
+  <inputTokenCA>Input token contract address if provided</inputTokenCA>
+  <outputTokenCA>Output token contract address if provided</outputTokenCA>
+  <amount>Amount to swap as a number</amount>
+</response>
+
+Use empty tags for any values that cannot be determined.
+
+## Example Output Format
+<response>
+  <inputTokenSymbol>SOL</inputTokenSymbol>
+  <outputTokenSymbol>USDC</outputTokenSymbol>
+  <inputTokenCA>So11111111111111111111111111111111111111112</inputTokenCA>
+  <outputTokenCA>EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v</outputTokenCA>
+  <amount>1.5</amount>
+</response>`;
 
 /**
  * Action for executing a token swap from one token to another on Solana.
@@ -93,6 +100,7 @@ export const executeSwap: Action = {
     'TRADE_TOKENS_SOLANA',
     'EXCHANGE_TOKENS_SOLANA',
   ],
+  enabled: false, // Disabled by default - extremely dangerous, can execute cryptocurrency trades and lose funds
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     // Check if Jupiter DEX service is available
     const jupiterService = runtime.getService<JupiterDexService>('jupiter-dex');
@@ -145,16 +153,17 @@ export const executeSwap: Action = {
         prompt: swapPrompt,
       });
 
-      const response = parseJSONObjectFromText(result) as {
+      const response = parseKeyValueXml(result) as {
         inputTokenSymbol?: string;
         outputTokenSymbol?: string;
         inputTokenCA?: string;
         outputTokenCA?: string;
-        amount?: number;
+        amount?: string;
       };
 
       // Validate input
-      if (!response.amount || response.amount <= 0) {
+      const amount = parseFloat(response.amount || '0');
+      if (!response.amount || amount <= 0) {
         callback?.({ text: 'Please specify a valid amount to swap' });
         return {
           success: false,
@@ -187,13 +196,13 @@ export const executeSwap: Action = {
 
       // Get swap quote
       callback?.({
-        text: `Getting quote for swapping ${response.amount} ${inputToken} to ${outputToken}...`,
+        text: `Getting quote for swapping ${amount} ${inputToken} to ${outputToken}...`,
       });
 
       const quote = await jupiterService.getSwapQuote(
         inputToken,
         outputToken,
-        response.amount,
+        amount,
         50 // 0.5% slippage
       );
 
@@ -201,7 +210,7 @@ export const executeSwap: Action = {
       const priceImpact = await jupiterService.calculatePriceImpact(
         inputToken,
         outputToken,
-        response.amount
+        amount
       );
 
       // Show quote to user

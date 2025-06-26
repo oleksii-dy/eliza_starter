@@ -5,7 +5,7 @@ import type { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 /**
  * Creates a mock runtime for plugin-autocoder tests
  */
-export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime {
+export function createMockRuntime(overrides: Partial<IAgentRuntime> = { /* empty */ }): IAgentRuntime {
   return {
     agentId: 'test-agent-id' as UUID,
     character: {
@@ -66,9 +66,9 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
           listTasks: mock().mockResolvedValue([]),
         },
         'secure-environment': {
-          createTaskEnvironment: mock().mockResolvedValue({}),
-          provisionAgentCredentials: mock().mockResolvedValue({}),
-          getAgentEnvironment: mock().mockResolvedValue({}),
+          createTaskEnvironment: mock().mockResolvedValue({ /* empty */ }),
+          provisionAgentCredentials: mock().mockResolvedValue({ /* empty */ }),
+          getAgentEnvironment: mock().mockResolvedValue({ /* empty */ }),
         },
         'secrets-manager': {
           getSecret: mock().mockResolvedValue('secret-value'),
@@ -93,8 +93,8 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     createMemory: mock().mockResolvedValue('memory-id' as UUID),
     getMemories: mock().mockResolvedValue([]),
     composeState: mock().mockResolvedValue({
-      values: {},
-      data: {},
+      values: { /* empty */ },
+      data: { /* empty */ },
       text: '',
     }),
 
@@ -105,7 +105,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
 /**
  * Creates a mock memory for autocoder tests
  */
-export function createMockMemory(overrides: Partial<Memory> = {}): Memory {
+export function createMockMemory(overrides: Partial<Memory> = { /* empty */ }): Memory {
   return {
     id: 'test-memory-id' as UUID,
     entityId: 'test-entity-id' as UUID,
@@ -123,10 +123,10 @@ export function createMockMemory(overrides: Partial<Memory> = {}): Memory {
 /**
  * Creates a mock state for autocoder tests
  */
-export function createMockState(overrides: Partial<State> = {}): State {
+export function createMockState(overrides: Partial<State> = { /* empty */ }): State {
   return {
-    values: {},
-    data: {},
+    values: { /* empty */ },
+    data: { /* empty */ },
     text: '',
     ...overrides,
   } as State;

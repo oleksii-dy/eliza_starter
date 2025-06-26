@@ -32,7 +32,7 @@ export function NodeHierarchy({ app }) {
   const hasProperty = (obj, prop) => {
     try {
       return obj && typeof obj[prop] !== 'undefined';
-    } catch (err) {
+    } catch (_err) {
       return false;
     }
   };
@@ -248,7 +248,7 @@ const nodeIcons = {
   snap: MagnetIcon,
 };
 
-function renderHierarchy(nodes, depth = 0, selectedNode, setSelectedNode) {
+function _renderHierarchy(nodes, depth = 0, selectedNode, setSelectedNode) {
   if (!Array.isArray(nodes)) {return null;}
 
   return nodes.map(node => {
@@ -278,7 +278,7 @@ function renderHierarchy(nodes, depth = 0, selectedNode, setSelectedNode) {
           <Icon size={14} />
           <span>{node.id === '$root' ? 'app' : node.id}</span>
         </div>
-        {hasChildren && renderHierarchy(children, depth + 1, selectedNode, setSelectedNode)}
+        {hasChildren && _renderHierarchy(children, depth + 1, selectedNode, setSelectedNode)}
       </div>
     );
   });

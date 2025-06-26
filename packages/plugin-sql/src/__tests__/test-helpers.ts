@@ -9,18 +9,14 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Import unified system components
 import sqlPlugin, { connectionRegistry } from '../index';
-import { PgDatabaseAdapter } from '../pg/adapter';
-import { PgliteDatabaseAdapter } from '../pglite/adapter';
+import { PgAdapter } from '../pg/adapter';
+import { PgManager } from '../pg/manager';
 import { mockCharacter } from './fixtures';
-import { PGliteClientManager } from '../pglite/manager';
-import { getTempDbPath } from '../utils/temp';
 
 /**
- * Creates a fully initialized database adapter and a corresponding AgentRuntime instance
+ * Creates a fully initialized PostgreSQL database adapter and a corresponding AgentRuntime instance
  * for testing purposes. Uses the unified migration system and connection registry to
  * set up the schema for the core SQL plugin and any additional plugins provided.
- *
- * Uses the test schema for isolation from production data.
  *
  * @param testAgentId - The UUID to use for the agent runtime and adapter.
  * @param testPlugins - An array of additional plugins to load and migrate.
@@ -29,347 +25,164 @@ import { getTempDbPath } from '../utils/temp';
 export async function createTestDatabase(
   testAgentId: UUID,
   testPlugins: Plugin[] = []
-): Promise<{
-  adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
-  runtime: AgentRuntime;
-  cleanup: () => Promise<void>;
-}> {
-  // Force test environment
-  process.env.NODE_ENV = 'test';
-  process.env.VITEST = 'true';
+): Promise<{ adapter: PgAdapter; runtime: AgentRuntime; cleanup: () => Promise<void> }> {
+  // Skip test if no PostgreSQL URL is provided
+  if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
+    throw new Error(
+      'PostgreSQL connection required for tests. Please set POSTGRES_URL or TEST_POSTGRES_URL environment variable.'
+    );
+  }
 
-  // Generate a unique agent name for this test
-  const agentName = `${mockCharacter.name}_${testAgentId.substring(0, 8)}`;
+  const postgresUrl = process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL!;
 
-  // Use the same ID generation logic as the runtime
-  const agentId = stringToUuid(agentName);
+  const manager = new PgManager({
+    connectionString: postgresUrl,
+    ssl: false,
+  });
 
-  if (process.env.POSTGRES_URL) {
-    try {
-      // PostgreSQL testing using unified connection registry
-      console.log('[TEST] Using PostgreSQL with test schema');
-      const connectionManager = connectionRegistry.getPostgresManager(process.env.POSTGRES_URL);
-      const adapter = new PgDatabaseAdapter(agentId, connectionManager, process.env.POSTGRES_URL);
+  await manager.connect();
 
-      // The UnifiedMigrator will handle schema setup automatically
+  const adapter = new PgAdapter(testAgentId, manager);
+  await adapter.init();
 
-      // Create character with all required fields
-      const testCharacter = {
-        ...mockCharacter,
-        id: agentId,
-        name: agentName,
-        bio: Array.isArray(mockCharacter.bio)
-          ? mockCharacter.bio
-          : [mockCharacter.bio || 'Test bio'],
-        system: mockCharacter.system || 'You are a helpful assistant.',
-        status: AgentStatus.ACTIVE,
-        enabled: true,
-        settings: {},
-        plugins: [],
-        knowledge: [],
-        topics: [],
-        messageExamples: [],
-        postExamples: [],
-      };
+  // Register adapter in connection registry
+  connectionRegistry.registerAdapter(testAgentId, adapter);
 
-      // Initialize adapter with migrations (will use test schema)
-      await adapter.init();
+  // Create AgentRuntime with the adapter
+  const runtime = new AgentRuntime({
+    agentId: testAgentId,
+    token: '',
+    character: mockCharacter,
+    databaseAdapter: adapter,
+  });
 
-      // Give the database a moment to fully settle after migrations
-      await new Promise((resolve) => setTimeout(resolve, 500));
+  await runtime.initialize();
 
-      // Verify database is ready
-      const isReady = await adapter.isReady();
-      if (!isReady) {
-        throw new Error('[TEST] Database adapter not ready after migrations');
-      }
-
-      // Create and initialize runtime with the fully-prepared adapter
-      const runtime = new AgentRuntime({
-        character: testCharacter,
-        agentId,
-        plugins: [sqlPlugin, ...testPlugins],
-        adapter,
-      });
-
-      // Initialize the runtime - this will handle agent creation
-      await runtime.initialize();
-
-      const cleanup = async () => {
-        // Clean up test schema data
-        await adapter.close();
-        connectionRegistry.removeAdapter(agentId);
-        // Wait for cleanup to complete
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      };
-
-      return { adapter, runtime, cleanup };
-    } catch (error) {
-      console.warn('[TEST] Failed to connect to PostgreSQL, falling back to PGLite:', error);
-      // Fall through to PGLite setup below
+  // Initialize all test plugins
+  const allPlugins = [sqlPlugin, ...testPlugins];
+  for (const plugin of allPlugins) {
+    if (plugin.init) {
+      await plugin.init({}, runtime);
     }
   }
 
-  // PGLite testing (fallback or when POSTGRES_URL not set)
-  // Use shared test database
-  const dataDir = getTempDbPath('eliza-test-db');
-  console.log(`[TEST] Using PGLite database with test tables: ${dataDir}`);
-
-  // Use connection registry to ensure unified migrator uses same instance
-  const connectionManager = connectionRegistry.getPGLiteManager(dataDir);
-  await connectionManager.initialize();
-  const adapter = new PgliteDatabaseAdapter(agentId, connectionManager, dataDir);
-
-  // Create character with all required fields
-  const testCharacter = {
-    ...mockCharacter,
-    id: agentId,
-    name: agentName,
-    bio: Array.isArray(mockCharacter.bio) ? mockCharacter.bio : [mockCharacter.bio || 'Test bio'],
-    system: mockCharacter.system || 'You are a helpful assistant.',
-    status: AgentStatus.ACTIVE,
-    enabled: true,
-    settings: {},
-    plugins: [],
-    knowledge: [],
-    topics: [],
-    messageExamples: [],
-    postExamples: [],
-  };
-
-  // Initialize adapter with migrations (will use test_ prefix for tables)
-  await adapter.init();
-
-  // Give the database a moment to fully settle after migrations
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // Verify database is ready
-  const isReady = await adapter.isReady();
-  if (!isReady) {
-    throw new Error('[TEST] Database adapter not ready after migrations');
-  }
-
-  // Create runtime with the adapter directly to bypass plugin initialization issues
-  console.log(`[TEST] Creating runtime with ${testPlugins.length} plugins (excluding sqlPlugin)`);
-  console.log(
-    '[TEST] Test plugins:',
-    testPlugins.map((p) => p.name)
-  );
-  const runtime = new AgentRuntime({
-    character: testCharacter,
-    agentId,
-    plugins: [...testPlugins], // Don't include sqlPlugin to avoid duplicate adapter creation
-    adapter, // Pass adapter directly to ensure it's used
-  });
-
-  // Initialize the runtime - this will handle agent creation
-  await runtime.initialize();
-
   const cleanup = async () => {
-    // Clean up test tables
-    await adapter.close();
-    connectionRegistry.removeAdapter(agentId);
-    // Wait for cleanup to complete
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      // Clean up test data
+      await adapter.query('DELETE FROM memories WHERE agent_id = $1', [testAgentId]);
+      await adapter.query('DELETE FROM entities WHERE agent_id = $1', [testAgentId]);
+      await adapter.query('DELETE FROM rooms WHERE agent_id = $1', [testAgentId]);
+      await adapter.query('DELETE FROM agents WHERE id = $1', [testAgentId]);
+
+      connectionRegistry.removeAdapter(testAgentId);
+      await adapter.close();
+      await manager.close();
+    } catch (error) {
+      console.warn('Error during test cleanup:', error);
+    }
   };
 
   return { adapter, runtime, cleanup };
 }
 
 /**
- * Creates a properly isolated test database with automatic cleanup using the unified system.
- * This function ensures each test has clean test schema/tables.
- *
- * @param testName - A unique name for this test to ensure isolation
- * @param testPlugins - Additional plugins to load
- * @returns Database adapter, runtime, and cleanup function
+ * Creates an isolated test database for testing purposes.
+ * This is a simplified version that only creates the adapter.
  */
 export async function createIsolatedTestDatabase(
-  testName: string,
-  testPlugins: Plugin[] = []
-): Promise<{
-  adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
-  runtime: AgentRuntime;
-  cleanup: () => Promise<void>;
-  testAgentId: UUID;
-}> {
-  // Set test environment flag early
-  process.env.ELIZA_TESTING_PLUGIN = 'true';
-  process.env.NODE_ENV = 'test';
-  process.env.VITEST = 'true';
-
-  // Generate a unique test ID for this test
-  const uniqueTestId = v4() as UUID;
-  const testId = testName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-
-  // Generate a unique agent name for this test
-  const agentName = `${mockCharacter.name}_${uniqueTestId.substring(0, 8)}`;
-
-  // Use the same ID generation logic as the runtime
-  const testAgentId = stringToUuid(agentName);
-
-  if (process.env.POSTGRES_URL) {
-    try {
-      // PostgreSQL - use test schema
-      console.log('[TEST] Creating isolated PostgreSQL test');
-
-      const connectionManager = connectionRegistry.getPostgresManager(process.env.POSTGRES_URL);
-      const adapter = new PgDatabaseAdapter(
-        testAgentId,
-        connectionManager,
-        process.env.POSTGRES_URL
-      );
-
-      const db = connectionManager.getDatabase();
-
-      // Clean up test schema before starting
-
-      // Create character with all required fields
-      const testCharacter = {
-        ...mockCharacter,
-        id: testAgentId,
-        name: agentName,
-        bio: Array.isArray(mockCharacter.bio)
-          ? mockCharacter.bio
-          : [mockCharacter.bio || 'Test bio'],
-        system: mockCharacter.system || 'You are a helpful assistant.',
-        status: AgentStatus.ACTIVE,
-        enabled: true,
-        settings: {},
-        plugins: [],
-        knowledge: [],
-        topics: [],
-        messageExamples: [],
-        postExamples: [],
-      };
-
-      // Initialize adapter with migrations
-      await adapter.init();
-
-      // Give the database a moment to fully settle after migrations
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Verify database is ready
-      const isReady = await adapter.isReady();
-      if (!isReady) {
-        throw new Error('[TEST] Database adapter not ready after migrations');
-      }
-
-      // Create runtime with the adapter directly
-      console.log(
-        `[TEST] Creating isolated runtime with ${testPlugins.length} plugins (excluding sqlPlugin)`
-      );
-      console.log(
-        '[TEST] Test plugins:',
-        testPlugins.map((p) => p.name)
-      );
-      const runtime = new AgentRuntime({
-        character: testCharacter,
-        agentId: testAgentId,
-        plugins: [...testPlugins], // Don't include sqlPlugin to avoid duplicate adapter creation
-        adapter, // Pass adapter directly to ensure it's used
-      });
-
-      // Initialize the runtime - this will handle agent creation
-      await runtime.initialize();
-
-      const cleanup = async () => {
-        await adapter.close();
-        connectionRegistry.removeAdapter(testAgentId);
-        // Wait for cleanup to complete
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      };
-
-      return { adapter, runtime, cleanup, testAgentId };
-    } catch (error) {
-      console.warn('[TEST] Failed to connect to PostgreSQL, falling back to PGLite:', error);
-      // Fall through to PGLite setup below
-    }
+  testName: string
+): Promise<{ adapter: PgAdapter; cleanup: () => Promise<void> }> {
+  // Skip test if no PostgreSQL URL is provided
+  if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
+    throw new Error(
+      'PostgreSQL connection required for tests. Please set POSTGRES_URL or TEST_POSTGRES_URL environment variable.'
+    );
   }
 
-  // PGLite fallback
-  // Use unique test database for each test
-  const testDbName = `eliza-test-db-${testId}-${Date.now()}`;
-  const dataDir = getTempDbPath(testDbName);
-  console.log(`[TEST] Creating isolated PGLite test database: ${dataDir}`);
+  const testAgentId = stringToUuid(`test-${testName}-${Date.now()}`);
+  const postgresUrl = process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL!;
 
-  // Use connection registry to ensure unified migrator uses same instance
-  const connectionManager = connectionRegistry.getPGLiteManager(dataDir);
-  await connectionManager.initialize();
-  const adapter = new PgliteDatabaseAdapter(testAgentId, connectionManager, dataDir);
-
-  // Initialize adapter first so we can use its database
-  await adapter.init();
-
-  // Clean up test tables before starting
-  const db = adapter.getDatabase();
-
-  // Create character with all required fields
-  const testCharacter = {
-    ...mockCharacter,
-    id: testAgentId,
-    name: agentName,
-    bio: Array.isArray(mockCharacter.bio) ? mockCharacter.bio : [mockCharacter.bio || 'Test bio'],
-    system: mockCharacter.system || 'You are a helpful assistant.',
-    status: AgentStatus.ACTIVE,
-    enabled: true,
-    settings: {},
-    plugins: [],
-    knowledge: [],
-    topics: [],
-    messageExamples: [],
-    postExamples: [],
-  };
-
-  // Re-initialize adapter after cleanup to ensure fresh state
-  await adapter.init();
-
-  // Give the database a moment to fully settle after migrations
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // Verify database is ready
-  const isReady = await adapter.isReady();
-  if (!isReady) {
-    throw new Error('[TEST] Database adapter not ready after migrations');
-  }
-
-  // Create runtime with the adapter directly to bypass plugin initialization issues
-  const runtime = new AgentRuntime({
-    character: testCharacter,
-    agentId: testAgentId,
-    plugins: [...testPlugins], // Don't include sqlPlugin to avoid duplicate adapter creation
-    adapter, // Pass adapter directly to ensure it's used
+  const manager = new PgManager({
+    connectionString: postgresUrl,
+    ssl: false,
   });
 
-  // Initialize the runtime - this will handle agent creation
-  await runtime.initialize();
+  await manager.connect();
 
-  const cleanup = async () => {
-    await adapter.close();
-    connectionRegistry.removeAdapter(testAgentId);
-    // Wait for cleanup to complete
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  };
-
-  return { adapter, runtime, cleanup, testAgentId };
-}
-
-export async function createTestAdapter(testSuffix?: string): Promise<{
-  adapter: PgliteDatabaseAdapter;
-  agentId: UUID;
-  dataDir: string;
-}> {
-  // Force test environment
-  process.env.NODE_ENV = 'test';
-  process.env.VITEST = 'true';
-
-  const agentId = uuidv4() as UUID;
-  const dataDir = getTempDbPath('eliza-test-db');
-
-  const manager = new PGliteClientManager({ dataDir });
-  const adapter = new PgliteDatabaseAdapter(agentId, manager, dataDir);
-
+  const adapter = new PgAdapter(testAgentId, manager);
   await adapter.init();
 
-  return { adapter, agentId, dataDir };
+  const cleanup = async () => {
+    try {
+      // Clean up test data
+      await adapter.query('DELETE FROM memories WHERE agent_id = $1', [testAgentId]);
+      await adapter.query('DELETE FROM entities WHERE agent_id = $1', [testAgentId]);
+      await adapter.query('DELETE FROM rooms WHERE agent_id = $1', [testAgentId]);
+      await adapter.query('DELETE FROM agents WHERE id = $1', [testAgentId]);
+
+      await adapter.close();
+      await manager.close();
+    } catch (error) {
+      console.warn('Error during isolated test cleanup:', error);
+    }
+  };
+
+  return { adapter, cleanup };
+}
+
+/**
+ * Creates a test database adapter for testing with PostgreSQL.
+ * Uses environment variables to determine connection.
+ */
+export async function createTestAdapter(agentId?: UUID): Promise<PgAdapter> {
+  const testAgentId = agentId || stringToUuid(`test-${Date.now()}`);
+
+  // Skip if no PostgreSQL URL is provided
+  if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
+    throw new Error(
+      'PostgreSQL connection required for tests. Please set POSTGRES_URL or TEST_POSTGRES_URL environment variable.'
+    );
+  }
+
+  const postgresUrl = process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL!;
+
+  const manager = new PgManager({
+    connectionString: postgresUrl,
+    ssl: false,
+  });
+
+  await manager.connect();
+
+  const adapter = new PgAdapter(testAgentId, manager);
+  await adapter.init();
+
+  return adapter;
+}
+
+/**
+ * Helper to skip tests when PostgreSQL is not available
+ */
+export function skipIfNoPostgres(): boolean {
+  return !process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL;
+}
+
+/**
+ * Get the connection string for tests
+ */
+export function getTestConnectionString(): string {
+  return process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL || '';
+}
+
+/**
+ * Clean up test data for a specific agent
+ */
+export async function cleanupTestData(adapter: PgAdapter, agentId: UUID): Promise<void> {
+  try {
+    await adapter.query('DELETE FROM memories WHERE agent_id = $1', [agentId]);
+    await adapter.query('DELETE FROM entities WHERE agent_id = $1', [agentId]);
+    await adapter.query('DELETE FROM rooms WHERE agent_id = $1', [agentId]);
+    await adapter.query('DELETE FROM agents WHERE id = $1', [agentId]);
+  } catch (error) {
+    console.warn('Error cleaning up test data:', error);
+  }
 }

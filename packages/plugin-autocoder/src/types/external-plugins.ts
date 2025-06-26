@@ -1,7 +1,7 @@
 // Type definitions for external plugin services
 // These match the actual interfaces from the ElizaOS plugins
 
-import type { IAgentRuntime, Plugin, Service } from '@elizaos/core';
+import { type IAgentRuntime as _IAgentRuntime, Service } from '@elizaos/core';
 
 // Research Service Types (from @elizaos/plugin-research)
 export interface ResearchProject {
@@ -48,7 +48,7 @@ export interface KnowledgeDocument {
 
 export interface KnowledgeService extends Service {
   addKnowledge(options: any): Promise<any>;
-  getKnowledge(message: any, scope?: any): Promise<any[]>;
+  getKnowledge(_message: any, scope?: any): Promise<any[]>;
   checkExistingKnowledge(knowledgeId: string): Promise<boolean>;
   deleteMemory(memoryId: string): Promise<void>;
   storeDocument(doc: any): Promise<{ id: string }>;
@@ -57,7 +57,7 @@ export interface KnowledgeService extends Service {
 // Environment Manager Service Types (from @elizaos/plugin-secrets-manager)
 export interface EnvVarConfig {
   value?: string;
-  type: 'api_key' | 'private_key' | 'public_key' | 'url' | 'credential' | 'config' | 'secret';
+  type: 'apikey' | 'privatekey' | 'publickey' | 'url' | 'credential' | 'config' | 'secret';
   required: boolean;
   description: string;
   canGenerate: boolean;
@@ -75,7 +75,7 @@ export interface EnvManagerService extends Service {
   setEnvVar(
     varName: string,
     value: string,
-    options: { scope: string; projectId: string }
+    _options: { scope: string; projectId: string }
   ): Promise<void>;
   updateEnvVar(
     pluginName: string,
@@ -155,7 +155,7 @@ export interface PluginManagerService extends Service {
   searchPlugins(query: PluginSearchQuery): Promise<PluginSearchResult[]>;
 
   // Installation and lifecycle
-  installPlugin(pluginName: string, options?: PluginInstallOptions): Promise<PluginInstallResult>;
+  installPlugin(pluginName: string, _options?: PluginInstallOptions): Promise<PluginInstallResult>;
   loadPlugin(pluginId: string): Promise<LoadPluginResult>;
   unloadPlugin(pluginId: string): Promise<UnloadPluginResult>;
 
@@ -164,7 +164,7 @@ export interface PluginManagerService extends Service {
   getAllPlugins(): Promise<PluginState[]>;
 
   // Configuration
-  configurePlugin(pluginId: string, config: Record<string, any>): Promise<ConfigurationResult>;
+  configurePlugin(pluginId: string, _config: Record<string, any>): Promise<ConfigurationResult>;
   startPluginConfiguration(pluginName: string): Promise<void>;
 
   // Event handling (optional)
@@ -175,8 +175,8 @@ export interface PluginManagerService extends Service {
   clonePlugin(options: { source: string; branch?: string }): Promise<{ path: string }>;
   cloneRepository(url: string, targetDir: string): Promise<string>;
   createBranch(branchName: string): Promise<void>;
-  commitChanges(message: string): Promise<void>;
-  pushToRemote(repoPath: string, credentials: { username: string; token: string }): Promise<void>;
+  commitChanges(_message: string): Promise<void>;
+  pushToRemote(_repoPath: string, credentials: { username: string; token: string }): Promise<void>;
   createGitHubRepo(name: string, description: string): Promise<string>;
   forkRepository(repoUrl: string): Promise<string>;
   createPullRequest(options: {
@@ -219,7 +219,7 @@ export interface PluginCreationService extends Service {
     name?: string;
     path?: string;
     description?: string;
-    options?: any;
+    _options?: any;
   }): Promise<{ id: string }>;
   getJobStatus(jobId: string): Promise<PluginCreationJob | null>;
 }

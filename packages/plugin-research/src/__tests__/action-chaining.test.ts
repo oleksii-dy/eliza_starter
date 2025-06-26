@@ -19,18 +19,39 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 // Extract individual actions from the array
-const researchAction = researchActions.find((a) => a.name === 'start_research')!;
-const checkStatusAction = researchActions.find((a) => a.name === 'check_research_status')!;
-const pauseResearchAction = researchActions.find((a) => a.name === 'pause_research')!;
-const resumeResearchAction = researchActions.find((a) => a.name === 'resume_research')!;
-const refineResearchQueryAction = researchActions.find((a) => a.name === 'refine_research_query')!;
-const evaluateResearchAction = researchActions.find((a) => a.name === 'evaluate_research')!;
-const exportResearchAction = researchActions.find((a) => a.name === 'export_research')!;
-const compareResearchAction = researchActions.find((a) => a.name === 'compare_research')!;
+const researchAction = researchActions.find(
+  (a) => a.name === 'start_research'
+)!;
+const checkStatusAction = researchActions.find(
+  (a) => a.name === 'check_research_status'
+)!;
+const pauseResearchAction = researchActions.find(
+  (a) => a.name === 'pause_research'
+)!;
+const resumeResearchAction = researchActions.find(
+  (a) => a.name === 'resume_research'
+)!;
+const refineResearchQueryAction = researchActions.find(
+  (a) => a.name === 'refine_research_query'
+)!;
+const evaluateResearchAction = researchActions.find(
+  (a) => a.name === 'evaluate_research'
+)!;
+const exportResearchAction = researchActions.find(
+  (a) => a.name === 'export_research'
+)!;
+const compareResearchAction = researchActions.find(
+  (a) => a.name === 'compare_research'
+)!;
 
 // Helper to create a simple mock runtime without mock()
-function createSimpleRuntime(serviceOverrides?: Partial<ResearchService>): IAgentRuntime {
-  let researchService: ResearchService;
+function createSimpleRuntime(
+  serviceOverrides?: Partial<ResearchService>
+): IAgentRuntime {
+  let researchService = {
+    // Mock research service methods
+    ...serviceOverrides,
+  } as ResearchService;
 
   const runtime = {
     agentId: uuidv4() as UUID,
@@ -65,7 +86,8 @@ function createSimpleRuntime(serviceOverrides?: Partial<ResearchService>): IAgen
     },
     useModel: async (modelType: any, params: any) => {
       // Mock LLM responses based on the prompt
-      const content = params.messages?.[1]?.content || params.messages?.[0]?.content || '';
+      const content =
+        params.messages?.[1]?.content || params.messages?.[0]?.content || '';
 
       // Handle sub-query generation - match the actual prompt pattern
       if (
@@ -105,7 +127,8 @@ PRIORITY: medium`;
       // Return a more realistic response for other cases
       if (params?.messages) {
         return {
-          content: 'Based on the search results, here is a concise answer to your query.',
+          content:
+            'Based on the search results, here is a concise answer to your query.',
         };
       }
       return 'mock response';
@@ -428,13 +451,21 @@ describe('Action Chaining Integration Tests', () => {
       const message = createTestMemory('test');
 
       // All actions should fail validation without service
-      expect(await researchAction.validate(runtimeNoService, message)).toBe(false);
-      expect(await checkStatusAction.validate(runtimeNoService, message)).toBe(false);
-      expect(await pauseResearchAction.validate(runtimeNoService, message)).toBe(false);
+      expect(await researchAction.validate(runtimeNoService, message)).toBe(
+        false
+      );
+      expect(await checkStatusAction.validate(runtimeNoService, message)).toBe(
+        false
+      );
+      expect(
+        await pauseResearchAction.validate(runtimeNoService, message)
+      ).toBe(false);
 
       // With service, should pass
       const runtimeWithService = createSimpleRuntime();
-      expect(await researchAction.validate(runtimeWithService, message)).toBe(true);
+      expect(await researchAction.validate(runtimeWithService, message)).toBe(
+        true
+      );
     });
   });
 
@@ -744,7 +775,11 @@ describe('Action Chaining Integration Tests', () => {
       const result = await refineResearchQueryAction.handler(
         runtime,
         refineMessage,
-        { values: { research_project_id: mockProjects[0].id }, data: {}, text: '' },
+        {
+          values: { research_project_id: mockProjects[0].id },
+          data: {},
+          text: '',
+        },
         {},
         callback
       );
@@ -758,7 +793,9 @@ describe('Action Chaining Integration Tests', () => {
         if (responses.length > 0) {
           expect(responses[0].text).toContain('refined');
           expect(responses[0].metadata.refinement).toBeDefined();
-          expect(responses[0].metadata.refinement.focusAreas).toContain('neural networks');
+          expect(responses[0].metadata.refinement.focusAreas).toContain(
+            'neural networks'
+          );
         }
       } else {
         // Test should fail if result is not an ActionResult
@@ -794,7 +831,9 @@ describe('Action Chaining Integration Tests', () => {
           }
         }
         if ('nextActions' in result) {
-          expect((result as any).nextActions).toContain('check_research_status');
+          expect((result as any).nextActions).toContain(
+            'check_research_status'
+          );
         }
         if ('metadata' in result) {
           expect((result as any).metadata).toBeDefined();

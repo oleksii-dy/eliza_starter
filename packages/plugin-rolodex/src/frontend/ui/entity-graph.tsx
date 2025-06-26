@@ -22,7 +22,7 @@ interface LinkObject {
   [key: string]: any;
 }
 
-interface ForceGraphMethods {
+interface _ForceGraphMethods {
   d3Force(forceName: string): any;
   zoomToFit(duration?: number, padding?: number): void;
   centerAt(x?: number, y?: number, duration?: number): void;
@@ -100,7 +100,7 @@ export function EntityGraph({
   const [initialized, setInitialized] = useState(false);
   const [graphData, setGraphData] = useState<{ nodes: EntityNode[]; links: RelationshipLink[] }>({
     nodes: [],
-    links: []
+    links: [],
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -122,20 +122,26 @@ export function EntityGraph({
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         const matchesName = entity.names.some((name) => name.toLowerCase().includes(searchLower));
-        if (!matchesName) {return false;}
+        if (!matchesName) {
+          return false;
+        }
       }
 
       // Entity type filter
       if (entityTypeFilter) {
         const entityType = (entity.metadata?.type || 'person') as string;
-        if (entityType !== entityTypeFilter) {return false;}
+        if (entityType !== entityTypeFilter) {
+          return false;
+        }
       }
 
       // Trust level filter
       const metadata = entity.metadata || {};
       const trustMetrics = (metadata.trustMetrics as any) || {};
       const trustLevel = trustMetrics.helpfulness - trustMetrics.suspicionLevel;
-      if (trustLevel < trustLevelRange[0] || trustLevel > trustLevelRange[1]) {return false;}
+      if (trustLevel < trustLevelRange[0] || trustLevel > trustLevelRange[1]) {
+        return false;
+      }
 
       return true;
     });
@@ -143,7 +149,9 @@ export function EntityGraph({
     const filteredRelationships = relationships.filter((rel) => {
       // Connection strength filter
       const strength = rel.strength || 0.5;
-      if (strength < strengthThreshold) {return false;}
+      if (strength < strengthThreshold) {
+        return false;
+      }
 
       // Only include relationships between filtered entities
       const sourceInFiltered = filteredEntities.some((e) => e.id === rel.sourceEntityId);
@@ -226,8 +234,12 @@ export function EntityGraph({
   // Get node color based on trust level
   const getNodeColor = (node: EntityNode) => {
     const trustLevel = node.trustLevel || 0;
-    if (trustLevel > 0.5) {return 'hsl(120, 70%, 50%)';} // Green - trusted
-    if (trustLevel < -0.5) {return 'hsl(0, 70%, 50%)';} // Red - suspicious
+    if (trustLevel > 0.5) {
+      return 'hsl(120, 70%, 50%)';
+    } // Green - trusted
+    if (trustLevel < -0.5) {
+      return 'hsl(0, 70%, 50%)';
+    } // Red - suspicious
     return 'hsl(210, 70%, 50%)'; // Blue - neutral
   };
 

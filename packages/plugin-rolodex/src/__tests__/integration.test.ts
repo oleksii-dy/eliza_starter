@@ -39,13 +39,7 @@ describe('Rolodex Plugin Integration Tests', () => {
 
       // Test handler
       const mockCallback = mock();
-      const result = await trackEntityAction.handler(
-        mockRuntime,
-        message,
-        state,
-        {},
-        mockCallback
-      );
+      const result = await trackEntityAction.handler(mockRuntime, message, state, {}, mockCallback);
 
       expect(result).toBeDefined();
       expect(mockCallback).toHaveBeenCalled();
@@ -131,7 +125,7 @@ describe('Rolodex Plugin Integration Tests', () => {
       };
 
       // Mock validation response - validation expects specific response format
-      mockRuntime.useModel.mockImplementation((modelType, params) => {
+      mockRuntime.useModel.mockImplementation((modelType: any, params: any) => {
         // For validation prompts, return 'yes'
         if (params?.messages && params.messages[0]?.content?.includes('follow-up')) {
           return Promise.resolve('yes');
@@ -148,12 +142,14 @@ describe('Rolodex Plugin Integration Tests', () => {
       const mockCallback = mock();
 
       // Mock the LLM response for follow-up extraction
-      mockRuntime.useModel.mockResolvedValueOnce(JSON.stringify({
-        entityName: 'Sarah Chen',
-        scheduledFor: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Next week
-        message: 'partnership discussion',
-        priority: 'medium'
-      }));
+      mockRuntime.useModel.mockResolvedValueOnce(
+        JSON.stringify({
+          entityName: 'Sarah Chen',
+          scheduledFor: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Next week
+          message: 'partnership discussion',
+          priority: 'medium',
+        })
+      );
 
       const result = await scheduleFollowUpAction.handler(
         mockRuntime,

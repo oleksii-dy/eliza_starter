@@ -173,7 +173,7 @@ export class KnowledgeService extends Service {
    */
   static async stop(runtime: IAgentRuntime): Promise<void> {
     logger.info(`Stopping Knowledge service for agent: ${runtime.agentId}`);
-    const service = runtime.getService(KnowledgeService.serviceType);
+    const service = runtime.getService<KnowledgeService>(KnowledgeService.serviceType);
     if (!service) {
       logger.warn(`KnowledgeService not found for agent ${runtime.agentId} during stop.`);
     }
@@ -1095,7 +1095,7 @@ export class KnowledgeService extends Service {
         case 'csv': {
           // Simple CSV parsing (production would use a proper CSV parser)
           const lines = data.split('\n');
-          const headers = lines[0].split(',');
+          const _headers = lines[0].split(',');
 
           for (let i = 1; i < lines.length; i++) {
             const values = lines[i].split(',');

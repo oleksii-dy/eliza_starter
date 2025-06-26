@@ -1,5 +1,4 @@
 import { logger } from '@elizaos/core';
-import { SearchResult } from '../types';
 
 // Simple built-in rate limiter implementation
 class RateLimiter {
@@ -63,19 +62,12 @@ class RateLimiter {
   }
 }
 
-export interface SearchProvider {
-  search(query: string, maxResults?: number): Promise<any[]>;
-  name?: string;
-}
-
-export interface ContentExtractor {
-  extractContent(url: string): Promise<{ content: string; title?: string; metadata?: any }>;
-  name?: string;
-}
+import { SearchProvider } from '../types';
 
 export class RateLimitedProvider implements SearchProvider {
   private limiter: RateLimiter;
   public readonly name: string;
+  public readonly supportedDomains: string[] = ['*'];
 
   constructor(
     private provider: SearchProvider,
@@ -89,14 +81,17 @@ export class RateLimitedProvider implements SearchProvider {
     this.limiter = new RateLimiter(config);
   }
 
-  async search(query: string, maxResults?: number): Promise<any[]> {
+  async search(
+    query: string,
+    options?: any
+  ): Promise<import('../types').SearchResult[]> {
     const hasTokens = await this.limiter.tryRemoveTokens(1);
     if (!hasTokens) {
       logger.warn(`[${this.name}] Rate limit reached, waiting...`);
       await this.limiter.removeTokens(1);
     }
 
-    return this.provider.search(query, maxResults);
+    return this.provider.search(query, options);
   }
 }
 
@@ -146,14 +141,20 @@ export class AdaptiveRateLimiter extends RateLimitedProvider {
   private successCount: number = 0;
   private lastRateLimitError: number = 0;
 
-  async search(query: string, maxResults?: number): Promise<SearchResult[]> {
+  async search(
+    query: string,
+    options?: any
+  ): Promise<import('../types').SearchResult[]> {
     try {
-      const results = await super.search(query, maxResults);
+      const results = await super.search(query, options);
       this.successCount++;
       this.errorCount = Math.max(0, this.errorCount - 1); // Gradually reduce error count
       return results;
     } catch (error: any) {
-      if (error.message?.includes('rate limit') || error.message?.includes('429')) {
+      if (
+        error.message?.includes('rate limit') ||
+        error.message?.includes('429')
+      ) {
         this.errorCount++;
         this.lastRateLimitError = Date.now();
 
@@ -166,7 +167,7 @@ export class AdaptiveRateLimiter extends RateLimitedProvider {
         await new Promise((resolve) => setTimeout(resolve, backoffMs));
 
         // Retry once after backoff
-        return super.search(query, maxResults);
+        return super.search(query, options);
       }
       throw error;
     }
@@ -177,7 +178,9 @@ export class AdaptiveRateLimiter extends RateLimitedProvider {
       errorCount: this.errorCount,
       successCount: this.successCount,
       lastRateLimitError: this.lastRateLimitError,
-      timeSinceLastError: this.lastRateLimitError ? Date.now() - this.lastRateLimitError : null,
+      timeSinceLastError: this.lastRateLimitError
+        ? Date.now() - this.lastRateLimitError
+        : null,
     };
   }
 }

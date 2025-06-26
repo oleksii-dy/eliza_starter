@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 // Config table for storing key-value pairs like version, spawn, settings
 export const config = sqliteTable('config', {

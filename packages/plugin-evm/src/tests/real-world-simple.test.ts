@@ -4,7 +4,7 @@ import { swapAction } from '../actions/swap';
 import { bridgeAction } from '../actions/bridge';
 import { voteAction } from '../actions/gov-vote';
 import { EVMService } from '../service';
-import { type IAgentRuntime, type Memory, type State } from '@elizaos/core';
+import { type IAgentRuntime, type Memory, type State, asUUID } from '@elizaos/core';
 import { createPublicClient, http, type Address } from 'viem';
 import { sepolia, baseSepolia, optimismSepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -134,19 +134,22 @@ describe('Real-World EVM Plugin Validation', () => {
 
       const transferCallback = mock();
       const mockMessage: Memory = {
-        id: 'real-validation-transfer',
+        id: asUUID('real-validation-transfer'),
         agentId: mockRuntime.agentId,
-        userId: 'test-user',
+        entityId: asUUID('test-user'),
         content: { text: 'Validate transfer to real address', action: 'EVM_TRANSFER_TOKENS' },
-        roomId: 'test-room',
-        embedding: new Float32Array(),
+        roomId: asUUID('test-room'),
+        embedding: [],
         createdAt: Date.now(),
       };
 
-      const mockState: State = {
+      const mockState = {
+        values: {},
+        data: {},
+        text: '',
         agentId: mockRuntime.agentId,
-        roomId: 'test-room',
-        userId: 'test-user',
+        roomId: asUUID('test-room'),
+        entityId: asUUID('test-user'),
         bio: '',
         messageDirections: '',
         postDirections: '',
@@ -226,12 +229,12 @@ describe('Real-World EVM Plugin Validation', () => {
 
       const swapCallback = mock();
       const mockMessage: Memory = {
-        id: 'real-validation-swap',
+        id: asUUID('real-validation-swap'),
         agentId: mockRuntime.agentId,
-        userId: 'test-user',
+        entityId: asUUID('test-user'),
         content: { text: 'Validate swap with real DEX', action: 'EVM_SWAP_TOKENS' },
-        roomId: 'test-room',
-        embedding: new Float32Array(),
+        roomId: asUUID('test-room'),
+        embedding: [],
         createdAt: Date.now(),
       };
 
@@ -251,10 +254,13 @@ describe('Real-World EVM Plugin Validation', () => {
         mockMessage,
         {
           agentId: mockRuntime.agentId,
-          roomId: 'test-room',
-          userId: 'test-user',
+          values: {},
+          data: {},
+          text: '',
+          roomId: asUUID('test-room'),
+          entityId: asUUID('test-user'),
           supportedChains: 'sepolia',
-        } as State,
+        },
         {},
         swapCallback
       );
@@ -291,20 +297,23 @@ describe('Real-World EVM Plugin Validation', () => {
         const result = await swapAction.handler(
           mockRuntime,
           {
-            id: `slippage-test-${slippage}`,
+            id: asUUID(`slippage-test-${slippage}`),
             agentId: mockRuntime.agentId,
-            userId: 'test-user',
+            entityId: asUUID('test-user'),
             content: { text: `Test ${slippage}% slippage`, action: 'EVM_SWAP_TOKENS' },
-            roomId: 'test-room',
-            embedding: new Float32Array(),
+            roomId: asUUID('test-room'),
+            embedding: [],
             createdAt: Date.now(),
           },
           {
+            values: {},
+            data: {},
+            text: '',
             agentId: mockRuntime.agentId,
-            roomId: 'test-room',
-            userId: 'test-user',
+            roomId: asUUID('test-room'),
+            entityId: asUUID('test-user'),
             supportedChains: 'sepolia',
-          } as State,
+          },
           {},
           swapCallback
         );
@@ -342,20 +351,23 @@ describe('Real-World EVM Plugin Validation', () => {
         const result = await bridgeAction.handler(
           mockRuntime,
           {
-            id: `bridge-route-${route.from}-${route.to}`,
+            id: asUUID(`bridge-route-${route.from}-${route.to}`),
             agentId: mockRuntime.agentId,
-            userId: 'test-user',
+            entityId: asUUID('test-user'),
             content: { text: `Bridge ${route.from} to ${route.to}`, action: 'EVM_BRIDGE_TOKENS' },
-            roomId: 'test-room',
-            embedding: new Float32Array(),
+            roomId: asUUID('test-room'),
+            embedding: [],
             createdAt: Date.now(),
           },
           {
+            values: {},
+            data: {},
+            text: '',
             agentId: mockRuntime.agentId,
-            roomId: 'test-room',
-            userId: 'test-user',
+            roomId: asUUID('test-room'),
+            entityId: asUUID('test-user'),
             supportedChains: `${route.from} | ${route.to}`,
-          } as State,
+          },
           {},
           bridgeCallback
         );
@@ -384,20 +396,23 @@ describe('Real-World EVM Plugin Validation', () => {
       const result = await bridgeAction.handler(
         mockRuntime,
         {
-          id: 'bridge-fee-test',
+          id: asUUID('bridge-fee-test'),
           agentId: mockRuntime.agentId,
-          userId: 'test-user',
+          entityId: asUUID('test-user'),
           content: { text: 'Test bridge fees', action: 'EVM_BRIDGE_TOKENS' },
-          roomId: 'test-room',
-          embedding: new Float32Array(),
+          roomId: asUUID('test-room'),
+          embedding: [],
           createdAt: Date.now(),
         },
         {
+          values: {},
+          data: {},
+          text: '',
           agentId: mockRuntime.agentId,
-          roomId: 'test-room',
-          userId: 'test-user',
+          roomId: asUUID('test-room'),
+          entityId: asUUID('test-user'),
           supportedChains: 'sepolia | base-sepolia',
-        } as State,
+        },
         {},
         bridgeCallback
       );
@@ -433,15 +448,21 @@ describe('Real-World EVM Plugin Validation', () => {
       const result = await voteAction.handler(
         mockRuntime,
         {
-          id: 'governance-validation',
+          id: asUUID('governance-validation'),
           agentId: mockRuntime.agentId,
-          userId: 'test-user',
+          entityId: asUUID('test-user'),
           content: { text: 'Validate governance', action: 'EVM_GOVERNANCE_VOTE' },
-          roomId: 'test-room',
-          embedding: new Float32Array(),
+          roomId: asUUID('test-room'),
+          embedding: [],
           createdAt: Date.now(),
         },
-        { agentId: mockRuntime.agentId, roomId: 'test-room', userId: 'test-user' } as State,
+        {
+          values: {},
+          data: {},
+          text: '',
+          agentId: mockRuntime.agentId,
+          roomId: asUUID('test-room'),
+        } as State,
         voteOptions,
         voteCallback
       );
@@ -503,23 +524,26 @@ describe('Real-World EVM Plugin Validation', () => {
           await op.action.handler(
             mockRuntime,
             {
-              id: `perf-test-${op.name}`,
+              id: asUUID(`perf-test-${op.name}`),
               agentId: mockRuntime.agentId,
-              userId: 'test-user',
+              entityId: asUUID('test-user'),
               content: {
                 text: `Performance test ${op.name}`,
                 action: `EVM_${op.name.toUpperCase()}_TOKENS`,
               },
-              roomId: 'test-room',
-              embedding: new Float32Array(),
+              roomId: asUUID('test-room'),
+              embedding: [],
               createdAt: Date.now(),
             },
             {
+              values: {},
+              data: {},
+              text: '',
               agentId: mockRuntime.agentId,
-              roomId: 'test-room',
-              userId: 'test-user',
+              roomId: asUUID('test-room'),
+              entityId: asUUID('test-user'),
               supportedChains: 'sepolia | base-sepolia',
-            } as State,
+            },
             {},
             callback
           );
@@ -534,7 +558,7 @@ describe('Real-World EVM Plugin Validation', () => {
       }
 
       // Validate reasonable performance
-      Object.entries(performanceResults).forEach(([operation, time]) => {
+      Object.entries(performanceResults).forEach(([_operation, time]) => {
         expect(time).toBeLessThan(10000); // Should complete within 10 seconds
       });
 
@@ -552,53 +576,58 @@ describe('Real-World EVM Plugin Validation', () => {
         transferAction.handler(
           mockRuntime,
           {
-            id: 'concurrent-1',
+            id: asUUID('concurrent-1'),
             agentId: mockRuntime.agentId,
-            userId: 'test-user',
+            entityId: asUUID('test-user'),
             content: { text: 'Concurrent transfer', action: 'EVM_TRANSFER_TOKENS' },
-            roomId: 'test-room',
-            embedding: new Float32Array(),
+            roomId: asUUID('test-room'),
+            embedding: [],
             createdAt: Date.now(),
           },
           {
+            values: {},
+            data: {},
+            text: '',
             agentId: mockRuntime.agentId,
-            roomId: 'test-room',
-            userId: 'test-user',
+            roomId: asUUID('test-room'),
+            entityId: asUUID('test-user'),
             supportedChains: 'sepolia',
-          } as State,
+          },
           {},
           callback1
         ),
         swapAction.handler(
           mockRuntime,
           {
-            id: 'concurrent-2',
+            id: asUUID('concurrent-2'),
             agentId: mockRuntime.agentId,
-            userId: 'test-user',
+            entityId: asUUID('test-user'),
             content: { text: 'Concurrent swap', action: 'EVM_SWAP_TOKENS' },
-            roomId: 'test-room',
-            embedding: new Float32Array(),
+            roomId: asUUID('test-room'),
+            embedding: [],
             createdAt: Date.now(),
           },
           {
+            values: {},
+            data: {},
+            text: '',
             agentId: mockRuntime.agentId,
-            roomId: 'test-room',
-            userId: 'test-user',
+            roomId: asUUID('test-room'),
+            entityId: asUUID('test-user'),
             supportedChains: 'sepolia',
-          } as State,
+          },
           {},
           callback2
         ),
       ];
 
       // Mock responses
-      mockRuntime.useModel
-        .mockResolvedValueOnce(
-          `<response><fromChain>sepolia</fromChain><amount>0.001</amount><toAddress>${userAddress}</toAddress><token>null</token></response>`
-        )
-        .mockResolvedValueOnce(
-          '<response><inputToken>ETH</inputToken><outputToken>USDC</outputToken><amount>0.001</amount><slippage>1</slippage><chain>sepolia</chain></response>'
-        );
+      (mockRuntime.useModel as any).mockResolvedValueOnce(
+        `<response><fromChain>sepolia</fromChain><amount>0.001</amount><toAddress>${userAddress}</toAddress><token>null</token></response>`
+      );
+      (mockRuntime.useModel as any).mockResolvedValueOnce(
+        '<response><inputToken>ETH</inputToken><outputToken>USDC</outputToken><amount>0.001</amount><slippage>1</slippage><chain>sepolia</chain></response>'
+      );
 
       const startTime = Date.now();
       const results = await Promise.allSettled(concurrentOperations);
@@ -669,7 +698,7 @@ describe('Real-World EVM Plugin Validation', () => {
         const result = await transferAction.handler(
           mockRuntime,
           {
-            id: 'insufficient-balance-test' as any,
+            id: asUUID('insufficient-balance-test'),
             agentId: mockRuntime.agentId,
             entityId: 'test-user' as any,
             content: { text: 'Transfer more than balance', action: 'EVM_TRANSFER_TOKENS' },
@@ -679,20 +708,25 @@ describe('Real-World EVM Plugin Validation', () => {
           } as Memory,
           {
             agentId: mockRuntime.agentId,
-            roomId: 'test-room',
-            userId: 'test-user',
+            roomId: asUUID('test-room'),
+            entityId: asUUID('test-user'),
             supportedChains: 'sepolia',
             values: {},
             data: {},
             text: '',
-          } as State,
+          },
           {},
           transferCallback
         );
       } catch (error) {
         // Expected error for missing fromChain
-        console.log('✅ Insufficient balance scenario validated with error:', error.message);
-        expect(error.message).toContain('Missing source chain');
+        console.log(
+          '✅ Insufficient balance scenario validated with error:',
+          error instanceof Error ? error.message : String(error)
+        );
+        expect(error instanceof Error ? error.message : String(error)).toContain(
+          'Missing source chain'
+        );
         return;
       }
 
@@ -727,7 +761,7 @@ describe('Real-World EVM Plugin Validation', () => {
       await mockRuntime.createMemory(
         {
           entityId: mockRuntime.agentId,
-          roomId: 'test-room',
+          roomId: asUUID('test-room'),
           agentId: mockRuntime.agentId,
           content: {
             text: 'Test workflow memory',
@@ -742,9 +776,9 @@ describe('Real-World EVM Plugin Validation', () => {
       // Mock memory retrieval to return the created memory
       (mockRuntime.getMemories as any).mockResolvedValueOnce([
         {
-          id: 'test-memory-id',
+          id: asUUID('test-memory-id'),
           entityId: mockRuntime.agentId,
-          roomId: 'test-room',
+          roomId: asUUID('test-room'),
           agentId: mockRuntime.agentId,
           content: {
             text: 'Test workflow memory',

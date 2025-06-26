@@ -3,23 +3,24 @@ import {
   type Memory,
   type State,
   type HandlerCallback,
-  elizaLogger,
-  ActionExample,
-  type Action,
+  elizaLogger as _elizaLogger,
+  ActionExample as _ActionExample,
+  type Action as _Action,
 } from '@elizaos/core';
-import { encodeAbiParameters, parseAbiParameters } from 'viem';
-import { type WalletProvider, initWalletProvider } from '../providers/wallet';
-import { queueProposalTemplate } from '../templates';
-import type { QueueProposalParams, SupportedChain, Transaction } from '../types';
-import governorArtifacts from '../contracts/artifacts/OZGovernor.json';
 import {
-  type ByteArray,
+  encodeAbiParameters as _encodeAbiParameters,
+  parseAbiParameters as _parseAbiParameters,
+  type ByteArray as _ByteArray,
   type Hex,
   encodeFunctionData,
   keccak256,
   stringToHex,
   type Address,
 } from 'viem';
+import { type WalletProvider, initWalletProvider } from '../providers/wallet';
+import { queueProposalTemplate } from '../templates';
+import type { QueueProposalParams, SupportedChain, Transaction } from '../types';
+import governorArtifacts from '../contracts/artifacts/OZGovernor.json';
 
 export { queueProposalTemplate };
 
@@ -80,12 +81,13 @@ export class QueueAction {
 export const queueAction = {
   name: 'queue',
   description: 'Queue a DAO governance proposal for execution',
+  enabled: false, // Disabled by default - can queue governance proposals for execution
   handler: async (
     runtime: IAgentRuntime,
     _message: Memory,
     _state?: State,
     options?: Record<string, unknown>,
-    callback?: HandlerCallback,
+    callback?: HandlerCallback
   ) => {
     try {
       // Ensure options is provided
@@ -154,7 +156,8 @@ export const queueAction = {
       };
     }
   },
-  validate: async (runtime: IAgentRuntime) => {
+  // eslint-disable-next-line require-await
+  validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const privateKey = runtime.getSetting('EVM_PRIVATE_KEY');
     return typeof privateKey === 'string' && privateKey.startsWith('0x');
   },
@@ -171,7 +174,8 @@ export const queueAction = {
         name: '{{agent}}',
         content: {
           text: "I'll queue proposal 123 and execute it after the timelock period expires.",
-          thought: 'Complete governance implementation: first queue the approved proposal for the timelock period, then execute it to implement the changes. This follows the full governance security process.',
+          thought:
+            'Complete governance implementation: first queue the approved proposal for the timelock period, then execute it to implement the changes. This follows the full governance security process.',
           actions: ['EVM_GOVERNANCE_QUEUE', 'EVM_GOVERNANCE_EXECUTE'],
         },
       },
@@ -204,7 +208,8 @@ export const queueAction = {
         name: '{{agent}}',
         content: {
           text: "I'll queue the passed proposal for execution. This begins the security timelock period before the changes can be implemented.",
-          thought: 'Governance security step: proposal passed voting, now needs to be queued for the mandatory timelock period. This gives the community time to review before execution.',
+          thought:
+            'Governance security step: proposal passed voting, now needs to be queued for the mandatory timelock period. This gives the community time to review before execution.',
           action: 'EVM_GOVERNANCE_QUEUE',
           workflowContext: {
             step: 'governance-queue',
@@ -225,7 +230,8 @@ export const queueAction = {
         name: '{{agent}}',
         content: {
           text: "I'll queue proposals 15, 16, and 17 for execution. This batch queuing prepares all approved proposals for implementation.",
-          thought: "Batch governance processing: multiple proposals passed and need to be queued. I'll queue them all to start their timelock periods for orderly implementation.",
+          thought:
+            "Batch governance processing: multiple proposals passed and need to be queued. I'll queue them all to start their timelock periods for orderly implementation.",
           action: 'EVM_GOVERNANCE_QUEUE',
           workflowContext: {
             step: 'batch-queue',
@@ -246,7 +252,8 @@ export const queueAction = {
         name: '{{agent}}',
         content: {
           text: "I'll queue the treasury proposal and provide execution timing information for community awareness.",
-          thought: 'Community coordination: treasury proposals affect everyone, so queuing needs to be followed by clear communication about when execution will occur.',
+          thought:
+            'Community coordination: treasury proposals affect everyone, so queuing needs to be followed by clear communication about when execution will occur.',
           action: 'EVM_GOVERNANCE_QUEUE',
           workflowContext: {
             step: 'community-notification',

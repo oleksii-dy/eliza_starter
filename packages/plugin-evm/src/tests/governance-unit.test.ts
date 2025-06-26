@@ -6,7 +6,7 @@ import {
   TESTNET_GOVERNORS,
   getTestChains,
 } from './test-config';
-import { ProposeAction, proposeAction as govProposeAction } from '../actions/gov-propose';
+import { ProposeAction } from '../actions/gov-propose';
 import { WalletProvider } from '../providers/wallet';
 import type { IAgentRuntime } from '@elizaos/core';
 import type { Address, Hash } from 'viem';

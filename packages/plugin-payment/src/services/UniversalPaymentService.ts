@@ -12,7 +12,7 @@ import {
   type SwapParams,
   type BridgeParams,
   type PaymentRequestParams,
-  type PaymentRequest as CorePaymentRequest,
+  type PaymentRequest as _CorePaymentRequest,
   type PaymentResult as CorePaymentResult,
   type PaymentVerification,
   type WalletCapability,
@@ -26,7 +26,7 @@ import { PriceOracleService } from './PriceOracleService';
 import {
   PaymentMethod,
   PaymentStatus,
-  type IWalletAdapter,
+  type IWalletAdapter as _IWalletAdapter,
 } from '../types';
 
 /**

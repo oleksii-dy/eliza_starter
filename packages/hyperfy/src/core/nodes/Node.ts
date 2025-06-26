@@ -1,5 +1,6 @@
-import * as THREE from '../extras/three';
+import { THREE } from '../extras/three';
 import { Vector3Enhanced } from '../extras/Vector3Enhanced';
+// Runtime instances use THREE namespace which provides the actual classes
 
 // Helper function to replace lodash
 function isBoolean(value: any): value is boolean {
@@ -24,7 +25,9 @@ const EPSILON = 0.000000001;
 
 const secure = { allowRef: false };
 export function getRef(pNode: any): any {
-  if (!pNode || !pNode._isRef) {return pNode;}
+  if (!pNode || !pNode._isRef) {
+    return pNode;
+  }
   secure.allowRef = true;
   const node = pNode._ref;
   secure.allowRef = false;
@@ -34,7 +37,9 @@ export function getRef(pNode: any): any {
 export function secureRef(obj: any = {}, getRef: () => any): any {
   const tpl = {
     get _ref() {
-      if (!secure.allowRef) {return null;}
+      if (!secure.allowRef) {
+        return null;
+      }
       return getRef();
     },
   };
@@ -75,7 +80,7 @@ export class Node {
 
     this.parent = null
     ;(this.children = []), (this.ctx = null);
-    this.position = new THREE.Vector3();
+    this.position = new THREE.Vector3() as Vector3Enhanced;
     this.position.fromArray(data.position || defaults.position);
     this.quaternion = new THREE.Quaternion();
     this.quaternion.fromArray(data.quaternion || defaults.quaternion);
@@ -118,10 +123,16 @@ export class Node {
   }
 
   activate(ctx?: any): void {
-    if (ctx) {this.ctx = ctx;}
-    if (!this._active) {return;}
+    if (ctx) {
+      this.ctx = ctx;
+    }
+    if (!this._active) {
+      return;
+    }
     // top down mount
-    if (this.mounted) {return;}
+    if (this.mounted) {
+      return;
+    }
     this.updateTransform();
     this.mounted = true;
     this.mount();
@@ -135,7 +146,9 @@ export class Node {
   }
 
   deactivate() {
-    if (!this.mounted) {return;}
+    if (!this.mounted) {
+      return;
+    }
     // bottom up unmount
     const children = this.children;
     for (let i = 0, l = children.length; i < l; i++) {
@@ -151,7 +164,9 @@ export class Node {
   }
 
   add(node: Node) {
-    if (!node) {return console.error('no node to add');}
+    if (!node) {
+      return console.error('no node to add');
+    }
     if (node.parent) {
       node.parent.remove(node);
     }
@@ -165,7 +180,9 @@ export class Node {
 
   remove(node: Node) {
     const idx = this.children.indexOf(node);
-    if (idx === -1) {return;}
+    if (idx === -1) {
+      return;
+    }
     node.deactivate();
     node.parent = null;
     this.children.splice(idx, 1);
@@ -192,7 +209,9 @@ export class Node {
     // - ensure this is marked as transformed
     // - ensure this and all descendants are dirty
     // - ensure only this node is tracked dirty
-    if (this.isTransformed) {return;}
+    if (this.isTransformed) {
+      return;
+    }
     this.traverse((node: Node) => {
       if (node === this) {
         node.isTransformed = true;
@@ -209,9 +228,13 @@ export class Node {
 
   setDirty() {
     // if we haven't mounted no track
-    if (!this.mounted) {return;}
+    if (!this.mounted) {
+      return;
+    }
     // if already dirty, either this or a parent is being tracked so we're good
-    if (this.isDirty) {return;}
+    if (this.isDirty) {
+      return;
+    }
     this.isDirty = true;
     this.ctx.world.stage.dirtyNodes.add(this);
   }
@@ -221,7 +244,9 @@ export class Node {
   }
 
   set active(value) {
-    if (this._active === value) {return;}
+    if (this._active === value) {
+      return;
+    }
     this._active = value;
     if (!this._active && this.mounted) {
       this.deactivate();
@@ -233,7 +258,9 @@ export class Node {
   }
 
   clean() {
-    if (!this.isDirty) {return;}
+    if (!this.isDirty) {
+      return;
+    }
     let top: Node = this;
     while (top.parent && top.parent.isDirty) {
       top = top.parent;
@@ -320,7 +347,9 @@ export class Node {
   }
 
   get(id: string): Node | null {
-    if (this.id === id) {return this;}
+    if (this.id === id) {
+      return this;
+    }
     for (let i = 0, l = this.children.length; i < l; i++) {
       const child = this.children[i];
       if (child) {
@@ -495,7 +524,9 @@ export class Node {
           self.clean();
         },
         get _ref() {
-          if (!secure.allowRef) {return null;}
+          if (!secure.allowRef) {
+            return null;
+          }
           return self;
         },
         get _isRef() {

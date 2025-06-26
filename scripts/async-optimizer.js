@@ -634,7 +634,7 @@ async function extractAsyncFunctions(filePath) {
     const visited = new WeakSet();
 
     function visit(node) {
-      if (!node || visited.has(node)) {return;}
+      if (!node || visited.has(node)) return;
       visited.add(node);
 
       try {
@@ -705,7 +705,7 @@ async function extractAsyncFunctions(filePath) {
 
 // Improved AST analysis with better error handling
 function analyzeASTForParallelization(node, sourceCode) {
-  if (!node) {return [];}
+  if (!node) return [];
 
   const parallelOps = [];
   const awaitExpressions = [];
@@ -725,7 +725,7 @@ function analyzeASTForParallelization(node, sourceCode) {
     const parent2 = node2;
 
     // Safety check
-    if (!parent1 || !parent2) {return false;}
+    if (!parent1 || !parent2) return false;
 
     try {
       while (parent1) {
@@ -750,7 +750,7 @@ function analyzeASTForParallelization(node, sourceCode) {
 
   // Find all await expressions and Promise.all usage with improved safety
   function collectNodes(node) {
-    if (!node || visited.has(node)) {return;}
+    if (!node || visited.has(node)) return;
     visited.add(node);
 
     try {
@@ -824,7 +824,7 @@ function analyzeASTForParallelization(node, sourceCode) {
         }
       }
 
-      if (!parent) {continue;}
+      if (!parent) continue;
 
       if (currentGroup.length === 0) {
         currentGroup.push({ await: awaitExpr, parent });
@@ -971,7 +971,7 @@ function hasComplexDependencies(startNode, endNode, awaitExpr1, awaitExpr2, sour
   const usedVars = new Set();
   const identifierVisited = new WeakSet();
   function collectIdentifiers(node) {
-    if (!node || identifierVisited.has(node)) {return;}
+    if (!node || identifierVisited.has(node)) return;
     identifierVisited.add(node);
 
     if (node.type === 'Identifier') {
@@ -1259,7 +1259,7 @@ async function saveInitialCandidates(parseResults) {
         parallelOps.forEach((op) => {
           op.operations.forEach((call) => {
             const match = call.match(/([a-zA-Z_$][a-zA-Z0-9_$]*)\(/);
-            if (match) {functionNames.add(match[1]);}
+            if (match) functionNames.add(match[1]);
           });
         });
         candidateInfo.parallelizable_functions = Array.from(functionNames);
@@ -1377,7 +1377,7 @@ async function parseAllPackages(packagesDir) {
             console.log(`\n  Function: ${fn.name}`);
             for (const op of fn.astAnalysis.parallelizableOperations) {
               console.log(`    Lines ${op.lines[0]}-${op.lines[1]}:`);
-              console.log('    Operations:', op.operations);
+              console.log(`    Operations:`, op.operations);
             }
           }
         }
@@ -1681,7 +1681,7 @@ async function updateCandidates(fn, analysis) {
         analysis.parallelizableOperations.forEach((op) => {
           (op.operations || []).forEach((call) => {
             const match = call.match(/([a-zA-Z_$][a-zA-Z0-9_$]*)\(/);
-            if (match) {functionNames.add(match[1]);}
+            if (match) functionNames.add(match[1]);
           });
         });
         candidate.parallelizable_functions = Array.from(functionNames);
@@ -1851,7 +1851,7 @@ async function generateMarkdownReport(analysisResults) {
     const analysis = analysisResults.results[key];
     const { sourceInfo } = analysis;
 
-    if (!sourceInfo || !sourceInfo.filePath) {continue;}
+    if (!sourceInfo || !sourceInfo.filePath) continue;
 
     // Group by file path
     if (!fileMap[sourceInfo.filePath]) {
@@ -1960,7 +1960,7 @@ async function analyzeWithRegex(filePath) {
 
     // Find standard async functions
     while ((match = asyncFnPattern.exec(code)) !== null) {
-      const fullMatch = `${match[0]}}`; // Add closing brace
+      const fullMatch = match[0] + '}'; // Add closing brace
       const fnBody = match[2];
       const startLine = code.substring(0, match.index).split('\n').length;
 
@@ -1977,7 +1977,7 @@ async function analyzeWithRegex(filePath) {
 
     // Find exported async functions
     while ((match = asyncExportPattern.exec(code)) !== null) {
-      const fullMatch = `${match[0]}}`; // Add closing brace
+      const fullMatch = match[0] + '}'; // Add closing brace
       const fnBody = match[2];
       const startLine = code.substring(0, match.index).split('\n').length;
 
@@ -1994,7 +1994,7 @@ async function analyzeWithRegex(filePath) {
 
     // Find arrow async functions
     while ((match = arrowAsyncPattern.exec(code)) !== null) {
-      const fullMatch = `${match[0]}}`; // Add closing brace
+      const fullMatch = match[0] + '}'; // Add closing brace
       const fnBody = match[2];
       const startLine = code.substring(0, match.index).split('\n').length;
 
@@ -2011,7 +2011,7 @@ async function analyzeWithRegex(filePath) {
 
     // Find class method async functions
     while ((match = classMethodPattern.exec(code)) !== null) {
-      const fullMatch = `${match[0]}}`; // Add closing brace
+      const fullMatch = match[0] + '}'; // Add closing brace
       const fnBody = match[2];
       const startLine = code.substring(0, match.index).split('\n').length;
 

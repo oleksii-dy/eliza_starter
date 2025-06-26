@@ -98,7 +98,8 @@ async function saveResearchOutputs() {
       taskType: completedProject.metadata.taskType,
       sourceCount: completedProject.sources.length,
       findingCount: completedProject.findings.length,
-      evaluationScore: completedProject.evaluationResults?.overallScore || 'Not evaluated',
+      evaluationScore:
+        completedProject.evaluationResults?.overallScore || 'Not evaluated',
     };
     await fs.writeFile(metaPath, JSON.stringify(metadata, null, 2), 'utf-8');
     console.log(`   ✅ Metadata saved to: ${metaPath}`);

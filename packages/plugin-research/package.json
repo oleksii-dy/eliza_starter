@@ -6,14 +6,12 @@
   "type": "module",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "bun run typecheck && tsup",
-    "clean": "rm -rf dist",
-    "test": "elizaos test",
-    "dev": "tsup --watch",
-    "lint": "eslint src --fix && prettier --write \"src/**/*.{ts,tsx,md}\"",
-    "lint:check": "eslint src && prettier --check \"src/**/*.{ts,tsx,md}\"",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write \"src/**/*.{ts,tsx,md}\"",
+    "test": "elizaos test",
     "benchmark": "node scripts/run-benchmarks.ts",
     "benchmark:deepresearch": "node scripts/run-benchmarks.ts deepresearch",
     "benchmark:breadth": "node scripts/run-benchmarks.ts breadth",
@@ -51,7 +49,6 @@
     "@typescript-eslint/parser": "^8.26.0",
     "eslint": "^9.22.0",
     "prettier": "^3.2.2",
-    "tsup": "^8.0.1",
     "typescript": "5.8.3"
   },
   "files": [

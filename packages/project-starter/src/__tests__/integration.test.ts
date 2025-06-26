@@ -74,14 +74,11 @@ describe('Integration: Character and Plugin', () => {
     // Check if plugin has actions, models, providers, etc. that character might use
     const components = ['models', 'actions', 'providers', 'services', 'routes', 'events'];
     components.forEach((component) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((plugin as any)[component]) {
         // Just verify if these exist, we don't need to test their functionality here
         // Those tests belong in plugin.test.ts, actions.test.ts, etc.
         expect(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           Array.isArray((plugin as any)[component]) ||
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             typeof (plugin as any)[component] === 'object'
         ).toBeTruthy();
       }

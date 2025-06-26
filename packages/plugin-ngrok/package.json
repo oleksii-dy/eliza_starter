@@ -20,21 +20,12 @@
     "dist"
   ],
   "scripts": {
-    "build": "bun run typecheck && tsup src/index.ts --format esm --dts && vite build",
-    "test": "elizaos test",
-    "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage",
-    "test:unit": "bun test src/__tests__/unit",
-    "demo": "tsx demo/ngrok-demo.ts",
-    "demo:api": "tsx demo/api-server.ts",
-    "demo:full": "concurrently \"npm run demo:api\" \"npm run dev\"",
-    "clean": "rm -rf dist coverage",
-    "dev": "vite",
-    "dev:plugin": "tsup src/index.ts --watch",
-    "example": "ts-node src/example/main.ts",
-    "lint": "eslint src --fix && prettier --write .",
-    "lint:check": "eslint src && prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "elizaos test"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",
@@ -91,7 +82,6 @@
     "postcss": "^8.4.51",
     "prettier": "^3.0.0",
     "tailwindcss": "^3.4.10",
-    "tsup": "^6.7.0",
     "typescript": "5.8.3",
     "vite": "^5.4.1"
   },

@@ -1,5 +1,16 @@
+import type { IAgentRuntime, UUID, Component } from '@elizaos/core';
+import { elizaLogger as logger, createUniqueUuid, Role } from '@elizaos/core';
 import { secureCrypto } from './security/crypto';
 import { EnvManagerService } from './service';
+import type {
+  SecretContext,
+  SecretConfig,
+  SecretMetadata,
+  SecretAccessLog,
+  SecretPermission,
+  EncryptedSecret,
+  EnvVarConfig,
+} from './types';
 import { validateEnvVar } from './validation';
 
 /**
@@ -83,7 +94,7 @@ export class EnhancedSecretManager extends EnvManagerService {
       // Convert existing env vars to secret format
       const envVars = await this.getAllEnvVars();
       if (envVars) {
-        for (const [plugin, vars] of Object.entries(envVars)) {
+        for (const [_plugin, vars] of Object.entries(envVars)) {
           for (const [key, config] of Object.entries(vars)) {
             globalMeta[key] = {
               ...config,
@@ -108,7 +119,7 @@ export class EnhancedSecretManager extends EnvManagerService {
       // Get all worlds for this agent
       const worlds = await this.runtime.db.getWorlds(this.runtime.agentId);
 
-      for (const _world of worlds) {
+      for (const world of worlds) {
         if (world.metadata?.secrets) {
           const worldMeta: SecretMetadata = {};
 
@@ -274,7 +285,7 @@ export class EnhancedSecretManager extends EnvManagerService {
 
     // Then check our cache
     const globalSecrets = this.secretCache.get('global');
-    const _config = globalSecrets?.[key];
+    const config = globalSecrets?.[key];
 
     return config?.value || null;
   }
@@ -302,7 +313,7 @@ export class EnhancedSecretManager extends EnvManagerService {
     // Check cache first
     const worldSecrets = this.secretCache.get(`world:${worldId}`);
     if (worldSecrets?.[key]) {
-      const _config = worldSecrets[key];
+      const config = worldSecrets[key];
       if (config.encrypted && config.value) {
         return await this.decrypt(config.value);
       }
@@ -310,7 +321,7 @@ export class EnhancedSecretManager extends EnvManagerService {
     }
 
     // Load from world metadata
-    const _world = await this.runtime.getWorld(worldId as UUID);
+    const world = await this.runtime.getWorld(worldId as UUID);
     if (world?.metadata?.secrets?.[key]) {
       const secretData = world.metadata.secrets[key];
       if (typeof secretData === 'object' && secretData.encrypted) {
@@ -331,7 +342,7 @@ export class EnhancedSecretManager extends EnvManagerService {
     worldId: string,
     config: SecretConfig
   ): Promise<boolean> {
-    const _world = await this.runtime.getWorld(worldId as UUID);
+    const world = await this.runtime.getWorld(worldId as UUID);
     if (!world) {
       throw new Error(`World ${worldId} not found`);
     }
@@ -567,7 +578,7 @@ export class EnhancedSecretManager extends EnvManagerService {
 
     // World secrets - check world roles
     if (context.level === 'world' && context.worldId) {
-      const _world = await this.runtime.getWorld(context.worldId as UUID);
+      const world = await this.runtime.getWorld(context.worldId as UUID);
       if (!world) {
         return false;
       }
@@ -604,7 +615,7 @@ export class EnhancedSecretManager extends EnvManagerService {
     }
 
     // Get current config
-    const _config = await this.getSecretConfig(key, context);
+    const config = await this.getSecretConfig(key, context);
     if (!config) {
       return false;
     }
@@ -637,7 +648,7 @@ export class EnhancedSecretManager extends EnvManagerService {
     }
 
     // Get current config
-    const _config = await this.getSecretConfig(key, context);
+    const config = await this.getSecretConfig(key, context);
     if (!config) {
       return false;
     }
@@ -847,7 +858,7 @@ export class EnhancedSecretManager extends EnvManagerService {
     }
   ): Promise<boolean> {
     // Get secret config to check permissions
-    const _config = await this.getSecretConfig(key, context);
+    const config = await this.getSecretConfig(key, context);
     if (!config || !config.permissions) {
       return false;
     }

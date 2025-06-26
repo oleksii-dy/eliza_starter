@@ -1,6 +1,5 @@
-import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
-
-import * as THREE from './three';
+import type { Matrix4, Vector3 } from 'three';
+import { THREE } from './three';
 import { DEG2RAD } from './general';
 import { getTrianglesFromGeometry } from './getTrianglesFromGeometry';
 import { getTextureBytesFromMaterial } from './getTextureBytesFromMaterial';
@@ -46,7 +45,7 @@ export function createVRMFactory(glb, setupMaterial) {
   // convert skinned mesh to detached bind mode
   // this lets us remove root bone from scene and then only perform matrix updates on the whole skeleton
   // when we actually need to  for massive performance
-  const skinnedMeshes: THREE.SkinnedMesh[] = [];
+  const skinnedMeshes: any[] = [];
   glb.scene.traverse(node => {
     if (node.isSkinnedMesh) {
       node.bindMode = THREE.DetachedBindMode;
@@ -119,7 +118,7 @@ export function createVRMFactory(glb, setupMaterial) {
 
   function create(matrix, hooks, node) {
     const vrm = cloneGLB(glb);
-    const tvrm = vrm.userData.vrm;
+    const _tvrm = vrm.userData.vrm;
     const skinnedMeshes = getSkinnedMeshes(vrm.scene);
     const skeleton = skinnedMeshes[0].skeleton; // should be same across all skinnedMeshes
     const rootBone = skeleton.bones[0]; // should always be 0
@@ -142,9 +141,9 @@ export function createVRMFactory(glb, setupMaterial) {
     hooks.octree?.insert(sItem);
 
     // debug capsule
-    // const foo = new THREE.Mesh(
+    // const foo = new Mesh(
     //   sItem.geometry,
-    //   new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 })
+    //   new MeshBasicMaterial({ transparent: true, opacity: 0.5 })
     // )
     // vrm.scene.add(foo)
 
@@ -165,12 +164,12 @@ export function createVRMFactory(glb, setupMaterial) {
     let rate = 0;
     let rateCheckedAt = 999;
     let rateCheck = true;
-    const update = delta => {
-      elapsed += delta;
+    const update = _delta => {
+      elapsed += _delta;
       let should = true;
       if (rateCheck) {
         // periodically calculate update rate based on distance to camera
-        rateCheckedAt += delta;
+        rateCheckedAt += _delta;
         if (rateCheckedAt >= DIST_CHECK_RATE) {
           const vrmPos = v1.setFromMatrixPosition(vrm.scene.matrix);
           const camPos = v2.setFromMatrixPosition(hooks.camera.matrixWorld); // prettier-ignore
@@ -198,7 +197,7 @@ export function createVRMFactory(glb, setupMaterial) {
     interface Emote {
       url: string
       loading: boolean
-      action: THREE.AnimationAction | null
+      action: any | null
     }
 
     const emotes: { [url: string]: Emote } = {
@@ -312,11 +311,11 @@ export function createVRMFactory(glb, setupMaterial) {
 function cloneGLB(glb) {
   // returns a shallow clone of the gltf but a deep clone of the scene.
   // uses SkeletonUtils.clone which is the same as Object3D.clone except also clones skinned meshes etc
-  return { ...glb, scene: SkeletonUtils.clone(glb.scene) };
+  return { ...glb, scene: THREE.SkeletonUtils.clone(glb.scene) };
 }
 
 function getSkinnedMeshes(scene) {
-  const meshes: THREE.SkinnedMesh[] = [];
+  const meshes: any[] = [];
   scene.traverse(o => {
     if (o.isSkinnedMesh) {
       meshes.push(o);

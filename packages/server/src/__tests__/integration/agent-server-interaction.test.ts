@@ -6,7 +6,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'bun:test'
 import { AgentServer, CentralRootMessage } from '../../index';
 import type { IAgentRuntime, UUID, Character } from '@elizaos/core';
 import { ChannelType, AgentRuntime } from '@elizaos/core';
-import { createDatabaseAdapter } from '@elizaos/plugin-sql';
+// Database adapter created through server initialization
 import path from 'node:path';
 import fs from 'node:fs';
 
@@ -39,14 +39,8 @@ describe('Agent-Server Interaction Integration Tests', () => {
       },
     } as Character;
 
-    const db1 = await createDatabaseAdapter(
-      {
-        dataDir: testDbPath,
-      },
-      'agent-1' as UUID
-    );
-
-    await db1.init();
+    // Database adapter will be created through server initialization
+    const db1 = agentServer.database;
 
     agent1 = new AgentRuntime({
       agentId: 'agent-1' as UUID,
@@ -68,14 +62,8 @@ describe('Agent-Server Interaction Integration Tests', () => {
       },
     } as Character;
 
-    const db2 = await createDatabaseAdapter(
-      {
-        dataDir: testDbPath,
-      },
-      'agent-2' as UUID
-    );
-
-    await db2.init();
+    // Database adapter will be created through server initialization
+    const db2 = agentServer.database;
 
     agent2 = new AgentRuntime({
       agentId: 'agent-2' as UUID,

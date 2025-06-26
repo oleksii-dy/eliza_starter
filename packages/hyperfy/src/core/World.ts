@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { THREE } from './extras/three';
 import EventEmitter from 'eventemitter3';
 import type {
   World as IWorld,
@@ -47,8 +47,8 @@ export class World extends EventEmitter implements IWorld {
   hot = new Set<HotReloadable>();
 
   // Three.js objects
-  rig: any; // THREE.Object3D with any event map
-  camera: THREE.PerspectiveCamera;
+  rig: any; // Object3D with any event map
+  camera: THREE.PerspectiveCameraType;
 
   // Systems
   settings!: Settings;
@@ -133,17 +133,17 @@ export class World extends EventEmitter implements IWorld {
     // begin any stats/performance monitors
     this.preTick();
 
-    // update time, delta, frame and accumulator
+    // update time, _delta, frame and accumulator
     time /= 1000;
-    let delta = time - this.time;
-    if (delta < 0) {delta = 0;}
-    if (delta > this.maxDeltaTime) {
-      delta = this.maxDeltaTime;
+    let _delta = time - this.time;
+    if (_delta < 0) {_delta = 0;}
+    if (_delta > this.maxDeltaTime) {
+      _delta = this.maxDeltaTime;
     }
 
     this.frame++;
     this.time = time;
-    this.accumulator += delta;
+    this.accumulator += _delta;
 
     // prepare physics
     const willFixedStep = this.accumulator >= this.fixedDeltaTime;
@@ -159,21 +159,21 @@ export class World extends EventEmitter implements IWorld {
       this.accumulator -= this.fixedDeltaTime;
     }
 
-    // interpolate physics for remaining delta time
+    // interpolate physics for remaining _delta time
     const alpha = this.accumulator / this.fixedDeltaTime;
     this.preUpdate(alpha);
 
     // run all updates
-    this.update(delta, alpha);
+    this.update(_delta, alpha);
 
     // run post updates, eg cleaning all node matrices
-    this.postUpdate(delta);
+    this.postUpdate(_delta);
 
     // run all late updates
-    this.lateUpdate(delta, alpha);
+    this.lateUpdate(_delta, alpha);
 
     // run post late updates, eg cleaning all node matrices
-    this.postLateUpdate(delta);
+    this.postLateUpdate(_delta);
 
     // commit all changes, eg render on the client
     this.commit();
@@ -194,18 +194,18 @@ export class World extends EventEmitter implements IWorld {
     }
   }
 
-  private fixedUpdate(delta: number): void {
+  private fixedUpdate(_delta: number): void {
     for (const item of Array.from(this.hot)) {
-      item.fixedUpdate?.(delta);
+      item.fixedUpdate?.(_delta);
     }
     for (const system of this.systems) {
-      system.fixedUpdate(delta);
+      system.fixedUpdate(_delta);
     }
   }
 
-  private postFixedUpdate(delta: number): void {
+  private postFixedUpdate(_delta: number): void {
     for (const system of this.systems) {
-      system.postFixedUpdate(delta);
+      system.postFixedUpdate(_delta);
     }
   }
 
@@ -215,36 +215,36 @@ export class World extends EventEmitter implements IWorld {
     }
   }
 
-  private update(delta: number, _alpha: number): void {
+  private update(_delta: number, _alpha: number): void {
     for (const item of Array.from(this.hot)) {
-      item.update?.(delta);
+      item.update?.(_delta);
     }
     for (const system of this.systems) {
-      system.update(delta);
+      system.update(_delta);
     }
   }
 
-  private postUpdate(delta: number): void {
+  private postUpdate(_delta: number): void {
     for (const system of this.systems) {
-      system.postUpdate(delta);
+      system.postUpdate(_delta);
     }
   }
 
-  private lateUpdate(delta: number, _alpha: number): void {
+  private lateUpdate(_delta: number, _alpha: number): void {
     for (const item of Array.from(this.hot)) {
-      item.lateUpdate?.(delta);
+      item.lateUpdate?.(_delta);
     }
     for (const system of this.systems) {
-      system.lateUpdate(delta);
+      system.lateUpdate(_delta);
     }
   }
 
-  private postLateUpdate(delta: number): void {
+  private postLateUpdate(_delta: number): void {
     for (const item of Array.from(this.hot)) {
-      item.postLateUpdate?.(delta);
+      item.postLateUpdate?.(_delta);
     }
     for (const system of this.systems) {
-      system.postLateUpdate(delta);
+      system.postLateUpdate(_delta);
     }
   }
 
@@ -261,7 +261,6 @@ export class World extends EventEmitter implements IWorld {
   }
 
   setupMaterial = (material: THREE.Material): void => {
-    // @ts-ignore - CSM is added by environment system
     this.environment?.csm?.setupMaterial(material);
   };
 

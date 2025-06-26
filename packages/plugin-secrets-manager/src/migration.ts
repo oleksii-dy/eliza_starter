@@ -11,7 +11,7 @@ export class SecretMigrationHelper {
 
   constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
-    this.secretsManager = runtime.get('SECRETS') as EnhancedSecretManager;
+    this.secretsManager = runtime.getService<EnhancedSecretManager>('SECRETS');
 
     if (!this.secretsManager) {
       throw new Error('Secrets manager service not available');
@@ -187,11 +187,11 @@ export async function runMigration(_runtime: IAgentRuntime): Promise<void> {
   const _helper = new SecretMigrationHelper(_runtime);
 
   // Run all migrations
-  await helper.migrateCharacterSettings();
-  await helper.migrateAllWorlds();
+  await _helper.migrateCharacterSettings();
+  await _helper.migrateAllWorlds();
 
   // Install compatibility layer
-  helper.installCompatibilityLayer();
+  _helper.installCompatibilityLayer();
 
   logger.info('[Migration] Migration completed successfully');
 }

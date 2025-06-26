@@ -486,7 +486,7 @@ const PhysX = (() => {
         const h16 = new Int16Array(1);
         const h8 = new Int8Array(h16.buffer);
         h16[0] = 0x6373;
-        if (h8[0] !== 0x73 || h8[1] !== 0x63) {throw 'Runtime error: expected the system to be little-endian! (Run with -sSUPPORT_BIG_ENDIAN to bypass)';}
+        if (h8[0] !== 0x73 || h8[1] !== 0x63) {throw new Error('Runtime error: expected the system to be little-endian! (Run with -sSUPPORT_BIG_ENDIAN to bypass)');}
       })();
 
       // end include: runtime_assertions.js
@@ -738,7 +738,7 @@ const PhysX = (() => {
         if (readBinary) {
           return readBinary(file);
         }
-        throw 'both async and sync fetching of the wasm failed';
+        throw new Error('both async and sync fetching of the wasm failed');
       }
 
       function getBinaryPromise(binaryFile) {
@@ -753,7 +753,7 @@ const PhysX = (() => {
           ) {
             return fetch(binaryFile, { credentials: 'same-origin' }).then((response) => {
               if (!response['ok']) {
-                throw `failed to load wasm binary file at '${binaryFile}'`;
+                throw new Error(`failed to load wasm binary file at '${binaryFile}'`);
               }
               return response['arrayBuffer']();
             }).catch(() => getBinarySync(binaryFile));
@@ -990,29 +990,29 @@ const PhysX = (() => {
       // === Body ===
 
       const ASM_CONSTS = {
-        269854: ($0) => { const self = Module['getCache'](Module['CustomSupportImpl'])[$0]; if (!self.hasOwnProperty('getCustomMargin')) {throw 'a JSImplementation must implement all functions, you forgot CustomSupportImpl::getCustomMargin.';} return self['getCustomMargin'](); },
-        270106: ($0, $1, $2) => { const self = Module['getCache'](Module['CustomSupportImpl'])[$0]; if (!self.hasOwnProperty('getCustomSupportLocal')) {throw 'a JSImplementation must implement all functions, you forgot CustomSupportImpl::getCustomSupportLocal.';} self['getCustomSupportLocal']($1,$2); },
-        270374: ($0, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10) => { const self = Module['getCache'](Module['PassThroughFilterShaderImpl'])[$0]; if (!self.hasOwnProperty('filterShader')) {throw 'a JSImplementation must implement all functions, you forgot PassThroughFilterShaderImpl::filterShader.';} return self['filterShader']($1,$2,$3,$4,$5,$6,$7,$8,$9,$10); },
-        270667: ($0, $1, $2) => { const self = Module['getCache'](Module['PxControllerBehaviorCallbackImpl'])[$0]; if (!self.hasOwnProperty('getShapeBehaviorFlags')) {throw 'a JSImplementation must implement all functions, you forgot PxControllerBehaviorCallbackImpl::getShapeBehaviorFlags.';} return self['getShapeBehaviorFlags']($1,$2); },
-        270972: ($0, $1) => { const self = Module['getCache'](Module['PxControllerBehaviorCallbackImpl'])[$0]; if (!self.hasOwnProperty('getControllerBehaviorFlags')) {throw 'a JSImplementation must implement all functions, you forgot PxControllerBehaviorCallbackImpl::getControllerBehaviorFlags.';} return self['getControllerBehaviorFlags']($1); },
-        271289: ($0, $1) => { const self = Module['getCache'](Module['PxControllerBehaviorCallbackImpl'])[$0]; if (!self.hasOwnProperty('getObstacleBehaviorFlags')) {throw 'a JSImplementation must implement all functions, you forgot PxControllerBehaviorCallbackImpl::getObstacleBehaviorFlags.';} return self['getObstacleBehaviorFlags']($1); },
-        271600: ($0, $1, $2) => { const self = Module['getCache'](Module['PxControllerFilterCallbackImpl'])[$0]; if (!self.hasOwnProperty('filter')) {throw 'a JSImplementation must implement all functions, you forgot PxControllerFilterCallbackImpl::filter.';} return self['filter']($1,$2); },
-        271856: ($0, $1, $2, $3, $4) => { const self = Module['getCache'](Module['PxErrorCallbackImpl'])[$0]; if (!self.hasOwnProperty('reportError')) {throw 'a JSImplementation must implement all functions, you forgot PxErrorCallbackImpl::reportError.';} self['reportError']($1,$2,$3,$4); },
-        272104: ($0, $1, $2, $3, $4) => { const self = Module['getCache'](Module['PxQueryFilterCallbackImpl'])[$0]; if (!self.hasOwnProperty('simplePreFilter')) {throw 'a JSImplementation must implement all functions, you forgot PxQueryFilterCallbackImpl::simplePreFilter.';} return self['simplePreFilter']($1,$2,$3,$4); },
-        272383: ($0, $1, $2, $3, $4) => { const self = Module['getCache'](Module['PxQueryFilterCallbackImpl'])[$0]; if (!self.hasOwnProperty('simplePostFilter')) {throw 'a JSImplementation must implement all functions, you forgot PxQueryFilterCallbackImpl::simplePostFilter.';} return self['simplePostFilter']($1,$2,$3,$4); },
-        272665: ($0, $1, $2) => { const self = Module['getCache'](Module['PxSimulationEventCallbackImpl'])[$0]; if (!self.hasOwnProperty('onConstraintBreak')) {throw 'a JSImplementation must implement all functions, you forgot PxSimulationEventCallbackImpl::onConstraintBreak.';} self['onConstraintBreak']($1,$2); },
-        272945: ($0, $1, $2) => { const self = Module['getCache'](Module['PxSimulationEventCallbackImpl'])[$0]; if (!self.hasOwnProperty('onWake')) {throw 'a JSImplementation must implement all functions, you forgot PxSimulationEventCallbackImpl::onWake.';} self['onWake']($1,$2); },
-        273192: ($0, $1, $2) => { const self = Module['getCache'](Module['PxSimulationEventCallbackImpl'])[$0]; if (!self.hasOwnProperty('onSleep')) {throw 'a JSImplementation must implement all functions, you forgot PxSimulationEventCallbackImpl::onSleep.';} self['onSleep']($1,$2); },
-        273442: ($0, $1, $2, $3) => { const self = Module['getCache'](Module['PxSimulationEventCallbackImpl'])[$0]; if (!self.hasOwnProperty('onContact')) {throw 'a JSImplementation must implement all functions, you forgot PxSimulationEventCallbackImpl::onContact.';} self['onContact']($1,$2,$3); },
-        273701: ($0, $1, $2) => { const self = Module['getCache'](Module['PxSimulationEventCallbackImpl'])[$0]; if (!self.hasOwnProperty('onTrigger')) {throw 'a JSImplementation must implement all functions, you forgot PxSimulationEventCallbackImpl::onTrigger.';} self['onTrigger']($1,$2); },
-        273957: ($0, $1) => { const self = Module['getCache'](Module['PxUserControllerHitReportImpl'])[$0]; if (!self.hasOwnProperty('onShapeHit')) {throw 'a JSImplementation must implement all functions, you forgot PxUserControllerHitReportImpl::onShapeHit.';} self['onShapeHit']($1); },
-        274213: ($0, $1) => { const self = Module['getCache'](Module['PxUserControllerHitReportImpl'])[$0]; if (!self.hasOwnProperty('onControllerHit')) {throw 'a JSImplementation must implement all functions, you forgot PxUserControllerHitReportImpl::onControllerHit.';} self['onControllerHit']($1); },
-        274484: ($0, $1) => { const self = Module['getCache'](Module['PxUserControllerHitReportImpl'])[$0]; if (!self.hasOwnProperty('onObstacleHit')) {throw 'a JSImplementation must implement all functions, you forgot PxUserControllerHitReportImpl::onObstacleHit.';} self['onObstacleHit']($1); },
-        274749: ($0) => { const self = Module['getCache'](Module['SimplPvdTransportImpl'])[$0]; if (!self.hasOwnProperty('connect')) {throw 'a JSImplementation must implement all functions, you forgot SimplPvdTransportImpl::connect.';} return self['connect'](); },
-        274985: ($0) => { const self = Module['getCache'](Module['SimplPvdTransportImpl'])[$0]; if (!self.hasOwnProperty('disconnect')) {throw 'a JSImplementation must implement all functions, you forgot SimplPvdTransportImpl::disconnect.';} self['disconnect'](); },
-        275223: ($0) => { const self = Module['getCache'](Module['SimplPvdTransportImpl'])[$0]; if (!self.hasOwnProperty('isConnected')) {throw 'a JSImplementation must implement all functions, you forgot SimplPvdTransportImpl::isConnected.';} return self['isConnected'](); },
-        275471: ($0) => { const self = Module['getCache'](Module['SimplPvdTransportImpl'])[$0]; if (!self.hasOwnProperty('flush')) {throw 'a JSImplementation must implement all functions, you forgot SimplPvdTransportImpl::flush.';} self['flush'](); },
-        275694: ($0, $1, $2) => { const self = Module['getCache'](Module['SimplPvdTransportImpl'])[$0]; if (!self.hasOwnProperty('send')) {throw 'a JSImplementation must implement all functions, you forgot SimplPvdTransportImpl::send.';} self['send']($1,$2); }
+        269854: ($0) => { const self = Module['getCache'](Module['CustomSupportImpl'])[$0]; if (!self.hasOwnProperty('getCustomMargin')) {throw new Error('a JSImplementation must implement all functions, you forgot CustomSupportImpl::getCustomMargin.');} return self['getCustomMargin'](); },
+        270106: ($0, $1, $2) => { const self = Module['getCache'](Module['CustomSupportImpl'])[$0]; if (!self.hasOwnProperty('getCustomSupportLocal')) {throw new Error('a JSImplementation must implement all functions, you forgot CustomSupportImpl::getCustomSupportLocal.');} self['getCustomSupportLocal']($1,$2); },
+        270374: ($0, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10) => { const self = Module['getCache'](Module['PassThroughFilterShaderImpl'])[$0]; if (!self.hasOwnProperty('filterShader')) {throw new Error('a JSImplementation must implement all functions, you forgot PassThroughFilterShaderImpl::filterShader.');} return self['filterShader']($1,$2,$3,$4,$5,$6,$7,$8,$9,$10); },
+        270667: ($0, $1, $2) => { const self = Module['getCache'](Module['PxControllerBehaviorCallbackImpl'])[$0]; if (!self.hasOwnProperty('getShapeBehaviorFlags')) {throw new Error('a JSImplementation must implement all functions, you forgot PxControllerBehaviorCallbackImpl::getShapeBehaviorFlags.');} return self['getShapeBehaviorFlags']($1,$2); },
+        270972: ($0, $1) => { const self = Module['getCache'](Module['PxControllerBehaviorCallbackImpl'])[$0]; if (!self.hasOwnProperty('getControllerBehaviorFlags')) {throw new Error('a JSImplementation must implement all functions, you forgot PxControllerBehaviorCallbackImpl::getControllerBehaviorFlags.');} return self['getControllerBehaviorFlags']($1); },
+        271289: ($0, $1) => { const self = Module['getCache'](Module['PxControllerBehaviorCallbackImpl'])[$0]; if (!self.hasOwnProperty('getObstacleBehaviorFlags')) {throw new Error('a JSImplementation must implement all functions, you forgot PxControllerBehaviorCallbackImpl::getObstacleBehaviorFlags.');} return self['getObstacleBehaviorFlags']($1); },
+        271600: ($0, $1, $2) => { const self = Module['getCache'](Module['PxControllerFilterCallbackImpl'])[$0]; if (!self.hasOwnProperty('filter')) {throw new Error('a JSImplementation must implement all functions, you forgot PxControllerFilterCallbackImpl::filter.');} return self['filter']($1,$2); },
+        271856: ($0, $1, $2, $3, $4) => { const self = Module['getCache'](Module['PxErrorCallbackImpl'])[$0]; if (!self.hasOwnProperty('reportError')) {throw new Error('a JSImplementation must implement all functions, you forgot PxErrorCallbackImpl::reportError.');} self['reportError']($1,$2,$3,$4); },
+        272104: ($0, $1, $2, $3, $4) => { const self = Module['getCache'](Module['PxQueryFilterCallbackImpl'])[$0]; if (!self.hasOwnProperty('simplePreFilter')) {throw new Error('a JSImplementation must implement all functions, you forgot PxQueryFilterCallbackImpl::simplePreFilter.');} return self['simplePreFilter']($1,$2,$3,$4); },
+        272383: ($0, $1, $2, $3, $4) => { const self = Module['getCache'](Module['PxQueryFilterCallbackImpl'])[$0]; if (!self.hasOwnProperty('simplePostFilter')) {throw new Error('a JSImplementation must implement all functions, you forgot PxQueryFilterCallbackImpl::simplePostFilter.');} return self['simplePostFilter']($1,$2,$3,$4); },
+        272665: ($0, $1, $2) => { const self = Module['getCache'](Module['PxSimulationEventCallbackImpl'])[$0]; if (!self.hasOwnProperty('onConstraintBreak')) {throw new Error('a JSImplementation must implement all functions, you forgot PxSimulationEventCallbackImpl::onConstraintBreak.');} self['onConstraintBreak']($1,$2); },
+        272945: ($0, $1, $2) => { const self = Module['getCache'](Module['PxSimulationEventCallbackImpl'])[$0]; if (!self.hasOwnProperty('onWake')) {throw new Error('a JSImplementation must implement all functions, you forgot PxSimulationEventCallbackImpl::onWake.');} self['onWake']($1,$2); },
+        273192: ($0, $1, $2) => { const self = Module['getCache'](Module['PxSimulationEventCallbackImpl'])[$0]; if (!self.hasOwnProperty('onSleep')) {throw new Error('a JSImplementation must implement all functions, you forgot PxSimulationEventCallbackImpl::onSleep.');} self['onSleep']($1,$2); },
+        273442: ($0, $1, $2, $3) => { const self = Module['getCache'](Module['PxSimulationEventCallbackImpl'])[$0]; if (!self.hasOwnProperty('onContact')) {throw new Error('a JSImplementation must implement all functions, you forgot PxSimulationEventCallbackImpl::onContact.');} self['onContact']($1,$2,$3); },
+        273701: ($0, $1, $2) => { const self = Module['getCache'](Module['PxSimulationEventCallbackImpl'])[$0]; if (!self.hasOwnProperty('onTrigger')) {throw new Error('a JSImplementation must implement all functions, you forgot PxSimulationEventCallbackImpl::onTrigger.');} self['onTrigger']($1,$2); },
+        273957: ($0, $1) => { const self = Module['getCache'](Module['PxUserControllerHitReportImpl'])[$0]; if (!self.hasOwnProperty('onShapeHit')) {throw new Error('a JSImplementation must implement all functions, you forgot PxUserControllerHitReportImpl::onShapeHit.');} self['onShapeHit']($1); },
+        274213: ($0, $1) => { const self = Module['getCache'](Module['PxUserControllerHitReportImpl'])[$0]; if (!self.hasOwnProperty('onControllerHit')) {throw new Error('a JSImplementation must implement all functions, you forgot PxUserControllerHitReportImpl::onControllerHit.');} self['onControllerHit']($1); },
+        274484: ($0, $1) => { const self = Module['getCache'](Module['PxUserControllerHitReportImpl'])[$0]; if (!self.hasOwnProperty('onObstacleHit')) {throw new Error('a JSImplementation must implement all functions, you forgot PxUserControllerHitReportImpl::onObstacleHit.');} self['onObstacleHit']($1); },
+        274749: ($0) => { const self = Module['getCache'](Module['SimplPvdTransportImpl'])[$0]; if (!self.hasOwnProperty('connect')) {throw new Error('a JSImplementation must implement all functions, you forgot SimplPvdTransportImpl::connect.');} return self['connect'](); },
+        274985: ($0) => { const self = Module['getCache'](Module['SimplPvdTransportImpl'])[$0]; if (!self.hasOwnProperty('disconnect')) {throw new Error('a JSImplementation must implement all functions, you forgot SimplPvdTransportImpl::disconnect.');} self['disconnect'](); },
+        275223: ($0) => { const self = Module['getCache'](Module['SimplPvdTransportImpl'])[$0]; if (!self.hasOwnProperty('isConnected')) {throw new Error('a JSImplementation must implement all functions, you forgot SimplPvdTransportImpl::isConnected.');} return self['isConnected'](); },
+        275471: ($0) => { const self = Module['getCache'](Module['SimplPvdTransportImpl'])[$0]; if (!self.hasOwnProperty('flush')) {throw new Error('a JSImplementation must implement all functions, you forgot SimplPvdTransportImpl::flush.');} self['flush'](); },
+        275694: ($0, $1, $2) => { const self = Module['getCache'](Module['SimplPvdTransportImpl'])[$0]; if (!self.hasOwnProperty('send')) {throw new Error('a JSImplementation must implement all functions, you forgot SimplPvdTransportImpl::send.');} self['send']($1,$2); }
       };
 
 
@@ -5699,7 +5699,7 @@ const PhysX = (() => {
 
       /** @suppress {duplicate} (TODO: avoid emitting this multiple times, it is redundant) */
       function destroy(obj) {
-        if (!obj['__destroy__']) {throw 'Error: Cannot destroy object. (Did you create it yourself?)';}
+        if (!obj['__destroy__']) {throw new Error('Error: Cannot destroy object. (Did you create it yourself?)');}
         obj['__destroy__']();
         // Remove from cache, so the object can be GC'd and refs added onto it released
         delete getCache(obj.__class__)[obj.ptr];
@@ -5846,7 +5846,7 @@ const PhysX = (() => {
 
 
       // PxBase
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBase() { throw 'cannot construct a PxBase, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBase() { throw new Error('cannot construct a PxBase, no constructor in IDL'); }
       PxBase.prototype = Object.create(WrapperObject.prototype);
       PxBase.prototype.constructor = PxBase;
       PxBase.prototype.__class__ = PxBase;
@@ -5892,7 +5892,7 @@ const PhysX = (() => {
       };;
 
       // PxActor
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxActor() { throw 'cannot construct a PxActor, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxActor() { throw new Error('cannot construct a PxActor, no constructor in IDL'); }
       PxActor.prototype = Object.create(PxBase.prototype);
       PxActor.prototype.constructor = PxActor;
       PxActor.prototype.__class__ = PxActor;
@@ -6019,7 +6019,7 @@ const PhysX = (() => {
       /** @suppress {checkTypes} */
       Object.defineProperty(PxActor.prototype, 'userData', { get: PxActor.prototype.get_userData, set: PxActor.prototype.set_userData });
       // PxQueryHit
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxQueryHit() { throw 'cannot construct a PxQueryHit, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxQueryHit() { throw new Error('cannot construct a PxQueryHit, no constructor in IDL'); }
       PxQueryHit.prototype = Object.create(WrapperObject.prototype);
       PxQueryHit.prototype.constructor = PxQueryHit;
       PxQueryHit.prototype.__class__ = PxQueryHit;
@@ -6042,7 +6042,7 @@ const PhysX = (() => {
         _emscripten_bind_PxQueryHit___destroy___0(self);
       };
       // PxControllerBehaviorCallback
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerBehaviorCallback() { throw 'cannot construct a PxControllerBehaviorCallback, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerBehaviorCallback() { throw new Error('cannot construct a PxControllerBehaviorCallback, no constructor in IDL'); }
       PxControllerBehaviorCallback.prototype = Object.create(WrapperObject.prototype);
       PxControllerBehaviorCallback.prototype.constructor = PxControllerBehaviorCallback;
       PxControllerBehaviorCallback.prototype.__class__ = PxControllerBehaviorCallback;
@@ -6050,7 +6050,7 @@ const PhysX = (() => {
       Module['PxControllerBehaviorCallback'] = PxControllerBehaviorCallback;
 
       // PxLocationHit
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxLocationHit() { throw 'cannot construct a PxLocationHit, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxLocationHit() { throw new Error('cannot construct a PxLocationHit, no constructor in IDL'); }
       PxLocationHit.prototype = Object.create(PxQueryHit.prototype);
       PxLocationHit.prototype.constructor = PxLocationHit;
       PxLocationHit.prototype.__class__ = PxLocationHit;
@@ -6117,7 +6117,7 @@ const PhysX = (() => {
         _emscripten_bind_PxLocationHit___destroy___0(self);
       };
       // PxPvdTransport
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxPvdTransport() { throw 'cannot construct a PxPvdTransport, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxPvdTransport() { throw new Error('cannot construct a PxPvdTransport, no constructor in IDL'); }
       PxPvdTransport.prototype = Object.create(WrapperObject.prototype);
       PxPvdTransport.prototype.constructor = PxPvdTransport;
       PxPvdTransport.prototype.__class__ = PxPvdTransport;
@@ -6150,7 +6150,7 @@ const PhysX = (() => {
       };;
 
       // PxQueryFilterCallback
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxQueryFilterCallback() { throw 'cannot construct a PxQueryFilterCallback, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxQueryFilterCallback() { throw new Error('cannot construct a PxQueryFilterCallback, no constructor in IDL'); }
       PxQueryFilterCallback.prototype = Object.create(WrapperObject.prototype);
       PxQueryFilterCallback.prototype.constructor = PxQueryFilterCallback;
       PxQueryFilterCallback.prototype.__class__ = PxQueryFilterCallback;
@@ -6162,7 +6162,7 @@ const PhysX = (() => {
         _emscripten_bind_PxQueryFilterCallback___destroy___0(self);
       };
       // PxRefCounted
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRefCounted() { throw 'cannot construct a PxRefCounted, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRefCounted() { throw new Error('cannot construct a PxRefCounted, no constructor in IDL'); }
       PxRefCounted.prototype = Object.create(PxBase.prototype);
       PxRefCounted.prototype.constructor = PxRefCounted;
       PxRefCounted.prototype.__class__ = PxRefCounted;
@@ -6218,7 +6218,7 @@ const PhysX = (() => {
       };;
 
       // PxRigidActor
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRigidActor() { throw 'cannot construct a PxRigidActor, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRigidActor() { throw new Error('cannot construct a PxRigidActor, no constructor in IDL'); }
       PxRigidActor.prototype = Object.create(PxActor.prototype);
       PxRigidActor.prototype.constructor = PxRigidActor;
       PxRigidActor.prototype.__class__ = PxRigidActor;
@@ -6390,7 +6390,7 @@ const PhysX = (() => {
       /** @suppress {checkTypes} */
       Object.defineProperty(PxRigidActor.prototype, 'userData', { get: PxRigidActor.prototype.get_userData, set: PxRigidActor.prototype.set_userData });
       // PxSceneQuerySystemBase
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSceneQuerySystemBase() { throw 'cannot construct a PxSceneQuerySystemBase, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSceneQuerySystemBase() { throw new Error('cannot construct a PxSceneQuerySystemBase, no constructor in IDL'); }
       PxSceneQuerySystemBase.prototype = Object.create(WrapperObject.prototype);
       PxSceneQuerySystemBase.prototype.constructor = PxSceneQuerySystemBase;
       PxSceneQuerySystemBase.prototype.__class__ = PxSceneQuerySystemBase;
@@ -6473,7 +6473,7 @@ const PhysX = (() => {
       };;
 
       // PxSimulationEventCallback
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSimulationEventCallback() { throw 'cannot construct a PxSimulationEventCallback, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSimulationEventCallback() { throw new Error('cannot construct a PxSimulationEventCallback, no constructor in IDL'); }
       PxSimulationEventCallback.prototype = Object.create(WrapperObject.prototype);
       PxSimulationEventCallback.prototype.constructor = PxSimulationEventCallback;
       PxSimulationEventCallback.prototype.__class__ = PxSimulationEventCallback;
@@ -6485,7 +6485,7 @@ const PhysX = (() => {
         _emscripten_bind_PxSimulationEventCallback___destroy___0(self);
       };
       // PxSimulationFilterShader
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSimulationFilterShader() { throw 'cannot construct a PxSimulationFilterShader, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSimulationFilterShader() { throw new Error('cannot construct a PxSimulationFilterShader, no constructor in IDL'); }
       PxSimulationFilterShader.prototype = Object.create(WrapperObject.prototype);
       PxSimulationFilterShader.prototype.constructor = PxSimulationFilterShader;
       PxSimulationFilterShader.prototype.__class__ = PxSimulationFilterShader;
@@ -6497,7 +6497,7 @@ const PhysX = (() => {
         _emscripten_bind_PxSimulationFilterShader___destroy___0(self);
       };
       // Support
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function Support() { throw 'cannot construct a Support, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function Support() { throw new Error('cannot construct a Support, no constructor in IDL'); }
       Support.prototype = Object.create(WrapperObject.prototype);
       Support.prototype.constructor = Support;
       Support.prototype.__class__ = Support;
@@ -6520,7 +6520,7 @@ const PhysX = (() => {
         _emscripten_bind_Support___destroy___0(self);
       };
       // CustomSupport
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function CustomSupport() { throw 'cannot construct a CustomSupport, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function CustomSupport() { throw new Error('cannot construct a CustomSupport, no constructor in IDL'); }
       CustomSupport.prototype = Object.create(Support.prototype);
       CustomSupport.prototype.constructor = CustomSupport;
       CustomSupport.prototype.__class__ = CustomSupport;
@@ -6555,7 +6555,7 @@ const PhysX = (() => {
         _emscripten_bind_CustomSupport___destroy___0(self);
       };
       // PassThroughFilterShader
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PassThroughFilterShader() { throw 'cannot construct a PassThroughFilterShader, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PassThroughFilterShader() { throw new Error('cannot construct a PassThroughFilterShader, no constructor in IDL'); }
       PassThroughFilterShader.prototype = Object.create(PxSimulationFilterShader.prototype);
       PassThroughFilterShader.prototype.constructor = PassThroughFilterShader;
       PassThroughFilterShader.prototype.__class__ = PassThroughFilterShader;
@@ -6593,7 +6593,7 @@ const PhysX = (() => {
         _emscripten_bind_PassThroughFilterShader___destroy___0(self);
       };
       // PxArticulationTendon
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationTendon() { throw 'cannot construct a PxArticulationTendon, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationTendon() { throw new Error('cannot construct a PxArticulationTendon, no constructor in IDL'); }
       PxArticulationTendon.prototype = Object.create(PxBase.prototype);
       PxArticulationTendon.prototype.constructor = PxArticulationTendon;
       PxArticulationTendon.prototype.__class__ = PxArticulationTendon;
@@ -6694,7 +6694,7 @@ const PhysX = (() => {
         _emscripten_bind_PxArticulationTendon___destroy___0(self);
       };
       // PxBaseMaterial
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBaseMaterial() { throw 'cannot construct a PxBaseMaterial, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBaseMaterial() { throw new Error('cannot construct a PxBaseMaterial, no constructor in IDL'); }
       PxBaseMaterial.prototype = Object.create(PxRefCounted.prototype);
       PxBaseMaterial.prototype.constructor = PxBaseMaterial;
       PxBaseMaterial.prototype.__class__ = PxBaseMaterial;
@@ -6754,7 +6754,7 @@ const PhysX = (() => {
         _emscripten_bind_PxBaseMaterial___destroy___0(self);
       };
       // PxController
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxController() { throw 'cannot construct a PxController, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxController() { throw new Error('cannot construct a PxController, no constructor in IDL'); }
       PxController.prototype = Object.create(WrapperObject.prototype);
       PxController.prototype.constructor = PxController;
       PxController.prototype.__class__ = PxController;
@@ -6904,7 +6904,7 @@ const PhysX = (() => {
       };;
 
       // PxControllerDesc
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerDesc() { throw 'cannot construct a PxControllerDesc, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerDesc() { throw new Error('cannot construct a PxControllerDesc, no constructor in IDL'); }
       PxControllerDesc.prototype = Object.create(WrapperObject.prototype);
       PxControllerDesc.prototype.constructor = PxControllerDesc;
       PxControllerDesc.prototype.__class__ = PxControllerDesc;
@@ -7098,7 +7098,7 @@ const PhysX = (() => {
       /** @suppress {checkTypes} */
       Object.defineProperty(PxControllerDesc.prototype, 'userData', { get: PxControllerDesc.prototype.get_userData, set: PxControllerDesc.prototype.set_userData });
       // PxControllerFilterCallback
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerFilterCallback() { throw 'cannot construct a PxControllerFilterCallback, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerFilterCallback() { throw new Error('cannot construct a PxControllerFilterCallback, no constructor in IDL'); }
       PxControllerFilterCallback.prototype = Object.create(WrapperObject.prototype);
       PxControllerFilterCallback.prototype.constructor = PxControllerFilterCallback;
       PxControllerFilterCallback.prototype.__class__ = PxControllerFilterCallback;
@@ -7117,7 +7117,7 @@ const PhysX = (() => {
         _emscripten_bind_PxControllerFilterCallback___destroy___0(self);
       };
       // PxControllerHit
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerHit() { throw 'cannot construct a PxControllerHit, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerHit() { throw new Error('cannot construct a PxControllerHit, no constructor in IDL'); }
       PxControllerHit.prototype = Object.create(WrapperObject.prototype);
       PxControllerHit.prototype.constructor = PxControllerHit;
       PxControllerHit.prototype.__class__ = PxControllerHit;
@@ -7184,7 +7184,7 @@ const PhysX = (() => {
         _emscripten_bind_PxControllerHit___destroy___0(self);
       };
       // PxCpuDispatcher
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxCpuDispatcher() { throw 'cannot construct a PxCpuDispatcher, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxCpuDispatcher() { throw new Error('cannot construct a PxCpuDispatcher, no constructor in IDL'); }
       PxCpuDispatcher.prototype = Object.create(WrapperObject.prototype);
       PxCpuDispatcher.prototype.constructor = PxCpuDispatcher;
       PxCpuDispatcher.prototype.__class__ = PxCpuDispatcher;
@@ -7196,7 +7196,7 @@ const PhysX = (() => {
         _emscripten_bind_PxCpuDispatcher___destroy___0(self);
       };
       // PxErrorCallback
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxErrorCallback() { throw 'cannot construct a PxErrorCallback, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxErrorCallback() { throw new Error('cannot construct a PxErrorCallback, no constructor in IDL'); }
       PxErrorCallback.prototype = Object.create(WrapperObject.prototype);
       PxErrorCallback.prototype.constructor = PxErrorCallback;
       PxErrorCallback.prototype.__class__ = PxErrorCallback;
@@ -7220,7 +7220,7 @@ const PhysX = (() => {
         _emscripten_bind_PxErrorCallback___destroy___0(self);
       };
       // PxGeomRaycastHit
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxGeomRaycastHit() { throw 'cannot construct a PxGeomRaycastHit, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxGeomRaycastHit() { throw new Error('cannot construct a PxGeomRaycastHit, no constructor in IDL'); }
       PxGeomRaycastHit.prototype = Object.create(PxLocationHit.prototype);
       PxGeomRaycastHit.prototype.constructor = PxGeomRaycastHit;
       PxGeomRaycastHit.prototype.__class__ = PxGeomRaycastHit;
@@ -7314,7 +7314,7 @@ const PhysX = (() => {
         _emscripten_bind_PxGeomRaycastHit___destroy___0(self);
       };
       // PxGeomSweepHit
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxGeomSweepHit() { throw 'cannot construct a PxGeomSweepHit, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxGeomSweepHit() { throw new Error('cannot construct a PxGeomSweepHit, no constructor in IDL'); }
       PxGeomSweepHit.prototype = Object.create(PxLocationHit.prototype);
       PxGeomSweepHit.prototype.constructor = PxGeomSweepHit;
       PxGeomSweepHit.prototype.__class__ = PxGeomSweepHit;
@@ -7386,7 +7386,7 @@ const PhysX = (() => {
         _emscripten_bind_PxGeomSweepHit___destroy___0(self);
       };
       // PxGeometry
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxGeometry() { throw 'cannot construct a PxGeometry, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxGeometry() { throw new Error('cannot construct a PxGeometry, no constructor in IDL'); }
       PxGeometry.prototype = Object.create(WrapperObject.prototype);
       PxGeometry.prototype.constructor = PxGeometry;
       PxGeometry.prototype.__class__ = PxGeometry;
@@ -7403,7 +7403,7 @@ const PhysX = (() => {
         _emscripten_bind_PxGeometry___destroy___0(self);
       };
       // PxI32ConstPtr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxI32ConstPtr() { throw 'cannot construct a PxI32ConstPtr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxI32ConstPtr() { throw new Error('cannot construct a PxI32ConstPtr, no constructor in IDL'); }
       PxI32ConstPtr.prototype = Object.create(WrapperObject.prototype);
       PxI32ConstPtr.prototype.constructor = PxI32ConstPtr;
       PxI32ConstPtr.prototype.__class__ = PxI32ConstPtr;
@@ -7415,7 +7415,7 @@ const PhysX = (() => {
         _emscripten_bind_PxI32ConstPtr___destroy___0(self);
       };
       // PxInputData
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxInputData() { throw 'cannot construct a PxInputData, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxInputData() { throw new Error('cannot construct a PxInputData, no constructor in IDL'); }
       PxInputData.prototype = Object.create(WrapperObject.prototype);
       PxInputData.prototype.constructor = PxInputData;
       PxInputData.prototype.__class__ = PxInputData;
@@ -7427,7 +7427,7 @@ const PhysX = (() => {
         _emscripten_bind_PxInputData___destroy___0(self);
       };
       // PxJoint
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxJoint() { throw 'cannot construct a PxJoint, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxJoint() { throw new Error('cannot construct a PxJoint, no constructor in IDL'); }
       PxJoint.prototype = Object.create(PxBase.prototype);
       PxJoint.prototype.constructor = PxJoint;
       PxJoint.prototype.__class__ = PxJoint;
@@ -7589,7 +7589,7 @@ const PhysX = (() => {
       /** @suppress {checkTypes} */
       Object.defineProperty(PxJoint.prototype, 'userData', { get: PxJoint.prototype.get_userData, set: PxJoint.prototype.set_userData });
       // PxJointLimitParameters
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxJointLimitParameters() { throw 'cannot construct a PxJointLimitParameters, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxJointLimitParameters() { throw new Error('cannot construct a PxJointLimitParameters, no constructor in IDL'); }
       PxJointLimitParameters.prototype = Object.create(WrapperObject.prototype);
       PxJointLimitParameters.prototype.constructor = PxJointLimitParameters;
       PxJointLimitParameters.prototype.__class__ = PxJointLimitParameters;
@@ -7651,7 +7651,7 @@ const PhysX = (() => {
       /** @suppress {checkTypes} */
       Object.defineProperty(PxJointLimitParameters.prototype, 'damping', { get: PxJointLimitParameters.prototype.get_damping, set: PxJointLimitParameters.prototype.set_damping });
       // PxObstacle
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxObstacle() { throw 'cannot construct a PxObstacle, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxObstacle() { throw new Error('cannot construct a PxObstacle, no constructor in IDL'); }
       PxObstacle.prototype = Object.create(WrapperObject.prototype);
       PxObstacle.prototype.constructor = PxObstacle;
       PxObstacle.prototype.__class__ = PxObstacle;
@@ -7701,7 +7701,7 @@ const PhysX = (() => {
         _emscripten_bind_PxObstacle___destroy___0(self);
       };
       // PxOutputStream
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxOutputStream() { throw 'cannot construct a PxOutputStream, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxOutputStream() { throw new Error('cannot construct a PxOutputStream, no constructor in IDL'); }
       PxOutputStream.prototype = Object.create(WrapperObject.prototype);
       PxOutputStream.prototype.constructor = PxOutputStream;
       PxOutputStream.prototype.__class__ = PxOutputStream;
@@ -7713,7 +7713,7 @@ const PhysX = (() => {
         _emscripten_bind_PxOutputStream___destroy___0(self);
       };
       // PxOverlapCallback
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxOverlapCallback() { throw 'cannot construct a PxOverlapCallback, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxOverlapCallback() { throw new Error('cannot construct a PxOverlapCallback, no constructor in IDL'); }
       PxOverlapCallback.prototype = Object.create(WrapperObject.prototype);
       PxOverlapCallback.prototype.constructor = PxOverlapCallback;
       PxOverlapCallback.prototype.__class__ = PxOverlapCallback;
@@ -7730,7 +7730,7 @@ const PhysX = (() => {
         _emscripten_bind_PxOverlapCallback___destroy___0(self);
       };
       // PxRaycastCallback
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRaycastCallback() { throw 'cannot construct a PxRaycastCallback, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRaycastCallback() { throw new Error('cannot construct a PxRaycastCallback, no constructor in IDL'); }
       PxRaycastCallback.prototype = Object.create(WrapperObject.prototype);
       PxRaycastCallback.prototype.constructor = PxRaycastCallback;
       PxRaycastCallback.prototype.__class__ = PxRaycastCallback;
@@ -7747,7 +7747,7 @@ const PhysX = (() => {
         _emscripten_bind_PxRaycastCallback___destroy___0(self);
       };
       // PxRealConstPtr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRealConstPtr() { throw 'cannot construct a PxRealConstPtr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRealConstPtr() { throw new Error('cannot construct a PxRealConstPtr, no constructor in IDL'); }
       PxRealConstPtr.prototype = Object.create(WrapperObject.prototype);
       PxRealConstPtr.prototype.constructor = PxRealConstPtr;
       PxRealConstPtr.prototype.__class__ = PxRealConstPtr;
@@ -7759,7 +7759,7 @@ const PhysX = (() => {
         _emscripten_bind_PxRealConstPtr___destroy___0(self);
       };
       // PxRigidBody
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRigidBody() { throw 'cannot construct a PxRigidBody, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRigidBody() { throw new Error('cannot construct a PxRigidBody, no constructor in IDL'); }
       PxRigidBody.prototype = Object.create(PxRigidActor.prototype);
       PxRigidBody.prototype.constructor = PxRigidBody;
       PxRigidBody.prototype.__class__ = PxRigidBody;
@@ -8131,7 +8131,7 @@ const PhysX = (() => {
       /** @suppress {checkTypes} */
       Object.defineProperty(PxRigidBody.prototype, 'userData', { get: PxRigidBody.prototype.get_userData, set: PxRigidBody.prototype.set_userData });
       // PxSceneSQSystem
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSceneSQSystem() { throw 'cannot construct a PxSceneSQSystem, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSceneSQSystem() { throw new Error('cannot construct a PxSceneSQSystem, no constructor in IDL'); }
       PxSceneSQSystem.prototype = Object.create(PxSceneQuerySystemBase.prototype);
       PxSceneSQSystem.prototype.constructor = PxSceneSQSystem;
       PxSceneSQSystem.prototype.__class__ = PxSceneSQSystem;
@@ -8372,7 +8372,7 @@ const PhysX = (() => {
         _emscripten_bind_PxSpring___destroy___0(self);
       };
       // PxStridedData
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxStridedData() { throw 'cannot construct a PxStridedData, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxStridedData() { throw new Error('cannot construct a PxStridedData, no constructor in IDL'); }
       PxStridedData.prototype = Object.create(WrapperObject.prototype);
       PxStridedData.prototype.constructor = PxStridedData;
       PxStridedData.prototype.__class__ = PxStridedData;
@@ -8406,7 +8406,7 @@ const PhysX = (() => {
         _emscripten_bind_PxStridedData___destroy___0(self);
       };
       // PxSweepCallback
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSweepCallback() { throw 'cannot construct a PxSweepCallback, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSweepCallback() { throw new Error('cannot construct a PxSweepCallback, no constructor in IDL'); }
       PxSweepCallback.prototype = Object.create(WrapperObject.prototype);
       PxSweepCallback.prototype.constructor = PxSweepCallback;
       PxSweepCallback.prototype.__class__ = PxSweepCallback;
@@ -8423,7 +8423,7 @@ const PhysX = (() => {
         _emscripten_bind_PxSweepCallback___destroy___0(self);
       };
       // PxU16ConstPtr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU16ConstPtr() { throw 'cannot construct a PxU16ConstPtr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU16ConstPtr() { throw new Error('cannot construct a PxU16ConstPtr, no constructor in IDL'); }
       PxU16ConstPtr.prototype = Object.create(WrapperObject.prototype);
       PxU16ConstPtr.prototype.constructor = PxU16ConstPtr;
       PxU16ConstPtr.prototype.__class__ = PxU16ConstPtr;
@@ -8435,7 +8435,7 @@ const PhysX = (() => {
         _emscripten_bind_PxU16ConstPtr___destroy___0(self);
       };
       // PxU32ConstPtr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU32ConstPtr() { throw 'cannot construct a PxU32ConstPtr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU32ConstPtr() { throw new Error('cannot construct a PxU32ConstPtr, no constructor in IDL'); }
       PxU32ConstPtr.prototype = Object.create(WrapperObject.prototype);
       PxU32ConstPtr.prototype.constructor = PxU32ConstPtr;
       PxU32ConstPtr.prototype.__class__ = PxU32ConstPtr;
@@ -8447,7 +8447,7 @@ const PhysX = (() => {
         _emscripten_bind_PxU32ConstPtr___destroy___0(self);
       };
       // PxU8ConstPtr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU8ConstPtr() { throw 'cannot construct a PxU8ConstPtr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU8ConstPtr() { throw new Error('cannot construct a PxU8ConstPtr, no constructor in IDL'); }
       PxU8ConstPtr.prototype = Object.create(WrapperObject.prototype);
       PxU8ConstPtr.prototype.constructor = PxU8ConstPtr;
       PxU8ConstPtr.prototype.__class__ = PxU8ConstPtr;
@@ -8459,7 +8459,7 @@ const PhysX = (() => {
         _emscripten_bind_PxU8ConstPtr___destroy___0(self);
       };
       // PxUserControllerHitReport
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxUserControllerHitReport() { throw 'cannot construct a PxUserControllerHitReport, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxUserControllerHitReport() { throw new Error('cannot construct a PxUserControllerHitReport, no constructor in IDL'); }
       PxUserControllerHitReport.prototype = Object.create(WrapperObject.prototype);
       PxUserControllerHitReport.prototype.constructor = PxUserControllerHitReport;
       PxUserControllerHitReport.prototype.__class__ = PxUserControllerHitReport;
@@ -8485,7 +8485,7 @@ const PhysX = (() => {
       };;
 
       // SimpleControllerBehaviorCallback
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function SimpleControllerBehaviorCallback() { throw 'cannot construct a SimpleControllerBehaviorCallback, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function SimpleControllerBehaviorCallback() { throw new Error('cannot construct a SimpleControllerBehaviorCallback, no constructor in IDL'); }
       SimpleControllerBehaviorCallback.prototype = Object.create(PxControllerBehaviorCallback.prototype);
       SimpleControllerBehaviorCallback.prototype.constructor = SimpleControllerBehaviorCallback;
       SimpleControllerBehaviorCallback.prototype.__class__ = SimpleControllerBehaviorCallback;
@@ -8516,7 +8516,7 @@ const PhysX = (() => {
         _emscripten_bind_SimpleControllerBehaviorCallback___destroy___0(self);
       };
       // SimplePvdTransport
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function SimplePvdTransport() { throw 'cannot construct a SimplePvdTransport, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function SimplePvdTransport() { throw new Error('cannot construct a SimplePvdTransport, no constructor in IDL'); }
       SimplePvdTransport.prototype = Object.create(PxPvdTransport.prototype);
       SimplePvdTransport.prototype.constructor = SimplePvdTransport;
       SimplePvdTransport.prototype.__class__ = SimplePvdTransport;
@@ -8560,7 +8560,7 @@ const PhysX = (() => {
         _emscripten_bind_SimplePvdTransport___destroy___0(self);
       };
       // SimpleQueryFilterCallback
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function SimpleQueryFilterCallback() { throw 'cannot construct a SimpleQueryFilterCallback, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function SimpleQueryFilterCallback() { throw new Error('cannot construct a SimpleQueryFilterCallback, no constructor in IDL'); }
       SimpleQueryFilterCallback.prototype = Object.create(PxQueryFilterCallback.prototype);
       SimpleQueryFilterCallback.prototype.constructor = SimpleQueryFilterCallback;
       SimpleQueryFilterCallback.prototype.__class__ = SimpleQueryFilterCallback;
@@ -8590,7 +8590,7 @@ const PhysX = (() => {
         _emscripten_bind_SimpleQueryFilterCallback___destroy___0(self);
       };
       // SimpleSimulationEventCallback
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function SimpleSimulationEventCallback() { throw 'cannot construct a SimpleSimulationEventCallback, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function SimpleSimulationEventCallback() { throw new Error('cannot construct a SimpleSimulationEventCallback, no constructor in IDL'); }
       SimpleSimulationEventCallback.prototype = Object.create(PxSimulationEventCallback.prototype);
       SimpleSimulationEventCallback.prototype.constructor = SimpleSimulationEventCallback;
       SimpleSimulationEventCallback.prototype.__class__ = SimpleSimulationEventCallback;
@@ -8638,7 +8638,7 @@ const PhysX = (() => {
         _emscripten_bind_SimpleSimulationEventCallback___destroy___0(self);
       };
       // VoidPtr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function VoidPtr() { throw 'cannot construct a VoidPtr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function VoidPtr() { throw new Error('cannot construct a VoidPtr, no constructor in IDL'); }
       VoidPtr.prototype = Object.create(WrapperObject.prototype);
       VoidPtr.prototype.constructor = VoidPtr;
       VoidPtr.prototype.__class__ = VoidPtr;
@@ -8874,7 +8874,7 @@ const PhysX = (() => {
         _emscripten_bind_CustomSupportImpl___destroy___0(self);
       };
       // NativeArrayHelpers
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function NativeArrayHelpers() { throw 'cannot construct a NativeArrayHelpers, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function NativeArrayHelpers() { throw new Error('cannot construct a NativeArrayHelpers, no constructor in IDL'); }
       NativeArrayHelpers.prototype = Object.create(WrapperObject.prototype);
       NativeArrayHelpers.prototype.constructor = NativeArrayHelpers;
       NativeArrayHelpers.prototype.__class__ = NativeArrayHelpers;
@@ -9145,7 +9145,7 @@ const PhysX = (() => {
         _emscripten_bind_PxActorFlags___destroy___0(self);
       };
       // PxActorPtr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxActorPtr() { throw 'cannot construct a PxActorPtr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxActorPtr() { throw new Error('cannot construct a PxActorPtr, no constructor in IDL'); }
       PxActorPtr.prototype = Object.create(WrapperObject.prototype);
       PxActorPtr.prototype.constructor = PxActorPtr;
       PxActorPtr.prototype.__class__ = PxActorPtr;
@@ -9191,7 +9191,7 @@ const PhysX = (() => {
         _emscripten_bind_PxActorTypeFlags___destroy___0(self);
       };
       // PxAggregate
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxAggregate() { throw 'cannot construct a PxAggregate, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxAggregate() { throw new Error('cannot construct a PxAggregate, no constructor in IDL'); }
       PxAggregate.prototype = Object.create(PxBase.prototype);
       PxAggregate.prototype.constructor = PxAggregate;
       PxAggregate.prototype.__class__ = PxAggregate;
@@ -9951,7 +9951,7 @@ const PhysX = (() => {
         _emscripten_bind_PxArray_PxVec4___destroy___0(self);
       };
       // PxArticulationAttachment
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationAttachment() { throw 'cannot construct a PxArticulationAttachment, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationAttachment() { throw new Error('cannot construct a PxArticulationAttachment, no constructor in IDL'); }
       PxArticulationAttachment.prototype = Object.create(WrapperObject.prototype);
       PxArticulationAttachment.prototype.constructor = PxArticulationAttachment;
       PxArticulationAttachment.prototype.__class__ = PxArticulationAttachment;
@@ -10043,7 +10043,7 @@ const PhysX = (() => {
         _emscripten_bind_PxArticulationAttachment___destroy___0(self);
       };
       // PxArticulationCache
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationCache() { throw 'cannot construct a PxArticulationCache, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationCache() { throw new Error('cannot construct a PxArticulationCache, no constructor in IDL'); }
       PxArticulationCache.prototype = Object.create(WrapperObject.prototype);
       PxArticulationCache.prototype.constructor = PxArticulationCache;
       PxArticulationCache.prototype.__class__ = PxArticulationCache;
@@ -10337,7 +10337,7 @@ const PhysX = (() => {
         _emscripten_bind_PxArticulationDrive___destroy___0(self);
       };
       // PxArticulationFixedTendon
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationFixedTendon() { throw 'cannot construct a PxArticulationFixedTendon, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationFixedTendon() { throw new Error('cannot construct a PxArticulationFixedTendon, no constructor in IDL'); }
       PxArticulationFixedTendon.prototype = Object.create(PxArticulationTendon.prototype);
       PxArticulationFixedTendon.prototype.constructor = PxArticulationFixedTendon;
       PxArticulationFixedTendon.prototype.__class__ = PxArticulationFixedTendon;
@@ -10509,7 +10509,7 @@ const PhysX = (() => {
         _emscripten_bind_PxArticulationFlags___destroy___0(self);
       };
       // PxArticulationJointReducedCoordinate
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationJointReducedCoordinate() { throw 'cannot construct a PxArticulationJointReducedCoordinate, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationJointReducedCoordinate() { throw new Error('cannot construct a PxArticulationJointReducedCoordinate, no constructor in IDL'); }
       PxArticulationJointReducedCoordinate.prototype = Object.create(PxBase.prototype);
       PxArticulationJointReducedCoordinate.prototype.constructor = PxArticulationJointReducedCoordinate;
       PxArticulationJointReducedCoordinate.prototype.__class__ = PxArticulationJointReducedCoordinate;
@@ -10801,7 +10801,7 @@ const PhysX = (() => {
         _emscripten_bind_PxArticulationLimit___destroy___0(self);
       };
       // PxArticulationLink
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationLink() { throw 'cannot construct a PxArticulationLink, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationLink() { throw new Error('cannot construct a PxArticulationLink, no constructor in IDL'); }
       PxArticulationLink.prototype = Object.create(PxRigidBody.prototype);
       PxArticulationLink.prototype.constructor = PxArticulationLink;
       PxArticulationLink.prototype.__class__ = PxArticulationLink;
@@ -11209,7 +11209,7 @@ const PhysX = (() => {
       /** @suppress {checkTypes} */
       Object.defineProperty(PxArticulationLink.prototype, 'userData', { get: PxArticulationLink.prototype.get_userData, set: PxArticulationLink.prototype.set_userData });
       // PxArticulationReducedCoordinate
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationReducedCoordinate() { throw 'cannot construct a PxArticulationReducedCoordinate, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationReducedCoordinate() { throw new Error('cannot construct a PxArticulationReducedCoordinate, no constructor in IDL'); }
       PxArticulationReducedCoordinate.prototype = Object.create(PxBase.prototype);
       PxArticulationReducedCoordinate.prototype.constructor = PxArticulationReducedCoordinate;
       PxArticulationReducedCoordinate.prototype.__class__ = PxArticulationReducedCoordinate;
@@ -11654,7 +11654,7 @@ const PhysX = (() => {
         _emscripten_bind_PxArticulationRootLinkData___destroy___0(self);
       };
       // PxArticulationSpatialTendon
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationSpatialTendon() { throw 'cannot construct a PxArticulationSpatialTendon, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationSpatialTendon() { throw new Error('cannot construct a PxArticulationSpatialTendon, no constructor in IDL'); }
       PxArticulationSpatialTendon.prototype = Object.create(PxArticulationTendon.prototype);
       PxArticulationSpatialTendon.prototype.constructor = PxArticulationSpatialTendon;
       PxArticulationSpatialTendon.prototype.__class__ = PxArticulationSpatialTendon;
@@ -11769,7 +11769,7 @@ const PhysX = (() => {
         _emscripten_bind_PxArticulationSpatialTendon___destroy___0(self);
       };
       // PxArticulationTendonJoint
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationTendonJoint() { throw 'cannot construct a PxArticulationTendonJoint, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationTendonJoint() { throw new Error('cannot construct a PxArticulationTendonJoint, no constructor in IDL'); }
       PxArticulationTendonJoint.prototype = Object.create(WrapperObject.prototype);
       PxArticulationTendonJoint.prototype.constructor = PxArticulationTendonJoint;
       PxArticulationTendonJoint.prototype.__class__ = PxArticulationTendonJoint;
@@ -11820,7 +11820,7 @@ const PhysX = (() => {
         _emscripten_bind_PxArticulationTendonJoint___destroy___0(self);
       };
       // PxArticulationTendonLimit
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationTendonLimit() { throw 'cannot construct a PxArticulationTendonLimit, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxArticulationTendonLimit() { throw new Error('cannot construct a PxArticulationTendonLimit, no constructor in IDL'); }
       PxArticulationTendonLimit.prototype = Object.create(WrapperObject.prototype);
       PxArticulationTendonLimit.prototype.constructor = PxArticulationTendonLimit;
       PxArticulationTendonLimit.prototype.__class__ = PxArticulationTendonLimit;
@@ -11854,7 +11854,7 @@ const PhysX = (() => {
         _emscripten_bind_PxArticulationTendonLimit___destroy___0(self);
       };
       // PxBVH
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBVH() { throw 'cannot construct a PxBVH, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBVH() { throw new Error('cannot construct a PxBVH, no constructor in IDL'); }
       PxBVH.prototype = Object.create(PxBase.prototype);
       PxBVH.prototype.constructor = PxBVH;
       PxBVH.prototype.__class__ = PxBVH;
@@ -11900,7 +11900,7 @@ const PhysX = (() => {
       };;
 
       // PxBVH33MidphaseDesc
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBVH33MidphaseDesc() { throw 'cannot construct a PxBVH33MidphaseDesc, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBVH33MidphaseDesc() { throw new Error('cannot construct a PxBVH33MidphaseDesc, no constructor in IDL'); }
       PxBVH33MidphaseDesc.prototype = Object.create(WrapperObject.prototype);
       PxBVH33MidphaseDesc.prototype.constructor = PxBVH33MidphaseDesc;
       PxBVH33MidphaseDesc.prototype.__class__ = PxBVH33MidphaseDesc;
@@ -11944,7 +11944,7 @@ const PhysX = (() => {
         _emscripten_bind_PxBVH33MidphaseDesc___destroy___0(self);
       };
       // PxBVH34MidphaseDesc
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBVH34MidphaseDesc() { throw 'cannot construct a PxBVH34MidphaseDesc, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBVH34MidphaseDesc() { throw new Error('cannot construct a PxBVH34MidphaseDesc, no constructor in IDL'); }
       PxBVH34MidphaseDesc.prototype = Object.create(WrapperObject.prototype);
       PxBVH34MidphaseDesc.prototype.constructor = PxBVH34MidphaseDesc;
       PxBVH34MidphaseDesc.prototype.__class__ = PxBVH34MidphaseDesc;
@@ -12011,7 +12011,7 @@ const PhysX = (() => {
         _emscripten_bind_PxBaseFlags___destroy___0(self);
       };
       // PxBaseTask
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBaseTask() { throw 'cannot construct a PxBaseTask, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBaseTask() { throw new Error('cannot construct a PxBaseTask, no constructor in IDL'); }
       PxBaseTask.prototype = Object.create(WrapperObject.prototype);
       PxBaseTask.prototype.constructor = PxBaseTask;
       PxBaseTask.prototype.__class__ = PxBaseTask;
@@ -12207,7 +12207,7 @@ const PhysX = (() => {
         _emscripten_bind_PxBounds3___destroy___0(self);
       };
       // PxBoxController
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBoxController() { throw 'cannot construct a PxBoxController, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxBoxController() { throw new Error('cannot construct a PxBoxController, no constructor in IDL'); }
       PxBoxController.prototype = Object.create(PxController.prototype);
       PxBoxController.prototype.constructor = PxBoxController;
       PxBoxController.prototype.__class__ = PxBoxController;
@@ -12860,7 +12860,7 @@ const PhysX = (() => {
         _emscripten_bind_PxBroadPhaseRegionInfo___destroy___0(self);
       };
       // PxCapsuleController
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxCapsuleController() { throw 'cannot construct a PxCapsuleController, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxCapsuleController() { throw new Error('cannot construct a PxCapsuleController, no constructor in IDL'); }
       PxCapsuleController.prototype = Object.create(PxController.prototype);
       PxCapsuleController.prototype.constructor = PxCapsuleController;
       PxCapsuleController.prototype.__class__ = PxCapsuleController;
@@ -13401,7 +13401,7 @@ const PhysX = (() => {
         _emscripten_bind_PxCapsuleObstacle___destroy___0(self);
       };
       // PxCollection
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxCollection() { throw 'cannot construct a PxCollection, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxCollection() { throw new Error('cannot construct a PxCollection, no constructor in IDL'); }
       PxCollection.prototype = Object.create(WrapperObject.prototype);
       PxCollection.prototype.constructor = PxCollection;
       PxCollection.prototype.__class__ = PxCollection;
@@ -13475,7 +13475,7 @@ const PhysX = (() => {
       };;
 
       // PxCollectionExt
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxCollectionExt() { throw 'cannot construct a PxCollectionExt, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxCollectionExt() { throw new Error('cannot construct a PxCollectionExt, no constructor in IDL'); }
       PxCollectionExt.prototype = Object.create(WrapperObject.prototype);
       PxCollectionExt.prototype.constructor = PxCollectionExt;
       PxCollectionExt.prototype.__class__ = PxCollectionExt;
@@ -13510,7 +13510,7 @@ const PhysX = (() => {
         _emscripten_bind_PxCollectionExt___destroy___0(self);
       };
       // PxConstraint
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxConstraint() { throw 'cannot construct a PxConstraint, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxConstraint() { throw new Error('cannot construct a PxConstraint, no constructor in IDL'); }
       PxConstraint.prototype = Object.create(PxBase.prototype);
       PxConstraint.prototype.constructor = PxConstraint;
       PxConstraint.prototype.__class__ = PxConstraint;
@@ -13621,7 +13621,7 @@ const PhysX = (() => {
       };;
 
       // PxConstraintConnector
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxConstraintConnector() { throw 'cannot construct a PxConstraintConnector, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxConstraintConnector() { throw new Error('cannot construct a PxConstraintConnector, no constructor in IDL'); }
       PxConstraintConnector.prototype = Object.create(WrapperObject.prototype);
       PxConstraintConnector.prototype.constructor = PxConstraintConnector;
       PxConstraintConnector.prototype.__class__ = PxConstraintConnector;
@@ -13715,7 +13715,7 @@ const PhysX = (() => {
         _emscripten_bind_PxConstraintFlags___destroy___0(self);
       };
       // PxConstraintInfo
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxConstraintInfo() { throw 'cannot construct a PxConstraintInfo, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxConstraintInfo() { throw new Error('cannot construct a PxConstraintInfo, no constructor in IDL'); }
       PxConstraintInfo.prototype = Object.create(WrapperObject.prototype);
       PxConstraintInfo.prototype.constructor = PxConstraintInfo;
       PxConstraintInfo.prototype.__class__ = PxConstraintInfo;
@@ -13760,7 +13760,7 @@ const PhysX = (() => {
         _emscripten_bind_PxConstraintInfo___destroy___0(self);
       };
       // PxConstraintSolverPrep
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxConstraintSolverPrep() { throw 'cannot construct a PxConstraintSolverPrep, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxConstraintSolverPrep() { throw new Error('cannot construct a PxConstraintSolverPrep, no constructor in IDL'); }
       PxConstraintSolverPrep.prototype = Object.create(WrapperObject.prototype);
       PxConstraintSolverPrep.prototype.constructor = PxConstraintSolverPrep;
       PxConstraintSolverPrep.prototype.__class__ = PxConstraintSolverPrep;
@@ -13772,7 +13772,7 @@ const PhysX = (() => {
         _emscripten_bind_PxConstraintSolverPrep___destroy___0(self);
       };
       // PxContactBuffer
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxContactBuffer() { throw 'cannot construct a PxContactBuffer, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxContactBuffer() { throw new Error('cannot construct a PxContactBuffer, no constructor in IDL'); }
       PxContactBuffer.prototype = Object.create(WrapperObject.prototype);
       PxContactBuffer.prototype.constructor = PxContactBuffer;
       PxContactBuffer.prototype.__class__ = PxContactBuffer;
@@ -13843,7 +13843,7 @@ const PhysX = (() => {
         _emscripten_bind_PxContactBuffer___destroy___0(self);
       };
       // PxContactPair
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxContactPair() { throw 'cannot construct a PxContactPair, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxContactPair() { throw new Error('cannot construct a PxContactPair, no constructor in IDL'); }
       PxContactPair.prototype = Object.create(WrapperObject.prototype);
       PxContactPair.prototype.constructor = PxContactPair;
       PxContactPair.prototype.__class__ = PxContactPair;
@@ -13954,7 +13954,7 @@ const PhysX = (() => {
         _emscripten_bind_PxContactPairFlags___destroy___0(self);
       };
       // PxContactPairHeader
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxContactPairHeader() { throw 'cannot construct a PxContactPairHeader, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxContactPairHeader() { throw new Error('cannot construct a PxContactPairHeader, no constructor in IDL'); }
       PxContactPairHeader.prototype = Object.create(WrapperObject.prototype);
       PxContactPairHeader.prototype.constructor = PxContactPairHeader;
       PxContactPairHeader.prototype.__class__ = PxContactPairHeader;
@@ -14047,7 +14047,7 @@ const PhysX = (() => {
         _emscripten_bind_PxContactPairHeaderFlags___destroy___0(self);
       };
       // PxContactPairPoint
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxContactPairPoint() { throw 'cannot construct a PxContactPairPoint, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxContactPairPoint() { throw new Error('cannot construct a PxContactPairPoint, no constructor in IDL'); }
       PxContactPairPoint.prototype = Object.create(WrapperObject.prototype);
       PxContactPairPoint.prototype.constructor = PxContactPairPoint;
       PxContactPairPoint.prototype.__class__ = PxContactPairPoint;
@@ -14446,7 +14446,7 @@ const PhysX = (() => {
         _emscripten_bind_PxControllerFilters___destroy___0(self);
       };
       // PxControllerManager
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerManager() { throw 'cannot construct a PxControllerManager, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerManager() { throw new Error('cannot construct a PxControllerManager, no constructor in IDL'); }
       PxControllerManager.prototype = Object.create(WrapperObject.prototype);
       PxControllerManager.prototype.constructor = PxControllerManager;
       PxControllerManager.prototype.__class__ = PxControllerManager;
@@ -14539,7 +14539,7 @@ const PhysX = (() => {
       };;
 
       // PxControllerObstacleHit
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerObstacleHit() { throw 'cannot construct a PxControllerObstacleHit, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerObstacleHit() { throw new Error('cannot construct a PxControllerObstacleHit, no constructor in IDL'); }
       PxControllerObstacleHit.prototype = Object.create(PxControllerHit.prototype);
       PxControllerObstacleHit.prototype.constructor = PxControllerObstacleHit;
       PxControllerObstacleHit.prototype.__class__ = PxControllerObstacleHit;
@@ -14617,7 +14617,7 @@ const PhysX = (() => {
         _emscripten_bind_PxControllerObstacleHit___destroy___0(self);
       };
       // PxControllerShapeHit
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerShapeHit() { throw 'cannot construct a PxControllerShapeHit, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerShapeHit() { throw new Error('cannot construct a PxControllerShapeHit, no constructor in IDL'); }
       PxControllerShapeHit.prototype = Object.create(PxControllerHit.prototype);
       PxControllerShapeHit.prototype.constructor = PxControllerShapeHit;
       PxControllerShapeHit.prototype.__class__ = PxControllerShapeHit;
@@ -14820,7 +14820,7 @@ const PhysX = (() => {
         _emscripten_bind_PxControllerState___destroy___0(self);
       };
       // PxControllerStats
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerStats() { throw 'cannot construct a PxControllerStats, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllerStats() { throw new Error('cannot construct a PxControllerStats, no constructor in IDL'); }
       PxControllerStats.prototype = Object.create(WrapperObject.prototype);
       PxControllerStats.prototype.constructor = PxControllerStats;
       PxControllerStats.prototype.__class__ = PxControllerStats;
@@ -14876,7 +14876,7 @@ const PhysX = (() => {
         _emscripten_bind_PxControllerStats___destroy___0(self);
       };
       // PxControllersHit
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllersHit() { throw 'cannot construct a PxControllersHit, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxControllersHit() { throw new Error('cannot construct a PxControllersHit, no constructor in IDL'); }
       PxControllersHit.prototype = Object.create(PxControllerHit.prototype);
       PxControllersHit.prototype.constructor = PxControllersHit;
       PxControllersHit.prototype.__class__ = PxControllersHit;
@@ -14988,7 +14988,7 @@ const PhysX = (() => {
         _emscripten_bind_PxConvexFlags___destroy___0(self);
       };
       // PxConvexMesh
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxConvexMesh() { throw 'cannot construct a PxConvexMesh, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxConvexMesh() { throw new Error('cannot construct a PxConvexMesh, no constructor in IDL'); }
       PxConvexMesh.prototype = Object.create(PxRefCounted.prototype);
       PxConvexMesh.prototype.constructor = PxConvexMesh;
       PxConvexMesh.prototype.__class__ = PxConvexMesh;
@@ -15347,7 +15347,7 @@ const PhysX = (() => {
         _emscripten_bind_PxCookingParams___destroy___0(self);
       };
       // PxD6Joint
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxD6Joint() { throw 'cannot construct a PxD6Joint, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxD6Joint() { throw new Error('cannot construct a PxD6Joint, no constructor in IDL'); }
       PxD6Joint.prototype = Object.create(PxJoint.prototype);
       PxD6Joint.prototype.constructor = PxD6Joint;
       PxD6Joint.prototype.__class__ = PxD6Joint;
@@ -15713,7 +15713,7 @@ const PhysX = (() => {
         _emscripten_bind_PxD6JointDriveFlags___destroy___0(self);
       };
       // PxDebugLine
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxDebugLine() { throw 'cannot construct a PxDebugLine, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxDebugLine() { throw new Error('cannot construct a PxDebugLine, no constructor in IDL'); }
       PxDebugLine.prototype = Object.create(WrapperObject.prototype);
       PxDebugLine.prototype.constructor = PxDebugLine;
       PxDebugLine.prototype.__class__ = PxDebugLine;
@@ -15765,7 +15765,7 @@ const PhysX = (() => {
       /** @suppress {checkTypes} */
       Object.defineProperty(PxDebugLine.prototype, 'color1', { get: PxDebugLine.prototype.get_color1, set: PxDebugLine.prototype.set_color1 });
       // PxDebugPoint
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxDebugPoint() { throw 'cannot construct a PxDebugPoint, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxDebugPoint() { throw new Error('cannot construct a PxDebugPoint, no constructor in IDL'); }
       PxDebugPoint.prototype = Object.create(WrapperObject.prototype);
       PxDebugPoint.prototype.constructor = PxDebugPoint;
       PxDebugPoint.prototype.__class__ = PxDebugPoint;
@@ -15795,7 +15795,7 @@ const PhysX = (() => {
       /** @suppress {checkTypes} */
       Object.defineProperty(PxDebugPoint.prototype, 'color', { get: PxDebugPoint.prototype.get_color, set: PxDebugPoint.prototype.set_color });
       // PxDebugTriangle
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxDebugTriangle() { throw 'cannot construct a PxDebugTriangle, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxDebugTriangle() { throw new Error('cannot construct a PxDebugTriangle, no constructor in IDL'); }
       PxDebugTriangle.prototype = Object.create(WrapperObject.prototype);
       PxDebugTriangle.prototype.constructor = PxDebugTriangle;
       PxDebugTriangle.prototype.__class__ = PxDebugTriangle;
@@ -15884,7 +15884,7 @@ const PhysX = (() => {
         _emscripten_bind_PxDefaultAllocator___destroy___0(self);
       };
       // PxDefaultCpuDispatcher
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxDefaultCpuDispatcher() { throw 'cannot construct a PxDefaultCpuDispatcher, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxDefaultCpuDispatcher() { throw new Error('cannot construct a PxDefaultCpuDispatcher, no constructor in IDL'); }
       PxDefaultCpuDispatcher.prototype = Object.create(PxCpuDispatcher.prototype);
       PxDefaultCpuDispatcher.prototype.constructor = PxDefaultCpuDispatcher;
       PxDefaultCpuDispatcher.prototype.__class__ = PxDefaultCpuDispatcher;
@@ -15995,7 +15995,7 @@ const PhysX = (() => {
         _emscripten_bind_PxDefaultMemoryOutputStream___destroy___0(self);
       };
       // PxDistanceJoint
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxDistanceJoint() { throw 'cannot construct a PxDistanceJoint, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxDistanceJoint() { throw new Error('cannot construct a PxDistanceJoint, no constructor in IDL'); }
       PxDistanceJoint.prototype = Object.create(PxJoint.prototype);
       PxDistanceJoint.prototype.constructor = PxDistanceJoint;
       PxDistanceJoint.prototype.__class__ = PxDistanceJoint;
@@ -16393,7 +16393,7 @@ const PhysX = (() => {
         _emscripten_bind_PxExtendedVec3___destroy___0(self);
       };
       // PxExtensionTopLevelFunctions
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxExtensionTopLevelFunctions() { throw 'cannot construct a PxExtensionTopLevelFunctions, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxExtensionTopLevelFunctions() { throw new Error('cannot construct a PxExtensionTopLevelFunctions, no constructor in IDL'); }
       PxExtensionTopLevelFunctions.prototype = Object.create(WrapperObject.prototype);
       PxExtensionTopLevelFunctions.prototype.constructor = PxExtensionTopLevelFunctions;
       PxExtensionTopLevelFunctions.prototype.__class__ = PxExtensionTopLevelFunctions;
@@ -16477,7 +16477,7 @@ const PhysX = (() => {
         _emscripten_bind_PxFilterData___destroy___0(self);
       };
       // PxFixedJoint
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxFixedJoint() { throw 'cannot construct a PxFixedJoint, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxFixedJoint() { throw new Error('cannot construct a PxFixedJoint, no constructor in IDL'); }
       PxFixedJoint.prototype = Object.create(PxJoint.prototype);
       PxFixedJoint.prototype.constructor = PxFixedJoint;
       PxFixedJoint.prototype.__class__ = PxFixedJoint;
@@ -16643,7 +16643,7 @@ const PhysX = (() => {
         _emscripten_bind_PxFixedJoint___destroy___0(self);
       };
       // PxFoundation
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxFoundation() { throw 'cannot construct a PxFoundation, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxFoundation() { throw new Error('cannot construct a PxFoundation, no constructor in IDL'); }
       PxFoundation.prototype = Object.create(WrapperObject.prototype);
       PxFoundation.prototype.constructor = PxFoundation;
       PxFoundation.prototype.__class__ = PxFoundation;
@@ -16719,7 +16719,7 @@ const PhysX = (() => {
         _emscripten_bind_PxGeometryHolder___destroy___0(self);
       };
       // PxGeometryQuery
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxGeometryQuery() { throw 'cannot construct a PxGeometryQuery, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxGeometryQuery() { throw new Error('cannot construct a PxGeometryQuery, no constructor in IDL'); }
       PxGeometryQuery.prototype = Object.create(WrapperObject.prototype);
       PxGeometryQuery.prototype.constructor = PxGeometryQuery;
       PxGeometryQuery.prototype.__class__ = PxGeometryQuery;
@@ -16795,7 +16795,7 @@ const PhysX = (() => {
         _emscripten_bind_PxGeometryQuery___destroy___0(self);
       };
       // PxGjkQuery
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxGjkQuery() { throw 'cannot construct a PxGjkQuery, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxGjkQuery() { throw new Error('cannot construct a PxGjkQuery, no constructor in IDL'); }
       PxGjkQuery.prototype = Object.create(WrapperObject.prototype);
       PxGjkQuery.prototype.constructor = PxGjkQuery;
       PxGjkQuery.prototype.__class__ = PxGjkQuery;
@@ -16851,7 +16851,7 @@ const PhysX = (() => {
         _emscripten_bind_PxGjkQuery___destroy___0(self);
       };
       // PxGjkQueryExt
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxGjkQueryExt() { throw 'cannot construct a PxGjkQueryExt, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxGjkQueryExt() { throw new Error('cannot construct a PxGjkQueryExt, no constructor in IDL'); }
       PxGjkQueryExt.prototype = Object.create(WrapperObject.prototype);
       PxGjkQueryExt.prototype.constructor = PxGjkQueryExt;
       PxGjkQueryExt.prototype.__class__ = PxGjkQueryExt;
@@ -17063,7 +17063,7 @@ const PhysX = (() => {
         _emscripten_bind_PxGjkQuerySweepResult___destroy___0(self);
       };
       // PxHeightField
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxHeightField() { throw 'cannot construct a PxHeightField, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxHeightField() { throw new Error('cannot construct a PxHeightField, no constructor in IDL'); }
       PxHeightField.prototype = Object.create(PxRefCounted.prototype);
       PxHeightField.prototype.constructor = PxHeightField;
       PxHeightField.prototype.__class__ = PxHeightField;
@@ -17560,7 +17560,7 @@ const PhysX = (() => {
         _emscripten_bind_PxHullPolygon___destroy___0(self);
       };
       // PxI32Ptr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxI32Ptr() { throw 'cannot construct a PxI32Ptr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxI32Ptr() { throw new Error('cannot construct a PxI32Ptr, no constructor in IDL'); }
       PxI32Ptr.prototype = Object.create(PxI32ConstPtr.prototype);
       PxI32Ptr.prototype.constructor = PxI32Ptr;
       PxI32Ptr.prototype.__class__ = PxI32Ptr;
@@ -17572,7 +17572,7 @@ const PhysX = (() => {
         _emscripten_bind_PxI32Ptr___destroy___0(self);
       };
       // PxInsertionCallback
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxInsertionCallback() { throw 'cannot construct a PxInsertionCallback, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxInsertionCallback() { throw new Error('cannot construct a PxInsertionCallback, no constructor in IDL'); }
       PxInsertionCallback.prototype = Object.create(WrapperObject.prototype);
       PxInsertionCallback.prototype.constructor = PxInsertionCallback;
       PxInsertionCallback.prototype.__class__ = PxInsertionCallback;
@@ -18210,7 +18210,7 @@ const PhysX = (() => {
         _emscripten_bind_PxMat33___destroy___0(self);
       };
       // PxMaterial
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxMaterial() { throw 'cannot construct a PxMaterial, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxMaterial() { throw new Error('cannot construct a PxMaterial, no constructor in IDL'); }
       PxMaterial.prototype = Object.create(PxBaseMaterial.prototype);
       PxMaterial.prototype.constructor = PxMaterial;
       PxMaterial.prototype.__class__ = PxMaterial;
@@ -18350,7 +18350,7 @@ const PhysX = (() => {
       /** @suppress {checkTypes} */
       Object.defineProperty(PxMaterial.prototype, 'userData', { get: PxMaterial.prototype.get_userData, set: PxMaterial.prototype.set_userData });
       // PxMaterialConstPtr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxMaterialConstPtr() { throw 'cannot construct a PxMaterialConstPtr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxMaterialConstPtr() { throw new Error('cannot construct a PxMaterialConstPtr, no constructor in IDL'); }
       PxMaterialConstPtr.prototype = Object.create(WrapperObject.prototype);
       PxMaterialConstPtr.prototype.constructor = PxMaterialConstPtr;
       PxMaterialConstPtr.prototype.__class__ = PxMaterialConstPtr;
@@ -18396,7 +18396,7 @@ const PhysX = (() => {
         _emscripten_bind_PxMaterialFlags___destroy___0(self);
       };
       // PxMaterialPtr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxMaterialPtr() { throw 'cannot construct a PxMaterialPtr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxMaterialPtr() { throw new Error('cannot construct a PxMaterialPtr, no constructor in IDL'); }
       PxMaterialPtr.prototype = Object.create(WrapperObject.prototype);
       PxMaterialPtr.prototype.constructor = PxMaterialPtr;
       PxMaterialPtr.prototype.__class__ = PxMaterialPtr;
@@ -18616,7 +18616,7 @@ const PhysX = (() => {
         _emscripten_bind_PxMidphaseDesc___destroy___0(self);
       };
       // PxObstacleContext
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxObstacleContext() { throw 'cannot construct a PxObstacleContext, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxObstacleContext() { throw new Error('cannot construct a PxObstacleContext, no constructor in IDL'); }
       PxObstacleContext.prototype = Object.create(WrapperObject.prototype);
       PxObstacleContext.prototype.constructor = PxObstacleContext;
       PxObstacleContext.prototype.__class__ = PxObstacleContext;
@@ -18674,7 +18674,7 @@ const PhysX = (() => {
         _emscripten_bind_PxObstacleContext___destroy___0(self);
       };
       // PxOmniPvd
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxOmniPvd() { throw 'cannot construct a PxOmniPvd, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxOmniPvd() { throw new Error('cannot construct a PxOmniPvd, no constructor in IDL'); }
       PxOmniPvd.prototype = Object.create(WrapperObject.prototype);
       PxOmniPvd.prototype.constructor = PxOmniPvd;
       PxOmniPvd.prototype.__class__ = PxOmniPvd;
@@ -18770,7 +18770,7 @@ const PhysX = (() => {
         _emscripten_bind_PxOverlapBuffer10___destroy___0(self);
       };
       // PxOverlapHit
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxOverlapHit() { throw 'cannot construct a PxOverlapHit, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxOverlapHit() { throw new Error('cannot construct a PxOverlapHit, no constructor in IDL'); }
       PxOverlapHit.prototype = Object.create(PxQueryHit.prototype);
       PxOverlapHit.prototype.constructor = PxOverlapHit;
       PxOverlapHit.prototype.__class__ = PxOverlapHit;
@@ -18913,7 +18913,7 @@ const PhysX = (() => {
         _emscripten_bind_PxPairFlags___destroy___0(self);
       };
       // PxPhysics
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxPhysics() { throw 'cannot construct a PxPhysics, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxPhysics() { throw new Error('cannot construct a PxPhysics, no constructor in IDL'); }
       PxPhysics.prototype = Object.create(WrapperObject.prototype);
       PxPhysics.prototype.constructor = PxPhysics;
       PxPhysics.prototype.__class__ = PxPhysics;
@@ -19117,7 +19117,7 @@ const PhysX = (() => {
         _emscripten_bind_PxPlaneGeometry___destroy___0(self);
       };
       // PxPrismaticJoint
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxPrismaticJoint() { throw 'cannot construct a PxPrismaticJoint, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxPrismaticJoint() { throw new Error('cannot construct a PxPrismaticJoint, no constructor in IDL'); }
       PxPrismaticJoint.prototype = Object.create(PxJoint.prototype);
       PxPrismaticJoint.prototype.constructor = PxPrismaticJoint;
       PxPrismaticJoint.prototype.__class__ = PxPrismaticJoint;
@@ -19351,7 +19351,7 @@ const PhysX = (() => {
         _emscripten_bind_PxPrismaticJointFlags___destroy___0(self);
       };
       // PxPvd
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxPvd() { throw 'cannot construct a PxPvd, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxPvd() { throw new Error('cannot construct a PxPvd, no constructor in IDL'); }
       PxPvd.prototype = Object.create(WrapperObject.prototype);
       PxPvd.prototype.constructor = PxPvd;
       PxPvd.prototype.__class__ = PxPvd;
@@ -19927,7 +19927,7 @@ const PhysX = (() => {
         _emscripten_bind_PxRaycastResult___destroy___0(self);
       };
       // PxRealPtr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRealPtr() { throw 'cannot construct a PxRealPtr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRealPtr() { throw new Error('cannot construct a PxRealPtr, no constructor in IDL'); }
       PxRealPtr.prototype = Object.create(PxRealConstPtr.prototype);
       PxRealPtr.prototype.constructor = PxRealPtr;
       PxRealPtr.prototype.__class__ = PxRealPtr;
@@ -19939,7 +19939,7 @@ const PhysX = (() => {
         _emscripten_bind_PxRealPtr___destroy___0(self);
       };
       // PxRenderBuffer
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRenderBuffer() { throw 'cannot construct a PxRenderBuffer, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRenderBuffer() { throw new Error('cannot construct a PxRenderBuffer, no constructor in IDL'); }
       PxRenderBuffer.prototype = Object.create(WrapperObject.prototype);
       PxRenderBuffer.prototype.constructor = PxRenderBuffer;
       PxRenderBuffer.prototype.__class__ = PxRenderBuffer;
@@ -20029,7 +20029,7 @@ const PhysX = (() => {
       };;
 
       // PxRevoluteJoint
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRevoluteJoint() { throw 'cannot construct a PxRevoluteJoint, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRevoluteJoint() { throw new Error('cannot construct a PxRevoluteJoint, no constructor in IDL'); }
       PxRevoluteJoint.prototype = Object.create(PxJoint.prototype);
       PxRevoluteJoint.prototype.constructor = PxRevoluteJoint;
       PxRevoluteJoint.prototype.__class__ = PxRevoluteJoint;
@@ -20298,7 +20298,7 @@ const PhysX = (() => {
         _emscripten_bind_PxRevoluteJointFlags___destroy___0(self);
       };
       // PxRigidActorExt
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRigidActorExt() { throw 'cannot construct a PxRigidActorExt, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRigidActorExt() { throw new Error('cannot construct a PxRigidActorExt, no constructor in IDL'); }
       PxRigidActorExt.prototype = Object.create(WrapperObject.prototype);
       PxRigidActorExt.prototype.constructor = PxRigidActorExt;
       PxRigidActorExt.prototype.__class__ = PxRigidActorExt;
@@ -20320,7 +20320,7 @@ const PhysX = (() => {
         _emscripten_bind_PxRigidActorExt___destroy___0(self);
       };
       // PxRigidBodyExt
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRigidBodyExt() { throw 'cannot construct a PxRigidBodyExt, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRigidBodyExt() { throw new Error('cannot construct a PxRigidBodyExt, no constructor in IDL'); }
       PxRigidBodyExt.prototype = Object.create(WrapperObject.prototype);
       PxRigidBodyExt.prototype.constructor = PxRigidBodyExt;
       PxRigidBodyExt.prototype.__class__ = PxRigidBodyExt;
@@ -20486,7 +20486,7 @@ const PhysX = (() => {
         _emscripten_bind_PxRigidBodyFlags___destroy___0(self);
       };
       // PxRigidDynamic
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRigidDynamic() { throw 'cannot construct a PxRigidDynamic, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRigidDynamic() { throw new Error('cannot construct a PxRigidDynamic, no constructor in IDL'); }
       PxRigidDynamic.prototype = Object.create(PxRigidBody.prototype);
       PxRigidDynamic.prototype.constructor = PxRigidDynamic;
       PxRigidDynamic.prototype.__class__ = PxRigidDynamic;
@@ -21005,7 +21005,7 @@ const PhysX = (() => {
         _emscripten_bind_PxRigidDynamicLockFlags___destroy___0(self);
       };
       // PxRigidStatic
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRigidStatic() { throw 'cannot construct a PxRigidStatic, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxRigidStatic() { throw new Error('cannot construct a PxRigidStatic, no constructor in IDL'); }
       PxRigidStatic.prototype = Object.create(PxRigidActor.prototype);
       PxRigidStatic.prototype.constructor = PxRigidStatic;
       PxRigidStatic.prototype.__class__ = PxRigidStatic;
@@ -21177,7 +21177,7 @@ const PhysX = (() => {
       /** @suppress {checkTypes} */
       Object.defineProperty(PxRigidStatic.prototype, 'userData', { get: PxRigidStatic.prototype.get_userData, set: PxRigidStatic.prototype.set_userData });
       // PxScene
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxScene() { throw 'cannot construct a PxScene, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxScene() { throw new Error('cannot construct a PxScene, no constructor in IDL'); }
       PxScene.prototype = Object.create(PxSceneSQSystem.prototype);
       PxScene.prototype.constructor = PxScene;
       PxScene.prototype.__class__ = PxScene;
@@ -22465,7 +22465,7 @@ const PhysX = (() => {
         _emscripten_bind_PxSceneLimits___destroy___0(self);
       };
       // PxSerialization
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSerialization() { throw 'cannot construct a PxSerialization, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSerialization() { throw new Error('cannot construct a PxSerialization, no constructor in IDL'); }
       PxSerialization.prototype = Object.create(WrapperObject.prototype);
       PxSerialization.prototype.constructor = PxSerialization;
       PxSerialization.prototype.__class__ = PxSerialization;
@@ -22553,7 +22553,7 @@ const PhysX = (() => {
         _emscripten_bind_PxSerialization___destroy___0(self);
       };
       // PxSerializationRegistry
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSerializationRegistry() { throw 'cannot construct a PxSerializationRegistry, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSerializationRegistry() { throw new Error('cannot construct a PxSerializationRegistry, no constructor in IDL'); }
       PxSerializationRegistry.prototype = Object.create(WrapperObject.prototype);
       PxSerializationRegistry.prototype.constructor = PxSerializationRegistry;
       PxSerializationRegistry.prototype.__class__ = PxSerializationRegistry;
@@ -22566,7 +22566,7 @@ const PhysX = (() => {
       };;
 
       // PxShape
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxShape() { throw 'cannot construct a PxShape, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxShape() { throw new Error('cannot construct a PxShape, no constructor in IDL'); }
       PxShape.prototype = Object.create(PxRefCounted.prototype);
       PxShape.prototype.constructor = PxShape;
       PxShape.prototype.__class__ = PxShape;
@@ -22788,7 +22788,7 @@ const PhysX = (() => {
       /** @suppress {checkTypes} */
       Object.defineProperty(PxShape.prototype, 'userData', { get: PxShape.prototype.get_userData, set: PxShape.prototype.set_userData });
       // PxShapeExt
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxShapeExt() { throw 'cannot construct a PxShapeExt, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxShapeExt() { throw new Error('cannot construct a PxShapeExt, no constructor in IDL'); }
       PxShapeExt.prototype = Object.create(WrapperObject.prototype);
       PxShapeExt.prototype.constructor = PxShapeExt;
       PxShapeExt.prototype.__class__ = PxShapeExt;
@@ -22885,7 +22885,7 @@ const PhysX = (() => {
         _emscripten_bind_PxShapeFlags___destroy___0(self);
       };
       // PxShapePtr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxShapePtr() { throw 'cannot construct a PxShapePtr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxShapePtr() { throw new Error('cannot construct a PxShapePtr, no constructor in IDL'); }
       PxShapePtr.prototype = Object.create(WrapperObject.prototype);
       PxShapePtr.prototype.constructor = PxShapePtr;
       PxShapePtr.prototype.__class__ = PxShapePtr;
@@ -22948,7 +22948,7 @@ const PhysX = (() => {
         _emscripten_bind_PxSimulationEventCallbackImpl___destroy___0(self);
       };
       // PxSimulationStatistics
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSimulationStatistics() { throw 'cannot construct a PxSimulationStatistics, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSimulationStatistics() { throw new Error('cannot construct a PxSimulationStatistics, no constructor in IDL'); }
       PxSimulationStatistics.prototype = Object.create(WrapperObject.prototype);
       PxSimulationStatistics.prototype.constructor = PxSimulationStatistics;
       PxSimulationStatistics.prototype.__class__ = PxSimulationStatistics;
@@ -23216,7 +23216,7 @@ const PhysX = (() => {
         _emscripten_bind_PxSimulationStatistics___destroy___0(self);
       };
       // PxSpatialForce
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSpatialForce() { throw 'cannot construct a PxSpatialForce, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSpatialForce() { throw new Error('cannot construct a PxSpatialForce, no constructor in IDL'); }
       PxSpatialForce.prototype = Object.create(WrapperObject.prototype);
       PxSpatialForce.prototype.constructor = PxSpatialForce;
       PxSpatialForce.prototype.__class__ = PxSpatialForce;
@@ -23250,7 +23250,7 @@ const PhysX = (() => {
         _emscripten_bind_PxSpatialForce___destroy___0(self);
       };
       // PxSpatialVelocity
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSpatialVelocity() { throw 'cannot construct a PxSpatialVelocity, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSpatialVelocity() { throw new Error('cannot construct a PxSpatialVelocity, no constructor in IDL'); }
       PxSpatialVelocity.prototype = Object.create(WrapperObject.prototype);
       PxSpatialVelocity.prototype.constructor = PxSpatialVelocity;
       PxSpatialVelocity.prototype.__class__ = PxSpatialVelocity;
@@ -23316,7 +23316,7 @@ const PhysX = (() => {
         _emscripten_bind_PxSphereGeometry___destroy___0(self);
       };
       // PxSphericalJoint
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSphericalJoint() { throw 'cannot construct a PxSphericalJoint, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxSphericalJoint() { throw new Error('cannot construct a PxSphericalJoint, no constructor in IDL'); }
       PxSphericalJoint.prototype = Object.create(PxJoint.prototype);
       PxSphericalJoint.prototype.constructor = PxSphericalJoint;
       PxSphericalJoint.prototype.__class__ = PxSphericalJoint;
@@ -23785,7 +23785,7 @@ const PhysX = (() => {
         _emscripten_bind_PxSweepResult___destroy___0(self);
       };
       // PxTetMaker
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTetMaker() { throw 'cannot construct a PxTetMaker, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTetMaker() { throw new Error('cannot construct a PxTetMaker, no constructor in IDL'); }
       PxTetMaker.prototype = Object.create(WrapperObject.prototype);
       PxTetMaker.prototype.constructor = PxTetMaker;
       PxTetMaker.prototype.__class__ = PxTetMaker;
@@ -23912,7 +23912,7 @@ const PhysX = (() => {
       };;
 
       // PxTetrahedronMesh
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTetrahedronMesh() { throw 'cannot construct a PxTetrahedronMesh, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTetrahedronMesh() { throw new Error('cannot construct a PxTetrahedronMesh, no constructor in IDL'); }
       PxTetrahedronMesh.prototype = Object.create(PxRefCounted.prototype);
       PxTetrahedronMesh.prototype.constructor = PxTetrahedronMesh;
       PxTetrahedronMesh.prototype.__class__ = PxTetrahedronMesh;
@@ -24120,7 +24120,7 @@ const PhysX = (() => {
         _emscripten_bind_PxTetrahedronMeshDesc___destroy___0(self);
       };
       // PxTetrahedronMeshExt
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTetrahedronMeshExt() { throw 'cannot construct a PxTetrahedronMeshExt, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTetrahedronMeshExt() { throw new Error('cannot construct a PxTetrahedronMeshExt, no constructor in IDL'); }
       PxTetrahedronMeshExt.prototype = Object.create(WrapperObject.prototype);
       PxTetrahedronMeshExt.prototype.constructor = PxTetrahedronMeshExt;
       PxTetrahedronMeshExt.prototype.__class__ = PxTetrahedronMeshExt;
@@ -24248,7 +24248,7 @@ const PhysX = (() => {
         _emscripten_bind_PxTolerancesScale___destroy___0(self);
       };
       // PxTopLevelFunctions
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTopLevelFunctions() { throw 'cannot construct a PxTopLevelFunctions, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTopLevelFunctions() { throw new Error('cannot construct a PxTopLevelFunctions, no constructor in IDL'); }
       PxTopLevelFunctions.prototype = Object.create(WrapperObject.prototype);
       PxTopLevelFunctions.prototype.constructor = PxTopLevelFunctions;
       PxTopLevelFunctions.prototype.__class__ = PxTopLevelFunctions;
@@ -24507,7 +24507,7 @@ const PhysX = (() => {
         _emscripten_bind_PxTriangle___destroy___0(self);
       };
       // PxTriangleMesh
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTriangleMesh() { throw 'cannot construct a PxTriangleMesh, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTriangleMesh() { throw new Error('cannot construct a PxTriangleMesh, no constructor in IDL'); }
       PxTriangleMesh.prototype = Object.create(PxRefCounted.prototype);
       PxTriangleMesh.prototype.constructor = PxTriangleMesh;
       PxTriangleMesh.prototype.__class__ = PxTriangleMesh;
@@ -24814,7 +24814,7 @@ const PhysX = (() => {
         _emscripten_bind_PxTriangleMeshGeometry___destroy___0(self);
       };
       // PxTriggerPair
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTriggerPair() { throw 'cannot construct a PxTriggerPair, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTriggerPair() { throw new Error('cannot construct a PxTriggerPair, no constructor in IDL'); }
       PxTriggerPair.prototype = Object.create(WrapperObject.prototype);
       PxTriggerPair.prototype.constructor = PxTriggerPair;
       PxTriggerPair.prototype.__class__ = PxTriggerPair;
@@ -24926,7 +24926,7 @@ const PhysX = (() => {
         _emscripten_bind_PxTriggerPairFlags___destroy___0(self);
       };
       // PxTypedStridedData_PxU16
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTypedStridedData_PxU16() { throw 'cannot construct a PxTypedStridedData_PxU16, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxTypedStridedData_PxU16() { throw new Error('cannot construct a PxTypedStridedData_PxU16, no constructor in IDL'); }
       PxTypedStridedData_PxU16.prototype = Object.create(WrapperObject.prototype);
       PxTypedStridedData_PxU16.prototype.constructor = PxTypedStridedData_PxU16;
       PxTypedStridedData_PxU16.prototype.__class__ = PxTypedStridedData_PxU16;
@@ -24960,7 +24960,7 @@ const PhysX = (() => {
         _emscripten_bind_PxTypedStridedData_PxU16___destroy___0(self);
       };
       // PxU16Ptr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU16Ptr() { throw 'cannot construct a PxU16Ptr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU16Ptr() { throw new Error('cannot construct a PxU16Ptr, no constructor in IDL'); }
       PxU16Ptr.prototype = Object.create(PxU16ConstPtr.prototype);
       PxU16Ptr.prototype.constructor = PxU16Ptr;
       PxU16Ptr.prototype.__class__ = PxU16Ptr;
@@ -24972,7 +24972,7 @@ const PhysX = (() => {
         _emscripten_bind_PxU16Ptr___destroy___0(self);
       };
       // PxU16StridedData
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU16StridedData() { throw 'cannot construct a PxU16StridedData, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU16StridedData() { throw new Error('cannot construct a PxU16StridedData, no constructor in IDL'); }
       PxU16StridedData.prototype = Object.create(WrapperObject.prototype);
       PxU16StridedData.prototype.constructor = PxU16StridedData;
       PxU16StridedData.prototype.__class__ = PxU16StridedData;
@@ -25006,7 +25006,7 @@ const PhysX = (() => {
         _emscripten_bind_PxU16StridedData___destroy___0(self);
       };
       // PxU32Ptr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU32Ptr() { throw 'cannot construct a PxU32Ptr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU32Ptr() { throw new Error('cannot construct a PxU32Ptr, no constructor in IDL'); }
       PxU32Ptr.prototype = Object.create(PxU32ConstPtr.prototype);
       PxU32Ptr.prototype.constructor = PxU32Ptr;
       PxU32Ptr.prototype.__class__ = PxU32Ptr;
@@ -25018,7 +25018,7 @@ const PhysX = (() => {
         _emscripten_bind_PxU32Ptr___destroy___0(self);
       };
       // PxU8Ptr
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU8Ptr() { throw 'cannot construct a PxU8Ptr, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function PxU8Ptr() { throw new Error('cannot construct a PxU8Ptr, no constructor in IDL'); }
       PxU8Ptr.prototype = Object.create(PxU8ConstPtr.prototype);
       PxU8Ptr.prototype.constructor = PxU8Ptr;
       PxU8Ptr.prototype.__class__ = PxU8Ptr;
@@ -25418,7 +25418,7 @@ const PhysX = (() => {
         _emscripten_bind_SphereSupport___destroy___0(self);
       };
       // SupportFunctions
-      /** @suppress {undefinedVars, duplicate} @this{Object} */function SupportFunctions() { throw 'cannot construct a SupportFunctions, no constructor in IDL'; }
+      /** @suppress {undefinedVars, duplicate} @this{Object} */function SupportFunctions() { throw new Error('cannot construct a SupportFunctions, no constructor in IDL'); }
       SupportFunctions.prototype = Object.create(WrapperObject.prototype);
       SupportFunctions.prototype.constructor = SupportFunctions;
       SupportFunctions.prototype.__class__ = SupportFunctions;

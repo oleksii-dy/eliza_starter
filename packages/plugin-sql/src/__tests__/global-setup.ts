@@ -1,13 +1,10 @@
-import { PGliteClientManager } from '../pglite/manager';
-
 export async function setup() {
   console.log('[GLOBAL SETUP] Starting test environment setup...');
 
-  // Force cleanup any existing PGLite instances
-  await PGliteClientManager.forceCleanupAll();
-
-  // Wait additional time for WebAssembly cleanup
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  // Check PostgreSQL environment
+  if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
+    console.warn('[GLOBAL SETUP] Warning: No PostgreSQL URL configured');
+  }
 
   console.log('[GLOBAL SETUP] Test environment ready');
 }
@@ -15,11 +12,8 @@ export async function setup() {
 export async function teardown() {
   console.log('[GLOBAL TEARDOWN] Cleaning up test environment...');
 
-  // Force cleanup all PGLite instances
-  await PGliteClientManager.forceCleanupAll();
-
-  // Wait for complete cleanup
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+  // No specific cleanup needed for PostgreSQL connections
+  // Connections are managed by individual test adapters
 
   console.log('[GLOBAL TEARDOWN] Cleanup complete');
 }

@@ -57,10 +57,10 @@ export class BufferedLerpQuaternion {
   }
 
   /**
-   * Call once per frame with your frame‐delta in seconds.
+   * Call once per frame with your frame‐_delta in seconds.
    */
-  update(delta) {
-    this.localTime += delta;
+  update(_delta) {
+    this.localTime += _delta;
     const tRender = this.localTime - this.buffer;
 
     // find the two samples that straddle tRender:
@@ -147,7 +147,7 @@ export class BufferedLerpQuaternion {
 //     }
 //   }
 
-//   update(delta) {
+//   update(_delta) {
 //     this.localTime += delta
 //     // where in time we should render
 //     const tRender = this.localTime - this.buffer

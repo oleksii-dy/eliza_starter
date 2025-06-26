@@ -10,6 +10,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import SocketIOManager from '@/lib/socketio-manager';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const connectionStatusActions = {
   setUnauthorized: (message: string) => {
     console.warn('setUnauthorized called before ConnectionContext is ready', message);
@@ -69,6 +70,7 @@ export const ConnectionProvider = ({ children }: { children: ReactNode }) => {
         }
       } else {
         if (status === 'error' && error?.includes('offline')) {
+          // Handle offline status - no action needed for now
         }
       }
     },
@@ -160,6 +162,7 @@ export const ConnectionProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useConnection = () => {
   const ctx = useContext(ConnectionContext);
   if (!ctx) {

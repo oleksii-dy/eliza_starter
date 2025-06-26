@@ -65,7 +65,19 @@ Respond with JSON:
       max_tokens: 400,
     });
 
-    return WebhookEventAnalysisSchema.parse(JSON.parse(response));
+    // Extract JSON from response that might contain markdown backticks
+    let jsonText = response;
+    if (typeof response === 'string') {
+      // Remove markdown code block markers if present
+      jsonText = response.replace(/```json\s*|\s*```/g, '').trim();
+      // Try to find JSON object in the text
+      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
+      }
+    }
+
+    return WebhookEventAnalysisSchema.parse(JSON.parse(jsonText));
   } catch (_error) {
     logger.warn('Failed to analyze webhook mention:', _error);
     return {
@@ -112,7 +124,19 @@ Respond with JSON:
       max_tokens: 300,
     });
 
-    return MessageRelevanceSchema.parse(JSON.parse(response));
+    // Extract JSON from response that might contain markdown backticks
+    let jsonText = response;
+    if (typeof response === 'string') {
+      // Remove markdown code block markers if present
+      jsonText = response.replace(/```json\s*|\s*```/g, '').trim();
+      // Try to find JSON object in the text
+      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
+      }
+    }
+
+    return MessageRelevanceSchema.parse(JSON.parse(jsonText));
   } catch (error) {
     logger.warn('Failed to analyze message relevance:', error);
     return {
@@ -306,55 +330,55 @@ async function processWebhookEvent(
   }
 }
 
-// Collect all actions
+// Collect all actions - enabled property is now directly on action objects
 const githubActions: Action[] = [
-  // Repository actions
+  // Repository actions - read actions enabled, create disabled
   getRepositoryAction,
   listRepositoriesAction,
-  createRepositoryAction,
+  createRepositoryAction, // Has enabled: false property
   searchRepositoriesAction,
 
-  // Issue actions
+  // Issue actions - read/list enabled, create disabled by default
   getIssueAction,
   listIssuesAction,
-  createIssueAction,
+  createIssueAction, // Has enabled: false property
   searchIssuesAction,
 
-  // Pull request actions
+  // Pull request actions - view enabled, modify disabled
   getPullRequestAction,
   listPullRequestsAction,
-  createPullRequestAction,
-  mergePullRequestAction,
+  createPullRequestAction, // Has enabled: false property
+  mergePullRequestAction, // Has enabled: false property
 
-  // Activity actions
+  // Activity actions - all enabled for monitoring
   getGitHubActivityAction,
   clearGitHubActivityAction,
   getGitHubRateLimitAction,
 
-  // Search actions
+  // Search actions - enabled for information gathering
   searchGitHubAction,
 
-  // User actions
+  // User actions - all enabled for information
   getUserProfileAction,
   getUserStatsAction,
   listUserRepositoriesAction,
 
-  // Branch actions
+  // Branch actions - list enabled, create/modify disabled
   listBranchesAction,
-  createBranchAction,
+  createBranchAction, // Has enabled: false property
   getBranchProtectionAction,
 
-  // Stats actions
+  // Stats actions - all enabled for monitoring
   getRepositoryStatsAction,
   getRepositoryTrafficAction,
 
-  // Webhook actions
-  createWebhookAction,
+  // Webhook actions - disabled by default (infrastructure changes)
+  createWebhookAction, // Has enabled: false property
   listWebhooksAction,
-  deleteWebhookAction,
+  deleteWebhookAction, // Has enabled: false property
   pingWebhookAction,
 
-  // Auto-coder actions
+  // Auto-coder actions - enabled for productivity
   autoCodeIssueAction,
   respondToMentionAction,
 ];

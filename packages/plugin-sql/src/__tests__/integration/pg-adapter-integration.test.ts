@@ -1,9 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import type { UUID } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
-import { PGliteClientManager } from '../../pglite/manager';
-import { PGlite } from '@electric-sql/pglite';
+import { PgAdapter } from '../../pg/adapter';
+import { PgManager } from '../../pg/manager';
 // Migration is handled by the adapter's UnifiedMigrator
 import { setDatabaseType } from '../../schema/factory';
 import * as schema from '../../schema';
@@ -11,17 +10,26 @@ import { v4 as uuidv4 } from 'uuid';
 
 describe('PostgreSQL Adapter Direct Integration Tests', () => {
   describe('PostgreSQL Adapter Direct Tests', () => {
-    let adapter: PgliteDatabaseAdapter;
-    let manager: PGliteClientManager;
+    let adapter: PgAdapter;
+    let manager: PgManager;
     let testAgentId: UUID;
 
     beforeAll(async () => {
+      // Skip test if no PostgreSQL URL is provided
+      if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
+        throw new Error(
+          'PostgreSQL connection required for tests. Please set POSTGRES_URL or TEST_POSTGRES_URL environment variable.'
+        );
+      }
+
       // Set database type for schema lazy loading
-      setDatabaseType('pglite');
+      setDatabaseType('postgres');
 
       testAgentId = uuidv4() as UUID;
-      manager = new PGliteClientManager({});
-      adapter = new PgliteDatabaseAdapter(testAgentId, manager);
+      const postgresUrl = process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL!;
+      manager = new PgManager({ connectionString: postgresUrl, ssl: false });
+      await manager.connect();
+      adapter = new PgAdapter(testAgentId, manager);
       await adapter.init();
 
       // Migrations are handled automatically by the adapter's UnifiedMigrator
@@ -32,6 +40,7 @@ describe('PostgreSQL Adapter Direct Integration Tests', () => {
       const db = adapter.getDatabase();
       await db.execute(sql`DELETE FROM agents WHERE id = ${testAgentId}`);
       await adapter.close();
+      await manager.close();
     });
 
     describe('Initialization and Connection', () => {
@@ -235,7 +244,7 @@ describe('PostgreSQL Adapter Direct Integration Tests', () => {
         `);
 
         try {
-          // PGLite requires array syntax
+          // PostgreSQL array syntax
           await db.execute(sql`
             INSERT INTO array_test (tags) VALUES (ARRAY['tag1', 'tag2', 'tag3'])
           `);
@@ -270,12 +279,15 @@ describe('PostgreSQL Adapter Direct Integration Tests', () => {
     describe('Adapter Shutdown', () => {
       it('should handle close gracefully', async () => {
         // Create a temporary adapter
-        const tempManager = new PGliteClientManager({});
-        const tempAdapter = new PgliteDatabaseAdapter(uuidv4() as UUID, tempManager);
+        const tempPostgresUrl = process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL!;
+        const tempManager = new PgManager({ connectionString: tempPostgresUrl, ssl: false });
+        await tempManager.connect();
+        const tempAdapter = new PgAdapter(uuidv4() as UUID, tempManager);
         await tempAdapter.init();
 
         // Close it
         await tempAdapter.close();
+        await tempManager.close();
 
         // Should not be ready after close
         const isReady = await tempAdapter.isReady();

@@ -106,7 +106,7 @@ export class FaceRecognition {
         .withFaceExpressions()
         .withAgeAndGender();
 
-      return detections.filter((d) => {
+      return detections.filter((d: any) => {
         const box = d.detection.box;
         return box.width >= this.MIN_FACE_SIZE && box.height >= this.MIN_FACE_SIZE;
       });

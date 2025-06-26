@@ -264,7 +264,7 @@ const options = {
   hooks: {
     logMethod(inputArgs: [string | Record<string, unknown>, ...unknown[]], method: LogFn): void {
       const [arg1, ...rest] = inputArgs;
-      if (process.env.SENTRY_LOGGING !== 'false') {
+      if (typeof process !== 'undefined' && process.env?.SENTRY_LOGGING !== 'false') {
         if (arg1 instanceof Error) {
           Sentry.captureException(arg1);
         } else {
@@ -363,19 +363,11 @@ interface LoggerWithClear extends pino.Logger {
 // Enhance logger with custom destination in Node.js environment
 if (typeof process !== 'undefined') {
   // Create the destination with in-memory logging
-  let stream: DestinationStream | null = null;
+  const stream: DestinationStream | null = null;
 
-  if (!raw) {
-    // Try to load pino-pretty synchronously for better compatibility
-    try {
-      const pretty = await import('pino-pretty');
-      stream = pretty.default(createPrettyConfig());
-    } catch (e) {
-      // If synchronous loading fails, continue without pretty printing
-      // This prevents the async race condition that was causing issues
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      console.warn('Failed to load pino-pretty, logging without formatting:', errorMessage);
-    }
+  if (!raw && typeof process !== 'undefined' && process.versions?.node) {
+    // Skip pino-pretty in browser environments
+    // In Node.js, stream will remain null if pino-pretty is not available
   }
 
   // Always create destination, even if stream is null (raw mode or fallback)

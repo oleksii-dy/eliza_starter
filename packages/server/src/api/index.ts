@@ -57,10 +57,28 @@ export function setupSocketIO(
   return io;
 }
 
+// Log entry interface for type safety
+interface LogEntry {
+  time?: number;
+  level?: number;
+  msg?: string;
+  [key: string]: unknown;
+}
+
+// Logger destination interface
+interface LoggerDestination {
+  write: (data: string | Buffer | LogEntry) => void;
+}
+
+// Logger instance interface with dynamic property access
+interface LoggerInstance {
+  [key: symbol]: LoggerDestination | undefined;
+}
+
 // Setup log streaming integration with the logger
-function setupLogStreaming(io: SocketIOServer, router: SocketIORouter) {
+function setupLogStreaming(io: SocketIOServer, router: SocketIORouter): void {
   // Access the logger's destination to hook into log events
-  const loggerInstance = logger as any;
+  const loggerInstance = logger as unknown as LoggerInstance;
   const destination = loggerInstance[Symbol.for('pino-destination')];
 
   if (destination && typeof destination.write === 'function') {
@@ -68,15 +86,17 @@ function setupLogStreaming(io: SocketIOServer, router: SocketIORouter) {
     const originalWrite = destination.write.bind(destination);
 
     // Override write method to broadcast logs via WebSocket
-    destination.write = function (data: string | any) {
+    destination.write = function (data: string | Buffer | LogEntry): void {
       // Call original write first
       originalWrite(data);
 
       // Parse and broadcast log entry
       try {
-        let logEntry;
+        let logEntry: LogEntry;
         if (typeof data === 'string') {
-          logEntry = JSON.parse(data);
+          logEntry = JSON.parse(data) as LogEntry;
+        } else if (Buffer.isBuffer(data)) {
+          logEntry = JSON.parse(data.toString()) as LogEntry;
         } else {
           logEntry = data;
         }
@@ -162,7 +182,7 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
               );
               try {
                 if (route.handler) {
-                  route.handler(req, res, runtime);
+                  route.handler(req as any, res as any, runtime);
                   handled = true;
                 }
               } catch (error) {
@@ -212,7 +232,7 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
               req.params = { ...(matched.params || {}) };
               try {
                 if (route.handler) {
-                  route.handler(req, res, runtime);
+                  route.handler(req as any, res as any, runtime);
                   handled = true;
                 }
               } catch (error) {
@@ -299,7 +319,7 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
                 `Global plugin wildcard route: [${route.type.toUpperCase()}] ${routePath} (Agent: ${runtime.agentId}) for request: ${reqPath}`
               );
               try {
-                route?.handler?.(req, res, runtime);
+                route?.handler?.(req as any, res as any, runtime);
                 handled = true;
               } catch (error) {
                 logger.error(
@@ -326,7 +346,7 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
               `Global plugin route matched: [${route.type.toUpperCase()}] ${routePath} (Agent: ${runtime.agentId}) for request: ${reqPath}`
             );
             try {
-              route?.handler?.(req, res, runtime);
+              route?.handler?.(req as any, res as any, runtime);
               handled = true;
             } catch (error) {
               logger.error(
@@ -408,18 +428,18 @@ export function createApiRouter(
   // Body parsing middleware
   router.use(
     bodyParser.json({
-      limit: process.env.EXPRESS_MAX_PAYLOAD || '100kb',
+      limit: process.env.EXPRESS_MAX_PAYLOAD || '10mb',
     })
   );
   router.use(
     bodyParser.urlencoded({
       extended: true,
-      limit: process.env.EXPRESS_MAX_PAYLOAD || '100kb',
+      limit: process.env.EXPRESS_MAX_PAYLOAD || '10mb',
     })
   );
   router.use(
     express.json({
-      limit: process.env.EXPRESS_MAX_PAYLOAD || '100kb',
+      limit: process.env.EXPRESS_MAX_PAYLOAD || '10mb',
     })
   );
 

@@ -1,7 +1,7 @@
-import React from 'react';
+
 // import 'ses'
 // import '../core/lockdown'
-import * as THREE from 'three';
+import { THREE } from '../core/extras/three';
 import { useEffect, useMemo, useRef, useState } from 'react';
 // Removed css utility import
 

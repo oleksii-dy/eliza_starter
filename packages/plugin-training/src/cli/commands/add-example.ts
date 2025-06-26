@@ -32,6 +32,8 @@ export function addExampleCommand(program: Command) {
         await builder.loadExamples();
 
         const id = await builder.addExample({
+          input: options.request,
+          output: options.response,
           request: options.request,
           response: options.response,
           thinking: options.thinking,

@@ -1,4 +1,3 @@
-
 /**
  * Centralized trust level requirements for all actions across plugins
  * Trust levels range from 0-100:
@@ -72,13 +71,13 @@ export const TrustRequirements = new Map<string, number>([
   ['EVALUATE_TRUST', 50],
 
   // Solana plugin - financial operations require high trust
-  ['TRANSFER_SOL', 80],          // High value financial transfers
-  ['TRANSFER_TOKEN', 80],        // High value financial transfers
-  ['SWAP_TOKENS', 75],           // Trading operations
-  ['STAKE_SOL', 70],             // Staking operations (can be recovered)
-  ['SOLANA_TRANSFER', 80],       // Generic transfer action
-  ['SOLANA_SWAP', 75],           // Generic swap action
-  ['SOLANA_STAKE', 70],          // Generic stake action
+  ['TRANSFER_SOL', 80], // High value financial transfers
+  ['TRANSFER_TOKEN', 80], // High value financial transfers
+  ['SWAP_TOKENS', 75], // Trading operations
+  ['STAKE_SOL', 70], // Staking operations (can be recovered)
+  ['SOLANA_TRANSFER', 80], // Generic transfer action
+  ['SOLANA_SWAP', 75], // Generic swap action
+  ['SOLANA_STAKE', 70], // Generic stake action
 
   // Default for unknown actions
   ['DEFAULT', 50],

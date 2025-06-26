@@ -167,7 +167,7 @@ export class ShellBasicE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing shell history clearing...');
 
-        const shellService = runtime.getService<ShellService>('SHELL' as any);
+        const shellService = runtime.getService<ShellService>('SHELL');
         if (!shellService) {
           throw new Error('Shell service not available');
         }

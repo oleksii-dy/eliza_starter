@@ -36,7 +36,7 @@ export class NPCSpawnManager {
   /**
    * Update spawn points and respawn queue
    */
-  update(delta: number): void {
+  update(_delta: number): void {
     const now = Date.now();
 
     // Process respawn queue
@@ -49,7 +49,7 @@ export class NPCSpawnManager {
     this.respawnQueue = this.respawnQueue.filter(task => now < task.scheduledTime);
 
     // Check spawn points
-    for (const [id, spawnPoint] of this.spawnPoints) {
+    for (const [_id, spawnPoint] of this.spawnPoints) {
       if (!spawnPoint.active) {continue;}
 
       // Check if we need to spawn more NPCs

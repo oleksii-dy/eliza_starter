@@ -7,10 +7,7 @@ import type { UUID } from '@elizaos/core';
  */
 
 export { validateShellCommand } from './plugin-shell-integration';
-export {
-  SecretOperation,
-  SecretSensitivity
-} from './plugin-secrets-integration';
+export { SecretOperation, SecretSensitivity } from './plugin-secrets-integration';
 
 /**
  * Generic trust validation utility for any plugin action
@@ -46,7 +43,7 @@ export async function validateActionWithTrust(
       logger.warn(`[TrustValidation] Trust engine not available for action ${options.action}`);
       return {
         allowed: false,
-        reason: 'Trust engine not available'
+        reason: 'Trust engine not available',
       };
     }
 
@@ -54,7 +51,7 @@ export async function validateActionWithTrust(
     const requirements = {
       minimumTrust: options.minimumTrust || 50,
       dimensions: options.requiredDimensions,
-      minimumInteractions: options.minimumInteractions
+      minimumInteractions: options.minimumInteractions,
     };
 
     // Build trust context
@@ -62,7 +59,7 @@ export async function validateActionWithTrust(
       evaluatorId: runtime.agentId,
       action: options.action,
       worldId: message.worldId,
-      roomId: message.roomId
+      roomId: message.roomId,
     };
 
     // Evaluate trust decision
@@ -84,12 +81,12 @@ export async function validateActionWithTrust(
             action: options.action,
             resource: options.resource,
             trustScore: decision.trustScore,
-            requiredTrust: requirements.minimumTrust
+            requiredTrust: requirements.minimumTrust,
           },
           details: {
             reason: decision.reason,
-            requirements
-          }
+            requirements,
+          },
         });
       }
     }
@@ -99,14 +96,13 @@ export async function validateActionWithTrust(
       reason: decision.reason,
       trustScore: decision.trustScore,
       suggestions: decision.suggestions,
-      method: 'trust-based'
+      method: 'trust-based',
     };
-
   } catch (error) {
     logger.error(`[TrustValidation] Error validating action ${options.action}:`, error);
     return {
       allowed: false,
-      reason: 'Trust validation error'
+      reason: 'Trust validation error',
     };
   }
 }
@@ -132,13 +128,15 @@ export function withTrustValidation<T extends (...args: any[]) => any>(
       const validation = await validateActionWithTrust(runtime, message, options);
 
       if (!validation.allowed) {
-        logger.warn(`[TrustMiddleware] Action ${options.action} denied for ${message.entityId}: ${validation.reason}`);
+        logger.warn(
+          `[TrustMiddleware] Action ${options.action} denied for ${message.entityId}: ${validation.reason}`
+        );
 
         return {
           text: `Action denied: ${validation.reason}${validation.suggestions ? `\n\nSuggestions:\n${validation.suggestions.join('\n')}` : ''}`,
           error: true,
           trustDenied: true,
-          trustScore: validation.trustScore
+          trustScore: validation.trustScore,
         };
       }
 
@@ -161,7 +159,9 @@ export async function recordSuccessfulAction(
 ): Promise<void> {
   try {
     const trustEngine = runtime.getService('trust-engine') as any;
-    if (!trustEngine) {return;}
+    if (!trustEngine) {
+      return;
+    }
 
     await trustEngine.recordInteraction({
       sourceEntityId: userId,
@@ -171,11 +171,11 @@ export async function recordSuccessfulAction(
       impact,
       details: {
         action: actionName,
-        successful: true
+        successful: true,
       },
       context: {
-        evaluatorId: runtime.agentId
-      }
+        evaluatorId: runtime.agentId,
+      },
     });
   } catch (error) {
     logger.error('[TrustValidation] Failed to record successful action:', error);
@@ -194,7 +194,9 @@ export async function recordFailedAction(
 ): Promise<void> {
   try {
     const trustEngine = runtime.getService('trust-engine') as any;
-    if (!trustEngine) {return;}
+    if (!trustEngine) {
+      return;
+    }
 
     await trustEngine.recordInteraction({
       sourceEntityId: userId,
@@ -205,11 +207,11 @@ export async function recordFailedAction(
       details: {
         action: actionName,
         successful: false,
-        error: error.message
+        error: error.message,
       },
       context: {
-        evaluatorId: runtime.agentId
-      }
+        evaluatorId: runtime.agentId,
+      },
     });
   } catch (error) {
     logger.error('[TrustValidation] Failed to record failed action:', error);

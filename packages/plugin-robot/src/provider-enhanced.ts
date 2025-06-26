@@ -1,7 +1,7 @@
 import { Provider, type IAgentRuntime, type Memory, type State, logger } from '@elizaos/core';
 import { VisionService } from './service';
 import { EntityTracker } from './entity-tracker';
-import type { TrackedEntity } from './types';
+import type { TrackedEntity as _TrackedEntity } from './types';
 
 export const visionEnhancedProvider: Provider = {
   name: 'VISION_ENHANCED',
@@ -9,7 +9,7 @@ export const visionEnhancedProvider: Provider = {
 
   async get(runtime: IAgentRuntime, message: Memory, _state: State) {
     try {
-      const visionService = runtime.getService('VISION') as VisionService | null;
+      const visionService = runtime.getService<VisionService>('VISION') | null;
 
       if (!visionService || !visionService.isActive()) {
         return {

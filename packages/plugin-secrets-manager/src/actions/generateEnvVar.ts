@@ -1,6 +1,14 @@
+import {
+  elizaLogger as logger,
+  type Action,
+  type IAgentRuntime,
+  type Memory,
+  type State,
+  type HandlerCallback,
+} from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { generateScript } from '../generation';
-import { EnvManager } from '../service';
+import { EnhancedSecretManager } from '../enhanced-service';
 import type { GenerationScriptMetadata } from '../types';
 import { validateEnvVar } from '../validation';
 
@@ -14,8 +22,8 @@ export const generateEnvVarAction: Action = {
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     try {
-      const envService = runtime.getService('ENV_MANAGER') as EnvManager;
-      if (!env) {
+      const envService = runtime.getService<EnhancedSecretManager>('ENV_MANAGER');
+      if (!envService) {
         return false;
       }
 
@@ -52,8 +60,8 @@ export const generateEnvVarAction: Action = {
         throw new Error('Callback is required for GENERATE_ENV_VAR action');
       }
 
-      const envService = runtime.getService('ENV_MANAGER') as EnvManager;
-      if (!env) {
+      const envService = runtime.getService<EnhancedSecretManager>('ENV_MANAGER');
+      if (!envService) {
         throw new Error('Environment manager service not available');
       }
 
@@ -114,8 +122,8 @@ export const generateEnvVarAction: Action = {
           };
 
           // Get shell service to execute the script
-          const shellService = runtime.getService('SHELL' as any);
-          if (!shell) {
+          const shellService = runtime.getService('SHELL');
+          if (!shellService) {
             throw new Error('Shell service not available for script execution');
           }
 
@@ -275,7 +283,7 @@ export const generateEnvVarAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as any[][],
 };
 
 export default generateEnvVarAction;

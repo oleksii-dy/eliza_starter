@@ -1,14 +1,11 @@
-import {
-  type IAgentRuntime,
-  logger
-} from '@elizaos/core';
+import { type IAgentRuntime, logger } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
 import type {
   TrustRequirements,
   TrustDecision,
   TrustEvidenceType,
   SemanticTrustEvidence,
-  TrustScore
+  TrustScore,
 } from '../types/trust';
 import type { AccessDecision } from '../types/permissions';
 import type { ThreatAssessment } from '../types/security';
@@ -31,7 +28,9 @@ export class CoreTrustProvider {
     // Initialize will be called after services are registered
     this.trustService = this.runtime.getService('trust');
     if (!this.trustService) {
-      throw new Error('Trust service not available. Ensure the trust plugin is properly initialized.');
+      throw new Error(
+        'Trust service not available. Ensure the trust plugin is properly initialized.'
+      );
     }
   }
 
@@ -39,7 +38,9 @@ export class CoreTrustProvider {
     if (!this.trustService) {
       this.trustService = this.runtime.getService('trust');
       if (!this.trustService) {
-        throw new Error('Trust service not available. Ensure the trust plugin is properly initialized.');
+        throw new Error(
+          'Trust service not available. Ensure the trust plugin is properly initialized.'
+        );
       }
     }
     return this.trustService;
@@ -87,18 +88,15 @@ export class CoreTrustProvider {
       resource: resource || 'default',
       timestamp: Date.now(),
       context: {
-        requesterEntityId: this.runtime.agentId
-      }
+        requesterEntityId: this.runtime.agentId,
+      },
     });
   }
 
   /**
    * Evaluate threat level for an entity
    */
-  async evaluateThreatLevel(
-    entityId: UUID,
-    context?: any
-  ): Promise<ThreatAssessment> {
+  async evaluateThreatLevel(entityId: UUID, context?: any): Promise<ThreatAssessment> {
     const trustService = await this.ensureTrustService();
     return trustService.assessThreat(entityId, context);
   }
@@ -117,13 +115,14 @@ export class CoreTrustProvider {
     const interaction = {
       sourceEntityId: entityId,
       targetEntityId: this.runtime.agentId,
-      type: result === 'success' ? 'successful_completion' : 'failed_attempt' as TrustEvidenceType,
+      type:
+        result === 'success' ? 'successful_completion' : ('failed_attempt' as TrustEvidenceType),
       impact: result === 'success' ? 0.1 : -0.1,
       timestamp: Date.now(),
       metadata: {
         activity,
-        ...metadata
-      }
+        ...metadata,
+      },
     };
 
     await trustService.updateTrust(interaction);

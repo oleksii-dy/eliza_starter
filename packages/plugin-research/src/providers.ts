@@ -1,4 +1,11 @@
-import { Provider, IAgentRuntime, Memory, State, ProviderResult } from '@elizaos/core';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  Provider,
+  IAgentRuntime,
+  Memory,
+  State,
+  ProviderResult,
+} from '@elizaos/core';
 import { ResearchService } from './service';
 import { ResearchStatus, ResearchPhase } from './types';
 
@@ -6,7 +13,11 @@ export const activeResearchProvider: Provider = {
   name: 'active_research',
   description: 'Provides information about active research projects',
 
-  async get(runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> {
+  async get(
+    runtime: IAgentRuntime,
+    message: Memory,
+    state: State
+  ): Promise<ProviderResult> {
     const researchService = runtime.getService<ResearchService>('research');
     if (!researchService) {
       return { text: '' };
@@ -39,16 +50,23 @@ export const activeResearchProvider: Provider = {
 
 export const completedResearchProvider: Provider = {
   name: 'completed_research',
-  description: 'Provides information about completed research projects with reports',
+  description:
+    'Provides information about completed research projects with reports',
 
-  async get(runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> {
+  async get(
+    runtime: IAgentRuntime,
+    message: Memory,
+    state: State
+  ): Promise<ProviderResult> {
     const researchService = runtime.getService<ResearchService>('research');
     if (!researchService) {
       return { text: '' };
     }
 
     const allProjects = await researchService.getAllProjects();
-    const completedProjects = allProjects.filter((p) => p.status === ResearchStatus.COMPLETED);
+    const completedProjects = allProjects.filter(
+      (p) => p.status === ResearchStatus.COMPLETED
+    );
 
     if (completedProjects.length === 0) {
       return { text: '' };
@@ -76,7 +94,11 @@ export const researchCapabilitiesProvider: Provider = {
   name: 'research_capabilities',
   description: 'Provides information about research service capabilities',
 
-  async get(runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> {
+  async get(
+    runtime: IAgentRuntime,
+    message: Memory,
+    state: State
+  ): Promise<ProviderResult> {
     const researchService = runtime.getService<ResearchService>('research');
 
     // Always return capabilities info, even if service is not currently available

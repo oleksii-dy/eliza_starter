@@ -6,7 +6,13 @@ import {
   researchCapabilitiesProvider,
 } from '../providers';
 import { ResearchService } from '../service';
-import { ResearchStatus, ResearchPhase, ResearchDomain, TaskType, ResearchDepth } from '../types';
+import {
+  ResearchStatus,
+  ResearchPhase,
+  ResearchDomain,
+  TaskType,
+  ResearchDepth,
+} from '../types';
 
 describe('Research Providers', () => {
   let mockRuntime: IAgentRuntime;
@@ -64,7 +70,11 @@ describe('Research Providers', () => {
 
       mockService.getActiveProjects = mock().mockResolvedValue([mockProject]);
 
-      const result = await activeResearchProvider.get(mockRuntime, mockMemory, mockState);
+      const result = await activeResearchProvider.get(
+        mockRuntime,
+        mockMemory,
+        mockState
+      );
 
       expect(result).toBeDefined();
       expect(result.text).toContain('Research on "quantum computing"');
@@ -74,7 +84,11 @@ describe('Research Providers', () => {
     it('should handle no active projects', async () => {
       mockService.getActiveProjects = mock().mockResolvedValue([]);
 
-      const result = await activeResearchProvider.get(mockRuntime, mockMemory, mockState);
+      const result = await activeResearchProvider.get(
+        mockRuntime,
+        mockMemory,
+        mockState
+      );
 
       expect(result.text).toBe('');
     });
@@ -82,7 +96,11 @@ describe('Research Providers', () => {
     it('should handle service not available', async () => {
       mockRuntime.getService = mock().mockReturnValue(null);
 
-      const result = await activeResearchProvider.get(mockRuntime, mockMemory, mockState);
+      const result = await activeResearchProvider.get(
+        mockRuntime,
+        mockMemory,
+        mockState
+      );
 
       expect(result.text).toBe('');
     });
@@ -115,7 +133,11 @@ describe('Research Providers', () => {
 
       mockService.getAllProjects = mock().mockResolvedValue(mockProjects);
 
-      const result = await completedResearchProvider.get(mockRuntime, mockMemory, mockState);
+      const result = await completedResearchProvider.get(
+        mockRuntime,
+        mockMemory,
+        mockState
+      );
 
       expect(result.text).toContain('Recently Completed Research');
       expect(result.text).toContain('AI ethics');
@@ -126,7 +148,11 @@ describe('Research Providers', () => {
     it('should handle no completed projects', async () => {
       mockService.getAllProjects = mock().mockResolvedValue([]);
 
-      const result = await completedResearchProvider.get(mockRuntime, mockMemory, mockState);
+      const result = await completedResearchProvider.get(
+        mockRuntime,
+        mockMemory,
+        mockState
+      );
 
       expect(result.text).toBe('');
     });
@@ -134,7 +160,11 @@ describe('Research Providers', () => {
 
   describe('researchCapabilitiesProvider', () => {
     it('should provide research capabilities information', async () => {
-      const result = await researchCapabilitiesProvider.get(mockRuntime, mockMemory, mockState);
+      const result = await researchCapabilitiesProvider.get(
+        mockRuntime,
+        mockMemory,
+        mockState
+      );
 
       expect(result.text).toContain('Research Capabilities');
       expect(result.text).toContain('Deep multi-phase internet research');
@@ -145,7 +175,11 @@ describe('Research Providers', () => {
     it('should work even without service', async () => {
       mockRuntime.getService = mock().mockReturnValue(null);
 
-      const result = await researchCapabilitiesProvider.get(mockRuntime, mockMemory, mockState);
+      const result = await researchCapabilitiesProvider.get(
+        mockRuntime,
+        mockMemory,
+        mockState
+      );
 
       expect(result.text).toContain('Research Capabilities');
     });

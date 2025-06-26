@@ -100,7 +100,7 @@ export const hyperfyProvider: Provider = {
       const nearbyActions = (actionsSystem as any)?.getNearby?.(50) || [];
       const currentAction = actionsSystem?.currentNode;
 
-      const actionLines = nearbyActions.map((action) => {
+      const actionLines = nearbyActions.map((action: any) => {
         const entity = action.ctx?.entity;
         const pos = entity?.root?.position;
         const posStr =

@@ -34,7 +34,7 @@ export const mintNftAction: Action = {
   ] as ActionExample[][],
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
-    const service = runtime.getService('nft') as unknown as NftService;
+    const service = runtime.getService<NftService>('nft');
     return (service !== null && message.content.text?.toLowerCase().includes('mint')) || false;
   },
 
@@ -45,7 +45,7 @@ export const mintNftAction: Action = {
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
-    const service = runtime.getService('nft') as unknown as NftService;
+    const service = runtime.getService<NftService>('nft');
     if (!service) {
       throw new Error('NFT service not available');
     }
@@ -130,7 +130,7 @@ export const transferNftAction: Action = {
   ] as ActionExample[][],
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
-    const service = runtime.getService('nft') as unknown as NftService;
+    const service = runtime.getService<NftService>('nft');
     return (service !== null && message.content.text?.toLowerCase().includes('transfer')) || false;
   },
 
@@ -141,7 +141,7 @@ export const transferNftAction: Action = {
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
-    const service = runtime.getService('nft') as unknown as NftService;
+    const service = runtime.getService<NftService>('nft');
     if (!service) {
       throw new Error('NFT service not available');
     }
@@ -215,7 +215,7 @@ export const listNftAction: Action = {
   ] as ActionExample[][],
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
-    const service = runtime.getService('nft') as unknown as NftService;
+    const service = runtime.getService<NftService>('nft');
     return (service !== null && message.content.text?.toLowerCase().includes('list')) || false;
   },
 
@@ -226,7 +226,7 @@ export const listNftAction: Action = {
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
-    const service = runtime.getService('nft') as unknown as NftService;
+    const service = runtime.getService<NftService>('nft');
     if (!service) {
       throw new Error('NFT service not available');
     }
@@ -312,7 +312,7 @@ export const viewNftsAction: Action = {
   ] as ActionExample[][],
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
-    const service = runtime.getService('nft') as unknown as NftService;
+    const service = runtime.getService<NftService>('nft');
     const text = message.content.text?.toLowerCase() || '';
     return (
       (service !== null &&
@@ -329,7 +329,7 @@ export const viewNftsAction: Action = {
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
-    const service = runtime.getService('nft') as unknown as NftService;
+    const service = runtime.getService<NftService>('nft');
     if (!service) {
       throw new Error('NFT service not available');
     }
@@ -339,9 +339,15 @@ export const viewNftsAction: Action = {
       const addressMatch = text.match(/([\w]{32,44})/);
 
       // Use specified address or agent's wallet
-      const keyManager = runtime.getService('secure-key-manager') as any;
-      const walletKeypair = await keyManager.getAgentKeypair();
-      const owner = addressMatch ? new PublicKey(addressMatch[1]) : walletKeypair.publicKey;
+      const keyManager = runtime.getService('secure-key-manager');
+      const walletKeypair = keyManager && 'getAgentKeypair' in keyManager && typeof keyManager.getAgentKeypair === 'function' 
+        ? await keyManager.getAgentKeypair() 
+        : null;
+      const owner = addressMatch ? new PublicKey(addressMatch[1]) : walletKeypair?.publicKey;
+
+      if (!owner) {
+        throw new Error('No wallet address available to check NFTs');
+      }
 
       const nfts = await service.getUserNfts(owner);
 

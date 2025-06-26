@@ -120,7 +120,7 @@ async function getLocalRegistryIndex(): Promise<Record<string, RegistryEntry>> {
 }
 
 // Real plugin installation function using npm/git
-async function installPlugin(
+async function _installPlugin(
   pluginName: string,
   targetDir: string,
   version?: string,
@@ -521,7 +521,9 @@ export class PluginManagerService extends Service implements PluginRegistry {
       }
       if (plugin.services) {
         for (const service of plugin.services) {
-          state.components!.services.add(service.serviceType || '');
+          // Handle both direct service references and wrapper objects
+          const serviceClass = 'component' in service ? service.component : service;
+          state.components!.services.add(serviceClass.serviceType || '');
         }
       }
 
@@ -825,14 +827,24 @@ export class PluginManagerService extends Service implements PluginRegistry {
 
     // Register services - services are registered differently
     if (plugin.services) {
-      for (const ServiceClass of plugin.services) {
+      for (const serviceEntry of plugin.services) {
         try {
+          // Handle both direct service references and wrapper objects
+          const ServiceClass = 'component' in serviceEntry ? serviceEntry.component : serviceEntry;
+          const enabled = 'enabled' in serviceEntry ? serviceEntry.enabled : true;
+
+          // Skip disabled services
+          if (!enabled) {
+            continue;
+          }
+
           const service = await ServiceClass.start(this.runtime);
           const serviceType = ServiceClass.serviceType as ServiceTypeName;
           this.runtime.services.set(serviceType, service);
           pluginState.components!.services.add(serviceType);
           this.trackComponentRegistration(pluginState.id, 'service', serviceType);
         } catch (error) {
+          const ServiceClass = 'component' in serviceEntry ? serviceEntry.component : serviceEntry;
           logger.error(`Failed to register service ${ServiceClass.serviceType}:`, error);
         }
       }
@@ -909,7 +921,9 @@ export class PluginManagerService extends Service implements PluginRegistry {
 
     // Stop and remove services
     if (plugin.services && this.runtime.services) {
-      for (const ServiceClass of plugin.services) {
+      for (const serviceEntry of plugin.services) {
+        // Handle both direct service references and wrapper objects
+        const ServiceClass = 'component' in serviceEntry ? serviceEntry.component : serviceEntry;
         const serviceType = ServiceClass.serviceType || '';
         if (serviceType && !this.originalServices.has(serviceType)) {
           const service = this.runtime.services.get(serviceType as ServiceTypeName);
@@ -1292,7 +1306,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
   }
 
   // from PluginDiscoveryService & MLRecommendationService
-  public async searchPlugins(query: string, context?: AgentContext): Promise<SearchResult[]> {
+  public async searchPlugins(query: string, _context?: AgentContext): Promise<SearchResult[]> {
     // Only log in non-test environments
     if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
       logger.info(`[PluginManagerService:Discovery] Searching for: ${query}`);
@@ -1368,8 +1382,8 @@ export class PluginManagerService extends Service implements PluginRegistry {
     return profile;
   }
 
-  public async suggestCapabilityEnhancements(taskHistory: Task[]): Promise<any[]> {
-    const profile = await this.analyzeCurrentCapabilities();
+  public async suggestCapabilityEnhancements(_taskHistory: Task[]): Promise<any[]> {
+    const _profile = await this.analyzeCurrentCapabilities();
     logger.error(
       '[PluginManagerService:Capability] Capability enhancement suggestions not implemented'
     );
@@ -1417,8 +1431,8 @@ export class PluginManagerService extends Service implements PluginRegistry {
 
   private async _rankPluginsByContext(
     plugins: PluginSearchResult[],
-    agentCapabilities: string[],
-    recentTasks: string[]
+    _agentCapabilities: string[],
+    _recentTasks: string[]
   ): Promise<RankedPlugin[]> {
     const prompt = 'You are an expert at analyzing plugin ecosystems...'; // full prompt
     const response = (await this.runtime.useModel(ModelType.TEXT_LARGE, {
@@ -1430,9 +1444,9 @@ export class PluginManagerService extends Service implements PluginRegistry {
   }
 
   private _buildEvaluationPrompt(
-    plugins: PluginSearchResult[],
-    context: AgentContext,
-    userQuery?: string
+    _plugins: PluginSearchResult[],
+    _context: AgentContext,
+    _userQuery?: string
   ): string {
     const prompt = 'You are an expert at evaluating plugin relevance...'; // full prompt
     return prompt;
@@ -1467,7 +1481,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
       const matchReasons: string[] = [];
 
       const pluginNameLower = plugin.name.toLowerCase();
-      const pluginText = `${plugin.name} ${plugin.description}`.toLowerCase();
+      const _pluginText = `${plugin.name} ${plugin.description}`.toLowerCase();
 
       // Exact name match gets highest score
       if (pluginNameLower === queryLower) {

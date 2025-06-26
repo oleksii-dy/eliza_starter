@@ -41,7 +41,7 @@ describe('index', () => {
 
     it('should export types', () => {
       // Test that types are exported by importing them dynamically
-      import('./index').then((module) => {
+      void import('./index').then((module) => {
         expect(module.EnhancedSecretManager).toBe(EnhancedSecretManager);
       });
     });

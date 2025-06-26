@@ -176,14 +176,20 @@ describe('RPG E2E Integration Tests', () => {
       (systems.combat as any).lastTickTime = 0;
 
       // Process combat until NPC dies
-      const npcStats = npc!.getComponent<StatsComponent>('stats');
+      let npcStats = npc!.getComponent<StatsComponent>('stats');
       let combatTicks = 0;
 
-      while (npcStats && npcStats.hitpoints.current > 0 && combatTicks < 20) {
+      while (combatTicks < 20) {
+        const currentNpcStats = npc!.getComponent<StatsComponent>('stats');
+        if (!currentNpcStats || currentNpcStats.hitpoints.current <= 0) {break;}
+
         currentTime += 600; // Advance time by one combat tick
         systems.combat.fixedUpdate(600);
         systems.combat.update(600);
         combatTicks++;
+
+        // Update npcStats for next iteration
+        npcStats = currentNpcStats;
       }
 
       // NPC should be dead
@@ -720,15 +726,21 @@ describe('RPG E2E Integration Tests', () => {
         (systems.combat as any).lastTickTime = 0;
 
         // Process combat
-        const npcStats = npc.getComponent<StatsComponent>('stats');
+        let npcStats = npc.getComponent<StatsComponent>('stats');
         let ticks = 0;
 
-        while (npcStats && npcStats.hitpoints.current > 0 && ticks < 30) {
+        while (ticks < 30) {
+          const currentNpcStats = npc.getComponent<StatsComponent>('stats');
+          if (!currentNpcStats || currentNpcStats.hitpoints.current <= 0) {break;}
+
           currentTime += 600;
           systems.combat.fixedUpdate(600);
           systems.combat.update(600);
           systems.loot.update(600);
           ticks++;
+
+          // Update npcStats for next iteration
+          npcStats = currentNpcStats;
         }
 
         // NPC should be dead

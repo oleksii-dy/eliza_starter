@@ -8,13 +8,14 @@ import { Window } from 'happy-dom';
 // Set up happy-dom environment before importing testing-library
 const window = new Window();
 const document = window.document;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+
 (globalThis as any).window = window;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 (globalThis as any).document = document;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 (globalThis as any).navigator = window.navigator;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 (globalThis as any).HTMLElement = window.HTMLElement;
 
 // Now import testing-library after DOM is set up
@@ -168,7 +169,8 @@ function ElizaWrapper() {
 describe('ElizaWrapper', () => {
   it('should render without crashing', () => {
     // Mock the fetch function to simulate network error
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+
     (globalThis as any).fetch = () => Promise.reject(new Error('Network error'));
 
     const { container } = render(<ElizaWrapper />);

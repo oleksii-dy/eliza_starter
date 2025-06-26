@@ -75,9 +75,9 @@ export class ClientStats extends System {
     }
   }
 
-  update(delta: number) {
+  update(_delta: number) {
     if (!this.active) {return;}
-    this.lastPingAt += delta;
+    this.lastPingAt += _delta;
     if (this.lastPingAt > PING_RATE) {
       const time = performance.now()
       ;(this.world as any).network.send('ping', time);

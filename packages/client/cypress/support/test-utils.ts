@@ -59,7 +59,7 @@ export const mockAPIResponses = {
     }),
   },
   messages: {
-    success: (messages: any[] = []) => ({
+    success: (messages: unknown[] = []) => ({
       statusCode: 200,
       body: { messages, success: true },
     }),

@@ -1,5 +1,15 @@
-import type { Action, ActionResult, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';
-import { ModelType, composePromptFromState, elizaLogger, parseKeyValueXml } from '@elizaos/core';
+import {
+  type Action,
+  type ActionResult,
+  type HandlerCallback,
+  type IAgentRuntime,
+  type Memory,
+  type State,
+  ModelType,
+  composePromptFromState,
+  elizaLogger,
+  parseKeyValueXml,
+} from '@elizaos/core';
 import {
   type ExtendedChain,
   type Route,
@@ -9,14 +19,7 @@ import {
   getToken,
 } from '@lifi/sdk';
 
-import {
-  type Address,
-  type ByteArray,
-  type Hex,
-  encodeFunctionData,
-  parseAbi,
-  parseUnits,
-} from 'viem';
+import { type Address, type Hex, encodeFunctionData, parseAbi, parseUnits } from 'viem';
 import { type WalletProvider, initWalletProvider } from '../providers/wallet';
 import { swapTemplate } from '../templates';
 import type { SwapParams, SwapQuote, Transaction } from '../types';
@@ -68,7 +71,7 @@ export class SwapAction {
           mainnet: true,
           diamondAddress: '0x0000000000000000000000000000000000000000',
         } as ExtendedChain);
-      } catch {
+      } catch (_error) {
         // Skip chains with missing config in viem
       }
     }
@@ -91,7 +94,7 @@ export class SwapAction {
    */
   private async resolveTokenAddress(
     tokenSymbolOrAddress: string,
-    chainId: number,
+    chainId: number
   ): Promise<string> {
     // If it's already a valid address (starts with 0x and is 42 chars), return as is
     if (tokenSymbolOrAddress.startsWith('0x') && tokenSymbolOrAddress.length === 42) {
@@ -120,7 +123,7 @@ export class SwapAction {
     const testnetChainIds = [11155111, 84532, 11155420, 421614]; // Sepolia, Base Sepolia, OP Sepolia, Arbitrum Sepolia
     if (testnetChainIds.includes(chainId)) {
       elizaLogger.warn(
-        `Token resolution not supported for testnet chain ${chainId}. Using original value: ${tokenSymbolOrAddress}`,
+        `Token resolution not supported for testnet chain ${chainId}. Using original value: ${tokenSymbolOrAddress}`
       );
       return tokenSymbolOrAddress;
     }
@@ -129,10 +132,10 @@ export class SwapAction {
       // Use LiFi SDK to resolve token symbol to address
       const token = await getToken(chainId, tokenSymbolOrAddress);
       return token.address;
-    } catch (error) {
+    } catch (_error) {
       elizaLogger.error(
         `Failed to resolve token ${tokenSymbolOrAddress} on chain ${chainId}:`,
-        error,
+        _error
       );
       // If LiFi fails, return original value and let downstream handle the error
       return tokenSymbolOrAddress;
@@ -174,7 +177,7 @@ export class SwapAction {
         const sortedQuotes: SwapQuote[] = await this.getSortedQuotes(
           fromAddress,
           resolvedParams,
-          slippage,
+          slippage
         );
 
         // Trying to execute the best quote by amount, fallback to the next one if it fails
@@ -201,10 +204,10 @@ export class SwapAction {
 
           elizaLogger.warn(`${quote.aggregator} attempt failed, trying next option...`);
         }
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error));
+      } catch (_error) {
+        lastError = _error instanceof Error ? _error : new Error(String(_error));
         elizaLogger.warn(
-          `Swap attempt with ${(slippage * 100).toFixed(1)}% slippage failed: ${lastError.message}`,
+          `Swap attempt with ${(slippage * 100).toFixed(1)}% slippage failed: ${lastError.message}`
         );
 
         // If it's a slippage error, revert, or MEV issue and we have more slippage levels to try, continue
@@ -234,7 +237,7 @@ export class SwapAction {
   private async getSortedQuotes(
     fromAddress: Address,
     params: SwapParams,
-    slippage: number = 0.01,
+    slippage: number = 0.01
   ): Promise<SwapQuote[]> {
     const decimalsAbi = parseAbi(['function decimals() view returns (uint8)']);
     let fromTokenDecimals: number;
@@ -261,7 +264,7 @@ export class SwapAction {
     ];
     const quotesResults = await Promise.all(quotesPromises);
     const sortedQuotes: SwapQuote[] = quotesResults.filter(
-      (quote): quote is SwapQuote => quote !== undefined,
+      (quote): quote is SwapQuote => quote !== undefined
     );
     sortedQuotes.sort((a, b) => (BigInt(a.minOutputAmount) > BigInt(b.minOutputAmount) ? -1 : 1));
     if (sortedQuotes.length === 0) {
@@ -274,7 +277,7 @@ export class SwapAction {
     fromAddress: Address,
     params: SwapParams,
     fromTokenDecimals: number,
-    slippage: number = 0.01,
+    slippage: number = 0.01
   ): Promise<SwapQuote | undefined> {
     try {
       const routes = await getRoutes({
@@ -297,8 +300,8 @@ export class SwapAction {
         minOutputAmount: routes.routes[0].steps[0].estimate.toAmountMin,
         swapData: routes.routes[0],
       };
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+    } catch (_error: unknown) {
+      const errorMessage = _error instanceof Error ? _error.message : String(_error);
 
       // Check for specific slippage-related errors
       if (
@@ -307,7 +310,7 @@ export class SwapAction {
         errorMessage.includes('slippage')
       ) {
         elizaLogger.error(
-          `LiFi swap failed due to slippage protection. Consider increasing slippage tolerance. Error: ${errorMessage}`,
+          `LiFi swap failed due to slippage protection. Consider increasing slippage tolerance. Error: ${errorMessage}`
         );
       }
 
@@ -319,7 +322,7 @@ export class SwapAction {
   private async getBebopQuote(
     fromAddress: Address,
     params: SwapParams,
-    fromTokenDecimals: number,
+    fromTokenDecimals: number
   ): Promise<SwapQuote | undefined> {
     try {
       const chainName = (this.bebopChainsMap as any)[params.chain] ?? params.chain;
@@ -399,8 +402,8 @@ export class SwapAction {
         minOutputAmount: buyTokenInfo.minimumAmount.toString(),
         swapData: route,
       };
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+    } catch (_error: unknown) {
+      const errorMessage = _error instanceof Error ? _error.message : String(_error);
       elizaLogger.error('Error in getBebopQuote:', errorMessage);
       return undefined;
     }
@@ -426,7 +429,7 @@ export class SwapAction {
       // Get wallet client for the correct chain
       const chainId = route.fromChainId;
       const chainName = Object.keys(this.walletProvider.chains).find(
-        (name) => this.walletProvider.getChainConfigs(name as any).id === chainId,
+        (name) => this.walletProvider.getChainConfigs(name as any).id === chainId
       );
 
       if (!chainName) {
@@ -512,7 +515,7 @@ export class SwapAction {
 
       if (receipt.status === 'reverted') {
         throw new Error(
-          `Transaction reverted on-chain. Hash: ${hash}. This could be due to price movement, insufficient gas, or MEV frontrunning. Please try again.`,
+          `Transaction reverted on-chain. Hash: ${hash}. This could be due to price movement, insufficient gas, or MEV frontrunning. Please try again.`
         );
       }
 
@@ -524,8 +527,8 @@ export class SwapAction {
         data: txRequest.data as `0x${string}`,
         chainId: route.fromChainId,
       };
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+    } catch (_error: unknown) {
+      const errorMessage = _error instanceof Error ? _error.message : String(_error);
 
       // Check for specific slippage-related errors
       if (
@@ -534,10 +537,10 @@ export class SwapAction {
         errorMessage.includes('slippage')
       ) {
         elizaLogger.error(
-          `LiFi swap failed due to slippage protection. Consider increasing slippage tolerance. Error: ${errorMessage}`,
+          `LiFi swap failed due to slippage protection. Consider increasing slippage tolerance. Error: ${errorMessage}`
         );
         throw new Error(
-          'Swap failed due to price movement. Try again or increase slippage tolerance.',
+          'Swap failed due to price movement. Try again or increase slippage tolerance.'
         );
       }
 
@@ -548,7 +551,7 @@ export class SwapAction {
 
   private async executeBebopQuote(
     quote: SwapQuote,
-    params: SwapParams,
+    params: SwapParams
   ): Promise<Transaction | undefined> {
     try {
       const bebopRoute: BebopRoute = quote.swapData as BebopRoute;
@@ -633,8 +636,8 @@ export class SwapAction {
         data: bebopRoute.data as Hex,
         chainId: chainConfig.id,
       };
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+    } catch (_error: unknown) {
+      const errorMessage = _error instanceof Error ? _error.message : String(_error);
       elizaLogger.error(`Failed to execute bebop quote: ${errorMessage}`);
       throw new Error(errorMessage);
     }
@@ -645,7 +648,7 @@ const buildSwapDetails = async (
   state: State,
   _message: Memory,
   runtime: IAgentRuntime,
-  wp: WalletProvider,
+  wp: WalletProvider
 ): Promise<SwapParams> => {
   const chains = wp.getSupportedChains();
 
@@ -691,7 +694,7 @@ const buildSwapDetails = async (
     // Validate chain exists
     if (!wp.chains[normalizedChainName]) {
       throw new Error(
-        `Chain ${swapDetails.chain} not configured. Available chains: ${chains.join(', ')}`,
+        `Chain ${swapDetails.chain} not configured. Available chains: ${chains.join(', ')}`
       );
     }
 
@@ -726,7 +729,7 @@ const buildSwapDetails = async (
       // User specified a percentage
       const match = messageText.match(/(\d+)%/);
       if (match) {
-                            const percentage = parseInt(match[1], 10) / 100;
+        const percentage = parseInt(match[1], 10) / 100;
         const balance = balances[swapDetails.chain];
         if (balance) {
           const percentageBalance = (parseFloat(balance) * percentage).toString();
@@ -741,13 +744,15 @@ const buildSwapDetails = async (
 
 export const swapAction: Action = {
   name: 'EVM_SWAP_TOKENS',
-  description: 'Swaps tokens on the same chain using LiFi or Bebop aggregators. Returns swap transaction details and suggests next actions in DeFi workflows. Supports partial balance swaps and automatic route finding.',
+  description:
+    'Swaps tokens on the same chain using LiFi or Bebop aggregators. Returns swap transaction details and suggests next actions in DeFi workflows. Supports partial balance swaps and automatic route finding.',
+  enabled: false, // Disabled by default - extremely dangerous, can execute cryptocurrency trades and lose funds
   handler: async (
     runtime: IAgentRuntime,
     _message: Memory,
     state?: State,
     _options?: any,
-    callback?: HandlerCallback,
+    callback?: HandlerCallback
   ): Promise<ActionResult> => {
     const walletProvider = await initWalletProvider(runtime);
     const action = new SwapAction(walletProvider);
@@ -844,7 +849,7 @@ export const swapAction: Action = {
                 nextAction: nextSuggestedAction,
               },
             },
-            'workflow',
+            'workflow'
           );
         }
       }
@@ -868,8 +873,8 @@ export const swapAction: Action = {
           toToken: swapOptions.toToken,
         },
       };
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+    } catch (_error: unknown) {
+      const errorMessage = _error instanceof Error ? _error.message : String(_error);
       console.error('Error in swap handler:', errorMessage);
 
       // Provide meaningful error messages
@@ -928,7 +933,8 @@ export const swapAction: Action = {
       };
     }
   },
-  validate: async (runtime: IAgentRuntime) => {
+  // eslint-disable-next-line require-await
+  validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const privateKey = runtime.getSetting('EVM_PRIVATE_KEY');
     return typeof privateKey === 'string' && privateKey.startsWith('0x');
   },
@@ -945,7 +951,8 @@ export const swapAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll swap 1 WETH for USDC on Arbitrum first, then bridge the USDC to Base for lower fees.",
-          thought: 'This is a cross-chain optimization strategy. First convert to stablecoins on Arbitrum, then bridge to Base where fees are even lower. The swap prepares the right asset for bridging.',
+          thought:
+            'This is a cross-chain optimization strategy. First convert to stablecoins on Arbitrum, then bridge to Base where fees are even lower. The swap prepares the right asset for bridging.',
           actions: ['EVM_SWAP_TOKENS', 'EVM_BRIDGE_TOKENS'],
         },
       },
@@ -962,7 +969,8 @@ export const swapAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll swap 50% of your ETH to USDC and then transfer it to your cold wallet for safekeeping.",
-          thought: 'Risk management workflow: convert volatile ETH to stable USDC, then secure it in cold storage. The swap reduces portfolio volatility before the secure transfer.',
+          thought:
+            'Risk management workflow: convert volatile ETH to stable USDC, then secure it in cold storage. The swap reduces portfolio volatility before the secure transfer.',
           actions: ['EVM_SWAP_TOKENS', 'EVM_TRANSFER_TOKENS'],
         },
       },
@@ -978,7 +986,8 @@ export const swapAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll execute your yield farming strategy: first swap ETH to USDC, then bridge to Base.",
-          thought: 'Yield farming preparation: convert ETH to USDC for stable farming pairs, then move to Base for lower fee farming operations. Sequential setup for DeFi strategy.',
+          thought:
+            'Yield farming preparation: convert ETH to USDC for stable farming pairs, then move to Base for lower fee farming operations. Sequential setup for DeFi strategy.',
           actions: ['EVM_SWAP_TOKENS', 'EVM_BRIDGE_TOKENS'],
         },
       },
@@ -995,7 +1004,8 @@ export const swapAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll swap ETH to USDC for your arbitrage strategy. After the swap, I can help bridge to Polygon to capture the price difference.",
-          thought: 'Cross-chain arbitrage setup: convert to USDC first to enable price comparison and movement between chains. The swap standardizes the asset for arbitrage execution.',
+          thought:
+            'Cross-chain arbitrage setup: convert to USDC first to enable price comparison and movement between chains. The swap standardizes the asset for arbitrage execution.',
           action: 'EVM_SWAP_TOKENS',
           workflowContext: {
             step: 'arbitrage-swap',
@@ -1017,7 +1027,8 @@ export const swapAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll help rebalance your portfolio by swapping 50% of your ETH to stablecoins. This will reduce volatility and create opportunities for yield generation.",
-          thought: 'Portfolio risk management: converting 50% of volatile ETH exposure to stable assets. This rebalancing reduces overall portfolio volatility while maintaining upside exposure.',
+          thought:
+            'Portfolio risk management: converting 50% of volatile ETH exposure to stable assets. This rebalancing reduces overall portfolio volatility while maintaining upside exposure.',
           action: 'EVM_SWAP_TOKENS',
           workflowContext: {
             step: 'rebalance-swap',
@@ -1039,7 +1050,8 @@ export const swapAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll swap your tokens to prepare for Uniswap liquidity provision. After the swap, I can help you add liquidity and start earning trading fees.",
-          thought: 'Liquidity farming preparation: need to get the right token ratio for Uniswap pairs. The swap positions tokens correctly for liquidity provision and fee earning.',
+          thought:
+            'Liquidity farming preparation: need to get the right token ratio for Uniswap pairs. The swap positions tokens correctly for liquidity provision and fee earning.',
           action: 'EVM_SWAP_TOKENS',
           workflowContext: {
             step: 'farming-prep',

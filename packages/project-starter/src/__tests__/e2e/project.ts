@@ -32,7 +32,7 @@ export class ProjectTestSuite implements TestSuite {
   tests = [
     {
       name: 'Project runtime environment test',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       fn: async (runtime: any) => {
         /**
          * This test verifies that the project's runtime environment is set up correctly.

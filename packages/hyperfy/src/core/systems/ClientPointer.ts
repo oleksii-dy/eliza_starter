@@ -31,7 +31,7 @@ export class ClientPointer extends System {
     });
   }
 
-  update(delta: number) {
+  update(_delta: number) {
     const hit = this.control.pointer.locked ? (this.world.stage as any).raycastReticle()[0] : this.screenHit;
     this.pointerState.update(hit, this.control.mouseLeft.pressed, this.control.mouseLeft.released);
   }

@@ -123,7 +123,7 @@ describe('SocketIORouter', () => {
       connectionHandler(mockSocket);
 
       const joinHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === String(SOCKET_MESSAGE_TYPE.ROOM_JOINING)
+        (call: any) => call[0] === String(SOCKET_MESSAGE_TYPE.ROOM_JOINING)
       )?.[1];
 
       const payload = {
@@ -151,7 +151,7 @@ describe('SocketIORouter', () => {
       connectionHandler(mockSocket);
 
       const joinHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === String(SOCKET_MESSAGE_TYPE.ROOM_JOINING)
+        (call: any) => call[0] === String(SOCKET_MESSAGE_TYPE.ROOM_JOINING)
       )?.[1];
 
       const payload = {
@@ -176,7 +176,7 @@ describe('SocketIORouter', () => {
       connectionHandler(mockSocket);
 
       const joinHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === String(SOCKET_MESSAGE_TYPE.ROOM_JOINING)
+        (call: any) => call[0] === String(SOCKET_MESSAGE_TYPE.ROOM_JOINING)
       )?.[1];
 
       const payload = {
@@ -204,7 +204,7 @@ describe('SocketIORouter', () => {
       connectionHandler(mockSocket);
 
       const joinHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === String(SOCKET_MESSAGE_TYPE.ROOM_JOINING)
+        (call: any) => call[0] === String(SOCKET_MESSAGE_TYPE.ROOM_JOINING)
       )?.[1];
 
       joinHandler({}); // No channelId
@@ -225,7 +225,7 @@ describe('SocketIORouter', () => {
 
     it('should handle valid message submission', async () => {
       const messageHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE)
+        (call: any) => call[0] === String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE)
       )?.[1];
 
       expect(typeof messageHandler).toBe('function');
@@ -267,7 +267,7 @@ describe('SocketIORouter', () => {
 
     it('should auto-create channel if it does not exist', async () => {
       const messageHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE)
+        (call: any) => call[0] === String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE)
       )?.[1];
 
       expect(typeof messageHandler).toBe('function');
@@ -304,7 +304,7 @@ describe('SocketIORouter', () => {
 
     it('should handle DM channel creation', async () => {
       const messageHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE)
+        (call: any) => call[0] === String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE)
       )?.[1];
 
       expect(typeof messageHandler).toBe('function');
@@ -342,7 +342,7 @@ describe('SocketIORouter', () => {
 
     it('should reject message without required fields', async () => {
       const messageHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE)
+        (call: any) => call[0] === String(SOCKET_MESSAGE_TYPE.SEND_MESSAGE)
       )?.[1];
 
       const payload = {
@@ -368,7 +368,7 @@ describe('SocketIORouter', () => {
 
     it('should handle log subscription', () => {
       const subscribeHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === 'subscribe_logs'
+        (call: any) => call[0] === 'subscribe_logs'
       )?.[1];
 
       subscribeHandler();
@@ -381,7 +381,7 @@ describe('SocketIORouter', () => {
 
     it('should handle log unsubscription', () => {
       const unsubscribeHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === 'unsubscribe_logs'
+        (call: any) => call[0] === 'unsubscribe_logs'
       )?.[1];
 
       unsubscribeHandler();
@@ -395,13 +395,13 @@ describe('SocketIORouter', () => {
     it('should handle log filter updates', () => {
       // First subscribe
       const subscribeHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === 'subscribe_logs'
+        (call: any) => call[0] === 'subscribe_logs'
       )?.[1];
       subscribeHandler();
 
       // Then update filters
       const updateHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === 'update_log_filters'
+        (call: any) => call[0] === 'update_log_filters'
       )?.[1];
 
       const filters = { agentName: 'TestAgent', level: 'debug' };
@@ -416,12 +416,12 @@ describe('SocketIORouter', () => {
     it('should broadcast logs based on filters', () => {
       // Subscribe and set filters
       const subscribeHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === 'subscribe_logs'
+        (call: any) => call[0] === 'subscribe_logs'
       )?.[1];
       subscribeHandler();
 
       const updateHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === 'update_log_filters'
+        (call: any) => call[0] === 'update_log_filters'
       )?.[1];
       updateHandler({ agentName: 'TestAgent', level: 'info' });
 
@@ -446,12 +446,12 @@ describe('SocketIORouter', () => {
     it('should not broadcast logs that do not match filters', () => {
       // Subscribe and set filters
       const subscribeHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === 'subscribe_logs'
+        (call: any) => call[0] === 'subscribe_logs'
       )?.[1];
       subscribeHandler();
 
       const updateHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === 'update_log_filters'
+        (call: any) => call[0] === 'update_log_filters'
       )?.[1];
       updateHandler({ agentName: 'TestAgent', level: 'error' });
 
@@ -477,7 +477,7 @@ describe('SocketIORouter', () => {
 
       // First join with agent ID
       const joinHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === String(SOCKET_MESSAGE_TYPE.ROOM_JOINING)
+        (call: any) => call[0] === String(SOCKET_MESSAGE_TYPE.ROOM_JOINING)
       )?.[1];
 
       joinHandler({
@@ -487,7 +487,7 @@ describe('SocketIORouter', () => {
 
       // Then disconnect
       const disconnectHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === 'disconnect'
+        (call: any) => call[0] === 'disconnect'
       )?.[1];
 
       expect(typeof disconnectHandler).toBe('function');
@@ -506,7 +506,7 @@ describe('SocketIORouter', () => {
       const connectionHandler = mockIO.on.mock.calls[0][1];
       connectionHandler(mockSocket);
 
-      const errorHandler = mockSocket.on.mock.calls.find((call) => call[0] === 'error')?.[1];
+      const errorHandler = mockSocket.on.mock.calls.find((call: any) => call[0] === 'error')?.[1];
 
       expect(typeof errorHandler).toBe('function');
 
@@ -521,7 +521,9 @@ describe('SocketIORouter', () => {
       const connectionHandler = mockIO.on.mock.calls[0][1];
       connectionHandler(mockSocket);
 
-      const messageHandler = mockSocket.on.mock.calls.find((call) => call[0] === 'message')?.[1];
+      const messageHandler = mockSocket.on.mock.calls.find(
+        (call: any) => call[0] === 'message'
+      )?.[1];
 
       expect(typeof messageHandler).toBe('function');
 

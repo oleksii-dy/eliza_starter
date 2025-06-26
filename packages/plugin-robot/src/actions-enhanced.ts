@@ -56,7 +56,7 @@ export const nameEntityAction: Action = {
   ] as ActionExample[][],
 
   async validate(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> {
-    const visionService = runtime.getService('VISION') as VisionService | null;
+    const visionService = runtime.getService<VisionService>('VISION') | null;
     return visionService?.isActive() || false;
   },
 
@@ -68,7 +68,7 @@ export const nameEntityAction: Action = {
     callback?: HandlerCallback
   ): Promise<ActionResult> {
     try {
-      const visionService = runtime.getService('VISION') as VisionService;
+      const visionService = runtime.getService<VisionService>('VISION');
       const scene = await visionService.getSceneDescription();
 
       if (!scene || scene.people.length === 0) {
@@ -273,7 +273,7 @@ export const identifyPersonAction: Action = {
   ] as ActionExample[][],
 
   async validate(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> {
-    const visionService = runtime.getService('VISION') as VisionService | null;
+    const visionService = runtime.getService<VisionService>('VISION') | null;
     return visionService?.isActive() || false;
   },
 
@@ -285,7 +285,7 @@ export const identifyPersonAction: Action = {
     callback?: HandlerCallback
   ): Promise<ActionResult> {
     try {
-      const visionService = runtime.getService('VISION') as VisionService;
+      const visionService = runtime.getService<VisionService>('VISION');
       const scene = await visionService.getSceneDescription();
 
       if (!scene || scene.people.length === 0) {
@@ -471,7 +471,7 @@ export const trackEntityAction: Action = {
   ] as ActionExample[][],
 
   async validate(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> {
-    const visionService = runtime.getService('VISION') as VisionService | null;
+    const visionService = runtime.getService<VisionService>('VISION') | null;
     return visionService?.isActive() || false;
   },
 
@@ -483,7 +483,7 @@ export const trackEntityAction: Action = {
     callback?: HandlerCallback
   ): Promise<ActionResult> {
     try {
-      const visionService = runtime.getService('VISION') as VisionService;
+      const visionService = runtime.getService<VisionService>('VISION');
       const scene = await visionService.getSceneDescription();
 
       if (!scene) {

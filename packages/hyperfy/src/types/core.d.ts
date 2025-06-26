@@ -1,7 +1,7 @@
 // Core type definitions used throughout the codebase
 
-import * as THREE from 'three';
-import type { World, Entity, Component, System } from './index';
+import { Object3D, Material } from 'three';
+import type { World, Entity } from './index';
 
 // Extend existing types with additional properties
 declare module './index' {
@@ -24,7 +24,7 @@ declare module './index' {
   interface Entity {
     // Additional entity properties
     data?: any;
-    root?: THREE.Object3D;
+    root?: Object3D;
     blueprint?: any;
     isApp?: boolean;
     build?: () => Node;
@@ -126,7 +126,7 @@ export interface MaterialProxy {
 }
 
 export interface MaterialWrapper {
-  raw: THREE.Material;
+  raw: Material;
   proxy: MaterialProxy;
 }
 
@@ -218,7 +218,7 @@ export interface Control {
   };
   pointer: {
     locked: boolean;
-    delta: { x: number; y: number };
+    _delta: { x: number; y: number };
   };
   scrollDelta: { value: number };
   space: { down: boolean; pressed: boolean };
@@ -244,7 +244,7 @@ export interface Control {
 // Touch Types
 export interface Touch {
   position: { x: number; y: number; clone: () => { x: number; y: number } };
-  delta: { x: number; y: number };
+  _delta: { x: number; y: number };
 }
 
 // Network Types
@@ -267,10 +267,10 @@ export type EventCallback = (data?: any, networkId?: string) => void;
 
 // Hot Reloadable Interface
 export interface HotReloadable {
-  fixedUpdate?(delta: number): void;
-  update?(delta: number): void;
-  lateUpdate?(delta: number): void;
-  postLateUpdate?(delta: number): void;
+  fixedUpdate?(_delta: number): void;
+  update?(_delta: number): void;
+  lateUpdate?(_delta: number): void;
+  postLateUpdate?(_delta: number): void;
 }
 
 // Vector3 Enhanced Extensions

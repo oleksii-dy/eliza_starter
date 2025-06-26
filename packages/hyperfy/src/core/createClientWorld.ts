@@ -22,6 +22,9 @@ import { Snaps } from './systems/Snaps';
 import { Wind } from './systems/Wind';
 import { XR } from './systems/XR';
 
+// Import ENV for configuration
+import { ENV } from './env';
+
 export function createClientWorld() {
   const world = new World();
   world.register('client', Client);
@@ -45,5 +48,26 @@ export function createClientWorld() {
   world.register('snaps', Snaps);
   world.register('wind', Wind);
   world.register('xr', XR);
+
+  // Register RPG systems if enabled
+  const enableRPG = ENV.ENABLE_RPG === 'true';
+  if (enableRPG) {
+    console.log('[createClientWorld] Registering RPG systems...');
+    // Dynamically import and register RPG systems
+    import('../rpg').then(({ HyperfyRPGPlugin }) => {
+      const rpgConfig: any = {
+        worldType: ENV.RPG_WORLD_TYPE,
+        isServer: false
+      };
+      if (ENV.RPG_SYSTEMS) {
+        rpgConfig.systems = ENV.RPG_SYSTEMS.split(',').map(s => s.trim());
+      }
+      HyperfyRPGPlugin.init(world, rpgConfig);
+      console.log('[createClientWorld] RPG systems loaded');
+    }).catch(error => {
+      console.error('[createClientWorld] Failed to load RPG systems:', error);
+    });
+  }
+
   return world;
 }

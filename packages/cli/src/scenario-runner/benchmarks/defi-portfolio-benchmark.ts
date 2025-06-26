@@ -6,9 +6,9 @@
 
 import { logger } from '@elizaos/core';
 import type { IAgentRuntime } from '@elizaos/core';
-import { ProductionCostTracker } from '../production-cost-tracker.js';
-import { RealWorldTaskExecutor } from '../real-world-task-executor.js';
-import { LiveMessageBus } from '../live-message-bus.js';
+import { ProductionCostTracker } from '../ProductionCostTracker.js';
+import { RealWorldTaskExecutor } from '../RealWorldTaskExecutor.js';
+import { LiveMessageBus } from '../LiveMessageBus.js';
 
 export interface DeFiPortfolioBenchmark {
   id: string;

@@ -250,10 +250,15 @@ export interface MockRuntime {
  * @returns A function to restore the original logger methods
  */
 export function setupLoggerSpies() {
-  mock.spyOn(logger, 'info').mockImplementation(() => {});
-  mock.spyOn(logger, 'error').mockImplementation(() => {});
-  mock.spyOn(logger, 'warn').mockImplementation(() => {});
-  mock.spyOn(logger, 'debug').mockImplementation(() => {});
+  const infoSpy = mock(() => {});
+  const errorSpy = mock(() => {});
+  const warnSpy = mock(() => {});
+  const debugSpy = mock(() => {});
+
+  (logger as any).info = infoSpy;
+  (logger as any).error = errorSpy;
+  (logger as any).warn = warnSpy;
+  (logger as any).debug = debugSpy;
 
   // allow tests to restore originals
   return () => mock.restore();

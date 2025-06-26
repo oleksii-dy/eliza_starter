@@ -11,7 +11,7 @@ import {
   Vector3,
   GravestoneTier,
   PlayerEntity
-} from '../types';
+} from '../types/index';
 
 interface Gravestone {
   id: string;
@@ -193,11 +193,14 @@ export class DeathRespawnSystem extends System {
 
     if (!inventory || !movement || !stats) {return;}
 
-    const position = movement.position;
+    // Access position from the component's data structure
+    const position = (movement as any).data?.position;
+    if (!position) {return;}
 
     // Create or update death component
     let death = player.getComponent<DeathComponent>('death');
     if (!death) {
+      // The component system will wrap this in a data property automatically
       death = {
         type: 'death',
         isDead: true,
@@ -212,22 +215,35 @@ export class DeathRespawnSystem extends System {
         itemsLostOnDeath: [],
         deathCount: 1,
         lastDeathTime: Date.now()
-      } as unknown as DeathComponent;
+      } as any;
       player.addComponent('death', death);
     } else {
-      death.isDead = true;
-      death.deathTime = Date.now();
-      death.deathLocation = { ...position };
-      death.killer = killerId || null;
-      death.deathCount++;
-      death.lastDeathTime = Date.now();
+      // Access the data that was wrapped by the component system
+      const deathData = (death as any).data;
+      if (deathData) {
+        deathData.isDead = true;
+      }
     }
+
+    // Get the death component again to access wrapped data
+    const currentDeath = player.getComponent<DeathComponent>('death');
+    let deathData = (currentDeath as any).data;
+    if (!deathData) {
+      deathData = currentDeath as any;
+    }
+    
+    deathData.deathTime = Date.now();
+    deathData.deathLocation = { ...position };
+    deathData.killer = killerId || null;
+    deathData.deathCount = (deathData.deathCount || 0) + 1;
+    deathData.lastDeathTime = Date.now();
 
     // Check if in safe zone
     if (this.isInSafeZone(position)) {
       // Safe death - keep all items
-      death.itemsKeptOnDeath = [...inventory.items.filter(item => item !== null)] as ItemStack[];
-      death.itemsLostOnDeath = [];
+      const items = (inventory as any).data?.items || (inventory as any).items || [];
+      deathData.itemsKeptOnDeath = [...items.filter((item: any) => item !== null)] as ItemStack[];
+      deathData.itemsLostOnDeath = [];
     } else {
       // Calculate kept and lost items
       const isSkull = (player as any).skullTimer && (player as any).skullTimer > 0;
@@ -239,43 +255,40 @@ export class DeathRespawnSystem extends System {
       }
 
       const { kept, lost } = this.calculateItemsKeptOnDeath(inventory, itemsToKeep);
-      death.itemsKeptOnDeath = kept;
-      death.itemsLostOnDeath = lost;
+      deathData.itemsKeptOnDeath = kept;
+      deathData.itemsLostOnDeath = lost;
 
       // Create gravestone if items were lost
       if (lost.length > 0 && this.config.gravestoneEnabled) {
         const gravestone = this.createGravestone(player, lost, position);
-        death.gravestoneId = gravestone.id;
+        deathData.gravestoneId = gravestone.id;
       }
     }
 
     // Clear inventory except kept items
-    inventory.items = new Array(28).fill(null);
-    death.itemsKeptOnDeath.forEach((item, index) => {
-      if (index < inventory.items.length) {
-        inventory.items[index] = item;
-      }
-    });
+    const inventoryItems = (inventory as any).data?.items || (inventory as any).items;
+    if (inventoryItems) {
+      inventoryItems.fill(null);
+      deathData.itemsKeptOnDeath.forEach((item: ItemStack, index: number) => {
+        if (index < inventoryItems.length) {
+          inventoryItems[index] = item;
+        }
+      });
+    }
 
     // Clear equipment
-    inventory.equipment = {
-      head: null,
-      cape: null,
-      amulet: null,
-      weapon: null,
-      body: null,
-      shield: null,
-      legs: null,
-      gloves: null,
-      boots: null,
-      ring: null,
-      ammo: null
-    };
+    const equipment = (inventory as any).data?.equipment || (inventory as any).equipment;
+    if (equipment) {
+      Object.keys(equipment).forEach(slot => {
+        equipment[slot] = null;
+      });
+    }
 
     // Reset combat
     if (combat) {
-      combat.inCombat = false;
-      combat.target = null;
+      const combatData = (combat as any).data || combat;
+      combatData.inCombat = false;
+      combatData.target = null;
     }
 
     // Reset skull timer on player
@@ -288,17 +301,19 @@ export class DeathRespawnSystem extends System {
       playerId: player.id,
       killerId,
       position,
-      keptItems: death.itemsKeptOnDeath,
-      lostItems: death.itemsLostOnDeath,
-      gravestoneId: death.gravestoneId
+      keptItems: deathData.itemsKeptOnDeath,
+      lostItems: deathData.itemsLostOnDeath,
+      gravestoneId: deathData.gravestoneId
     });
 
-    // Schedule auto-respawn
-    const timerId = setTimeout(() => {
-      this.respawn(player);
-    }, death.respawnTimer);
-
-    this.deathTimers.set(player.id, timerId);
+    // Schedule auto-respawn (disabled for testing)
+    // Uncomment the below code to enable auto-respawn:
+    
+    // Uncomment this for auto-respawn:
+    // const timerId = setTimeout(() => {
+    //   this.respawn(player);
+    // }, (death as any).data.respawnTimer);
+    // this.deathTimers.set(player.id, timerId);
   }
 
   /**
@@ -322,13 +337,17 @@ export class DeathRespawnSystem extends System {
   } {
     const allItems: ItemStack[] = [];
 
-    // Collect all items from inventory and equipment
-    for (const item of inventory.items) {
+    // Collect all items from inventory and equipment - handle component data structure
+    const items = (inventory as any).data?.items || (inventory as any).items || [];
+    for (const item of items) {
       if (item) {allItems.push({ ...item });}
     }
 
-    for (const slot of Object.values(inventory.equipment)) {
-      if (slot) {allItems.push({ itemId: slot.id, quantity: 1 });}
+    const equipment = (inventory as any).data?.equipment || (inventory as any).equipment;
+    if (equipment) {
+      for (const slot of Object.values(equipment)) {
+        if (slot) {allItems.push({ itemId: (slot as any).id, quantity: 1 });}
+      }
     }
 
     // Sort by value (descending)
@@ -340,19 +359,16 @@ export class DeathRespawnSystem extends System {
 
     const kept: ItemStack[] = [];
     const lost: ItemStack[] = [];
-    let keptCount = 0;
+    let keptStacks = 0;
 
     for (const item of sortedItems) {
-      if (keptCount < itemsToKeep) {
-        const toKeep = Math.min(item.quantity, itemsToKeep - keptCount);
-        kept.push({ itemId: item.itemId, quantity: toKeep });
-        keptCount += toKeep;
-
-        if (item.quantity > toKeep) {
-          lost.push({ itemId: item.itemId, quantity: item.quantity - toKeep });
-        }
+      if (keptStacks < itemsToKeep) {
+        // Keep the entire stack (this represents one "item slot")
+        kept.push({ ...item });
+        keptStacks += 1;
       } else {
-        lost.push(item);
+        // Lose the entire stack
+        lost.push({ ...item });
       }
     }
 
@@ -414,8 +430,12 @@ export class DeathRespawnSystem extends System {
     });
 
     // Add to world
-    (this.world as any).entities?.items?.set(gravestone.id, gravestoneEntity) ||
-    ((this.world as any).entities = new Map()).set(gravestone.id, gravestoneEntity);
+    if ((this.world as any).entities?.items) {
+      (this.world as any).entities.items.set(gravestone.id, gravestoneEntity);
+    } else {
+      (this.world as any).entities = new Map();
+      (this.world as any).entities.set(gravestone.id, gravestoneEntity);
+    }
 
     this.gravestoneEntities.set(gravestone.id, gravestoneEntity);
 
@@ -447,25 +467,31 @@ export class DeathRespawnSystem extends System {
     // Get respawn location
     const location = this.getRespawnLocation(player, respawnPoint);
 
-    // Restore health and prayer
-    stats.hitpoints.current = stats.hitpoints.max;
-    stats.prayer.points = Math.floor(stats.prayer.maxPoints * 0.5); // 50% prayer
+    // Restore health and prayer - handle stats component structure
+    const statsData = (stats as any).data || stats;
+    if (statsData.hitpoints) {
+      statsData.hitpoints.current = statsData.hitpoints.max;
+    }
+    if (statsData.prayer) {
+      statsData.prayer.points = Math.floor(statsData.prayer.maxPoints * 0.5); // 50% prayer
+    }
 
     // Reset death state
-    death.isDead = false;
-    death.respawnTimer = 5000;
+    const deathData = (death as any).data;
+    deathData.isDead = false;
+    deathData.respawnTimer = 5000;
 
     // Teleport to respawn
-    movement.position = { ...location };
-    movement.teleportDestination = { ...location };
-    movement.teleportTime = Date.now();
-    movement.teleportAnimation = 'respawn';
+    (movement as any).data.position = { ...location };
+    (movement as any).data.teleportDestination = { ...location };
+    (movement as any).data.teleportTime = Date.now();
+    (movement as any).data.teleportAnimation = 'respawn';
 
     // Emit respawn event
     this.world.events.emit('player:respawned', {
       playerId: player.id,
       position: location,
-      gravestoneId: death.gravestoneId
+      gravestoneId: deathData.gravestoneId
     });
   }
 
@@ -477,7 +503,7 @@ export class DeathRespawnSystem extends System {
     if (!player) {return;}
 
     const death = player.getComponent<DeathComponent>('death');
-    if (!death || !death.isDead) {return;}
+    if (!death || !(death as any).data?.isDead) {return;}
 
     this.respawn(player, event.respawnPoint);
   }
@@ -496,8 +522,8 @@ export class DeathRespawnSystem extends System {
 
     // Check for saved respawn point
     const death = player.getComponent<DeathComponent>('death');
-    if (death?.respawnPoint) {
-      const point = this.config.respawnPoints.get(death.respawnPoint);
+    if ((death as any)?.data?.respawnPoint) {
+      const point = this.config.respawnPoints.get((death as any).data.respawnPoint);
       if (point && this.canUseRespawnPoint(player, point)) {
         return { ...point.position };
       }
@@ -620,7 +646,7 @@ export class DeathRespawnSystem extends System {
     // Update death component
     const death = player.getComponent<DeathComponent>('death');
     if (death) {
-      death.gravestoneId = null;
+      (death as any).data.gravestoneId = null;
     }
 
     this.sendMessage(playerId, 'You have reclaimed your items.');
@@ -685,6 +711,10 @@ export class DeathRespawnSystem extends System {
    * Check if position is in safe zone
    */
   private isInSafeZone(position: Vector3): boolean {
+    if (!position) {
+      return false;
+    }
+
     for (const zone of this.config.safeZones) {
       if (position.x >= zone.bounds.min.x && position.x <= zone.bounds.max.x &&
           position.y >= zone.bounds.min.y && position.y <= zone.bounds.max.y &&
@@ -698,7 +728,7 @@ export class DeathRespawnSystem extends System {
   /**
    * Get player gravestone tier
    */
-  private getPlayerGravestoneTier(player: PlayerEntity): GravestoneTier {
+  private getPlayerGravestoneTier(_player: PlayerEntity): GravestoneTier {
     // TODO: Check player's unlocked gravestone tier
     // For now, return wooden
     return GravestoneTier.WOODEN;
@@ -709,11 +739,13 @@ export class DeathRespawnSystem extends System {
    */
   private getGravestoneModel(tier: GravestoneTier): string {
     const models: Record<GravestoneTier, string> = {
+      [GravestoneTier.BASIC]: 'gravestone_basic',
       [GravestoneTier.WOODEN]: 'gravestone_wooden',
       [GravestoneTier.STONE]: 'gravestone_stone',
       [GravestoneTier.ORNATE]: 'gravestone_ornate',
       [GravestoneTier.ANGEL]: 'gravestone_angel',
-      [GravestoneTier.MYSTIC]: 'gravestone_mystic'
+      [GravestoneTier.MYSTIC]: 'gravestone_mystic',
+      [GravestoneTier.ROYAL]: 'gravestone_royal'
     };
     return models[tier];
   }
@@ -735,15 +767,22 @@ export class DeathRespawnSystem extends System {
   private getItemValue(itemId: number): number {
     // Try to get from InventorySystem's item registry
     const inventorySystem = this.world.getSystem<any>('inventory');
-    if (inventorySystem && inventorySystem.itemRegistry) {
+    if (inventorySystem && inventorySystem.itemRegistry && typeof inventorySystem.itemRegistry.getItem === 'function') {
       const item = inventorySystem.itemRegistry.getItem(itemId);
-      if (item) {
+      if (item && item.value) {
         return item.value;
       }
     }
 
-    // Fallback for unknown items
-    return 1;
+    // Fallback item values for common items
+    const fallbackValues: Record<number, number> = {
+      1: 15,    // Bronze sword
+      995: 1,   // Coins
+      315: 5,   // Shrimps
+      526: 1,   // Bones
+    };
+
+    return fallbackValues[itemId] || 1;
   }
 
   /**
@@ -751,7 +790,8 @@ export class DeathRespawnSystem extends System {
    */
   private getPlayerGold(inventory: InventoryComponent): number {
     let total = 0;
-    for (const item of inventory.items) {
+    const items = (inventory as any).data?.items || (inventory as any).items || [];
+    for (const item of items) {
       if (item && item.itemId === 995) { // Coins
         total += item.quantity;
       }

@@ -6,7 +6,7 @@ import { createNode } from '../extras/createNode';
 import { DEG2RAD, RAD2DEG } from '../extras/general';
 import { Emotes } from '../extras/playerEmotes';
 import { simpleCamLerp } from '../extras/simpleCamLerp';
-import * as THREE from '../extras/three';
+import { THREE } from '../extras/three';
 import { clamp, hasRole } from '../utils';
 import { Entity } from './Entity';
 
@@ -42,15 +42,15 @@ const m2 = new THREE.Matrix4();
 const m3 = new THREE.Matrix4();
 
 interface PlayerState {
-  id: string;
-  p: THREE.Vector3;
-  q: THREE.Quaternion;
-  e: string | null;
+  id: string
+  p: any
+  q: any
+  e: string | null
 }
 
 interface StickState {
-  center: { x: number; y: number };
-  touch: Touch;
+  center: { x: number; y: number }
+  touch: Touch
 }
 
 export class PlayerLocal extends Entity implements HotReloadable {
@@ -63,10 +63,10 @@ export class PlayerLocal extends Entity implements HotReloadable {
   capsuleHeight: number = 1.6;
   grounded: boolean = false;
   groundAngle: number = 0;
-  groundNormal: THREE.Vector3 = new THREE.Vector3().copy(UP);
+  groundNormal: any = new THREE.Vector3().copy(UP);
   groundSweepRadius: number = 0.29;
   groundSweepGeometry: any;
-  pushForce: THREE.Vector3 | null = null;
+  pushForce: any | null = null;
   pushForceInit: boolean = false;
   slipping: boolean = false;
   jumped: boolean = false;
@@ -74,16 +74,16 @@ export class PlayerLocal extends Entity implements HotReloadable {
   justLeftGround: boolean = false;
   fallTimer: number = 0;
   falling: boolean = false;
-  moveDir: THREE.Vector3 = new THREE.Vector3();
+  moveDir: any = new THREE.Vector3();
   moving: boolean = false;
   lastJumpAt: number = 0;
   flying: boolean = false;
   flyForce: number = 100;
   flyDrag: number = 300;
-  flyDir: THREE.Vector3 = new THREE.Vector3();
+  flyDir: any = new THREE.Vector3();
   platform: {
-    actor: any;
-    prevTransform: THREE.Matrix4;
+    actor: any
+    prevTransform: any
   } = {
       actor: null,
       prevTransform: new THREE.Matrix4(),
@@ -98,15 +98,15 @@ export class PlayerLocal extends Entity implements HotReloadable {
   bubbleText: any;
   camHeight: number = DEFAULT_CAM_HEIGHT;
   cam: {
-    position: THREE.Vector3;
-    quaternion: THREE.Quaternion;
-    rotation: THREE.Euler;
-    zoom: number;
+    position: any
+    quaternion: any
+    rotation: any
+    zoom: number
   } = {
       position: new THREE.Vector3(),
       quaternion: new THREE.Quaternion(),
       rotation: new THREE.Euler(0, 0, 0, 'YXZ'),
-      zoom: 1.5
+      zoom: 1.5,
     };
   avatarUrl?: string;
   avatar?: any;
@@ -229,7 +229,7 @@ export class PlayerLocal extends Entity implements HotReloadable {
       position: new THREE.Vector3().copy(this.base.position),
       quaternion: new THREE.Quaternion(),
       rotation: new THREE.Euler(0, 0, 0, 'YXZ'),
-      zoom: 1.5
+      zoom: 1.5,
     };
     this.cam.position.y += this.camHeight;
     bindRotations(this.cam.quaternion, this.cam.rotation);
@@ -257,11 +257,15 @@ export class PlayerLocal extends Entity implements HotReloadable {
 
   applyAvatar(): void {
     const avatarUrl = this.getAvatarUrl();
-    if (this.avatarUrl === avatarUrl) {return;}
+    if (this.avatarUrl === avatarUrl) {
+      return;
+    }
     this.world.loader
       ?.load('avatar', avatarUrl)
       .then((src: any) => {
-        if (this.avatar) {this.avatar.deactivate();}
+        if (this.avatar) {
+          this.avatar.deactivate();
+        }
         this.avatar = src.toNodes().get('avatar');
         this.avatar.disableRateCheck(); // max fps for local player
         this.base.add(this.avatar);
@@ -410,7 +414,9 @@ export class PlayerLocal extends Entity implements HotReloadable {
 
   toggleFlying() {
     const canFly = this.world.settings.public || hasRole(this.data.roles, 'admin');
-    if (!canFly) {return;}
+    if (!canFly) {
+      return;
+    }
     this.flying = !this.flying;
     if (this.flying) {
       // zero out vertical velocity when entering fly mode
@@ -807,13 +813,13 @@ export class PlayerLocal extends Entity implements HotReloadable {
       }
     } else if (this.control.pointer.locked) {
       // or pointer lock, rotate camera with pointer movement
-      this.cam.rotation.x += -this.control.pointer.delta.y * POINTER_LOOK_SPEED * delta;
-      this.cam.rotation.y += -this.control.pointer.delta.x * POINTER_LOOK_SPEED * delta;
+      this.cam.rotation.x += -this.control.pointer._delta.y * POINTER_LOOK_SPEED * delta;
+      this.cam.rotation.y += -this.control.pointer._delta.x * POINTER_LOOK_SPEED * delta;
       this.cam.rotation.z = 0;
     } else if (this.pan) {
       // or when touch panning
-      this.cam.rotation.x += -this.pan.delta.y * PAN_LOOK_SPEED * delta;
-      this.cam.rotation.y += -this.pan.delta.x * PAN_LOOK_SPEED * delta;
+      this.cam.rotation.x += -this.pan._delta.y * PAN_LOOK_SPEED * delta;
+      this.cam.rotation.y += -this.pan._delta.x * PAN_LOOK_SPEED * delta;
       this.cam.rotation.z = 0;
     }
 
@@ -859,10 +865,18 @@ export class PlayerLocal extends Entity implements HotReloadable {
       this.moveDir.z = stickY;
     } else {
       // otherwise use keyboard
-      if (this.control.keyW.down || this.control.arrowUp.down) {this.moveDir.z -= 1;}
-      if (this.control.keyS.down || this.control.arrowDown.down) {this.moveDir.z += 1;}
-      if (this.control.keyA.down || this.control.arrowLeft.down) {this.moveDir.x -= 1;}
-      if (this.control.keyD.down || this.control.arrowRight.down) {this.moveDir.x += 1;}
+      if (this.control.keyW.down || this.control.arrowUp.down) {
+        this.moveDir.z -= 1;
+      }
+      if (this.control.keyS.down || this.control.arrowDown.down) {
+        this.moveDir.z += 1;
+      }
+      if (this.control.keyA.down || this.control.arrowLeft.down) {
+        this.moveDir.x -= 1;
+      }
+      if (this.control.keyD.down || this.control.arrowRight.down) {
+        this.moveDir.x += 1;
+      }
     }
 
     // we're moving if direction is set
@@ -949,7 +963,9 @@ export class PlayerLocal extends Entity implements HotReloadable {
     } else if (this.speaking) {
       emote = Emotes.TALK;
     }
-    if (!emote) {emote = Emotes.IDLE;}
+    if (!emote) {
+      emote = Emotes.IDLE;
+    }
     if (this.emote !== emote) {
       this.emote = emote;
     }
@@ -1033,7 +1049,9 @@ export class PlayerLocal extends Entity implements HotReloadable {
     }
     if (this.avatar) {
       const matrix = this.avatar.getBoneTransform('head');
-      if (matrix) {this.aura.position.setFromMatrixPosition(matrix);}
+      if (matrix) {
+        this.aura.position.setFromMatrixPosition(matrix);
+      }
     }
   }
 
@@ -1045,7 +1063,9 @@ export class PlayerLocal extends Entity implements HotReloadable {
     ;(position as any).toPxTransform(pose);
     this.capsuleHandle.snap(pose);
     this.base.position.copy(position);
-    if (hasRotation) {this.base.rotation.y = rotationY!;}
+    if (hasRotation) {
+      this.base.rotation.y = rotationY!;
+    }
     // send network update
     this.world.network?.send('entityModified', {
       id: this.data.id,
@@ -1056,13 +1076,17 @@ export class PlayerLocal extends Entity implements HotReloadable {
     // snap camera
     this.cam.position.copy(this.base.position);
     this.cam.position.y += this.camHeight;
-    if (hasRotation) {this.cam.rotation.y = rotationY!;}
+    if (hasRotation) {
+      this.cam.rotation.y = rotationY!;
+    }
     this.control.camera.position.copy(this.cam.position);
     this.control.camera.quaternion.copy(this.cam.quaternion);
   }
 
   setEffect(effect: any, onEnd?: () => void) {
-    if (this.data.effect === effect) {return;}
+    if (this.data.effect === effect) {
+      return;
+    }
     if (this.data.effect) {
       this.data.effect = undefined;
       this.onEffectEnd?.();
@@ -1078,7 +1102,9 @@ export class PlayerLocal extends Entity implements HotReloadable {
   }
 
   setSpeaking(speaking: boolean) {
-    if (this.speaking === speaking) {return;}
+    if (this.speaking === speaking) {
+      return;
+    }
     this.speaking = speaking;
   }
 

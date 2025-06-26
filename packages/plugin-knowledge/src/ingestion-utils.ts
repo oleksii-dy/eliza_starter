@@ -1,11 +1,11 @@
-import { Buffer } from 'node:buffer';
+import { Buffer as _Buffer } from 'node:buffer';
 import { logger, stringToUuid, UUID } from '@elizaos/core';
 import type {
   GitHubIngestionOptions,
   GitHubIngestionResult,
   WebPageIngestionOptions,
   WebPageIngestionResult,
-  KnowledgeSourceType,
+  KnowledgeSourceType as _KnowledgeSourceType,
   KnowledgeSourceMetadata,
 } from './types';
 
@@ -13,7 +13,7 @@ import type {
 let JSDOM: any;
 try {
   JSDOM = require('jsdom').JSDOM;
-} catch (error) {
+} catch (_error) {
   logger.warn('JSDOM not available - web page parsing will be limited');
 }
 
@@ -252,7 +252,7 @@ export async function ingestWebPage(
     };
 
     // Create source metadata
-    const sourceMetadata: KnowledgeSourceMetadata = {
+    const _sourceMetadata: KnowledgeSourceMetadata = {
       sourceType: 'web_page' as const,
       originalUrl: options.url,
       extractionMethod: 'jsdom_parser',
@@ -480,7 +480,7 @@ function extractWebPageContent(
     try {
       const elements = document.querySelectorAll(selector);
       elements.forEach((el) => el.remove());
-    } catch (error) {
+    } catch (_error) {
       logger.debug(`Invalid selector: ${selector}`);
     }
   });
@@ -494,7 +494,7 @@ function extractWebPageContent(
       try {
         const elements = Array.from(document.querySelectorAll(selector));
         contentElements.push(...elements);
-      } catch (error) {
+      } catch (_error) {
         logger.debug(`Invalid include selector: ${selector}`);
       }
     });

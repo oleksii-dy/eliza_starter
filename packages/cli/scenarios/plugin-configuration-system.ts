@@ -5,6 +5,8 @@
  */
 
 import { Service, asUUID } from '@elizaos/core';
+import type { Scenario } from '../src/scenario-runner/types.js';
+import { v4 as uuidv4 } from 'uuid';
 import type {
   IAgentRuntime,
   Plugin,
@@ -228,8 +230,8 @@ const queryDatabaseAction: Action = {
   ],
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
-    const dbService = runtime.getService('database-service') as DatabaseService;
-    const authService = runtime.getService('auth-service') as AuthService;
+    const dbService = runtime.getService<DatabaseService>('database-service');
+    const authService = runtime.getService<AuthService>('auth-service');
 
     if (!dbService) {
       console.log('QUERY_DATABASE validation failed: DatabaseService not available');
@@ -259,8 +261,8 @@ const queryDatabaseAction: Action = {
     callback?: HandlerCallback
   ) => {
     try {
-      const dbService = runtime.getService('database-service') as DatabaseService;
-      const authService = runtime.getService('auth-service') as AuthService;
+      const dbService = runtime.getService<DatabaseService>('database-service');
+      const authService = runtime.getService<AuthService>('auth-service');
 
       if (!dbService || !authService) {
         throw new Error('Required services not available');
@@ -317,8 +319,8 @@ const systemStatsProvider: Provider = {
 
   get: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     try {
-      const dbService = runtime.getService('database-service') as DatabaseService;
-      const authService = runtime.getService('auth-service') as AuthService;
+      const dbService = runtime.getService<DatabaseService>('database-service');
+      const authService = runtime.getService<AuthService>('auth-service');
 
       const stats: any = {
         timestamp: new Date().toISOString(),
@@ -388,8 +390,8 @@ const performanceEvaluator: Evaluator = {
     callback?: HandlerCallback
   ) => {
     try {
-      const dbService = runtime.getService('database-service') as DatabaseService;
-      const authService = runtime.getService('auth-service') as AuthService;
+      const dbService = runtime.getService<DatabaseService>('database-service');
+      const authService = runtime.getService<AuthService>('auth-service');
 
       const metrics = {
         timestamp: new Date().toISOString(),
@@ -716,3 +718,137 @@ export async function testPluginConfigurationSystem(runtime: IAgentRuntime): Pro
   console.log('- Evaluators:', runtime.evaluators.length);
   console.log('- Services:', runtime.services.size);
 }
+
+// Export the scenario for the scenario runner
+export const pluginConfigurationScenario: Scenario = {
+  id: 'plugin-configuration-system',
+  name: 'Plugin Configuration System Integration Test',
+  description: 'Tests complete plugin lifecycle with real services, actions, providers, and evaluators',
+  category: 'plugin-system',
+  tags: ['plugins', 'configuration', 'services', 'integration'],
+
+  actors: [
+    {
+      id: asUUID(uuidv4()),
+      name: 'Plugin Test Agent',
+      role: 'subject',
+    },
+    {
+      id: asUUID(uuidv4()),
+      name: 'System Administrator',
+      role: 'assistant',
+      script: {
+        steps: [
+          {
+            type: 'message',
+            content: 'Can you test the plugin configuration system by creating a database service?',
+          },
+          {
+            type: 'wait',
+            waitTime: 3000,
+          },
+          {
+            type: 'message',
+            content: 'Great! Now can you add some authentication capabilities?',
+          },
+          {
+            type: 'wait',
+            waitTime: 3000,
+          },
+          {
+            type: 'message',
+            content: 'Perfect! Can you show me the current system status?',
+          },
+        ],
+        personality: 'technical, methodical, system-oriented',
+        goals: ['test plugin functionality', 'validate system integration', 'ensure proper configuration'],
+      },
+    },
+  ],
+
+  setup: {
+    roomType: 'dm',
+    roomName: 'Plugin Configuration Testing',
+    context: 'You are testing the plugin configuration system to ensure all components work correctly.',
+    environment: {
+      testMode: true,
+      plugins: ['database', 'auth', 'system-monitoring'],
+    },
+  },
+
+  execution: {
+    maxDuration: 60000, // 1 minute
+    maxSteps: 10,
+    stopConditions: [
+      {
+        type: 'keyword',
+        value: 'system ready',
+        description: 'Stop when system is fully configured',
+      },
+    ],
+  },
+
+  verification: {
+    rules: [
+      {
+        id: 'plugin-loading',
+        type: 'llm',
+        description: 'Agent successfully loaded and configured plugins',
+        config: {
+          criteria: 'The agent demonstrated ability to load, configure, and manage plugins effectively',
+        },
+        weight: 3,
+      },
+      {
+        id: 'service-integration',
+        type: 'llm',
+        description: 'Agent integrated services properly',
+        config: {
+          criteria: 'The agent showed proper integration of database and authentication services',
+        },
+        weight: 3,
+      },
+      {
+        id: 'system-monitoring',
+        type: 'llm',
+        description: 'Agent provided system status and monitoring information',
+        config: {
+          criteria: 'The agent provided useful system status information and monitoring capabilities',
+        },
+        weight: 2,
+      },
+      {
+        id: 'error-handling',
+        type: 'llm',
+        description: 'Agent handled configuration errors gracefully',
+        config: {
+          criteria: 'The agent properly handled any configuration errors or issues that arose',
+        },
+        weight: 2,
+      },
+    ],
+    groundTruth: {
+      expectedBehavior: 'Agent should successfully configure and test the plugin system',
+      successCriteria: [
+        'Load plugins successfully',
+        'Configure services properly',
+        'Provide system status',
+        'Handle errors gracefully',
+      ],
+    },
+  },
+
+  benchmarks: {
+    maxDuration: 60000,
+    maxSteps: 10,
+    maxTokens: 3000,
+    targetAccuracy: 0.8,
+    customMetrics: [
+      { name: 'plugin_loading_speed' },
+      { name: 'configuration_accuracy' },
+      { name: 'system_stability' },
+    ],
+  },
+};
+
+export default pluginConfigurationScenario;

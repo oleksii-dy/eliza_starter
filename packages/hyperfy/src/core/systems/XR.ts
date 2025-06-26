@@ -1,4 +1,4 @@
-import * as THREE from '../extras/three';
+import { THREE } from '../extras/three';
 import { System } from './System';
 
 import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory.js';
@@ -12,9 +12,9 @@ import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerM
  */
 export class XR extends System {
   session: XRSession | null;
-  camera: THREE.Camera | null;
-  controller1Model: THREE.Object3D | null;
-  controller2Model: THREE.Object3D | null;
+  camera: THREE.CameraType | null;
+  controller1Model: THREE.Object3DType | null;
+  controller2Model: THREE.Object3DType | null;
   supportsVR: boolean;
   supportsAR: boolean;
   controllerModelFactory: XRControllerModelFactory;

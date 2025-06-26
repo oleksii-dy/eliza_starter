@@ -23,7 +23,7 @@ export const fileOperationAction: Action = {
   description:
     'Performs file operations - create, read, write files. Can be chained with analysis actions to process file contents or command execution to use file data',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
 
     // Basic action validation

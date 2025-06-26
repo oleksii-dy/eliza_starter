@@ -138,7 +138,9 @@ export class CacheManager {
       }
     }
 
-    if (missingKeys.length === 0) {return;}
+    if (missingKeys.length === 0) {
+      return;
+    }
 
     try {
       const values = await fetcher(missingKeys);
@@ -157,7 +159,7 @@ export class CacheManager {
     maxSize: number;
     hitRate: number;
     avgTTL: number;
-    } {
+  } {
     const now = Date.now();
     let totalTTL = 0;
     let validEntries = 0;

@@ -150,7 +150,7 @@ describe('ShellService', () => {
     // Create test files first
     await shellService.executeCommand('touch source.txt');
     await shellService.executeCommand('touch file1.txt');
-    
+
     await shellService.executeCommand('mv source.txt dest.txt');
     await shellService.executeCommand('cp file1.txt file2.txt');
 
@@ -162,7 +162,7 @@ describe('ShellService', () => {
     expect(moveOp?.secondaryTarget).toBeDefined();
     expect(copyOp).toBeDefined();
     expect(copyOp?.secondaryTarget).toBeDefined();
-    
+
     // Clean up
     await shellService.executeCommand('rm -f dest.txt file1.txt file2.txt');
   });
@@ -349,8 +349,8 @@ describe('Shell Actions', () => {
         })
       );
       expect(result).toBeDefined();
-      expect(result.values.success).toBe(true);
-      expect(result.data.command).toBe('pwd');
+      expect((result as any).values.success).toBe(true);
+      expect((result as any).data.command).toBe('pwd');
     });
 
     it('should extract command from natural language', async () => {
@@ -362,8 +362,8 @@ describe('Shell Actions', () => {
       );
       expect(mockShellService.executeCommand).toHaveBeenCalledWith('ls -la');
       expect(result).toBeDefined();
-      expect(result.values.success).toBe(true);
-      expect(result.data.command).toBe('ls -la');
+      expect((result as any).values.success).toBe(true);
+      expect((result as any).data.command).toBe('ls -la');
     });
 
     it('should handle direct shell commands', async () => {
@@ -373,7 +373,7 @@ describe('Shell Actions', () => {
 
       expect(mockShellService.executeCommand).toHaveBeenCalledWith('ls -la');
       expect(result).toBeDefined();
-      expect(result.values.success).toBe(true);
+      expect((result as any).values.success).toBe(true);
     });
 
     it('should quote wildcards for find and grep commands', async () => {
@@ -383,7 +383,7 @@ describe('Shell Actions', () => {
 
       expect(mockShellService.executeCommand).toHaveBeenCalledWith("find . -name '*.txt'");
       expect(result).toBeDefined();
-      expect(result.values.success).toBe(true);
+      expect((result as any).values.success).toBe(true);
     });
 
     it('should handle command execution errors', async () => {
@@ -407,8 +407,8 @@ describe('Shell Actions', () => {
         })
       );
       expect(result).toBeDefined();
-      expect(result.values.success).toBe(false);
-      expect(result.values.error).toContain('Command failed');
+      expect((result as any).values.success).toBe(false);
+      expect((result as any).values.error).toContain('Command failed');
     });
   });
 
@@ -424,8 +424,8 @@ describe('Shell Actions', () => {
         })
       );
       expect(result).toBeDefined();
-      expect(result.values.success).toBe(true);
-      expect(result.values.cleared).toBe(true);
+      expect((result as any).values.success).toBe(true);
+      expect((result as any).values.cleared).toBe(true);
     });
 
     it('should handle missing shell service', async () => {
@@ -440,8 +440,8 @@ describe('Shell Actions', () => {
         })
       );
       expect(result).toBeDefined();
-      expect(result.values.success).toBe(false);
-      expect(result.values.error).toBe('ShellService not available');
+      expect((result as any).values.success).toBe(false);
+      expect((result as any).values.error).toBe('ShellService not available');
     });
   });
 
@@ -464,8 +464,8 @@ describe('Shell Actions', () => {
         })
       );
       expect(result).toBeDefined();
-      expect(result.values.success).toBe(true);
-      expect(result.values.stopped).toBe(true);
+      expect((result as any).values.success).toBe(true);
+      expect((result as any).values.stopped).toBe(true);
     });
 
     it('should handle missing autonomous service', async () => {
@@ -480,8 +480,8 @@ describe('Shell Actions', () => {
         })
       );
       expect(result).toBeDefined();
-      expect(result.values.success).toBe(true);
-      expect(result.values.stopped).toBe(false);
+      expect((result as any).values.success).toBe(true);
+      expect((result as any).values.stopped).toBe(false);
     });
   });
 });

@@ -45,7 +45,9 @@ const runtime = {
 
 async function runRealResearch() {
   console.log('🔬 ElizaOS Research Plugin - Real Research Demo\n');
-  console.log('📁 File logging enabled - outputs will be saved to research_logs/\n');
+  console.log(
+    '📁 File logging enabled - outputs will be saved to research_logs/\n'
+  );
 
   // Create research service
   const service = new ResearchService(runtime);
@@ -90,7 +92,10 @@ async function runRealResearch() {
             `\r📍 Status: ${currentProject.status} | Phase: ${currentProject.phase || 'N/A'}`
           );
 
-          if (currentProject.status === 'completed' || currentProject.status === 'failed') {
+          if (
+            currentProject.status === 'completed' ||
+            currentProject.status === 'failed'
+          ) {
             completed = true;
             console.log('\n');
           }
@@ -107,8 +112,12 @@ async function runRealResearch() {
         console.log(`💡 Key Findings: ${finalProject.findings.length}`);
 
         if (finalProject.report) {
-          console.log(`📝 Report Generated: ${finalProject.report.wordCount} words`);
-          console.log(`⏱️  Reading Time: ${finalProject.report.readingTime} minutes`);
+          console.log(
+            `📝 Report Generated: ${finalProject.report.wordCount} words`
+          );
+          console.log(
+            `⏱️  Reading Time: ${finalProject.report.readingTime} minutes`
+          );
         }
 
         // The report should already be saved by the service

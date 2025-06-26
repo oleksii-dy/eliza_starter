@@ -1,6 +1,6 @@
 import { System } from './System';
 import type { World } from '../World';
-import { Vector3 } from 'three';
+import { THREE } from '../extras/three';
 
 export enum TerrainType {
   GRASS = 'grass',
@@ -119,9 +119,9 @@ export class Terrain extends System {
   }
 
   // Get surface normal at position
-  getNormalAt(x: number, z: number): Vector3 {
+  getNormalAt(x: number, z: number): THREE.Vector3 {
     const epsilon = 0.1;
-    const h = this.getHeightAt(x, z);
+    const _h = this.getHeightAt(x, z);
     const hx1 = this.getHeightAt(x + epsilon, z);
     const hx2 = this.getHeightAt(x - epsilon, z);
     const hz1 = this.getHeightAt(x, z + epsilon);
@@ -130,7 +130,7 @@ export class Terrain extends System {
     const dx = (hx1 - hx2) / (2 * epsilon);
     const dz = (hz1 - hz2) / (2 * epsilon);
 
-    const normal = new Vector3(-dx, 1, -dz);
+    const normal = new THREE.Vector3(-dx, 1, -dz);
     return normal.normalize();
   }
 
@@ -222,7 +222,7 @@ export class Terrain extends System {
   }
 
   // Ray cast against terrain
-  raycast(origin: Vector3, direction: Vector3, maxDistance: number = 1000): Vector3 | null {
+  raycast(origin: THREE.Vector3, direction: THREE.Vector3, maxDistance: number = 1000): THREE.Vector3 | null {
     const step = 0.5;
     const dir = direction.clone().normalize();
 

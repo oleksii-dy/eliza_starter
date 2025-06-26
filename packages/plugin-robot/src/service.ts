@@ -1,12 +1,12 @@
 // Vision service for camera integration and scene analysis
 import {
   Service,
-  ServiceType,
+  ServiceType as _ServiceType,
   type IAgentRuntime,
   type ServiceTypeName,
   logger,
   ModelType,
-  type Metadata,
+  type Metadata as _Metadata,
 } from '@elizaos/core';
 import {
   VisionServiceType,
@@ -1344,7 +1344,7 @@ export class VisionService extends Service {
         } catch (_error) {
           // Clean up temp file on _error
           await fs.unlink(tempFile).catch(() => {});
-          throw error;
+          throw _error;
         }
       },
     };

@@ -1,6 +1,5 @@
 import { IAgentRuntime, logger } from '@elizaos/core';
-import type { Address, Hex, Hash } from 'viem';
-import { formatUnits, parseUnits } from 'viem';
+import { type Address, type Hash, type Hex, formatUnits as _formatUnits, parseUnits } from 'viem';
 import { ChainConfigService } from '../core/chains/config';
 import { TokenService } from '../tokens/token-service';
 import { MEVProtectionService } from '../core/security/mev-protection';
@@ -156,7 +155,7 @@ export class BridgeAggregatorService {
       let bestQuote = sortedQuotes[0];
       if (params.preferredProtocols && params.preferredProtocols.length > 0) {
         const preferred = sortedQuotes.find((q) =>
-          params.preferredProtocols!.includes(q.route.protocol.id),
+          params.preferredProtocols!.includes(q.route.protocol.id)
         );
         if (preferred) {
           // Use preferred if output is within 1% of best
@@ -185,8 +184,8 @@ export class BridgeAggregatorService {
       });
 
       return bestQuote;
-    } catch (error) {
-      logger.error('Error getting bridge quotes:', error);
+    } catch (_error) {
+      logger.error('Error getting bridge quotes:', _error);
       return null;
     }
   }
@@ -205,7 +204,7 @@ export class BridgeAggregatorService {
       const balance = await this.tokenService.getTokenBalance(
         quote.route.fromToken,
         this.getWalletAddress(),
-        quote.route.fromChain,
+        quote.route.fromChain
       );
 
       if (balance.balance < quote.fromAmount) {
@@ -242,24 +241,22 @@ export class BridgeAggregatorService {
       return txHash;
     } catch (error) {
       logger.error('Error executing bridge:', error);
-      throw new Error(
-        `Bridge execution failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      throw new Error(`Bridge execution failed: ${error instanceof Error ? error.message : error}`);
     }
   }
 
   /**
    * Get bridge status
    */
-  async getBridgeStatus(txHash: Hash): Promise<BridgeStatus | null> {
+  getBridgeStatus(txHash: Hash): Promise<BridgeStatus | null> {
     // Check local cache first
     const cached = this.pendingBridges.get(txHash);
     if (cached) {
-      return cached;
+      return Promise.resolve(cached);
     }
 
     // Query from chain or bridge protocol
-    return await this.queryBridgeStatus(txHash);
+    return this.queryBridgeStatus(txHash);
   }
 
   /**
@@ -320,18 +317,15 @@ export class BridgeAggregatorService {
         if (quote) {
           quotes.push(quote);
         }
-      } catch (error) {
-        logger.warn(`Failed to get quote from ${route.protocol.name}:`, error);
+      } catch (_error) {
+        logger.warn(`Failed to get quote from ${route.protocol.name}:`, _error);
       }
     }
 
     return quotes;
   }
 
-  private async getProtocolQuote(
-    route: BridgeRoute,
-    params: BridgeParams,
-  ): Promise<BridgeQuote | null> {
+  private getProtocolQuote(route: BridgeRoute, params: BridgeParams): Promise<BridgeQuote | null> {
     // This would integrate with specific bridge protocol APIs
     // For now, return a simulated quote
 
@@ -340,7 +334,7 @@ export class BridgeAggregatorService {
     const toAmount = params.amount - bridgeFee; // Simplified
     const toAmountMin = (toAmount * BigInt(10000 - slippage)) / 10000n;
 
-    return {
+    const quote: BridgeQuote = {
       route,
       fromAmount: params.amount,
       toAmount,
@@ -349,20 +343,22 @@ export class BridgeAggregatorService {
       priceImpact: 0.1, // 0.1% simulated
       validUntil: Date.now() + 60000, // 1 minute
     };
+    return Promise.resolve(quote);
   }
 
-  private async buildBridgeTransaction(quote: BridgeQuote, recipient?: Address): Promise<any> {
+  private buildBridgeTransaction(quote: BridgeQuote, _recipient?: Address): Promise<any> {
     // Protocol-specific transaction building
     // This is a simplified placeholder
-    return {
-      to: '0x0000000000000000000000000000000000000000', // Bridge contract
-      data: '0x', // Encoded bridge call
+    const transaction = {
+      to: '0x0000000000000000000000000000000000000000' as Address, // Bridge contract
+      data: '0x' as Hex, // Encoded bridge call
       value: quote.fromAmount,
       chainId: quote.route.fromChain,
     };
+    return Promise.resolve(transaction);
   }
 
-  private async monitorBridgeStatus(txHash: Hash): Promise<void> {
+  private monitorBridgeStatus(txHash: Hash): Promise<void> {
     const checkStatus = async () => {
       try {
         const status = await this.queryBridgeStatus(txHash);
@@ -377,37 +373,41 @@ export class BridgeAggregatorService {
 
         // Continue monitoring
         setTimeout(checkStatus, 30000); // Check every 30 seconds
-      } catch (error) {
-        logger.error(`Error monitoring bridge ${txHash}:`, error);
+      } catch (_error) {
+        logger.error(`Error monitoring bridge ${txHash}:`, _error);
       }
     };
 
     // Start monitoring
     checkStatus();
+    return Promise.resolve();
   }
 
-  private async queryBridgeStatus(txHash: Hash): Promise<BridgeStatus | null> {
+  private queryBridgeStatus(txHash: Hash): Promise<BridgeStatus | null> {
     // This would query the specific bridge protocol's API
     // For now, return cached status
-    return this.pendingBridges.get(txHash) || null;
+    const status = this.pendingBridges.get(txHash) || null;
+    return Promise.resolve(status);
   }
 
-  private async estimateGas(protocol: BridgeProtocol, chainId: number): Promise<bigint> {
+  private estimateGas(protocol: BridgeProtocol, _chainId: number): Promise<bigint> {
     // Protocol and chain specific gas estimation
     // Simplified estimation
     const baseGas = 200000n;
     const multiplier = protocol.id === 'layerzero' ? 150n : 100n;
-    return (baseGas * multiplier) / 100n;
+    const gasEstimate = (baseGas * multiplier) / 100n;
+    return Promise.resolve(gasEstimate);
   }
 
-  private async getBridgeFee(
-    protocol: BridgeProtocol,
-    fromChain: number,
-    toChain: number,
+  private getBridgeFee(
+    _protocol: BridgeProtocol,
+    _fromChain: number,
+    _toChain: number
   ): Promise<bigint> {
     // Protocol specific fee calculation
     // Simplified: 0.1% of amount
-    return parseUnits('0.001', 18); // Example fee
+    const fee = parseUnits('0.001', 18); // Example fee
+    return Promise.resolve(fee);
   }
 
   private getWalletAddress(): Address {
@@ -433,14 +433,14 @@ export class BridgeAggregatorService {
    */
   estimateBridgeTime(
     fromChain: number,
-    toChain: number,
+    toChain: number
   ): {
     fastest: number;
     average: number;
     slowest: number;
   } {
     const times = BRIDGE_PROTOCOLS.filter(
-      (p) => p.supportedChains.includes(fromChain) && p.supportedChains.includes(toChain),
+      (p) => p.supportedChains.includes(fromChain) && p.supportedChains.includes(toChain)
     ).map((p) => p.estimateTime(fromChain, toChain));
 
     if (times.length === 0) {

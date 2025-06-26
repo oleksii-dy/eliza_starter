@@ -29,6 +29,11 @@ export default [
         clearInterval: 'readonly',
         setTimeout: 'readonly',
         HTMLElement: 'readonly',
+        URLSearchParams: 'readonly',
+        URL: 'readonly',
+        Error: 'readonly',
+        JSON: 'readonly',
+        Promise: 'readonly',
       },
     },
     plugins: {

@@ -21,7 +21,7 @@ export function extendRuntimeWithEventUnregistration(runtime: IAgentRuntime): vo
     ) {
       const handlers = this.events.get(event);
       if (handlers) {
-        const filteredHandlers = handlers.filter((h) => h !== handler);
+        const filteredHandlers = handlers.filter((h: any) => h !== handler);
         if (filteredHandlers.length > 0) {
           this.events.set(event, filteredHandlers);
         } else {
@@ -40,7 +40,7 @@ export function extendRuntimeWithComponentUnregistration(runtime: IAgentRuntime)
   // Add unregisterAction method if it doesn't exist
   if (!(runtime as any).unregisterAction) {
     (runtime as any).unregisterAction = function (actionName: string) {
-      const index = this.actions.findIndex((a) => a.name === actionName);
+      const index = this.actions.findIndex((a: any) => a.name === actionName);
       if (index !== -1) {
         this.actions.splice(index, 1);
       }
@@ -50,7 +50,7 @@ export function extendRuntimeWithComponentUnregistration(runtime: IAgentRuntime)
   // Add unregisterProvider method if it doesn't exist
   if (!(runtime as any).unregisterProvider) {
     (runtime as any).unregisterProvider = function (providerName: string) {
-      const index = this.providers.findIndex((p) => p.name === providerName);
+      const index = this.providers.findIndex((p: any) => p.name === providerName);
       if (index !== -1) {
         this.providers.splice(index, 1);
       }
@@ -60,7 +60,7 @@ export function extendRuntimeWithComponentUnregistration(runtime: IAgentRuntime)
   // Add unregisterEvaluator method if it doesn't exist
   if (!(runtime as any).unregisterEvaluator) {
     (runtime as any).unregisterEvaluator = function (evaluatorName: string) {
-      const index = this.evaluators.findIndex((e) => e.name === evaluatorName);
+      const index = this.evaluators.findIndex((e: any) => e.name === evaluatorName);
       if (index !== -1) {
         this.evaluators.splice(index, 1);
       }

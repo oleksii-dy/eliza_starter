@@ -170,13 +170,13 @@ export class AudioCaptureService {
         // Linux: Use arecord
         const _device = this.config.device || 'default';
         await execAsync(
-          `arecord -D ${device} -f S16_LE -r ${this.config.sampleRate} -c ${this.config.channels} -d ${duration} "${outputPath}"`
+          `arecord -D ${_device} -f S16_LE -r ${this.config.sampleRate} -c ${this.config.channels} -d ${duration} "${outputPath}"`
         );
       } else if (platform === 'win32') {
         // Windows: Use ffmpeg with DirectShow
         const _device = this.config.device || 'Microphone';
         await execAsync(
-          `ffmpeg -f dshow -i audio="${device}" -t ${duration} -acodec pcm_s16le -ar ${this.config.sampleRate} -ac ${this.config.channels} "${outputPath}" -y`
+          `ffmpeg -f dshow -i audio="${_device}" -t ${duration} -acodec pcm_s16le -ar ${this.config.sampleRate} -ac ${this.config.channels} "${outputPath}" -y`
         );
       } else {
         throw new Error(`Unsupported platform: ${platform}`);

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function useElemSize(elem: HTMLElement | null) {
   const [width, setWidth] = useState(0);

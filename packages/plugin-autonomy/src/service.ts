@@ -4,7 +4,7 @@ import {
   type Entity,
   type IAgentRuntime,
   type Memory,
-  type ServiceTypeName,
+  type ServiceTypeName as _ServiceTypeName,
 } from '@elizaos/core';
 import { EventType, AutonomousServiceType } from './types';
 
@@ -126,7 +126,7 @@ export default class AutonomousService extends Service {
     await this.runtime.emitEvent(EventType.AUTO_MESSAGE_RECEIVED, {
       runtime: this.runtime,
       message: newMessage,
-      callback: (content) => {
+      callback: (content: any) => {
         console.log('AUTO_MESSAGE_RECEIVED:\n', content);
       },
       onComplete: () => {

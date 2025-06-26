@@ -1,7 +1,7 @@
 // Type definitions for Hyperfy client components
 
-import { ReactNode } from 'react';
-import * as THREE from 'three';
+// import { ReactNode } from 'react';
+import { Object3D, Vector3 } from 'three';
 
 // Core types
 export interface World {
@@ -17,7 +17,7 @@ export interface World {
   graphics: GraphicsSystem
   controls: ControlsSystem
   target: TargetSystem
-  rig: THREE.Object3D
+  rig: Object3D
   livekit: LiveKitManager
   xr: XRManager
   chat: ChatSystem
@@ -56,7 +56,7 @@ export interface Entity {
   data: EntityData
   isApp?: boolean
   isPlayer?: boolean
-  root: THREE.Object3D
+  root: Object3D
   blueprint?: Blueprint
   modify: (changes: Partial<EntityData>) => void
   destroy: (broadcast?: boolean) => void
@@ -225,7 +225,7 @@ export interface Action {
 }
 
 export interface TargetSystem {
-  show: (position: THREE.Vector3) => void
+  show: (position: Vector3) => void
   hide: () => void
 }
 

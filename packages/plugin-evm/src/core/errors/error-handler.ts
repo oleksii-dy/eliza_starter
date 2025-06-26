@@ -1,5 +1,4 @@
-import { elizaLogger as logger } from '@elizaos/core';
-import type { IAgentRuntime } from '@elizaos/core';
+import { elizaLogger as logger, type IAgentRuntime } from '@elizaos/core';
 
 // Error Categories
 export enum ErrorCategory {
@@ -39,7 +38,7 @@ export class EVMError extends Error {
       retryable?: boolean;
       context?: Record<string, any>;
       cause?: Error;
-    },
+    }
   ) {
     super(message);
     this.name = 'EVMError';
@@ -206,7 +205,7 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
 // Retry Mechanism
 export async function withRetry<T>(
   fn: () => Promise<T>,
-  config: Partial<RetryConfig> = {},
+  config: Partial<RetryConfig> = {}
 ): Promise<T> {
   const retryConfig = { ...DEFAULT_RETRY_CONFIG, ...config };
   let lastError: Error | undefined;
@@ -214,10 +213,10 @@ export async function withRetry<T>(
   for (let attempt = 1; attempt <= retryConfig.maxAttempts; attempt++) {
     try {
       return await fn();
-    } catch (error) {
-      lastError = error as Error;
+    } catch (_error) {
+      lastError = _error as Error;
 
-      const evmError = error instanceof EVMError ? error : parseEthersError(error);
+      const evmError = _error instanceof EVMError ? _error : parseEthersError(_error);
 
       if (!evmError.retryable || attempt === retryConfig.maxAttempts) {
         throw evmError;
@@ -263,7 +262,7 @@ export class CircuitBreaker {
     private readonly name: string,
     private readonly threshold: number = 5,
     private readonly timeout: number = 60000, // 1 minute
-    private readonly resetTimeout: number = 300000, // 5 minutes
+    private readonly resetTimeout: number = 300000 // 5 minutes
   ) {}
 
   async execute<T>(fn: () => Promise<T>): Promise<T> {
@@ -277,7 +276,7 @@ export class CircuitBreaker {
           `Circuit breaker ${this.name} is OPEN`,
           ErrorCategory.NETWORK_ERROR,
           ErrorSeverity.HIGH,
-          { retryable: false },
+          { retryable: false }
         );
       }
     }
@@ -290,9 +289,9 @@ export class CircuitBreaker {
       }
 
       return result;
-    } catch (error) {
+    } catch (_error) {
       this.recordFailure();
-      throw error;
+      throw _error;
     }
   }
 
@@ -333,7 +332,7 @@ export function getRecoverySuggestions(error: EVMError): string[] {
         'Check your wallet balance',
         'Ensure you have enough ETH for gas fees',
         'Try reducing the transaction amount',
-        'Bridge funds from another chain if needed',
+        'Bridge funds from another chain if needed'
       );
       break;
 
@@ -342,7 +341,7 @@ export function getRecoverySuggestions(error: EVMError): string[] {
         'Check your internet connection',
         'Try again in a few moments',
         'Switch to a different RPC endpoint',
-        'Check if the blockchain is congested',
+        'Check if the blockchain is congested'
       );
       break;
 
@@ -351,7 +350,7 @@ export function getRecoverySuggestions(error: EVMError): string[] {
         'Verify the contract address is correct',
         'Check if you have the necessary approvals',
         'Ensure the contract method exists',
-        'Review the transaction parameters',
+        'Review the transaction parameters'
       );
       break;
 
@@ -360,11 +359,11 @@ export function getRecoverySuggestions(error: EVMError): string[] {
         'Double-check all input values',
         'Ensure addresses are valid',
         'Verify token amounts and decimals',
-        "Check if you're using the correct chain",
+        "Check if you're using the correct chain"
       );
       break;
 
-    case ErrorCategory.RATE_LIMIT:
+    case ErrorCategory.RATE_LIMIT: {
       const retryAfter = error.context?.retryAfter;
       if (retryAfter) {
         suggestions.push(`Wait ${retryAfter} seconds before retrying`);
@@ -373,12 +372,13 @@ export function getRecoverySuggestions(error: EVMError): string[] {
       }
       suggestions.push('Consider using a different RPC endpoint');
       break;
+    }
 
     case ErrorCategory.TIMEOUT:
       suggestions.push(
         'Try again with a higher gas price',
         'Check if the network is congested',
-        'Consider using a different RPC endpoint',
+        'Consider using a different RPC endpoint'
       );
       break;
 
@@ -386,7 +386,7 @@ export function getRecoverySuggestions(error: EVMError): string[] {
       suggestions.push(
         'Try again in a few moments',
         'Check the transaction details',
-        'Contact support if the issue persists',
+        'Contact support if the issue persists'
       );
   }
 
@@ -401,7 +401,7 @@ export class ErrorHandler {
 
   constructor(private readonly runtime: IAgentRuntime) {}
 
-  async handle(error: any, context?: Record<string, any>): Promise<void> {
+  handle(error: any, context?: Record<string, any>): void {
     let evmError = error instanceof EVMError ? error : parseEthersError(error);
 
     // Add context by creating new error with merged context
@@ -475,12 +475,12 @@ export class ErrorHandler {
       threshold?: number;
       timeout?: number;
       resetTimeout?: number;
-    },
+    }
   ): CircuitBreaker {
     if (!this.circuitBreakers.has(name)) {
       this.circuitBreakers.set(
         name,
-        new CircuitBreaker(name, config?.threshold, config?.timeout, config?.resetTimeout),
+        new CircuitBreaker(name, config?.threshold, config?.timeout, config?.resetTimeout)
       );
     }
     return this.circuitBreakers.get(name)!;
@@ -499,7 +499,7 @@ export class ErrorHandler {
         acc[error.category] = (acc[error.category] || 0) + 1;
         return acc;
       },
-      {} as Record<ErrorCategory, number>,
+      {} as Record<ErrorCategory, number>
     );
 
     const bySeverity = errors.reduce(
@@ -507,7 +507,7 @@ export class ErrorHandler {
         acc[error.severity] = (acc[error.severity] || 0) + 1;
         return acc;
       },
-      {} as Record<ErrorSeverity, number>,
+      {} as Record<ErrorSeverity, number>
     );
 
     return {

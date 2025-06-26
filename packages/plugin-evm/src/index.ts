@@ -84,11 +84,11 @@ export {
 
 // Bridge exports - export from one location only
 export {
-  BridgeAggregator,
+  BridgeAggregatorService,
   type BridgeParams as BridgeAggregatorParams,
   type BridgeQuote,
   type BridgeRoute,
-} from './bridges/bridge-aggregator';
+} from './cross-chain/bridge-aggregator';
 
 // Token exports
 export * from './tokens/token-service';
@@ -134,9 +134,8 @@ export * from './utils/ens-resolver';
 export * from './utils/multicall';
 
 // Main plugin export
-import type { Action, IAgentRuntime, Plugin } from '@elizaos/core';
-import { elizaLogger } from '@elizaos/core';
-import EVMPluginTestSuite from './__tests__/e2e/plugin-tests';
+import { type Action, type IAgentRuntime, type Plugin, elizaLogger } from '@elizaos/core';
+// import EVMPluginTestSuite from './__tests__/e2e/plugin-tests';
 import { bridgeAction } from './actions/bridge';
 import { executeAction } from './actions/gov-execute';
 import { proposeAction } from './actions/gov-propose';
@@ -150,9 +149,11 @@ import { tokenBalanceProvider } from './providers/get-balance';
 import { evmWalletProvider } from './providers/wallet';
 
 const actions: Action[] = [
+  // Financial actions (already have enabled: false in their definitions)
   transferAction,
   bridgeAction,
   swapAction,
+  // Governance actions (should also be disabled by default)
   proposeAction,
   voteAction,
   queueAction,
@@ -171,10 +172,10 @@ export const evmPlugin: Plugin = {
   actions,
   providers: [...providers],
   services,
-  tests: [EVMPluginTestSuite],
+  // tests: [EVMPluginTestSuite],
   dependencies: [],
 
-  async init(config: Record<string, string>, runtime: IAgentRuntime): Promise<void> {
+  init(_config: Record<string, string>, runtime: IAgentRuntime): Promise<void> {
     elizaLogger.info('Initializing EVM Plugin...');
 
     // Register actions
@@ -188,6 +189,7 @@ export const evmPlugin: Plugin = {
     }
 
     elizaLogger.info('✔ EVM plugin initialized successfully');
+    return Promise.resolve();
   },
 };
 

@@ -12,8 +12,8 @@ import { extendThreePhysX } from './extras/extendThreePhysX.js';
 let promise: Promise<any> | undefined;
 export function loadPhysX(): Promise<any> {
   if (!promise) {
-    promise = new Promise(async (resolve) => {
-      (globalThis as any).PHYSX = await PhysXModule();
+    promise = new Promise(async resolve => {
+      ;(globalThis as any).PHYSX = await PhysXModule();
 
       // Extend Three.js objects with physics methods immediately after PhysX loads
       extendThreePhysX();

@@ -1,4 +1,4 @@
-import { logger } from '@elizaos/core';
+import { elizaLogger as logger } from '@elizaos/core';
 import type { GenerationScript } from './types';
 
 /**

@@ -11,7 +11,7 @@ import {
   List,
   Network,
   Users,
-  Table as TableIcon,
+  Table as _TableIcon,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -36,7 +36,14 @@ import { Card, CardFooter, CardHeader } from './card';
 import { Input } from './input';
 import { MemoryGraph } from './memory-graph';
 import { EntityGraph } from './entity-graph';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table';
+import {
+  Table as _Table,
+  TableBody as _TableBody,
+  TableCell as _TableCell,
+  TableHead as _TableHead,
+  TableHeader as _TableHeader,
+  TableRow as _TableRow,
+} from './table';
 import { EntityListView } from './entity-list-view';
 
 // Local utility function instead of importing from client
@@ -70,7 +77,9 @@ const Dialog = ({
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
 }) => {
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
   return (
     <div
       className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4"
@@ -258,9 +267,15 @@ const apiClient = {
   ) => {
     const params = new URLSearchParams();
     params.append('agentId', agentId);
-    if (options?.limit) params.append('limit', options.limit.toString());
-    if (options?.before) params.append('before', options.before.toString());
-    if (options?.includeEmbedding) params.append('includeEmbedding', 'true');
+    if (options?.limit) {
+      params.append('limit', options.limit.toString());
+    }
+    if (options?.before) {
+      params.append('before', options.before.toString());
+    }
+    if (options?.includeEmbedding) {
+      params.append('includeEmbedding', 'true');
+    }
 
     const response = await fetch(`/api/documents?${params.toString()}`);
     if (!response.ok) {
@@ -300,9 +315,15 @@ const apiClient = {
   ) => {
     const params = new URLSearchParams();
     params.append('agentId', agentId);
-    if (options?.limit) params.append('limit', options.limit.toString());
-    if (options?.before) params.append('before', options.before.toString());
-    if (options?.documentId) params.append('documentId', options.documentId);
+    if (options?.limit) {
+      params.append('limit', options.limit.toString());
+    }
+    if (options?.before) {
+      params.append('before', options.before.toString());
+    }
+    if (options?.documentId) {
+      params.append('documentId', options.documentId);
+    }
 
     const response = await fetch(`/api/knowledges?${params.toString()}`);
     if (!response.ok) {
@@ -323,7 +344,9 @@ const apiClient = {
       const errorText = await response.text();
       throw new Error(`Failed to delete knowledge document: ${response.status} ${errorText}`);
     }
-    if (response.status === 204) return;
+    if (response.status === 204) {
+      return;
+    }
     return await response.json();
   },
 
@@ -338,7 +361,7 @@ const apiClient = {
     }
     formData.append('agentId', agentId);
 
-    const response = await fetch(`/api/documents`, {
+    const response = await fetch('/api/documents', {
       method: 'POST',
       body: formData,
     });
@@ -393,7 +416,7 @@ const useKnowledgeChunks = (agentId: UUID, enabled: boolean = true, documentIdFi
     data: chunks = [],
     isLoading: chunksLoading,
     error: chunksError,
-  } = useQuery<Memory[] Error>({
+  } = useQuery<Memory[], Error>({
     queryKey: ['agents', agentId, 'knowledge', 'chunks', { documentIdFilter }],
     queryFn: async () => {
       const response = await apiClient.getKnowledgeChunks(agentId, {
@@ -409,7 +432,7 @@ const useKnowledgeChunks = (agentId: UUID, enabled: boolean = true, documentIdFi
     data: documents = [],
     isLoading: documentsLoading,
     error: documentsError,
-  } = useQuery<Memory[] Error>({
+  } = useQuery<Memory[], Error>({
     queryKey: ['agents', agentId, 'knowledge', 'documents-for-graph'],
     queryFn: async () => {
       const response = await apiClient.getKnowledgeDocuments(agentId, { includeEmbedding: false });
@@ -581,15 +604,27 @@ export function RolodexTab({ agentId }: { agentId: UUID }) {
     }
   };
 
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
   const handleDelete = (knowledgeId: string) => {
-    if (knowledgeId && window.confirm('Are you sure you want to delete this document?')) {
-      deleteKnowledgeDoc({ knowledgeId: knowledgeId as UUID });
+    if (!knowledgeId) {
+      return;
+    }
+    setDeleteConfirmId(knowledgeId);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmId) {
+      deleteKnowledgeDoc({ knowledgeId: deleteConfirmId as UUID });
       setViewingContent(null);
+      setDeleteConfirmId(null);
     }
   };
 
   const handleUploadClick = () => {
-    if (fileInputRef.current) fileInputRef.current.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   const handleUrlUploadClick = () => {
@@ -615,7 +650,7 @@ export function RolodexTab({ agentId }: { agentId: UUID }) {
       setUrls([...urls, urlInput]);
       setUrlInput('');
       setUrlError(null);
-    } catch (e) {
+    } catch (_e) {
       setUrlError('Invalid URL');
     }
   };
@@ -632,7 +667,7 @@ export function RolodexTab({ agentId }: { agentId: UUID }) {
         if (url.protocol.startsWith('http') && !urls.includes(urlInput)) {
           setUrls([...urls, urlInput]);
         }
-      } catch (e) {
+      } catch (_e) {
         // If the input is not a valid URL, just ignore it
       }
     }
@@ -647,7 +682,7 @@ export function RolodexTab({ agentId }: { agentId: UUID }) {
     setUrlError(null);
 
     try {
-      const result = await fetch(`/api/documents`, {
+      const result = await fetch('/api/documents', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -688,7 +723,9 @@ export function RolodexTab({ agentId }: { agentId: UUID }) {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0) {
+      return;
+    }
     setIsUploading(true);
     try {
       const fileArray = Array.from(files);
@@ -871,7 +908,7 @@ export function RolodexTab({ agentId }: { agentId: UUID }) {
   const MemoryDetails = ({ memory }: { memory: Memory }) => {
     const metadata = memory.metadata as MemoryMetadata;
     const isFragment = metadata?.type === 'fragment';
-    const isDocument = metadata?.type === 'document';
+    const _isDocument = metadata?.type === 'document';
 
     return (
       <div className="border-t border-border bg-card text-card-foreground h-full flex flex-col">
@@ -966,10 +1003,15 @@ export function RolodexTab({ agentId }: { agentId: UUID }) {
             variant="outline"
             size="sm"
             onClick={() => {
-              if (viewMode === 'list') setViewMode('graph');
-              else if (viewMode === 'graph') setViewMode('entities');
-              else if (viewMode === 'entity-list') setViewMode('list');
-              else setViewMode('entity-list');
+              if (viewMode === 'list') {
+                setViewMode('graph');
+              } else if (viewMode === 'graph') {
+                setViewMode('entities');
+              } else if (viewMode === 'entity-list') {
+                setViewMode('list');
+              } else {
+                setViewMode('entity-list');
+              }
             }}
             className="flex-shrink-0"
             title={
@@ -1492,6 +1534,35 @@ export function RolodexTab({ agentId }: { agentId: UUID }) {
                 Close
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Delete confirmation dialog */}
+      {deleteConfirmId && (
+        <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
+          <DialogContent className="max-w-md">
+            <div className="flex flex-col items-center p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Delete Document</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this document? This action cannot be undone.
+              </p>
+              <div className="flex gap-3 w-full">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setDeleteConfirmId(null)}
+                >
+                  Cancel
+                </Button>
+                <Button variant="destructive" className="flex-1" onClick={confirmDelete}>
+                  Delete
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       )}

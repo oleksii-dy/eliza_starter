@@ -59,7 +59,7 @@ export class MEVProtectionService {
       usePrivateMempool: true,
       flashbotsEnabled: true,
       simulateBeforeSend: true,
-    },
+    }
   ) {
     this.chainService = new ChainConfigService(runtime);
     this.simulator = new TransactionSimulator(runtime, this.chainService);
@@ -136,8 +136,8 @@ export class MEVProtectionService {
         recommendations,
         alternativeRoutes,
       };
-    } catch (error) {
-      logger.error('Error analyzing MEV risk:', error);
+    } catch (_error) {
+      logger.error('Error analyzing MEV risk:', _error);
       return {
         isSandwichable: false,
         vulnerabilities: ['MEV analysis failed'],
@@ -151,7 +151,7 @@ export class MEVProtectionService {
    */
   async sendProtectedTransaction(
     tx: TransactionRequest,
-    protectionLevel: 'none' | 'basic' | 'maximum' = 'basic',
+    protectionLevel: 'none' | 'basic' | 'maximum' = 'basic'
   ): Promise<Hash> {
     try {
       const chainId = tx.chainId || 1;
@@ -189,9 +189,9 @@ export class MEVProtectionService {
         default:
           return await this.sendRegularTransaction(tx);
       }
-    } catch (error) {
-      logger.error('Error sending protected transaction:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Error sending protected transaction:', _error);
+      throw _error;
     }
   }
 
@@ -233,16 +233,16 @@ export class MEVProtectionService {
 
       logger.info('Transaction sent via Flashbots:', txHash);
       return txHash;
-    } catch (error) {
-      logger.error('Flashbots submission failed, falling back to regular mempool:', error);
-      return await this.sendRegularTransaction(tx);
+    } catch (_error) {
+      logger.error('Flashbots submission failed, falling back to regular mempool:', _error);
+      return this.sendRegularTransaction(tx);
     }
   }
 
   /**
    * Send via private mempool services
    */
-  private async sendViaPrivateMempool(tx: TransactionRequest): Promise<Hash> {
+  private sendViaPrivateMempool(tx: TransactionRequest): Promise<Hash> {
     // This would integrate with services like:
     // - BloXroute
     // - Eden Network
@@ -256,22 +256,22 @@ export class MEVProtectionService {
       maxPriorityFeePerGas: (tx.maxPriorityFeePerGas || 0n) + 1000000000n, // +1 gwei
     };
 
-    return await this.sendRegularTransaction(protectedTx);
+    return this.sendRegularTransaction(protectedTx);
   }
 
   /**
    * Regular transaction sending
    */
-  private async sendRegularTransaction(tx: TransactionRequest): Promise<Hash> {
+  private sendRegularTransaction(_tx: TransactionRequest): Promise<Hash> {
     // This would use the wallet service to send transaction
     logger.info('Sending regular transaction');
-    return `0x${'0'.repeat(64)}` as Hash; // Placeholder
+    return Promise.resolve(`0x${'0'.repeat(64)}` as Hash); // Placeholder
   }
 
   /**
    * Helper methods
    */
-  private async isDEXTransaction(tx: TransactionRequest): Promise<boolean> {
+  private isDEXTransaction(tx: TransactionRequest): boolean {
     if (!tx.to || !tx.data) {
       return false;
     }
@@ -286,7 +286,7 @@ export class MEVProtectionService {
     return dexRouters.some((router) => tx.to?.toLowerCase() === router.toLowerCase());
   }
 
-  private async isApprovalTransaction(tx: TransactionRequest): Promise<boolean> {
+  private isApprovalTransaction(tx: TransactionRequest): boolean {
     if (!tx.data || tx.data.length < 10) {
       return false;
     }
@@ -296,7 +296,7 @@ export class MEVProtectionService {
     return tx.data.startsWith(approveSelector);
   }
 
-  private async estimateSandwichLoss(tx: TransactionRequest): Promise<bigint> {
+  private estimateSandwichLoss(tx: TransactionRequest): bigint {
     // Simplified estimation based on transaction value and slippage
     // In production, would simulate sandwich attack scenarios
     if (!tx.value) {
@@ -312,14 +312,14 @@ export class MEVProtectionService {
     return (simulation.stateChanges?.length || 0) > 5;
   }
 
-  private async findAlternativeRoutes(tx: TransactionRequest): Promise<any[]> {
+  private findAlternativeRoutes(_tx: TransactionRequest): any[] {
     // Would integrate with DEX aggregators to find alternative routes
     return [];
   }
 
-  private async getAverageGasPrice(chainId: number): Promise<bigint> {
+  private getAverageGasPrice(chainId: number): Promise<bigint> {
     const client = this.chainService.getPublicClient(chainId);
-    return await client.getGasPrice();
+    return client.getGasPrice();
   }
 
   private supportsPrivateMempool(chainId: number): boolean {
@@ -331,36 +331,36 @@ export class MEVProtectionService {
     return this.flashbotsEndpoints[chainId] !== undefined;
   }
 
-  private async signTransaction(tx: TransactionRequest): Promise<Hex> {
+  private signTransaction(_tx: TransactionRequest): Promise<Hex> {
     // Would use wallet service to sign
-    return '0x' as Hex;
+    return Promise.resolve('0x' as Hex);
   }
 
-  private async getCurrentBlockNumber(chainId: number): Promise<bigint> {
+  private getCurrentBlockNumber(chainId: number): Promise<bigint> {
     const client = this.chainService.getPublicClient(chainId);
-    return await client.getBlockNumber();
+    return client.getBlockNumber();
   }
 
-  private async submitFlashbotsBundle(
-    bundle: FlashbotsBundle,
-    endpoint: string,
+  private submitFlashbotsBundle(
+    _bundle: FlashbotsBundle,
+    _endpoint: string
   ): Promise<{ success: boolean; bundleHash?: string; error?: string }> {
     // Would submit to Flashbots relay
-    return { success: true, bundleHash: 'bundle-hash' };
+    return Promise.resolve({ success: true, bundleHash: 'bundle-hash' });
   }
 
-  private async waitForBundleInclusion(bundleHash: string, chainId: number): Promise<Hash> {
+  private waitForBundleInclusion(_bundleHash: string, _chainId: number): Promise<Hash> {
     // Would poll for bundle inclusion
-    return `0x${'0'.repeat(64)}` as Hash;
+    return Promise.resolve(`0x${'0'.repeat(64)}` as Hash);
   }
 
   /**
    * Monitor mempool for potential attacks
    */
-  async monitorMempool(
+  monitorMempool(
     targetAddress: Address,
-    callback: (threat: SandwichAttackPattern) => void,
-  ): Promise<() => void> {
+    _callback: (threat: SandwichAttackPattern) => void
+  ): () => void {
     // Would subscribe to mempool and detect sandwich patterns
     logger.info('Starting mempool monitoring for', targetAddress);
 
@@ -375,7 +375,7 @@ export class MEVProtectionService {
 // Export factory function
 export function createMEVProtectionService(
   runtime: IAgentRuntime,
-  config?: MEVProtectionConfig,
+  config?: MEVProtectionConfig
 ): MEVProtectionService {
   return new MEVProtectionService(runtime, config);
 }

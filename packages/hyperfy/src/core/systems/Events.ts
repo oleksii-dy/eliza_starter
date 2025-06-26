@@ -44,7 +44,7 @@ export class Events extends System implements IEvents {
     return this;
   }
 
-  off<T extends string | symbol>(event: T, fn?: (...args: any[]) => void, context?: any, once?: boolean): this {
+  off<T extends string | symbol>(event: T, fn?: (...args: any[]) => void, _context?: any, _once?: boolean): this {
     if (!fn) {
       // Remove all listeners for this event
       this.eventListeners.delete(event);

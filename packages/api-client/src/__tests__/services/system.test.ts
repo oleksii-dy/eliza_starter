@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, afterAll, mock } from 'bun:test';
-import { SystemService } from '../../services/system';
+import { SystemService } from '../../services/SystemService';
 import { LocalEnvironmentUpdateParams } from '../../types/system';
 
 // Mock the BaseApiClient

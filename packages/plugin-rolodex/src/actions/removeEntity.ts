@@ -321,7 +321,7 @@ export const removeEntityAction: Action = {
 
       const errorText =
         error instanceof EntityNotFoundError
-          ? 'I couldn\'t find the entity you want to remove. Please check the name and try again.'
+          ? "I couldn't find the entity you want to remove. Please check the name and try again."
           : `I couldn't remove the entity. ${error instanceof Error ? error.message : 'Please try again.'}`;
 
       if (callback) {

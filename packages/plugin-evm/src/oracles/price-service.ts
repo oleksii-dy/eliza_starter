@@ -36,8 +36,8 @@ export class PriceService {
       });
 
       return price;
-    } catch (error) {
-      logger.warn('Failed to fetch token price:', error);
+    } catch (_error) {
+      logger.warn('Failed to fetch token price:', _error);
 
       // Fallback prices for common tokens
       return this.getFallbackPrice(tokenAddress, chainId);
@@ -69,7 +69,7 @@ export class PriceService {
 
     try {
       const response = await fetch(
-        `https://api.coingecko.com/api/v3/simple/price?ids=${tokenId}&vs_currencies=usd`,
+        `https://api.coingecko.com/api/v3/simple/price?ids=${tokenId}&vs_currencies=usd`
       );
 
       if (!response.ok) {
@@ -85,8 +85,8 @@ export class PriceService {
       });
 
       return price;
-    } catch (error) {
-      logger.warn('Failed to fetch native token price:', error);
+    } catch (_error) {
+      logger.warn('Failed to fetch native token price:', _error);
 
       // Fallback prices
       const fallbackPrices: Record<number, number> = {
@@ -119,7 +119,7 @@ export class PriceService {
     return mapping[chainId] || 'ethereum';
   }
 
-  private getFallbackPrice(tokenAddress: string, chainId: number): number {
+  private getFallbackPrice(tokenAddress: string, _chainId: number): number {
     // Common stablecoin addresses
     const stablecoins: Record<string, number> = {
       // Ethereum mainnet

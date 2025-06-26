@@ -1,10 +1,12 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { n8nWorkflowAction, checkN8nWorkflowStatusAction } from '../../actions/n8n-workflow-action';
-import { N8nWorkflowService } from '../../services/n8n-workflow-service';
+import { N8nWorkflowService } from '../../services/N8nWorkflowService';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
 // Mock the N8nWorkflowService
-mock.module('../../services/n8n-workflow-service');
+mock.module('../../services/N8nWorkflowService', () => ({
+  N8nWorkflowService: mock()
+}));
 
 describe('N8n Workflow Actions', () => {
   let mockRuntime: IAgentRuntime;
@@ -42,8 +44,8 @@ describe('N8n Workflow Actions', () => {
     } as Memory;
 
     mockState = {
-      values: {},
-      data: {},
+      values: { /* empty */ },
+      data: { /* empty */ },
       text: '',
     } as State;
 
@@ -73,7 +75,7 @@ describe('N8n Workflow Actions', () => {
         mockRuntime,
         mockMemory,
         mockState,
-        {},
+        { /* empty */ },
         mockCallback
       );
 
@@ -98,7 +100,7 @@ describe('N8n Workflow Actions', () => {
         mockRuntime,
         mockMemory,
         mockState,
-        {},
+        { /* empty */ },
         mockCallback
       );
 
@@ -126,7 +128,7 @@ describe('N8n Workflow Actions', () => {
 
       mockMemory.content.text = JSON.stringify(jsonSpec);
 
-      await n8nWorkflowAction.handler(mockRuntime, mockMemory, mockState, {}, mockCallback);
+      await n8nWorkflowAction.handler(mockRuntime, mockMemory, mockState, { /* empty */ }, mockCallback);
 
       expect(mockService.createWorkflow).toHaveBeenCalledWith(jsonSpec);
     });

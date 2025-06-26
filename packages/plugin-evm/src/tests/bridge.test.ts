@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
-import type { Account, Chain } from 'viem';
-import { parseEther, formatEther } from 'viem';
+import { type Account } from 'viem';
 
 import { BridgeAction } from '../actions/bridge';
 import { WalletProvider } from '../providers/wallet';
@@ -363,10 +362,10 @@ describe('Bridge Action', () => {
   });
 
   describe('Gas and Fee Estimation', () => {
-    let bridgeAction: BridgeAction;
+    let _bridgeAction: BridgeAction;
 
     beforeEach(() => {
-      bridgeAction = new BridgeAction(wp);
+      _bridgeAction = new BridgeAction(wp);
     });
 
     it('should handle bridge cost estimation', async () => {

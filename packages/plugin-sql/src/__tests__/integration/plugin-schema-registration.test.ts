@@ -2,13 +2,12 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from 'bun:test';
 import { createIsolatedTestDatabase } from '../test-helpers';
 import { v4 as uuidv4 } from 'uuid';
 import { type UUID, type Plugin } from '@elizaos/core';
-import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
 import { schemaRegistry, type TableSchema } from '../../schema-registry';
 import { sql } from 'drizzle-orm';
 
 describe('Plugin Schema Registration Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
 
@@ -76,17 +75,11 @@ describe('Plugin Schema Registration Tests', () => {
 
       // Create the table through the schema registry
       const db = adapter.getDatabase();
-      await schemaRegistry.createTables(
-        db,
-        adapter instanceof PgliteDatabaseAdapter ? 'pglite' : 'postgres'
-      );
+      await schemaRegistry.createTables(db, 'postgres');
 
       // Verify the table exists and is usable
       const testId = uuidv4();
-      const insertSql =
-        adapter instanceof PgliteDatabaseAdapter
-          ? `INSERT INTO test_plugin_table (id, agent_id, test_data) VALUES ('${testId}', '${testAgentId}', '{"test": true}')`
-          : `INSERT INTO test_plugin_table (id, agent_id, test_data) VALUES ('${testId}', '${testAgentId}', '{"test": true}')`;
+      const insertSql = `INSERT INTO test_plugin_table (id, agent_id, test_data) VALUES ('${testId}', '${testAgentId}', '{"test": true}')`;
 
       await db.execute(sql.raw(insertSql));
 
@@ -247,15 +240,12 @@ describe('Plugin Schema Registration Tests', () => {
       // Register the vector schema
       schemaRegistry.registerTable(vectorSchema);
 
-      // Create the table (should use fallback for PGLite, regular for PostgreSQL)
+      // Create the table using PostgreSQL schema
       const db = adapter.getDatabase();
 
       // This should not throw regardless of vector support
       await expect(async () => {
-        await schemaRegistry.createTables(
-          db,
-          adapter instanceof PgliteDatabaseAdapter ? 'pglite' : 'postgres'
-        );
+        await schemaRegistry.createTables(db, 'postgres');
       }).not.toThrow();
 
       // Verify table exists

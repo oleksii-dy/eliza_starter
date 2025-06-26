@@ -33,6 +33,12 @@ import {
   initializeOnboarding,
   type OnboardingConfig,
 } from '@elizaos/core';
+
+// Type the imported logger and enums to avoid implicit any
+const elizaLogger = logger;
+const _elizaChannelType = ChannelType;
+const _elizaEventType = EventType;
+const _elizaRole = Role;
 import { v4 } from 'uuid';
 
 /**
@@ -142,7 +148,7 @@ export async function processAttachments(
   if (!attachments || attachments.length === 0) {
     return [];
   }
-  logger.debug(`[Message Handling] Processing ${attachments.length} attachment(s)`);
+  elizaLogger.debug(`[Message Handling] Processing ${attachments.length} attachment(s)`);
 
   const processedAttachments: Media[] = [];
 
@@ -153,7 +159,7 @@ export async function processAttachments(
 
       // Only process images that don't already have descriptions
       if (attachment.contentType === ContentType.IMAGE && !attachment.description) {
-        logger.debug(`[Message Handling] Generating description for image: ${attachment.url}`);
+        elizaLogger.debug(`[Message Handling] Generating description for image: ${attachment.url}`);
 
         try {
           const response = await runtime.useModel(ModelType.IMAGE_DESCRIPTION, {
@@ -170,11 +176,13 @@ export async function processAttachments(
               processedAttachment.title = parsedXml.title || 'Image';
               processedAttachment.text = parsedXml.text;
 
-              logger.debug(
+              elizaLogger.debug(
                 `[Message Handling] Generated description: ${processedAttachment.description?.substring(0, 100)}...`
               );
             } else {
-              logger.warn('[Message Handling] Failed to parse XML response for image description');
+              elizaLogger.warn(
+                '[Message Handling] Failed to parse XML response for image description'
+              );
             }
           } else if (response && typeof response === 'object' && 'description' in response) {
             // Handle object responses for backwards compatibility
@@ -182,21 +190,24 @@ export async function processAttachments(
             processedAttachment.title = response.title || 'Image';
             processedAttachment.text = response.description;
 
-            logger.debug(
+            elizaLogger.debug(
               `[Message Handling] Generated description: ${processedAttachment.description?.substring(0, 100)}...`
             );
           } else {
-            logger.warn('[Message Handling] Unexpected response format for image description');
+            elizaLogger.warn('[Message Handling] Unexpected response format for image description');
           }
         } catch (error) {
-          logger.error('[Message Handling] Error generating image description:', error);
+          elizaLogger.error('[Message Handling] Error generating image description:', error);
           // Continue processing without description
         }
       }
 
       processedAttachments.push(processedAttachment);
     } catch (error) {
-      logger.error(`[Message Handling] Failed to process attachment ${attachment.url}:`, error);
+      elizaLogger.error(
+        `[Message Handling] Failed to process attachment ${attachment.url}:`,
+        error
+      );
       // Add the original attachment if processing fails
       processedAttachments.push(attachment);
     }
@@ -277,7 +288,7 @@ const messageReceivedHandler = async ({
   let timeoutId: NodeJS.Timeout | undefined = undefined;
 
   try {
-    logger.info(
+    elizaLogger.info(
       `[Message Handling] Message received from ${message.entityId} in room ${message.roomId}`
     );
     // Generate a new response ID
@@ -332,16 +343,16 @@ const messageReceivedHandler = async ({
     const processingPromise = (async () => {
       try {
         if (message.entityId === runtime.agentId) {
-          logger.debug(`[Message Handling] Skipping message from self (${runtime.agentId})`);
+          elizaLogger.debug(`[Message Handling] Skipping message from self (${runtime.agentId})`);
           throw new Error('Message is from the agent itself');
         }
 
-        logger.debug(
+        elizaLogger.debug(
           `[Message Handling] Processing message: ${truncateToCompleteSentence(message.content.text || '', 50)}...`
         );
 
         // First, save the incoming message
-        logger.debug('[Message Handling] Saving message to memory and embeddings');
+        elizaLogger.debug('[Message Handling] Saving message to memory and embeddings');
         await Promise.all([
           runtime.addEmbeddingToMemory(message),
           runtime.createMemory(message, 'messages'),
@@ -356,7 +367,7 @@ const messageReceivedHandler = async ({
           agentUserState === 'MUTED' &&
           !message.content.text?.toLowerCase().includes(runtime.character.name.toLowerCase())
         ) {
-          logger.debug(`[Message Handling] Ignoring muted room ${message.roomId}`);
+          elizaLogger.debug(`[Message Handling] Ignoring muted room ${message.roomId}`);
           return;
         }
 
@@ -391,7 +402,7 @@ const messageReceivedHandler = async ({
             template: shouldRespondTemplate,
           });
 
-          logger.debug(
+          elizaLogger.debug(
             `[Message Handling] Evaluating response for ${runtime.character.name}\nPrompt: ${shouldRespondPrompt}`
           );
 
@@ -399,16 +410,16 @@ const messageReceivedHandler = async ({
             prompt: shouldRespondPrompt,
           });
 
-          logger.debug(
+          elizaLogger.debug(
             `[Message Handling] Response evaluation for ${runtime.character.name}:\n${response}`
           );
-          logger.debug(`[Message Handling] Response type: ${typeof response}`);
+          elizaLogger.debug(`[Message Handling] Response type: ${typeof response}`);
 
           // Try to preprocess response by removing code blocks markers if present
           // let processedResponse = response.replace('```json', '').replaceAll('```', '').trim(); // No longer needed for XML
 
           const responseObject = parseKeyValueXml(response);
-          logger.debug('[Message Handling] Parsed response:', responseObject);
+          elizaLogger.debug('[Message Handling] Parsed response:', responseObject);
 
           // If an action is provided, the agent intends to respond in some way
           // Only exclude explicit non-response actions
@@ -417,7 +428,7 @@ const messageReceivedHandler = async ({
             responseObject?.action &&
             !nonResponseActions.includes(responseObject.action.toUpperCase());
         } else {
-          logger.debug(
+          elizaLogger.debug(
             `[Message Handling] Skipping shouldRespond check for ${runtime.character.name} because ${room?.type} ${room?.source}`
           );
           shouldRespond = true;
@@ -431,7 +442,7 @@ const messageReceivedHandler = async ({
         if (shouldRespond) {
           state = await runtime.composeState(message, ['ACTIONS']);
           if (!state.values.actionNames) {
-            logger.warn('actionNames data missing from state, even though it was requested');
+            elizaLogger.warn('actionNames data missing from state, even though it was requested');
           }
 
           const prompt = composePromptFromState({
@@ -450,11 +461,11 @@ const messageReceivedHandler = async ({
               prompt,
             });
 
-            logger.debug('[Message Handling] *** Raw LLM Response ***\n', response);
+            elizaLogger.debug('[Message Handling] *** Raw LLM Response ***\n', response);
 
             // Attempt to parse the XML response
             const parsedXml = parseKeyValueXml(response);
-            logger.debug('[Message Handling] *** Parsed XML Content ***\n', parsedXml);
+            elizaLogger.debug('[Message Handling] *** Parsed XML Content ***\n', parsedXml);
 
             // Map parsed XML to Content type, handling potential missing fields
             if (parsedXml) {
@@ -472,7 +483,7 @@ const messageReceivedHandler = async ({
 
             retries++;
             if (!responseContent?.thought || !responseContent?.actions) {
-              logger.warn(
+              elizaLogger.warn(
                 '[Message Handling] *** Missing required fields (thought or actions), retrying... ***\n',
                 response,
                 parsedXml,
@@ -484,7 +495,7 @@ const messageReceivedHandler = async ({
           // Check if this is still the latest response ID for this agent+room
           const currentResponseId = agentResponses.get(message.roomId);
           if (currentResponseId !== responseId) {
-            logger.info(
+            elizaLogger.info(
               `Response discarded - newer message being processed for agent: ${runtime.agentId}, room: ${message.roomId}`
             );
             return;
@@ -527,7 +538,7 @@ const messageReceivedHandler = async ({
           if (responseContent && responseContent.simple && responseContent.text) {
             // Log provider usage for simple responses
             if (responseContent.providers && responseContent.providers.length > 0) {
-              logger.debug(
+              elizaLogger.debug(
                 '[Message Handling] Simple response used providers',
                 responseContent.providers
               );
@@ -541,7 +552,9 @@ const messageReceivedHandler = async ({
 
             if (planningService && responseContent) {
               try {
-                logger.debug('[Message Handling] Using planning service for action coordination');
+                elizaLogger.debug(
+                  '[Message Handling] Using planning service for action coordination'
+                );
 
                 // Create a simple plan using the planning service
                 const plan = await planningService.createSimplePlan(
@@ -560,13 +573,13 @@ const messageReceivedHandler = async ({
                     callback
                   );
 
-                  logger.debug(
+                  elizaLogger.debug(
                     `[Message Handling] Plan execution completed. Success: ${planResult.success}`
                   );
 
                   // If plan execution failed, fall back to regular action processing
                   if (!planResult.success) {
-                    logger.warn(
+                    elizaLogger.warn(
                       '[Message Handling] Plan execution failed, falling back to regular action processing'
                     );
                     await runtime.processActions(message, responseMessages, state, callback);
@@ -576,7 +589,7 @@ const messageReceivedHandler = async ({
                   await runtime.processActions(message, responseMessages, state, callback);
                 }
               } catch (error) {
-                logger.error(
+                elizaLogger.error(
                   '[Message Handling] Planning service error, falling back to regular action processing:',
                   error
                 );
@@ -590,19 +603,21 @@ const messageReceivedHandler = async ({
           await runtime.evaluate(message, state, shouldRespond, callback, responseMessages);
         } else {
           // Handle the case where the agent decided not to respond
-          logger.debug('[Message Handling] Agent decided not to respond (shouldRespond is false).');
+          elizaLogger.debug(
+            '[Message Handling] Agent decided not to respond (shouldRespond is false).'
+          );
 
           // Check if we still have the latest response ID
           const currentResponseId = agentResponses.get(message.roomId);
           if (currentResponseId !== responseId) {
-            logger.info(
+            elizaLogger.info(
               `Ignore response discarded - newer message being processed for agent: ${runtime.agentId}, room: ${message.roomId}`
             );
             return; // Stop processing if a newer message took over
           }
 
           if (!message.id) {
-            logger.error(
+            elizaLogger.error(
               '[Message Handling] Message ID is missing, cannot create ignore response.'
             );
             return;
@@ -629,7 +644,7 @@ const messageReceivedHandler = async ({
             createdAt: Date.now(),
           };
           await runtime.createMemory(ignoreMemory, 'messages');
-          logger.debug('[Message Handling] Saved ignore response to memory', {
+          elizaLogger.debug('[Message Handling] Saved ignore response to memory', {
             memoryId: ignoreMemory.id,
           });
 
@@ -701,10 +716,10 @@ const reactionReceivedHandler = async ({
     await runtime.createMemory(message, 'messages');
   } catch (error: any) {
     if (error.code === '23505') {
-      logger.warn('[Message Handling] Duplicate reaction memory, skipping');
+      elizaLogger.warn('[Message Handling] Duplicate reaction memory, skipping');
       return;
     }
-    logger.error('[Message Handling] Error in reaction handler:', error);
+    elizaLogger.error('[Message Handling] Error in reaction handler:', error);
   }
 };
 
@@ -725,20 +740,20 @@ const messageDeletedHandler = async ({
 }) => {
   try {
     if (!message.id) {
-      logger.error('[Message Handling] Cannot delete memory: message ID is missing');
+      elizaLogger.error('[Message Handling] Cannot delete memory: message ID is missing');
       return;
     }
 
-    logger.info(
+    elizaLogger.info(
       '[Message Handling] Deleting memory for message',
       message.id,
       'from room',
       message.roomId
     );
     await runtime.deleteMemory(message.id);
-    logger.debug('[Message Handling] Successfully deleted memory for message', message.id);
+    elizaLogger.debug('[Message Handling] Successfully deleted memory for message', message.id);
   } catch (error: unknown) {
-    logger.error('[Message Handling] Error in message deleted handler:', error);
+    elizaLogger.error('[Message Handling] Error in message deleted handler:', error);
   }
 };
 
@@ -764,7 +779,7 @@ const channelClearedHandler = async ({
   memoryCount: number;
 }) => {
   try {
-    logger.info(
+    elizaLogger.info(
       `[Message Handling] Clearing ${memoryCount} message memories from channel ${channelId} -> room ${roomId}`
     );
 
@@ -782,16 +797,19 @@ const channelClearedHandler = async ({
           await runtime.deleteMemory(memory.id);
           deletedCount++;
         } catch (error) {
-          logger.warn(`[Message Handling] Failed to delete message memory ${memory.id}:`, error);
+          elizaLogger.warn(
+            `[Message Handling] Failed to delete message memory ${memory.id}:`,
+            error
+          );
         }
       }
     }
 
-    logger.info(
+    elizaLogger.info(
       `[Message Handling] Successfully cleared ${deletedCount}/${memories.length} message memories from channel ${channelId}`
     );
   } catch (error: unknown) {
-    logger.error('[Message Handling] Error in channel cleared handler:', error);
+    elizaLogger.error('[Message Handling] Error in channel cleared handler:', error);
   }
 };
 
@@ -812,7 +830,7 @@ const postGeneratedHandler = async ({
   roomId,
   source,
 }: InvokePayload) => {
-  logger.info('[Message Handling] Generating new post...');
+  elizaLogger.info('[Message Handling] Generating new post...');
   // Ensure world exists first
   await runtime.ensureWorldExists({
     id: worldId,
@@ -895,7 +913,7 @@ const postGeneratedHandler = async ({
 
     retries++;
     if (!responseContent?.thought || !responseContent?.actions) {
-      logger.warn(
+      elizaLogger.warn(
         '[Message Handling] *** Missing required fields, retrying... ***\n',
         response,
         parsedXml,
@@ -919,10 +937,10 @@ const postGeneratedHandler = async ({
   });
 
   // Parse the XML response
-  const parsedXmlResponse = parseKeyValueXml(xmlResponseText);
+  const parsedXmlResponse: Record<string, any> | null = parseKeyValueXml(xmlResponseText);
 
   if (!parsedXmlResponse) {
-    logger.error(
+    elizaLogger.error(
       '[Message Handling] Failed to parse XML response for post creation. Raw response:',
       xmlResponseText
     );
@@ -961,16 +979,18 @@ const postGeneratedHandler = async ({
   // 		const fetchedMedia = await fetchMediaData(imagePromptMedia);
   // 		mediaData.push(...fetchedMedia);
   // 	} catch (error) {
-  // 		logger.error("Error fetching media for tweet:", error);
+  // 		elizaLogger.error("Error fetching media for tweet:", error);
   // 	}
   // }
 
   // have we posted it before?
-  const RM = state.providerData?.find((pd) => pd.providerName === 'RECENT_MESSAGES');
+  const RM = state.providerData?.find(
+    (pd: { providerName: string }) => pd.providerName === 'RECENT_MESSAGES'
+  );
   if (RM) {
     for (const m of RM.data.recentMessages) {
       if (cleanedText === m.content.text) {
-        logger.log('[Message Handling] Already recently posted that, retrying', cleanedText);
+        elizaLogger.log('[Message Handling] Already recently posted that, retrying', cleanedText);
         postGeneratedHandler({
           runtime,
           callback,
@@ -1001,7 +1021,7 @@ const postGeneratedHandler = async ({
     googleRefusalRegex.test(cleanedText) ||
     generalRefusalRegex.test(cleanedText)
   ) {
-    logger.log('[Message Handling] Got prompt moderation refusal, retrying', cleanedText);
+    elizaLogger.log('[Message Handling] Got prompt moderation refusal, retrying', cleanedText);
     postGeneratedHandler({
       runtime,
       callback,
@@ -1073,11 +1093,13 @@ const syncSingleUser = async (
 ) => {
   try {
     const entity = await runtime.getEntityById(entityId);
-    logger.info(`[Message Handling] Syncing user: ${entity?.metadata?.username || entityId}`);
+    elizaLogger.info(`[Message Handling] Syncing user: ${entity?.metadata?.username || entityId}`);
 
     // Ensure we're not using WORLD type and that we have a valid channelId
     if (!channelId) {
-      logger.warn(`[Message Handling] Cannot sync user ${entity?.id} without a valid channelId`);
+      elizaLogger.warn(
+        `[Message Handling] Cannot sync user ${entity?.id} without a valid channelId`
+      );
       return;
     }
 
@@ -1098,7 +1120,7 @@ const syncSingleUser = async (
           }
         : undefined;
 
-    logger.info(
+    elizaLogger.info(
       `[Message Handling] syncSingleUser - type: ${type}, isDM: ${type === ChannelType.DM}, worldMetadata: ${JSON.stringify(worldMetadata)}`
     );
 
@@ -1119,7 +1141,7 @@ const syncSingleUser = async (
     // Verify the world was created with proper metadata
     try {
       const createdWorld = await runtime.getWorld(worldId);
-      logger.info(
+      elizaLogger.info(
         `[Message Handling] Created world check - ID: ${worldId}, metadata: ${JSON.stringify(createdWorld?.metadata)}`
       );
 
@@ -1127,7 +1149,7 @@ const syncSingleUser = async (
       if (type === ChannelType.DM && createdWorld) {
         const existingSettings = await getWorldSettings(runtime, serverId);
         if (!existingSettings) {
-          logger.info(
+          elizaLogger.info(
             `[Message Handling] Initializing default server settings for DM world ${worldId}`
           );
 
@@ -1137,16 +1159,16 @@ const syncSingleUser = async (
           };
 
           await initializeOnboarding(runtime, createdWorld, onboardingConfig);
-          logger.info(`[Message Handling] Server settings initialized for world ${worldId}`);
+          elizaLogger.info(`[Message Handling] Server settings initialized for world ${worldId}`);
         }
       }
     } catch (error) {
-      logger.error(`[Message Handling] Failed to verify created world: ${error}`);
+      elizaLogger.error(`[Message Handling] Failed to verify created world: ${error}`);
     }
 
-    logger.success(`[Message Handling] Successfully synced user: ${entity?.id}`);
+    elizaLogger.success(`[Message Handling] Successfully synced user: ${entity?.id}`);
   } catch (error) {
-    logger.error(
+    elizaLogger.error(
       `[Message Handling] Error syncing user: ${error instanceof Error ? error.message : String(error)}`
     );
   }
@@ -1163,13 +1185,13 @@ const handleServerSync = async ({
   source,
   onComplete,
 }: WorldPayload) => {
-  logger.debug(`[Message Handling] Handling server sync event for server: ${world.name}`);
+  elizaLogger.debug(`[Message Handling] Handling server sync event for server: ${world.name}`);
   try {
     await runtime.ensureConnections(entities, rooms, source, world);
-    logger.debug(`Successfully synced standardized world structure for ${world.name}`);
+    elizaLogger.debug(`Successfully synced standardized world structure for ${world.name}`);
     onComplete?.();
   } catch (error) {
-    logger.error(
+    elizaLogger.error(
       `Error processing standardized server data: ${error instanceof Error ? error.message : String(error)}`
     );
   }
@@ -1198,7 +1220,7 @@ const controlMessageHandler = async ({
   source: string;
 }) => {
   try {
-    logger.debug(
+    elizaLogger.debug(
       `[controlMessageHandler] Processing control message: ${message.payload.action} for room ${message.roomId}`
     );
 
@@ -1225,17 +1247,21 @@ const controlMessageHandler = async ({
           },
         });
 
-        logger.debug(
+        elizaLogger.debug(
           `[controlMessageHandler] Control message ${message.payload.action} sent successfully`
         );
       } else {
-        logger.error('[controlMessageHandler] WebSocket service does not have sendMessage method');
+        elizaLogger.error(
+          '[controlMessageHandler] WebSocket service does not have sendMessage method'
+        );
       }
     } else {
-      logger.error('[controlMessageHandler] No WebSocket service found to send control message');
+      elizaLogger.error(
+        '[controlMessageHandler] No WebSocket service found to send control message'
+      );
     }
   } catch (error) {
-    logger.error(`[controlMessageHandler] Error processing control message: ${error}`);
+    elizaLogger.error(`[controlMessageHandler] Error processing control message: ${error}`);
   }
 };
 
@@ -1243,7 +1269,7 @@ export const events = {
   [EventType.MESSAGE_RECEIVED]: [
     async (payload: MessagePayload) => {
       if (!payload.callback) {
-        logger.error('No callback provided for message');
+        elizaLogger.error('No callback provided for message');
         return;
       }
       await messageReceivedHandler({
@@ -1258,7 +1284,7 @@ export const events = {
   [EventType.VOICE_MESSAGE_RECEIVED]: [
     async (payload: MessagePayload) => {
       if (!payload.callback) {
-        logger.error('No callback provided for voice message');
+        elizaLogger.error('No callback provided for voice message');
         return;
       }
       await messageReceivedHandler({
@@ -1287,7 +1313,7 @@ export const events = {
 
   [EventType.MESSAGE_SENT]: [
     async (payload: MessagePayload) => {
-      logger.debug(`[Message Handling] Message sent: ${payload.message.content.text}`);
+      elizaLogger.debug(`[Message Handling] Message sent: ${payload.message.content.text}`);
     },
   ],
 
@@ -1325,20 +1351,20 @@ export const events = {
 
   [EventType.ENTITY_JOINED]: [
     async (payload: EntityPayload) => {
-      logger.debug(
+      elizaLogger.debug(
         `[Message Handling] ENTITY_JOINED event received for entity ${payload.entityId}`
       );
 
       if (!payload.worldId) {
-        logger.error('[Message Handling] No worldId provided for entity joined');
+        elizaLogger.error('[Message Handling] No worldId provided for entity joined');
         return;
       }
       if (!payload.roomId) {
-        logger.error('[Message Handling] No roomId provided for entity joined');
+        elizaLogger.error('[Message Handling] No roomId provided for entity joined');
         return;
       }
       if (!payload.metadata?.type) {
-        logger.error('[Message Handling] No type provided for entity joined');
+        elizaLogger.error('[Message Handling] No type provided for entity joined');
         return;
       }
 
@@ -1366,16 +1392,18 @@ export const events = {
           };
           await payload.runtime.updateEntity(entity);
         }
-        logger.info(`[Message Handling] User ${payload.entityId} left world ${payload.worldId}`);
+        elizaLogger.info(
+          `[Message Handling] User ${payload.entityId} left world ${payload.worldId}`
+        );
       } catch (error: any) {
-        logger.error(`[Message Handling] Error handling user left: ${error.message}`);
+        elizaLogger.error(`[Message Handling] Error handling user left: ${error.message}`);
       }
     },
   ],
 
   [EventType.ACTION_STARTED]: [
     async (payload: ActionEventPayload) => {
-      logger.debug(
+      elizaLogger.debug(
         `[Message Handling] Action started: ${payload.actionName} (${payload.actionId})`
       );
     },
@@ -1384,7 +1412,7 @@ export const events = {
   [EventType.ACTION_COMPLETED]: [
     async (payload: ActionEventPayload) => {
       const status = payload.error ? `failed: ${payload.error.message}` : 'completed';
-      logger.debug(
+      elizaLogger.debug(
         `[Message Handling] Action ${status}: ${payload.actionName} (${payload.actionId})`
       );
     },
@@ -1392,7 +1420,7 @@ export const events = {
 
   [EventType.EVALUATOR_STARTED]: [
     async (payload: EvaluatorEventPayload) => {
-      logger.debug(
+      elizaLogger.debug(
         `[Message Handling] Evaluator started: ${payload.evaluatorName} (${payload.evaluatorId})`
       );
     },
@@ -1401,7 +1429,7 @@ export const events = {
   [EventType.EVALUATOR_COMPLETED]: [
     async (payload: EvaluatorEventPayload) => {
       const status = payload.error ? `failed: ${payload.error.message}` : 'completed';
-      logger.debug(
+      elizaLogger.debug(
         `[Message Handling] Evaluator ${status}: ${payload.evaluatorName} (${payload.evaluatorId})`
       );
     },

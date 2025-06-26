@@ -1,8 +1,10 @@
-import { logger, validateUuid, type UUID } from '@elizaos/core';
+import { logger, validateUuid, type UUID, EventType } from '@elizaos/core';
 import express from 'express';
-import internalMessageBus from '../../bus'; // Import the bus
+import internalMessageBus from '../../MessageBus'; // Import the bus
 import type { AgentServer } from '../../index';
 import type { MessageServiceStructure as MessageService } from '../../types';
+import { validateRequest, CommonSchemas } from '../shared/validation';
+import { rateLimitValidation } from '../../middleware/ValidationMiddleware';
 
 const DEFAULT_SERVER_ID = '00000000-0000-0000-0000-000000000000' as UUID; // Single default server
 
@@ -12,85 +14,171 @@ const DEFAULT_SERVER_ID = '00000000-0000-0000-0000-000000000000' as UUID; // Sin
 export function createMessagingCoreRouter(serverInstance: AgentServer): express.Router {
   const router = express.Router();
 
+  // Apply rate limiting to message submission endpoint
+  router.use('/submit', rateLimitValidation(60000, 50)); // 50 requests per minute
+
+  // Input validation schema for message submission
+  const messageSubmissionSchema = {
+    body: {
+      type: 'object' as const,
+      required: true,
+      properties: {
+        channel_id: CommonSchemas.UUID,
+        server_id: CommonSchemas.UUID,
+        author_id: CommonSchemas.UUID,
+        content: {
+          type: 'string' as const,
+          required: true,
+          maxLength: 10000,
+          minLength: 1,
+        },
+        source_type: {
+          type: 'string' as const,
+          required: true,
+          maxLength: 100,
+        },
+        raw_message: {
+          type: 'object' as const,
+          required: true,
+        },
+        in_reply_to_message_id: {
+          type: 'string' as const,
+          required: false,
+          pattern: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+        },
+        metadata: {
+          type: 'object' as const,
+          required: false,
+        },
+      },
+    },
+  };
+
   // Endpoint for AGENT REPLIES or direct submissions to the central bus FROM AGENTS/SYSTEM
-  (router as any).post('/submit', async (req: express.Request, res: express.Response) => {
-    const {
-      channel_id,
-      server_id, // This is the server_id
-      author_id, // This should be the agent's runtime.agentId or a dedicated central ID for the agent
-      content,
-      in_reply_to_message_id, // This is a root_message.id
-      source_type,
-      raw_message,
-      metadata, // Should include agent_name if author_id is agent's runtime.agentId
-    } = req.body;
+  (router as any).post(
+    '/submit',
+    validateRequest(messageSubmissionSchema),
+    async (req: express.Request, res: express.Response) => {
+      const {
+        channel_id,
+        server_id, // This is the server_id
+        author_id, // This should be the agent's runtime.agentId or a dedicated central ID for the agent
+        content,
+        in_reply_to_message_id, // This is a root_message.id
+        source_type,
+        raw_message,
+        metadata, // Should include agent_name if author_id is agent's runtime.agentId
+      } = req.body;
 
-    // Special handling for default server ID "0"
-    const isValidServerId = server_id === DEFAULT_SERVER_ID || validateUuid(server_id);
+      // Special handling for default server ID "0"
+      const isValidServerId = server_id === DEFAULT_SERVER_ID || validateUuid(server_id);
 
-    if (
-      !validateUuid(channel_id) ||
-      !validateUuid(author_id) ||
-      !content ||
-      !isValidServerId ||
-      !source_type ||
-      !raw_message
-    ) {
-      return res.status(400).json({
-        success: false,
-        error:
-          'Missing required fields: channel_id, server_id, author_id, content, source_type, raw_message',
-      });
-    }
-
-    // Validate in_reply_to_message_id only if it's provided
-    if (in_reply_to_message_id && !validateUuid(in_reply_to_message_id)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid in_reply_to_message_id format',
-      });
-    }
-
-    try {
-      const newRootMessageData = {
-        channelId: validateUuid(channel_id)!,
-        authorId: validateUuid(author_id)!,
-        content: content as string,
-        rawMessage: raw_message,
-        sourceType: source_type || 'agent_response',
-        inReplyToRootMessageId: in_reply_to_message_id
-          ? validateUuid(in_reply_to_message_id) || undefined
-          : undefined,
-        metadata,
-      };
-      // Use AgentServer's method to create the message in the DB
-      const createdMessage = await serverInstance.createMessage(newRootMessageData);
-
-      // Emit to SocketIO for real-time GUI updates
-      if (serverInstance.socketIO) {
-        serverInstance.socketIO.to(channel_id).emit('messageBroadcast', {
-          senderId: author_id, // This is the agent's ID
-          senderName: metadata?.agentName || 'Agent',
-          text: content,
-          roomId: channel_id, // For SocketIO, room is the central channel_id
-          serverId: server_id, // Client layer uses serverId
-          createdAt: new Date(createdMessage.createdAt).getTime(),
-          source: createdMessage.sourceType,
-          id: createdMessage.id, // Central message ID
-          thought: raw_message?.thought,
-          actions: raw_message?.actions,
-          attachments: metadata?.attachments,
+      if (
+        !validateUuid(channel_id) ||
+        !validateUuid(author_id) ||
+        !content ||
+        !isValidServerId ||
+        !source_type ||
+        !raw_message
+      ) {
+        return res.status(400).json({
+          success: false,
+          error:
+            'Missing required fields: channel_id, server_id, author_id, content, source_type, raw_message',
         });
       }
-      // NO broadcast to internalMessageBus here, this endpoint is for messages ALREADY PROCESSED by an agent
-      // or system messages that don't need further agent processing via the bus.
 
-      res.status(201).json({ success: true, data: createdMessage });
-    } catch (error) {
-      logger.error('[Messages Router /submit] Error submitting agent message:', error);
-      res.status(500).json({ success: false, error: 'Failed to submit agent message' });
+      // Validate in_reply_to_message_id only if it's provided
+      if (in_reply_to_message_id && !validateUuid(in_reply_to_message_id)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid in_reply_to_message_id format',
+        });
+      }
+
+      try {
+        const newRootMessageData = {
+          channelId: validateUuid(channel_id)!,
+          authorId: validateUuid(author_id)!,
+          content: content as string,
+          rawMessage: raw_message,
+          sourceType: source_type || 'agent_response',
+          inReplyToRootMessageId: in_reply_to_message_id
+            ? validateUuid(in_reply_to_message_id) || undefined
+            : undefined,
+          metadata,
+        };
+        // Use AgentServer's method to create the message in the DB
+        const createdMessage = await serverInstance.createMessage(newRootMessageData);
+
+        // Emit to SocketIO for real-time GUI updates
+        if (serverInstance.socketIO) {
+          serverInstance.socketIO.to(channel_id).emit('messageBroadcast', {
+            senderId: author_id, // This is the agent's ID
+            senderName: metadata?.agentName || 'Agent',
+            text: content,
+            roomId: channel_id, // For SocketIO, room is the central channel_id
+            serverId: server_id, // Client layer uses serverId
+            createdAt: new Date(createdMessage.createdAt).getTime(),
+            source: createdMessage.sourceType,
+            id: createdMessage.id, // Central message ID
+            thought: raw_message?.thought,
+            actions: raw_message?.actions,
+            attachments: metadata?.attachments,
+          });
+        }
+
+        // Emit MESSAGE_SENT event if the message was sent by an agent
+        if (source_type === 'agent_response' && validateUuid(author_id)) {
+          // Try to get the agent runtime to emit the event
+          const agentRuntime = (serverInstance as any).agents?.get(author_id as UUID);
+          if (agentRuntime) {
+            try {
+              const messagePayload = {
+                runtime: agentRuntime,
+                message: {
+                  id: createdMessage.id,
+                  entityId: validateUuid(author_id)!,
+                  agentId: validateUuid(author_id)!,
+                  roomId: validateUuid(channel_id)!,
+                  content: {
+                    text: content,
+                    thought: raw_message?.thought,
+                    actions: raw_message?.actions,
+                    ...raw_message,
+                  },
+                  createdAt: new Date(createdMessage.createdAt).getTime(),
+                },
+                source: source_type,
+              };
+
+              await agentRuntime.emitEvent(EventType.MESSAGE_SENT, messagePayload);
+              logger.info(
+                `[Messages Router /submit] Emitted MESSAGE_SENT event for agent ${author_id}`
+              );
+            } catch (eventError) {
+              logger.error(
+                '[Messages Router /submit] Error emitting MESSAGE_SENT event:',
+                eventError
+              );
+            }
+          } else {
+            logger.debug(
+              `[Messages Router /submit] Agent runtime not found for author_id ${author_id}, skipping MESSAGE_SENT event`
+            );
+          }
+        }
+
+        // NO broadcast to internalMessageBus here, this endpoint is for messages ALREADY PROCESSED by an agent
+        // or system messages that don't need further agent processing via the bus.
+
+        res.status(201).json({ success: true, data: createdMessage });
+      } catch (error) {
+        logger.error('[Messages Router /submit] Error submitting agent message:', error);
+        res.status(500).json({ success: false, error: 'Failed to submit agent message' });
+      }
     }
-  });
+  );
 
   // Endpoint to notify that a message is complete (e.g., agent finished responding)
   (router as any).post('/complete', async (req: express.Request, res: express.Response) => {

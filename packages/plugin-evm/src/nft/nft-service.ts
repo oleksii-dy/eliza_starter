@@ -4,20 +4,15 @@ import {
   type Address,
   type PublicClient,
   type Hex,
-  parseAbiItem,
-  decodeEventLog,
-  formatUnits,
-  parseUnits,
   type Chain,
 } from 'viem';
 import { mainnet, polygon, arbitrum, optimism, base } from 'viem/chains';
 import { elizaLogger as logger } from '@elizaos/core';
 import axios from 'axios';
-import { IAgentRuntime } from '@elizaos/core';
 import type { NFTHolding } from '../core/interfaces/IWalletService';
 
 // NFT Marketplace contracts
-const MARKETPLACES = {
+const _MARKETPLACES = {
   opensea: {
     1: {
       // Mainnet
@@ -116,7 +111,7 @@ const ERC721_ABI = [
   },
 ] as const;
 
-const ERC1155_ABI = [
+const _ERC1155_ABI = [
   {
     inputs: [
       { name: 'account', type: 'address' },
@@ -215,21 +210,21 @@ export class NFTService {
       createPublicClient({
         chain: mainnet,
         transport: http(process.env.ETHEREUM_RPC_URL || 'https://eth.llamarpc.com'),
-      }),
+      })
     );
     this.publicClients.set(
       137,
       createPublicClient({
         chain: polygon,
         transport: http(process.env.POLYGON_RPC_URL || 'https://polygon.llamarpc.com'),
-      }),
+      })
     );
     this.publicClients.set(
       42161,
       createPublicClient({
         chain: arbitrum,
         transport: http(process.env.ARBITRUM_RPC_URL || 'https://arbitrum.llamarpc.com'),
-      }),
+      })
     );
 
     // API keys
@@ -307,13 +302,13 @@ export class NFTService {
           owner: walletAddress,
           collection: nft.collection
             ? {
-              name: nft.contract.name,
-              slug:
+                name: nft.contract.name,
+                slug:
                   nft.contract.collection_slug ||
                   nft.contract.name.toLowerCase().replace(/\s+/g, '-'),
-              imageUrl: nft.contract.image_url,
-              floorPrice: nft.floor_price,
-            }
+                imageUrl: nft.contract.image_url,
+                floorPrice: nft.floor_price,
+              }
             : undefined,
         };
         holdings.push(holding);
@@ -325,8 +320,8 @@ export class NFTService {
       }
 
       return holdings;
-    } catch (error) {
-      logger.error('Error fetching NFTs from Alchemy:', error);
+    } catch (_error) {
+      logger.error('Error fetching NFTs from Alchemy:', _error);
       return [];
     }
   }
@@ -361,7 +356,7 @@ export class NFTService {
             format: 'decimal',
             media_items: true,
           },
-        },
+        }
       );
 
       const holdings: NFTHolding[] = [];
@@ -378,11 +373,11 @@ export class NFTService {
           owner: walletAddress,
           collection: nft.collection
             ? {
-              name: nft.collection.name,
-              slug: nft.collection.slug,
-              imageUrl: nft.collection.image_url,
-              floorPrice: nft.collection.floor_price_usd,
-            }
+                name: nft.collection.name,
+                slug: nft.collection.slug,
+                imageUrl: nft.collection.image_url,
+                floorPrice: nft.collection.floor_price_usd,
+              }
             : undefined,
         };
         holdings.push(holding);
@@ -422,7 +417,7 @@ export class NFTService {
           // Would need to enumerate tokens owned
           // This is complex without indexed data
         }
-      } catch (error) {
+      } catch (_error) {
         // Skip if not ERC721
         continue;
       }
@@ -434,7 +429,7 @@ export class NFTService {
   async getNFTMetadata(
     contractAddress: Address,
     tokenId: string,
-    chainId: number,
+    chainId: number
   ): Promise<NFTMetadata | null> {
     const cacheKey = `${chainId}-${contractAddress}-${tokenId}`;
     const cached = this.metadataCache.get(cacheKey);
@@ -497,7 +492,7 @@ export class NFTService {
 
   async getCollectionStats(
     contractAddress: Address,
-    chainId: number,
+    chainId: number
   ): Promise<NFTCollection | null> {
     const cacheKey = `${chainId}-${contractAddress}`;
     const cached = this.collectionCache.get(cacheKey);
@@ -544,15 +539,15 @@ export class NFTService {
         symbol: symbol as string,
         chainId,
       };
-    } catch (error) {
-      logger.error('Error fetching collection stats:', error);
+    } catch (_error) {
+      logger.error('Error fetching collection stats:', _error);
       return null;
     }
   }
 
   private async getOpenSeaCollectionStats(
     contractAddress: Address,
-    chainId: number,
+    chainId: number
   ): Promise<NFTCollection | null> {
     try {
       const chainName = chainId === 1 ? 'ethereum' : chainId === 137 ? 'matic' : null;
@@ -566,7 +561,7 @@ export class NFTService {
           headers: {
             'X-API-KEY': process.env.OPENSEA_API_KEY,
           },
-        },
+        }
       );
 
       const data = response.data;
@@ -591,10 +586,10 @@ export class NFTService {
     }
   }
 
-  async getActivityHistory(
-    contractAddress: Address,
-    tokenId?: string,
-    chainId?: number,
+  getActivityHistory(
+    _contractAddress: Address,
+    _tokenId?: string,
+    _chainId?: number
   ): Promise<NFTActivity[]> {
     const activities: NFTActivity[] = [];
 
@@ -603,35 +598,35 @@ export class NFTService {
     // 2. OpenSea activity API
     // 3. On-chain event logs
 
-    return activities;
+    return Promise.resolve(activities);
   }
 
-  async transferNFT(
-    contractAddress: Address,
-    tokenId: string,
-    from: Address,
-    to: Address,
-    chainId: number,
+  transferNFT(
+    _contractAddress: Address,
+    _tokenId: string,
+    _from: Address,
+    _to: Address,
+    _chainId: number
   ): Promise<Hex> {
     // This would build the transfer transaction
     // In production, would be executed by wallet service
 
-    logger.info(`Preparing NFT transfer: ${contractAddress} #${tokenId} from ${from} to ${to}`);
-    return `0x${'0'.repeat(64)}` as Hex;
+    logger.info(`Preparing NFT transfer: ${_contractAddress} #${_tokenId} from ${_from} to ${_to}`);
+    return Promise.resolve(`0x${'0'.repeat(64)}` as Hex);
   }
 
-  async listNFT(params: NFTListingParams): Promise<Hex> {
+  listNFT(_params: NFTListingParams): Promise<Hex> {
     // This would create a listing on the specified marketplace
     // Each marketplace has different interfaces
 
-    logger.info(`Listing NFT on ${params.marketplace}:`, params);
-    return `0x${'0'.repeat(64)}` as Hex;
+    logger.info(`Listing NFT on ${_params.marketplace}:`, _params);
+    return Promise.resolve(`0x${'0'.repeat(64)}` as Hex);
   }
 
   async estimateNFTValue(
     contractAddress: Address,
     tokenId: string,
-    chainId: number,
+    chainId: number
   ): Promise<{
     estimatedValue: number;
     floorPrice: number;
@@ -690,7 +685,7 @@ export class NFTService {
           const metadata = await this.getNFTMetadata(
             holding.contractAddress,
             holding.tokenId,
-            holding.chain.id,
+            holding.chain.id
           );
           if (metadata) {
             holding.name = metadata.name;
@@ -706,7 +701,7 @@ export class NFTService {
           const valuation = await this.estimateNFTValue(
             holding.contractAddress,
             holding.tokenId,
-            holding.chain.id,
+            holding.chain.id
           );
 
           // Store valuation in collection or attributes if needed
@@ -715,22 +710,22 @@ export class NFTService {
           }
           (holding.attributes as any).estimatedValue = valuation.estimatedValue;
         }
-      } catch (error) {
+      } catch (_error) {
         // Don't fail entire enrichment for one NFT
-        logger.error(`Error enriching NFT ${holding.contractAddress}:`, error);
+        logger.error(`Error enriching NFT ${holding.contractAddress}:`, _error);
       }
     });
 
     await Promise.all(enrichmentPromises);
   }
 
-  async searchCollections(query: string, chainId?: number): Promise<NFTCollection[]> {
+  searchCollections(_query: string, _chainId?: number): Promise<NFTCollection[]> {
     // Would implement search across:
     // 1. OpenSea collections API
     // 2. Alchemy collections API
     // 3. Local database of known collections
 
-    return [];
+    return Promise.resolve([]);
   }
 
   clearCache(): void {

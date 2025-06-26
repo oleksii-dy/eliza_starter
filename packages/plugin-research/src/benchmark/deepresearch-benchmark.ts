@@ -39,8 +39,10 @@ export class DeepResearchBenchmark {
 
   constructor(config: BenchmarkConfig = {}) {
     this.pythonPath = config.pythonPath || 'python3';
-    this.benchmarkPath = config.benchmarkPath || path.join(process.cwd(), 'deep_research_bench');
-    this.outputDir = config.outputDir || path.join(this.benchmarkPath, 'results');
+    this.benchmarkPath =
+      config.benchmarkPath || path.join(process.cwd(), 'deep_research_bench');
+    this.outputDir =
+      config.outputDir || path.join(this.benchmarkPath, 'results');
     this.maxRetries = config.maxRetries || 3;
   }
 
@@ -50,7 +52,9 @@ export class DeepResearchBenchmark {
   async checkSetup(): Promise<BenchmarkSetupResult> {
     try {
       // Check Python availability
-      const { stdout: pythonVersion } = await execAsync(`${this.pythonPath} --version`);
+      const { stdout: pythonVersion } = await execAsync(
+        `${this.pythonPath} --version`
+      );
       logger.info(`Python version: ${pythonVersion.trim()}`);
 
       // Check if benchmark directory exists
@@ -64,7 +68,10 @@ export class DeepResearchBenchmark {
       }
 
       // Check if main script exists
-      const mainScript = path.join(this.benchmarkPath, 'deepresearch_bench_race.py');
+      const mainScript = path.join(
+        this.benchmarkPath,
+        'deepresearch_bench_race.py'
+      );
       try {
         await fs.access(mainScript);
       } catch {
@@ -106,7 +113,7 @@ export class DeepResearchBenchmark {
     try {
       logger.info('Installing DeepResearch benchmark dependencies...');
 
-      const { stdout, stderr } = await execAsync(
+      const { stdout: _stdout, stderr } = await execAsync(
         `cd "${this.benchmarkPath}" && pip install -r requirements.txt`,
         { timeout: 180000 } // 3 minutes
       );
@@ -127,7 +134,9 @@ export class DeepResearchBenchmark {
   /**
    * Convert a ResearchProject to DeepResearch benchmark format
    */
-  private convertProjectToBenchmarkFormat(project: ResearchProject): DeepResearchBenchResult {
+  private convertProjectToBenchmarkFormat(
+    project: ResearchProject
+  ): DeepResearchBenchResult {
     if (!project.report) {
       throw new Error('Project must have a report to be benchmarked');
     }
@@ -185,7 +194,12 @@ export class DeepResearchBenchmark {
     const benchmarkData = this.convertProjectToBenchmarkFormat(project);
 
     // Create model directory
-    const modelDir = path.join(this.benchmarkPath, 'data', 'test_data', 'raw_data');
+    const modelDir = path.join(
+      this.benchmarkPath,
+      'data',
+      'test_data',
+      'raw_data'
+    );
     await fs.mkdir(modelDir, { recursive: true });
 
     // Save as JSONL file (one line per project)
@@ -220,7 +234,7 @@ export class DeepResearchBenchmark {
 
       const command = `cd "${this.benchmarkPath}" && ${this.pythonPath} deepresearch_bench_race.py ${modelName} --limit 1 --only_en`;
 
-      const { stdout, stderr } = await execAsync(command, {
+      const { stdout: _stdout, stderr } = await execAsync(command, {
         timeout: 300000, // 5 minutes
         maxBuffer: 1024 * 1024 * 10, // 10MB buffer
       });
@@ -292,7 +306,9 @@ export class DeepResearchBenchmark {
       ];
       for (const field of requiredFields) {
         if (results[field] === undefined) {
-          throw new Error(`Missing required field in benchmark results: ${field}`);
+          throw new Error(
+            `Missing required field in benchmark results: ${field}`
+          );
         }
       }
 
@@ -335,7 +351,7 @@ export class DeepResearchBenchmark {
   /**
    * Get benchmark statistics for a model
    */
-  async getBenchmarkStats(modelName: string): Promise<{
+  async getBenchmarkStats(_modelName: string): Promise<{
     averageScore: number;
     totalEvaluations: number;
     scoreBreakdown: {
@@ -350,7 +366,9 @@ export class DeepResearchBenchmark {
       const content = await fs.readFile(rawResultsFile, 'utf-8');
       const lines = content.trim().split('\n');
 
-      const scores = lines.map((line) => JSON.parse(line)).filter((result) => !result.error); // Filter out failed evaluations
+      const scores = lines
+        .map((line) => JSON.parse(line))
+        .filter((result) => !result.error); // Filter out failed evaluations
 
       if (scores.length === 0) {
         throw new Error('No successful evaluations found');
@@ -358,15 +376,21 @@ export class DeepResearchBenchmark {
 
       const avgScores = {
         comprehensiveness:
-          scores.reduce((sum, s) => sum + (s.comprehensiveness || 0), 0) / scores.length,
-        insight: scores.reduce((sum, s) => sum + (s.insight || 0), 0) / scores.length,
+          scores.reduce((sum, s) => sum + (s.comprehensiveness || 0), 0) /
+          scores.length,
+        insight:
+          scores.reduce((sum, s) => sum + (s.insight || 0), 0) / scores.length,
         instructionFollowing:
-          scores.reduce((sum, s) => sum + (s.instruction_following || 0), 0) / scores.length,
-        readability: scores.reduce((sum, s) => sum + (s.readability || 0), 0) / scores.length,
+          scores.reduce((sum, s) => sum + (s.instruction_following || 0), 0) /
+          scores.length,
+        readability:
+          scores.reduce((sum, s) => sum + (s.readability || 0), 0) /
+          scores.length,
       };
 
       const averageScore =
-        scores.reduce((sum, s) => sum + (s.overall_score || 0), 0) / scores.length;
+        scores.reduce((sum, s) => sum + (s.overall_score || 0), 0) /
+        scores.length;
 
       return {
         averageScore,

@@ -1,17 +1,17 @@
-import React from 'react';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Settings, Sun, User, Volume2, X } from 'lucide-react';
 
 import { hasRole } from '../../core/utils';
-import { InputDropdown, InputNumber, InputRange, InputSwitch, InputText } from './Inputs';
+import { InputDropdown, InputRange, InputSwitch, InputText } from './Inputs';
 import { usePane } from './usePane';
 
 export function SettingsPane({ world, player, close }) {
   const paneRef = useRef<HTMLDivElement | null>(null);
   const headRef = useRef<HTMLDivElement | null>(null);
   usePane('settings', paneRef, headRef);
-  const [tab, setTab] = useState('general');
-  const canBuild = useMemo(() => {
+  const [tab, _setTab] = useState('general');
+  const _canBuild = useMemo(() => {
     return hasRole(player.data.roles, 'admin', 'builder');
   }, [player]);
   return (
@@ -118,7 +118,7 @@ const shadowOptions = [
   { label: 'Med', value: 'med' },
   { label: 'High', value: 'high' },
 ];
-const onOffOptions = [
+const _onOffOptions = [
   { label: 'Off', value: false },
   { label: 'On', value: true },
 ];
@@ -310,6 +310,6 @@ function GeneralSettings({ world, player }) {
   );
 }
 
-function WorldSettings({ world }) {
+function WorldSettings({ world: _world }) {
   return <div>World settings coming soon...</div>;
 }

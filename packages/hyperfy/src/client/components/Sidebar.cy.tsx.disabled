@@ -1,0 +1,100 @@
+/// <reference types="cypress" />
+/// <reference types="@cypress/react" />
+
+import React from 'react';
+import { Sidebar } from './Sidebar';
+
+describe('Sidebar Component', () => {
+  const createMockWorld = () => ({
+    ui: { 
+      active: true,
+      pane: 'apps',
+      togglePane: cy.stub(),
+      app: null
+    },
+    livekit: {
+      status: { available: false, connected: false },
+      on: cy.stub(),
+      off: cy.stub()
+    },
+    xr: {
+      supportsVR: false
+    },
+    entities: {
+      player: {}
+    },
+    emit: cy.stub(),
+    events: {
+      emit: cy.stub(),
+      on: cy.stub(),
+      off: cy.stub()
+    }
+  });
+
+  it('renders correctly', () => {
+    const mockWorld = createMockWorld();
+    const mockUI = mockWorld.ui;
+
+    cy.mount(
+      <Sidebar 
+        world={mockWorld as any}
+        ui={mockUI as any}
+      />
+    );
+
+    // Check sidebar sections are visible
+    cy.get('.sidebar').should('be.visible');
+    cy.get('.sidebar-sections').should('exist');
+  });
+
+  it('shows main section buttons', () => {
+    const mockWorld = createMockWorld();
+    mockWorld.ui.pane = 'prefs';
+
+    cy.mount(
+      <Sidebar 
+        world={mockWorld as any}
+        ui={mockWorld.ui as any}
+      />
+    );
+
+    // Check main section has menu button
+    cy.get('.sidebar-section').first().within(() => {
+      cy.get('[data-testid="btn"]').should('exist');
+    });
+  });
+
+  it('toggles panes when buttons are clicked', () => {
+    const mockWorld = createMockWorld();
+    
+    cy.mount(
+      <Sidebar 
+        world={mockWorld as any}
+        ui={mockWorld.ui as any}
+      />
+    );
+
+    // Click world button (Earth icon)
+    cy.get('.sidebar-section').within(() => {
+      cy.get('div').contains('svg').parent().click();
+    });
+    
+    // Check togglePane was called
+    cy.wrap(mockWorld.ui.togglePane).should('have.been.called');
+  });
+
+  it('shows builder sections when user has permissions', () => {
+    const mockWorld = createMockWorld();
+    // Mock permissions would need to be set up properly
+    
+    cy.mount(
+      <Sidebar 
+        world={mockWorld as any}
+        ui={mockWorld.ui as any}
+      />
+    );
+
+    // Should have multiple sections for builders
+    cy.get('.sidebar-section').should('have.length.at.least', 1);
+  });
+}); 

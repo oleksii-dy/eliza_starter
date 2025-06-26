@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -9,7 +10,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const processPolyfillPlugin = () => ({
   name: 'process-polyfill',
   transform(code: string, id: string) {
-    if (id.includes('node_modules') || !id.includes('/src/')) {
+    if (id.includes('node_modules') || !id.includes('/src/') || id.includes('.html')) {
+      return null;
+    }
+    // Only inject into TypeScript/JavaScript files, not HTML
+    if (!id.endsWith('.ts') && !id.endsWith('.tsx') && !id.endsWith('.js') && !id.endsWith('.jsx')) {
       return null;
     }
     // Inject process polyfill at the top of each module
@@ -29,9 +34,34 @@ ${code}`,
   }
 });
 
+// Custom plugin to handle particles path injection
+const particlesPathPlugin = () => ({
+  name: 'particles-path',
+  writeBundle(options: any, bundle: any) {
+    // Find the particles entry file
+    const particlesFile = Object.keys(bundle).find(key => 
+      key.includes('particles') && key.endsWith('.js')
+    );
+    
+    if (particlesFile) {
+      // Update the HTML file to use the correct particles path
+      const htmlPath = path.join(options.dir, 'index.html');
+      
+      if (fs.existsSync(htmlPath)) {
+        let htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+        htmlContent = htmlContent.replace(
+          'window.PARTICLES_PATH = \'/client-assets/particles.js\';',
+          `window.PARTICLES_PATH = '/${particlesFile}';`
+        );
+        fs.writeFileSync(htmlPath, htmlContent);
+      }
+    }
+  }
+});
+
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), processPolyfillPlugin()],
+  plugins: [react(), processPolyfillPlugin(), particlesPathPlugin()],
 
   // Define which env variables are exposed to client
   envPrefix: 'PUBLIC_', // Only expose env vars starting with PUBLIC_
@@ -46,7 +76,16 @@ export default defineConfig({
     assetsDir: 'client-assets', // Use a different directory to avoid conflicts with world assets
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'src/client/index.html')
+        main: path.resolve(__dirname, 'src/client/index.html'),
+        particles: path.resolve(__dirname, 'src/client/particles.ts')
+      },
+      output: {
+        entryFileNames: (chunkInfo) => {
+          if (chunkInfo.name === 'particles') {
+            return 'client-assets/particles-[hash].js';
+          }
+          return 'client-assets/[name]-[hash].js';
+        }
       }
     }
   },
@@ -70,10 +109,14 @@ export default defineConfig({
   },
 
   server: {
-    port: Number(process.env.VITE_PORT) || 3001,
+    port: Number(process.env.VITE_PORT) || 4445,
     open: false,
     host: true,
     // These will be configured in the dev script
+  },
+
+  worker: {
+    format: 'es'
   },
 
   resolve: {
@@ -83,10 +126,12 @@ export default defineConfig({
       '@core': path.resolve('./src/core'),
       '@types': path.resolve('./src/types'),
     },
+    dedupe: ['three', 'react', 'react-dom']
   },
 
   optimizeDeps: {
-    include: ['three', 'react', 'react-dom'],
+    include: ['react', 'react-dom'],
+    exclude: ['three'],
     esbuildOptions: {
       target: 'esnext' // Support top-level await
     }

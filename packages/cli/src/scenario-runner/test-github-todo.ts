@@ -11,7 +11,7 @@ import {
 import githubPlugin from '@elizaos/plugin-github';
 import messageHandlingPlugin from '@elizaos/plugin-message-handling';
 import TodoPlugin from '@elizaos/plugin-todo';
-import { AgentServer } from '@elizaos/server';
+import AgentServer from '@elizaos/server';
 import chalk from 'chalk';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -114,7 +114,7 @@ async function runGitHubTodoTest() {
     const character = createTestCharacter();
 
     // Dynamically import SQL plugin to avoid early schema loading
-    const sqlModule = await import('@elizaos/plugin-sql');
+    const sqlModule = (await import('@elizaos/plugin-sql')) as any;
     const sqlPlugin = sqlModule.plugin;
 
     // Create the runtime with plugins

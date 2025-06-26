@@ -6,7 +6,7 @@ export const contactsProvider: Provider = {
   description: 'Provides contact information from the rolodex',
   get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
     try {
-      const rolodexService = runtime.getService('rolodex') as RolodexService;
+      const rolodexService = runtime.getService<RolodexService>('rolodex');
       if (!rolodexService) {
         logger.warn('[ContactsProvider] RolodexService not available');
         return { text: '' };
@@ -39,7 +39,9 @@ export const contactsProvider: Provider = {
       const grouped = contactDetails.reduce(
         (acc, contact) => {
           const type = contact.type;
-          if (!acc[type]) {acc[type] = [];}
+          if (!acc[type]) {
+            acc[type] = [];
+          }
           acc[type].push(contact);
           return acc;
         },

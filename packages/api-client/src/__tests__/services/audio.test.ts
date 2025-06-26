@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
-import { AudioService } from '../../services/audio';
+import { AudioService } from '../../services/AudioService';
 import { ApiClientConfig } from '../../types/base';
 import { UUID } from '@elizaos/core';
 

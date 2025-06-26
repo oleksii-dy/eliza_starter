@@ -12,8 +12,9 @@ import type {
   ComponentDependency,
   ValidationResult,
   ComponentValidationContext,
-} from '../types/validation.js';
-import { elizaLogger } from '../logger.js';
+} from '../types/validation';
+import { ValidationError } from '../errors/index';
+import { elizaLogger } from '../logger';
 
 /**
  * Configuration Manager for Plugin System
@@ -440,18 +441,20 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
    * Validate component dependencies
    */
   validateComponentDependencies(context: ComponentValidationContext): ValidationResult {
-    const errors: string[] = [];
+    const errors: ValidationError[] = [];
     const warnings: string[] = [];
 
     // Check if all dependencies are enabled
-    for (const dependency of context.dependencies) {
+    for (const dependency of context.dependencies || []) {
       const pluginName = dependency.pluginName || context.pluginName;
-      const dependentComponents = context.enabledComponents.get(pluginName);
+      const dependentComponents = context.enabledComponents?.get?.(pluginName);
 
       if (!dependentComponents) {
         if (!dependency.optional) {
           errors.push(
-            `Required plugin dependency "${dependency.pluginName || 'unknown'}" is not available for ${context.componentType} "${context.componentName}"`
+            new ValidationError(
+              `Required plugin dependency "${dependency.pluginName || 'unknown'}" is not available for ${context.componentType} "${context.componentName}"`
+            )
           );
         } else {
           warnings.push(
@@ -466,7 +469,9 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
       if (!dependentComponents.has(componentKey)) {
         if (!dependency.optional) {
           errors.push(
-            `Required component dependency "${dependency.pluginName || 'current'}.${dependency.name}" (${dependency.type}) is not enabled for ${context.componentType} "${context.componentName}"`
+            new ValidationError(
+              `Required component dependency "${dependency.pluginName || 'current'}.${dependency.name}" (${dependency.type}) is not enabled for ${context.componentType} "${context.componentName}"`
+            )
           );
         } else {
           warnings.push(
@@ -499,7 +504,7 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
     if (!pluginConfig) {
       return {
         valid: false,
-        errors: [`Plugin ${pluginName} not found`],
+        errors: [new ValidationError(`Plugin ${pluginName} not found`)],
         warnings: [],
       };
     }
@@ -519,7 +524,9 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
     if (!componentExists) {
       return {
         valid: false,
-        errors: [`Component ${componentName} not found in plugin ${pluginName}`],
+        errors: [
+          new ValidationError(`Component ${componentName} not found in plugin ${pluginName}`),
+        ],
         warnings: [],
       };
     }
@@ -545,7 +552,7 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
       }
 
       // Log warnings if any
-      if (validationResult.warnings.length > 0) {
+      if (validationResult.warnings && validationResult.warnings.length > 0) {
         this.logger.warn(
           `Enabling ${componentType} "${componentName}" in plugin "${pluginName}" with warnings: ${validationResult.warnings.join(', ')}`
         );

@@ -86,7 +86,7 @@ export function isAllowedCommand(command: string): boolean {
  * Sanitizes environment variables to prevent injection
  */
 export function sanitizeEnv(env: Record<string, string>): Record<string, string> {
-  const sanitized: Record<string, string> = {};
+  const sanitized: Record<string, string> = { /* empty */ };
 
   for (const [key, value] of Object.entries(env)) {
     // Only allow alphanumeric keys with underscores
@@ -109,7 +109,7 @@ export function sanitizeEnv(env: Record<string, string>): Record<string, string>
 export function createSafeCommand(
   command: string,
   args: string[],
-  options?: { env?: Record<string, string> }
+  _options?: { env?: Record<string, string> }
 ): { command: string; args: string[]; env?: Record<string, string> } | null {
   // Validate command
   if (!isAllowedCommand(command)) {
@@ -125,7 +125,7 @@ export function createSafeCommand(
   }
 
   // Sanitize environment if provided
-  const sanitizedEnv = options?.env ? sanitizeEnv(options.env) : undefined;
+  const sanitizedEnv = _options?.env ? sanitizeEnv(_options.env) : undefined;
 
   return {
     command,

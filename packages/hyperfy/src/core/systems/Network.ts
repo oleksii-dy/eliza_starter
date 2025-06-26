@@ -125,7 +125,7 @@ export class Network extends System {
   }
 
   // Update
-  override update(delta: number): void {
+  override update(_delta: number): void {
     // Process incoming messages
     this.processIncomingMessages();
 

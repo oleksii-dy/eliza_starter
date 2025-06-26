@@ -7,17 +7,17 @@ import type { TrustProfile } from '../../types/trust';
 const createMockRuntime = (): IAgentRuntime =>
   ({
     agentId: 'test-agent' as UUID,
-    getService: mock()
-  } as any);
+    getService: mock(),
+  }) as any;
 
 const createMockMemory = (text: string, entityId: UUID): Memory =>
   ({
     entityId,
     content: {
-      text
+      text,
     },
-    roomId: 'room-1' as UUID
-  } as Memory);
+    roomId: 'room-1' as UUID,
+  }) as Memory;
 
 const mockTrustProfile: TrustProfile = {
   entityId: 'entity-1' as UUID,
@@ -29,7 +29,7 @@ const mockTrustProfile: TrustProfile = {
     competence: 75,
     integrity: 70,
     benevolence: 78,
-    transparency: 72
+    transparency: 72,
   },
   evidence: [],
   lastCalculated: Date.now(),
@@ -37,9 +37,9 @@ const mockTrustProfile: TrustProfile = {
   trend: {
     direction: 'stable',
     changeRate: 0,
-    lastChangeAt: Date.now()
+    lastChangeAt: Date.now(),
   },
-  interactionCount: 25
+  interactionCount: 25,
 };
 
 describe('trustProfileProvider', () => {
@@ -54,11 +54,13 @@ describe('trustProfileProvider', () => {
       getRecentInteractions: mock().mockResolvedValue([
         { impact: 5, type: 'HELPFUL_ACTION' },
         { impact: -2, type: 'MINOR_VIOLATION' },
-        { impact: 3, type: 'COMMUNITY_CONTRIBUTION' }
-      ])
+        { impact: 3, type: 'COMMUNITY_CONTRIBUTION' },
+      ]),
     };
-    (runtime.getService as unknown as Mock).mockImplementation((name: string) => {
-      if (name === 'trust-engine') {return trustEngine;}
+    (runtime.getService as unknown as Mock<any>).mockImplementation((name: string) => {
+      if (name === 'trust-engine') {
+        return trustEngine;
+      }
       return null;
     });
   });
@@ -68,7 +70,7 @@ describe('trustProfileProvider', () => {
     const state = {
       values: {},
       data: {},
-      text: ''
+      text: '',
     } as State;
 
     const result = await trustProfileProvider.get(runtime, memory, state);
@@ -83,7 +85,7 @@ describe('trustProfileProvider', () => {
       trustTrend: 'stable',
       interactionCount: 25,
       recentPositiveActions: 2,
-      recentNegativeActions: 1
+      recentNegativeActions: 1,
     });
   });
 
@@ -93,20 +95,20 @@ describe('trustProfileProvider', () => {
       { score: 65, level: 'good trust' },
       { score: 45, level: 'moderate trust' },
       { score: 25, level: 'low trust' },
-      { score: 10, level: 'very low trust' }
+      { score: 10, level: 'very low trust' },
     ];
 
     for (const { score, level } of testCases) {
       trustEngine.evaluateTrust.mockResolvedValue({
         ...mockTrustProfile,
-        overallTrust: score
+        overallTrust: score,
       });
 
       const memory = createMockMemory('test', testEntityId);
       const state = {
         values: {},
         data: {},
-        text: ''
+        text: '',
       } as State;
 
       const result = await trustProfileProvider.get(runtime, memory, state);
@@ -116,13 +118,13 @@ describe('trustProfileProvider', () => {
   });
 
   it('should handle missing trust engine', async () => {
-    (runtime.getService as unknown as Mock).mockReturnValue(null);
+    (runtime.getService as unknown as Mock<any>).mockReturnValue(null);
 
     const memory = createMockMemory('test', testEntityId);
     const state = {
       values: {},
       data: {},
-      text: ''
+      text: '',
     } as State;
 
     const result = await trustProfileProvider.get(runtime, memory, state);
@@ -137,7 +139,7 @@ describe('trustProfileProvider', () => {
     const state = {
       values: {},
       data: {},
-      text: ''
+      text: '',
     } as State;
 
     const result = await trustProfileProvider.get(runtime, memory, state);

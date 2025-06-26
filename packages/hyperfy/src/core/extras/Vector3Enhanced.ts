@@ -1,8 +1,8 @@
-import { Quaternion, MathUtils } from 'three';
+import * as THREE_ORIGINAL from 'three';
 
 /**
- * This is an enhanced version of THREE.Vector3 to add the _onChange function
- * to match THREE.Quaternion
+ * This is an enhanced version of Vector3 to add the _onChange function
+ * to match Quaternion
  *
  * Current version is from THREE v167
  *
@@ -13,23 +13,23 @@ import { Quaternion, MathUtils } from 'three';
 declare const PHYSX: any;
 
 interface Euler {
-	_x: number;
-	_y: number;
-	_z: number;
-	_order?: string;
+  _x: number
+  _y: number
+  _z: number
+  _order?: string
 }
 
 interface Camera {
-	matrixWorldInverse: { elements: number[] };
-	projectionMatrix: { elements: number[] };
-	projectionMatrixInverse: { elements: number[] };
-	matrixWorld: { elements: number[] };
+  matrixWorldInverse: { elements: number[] }
+  projectionMatrix: { elements: number[] }
+  projectionMatrixInverse: { elements: number[] }
+  matrixWorld: { elements: number[] }
 }
 
 interface BufferAttribute {
-	getX(index: number): number;
-	getY(index: number): number;
-	getZ(index: number): number;
+  getX(index: number): number
+  getY(index: number): number
+  getZ(index: number): number
 }
 
 let _vector: Vector3Enhanced | null = null;
@@ -75,7 +75,9 @@ export class Vector3Enhanced {
   }
 
   set(x: number, y: number, z?: number): this {
-    if (z === undefined) {z = this._z;}
+    if (z === undefined) {
+      z = this._z;
+    }
 
     this._x = x;
     this._y = y;
@@ -235,15 +237,17 @@ export class Vector3Enhanced {
   }
 
   applyEuler(euler: Euler): this {
-    return this.applyQuaternion(new Quaternion().setFromEuler(euler as any));
+    return this.applyQuaternion(new (THREE_ORIGINAL as any).Quaternion().setFromEuler(euler as any));
   }
 
   applyAxisAngle(axis: { x: number; y: number; z: number }, angle: number): this {
-    return this.applyQuaternion(new Quaternion().setFromAxisAngle(axis, angle));
+    return this.applyQuaternion(new (THREE_ORIGINAL as any).Quaternion().setFromAxisAngle(axis, angle));
   }
 
   applyMatrix3(m: { elements: number[] }): this {
-    const x = this._x, y = this._y, z = this._z;
+    const x = this._x,
+      y = this._y,
+      z = this._z;
     const e = m.elements;
 
     this._x = e[0]! * x + e[3]! * y + e[6]! * z;
@@ -260,7 +264,9 @@ export class Vector3Enhanced {
   }
 
   applyMatrix4(m: { elements: number[] }): this {
-    const x = this._x, y = this._y, z = this._z;
+    const x = this._x,
+      y = this._y,
+      z = this._z;
     const e = m.elements;
 
     const w = 1 / (e[3]! * x + e[7]! * y + e[11]! * z + e[15]!);
@@ -277,8 +283,13 @@ export class Vector3Enhanced {
   applyQuaternion(q: { x: number; y: number; z: number; w: number }): this {
     // quaternion q is assumed to have unit length
 
-    const vx = this._x, vy = this._y, vz = this._z;
-    const qx = q.x, qy = q.y, qz = q.z, qw = q.w;
+    const vx = this._x,
+      vy = this._y,
+      vz = this._z;
+    const qx = q.x,
+      qy = q.y,
+      qz = q.z,
+      qw = q.w;
 
     // t = 2 * cross( q.xyz, v );
     const tx = 2 * (qy * vz - qz * vy);
@@ -304,10 +315,12 @@ export class Vector3Enhanced {
   }
 
   transformDirection(m: { elements: number[] }): this {
-    // input: THREE.Matrix4 affine matrix
+    // input: Matrix4 affine matrix
     // vector interpreted as a direction
 
-    const x = this._x, y = this._y, z = this._z;
+    const x = this._x,
+      y = this._y,
+      z = this._z;
     const e = m.elements;
 
     this._x = e[0]! * x + e[4]! * y + e[8]! * z;
@@ -463,8 +476,12 @@ export class Vector3Enhanced {
   }
 
   crossVectors(a: { x: number; y: number; z: number }, b: { x: number; y: number; z: number }): this {
-    const ax = a.x, ay = a.y, az = a.z;
-    const bx = b.x, by = b.y, bz = b.z;
+    const ax = a.x,
+      ay = a.y,
+      az = a.z;
+    const bx = b.x,
+      by = b.y,
+      bz = b.z;
 
     this._x = ay * bz - az * by;
     this._y = az * bx - ax * bz;
@@ -477,9 +494,11 @@ export class Vector3Enhanced {
 
   projectOnVector(v: Vector3Enhanced | { x: number; y: number; z: number }): this {
     const isEnhanced = 'lengthSq' in v && 'dot' in v;
-    const denominator = isEnhanced ? (v as Vector3Enhanced).lengthSq() : (v.x * v.x + v.y * v.y + v.z * v.z);
+    const denominator = isEnhanced ? (v as Vector3Enhanced).lengthSq() : v.x * v.x + v.y * v.y + v.z * v.z;
 
-    if (denominator === 0) {return this.set(0, 0, 0);}
+    if (denominator === 0) {
+      return this.set(0, 0, 0);
+    }
 
     const scalar = isEnhanced ? (v as Vector3Enhanced).dot(this) / denominator : this.dot(v) / denominator;
 
@@ -487,7 +506,9 @@ export class Vector3Enhanced {
   }
 
   projectOnPlane(planeNormal: { x: number; y: number; z: number }): this {
-    if (!_vector) {_vector = new Vector3Enhanced();}
+    if (!_vector) {
+      _vector = new Vector3Enhanced();
+    }
     _vector.copy(this).projectOnVector(planeNormal);
 
     return this.sub(_vector);
@@ -496,7 +517,9 @@ export class Vector3Enhanced {
   reflect(normal: { x: number; y: number; z: number }): this {
     // reflect incident vector off plane orthogonal to normal
     // normal is assumed to have unit length
-    if (!_vector) {_vector = new Vector3Enhanced();}
+    if (!_vector) {
+      _vector = new Vector3Enhanced();
+    }
     return this.sub(_vector.copy(normal).multiplyScalar(2 * this.dot(normal)));
   }
 
@@ -504,13 +527,15 @@ export class Vector3Enhanced {
     const vLengthSq = v.x * v.x + v.y * v.y + v.z * v.z;
     const denominator = Math.sqrt(this.lengthSq() * vLengthSq);
 
-    if (denominator === 0) {return Math.PI / 2;}
+    if (denominator === 0) {
+      return Math.PI / 2;
+    }
 
     const theta = this.dot(v) / denominator;
 
     // clamp, to handle numerical problems
 
-    return Math.acos(MathUtils.clamp(theta, -1, 1));
+    return Math.acos((THREE_ORIGINAL as any).MathUtils.clamp(theta, -1, 1));
   }
 
   distanceTo(v: { x: number; y: number; z: number }): number {
@@ -518,7 +543,9 @@ export class Vector3Enhanced {
   }
 
   distanceToSquared(v: { x: number; y: number; z: number }): number {
-    const dx = this._x - v.x, dy = this._y - v.y, dz = this._z - v.z;
+    const dx = this._x - v.x,
+      dy = this._y - v.y,
+      dz = this._z - v.z;
 
     return dx * dx + dy * dy + dz * dz;
   }
@@ -618,7 +645,7 @@ export class Vector3Enhanced {
   }
 
   equals(v: { x: number; y: number; z: number }): boolean {
-    return ((v.x === this._x) && (v.y === this._y) && (v.z === this._z));
+    return v.x === this._x && v.y === this._y && v.z === this._z;
   }
 
   fromArray(array: ArrayLike<number>, offset = 0): this {
@@ -631,18 +658,22 @@ export class Vector3Enhanced {
     return this;
   }
 
-  toArray(): [number, number, number];
-  toArray<TArray extends ArrayLike<number>>(array: TArray, offset?: number): TArray;
+  // eslint-disable-next-line no-dupe-class-members
+  toArray(): [number, number, number]
+  // eslint-disable-next-line no-dupe-class-members
+  toArray<TArray extends ArrayLike<number>>(array: TArray, offset?: number): TArray
   toArray(array?: ArrayLike<number>, offset?: number): ArrayLike<number> | [number, number, number] {
     if (array === undefined) {
       return [this._x, this._y, this._z];
     }
 
-    if (offset === undefined) {offset = 0;}
+    if (offset === undefined) {
+      offset = 0;
+    }
 
-    (array as any)[offset] = this._x;
-    (array as any)[offset + 1] = this._y;
-    (array as any)[offset + 2] = this._z;
+    ;(array as any)[offset] = this._x
+    ;(array as any)[offset + 1] = this._y
+    ;(array as any)[offset + 2] = this._z;
 
     return array;
   }

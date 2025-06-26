@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
 import { every, isArray, isBoolean, isNumber, isString } from 'lodash-es';
 import Yoga from 'yoga-layout';
 
@@ -15,9 +15,7 @@ import {
   isFlexWrap,
   isJustifyContent,
   JustifyContent,
-  Display,
 } from '../extras/yoga';
-import CustomShaderMaterial from '../libs/three-custom-shader-material';
 import { borderRoundRect } from '../extras/borderRoundRect';
 import { clamp } from '../utils';
 
@@ -26,16 +24,16 @@ const v2 = new THREE.Vector3();
 const v3 = new THREE.Vector3();
 const v4 = new THREE.Vector3();
 const v5 = new THREE.Vector3();
-const v6 = new THREE.Vector3();
+const _v6 = new THREE.Vector3();
 const q1 = new THREE.Quaternion();
-const q2 = new THREE.Quaternion();
+const _q2 = new THREE.Quaternion();
 const e1 = new THREE.Euler(0, 0, 0, 'YXZ');
 const m1 = new THREE.Matrix4();
 
 const FORWARD = new THREE.Vector3(0, 0, 1);
 
-const iQuaternion = new THREE.Quaternion(0, 0, 0, 1);
-const iScale = new THREE.Vector3(1, 1, 1);
+const _iQuaternion = new THREE.Quaternion(0, 0, 0, 1);
+const _iScale = new THREE.Vector3(1, 1, 1);
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -165,7 +163,7 @@ export class UI extends Node {
 
     this.ui = this;
 
-    // Note: We can't override _offset methods since it would break THREE.Vector3 functionality
+    // Note: We can't override _offset methods since it would break Vector3 functionality
     // offset changes should be tracked through the setter
   }
 
@@ -181,8 +179,8 @@ export class UI extends Node {
       this.texture = new THREE.CanvasTexture(this.canvas);
       this.texture.colorSpace = THREE.SRGBColorSpace;
       this.texture.anisotropy = this.ctx.world.graphics.maxAnisotropy;
-      // this.texture.minFilter = THREE.LinearFilter // or THREE.NearestFilter for pixel-perfect but potentially aliased text
-      // this.texture.magFilter = THREE.LinearFilter
+      // this.texture.minFilter = LinearFilter // or NearestFilter for pixel-perfect but potentially aliased text
+      // this.texture.magFilter = LinearFilter
       // this.texture.generateMipmaps = true
       this.geometry = new THREE.PlaneGeometry(this._width, this._height);
       this.geometry.scale(this._size, this._size, this._size);
@@ -219,7 +217,7 @@ export class UI extends Node {
         let hit;
         const canvas = this.canvas;
         const world = this.ctx.world;
-        const onPointerEnter = e => {
+        const onPointerEnter = () => {
           hit = {
             node: this,
             coords: new THREE.Vector3(0, 0, 0),
@@ -233,7 +231,7 @@ export class UI extends Node {
           hit.coords.x = x;
           hit.coords.y = y;
         };
-        const onPointerLeave = e => {
+        const onPointerLeave = () => {
           hit = null;
           world.pointer.setScreenHit(null);
         };
@@ -375,7 +373,7 @@ export class UI extends Node {
     }
   }
 
-  lateUpdate(delta) {
+  lateUpdate(_delta) {
     if (this._space === 'world' && this.mesh) {
       const world = this.ctx.world;
       const camera = world.camera;
@@ -1088,7 +1086,7 @@ function pivotGeometry(pivot, geometry, width, height) {
   }
 }
 
-function pivotCanvas(pivot, canvas, width, height) {
+function pivotCanvas(pivot, canvas, _width, _height) {
   // const halfWidth = width / 2
   // const halfHeight = height / 2
   switch (pivot) {
@@ -1135,7 +1133,7 @@ function isSpace(value) {
   return spaces.includes(value);
 }
 
-// pivotOffset == ( - pivotX, - pivotY )
+// pivotOffset === ( - pivotX, - pivotY )
 // i.e., the negative of whatever pivotGeometry just did.
 function getPivotOffset(pivot, width, height) {
   // The top-left corner is originally (-halfW, +halfH).
@@ -1190,7 +1188,7 @@ function getPivotOffset(pivot, width, height) {
   return new THREE.Vector2(-halfW + tx, +halfH + ty);
 }
 
-function isEdge(value) {
+function _isEdge(value) {
   if (isNumber(value)) {
     return true;
   }

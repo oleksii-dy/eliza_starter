@@ -1,7 +1,6 @@
 import { type IAgentRuntime, type Memory, type State, type UUID, logger } from '@elizaos/core';
-import { type IAgentRuntime, type Memory, type State, type UUID, logger } from '@elizaos/core';
-import { describe, it, expect, beforeEach, vi } from 'bun:test';
-import { EnvManager } from '../service';
+import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test';
+import { EnvManagerService } from '../service';
 import { envStatusProvider } from './envStatus';
 
 describe('envStatusProvider', () => {
@@ -18,7 +17,7 @@ describe('envStatusProvider', () => {
     };
 
     mockRuntime = {
-      get: mock().mockReturnValue(mockEnv),
+      getService: mock().mockReturnValue(mockEnv),
       character: { name: 'TestAgent' },
     } as any;
 
@@ -48,8 +47,8 @@ describe('envStatusProvider', () => {
 
   describe('get method', () => {
     it('should return empty status when service is not available', async () => {
-      mockRuntime.get = mock().mockReturnValue(null);
-      const debugSpy = mock.spyOn(logger, 'debug');
+      mockRuntime.getService = mock().mockReturnValue(null);
+      const debugSpy = spyOn(logger, 'debug');
 
       const result = await envStatusProvider.get(mockRuntime, mockMessage, mockState);
 
@@ -64,7 +63,7 @@ describe('envStatusProvider', () => {
 
     it('should return empty status when no environment variables exist', async () => {
       mockEnv.getAllEnvVars.mockResolvedValue(null);
-      const debugSpy = mock.spyOn(logger, 'debug');
+      const debugSpy = spyOn(logger, 'debug');
 
       const result = await envStatusProvider.get(mockRuntime, mockMessage, mockState);
 
@@ -251,7 +250,7 @@ describe('envStatusProvider', () => {
 
     it('should handle errors gracefully', async () => {
       mockEnv.getAllEnvVars.mockRejectedValue(new Error('Test error'));
-      const errorSpy = mock.spyOn(logger, 'error');
+      const errorSpy = spyOn(logger, 'error');
 
       const result = await envStatusProvider.get(mockRuntime, mockMessage, mockState);
 
@@ -326,7 +325,7 @@ describe('envStatusProvider', () => {
 
 describe('envStatusProvider Additional Coverage', () => {
   let mockRuntime: IAgentRuntime;
-  let mockEnv: EnvManager;
+  let mockEnv: EnvManagerService;
   let mockLogger: any;
 
   beforeEach(() => {

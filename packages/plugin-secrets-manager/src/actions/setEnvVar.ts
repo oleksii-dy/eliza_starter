@@ -1,11 +1,23 @@
-import { EnvManager } from '../service';
+import {
+  type Action,
+  type ActionExample,
+  composePrompt,
+  type HandlerCallback,
+  type IAgentRuntime,
+  elizaLogger as logger,
+  type Memory,
+  ModelType,
+  parseKeyValueXml,
+  type State,
+} from '@elizaos/core';
+import { EnhancedSecretManager } from '../enhanced-service';
 import type { EnvVarMetadata, EnvVarUpdate, EnvVarConfig } from '../types';
 import { validateEnvVar } from '../validation';
 
 /**
  * Template for extracting environment variable assignments from user input
  */
-const _extractionTemplate = `# Task: Extract Environment Variable Assignments from User Input
+const extractionTemplate = `# Task: Extract Environment Variable Assignments from User Input
 
 I need to extract environment variable assignments that the user wants to set based on their message.
 
@@ -15,15 +27,28 @@ Available Environment Variables:
 User message: {{content}}
 
 For each environment variable mentioned in the user's input, extract the variable name and its new value.
-Format your response as a JSON array of objects, each with 'pluginName', 'variableName', and 'value' properties.
 
-Example response:
-\`\`\`json
-[
-  { "pluginName": "openai", "variableName": "OPENAI_API_KEY", "value": "sk-..." },
-  { "pluginName": "groq", "variableName": "GROQ_API_KEY", "value": "gsk_..." }
-]
-\`\`\`
+Return an XML object with flattened assignment entries:
+<response>
+  <assignment1_plugin>plugin name</assignment1_plugin>
+  <assignment1_variable>variable name</assignment1_variable>
+  <assignment1_value>variable value</assignment1_value>
+  <assignment2_plugin>plugin name</assignment2_plugin>
+  <assignment2_variable>variable name</assignment2_variable>
+  <assignment2_value>variable value</assignment2_value>
+</response>
+
+Use empty tags if no environment variables are found.
+
+## Example Output
+<response>
+  <assignment1_plugin>openai</assignment1_plugin>
+  <assignment1_variable>OPENAI_API_KEY</assignment1_variable>
+  <assignment1_value>sk-...</assignment1_value>
+  <assignment2_plugin>groq</assignment2_plugin>
+  <assignment2_variable>GROQ_API_KEY</assignment2_variable>
+  <assignment2_value>gsk_...</assignment2_value>
+</response>
 
 IMPORTANT: Only include environment variables from the Available Environment Variables list above. Ignore any other potential variables.`;
 
@@ -50,10 +75,11 @@ const successTemplate = `# Task: Generate a response for successful environment 
 Write a natural, conversational response that {{agentName}} would send about the successful update and next steps.
 Include the actions array ["ENV_VAR_UPDATED"] in your response.
 
-Response format should be formatted in a valid JSON block like this:
-\`\`\`json
-{ "text": "<string>", "actions": ["ENV_VAR_UPDATED"] }
-\`\`\``;
+Return an XML object with these fields:
+<response>
+  <text>Natural conversational response about the successful update</text>
+  <actions>ENV_VAR_UPDATED</actions>
+</response>`;
 
 /**
  * Template for failure responses when environment variables couldn't be updated
@@ -77,12 +103,12 @@ const failureTemplate = `# Task: Generate a response for failed environment vari
 5. Use a helpful, patient tone
 
 Write a natural, conversational response that {{agentName}} would send about the failed update and how to proceed.
-Include the actions array ["ENV_VAR_UPDATE_FAILED"] in your response.
 
-Response format should be formatted in a valid JSON block like this:
-\`\`\`json
-{ "text": "<string>", "actions": ["ENV_VAR_UPDATE_FAILED"] }
-\`\`\``;
+Return an XML object with these fields:
+<response>
+  <text>Natural conversational response about the failed update</text>
+  <actions>ENV_VAR_UPDATE_FAILED</actions>
+</response>`;
 
 /**
  * Extracts environment variable values from user message
@@ -125,39 +151,41 @@ async function extractEnvVarValues(
       stopSequences: [],
     });
 
-    // Custom parsing for arrays since parseJSONObjectFromText only handles objects
-    let parsed: any;
-    const jsonBlockMatch = result.match(/```json\n([\s\S]*?)\n```/);
-
-    try {
-      if (jsonBlockMatch) {
-        parsed = JSON.parse(jsonBlockMatch[1].trim());
-      } else {
-        parsed = JSON.parse(result.trim());
-      }
-    } catch (parseError) {
-      logger.error('Error parsing JSON from model response:', parseError);
+    // Parse XML response
+    const parsed = parseKeyValueXml(result);
+    if (!parsed) {
+      logger.error('Failed to parse XML from model response');
       return [];
     }
 
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    // Validate extracted assignments
+    // Extract assignments from flattened XML structure
     const validAssignments: EnvVarUpdate[] = [];
+    let assignmentIndex = 1;
 
-    for (const assignment of parsed) {
-      if (assignment.pluginName && assignment.variableName && assignment.value) {
-        // Check if the variable exists in our metadata
-        if (envVars[assignment.pluginName]?.[assignment.variableName]) {
-          validAssignments.push({
-            pluginName: assignment.pluginName,
-            variableName: assignment.variableName,
-            value: assignment.value,
-          });
-        }
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const pluginKey = `assignment${assignmentIndex}_plugin`;
+      const variableKey = `assignment${assignmentIndex}_variable`;
+      const valueKey = `assignment${assignmentIndex}_value`;
+
+      if (!parsed[pluginKey] || !parsed[variableKey] || !parsed[valueKey]) {
+        break;
       }
+
+      const pluginName = parsed[pluginKey];
+      const variableName = parsed[variableKey];
+      const value = parsed[valueKey];
+
+      // Check if the variable exists in our metadata
+      if (envVars[pluginName]?.[variableName]) {
+        validAssignments.push({
+          pluginName,
+          variableName,
+          value,
+        });
+      }
+
+      assignmentIndex++;
     }
 
     return validAssignments;
@@ -182,7 +210,7 @@ async function processEnvVarUpdates(
   let updatedAny = false;
 
   try {
-    const env = runtime.get('ENV_MANAGER') as EnvManager;
+    const env = runtime.getService<EnhancedSecretManager>('ENV_MANAGER');
     if (!env) {
       throw new Error('Environment manager service not available');
     }
@@ -262,10 +290,11 @@ export const setEnvVarAction: Action = {
   name: 'SET_ENV_VAR',
   similes: ['UPDATE_ENV_VAR', 'CONFIGURE_ENV', 'SET_ENVIRONMENT', 'UPDATE_ENVIRONMENT'],
   description: 'Sets environment variables for plugins based on user input',
+  enabled: false, // Disabled by default - can modify system configuration and store sensitive credentials
 
-  validate: async (_runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     try {
-      const env = runtime.get('ENV_MANAGER') as EnvManager;
+      const env = runtime.getService<EnhancedSecretManager>('ENV_MANAGER');
       if (!env) {
         return false;
       }
@@ -296,14 +325,14 @@ export const setEnvVarAction: Action = {
     message: Memory,
     state?: State,
     _options?: any,
-    callback?: Callback
+    callback?: HandlerCallback
   ): Promise<void> => {
     try {
       if (!state || !callback) {
         throw new Error('State and callback are required for SET_ENV_VAR action');
       }
 
-      const env = runtime.get('ENV_MANAGER') as EnvManager;
+      const env = runtime.getService<EnhancedSecretManager>('ENV_MANAGER');
       if (!env) {
         throw new Error('Environment manager service not available');
       }
@@ -357,11 +386,11 @@ export const setEnvVarAction: Action = {
           stopSequences: [],
         });
 
-        const parsedResponse = parseJSONObjectFromText(response);
+        const parsedResponse = parseKeyValueXml(response);
 
         await void callback({
           text: parsedResponse?.text || 'Environment variable updated successfully',
-          actions: ['ENV_VAR_UPDATED'],
+          actions: parsedResponse?.actions ? [parsedResponse.actions] : ['ENV_VAR_UPDATED'],
           source: message.content.source,
         });
       } else {
@@ -381,11 +410,11 @@ export const setEnvVarAction: Action = {
           stopSequences: [],
         });
 
-        const parsedResponse = parseJSONObjectFromText(response);
+        const parsedResponse = parseKeyValueXml(response);
 
         await void callback({
           text: parsedResponse?.text || 'Failed to update environment variable',
-          actions: ['ENV_VAR_UPDATE_FAILED'],
+          actions: parsedResponse?.actions ? [parsedResponse.actions] : ['ENV_VAR_UPDATE_FAILED'],
           source: message.content.source,
         });
       }

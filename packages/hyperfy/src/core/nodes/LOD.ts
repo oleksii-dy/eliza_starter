@@ -1,5 +1,5 @@
 import { isBoolean } from 'lodash-es';
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
 
 import { getRef, Node } from './Node';
 

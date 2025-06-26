@@ -9,10 +9,9 @@ import {
   text,
   bigint,
   index,
-  primaryKey,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
+import { sql as _sql } from 'drizzle-orm';
 
 // Wallets table
 export const wallets = pgTable(
@@ -42,10 +41,10 @@ export const wallets = pgTable(
       typeIdx: index('evm_wallets_type_idx').on(table.type),
       agentAddressUnique: uniqueIndex('evm_wallets_agent_address_unique').on(
         table.agentId,
-        table.address,
+        table.address
       ),
     };
-  },
+  }
 );
 
 // Sessions table
@@ -76,7 +75,7 @@ export const sessions = pgTable(
       expiresAtIdx: index('evm_sessions_expires_at_idx').on(table.expiresAt),
       isActiveIdx: index('evm_sessions_is_active_idx').on(table.isActive),
     };
-  },
+  }
 );
 
 // Transaction history table
@@ -115,7 +114,7 @@ export const transactionHistory = pgTable(
       timestampIdx: index('evm_tx_history_timestamp_idx').on(table.timestamp),
       blockNumberIdx: index('evm_tx_history_block_number_idx').on(table.blockNumber),
     };
-  },
+  }
 );
 
 // Token balances cache table
@@ -140,16 +139,16 @@ export const tokenBalances = pgTable(
     return {
       walletChainIdx: index('evm_token_balances_wallet_chain_idx').on(
         table.walletId,
-        table.chainId,
+        table.chainId
       ),
       tokenAddressIdx: index('evm_token_balances_token_address_idx').on(table.tokenAddress),
       walletTokenUnique: uniqueIndex('evm_token_balances_unique').on(
         table.walletId,
         table.chainId,
-        table.tokenAddress,
+        table.tokenAddress
       ),
     };
-  },
+  }
 );
 
 // DeFi positions table
@@ -174,17 +173,17 @@ export const defiPositions = pgTable(
     return {
       walletChainIdx: index('evm_defi_positions_wallet_chain_idx').on(
         table.walletId,
-        table.chainId,
+        table.chainId
       ),
       protocolIdx: index('evm_defi_positions_protocol_idx').on(table.protocol),
       walletProtocolUnique: uniqueIndex('evm_defi_positions_unique').on(
         table.walletId,
         table.chainId,
         table.protocol,
-        table.protocolId,
+        table.protocolId
       ),
     };
-  },
+  }
 );
 
 // NFT holdings table
@@ -217,10 +216,10 @@ export const nftHoldings = pgTable(
         table.walletId,
         table.chainId,
         table.contractAddress,
-        table.tokenId,
+        table.tokenId
       ),
     };
-  },
+  }
 );
 
 // Gas price cache table
@@ -242,7 +241,7 @@ export const gasPriceCache = pgTable(
     return {
       chainIdIdx: uniqueIndex('evm_gas_price_chain_id_idx').on(table.chainId),
     };
-  },
+  }
 );
 
 // Contract ABI cache table
@@ -264,7 +263,7 @@ export const contractAbiCache = pgTable(
     return {
       addressChainUnique: uniqueIndex('evm_abi_cache_unique').on(table.address, table.chainId),
     };
-  },
+  }
 );
 
 // ENS resolution cache
@@ -292,7 +291,7 @@ export const ensCache = pgTable(
       nameIdx: uniqueIndex('evm_ens_cache_name_idx').on(table.name),
       addressIdx: index('evm_ens_cache_address_idx').on(table.address),
     };
-  },
+  }
 );
 
 // Type exports for use in application

@@ -37,7 +37,7 @@ export class SerialProtocol {
       });
 
       await new Promise<void>((resolve, reject) => {
-        this.port!.open((err) => {
+        this.port!.open((err: any) => {
           if (err) {
             reject(err);
           } else {
@@ -170,7 +170,7 @@ export class SerialProtocol {
     const fullPacket = Buffer.concat([packet, Buffer.from([command.checksum || 0])]);
 
     await new Promise<void>((resolve, reject) => {
-      this.port!.write(fullPacket, (err) => {
+      this.port!.write(fullPacket, (err: any) => {
         if (err) {
           reject(err);
         } else {

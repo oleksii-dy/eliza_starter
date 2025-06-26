@@ -32,6 +32,7 @@ fi
 # Global variables
 export CLI_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../" && pwd)"
 export CLI_DIST_PATH="${CLI_ROOT}/dist/index.js"
+export ELIZAOS_BIN="${CLI_DIST_PATH}"
 export MONOREPO_ROOT="$(cd "${CLI_ROOT}/../../" && pwd)"
 export TEST_TIMEOUT=30
 
@@ -102,8 +103,44 @@ create_test_character() {
   cat > "$filename" <<EOF
 {
   "name": "TestAgent",
-  "description": "A test agent for CLI testing",
-  "modelProvider": "openai",
+  "bio": [
+    "A test agent created for CLI testing and validation",
+    "Designed to test ElizaOS functionality and server startup",
+    "This agent was created to validate the CLI functionality",
+    "It helps ensure that the ElizaOS CLI can properly start agents"
+  ],
+  "messageExamples": [
+    [
+      {
+        "name": "{{user1}}",
+        "content": {
+          "text": "Hello test agent!"
+        }
+      },
+      {
+        "name": "TestAgent", 
+        "content": {
+          "text": "Hello! I'm a test agent running via the CLI."
+        }
+      }
+    ]
+  ],
+  "postExamples": [],
+  "topics": ["testing", "cli", "validation", "helpful", "reliable", "test-focused"],
+  "style": {
+    "all": [
+      "Be helpful and responsive",
+      "Acknowledge that you are a test agent",
+      "Keep responses clear and concise"
+    ],
+    "chat": [
+      "Be friendly in conversation",
+      "Respond promptly to user messages"
+    ],
+    "post": [
+      "Not used in test scenarios"
+    ]
+  },
   "settings": {
     "voice": {
       "model": "en_US-male-medium"
@@ -279,6 +316,12 @@ start_cli_background() {
 # Kill process and wait for it to die
 kill_process_gracefully() {
   local pid="$1"
+  
+  # Validate PID
+  if [[ -z "$pid" || ! "$pid" =~ ^[0-9]+$ ]]; then
+    echo "Invalid PID: '$pid'" >&2
+    return 1
+  fi
   
   if kill -0 "$pid" 2>/dev/null; then
     kill -TERM "$pid" 2>/dev/null || true

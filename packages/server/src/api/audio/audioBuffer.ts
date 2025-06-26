@@ -59,7 +59,7 @@ export async function convertToAudioBuffer(
     resultBuffer = speechResponse;
   } else if (typeof speechResponse?.getReader === 'function') {
     // Handle Web ReadableStream
-    // eslint-disable-next-line no-undef
+
     const reader = (speechResponse as ReadableStream<Uint8Array>).getReader();
     const chunks: Uint8Array[] = [];
 

@@ -1,0 +1,43 @@
+{
+  "defaultWorldOld": {
+    "id": "world-default",
+    "name": "Default Test World",
+    "description": "A default world for testing",
+    "owner": "testuser",
+    "public": true,
+    "maxPlayers": 100,
+    "spawnPoint": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "environment": {
+      "model": "/base-environment.glb",
+      "skybox": "/day2-2k.jpg",
+      "lighting": "day"
+    }
+  },
+  "defaultWorld": {
+    "id": "world-rpg",
+    "name": "RPG Test World",
+    "description": "RPG world with combat and quests",
+    "owner": "admin",
+    "public": true,
+    "maxPlayers": 50,
+    "spawnPoint": {
+      "x": 100,
+      "y": 0,
+      "z": 100
+    },
+    "features": ["combat", "inventory", "quests", "npcs", "shops"]
+  },
+  "privateWorld": {
+    "id": "world-private",
+    "name": "Private Test World",
+    "description": "A private world for testing permissions",
+    "owner": "player1",
+    "public": false,
+    "maxPlayers": 10,
+    "allowedUsers": ["player1", "player2"]
+  }
+}

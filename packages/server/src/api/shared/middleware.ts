@@ -1,7 +1,7 @@
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import express from 'express';
 import { validateUuid, logger } from '@elizaos/core';
-import { sendError } from './response-utils';
+import { sendError } from './responseUtils';
 import { validateChannelId } from './validation';
 import rateLimit from 'express-rate-limit';
 

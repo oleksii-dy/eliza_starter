@@ -1,4 +1,4 @@
-import { mock  } from 'bun:test';
+import { mock } from 'bun:test';
 import {
   stringToUuid,
   type IAgentRuntime,
@@ -82,6 +82,39 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
     // Service operations
     getService: mock((name: string) => {
       const services: Record<string, any> = {
+        rolodex: {
+          upsertEntity: mock().mockResolvedValue({
+            id: stringToUuid('test-entity-id'),
+            agentId: stringToUuid('test-agent'),
+            names: ['Test Entity'],
+            metadata: {
+              type: 'person',
+              attributes: {},
+              lastUpdated: new Date().toISOString(),
+              source: 'track-entity-action',
+            },
+          }),
+          searchEntities: mock().mockResolvedValue([
+            {
+              id: stringToUuid('test-entity-id'),
+              names: ['Test Entity'],
+              metadata: {
+                type: 'person',
+                attributes: {},
+              },
+            },
+          ]),
+          getEntity: mock().mockResolvedValue(null),
+          getRelationships: mock().mockResolvedValue([]),
+          scheduleFollowUp: mock().mockResolvedValue({
+            id: stringToUuid('test-followup-id'),
+            entityName: 'Test Entity',
+            scheduledFor: new Date().toISOString(),
+            message: 'Test follow-up message',
+            priority: 'medium',
+            metadata: {},
+          }),
+        },
         entity: {
           trackEntity: mock().mockResolvedValue({
             entityId: stringToUuid('test-entity-id'),
@@ -136,6 +169,27 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
       // Check if it's a validation prompt
       if (params?.prompt?.toLowerCase().includes('answer only yes or no')) {
         return Promise.resolve('yes');
+      }
+      // Check if it's entity extraction prompt
+      if (params?.prompt?.includes('Extract entity information')) {
+        return Promise.resolve(
+          JSON.stringify({
+            name: 'Test Entity',
+            type: 'person',
+            attributes: { role: 'Test Role', company: 'Test Company' },
+          })
+        );
+      }
+      // Check if it's follow-up extraction prompt
+      if (params?.prompt?.includes('follow-up') || params?.prompt?.includes('schedule')) {
+        return Promise.resolve(
+          JSON.stringify({
+            entityName: 'Test Entity',
+            scheduledFor: new Date(Date.now() + 86400000).toISOString(),
+            message: 'Test follow-up message',
+            priority: 'medium',
+          })
+        );
       }
       // Check if it's a follow-up intent detector
       if (params?.messages && params.messages[0]?.content?.includes('follow-up intent detector')) {

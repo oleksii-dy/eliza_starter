@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElizaOS Client Browser Test</title>
+    <script src="https://unpkg.com/react@19/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@19/umd/react-dom.production.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>ElizaOS Client Browser Test</h1>
+    <div id="status">Loading...</div>
+    <div id="details"></div>
+    
+    <script type="module">
+        try {
+            // Test importing the client library
+            console.log('Importing @elizaos/client...');
+            const module = await import('./dist/lib/index.js');
+            
+            const statusEl = document.getElementById('status');
+            const detailsEl = document.getElementById('details');
+            
+            console.log('Successfully imported client library:', Object.keys(module));
+            
+            // Test basic functionality
+            const exports = Object.keys(module);
+            const hasAgentEditor = !!module.AgentEditor;
+            const hasApiClient = !!module.apiClient;
+            const hasUtils = !!module.useIsMobile;
+            
+            statusEl.className = 'status success';
+            statusEl.innerHTML = '✅ Client library loaded successfully!';
+            
+            detailsEl.innerHTML = `
+                <h3>Available Exports:</h3>
+                <ul>
+                    ${exports.map(exp => `<li>${exp}</li>`).join('')}
+                </ul>
+                <h3>Key Components:</h3>
+                <ul>
+                    <li>AgentEditor: ${hasAgentEditor ? '✅ Available' : '❌ Missing'}</li>
+                    <li>apiClient: ${hasApiClient ? '✅ Available' : '❌ Missing'}</li>
+                    <li>useIsMobile: ${hasUtils ? '✅ Available' : '❌ Missing'}</li>
+                </ul>
+                <h3>Bundle Info:</h3>
+                <p>Size: ~1.9MB (gzipped: ~392KB)</p>
+                <p>Format: ES Modules</p>
+                <p>Browser Compatible: ✅ Yes</p>
+            `;
+            
+        } catch (error) {
+            console.error('Failed to import client library:', error);
+            
+            const statusEl = document.getElementById('status');
+            statusEl.className = 'status error';
+            statusEl.innerHTML = '❌ Error loading client library';
+            
+            const detailsEl = document.getElementById('details');
+            detailsEl.innerHTML = `<pre>${error.message}</pre>`;
+        }
+    </script>
+</body>
+</html>

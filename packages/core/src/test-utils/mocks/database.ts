@@ -5,7 +5,7 @@
  * supporting both unit and integration testing scenarios.
  */
 
-import { mock } from './mock-utils';
+import { mock } from './mockUtils';
 import type {
   IDatabaseAdapter,
   UUID,

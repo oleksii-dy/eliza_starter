@@ -436,10 +436,10 @@ export class SelfModificationRealTestSuite implements TestSuite {
         }
 
         console.log('End-to-end workflow completed successfully:');
-        console.log(`- Character modified: ✅`);
-        console.log(`- Provider context: ✅`);
+        console.log('- Character modified: ✅');
+        console.log('- Provider context: ✅');
         console.log(`- Memories created: ${memories.length}`);
-        console.log(`- File manager: ✅`);
+        console.log('- File manager: ✅');
 
         console.log('✅ End-to-end real runtime workflow test PASSED');
       },

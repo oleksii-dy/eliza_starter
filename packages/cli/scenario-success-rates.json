@@ -1,0 +1,38 @@
+{
+  "timestamp": "2025-06-26T03:04:57.512Z",
+  "targetSuccessRate": 0.8,
+  "scenarios": [
+    {
+      "id": "github-todo-workflow",
+      "name": "GitHub Todo Workflow Integration",
+      "successRate": 0,
+      "passed": false,
+      "runs": 10,
+      "averageDuration": 122.4,
+      "errors": 10
+    },
+    {
+      "id": "production-plugin-config",
+      "name": "Production Plugin Configuration",
+      "successRate": 0,
+      "passed": false,
+      "runs": 10,
+      "averageDuration": 116.5,
+      "errors": 10
+    },
+    {
+      "id": "autocoder-plugin",
+      "name": "Autocoder Plugin Functionality",
+      "successRate": 0,
+      "passed": false,
+      "runs": 10,
+      "averageDuration": 1338.6,
+      "errors": 10
+    }
+  ],
+  "summary": {
+    "totalScenarios": 3,
+    "passedScenarios": 0,
+    "overallSuccessRate": 0
+  }
+}

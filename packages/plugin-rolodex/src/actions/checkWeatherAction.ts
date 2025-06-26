@@ -16,8 +16,16 @@ export const checkWeatherAction: Action = {
     const text = message.content.text?.toLowerCase() || '';
 
     // Check for weather-related keywords
-    const weatherKeywords = ['weather', 'temperature', 'forecast', 'climate', 'rain', 'sunny', 'cloudy'];
-    const hasWeatherKeyword = weatherKeywords.some(kw => text.includes(kw));
+    const weatherKeywords = [
+      'weather',
+      'temperature',
+      'forecast',
+      'climate',
+      'rain',
+      'sunny',
+      'cloudy',
+    ];
+    const hasWeatherKeyword = weatherKeywords.some((kw) => text.includes(kw));
 
     // Check if we have the weather API key
     const hasApiKey = !!runtime.getSetting('WEATHER_API_KEY');
@@ -51,7 +59,9 @@ export const checkWeatherAction: Action = {
       const location = locationMatch ? locationMatch[1].trim() : 'New York';
 
       // Simulate API call with the key
-      logger.info(`[checkWeatherAction] Checking weather for ${location} with API key: ${apiKey.substring(0, 5)}...`);
+      logger.info(
+        `[checkWeatherAction] Checking weather for ${location} with API key: ${apiKey.substring(0, 5)}...`
+      );
 
       // Simulate weather data (in real implementation, this would call actual API)
       const weatherData = {
@@ -81,7 +91,6 @@ export const checkWeatherAction: Action = {
           apiKeyUsed: true,
         },
       };
-
     } catch (error) {
       logger.error('[checkWeatherAction] Error checking weather:', error);
 
@@ -98,7 +107,7 @@ export const checkWeatherAction: Action = {
     [
       {
         name: '{{user}}',
-        content: { text: 'What\'s the weather in San Francisco?' },
+        content: { text: "What's the weather in San Francisco?" },
       },
       {
         name: '{{agent}}',

@@ -19,7 +19,7 @@ export const shellProvider: Provider = {
     'Provides the recent shell command history and current working directory. Assumes ShellService manages overall history length and summarization.',
   position: 99, // Position it appropriately
   get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
-    const shellService = runtime.getService<ShellService>('SHELL' as any);
+    const shellService = runtime.getService<ShellService>('SHELL');
 
     if (!shellService) {
       logger.warn('[shellProvider] ShellService not found.');

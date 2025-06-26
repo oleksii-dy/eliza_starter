@@ -27,7 +27,9 @@ const createTestRuntime = (): IAgentRuntime => {
     getSetting: (key: string) => {
       // Return actual environment variables
       const value = process.env[key];
-      logger.debug(`[Runtime] getSetting(${key}) = ${value ? '<REDACTED>' : 'null'}`);
+      logger.debug(
+        `[Runtime] getSetting(${key}) = ${value ? '<REDACTED>' : 'null'}`
+      );
       return value || null;
     },
     getService: (name: string) => {

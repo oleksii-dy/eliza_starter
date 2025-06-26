@@ -1,5 +1,5 @@
 import { System } from './System';
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
 import CustomShaderMaterial from '../libs/three-custom-shader-material';
 import { DEG2RAD } from '../extras/general';
 import { uuid } from '../utils';
@@ -20,12 +20,42 @@ let worker: Worker | null = null;
 function getWorker() {
   if (!worker) {
     const particlesPath = (window as any).PARTICLES_PATH;
-    if (!particlesPath || particlesPath === '{particlesPath}') {
-      console.warn('[Particles] PARTICLES_PATH not set, using default');
-      // Use a default path for development
-      worker = new Worker('/particles.js');
+    if (particlesPath === null) {
+      console.log('[Particles] Particles disabled in development mode');
+      // Return a mock worker that does nothing
+      const workerCode = `
+        self.onmessage = function(e) {
+          // Do nothing in development mode
+        };
+      `;
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      worker = new Worker(URL.createObjectURL(blob));
+    } else if (!particlesPath || particlesPath === '{particlesPath}') {
+      console.warn('[Particles] PARTICLES_PATH not set, falling back to inline worker');
+      // Create a simple inline worker for development fallback
+      const workerCode = `
+        // Simple fallback particle worker
+        self.onmessage = function(e) {
+          // Echo back for now - replace with actual particle logic
+          self.postMessage({ type: 'particles', data: e.data });
+        };
+      `;
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      worker = new Worker(URL.createObjectURL(blob));
     } else {
-      worker = new Worker(particlesPath);
+      try {
+        worker = new Worker(particlesPath);
+      } catch (error) {
+        console.error('[Particles] Failed to create worker with path:', particlesPath, error);
+        // Fallback to inline worker
+        const workerCode = `
+          self.onmessage = function(e) {
+            self.postMessage({ type: 'particles', data: e.data });
+          };
+        `;
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        worker = new Worker(URL.createObjectURL(blob));
+      }
     }
   }
   return worker;
@@ -33,8 +63,8 @@ function getWorker() {
 
 export class Particles extends System {
   worker: Worker | null;
-  uOrientationFull: { value: THREE.Quaternion };
-  uOrientationY: { value: THREE.Quaternion };
+  uOrientationFull: { value: THREE.QuaternionType };
+  uOrientationY: { value: THREE.QuaternionType };
   emitters: Map<string, any>;
 
   constructor(world: any) {
@@ -59,14 +89,14 @@ export class Particles extends System {
     return createEmitter(this.world, this, node);
   }
 
-  update(delta: number) {
+  update(_delta: number) {
     e1.setFromQuaternion(this.uOrientationFull.value);
     e1.x = 0;
     e1.z = 0;
     this.uOrientationY.value.setFromEuler(e1);
 
     this.emitters.forEach(emitter => {
-      emitter.update(delta);
+      emitter.update(_delta);
     });
   }
 
@@ -144,7 +174,7 @@ function createEmitter(world: any, system: Particles, node: any) {
     uBillboard: { value: billboardModeInts[node._billboard as string] || 0 },
     uOrientation: node._billboard === 'full' ? system.uOrientationFull : system.uOrientationY,
   };
-  world.loader.load('texture', node._image).then((texture: THREE.Texture) => {
+  world.loader.load('texture', node._image).then((texture: THREE.TextureType) => {
     texture.colorSpace = THREE.SRGBColorSpace;
     uniforms.uTexture.value = texture;
     // console.log(t)
@@ -160,7 +190,7 @@ function createEmitter(world: any, system: Particles, node: any) {
     premultipliedAlpha: true,
     color: 'white',
     side: THREE.DoubleSide,
-    // side: THREE.FrontSide,
+    // side: FrontSide,
     depthWrite: false,
     depthTest: true,
     uniforms,
@@ -345,7 +375,7 @@ function createEmitter(world: any, system: Particles, node: any) {
     }
   }
 
-  function update(delta: number) {
+  function update(_delta: number) {
     const camPosition = v1.setFromMatrixPosition(world.camera.matrixWorld);
     const worldPosition = v2.setFromMatrixPosition(matrixWorld);
 
@@ -354,9 +384,9 @@ function createEmitter(world: any, system: Particles, node: any) {
     mesh.renderOrder = -distance;
 
     if (pending) {
-      skippedDelta += delta;
+      skippedDelta += _delta;
     } else {
-      delta += skippedDelta;
+      _delta += skippedDelta;
       skippedDelta = 0;
       const aPosition = next.aPosition;
       const aRotation = next.aRotation;
@@ -371,7 +401,7 @@ function createEmitter(world: any, system: Particles, node: any) {
       send(
         {
           op: 'update',
-          delta,
+          _delta,
           camPosition: camPosition.toArray(arr1),
           matrixWorld: matrixWorld.toArray(arr2),
           aPosition,

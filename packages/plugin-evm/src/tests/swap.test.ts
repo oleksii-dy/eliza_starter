@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
-import type { Account, Chain } from 'viem';
-import { parseUnits, formatUnits } from 'viem';
+import {
+  type Account,
+  type Chain,
+  parseUnits as _parseUnits,
+  formatUnits as _formatUnits,
+} from 'viem';
 
 import { WalletProvider } from '../providers/wallet';
 import { SwapAction } from '../actions/swap';
@@ -56,11 +60,11 @@ describe('Swap Action', () => {
 
   describe('Swap Validation', () => {
     let swapAction: SwapAction;
-    let testAccount: Account;
+    let _testAccount: Account;
 
     beforeEach(() => {
       swapAction = new SwapAction(wp);
-      testAccount = privateKeyToAccount(generatePrivateKey());
+      _testAccount = privateKeyToAccount(generatePrivateKey());
     });
 
     it('should validate swap parameters', () => {
@@ -296,10 +300,10 @@ describe('Swap Action', () => {
   });
 
   describe('Quote Comparison', () => {
-    let swapAction: SwapAction;
+    let _swapAction: SwapAction;
 
     beforeEach(() => {
-      swapAction = new SwapAction(wp);
+      _swapAction = new SwapAction(wp);
     });
 
     it('should compare quotes from different aggregators', async () => {

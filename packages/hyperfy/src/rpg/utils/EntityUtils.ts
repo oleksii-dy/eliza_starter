@@ -1,5 +1,5 @@
 import type { World, Entity } from '../../types';
-import type { RPGEntity } from '../types';
+import type { RPGEntity } from '../types/index';
 
 /**
  * Utility functions for consistent entity access across RPG systems

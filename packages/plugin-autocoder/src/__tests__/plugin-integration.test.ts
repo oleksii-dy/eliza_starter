@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { autocoderPlugin } from '../index.js';
+import autocoderPlugin from '../index.js';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
 // Real plugin integration tests - testing actual plugin structure and validation
@@ -17,7 +17,9 @@ describe('AutoCoder Plugin - Real Integration Tests', () => {
   it('should have all required services defined', () => {
     expect(autocoderPlugin.services?.length).toBeGreaterThanOrEqual(5);
 
-    const serviceNames = autocoderPlugin.services?.map((service) => service.serviceName) || [];
+    const serviceNames = autocoderPlugin.services?.map((service) =>
+      typeof service === 'function' ? service.serviceName : service.component?.serviceName
+    ) || [];
     expect(serviceNames).toContain('docker');
     expect(serviceNames).toContain('communication-bridge');
     expect(serviceNames).toContain('container-orchestrator');
@@ -70,7 +72,7 @@ describe('AutoCoder Plugin - Real Integration Tests', () => {
       createdAt: Date.now(),
     };
 
-    const isValid = await spawnAction!.validate(mockRuntime, validMessage, {} as State);
+    const isValid = await spawnAction!.validate(mockRuntime, validMessage, { /* empty */ } as State);
     expect(isValid).toBe(true);
 
     // Test negative validation
@@ -82,7 +84,7 @@ describe('AutoCoder Plugin - Real Integration Tests', () => {
       },
     };
 
-    const isInvalid = await spawnAction!.validate(mockRuntime, invalidMessage, {} as State);
+    const isInvalid = await spawnAction!.validate(mockRuntime, invalidMessage, { /* empty */ } as State);
     expect(isInvalid).toBe(false);
   });
 
@@ -111,7 +113,7 @@ describe('AutoCoder Plugin - Real Integration Tests', () => {
       createdAt: Date.now(),
     };
 
-    const isValid = await monitorAction!.validate(mockRuntime, messageWithTaskId, {} as State);
+    const isValid = await monitorAction!.validate(mockRuntime, messageWithTaskId, { /* empty */ } as State);
     expect(isValid).toBe(true);
 
     // Test without task reference
@@ -123,7 +125,7 @@ describe('AutoCoder Plugin - Real Integration Tests', () => {
       },
     };
 
-    const isInvalid = await monitorAction!.validate(mockRuntime, messageWithoutTask, {} as State);
+    const isInvalid = await monitorAction!.validate(mockRuntime, messageWithoutTask, { /* empty */ } as State);
     expect(isInvalid).toBe(false);
   });
 
@@ -163,15 +165,15 @@ describe('AutoCoder Plugin - Real Integration Tests', () => {
       getService: (name: string) => null, // Simulate missing services
       getSetting: (key: string) => null,
       logger: {
-        info: () => {},
-        warn: () => {},
-        error: () => {},
+        info: () => { /* empty */ },
+        warn: () => { /* empty */ },
+        error: () => { /* empty */ },
       },
     } as any;
 
     // Plugin init should not throw even if dependencies are missing
     expect(async () => {
-      await autocoderPlugin.init?.({}, mockRuntime);
+      await autocoderPlugin.init?.({ /* empty */ }, mockRuntime);
     }).not.toThrow();
   });
 
@@ -213,8 +215,9 @@ describe('AutoCoder Plugin - Real Integration Tests', () => {
   });
 
   it('should have valid service classes', () => {
-    autocoderPlugin.services?.forEach((ServiceClass) => {
+    autocoderPlugin.services?.forEach((service) => {
       // Check static properties
+      const ServiceClass = typeof service === 'function' ? service : service.component;
       expect(ServiceClass.serviceName).toBeDefined();
       expect(typeof ServiceClass.serviceName).toBe('string');
       expect(ServiceClass.start).toBeDefined();

@@ -1,8 +1,11 @@
-import { System } from '@elizaos/hyperfy';
 import { logger } from '@elizaos/core';
 import * as THREE from 'three';
-import { Vector3Enhanced } from '@elizaos/hyperfy';
-import type { HyperfyWorld, HyperfyPlayer, HyperfyEntity } from '../types/hyperfy.js';
+import type {
+  HyperfyWorld,
+  HyperfyPlayer,
+  HyperfyEntity,
+  HyperfySystem,
+} from '../types/hyperfy.js';
 
 const FORWARD = new THREE.Vector3(0, 0, -1);
 const v1 = new THREE.Vector3();
@@ -51,7 +54,9 @@ class ControlsToken {
   }
 }
 
-export class AgentControls extends System {
+export class AgentControls implements HyperfySystem {
+  world: any;
+  [key: string]: any; // Allow dynamic property access
   // Define expected control properties directly on the instance
   scrollDelta = { value: 0 };
   pointer = { locked: false, delta: { x: 0, y: 0 } };
@@ -102,7 +107,7 @@ export class AgentControls extends System {
   private _rotationAbortController: ControlsToken | null = null;
 
   constructor(world: any) {
-    super(world); // Call base System constructor
+    this.world = world;
 
     const commonKeys = [
       'keyW',
@@ -534,8 +539,8 @@ export class AgentControls extends System {
     return true;
   }
 
-  createCamera(self) {
-    function bindRotations(quaternion, euler) {
+  createCamera(self: any) {
+    function bindRotations(quaternion: any, euler: any) {
       quaternion._x = euler._x = 0;
       quaternion._y = euler._y = 0;
       quaternion._z = euler._z = 0;

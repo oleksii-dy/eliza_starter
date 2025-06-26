@@ -1,7 +1,67 @@
-import { type Route, type IAgentRuntime, logger } from '../types/core.d';
+import { type Route, type IAgentRuntime, logger, asUUID, type UUID } from '../types/core.d';
 import type { CustodialWalletService } from '../services/CustodialWalletService';
 import { HighValueTransactionValidator } from '../trust/trustIntegration';
 import type { CustodialWallet } from '../types/wallet';
+
+// Enhanced interfaces for trust engine and validation
+interface TrustEngine {
+  calculateTrust(
+    entityId: string,
+    context: { evaluatorId: string; roomId?: string; operation?: string; context?: unknown }
+  ): Promise<{ overallTrust: number }>;
+}
+
+interface TrustService {
+  trustEngine?: TrustEngine;
+}
+
+interface ValidationMessage {
+  entityId: UUID;
+  content: Record<string, unknown>;
+  roomId: UUID;
+}
+
+interface DatabaseAdapter {
+  query(sql: string, params: unknown[]): Promise<unknown[]>;
+  run(sql: string, params: unknown[]): Promise<void>;
+  get(sql: string, params: unknown[]): Promise<unknown>;
+  all(sql: string, params: unknown[]): Promise<unknown[]>;
+}
+
+interface WalletCreationRequest {
+  name: string;
+  description?: string;
+  entityId?: string;
+  roomId?: string;
+  worldId?: string;
+  ownerId: string;
+  purpose?: string;
+  trustLevel?: number;
+  isPool?: boolean;
+  maxBalance?: string;
+  allowedTokens?: string[];
+  network?: string;
+}
+
+interface WalletTransferRequest {
+  toAddress: string;
+  amount: string;
+  tokenAddress?: string;
+  purpose?: string;
+}
+
+interface AgentKitWithTools {
+  runTool(toolName: string, params: Record<string, unknown>): Promise<unknown>;
+}
+
+interface DatabaseCountResult {
+  count: number;
+}
+
+interface RuntimeWithDatabase {
+  databaseAdapter?: DatabaseAdapter;
+  db?: DatabaseAdapter;
+}
 
 /**
  * REAL API endpoints for custodial wallet management
@@ -20,25 +80,27 @@ export const custodialWalletRoutes: Route[] = [
         const worldId = req.query.worldId as string;
 
         if (!entityId && !roomId && !worldId) {
-          return res.status(400).json({
+          res.status(400).json({
             error: 'Must specify entityId, roomId, or worldId',
           });
+          return;
         }
 
         const custodialService = runtime.getService<CustodialWalletService>('custodial-wallet');
         if (!custodialService) {
-          return res.status(503).json({
+          res.status(503).json({
             error: 'Custodial wallet service not available',
           });
+          return;
         }
 
         let wallets: CustodialWallet[] = [];
         if (entityId) {
-          wallets = await custodialService.getWalletsForEntity(entityId as any);
+          wallets = await custodialService.getWalletsForEntity(asUUID(entityId));
         } else if (roomId) {
-          wallets = await custodialService.getWalletsForRoom(roomId as any);
+          wallets = await custodialService.getWalletsForRoom(asUUID(roomId));
         } else if (worldId) {
-          wallets = await custodialService.getWalletsForWorld(worldId as any);
+          wallets = await custodialService.getWalletsForWorld(asUUID(worldId));
         }
 
         // Filter based on permissions
@@ -48,7 +110,7 @@ export const custodialWalletRoutes: Route[] = [
             const requestingEntity = (req.headers['x-entity-id'] as string) || entityId;
             const hasPermission = await custodialService.hasPermission(
               wallet.id,
-              requestingEntity as any,
+              asUUID(requestingEntity),
               'view'
             );
             if (hasPermission) {
@@ -101,12 +163,13 @@ export const custodialWalletRoutes: Route[] = [
           maxBalance,
           allowedTokens,
           network,
-        } = req.body;
+        } = req.body as unknown as WalletCreationRequest;
 
         if (!name || !ownerId) {
-          return res.status(400).json({
+          res.status(400).json({
             error: 'Name and ownerId are required',
           });
+          return;
         }
 
         // Validate that requester has permission to create wallets
@@ -115,35 +178,41 @@ export const custodialWalletRoutes: Route[] = [
           // Check if requesting entity has admin permissions in the context
           const hasPermission = await validateCreatePermission(
             runtime,
-            requestingEntity,
+            asUUID(requestingEntity),
             entityId || roomId || worldId
           );
 
           if (!hasPermission) {
-            return res.status(403).json({
+            res.status(403).json({
               error: 'Insufficient permissions to create wallet',
             });
+            return;
           }
         }
 
         const custodialService = runtime.getService<CustodialWalletService>('custodial-wallet');
         if (!custodialService) {
-          return res.status(503).json({
+          res.status(503).json({
             error: 'Custodial wallet service not available',
           });
+          return;
         }
 
         const wallet = await custodialService.createWallet({
           name,
           description,
-          entityId: entityId as any,
-          roomId: roomId as any,
-          worldId: worldId as any,
-          ownerId: ownerId as any,
+          entityId: entityId ? asUUID(entityId) : undefined,
+          roomId: roomId ? asUUID(roomId) : undefined,
+          worldId: worldId ? asUUID(worldId) : undefined,
+          ownerId: asUUID(ownerId),
           purpose,
-          trustLevel: trustLevel || 50,
+          trustLevel: typeof trustLevel === 'string' ? parseInt(trustLevel) : trustLevel || 50,
           isPool: isPool || false,
-          maxBalance,
+          maxBalance: maxBalance
+            ? typeof maxBalance === 'string'
+              ? parseFloat(maxBalance)
+              : maxBalance
+            : undefined,
           allowedTokens,
           network,
         });
@@ -181,36 +250,40 @@ export const custodialWalletRoutes: Route[] = [
         const requestingEntity = req.headers['x-entity-id'] as string;
 
         if (!requestingEntity) {
-          return res.status(401).json({
+          res.status(401).json({
             error: 'Entity ID required in headers',
           });
+          return;
         }
 
         const custodialService = runtime.getService<CustodialWalletService>('custodial-wallet');
         if (!custodialService) {
-          return res.status(503).json({
+          res.status(503).json({
             error: 'Custodial wallet service not available',
           });
+          return;
         }
 
-        const wallet = await custodialService.getWallet(walletId as any);
+        const wallet = await custodialService.getWallet(asUUID(walletId));
         if (!wallet) {
-          return res.status(404).json({
+          res.status(404).json({
             error: 'Wallet not found',
           });
+          return;
         }
 
         // Check permissions
         const hasPermission = await custodialService.hasPermission(
           wallet.id,
-          requestingEntity as any,
+          asUUID(requestingEntity),
           'view'
         );
 
         if (!hasPermission) {
-          return res.status(403).json({
+          res.status(403).json({
             error: 'Insufficient permissions to view wallet',
           });
+          return;
         }
 
         res.json({
@@ -253,46 +326,52 @@ export const custodialWalletRoutes: Route[] = [
     handler: async (req, res, runtime) => {
       try {
         const { walletId } = req.params;
-        const { toAddress, amount, tokenAddress, purpose } = req.body;
+        const { toAddress, amount, tokenAddress, purpose } =
+          req.body as unknown as WalletTransferRequest;
         const requestingEntity = req.headers['x-entity-id'] as string;
 
         if (!requestingEntity) {
-          return res.status(401).json({
+          res.status(401).json({
             error: 'Entity ID required in headers',
           });
+          return;
         }
 
         if (!toAddress || !amount) {
-          return res.status(400).json({
+          res.status(400).json({
             error: 'toAddress and amount are required',
           });
+          return;
         }
 
         const custodialService = runtime.getService<CustodialWalletService>('custodial-wallet');
         if (!custodialService) {
-          return res.status(503).json({
+          res.status(503).json({
             error: 'Custodial wallet service not available',
           });
+          return;
         }
 
-        const wallet = await custodialService.getWallet(walletId as any);
+        const wallet = await custodialService.getWallet(asUUID(walletId));
         if (!wallet) {
-          return res.status(404).json({
+          res.status(404).json({
             error: 'Wallet not found',
           });
+          return;
         }
 
         // Check transfer permissions
         const hasPermission = await custodialService.hasPermission(
           wallet.id,
-          requestingEntity as any,
+          asUUID(requestingEntity),
           'transfer'
         );
 
         if (!hasPermission) {
-          return res.status(403).json({
+          res.status(403).json({
             error: 'Insufficient permissions to transfer from wallet',
           });
+          return;
         }
 
         // Validate trust level for the transfer
@@ -303,7 +382,7 @@ export const custodialWalletRoutes: Route[] = [
         let trustLevel = 50; // Default trust level
 
         if (trustService) {
-          const trustEngine = (trustService as any).trustEngine;
+          const trustEngine = (trustService as TrustService).trustEngine;
           if (trustEngine) {
             const trustProfile = await trustEngine.calculateTrust(requestingEntity, {
               evaluatorId: runtime.agentId,
@@ -314,28 +393,35 @@ export const custodialWalletRoutes: Route[] = [
         }
 
         if (trustLevel < wallet.requiredTrustLevel) {
-          return res.status(403).json({
+          res.status(403).json({
             error: `Trust validation failed: Trust level ${trustLevel} < ${wallet.requiredTrustLevel}`,
             currentTrustLevel: trustLevel,
             requiredLevel: wallet.requiredTrustLevel,
           });
+          return;
         }
 
         // Validate transaction value for high-value transfers
         const amountInEth = Number(amountWei) / 1e18;
         const tokenSymbol = tokenAddress || 'ETH';
+        const validationMessage: ValidationMessage = {
+          entityId: asUUID(requestingEntity),
+          content: {},
+          roomId: asUUID(wallet.roomId || 'default-room'),
+        };
         const validation = await HighValueTransactionValidator.validateTransactionValue(
           runtime,
-          { entityId: requestingEntity, content: {} } as any,
+          validationMessage,
           amountInEth,
           tokenSymbol
         );
 
         if (!validation.allowed) {
-          return res.status(403).json({
+          res.status(403).json({
             error: `Transaction blocked: ${validation.reason}`,
             requiresApproval: validation.requiresApproval,
           });
+          return;
         }
 
         // Execute the transfer
@@ -344,7 +430,7 @@ export const custodialWalletRoutes: Route[] = [
           toAddress,
           amountWei,
           tokenAddress,
-          initiatedBy: requestingEntity as any,
+          initiatedBy: asUUID(requestingEntity),
           purpose: purpose || 'API transfer',
           trustLevel,
         });
@@ -379,47 +465,55 @@ export const custodialWalletRoutes: Route[] = [
         const requestingEntity = req.headers['x-entity-id'] as string;
 
         if (!requestingEntity) {
-          return res.status(401).json({
+          res.status(401).json({
             error: 'Entity ID required in headers',
           });
+          return;
         }
 
         const custodialService = runtime.getService<CustodialWalletService>('custodial-wallet');
         if (!custodialService) {
-          return res.status(503).json({
+          res.status(503).json({
             error: 'Custodial wallet service not available',
           });
+          return;
         }
 
-        const wallet = await custodialService.getWallet(walletId as any);
+        const wallet = await custodialService.getWallet(asUUID(walletId));
         if (!wallet) {
-          return res.status(404).json({
+          res.status(404).json({
             error: 'Wallet not found',
           });
+          return;
         }
 
         // Check view permissions
         const hasPermission = await custodialService.hasPermission(
           wallet.id,
-          requestingEntity as any,
+          asUUID(requestingEntity),
           'view'
         );
 
         if (!hasPermission) {
-          return res.status(403).json({
+          res.status(403).json({
             error: 'Insufficient permissions to view wallet balance',
           });
+          return;
         }
 
         // Get actual balance from blockchain (not fake balance)
-        const agentKitService = runtime.getService('agentkit') as any;
+        const agentKitService = runtime.getService('agentkit') as unknown as {
+          isReady(): boolean;
+          getAgentKit(): unknown;
+        } | null;
         if (!agentKitService || !agentKitService.isReady()) {
-          return res.status(503).json({
+          res.status(503).json({
             error: 'AgentKit service not available for balance lookup',
           });
+          return;
         }
 
-        const agentKit = agentKitService.getAgentKit();
+        const agentKit = agentKitService.getAgentKit() as AgentKitWithTools;
 
         let balance;
         if (tokenAddress && tokenAddress !== 'ETH') {
@@ -442,7 +536,7 @@ export const custodialWalletRoutes: Route[] = [
             address: wallet.address,
             network: wallet.network,
             tokenAddress: tokenAddress || 'ETH',
-            balance: balance.toString(),
+            balance: String(balance),
             lastUpdated: Date.now(),
           },
         });
@@ -466,44 +560,50 @@ export const custodialWalletRoutes: Route[] = [
         const requestingEntity = req.headers['x-entity-id'] as string;
 
         if (!requestingEntity) {
-          return res.status(401).json({
+          res.status(401).json({
             error: 'Entity ID required in headers',
           });
+          return;
         }
 
         const custodialService = runtime.getService<CustodialWalletService>('custodial-wallet');
         if (!custodialService) {
-          return res.status(503).json({
+          res.status(503).json({
             error: 'Custodial wallet service not available',
           });
+          return;
         }
 
-        const wallet = await custodialService.getWallet(walletId as any);
+        const wallet = await custodialService.getWallet(asUUID(walletId));
         if (!wallet) {
-          return res.status(404).json({
+          res.status(404).json({
             error: 'Wallet not found',
           });
+          return;
         }
 
         // Check view permissions
         const hasPermission = await custodialService.hasPermission(
           wallet.id,
-          requestingEntity as any,
+          asUUID(requestingEntity),
           'view'
         );
 
         if (!hasPermission) {
-          return res.status(403).json({
+          res.status(403).json({
             error: 'Insufficient permissions to view transaction history',
           });
+          return;
         }
 
         // Get transactions from database
-        const db = (runtime as any).databaseAdapter || (runtime as any).db;
+        const db =
+          (runtime as RuntimeWithDatabase).databaseAdapter || (runtime as RuntimeWithDatabase).db;
         if (!db) {
-          return res.status(503).json({
+          res.status(503).json({
             error: 'Database not available',
           });
+          return;
         }
 
         const transactions = await db.query(
@@ -528,7 +628,7 @@ export const custodialWalletRoutes: Route[] = [
           success: true,
           transactions: transactions || [],
           pagination: {
-            total: totalCount?.[0]?.count || 0,
+            total: (totalCount?.[0] as DatabaseCountResult)?.count || 0,
             limit: Number.parseInt(limit as string),
             offset: Number.parseInt(offset as string),
           },
@@ -555,7 +655,7 @@ async function validateCreatePermission(
   try {
     const trustService = runtime.getService('trust-engine');
     if (trustService) {
-      const trustEngine = (trustService as any).trustEngine;
+      const trustEngine = (trustService as TrustService).trustEngine;
       if (trustEngine) {
         const trustProfile = await trustEngine.calculateTrust(requestingEntity, {
           evaluatorId: runtime.agentId,

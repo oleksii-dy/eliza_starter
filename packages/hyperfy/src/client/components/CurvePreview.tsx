@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useEffect, useRef } from 'react';
 import { Curve } from '../../core/extras/Curve';
 

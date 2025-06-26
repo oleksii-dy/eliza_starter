@@ -8,23 +8,13 @@ export async function createTodoTables(db: any): Promise<void> {
   try {
     logger.info('Creating todo plugin tables...');
 
-    // Try PostgreSQL syntax first
+    // Use PostgreSQL syntax (PGLite support removed)
     await createPostgreSQLTables(db);
 
     logger.info('Todo plugin tables created successfully');
   } catch (error) {
-    // If PostgreSQL syntax fails, try PGLite syntax
-    if (
-      error instanceof Error &&
-      (error.message.includes('gen_random_uuid') ||
-        error.message.includes('UUID') ||
-        error.message.includes('JSONB'))
-    ) {
-      logger.info('Detected PGLite database, using alternative table creation...');
-      await createPGLiteTables(db);
-    } else {
-      throw error;
-    }
+    logger.error('Failed to create todo plugin tables:', error);
+    throw error;
   }
 }
 
@@ -65,42 +55,6 @@ async function createPostgreSQLTables(db: any): Promise<void> {
   await createIndexes(db);
 }
 
-async function createPGLiteTables(db: any): Promise<void> {
-  // Create todos table with SQLite-compatible syntax
-  await db.execute(sql`
-    CREATE TABLE IF NOT EXISTS todos (
-      id TEXT PRIMARY KEY,
-      agent_id TEXT NOT NULL,
-      world_id TEXT NOT NULL,
-      room_id TEXT NOT NULL,
-      entity_id TEXT NOT NULL,
-      name TEXT NOT NULL,
-      description TEXT,
-      type TEXT NOT NULL,
-      priority INTEGER DEFAULT 4,
-      is_urgent INTEGER DEFAULT 0,
-      is_completed INTEGER DEFAULT 0,
-      due_date TIMESTAMP,
-      completed_at TIMESTAMP,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-      metadata TEXT DEFAULT '{}' NOT NULL
-    )
-  `);
-
-  // Create todo_tags table
-  await db.execute(sql`
-    CREATE TABLE IF NOT EXISTS todo_tags (
-      id TEXT PRIMARY KEY,
-      todo_id TEXT NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
-      tag TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-    )
-  `);
-
-  // Create indexes
-  await createIndexes(db);
-}
 
 async function createIndexes(db: any): Promise<void> {
   const indexes = [

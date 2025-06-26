@@ -145,8 +145,9 @@ export const runShellCommandAction: Action = {
   similes: ['EXECUTE_SHELL_COMMAND', 'TERMINAL_COMMAND', 'RUN_COMMAND'],
   description:
     'Executes a shell command on the host system and returns its output, error, and exit code. Handles `cd` to change current working directory for the session. Returns command details for chaining with other shell actions like CLEAR_SHELL_HISTORY.',
-  validate: async (runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
-    const shellService = runtime.getService<ShellService>('SHELL' as any);
+  enabled: false, // Disabled by default - extremely dangerous, allows arbitrary command execution
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
+    const shellService = runtime.getService<ShellService>('SHELL');
     if (!shellService) {
       logger.warn('[runShellCommandAction] ShellService not available during validation.');
       return false;
@@ -156,19 +157,21 @@ export const runShellCommandAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    options: { command?: string },
-    callback: HandlerCallback,
+    _state?: State,
+    options?: { command?: string },
+    callback?: HandlerCallback,
     _responses?: Memory[]
   ): Promise<ActionResult> => {
-    const shellService = runtime.getService<ShellService>('SHELL' as any);
+    const shellService = runtime.getService<ShellService>('SHELL');
 
     if (!shellService) {
       const thought = 'ShellService is not available. Cannot execute command.';
       const text = 'I am currently unable to run shell commands.';
       // No direct shell output to attach here, so save a simple record
       await saveExecutionRecord(runtime, message, thought, text);
-      await callback({ thought, text });
+      if (callback) {
+        await callback({ thought, text });
+      }
       return {
         data: {
           actionName: 'RUN_SHELL_COMMAND',
@@ -224,7 +227,7 @@ export const runShellCommandAction: Action = {
         ) {
           commandToRun = directCommand;
         } else {
-          commandToRun = await extractCommandFromMessage(runtime, message);
+          commandToRun = (await extractCommandFromMessage(runtime, message)) ?? undefined;
         }
       } else if (Array.isArray(message.content.actions) && message.content.actions.length > 1) {
         commandToRun = message.content.actions[1];
@@ -240,7 +243,9 @@ export const runShellCommandAction: Action = {
       const thought = 'No command was provided or could be extracted from the message.';
       const text = 'What command would you like me to run?';
       await saveExecutionRecord(runtime, message, thought, text);
-      await callback({ thought, text });
+      if (callback) {
+        await callback({ thought, text });
+      }
       return {
         data: {
           actionName: 'RUN_SHELL_COMMAND',
@@ -346,11 +351,13 @@ Respond using XML format:
       );
 
       // 4. Callback with the summary
-      await callback({
-        thought: summaryThought,
-        text: summaryText,
-        attachments: [shellOutputAttachment], // Also include in callback if frontend can use it
-      });
+      if (callback) {
+        await callback({
+          thought: summaryThought,
+          text: summaryText,
+          attachments: [shellOutputAttachment], // Also include in callback if frontend can use it
+        });
+      }
 
       return {
         data: {
@@ -377,7 +384,9 @@ Respond using XML format:
         'An unexpected error occurred while trying to execute or summarize the shell command.';
       const text = `Error during shell command execution: ${e.message}`;
       await saveExecutionRecord(runtime, message, thought, text);
-      await callback({ thought, text });
+      if (callback) {
+        await callback({ thought, text });
+      }
       return {
         data: {
           actionName: 'RUN_SHELL_COMMAND',
@@ -451,24 +460,27 @@ export const clearShellHistoryAction: Action = {
   name: 'CLEAR_SHELL_HISTORY',
   similes: ['RESET_SHELL', 'CLEAR_TERMINAL'],
   description: 'Clears the recorded history of shell commands for the current session. Often used after running sensitive commands or as part of security cleanup workflows.',
-  validate: async (runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
-    const shellService = runtime.getService<ShellService>('SHELL' as any);
+  enabled: false, // Disabled by default - can affect forensics and debugging
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
+    const shellService = runtime.getService<ShellService>('SHELL');
     return !!shellService;
   },
   handler: async (
     runtime: IAgentRuntime,
     _message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
     _responses?: Memory[]
   ): Promise<ActionResult> => {
-    const shellService = runtime.getService<ShellService>('SHELL' as any);
+    const shellService = runtime.getService<ShellService>('SHELL');
     if (!shellService) {
-      await callback({
-        thought: 'ShellService is not available. Cannot clear history.',
-        text: 'I am currently unable to clear shell history.',
-      });
+      if (callback) {
+        await callback({
+          thought: 'ShellService is not available. Cannot clear history.',
+          text: 'I am currently unable to clear shell history.',
+        });
+      }
       return {
         data: {
           actionName: 'CLEAR_SHELL_HISTORY',
@@ -483,10 +495,12 @@ export const clearShellHistoryAction: Action = {
 
     try {
       shellService.clearHistory();
-      await callback({
-        thought: 'Shell history has been cleared successfully.',
-        text: 'Shell command history has been cleared.',
-      });
+      if (callback) {
+        await callback({
+          thought: 'Shell history has been cleared successfully.',
+          text: 'Shell command history has been cleared.',
+        });
+      }
       return {
         data: {
           actionName: 'CLEAR_SHELL_HISTORY',
@@ -499,10 +513,12 @@ export const clearShellHistoryAction: Action = {
       };
     } catch (e: any) {
       logger.error('[clearShellHistoryAction] Error clearing history:', e);
-      await callback({
-        thought: 'An unexpected error occurred while trying to clear shell history.',
-        text: `Error clearing shell history: ${e.message}`,
-      });
+      if (callback) {
+        await callback({
+          thought: 'An unexpected error occurred while trying to clear shell history.',
+          text: `Error clearing shell history: ${e.message}`,
+        });
+      }
       return {
         data: {
           actionName: 'CLEAR_SHELL_HISTORY',
@@ -546,16 +562,17 @@ export const killAutonomousAction: Action = {
   name: 'KILL_AUTONOMOUS',
   similes: ['STOP_AUTONOMOUS', 'HALT_AUTONOMOUS', 'KILL_AUTO_LOOP'],
   description: 'Stops the autonomous agent loop for debugging purposes. Can be chained with RUN_SHELL_COMMAND to check process status before/after stopping.',
-  validate: async (_runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
+  enabled: false, // Disabled by default - can disrupt agent operation
+  validate: async (_runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     // Always allow this action for debugging
     return true;
   },
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
     _responses?: Memory[]
   ): Promise<ActionResult> => {
     try {
@@ -570,7 +587,9 @@ export const killAutonomousAction: Action = {
           'Autonomous loop has been killed. The agent will no longer run autonomously until restarted.';
 
         await saveExecutionRecord(runtime, message, thought, text, ['KILL_AUTONOMOUS']);
-        await callback({ thought, text });
+        if (callback) {
+          await callback({ thought, text });
+        }
         return {
           data: {
             actionName: 'KILL_AUTONOMOUS',
@@ -586,7 +605,9 @@ export const killAutonomousAction: Action = {
         const text = 'No autonomous loop was running or the service could not be found.';
 
         await saveExecutionRecord(runtime, message, thought, text, ['KILL_AUTONOMOUS']);
-        await callback({ thought, text });
+        if (callback) {
+          await callback({ thought, text });
+        }
         return {
           data: {
             actionName: 'KILL_AUTONOMOUS',
@@ -606,7 +627,9 @@ export const killAutonomousAction: Action = {
       const text = `Error stopping autonomous loop: ${error.message}`;
 
       await saveExecutionRecord(runtime, message, thought, text, ['KILL_AUTONOMOUS']);
-      await callback({ thought, text });
+      if (callback) {
+        await callback({ thought, text });
+      }
       return {
         data: {
           actionName: 'KILL_AUTONOMOUS',

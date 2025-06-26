@@ -8,7 +8,8 @@ import { EnhancedSecretManager } from './enhanced-service';
 import { envStatusProvider } from './providers/envStatus';
 import { secretsInfoProvider } from './providers/secretsInfo';
 import { uxGuidanceProvider } from './providers/uxGuidanceProvider';
-import { ActionChain as _ActionChain } from './services/action-chain-service';
+import { ActionChainService } from './services/action-chain-service';
+import { SecretFormService } from './services/secret-form-service';
 
 /**
  * Secrets and Environment Variable Management Plugin
@@ -44,7 +45,7 @@ export const envPlugin: Plugin = {
 
   tests: [], // No tests in production build
 
-  init: async (_config, runtime) => {
+  init: async (_config, _runtime) => {
     // Initialize the enhanced secret manager service
     // The service will automatically scan for required environment variables,
     // load them from character secrets into runtime settings,
@@ -86,7 +87,6 @@ export { canGenerateEnvVar, generateScript, getGenerationDescription } from './g
 export { validateEnvVar, validationStrategies } from './validation';
 
 // Export services for direct access if needed
-export { EnvManager } from './service';
 export { EnhancedSecretManager } from './enhanced-service';
 
 // Export migration utilities

@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { type ParserOptions, parse } from '@typescript-eslint/parser/dist/index.js';
+import { type ParserOptions, parse } from '@typescript-eslint/parser';
 import { type ActionBounds } from './types';
 
 /**

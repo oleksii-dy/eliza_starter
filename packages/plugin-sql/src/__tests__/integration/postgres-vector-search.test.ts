@@ -8,13 +8,16 @@ import {
   type Room,
   type UUID,
 } from '@elizaos/core';
-import { PgDatabaseAdapter } from '../../pg/adapter';
+import { PgAdapter } from '../../pg/adapter';
+import { PgManager } from '../../pg/manager';
+import pgvector from 'pgvector';
 import { embeddingTable, memoryTable } from '../../schema';
 import { createIsolatedTestDatabase } from '../test-helpers';
 
 describe('PostgreSQL Vector Search Tests', () => {
-  let adapter: PgDatabaseAdapter | null = null;
-  let cleanup: (() => Promise<void>) | null = null;
+  let adapter: PgAdapter | null = null;
+  let manager: PgManager | null = null;
+  const cleanup: (() => Promise<void>) | null = null;
   let testAgentId: UUID;
   let testEntityId: UUID;
   let testRoomId: UUID;
@@ -27,17 +30,21 @@ describe('PostgreSQL Vector Search Tests', () => {
     }
 
     try {
-      const setup = await createIsolatedTestDatabase('postgres-vector-search');
+      const testConfig = {
+        connectionString: process.env.POSTGRES_URL,
+        ssl: false,
+      };
 
-      // Only run these tests if we got a PostgreSQL adapter
-      if (setup.adapter.constructor.name !== 'PgDatabaseAdapter') {
-        console.log('Skipping PostgreSQL vector search tests - not using PostgreSQL adapter');
-        return;
-      }
+      manager = new PgManager(testConfig);
+      await manager.connect();
 
-      adapter = setup.adapter as PgDatabaseAdapter;
-      cleanup = setup.cleanup;
-      testAgentId = setup.testAgentId;
+      // Ensure pgvector extension is installed
+      await manager.query('CREATE EXTENSION IF NOT EXISTS vector');
+
+      testAgentId = uuidv4() as UUID;
+      adapter = new PgAdapter(testAgentId, manager);
+
+      await adapter.init();
 
       // Generate test data
       testEntityId = uuidv4() as UUID;
@@ -63,13 +70,18 @@ describe('PostgreSQL Vector Search Tests', () => {
   }, 30000);
 
   afterAll(async () => {
-    if (cleanup) {
-      await cleanup();
+    if (adapter) {
+      await adapter.close();
+    }
+    if (manager) {
+      await manager.close();
     }
   });
 
   beforeEach(async () => {
-    if (!adapter) return;
+    if (!adapter) {
+      return;
+    }
 
     // Clear existing data
     await adapter.getDatabase().delete(embeddingTable);
@@ -115,6 +127,7 @@ describe('PostgreSQL Vector Search Tests', () => {
         content: { text: 'hello world' },
         // Base embedding for "hello world"
         embedding: createEmbedding([0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]),
+        dim_384: pgvector.toSql(createEmbedding([0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2])),
         createdAt: Date.now() - 3000,
         unique: false,
         metadata: { type: MemoryType.CUSTOM, category: 'greeting' },
@@ -127,6 +140,7 @@ describe('PostgreSQL Vector Search Tests', () => {
         content: { text: 'hi planet' },
         // Very similar to "hello world" (90% similarity)
         embedding: createEmbedding([0.88, 0.78, 0.68, 0.58, 0.48, 0.38, 0.28, 0.18]),
+        dim_384: pgvector.toSql(createEmbedding([0.88, 0.78, 0.68, 0.58, 0.48, 0.38, 0.28, 0.18])),
         createdAt: Date.now() - 2000,
         unique: false,
         metadata: { type: MemoryType.CUSTOM, category: 'greeting' },
@@ -139,6 +153,7 @@ describe('PostgreSQL Vector Search Tests', () => {
         content: { text: 'greetings earth' },
         // Somewhat similar (70% similarity)
         embedding: createEmbedding([0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]),
+        dim_384: pgvector.toSql(createEmbedding([0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0])),
         createdAt: Date.now() - 1500,
         unique: false,
         metadata: { type: MemoryType.CUSTOM, category: 'greeting' },
@@ -151,6 +166,7 @@ describe('PostgreSQL Vector Search Tests', () => {
         content: { text: 'this is a towel' },
         // Very different embedding
         embedding: createEmbedding([0.1, 0.2, 0.1, 0.9, 0.8, 0.7, 0.6, 0.5]),
+        dim_384: pgvector.toSql(createEmbedding([0.1, 0.2, 0.1, 0.9, 0.8, 0.7, 0.6, 0.5])),
         createdAt: Date.now() - 1000,
         unique: false,
         metadata: { type: MemoryType.CUSTOM, category: 'object' },

@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import type { THREE } from '../core/extras/three';
 
 // Core World Types
 export interface WorldOptions {
@@ -24,8 +24,8 @@ export interface World {
   assetsUrl: string | null;
   assetsDir: string | null;
   hot: Set<HotReloadable>;
-  rig: any; // THREE.Object3D
-  camera: any; // THREE.PerspectiveCamera
+  rig: any; // Object3D
+  camera: any; // PerspectiveCamera
 
   // Systems
   settings: Settings;
@@ -113,13 +113,13 @@ export interface System {
   // Update cycle
   preTick(): void;
   preFixedUpdate(willFixedStep: boolean): void;
-  fixedUpdate(delta: number): void;
-  postFixedUpdate(delta: number): void;
+  fixedUpdate(_delta: number): void;
+  postFixedUpdate(_delta: number): void;
   preUpdate(alpha: number): void;
-  update(delta: number): void;
-  postUpdate(delta: number): void;
-  lateUpdate(delta: number): void;
-  postLateUpdate(delta: number): void;
+  update(_delta: number): void;
+  postUpdate(_delta: number): void;
+  lateUpdate(_delta: number): void;
+  postLateUpdate(_delta: number): void;
   commit(): void;
   postTick(): void;
 }
@@ -155,9 +155,9 @@ export interface Entity {
   getVelocity(): Vector3;
 
   // Lifecycle
-  fixedUpdate?(delta: number): void;
-  update?(delta: number): void;
-  lateUpdate?(delta: number): void;
+  fixedUpdate?(_delta: number): void;
+  update?(_delta: number): void;
+  lateUpdate?(_delta: number): void;
 
   // Event handling
   on?(event: string, callback: Function): void;
@@ -174,17 +174,21 @@ export interface Component {
   data: any;
 
   init?(): void;
-  update?(delta: number): void;
-  fixedUpdate?(delta: number): void;
-  lateUpdate?(delta: number): void;
+  update?(_delta: number): void;
+  fixedUpdate?(_delta: number): void;
+  lateUpdate?(_delta: number): void;
   destroy?(): void;
 }
 
-// Math Types
+// Math Types - interfaces that support both plain objects and THREE.js instances
 export interface Vector3 {
   x: number;
   y: number;
   z: number;
+  // Include common THREE.js methods when available
+  copy?(vector: Vector3): this;
+  set?(x: number, y: number, z: number): this;
+  lerpVectors?(v1: Vector3, v2: Vector3, alpha: number): this;
 }
 
 export interface Quaternion {
@@ -192,10 +196,18 @@ export interface Quaternion {
   y: number;
   z: number;
   w: number;
+  // Include common THREE.js methods when available
+  copy?(quaternion: Quaternion): this;
+  slerpQuaternions?(qa: Quaternion, qb: Quaternion, t: number): this;
 }
 
 export interface Matrix4 {
   elements: number[];
+  // Include common THREE.js methods when available
+  decompose?(position: Vector3, quaternion: Quaternion, scale: Vector3): this;
+  copy?(matrix: Matrix4): this;
+  compose?(position: Vector3, quaternion: Quaternion, scale: Vector3): this;
+  multiplyMatrices?(a: Matrix4, b: Matrix4): this;
 }
 
 // Physics Types
@@ -328,10 +340,10 @@ export interface GameEvent {
 
 // Hot Reloadable
 export interface HotReloadable {
-  fixedUpdate?(delta: number): void;
-  update?(delta: number): void;
-  lateUpdate?(delta: number): void;
-  postLateUpdate?(delta: number): void;
+  fixedUpdate?(_delta: number): void;
+  update?(_delta: number): void;
+  lateUpdate?(_delta: number): void;
+  postLateUpdate?(_delta: number): void;
 }
 
 // System Interfaces
@@ -458,7 +470,7 @@ export interface RaycastHit {
 
 export interface Stage extends System {
   octree: any;
-  scene: any; // THREE.Scene
+  scene: any; // Scene
   environment: any;
   clean(): void;
 }

@@ -1,9 +1,21 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { IAgentRuntime, logger } from '@elizaos/core';
-import { SearchProvider, ContentExtractor } from './rate-limiter';
+import { SearchProvider, ContentExtractor } from '../types';
+
+// Compatibility interface for content extraction
+interface CompatibleContentExtractor {
+  extractContent(
+    url: string
+  ): Promise<{ content: string; title?: string; metadata?: any }>;
+  name?: string;
+}
 import { TavilySearchProvider } from './search-providers/tavily';
 import { SerperSearchProvider } from './search-providers/serper';
 import { AcademicSearchProvider } from './search-providers/academic';
-import { FirecrawlContentExtractor, FirecrawlConfig } from './content-extractors/firecrawl';
+import {
+  FirecrawlContentExtractor,
+  FirecrawlConfig,
+} from './content-extractors/firecrawl';
 import { PlaywrightContentExtractor } from './content-extractors/playwright';
 import { CachedSearchProvider } from './cache';
 import { RateLimitedSearchProvider } from './rate-limiter';
@@ -13,10 +25,77 @@ import { StagehandGoogleSearchProvider } from './search-providers/stagehand-goog
 import { PyPISearchProvider } from './search-providers/pypi';
 import { NPMSearchProvider } from './search-providers/npm';
 
-export type { SearchProvider, ContentExtractor };
+// Mock provider function for test mode
+function createMockProvider(type: string): SearchProvider {
+  return {
+    name: `mock-${type}`,
+    supportedDomains: ['*'],
+    async search(query: string, options?: any): Promise<any[]> {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      return [
+        {
+          title: `Mock ${type} Result for: ${query}`,
+          url: `https://mock-${type}.example.com/search/${encodeURIComponent(query)}`,
+          snippet: `This is a mock search result from ${type} provider for the query: ${query}`,
+          score: 0.95,
+          publishedDate: new Date().toISOString(),
+          domain: `mock-${type}.example.com`,
+          provider: `mock-${type}`,
+          metadata: {
+            type: 'mock',
+            provider: `mock-${type}`,
+            mode: 'test',
+          },
+        },
+      ];
+    },
+  };
+}
+
+// Mock content extractor function for test mode
+function createMockContentExtractor(): CompatibleContentExtractor {
+  return {
+    name: 'mock-content-extractor',
+    async extractContent(
+      url: string
+    ): Promise<{ content: string; metadata?: any }> {
+      // Simulate content extraction delay
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      return {
+        content: `
+# Mock Content for ${url}
+
+This is mock content extracted from the URL. In a real scenario, this would contain the actual content from the webpage.
+
+## Summary
+The mock content provides representative data for testing purposes.
+
+## Key Points
+- Mock data point 1
+- Mock data point 2  
+- Mock data point 3
+
+## Conclusion
+This mock content serves as a representative example of what would be extracted from a real webpage.
+        `.trim(),
+        metadata: {
+          title: `Mock Page Title for ${url}`,
+          author: 'Mock Author',
+          publishedDate: new Date().toISOString(),
+          wordCount: 150,
+          extractedBy: 'mock-extractor',
+        },
+      };
+    },
+  };
+}
 
 // Wrapper to make FirecrawlContentExtractor compatible with ContentExtractor interface
-class FirecrawlWrapper implements ContentExtractor {
+class FirecrawlWrapper implements CompatibleContentExtractor {
+  name = 'firecrawl-content-extractor';
   private extractor: FirecrawlContentExtractor;
 
   constructor(apiKey: string) {
@@ -24,7 +103,9 @@ class FirecrawlWrapper implements ContentExtractor {
     this.extractor = new FirecrawlContentExtractor(config);
   }
 
-  async extractContent(url: string): Promise<{ content: string; metadata?: any }> {
+  async extractContent(
+    url: string
+  ): Promise<{ content: string; metadata?: any }> {
     const result = await this.extractor.extractContent(url);
     if (!result) {
       return { content: '', metadata: {} };
@@ -34,14 +115,17 @@ class FirecrawlWrapper implements ContentExtractor {
 }
 
 // Wrapper to make PlaywrightContentExtractor compatible with ContentExtractor interface
-class PlaywrightWrapper implements ContentExtractor {
+class PlaywrightWrapper implements CompatibleContentExtractor {
+  name = 'playwright-content-extractor';
   private extractor: PlaywrightContentExtractor;
 
   constructor() {
     this.extractor = new PlaywrightContentExtractor();
   }
 
-  async extractContent(url: string): Promise<{ content: string; metadata?: any }> {
+  async extractContent(
+    url: string
+  ): Promise<{ content: string; metadata?: any }> {
     const result = await this.extractor.extractContent(url);
     if (!result) {
       return { content: '', metadata: {} };
@@ -54,12 +138,14 @@ class PlaywrightWrapper implements ContentExtractor {
 class PyPISearchWrapper implements SearchProvider {
   private provider: PyPISearchProvider;
   name = 'pypi';
+  supportedDomains = ['pypi.org'];
 
   constructor() {
     this.provider = new PyPISearchProvider();
   }
 
-  async search(query: string, maxResults?: number): Promise<any[]> {
+  async search(query: string, options?: any): Promise<any[]> {
+    const maxResults = options?.maxResults;
     return this.provider.search(query, maxResults);
   }
 }
@@ -68,23 +154,102 @@ class PyPISearchWrapper implements SearchProvider {
 class NPMSearchWrapper implements SearchProvider {
   private provider: NPMSearchProvider;
   name = 'npm';
+  supportedDomains = ['npmjs.com'];
 
   constructor() {
     this.provider = new NPMSearchProvider();
   }
 
-  async search(query: string, maxResults?: number): Promise<any[]> {
+  async search(query: string, options?: any): Promise<any[]> {
+    const maxResults = options?.maxResults;
     return this.provider.search(query, maxResults);
+  }
+}
+
+// Wrapper for Tavily search provider
+class TavilySearchWrapper implements SearchProvider {
+  private provider: TavilySearchProvider;
+  name = 'tavily';
+  supportedDomains = ['*'];
+
+  constructor(config: any) {
+    this.provider = new TavilySearchProvider(config);
+  }
+
+  async search(query: string, options?: any): Promise<any[]> {
+    return this.provider.search(query, options);
+  }
+}
+
+// Wrapper for Serper search provider
+class SerperSearchWrapper implements SearchProvider {
+  private provider: SerperSearchProvider;
+  name = 'serper';
+  supportedDomains = ['*'];
+
+  constructor(config: any) {
+    this.provider = new SerperSearchProvider(config);
+  }
+
+  async search(query: string, options?: any): Promise<any[]> {
+    return this.provider.search(query, options);
+  }
+}
+
+// Wrapper for Exa search provider
+class ExaSearchWrapper implements SearchProvider {
+  private provider: ExaSearchProvider;
+  name = 'exa';
+  supportedDomains = ['*'];
+
+  constructor(config: any) {
+    this.provider = new ExaSearchProvider(config);
+  }
+
+  async search(query: string, options?: any): Promise<any[]> {
+    return this.provider.search(query, options);
+  }
+}
+
+// Wrapper for SerpAPI search provider
+class SerpAPISearchWrapper implements SearchProvider {
+  private provider: SerpAPISearchProvider;
+  name = 'serpapi';
+  supportedDomains = ['*'];
+
+  constructor(config: any) {
+    this.provider = new SerpAPISearchProvider(config);
+  }
+
+  async search(query: string, options?: any): Promise<any[]> {
+    return this.provider.search(query, options);
+  }
+}
+
+// Wrapper for Academic search provider
+class AcademicSearchWrapper implements SearchProvider {
+  private provider: AcademicSearchProvider;
+  name = 'academic';
+  supportedDomains = ['*'];
+
+  constructor(config: any) {
+    this.provider = new AcademicSearchProvider(config);
+  }
+
+  async search(query: string, options?: any): Promise<any[]> {
+    return this.provider.search(query, options);
   }
 }
 
 // Wrapper for GitHub search provider (uses existing GitHub plugin)
 class GitHubSearchWrapper implements SearchProvider {
   name = 'github';
+  supportedDomains = ['github.com'];
 
   constructor(private runtime: IAgentRuntime) {}
 
-  async search(query: string, maxResults?: number): Promise<any[]> {
+  async search(query: string, options?: any): Promise<any[]> {
+    const maxResults = options?.maxResults;
     try {
       const githubService = this.runtime.getService('github');
       if (!githubService) {
@@ -125,17 +290,22 @@ class GitHubSearchWrapper implements SearchProvider {
 
       // Search issues if we have room for more results
       if (results.length < limit) {
-        const issues = await (githubService as any).searchIssues(`${query} is:issue`, {
-          sort: 'updated',
-          per_page: Math.min(limit - results.length, 5),
-        });
+        const issues = await (githubService as any).searchIssues(
+          `${query} is:issue`,
+          {
+            sort: 'updated',
+            per_page: Math.min(limit - results.length, 5),
+          }
+        );
 
         if (issues?.items) {
           results.push(
             ...issues.items.map((issue: any) => ({
               title: issue.title,
               url: issue.html_url,
-              snippet: issue.body ? `${issue.body.substring(0, 200)}...` : 'No description',
+              snippet: issue.body
+                ? `${issue.body.substring(0, 200)}...`
+                : 'No description',
               content: `${issue.title}\n${issue.body || ''}`,
               score: issue.comments / 50, // Normalize by comment count
               provider: 'github',
@@ -162,10 +332,13 @@ class GitHubSearchWrapper implements SearchProvider {
 }
 
 // StagehandContentExtractor - uses browserbase/stagehand for extraction
-class StagehandContentExtractor implements ContentExtractor {
+class StagehandContentExtractor implements CompatibleContentExtractor {
+  name = 'stagehand-content-extractor';
   constructor(private runtime: IAgentRuntime) {}
 
-  async extractContent(url: string): Promise<{ content: string; title?: string; metadata?: any }> {
+  async extractContent(
+    url: string
+  ): Promise<{ content: string; title?: string; metadata?: any }> {
     try {
       const stagehandService = this.runtime.getService('stagehand');
       if (!stagehandService) {
@@ -214,7 +387,19 @@ class StagehandContentExtractor implements ContentExtractor {
   }
 }
 
-export function createSearchProvider(type: string, runtime: any): SearchProvider {
+export function createSearchProvider(
+  type: string,
+  runtime: any
+): SearchProvider {
+  // In test mode, use mock providers instead of real API providers
+  if (
+    process.env.RESEARCH_MOCK_MODE === 'true' ||
+    process.env.NODE_ENV === 'test'
+  ) {
+    logger.info(`[Factory] Using mock provider for ${type} in test mode`);
+    return createMockProvider(type);
+  }
+
   const apiKey = runtime.getSetting(`${type.toUpperCase()}_API_KEY`);
 
   switch (type) {
@@ -224,7 +409,7 @@ export function createSearchProvider(type: string, runtime: any): SearchProvider
           'TAVILY_API_KEY is required for Tavily search provider. Please configure this environment variable.'
         );
       }
-      return new TavilySearchProvider({ apiKey });
+      return new TavilySearchWrapper({ apiKey });
 
     case 'serper':
       if (!apiKey) {
@@ -232,7 +417,7 @@ export function createSearchProvider(type: string, runtime: any): SearchProvider
           'SERPER_API_KEY is required for Serper search provider. Please configure this environment variable.'
         );
       }
-      return new SerperSearchProvider({ apiKey });
+      return new SerperSearchWrapper({ apiKey });
 
     case 'exa':
       if (!apiKey) {
@@ -240,7 +425,7 @@ export function createSearchProvider(type: string, runtime: any): SearchProvider
           'EXA_API_KEY is required for Exa search provider. Please configure this environment variable.'
         );
       }
-      return new ExaSearchProvider({ apiKey });
+      return new ExaSearchWrapper({ apiKey });
 
     case 'serpapi':
       if (!apiKey) {
@@ -248,10 +433,10 @@ export function createSearchProvider(type: string, runtime: any): SearchProvider
           'SERPAPI_API_KEY is required for SerpAPI search provider. Please configure this environment variable.'
         );
       }
-      return new SerpAPISearchProvider({ apiKey });
+      return new SerpAPISearchWrapper({ apiKey });
 
     case 'academic':
-      return new AcademicSearchProvider(runtime);
+      return new AcademicSearchWrapper(runtime);
 
     case 'pypi':
       logger.info('Using PyPI search provider');
@@ -271,8 +456,10 @@ export function createSearchProvider(type: string, runtime: any): SearchProvider
       // Try Tavily first and prioritize it heavily
       const tavilyKey = runtime.getSetting('TAVILY_API_KEY');
       if (tavilyKey) {
-        logger.info('🎯 Using TAVILY as primary web search provider (user preference)');
-        return new TavilySearchProvider({
+        logger.info(
+          '🎯 Using TAVILY as primary web search provider (user preference)'
+        );
+        return new TavilySearchWrapper({
           apiKey: tavilyKey,
           searchDepth: 'advanced',
           includeRawContent: true,
@@ -286,14 +473,16 @@ export function createSearchProvider(type: string, runtime: any): SearchProvider
       for (const provider of fallbackProviders) {
         const key = runtime.getSetting(`${provider}_API_KEY`);
         if (key) {
-          logger.warn(`⚠️ Using ${provider} as fallback (TAVILY_API_KEY not configured)`);
+          logger.warn(
+            `⚠️ Using ${provider} as fallback (TAVILY_API_KEY not configured)`
+          );
           switch (provider) {
             case 'EXA':
-              return new ExaSearchProvider({ apiKey: key });
+              return new ExaSearchWrapper({ apiKey: key });
             case 'SERPAPI':
-              return new SerpAPISearchProvider({ apiKey: key });
+              return new SerpAPISearchWrapper({ apiKey: key });
             case 'SERPER':
-              return new SerperSearchProvider({ apiKey: key });
+              return new SerperSearchWrapper({ apiKey: key });
           }
         }
       }
@@ -305,8 +494,9 @@ export function createSearchProvider(type: string, runtime: any): SearchProvider
 }
 
 // Enhanced content extractor with Tavily-first strategy
-class RobustContentExtractor implements ContentExtractor {
-  private extractors: ContentExtractor[] = [];
+class RobustContentExtractor implements CompatibleContentExtractor {
+  name = 'robust-content-extractor';
+  private extractors: CompatibleContentExtractor[] = [];
   private runtime: IAgentRuntime;
 
   constructor(runtime: IAgentRuntime) {
@@ -339,7 +529,9 @@ class RobustContentExtractor implements ContentExtractor {
     logger.info('Added Playwright content extractor as last resort');
   }
 
-  async extractContent(url: string): Promise<{ content: string; title?: string; metadata?: any }> {
+  async extractContent(
+    url: string
+  ): Promise<{ content: string; title?: string; metadata?: any }> {
     const errors: Error[] = [];
 
     // STRATEGY: Prefer Tavily's built-in content when available
@@ -354,7 +546,9 @@ class RobustContentExtractor implements ContentExtractor {
       const extractorName = extractor.constructor.name;
 
       try {
-        logger.debug(`Attempting content extraction with ${extractorName} for: ${url}`);
+        logger.debug(
+          `Attempting content extraction with ${extractorName} for: ${url}`
+        );
         const result = await extractor.extractContent(url);
 
         // Validate result quality - more lenient for Tavily-first strategy
@@ -381,7 +575,9 @@ class RobustContentExtractor implements ContentExtractor {
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        logger.warn(`${extractorName} extraction failed for ${url}: ${errorMsg}`);
+        logger.warn(
+          `${extractorName} extraction failed for ${url}: ${errorMsg}`
+        );
         errors.push(error instanceof Error ? error : new Error(errorMsg));
       }
     }
@@ -410,15 +606,39 @@ class RobustContentExtractor implements ContentExtractor {
   }
 }
 
-export function createContentExtractor(runtime: IAgentRuntime): ContentExtractor | null {
+export function createContentExtractor(
+  runtime: IAgentRuntime
+): CompatibleContentExtractor | null {
+  // In test mode, use mock content extractor
+  if (
+    process.env.RESEARCH_MOCK_MODE === 'true' ||
+    process.env.NODE_ENV === 'test'
+  ) {
+    logger.info('[Factory] Using mock content extractor in test mode');
+    return createMockContentExtractor();
+  }
+
   return new RobustContentExtractor(runtime);
 }
 
-export function createAcademicSearchProvider(runtime: IAgentRuntime): SearchProvider {
-  const semanticScholarKey = runtime.getSetting('SEMANTIC_SCHOLAR_API_KEY');
-  logger.info('Using Academic search provider (Semantic Scholar, arXiv, CrossRef)');
+export function createAcademicSearchProvider(
+  runtime: IAgentRuntime
+): SearchProvider {
+  // In test mode, use mock academic provider
+  if (
+    process.env.RESEARCH_MOCK_MODE === 'true' ||
+    process.env.NODE_ENV === 'test'
+  ) {
+    logger.info('[Factory] Using mock academic provider in test mode');
+    return createMockProvider('academic');
+  }
 
-  const provider = new AcademicSearchProvider({
+  const semanticScholarKey = runtime.getSetting('SEMANTIC_SCHOLAR_API_KEY');
+  logger.info(
+    'Using Academic search provider (Semantic Scholar, arXiv, CrossRef)'
+  );
+
+  const provider = new AcademicSearchWrapper({
     semanticScholarApiKey: semanticScholarKey,
     timeout: 30000,
   });

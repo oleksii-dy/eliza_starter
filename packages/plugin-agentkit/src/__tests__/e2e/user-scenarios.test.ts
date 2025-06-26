@@ -499,9 +499,9 @@ export class AgentKitUserScenariosTestSuite implements TestSuite {
         };
 
         for (const test of intentTests) {
-          const expectedActions = intentMap[test.intent] || [];
+          const expectedActions = intentMap[test.intent as keyof typeof intentMap] || [];
           const matchingActions = runtime.actions.filter((action) =>
-            expectedActions.some((expected) => action.name.includes(expected))
+            expectedActions.some((expected: string) => action.name.includes(expected))
           );
 
           if (matchingActions.length > 0) {

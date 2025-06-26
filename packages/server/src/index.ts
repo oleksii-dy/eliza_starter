@@ -17,12 +17,12 @@ import path, { basename, dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Server as SocketIOServer } from 'socket.io';
 import { createApiRouter, createPluginRouteHandler, setupSocketIO } from './api/index.js';
-import { apiKeyAuthMiddleware } from './authMiddleware.js';
-import { messageBusConnectorPlugin } from './services/message.js';
-import { loadCharacterTryPath, jsonToCharacter } from './loader.js';
+import { enhancedAuthMiddleware } from './AuthMiddleware.js';
+import { messageBusConnectorPlugin } from './services/MessageBusService.js';
+import { loadCharacterTryPath, jsonToCharacter } from './CharacterLoader.js';
 
-import { createDatabaseAdapter } from '@elizaos/plugin-sql';
-import internalMessageBus from './bus.js';
+import { createAdaptiveDatabaseAdapterV2 } from '@elizaos/plugin-sql';
+import internalMessageBus from './MessageBus.js';
 import type {
   CentralRootMessage,
   MessageChannel,
@@ -197,12 +197,10 @@ export class AgentServer {
         logger.info('[INIT] FORCE_PGLITE detected, ignoring PostgreSQL URL for testing');
         postgresUrl = undefined;
       }
-      const dataDir = agentDataDir;
 
-      this.database = (await createDatabaseAdapter(
+      this.database = (await createAdaptiveDatabaseAdapterV2(
         {
-          dataDir,
-          postgresUrl,
+          ...(postgresUrl && { postgresUrl }),
         },
         migrationAgentId
       )) as DatabaseAdapter;
@@ -361,7 +359,7 @@ export class AgentServer {
                   connectSrc: ["'self'", 'ws:', 'wss:', 'https:', 'http:'],
                   mediaSrc: ["'self'", 'blob:', 'data:'],
                   objectSrc: ["'none'"],
-                  frameSrc: ["'none'"],
+                  frameSrc: ["'self'"],
                   baseUri: ["'self'"],
                   formAction: ["'self'"],
                   // upgrade-insecure-requests is added by helmet automatically
@@ -431,7 +429,7 @@ export class AgentServer {
       ); // Enable CORS
       this.app.use(
         bodyParser.json({
-          limit: process.env.EXPRESS_MAX_PAYLOAD || '100kb',
+          limit: process.env.EXPRESS_MAX_PAYLOAD || '10mb',
         })
       ); // Parse JSON bodies
 
@@ -452,19 +450,31 @@ export class AgentServer {
         })
       );
 
-      // Optional Authentication Middleware
+      // Enhanced Authentication Middleware (JWT + Legacy API Key)
       const serverAuthToken = process.env.ELIZA_SERVER_AUTH_TOKEN;
-      if (serverAuthToken) {
-        logger.info('Server authentication enabled. Requires X-API-KEY header for /api routes.');
-        // Apply middleware only to /api paths
+      const sharedJwtSecret = process.env.SHARED_JWT_SECRET || process.env.JWT_SECRET;
+
+      if (serverAuthToken || sharedJwtSecret) {
+        logger.info(
+          'Server authentication enabled. Supports JWT tokens and legacy X-API-KEY authentication for /api routes.'
+        );
+        // Apply enhanced middleware to /api paths - supports both JWT and legacy API key
         this.app.use('/api', (req, res, next) => {
-          apiKeyAuthMiddleware(req, res, next);
+          enhancedAuthMiddleware(req, res, next);
         });
       } else {
         logger.warn(
-          'Server authentication is disabled. Set ELIZA_SERVER_AUTH_TOKEN environment variable to enable.'
+          'Server authentication is disabled. Set ELIZA_SERVER_AUTH_TOKEN or SHARED_JWT_SECRET environment variable to enable.'
         );
       }
+
+      // Security validation middleware - applied to all /api routes
+      const { securityValidation, contentLengthValidation } = await import(
+        './middleware/ValidationMiddleware'
+      );
+      logger.info('Applying security validation middleware to all API routes');
+      this.app.use('/api', securityValidation);
+      this.app.use('/api', contentLengthValidation(10 * 1024 * 1024)); // 10MB limit for API requests
 
       const uploadsBasePath = path.join(process.cwd(), '.eliza', 'data', 'uploads', 'agents');
       const generatedBasePath = path.join(process.cwd(), '.eliza', 'data', 'generated');
@@ -616,6 +626,52 @@ export class AgentServer {
       // Client files are built into the CLI package's dist directory
       const clientPath = path.resolve(__dirname, '../../cli/dist');
       this.app.use(express.static(clientPath, staticOptions));
+
+      // *** NEW: Special route for iframe embedding ***
+      this.app.get('/admin', (req: express.Request, res: express.Response): void => {
+        const isEmbed = req.query.embed === 'true';
+        const token = req.query.token;
+
+        if (isEmbed && token) {
+          // For iframe embedding, we need to verify the JWT token
+          logger.info('Serving embedded admin interface with token authentication');
+
+          // Set headers to allow iframe embedding from the platform
+          res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+          res.setHeader(
+            'Content-Security-Policy',
+            "frame-ancestors 'self' http://localhost:3333 https://*.elizaos.com"
+          );
+
+          // Add token info to the HTML for client-side use
+          const html = `<!DOCTYPE html>
+<html>
+<head>
+    <title>ElizaOS Agent Management</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+        // Store token for API calls
+        window.__ELIZA_TOKEN__ = '${token}';
+        window.__ELIZA_EMBED__ = true;
+        // Redirect to main interface with token in hash
+        window.location.href = '/#/embed?token=' + encodeURIComponent('${token}');
+    </script>
+</head>
+<body>
+    <div>Loading ElizaOS Agent Management...</div>
+</body>
+</html>`;
+
+          res.setHeader('Content-Type', 'text/html');
+          res.send(html);
+          return;
+        }
+
+        // Regular admin access - serve the normal SPA
+        const cliDistPath = path.resolve(__dirname, '../../cli/dist');
+        res.sendFile(path.join(cliDistPath, 'index.html'));
+      });
 
       // *** NEW: Mount the plugin route handler BEFORE static serving ***
       const pluginRouteHandler = createPluginRouteHandler(this.agents);
@@ -1222,11 +1278,11 @@ export class AgentServer {
   async getServersForAgent(agentId: UUID): Promise<UUID[]> {
     // This method isn't directly supported in the adapter, so we need to implement it differently
     const servers = await (this.database as any).getMessageServers();
-    const serverIds = [];
+    const serverIds: UUID[] = [];
     for (const server of servers) {
       const agents = await (this.database as any).getAgentsForServer(server.id);
       if (agents.includes(agentId)) {
-        serverIds.push(server.id as never);
+        serverIds.push(server.id as UUID);
       }
     }
     return serverIds;
@@ -1273,7 +1329,7 @@ export {
   loadCharacterTryPath,
   hasValidRemoteUrls,
   loadCharacters,
-} from './loader';
+} from './CharacterLoader';
 
 // Export types
 export * from './types';

@@ -1,28 +1,34 @@
-import { IAgentRuntime, logger, UUID, Service, ServiceType, TokenBalance } from '@elizaos/core';
 import {
-  IUniversalWalletService,
-  UniversalPortfolio,
-  UniversalTokenBalance,
-  UniversalTransferParams,
-  SwapParams,
-  BridgeParams,
-  UniversalTransactionParams,
-  UniversalTransactionResult,
-  SimulationResult,
-  GasEstimate,
-  ChainInfo,
+  type IAgentRuntime,
+  type IUniversalWalletService,
+  type UniversalPortfolio,
+  type UniversalTokenBalance,
+  type UniversalTransferParams,
+  type SwapParams,
+  type BridgeParams,
+  type UniversalTransactionParams,
+  type UniversalTransactionResult,
+  type SimulationResult,
+  type GasEstimate,
+  type ChainInfo,
+  type ChainAdapter,
+  type PaymentRequestParams as _PaymentRequestParams,
+  type UniversalPaymentRequest as _UniversalPaymentRequest,
+  type PaymentResult as _PaymentResult,
+  type PaymentVerification as _PaymentVerification,
+  type WalletCreationParams,
+  type WalletImportParams,
+  type WalletInstance,
+  type WalletFilter,
+  type SessionParams,
+  type SessionKey,
+  type UUID as _UUID,
+  type TokenBalance as _TokenBalance,
+  logger,
+  Service,
+  ServiceType,
   WalletCapability,
-  ChainAdapter,
-  PaymentRequestParams,
-  UniversalPaymentRequest,
-  PaymentResult,
-  PaymentVerification,
-  WalletCreationParams,
-  WalletImportParams,
-  WalletInstance,
-  WalletFilter,
-  SessionParams,
-  SessionKey,
+  stringToUuid as _stringToUuid,
 } from '@elizaos/core';
 import {
   createPublicClient,
@@ -32,20 +38,28 @@ import {
   type Hash,
   type PublicClient,
   type WalletClient,
-  parseEther,
+  parseEther as _parseEther,
   formatEther,
   formatUnits,
-  parseUnits,
+  parseUnits as _parseUnits,
   getContract,
-  isAddress,
+  isAddress as _isAddress,
   type Hex,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { mainnet, polygon, arbitrum, optimism, base, bsc, avalanche } from 'viem/chains';
-import type { Chain } from 'viem/chains';
+import {
+  mainnet,
+  polygon,
+  arbitrum,
+  optimism,
+  base,
+  bsc,
+  avalanche,
+  type Chain,
+} from 'viem/chains';
 import { EVMWalletService } from './EVMWalletService';
 import { createTokenService } from '../../tokens/token-service';
-import { BridgeAggregator } from '../../bridges/bridge-aggregator';
+import { BridgeAggregatorService } from '../../cross-chain/bridge-aggregator';
 
 // ERC20 ABI for token transfers
 const ERC20_ABI = [
@@ -113,10 +127,10 @@ export class EVMChainAdapter implements ChainAdapter {
     private walletClient: WalletClient,
     private runtime: IAgentRuntime,
     private tokenService?: ReturnType<typeof createTokenService>,
-    private bridgeAggregator?: BridgeAggregator,
+    private bridgeAggregator?: BridgeAggregatorService
   ) {}
 
-  private async getWalletAccount() {
+  private getWalletAccount() {
     // Try to get the account from the wallet client first
     if (this.walletClient.account) {
       return this.walletClient.account;
@@ -184,7 +198,7 @@ export class EVMChainAdapter implements ChainAdapter {
         };
       }
     } catch (error) {
-      logger.error(`Error getting balance for ${this.chainId}:`, error);
+      logger.error('Failed to get balance:', error);
       throw error;
     }
   }
@@ -193,7 +207,7 @@ export class EVMChainAdapter implements ChainAdapter {
     try {
       const to = params.to as Address;
       const amount = BigInt(params.amount);
-      const account = await this.getWalletAccount();
+      const account = this.getWalletAccount();
 
       let hash: Hash;
 
@@ -239,7 +253,7 @@ export class EVMChainAdapter implements ChainAdapter {
         timestamp: Date.now(),
       };
     } catch (error) {
-      logger.error(`Error executing transfer on ${this.chainId}:`, error);
+      logger.error('Transfer failed:', error);
       return {
         hash: '',
         status: 'failed',
@@ -251,7 +265,7 @@ export class EVMChainAdapter implements ChainAdapter {
 
   async sendTransaction(params: UniversalTransactionParams): Promise<UniversalTransactionResult> {
     try {
-      const account = await this.getWalletAccount();
+      const account = this.getWalletAccount();
       const hash = await this.walletClient.sendTransaction({
         account,
         to: params.to as Address,
@@ -280,7 +294,7 @@ export class EVMChainAdapter implements ChainAdapter {
         timestamp: Date.now(),
       };
     } catch (error) {
-      logger.error(`Error sending transaction on ${this.chainId}:`, error);
+      logger.error('Transaction failed:', error);
       return {
         hash: '',
         status: 'failed',
@@ -308,7 +322,7 @@ export class EVMChainAdapter implements ChainAdapter {
         estimatedTime: 15, // Estimate based on chain
       };
     } catch (error) {
-      logger.error(`Error estimating gas on ${this.chainId}:`, error);
+      logger.error('Gas estimation failed:', error);
       throw error;
     }
   }
@@ -346,8 +360,8 @@ export class EVMChainAdapter implements ChainAdapter {
 
     try {
       // Get wallet address from account
-      const account = await this.getWalletAccount();
-      const walletAddress = account.address;
+      const account = this.getWalletAccount();
+      const _walletAddress = account.address;
 
       // Use the SwapAction to execute the swap
       const { SwapAction } = await import('../../actions/swap');
@@ -371,7 +385,7 @@ export class EVMChainAdapter implements ChainAdapter {
         chain: params.chain,
       };
     } catch (error) {
-      logger.error(`Error executing swap on ${params.chain}:`, error);
+      logger.error('Swap failed:', error);
       return {
         hash: '',
         status: 'failed',
@@ -413,7 +427,7 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
 
   private evmWalletService?: EVMWalletService;
   private tokenService?: ReturnType<typeof createTokenService>;
-  private bridgeAggregator?: BridgeAggregator;
+  private bridgeAggregator?: BridgeAggregatorService;
   private chains: Map<string, Chain> = new Map();
   protected adapters: Map<string, ChainAdapter> = new Map();
   protected defaultChain?: string;
@@ -427,7 +441,7 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
     // Get other services
     this.evmWalletService = runtime.getService<EVMWalletService>('wallet') || undefined;
     this.tokenService = createTokenService(runtime);
-    this.bridgeAggregator = new BridgeAggregator();
+    this.bridgeAggregator = new BridgeAggregatorService(runtime);
 
     // Create and register chain adapters
     this.initializeAdapters();
@@ -481,7 +495,7 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
           walletClient,
           this.runtime!,
           this.tokenService,
-          this.bridgeAggregator,
+          this.bridgeAggregator
         );
 
         this.registerAdapter(chainId, adapter);
@@ -513,23 +527,23 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
   }
 
   // Core required methods
-  async transfer(params: UniversalTransferParams): Promise<UniversalTransactionResult> {
+  transfer(params: UniversalTransferParams): Promise<UniversalTransactionResult> {
     const chain = params.chain || 'ethereum';
     if (!this.isChainSupported(chain)) {
       throw new Error(`Unsupported chain: ${chain}`);
     }
 
     const adapter = this.getAdapterForChain(chain);
-    return await adapter.transfer(params);
+    return adapter.transfer(params);
   }
 
-  async sendTransaction(params: UniversalTransactionParams): Promise<UniversalTransactionResult> {
+  sendTransaction(params: UniversalTransactionParams): Promise<UniversalTransactionResult> {
     if (!this.isChainSupported(params.chain)) {
       throw new Error(`Unsupported chain: ${params.chain}`);
     }
 
     const adapter = this.getAdapterForChain(params.chain);
-    return await adapter.sendTransaction(params);
+    return adapter.sendTransaction(params);
   }
 
   async getBalances(owner?: string): Promise<UniversalTokenBalance[]> {
@@ -542,7 +556,7 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
           // Get native token balance
           const nativeBalance = await adapter.getBalance(
             owner || (await this.getDefaultAddress()),
-            undefined,
+            undefined
           );
           allBalances.push(nativeBalance);
 
@@ -552,21 +566,18 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
             try {
               const tokenBalance = await adapter.getBalance(
                 owner || (await this.getDefaultAddress()),
-                tokenAddress,
+                tokenAddress
               );
               if (parseFloat(tokenBalance.balance) > 0) {
                 allBalances.push(tokenBalance);
               }
-            } catch (error) {
+            } catch (_error) {
               // Skip tokens that fail to fetch
-              console.debug(
-                `Failed to fetch balance for token ${tokenAddress} on ${chainId}:`,
-                error,
-              );
+              // Skip tokens that fail to fetch balances
             }
           }
         } catch (error) {
-          console.warn(`Failed to fetch balances for chain ${chainId}:`, error);
+          logger.warn(`Failed to fetch balances for chain ${chainId}:`, error);
         }
       }
     }
@@ -579,10 +590,7 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
     const chain = this.defaultChain || 'ethereum';
     const adapter = this.getAdapterForChain(chain);
 
-    return await adapter.getBalance(
-      walletAddress,
-      assetAddress === 'native' ? undefined : assetAddress,
-    );
+    return adapter.getBalance(walletAddress, assetAddress === 'native' ? undefined : assetAddress);
   }
 
   // Enhanced implementations using EVM services
@@ -642,12 +650,12 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
         };
       }
     } catch (error) {
-      logger.error('Error getting EVM portfolio:', error);
+      logger.error('Failed to get portfolio:', error);
       throw error;
     }
   }
 
-  async swap(params: SwapParams): Promise<UniversalTransactionResult> {
+  swap(params: SwapParams): Promise<UniversalTransactionResult> {
     if (!this.isChainSupported(params.chain)) {
       throw new Error(`Unsupported chain: ${params.chain}`);
     }
@@ -657,22 +665,22 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
       throw new Error(`Swap not supported on ${params.chain}`);
     }
 
-    return await adapter.swap(params);
+    return adapter.swap(params);
   }
 
-  async bridge(params: BridgeParams): Promise<UniversalTransactionResult> {
+  bridge(_params: BridgeParams): Promise<UniversalTransactionResult> {
     // TODO: Implement bridge functionality
     throw new Error('Bridge functionality not yet implemented');
   }
 
-  async estimateGas(params: UniversalTransactionParams): Promise<GasEstimate> {
+  estimateGas(params: UniversalTransactionParams): Promise<GasEstimate> {
     const adapter = this.getAdapterForChain(params.chain);
-    return await adapter.estimateGas(params);
+    return adapter.estimateGas(params);
   }
 
-  async simulateTransaction(params: UniversalTransactionParams): Promise<SimulationResult> {
+  simulateTransaction(params: UniversalTransactionParams): Promise<SimulationResult> {
     const adapter = this.getAdapterForChain(params.chain);
-    return await adapter.simulateTransaction(params);
+    return adapter.simulateTransaction(params);
   }
 
   async getTransaction(hash: string, chain?: string): Promise<UniversalTransactionResult> {
@@ -703,7 +711,7 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
         timestamp: Date.now(), // Would need to get block timestamp
       };
     } catch (error) {
-      logger.error('Error getting EVM transaction:', error);
+      logger.error('Failed to get transaction:', error);
       throw error;
     }
   }
@@ -722,7 +730,7 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
       try {
         const account = privateKeyToAccount(privateKey as Hex);
         return account.address;
-      } catch (error) {
+      } catch (_error) {
         throw new Error('Could not derive address from private key');
       }
     }
@@ -731,37 +739,37 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
   }
 
   // Wallet management methods (optional implementation)
-  async createWallet(params: WalletCreationParams): Promise<WalletInstance> {
+  createWallet(_params: WalletCreationParams): Promise<WalletInstance> {
     throw new Error('Wallet creation not implemented');
   }
 
-  async importWallet(params: WalletImportParams): Promise<WalletInstance> {
+  importWallet(_params: WalletImportParams): Promise<WalletInstance> {
     throw new Error('Wallet import not implemented');
   }
 
-  async getWallets(filter?: WalletFilter): Promise<WalletInstance[]> {
-    return [];
+  getWallets(_filter?: WalletFilter): Promise<WalletInstance[]> {
+    return Promise.resolve([]);
   }
 
-  async deleteWallet(walletId: string): Promise<boolean> {
+  deleteWallet(_walletId: string): Promise<boolean> {
     throw new Error('Wallet deletion not implemented');
   }
 
   // Session management methods (optional implementation)
-  async createSession(params: SessionParams): Promise<SessionKey> {
+  createSession(_params: SessionParams): Promise<SessionKey> {
     throw new Error('Session creation not implemented');
   }
 
-  async validateSession(sessionId: string, operation: string): Promise<boolean> {
-    return false;
+  validateSession(_sessionId: string, _operation: string): Promise<boolean> {
+    return Promise.resolve(false);
   }
 
-  async revokeSession(sessionId: string): Promise<void> {
+  revokeSession(_sessionId: string): Promise<void> {
     throw new Error('Session revocation not implemented');
   }
 
-  async listSessions(walletId?: string): Promise<SessionKey[]> {
-    return [];
+  listSessions(_walletId?: string): Promise<SessionKey[]> {
+    return Promise.resolve([]);
   }
 
   // Service lifecycle
@@ -781,14 +789,15 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
     return service;
   }
 
-  async stop(): Promise<void> {
+  stop(): Promise<void> {
     logger.info('Stopping EVMUniversalWalletService...');
     // Cleanup any resources if needed
+    return Promise.resolve();
   }
 
   // Additional required methods from IUniversalWalletService
-  async getSupportedChains(): Promise<ChainInfo[]> {
-    return this.chainSupport.map((chainId) => {
+  getSupportedChains(): Promise<ChainInfo[]> {
+    const chains = this.chainSupport.map((chainId) => {
       const chain = this.chains.get(chainId);
       return {
         id: chainId,
@@ -804,13 +813,15 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
         bridgeSupport: ['lifi', 'across', 'wormhole'],
       };
     });
+    return Promise.resolve(chains);
   }
 
-  async switchChain(chainId: string): Promise<void> {
+  switchChain(chainId: string): Promise<void> {
     if (!this.isChainSupported(chainId)) {
       throw new Error(`Unsupported chain: ${chainId}`);
     }
     this.defaultChain = chainId;
+    return Promise.resolve();
   }
 
   isChainSupported(chainId: string): boolean {
@@ -834,7 +845,7 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
     return `Universal wallet service supporting ${this.chainSupport.join(', ')} with capabilities: ${this.capabilities.join(', ')}`;
   }
 
-  protected async getCommonTokensForChain(chainId: string): Promise<string[]> {
+  protected getCommonTokensForChain(chainId: string): Promise<string[]> {
     // Return common token addresses for each chain
     const commonTokens: Record<string, string[]> = {
       ethereum: [
@@ -850,7 +861,7 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
       ],
     };
 
-    return commonTokens[chainId] || [];
+    return Promise.resolve(commonTokens[chainId] || []);
   }
 }
 

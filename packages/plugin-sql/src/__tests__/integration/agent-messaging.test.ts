@@ -2,11 +2,10 @@ import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { AgentRuntime, type Memory, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { createIsolatedTestDatabase } from '../test-helpers';
-import type { PgliteDatabaseAdapter } from '../../pglite/adapter';
-import type { PgDatabaseAdapter } from '../../pg/adapter';
+import type { PgAdapter } from '../../pg/adapter';
 
-describe('Agent Messaging with PGLite', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+describe('Agent Messaging with PostgreSQL', () => {
+  let adapter: PgAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -215,15 +214,8 @@ describe('Agent Messaging with PGLite', () => {
 
     console.log('[Test] Adapter closed. Simulating restart...');
 
-    // For PGLite in-memory, we need to create a new adapter
-    // In real scenarios with file-based PGLite, data would persist
-    const isPGLite = adapter.constructor.name === 'PgliteDatabaseAdapter';
-
-    if (isPGLite) {
-      console.log(
-        '[Test] Note: In-memory PGLite loses data on shutdown. In production, use file-based storage.'
-      );
-    }
+    // PostgreSQL maintains data persistence across connections
+    console.log('[Test] Note: PostgreSQL maintains data persistence across connections.');
 
     // Re-initialize the adapter
     await adapter.init();
@@ -254,8 +246,8 @@ describe('Agent Messaging with PGLite', () => {
       tableName: 'messages',
     });
 
-    // For in-memory PGLite, we'll only have the new message
-    // For file-based PGLite or PostgreSQL, we'd have both
+    // For fresh database connections, we'll only have the new message
+    // For PostgreSQL with persistent storage, we'd have both
     expect(messagesAfterRestart.length).toBeGreaterThan(0);
 
     console.log('[Test] Successfully handled shutdown and restart');

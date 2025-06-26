@@ -1,4 +1,4 @@
-import { type Plugin, PluginEvents } from '@elizaos/core';
+import type { Plugin } from '@elizaos/core';
 
 import * as actions from './actions/index.ts';
 import * as providers from './providers/index.ts';
@@ -20,8 +20,8 @@ export const messageHandlingPlugin: Plugin = {
     actions.muteRoomAction,
     actions.unmuteRoomAction,
   ],
-  // this is jank, these events are not valid
-  events: events as any as PluginEvents,
+  // TODO: Fix event type casting - events need proper typing
+  events: events as any,
   providers: [
     providers.evaluatorsProvider,
     providers.anxietyProvider,

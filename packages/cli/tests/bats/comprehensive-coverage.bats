@@ -37,12 +37,31 @@ teardown() {
     # Kill any running processes from PIDS_FILE
     if [ -f "$PIDS_FILE" ]; then
         while read -r pid; do
-            if kill -0 "$pid" 2>/dev/null; then
-                kill -TERM "$pid" 2>/dev/null || true
-                sleep 1
-                kill -KILL "$pid" 2>/dev/null || true
+            # Skip empty lines and validate PID format
+            if [[ -n "$pid" && "$pid" =~ ^[0-9]+$ ]]; then
+                if kill -0 "$pid" 2>/dev/null; then
+                    kill -TERM "$pid" 2>/dev/null || true
+                    sleep 1
+                    if kill -0 "$pid" 2>/dev/null; then
+                        kill -KILL "$pid" 2>/dev/null || true
+                    fi
+                fi
             fi
         done < "$PIDS_FILE"
+    fi
+    
+    # Clean up any test projects in monorepo packages
+    if [[ -n "$MONOREPO_ROOT" && -d "$MONOREPO_ROOT/packages" ]]; then
+        cd "$MONOREPO_ROOT/packages"
+        # Remove test directories (be very careful with pattern)
+        rm -rf test-monorepo-project* 2>/dev/null || true
+        rm -rf lifecycle-test* 2>/dev/null || true
+        rm -rf multi-agent-test* 2>/dev/null || true
+        rm -rf broken-index-test* 2>/dev/null || true
+        rm -rf missing-deps-test* 2>/dev/null || true
+        rm -rf failing-test-plugin* 2>/dev/null || true
+        rm -rf full-feature-plugin* 2>/dev/null || true
+        rm -rf plugin-consumer* 2>/dev/null || true
     fi
     
     teardown_test_environment
@@ -55,16 +74,27 @@ start_with_timeout() {
     local log_file="${3:-$TEST_DIR/process.log}"
     
     # Start the process in background
-    $cmd > "$log_file" 2>&1 &
+    eval "$cmd" > "$log_file" 2>&1 &
     local pid=$!
+    
+    # Verify process started
+    if ! kill -0 "$pid" 2>/dev/null; then
+        echo "Failed to start process: $cmd" >&2
+        return 1
+    fi
+    
     echo "$pid" >> "$PIDS_FILE"
     
-    # Set up timeout
+    # Set up timeout in background with better error handling
     (
         sleep "$timeout"
         if kill -0 "$pid" 2>/dev/null; then
-            echo "Process $pid killed after ${timeout}s timeout"
+            echo "Process $pid killed after ${timeout}s timeout" >> "$log_file"
             kill -TERM "$pid" 2>/dev/null || true
+            sleep 2
+            if kill -0 "$pid" 2>/dev/null; then
+                kill -KILL "$pid" 2>/dev/null || true
+            fi
         fi
     ) &
     local timeout_pid=$!
@@ -104,7 +134,7 @@ wait_for_server() {
     # Create project from template
     run node "$ELIZAOS_BIN" create test-project --yes
     assert_success
-    assert_output --partial "created successfully"
+    assert_output --partial "initialized successfully"
     
     # Navigate to project
     cd "$TEST_DIR/test-project"
@@ -142,7 +172,7 @@ wait_for_server() {
     assert_output --partial "created successfully"
     
     # Navigate to plugin
-    cd "$TEST_DIR/test-plugin"
+    cd "$TEST_DIR/plugin-test"
     
     # Install dependencies
     run bun install
@@ -200,13 +230,17 @@ wait_for_server() {
 
 # Test 4: Test inside monorepo context
 @test "context: create and run project inside monorepo" {
-    # Create project inside monorepo packages
+    # Create project inside monorepo packages with unique name
+    local project_name="test-monorepo-project-$$-$(date +%s)"
     cd "$MONOREPO_ROOT/packages"
     
-    run node "$ELIZAOS_BIN" create test-monorepo-project --yes
+    # Ensure clean state
+    rm -rf "$project_name" 2>/dev/null || true
+    
+    run node "$ELIZAOS_BIN" create "$project_name" --yes
     assert_success
     
-    cd test-monorepo-project
+    cd "$project_name"
     
     # Should use workspace protocol
     run grep -q "workspace:\\*" package.json
@@ -221,15 +255,21 @@ wait_for_server() {
     
     # Clean up
     cd "$MONOREPO_ROOT/packages"
-    rm -rf test-monorepo-project
+    rm -rf "$project_name"
 }
 
-# Test 5: Test outside monorepo context
+# Test 5: Test outside monorepo context (simulating production)
 @test "context: create and run project outside monorepo" {
     # Create temp directory outside monorepo
     local EXTERNAL_DIR="$BATS_TEST_TMPDIR/external-test"
     mkdir -p "$EXTERNAL_DIR"
     cd "$EXTERNAL_DIR"
+    
+    # Temporarily disable test mode to simulate production
+    local OLD_ELIZA_TEST_MODE="$ELIZA_TEST_MODE"
+    local OLD_NODE_ENV="$NODE_ENV"
+    unset ELIZA_TEST_MODE
+    export NODE_ENV="production"
     
     # Create project
     run node "$ELIZAOS_BIN" create standalone-project --yes
@@ -241,9 +281,17 @@ wait_for_server() {
     run grep -q "workspace:\\*" package.json
     assert_failure
     
-    # Should have explicit versions
-    run grep -q "\"@elizaos/core\": \"\\^" package.json
+    # Should have latest version for published packages
+    run grep -q "\"@elizaos/cli\": \"latest\"" package.json
     assert_success
+    
+    # Should have latest for core (since outside workspace, it tries published version)
+    run grep -q "\"@elizaos/core\": \"latest\"" package.json
+    assert_success
+    
+    # Restore test environment
+    export ELIZA_TEST_MODE="$OLD_ELIZA_TEST_MODE"
+    export NODE_ENV="$OLD_NODE_ENV"
     
     # Clean up
     cd "$BATS_TEST_TMPDIR"

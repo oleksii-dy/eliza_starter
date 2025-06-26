@@ -1,6 +1,7 @@
 import { elizaLogger, type IAgentRuntime } from '@elizaos/core';
 import * as semver from 'semver';
 import { PluginManagerServiceType } from '../types.ts';
+import { PluginManagerService } from '../services/pluginManagerService.ts';
 
 export interface DependencyNode {
   pluginName: string;
@@ -149,7 +150,7 @@ export class DependencyResolverManager {
       graph.set(pluginName, node);
 
       // Recursively process dependencies
-      for (const [depName, depVersion] of node.dependencies) {
+      for (const [depName, _depVersion] of node.dependencies) {
         await this.buildDependencyGraph(depName, graph, visited, visiting, conflicts, depth + 1);
       }
     } finally {
@@ -162,7 +163,7 @@ export class DependencyResolverManager {
    * Get plugin information from registry
    */
   private async getPluginInfo(pluginName: string): Promise<any> {
-    const pluginManager = this.runtime.getService(PluginManagerServiceType.PLUGIN_MANAGER) as any;
+    const pluginManager = this.runtime.getService<PluginManagerService>(PluginManagerServiceType.PLUGIN_MANAGER);
     if (!pluginManager) {
       return null;
     }

@@ -33,7 +33,7 @@ export const enhancedMessageClassifierProvider: Provider = {
   name: 'ENHANCED_MESSAGE_CLASSIFIER',
   description: 'AI-powered message classification for intelligent planning',
 
-  get: async (runtime, message, state) => {
+  get: async (runtime, message, _state) => {
     const text = message.content?.text || '';
 
     if (!runtime.useModel) {
@@ -84,7 +84,7 @@ Respond in this JSON format:
         } else {
           throw new Error('No JSON found in response');
         }
-      } catch (parseError) {
+      } catch (_parseError) {
         console.warn('Failed to parse LLM classification, using fallback');
         return fallbackClassification(text);
       }
@@ -231,11 +231,11 @@ export const enhancedCreatePlanAction: Action = {
           plan,
           planCreated: true,
           planType: 'enhanced',
-          nextActions: plan.steps.map(s => s.action)
+          nextActions: plan.steps.map((s: any) => s.action)
         },
         data: {
           strategicPlan: plan,
-          executionSteps: plan.steps.map(s => s.action),
+          executionSteps: plan.steps.map((s: any) => s.action),
           planningAnalysis: analysis
         },
         text: `Enhanced plan created with ${plan.steps.length} steps`,
@@ -289,7 +289,7 @@ export const enhancedExecutePlanAction: Action = {
     }
 
     // Execute plan with enhanced context awareness
-    const executionResults = [];
+    const executionResults: any[] = [];
 
     for (let i = 0; i < plan.steps.length; i++) {
       const step = plan.steps[i];
@@ -449,7 +449,7 @@ function parsePlanFromLLMResponse(response: string, userRequest: string): any {
   };
 }
 
-async function generateStepExecution(step: any, plan: any, runtime: any): Promise<any> {
+async function generateStepExecution(step: any, _plan: any, _runtime: any): Promise<any> {
   // Generate contextual execution message based on step action
   const actionMessages = {
     'ANALYZE_REQUEST': 'Request analysis completed - identified key requirements and objectives',
@@ -469,7 +469,7 @@ async function generateStepExecution(step: any, plan: any, runtime: any): Promis
     'COMPLIANCE_CHECK': 'Compliance verification completed - all requirements validated'
   };
 
-  const message = actionMessages[step.action] || `${step.action.toLowerCase().replace('_', ' ')} completed successfully`;
+  const message = (actionMessages as any)[step.action] || `${step.action.toLowerCase().replace('_', ' ')} completed successfully`;
 
   return {
     step: step.number,
@@ -482,7 +482,7 @@ async function generateStepExecution(step: any, plan: any, runtime: any): Promis
 
 function fallbackPlanning(userRequest: string, analysis: any, callback: any): any {
   // Simple fallback planning logic
-  const steps = [];
+  const steps: Array<{ number: number; action: string; description: string }> = [];
   const text = userRequest.toLowerCase();
 
   if (text.includes('email')) {

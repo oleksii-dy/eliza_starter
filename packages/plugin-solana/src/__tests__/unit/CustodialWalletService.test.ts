@@ -6,26 +6,58 @@ import * as crypto from 'crypto';
 
 // Mock dependencies
 mock.module('@solana/web3.js', () => ({
-  Connection: mock().mockImplementation(() => ({
-    getBalance: mock(),
-    getAccountInfo: mock(),
-  })),
+  Connection: class MockConnection {
+    public url: string;
+    public commitment: string;
+    public getBalance: any;
+    public getAccountInfo: any;
+
+    constructor(url: string, commitment: string) {
+      this.url = url;
+      this.commitment = commitment;
+      this.getBalance = mock().mockResolvedValue(1000000000);
+      this.getAccountInfo = mock().mockResolvedValue(null);
+    }
+  },
   Keypair: {
     fromSeed: mock(),
     fromSecretKey: mock(),
+    generate: mock(() => ({
+      publicKey: { toString: () => 'generated-pubkey' },
+      secretKey: new Uint8Array(64),
+    })),
   },
-  PublicKey: mock().mockImplementation((key) => ({
-    toString: () => key,
-    toBase58: () => key,
-  })),
+  PublicKey: class MockPublicKey {
+    public key: string;
+
+    constructor(key: string) {
+      this.key = key;
+    }
+    toString() {
+      return this.key;
+    }
+    toBase58() {
+      return this.key;
+    }
+  },
   LAMPORTS_PER_SOL: 1000000000,
 }));
 
 mock.module('crypto', () => ({
-  randomBytes: mock(),
-  createHmac: mock(),
-  createCipher: mock(),
-  createDecipher: mock(),
+  randomBytes: mock().mockReturnValue(Buffer.from('test-random-bytes')),
+  createHmac: mock().mockReturnValue({
+    update: mock().mockReturnThis(),
+    digest: mock().mockReturnValue(Buffer.from('test-derived-seed')),
+  }),
+  scryptSync: mock().mockReturnValue(Buffer.from('test-derived-key')),
+  createCipheriv: mock().mockReturnValue({
+    update: mock().mockReturnValue(Buffer.from('encrypted-')),
+    final: mock().mockReturnValue(Buffer.from('data')),
+  }),
+  createDecipheriv: mock().mockReturnValue({
+    update: mock().mockReturnValue(Buffer.from('decrypted-')),
+    final: mock().mockReturnValue(Buffer.from('data')),
+  }),
 }));
 
 mock.module('bs58', () => ({
@@ -82,21 +114,7 @@ describe('CustodialWalletService', () => {
       getService: mock(() => null), // No services available in tests
     };
 
-    // Mock crypto functions
-    (crypto.randomBytes as any) = mock().mockReturnValue(Buffer.from('test-random-bytes'));
-    (crypto.createHmac as any) = mock().mockReturnValue({
-      update: mock().mockReturnThis(),
-      digest: mock().mockReturnValue(Buffer.from('test-derived-seed')),
-    });
-    (crypto.scryptSync as any) = mock().mockReturnValue(Buffer.from('test-derived-key'));
-    (crypto.createCipheriv as any) = mock().mockReturnValue({
-      update: mock().mockReturnValue(Buffer.from('encrypted-')),
-      final: mock().mockReturnValue(Buffer.from('data')),
-    });
-    (crypto.createDecipheriv as any) = mock().mockReturnValue({
-      update: mock().mockReturnValue(Buffer.from('decrypted-')),
-      final: mock().mockReturnValue(Buffer.from('data')),
-    });
+    // Crypto is mocked at module level
 
     // Mock Keypair.fromSeed
     (Keypair.fromSeed as any) = mock().mockReturnValue(mockKeypair);

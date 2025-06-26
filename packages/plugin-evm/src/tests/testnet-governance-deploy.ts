@@ -1,14 +1,13 @@
-import { createWalletClient, createPublicClient, http, parseEther } from 'viem';
+import { type Address, createWalletClient, createPublicClient, http, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
-import type { Address } from 'viem';
 import fs from 'fs';
 import path from 'path';
 
 // Contract ABIs and bytecode would normally be imported from compiled contracts
 // For this example, we'll use simplified versions
 
-const SIMPLE_GOVERNOR_ABI = [
+const _SIMPLE_GOVERNOR_ABI = [
   {
     inputs: [
       { name: '_token', type: 'address' },
@@ -62,7 +61,7 @@ const SIMPLE_GOVERNOR_ABI = [
   },
 ];
 
-const VOTE_TOKEN_ABI = [
+const _VOTE_TOKEN_ABI = [
   {
     inputs: [],
     stateMutability: 'nonpayable',
@@ -111,7 +110,7 @@ interface DeployedContracts {
 
 export async function deployTestnetGovernance(
   privateKey: `0x${string}`,
-  chain = sepolia,
+  chain = sepolia
 ): Promise<DeployedContracts> {
   console.log('🚀 Deploying governance contracts to testnet...');
 
@@ -121,7 +120,7 @@ export async function deployTestnetGovernance(
     transport: http(),
   });
 
-  const walletClient = createWalletClient({
+  const _walletClient = createWalletClient({
     account,
     chain,
     transport: http(),

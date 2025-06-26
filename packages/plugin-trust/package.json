@@ -18,14 +18,12 @@
     "access-control"
   ],
   "scripts": {
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' tsup",
-    "build:types": "NODE_OPTIONS='--max-old-space-size=8192' tsc --declaration --emitDeclarationOnly --outDir dist",
-    "build:watch": "NODE_OPTIONS='--max-old-space-size=4096' tsup --watch",
-    "dev": "tsup --format esm --watch",
-    "test": "elizaos test",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
-    "type-check": "tsc --noEmit"
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "elizaos test"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",
@@ -34,7 +32,6 @@
   },
   "devDependencies": {
     "@types/dedent": "^0.7.2",
-    "tsup": "^8.3.5",
     "typescript": "5.6.3"
   },
   "peerDependencies": {

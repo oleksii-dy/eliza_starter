@@ -54,7 +54,7 @@
     "lru-cache": "^11.0.2",
     "uuid": "^11.1.0",
     "ws": "^8.18.0",
-    "zod": "3.24.2"
+    "zod": "3.25.67"
   },
   "peerDependencies": {},
   "devDependencies": {
@@ -66,22 +66,15 @@
     "@types/ws": "^8.5.12",
     "dotenv": "16.4.5",
     "prettier": "3.5.3",
-    "tsup": "8.4.0",
     "typescript": "5.8.3"
   },
   "scripts": {
-    "start": "bun run elizaos start",
-    "dev": "bun run elizaos dev",
-    "build": "bun run tsup",
-    "lint": "eslint 'src/**/*.{js,ts,tsx}'",
-    "lint:fix": "eslint 'src/**/*.{js,ts,tsx}' --fix",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "typecheck": "tsc --noEmit",
     "test": "elizaos test",
-    "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage",
-    "test:e2e": "bun run elizaos test",
-    "publish": "bun run elizaos publish",
-    "format": "bun run prettier --write ./src",
-    "format:check": "bun run prettier --check ./src",
     "benchmarks": "bun ./scripts/run-benchmarks.ts",
     "swe-bench:comprehensive": "bun ./scripts/run-swe-bench-comprehensive.ts",
     "swe-bench:real": "bun ./scripts/run-swe-bench-real.ts",
@@ -91,7 +84,7 @@
     "access": "public"
   },
   "resolutions": {
-    "zod": "3.24.2"
+    "zod": "3.25.67"
   },
   "agentConfig": {
     "pluginType": "elizaos:plugin:1.0.0",

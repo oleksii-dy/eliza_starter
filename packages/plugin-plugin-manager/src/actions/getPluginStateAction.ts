@@ -9,6 +9,7 @@ import {
 } from '@elizaos/core';
 import { PluginManagerService } from '../services/pluginManagerService.ts';
 import { PluginManagerServiceType, type PluginState, PluginStatusValues } from '../types.ts';
+import { TrustService } from '@elizaos/plugin-trust';
 
 export const getPluginStateAction: Action = {
   name: 'GET_PLUGIN_STATE',
@@ -154,12 +155,12 @@ export const getPluginStateAction: Action = {
           : 'No plugins registered in the Plugin Manager.';
 
       // Check permissions for various actions
-      const trustService = runtime.getService('TRUST') as any;
+      const trustService = runtime.getService<TrustService>('TRUST');
       const canLoad = trustService ?
-        await trustService.checkPermission(message.entityId, 'plugin:load') :
+        await (trustService as any).checkPermission(message.entityId, 'plugin:load') :
         true;
       const canUnload = trustService ?
-        await trustService.checkPermission(message.entityId, 'plugin:unload') :
+        await (trustService as any).checkPermission(message.entityId, 'plugin:unload') :
         true;
 
       let actionText = text;

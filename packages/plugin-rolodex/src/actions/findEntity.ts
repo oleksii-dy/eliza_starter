@@ -339,7 +339,9 @@ function _formatEntityList(entities: any[]): string {
 }
 
 function _formatRecentMessages(state?: State): string {
-  if (!state?.text) {return 'No recent message context available.';}
+  if (!state?.text) {
+    return 'No recent message context available.';
+  }
   return state.text.slice(-500); // Last 500 chars
 }
 
@@ -393,8 +395,12 @@ function _searchEntitiesFuzzy(entities: any[], query: string): SearchResult[] {
 }
 
 function calculateSimpleDistance(a: string, b: string): number {
-  if (a.length === 0) {return b.length;}
-  if (b.length === 0) {return a.length;}
+  if (a.length === 0) {
+    return b.length;
+  }
+  if (b.length === 0) {
+    return a.length;
+  }
 
   const matrix = Array(a.length + 1)
     .fill(null)

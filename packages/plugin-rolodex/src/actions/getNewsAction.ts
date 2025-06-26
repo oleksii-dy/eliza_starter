@@ -17,7 +17,7 @@ export const getNewsAction: Action = {
 
     // Check for news-related keywords
     const newsKeywords = ['news', 'headlines', 'latest', 'breaking', 'article', 'story'];
-    const hasNewsKeyword = newsKeywords.some(kw => text.includes(kw));
+    const hasNewsKeyword = newsKeywords.some((kw) => text.includes(kw));
 
     // Check if we have the news API key
     const hasApiKey = !!runtime.getSetting('NEWS_API_KEY');
@@ -49,14 +49,22 @@ export const getNewsAction: Action = {
       const text = message.content.text || '';
       let topic = 'general';
 
-      if (text.includes('tech')) {topic = 'technology';}
-      else if (text.includes('sport')) {topic = 'sports';}
-      else if (text.includes('business')) {topic = 'business';}
-      else if (text.includes('health')) {topic = 'health';}
-      else if (text.includes('science')) {topic = 'science';}
+      if (text.includes('tech')) {
+        topic = 'technology';
+      } else if (text.includes('sport')) {
+        topic = 'sports';
+      } else if (text.includes('business')) {
+        topic = 'business';
+      } else if (text.includes('health')) {
+        topic = 'health';
+      } else if (text.includes('science')) {
+        topic = 'science';
+      }
 
       // Simulate API call with the key
-      logger.info(`[getNewsAction] Fetching ${topic} news with API key: ${apiKey.substring(0, 5)}...`);
+      logger.info(
+        `[getNewsAction] Fetching ${topic} news with API key: ${apiKey.substring(0, 5)}...`
+      );
 
       // Simulate news data (in real implementation, this would call actual API)
       const headlines = [
@@ -99,7 +107,6 @@ export const getNewsAction: Action = {
           apiKeyUsed: true,
         },
       };
-
     } catch (error) {
       logger.error('[getNewsAction] Error getting news:', error);
 

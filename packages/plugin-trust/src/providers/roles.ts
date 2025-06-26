@@ -27,7 +27,8 @@ import {
  */
 export const roleProvider: Provider = {
   name: 'ROLES',
-  description: 'Provides hierarchical role information for server members when agent needs to understand permissions, authority levels, or access control context in group interactions',
+  description:
+    'Provides hierarchical role information for server members when agent needs to understand permissions, authority levels, or access control context in group interactions',
   get: async (runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> => {
     const room = state.data.room ?? (await runtime.getRoom(message.roomId));
     if (!room) {

@@ -1,12 +1,6 @@
 import type { EntityData } from '../../types/core';
-import type {
-  Component,
-  Vector3,
-  Quaternion,
-  World,
-  Entity as IEntity
-} from '../../types';
-import * as THREE from 'three';
+import type { Component, Vector3, Quaternion, World, Entity as IEntity } from '../../types';
+import { THREE } from '../extras/three';
 
 export class Entity implements IEntity {
   world: World;
@@ -14,7 +8,7 @@ export class Entity implements IEntity {
   id: string;
   name: string;
   type: string;
-  node: any; // THREE.Object3D - using any to avoid type conflicts
+  node: any; // Object3D - using any to avoid type conflicts
   components: Map<string, Component>;
   velocity: Vector3;
   isPlayer: boolean;
@@ -59,7 +53,7 @@ export class Entity implements IEntity {
 
     // Network sync for local entities
     if (local && (this.world as any).network) {
-      (this.world as any).network.send('entityAdded', this.serialize());
+      ;(this.world as any).network.send('entityAdded', this.serialize());
     }
   }
 
@@ -68,7 +62,7 @@ export class Entity implements IEntity {
     return {
       x: this.node.position.x,
       y: this.node.position.y,
-      z: this.node.position.z
+      z: this.node.position.z,
     };
   }
 
@@ -82,7 +76,7 @@ export class Entity implements IEntity {
       x: this.node.quaternion.x,
       y: this.node.quaternion.y,
       z: this.node.quaternion.z,
-      w: this.node.quaternion.w
+      w: this.node.quaternion.w,
     };
   }
 
@@ -95,7 +89,7 @@ export class Entity implements IEntity {
     return {
       x: this.node.scale.x,
       y: this.node.scale.y,
-      z: this.node.scale.z
+      z: this.node.scale.z,
     };
   }
 
@@ -115,7 +109,7 @@ export class Entity implements IEntity {
     const component: Component = {
       type,
       entity: this,
-      data: data || {}
+      data: data || {},
     };
 
     // Store component
@@ -133,7 +127,7 @@ export class Entity implements IEntity {
     this.world.events?.emit('entity:component:added', {
       entityId: this.id,
       componentType: type,
-      component
+      component,
     });
 
     return component;
@@ -141,7 +135,9 @@ export class Entity implements IEntity {
 
   removeComponent(type: string): void {
     const component = this.components.get(type);
-    if (!component) {return;}
+    if (!component) {
+      return;
+    }
 
     // Destroy component if it has destroy method
     if (component.destroy) {
@@ -157,12 +153,23 @@ export class Entity implements IEntity {
     // Emit event
     this.world.events?.emit('entity:component:removed', {
       entityId: this.id,
-      componentType: type
+      componentType: type,
     });
   }
 
   getComponent<T extends Component>(type: string): T | null {
-    return (this.components.get(type) as T) || null;
+    const component = this.components.get(type);
+    if (!component) {
+      return null;
+    }
+
+    // For compatibility with RPG systems that expect component data directly,
+    // return the data field if it exists, otherwise return the full component
+    if (component.data && typeof component.data === 'object') {
+      return component.data as T;
+    }
+
+    return component as T;
   }
 
   hasComponent(type: string): boolean {
@@ -171,7 +178,9 @@ export class Entity implements IEntity {
 
   // Physics methods
   applyForce(force: Vector3): void {
-    if (!this.rigidBody) {return;}
+    if (!this.rigidBody) {
+      return;
+    }
 
     if (this.world.physics?.world) {
       const physicsForce = new this.world.physics.world.PxVec3(force.x, force.y, force.z);
@@ -181,7 +190,9 @@ export class Entity implements IEntity {
   }
 
   applyImpulse(impulse: Vector3): void {
-    if (!this.rigidBody) {return;}
+    if (!this.rigidBody) {
+      return;
+    }
 
     if (this.world.physics?.world) {
       const physicsImpulse = new this.world.physics.world.PxVec3(impulse.x, impulse.y, impulse.z);
@@ -260,7 +271,7 @@ export class Entity implements IEntity {
       name: this.name,
       type: this.type,
       position: [this.position.x, this.position.y, this.position.z],
-      quaternion: [this.rotation.x, this.rotation.y, this.rotation.z, this.rotation.w]
+      quaternion: [this.rotation.x, this.rotation.y, this.rotation.z, this.rotation.w],
     };
 
     // Add scale if present in original data or not default
@@ -270,10 +281,16 @@ export class Entity implements IEntity {
 
     // Copy any additional data fields
     for (const key in this.data) {
-      if (key !== 'id' && key !== 'name' && key !== 'type' &&
-          key !== 'position' && key !== 'quaternion' && key !== 'scale' &&
-          this.data.hasOwnProperty(key)) {
-        (serialized as any)[key] = this.data[key];
+      if (
+        key !== 'id' &&
+        key !== 'name' &&
+        key !== 'type' &&
+        key !== 'position' &&
+        key !== 'quaternion' &&
+        key !== 'scale' &&
+        this.data.hasOwnProperty(key)
+      ) {
+        ;(serialized as any)[key] = this.data[key];
       }
     }
 
@@ -303,7 +320,7 @@ export class Entity implements IEntity {
     this.world.events?.emit(`entity:${this.id}:network:${name}`, {
       version,
       data,
-      networkId
+      networkId,
     });
   }
 
@@ -327,18 +344,20 @@ export class Entity implements IEntity {
 
     // Network sync
     if (local && (this.world as any).network) {
-      (this.world as any).network.send('entityRemoved', this.id);
+      ;(this.world as any).network.send('entityRemoved', this.id);
     }
 
     // Emit destroy event
     this.world.events?.emit('entity:destroyed', {
-      entityId: this.id
+      entityId: this.id,
     });
   }
 
   // Helper methods
   private syncPhysicsTransform(): void {
-    if (!this.rigidBody || !this.world.physics?.world) {return;}
+    if (!this.rigidBody || !this.world.physics?.world) {
+      return;
+    }
 
     // Sync Three.js transform to physics body
     const pos = this.position;
@@ -412,8 +431,7 @@ export class Entity implements IEntity {
   }
 
   private isDefaultRotation(): boolean {
-    return this.rotation.x === 0 && this.rotation.y === 0 &&
-           this.rotation.z === 0 && this.rotation.w === 1;
+    return this.rotation.x === 0 && this.rotation.y === 0 && this.rotation.z === 0 && this.rotation.w === 1;
   }
 
   private isDefaultScale(): boolean {

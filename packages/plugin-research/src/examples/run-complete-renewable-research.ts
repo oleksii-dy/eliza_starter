@@ -8,7 +8,13 @@ import path from 'path';
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 import { ResearchService } from '../service';
-import { logger, IAgentRuntime, ModelType, Character, asUUID } from '@elizaos/core';
+import {
+  logger,
+  IAgentRuntime,
+  ModelType,
+  Character,
+  asUUID,
+} from '@elizaos/core';
 import { ResearchConfig, ResearchStatus } from '../types';
 import fs from 'fs/promises';
 import OpenAI from 'openai';
@@ -85,11 +91,19 @@ const createRealLLMRuntime = (): IAgentRuntime => {
             max_tokens: 4096,
             messages: messages.map((msg: any) => ({
               role: msg.role === 'system' ? 'user' : msg.role,
-              content: msg.role === 'system' ? `<system>${msg.content}</system>` : msg.content,
+              content:
+                msg.role === 'system'
+                  ? `<system>${msg.content}</system>`
+                  : msg.content,
             })),
           });
 
-          return { content: response.content[0].type === 'text' ? response.content[0].text : '' };
+          return {
+            content:
+              response.content[0].type === 'text'
+                ? response.content[0].text
+                : '',
+          };
         }
         // Fall back to OpenAI
         else if (openai) {
@@ -236,7 +250,10 @@ async function runCompleteResearch() {
         if (current.report) {
           // Export and save the report
           const markdown = await service.exportProject(project.id, 'markdown');
-          const reportPath = path.join(__dirname, '../../renewable-energy-research-report.md');
+          const reportPath = path.join(
+            __dirname,
+            '../../renewable-energy-research-report.md'
+          );
           await fs.writeFile(reportPath, markdown);
 
           logger.info(`📄 Report saved to: ${reportPath}`);
@@ -262,12 +279,24 @@ async function runCompleteResearch() {
           logger.info(`  - Sources: ${contentAnalysis.sourceCount}`);
           logger.info(`  - Findings: ${contentAnalysis.findingCount}`);
           logger.info('  - Contains key terms:');
-          logger.info(`    • Energy: ${contentAnalysis.hasEnergy ? '✅' : '❌'}`);
-          logger.info(`    • Storage: ${contentAnalysis.hasStorage ? '✅' : '❌'}`);
-          logger.info(`    • Battery: ${contentAnalysis.hasBattery ? '✅' : '❌'}`);
-          logger.info(`    • Renewable: ${contentAnalysis.hasRenewable ? '✅' : '❌'}`);
-          logger.info(`    • Environmental: ${contentAnalysis.hasEnvironmental ? '✅' : '❌'}`);
-          logger.info(`    • Economic: ${contentAnalysis.hasEconomic ? '✅' : '❌'}`);
+          logger.info(
+            `    • Energy: ${contentAnalysis.hasEnergy ? '✅' : '❌'}`
+          );
+          logger.info(
+            `    • Storage: ${contentAnalysis.hasStorage ? '✅' : '❌'}`
+          );
+          logger.info(
+            `    • Battery: ${contentAnalysis.hasBattery ? '✅' : '❌'}`
+          );
+          logger.info(
+            `    • Renewable: ${contentAnalysis.hasRenewable ? '✅' : '❌'}`
+          );
+          logger.info(
+            `    • Environmental: ${contentAnalysis.hasEnvironmental ? '✅' : '❌'}`
+          );
+          logger.info(
+            `    • Economic: ${contentAnalysis.hasEconomic ? '✅' : '❌'}`
+          );
           logger.info(`    • Grid: ${contentAnalysis.hasGrid ? '✅' : '❌'}`);
 
           // Show preview
@@ -289,7 +318,9 @@ async function runCompleteResearch() {
               '\n⚠️  PARTIAL: Report contains some relevant content but may be incomplete'
             );
           } else {
-            logger.error('\n❌ FAIL: Report does NOT contain relevant renewable energy content');
+            logger.error(
+              '\n❌ FAIL: Report does NOT contain relevant renewable energy content'
+            );
           }
         } else {
           logger.warn('⚠️  Research completed but no report generated');
@@ -310,7 +341,10 @@ async function runCompleteResearch() {
 
     // Export project data
     const exportData = await service.exportProject(project.id, 'json');
-    const exportPath = path.join(__dirname, '../../renewable-energy-research-export.json');
+    const exportPath = path.join(
+      __dirname,
+      '../../renewable-energy-research-export.json'
+    );
     await fs.writeFile(exportPath, exportData);
     logger.info(`💾 Full project data exported to: ${exportPath}`);
 

@@ -1,4 +1,4 @@
-import type { UUID, Memory, KnowledgeItem } from '@elizaos/core';
+import type { UUID, Memory as _Memory, KnowledgeItem } from '@elizaos/core';
 import { z } from 'zod';
 
 /**

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { logger } from '@elizaos/core';
 import axios from 'axios';
 import { SearchResult, SourceType } from '../../types';
@@ -20,7 +21,10 @@ export class AcademicSearchProvider {
     };
   }
 
-  async search(query: string, maxResults: number = 20): Promise<SearchResult[]> {
+  async search(
+    query: string,
+    maxResults: number = 20
+  ): Promise<SearchResult[]> {
     logger.info(`[Academic] Searching for: ${query}`);
 
     const results: SearchResult[] = [];
@@ -44,13 +48,17 @@ export class AcademicSearchProvider {
     return results.sort((a, b) => b.score - a.score).slice(0, maxResults);
   }
 
-  private async searchSemanticScholar(query: string, limit: number): Promise<SearchResult[]> {
+  private async searchSemanticScholar(
+    query: string,
+    limit: number
+  ): Promise<SearchResult[]> {
     try {
       const url = 'https://api.semanticscholar.org/graph/v1/paper/search';
       const params = {
         query,
         limit,
-        fields: 'paperId,title,abstract,authors,year,citationCount,url,venue,publicationDate',
+        fields:
+          'paperId,title,abstract,authors,year,citationCount,url,venue,publicationDate',
       };
 
       const headers: any = {
@@ -69,7 +77,9 @@ export class AcademicSearchProvider {
       });
 
       if (response.status === 429) {
-        logger.warn('[Semantic Scholar] Rate limited, falling back to public rate');
+        logger.warn(
+          '[Semantic Scholar] Rate limited, falling back to public rate'
+        );
         // Try again without API key
         delete headers['x-api-key'];
         const retryResponse = await axios.get(url, {
@@ -79,7 +89,9 @@ export class AcademicSearchProvider {
         });
         response.data = retryResponse.data;
       } else if (response.status >= 400) {
-        logger.warn(`[Semantic Scholar] HTTP ${response.status}: ${response.statusText}`);
+        logger.warn(
+          `[Semantic Scholar] HTTP ${response.status}: ${response.statusText}`
+        );
         return [];
       }
 
@@ -88,7 +100,9 @@ export class AcademicSearchProvider {
       for (const paper of response.data.data || []) {
         results.push({
           title: paper.title || 'Untitled',
-          url: paper.url || `https://api.semanticscholar.org/paper/${paper.paperId}`,
+          url:
+            paper.url ||
+            `https://api.semanticscholar.org/paper/${paper.paperId}`,
           snippet: paper.abstract || 'No abstract available',
           score: this.calculateRelevanceScore(paper, query),
           provider: 'semantic-scholar',
@@ -113,7 +127,10 @@ export class AcademicSearchProvider {
     }
   }
 
-  private async searchArxiv(query: string, limit: number): Promise<SearchResult[]> {
+  private async searchArxiv(
+    query: string,
+    limit: number
+  ): Promise<SearchResult[]> {
     try {
       const url = 'http://export.arxiv.org/api/query';
       const params = {
@@ -167,16 +184,21 @@ export class AcademicSearchProvider {
     }
   }
 
-  private async searchCrossRef(query: string, limit: number): Promise<SearchResult[]> {
+  private async searchCrossRef(
+    query: string,
+    limit: number
+  ): Promise<SearchResult[]> {
     try {
       // CrossRef requires more specific queries, so enhance simple queries
-      const enhancedQuery = query.length < 5 ? `${query} research paper` : query;
+      const enhancedQuery =
+        query.length < 5 ? `${query} research paper` : query;
 
       const url = 'https://api.crossref.org/works';
       const params = {
         query: enhancedQuery,
         rows: limit,
-        select: 'DOI,title,author,published-print,abstract,container-title,URL,cited-by-count',
+        select:
+          'DOI,title,author,published-print,abstract,container-title,URL,cited-by-count',
       };
 
       const response = await axios.get(url, {
@@ -189,7 +211,9 @@ export class AcademicSearchProvider {
       });
 
       if (response.status >= 400) {
-        logger.warn(`[CrossRef] HTTP ${response.status}: Query too short or invalid`);
+        logger.warn(
+          `[CrossRef] HTTP ${response.status}: Query too short or invalid`
+        );
         return [];
       }
 
@@ -211,7 +235,8 @@ export class AcademicSearchProvider {
             domain: 'crossref.org',
             doi: item.DOI,
             author: item.author?.map((a: any) => `${a.given} ${a.family}`),
-            publishDate: item['published-print']?.['date-parts']?.[0]?.join('-'),
+            publishDate:
+              item['published-print']?.['date-parts']?.[0]?.join('-'),
             citationCount: item['cited-by-count'],
             journal: item['container-title']?.[0],
           } as any,
@@ -252,7 +277,9 @@ export class AcademicSearchProvider {
     // Boost for title match
     const queryTerms = query.toLowerCase().split(' ');
     const titleLower = paper.title?.toLowerCase() || '';
-    const matchCount = queryTerms.filter((term) => titleLower.includes(term)).length;
+    const matchCount = queryTerms.filter((term) =>
+      titleLower.includes(term)
+    ).length;
     score += (matchCount / queryTerms.length) * 0.1;
 
     return Math.min(score, 1.0);
@@ -271,7 +298,9 @@ export class AcademicSearchProvider {
     // Title relevance
     const queryTerms = query.toLowerCase().split(' ');
     const titleLower = (item.title?.[0] || '').toLowerCase();
-    const matchCount = queryTerms.filter((term) => titleLower.includes(term)).length;
+    const matchCount = queryTerms.filter((term) =>
+      titleLower.includes(term)
+    ).length;
     score += (matchCount / queryTerms.length) * 0.15;
 
     return Math.min(score, 1.0);

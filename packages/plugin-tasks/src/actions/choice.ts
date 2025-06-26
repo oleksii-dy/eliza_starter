@@ -8,7 +8,7 @@ import {
   logger,
   type Memory,
   ModelType,
-  parseJSONObjectFromText,
+  parseKeyValueXml,
   type State,
   type ActionResult,
 } from '@elizaos/core';
@@ -98,17 +98,19 @@ Available options:
 1. Review the user's message and identify which task and option they are selecting
 2. Match against the available tasks and their options, including ABORT
 3. Return the task ID (shortened UUID) and selected option name exactly as listed above
-4. If no clear selection is made, return null for both fields
+4. If no clear selection is made, return empty tags for both fields
 
-Return in JSON format:
-\`\`\`json
-{
-  "taskId": "string" | null,
-  "selectedOption": "OPTION_NAME" | null
-}
-\`\`\`
+Return an XML object with these fields:
+<response>
+  <taskId>Task ID string or empty if no clear selection</taskId>
+  <selectedOption>Option name or empty if no clear selection</selectedOption>
+</response>
 
-Make sure to include the \`\`\`json\`\`\` tags around the JSON object.`;
+## Example Output Format
+<response>
+  <taskId>abc123</taskId>
+  <selectedOption>APPROVE</selectedOption>
+</response>`;
 
 /**
  * Represents an action that allows selecting an option for a pending task that has multiple options.
@@ -231,8 +233,17 @@ export const choiceAction: Action = {
         stopSequences: [],
       });
 
-      const parsed = parseJSONObjectFromText(result);
-      const { taskId, selectedOption } = parsed as any;
+      const parsed = parseKeyValueXml(result);
+      if (!parsed) {
+        await callback?.({
+          text: 'Could not parse your choice. Please try again.',
+          actions: ['SELECT_OPTION_ERROR'],
+          source: message.content.source,
+        });
+        return { values: { success: false, error: 'parse_error' } };
+      }
+
+      const { taskId, selectedOption } = parsed;
 
       if (taskId && selectedOption) {
         // Find the task by matching the shortened UUID

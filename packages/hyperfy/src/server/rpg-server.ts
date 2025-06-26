@@ -5,7 +5,7 @@ import { ENV } from '../core/env';
 
 // Server configuration
 const SERVER_PORT = ENV.PORT || '3000';
-const WS_PORT = ENV.WS_PORT || '3001';
+const WS_PORT = ENV.WS_PORT || '4445';
 const API_URL = ENV.get('API_URL') || `http://localhost:${SERVER_PORT}`;
 const ASSETS_URL = ENV.get('ASSETS_URL') || 'https://hyperfy-assets.s3.amazonaws.com';
 
@@ -19,7 +19,8 @@ async function startRPGServer() {
     // Initialize world with options
     const options: WorldOptions = {
       storage: null, // Add your storage implementation here
-      assetsUrl: ASSETS_URL
+      assetsUrl: ASSETS_URL,
+      physics: true
     };
 
     console.log('[RPGServer] Initializing world systems...');
@@ -97,7 +98,7 @@ async function startRPGServer() {
     let lastTime = Date.now();
     const gameLoop = () => {
       const now = Date.now();
-      const delta = now - lastTime;
+      const _delta = now - lastTime;
       lastTime = now;
 
       world.tick(now);

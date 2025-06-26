@@ -1,6 +1,6 @@
 import { isNumber, isString } from 'lodash-es';
 import { Node } from './Node';
-import * as THREE from '../extras/three';
+// import * as THREE from '../extras/three';
 
 // NOTE: actual defaults bubble up to ClientEnvironment.js
 const defaults = {
@@ -43,7 +43,7 @@ export class Sky extends Node {
     this.handle = this.ctx.world.environment.addSky?.(this);
   }
 
-  commit(didMove) {
+  commit(_didMove) {
     if (this.needsRebuild) {
       this.handle?.destroy();
       this.handle = this.ctx.world.environment.addSky?.(this);

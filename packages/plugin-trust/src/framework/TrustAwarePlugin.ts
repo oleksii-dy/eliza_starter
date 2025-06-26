@@ -1,11 +1,5 @@
 import type { UUID } from '@elizaos/core';
-import {
-  type Action,
-  type IAgentRuntime,
-  type Memory,
-  type Plugin,
-  logger
-} from '@elizaos/core';
+import { type Action, type IAgentRuntime, type Memory, type Plugin, logger } from '@elizaos/core';
 import { TrustService } from '../services/TrustService';
 import { type ActionPermission, PermissionUtils } from '../types/permissions';
 
@@ -41,7 +35,7 @@ export abstract class TrustAwarePlugin implements Plugin {
 
     // Wrap actions with trust checking
     if (this.actions) {
-      this.actions = this.actions.map(action => this.wrapAction(action));
+      this.actions = this.actions.map((action) => this.wrapAction(action));
     }
   }
 
@@ -58,7 +52,9 @@ export abstract class TrustAwarePlugin implements Plugin {
         // Run original validation first
         if (originalValidate) {
           const valid = await originalValidate(runtime, message, state);
-          if (!valid) {return false;}
+          if (!valid) {
+            return false;
+          }
         }
 
         // Check trust requirements
@@ -67,7 +63,9 @@ export abstract class TrustAwarePlugin implements Plugin {
           const trustScore = await this.trustService.getTrustScore(message.entityId);
 
           if (trustScore.overall < trustRequired) {
-            logger.warn(`[TrustAware] Insufficient trust for ${action.name}: ${trustScore.overall} < ${trustRequired}`);
+            logger.warn(
+              `[TrustAware] Insufficient trust for ${action.name}: ${trustScore.overall} < ${trustRequired}`
+            );
             return false;
           }
         }
@@ -85,7 +83,13 @@ export abstract class TrustAwarePlugin implements Plugin {
         return true;
       },
 
-      handler: async (runtime: IAgentRuntime, message: Memory, state?: any, options?: any, callback?: any) => {
+      handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state?: any,
+        options?: any,
+        callback?: any
+      ) => {
         // Log action for audit
         logger.info(`[TrustAware] Audit: ${message.entityId} executing ${action.name}`);
 
@@ -95,19 +99,14 @@ export abstract class TrustAwarePlugin implements Plugin {
         // Update trust based on action outcome
         if (this.trustService && result) {
           // Success increases trust slightly
-          await this.trustService.updateTrust(
-            message.entityId,
-            'HELPFUL_ACTION' as any,
-            1,
-            {
-              action: action.name,
-              success: true
-            }
-          );
+          await this.trustService.updateTrust(message.entityId, 'HELPFUL_ACTION' as any, 1, {
+            action: action.name,
+            success: true,
+          });
         }
 
         return result;
-      }
+      },
     };
   }
 
@@ -119,13 +118,15 @@ export abstract class TrustAwarePlugin implements Plugin {
     message: Memory,
     permission: ActionPermission
   ): Promise<boolean> {
-    if (!this.trustService) {return true;} // Fallback to allow if no trust service
+    if (!this.trustService) {
+      return true;
+    } // Fallback to allow if no trust service
 
     const context = {
       caller: message.entityId,
       action: permission.action,
       trust: 0,
-      roles: [] as string[]
+      roles: [] as string[],
     };
 
     // Get user's trust score
@@ -140,7 +141,9 @@ export abstract class TrustAwarePlugin implements Plugin {
    * Get trust level for a user
    */
   protected async getTrustLevel(runtime: IAgentRuntime, userId: UUID): Promise<number> {
-    if (!this.trustService) {return 0;}
+    if (!this.trustService) {
+      return 0;
+    }
 
     const trustScore = await this.trustService.getTrustScore(userId);
 
@@ -207,7 +210,7 @@ export const exampleTrustAwarePlugin: Plugin = {
           'sensitive-action' as UUID,
           'system' as UUID,
           {
-            roomId: message.roomId
+            roomId: message.roomId,
           }
         );
 
@@ -218,7 +221,7 @@ export const exampleTrustAwarePlugin: Plugin = {
         // Execute action
         logger.info('Executing sensitive action');
         return true;
-      }
-    }
-  ]
+      },
+    },
+  ],
 };

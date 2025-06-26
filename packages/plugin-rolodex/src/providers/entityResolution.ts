@@ -8,7 +8,9 @@ export const entityResolutionProvider: Provider = {
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     try {
-      const resolutionService = runtime.getService('entityResolution') as unknown as EntityResolutionManager;
+      const resolutionService = runtime.getService(
+        'entityResolution'
+      ) as unknown as EntityResolutionManager;
       if (!resolutionService) {
         logger.warn('[EntityResolutionProvider] EntityResolutionManager not available');
         return { text: '' };

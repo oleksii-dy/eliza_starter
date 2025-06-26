@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 export function MouseLeftIcon({ size = 24 }: { size?: number | string }) {
   return (

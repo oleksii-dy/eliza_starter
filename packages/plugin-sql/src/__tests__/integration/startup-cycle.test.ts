@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { AgentRuntime } from '@elizaos/core';
 import { plugin as sqlPlugin } from '../../index';
-import { PGliteClientManager } from '../../pglite/manager';
+// PGLite manager no longer needed - using PostgreSQL
 import { connectionRegistry } from '../../connection-registry';
 import { TestDbManager } from '../test-db-utils';
 import type { UUID } from '@elizaos/core';
@@ -19,7 +19,7 @@ const testCharacter = {
 };
 
 describe.skip('Startup Cycle Integration Test', () => {
-  // Skipped due to PGLite WebAssembly conflicts
+  // Skipped due to test complexity
   let dbManager: TestDbManager;
 
   beforeEach(async () => {
@@ -27,13 +27,13 @@ describe.skip('Startup Cycle Integration Test', () => {
     dbManager = new TestDbManager();
 
     // Force cleanup all existing instances
-    await PGliteClientManager.forceCleanupAll();
+    // No PGLite cleanup needed for PostgreSQL
     connectionRegistry.clearAll();
   });
 
   afterEach(async () => {
     // Force cleanup all instances
-    await PGliteClientManager.forceCleanupAll();
+    // No PGLite cleanup needed for PostgreSQL
     connectionRegistry.clearAll();
 
     // Clean up test databases
@@ -56,7 +56,7 @@ describe.skip('Startup Cycle Integration Test', () => {
       id: 'test-agent-startup-1' as UUID,
     });
 
-    // Set PGLite path via settings
+    // Set PostgreSQL connection via settings
     runtime1.settings = { SQLITE_DATA_DIR: testDataDir };
 
     // Initialize SQL plugin
@@ -109,7 +109,7 @@ describe.skip('Startup Cycle Integration Test', () => {
       id: 'test-agent-startup-2' as UUID,
     });
 
-    // Set same PGLite path
+    // Set same PostgreSQL connection
     runtime2.settings = { SQLITE_DATA_DIR: testDataDir };
 
     // This is where the WebAssembly abort might occur

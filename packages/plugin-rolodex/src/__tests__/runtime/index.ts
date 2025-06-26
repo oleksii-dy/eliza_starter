@@ -56,11 +56,11 @@ export class RolodexRuntimeTestSuite implements TestSuite {
               text: conversation[i],
               source: 'test',
             },
-            createdAt: Date.now() + (i * 1000), // Stagger timestamps
+            createdAt: Date.now() + i * 1000, // Stagger timestamps
           };
 
           await (runtime as any).processMessage(message);
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
         }
 
         // Verify entities were extracted

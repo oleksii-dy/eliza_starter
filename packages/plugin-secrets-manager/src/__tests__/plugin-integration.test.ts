@@ -1,5 +1,10 @@
 import { Role, type IAgentRuntime, type UUID, type World } from '@elizaos/core';
 import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test';
+
+// Global variable to fix 'Cannot find name' error
+declare global {
+  var secretsManager: any;
+}
 import { EnhancedSecretManager } from '../enhanced-service';
 import envPlugin from '../index';
 import { ActionChainService } from '../services/action-chain-service';
@@ -130,7 +135,11 @@ describe('Secrets Manager Plugin Integration', () => {
       expect(envPlugin.services).toBeDefined();
       expect(envPlugin.services).toHaveLength(3);
 
-      const serviceTypes = envPlugin.services?.map((s) => (s as any).serviceType) || [];
+      const serviceTypes =
+        envPlugin.services?.map((s) => {
+          const ServiceClass = typeof s === 'function' ? s : s.component;
+          return ServiceClass.serviceType;
+        }) || [];
       expect(serviceTypes).toContain('SECRETS');
       expect(serviceTypes).toContain('ACTION_CHAIN');
       expect(serviceTypes).toContain('SECRET_FORMS');
@@ -169,7 +178,10 @@ describe('Secrets Manager Plugin Integration', () => {
 
       // Register service classes from plugin
       if (envPlugin.services) {
-        for (const ServiceClass of envPlugin.services) {
+        for (const serviceEntry of envPlugin.services) {
+          // Handle both class constructors and objects with component/enabled structure
+          const ServiceClass =
+            typeof serviceEntry === 'function' ? serviceEntry : serviceEntry.component;
           await mockRuntime.registerService(ServiceClass);
         }
       }
@@ -341,7 +353,7 @@ describe('Secrets Manager Plugin Integration', () => {
   });
 
   describe('Error Handling', () => {
-    let secretsManager: UnifiedSecretManager;
+    let _secretsManager: UnifiedSecretManager;
     let mockNgrokService: any;
     let formService: SecretFormService;
 
@@ -363,7 +375,7 @@ describe('Secrets Manager Plugin Integration', () => {
       await mockRuntime.registerService(SecretFormService);
 
       // Create and start enhanced secret manager
-      secretsManager = await UnifiedSecretManager.start(mockRuntime);
+      _secretsManager = await UnifiedSecretManager.start(mockRuntime);
 
       // Get service instances
       formService = mockRuntime.getService('SECRET_FORMS') as SecretFormService;
@@ -375,11 +387,13 @@ describe('Secrets Manager Plugin Integration', () => {
     it('should handle missing encryption key gracefully', async () => {
       // Create a new runtime with no encryption salt but with character settings
       const newRuntime = createMockRuntime();
+      const originalGetSetting = newRuntime.getSetting;
       newRuntime.getSetting = mock((key: string) => {
         if (key === 'ENCRYPTION_SALT') {
           return null;
         } // No salt provided
-        return null;
+        // For other keys, use the original mock behavior
+        return originalGetSetting(key);
       });
 
       const newSecretsManager = await UnifiedSecretManager.start(newRuntime as any);

@@ -1,13 +1,6 @@
-import {
-  logger,
-} from '@elizaos/core';
+import { logger } from '@elizaos/core';
 
-import {
-  type Action,
-  type IAgentRuntime,
-  type Memory,
-  type HandlerCallback,
-} from '@elizaos/core';
+import { type Action, type IAgentRuntime, type Memory, type HandlerCallback } from '@elizaos/core';
 import { RolodexService } from '../services';
 
 export const searchEntitiesAction: Action = {

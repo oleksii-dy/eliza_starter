@@ -2,10 +2,10 @@ import { System } from '../../core/systems/System';
 import type { World } from '../../types';
 import {
   RPGEntity,
-  ItemStack,
+  // ItemStack,
   InventoryComponent,
   NPCComponent
-} from '../types';
+} from '../types/index';
 
 export interface ShopItem {
   itemId: number;
@@ -383,7 +383,7 @@ export class ShopSystem extends System {
   /**
    * Update all shops
    */
-  public update(delta: number): void {
+  public update(_delta: number): void {
     const now = Date.now();
 
     // Update shop stocks periodically

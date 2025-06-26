@@ -86,7 +86,9 @@ export class BenchmarkRunner {
     const runId = `run_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const startTime = Date.now();
 
-    logger.info(`[BenchmarkRunner] Starting benchmark: ${config.name} (${runId})`);
+    logger.info(
+      `[BenchmarkRunner] Starting benchmark: ${config.name} (${runId})`
+    );
 
     const queryResults: QueryResult[] = [];
     let successCount = 0;
@@ -104,11 +106,14 @@ export class BenchmarkRunner {
 
       try {
         // Create research project
-        const project = await this.researchService.createResearchProject(benchmarkQuery.query, {
-          domain: benchmarkQuery.domain as any,
-          researchDepth: benchmarkQuery.depth as any,
-          timeout: benchmarkQuery.maxDurationMs || config.timeoutMs,
-        });
+        const project = await this.researchService.createResearchProject(
+          benchmarkQuery.query,
+          {
+            domain: benchmarkQuery.domain as any,
+            researchDepth: benchmarkQuery.depth as any,
+            timeout: benchmarkQuery.maxDurationMs || config.timeoutMs,
+          }
+        );
 
         // Wait for completion with timeout
         const completedProject = await this.waitForCompletion(
@@ -123,9 +128,13 @@ export class BenchmarkRunner {
         let raceScore: number | undefined;
         let factScore: number | undefined;
 
-        if (completedProject.evaluation && 'raceScore' in completedProject.evaluation) {
+        if (
+          completedProject.evaluation &&
+          'raceScore' in completedProject.evaluation
+        ) {
           // EvaluationMetrics format (from report)
-          const evalMetrics = completedProject.evaluation as unknown as EvaluationMetrics;
+          const evalMetrics =
+            completedProject.evaluation as unknown as EvaluationMetrics;
           if (evalMetrics.raceScore) {
             raceScore = evalMetrics.raceScore.overall;
             if (raceScore !== undefined) {
@@ -141,13 +150,16 @@ export class BenchmarkRunner {
         } else if (completedProject.evaluationResults) {
           // EvaluationResults format (from service)
           if (completedProject.evaluationResults.raceEvaluation?.scores) {
-            raceScore = completedProject.evaluationResults.raceEvaluation.scores.overall;
+            raceScore =
+              completedProject.evaluationResults.raceEvaluation.scores.overall;
             if (raceScore !== undefined) {
               raceScores.push(raceScore);
             }
           }
           if (completedProject.evaluationResults.factEvaluation?.scores) {
-            factScore = completedProject.evaluationResults.factEvaluation.scores.citationAccuracy;
+            factScore =
+              completedProject.evaluationResults.factEvaluation.scores
+                .citationAccuracy;
             if (factScore !== undefined) {
               factScores.push(factScore);
             }
@@ -156,13 +168,19 @@ export class BenchmarkRunner {
 
         // Convert evaluation to EvaluationMetrics format if needed
         let evaluationMetrics: EvaluationMetrics | undefined;
-        if (completedProject.evaluation && 'raceScore' in completedProject.evaluation) {
-          evaluationMetrics = completedProject.evaluation as unknown as EvaluationMetrics;
+        if (
+          completedProject.evaluation &&
+          'raceScore' in completedProject.evaluation
+        ) {
+          evaluationMetrics =
+            completedProject.evaluation as unknown as EvaluationMetrics;
         } else if (completedProject.evaluationResults) {
           // Convert EvaluationResults to EvaluationMetrics format
           evaluationMetrics = {
-            raceScore: completedProject.evaluationResults.raceEvaluation?.scores,
-            factScore: completedProject.evaluationResults.factEvaluation?.scores,
+            raceScore:
+              completedProject.evaluationResults.raceEvaluation?.scores,
+            factScore:
+              completedProject.evaluationResults.factEvaluation?.scores,
             timestamp: completedProject.evaluationResults.timestamp,
             evaluatorVersion: '1.0.0',
           };
@@ -182,14 +200,18 @@ export class BenchmarkRunner {
         totalDuration += queryDuration;
         totalSources += sourcesFound;
 
-        logger.info(`[BenchmarkRunner] Query ${benchmarkQuery.id} completed successfully`, {
-          duration: queryDuration,
-          sources: sourcesFound,
-          raceScore,
-        });
+        logger.info(
+          `[BenchmarkRunner] Query ${benchmarkQuery.id} completed successfully`,
+          {
+            duration: queryDuration,
+            sources: sourcesFound,
+            raceScore,
+          }
+        );
       } catch (error) {
         const queryDuration = Date.now() - queryStartTime;
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
 
         queryResult = {
           queryId: benchmarkQuery.id,
@@ -200,7 +222,10 @@ export class BenchmarkRunner {
           error: errorMessage,
         };
 
-        logger.error(`[BenchmarkRunner] Query ${benchmarkQuery.id} failed:`, error);
+        logger.error(
+          `[BenchmarkRunner] Query ${benchmarkQuery.id} failed:`,
+          error
+        );
       }
 
       queryResults.push(queryResult);
@@ -208,10 +233,14 @@ export class BenchmarkRunner {
 
     // Calculate summary
     const averageRaceScore =
-      raceScores.length > 0 ? raceScores.reduce((a, b) => a + b, 0) / raceScores.length : undefined;
+      raceScores.length > 0
+        ? raceScores.reduce((a, b) => a + b, 0) / raceScores.length
+        : undefined;
 
     const averageFactScore =
-      factScores.length > 0 ? factScores.reduce((a, b) => a + b, 0) / factScores.length : undefined;
+      factScores.length > 0
+        ? factScores.reduce((a, b) => a + b, 0) / factScores.length
+        : undefined;
 
     const summary: BenchmarkSummary = {
       totalQueries: config.queries.length,
@@ -221,7 +250,10 @@ export class BenchmarkRunner {
       averageSourcesFound: successCount > 0 ? totalSources / successCount : 0,
       averageRaceScore,
       averageFactScore,
-      qualityGrade: this.calculateQualityGrade(averageRaceScore, averageFactScore),
+      qualityGrade: this.calculateQualityGrade(
+        averageRaceScore,
+        averageFactScore
+      ),
     };
 
     const benchmarkResult: BenchmarkResult = {
@@ -264,7 +296,10 @@ export class BenchmarkRunner {
     return benchmarkResult;
   }
 
-  private async waitForCompletion(projectId: string, timeoutMs: number): Promise<ResearchProject> {
+  private async waitForCompletion(
+    projectId: string,
+    timeoutMs: number
+  ): Promise<ResearchProject> {
     const checkInterval = 1000; // Check every second
     const maxChecks = Math.ceil(timeoutMs / checkInterval);
     let checks = 0;
@@ -300,7 +335,9 @@ export class BenchmarkRunner {
     }
 
     const avgScore =
-      raceScore && factScore ? (raceScore + factScore) / 2 : raceScore || factScore || 0;
+      raceScore && factScore
+        ? (raceScore + factScore) / 2
+        : raceScore || factScore || 0;
 
     if (avgScore >= 0.9) {
       return 'A';
@@ -317,7 +354,10 @@ export class BenchmarkRunner {
     return 'F';
   }
 
-  private async saveBenchmarkResult(result: BenchmarkResult, outputDir: string): Promise<void> {
+  private async saveBenchmarkResult(
+    result: BenchmarkResult,
+    outputDir: string
+  ): Promise<void> {
     try {
       await fs.mkdir(outputDir, { recursive: true });
 
@@ -332,7 +372,10 @@ export class BenchmarkRunner {
     }
   }
 
-  private async generateMarkdownReport(result: BenchmarkResult, outputDir: string): Promise<void> {
+  private async generateMarkdownReport(
+    result: BenchmarkResult,
+    outputDir: string
+  ): Promise<void> {
     try {
       const report = this.formatMarkdownReport(result);
 
@@ -426,7 +469,9 @@ ${query.error ? `**Error:** ${query.error}  ` : ''}`;
 
     queries.forEach((query) => {
       if (query.evaluation?.raceScore) {
-        const grade = this.calculateQualityGrade(query.evaluation.raceScore.overall);
+        const grade = this.calculateQualityGrade(
+          query.evaluation.raceScore.overall
+        );
         grades[grade]++;
       } else {
         grades.F++;
@@ -440,7 +485,8 @@ ${query.error ? `**Error:** ${query.error}  ` : ''}`;
 
   private calculateStandardDeviation(values: number[]): number {
     const mean = values.reduce((a, b) => a + b, 0) / values.length;
-    const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
+    const variance =
+      values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
     return Math.sqrt(variance);
   }
 
@@ -451,17 +497,25 @@ ${query.error ? `**Error:** ${query.error}  ` : ''}`;
   async loadPreviousResults(outputDir: string): Promise<BenchmarkResult[]> {
     try {
       const files = await fs.readdir(outputDir);
-      const jsonFiles = files.filter((f) => f.endsWith('.json') && !f.includes('_report'));
+      const jsonFiles = files.filter(
+        (f) => f.endsWith('.json') && !f.includes('_report')
+      );
 
       const results: BenchmarkResult[] = [];
 
       for (const file of jsonFiles) {
         try {
-          const content = await fs.readFile(path.join(outputDir, file), 'utf-8');
+          const content = await fs.readFile(
+            path.join(outputDir, file),
+            'utf-8'
+          );
           const result = JSON.parse(content) as BenchmarkResult;
           results.push(result);
         } catch (error) {
-          logger.warn(`[BenchmarkRunner] Failed to load result file ${file}:`, error);
+          logger.warn(
+            `[BenchmarkRunner] Failed to load result file ${file}:`,
+            error
+          );
         }
       }
 

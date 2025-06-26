@@ -52,19 +52,18 @@ export class MulticallService {
           abi: [], // We're using raw calldata
           functionName: 'raw',
           args: [],
-          // @ts-ignore - viem types don't expose raw calldata directly
           callData: call.callData,
         })),
         multicallAddress,
       });
 
-      return results.map((result, index) => ({
+      return results.map((result, _index) => ({
         success: result.status === 'success',
         returnData: (result.result || '0x') as Hex,
       }));
-    } catch (error) {
-      logger.error('Multicall failed:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Multicall failed:', _error);
+      throw _error;
     }
   }
 
@@ -74,7 +73,7 @@ export class MulticallService {
   async batchMulticall(
     chainId: number,
     calls: MulticallParams[],
-    batchSize = 50,
+    batchSize = 50
   ): Promise<MulticallResult[]> {
     const results: MulticallResult[] = [];
 
@@ -87,11 +86,7 @@ export class MulticallService {
     return results;
   }
 
-  async aggregate(
-    calls: MulticallCall[],
-    chainId: number,
-    client: PublicClient,
-  ): Promise<MulticallResult[]> {
+  aggregate(calls: MulticallCall[], _chainId: number, _client: PublicClient): MulticallResult[] {
     // Mock implementation
     return calls.map(() => ({
       success: true,
@@ -99,11 +94,7 @@ export class MulticallService {
     }));
   }
 
-  async tryAggregate(
-    calls: MulticallCall[],
-    chainId: number,
-    client: PublicClient,
-  ): Promise<MulticallResult[]> {
+  tryAggregate(calls: MulticallCall[], _chainId: number, _client: PublicClient): MulticallResult[] {
     // Mock implementation that allows failures
     return calls.map(() => ({
       success: true,

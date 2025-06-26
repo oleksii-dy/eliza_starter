@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { BaseApiClient, ApiError } from '../lib/base-client';
+import { BaseApiClient, ApiError } from '../lib/BaseClient';
 import { ApiClientConfig } from '../types/base';
 
 // Test implementation of BaseApiClient

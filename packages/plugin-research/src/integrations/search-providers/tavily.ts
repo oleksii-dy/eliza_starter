@@ -150,7 +150,10 @@ export class TavilySearchProvider {
     }
   }
 
-  async searchWithRetry(query: string, maxRetries: number = 3): Promise<SearchResult[]> {
+  async searchWithRetry(
+    query: string,
+    maxRetries: number = 3
+  ): Promise<SearchResult[]> {
     let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {

@@ -184,7 +184,7 @@ export class ConfigurationManager {
     // Watch for config file changes every 30 seconds
     this.watcherInterval = setInterval(async () => {
       try {
-        const stats = await fs.stat(this.configPath);
+        const _stats = await fs.stat(this.configPath);
         const content = await fs.readFile(this.configPath, 'utf-8');
         const newConfig = JSON.parse(content);
 

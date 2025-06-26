@@ -11,7 +11,7 @@ import {
   // Role, // Available if needed
   logger,
 } from '@elizaos/core';
-import { AgentServer } from '@elizaos/server';
+import AgentServer from '@elizaos/server';
 import type {
   Scenario,
   ScenarioResult,
@@ -25,16 +25,17 @@ import type {
 import { ScenarioVerifier } from './verification.js';
 import { MetricsCollector } from './metrics.js';
 import { ProductionVerificationSystem } from './integration-test.js';
-import { ScenarioActionTracker } from '../commands/scenario/action-tracker.js';
-import { processMessageWithLLMFallback } from './mock-llm-service.js';
+import { ScenarioActionTracker } from '../commands/scenario/ActionTracker.js';
+import { processMessageWithLLMFallback } from './MockLlmService.js';
 import { v4 as uuidv4 } from 'uuid';
 
 // Benchmarking System Components
-import { ProductionCostTracker } from './production-cost-tracker.js';
-import { LiveMessageBus } from './live-message-bus.js';
-import { RealWorldTaskExecutor } from './real-world-task-executor.js';
-import { ExternalAgentAPI } from './external-agent-api.js';
-import { BenchmarkScoringSystem } from './benchmark-scoring-system.js';
+import { ProductionCostTracker } from './ProductionCostTracker.js';
+// Commented out unused imports
+// import { LiveMessageBus } from './LiveMessageBus.js';
+// import { RealWorldTaskExecutor } from './RealWorldTaskExecutor.js';
+import { ExternalAgentAPI } from './ExternalAgentApi.js';
+import { BenchmarkScoringSystem } from './BenchmarkScoringSystem.js';
 import { defiPortfolioBenchmark } from './benchmarks/defi-portfolio-benchmark.js';
 import { ecommerceStoreBenchmark } from './benchmarks/ecommerce-store-benchmark.js';
 
@@ -54,8 +55,9 @@ export class ScenarioRunner {
 
   // Benchmarking system components
   private costTracker: ProductionCostTracker;
-  // private _messageBus: LiveMessageBus;
-  // private _taskExecutor: RealWorldTaskExecutor;
+  // Commenting out unused properties for now
+  // private _messageBus: LiveMessageBus; // Used for real-time benchmarking
+  // private _taskExecutor: RealWorldTaskExecutor; // Used for task execution
   private externalAgentAPI: ExternalAgentAPI;
   private scoringSystem: BenchmarkScoringSystem;
   private activeBenchmarks = new Map<string, any>();
@@ -76,10 +78,8 @@ export class ScenarioRunner {
 
     // Initialize benchmarking system
     this.costTracker = new ProductionCostTracker();
-    // @ts-expect-error - LiveMessageBus might not have proper type declarations
-    this.messageBus = new LiveMessageBus();
-    // @ts-expect-error - RealWorldTaskExecutor might not have proper type declarations
-    this.taskExecutor = new RealWorldTaskExecutor(this.costTracker);
+    // this._messageBus = new LiveMessageBus();
+    // this._taskExecutor = new RealWorldTaskExecutor(this.costTracker);
     this.externalAgentAPI = new ExternalAgentAPI(this.costTracker);
     this.scoringSystem = new BenchmarkScoringSystem(this.costTracker);
 

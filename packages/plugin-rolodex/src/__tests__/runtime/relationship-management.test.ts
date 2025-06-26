@@ -10,7 +10,9 @@ export const relationshipManagementRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing relationship detection from conversation...');
 
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -43,14 +45,14 @@ export const relationshipManagementRuntimeTests: TestSuite = {
           agentId: runtime.agentId,
           roomId,
           content: {
-            text: 'Emma Wilson and Frank Chen are co-founders of AIStartup. They\'ve been working together for 3 years.',
+            text: "Emma Wilson and Frank Chen are co-founders of AIStartup. They've been working together for 3 years.",
             source: 'test',
           },
           createdAt: Date.now(),
         };
 
         await (runtime as any).processMessage(message);
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
 
         // Check if relationship was created
         const relationships = await entityGraphService.getEntityRelationships(entity1Id);
@@ -73,7 +75,9 @@ export const relationshipManagementRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing relationship strength building...');
 
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -88,7 +92,7 @@ export const relationshipManagementRuntimeTests: TestSuite = {
           { roomId }
         );
 
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Find Grace's entity
         const graceResults = await entityGraphService.searchEntities('Grace Lee');
@@ -117,13 +121,13 @@ export const relationshipManagementRuntimeTests: TestSuite = {
           };
 
           await (runtime as any).processMessage(message);
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          await new Promise((resolve) => setTimeout(resolve, 1500));
         }
 
         // Check relationship strength
         const relationships = await entityGraphService.getEntityRelationships(userId);
-        const graceRelationship = relationships.find(r =>
-          r.sourceEntityId === graceId || r.targetEntityId === graceId
+        const graceRelationship = relationships.find(
+          (r) => r.sourceEntityId === graceId || r.targetEntityId === graceId
         );
 
         if (!graceRelationship) {
@@ -146,7 +150,9 @@ export const relationshipManagementRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing complex relationship network identification...');
 
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -177,7 +183,7 @@ export const relationshipManagementRuntimeTests: TestSuite = {
         };
 
         await (runtime as any).processMessage(message);
-        await new Promise(resolve => setTimeout(resolve, 5000)); // Longer wait for complex processing
+        await new Promise((resolve) => setTimeout(resolve, 5000)); // Longer wait for complex processing
 
         // Search for key entities
         const helenResults = await entityGraphService.searchEntities('Helen Park');
@@ -195,9 +201,12 @@ export const relationshipManagementRuntimeTests: TestSuite = {
           console.log(`✓ Helen has ${helenRelationships.length} relationships`);
 
           // Check for management relationships
-          const managementRels = helenRelationships.filter(r => (
-            r.relationshipType && Array.isArray(r.metadata?.tags) && r.metadata.tags.indexOf('manage') !== -1
-          ));
+          const managementRels = helenRelationships.filter(
+            (r) =>
+              r.relationshipType &&
+              Array.isArray(r.metadata?.tags) &&
+              r.metadata.tags.indexOf('manage') !== -1
+          );
           console.log(`✓ Found ${managementRels.length} management relationships`);
         }
 

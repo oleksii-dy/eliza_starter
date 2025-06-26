@@ -9,32 +9,32 @@ const createMockRuntime = (): IAgentRuntime => {
     id: 'world-1' as UUID,
     metadata: {
       ownership: {
-        ownerId: 'owner-1'
+        ownerId: 'owner-1',
       },
       roles: {
         'entity-1': 'OWNER',
         'entity-2': 'ADMIN',
-        'entity-3': 'MEMBER'
-      }
-    }
+        'entity-3': 'MEMBER',
+      },
+    },
   };
 
   const mockEntities = {
     'entity-1': {
       id: 'entity-1',
       metadata: { name: 'Alice', username: 'alice' },
-      names: ['Alice', 'alice123']
+      names: ['Alice', 'alice123'],
     },
     'entity-2': {
       id: 'entity-2',
       metadata: { name: 'Bob', username: 'bob' },
-      names: ['Bob', 'bob456']
+      names: ['Bob', 'bob456'],
     },
     'entity-3': {
       id: 'entity-3',
       metadata: { name: 'Charlie', username: 'charlie' },
-      names: ['Charlie', 'charlie789']
-    }
+      names: ['Charlie', 'charlie789'],
+    },
   };
 
   return {
@@ -42,10 +42,10 @@ const createMockRuntime = (): IAgentRuntime => {
     getRoom: mock().mockResolvedValue({
       id: 'room-1',
       type: ChannelType.GROUP,
-      serverId: 'server-1'
+      serverId: 'server-1',
     }),
     getWorld: mock().mockResolvedValue(mockWorld),
-    getEntityById: mock().mockImplementation((id: string) => mockEntities[id])
+    getEntityById: mock().mockImplementation((id: string) => mockEntities[id]),
   } as any;
 };
 
@@ -53,10 +53,10 @@ const createMockMemory = (text: string, entityId: UUID): Memory =>
   ({
     entityId,
     content: {
-      text
+      text,
     },
-    roomId: 'room-1' as UUID
-  } as Memory);
+    roomId: 'room-1' as UUID,
+  }) as Memory;
 
 describe('roleProvider', () => {
   let runtime: IAgentRuntime;
@@ -84,10 +84,10 @@ describe('roleProvider', () => {
   });
 
   it('should handle DM channels', async () => {
-    (runtime.getRoom as Mock).mockResolvedValue({
+    (runtime.getRoom as Mock<any>).mockResolvedValue({
       id: 'room-1',
       type: ChannelType.DM,
-      serverId: null
+      serverId: null,
     });
 
     const memory = createMockMemory('test', testEntityId);
@@ -99,7 +99,7 @@ describe('roleProvider', () => {
   });
 
   it('should handle missing world data', async () => {
-    (runtime.getWorld as Mock).mockResolvedValue(null);
+    (runtime.getWorld as Mock<any>).mockResolvedValue(null);
 
     const memory = createMockMemory('test', testEntityId);
     const state = { data: {} } as State;
@@ -110,12 +110,12 @@ describe('roleProvider', () => {
   });
 
   it('should handle empty roles', async () => {
-    (runtime.getWorld as Mock).mockResolvedValue({
+    (runtime.getWorld as Mock<any>).mockResolvedValue({
       id: 'world-1',
       metadata: {
         ownership: { ownerId: 'owner-1' },
-        roles: {}
-      }
+        roles: {},
+      },
     });
 
     const memory = createMockMemory('test', testEntityId);

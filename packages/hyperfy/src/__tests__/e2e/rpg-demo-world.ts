@@ -140,13 +140,13 @@ export class RPGDemoWorld {
   /**
    * Update all systems
    */
-  update(delta: number): void {
+  update(_delta: number): void {
     // Update in correct order
-    this.systems.spawning.fixedUpdate(delta);
-    this.systems.npc.update(delta);
-    this.systems.combat.fixedUpdate(delta);
-    this.systems.combat.update(delta);
-    this.systems.loot.update(delta);
+    this.systems.spawning.fixedUpdate(_delta);
+    this.systems.npc.update(_delta);
+    this.systems.combat.fixedUpdate(_delta);
+    this.systems.combat.update(_delta);
+    this.systems.loot.update(_delta);
   }
 
   /**

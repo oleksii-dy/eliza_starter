@@ -31,30 +31,30 @@ export async function withRetry<T>(
   operation: () => Promise<T>,
   userConfig?: RetryConfig
 ): Promise<T> {
-  const config = { ...DEFAULT_CONFIG, ...userConfig };
+  const _config = { ...DEFAULT_CONFIG, ...userConfig };
   let lastError: any;
 
-  for (let attempt = 1; attempt <= config.maxAttempts; attempt++) {
+  for (let attempt = 1; attempt <= _config.maxAttempts; attempt++) {
     try {
       return await operation();
-    } catch (error) {
-      lastError = error;
+    } catch (_error) {
+      lastError = _error;
 
       // Check if we should retry
-      if (!config.shouldRetry(error) || attempt === config.maxAttempts) {
-        throw error;
+      if (!_config.shouldRetry(_error) || attempt === _config.maxAttempts) {
+        throw _error;
       }
 
       // Calculate delay with exponential backoff
-      const baseDelay = config.initialDelayMs * Math.pow(config.backoffMultiplier, attempt - 1);
-      const delay = Math.min(baseDelay, config.maxDelayMs);
+      const baseDelay = _config.initialDelayMs * Math.pow(_config.backoffMultiplier, attempt - 1);
+      const delay = Math.min(baseDelay, _config.maxDelayMs);
 
       // Add jitter to prevent thundering herd
       const jitter = Math.random() * 0.3 * delay;
       const finalDelay = delay + jitter;
 
       // Notify about retry
-      config.onRetry(attempt, error);
+      _config.onRetry(attempt, _error);
 
       // Wait before retrying
       await new Promise((resolve) => setTimeout(resolve, finalDelay));

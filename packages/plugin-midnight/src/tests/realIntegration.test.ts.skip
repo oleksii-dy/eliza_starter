@@ -1,0 +1,492 @@
+import { describe, test, beforeAll, afterAll, expect } from '@jest/globals';
+import { IAgentRuntime, type TestCase } from '@elizaos/core';
+import { 
+  createMidnightTestEnvironment,
+  waitForMidnightInitialization,
+  verifyMidnightNetworkHealth,
+  executeMidnightTestScenario,
+  MidnightTestScenarios,
+  type MidnightTestAgents
+} from './testEnvironment.js';
+import { MidnightNetworkService } from '../services/MidnightNetworkService.js';
+import { SecureMessagingService } from '../services/SecureMessagingService.js';
+import { PaymentService } from '../services/PaymentService.js';
+import { AgentDiscoveryService } from '../services/AgentDiscoveryService.js';
+
+/**
+ * REAL integration tests using actual ElizaOS runtime instances
+ * These tests validate real functionality against live Midnight Network infrastructure
+ * 
+ * NOTE: These tests require:
+ * 1. MIDNIGHT_WALLET_MNEMONIC environment variable
+ * 2. Access to Midnight Network testnet infrastructure
+ * 3. Real network connectivity
+ */
+
+describe('Midnight Network Plugin - Real Integration Tests', () => {
+  let testAgents: MidnightTestAgents;
+  let networkService1: MidnightNetworkService;
+  let networkService2: MidnightNetworkService;
+  let messagingService1: SecureMessagingService;
+  let messagingService2: SecureMessagingService;
+
+  beforeAll(async () => {
+    // Skip tests if no wallet mnemonic is provided
+    if (!process.env.MIDNIGHT_WALLET_MNEMONIC) {
+      console.warn('Skipping real integration tests - MIDNIGHT_WALLET_MNEMONIC not provided');
+      return;
+    }
+
+    console.log('🚀 Setting up Midnight Network test environment...');
+
+    // Create test environment with two agents
+    testAgents = await createMidnightTestEnvironment({
+      enableRealNetwork: true,
+    });
+
+    console.log('⏳ Waiting for Midnight Network initialization...');
+
+    // Wait for all services to be initialized
+    await waitForMidnightInitialization(testAgents, 120000);
+
+    console.log('🔍 Verifying network health...');
+
+    // Verify network health
+    await verifyMidnightNetworkHealth(testAgents);
+
+    // Get services from both runtimes for direct testing
+    networkService1 = testAgents.agent1.getService<MidnightNetworkService>('midnight-network')!;
+    networkService2 = testAgents.agent2.getService<MidnightNetworkService>('midnight-network')!;
+    messagingService1 = testAgents.agent1.getService<SecureMessagingService>('secure-messaging')!;
+    messagingService2 = testAgents.agent2.getService<SecureMessagingService>('secure-messaging')!;
+
+    expect(networkService1).toBeDefined();
+    expect(networkService2).toBeDefined();
+    expect(messagingService1).toBeDefined();
+    expect(messagingService2).toBeDefined();
+
+    console.log('✅ Midnight Network test environment ready');
+  }, 180000); // 3 minute timeout for full initialization
+
+  afterAll(async () => {
+    if (testAgents?.harness) {
+      console.log('🧹 Cleaning up test environment...');
+      await testAgents.harness.cleanup();
+      console.log('✅ Test environment cleaned up');
+    }
+  });
+
+  test('Real Network Connection Establishment', async () => {
+    if (!process.env.MIDNIGHT_WALLET_MNEMONIC) {
+      console.warn('Skipping test - no wallet mnemonic');
+      return;
+    }
+
+    console.log('🔗 Testing network connection establishment...');
+
+    // Test that both agents can connect to real network
+    const [connectionState1, connectionState2] = await Promise.all([
+      new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Agent 1 connection timeout')), 30000);
+        const subscription = networkService1.getConnectionState().subscribe({
+          next: (state) => {
+            if (state.isConnected) {
+              clearTimeout(timeout);
+              subscription.unsubscribe();
+              resolve(state);
+            }
+          },
+          error: reject
+        });
+      }),
+      new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Agent 2 connection timeout')), 30000);
+        const subscription = networkService2.getConnectionState().subscribe({
+          next: (state) => {
+            if (state.isConnected) {
+              clearTimeout(timeout);
+              subscription.unsubscribe();
+              resolve(state);
+            }
+          },
+          error: reject
+        });
+      })
+    ]);
+
+    expect(connectionState1.isConnected).toBe(true);
+    expect(connectionState2.isConnected).toBe(true);
+    expect(connectionState1.networkId).toBe(connectionState2.networkId);
+    
+    console.log(`✅ Both agents connected to network: ${connectionState1.networkId}`);
+  }, 60000);
+
+  test('Real Wallet Initialization and Balance Check', async () => {
+    if (!process.env.MIDNIGHT_WALLET_MNEMONIC) {
+      console.warn('Skipping test - no wallet mnemonic');
+      return;
+    }
+
+    // Test real wallet functionality
+    const walletInfo1 = await networkService1.getWalletInfo();
+    const walletInfo2 = await networkService2.getWalletInfo();
+
+    expect(walletInfo1.address.address).toBeDefined();
+    expect(walletInfo1.balance).toBeDefined();
+    expect(typeof walletInfo1.balance).toBe('bigint');
+
+    expect(walletInfo2.address.address).toBeDefined(); 
+    expect(walletInfo2.balance).toBeDefined();
+    expect(typeof walletInfo2.balance).toBe('bigint');
+
+    // Addresses should be different for different agents
+    expect(walletInfo1.address.address).not.toBe(walletInfo2.address.address);
+  }, 30000);
+
+  test('Real Network State Monitoring', async () => {
+    if (!process.env.MIDNIGHT_WALLET_MNEMONIC) {
+      console.warn('Skipping test - no wallet mnemonic');
+      return;
+    }
+
+    // Test real network state updates
+    const networkState = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Network state timeout')), 30000);
+      const subscription = networkService1.getNetworkState().subscribe({
+        next: (state) => {
+          if (state.blockHeight > 0) {
+            clearTimeout(timeout);
+            subscription.unsubscribe();
+            resolve(state);
+          }
+        },
+        error: reject
+      });
+    });
+
+    expect(networkState.blockHeight).toBeGreaterThan(0);
+    expect(networkState.networkId).toBeDefined();
+    expect(typeof networkState.connectedPeers).toBe('number');
+  }, 45000);
+
+  test('Real Private State Management', async () => {
+    if (!process.env.MIDNIGHT_WALLET_MNEMONIC) {
+      console.warn('Skipping test - no wallet mnemonic');
+      return;
+    }
+
+    // Test real private state operations
+    const testKey = `test_key_${Date.now()}`;
+    const testValue = { message: 'Real private state test', timestamp: Date.now() };
+
+    // Set private state
+    await networkService1.setPrivateState(testKey, testValue);
+
+    // Get private state
+    const retrievedValue = await networkService1.getPrivateState(testKey);
+    expect(retrievedValue).toEqual(testValue);
+
+    // Delete private state
+    await networkService1.deletePrivateState(testKey);
+
+    // Verify deletion
+    const deletedValue = await networkService1.getPrivateState(testKey);
+    expect(deletedValue).toBeUndefined();
+  }, 30000);
+
+  test('Real Secure Messaging Between Agents', async () => {
+    if (!process.env.MIDNIGHT_WALLET_MNEMONIC) {
+      console.warn('Skipping test - no wallet mnemonic');
+      return;
+    }
+
+    // Create a secure message between real agents
+    const testMessage = 'This is a REAL secure message with sensitive content!';
+    
+    // Send message from agent 1 to agent 2
+    const result = await messagingService1.sendSecureMessage(
+      testAgents.agent2.agentId,
+      testMessage
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.data?.messageId).toBeDefined();
+    expect(result.data?.proof).toBeDefined();
+
+    // Verify message was processed
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for processing
+
+    // Check that message appears in agent 1's sent messages
+    const recentMessages1 = messagingService1.getRecentMessages(5);
+    expect(recentMessages1.length).toBeGreaterThan(0);
+    
+    const sentMessage = recentMessages1.find(msg => 
+      msg.content === testMessage && msg.fromAgent === testAgents.agent1.agentId
+    );
+    expect(sentMessage).toBeDefined();
+  }, 45000);
+
+  test('Real Chat Room Creation and Management', async () => {
+    if (!process.env.MIDNIGHT_WALLET_MNEMONIC) {
+      console.warn('Skipping test - no wallet mnemonic');
+      return;
+    }
+
+    // Create a real chat room with both agents
+    const roomName = `RealTestRoom_${Date.now()}`;
+    const participants = [testAgents.agent2.agentId];
+
+    const createResult = await messagingService1.createChatRoom(
+      roomName,
+      participants,
+      true // private room
+    );
+
+    expect(createResult.success).toBe(true);
+    expect(createResult.data?.contractAddress).toBeDefined();
+
+    // Verify room appears in chat rooms list
+    const chatRooms = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Chat rooms timeout')), 15000);
+      const subscription = messagingService1.getChatRooms().subscribe({
+        next: (rooms) => {
+          const room = rooms.find(r => r.name === roomName);
+          if (room) {
+            clearTimeout(timeout);
+            subscription.unsubscribe();
+            resolve(rooms);
+          }
+        },
+        error: reject
+      });
+    });
+
+    expect(chatRooms.length).toBeGreaterThan(0);
+    const createdRoom = chatRooms.find(r => r.name === roomName);
+    expect(createdRoom).toBeDefined();
+    expect(createdRoom.participants).toContain(testAgents.agent1.agentId);
+    expect(createdRoom.isPrivate).toBe(true);
+  }, 60000);
+
+  test('Real Payment Service Integration', async () => {
+    if (!process.env.MIDNIGHT_WALLET_MNEMONIC) {
+      console.warn('Skipping test - no wallet mnemonic');
+      return;
+    }
+
+    const paymentService1 = testAgents.agent1.getService<PaymentService>('payment')!;
+    const paymentService2 = testAgents.agent2.getService<PaymentService>('payment')!;
+
+    expect(paymentService1).toBeDefined();
+    expect(paymentService2).toBeDefined();
+
+    // Check real wallet balances
+    const balance1 = await paymentService1.getBalance();
+    const balance2 = await paymentService2.getBalance();
+
+    expect(balance1.balance).toBeDefined();
+    expect(balance1.currency).toBeDefined();
+    expect(balance2.balance).toBeDefined();
+    expect(balance2.currency).toBeDefined();
+
+    // Create a real payment request
+    const amount = BigInt(1000); // Small test amount
+    const result = await paymentService1.createPaymentRequest(
+      testAgents.agent2.agentId,
+      amount,
+      'MIDNIGHT',
+      'Real integration test payment',
+      new Date(Date.now() + 3600000) // 1 hour deadline
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.data?.paymentId).toBeDefined();
+    expect(result.data?.contractAddress).toBeDefined();
+
+    // Verify payment request appears in pending requests
+    const pendingPayments = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Pending payments timeout')), 15000);
+      const subscription = paymentService2.getPendingPaymentRequests().subscribe({
+        next: (requests) => {
+          if (requests.length > 0) {
+            clearTimeout(timeout);
+            subscription.unsubscribe();
+            resolve(requests);
+          }
+        },
+        error: reject
+      });
+    });
+
+    expect(pendingPayments.length).toBeGreaterThan(0);
+    const testPayment = pendingPayments.find(p => p.amount === amount);
+    expect(testPayment).toBeDefined();
+  }, 60000);
+
+  test('Real Agent Discovery on Network', async () => {
+    if (!process.env.MIDNIGHT_WALLET_MNEMONIC) {
+      console.warn('Skipping test - no wallet mnemonic');
+      return;
+    }
+
+    const discoveryService1 = testAgents.agent1.getService<AgentDiscoveryService>('agent-discovery')!;
+    const discoveryService2 = testAgents.agent2.getService<AgentDiscoveryService>('agent-discovery')!;
+
+    expect(discoveryService1).toBeDefined();
+    expect(discoveryService2).toBeDefined();
+
+    // Wait for agents to register themselves
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    // Test real agent discovery
+    const result = await discoveryService1.discoverAgents(['messaging', 'payments']);
+
+    expect(result.success).toBe(true);
+
+    // Check own profiles are created
+    const ownProfile1 = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Own profile timeout')), 15000);
+      const subscription = discoveryService1.getOwnProfile().subscribe({
+        next: (profile) => {
+          if (profile && profile.id === testAgents.agent1.agentId) {
+            clearTimeout(timeout);
+            subscription.unsubscribe();
+            resolve(profile);
+          }
+        },
+        error: reject
+      });
+    });
+
+    expect(ownProfile1).toBeDefined();
+    expect(ownProfile1.id).toBe(testAgents.agent1.agentId);
+    expect(ownProfile1.name).toBe('TestAgent1');
+    expect(ownProfile1.capabilities).toContain('messaging');
+    expect(ownProfile1.capabilities).toContain('payments');
+  }, 45000);
+
+  test('Real End-to-End Multi-Agent Scenario', async () => {
+    if (!process.env.MIDNIGHT_WALLET_MNEMONIC) {
+      console.warn('Skipping test - no wallet mnemonic');
+      return;
+    }
+
+    // Real end-to-end scenario:
+    // 1. Agent 1 discovers Agent 2
+    // 2. Agent 1 creates chat room with Agent 2  
+    // 3. Agent 1 sends secure message to Agent 2
+    // 4. Agent 1 requests payment from Agent 2
+    // 5. Verify all operations completed successfully
+
+    const discoveryService1 = testAgents.agent1.getService<AgentDiscoveryService>('agent-discovery')!;
+    const paymentService1 = testAgents.agent1.getService<PaymentService>('payment')!;
+
+    // Step 1: Discover agents
+    await discoveryService1.discoverAgents();
+
+    // Step 2: Create chat room
+    const roomResult = await messagingService1.createChatRoom(
+      `E2ETestRoom_${Date.now()}`,
+      [testAgents.agent2.agentId],
+      true
+    );
+    expect(roomResult.success).toBe(true);
+
+    // Step 3: Send secure message
+    const messageResult = await messagingService1.sendSecureMessage(
+      testAgents.agent2.agentId,
+      'End-to-end integration test message with real ZK privacy!'
+    );
+    expect(messageResult.success).toBe(true);
+
+    // Step 4: Request payment
+    const paymentResult = await paymentService1.createPaymentRequest(
+      testAgents.agent2.agentId,
+      BigInt(500),
+      'MIDNIGHT',
+      'E2E test payment request'
+    );
+    expect(paymentResult.success).toBe(true);
+
+    // Step 5: Verify all operations are reflected in network state
+    await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for propagation
+
+    // Check network state shows activity
+    const networkState = await new Promise((resolve) => {
+      const subscription = networkService1.getNetworkState().subscribe({
+        next: (state) => {
+          subscription.unsubscribe();
+          resolve(state);
+        }
+      });
+    });
+
+    expect(networkState.activeContracts).toBeGreaterThan(0);
+
+    // Verify final state across all services
+    const finalChatRooms = await new Promise((resolve) => {
+      const subscription = messagingService1.getChatRooms().subscribe({
+        next: (rooms) => {
+          subscription.unsubscribe();
+          resolve(rooms);
+        }
+      });
+    });
+
+    expect(finalChatRooms.length).toBeGreaterThan(0);
+
+    console.log('✅ Real end-to-end multi-agent scenario completed successfully!');
+  }, 120000); // 2 minute timeout for full scenario
+});
+
+/**
+ * Test suite that can be exported for use in ElizaOS test framework
+ */
+export const RealMidnightNetworkTestSuite: TestCase[] = [
+  {
+    name: 'Real Midnight Network Integration - Full Stack Test',
+    fn: async (runtime: IAgentRuntime) => {
+      if (!process.env.MIDNIGHT_WALLET_MNEMONIC) {
+        console.warn('Skipping real integration test - MIDNIGHT_WALLET_MNEMONIC not provided');
+        return;
+      }
+
+      // Test all services are initialized
+      const networkService = runtime.getService<MidnightNetworkService>('midnight-network');
+      const messagingService = runtime.getService<SecureMessagingService>('secure-messaging');  
+      const paymentService = runtime.getService<PaymentService>('payment');
+      const discoveryService = runtime.getService<AgentDiscoveryService>('agent-discovery');
+
+      if (!networkService || !messagingService || !paymentService || !discoveryService) {
+        throw new Error('Not all required services are available');
+      }
+
+      // Test real network connectivity
+      const connectionState = await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Connection timeout')), 30000);
+        const subscription = networkService.getConnectionState().subscribe({
+          next: (state) => {
+            if (state.isConnected) {
+              clearTimeout(timeout);
+              subscription.unsubscribe();
+              resolve(state);
+            }
+          },
+          error: reject
+        });
+      });
+
+      if (!connectionState.isConnected) {
+        throw new Error('Failed to establish real network connection');
+      }
+
+      // Test real wallet functionality
+      const walletInfo = await networkService.getWalletInfo();
+      if (!walletInfo.address.address || typeof walletInfo.balance !== 'bigint') {
+        throw new Error('Invalid wallet information from real network');
+      }
+
+      console.log('✅ Real Midnight Network integration test passed');
+    }
+  }
+];

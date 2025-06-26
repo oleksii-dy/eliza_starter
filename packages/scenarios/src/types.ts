@@ -6,7 +6,7 @@ export type { UUID } from '@elizaos/core';
 export interface ScenarioActor {
   id: UUID | string;
   name: string;
-  role: 'subject' | 'observer' | 'assistant' | 'adversary';
+  role: 'subject' | 'observer' | 'assistant' | 'adversary' | 'evaluator';
   personality?: {
     traits?: string[];
     systemPrompt?: string;
@@ -74,6 +74,7 @@ export interface ScenarioExecution {
   timeout?: number;
   stopConditions?: StopCondition[];
   strategy?: any;
+  realApiCallsExpected?: boolean;
 }
 
 export interface StopCondition {
@@ -91,20 +92,20 @@ export interface ScenarioVerification {
 
 export interface VerificationRule {
   id: string;
-  type: 'llm'; // All verification is now LLM-based for maximum intelligence
+  type: 'llm' | 'api-verification' | 'fact-checking' | 'llm-evaluation' | 'storage-verification' | 'code';
   description: string;
   config: VerificationConfig;
   weight?: number;
 }
 
 export interface VerificationConfig {
-  successCriteria?: string;
+  successCriteria?: string | string[];
   priority?: string;
   category?: string;
   dynamicallyGenerated?: boolean;
   context?: Record<string, any>;
   expectedValue?: string;
-  criteria?: string;
+  criteria?: string | string[];
   deterministicType?: string;
   minMessages?: number;
   maxMessages?: number;
@@ -132,6 +133,7 @@ export interface BenchmarkCriteria {
   maxTokens?: number;
   maxMemoryUsage?: number;
   targetAccuracy?: number;
+  minAccuracyScore?: number;
   customMetrics?: Array<{
     name: string;
     threshold?: number;
@@ -396,7 +398,7 @@ export interface EnvironmentRequirement {
 }
 
 export interface ActorRequirement {
-  role: 'subject' | 'observer' | 'assistant' | 'adversary';
+  role: 'subject' | 'observer' | 'assistant' | 'adversary' | 'evaluator';
   plugins: string[];
   config?: Record<string, any>;
 }

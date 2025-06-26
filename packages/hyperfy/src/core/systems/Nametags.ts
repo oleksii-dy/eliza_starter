@@ -1,7 +1,7 @@
 import { fillRoundRect } from '../extras/roundRect';
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
 import CustomShaderMaterial from '../libs/three-custom-shader-material';
-import { uuid } from '../utils';
+// import { uuid } from '../utils';
 import { System } from './System';
 import type { World } from '../../types';
 
@@ -17,7 +17,7 @@ import type { World } from '../../types';
 const RES = 2;
 const NAMETAG_WIDTH = 200 * RES;
 const NAMETAG_HEIGHT = 35 * RES;
-const NAMETAG_BORDER_RADIUS = 10 * RES;
+const _NAMETAG_BORDER_RADIUS = 10 * RES;
 
 const NAME_FONT_SIZE = 16 * RES;
 const NAME_OUTLINE_SIZE = 4 * RES;
@@ -35,14 +35,14 @@ const MAX_INSTANCES = PER_ROW * PER_COLUMN;
 const defaultQuaternion = new THREE.Quaternion(0, 0, 0, 1);
 const defaultScale = new THREE.Vector3(1, 1, 1);
 
-const v1 = new THREE.Vector3();
+const _v1 = new THREE.Vector3();
 
 interface Nametag {
   idx: number
   name: string
   health: number
-  matrix: THREE.Matrix4
-  move: (newMatrix: THREE.Matrix4) => void
+  matrix: THREE.Matrix4Type
+  move: (newMatrix: THREE.Matrix4Type) => void
   setName: (name: string) => void
   setHealth: (health: number) => void
   destroy: () => void
@@ -56,11 +56,12 @@ export class Nametags extends System {
   uniforms: { uAtlas: { value: any }; uXR: { value: number }; uOrientation: { value: any } };
   material: any;
   geometry: THREE.PlaneGeometry;
-  mesh: THREE.InstancedMesh<any, any, THREE.InstancedMeshEventMap>;
+  mesh: THREE.InstancedMeshType;
 
   constructor(world: World) {
-    super(world)
-    ;(this.nametags = []), (this.canvas = document.createElement('canvas'));
+    super(world);
+    this.nametags = [];
+    this.canvas = document.createElement('canvas');
     this.canvas.width = NAMETAG_WIDTH * PER_ROW;
     this.canvas.height = NAMETAG_HEIGHT * PER_COLUMN;
     // console.log(`nametags: atlas is ${this.canvas.width} x ${this.canvas.height}`)
@@ -225,7 +226,7 @@ export class Nametags extends System {
     // set coords
     const row = Math.floor(idx / PER_ROW);
     const col = idx % PER_ROW;
-    const coords = this.mesh.geometry.attributes.coords as THREE.InstancedBufferAttribute;
+    const coords = this.mesh.geometry.attributes.coords as THREE.InstancedBufferAttributeType;
     coords.setXY(idx, col / PER_ROW, row / PER_COLUMN);
     coords.needsUpdate = true;
     // make nametag
@@ -236,7 +237,7 @@ export class Nametags extends System {
       name,
       health,
       matrix,
-      move: (newMatrix: THREE.Matrix4) => {
+      move: (newMatrix: THREE.Matrix4Type) => {
         // copy over just position
         matrix.elements[12] = newMatrix.elements[12]; // x position
         matrix.elements[13] = newMatrix.elements[13]; // y position
@@ -284,7 +285,7 @@ export class Nametags extends System {
       last.idx = nametag.idx;
       this.draw(last);
       // update coords for swapped instance
-      const coords = this.mesh.geometry.attributes.coords as THREE.InstancedBufferAttribute;
+      const coords = this.mesh.geometry.attributes.coords as THREE.InstancedBufferAttributeType;
       const row = Math.floor(nametag.idx / PER_ROW);
       const col = nametag.idx % PER_ROW;
       coords.setXY(nametag.idx, col / PER_ROW, row / PER_COLUMN);

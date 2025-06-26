@@ -43,14 +43,14 @@ export enum SecurityEventType {
   PHISHING_ATTEMPT = 'phishing_attempt',
   IMPERSONATION_ATTEMPT = 'impersonation_attempt',
   COORDINATED_ATTACK = 'coordinated_attack',
-  MALICIOUS_LINK_CAMPAIGN = 'malicious_link_campaign'
+  MALICIOUS_LINK_CAMPAIGN = 'malicious_link_campaign',
 }
 
 export enum ThreatSeverity {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 export enum ThreatType {
@@ -71,7 +71,7 @@ export enum ThreatType {
   SYSTEM_PROBE = 'system_probe',
   SYBIL_ATTACK = 'sybil_attack',
   MULTI_STAGE_ATTACK = 'multi_stage_attack',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
 }
 
 export interface SecurityThreat {

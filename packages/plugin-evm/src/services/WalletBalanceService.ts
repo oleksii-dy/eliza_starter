@@ -1,6 +1,5 @@
 import type { IAgentRuntime } from '@elizaos/core';
-import type { Address } from 'viem';
-import { formatUnits } from 'viem';
+import { type Address, formatUnits } from 'viem';
 import { initWalletProvider } from '../providers/wallet';
 import type { SupportedChain } from '../types';
 
@@ -86,8 +85,9 @@ export class WalletBalanceService {
     };
   }
 
-  async getRecentActions(limit = 10): Promise<RecentAction[]> {
-    return this.recentActions.slice(0, limit);
+  getRecentActions(limit = 10): Promise<RecentAction[]> {
+    const actions = this.recentActions.slice(0, limit);
+    return Promise.resolve(actions);
   }
 
   addRecentAction(action: Omit<RecentAction, 'id' | 'timestamp'>): void {
@@ -169,8 +169,8 @@ export class WalletBalanceService {
       }
 
       return balances;
-    } catch (error) {
-      console.error('Error fetching token balances:', error);
+    } catch (_error) {
+      console.error('Error fetching token balances:', _error);
       return [];
     }
   }

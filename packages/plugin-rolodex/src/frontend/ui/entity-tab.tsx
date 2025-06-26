@@ -80,18 +80,26 @@ export function EntityTab({ agentId }: { agentId: UUID }) {
 
   // Filter entities based on trust level
   const filteredEntities = entities.filter((entity) => {
-    if (filterTrust === 'all') {return true;}
+    if (filterTrust === 'all') {
+      return true;
+    }
 
     const trust = entity.metadata?.trustMetrics;
-    if (!trust || typeof trust !== 'object') {return false;}
+    if (!trust || typeof trust !== 'object') {
+      return false;
+    }
 
     const trustLevel =
       'helpfulness' in trust && 'suspicionLevel' in trust
         ? (trust as any).helpfulness - (trust as any).suspicionLevel
         : 0;
 
-    if (filterTrust === 'trusted') {return trustLevel > 0.5;}
-    if (filterTrust === 'suspicious') {return trustLevel < -0.5;}
+    if (filterTrust === 'trusted') {
+      return trustLevel > 0.5;
+    }
+    if (filterTrust === 'suspicious') {
+      return trustLevel < -0.5;
+    }
     return true;
   });
 
@@ -122,7 +130,9 @@ export function EntityTab({ agentId }: { agentId: UUID }) {
     total: entities.length,
     trusted: entities.filter((e) => {
       const trust = e.metadata?.trustMetrics;
-      if (!trust || typeof trust !== 'object') {return false;}
+      if (!trust || typeof trust !== 'object') {
+        return false;
+      }
       const level =
         'helpfulness' in trust && 'suspicionLevel' in trust
           ? (trust as any).helpfulness - (trust as any).suspicionLevel
@@ -131,7 +141,9 @@ export function EntityTab({ agentId }: { agentId: UUID }) {
     }).length,
     suspicious: entities.filter((e) => {
       const trust = e.metadata?.trustMetrics;
-      if (!trust || typeof trust !== 'object') {return false;}
+      if (!trust || typeof trust !== 'object') {
+        return false;
+      }
       const level =
         'helpfulness' in trust && 'suspicionLevel' in trust
           ? (trust as any).helpfulness - (trust as any).suspicionLevel

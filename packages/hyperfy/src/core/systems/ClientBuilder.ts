@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
 import { cloneDeep, isBoolean } from 'lodash-es';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 
@@ -9,7 +9,7 @@ import { hashFile } from '../utils-client';
 import { hasRole, uuid } from '../utils';
 import { ControlPriorities } from '../extras/ControlPriorities';
 import { importApp } from '../extras/appTools';
-import { DEG2RAD, RAD2DEG } from '../extras/general';
+import { DEG2RAD } from '../extras/general';
 
 const FORWARD = new THREE.Vector3(0, 0, -1);
 const SNAP_DISTANCE = 1;
@@ -78,8 +78,9 @@ export class ClientBuilder extends System {
     this.localSpace = false;
     this.target = new THREE.Object3D() as TargetObject;
     this.target.rotation.reorder('YXZ');
-    this.lastMoveSendTime = 0
-    ;(this.undos = []), (this.dropTarget = null);
+    this.lastMoveSendTime = 0;
+    this.undos = [];
+    this.dropTarget = null;
     this.file = null;
   }
 
@@ -166,7 +167,7 @@ export class ClientBuilder extends System {
     this.control.setActions(actions);
   }
 
-  update(delta: number) {
+  update(_delta: number) {
     // toggle build
     if (this.control.tab.pressed) {
       this.toggle();
@@ -421,18 +422,18 @@ export class ClientBuilder extends System {
       const project = this.control.keyF.down ? 1 : this.control.keyC.down ? -1 : null;
       if (project) {
         const multiplier = this.control.shiftLeft.down ? 4 : 1;
-        this.target.limit! += project * PROJECT_SPEED * delta * multiplier;
+        this.target.limit! += project * PROJECT_SPEED * _delta * multiplier;
         if (this.target.limit! < PROJECT_MIN) {this.target.limit = PROJECT_MIN;}
         if (hitDistance && this.target.limit! > hitDistance) {this.target.limit = hitDistance;}
       }
       // shift + mouse wheel scales
       if (this.control.shiftLeft.down) {
-        const scaleFactor = 1 + this.control.scrollDelta.value * 0.1 * delta;
+        const scaleFactor = 1 + this.control.scrollDelta.value * 0.1 * _delta;
         this.target.scale.multiplyScalar(scaleFactor);
       }
       // !shift + mouse wheel rotates
       else {
-        this.target.rotation.y += this.control.scrollDelta.value * 0.1 * delta;
+        this.target.rotation.y += this.control.scrollDelta.value * 0.1 * _delta;
       }
       // apply movement
       app.root.position.copy(this.target.position);
@@ -461,7 +462,7 @@ export class ClientBuilder extends System {
     }
     // send selected updates
     if (this.selected) {
-      this.lastMoveSendTime += delta;
+      this.lastMoveSendTime += _delta;
       if (this.lastMoveSendTime > this.world.networkRate) {
         const app = this.selected
         ;(this.world as any).network.send('entityModified', {
@@ -646,7 +647,7 @@ export class ClientBuilder extends System {
     this.gizmo.attach(this.gizmoTarget as any);
     this.world.stage.scene.add(this.gizmoTarget)
     ;(this as any).gizmoHelper = this.gizmo;
-    this.gizmo.addEventListener('dragging-changed', (event: any) => {
+    (this.gizmo as any).addEventListener('dragging-changed', (event: any) => {
       this.gizmoActive = event.value;
       this.control.pointer.capture = event.value;
     });
@@ -658,7 +659,7 @@ export class ClientBuilder extends System {
     this.world.stage.scene.remove((this as any).gizmoHelper);
     this.gizmo.detach()
     ;(this.gizmo as any).disconnect();
-    this.gizmo.dispose()
+    (this.gizmo as any).dispose()
     ;(this.gizmo as any) = null;
   }
 

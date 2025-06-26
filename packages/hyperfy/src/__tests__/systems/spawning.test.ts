@@ -491,7 +491,7 @@ describe('SpawningSystem', () => {
 
     it('should throttle updates', () => {
       const updateSpy = spyOn(spawningSystem as any, 'updateSpawner');
-      
+
       // Set timeout to prevent infinite loops
       const timeout = setTimeout(() => {
         throw new Error('Test timed out - possible infinite loop in fixedUpdate');

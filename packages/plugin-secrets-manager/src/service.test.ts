@@ -2,7 +2,7 @@ import {
   type IAgentRuntime,
   Character,
   Plugin as _Plugin,
-  World,
+  World as _World,
   Service,
   UUID,
 } from '@elizaos/core';

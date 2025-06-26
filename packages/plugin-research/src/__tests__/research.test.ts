@@ -1,101 +1,38 @@
-import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import { ResearchService } from '../service';
 import { ResearchStatus, ResearchPhase, ResearchProject } from '../types';
 import { IAgentRuntime, ModelType } from '@elizaos/core';
+import { createTestRuntime, createTestProviders } from './test-providers';
+import {
+  LongRunningTestManager,
+  QUICK_TEST_CONFIG,
+} from './test-runner-config';
 
-// Mock runtime
-const createMockRuntime = () =>
-  ({
-    getSetting: mock((key: string) => {
-      const settings: Record<string, string> = {
-        RESEARCH_MAX_RESULTS: '10',
-        RESEARCH_TIMEOUT: '300000',
-        RESEARCH_ENABLE_CITATIONS: 'true',
-        RESEARCH_ENABLE_IMAGES: 'true',
-        RESEARCH_LANGUAGE: 'en',
-        // Provide mock API keys to satisfy validation
-        EXA_API_KEY: 'mock-exa-api-key',
-        TAVILY_API_KEY: 'mock-tavily-api-key',
-        SERPER_API_KEY: 'mock-serper-api-key',
-        SERPAPI_API_KEY: 'mock-serpapi-api-key',
-        OPENAI_API_KEY: 'mock-openai-api-key',
-        FIRECRAWL_API_KEY: 'mock-firecrawl-api-key',
-      };
-      return settings[key] || '';
-    }),
-    useModel: mock(async (type: any, params: any) => {
-      // Mock LLM responses based on the prompt
-      const content = params.messages?.[1]?.content || params.messages?.[0]?.content || '';
+let testManager: LongRunningTestManager;
 
-      // Handle sub-query generation - match the actual prompt pattern
-      if (
-        content.includes('Generate sub-queries for this research task') ||
-        content.includes('Generate 3-7 specific sub-queries')
-      ) {
-        return `PURPOSE: Find the most recent quantum computing advances and breakthroughs
-QUERY: quantum computing breakthroughs 2024
-TYPE: factual
-PRIORITY: high
+beforeEach(() => {
+  testManager = new LongRunningTestManager(QUICK_TEST_CONFIG);
+});
 
----
-
-PURPOSE: Research current quantum error correction techniques  
-QUERY: quantum error correction methods
-TYPE: theoretical
-PRIORITY: medium
-
----
-
-PURPOSE: Explore practical applications in industry
-QUERY: quantum computing commercial applications
-TYPE: practical
-PRIORITY: medium`;
-      }
-
-      if (content.includes('Generate a comprehensive search strategy')) {
-        return `Sub-Query 1:
-QUERY: quantum computing breakthroughs 2024
-PURPOSE: Find the most recent quantum computing advances and breakthroughs
-PRIORITY: critical
-EXPECTED_SOURCES: academic papers, industry reports
-KEYWORDS: quantum, computing, advances, 2024
-
-Sub-Query 2:
-QUERY: quantum error correction methods
-PURPOSE: Research current quantum error correction techniques
-PRIORITY: high
-EXPECTED_SOURCES: research papers, technical documentation
-KEYWORDS: error correction, quantum, stability`;
-      }
-      if (content.includes('research plan')) {
-        return 'Research plan: 1. Search for recent developments 2. Analyze key findings 3. Synthesize information';
-      }
-      if (content.includes('relevance')) {
-        return '0.85';
-      }
-      if (content.includes('Analyze')) {
-        return 'Key insights: Significant breakthroughs in quantum error correction';
-      }
-      if (content.includes('report')) {
-        return 'Executive Summary: This research explores recent quantum computing advances...';
-      }
-      return 'Mock response';
-    }),
-  }) as unknown as IAgentRuntime;
+afterEach(() => {
+  testManager.cleanup();
+});
 
 describe('ResearchService', () => {
   let runtime: IAgentRuntime;
   let service: ResearchService;
 
   beforeEach(() => {
-    runtime = createMockRuntime();
+    runtime = createTestRuntime();
     service = new ResearchService(runtime);
   });
 
   describe('service initialization', () => {
     it('should create service with default config', () => {
       expect(service).toBeDefined();
-      expect(service.capabilityDescription).toContain('PhD-level deep research');
+      expect(service.capabilityDescription).toContain(
+        'PhD-level deep research'
+      );
     });
 
     it('should create service with custom config', () => {
@@ -112,7 +49,9 @@ describe('ResearchService', () => {
       expect(project).toBeDefined();
       expect(project.id).toBeDefined();
       expect(project.query).toBe(query);
-      expect([ResearchStatus.PENDING, ResearchStatus.ACTIVE]).toContain(project.status);
+      expect([ResearchStatus.PENDING, ResearchStatus.ACTIVE]).toContain(
+        project.status
+      );
       expect([
         ResearchPhase.INITIALIZATION,
         ResearchPhase.PLANNING,

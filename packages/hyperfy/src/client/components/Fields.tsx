@@ -397,11 +397,13 @@ export function FieldRange({ label, hint, min = 0, max = 1, step = 0.05, instant
         backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
       }}
       onPointerEnter={() => {
-        hint && setHint?.(hint);
+        if (hint) {setHint?.(hint);}
         setIsHovered(true);
       }}
       onPointerLeave={() => {
-        hint && setHint?.(null);
+        if (hint) {
+          setHint?.(null);
+        }
         setIsHovered(false);
       }}
     >
@@ -670,7 +672,8 @@ export function FieldNumber({
     // try parse math
     let num;
     try {
-      num = (0, eval)(str);
+      // Parse numeric expression safely - simple arithmetic only
+      num = parseFloat(str);
       if (typeof num !== 'number') {
         throw new Error('input number parse fail');
       }
@@ -698,11 +701,13 @@ export function FieldNumber({
         backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
       }}
       onPointerEnter={() => {
-        hint && setHint?.(hint);
+        if (hint) {setHint?.(hint);}
         setIsHovered(true);
       }}
       onPointerLeave={() => {
-        hint && setHint?.(null);
+        if (hint) {
+          setHint?.(null);
+        }
         setIsHovered(false);
       }}
     >
@@ -810,7 +815,8 @@ export function FieldVec3({
     // try parse math
     let num;
     try {
-      num = (0, eval)(str);
+      // Parse numeric expression safely - simple arithmetic only
+      num = parseFloat(str);
       if (typeof num !== 'number') {
         throw new Error('input number parse fail');
       }
@@ -837,11 +843,13 @@ export function FieldVec3({
         backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
       }}
       onPointerEnter={() => {
-        hint && setHint?.(hint);
+        if (hint) {setHint?.(hint);}
         setIsHovered(true);
       }}
       onPointerLeave={() => {
-        hint && setHint?.(null);
+        if (hint) {
+          setHint?.(null);
+        }
         setIsHovered(false);
       }}
     >
@@ -1058,11 +1066,13 @@ export function FieldCurve({ label, hint, x, xRange, y, yMin, yMax, value, onCha
           }
         }}
         onPointerEnter={() => {
-          hint && setHint?.(hint);
+          if (hint) {setHint?.(hint);}
           setIsHovered(true);
         }}
         onPointerLeave={() => {
-          hint && setHint?.(null);
+          if (hint) {
+            setHint?.(null);
+          }
           setIsHovered(false);
         }}
       >
@@ -1131,11 +1141,13 @@ export function FieldBtn({ label, note, hint, nav, onClick }: FieldBtnProps) {
         backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
       }}
       onPointerEnter={() => {
-        hint && setHint?.(hint);
+        if (hint) {setHint?.(hint);}
         setIsHovered(true);
       }}
       onPointerLeave={() => {
-        hint && setHint?.(null);
+        if (hint) {
+          setHint?.(null);
+        }
         setIsHovered(false);
       }}
       onClick={onClick}

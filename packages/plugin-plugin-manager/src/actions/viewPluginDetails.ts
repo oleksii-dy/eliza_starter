@@ -64,7 +64,7 @@ const viewPluginDetailsHandler: Handler = async (
   }
 
   try {
-    const pluginService = runtime.getService('plugin') as PluginManagerService;
+    const pluginService = runtime.getService<PluginManagerService>('plugin');
     if (!pluginService) {
       if (callback) {
         await callback({

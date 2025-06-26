@@ -2,151 +2,208 @@ import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { v4 as uuidv4 } from 'uuid';
 import { ChannelType, type UUID, type Memory } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
-import { createIsolatedTestDatabase } from './test-helpers';
-import { connectionRegistry } from '../connection-registry';
-import type { PgliteDatabaseAdapter } from '../pglite/adapter';
+import { PgAdapter } from '../pg/adapter';
+import { PgManager } from '../pg/manager';
+import { setDatabaseType } from '../schema/factory';
+
+// Set database type for PostgreSQL
+setDatabaseType('postgres');
 
 describe('Debug Memory Operations', () => {
-  let adapter: PgliteDatabaseAdapter;
+  let adapter: PgAdapter;
+  let manager: PgManager;
   let agentId: UUID;
   let roomId: UUID;
   let entityId: UUID;
-  let cleanup: () => Promise<void>;
 
   beforeEach(async () => {
-    // Create unique test instance
-    const testId = `memory-test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const setup = await createIsolatedTestDatabase(testId);
+    // Skip test if no PostgreSQL URL is provided
+    if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
+      console.log('Skipping PostgreSQL test - no database URL provided');
+      return;
+    }
 
-    adapter = setup.adapter as PgliteDatabaseAdapter;
-    agentId = setup.testAgentId;
-    cleanup = setup.cleanup;
+    const postgresUrl =
+      process.env.TEST_POSTGRES_URL ||
+      process.env.POSTGRES_URL ||
+      'postgresql://postgres:postgres@localhost:5432/eliza_test';
 
-    // Create test entities
+    // Create unique test identifiers
+    agentId = uuidv4() as UUID;
     roomId = uuidv4() as UUID;
     entityId = uuidv4() as UUID;
 
-    // The adapter's init() method should have already been called by createIsolatedTestDatabase
+    manager = new PgManager({
+      connectionString: postgresUrl,
+      ssl: false,
+    });
 
-    // Create room
-    await adapter.createRooms([
-      {
-        id: roomId,
-        agentId,
-        source: 'test',
-        type: 'GROUP' as typeof ChannelType.GROUP,
-        name: 'Test Room',
-        channelId: uuidv4() as UUID,
-      },
-    ]);
-
-    // Create entity
-    await adapter.createEntities([
-      {
-        id: entityId,
-        agentId,
-        names: ['Test Entity'],
-      },
-    ]);
+    await manager.connect();
+    adapter = new PgAdapter(agentId, manager);
+    await adapter.init();
   });
 
   afterEach(async () => {
-    try {
-      if (cleanup) {
-        await cleanup();
+    if (adapter) {
+      // Clean up test data
+      try {
+        await adapter.query('DELETE FROM memories WHERE agent_id = $1', [agentId]);
+      } catch (error) {
+        console.warn('Error cleaning up test data:', error);
       }
-    } catch (error) {
-      console.error('Cleanup error:', error);
+      await adapter.close();
     }
-    // Force clear all connections to prevent interference
-    connectionRegistry.clearAll();
-  });
-
-  it('should check embeddings table columns', async () => {
-    // Check what columns the embeddings table actually has
-    const result = await (adapter as any).db.execute(sql`
-      SELECT column_name, data_type 
-      FROM information_schema.columns 
-      WHERE table_name = 'embeddings'
-      ORDER BY column_name
-    `);
-
-    console.log('Embeddings table columns:', result.rows);
-    expect(result.rows).toBeDefined();
-  });
-
-  it('should create memory without embedding', async () => {
-    const memory: Memory = {
-      id: uuidv4() as UUID,
-      agentId,
-      entityId,
-      roomId,
-      content: { text: 'Test memory without embedding' },
-      metadata: {
-        type: 'custom',
-      },
-      createdAt: Date.now(),
-    };
-
-    const memoryId = await adapter.createMemory(memory, 'memories');
-    expect(memoryId).toBeDefined();
-
-    const retrieved = await adapter.getMemoryById(memoryId);
-    expect(retrieved).toBeDefined();
-    expect(retrieved?.content).toEqual({ text: 'Test memory without embedding' });
+    if (manager) {
+      await manager.close();
+    }
   });
 
   it('should create memory with embedding', async () => {
-    const embedding = Array(384).fill(0.1);
+    if (!adapter) {
+      console.log('Test skipped - no adapter initialized');
+      return;
+    }
+
+    const memoryId = uuidv4() as UUID;
+    const embedding = Array.from({ length: 1536 }, () => Math.random());
+
     const memory: Memory = {
-      id: uuidv4() as UUID,
-      agentId,
+      id: memoryId,
       entityId,
+      agentId,
       roomId,
-      content: { text: 'Test memory with embedding' },
-      metadata: {
-        type: 'custom',
-      },
+      content: { text: 'Memory with embedding', type: 'test' },
       embedding,
+      unique: false,
       createdAt: Date.now(),
     };
 
-    console.log('Creating memory with embedding...');
-    const memoryId = await adapter.createMemory(memory, 'memories');
-    console.log('Memory created:', memoryId);
+    // Create memory
+    const createdId = await adapter.createMemory(memory, 'memories');
+    expect(createdId).toBe(memoryId);
 
-    expect(memoryId).toBeDefined();
+    // Retrieve and verify
+    const retrieved = await adapter.getMemoryById(memoryId);
+    expect(retrieved).toBeDefined();
+    expect(retrieved?.id).toBe(memoryId);
+    expect(retrieved?.content.text).toBe('Memory with embedding');
   });
 
-  it('should handle searchMemories without error', async () => {
-    // First create a memory with embedding
-    const embedding = Array(384).fill(0.1);
-    const memory: Memory = {
+  it('should perform vector similarity search', async () => {
+    if (!adapter) {
+      console.log('Test skipped - no adapter initialized');
+      return;
+    }
+
+    // Create base embedding
+    const baseEmbedding = Array.from({ length: 384 }, (_, i) => Math.sin(i * 0.1));
+
+    // Create similar embedding (slight variation)
+    const similarEmbedding = baseEmbedding.map((val) => val + (Math.random() - 0.5) * 0.1);
+
+    // Create very different embedding
+    const differentEmbedding = Array.from({ length: 384 }, () => Math.random() * 2 - 1);
+
+    // Create memories
+    const memory1: Memory = {
       id: uuidv4() as UUID,
-      agentId,
       entityId,
+      agentId,
       roomId,
-      content: { text: 'Searchable memory' },
-      metadata: {
-        type: 'custom',
-      },
-      embedding,
+      content: { text: 'Similar memory 1', type: 'test' },
+      embedding: baseEmbedding,
+      unique: false,
       createdAt: Date.now(),
     };
 
-    await adapter.createMemory(memory, 'memories');
+    const memory2: Memory = {
+      id: uuidv4() as UUID,
+      entityId,
+      agentId,
+      roomId,
+      content: { text: 'Similar memory 2', type: 'test' },
+      embedding: similarEmbedding,
+      unique: false,
+      createdAt: Date.now() + 1,
+    };
 
-    // Now try to search
-    console.log('Searching memories...');
-    const results = await adapter.searchMemories({
-      tableName: 'memories',
-      embedding,
+    const memory3: Memory = {
+      id: uuidv4() as UUID,
+      entityId,
+      agentId,
+      roomId,
+      content: { text: 'Different memory', type: 'test' },
+      embedding: differentEmbedding,
+      unique: false,
+      createdAt: Date.now() + 2,
+    };
+
+    // Create all memories
+    await adapter.createMemory(memory1, 'memories');
+    await adapter.createMemory(memory2, 'memories');
+    await adapter.createMemory(memory3, 'memories');
+
+    // Wait for pgvector to be ready
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Search for similar memories
+    const searchResults = await adapter.searchMemoriesByEmbedding(baseEmbedding, {
+      roomId,
+      match_threshold: 0.5,
       count: 10,
+      tableName: 'memories',
     });
 
-    console.log('Search results:', results.length);
-    // PGLite doesn't support vector similarity search, so it returns empty results
-    expect(results).toHaveLength(0);
-    expect(results).toEqual([]);
+    expect(searchResults.length).toBeGreaterThan(0);
+
+    // The first result should be the exact match or very similar
+    const firstResult = searchResults[0];
+    expect(firstResult.content.text).toContain('Similar');
+  });
+
+  it('should handle unique memory constraints', async () => {
+    if (!adapter) {
+      console.log('Test skipped - no adapter initialized');
+      return;
+    }
+
+    const memoryId1 = uuidv4() as UUID;
+    const memoryId2 = uuidv4() as UUID;
+
+    const uniqueMemory1: Memory = {
+      id: memoryId1,
+      entityId,
+      agentId,
+      roomId,
+      content: { text: 'Unique memory 1', type: 'unique' },
+      embedding: null,
+      unique: true,
+      createdAt: Date.now(),
+    };
+
+    const uniqueMemory2: Memory = {
+      id: memoryId2,
+      entityId,
+      agentId,
+      roomId,
+      content: { text: 'Unique memory 2', type: 'unique' },
+      embedding: null,
+      unique: true,
+      createdAt: Date.now() + 1,
+    };
+
+    // Create both memories
+    await adapter.createMemory(uniqueMemory1, 'memories');
+    await adapter.createMemory(uniqueMemory2, 'memories');
+
+    // Get memories with unique filter
+    const uniqueMemories = await adapter.getMemories({
+      roomId,
+      count: 10,
+      unique: true,
+    });
+
+    expect(uniqueMemories.length).toBe(2);
+    expect(uniqueMemories.every((m) => m.unique)).toBe(true);
   });
 });

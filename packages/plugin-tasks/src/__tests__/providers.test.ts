@@ -1,4 +1,4 @@
-import { IAgentRuntime, logger, Memory, State, UUID } from '@elizaos/core';
+import { AgentRuntime, logger, Memory, State, UUID } from '@elizaos/core';
 import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import { MockRuntime, setupActionTest } from './test-utils';
 
@@ -18,7 +18,7 @@ describe('Choice Provider', () => {
     spyOn(logger, 'warn').mockImplementation(() => {});
     spyOn(logger, 'debug').mockImplementation(() => {});
 
-    const setup = setupActionTest({}); // No specific state overrides needed for these tests
+    const setup = setupActionTest(); // No specific state overrides needed for these tests
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
@@ -59,7 +59,7 @@ describe('Choice Provider', () => {
     mockRuntime.getTasks = mock().mockResolvedValue(tasks);
 
     const result = await choiceProvider.get(
-      mockRuntime as IAgentRuntime,
+      mockRuntime as unknown as AgentRuntime,
       mockMessage as Memory,
       mockState as State
     );
@@ -90,7 +90,7 @@ describe('Choice Provider', () => {
     mockRuntime.getTasks = mock().mockResolvedValue([]); // No tasks
 
     const result = await choiceProvider.get(
-      mockRuntime as IAgentRuntime,
+      mockRuntime as unknown as AgentRuntime,
       mockMessage as Memory,
       mockState as State
     );
@@ -114,7 +114,7 @@ describe('Choice Provider', () => {
     mockRuntime.getTasks = mock().mockResolvedValue(tasks);
 
     const result = await choiceProvider.get(
-      mockRuntime as IAgentRuntime,
+      mockRuntime as unknown as AgentRuntime,
       mockMessage as Memory,
       mockState as State
     );
@@ -129,7 +129,7 @@ describe('Choice Provider', () => {
     mockRuntime.getTasks = mock().mockRejectedValue(new Error('Task service error'));
 
     const result = await choiceProvider.get(
-      mockRuntime as IAgentRuntime,
+      mockRuntime as unknown as AgentRuntime,
       mockMessage as Memory,
       mockState as State
     );

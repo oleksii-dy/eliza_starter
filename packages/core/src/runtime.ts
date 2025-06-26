@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createUniqueUuid } from './entities';
+import { ElizaError, ErrorCategory, ErrorSeverity } from './errors';
 import { decryptSecret, getSalt, safeReplacer } from './index';
 import { createLogger } from './logger';
 import type { PluginConfiguration } from './types/plugin';
@@ -57,8 +58,8 @@ import {
   getExecutionOrder,
 } from './planning';
 import type { ActionPlan, PlanningContext, PlanExecutionResult } from './types/planning';
-import { ConfigurationManager } from './managers/ConfigurationManager.js';
-import { CharacterConfigurationSource } from './configuration/CharacterConfigurationSource.js';
+import { ConfigurationManager } from './managers/ConfigurationManager';
+import { CharacterConfigurationSource } from './configuration/CharacterConfigurationSource';
 import type { ConfigurablePlugin } from './types/plugin';
 
 const environmentSettings: RuntimeSettings = {};
@@ -164,7 +165,6 @@ export class AgentRuntime implements IAgentRuntime {
   private sendHandlers = new Map<string, SendHandlerFunction>();
   private eventHandlers: Map<string, ((data: any) => void)[]> = new Map();
 
-
   // A map of all plugins available to the runtime, keyed by name, for dependency resolution.
   private allAvailablePlugins = new Map<string, Plugin>();
   // The initial list of plugins specified by the character configuration.
@@ -208,12 +208,12 @@ export class AgentRuntime implements IAgentRuntime {
       opts?.agentId ??
       stringToUuid(opts.character?.name ?? uuidv4() + opts.character?.username);
     this.character = opts.character || ({} as Character);
-    const logLevel = process.env.LOG_LEVEL || 'info';
+    const logLevel = (typeof process !== 'undefined' && process.env?.LOG_LEVEL) || 'info';
 
     // Create the logger with appropriate level - only show debug logs when explicitly configured
     this.logger = createLogger({
       agentName: this.character?.name,
-      logLevel: logLevel as any,
+      logLevel: logLevel as 'error' | 'warn' | 'info' | 'debug',
     });
 
     this.#conversationLength = opts.conversationLength ?? this.#conversationLength;
@@ -304,8 +304,10 @@ export class AgentRuntime implements IAgentRuntime {
       configurablePlugin.configurableEvaluators ||
       configurablePlugin.configurableServices;
 
+    // Check for unified components with proper type safety
+    const pluginWithComponents = plugin as Plugin & { components?: unknown[] };
     const hasUnifiedComponents =
-      (plugin as any).components && Array.isArray((plugin as any).components);
+      pluginWithComponents.components && Array.isArray(pluginWithComponents.components);
 
     // Initialize configuration using defaults manager if no existing configuration
     if (hasConfigurableComponents || hasUnifiedComponents) {
@@ -314,7 +316,7 @@ export class AgentRuntime implements IAgentRuntime {
       if (!existingConfig) {
         // Use DefaultConfigurationSource to generate intelligent defaults
         const { DefaultConfigurationSource } = await import(
-          './configuration/DefaultConfigurationSource.js'
+          './configuration/DefaultConfigurationSource'
         );
         const defaultSource = new DefaultConfigurationSource();
         const defaultConfig = defaultSource.generateDefaultForPlugin(plugin.name, plugin);
@@ -339,7 +341,7 @@ export class AgentRuntime implements IAgentRuntime {
       if (hasUnifiedComponents) {
         this.configurationManager.initializeUnifiedPluginConfiguration(
           plugin.name,
-          (plugin as any).components,
+          (plugin as Plugin & { components: unknown[] }).components,
           configurablePlugin.config?.defaultEnabled ?? true
         );
       }
@@ -372,10 +374,17 @@ export class AgentRuntime implements IAgentRuntime {
       this.registerDatabaseAdapter(plugin.adapter);
     }
 
-    // Register legacy actions (always enabled for backwards compatibility)
+    // Register actions with enable/disable support
     if (plugin.actions) {
       for (const action of plugin.actions) {
-        this.registerAction(action);
+        // Check enabled property (defaults to true if not specified)
+        const isEnabled = action.enabled !== false;
+        if (isEnabled) {
+          this.registerAction(action);
+          this.logger.debug(`Action ${action.name} enabled and registered`);
+        } else {
+          this.logger.debug(`Action ${action.name} disabled by default`);
+        }
       }
     }
 
@@ -397,10 +406,17 @@ export class AgentRuntime implements IAgentRuntime {
       }
     }
 
-    // Register legacy evaluators (always enabled for backwards compatibility)
+    // Register evaluators with enable/disable support
     if (plugin.evaluators) {
       for (const evaluator of plugin.evaluators) {
-        this.registerEvaluator(evaluator);
+        // Check enabled property (defaults to true if not specified)
+        const isEnabled = evaluator.enabled !== false;
+        if (isEnabled) {
+          this.registerEvaluator(evaluator);
+          this.logger.debug(`Evaluator ${evaluator.name} enabled and registered`);
+        } else {
+          this.logger.debug(`Evaluator ${evaluator.name} disabled by default`);
+        }
       }
     }
 
@@ -424,10 +440,17 @@ export class AgentRuntime implements IAgentRuntime {
       }
     }
 
-    // Register legacy providers (always enabled for backwards compatibility)
+    // Register providers with enable/disable support
     if (plugin.providers) {
       for (const provider of plugin.providers) {
-        this.registerProvider(provider);
+        // Check enabled property (defaults to true if not specified)
+        const isEnabled = provider.enabled !== false;
+        if (isEnabled) {
+          this.registerProvider(provider);
+          this.logger.debug(`Provider ${provider.name} enabled and registered`);
+        } else {
+          this.logger.debug(`Provider ${provider.name} disabled by default`);
+        }
       }
     }
 
@@ -451,7 +474,8 @@ export class AgentRuntime implements IAgentRuntime {
 
     // Process unified component system (components array)
     if (hasUnifiedComponents) {
-      const components = (plugin as any).components;
+      const pluginWithComponents = plugin as Plugin & { components: unknown[] };
+      const components = pluginWithComponents.components;
       const enabledComponentsMap = this.configurationManager.getEnabledComponentsMap();
 
       for (const componentDef of components) {
@@ -467,12 +491,12 @@ export class AgentRuntime implements IAgentRuntime {
 
         if (isEnabled) {
           // Validate dependencies if present
-          if (componentDef.dependencies && componentDef.dependencies.length > 0) {
+          if (componentDef.config?.dependencies && componentDef.config.dependencies.length > 0) {
             const validationResult = this.configurationManager.validateComponentDependencies({
               pluginName: plugin.name,
               componentName,
               componentType,
-              dependencies: componentDef.dependencies,
+              dependencies: componentDef.config.dependencies,
               enabledComponents: enabledComponentsMap,
             });
 
@@ -483,7 +507,7 @@ export class AgentRuntime implements IAgentRuntime {
               continue;
             }
 
-            if (validationResult.warnings.length > 0) {
+            if (validationResult.warnings && validationResult.warnings.length > 0) {
               this.logger.warn(
                 `${componentType} "${componentName}" in plugin "${plugin.name}" has warnings: ${validationResult.warnings.join(', ')}`
               );
@@ -493,22 +517,22 @@ export class AgentRuntime implements IAgentRuntime {
           // Register the component based on its type
           switch (componentType) {
             case 'action':
-              this.registerAction(componentDef.component);
+              this.registerAction(componentDef.component as Action);
               this.logger.debug(`Unified action ${componentName} is enabled and registered`);
               break;
             case 'provider':
-              this.registerProvider(componentDef.component);
+              this.registerProvider(componentDef.component as Provider);
               this.logger.debug(`Unified provider ${componentName} is enabled and registered`);
               break;
             case 'evaluator':
-              this.registerEvaluator(componentDef.component);
+              this.registerEvaluator(componentDef.component as Evaluator);
               this.logger.debug(`Unified evaluator ${componentName} is enabled and registered`);
               break;
             case 'service':
               if (this.isInitialized) {
-                await this.registerService(componentDef.component);
+                await this.registerService(componentDef.component as typeof Service);
               } else {
-                this.servicesInitQueue.add(componentDef.component);
+                this.servicesInitQueue.add(componentDef.component as typeof Service);
               }
               this.logger.debug(`Unified service ${componentName} is enabled and registered`);
               break;
@@ -547,13 +571,33 @@ export class AgentRuntime implements IAgentRuntime {
         }
       }
     }
-    // Register legacy services (always enabled for backwards compatibility)
+    // Register services with enable/disable support
     if (plugin.services) {
-      for (const service of plugin.services) {
-        if (this.isInitialized) {
-          await this.registerService(service);
+      for (const serviceItem of plugin.services) {
+        // Check if it's the new format with enabled flag
+        if ('component' in serviceItem && typeof serviceItem.enabled === 'boolean') {
+          if (serviceItem.enabled) {
+            if (this.isInitialized) {
+              await this.registerService(serviceItem.component);
+            } else {
+              this.servicesInitQueue.add(serviceItem.component);
+            }
+            this.logger.debug(
+              `Service ${serviceItem.component.serviceName || serviceItem.component.name} enabled and registered`
+            );
+          } else {
+            this.logger.debug(
+              `Service ${serviceItem.component.serviceName || serviceItem.component.name} disabled by default`
+            );
+          }
         } else {
-          this.servicesInitQueue.add(service);
+          // Legacy format - always enabled for backwards compatibility
+          const service = serviceItem as typeof Service;
+          if (this.isInitialized) {
+            await this.registerService(service);
+          } else {
+            this.servicesInitQueue.add(service);
+          }
         }
       }
     }
@@ -796,7 +840,10 @@ export class AgentRuntime implements IAgentRuntime {
                 metadata: {},
                 agentId: this.agentId,
               };
-            } else if (process.env.ELIZA_TESTING_PLUGIN === 'true') {
+            } else if (
+              typeof process !== 'undefined' &&
+              process.env?.ELIZA_TESTING_PLUGIN === 'true'
+            ) {
               this.logger.warn(
                 'Test agent entity could not be created (tables may not be ready), using mock entity'
               );
@@ -818,7 +865,11 @@ export class AgentRuntime implements IAgentRuntime {
               // Wait a bit and retry - might be a timing issue with PGLite
               await new Promise((resolve) => setTimeout(resolve, 100));
               agentEntity = await this.getEntityById(this.agentId);
-              if (!agentEntity && process.env.ELIZA_TESTING_PLUGIN === 'true') {
+              if (
+                !agentEntity &&
+                typeof process !== 'undefined' &&
+                process.env?.ELIZA_TESTING_PLUGIN === 'true'
+              ) {
                 this.logger.warn(
                   'Test agent entity still not found after retry, using mock entity'
                 );
@@ -909,7 +960,10 @@ export class AgentRuntime implements IAgentRuntime {
     try {
       // Room creation and participant setup
       // Special case: skip room setup for migration agent during database migration or test environment
-      if (this.character.name !== 'MigrationAgent' && process.env.ELIZA_TESTING_PLUGIN !== 'true') {
+      if (
+        this.character.name !== 'MigrationAgent' &&
+        (typeof process === 'undefined' || process.env?.ELIZA_TESTING_PLUGIN !== 'true')
+      ) {
         let room = await this.getRoom(this.agentId);
         if (!room) {
           const roomId = uuidv4() as UUID;
@@ -970,7 +1024,10 @@ export class AgentRuntime implements IAgentRuntime {
 
     // Run migrations for plugins with schemas
     // The SQL plugin adapter now handles migrations through its migrate() method
-    if (this.adapter && typeof (this.adapter as any).runPluginMigrations === 'function') {
+    const adapterWithMigrations = this.adapter as IDatabaseAdapter & {
+      runPluginMigrations?: (schema: unknown, pluginName: string) => Promise<void>;
+    };
+    if (this.adapter && typeof adapterWithMigrations.runPluginMigrations === 'function') {
       const pluginsWithSchemas = this.plugins.filter(
         (p) => p.schema && p.name !== '@elizaos/plugin-sql'
       );
@@ -980,7 +1037,7 @@ export class AgentRuntime implements IAgentRuntime {
           if (p.schema) {
             this.logger.info(`Running migrations for plugin: ${p.name}`);
             try {
-              await (this.adapter as any).runPluginMigrations(p.schema, p.name);
+              await adapterWithMigrations.runPluginMigrations!(p.schema, p.name);
               this.logger.info(`Successfully migrated plugin: ${p.name}`);
             } catch (error) {
               this.logger.error(`Failed to migrate plugin ${p.name}:`, error);
@@ -1002,8 +1059,12 @@ export class AgentRuntime implements IAgentRuntime {
       return;
     }
 
+    const adapterWithMigrations = this.adapter as IDatabaseAdapter & {
+      runPluginMigrations?: (schema: unknown, pluginName: string) => Promise<void>;
+    };
+
     // Check if the adapter has the required method
-    if (typeof (this.adapter as any).runPluginMigrations !== 'function') {
+    if (typeof adapterWithMigrations.runPluginMigrations !== 'function') {
       this.logger.warn('Database adapter does not support plugin migrations, skipping.');
       return;
     }
@@ -1016,7 +1077,7 @@ export class AgentRuntime implements IAgentRuntime {
         this.logger.info(`Running migrations for plugin: ${p.name}`);
         try {
           // Use the database adapter to run migrations
-          await (this.adapter as any).runPluginMigrations(p.schema, p.name);
+          await adapterWithMigrations.runPluginMigrations!(p.schema, p.name);
           this.logger.info(`Successfully migrated plugin: ${p.name}`);
         } catch (error) {
           this.logger.error(`Failed to migrate plugin ${p.name}:`, error);
@@ -1839,7 +1900,38 @@ export class AgentRuntime implements IAgentRuntime {
     return newState;
   }
 
-  getService<T extends Service = Service>(serviceName: ServiceTypeName | string): T | null {
+  getService<T extends Service = Service>(serviceName?: ServiceTypeName | string): T | null;
+  getService<T extends Service>(serviceClass: {
+    new (...args: any[]): T;
+    serviceName?: string;
+    serviceType?: string;
+  }): T | null;
+  getService<T extends Service = Service>(
+    serviceNameOrClass?:
+      | ServiceTypeName
+      | string
+      | { new (...args: any[]): T; serviceName?: string; serviceType?: string }
+  ): T | null {
+    let serviceName: string;
+
+    if (!serviceNameOrClass) {
+      // If no argument provided, try to find service by type T
+      // This would require more complex type reflection which isn't easily available in TypeScript
+      throw new Error('Service name or class constructor is required');
+    }
+
+    if (typeof serviceNameOrClass === 'string') {
+      serviceName = serviceNameOrClass;
+    } else if (typeof serviceNameOrClass === 'function') {
+      // Extract service name from class constructor
+      serviceName =
+        (serviceNameOrClass as any).serviceName ||
+        (serviceNameOrClass as any).serviceType ||
+        serviceNameOrClass.name.toLowerCase().replace('service', '');
+    } else {
+      throw new Error('Invalid service identifier');
+    }
+
     const serviceInstance = this.services.get(serviceName as ServiceTypeName);
     if (!serviceInstance) {
       // it's not a warn, a plugin might just not be installed
@@ -1899,7 +1991,9 @@ export class AgentRuntime implements IAgentRuntime {
   private async processPendingServices(): Promise<void> {
     const pendingList = Array.from(this.pendingServices.entries());
     for (const [serviceName, serviceDef] of pendingList) {
-      const dependencies = (serviceDef as any).dependencies || [];
+      // Type-safe service dependency access
+      const serviceWithDeps = serviceDef as typeof Service & { dependencies?: string[] };
+      const dependencies = serviceWithDeps.dependencies || [];
       const missingDeps = dependencies.filter(
         (dep: string) => !this.services.has(dep as ServiceTypeName)
       );
@@ -1934,7 +2028,8 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     // Check if all dependencies are satisfied
-    const dependencies = (serviceDef as any).dependencies || [];
+    const serviceWithDeps = serviceDef as typeof Service & { dependencies?: string[] };
+    const dependencies = serviceWithDeps.dependencies || [];
     const missingDeps = dependencies.filter(
       (dep: string) => !this.services.has(dep as ServiceTypeName)
     );
@@ -1970,7 +2065,6 @@ export class AgentRuntime implements IAgentRuntime {
       throw error;
     }
   }
-
 
   registerModel(
     modelType: ModelTypeName,
@@ -2047,8 +2141,32 @@ export class AgentRuntime implements IAgentRuntime {
       (Array.isArray(params?.messages) ? JSON.stringify(params.messages) : null);
     const model = this.getModel(modelKey, provider);
     if (!model) {
-      const errorMsg = `No handler found for delegate type: ${modelKey}`;
-      throw new Error(errorMsg);
+      throw new ElizaError(
+        `No handler found for model type: ${modelKey}`,
+        ErrorCategory.CONFIGURATION_ERROR,
+        ErrorSeverity.HIGH,
+        {
+          context: {
+            modelType: modelKey,
+            provider,
+            agentId: this.agentId,
+          },
+          recoverable: false,
+          retryable: false,
+          recoveryActions: [
+            {
+              action: 'check_model_configuration',
+              description: `Verify that model ${modelKey} is properly configured`,
+            },
+            {
+              action: 'check_provider',
+              description: provider
+                ? `Check if provider ${provider} is available`
+                : 'Check available providers',
+            },
+          ],
+        }
+      );
     }
 
     // Log input parameters (keep debug log if useful)
@@ -2141,9 +2259,37 @@ export class AgentRuntime implements IAgentRuntime {
       });
       return response as R;
     } catch (error: any) {
-      // Log the error before re-throwing for debugging
-      this.logger.error(`Error in useModel for ${modelKey}:`, error);
-      throw error;
+      const modelError = new ElizaError(
+        `Model execution failed for ${modelKey}: ${error.message}`,
+        ErrorCategory.MODEL_ERROR,
+        ErrorSeverity.HIGH,
+        {
+          context: {
+            modelType: modelKey,
+            provider,
+            agentId: this.agentId,
+            error: error.message,
+            elapsedTime: performance.now() - startTime,
+          },
+          cause: error,
+          recoverable: true,
+          retryable: true,
+          recoveryActions: [
+            {
+              action: 'retry_with_backoff',
+              description: 'Retry the model call with exponential backoff',
+              automated: true,
+            },
+            {
+              action: 'try_different_provider',
+              description: 'Try using a different model provider if available',
+            },
+          ],
+        }
+      );
+
+      this.logger.error(`Model execution error for ${modelKey}:`, modelError.toJSON());
+      throw modelError;
     }
   }
 
@@ -3114,10 +3260,11 @@ export class AgentRuntime implements IAgentRuntime {
     if (plugin) {
       const configurablePlugin = plugin as ConfigurablePlugin;
 
-      // Handle legacy actions (standard Plugin interface)
+      // Handle actions (standard Plugin interface)
       if (plugin.actions && config.actions) {
         for (const [actionName, actionConfig] of Object.entries(config.actions)) {
           const action = plugin.actions.find((a) => a.name === actionName);
+
           if (action) {
             const currentlyRegistered = this.actions.some((a) => a.name === actionName);
 
@@ -3160,10 +3307,11 @@ export class AgentRuntime implements IAgentRuntime {
         }
       }
 
-      // Handle legacy providers (standard Plugin interface)
+      // Handle providers (standard Plugin interface)
       if (plugin.providers && config.providers) {
         for (const [providerName, providerConfig] of Object.entries(config.providers)) {
           const provider = plugin.providers.find((p) => p.name === providerName);
+
           if (provider) {
             const currentlyRegistered = this.providers.some((p) => p.name === providerName);
 
@@ -3210,10 +3358,11 @@ export class AgentRuntime implements IAgentRuntime {
         }
       }
 
-      // Handle legacy evaluators (standard Plugin interface)
+      // Handle evaluators (standard Plugin interface)
       if (plugin.evaluators && config.evaluators) {
         for (const [evaluatorName, evaluatorConfig] of Object.entries(config.evaluators)) {
           const evaluator = plugin.evaluators.find((e) => e.name === evaluatorName);
+
           if (evaluator) {
             const currentlyRegistered = this.evaluators.some((e) => e.name === evaluatorName);
 
@@ -3265,13 +3414,27 @@ export class AgentRuntime implements IAgentRuntime {
       // Handle legacy services (standard Plugin interface)
       if (plugin.services && config.services) {
         for (const [serviceName, serviceConfig] of Object.entries(config.services)) {
-          const service = plugin.services.find((s) => (s.serviceName || s.name) === serviceName);
+          // Handle both legacy format (Service class directly) and new format ({ component: Service, enabled: boolean })
+          const service = plugin.services.find((serviceItem) => {
+            if ('component' in serviceItem && typeof serviceItem.enabled === 'boolean') {
+              return (
+                (serviceItem.component.serviceName || serviceItem.component.name) === serviceName
+              );
+            } else {
+              return (
+                ((serviceItem as any).serviceName || (serviceItem as any).name) === serviceName
+              );
+            }
+          });
+
           if (service) {
+            // Extract the actual service class from wrapper if needed
+            const serviceClass = 'component' in service ? service.component : service;
             const currentlyRegistered = this.services.has(serviceName as ServiceTypeName);
 
             if (serviceConfig.enabled && !currentlyRegistered) {
               // Enable service
-              await this.registerService(service);
+              await this.registerService(serviceClass);
               this.logger.info(`Legacy service ${serviceName} enabled for plugin ${pluginName}`);
             } else if (!serviceConfig.enabled && currentlyRegistered) {
               // Disable service

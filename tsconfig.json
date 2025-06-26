@@ -10,7 +10,11 @@
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@elizaos/core": ["packages/core/src"],
+      "@elizaos/core/*": ["packages/core/src/*"]
+    }
   },
   "files": [],
   "references": [

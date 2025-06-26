@@ -46,6 +46,7 @@ export function createMockRuntime(overrides: any = {}): IAgentRuntime {
         CDP_API_KEY_NAME: 'test-api-key',
         CDP_API_KEY_PRIVATE_KEY: 'test-private-key',
         CDP_AGENT_KIT_NETWORK: 'base-sepolia',
+        WALLET_ENCRYPTION_PASSPHRASE: 'test-encryption-passphrase-123',
         ...(overrides.settings || {}),
       };
       return settings[key];

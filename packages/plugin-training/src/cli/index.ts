@@ -17,7 +17,7 @@ import { createDatasetCommand } from './commands/create-dataset.js';
 import { trainModelCommand } from './commands/train-model.js';
 import { testModelCommand } from './commands/test-model.js';
 import { listExamplesCommand } from './commands/list-examples.js';
-import { extractSimpleCommand } from './commands/extract-simple.js';
+// import { extractSimpleCommand } from './commands/extract-simple.js';
 import { simulateTrainingCommand } from './commands/simulate-training.js';
 import {
   trainWithMonitoringCommand,
@@ -26,8 +26,8 @@ import {
 } from './commands/train-with-monitoring.js';
 import { testFineTunedCommand } from './commands/test-fine-tuned.js';
 import { customReasoningCommands } from './commands/custom-reasoning.js';
-import { extractDiscordCommand } from './commands/extract-discord.js';
-import { generateConversationDataCommand } from './commands/generate-conversation-data.js';
+// import { extractDiscordCommand } from './commands/extract-discord.js';
+// import { generateConversationDataCommand } from './commands/generate-conversation-data.js';
 // import { extractFromDbCommand } from './commands/extract-from-db.js'; // Temporarily disabled
 
 const program = new Command();
@@ -43,7 +43,7 @@ createDatasetCommand(program);
 trainModelCommand(program);
 testModelCommand(program);
 listExamplesCommand(program);
-extractSimpleCommand(program);
+// extractSimpleCommand(program);
 simulateTrainingCommand(program);
 
 // Live monitoring commands
@@ -58,8 +58,8 @@ testFineTunedCommand(program);
 customReasoningCommands(program);
 
 // Discord conversation extraction and training data generation
-extractDiscordCommand(program);
-generateConversationDataCommand(program);
+// extractDiscordCommand(program);
+// generateConversationDataCommand(program);
 
 // extractFromDbCommand(program); // Temporarily disabled
 

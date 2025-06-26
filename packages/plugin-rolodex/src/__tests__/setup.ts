@@ -1,9 +1,10 @@
 import './setup-window-mock';
-// Temporarily disable jest-dom due to lodash import issue
-// import '@testing-library/jest-dom';
-import { afterEach  } from 'bun:test';
+// Import jest-dom for custom matchers
+import '@testing-library/jest-dom';
+import './jest-dom.d.ts';
+import { afterEach } from 'bun:test';
 import { cleanup } from '@testing-library/react';
-import { mock  } from 'bun:test';
+import { mock } from 'bun:test';
 import { logger, IAgentRuntime } from '@elizaos/core';
 
 // Mock browser APIs for tests
@@ -38,16 +39,32 @@ global.fetch = mock(() =>
     ok: true,
     json: () => Promise.resolve({}),
     text: () => Promise.resolve(''),
+    headers: new Headers(),
+    redirected: false,
+    status: 200,
+    statusText: 'OK',
+    type: 'default',
+    url: '',
+    body: null,
+    bodyUsed: false,
+    clone: () => new Response(),
+    arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+    blob: () => Promise.resolve(new Blob()),
+    formData: () => Promise.resolve(new FormData()),
   } as Response)
-);
+) as unknown as typeof fetch;
 
 // Suppress specific console errors in tests
 const originalError = console.error;
 console.error = (...args: any[]) => {
   // Suppress React act() warnings
-  if (args[0]?.includes?.('act()')) {return;}
+  if (args[0]?.includes?.('act()')) {
+    return;
+  }
   // Suppress force-graph warnings
-  if (args[0]?.includes?.('force-graph')) {return;}
+  if (args[0]?.includes?.('force-graph')) {
+    return;
+  }
   originalError(...args);
 };
 

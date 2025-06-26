@@ -246,14 +246,14 @@ npm run build
 bun dist/server/rpg-server.js
 
 # Or with environment variables
-PORT=3000 WS_PORT=3001 bun dist/server/rpg-server.js
+PORT=3000 WS_PORT=4445 bun dist/server/rpg-server.js
 ```
 
 ### 4. Connect with Client
 
 The server will start on:
 
-- WebSocket: `ws://localhost:3001`
+- WebSocket: `ws://localhost:4445`
 - API: `http://localhost:3000`
 
 ## World Features
@@ -359,7 +359,7 @@ questSystem.registerQuest({
 ### Environment Variables
 
 - `PORT` - HTTP server port (default: 3000)
-- `WS_PORT` - WebSocket port (default: 3001)
+- `WS_PORT` - WebSocket port (default: 4445)
 - `API_URL` - API base URL
 - `ASSETS_URL` - Assets CDN URL
 

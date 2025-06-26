@@ -50,7 +50,7 @@ export interface CustodialWallet {
   // Metadata for extensibility
   metadata: {
     trustLevel: number;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 

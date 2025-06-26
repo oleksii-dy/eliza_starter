@@ -5,15 +5,15 @@ import {
   ChannelType,
   composePrompt,
   composePromptFromState,
-  type Content,
+  type Content as _Content,
   createUniqueUuid,
   findWorldsForOwner,
   type HandlerCallback,
   type IAgentRuntime,
-  logger,
+  elizaLogger as logger,
   type Memory,
   ModelType,
-  parseJSONObjectFromText,
+  parseKeyValueXml,
   type Setting,
   type State,
   type WorldSettings,
@@ -37,12 +37,18 @@ interface SettingUpdate {
   value: string | boolean;
 }
 
-const messageCompletionFooter = `\n# Instructions: Write the next message for {{agentName}}. Include the appropriate action from the list: {{actionNames}}
-Response format should be formatted in a valid JSON block like this:
-\`\`\`json
-{ "name": "{{agentName}}", "text": "<string>", "thought": "<string>", "actions": ["<string>", "<string>", "<string>"] }
-\`\`\`
-Do not including any thinking or internal reflection in the "text" field.
+const messageCompletionFooter = `
+# Instructions: Write the next message for {{agentName}}. Include the appropriate action from the list: {{actionNames}}
+
+Return an XML object with these fields:
+<response>
+  <name>{{agentName}}</name>
+  <text>Natural conversational response text</text>
+  <thought>Brief description of what the agent is thinking</thought>
+  <actions>Comma-separated action names</actions>
+</response>
+
+Do not include any thinking or internal reflection in the "text" field.
 "thought" should be a short description of what the agent is thinking about before responding, including a brief justification for the response.`;
 
 // Template for success responses when settings are updated
@@ -246,7 +252,7 @@ export async function getWorldSettings(
 ): Promise<WorldSettings | null> {
   try {
     const worldId = createUniqueUuid(runtime, serverId);
-    const _world = await runtime.getWorld(worldId);
+    const world = await runtime.getWorld(worldId);
 
     if (!world || !world.metadata?.settings) {
       return null;
@@ -269,7 +275,7 @@ export async function updateWorldSettings(
 ): Promise<boolean> {
   try {
     const worldId = createUniqueUuid(runtime, serverId);
-    const _world = await runtime.getWorld(worldId);
+    const world = await runtime.getWorld(worldId);
 
     if (!world) {
       logger.error(`No world found for server ${serverId}`);
@@ -535,11 +541,13 @@ async function handleOnboardingComplete(
       prompt,
     });
 
-    const responseContent = parseJSONObjectFromText(response) as Content;
+    const responseContent = parseKeyValueXml(response);
 
     await void callback({
-      text: responseContent.text,
-      actions: ['ONBOARDING_COMPLETE'],
+      text: responseContent?.text || 'Great! All required settings have been configured.',
+      actions: responseContent?.actions
+        ? responseContent.actions.split(',').map((a: string) => a.trim())
+        : ['ONBOARDING_COMPLETE'],
       source: 'discord',
     });
   } catch (error) {
@@ -590,11 +598,13 @@ async function generateSuccessResponse(
       prompt,
     });
 
-    const responseContent = parseJSONObjectFromText(response) as Content;
+    const responseContent = parseKeyValueXml(response);
 
     await void callback({
-      text: responseContent.text,
-      actions: ['SETTING_UPDATED'],
+      text: responseContent?.text || 'WorldSettings updated successfully.',
+      actions: responseContent?.actions
+        ? responseContent.actions.split(',').map((a: string) => a.trim())
+        : ['SETTING_UPDATED'],
       source: 'discord',
     });
   } catch (error) {
@@ -643,11 +653,14 @@ async function generateFailureResponse(
       prompt,
     });
 
-    const responseContent = parseJSONObjectFromText(response) as Content;
+    const responseContent = parseKeyValueXml(response);
 
     await void callback({
-      text: responseContent.text,
-      actions: ['SETTING_UPDATE_FAILED'],
+      text:
+        responseContent?.text || "I couldn't understand your settings update. Please try again.",
+      actions: responseContent?.actions
+        ? responseContent.actions.split(',').map((a: string) => a.trim())
+        : ['SETTING_UPDATE_FAILED'],
       source: 'discord',
     });
   } catch (error) {
@@ -678,11 +691,15 @@ async function generateErrorResponse(
       prompt,
     });
 
-    const responseContent = parseJSONObjectFromText(response) as Content;
+    const responseContent = parseKeyValueXml(response);
 
     await void callback({
-      text: responseContent.text,
-      actions: ['SETTING_UPDATE_ERROR'],
+      text:
+        responseContent?.text ||
+        "I'm sorry, but I encountered an error while processing your request.",
+      actions: responseContent?.actions
+        ? responseContent.actions.split(',').map((a: string) => a.trim())
+        : ['SETTING_UPDATE_ERROR'],
       source: 'discord',
     });
   } catch (error) {
@@ -705,7 +722,7 @@ export const updateSettingsAction: Action = {
   description:
     'Saves a configuration setting during the onboarding process, or update an existing setting. Use this when you are onboarding with a world owner or admin.',
 
-  validate: async (_runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     try {
       if (message.content.channelType !== ChannelType.DM) {
         logger.debug(`Skipping settings in non-DM channel (type: ${message.content.channelType})`);
@@ -719,7 +736,7 @@ export const updateSettingsAction: Action = {
         return false;
       }
 
-      const _world = worlds.find((world) => world.metadata?.settings);
+      const world = worlds.find((world) => world.metadata?.settings);
 
       // Check if there's an active settings state in world metadata
       const worldSettings = world?.metadata?.settings;

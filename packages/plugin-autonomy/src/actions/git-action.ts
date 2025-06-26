@@ -26,7 +26,7 @@ export const gitOperationAction: Action = {
   description:
     'Performs git operations - clone, commit, push, pull, etc. Can be chained with file operations to commit changes or with analysis actions to examine repository structure',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
     return (
       text.includes('git') ||

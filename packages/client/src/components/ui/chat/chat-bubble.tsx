@@ -171,7 +171,9 @@ export {
   ChatBubbleAvatar,
   ChatBubbleMessage,
   ChatBubbleTimestamp,
+  // eslint-disable-next-line react-refresh/only-export-components
   chatBubbleVariant,
+  // eslint-disable-next-line react-refresh/only-export-components
   chatBubbleMessageVariants,
   ChatBubbleAction,
   ChatBubbleActionWrapper,

@@ -1,9 +1,10 @@
-import { expect, beforeAll } from 'bun:test';
+import { expect, beforeAll, afterAll } from 'bun:test';
 import { mock, spyOn } from 'bun:test';
 import type { Vector3, Quaternion } from 'three';
 
 // Mock WebGL context for headless testing
 beforeAll(() => {
+  console.log('Setting up tests...');
   // Create a mock WebGL context
   const mockWebGLContext = {
     getParameter: mock(() => 1024),
@@ -106,6 +107,10 @@ beforeAll(() => {
       now: mock(() => Date.now()),
     },
   });
+});
+
+afterAll(() => {
+  console.log('Cleaning up tests...');
 });
 
 // Custom matchers for game engine testing

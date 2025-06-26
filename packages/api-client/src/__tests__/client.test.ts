@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'bun:test';
-import { ElizaClient } from '../client';
+import { ElizaClient } from '../ElizaClient';
 import { ApiClientConfig } from '../types/base';
-import { AgentsService } from '../services/agents';
-import { MessagingService } from '../services/messaging';
-import { MemoryService } from '../services/memory';
-import { AudioService } from '../services/audio';
-import { MediaService } from '../services/media';
-import { ServerService } from '../services/server';
-import { SystemService } from '../services/system';
+import { AgentsService } from '../services/AgentsService';
+import { MessagingService } from '../services/MessagingService';
+import { MemoryService } from '../services/MemoryService';
+import { AudioService } from '../services/AudioService';
+import { MediaService } from '../services/MediaService';
+import { ServerService } from '../services/ServerService';
+import { SystemService } from '../services/SystemService';
 
 describe('ElizaClient', () => {
   const config: ApiClientConfig = {

@@ -97,7 +97,9 @@ async function testFileLogging() {
           {
             id: uuidv4(),
             statement: 'LLMs show improved reasoning',
-            supportingEvidence: ['Research shows LLMs can solve complex problems'],
+            supportingEvidence: [
+              'Research shows LLMs can solve complex problems',
+            ],
             sourceUrls: ['https://example.com/ai-research'],
             verificationStatus: 'verified' as const,
             confidenceScore: 0.9,
@@ -110,7 +112,8 @@ async function testFileLogging() {
       },
       {
         id: uuidv4(),
-        content: 'Multimodal AI systems can now process text, images, and audio simultaneously.',
+        content:
+          'Multimodal AI systems can now process text, images, and audio simultaneously.',
         source: source2,
         relevance: 0.9,
         confidence: 0.85,
@@ -182,7 +185,10 @@ async function testFileLogging() {
       console.log('\n📖 Preview of the first report:\n');
       console.log('─'.repeat(80));
 
-      const content = await fs.readFile(path.join(logsDir, mdFiles[0]), 'utf-8');
+      const content = await fs.readFile(
+        path.join(logsDir, mdFiles[0]),
+        'utf-8'
+      );
       // Show first 50 lines
       const lines = content.split('\n');
       const preview = lines.slice(0, 50).join('\n');

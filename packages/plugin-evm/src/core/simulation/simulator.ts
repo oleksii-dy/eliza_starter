@@ -1,13 +1,5 @@
 import { IAgentRuntime, logger } from '@elizaos/core';
-import {
-  type PublicClient,
-  type Address,
-  type Hash,
-  type Hex,
-  parseAbi,
-  decodeFunctionData,
-  decodeEventLog,
-} from 'viem';
+import { type PublicClient, type Address, type Hex, parseAbi, decodeFunctionData } from 'viem';
 import type {
   TransactionRequest,
   SimulationResult,
@@ -25,12 +17,12 @@ export interface SimulatorOptions {
 export class TransactionSimulator {
   constructor(
     private runtime: IAgentRuntime,
-    private chainService: ChainConfigService,
+    private chainService: ChainConfigService
   ) {}
 
   async simulate(
     tx: TransactionRequest,
-    options: SimulatorOptions = {},
+    options: SimulatorOptions = {}
   ): Promise<SimulationResult> {
     try {
       const chainId = tx.chainId || 1;
@@ -42,28 +34,28 @@ export class TransactionSimulator {
         if (this.runtime.getSetting('TENDERLY_API_KEY')) {
           return await this.simulateWithTenderly(tx, options);
         }
-      } catch (error) {
+      } catch (_error) {
         logger.warn('Tenderly simulation failed, falling back to RPC methods');
       }
 
       // Method 2: Use debug_traceCall if available
       try {
         return await this.simulateWithDebugTrace(client, tx, options);
-      } catch (error) {
+      } catch (_error) {
         logger.warn('Debug trace simulation failed, falling back to eth_call');
       }
 
       // Method 3: Basic eth_call simulation
       return await this.simulateWithEthCall(client, tx);
-    } catch (error) {
-      logger.error('Transaction simulation failed:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Transaction simulation failed:', _error);
+      throw _error;
     }
   }
 
   private async simulateWithTenderly(
     tx: TransactionRequest,
-    options: SimulatorOptions,
+    options: SimulatorOptions
   ): Promise<SimulationResult> {
     const apiKey = this.runtime.getSetting('TENDERLY_API_KEY');
     const projectSlug = this.runtime.getSetting('TENDERLY_PROJECT_SLUG') || 'default';
@@ -91,7 +83,7 @@ export class TransactionSimulator {
           gas_price: tx.gasPrice?.toString(),
           block_number: options.forkBlock,
         }),
-      },
+      }
     );
 
     if (!response.ok) {
@@ -129,7 +121,7 @@ export class TransactionSimulator {
   private async simulateWithDebugTrace(
     client: PublicClient,
     tx: TransactionRequest,
-    options: SimulatorOptions,
+    options: SimulatorOptions
   ): Promise<SimulationResult> {
     // Prepare transaction for tracing
     const traceTx = {
@@ -201,7 +193,7 @@ export class TransactionSimulator {
 
   private async simulateWithEthCall(
     client: PublicClient,
-    tx: TransactionRequest,
+    tx: TransactionRequest
   ): Promise<SimulationResult> {
     try {
       // Estimate gas first
@@ -213,7 +205,7 @@ export class TransactionSimulator {
       });
 
       // Try to execute the call
-      const result = await client.call({
+      await client.call({
         account: tx.from,
         to: tx.to,
         value: tx.value,
@@ -320,7 +312,7 @@ export class TransactionSimulator {
       simulation.logs?.some(
         (log: any) =>
           log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef' &&
-          BigInt(log.data || 0) === 0n,
+          BigInt(log.data || 0) === 0n
       )
     ) {
       warnings.push('Zero-value token transfer detected');
@@ -362,7 +354,7 @@ export class TransactionSimulator {
 
   async simulateBatch(
     transactions: TransactionRequest[],
-    options: SimulatorOptions = {},
+    options: SimulatorOptions = {}
   ): Promise<SimulationResult[]> {
     // Simulate transactions in sequence to account for state changes
     const results: SimulationResult[] = [];
@@ -376,12 +368,12 @@ export class TransactionSimulator {
         if (!result.success && options.includeTrace) {
           break;
         }
-      } catch (error) {
+      } catch (_error) {
         results.push({
           success: false,
           gasUsed: 0n,
           gasPrice: 0n,
-          error: `Simulation failed: ${error}`,
+          error: `Simulation failed: ${_error}`,
           logs: [],
           stateChanges: [],
           warnings: [],
@@ -398,7 +390,7 @@ export class TransactionSimulator {
 
   async checkContractSafety(
     contractAddress: Address,
-    chainId: number,
+    chainId: number
   ): Promise<{
     isVerified: boolean;
     hasProxy: boolean;
@@ -457,8 +449,8 @@ export class TransactionSimulator {
         implementation,
         warnings,
       };
-    } catch (error) {
-      warnings.push(`Safety check failed: ${error}`);
+    } catch (_error) {
+      warnings.push(`Safety check failed: ${_error}`);
       return { isVerified: false, hasProxy: false, warnings };
     }
   }
@@ -478,7 +470,7 @@ export class TransactionSimulator {
 // Export factory function
 export function createTransactionSimulator(
   runtime: IAgentRuntime,
-  chainService: ChainConfigService,
+  chainService: ChainConfigService
 ): TransactionSimulator {
   return new TransactionSimulator(runtime, chainService);
 }

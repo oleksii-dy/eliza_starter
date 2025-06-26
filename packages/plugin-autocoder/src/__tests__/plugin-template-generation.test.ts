@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import * as utils from '../utils/plugin-templates';
-import type { PluginSpecification } from '../services/plugin-creation-service';
+import type { PluginSpecification } from '../services/PluginCreationService';
 
 describe('Plugin Template Generation', () => {
   describe('Provider Generation', () => {
@@ -48,13 +48,13 @@ describe('Plugin Template Generation', () => {
       expect(providerCode).toContain('field2: 0');
       expect(providerCode).toContain('field3: false');
       expect(providerCode).toContain('field4: []');
-      expect(providerCode).toContain('field5: {}');
+      expect(providerCode).toContain('field5: { /* empty */ }');
     });
   });
 
   describe('Plugin Index Generation', () => {
     it('should handle provider imports correctly', () => {
-      const spec: PluginSpecification = {
+      const _spec: PluginSpecification = {
         name: '@elizaos/plugin-time',
         description: 'A time and timezone management plugin',
         providers: [
@@ -69,7 +69,7 @@ describe('Plugin Template Generation', () => {
         ],
       };
 
-      const indexCode = utils.generatePluginIndex(spec.name, spec);
+      const indexCode = utils.generatePluginIndex(_spec.name, _spec);
 
       // Check imports
       expect(indexCode).toContain("import { timeProvider } from './providers/timeProvider.js';");
@@ -88,7 +88,7 @@ describe('Plugin Template Generation', () => {
     });
 
     it('should handle mixed components correctly', () => {
-      const spec: PluginSpecification = {
+      const _spec: PluginSpecification = {
         name: '@test/full-plugin',
         description: 'Full featured plugin',
         actions: [
@@ -117,7 +117,7 @@ describe('Plugin Template Generation', () => {
         ],
       };
 
-      const indexCode = utils.generatePluginIndex(spec.name, spec);
+      const indexCode = utils.generatePluginIndex(_spec.name, _spec);
 
       // Check all imports
       expect(indexCode).toContain("import { doSomethingAction } from './actions/doSomething.js';");
@@ -133,7 +133,7 @@ describe('Plugin Template Generation', () => {
     });
 
     it('should handle environment variables and secrets manager', () => {
-      const spec: PluginSpecification = {
+      const _spec: PluginSpecification = {
         name: '@test/secure-plugin',
         description: 'Plugin with secrets',
         environmentVariables: [
@@ -152,7 +152,7 @@ describe('Plugin Template Generation', () => {
         ],
       };
 
-      const indexCode = utils.generatePluginIndex(spec.name, spec);
+      const indexCode = utils.generatePluginIndex(_spec.name, _spec);
 
       // Check secrets manager import
       expect(indexCode).toContain(
@@ -165,7 +165,7 @@ describe('Plugin Template Generation', () => {
       // Check environment variable declarations
       expect(indexCode).toContain('declaredEnvVars: {');
       expect(indexCode).toContain("'API_KEY': {");
-      expect(indexCode).toContain("type: 'api_key'");
+      expect(indexCode).toContain("type: 'apikey'");
       expect(indexCode).toContain('required: true');
 
       expect(indexCode).toContain("'BASE_URL': {");
@@ -174,10 +174,10 @@ describe('Plugin Template Generation', () => {
 
       // Check init function
       expect(indexCode).toContain(
-        'async init(config: Record<string, string>, runtime: IAgentRuntime)'
+        'async init(_config: Record<string, string>, _runtime: IAgentRuntime)'
       );
-      expect(indexCode).toContain("await getConfigValue(runtime, 'API_KEY')");
-      expect(indexCode).toContain("await getConfigValue(runtime, 'BASE_URL')");
+      expect(indexCode).toContain("await getConfigValue(_runtime, 'API_KEY')");
+      expect(indexCode).toContain("await getConfigValue(_runtime, 'BASE_URL')");
     });
   });
 
@@ -269,17 +269,17 @@ describe('Plugin Template Generation', () => {
     });
 
     it('should handle plugin names with special characters', () => {
-      const spec: PluginSpecification = {
+      const _spec: PluginSpecification = {
         name: '@org/plugin-with-dashes_and_underscores',
         description: 'Complex name',
       };
 
-      const indexCode = utils.generatePluginIndex(spec.name, spec);
+      const indexCode = utils.generatePluginIndex(_spec.name, _spec);
       expect(indexCode).toContain('export const PluginwithdashesandunderscoresPlugin: Plugin = {');
     });
 
     it('should handle providers already ending with "Provider"', () => {
-      const spec: PluginSpecification = {
+      const _spec: PluginSpecification = {
         name: '@test/plugin',
         description: 'Test',
         providers: [
@@ -290,7 +290,7 @@ describe('Plugin Template Generation', () => {
         ],
       };
 
-      const indexCode = utils.generatePluginIndex(spec.name, spec);
+      const indexCode = utils.generatePluginIndex(_spec.name, _spec);
       // Should not double the Provider suffix
       expect(indexCode).toContain("import { dataProvider } from './providers/dataProvider.js';");
       expect(indexCode).not.toContain('dataProviderProvider');

@@ -2,10 +2,11 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": ".",
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM"],
     "target": "ESNext",
     "module": "Preserve",
     "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -23,6 +24,13 @@
     "allowArbitraryExtensions": true,
     "baseUrl": "."
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["dist", "node_modules"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "dist", 
+    "node_modules",
+    "**/__tests__/**/*",
+    "src/__tests__/**/*",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

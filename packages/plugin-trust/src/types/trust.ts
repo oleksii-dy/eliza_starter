@@ -90,7 +90,7 @@ export enum TrustEvidenceType {
   CONTEXT_SWITCH = 'CONTEXT_SWITCH',
 
   // LLM-analyzed evidence
-  SEMANTIC_ANALYSIS = 'SEMANTIC_ANALYSIS'
+  SEMANTIC_ANALYSIS = 'SEMANTIC_ANALYSIS',
 }
 
 /**

@@ -1,6 +1,7 @@
+import '../setup';
 import React from 'react';
 import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, fireEvent, waitFor, act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 // Type augmentation for expect matchers
 declare module 'bun:test' {
@@ -55,6 +56,11 @@ const mockServersResponse = {
 };
 
 describe('McpViewer', () => {
+  // Helper function to render component and return queries
+  const renderMcpViewer = (agentId = 'test-agent') => {
+    return render(<McpViewer agentId={agentId} />);
+  };
+
   beforeEach(() => {
     mock.restore();
     // Default successful response
@@ -69,19 +75,21 @@ describe('McpViewer', () => {
   });
 
   it('should render loading state initially', () => {
-    render(<McpViewer agentId="test-agent" />);
-    expect(screen.getByText('Loading MCP servers...')).toBeInTheDocument();
+    const { getByText } = render(<McpViewer agentId="test-agent" />);
+    expect(getByText('Loading MCP servers...')).toBeInTheDocument();
   });
 
   it('should fetch and display servers', async () => {
+    let getAllByText: any;
     await act(async () => {
-      render(<McpViewer agentId="test-agent" />);
+      const result = render(<McpViewer agentId="test-agent" />);
+      getAllByText = result.getAllByText;
     });
 
     await waitFor(
       () => {
-        expect(screen.getByText('test-server-1')).toBeInTheDocument();
-        expect(screen.getByText('test-server-2')).toBeInTheDocument();
+        expect(getAllByText('test-server-1').length).toBeGreaterThan(0);
+        expect(getAllByText('test-server-2').length).toBeGreaterThan(0);
       },
       { timeout: 3000 }
     );

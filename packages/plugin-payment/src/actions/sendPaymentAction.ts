@@ -34,7 +34,7 @@ export const sendPaymentAction: Action = {
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
-      const paymentService = runtime.getService('payment') as PaymentService;
+      const paymentService = runtime.getService<PaymentService>('payment');
       if (!paymentService) {
         await callback?.({
           text: 'Payment service is not available. Please ensure the payment plugin is properly configured.',

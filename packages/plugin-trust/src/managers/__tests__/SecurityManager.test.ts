@@ -8,7 +8,7 @@ import type {
   SecurityContext,
   ThreatAssessment,
   Memory,
-  Action
+  Action,
 } from '../../types/security';
 
 describe('SecurityManager', () => {
@@ -22,7 +22,7 @@ describe('SecurityManager', () => {
 
     // Mock trust engine
     mockTrustEngine = {
-      recordInteraction: mock()
+      recordInteraction: mock(),
     };
 
     securityManager = new SecurityManager();
@@ -45,7 +45,7 @@ describe('SecurityManager', () => {
       const entityId = 'entity-123' as UUID;
       const context: SecurityContext = {
         timestamp: Date.now(),
-        platform: 'test' as UUID
+        platform: 'test' as UUID,
       };
 
       const result = await securityManager.analyzeContent(content, entityId, context);
@@ -55,7 +55,7 @@ describe('SecurityManager', () => {
         confidence: 0,
         type: 'none',
         severity: 'low',
-        action: 'allow'
+        action: 'allow',
       });
     });
 
@@ -64,7 +64,7 @@ describe('SecurityManager', () => {
       const entityId = 'entity-123' as UUID;
       const context: SecurityContext = {
         timestamp: Date.now(),
-        platform: 'test' as UUID
+        platform: 'test' as UUID,
       };
 
       const result = await securityManager.analyzeContent(content, entityId, context);
@@ -80,7 +80,7 @@ describe('SecurityManager', () => {
       const entityId = 'entity-123' as UUID;
       const context: SecurityContext = {
         timestamp: Date.now(),
-        platform: 'test' as UUID
+        platform: 'test' as UUID,
       };
 
       const result = await securityManager.analyzeContent(content, entityId, context);
@@ -101,7 +101,7 @@ describe('SecurityManager', () => {
       const context: SecurityContext = {
         entityId: 'entity-123' as UUID,
         timestamp: Date.now(),
-        platform: 'test' as UUID
+        platform: 'test' as UUID,
       };
 
       const result = await securityManager.assessThreatLevel(context);
@@ -111,14 +111,14 @@ describe('SecurityManager', () => {
         confidence: expect.any(Number),
         type: 'anomaly',
         severity: 'low',
-        action: 'log_only'
+        action: 'log_only',
       });
     });
 
     it('should handle missing entityId', async () => {
       const context: SecurityContext = {
         timestamp: Date.now(),
-        platform: 'test' as UUID
+        platform: 'test' as UUID,
       };
 
       const result = await securityManager.assessThreatLevel(context);
@@ -138,7 +138,7 @@ describe('SecurityManager', () => {
         entityId: 'entity-123' as UUID,
         content: 'content-123' as UUID,
         timestamp: Date.now(),
-        roomId: 'room-123' as UUID
+        roomId: 'room-123' as UUID,
       };
 
       await securityManager.storeMemory(memory);
@@ -157,7 +157,7 @@ describe('SecurityManager', () => {
           entityId,
           content: `content-${i}` as UUID,
           timestamp: Date.now() + i,
-          roomId: 'room-123' as UUID
+          roomId: 'room-123' as UUID,
         });
       }
 
@@ -180,7 +180,7 @@ describe('SecurityManager', () => {
         entityId: 'entity-123' as UUID,
         type: 'test-action' as UUID,
         timestamp: Date.now(),
-        result: 'success' as const
+        result: 'success' as const,
       };
 
       await securityManager.storeAction(action);
@@ -202,7 +202,7 @@ describe('SecurityManager', () => {
           entityId,
           type: 'test-action' as UUID,
           timestamp: Date.now() + i,
-          result: 'success' as const
+          result: 'success' as const,
         });
       }
 

@@ -78,7 +78,7 @@ export class RobotRuntimeTestSuite implements TestSuite {
           limit: 10,
         });
 
-        const response = messages.find((m) => m.userId === runtime.agentId && m.id !== message.id);
+        const response = messages.find((m: any) => m.userId === runtime.agentId && m.id !== message.id);
 
         if (!response) {
           throw new Error('No response received for robot command');
@@ -154,7 +154,7 @@ export class RobotRuntimeTestSuite implements TestSuite {
         });
 
         const statusResponse = messages.find(
-          (m) => m.userId === runtime.agentId && m.id !== message.id
+          (m: any) => m.userId === runtime.agentId && m.id !== message.id
         );
 
         if (statusResponse) {
@@ -266,7 +266,7 @@ export class RobotRuntimeTestSuite implements TestSuite {
         });
 
         const emergencyResponse = messages.find(
-          (m) => m.userId === runtime.agentId && m.id !== emergencyMessage.id
+          (m: any) => m.userId === runtime.agentId && m.id !== emergencyMessage.id
         );
 
         if (emergencyResponse) {
@@ -327,7 +327,7 @@ export class RobotRuntimeTestSuite implements TestSuite {
         });
 
         const teachResponse = messages.find(
-          (m) => m.userId === runtime.agentId && m.id !== teachMessage.id
+          (m: any) => m.userId === runtime.agentId && m.id !== teachMessage.id
         );
 
         if (teachResponse) {
@@ -381,7 +381,7 @@ export class RobotRuntimeTestSuite implements TestSuite {
           });
 
           const response = messages.find(
-            (m) => m.userId === runtime.agentId && m.id !== message.id
+            (m: any) => m.userId === runtime.agentId && m.id !== message.id
           );
 
           if (response) {

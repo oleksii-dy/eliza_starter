@@ -1,20 +1,23 @@
 {
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": ".",
-    "lib": ["ESNext", "dom"],
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
     "target": "ESNext",
-    "module": "Preserve",
-    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": false,
+    "forceConsistentCasingInFileNames": true,
     "allowImportingTsExtensions": true,
-    "declaration": true,
     "emitDeclarationOnly": true,
+    "declaration": true,
     "resolveJsonModule": true,
-    "noImplicitAny": false,
+    "isolatedModules": true,
     "allowJs": true,
     "checkJs": false,
     "noEmitOnError": false,
@@ -22,5 +25,12 @@
     "allowArbitraryExtensions": true,
     "baseUrl": "."
   },
-  "include": ["src/**/*.ts", "lp_manager_code/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/e2e/**/*.ts",
+    "src/__tests__/**/*.ts",
+    "__tests__/**/*.ts",
+    "lp_manager_code/**/*.ts"
+  ]
 }

@@ -26,7 +26,7 @@ export enum RoleLevel {
   ADMIN = 60,
   SUPER_ADMIN = 70,
   SYSTEM = 80,
-  GOD_MODE = 90
+  GOD_MODE = 90,
 }
 
 /**
@@ -42,7 +42,7 @@ export enum PermissionCategory {
   SECURITY = 'security',
   FINANCIAL = 'financial',
   USER_MANAGEMENT = 'user_management',
-  PLUGIN_MANAGEMENT = 'plugin_management'
+  PLUGIN_MANAGEMENT = 'plugin_management',
 }
 
 /**
@@ -59,7 +59,7 @@ export enum ResourceType {
   SYSTEM_CONFIG = 'system_config',
   FINANCIAL_DATA = 'financial_data',
   LOGS = 'logs',
-  METRICS = 'metrics'
+  METRICS = 'metrics',
 }
 
 /**
@@ -212,7 +212,7 @@ export interface EnvironmentRoleConfig {
   ipWhitelist?: string[]; // Changed to string[] - IP addresses
   allowedTimeWindows?: {
     start: string; // Changed to string - HH:MM format
-    end: string;   // Changed to string - HH:MM format
+    end: string; // Changed to string - HH:MM format
     timezone: string; // Changed to string - timezone name
   }[];
 }
@@ -289,7 +289,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     resourceType: ResourceType.FILE,
     environments: ['development', 'staging', 'production'],
     minimumTrustLevel: 30,
-    riskLevel: 'low'
+    riskLevel: 'low',
   },
   'file.write.config': {
     id: 'file.write.config',
@@ -300,7 +300,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     environments: ['development', 'staging'],
     minimumTrustLevel: 60,
     riskLevel: 'high',
-    requiresApproval: true
+    requiresApproval: true,
   },
   'file.delete.user_data': {
     id: 'file.delete.user_data',
@@ -312,7 +312,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     minimumTrustLevel: 80,
     riskLevel: 'critical',
     requiresApproval: true,
-    mfaRequired: true
+    mfaRequired: true,
   },
 
   // Database Permissions
@@ -324,7 +324,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     resourceType: ResourceType.DATABASE,
     environments: ['development', 'staging', 'production'],
     minimumTrustLevel: 40,
-    riskLevel: 'medium'
+    riskLevel: 'medium',
   },
   'db.write.user_data': {
     id: 'db.write.user_data',
@@ -334,7 +334,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     resourceType: ResourceType.DATABASE,
     environments: ['development', 'staging'],
     minimumTrustLevel: 60,
-    riskLevel: 'high'
+    riskLevel: 'high',
   },
   'db.admin.schema': {
     id: 'db.admin.schema',
@@ -345,7 +345,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     environments: ['development'],
     minimumTrustLevel: 85,
     riskLevel: 'critical',
-    requiresApproval: true
+    requiresApproval: true,
   },
 
   // Shell Command Permissions
@@ -357,7 +357,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     resourceType: ResourceType.SHELL_COMMAND,
     environments: ['development', 'staging', 'production'],
     minimumTrustLevel: 50,
-    riskLevel: 'medium'
+    riskLevel: 'medium',
   },
   'shell.execute.admin': {
     id: 'shell.execute.admin',
@@ -369,7 +369,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     minimumTrustLevel: 80,
     riskLevel: 'critical',
     requiresApproval: true,
-    timeLimit: 3600 // 1 hour
+    timeLimit: 3600, // 1 hour
   },
 
   // Secret Management
@@ -381,7 +381,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     resourceType: ResourceType.SECRET,
     environments: ['development'],
     minimumTrustLevel: 40,
-    riskLevel: 'medium'
+    riskLevel: 'medium',
   },
   'secret.read.production': {
     id: 'secret.read.production',
@@ -394,7 +394,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     riskLevel: 'critical',
     requiresApproval: true,
     mfaRequired: true,
-    timeLimit: 1800 // 30 minutes
+    timeLimit: 1800, // 30 minutes
   },
 
   // Plugin Management
@@ -407,7 +407,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     environments: ['development', 'staging'],
     minimumTrustLevel: 70,
     riskLevel: 'high',
-    requiresApproval: true
+    requiresApproval: true,
   },
   'plugin.configure': {
     id: 'plugin.configure',
@@ -417,7 +417,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     resourceType: ResourceType.PLUGIN,
     environments: ['development', 'staging', 'production'],
     minimumTrustLevel: 60,
-    riskLevel: 'medium'
+    riskLevel: 'medium',
   },
 
   // User Management
@@ -429,7 +429,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     resourceType: ResourceType.USER_DATA,
     environments: ['development', 'staging', 'production'],
     minimumTrustLevel: 35,
-    riskLevel: 'low'
+    riskLevel: 'low',
   },
   'user.admin.roles': {
     id: 'user.admin.roles',
@@ -440,7 +440,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     environments: ['development', 'staging'],
     minimumTrustLevel: 75,
     riskLevel: 'high',
-    requiresApproval: true
+    requiresApproval: true,
   },
 
   // Financial Operations
@@ -453,7 +453,7 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     environments: ['development', 'staging', 'production'],
     minimumTrustLevel: 70,
     riskLevel: 'high',
-    mfaRequired: true
+    mfaRequired: true,
   },
   'financial.execute.payments': {
     id: 'financial.execute.payments',
@@ -466,8 +466,8 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
     riskLevel: 'critical',
     requiresApproval: true,
     mfaRequired: true,
-    timeLimit: 900 // 15 minutes
-  }
+    timeLimit: 900, // 15 minutes
+  },
 };
 
 /**
@@ -475,26 +475,24 @@ export const BUILT_IN_PERMISSIONS: Record<string, Permission> = {
  */
 export const BUILT_IN_ROLES: Record<string, any> = {
   // Guest Role - Very Limited Access
-  'guest': {
+  guest: {
     id: 'guest',
     name: 'Guest',
     description: 'Limited read-only access for unauthenticated users',
     level: RoleLevel.GUEST,
     environments: ['development', 'staging', 'production', 'demo'],
-    permissions: [
-      BUILT_IN_PERMISSIONS['user.read.profiles']
-    ],
+    permissions: [BUILT_IN_PERMISSIONS['user.read.profiles']],
     constraints: {
       maxConcurrentSessions: 1,
       sessionTimeout: 3600, // 1 hour
       trustRequirements: {
-        minimumTrust: 0
+        minimumTrust: 0,
       },
       rateLimits: {
         actionsPerMinute: 10,
         actionsPerHour: 100,
-        actionsPerDay: 500
-      }
+        actionsPerDay: 500,
+      },
     },
     metadata: {
       createdAt: new Date(),
@@ -503,12 +501,12 @@ export const BUILT_IN_ROLES: Record<string, any> = {
       updatedBy: 'system' as UUID,
       version: 1,
       approvalRequired: false,
-      auditLevel: 'basic'
-    }
+      auditLevel: 'basic',
+    },
   },
 
   // Regular User Role
-  'user': {
+  user: {
     id: 'user',
     name: 'User',
     description: 'Standard user with basic application access',
@@ -518,7 +516,7 @@ export const BUILT_IN_ROLES: Record<string, any> = {
       BUILT_IN_PERMISSIONS['file.read.logs'],
       BUILT_IN_PERMISSIONS['db.read.user_data'],
       BUILT_IN_PERMISSIONS['user.read.profiles'],
-      BUILT_IN_PERMISSIONS['plugin.configure']
+      BUILT_IN_PERMISSIONS['plugin.configure'],
     ],
     inheritsFrom: ['guest'],
     constraints: {
@@ -527,14 +525,14 @@ export const BUILT_IN_ROLES: Record<string, any> = {
       trustRequirements: {
         minimumTrust: 25,
         requiredDimensions: {
-          integrity: 20
-        }
+          integrity: 20,
+        },
       },
       rateLimits: {
         actionsPerMinute: 30,
         actionsPerHour: 500,
-        actionsPerDay: 2000
-      }
+        actionsPerDay: 2000,
+      },
     },
     metadata: {
       createdAt: new Date(),
@@ -543,12 +541,12 @@ export const BUILT_IN_ROLES: Record<string, any> = {
       updatedBy: 'system' as UUID,
       version: 1,
       approvalRequired: false,
-      auditLevel: 'basic'
-    }
+      auditLevel: 'basic',
+    },
   },
 
   // Developer Role
-  'developer': {
+  developer: {
     id: 'developer',
     name: 'Developer',
     description: 'Development access with code and config permissions',
@@ -560,7 +558,7 @@ export const BUILT_IN_ROLES: Record<string, any> = {
       BUILT_IN_PERMISSIONS['shell.execute.safe'],
       BUILT_IN_PERMISSIONS['secret.read.development'],
       BUILT_IN_PERMISSIONS['plugin.install'],
-      BUILT_IN_PERMISSIONS['plugin.configure']
+      BUILT_IN_PERMISSIONS['plugin.configure'],
     ],
     inheritsFrom: ['user'],
     constraints: {
@@ -570,14 +568,14 @@ export const BUILT_IN_ROLES: Record<string, any> = {
         minimumTrust: 55,
         requiredDimensions: {
           competence: 50,
-          integrity: 40
-        }
+          integrity: 40,
+        },
       },
       rateLimits: {
         actionsPerMinute: 60,
         actionsPerHour: 1000,
-        actionsPerDay: 5000
-      }
+        actionsPerDay: 5000,
+      },
     },
     metadata: {
       createdAt: new Date(),
@@ -586,12 +584,12 @@ export const BUILT_IN_ROLES: Record<string, any> = {
       updatedBy: 'system' as UUID,
       version: 1,
       approvalRequired: true,
-      auditLevel: 'detailed'
-    }
+      auditLevel: 'detailed',
+    },
   },
 
   // Admin Role
-  'admin': {
+  admin: {
     id: 'admin',
     name: 'Administrator',
     description: 'Administrative access with user management capabilities',
@@ -602,7 +600,7 @@ export const BUILT_IN_ROLES: Record<string, any> = {
       BUILT_IN_PERMISSIONS['db.admin.schema'],
       BUILT_IN_PERMISSIONS['shell.execute.admin'],
       BUILT_IN_PERMISSIONS['user.admin.roles'],
-      BUILT_IN_PERMISSIONS['financial.read.transactions']
+      BUILT_IN_PERMISSIONS['financial.read.transactions'],
     ],
     inheritsFrom: ['developer'],
     constraints: {
@@ -615,14 +613,14 @@ export const BUILT_IN_ROLES: Record<string, any> = {
           reliability: 70,
           competence: 70,
           integrity: 80,
-          transparency: 60
-        }
+          transparency: 60,
+        },
       },
       rateLimits: {
         actionsPerMinute: 100,
         actionsPerHour: 2000,
-        actionsPerDay: 10000
-      }
+        actionsPerDay: 10000,
+      },
     },
     metadata: {
       createdAt: new Date(),
@@ -631,12 +629,12 @@ export const BUILT_IN_ROLES: Record<string, any> = {
       updatedBy: 'system' as UUID,
       version: 1,
       approvalRequired: true,
-      auditLevel: 'full'
-    }
+      auditLevel: 'full',
+    },
   },
 
   // Super Admin Role - Production Access
-  'super_admin': {
+  super_admin: {
     id: 'super_admin',
     name: 'Super Administrator',
     description: 'Full system access including production environments',
@@ -644,18 +642,20 @@ export const BUILT_IN_ROLES: Record<string, any> = {
     environments: ['production'],
     permissions: [
       BUILT_IN_PERMISSIONS['secret.read.production'],
-      BUILT_IN_PERMISSIONS['financial.execute.payments']
+      BUILT_IN_PERMISSIONS['financial.execute.payments'],
     ],
     inheritsFrom: ['admin'],
     constraints: {
       maxConcurrentSessions: 2,
       sessionTimeout: 7200, // 2 hours
       allowedIpRanges: ['10.0.0.0/8'], // Very restricted IP range
-      timeRestrictions: [{
-        allowedHours: [9, 10, 11, 12, 13, 14, 15, 16, 17], // Business hours only
-        allowedDays: [1, 2, 3, 4, 5], // Weekdays only
-        timezone: 'UTC'
-      }],
+      timeRestrictions: [
+        {
+          allowedHours: [9, 10, 11, 12, 13, 14, 15, 16, 17], // Business hours only
+          allowedDays: [1, 2, 3, 4, 5], // Weekdays only
+          timezone: 'UTC',
+        },
+      ],
       trustRequirements: {
         minimumTrust: 90,
         requiredDimensions: {
@@ -663,14 +663,14 @@ export const BUILT_IN_ROLES: Record<string, any> = {
           competence: 85,
           integrity: 95,
           benevolence: 80,
-          transparency: 80
-        }
+          transparency: 80,
+        },
       },
       rateLimits: {
         actionsPerMinute: 20,
         actionsPerHour: 500,
-        actionsPerDay: 2000
-      }
+        actionsPerDay: 2000,
+      },
     },
     metadata: {
       createdAt: new Date(),
@@ -679,16 +679,16 @@ export const BUILT_IN_ROLES: Record<string, any> = {
       updatedBy: 'system' as UUID,
       version: 1,
       approvalRequired: true,
-      auditLevel: 'full'
-    }
-  }
+      auditLevel: 'full',
+    },
+  },
 };
 
 /**
  * Environment-specific configurations
  */
 export const ENVIRONMENT_CONFIGS: Record<Environment, EnvironmentRoleConfig> = {
-  'development': {
+  development: {
     environment: 'development',
     defaultRole: 'developer',
     autoEscalationEnabled: true,
@@ -697,9 +697,9 @@ export const ENVIRONMENT_CONFIGS: Record<Environment, EnvironmentRoleConfig> = {
     approvalRequired: false,
     auditLevel: 'basic',
     sessionTimeout: 28800, // 8 hours
-    mfaRequired: false
+    mfaRequired: false,
   },
-  'staging': {
+  staging: {
     environment: 'staging',
     defaultRole: 'user',
     autoEscalationEnabled: true,
@@ -708,9 +708,9 @@ export const ENVIRONMENT_CONFIGS: Record<Environment, EnvironmentRoleConfig> = {
     approvalRequired: true,
     auditLevel: 'detailed',
     sessionTimeout: 14400, // 4 hours
-    mfaRequired: false
+    mfaRequired: false,
   },
-  'production': {
+  production: {
     environment: 'production',
     defaultRole: 'user',
     autoEscalationEnabled: false,
@@ -721,13 +721,15 @@ export const ENVIRONMENT_CONFIGS: Record<Environment, EnvironmentRoleConfig> = {
     sessionTimeout: 10800, // 3 hours
     mfaRequired: true,
     ipWhitelist: ['10.0.0.0/8', '172.16.0.0/12'],
-    allowedTimeWindows: [{
-      start: '08:00',
-      end: '20:00',
-      timezone: 'UTC'
-    }]
+    allowedTimeWindows: [
+      {
+        start: '08:00',
+        end: '20:00',
+        timezone: 'UTC',
+      },
+    ],
   },
-  'testing': {
+  testing: {
     environment: 'testing',
     defaultRole: 'developer',
     autoEscalationEnabled: true,
@@ -736,9 +738,9 @@ export const ENVIRONMENT_CONFIGS: Record<Environment, EnvironmentRoleConfig> = {
     approvalRequired: false,
     auditLevel: 'none',
     sessionTimeout: 7200,
-    mfaRequired: false
+    mfaRequired: false,
   },
-  'sandbox': {
+  sandbox: {
     environment: 'sandbox',
     defaultRole: 'user',
     autoEscalationEnabled: true,
@@ -747,9 +749,9 @@ export const ENVIRONMENT_CONFIGS: Record<Environment, EnvironmentRoleConfig> = {
     approvalRequired: false,
     auditLevel: 'basic',
     sessionTimeout: 14400,
-    mfaRequired: false
+    mfaRequired: false,
   },
-  'local': {
+  local: {
     environment: 'local',
     defaultRole: 'developer',
     autoEscalationEnabled: true,
@@ -758,9 +760,9 @@ export const ENVIRONMENT_CONFIGS: Record<Environment, EnvironmentRoleConfig> = {
     approvalRequired: false,
     auditLevel: 'none',
     sessionTimeout: 28800, // 8 hours
-    mfaRequired: false
+    mfaRequired: false,
   },
-  'demo': {
+  demo: {
     environment: 'demo',
     defaultRole: 'guest',
     autoEscalationEnabled: false,
@@ -769,9 +771,9 @@ export const ENVIRONMENT_CONFIGS: Record<Environment, EnvironmentRoleConfig> = {
     approvalRequired: true,
     auditLevel: 'basic',
     sessionTimeout: 3600, // 1 hour
-    mfaRequired: false
+    mfaRequired: false,
   },
-  'experimental': {
+  experimental: {
     environment: 'experimental',
     defaultRole: 'developer',
     autoEscalationEnabled: true,
@@ -780,6 +782,6 @@ export const ENVIRONMENT_CONFIGS: Record<Environment, EnvironmentRoleConfig> = {
     approvalRequired: false,
     auditLevel: 'detailed',
     sessionTimeout: 21600, // 6 hours
-    mfaRequired: false
-  }
+    mfaRequired: false,
+  },
 };

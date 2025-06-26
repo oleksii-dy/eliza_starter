@@ -15,6 +15,17 @@ import type {
 } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
 
+interface JobStatus {
+  status: string;
+  data?: {
+    epochs: number;
+    tokens_trained: number;
+    cost: number;
+    training_time: number;
+  };
+  [key: string]: any;
+}
+
 export const checkTrainingStatusAction: Action = {
   name: 'CHECK_TRAINING_STATUS',
   similes: ['TRAINING_STATUS', 'CHECK_PROGRESS', 'MONITOR_TRAINING'],
@@ -206,7 +217,7 @@ function extractJobId(message: Memory): string | null {
 /**
  * Get specific job status from Together.ai
  */
-async function getJobStatus(apiKey: string, jobId: string) {
+async function getJobStatus(apiKey: string, jobId: string): Promise<JobStatus> {
   const response = await fetch(`https://api.together.xyz/v1/fine-tuning/jobs/${jobId}`, {
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -219,13 +230,13 @@ async function getJobStatus(apiKey: string, jobId: string) {
     throw new Error(`Failed to get job status: ${response.status} ${error}`);
   }
 
-  return await response.json();
+  return (await response.json()) as JobStatus;
 }
 
 /**
  * Get all fine-tuning jobs
  */
-async function getAllJobs(apiKey: string) {
+async function getAllJobs(apiKey: string): Promise<{ data: JobStatus[] }> {
   const response = await fetch('https://api.together.xyz/v1/fine-tuning/jobs', {
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -238,7 +249,7 @@ async function getAllJobs(apiKey: string) {
     throw new Error(`Failed to get jobs list: ${response.status} ${error}`);
   }
 
-  return await response.json();
+  return (await response.json()) as { data: JobStatus[] };
 }
 
 /**

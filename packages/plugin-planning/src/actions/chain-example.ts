@@ -13,7 +13,7 @@ export const analyzeInputAction: Action = {
   name: 'ANALYZE_INPUT',
   description: 'Analyzes user input and extracts key information',
 
-  validate: async (runtime: IAgentRuntime, message: Memory) => {
+  validate: async (_runtime: IAgentRuntime, _message: Memory) => {
     // This action can always run
     return true;
   },
@@ -23,7 +23,7 @@ export const analyzeInputAction: Action = {
     message: Memory,
     state?: State,
     options?: any,
-    callback?: HandlerCallback
+    _callback?: HandlerCallback
   ): Promise<ActionResult> => {
     console.log('[ChainExample] Analyzing input...');
 
@@ -67,7 +67,7 @@ export const processAnalysisAction: Action = {
   name: 'PROCESS_ANALYSIS',
   description: 'Processes the analysis results and makes decisions',
 
-  validate: async (runtime: IAgentRuntime, message: Memory) => {
+  validate: async (_runtime: IAgentRuntime, _message: Memory) => {
     return true;
   },
 
@@ -76,7 +76,7 @@ export const processAnalysisAction: Action = {
     message: Memory,
     state?: State,
     options?: any,
-    callback?: HandlerCallback
+    _callback?: HandlerCallback
   ): Promise<ActionResult> => {
     console.log('[ChainExample] Processing analysis...');
 
@@ -128,7 +128,7 @@ export const executeFinalAction: Action = {
   name: 'EXECUTE_FINAL',
   description: 'Executes the final action based on processing results',
 
-  validate: async (runtime: IAgentRuntime, message: Memory) => {
+  validate: async (_runtime: IAgentRuntime, _message: Memory) => {
     return true;
   },
 
@@ -137,12 +137,12 @@ export const executeFinalAction: Action = {
     message: Memory,
     state?: State,
     options?: any,
-    callback?: HandlerCallback
+    _callback?: HandlerCallback
   ): Promise<ActionResult> => {
     console.log('[ChainExample] Executing final action...');
 
     // Get all previous results
-    const analysisResult = options?.previousResults?.find(
+    const _analysisResult = options?.previousResults?.find(
       (r: any) => r.data?.wordCount !== undefined
     );
     const processingResult = options?.previousResults?.find(
@@ -172,8 +172,8 @@ export const executeFinalAction: Action = {
     console.log('[ChainExample] Execution complete:', execution);
 
     // Call the callback to send response
-    if (callback) {
-      await callback({
+    if (_callback) {
+      await _callback({
         text: execution.message,
         source: 'chain_example',
       });
@@ -198,18 +198,19 @@ export const chainExampleAction: Action = {
 
   validate: async (_runtime: IAgentRuntime, message: Memory) => {
     // Validate when this chain should be triggered
+    const text = message.content.text?.toLowerCase() || '';
     return (
-      message.content.text?.toLowerCase().includes('chain example') ||
-      message.content.text?.toLowerCase().includes('demonstrate chaining')
+      text.includes('chain example') ||
+      text.includes('demonstrate chaining')
     );
   },
 
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state: State,
-    _options: any,
-    callback: HandlerCallback
+    state?: State,
+    _options?: any,
+    callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
       // This demonstrates how actions can be chained programmatically
@@ -283,8 +284,8 @@ export const chainExampleAction: Action = {
       };
     } catch (error) {
       return {
-        error: error as Error,
-        data: { actionName: 'CHAIN_EXAMPLE' },
+        text: `Failed to create action chain: ${(error as Error).message}`,
+        data: { actionName: 'CHAIN_EXAMPLE', failed: true },
       };
     }
   },
@@ -327,14 +328,14 @@ export const analyzeContextAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state: State,
-    options: any,
-    callback: HandlerCallback
+    state?: State,
+    options?: any,
+    callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
       // Access previous action results from state
-      const previousResults = state.actionResults || [];
-      const context = options?.context?.previousResults || [];
+      const _previousResults = state?.actionResults || [];
+      const _context = options?.context?.previousResults || [];
 
       // Simulate analysis
       const analysis = {
@@ -363,8 +364,8 @@ export const analyzeContextAction: Action = {
       };
     } catch (error) {
       return {
-        error: error as Error,
-        data: { actionName: 'ANALYZE_CONTEXT' },
+        text: `Failed to analyze context: ${(error as Error).message}`,
+        data: { actionName: 'ANALYZE_CONTEXT', failed: true },
       };
     }
   },
@@ -389,13 +390,13 @@ export const generateStrategyAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state: State,
-    options: any,
-    callback: HandlerCallback
+    state?: State,
+    options?: any,
+    callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
       // Access analysis results from previous action's state
-      const analysisResults = state.analysisResults;
+      const analysisResults = state?.analysisResults;
 
       if (!analysisResults) {
         throw new Error('No analysis results found in state');
@@ -433,8 +434,8 @@ export const generateStrategyAction: Action = {
       };
     } catch (error) {
       return {
-        error: error as Error,
-        data: { actionName: 'GENERATE_STRATEGY' },
+        text: `Failed to generate strategy: ${(error as Error).message}`,
+        data: { actionName: 'GENERATE_STRATEGY', failed: true },
       };
     }
   },
@@ -475,7 +476,7 @@ export const createPlanAction: Action = {
       console.log('[CREATE_PLAN] Starting comprehensive plan creation...');
 
       // Extract project requirements from the message
-      const text = message.content.text || '';
+      const _text = message.content.text || '';
 
       // Create a comprehensive plan structure
       const plan = {
@@ -583,8 +584,6 @@ Ready to begin execution when you are!`,
       return {
         data: {
           actionName: 'CREATE_PLAN',
-          plan,
-          planId: plan.id,
           phaseCount: plan.phases.length,
           taskCount: plan.phases.reduce((total, phase) => total + phase.tasks.length, 0),
           ...planState,
@@ -603,8 +602,8 @@ Ready to begin execution when you are!`,
       }
 
       return {
-        error: error as Error,
-        data: { actionName: 'CREATE_PLAN' },
+        text: `Failed to create plan: ${(error as Error).message}`,
+        data: { actionName: 'CREATE_PLAN', failed: true },
       };
     }
   },

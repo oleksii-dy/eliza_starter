@@ -21,7 +21,7 @@ export function createRolodexService(runtime: any, config: any = {}) {
   Object.defineProperty(service, 'serviceName', {
     value: 'rolodex',
     writable: true,
-    configurable: true
+    configurable: true,
   });
 
   return service;

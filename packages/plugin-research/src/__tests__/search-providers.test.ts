@@ -19,7 +19,9 @@ describe('Search Providers - Real Implementation Tests', () => {
   });
 
   it('should initialize Academic provider', () => {
-    const provider = new AcademicSearchProvider({ semanticScholarApiKey: 'test-key' });
+    const provider = new AcademicSearchProvider({
+      semanticScholarApiKey: 'test-key',
+    });
     expect(provider).toBeDefined();
   });
 

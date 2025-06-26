@@ -40,7 +40,7 @@ export class LODs extends System {
     }
   }
 
-  override update(delta: number): void {
+  override update(_delta: number): void {
     if (this.nodes.length === 0) {return;}
 
     // check if lods need to switch (batched over multiple frames)

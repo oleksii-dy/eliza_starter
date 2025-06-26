@@ -299,7 +299,7 @@ export class Florence2API {
     if (data['<CAPTION>']) {
       const words = data['<CAPTION>'].toLowerCase().split(/\s+/);
       const commonTags = ['screen', 'window', 'desktop', 'application', 'browser', 'text', 'image'];
-      words.forEach((word) => {
+      words.forEach((word: any) => {
         if (commonTags.includes(word)) {
           tags.add(word);
         }

@@ -176,7 +176,7 @@ export class UIText extends Node {
     this.ui?.redraw();
   }
 
-  commit(didMove) {
+  commit(_didMove) {
     // ...
   }
 
@@ -220,7 +220,7 @@ export class UIText extends Node {
 
   measureTextFunc() {
     const ctx = getOffscreenContext();
-    return (width, widthMode, height, heightMode) => {
+    return (width, widthMode, _height, _heightMode) => {
       ctx.font = `${this._fontWeight} ${this._fontSize * this.ui._res}px ${this._fontFamily}`;
       ctx.textBaseline = 'alphabetic';
       let lines;
@@ -233,7 +233,7 @@ export class UIText extends Node {
       let finalWidth = 0;
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        const isFirst = i === 0;
+        const _isFirst = i === 0;
         const isLast = i === lines.length - 1;
         const metrics = ctx.measureText(line);
         const ascent = metrics.actualBoundingBoxAscent;

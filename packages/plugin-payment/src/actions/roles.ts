@@ -8,7 +8,7 @@ import {
   type ActionResult,
   logger,
   Role,
-  parseJSONObjectFromText,
+  parseKeyValueXml,
   type UUID
 } from '@elizaos/core';
 
@@ -34,15 +34,22 @@ You are managing role assignments. Extract the user identification and new role 
 Current request: {{userMessage}}
 
 Extract:
-1. The target user (by name, username, or ID)
+1. The target user (by name, username, or ID)  
 2. The new role to assign (owner, admin, or member)
 
-Respond with a JSON object containing:
-{
-  "targetUser": "username or name",
-  "targetUserId": "user ID if provided",
-  "newRole": "owner" | "admin" | "member"
-}
+Return an XML object with these fields:
+<response>
+  <targetUser>username or name</targetUser>
+  <targetUserId>user ID if provided</targetUserId>
+  <newRole>owner, admin, or member</newRole>
+</response>
+
+## Example Output Format
+<response>
+  <targetUser>john_doe</targetUser>
+  <targetUserId>uuid-123-456</targetUserId>
+  <newRole>admin</newRole>
+</response>
 `;
 
 export const updateRoleAction: Action = {
@@ -94,18 +101,14 @@ export const updateRoleAction: Action = {
       }
 
       // Parse the role update request
-      const _prompt = updateRoleTemplate.replace('{{userMessage}}', message.content.text || '');
+      const prompt = updateRoleTemplate.replace('{{userMessage}}', message.content.text || '');
 
-      // TODO: Fix runtime.generate method call
-      // const response = await runtime.generateText({
-      //   context: _prompt,
-      //   modelClass: ModelType.SMALL
-      // });
+      const response = await runtime.useModel('TEXT_SMALL' as any, {
+        prompt,
+        stopSequences: []
+      });
 
-      // For now, parse directly from the message
-      const response = message.content.text || '';
-
-      const roleData = parseJSONObjectFromText(response) as {
+      const roleData = parseKeyValueXml(response) as {
         targetUser?: string;
         targetUserId?: UUID;
         newRole?: string;

@@ -104,7 +104,7 @@ export const healthMonitoringTests: TestCase[] = [
       }
 
       console.log(`[HealthMonitor] Success: ${successCount}, Errors: ${errorCount}`);
-      assert(_errorCount > 0, 'Should have experienced crashes');
+      assert(errorCount > 0, 'Should have experienced crashes');
 
       // Plugin should still be functional after crashes
       const pluginState = pluginManager.getPlugin(pluginId);

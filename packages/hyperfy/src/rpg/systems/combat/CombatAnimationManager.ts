@@ -1,5 +1,5 @@
 import type { World } from '../../../types';
-import { AttackType, RPGEntity, CombatStyle, InventoryComponent, EquipmentSlot, WeaponType } from '../../types';
+import { AttackType, RPGEntity, CombatStyle, InventoryComponent, EquipmentSlot, WeaponType } from '../../types/index';
 
 interface AnimationTask {
   id: string;
@@ -27,14 +27,32 @@ export class CombatAnimationManager {
     'melee_stab': { duration: 600, file: 'stab.glb' },
     'melee_crush': { duration: 600, file: 'crush.glb' },
 
+    // Unarmed combat
+    'punch': { duration: 400, file: 'punch.glb' },
+
+    // Weapon-specific melee animations
+    'stab': { duration: 600, file: 'stab.glb' },
+    'stab_aggressive': { duration: 500, file: 'stab_aggressive.glb' },
+    'slash': { duration: 600, file: 'slash.glb' },
+    'slash_aggressive': { duration: 500, file: 'slash_aggressive.glb' },
+    'slash_defensive': { duration: 700, file: 'slash_defensive.glb' },
+    'crush': { duration: 700, file: 'crush.glb' },
+    'crush_aggressive': { duration: 600, file: 'crush_aggressive.glb' },
+    'stab_controlled': { duration: 650, file: 'stab_controlled.glb' },
+    'stab_2h': { duration: 800, file: 'stab_2h.glb' },
+
     // Ranged animations
     'ranged_bow': { duration: 900, file: 'bow_shoot.glb' },
     'ranged_crossbow': { duration: 700, file: 'crossbow_shoot.glb' },
     'ranged_thrown': { duration: 600, file: 'throw.glb' },
+    'bow_shoot': { duration: 900, file: 'bow_shoot.glb' },
+    'crossbow_shoot': { duration: 700, file: 'crossbow_shoot.glb' },
 
     // Magic animations
     'magic_cast': { duration: 1200, file: 'magic_cast.glb' },
     'magic_strike': { duration: 600, file: 'magic_strike.glb' },
+    'cast_standard': { duration: 1200, file: 'cast_standard.glb' },
+    'cast_defensive': { duration: 1400, file: 'cast_defensive.glb' },
 
     // Defense animations
     'block': { duration: 400, file: 'block.glb' },
@@ -44,7 +62,10 @@ export class CombatAnimationManager {
     'death': { duration: 2000, file: 'death.glb' },
 
     // Hit reactions
-    'hit_reaction': { duration: 300, file: 'hit_reaction.glb' }
+    'hit_reaction': { duration: 300, file: 'hit_reaction.glb' },
+
+    // Idle state
+    'idle': { duration: 0, file: 'idle.glb' }
   };
 
   constructor(world: World) {
@@ -54,7 +75,7 @@ export class CombatAnimationManager {
   /**
    * Update animation states
    */
-  update(delta: number): void {
+  update(_delta: number): void {
     const now = Date.now();
     const toRemove: string[] = [];
 
@@ -81,28 +102,28 @@ export class CombatAnimationManager {
   playAttackAnimation(attacker: RPGEntity, attackType: AttackType, style: CombatStyle = CombatStyle.ACCURATE): void {
     // Use the determineAnimation method to get the correct animation
     const animationName = this.determineAnimation(attacker, attackType, style);
-    this.playAnimation(attacker.data.id, animationName);
+    this.playAnimation(attacker.id, animationName);
   }
 
   /**
    * Play block/defense animation
    */
   playDefenseAnimation(defender: RPGEntity): void {
-    this.playAnimation(defender.data.id, 'block');
+    this.playAnimation(defender.id, 'block');
   }
 
   /**
    * Play hit reaction animation
    */
   playHitReaction(entity: RPGEntity): void {
-    this.playAnimation(entity.data.id, 'hit_reaction');
+    this.playAnimation(entity.id, 'hit_reaction');
   }
 
   /**
    * Play death animation
    */
   playDeathAnimation(entity: RPGEntity): void {
-    this.playAnimation(entity.data.id, 'death');
+    this.playAnimation(entity.id, 'death');
   }
 
   /**
@@ -347,29 +368,6 @@ export class CombatAnimationManager {
    */
   private getAnimationDuration(animationName: string): number {
     const animation = this.animations[animationName as keyof typeof this.animations];
-    if (animation) {
-      return animation.duration;
-    }
-
-    // Check for custom animations
-    const customAnimations: Record<string, number> = {
-      'stab': 600,
-      'stab_aggressive': 500,
-      'slash': 600,
-      'slash_aggressive': 500,
-      'slash_defensive': 700,
-      'crush': 700,
-      'crush_aggressive': 600,
-      'stab_controlled': 650,
-      'stab_2h': 800,
-      'punch': 400,
-      'crossbow_shoot': 700,
-      'bow_shoot': 900,
-      'cast_standard': 1200,
-      'cast_defensive': 1400,
-      'idle': 0
-    };
-
-    return customAnimations[animationName] || 600; // Default 600ms
+    return animation ? animation.duration : 600; // Default 600ms for unknown animations
   }
 }

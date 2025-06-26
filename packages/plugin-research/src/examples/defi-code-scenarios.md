@@ -10,7 +10,8 @@
 
 ```typescript
 const defiSecurityResearch = {
-  query: 'DeFi lending protocol vulnerabilities reentrancy flash loan attacks 2024',
+  query:
+    'DeFi lending protocol vulnerabilities reentrancy flash loan attacks 2024',
   config: {
     maxSearchResults: 25,
     searchProviders: ['academic', 'security', 'github'],
@@ -113,9 +114,14 @@ const yieldResearch = {
 
 ```typescript
 const mevResearch = {
-  query: 'MEV sandwich attacks frontrunning protection Flashbots private mempools',
+  query:
+    'MEV sandwich attacks frontrunning protection Flashbots private mempools',
   config: {
-    includeSources: ['research papers', 'MEV dashboards', 'protocol documentation'],
+    includeSources: [
+      'research papers',
+      'MEV dashboards',
+      'protocol documentation',
+    ],
     codeExamples: true,
     realTimeData: true,
   },
@@ -137,6 +143,7 @@ const mevResearch = {
    - Fair ordering protocols
 
 3. **Code Implementation Examples**
+
    ```solidity
    // MEV Protection Pattern
    contract MEVProtectedDEX {
@@ -171,9 +178,14 @@ const mevResearch = {
 
 ```typescript
 const gasOptimizationResearch = {
-  query: 'Solidity gas optimization assembly inline yul storage packing bitwise operations',
+  query:
+    'Solidity gas optimization assembly inline yul storage packing bitwise operations',
   config: {
-    focusAreas: ['storage optimization', 'computation efficiency', 'calldata optimization'],
+    focusAreas: [
+      'storage optimization',
+      'computation efficiency',
+      'calldata optimization',
+    ],
     includeCodeSnippets: true,
     benchmarkData: true,
   },
@@ -301,9 +313,14 @@ const bridgeResearch = {
 
 ```typescript
 const zkResearch = {
-  query: 'zero knowledge proofs DeFi implementation Tornado Cash privacy DEX zk-SNARKs Circom',
+  query:
+    'zero knowledge proofs DeFi implementation Tornado Cash privacy DEX zk-SNARKs Circom',
   config: {
-    includeImplementations: ['Circom circuits', 'Solidity verifiers', 'client libraries'],
+    includeImplementations: [
+      'Circom circuits',
+      'Solidity verifiers',
+      'client libraries',
+    ],
     useCases: ['private trading', 'compliant privacy', 'proof of solvency'],
     performanceMetrics: true,
   },
@@ -351,10 +368,15 @@ contract PrivateBalanceVerifier {
 
 ```typescript
 const integrationResearch = {
-  query: 'DeFi composability adapter pattern protocol integration Uniswap Aave Compound interfaces',
+  query:
+    'DeFi composability adapter pattern protocol integration Uniswap Aave Compound interfaces',
   config: {
     patterns: ['adapter', 'proxy', 'diamond', 'plugin'],
-    examples: ['flash loan arbitrage', 'yield aggregation', 'leveraged farming'],
+    examples: [
+      'flash loan arbitrage',
+      'yield aggregation',
+      'leveraged farming',
+    ],
     gasAnalysis: true,
   },
 };
@@ -401,10 +423,16 @@ contract YieldOptimizer {
 
 ```typescript
 const analyticsResearch = {
-  query: 'DeFi analytics real-time event processing The Graph Protocol Dune Analytics architecture',
+  query:
+    'DeFi analytics real-time event processing The Graph Protocol Dune Analytics architecture',
   config: {
     technologies: ['event streaming', 'GraphQL', 'time-series databases'],
-    metrics: ['TVL tracking', 'volume analysis', 'user behavior', 'risk metrics'],
+    metrics: [
+      'TVL tracking',
+      'volume analysis',
+      'user behavior',
+      'risk metrics',
+    ],
     scalability: 'high',
   },
 };
@@ -461,7 +489,8 @@ type LiquidityPool {
 
 ```typescript
 const aiAuditResearch = {
-  query: 'ML smart contract audit vulnerability detection neural networks static analysis Slither',
+  query:
+    'ML smart contract audit vulnerability detection neural networks static analysis Slither',
   config: {
     approaches: ['static analysis', 'symbolic execution', 'deep learning'],
     datasets: ['verified contracts', 'known vulnerabilities', 'audit reports'],
@@ -476,7 +505,8 @@ const aiAuditResearch = {
 
 ```typescript
 const orderbookResearch = {
-  query: 'decentralized orderbook implementation Serum dYdX performance optimization L2',
+  query:
+    'decentralized orderbook implementation Serum dYdX performance optimization L2',
   config: {
     focus: ['data structures', 'matching algorithms', 'state management'],
     performance: ['latency', 'throughput', 'gas efficiency'],

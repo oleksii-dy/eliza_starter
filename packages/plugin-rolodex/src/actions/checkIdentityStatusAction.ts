@@ -46,7 +46,9 @@ export const checkIdentityStatusAction: Action = {
 
       // Extract entity name or ID from message
       const text = message.content.text || '';
-      const entityNameMatch = text.match(/check (?:identity|verification) (?:status )?(?:for |of )?(.+)/i);
+      const entityNameMatch = text.match(
+        /check (?:identity|verification) (?:status )?(?:for |of )?(.+)/i
+      );
       const entityName = entityNameMatch?.[1]?.trim();
 
       if (!entityName) {
@@ -108,7 +110,10 @@ export const checkIdentityStatusAction: Action = {
         .filter(([_platform, identity]) => (identity as any).verified)
         .map(([platform, identity]) => ({
           platform,
-          name: (identity as any).metadata?.name || (identity as any).platformId || (identity as any).handle,
+          name:
+            (identity as any).metadata?.name ||
+            (identity as any).platformId ||
+            (identity as any).handle,
           verifiedAt: (identity as any).linkedAt || (identity as any).verifiedAt,
         }));
 
@@ -116,7 +121,10 @@ export const checkIdentityStatusAction: Action = {
         .filter(([_platform, identity]) => !(identity as any).verified)
         .map(([platform, identity]) => ({
           platform,
-          name: (identity as any).metadata?.name || (identity as any).platformId || (identity as any).handle,
+          name:
+            (identity as any).metadata?.name ||
+            (identity as any).platformId ||
+            (identity as any).handle,
         }));
 
       // Build response
@@ -138,7 +146,8 @@ export const checkIdentityStatusAction: Action = {
       }
 
       if (verifiedPlatforms.length === 0 && unverifiedPlatforms.length === 0) {
-        responseText += 'No platform identities linked yet. Use VERIFY_OAUTH_IDENTITY to add verified identities.';
+        responseText +=
+          'No platform identities linked yet. Use VERIFY_OAUTH_IDENTITY to add verified identities.';
       }
 
       const response = {

@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
 
 import { System } from './System';
 import type { World } from '../../types';
@@ -137,7 +137,7 @@ function intersectLineWithRect(
   const dx = x - cx;
   const dy = y - cy;
 
-  // If (x, y) == (cx, cy), there's no direction
+  // If (x, y) === (cx, cy), there's no direction
   if (dx === 0 && dy === 0) {return { x: cx, y: cy };}
 
   let tMin = Number.POSITIVE_INFINITY;

@@ -123,10 +123,7 @@ const teeStarterPlugin: Plugin = {
       name: 'mr-tee-status-route',
       path: '/mr-tee-status',
       type: 'GET',
-      handler: async (
-        _req: Record<string, unknown>,
-        res: { json: (data: Record<string, unknown>) => void }
-      ) => {
+      handler: async (_req: any, res: any) => {
         res.json({
           message: 'Mr. TEE is operational, fool!',
           tee_mode: process.env.TEE_MODE || 'NOT SET',

@@ -271,7 +271,6 @@ async function handler(runtime: IAgentRuntime, message: Memory, state?: State) {
     return reflection;
   } catch (error) {
     logger.error('Error in reflection handler:', error);
-
   }
 }
 

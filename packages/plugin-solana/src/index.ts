@@ -1,4 +1,4 @@
-import { IAgentRuntime, Plugin, logger } from '@elizaos/core';
+import { IAgentRuntime, Plugin, logger, Action } from '@elizaos/core';
 import { executeSwap } from './actions/swap.js';
 import transferAction from './actions/transfer.js';
 import { stakeSOL } from './actions/stake.js';
@@ -30,18 +30,20 @@ const solanaPlugin: Plugin = {
   name: SOLANA_PLUGIN_NAME,
   description:
     'Core Solana blockchain integration with wallet management, transfers, swaps, and staking.',
+
   actions: [
+    // Financial actions disabled by default for security
     executeSwap,
     transferAction,
     stakeSOL,
     mintNftAction,
     transferNftAction,
+    // Read-only actions enabled by default
     listNftAction,
     viewNftsAction,
   ],
   providers: [walletProvider],
   services: [
-    // Core services - only real, working services
     RpcService,
     TokenService,
     TransactionService,
@@ -56,7 +58,6 @@ const solanaPlugin: Plugin = {
     Token22Service,
     MultiSigService,
     TransactionHistoryService,
-    // Universal wallet service for unified blockchain interface
     SolanaUniversalWalletService,
   ],
   dependencies: [],

@@ -5,9 +5,9 @@ import { createMockRuntime } from '../test-utils.js';
 // Mock dockerode
 const mockContainer = {
   id: 'mock-container-id',
-  start: mock().mockResolvedValue({}),
-  stop: mock().mockResolvedValue({}),
-  remove: mock().mockResolvedValue({}),
+  start: mock().mockResolvedValue({ /* empty */ }),
+  stop: mock().mockResolvedValue({ /* empty */ }),
+  remove: mock().mockResolvedValue({ /* empty */ }),
   inspect: mock().mockResolvedValue({
     Id: 'mock-container-id',
     Name: '/test-container',
@@ -18,12 +18,12 @@ const mockContainer = {
       FinishedAt: null,
       Error: null,
     },
-    Config: { Labels: {} },
-    NetworkSettings: { Ports: {} },
+    Config: { Labels: { /* empty */ } },
+    NetworkSettings: { Ports: { /* empty */ } },
   }),
   logs: mock().mockResolvedValue('mock logs'),
   exec: mock().mockResolvedValue({
-    start: mock().mockResolvedValue({}),
+    start: mock().mockResolvedValue({ /* empty */ }),
   }),
 };
 
@@ -33,12 +33,12 @@ const mockNetwork = {
     Name: 'eliza-network',
     Id: 'network-id',
   }),
-  remove: mock().mockResolvedValue({}),
+  remove: mock().mockResolvedValue({ /* empty */ }),
 };
 
 // Create a comprehensive Docker mock that will be reused
 const createDockerMock = () => ({
-  ping: mock().mockResolvedValue({}),
+  ping: mock().mockResolvedValue({ /* empty */ }),
   version: mock().mockResolvedValue({ Version: '20.10.0' }),
   createContainer: mock().mockResolvedValue(mockContainer),
   getContainer: mock().mockReturnValue(mockContainer),
@@ -103,7 +103,7 @@ describe('DockerService', () => {
     });
 
     it('should create a container successfully', async () => {
-      const request = {
+      const _request = {
         name: 'test-agent',
         image: 'elizaos/autocoder-agent:latest',
         agentConfig: {
@@ -118,7 +118,7 @@ describe('DockerService', () => {
         },
       };
 
-      const containerId = await dockerService.createContainer(request);
+      const containerId = await dockerService.createContainer(_request);
 
       expect(containerId).toBe('mock-container-id');
     });
@@ -154,13 +154,13 @@ describe('DockerService', () => {
     });
 
     it('should create a network', async () => {
-      const config = {
+      const _config = {
         name: 'test-network',
         subnet: '172.20.0.0/16',
         gateway: '172.20.0.1',
       };
 
-      const networkId = await dockerService.createNetwork(config);
+      const networkId = await dockerService.createNetwork(_config);
 
       expect(networkId).toBe('network-id');
     });

@@ -1,17 +1,17 @@
-import { System } from '@elizaos/hyperfy';
 import * as THREE from 'three';
-import type { HyperfyWorld, HyperfyPlayer } from '../types/hyperfy.js';
+import type { HyperfyWorld, HyperfyPlayer, HyperfySystem } from '../types/hyperfy.js';
 
 interface ActionNode extends THREE.Object3D {
   [key: string]: any;
 }
 
-export class AgentActions extends System {
+export class AgentActions implements HyperfySystem {
+  world: any;
   private nodes: ActionNode[] = [];
   private currentNode: ActionNode | null = null;
 
   constructor(world: any) {
-    super(world);
+    this.world = world;
     this.nodes = [];
   }
 

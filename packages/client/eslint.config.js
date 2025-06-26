@@ -120,6 +120,7 @@ export default [
       'tailwind.config.*',
       'postcss.config.*',
       'cypress.config.*',
+      'cypress.config.cjs',
       'tsconfig*.json',
       'package-lock.json',
       'yarn.lock',
@@ -202,4 +203,25 @@ export default [
       'no-alert': 'off',
     },
   },
-]; 
+  {
+    // CommonJS files (like cypress.config.cjs)
+    files: ['**/*.cjs'],
+    languageOptions: {
+      globals: {
+        module: 'writable',
+        exports: 'writable',
+        require: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        global: 'readonly',
+        globalThis: 'readonly',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      'no-undef': 'off',
+    },
+  },
+];

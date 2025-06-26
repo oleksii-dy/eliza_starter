@@ -913,7 +913,7 @@ const postGeneratedHandler = async ({
   // }
 
   // have we posted it before?
-  const RM = state.providerData?.find((pd) => pd.providerName === 'RECENT_MESSAGES');
+  const RM = state.providerData?.find((pd: any) => pd.providerName === 'RECENT_MESSAGES');
   if (RM) {
     for (const m of RM.data.recentMessages) {
       if (cleanedText === m.content.text) {

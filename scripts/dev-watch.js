@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 const clientDir = path.resolve(__dirname, '../packages/client');
 const cliDir = path.resolve(__dirname, '../packages/cli');
 
-const processes = [];
+let processes = [];
 let isShuttingDown = false;
 let serverReady = false;
 
@@ -195,7 +195,7 @@ function startActualCliServer() {
 }
 
 function cleanup(signal = 'SIGTERM') {
-  if (isShuttingDown) {return;} // Prevent multiple cleanup calls
+  if (isShuttingDown) return; // Prevent multiple cleanup calls
   isShuttingDown = true;
 
   log('DEV', `Received ${signal}, shutting down...`);

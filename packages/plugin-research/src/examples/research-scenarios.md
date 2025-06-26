@@ -94,7 +94,8 @@ This research analyzed 12 sources to compare the performance characteristics of 
 const researchConfig = {
   maxSearchResults: 20,
   language: 'en',
-  scope: 'Focus on clinical applications, regulatory developments, and market size',
+  scope:
+    'Focus on clinical applications, regulatory developments, and market size',
   enableImages: true,
   searchProviders: ['tavily', 'serper'],
 };
@@ -354,7 +355,9 @@ client.on('messageCreate', async (message) => {
 ```typescript
 // Compare multiple topics
 const comparativeResearch = async (topics: string[]) => {
-  const projects = await Promise.all(topics.map((topic) => researchService.createProject(topic)));
+  const projects = await Promise.all(
+    topics.map((topic) => researchService.createProject(topic))
+  );
 
   // Wait for all to complete
   await Promise.all(projects.map((p) => waitForCompletion(p.id)));
@@ -407,7 +410,9 @@ const researchPipeline = async (initialTopic: string) => {
 
   // Stage 2: Deep dive into top findings
   const keyAreas = extractKeyAreas(overview.report);
-  const deepDives = await Promise.all(keyAreas.map((area) => researchService.createProject(area)));
+  const deepDives = await Promise.all(
+    keyAreas.map((area) => researchService.createProject(area))
+  );
 
   // Stage 3: Synthesize all research
   const synthesis = await createSynthesisReport([overview, ...deepDives]);

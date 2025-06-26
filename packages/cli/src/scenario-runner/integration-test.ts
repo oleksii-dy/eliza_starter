@@ -1,9 +1,9 @@
 import { logger, type UUID } from '@elizaos/core';
-import { HybridVerificationEngine } from './hybrid-verification.js';
-import { PerformanceOptimizer } from './performance-optimizations.js';
-import { SecureVerificationEngine } from './secure-verification.js';
-import { ExplainableVerificationEngine } from './explainable-verification.js';
-import { VersionedVerificationEngine } from './versioned-verification.js';
+import { HybridVerificationEngine } from './HybridVerification.js';
+import { PerformanceOptimizer } from './PerformanceOptimizations.js';
+import { SecureVerificationEngine } from './SecureVerification.js';
+import { ExplainableVerificationEngine } from './ExplainableVerification.js';
+import { VersionedVerificationEngine } from './VersionedVerification.js';
 import type { VerificationRule, VerificationResult, ScenarioContext, Scenario } from './types.js';
 
 export class ProductionVerificationSystem {

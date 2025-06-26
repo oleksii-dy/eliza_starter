@@ -7,7 +7,7 @@ import {
   type HandlerCallback,
   logger,
   type ActionExample,
-  ModelType,
+  ModelType as _ModelType,
   createUniqueUuid,
 } from '@elizaos/core';
 import puppeteer, { type Browser, type Page } from 'puppeteer';
@@ -400,7 +400,7 @@ export const browseWebAction: Action = {
   description:
     'Browses web pages and extracts information. Can be chained with file operations to save research findings or with analysis actions to process web content',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
 
     // Basic action validation

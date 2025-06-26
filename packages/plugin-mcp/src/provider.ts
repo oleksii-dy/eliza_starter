@@ -8,7 +8,7 @@ export const provider: Provider = {
     'Available MCP servers, tools, and resources when agent needs to interact with external MCP-compatible services and APIs',
 
   get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
-    const mcpService = runtime.getService(MCP_SERVICE_NAME) as McpService;
+    const mcpService = runtime.getService<McpService>(MCP_SERVICE_NAME);
     if (!mcpService) {
       return {
         values: { mcp: {} },

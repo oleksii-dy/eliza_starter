@@ -25,7 +25,7 @@ interface TimeResponse {
 /**
  * Time display component that fetches from backend
  */
-function TimeDisplay({ apiBase }: { apiBase: string }) {
+function _TimeDisplay({ apiBase }: { apiBase: string }) {
   const { data, isLoading, error, refetch } = useQuery<TimeResponse>({
     queryKey: ['currentTime'],
     queryFn: async () => {

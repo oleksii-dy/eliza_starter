@@ -4,7 +4,7 @@ import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
 // Mock the MCP creation service
 const mockCreateMCPProject = mock();
-mock.module('../../services/mcp-creation-service', () => ({
+mock.module('../../services/McpCreationService', () => ({
   MCPCreationService: mock().mockImplementation(() => ({
     createMCPProject: mockCreateMCPProject,
   })),
@@ -51,8 +51,8 @@ describe('createMCPAction', () => {
         return null;
       }),
       composeState: mock().mockResolvedValue({
-        values: {},
-        data: {},
+        values: { /* empty */ },
+        data: { /* empty */ },
         text: 'test state',
       }),
     } as unknown as IAgentRuntime;
@@ -72,8 +72,8 @@ describe('createMCPAction', () => {
 
     // Create mock state
     mockState = {
-      values: {},
-      data: {},
+      values: { /* empty */ },
+      data: { /* empty */ },
       text: 'test state',
     } as State;
 
@@ -124,7 +124,7 @@ describe('createMCPAction', () => {
       mockMessage.content.text = 'Create an MCP server called weather-service';
       const mockCallback = mock();
 
-      await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
+      await createMCPAction.handler(mockRuntime, mockMessage, mockState, { /* empty */ }, mockCallback);
 
       expect(mockCreateMCPProject).toHaveBeenCalledWith({
         name: 'weather-service',
@@ -152,7 +152,7 @@ describe('createMCPAction', () => {
       mockMessage.content.text = 'Create an MCP server for weather and file operations';
       const mockCallback = mock();
 
-      await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
+      await createMCPAction.handler(mockRuntime, mockMessage, mockState, { /* empty */ }, mockCallback);
 
       expect(mockCreateMCPProject).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -168,7 +168,7 @@ describe('createMCPAction', () => {
     it('should extract resources from message', async () => {
       mockMessage.content.text = 'Create an MCP server with config and data resources';
 
-      await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
+      await createMCPAction.handler(mockRuntime, mockMessage, mockState, { /* empty */ }, mockCallback);
 
       expect(mockCreateMCPProject).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -184,7 +184,7 @@ describe('createMCPAction', () => {
       mockMessage.content.text =
         'Create an MCP server called api-service with weather, web scraping, and database query tools';
 
-      await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
+      await createMCPAction.handler(mockRuntime, mockMessage, mockState, { /* empty */ }, mockCallback);
 
       expect(mockCreateMCPProject).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -204,7 +204,7 @@ describe('createMCPAction', () => {
         error: 'Permission denied',
       });
 
-      await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
+      await createMCPAction.handler(mockRuntime, mockMessage, mockState, { /* empty */ }, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -219,7 +219,7 @@ describe('createMCPAction', () => {
     it('should handle missing services', async () => {
       mockRuntime.getService = mock().mockReturnValue(null);
 
-      await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
+      await createMCPAction.handler(mockRuntime, mockMessage, mockState, { /* empty */ }, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -232,7 +232,7 @@ describe('createMCPAction', () => {
     it('should use default name when not specified', async () => {
       mockMessage.content.text = 'Create an MCP server';
 
-      await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
+      await createMCPAction.handler(mockRuntime, mockMessage, mockState, { /* empty */ }, mockCallback);
 
       expect(mockCreateMCPProject).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -244,7 +244,7 @@ describe('createMCPAction', () => {
     it('should sanitize project name', async () => {
       mockMessage.content.text = 'Create an MCP server named "My-Awesome-Server"';
 
-      await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
+      await createMCPAction.handler(mockRuntime, mockMessage, mockState, { /* empty */ }, mockCallback);
 
       expect(mockCreateMCPProject).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -268,7 +268,7 @@ describe('createMCPAction', () => {
     });
 
     it('should include usage instructions in response', async () => {
-      await createMCPAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
+      await createMCPAction.handler(mockRuntime, mockMessage, mockState, { /* empty */ }, mockCallback);
 
       const lastCall = mockCallback.mock.calls[mockCallback.mock.calls.length - 1][0];
       expect(lastCall.text).toContain('npm install');

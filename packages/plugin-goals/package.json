@@ -44,7 +44,7 @@
     "drizzle-orm": "^0.44.2",
     "start-server-and-test": "^2.0.5",
     "uuid": "^11.0.3",
-    "zod": "3.24.2"
+    "zod": "3.25.67"
   },
   "peerDependencies": {},
   "devDependencies": {
@@ -58,32 +58,21 @@
     "eslint": "^9.22.0",
     "prettier": "3.5.3",
     "ts-node": "^10.9.2",
-    "tsup": "^8.4.0",
     "typescript": "5.8.3"
   },
   "scripts": {
-    "start": "elizaos start",
-    "dev": "elizaos dev",
-    "build": "tsup",
-    "lint": "eslint . --fix",
-    "lint:check": "eslint .",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src",
-    "test": "elizaos test",
-    "test:skip-tsc": "node scripts/test-without-tsc.js",
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run",
-    "cypress:test": "cypress run --spec 'cypress/e2e/**/*.cy.ts'",
-    "test:e2e": "node scripts/test-e2e.js",
-    "test:e2e:headless": "CYPRESS_HEADED=false node scripts/test-e2e.js",
-    "test:e2e:ci": "CI=true node scripts/test-e2e-ci.js",
-    "publish": "elizaos publish"
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "elizaos test"
   },
   "publishConfig": {
     "access": "public"
   },
   "resolutions": {
-    "zod": "3.24.2"
+    "zod": "3.25.67"
   },
   "agentConfig": {
     "pluginType": "elizaos:plugin:1.0.0",

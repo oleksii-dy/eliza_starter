@@ -27,7 +27,10 @@ const runtime = {
 
     // Real API keys
     if (key === 'TAVILY_API_KEY') {
-      return process.env.TAVILY_API_KEY || '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';
+      return (
+        process.env.TAVILY_API_KEY ||
+        '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'
+      );
     }
     if (key === 'EXA_API_KEY') {
       return process.env.EXA_API_KEY || '267d9e0d-8617-444f-b1bf-612f3bf431f0';
@@ -39,10 +42,15 @@ const runtime = {
       );
     }
     if (key === 'FIRECRAWL_API_KEY') {
-      return process.env.FIRECRAWL_API_KEY || 'fc-857417811665460e92716b92e08ec398';
+      return (
+        process.env.FIRECRAWL_API_KEY || 'fc-857417811665460e92716b92e08ec398'
+      );
     }
     if (key === 'SEMANTIC_SCHOLAR_API_KEY') {
-      return process.env.SEMANTIC_SCHOLAR_API_KEY || 'XQRDiSXgS59uq91YOLadF2You3c4XFvW92Ysx2vxOJ';
+      return (
+        process.env.SEMANTIC_SCHOLAR_API_KEY ||
+        'XQRDiSXgS59uq91YOLadF2You3c4XFvW92Ysx2vxOJ'
+      );
     }
 
     // Model settings
@@ -75,16 +83,28 @@ const runtime = {
       ) {
         return 'computer_science';
       }
-      if (query.includes('medicine') || query.includes('health') || query.includes('disease')) {
+      if (
+        query.includes('medicine') ||
+        query.includes('health') ||
+        query.includes('disease')
+      ) {
         return 'medicine';
       }
       if (query.includes('physics') || query.includes('quantum')) {
         return 'physics';
       }
-      if (query.includes('business') || query.includes('market') || query.includes('economy')) {
+      if (
+        query.includes('business') ||
+        query.includes('market') ||
+        query.includes('economy')
+      ) {
         return 'economics';
       }
-      if (query.includes('psychology') || query.includes('mental') || query.includes('behavior')) {
+      if (
+        query.includes('psychology') ||
+        query.includes('mental') ||
+        query.includes('behavior')
+      ) {
         return 'psychology';
       }
       return 'general';
@@ -93,13 +113,21 @@ const runtime = {
     // Task type classification
     if (prompt.includes('task type')) {
       const query = prompt.toLowerCase();
-      if (query.includes('compare') || query.includes('versus') || query.includes('difference')) {
+      if (
+        query.includes('compare') ||
+        query.includes('versus') ||
+        query.includes('difference')
+      ) {
         return 'comparative';
       }
       if (query.includes('analyze') || query.includes('analysis')) {
         return 'analytical';
       }
-      if (query.includes('predict') || query.includes('future') || query.includes('forecast')) {
+      if (
+        query.includes('predict') ||
+        query.includes('future') ||
+        query.includes('forecast')
+      ) {
         return 'predictive';
       }
       if (query.includes('evaluate') || query.includes('assess')) {
@@ -143,7 +171,8 @@ const runtime = {
 
     // Query generation - create comprehensive search queries
     if (prompt.includes('search queries')) {
-      const baseQuery = prompt.match(/for: (.+?)(?:\.|$)/)?.[1] || 'research topic';
+      const baseQuery =
+        prompt.match(/for: (.+?)(?:\.|$)/)?.[1] || 'research topic';
 
       // Generate multiple search variations
       const queries = [
@@ -166,7 +195,10 @@ const runtime = {
     // Relevance scoring
     if (prompt.includes('relevance')) {
       // Analyze content relevance
-      if (prompt.includes('directly addresses') || prompt.includes('highly relevant')) {
+      if (
+        prompt.includes('directly addresses') ||
+        prompt.includes('highly relevant')
+      ) {
         return '0.95';
       }
       if (prompt.includes('related') || prompt.includes('relevant')) {
@@ -227,8 +259,12 @@ async function runDeepResearch() {
   console.log(
     '📊 Competing with OpenAI Deep Research by performing comprehensive, multi-source analysis\n'
   );
-  console.log('🔍 Using real search providers: Tavily, Exa, SerpAPI, Academic Search\n');
-  console.log('📁 File logging enabled - detailed reports saved to research_logs/\n');
+  console.log(
+    '🔍 Using real search providers: Tavily, Exa, SerpAPI, Academic Search\n'
+  );
+  console.log(
+    '📁 File logging enabled - detailed reports saved to research_logs/\n'
+  );
 
   // Create research service
   const service = new ResearchService(runtime);
@@ -252,12 +288,16 @@ async function runDeepResearch() {
     },
   ];
 
-  console.log(`🚀 Initiating ${researchQueries.length} deep research projects...\n`);
+  console.log(
+    `🚀 Initiating ${researchQueries.length} deep research projects...\n`
+  );
 
   for (let i = 0; i < researchQueries.length; i++) {
     const { query, description } = researchQueries[i];
     console.log(`\n${'='.repeat(100)}`);
-    console.log(`📚 Deep Research ${i + 1}/${researchQueries.length}: ${description}`);
+    console.log(
+      `📚 Deep Research ${i + 1}/${researchQueries.length}: ${description}`
+    );
     console.log(`❓ Query: "${query}"`);
     console.log(`${'='.repeat(100)}\n`);
 
@@ -274,7 +314,9 @@ async function runDeepResearch() {
       console.log(`   Domain: ${project.metadata.domain}`);
       console.log(`   Task Type: ${project.metadata.taskType}`);
       console.log(`   Research Depth: ${project.metadata.depth}`);
-      console.log(`   Search Strategy: ${project.metadata.queryPlan?.searchStrategy.approach}`);
+      console.log(
+        `   Search Strategy: ${project.metadata.queryPlan?.searchStrategy.approach}`
+      );
 
       // Monitor research progress
       console.log('\n⏳ Deep research in progress...\n');
@@ -305,7 +347,10 @@ async function runDeepResearch() {
         }
 
         // Check if completed
-        if (currentProject.status === 'completed' || currentProject.status === 'failed') {
+        if (
+          currentProject.status === 'completed' ||
+          currentProject.status === 'failed'
+        ) {
           console.log('\n');
           break;
         }
@@ -318,7 +363,9 @@ async function runDeepResearch() {
       const duration = Date.now() - startTime;
 
       if (finalProject) {
-        console.log(`\n✅ Deep Research Completed in ${(duration / 1000).toFixed(1)}s`);
+        console.log(
+          `\n✅ Deep Research Completed in ${(duration / 1000).toFixed(1)}s`
+        );
         console.log('\n📊 Research Metrics:');
         console.log(`   Sources Analyzed: ${finalProject.sources.length}`);
         console.log(`   Key Findings: ${finalProject.findings.length}`);
@@ -329,14 +376,18 @@ async function runDeepResearch() {
           console.log(`   Word Count: ${finalProject.report.wordCount}`);
           console.log(`   Sections: ${finalProject.report.sections.length}`);
           console.log(`   Citations: ${finalProject.report.citations.length}`);
-          console.log(`   Reading Time: ${finalProject.report.readingTime} minutes`);
+          console.log(
+            `   Reading Time: ${finalProject.report.readingTime} minutes`
+          );
         }
 
         // Show a preview of findings
         if (finalProject.findings.length > 0) {
           console.log('\n💡 Sample Findings:');
           finalProject.findings.slice(0, 3).forEach((finding, idx) => {
-            console.log(`   ${idx + 1}. ${finding.content.substring(0, 100)}...`);
+            console.log(
+              `   ${idx + 1}. ${finding.content.substring(0, 100)}...`
+            );
           });
         }
 
@@ -344,7 +395,10 @@ async function runDeepResearch() {
       }
     } catch (error) {
       console.error(`\n❌ Deep research failed: ${error}`);
-      console.error('Stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error(
+        'Stack:',
+        error instanceof Error ? error.stack : 'No stack trace'
+      );
     }
 
     // Pause between research projects
@@ -361,7 +415,9 @@ async function runDeepResearch() {
   try {
     const logsDir = path.join(process.cwd(), 'research_logs');
     const files = await fs.readdir(logsDir);
-    const todayFiles = files.filter((f) => f.includes(new Date().toISOString().split('T')[0]));
+    const todayFiles = files.filter((f) =>
+      f.includes(new Date().toISOString().split('T')[0])
+    );
     const mdFiles = todayFiles.filter((f) => f.endsWith('.md')).sort();
     const jsonFiles = todayFiles.filter((f) => f.endsWith('.json')).sort();
 
@@ -387,13 +443,17 @@ async function runDeepResearch() {
       console.log('\n📈 Research Quality Indicators:');
       for (const jsonFile of jsonFiles.slice(-3)) {
         try {
-          const data = JSON.parse(await fs.readFile(path.join(logsDir, jsonFile), 'utf-8'));
+          const data = JSON.parse(
+            await fs.readFile(path.join(logsDir, jsonFile), 'utf-8')
+          );
           if (data.report) {
             console.log(`\n   ${jsonFile}:`);
             console.log(`     - Words: ${data.report.wordCount}`);
             console.log(`     - Sources: ${data.sources?.length || 0}`);
             console.log(`     - Findings: ${data.findings?.length || 0}`);
-            console.log(`     - Citations: ${data.report.citations?.length || 0}`);
+            console.log(
+              `     - Citations: ${data.report.citations?.length || 0}`
+            );
           }
         } catch (e) {
           // Skip if can't read

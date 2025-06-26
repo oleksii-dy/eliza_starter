@@ -10,15 +10,7 @@ import {
   composePromptFromState,
   elizaLogger,
 } from '@elizaos/core';
-import {
-  type Hex,
-  formatEther,
-  parseEther,
-  parseAbi,
-  encodeFunctionData,
-  parseUnits,
-  type Address,
-} from 'viem';
+import { type Hex, parseEther, parseAbi, encodeFunctionData, parseUnits, type Address } from 'viem';
 import { getToken } from '@lifi/sdk';
 
 import { type WalletProvider, initWalletProvider } from '../providers/wallet';
@@ -39,7 +31,6 @@ export class TransferAction {
     const chainConfig = this.walletProvider.getChainConfigs(params.fromChain);
 
     try {
-      let hash: Hex;
       let to: Address;
       let value: bigint;
       let data: Hex;
@@ -51,8 +42,8 @@ export class TransferAction {
         params.token.toUpperCase() !== chainConfig.nativeCurrency.symbol.toUpperCase()
       ) {
         // This is an ERC20 token transfer
-        console.log(
-          `Processing ${params.token} token transfer of ${params.amount} to ${params.toAddress}`,
+        console.warn(
+          `Processing ${params.token} token transfer of ${params.amount} to ${params.toAddress}`
         );
 
         // First, resolve the token address
@@ -61,7 +52,7 @@ export class TransferAction {
         // Check if token was resolved properly
         if (tokenAddress === params.token && !tokenAddress.startsWith('0x')) {
           throw new Error(
-            `Token ${params.token} not found on ${params.fromChain}. Please check the token symbol.`,
+            `Token ${params.token} not found on ${params.fromChain}. Please check the token symbol.`
           );
         }
 
@@ -94,8 +85,8 @@ export class TransferAction {
         data = transferData;
       } else {
         // This is a native ETH transfer
-        console.log(
-          `Processing native ${chainConfig.nativeCurrency.symbol} transfer of ${params.amount} to ${params.toAddress}`,
+        console.warn(
+          `Processing native ${chainConfig.nativeCurrency.symbol} transfer of ${params.amount} to ${params.toAddress}`
         );
 
         // Validate amount before parsing
@@ -116,8 +107,8 @@ export class TransferAction {
         chain: walletClient.chain,
       };
 
-      hash = await walletClient.sendTransaction(transactionParams);
-      console.log(`Transaction sent successfully. Hash: ${hash}`);
+      const hash = await walletClient.sendTransaction(transactionParams);
+      elizaLogger.info(`Transaction sent successfully. Hash: ${hash}`);
 
       return {
         hash,
@@ -127,14 +118,14 @@ export class TransferAction {
         data,
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : error;
       throw new Error(`Transfer failed: ${errorMessage}`);
     }
   }
 
   private async resolveTokenAddress(
     tokenSymbolOrAddress: string,
-    chainId: number,
+    chainId: number
   ): Promise<string> {
     // If it's already a valid address (starts with 0x and is 42 chars), return as is
     if (tokenSymbolOrAddress.startsWith('0x') && tokenSymbolOrAddress.length === 42) {
@@ -150,10 +141,10 @@ export class TransferAction {
       // Use LiFi SDK to resolve token symbol to address
       const token = await getToken(chainId, tokenSymbolOrAddress);
       return token.address;
-    } catch (error) {
+    } catch (_error) {
       elizaLogger.error(
         `Failed to resolve token ${tokenSymbolOrAddress} on chain ${chainId}:`,
-        error,
+        _error
       );
       // If LiFi fails, return original value and let downstream handle the error
       return tokenSymbolOrAddress;
@@ -165,7 +156,7 @@ const buildTransferDetails = async (
   state: State,
   _message: Memory,
   runtime: IAgentRuntime,
-  wp: WalletProvider,
+  wp: WalletProvider
 ): Promise<TransferParams> => {
   const chains = wp.getSupportedChains();
 
@@ -201,7 +192,7 @@ const buildTransferDetails = async (
   // Validate required fields
   if (!transferDetails.fromChain) {
     throw new Error(
-      `Missing source chain. Please specify which chain to transfer from. Available chains: ${chains.toString()}`,
+      `Missing source chain. Please specify which chain to transfer from. Available chains: ${chains.toString()}`
     );
   }
 
@@ -229,7 +220,7 @@ const buildTransferDetails = async (
     throw new Error(
       `The chain ${
         transferDetails.fromChain
-      } not configured yet. Add the chain or choose one from configured: ${chains.toString()}`,
+      } not configured yet. Add the chain or choose one from configured: ${chains.toString()}`
     );
   }
 
@@ -243,12 +234,13 @@ export const transferAction: Action = {
   name: 'EVM_TRANSFER_TOKENS',
   description:
     'Transfers native tokens (ETH, BNB, etc.) or ERC20 tokens (USDC, USDT, etc.) between addresses on the same chain. Returns transaction details and suggests next actions for DeFi workflows like swapping or bridging.',
+  enabled: false, // Disabled by default - extremely dangerous, can transfer cryptocurrency and funds
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
     state: State | undefined,
     _options: any,
-    callback?: HandlerCallback,
+    callback?: HandlerCallback
   ): Promise<ActionResult> => {
     if (!state) {
       state = (await runtime.composeState(message)) as State;
@@ -347,7 +339,7 @@ export const transferAction: Action = {
                 nextAction: nextSuggestedAction,
               },
             },
-            'workflow',
+            'workflow'
           );
         }
       }
@@ -371,7 +363,7 @@ export const transferAction: Action = {
         },
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : error;
       console.error('Error during token transfer:', errorMessage);
       if (callback) {
         callback({
@@ -394,7 +386,8 @@ export const transferAction: Action = {
       };
     }
   },
-  validate: async (runtime: IAgentRuntime) => {
+  // eslint-disable-next-line require-await
+  validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const privateKey = runtime.getSetting('EVM_PRIVATE_KEY');
     return typeof privateKey === 'string' && privateKey.startsWith('0x');
   },
@@ -411,7 +404,8 @@ export const transferAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll transfer 1 ETH to your trading wallet first, then swap it for USDC.",
-          thought: 'The user wants to move ETH and then swap it. I need to transfer first to get the funds positioned correctly, then execute the swap. This is a common DeFi workflow pattern.',
+          thought:
+            'The user wants to move ETH and then swap it. I need to transfer first to get the funds positioned correctly, then execute the swap. This is a common DeFi workflow pattern.',
           actions: ['EVM_TRANSFER_TOKENS', 'EVM_SWAP_TOKENS'],
         },
       },
@@ -428,7 +422,8 @@ export const transferAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll transfer your USDC to the bridge wallet and then bridge it to Polygon for lower fees.",
-          thought: 'This requires two steps: first consolidate USDC to a bridge wallet, then execute the cross-chain bridge. The transfer prepares the funds for the bridge operation.',
+          thought:
+            'This requires two steps: first consolidate USDC to a bridge wallet, then execute the cross-chain bridge. The transfer prepares the funds for the bridge operation.',
           actions: ['EVM_TRANSFER_TOKENS', 'EVM_BRIDGE_TOKENS'],
         },
       },
@@ -460,7 +455,8 @@ export const transferAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll transfer 0.5 ETH to prepare for your DeFi farming strategy. After the transfer, I can help you swap it for the farming tokens you need.",
-          thought: 'User is starting a DeFi farming workflow. The transfer is the first step to position funds correctly before swapping for farming tokens. I should remember this context for the next action.',
+          thought:
+            'User is starting a DeFi farming workflow. The transfer is the first step to position funds correctly before swapping for farming tokens. I should remember this context for the next action.',
           action: 'EVM_TRANSFER_TOKENS',
           workflowContext: {
             step: 'prepare-swap',
@@ -481,7 +477,8 @@ export const transferAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll transfer your ETH first, then bridge it to Base to take advantage of lower transaction fees. This is a great strategy for frequent transactions.",
-          thought: 'This is a cross-chain fee optimization strategy. First transfer to consolidate, then bridge to a cheaper L2. The transfer sets up the bridge operation.',
+          thought:
+            'This is a cross-chain fee optimization strategy. First transfer to consolidate, then bridge to a cheaper L2. The transfer sets up the bridge operation.',
           action: 'EVM_TRANSFER_TOKENS',
           workflowContext: {
             step: 'prepare-bridge',
@@ -502,7 +499,8 @@ export const transferAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll help you consolidate funds from multiple wallets and then swap them for stablecoins. This is a good strategy for portfolio management and risk reduction.",
-          thought: 'Portfolio rebalancing workflow: consolidate scattered funds first, then convert to stablecoins for risk management. The transfer aggregates assets before the swap.',
+          thought:
+            'Portfolio rebalancing workflow: consolidate scattered funds first, then convert to stablecoins for risk management. The transfer aggregates assets before the swap.',
           action: 'EVM_TRANSFER_TOKENS',
           workflowContext: {
             step: 'consolidate-funds',

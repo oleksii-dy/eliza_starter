@@ -46,7 +46,7 @@ export const describeSceneAction: Action = {
   description:
     'Analyzes the current visual scene and provides a detailed description of what the agent sees through the camera. Returns scene analysis data including people count, objects, and camera info for action chaining.',
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
     return !!visionService && visionService.isActive();
   },
   handler: async (
@@ -57,7 +57,7 @@ export const describeSceneAction: Action = {
     callback?: HandlerCallback,
     _responses?: Memory[]
   ): Promise<ActionResult> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
 
     if (!visionService || !visionService.isActive()) {
       const thought = 'Vision service is not available or no camera is connected.';
@@ -253,7 +253,7 @@ export const captureImageAction: Action = {
   similes: ['TAKE_PHOTO', 'SCREENSHOT', 'CAPTURE_FRAME', 'TAKE_PICTURE'],
   description: 'Captures the current frame from the camera and saves it as an image attachment. Returns capture status and image metadata for action chaining.',
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
     return !!visionService && visionService.isActive();
   },
   handler: async (
@@ -264,7 +264,7 @@ export const captureImageAction: Action = {
     callback?: HandlerCallback,
     _responses?: Memory[]
   ): Promise<ActionResult> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
 
     if (!visionService || !visionService.isActive()) {
       const thought = 'Vision service is not available or no camera is connected.';
@@ -445,7 +445,7 @@ export const killAutonomousAction: Action = {
   ): Promise<ActionResult> => {
     try {
       // Try to get the autonomous service and stop it
-      const autonomousService = runtime.getService('AUTONOMOUS' as any);
+      const autonomousService = runtime.getService('AUTONOMOUS');
 
       if (autonomousService && 'stop' in autonomousService) {
         await (autonomousService as any).stop();
@@ -575,7 +575,7 @@ export const setVisionModeAction: Action = {
     'disable vision',
   ],
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
     return visionService !== null;
   },
   handler: async (
@@ -586,7 +586,7 @@ export const setVisionModeAction: Action = {
     callback?: HandlerCallback,
     _responses?: Memory[]
   ): Promise<ActionResult> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
 
     if (!visionService) {
       const thought = 'Vision service is not available.';

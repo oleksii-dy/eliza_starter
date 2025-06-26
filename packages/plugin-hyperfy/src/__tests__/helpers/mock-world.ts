@@ -134,7 +134,7 @@ export function createMockWorld(overrides: any = {}) {
       listeners: [],
       add: mock((msg, broadcast) => {
         mockWorld.chat.msgs.push(msg);
-        mockWorld.chat.listeners.forEach((cb) => cb(mockWorld.chat.msgs));
+        mockWorld.chat.listeners.forEach((cb: any) => cb(mockWorld.chat.msgs));
       }),
       subscribe: mock((callback) => {
         mockWorld.chat.listeners.push(callback);

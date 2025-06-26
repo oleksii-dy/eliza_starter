@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, mock } from 'bun:test';
+import { describe, it, expect, beforeAll, mock as _mock } from 'bun:test';
 import { createPublicClient, http } from 'viem';
 import { sepolia, baseSepolia, optimismSepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -221,7 +221,7 @@ describe('🌍 Real-World EVM Plugin Validation', () => {
         const { getToken } = await import('@lifi/sdk');
 
         // Try to get ETH token info on Sepolia
-        const ethToken = await getToken(11155111, 'ETH'); // Sepolia chain ID
+        const ethToken = await getToken('sepolia' as any, 'ETH'); // Sepolia chain ID
 
         console.log('💎 ETH token info:', {
           symbol: ethToken.symbol,
@@ -250,7 +250,7 @@ describe('🌍 Real-World EVM Plugin Validation', () => {
 
         // Try to find routes from Sepolia to Base Sepolia
         const routeRequest = {
-          fromChainId: 11155111, // Sepolia
+          fromChainId: 11155111, // Sepolia chain ID
           toChainId: 84532, // Base Sepolia
           fromTokenAddress: '0x0000000000000000000000000000000000000000', // ETH
           toTokenAddress: '0x0000000000000000000000000000000000000000', // ETH
@@ -263,9 +263,9 @@ describe('🌍 Real-World EVM Plugin Validation', () => {
 
         if (routes.routes.length > 0) {
           const bestRoute = routes.routes[0];
-          console.log(`🎯 Best route tool: ${bestRoute.tool}`);
+          console.log(`🎯 Best route:`, bestRoute);
           console.log(`💰 Estimated output: ${bestRoute.toAmount}`);
-          console.log(`⏱️ Estimated time: ${bestRoute.action?.execution?.time}ms`);
+          console.log(`⏱️ Route found`);
         }
 
         expect(routes).toBeDefined();
@@ -354,7 +354,7 @@ describe('🌍 Real-World EVM Plugin Validation', () => {
       }
 
       // Validate reasonable response times
-      Object.entries(benchmarks).forEach(([network, time]) => {
+      Object.entries(benchmarks).forEach(([_network, time]) => {
         if (time > 0) {
           expect(time).toBeLessThan(10000); // Should respond within 10 seconds
         }

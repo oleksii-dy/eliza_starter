@@ -1,4 +1,6 @@
-import { SecretForm } from '../services/secret-form-service';
+import type { Action, HandlerCallback, IAgentRuntime, Memory } from '@elizaos/core';
+import { elizaLogger, parseJSONObjectFromText } from '@elizaos/core';
+import { SecretFormService } from '../services/secret-form-service';
 import type { SecretContext, SecretConfig } from '../types';
 import type { SecretFormRequest, FormSubmission } from '../types/form';
 
@@ -19,10 +21,10 @@ export const requestSecretFormAction: Action = {
   name: 'REQUEST_SECRET_FORM',
   description: 'Create a secure web form for collecting secrets from users',
 
-  validate: async (_runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
-    const has = !!runtime.get('SECRET_FORMS');
+  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+    const has = !!runtime.getService('SECRET_FORMS');
     if (!has) {
-      logger.warn('[RequestSecretForm] Secret form service not available');
+      elizaLogger.warn('[RequestSecretForm] Secret form service not available');
       return false;
     }
 
@@ -47,11 +49,11 @@ export const requestSecretFormAction: Action = {
     message: Memory,
     state: any,
     options: any,
-    callback?: Callback
+    callback?: HandlerCallback
   ): Promise<boolean> => {
     elizaLogger.info('[RequestSecretForm] Starting secret form request');
 
-    const form = runtime.get('SECRET_FORMS') as SecretForm;
+    const form = runtime.getService<SecretFormService>('SECRET_FORMS');
     if (!form) {
       if (callback) {
         void callback({

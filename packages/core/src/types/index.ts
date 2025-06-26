@@ -4,6 +4,7 @@ export * from './database';
 export * from './environment';
 export * from '../environment';
 export * from './events';
+export * from './http';
 export * from './identity';
 export * from './knowledge';
 export * from './lp';

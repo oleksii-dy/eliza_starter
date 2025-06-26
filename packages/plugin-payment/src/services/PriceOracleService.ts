@@ -1,6 +1,6 @@
 import { type IAgentRuntime, Service, ServiceType, elizaLogger as logger } from '@elizaos/core';
 import { PaymentMethod } from '../types';
-import { priceCache, type NewPriceCache, type PriceCache } from '../database/schema';
+import { priceCache, type NewPriceCache, type PriceCache as _PriceCache } from '../database/schema';
 import { eq, and, gt } from 'drizzle-orm';
 
 export interface TokenPrice {
@@ -200,7 +200,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
         marketCap: price.marketCap?.toFixed(2),
         source: price.source,
         expiresAt,
-      };
+      } as any;
 
       await this.db
         .insert(priceCache)
@@ -249,8 +249,8 @@ export class PriceOracleService extends Service implements IPriceOracleService {
    * Get price from EVM oracle service
    */
   private async getEVMPriceFromOracle(
-    address: string,
-    network: string
+    _address: string,
+    _network: string
   ): Promise<TokenPrice | null> {
     // If EVM plugin provides a price oracle, use it
     // For now, return null to use fallback

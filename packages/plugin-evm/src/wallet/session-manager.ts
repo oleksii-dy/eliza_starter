@@ -1,12 +1,11 @@
 import { IAgentRuntime, logger, asUUID, UUID } from '@elizaos/core';
-import type { Address, Hash, Hex } from 'viem';
-import { keccak256, encodePacked } from 'viem';
+import { type Address, type Hash, type Hex, keccak256, encodePacked } from 'viem';
 import { WalletDatabaseService } from '../core/database/service';
 import { decrypt, encrypt } from '../core/security/encryption';
 import type {
   SessionPermission,
   WalletSession,
-  SessionKey as ISessionKey,
+  SessionKey as _ISessionKey,
 } from '../core/interfaces/IWalletService';
 import { randomBytes } from 'crypto';
 
@@ -53,9 +52,9 @@ export class SessionManager {
         keccak256(
           encodePacked(
             ['address', 'address', 'uint256'],
-            [config.walletAddress, sessionKey.address, BigInt(Date.now())],
-          ),
-        ),
+            [config.walletAddress, sessionKey.address, BigInt(Date.now())]
+          )
+        )
       );
 
       // Encrypt the private key
@@ -91,10 +90,10 @@ export class SessionManager {
       logger.info(`Session created: ${sessionId} for wallet ${config.walletAddress}`);
 
       return sessionWithId;
-    } catch (error) {
-      logger.error('Error creating session:', error);
+    } catch (_error) {
+      logger.error('Error creating session:', _error);
       throw new Error(
-        `Failed to create session: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to create session: ${_error instanceof Error ? _error.message : _error}`
       );
     }
   }
@@ -124,7 +123,7 @@ export class SessionManager {
   async validateSession(
     sessionId: string,
     action: string,
-    params?: any,
+    params?: any
   ): Promise<SessionValidation> {
     try {
       // Check cache first
@@ -250,7 +249,7 @@ export class SessionManager {
       // Decrypt the private key
       const privateKey = await decrypt(
         session.metadata.encryptedPrivateKey,
-        this.getEncryptionKey(),
+        this.getEncryptionKey()
       );
 
       // Sign the message
@@ -262,10 +261,10 @@ export class SessionManager {
       });
 
       return signature;
-    } catch (error) {
-      logger.error('Error signing with session:', error);
+    } catch (_error) {
+      logger.error('Error signing with session:', _error);
       throw new Error(
-        `Failed to sign with session: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to sign with session: ${_error instanceof Error ? _error.message : _error}`
       );
     }
   }
@@ -287,10 +286,10 @@ export class SessionManager {
       }
 
       logger.info(`Session revoked: ${sessionId}`);
-    } catch (error) {
-      logger.error('Error revoking session:', error);
+    } catch (_error) {
+      logger.error('Error revoking session:', _error);
       throw new Error(
-        `Failed to revoke session: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to revoke session: ${_error instanceof Error ? _error.message : _error}`
       );
     }
   }
@@ -312,8 +311,8 @@ export class SessionManager {
       await this.dbService.updateSession(sessionId as UUID, {
         lastUsedAt: now,
       });
-    } catch (error) {
-      logger.error('Error updating last used:', error);
+    } catch (_error) {
+      logger.error('Error updating last used:', _error);
     }
   }
 
@@ -342,8 +341,8 @@ export class SessionManager {
         }));
 
       return activeSessions;
-    } catch (error) {
-      logger.error('Error getting active sessions:', error);
+    } catch (_error) {
+      logger.error('Error getting active sessions:', _error);
       return [];
     }
   }
@@ -351,7 +350,7 @@ export class SessionManager {
   /**
    * Clean up expired sessions
    */
-  private async cleanupExpiredSessions(): Promise<void> {
+  private cleanupExpiredSessions(): void {
     try {
       const now = Date.now();
 
@@ -363,8 +362,8 @@ export class SessionManager {
       }
 
       logger.debug('Cleaned up expired sessions');
-    } catch (error) {
-      logger.error('Error cleaning up sessions:', error);
+    } catch (_error) {
+      logger.error('Error cleaning up sessions:', _error);
     }
   }
 
@@ -390,7 +389,7 @@ export class SessionManager {
   /**
    * Stop the session manager
    */
-  async stop(): Promise<void> {
+  stop(): void {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
     }

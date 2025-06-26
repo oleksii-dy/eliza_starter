@@ -1,25 +1,42 @@
 {
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
-    "baseUrl": ".",
-    "lib": ["ESNext", "DOM"],
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
     "target": "ESNext",
-    "module": "Preserve",
-    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "allowImportingTsExtensions": true,
-    "declaration": true,
     "emitDeclarationOnly": true,
+    "declaration": true,
     "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "checkJs": false,
+    "noEmitOnError": false,
     "moduleDetection": "force",
     "allowArbitraryExtensions": true,
     "jsx": "react",
-    "types": ["bun-types", "node"]
+    "types": [
+      "bun-types",
+      "node"
+    ],
+    "baseUrl": "."
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/e2e/**/*.ts",
+    "src/__tests__/**/*.ts",
+    "__tests__/**/*.ts"
+  ],
   "exclude": [
     "node_modules",
     "dist",

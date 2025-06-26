@@ -3,15 +3,15 @@ import type {
   Plugin,
   Action,
   Provider,
-  Service,
 } from '@elizaos/core';
+import { Service } from '@elizaos/core';
 
 // Simple message classifier provider
 export const messageClassifierProvider: Provider = {
   name: 'MESSAGE_CLASSIFIER',
   description: 'Classifies messages for strategic planning',
 
-  get: async (runtime, message, state) => {
+  get: async (runtime, message, _state) => {
     const text = message.content.text || '';
 
     // Simple classification logic
@@ -41,7 +41,7 @@ export const analyzeInputAction: Action = {
   similes: ['EXAMINE', 'REVIEW'],
   description: 'Analyzes user input and extracts key information',
 
-  validate: async (runtime, message) => {
+  validate: async (_runtime, _message) => {
     return true; // Always available
   },
 
@@ -75,7 +75,7 @@ export const processAnalysisAction: Action = {
   similes: ['HANDLE', 'EXECUTE'],
   description: 'Processes analysis results and makes decisions',
 
-  validate: async (runtime, message) => {
+  validate: async (_runtime, _message) => {
     return true;
   },
 
@@ -109,7 +109,7 @@ export const executeFinalAction: Action = {
   similes: ['COMPLETE', 'FINISH'],
   description: 'Executes the final action based on processing results',
 
-  validate: async (runtime, message) => {
+  validate: async (_runtime, _message) => {
     return true;
   },
 

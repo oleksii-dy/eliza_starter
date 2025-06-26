@@ -1,4 +1,5 @@
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
+// Using THREE namespace types
 import { Node } from './Node';
 
 export class Snap extends Node {

@@ -1,4 +1,4 @@
-import { mock  } from 'bun:test';
+import { mock } from 'bun:test';
 
 /**
  * Browser mocks for testing
@@ -60,7 +60,9 @@ if (typeof window === 'undefined') {
     querySelector: mock(),
     querySelectorAll: mock(() => []),
     getElementsByTagName: mock((tagName: string) => {
-      if (tagName === 'head') {return [mockHead];}
+      if (tagName === 'head') {
+        return [mockHead];
+      }
       return [];
     }),
   };
@@ -70,13 +72,13 @@ if (typeof window === 'undefined') {
   Object.defineProperty(global, 'navigator', {
     value: mockWindow.navigator,
     writable: true,
-    configurable: true
+    configurable: true,
   });
 
   Object.defineProperty(global, 'location', {
     value: mockWindow.location,
     writable: true,
-    configurable: true
+    configurable: true,
   });
 }
 

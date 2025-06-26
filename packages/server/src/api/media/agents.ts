@@ -1,7 +1,7 @@
 import { validateUuid, logger, getContentTypeFromMimeType } from '@elizaos/core';
 import express from 'express';
-import { sendError, sendSuccess } from '../shared/response-utils';
-import { cleanupUploadedFile } from '../shared/file-utils';
+import { sendError, sendSuccess } from '../shared/responseUtils';
+import { cleanupUploadedFile } from '../shared/fileUtils';
 import { agentMediaUpload, validateMediaFile, processUploadedFile } from '../shared/uploads';
 import type fileUpload from 'express-fileupload';
 

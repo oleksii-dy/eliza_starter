@@ -68,7 +68,7 @@ export const researchAction: Action = {
       });
 
       // Process payment
-      const paymentResult = await new Promise<Memory[]>((resolve, _reject) => {
+      const _paymentResult = await new Promise<Memory[]>((resolve, _reject) => {
         paymentMiddleware(
           runtime,
           message,

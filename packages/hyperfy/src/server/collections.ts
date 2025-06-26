@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { importApp } from '../core/extras/appTools';
+// import { importApp } from '../core/extras/appTools';
 import { isArray } from 'lodash-es';
 
 interface CollectionOptions {
@@ -8,7 +8,7 @@ interface CollectionOptions {
   assetsDir: string
 }
 
-export async function initCollections({ collectionsDir, assetsDir }: CollectionOptions) {
+export async function initCollections({ collectionsDir, assetsDir: _assetsDir }: CollectionOptions) {
   const collections: any[] = [];
   const dirs = await fs.readdir(collectionsDir);
   for (const dir of dirs) {

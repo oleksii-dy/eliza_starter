@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import axios, { AxiosError } from 'axios';
 import { SearchResult } from '../../types';
 import { logger } from '@elizaos/core';
@@ -83,7 +84,8 @@ export class PyPISearchProvider {
       });
 
       // Extract package names from search results
-      const packageMatches = searchResponse.data.match(/href="\/project\/([^\/]+)\//g) || [];
+      const packageMatches =
+        searchResponse.data.match(/href="\/project\/([^\/]+)\//g) || [];
 
       const packages = packageMatches
         .map((match: string) => {
@@ -106,7 +108,9 @@ export class PyPISearchProvider {
 
       const validResults = results.filter(Boolean) as SearchResult[];
       const duration = Date.now() - startTime;
-      logger.info(`[PyPI] Found ${validResults.length} results in ${duration}ms`);
+      logger.info(
+        `[PyPI] Found ${validResults.length} results in ${duration}ms`
+      );
 
       return validResults;
     } catch (error) {
@@ -182,13 +186,17 @@ export class PyPISearchProvider {
     return {
       title: `${info.name} v${info.version}`,
       url: packageUrl,
-      snippet: description.substring(0, 300) + (description.length > 300 ? '...' : ''),
+      snippet:
+        description.substring(0, 300) + (description.length > 300 ? '...' : ''),
       content: description + classifiers,
       score: Math.max(0.1, 1.0 - index * 0.05), // Decrease score based on result order
       provider: 'pypi',
       metadata: {
         language: 'python',
-        author: info.author || info.maintainer ? [info.author || info.maintainer] : [],
+        author:
+          info.author || info.maintainer
+            ? [info.author || info.maintainer]
+            : [],
         type: 'package',
         domain: 'pypi.org',
       },
@@ -215,10 +223,15 @@ export class PyPISearchProvider {
   /**
    * Search for packages by category/classifier
    */
-  async searchByCategory(category: string, maxResults?: number): Promise<SearchResult[]> {
+  async searchByCategory(
+    category: string,
+    maxResults?: number
+  ): Promise<SearchResult[]> {
     // This would require scraping PyPI's browse page or using alternative APIs
     // For now, return empty array and log the limitation
-    logger.warn('[PyPI] Category search not implemented - use keyword search instead');
+    logger.warn(
+      '[PyPI] Category search not implemented - use keyword search instead'
+    );
     return [];
   }
 }

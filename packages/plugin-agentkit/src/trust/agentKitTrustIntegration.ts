@@ -5,7 +5,46 @@ import {
   type State,
   type HandlerCallback,
   elizaLogger,
+  asUUID,
 } from '@elizaos/core';
+
+// Enhanced trust service interfaces
+interface TrustMessage {
+  entityId: string;
+  roomId: string;
+}
+
+interface TrustResult {
+  score: number;
+}
+
+interface TrustServiceWithEvaluate {
+  evaluate?: (
+    runtime: IAgentRuntime,
+    message: TrustMessage,
+    state: Record<string, unknown>
+  ) => Promise<TrustResult>;
+  updateTrust?: (data: {
+    agentId: string;
+    entityId: string;
+    action: string;
+    outcome: string;
+    timestamp: number;
+  }) => Promise<void>;
+}
+
+interface SecurityModule {
+  hashTransaction?: (data: {
+    fromAddress: string;
+    toAddress: string;
+    amount: string;
+    tokenAddress?: string;
+  }) => string;
+}
+
+interface _StateMessage {
+  entityId: string;
+}
 
 /**
  * Trust levels required for different AgentKit operations
@@ -116,13 +155,11 @@ export async function validateAgentKitTrust(
     try {
       // The trust service from plugin-trust doesn't have these methods on the base Service type
       // We need to handle this more gracefully
-      const trustServiceAny = trustService as any;
-      if (trustServiceAny.evaluate && typeof trustServiceAny.evaluate === 'function') {
-        const trustResult = await trustServiceAny.evaluate(
-          runtime,
-          { entityId, roomId: '' } as any,
-          {} as any
-        );
+      const trustServiceTyped = trustService as TrustServiceWithEvaluate;
+      if (trustServiceTyped.evaluate && typeof trustServiceTyped.evaluate === 'function') {
+        const trustMessage: TrustMessage = { entityId, roomId: '' };
+        const trustState: Record<string, unknown> = {};
+        const trustResult = await trustServiceTyped.evaluate(runtime, trustMessage, trustState);
         if (trustResult && typeof trustResult.score === 'number') {
           trustScore = trustResult.score;
         }
@@ -151,7 +188,12 @@ export async function validateAgentKitTrust(
     let hasRole = false;
     try {
       // Try to get role information from trust service
-      const roleResult = await runtime.composeState({ entityId } as any);
+      const stateMessage: Memory = {
+        entityId: asUUID(entityId),
+        content: { text: 'role_check' },
+        roomId: asUUID('default-room'),
+      };
+      const roleResult = await runtime.composeState(stateMessage);
       hasRole = roleResult?.values?.userRole === requirements.requiredRole;
     } catch (error) {
       elizaLogger.warn(
@@ -198,12 +240,16 @@ export async function validateAgentKitTrust(
     ) {
       const securityModule = runtime.getService('security-module');
       if (securityModule) {
-        const securityModuleAny = securityModule as any;
+        const securityModuleTyped = securityModule as SecurityModule & {
+          validateFinancialOperation?: (
+            data: unknown
+          ) => Promise<{ allowed: boolean; reason?: string }>;
+        };
         if (
-          securityModuleAny.validateFinancialOperation &&
-          typeof securityModuleAny.validateFinancialOperation === 'function'
+          securityModuleTyped.validateFinancialOperation &&
+          typeof securityModuleTyped.validateFinancialOperation === 'function'
         ) {
-          const securityCheck = await securityModuleAny.validateFinancialOperation({
+          const securityCheck = await securityModuleTyped.validateFinancialOperation({
             entityId,
             action: actionName,
             context: message.content,
@@ -264,12 +310,14 @@ async function validateMultiAgentCoordination(
         // Get trust score for coordinating agent
         let agentTrustScore = 50; // Default score
         try {
-          const trustServiceAny = trustService as any;
-          if (trustServiceAny.evaluate && typeof trustServiceAny.evaluate === 'function') {
-            const agentTrustResult = await trustServiceAny.evaluate(
+          const trustServiceTyped = trustService as TrustServiceWithEvaluate;
+          if (trustServiceTyped.evaluate && typeof trustServiceTyped.evaluate === 'function') {
+            const agentTrustMessage: TrustMessage = { entityId: agentId, roomId: '' };
+            const agentTrustState: Record<string, unknown> = {};
+            const agentTrustResult = await trustServiceTyped.evaluate(
               runtime,
-              { entityId: agentId, roomId: '' } as any,
-              {} as any
+              agentTrustMessage,
+              agentTrustState
             );
             if (agentTrustResult && typeof agentTrustResult.score === 'number') {
               agentTrustScore = agentTrustResult.score;
@@ -344,7 +392,7 @@ export async function recordAgentKitAction(
   message: Memory,
   actionName: string,
   success: boolean,
-  details?: any
+  _details?: unknown
 ): Promise<void> {
   try {
     const trustService = runtime.getService('trust-engine');
@@ -359,48 +407,52 @@ export async function recordAgentKitAction(
 
     // Calculate trust impact based on action type and outcome
     let trustChange = 0;
+    const requirements = (
+      AGENTKIT_TRUST_REQUIREMENTS as Record<
+        string,
+        { minTrustScore: number; requiredRole: string; requiresCoordination: boolean }
+      >
+    )[actionName];
     if (success) {
       // Positive trust for successful actions
-      if (AGENTKIT_TRUST_REQUIREMENTS[actionName]?.requiredRole === 'ADMIN_ROLE') {
+      if (requirements?.requiredRole === 'ADMIN_ROLE') {
         trustChange = 0.04; // Good boost for admin actions
-      } else if (AGENTKIT_TRUST_REQUIREMENTS[actionName]?.requiredRole === 'FINANCE_ROLE') {
+      } else if (requirements?.requiredRole === 'FINANCE_ROLE') {
         trustChange = 0.03; // Medium boost for finance actions
       } else {
         trustChange = 0.01; // Small boost for other actions
       }
 
       // Additional boost for successful coordination
-      if (AGENTKIT_TRUST_REQUIREMENTS[actionName]?.requiresCoordination) {
+      if (requirements?.requiresCoordination) {
         trustChange += 0.02;
       }
     } else {
       // Negative trust for failed critical actions
-      if (AGENTKIT_TRUST_REQUIREMENTS[actionName]?.requiredRole === 'ADMIN_ROLE') {
+      if (requirements?.requiredRole === 'ADMIN_ROLE') {
         trustChange = -0.08; // Significant penalty for failed admin actions
-      } else if (AGENTKIT_TRUST_REQUIREMENTS[actionName]?.requiredRole === 'FINANCE_ROLE') {
+      } else if (requirements?.requiredRole === 'FINANCE_ROLE') {
         trustChange = -0.05; // Medium penalty for failed finance actions
       } else {
         trustChange = -0.02; // Small penalty for other failures
       }
 
       // Additional penalty for failed coordination
-      if (AGENTKIT_TRUST_REQUIREMENTS[actionName]?.requiresCoordination) {
+      if (requirements?.requiresCoordination) {
         trustChange -= 0.03;
       }
     }
 
-    await (trustService as any).updateTrust({
-      entityId,
-      change: trustChange,
-      reason: `AgentKit action: ${actionName} (${success ? 'success' : 'failure'})`,
-      source: 'agentkit-plugin',
-      evidence: {
+    const trustServiceTyped = trustService as TrustServiceWithEvaluate;
+    if (trustServiceTyped.updateTrust) {
+      await trustServiceTyped.updateTrust({
+        agentId: runtime.agentId,
+        entityId,
         action: actionName,
-        success,
-        details,
-        timestamp: new Date().toISOString(),
-      },
-    });
+        outcome: success ? 'success' : 'failure',
+        timestamp: Date.now(),
+      });
+    }
 
     elizaLogger.debug(
       `Recorded trust change ${trustChange} for AgentKit action ${actionName} (${success ? 'success' : 'failure'})`
@@ -506,7 +558,7 @@ export function wrapAgentKitActionWithTrust(
       runtime: IAgentRuntime,
       message: Memory,
       state: State | undefined,
-      options?: any,
+      options?: Record<string, unknown>,
       callback?: HandlerCallback
     ) => {
       // Extract coordination context if needed
@@ -609,12 +661,14 @@ export async function validateCustodialWalletSecurity(
       return { allowed: true };
     }
 
-    const securityModuleAny = securityModule as any;
+    const securityModuleTyped = securityModule as SecurityModule & {
+      validateWalletOperation?: (data: unknown) => Promise<{ allowed: boolean; reason?: string }>;
+    };
     if (
-      securityModuleAny.validateWalletOperation &&
-      typeof securityModuleAny.validateWalletOperation === 'function'
+      securityModuleTyped.validateWalletOperation &&
+      typeof securityModuleTyped.validateWalletOperation === 'function'
     ) {
-      const walletSecurityCheck = await securityModuleAny.validateWalletOperation({
+      const walletSecurityCheck = await securityModuleTyped.validateWalletOperation({
         entityId: message.entityId,
         operationType,
         context: message.content,

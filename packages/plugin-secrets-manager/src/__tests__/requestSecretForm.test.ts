@@ -2,6 +2,7 @@ import { type IAgentRuntime, type Memory, type HandlerCallback, type State } fro
 import * as core from '@elizaos/core';
 import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test';
 import { requestSecretFormAction } from '../actions/requestSecretForm';
+import { createMockRuntime } from './test-utils';
 
 // Import core functions to spy on them
 // Mock logger
@@ -19,17 +20,26 @@ describe('requestSecretFormAction', () => {
   let mockCallback: HandlerCallback;
   let mockState: State;
   beforeEach(() => {
-    mock.restore();
+    // Reset individual mocks instead of calling mock.restore() which affects spies
     mockForm = {
       createSecretForm: mock().mockResolvedValue({
         url: 'https://test.ngrok.io/form/123',
         sessionId: 'session-123',
       }),
     } as any;
-    mockRuntime = {
+    
+    // Use the unified mock runtime with plugin-specific overrides
+    mockRuntime = createMockRuntime({
       agentId: 'agent-123',
+      getService: (name: string) => {
+        if (name === 'SECRET_FORMS') {
+          return mockForm;
+        }
+        return null;
+      },
       get: mock().mockReturnValue(mockForm),
-    } as any;
+    });
+    
     mockCallback = mock();
     mockState = {
       values: {},
@@ -47,7 +57,7 @@ describe('requestSecretFormAction', () => {
       expect(result).toBe(true);
     });
     it('should return false when service does not exist', async () => {
-      mockRuntime.get = mock(() => null);
+      mockRuntime.getService = mock(() => null);
       const message: Memory = {
         content: { text: 'request secret' },
         entityId: 'user-123',
@@ -230,7 +240,7 @@ describe('requestSecretFormAction', () => {
       });
     });
     it('should handle service not available', async () => {
-      mockRuntime.get = mock(() => null);
+      mockRuntime.getService = mock(() => null);
       const message: Memory = {
         content: { text: 'Request API key' },
         entityId: 'user-123',

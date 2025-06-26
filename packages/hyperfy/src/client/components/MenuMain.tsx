@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useEffect, useMemo, useState } from 'react';
 import {
   Menu,
@@ -9,7 +9,6 @@ import {
   MenuItemRange,
   MenuItemSwitch,
   MenuItemText,
-  MenuItemTextarea,
   MenuItemToggle,
 } from './Menu';
 import { usePermissions } from './usePermissions';
@@ -37,8 +36,8 @@ export function MenuMain({ world }) {
   return <Page world={world} pop={pop} push={push} />;
 }
 
-function MenuMainIndex({ world, pop, push }) {
-  const { isAdmin, isBuilder } = usePermissions(world);
+function MenuMainIndex({ world, _pop, push }) {
+  const { isBuilder } = usePermissions(world);
   const player = world.entities.player;
   const [name, setName] = useState(() => player.data.name);
   const changeName = name => {
@@ -59,12 +58,12 @@ function MenuMainIndex({ world, pop, push }) {
   );
 }
 
-function MenuMainUI({ world, pop, push }) {
-  const player = world.entities.player;
-  const [canFullscreen, isFullscreen, toggleFullscreen] = useFullscreen(document.documentElement);
+function MenuMainUI({ world, pop, _push }) {
+  const _player = world.entities.player;
+  const [_canFullscreen, isFullscreen, toggleFullscreen] = useFullscreen(document.documentElement);
   const [ui, setUI] = useState(world.prefs.ui);
   const [actions, setActions] = useState(world.prefs.actions);
-  const [stats, setStats] = useState(world.prefs.stats);
+  const [_stats, setStats] = useState(world.prefs.stats);
   const { isBuilder } = usePermissions(world);
   useEffect(() => {
     const onChange = changes => {
@@ -120,14 +119,14 @@ const shadowOptions = [
   { label: 'Med', value: 'med' },
   { label: 'High', value: 'high' },
 ];
-function MenuMainGraphics({ world, pop, push }) {
+function MenuMainGraphics({ world, pop, _push }) {
   const [dpr, setDPR] = useState(world.prefs.dpr);
   const [shadows, setShadows] = useState(world.prefs.shadows);
   const [postprocessing, setPostprocessing] = useState(world.prefs.postprocessing);
   const [bloom, setBloom] = useState(world.prefs.bloom);
   const dprOptions = useMemo(() => {
-    const width = world.graphics.width;
-    const height = world.graphics.height;
+    const _width = world.graphics.width;
+    const _height = world.graphics.height;
     const dpr = window.devicePixelRatio;
     interface DprOption {
       label: string;
@@ -196,7 +195,7 @@ function MenuMainGraphics({ world, pop, push }) {
   );
 }
 
-function MenuMainAudio({ world, pop, push }) {
+function MenuMainAudio({ world, pop, _push }) {
   const [music, setMusic] = useState(world.prefs.music);
   const [sfx, setSFX] = useState(world.prefs.sfx);
   const [voice, setVoice] = useState(world.prefs.voice);
@@ -248,8 +247,8 @@ function MenuMainAudio({ world, pop, push }) {
   );
 }
 
-function MenuMainWorld({ world, pop, push }) {
-  const player = world.entities.player;
+function MenuMainWorld({ world, pop, _push }) {
+  const _player = world.entities.player;
   const { isAdmin } = usePermissions(world);
   const [title, setTitle] = useState(world.settings.title);
   const [desc, setDesc] = useState(world.settings.desc);

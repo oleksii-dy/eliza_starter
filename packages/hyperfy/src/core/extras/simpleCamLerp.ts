@@ -1,4 +1,4 @@
-import * as THREE from './three';
+import { THREE } from './three';
 import { Layers } from './Layers';
 
 // Global PHYSX declaration
@@ -7,33 +7,33 @@ declare const PHYSX: any;
 const BACKWARD = new THREE.Vector3(0, 0, 1);
 
 const v1 = new THREE.Vector3();
-const v2= new THREE.Vector3();
+const v2 = new THREE.Vector3();
 
 let sweepGeometry: any;
 
 const smoothing = 20;
 
 interface CameraTarget {
-  position: THREE.Vector3;
-  quaternion: THREE.Quaternion;
+  position: any;
+  quaternion: any;
   zoom: number;
 }
 
 interface Camera {
-  position: THREE.Vector3;
-  quaternion: THREE.Quaternion;
+  position: any;
+  quaternion: any;
   zoom: number;
 }
 
 interface World {
   physics: {
-    sweep: (geometry: any, origin: THREE.Vector3, direction: THREE.Vector3, distance: number, layerMask: number) => { distance: number } | null;
+    sweep: (geometry: any, origin: any, direction: any, distance: number, layerMask: number) => { distance: number } | null;
   };
 }
 
-export function simpleCamLerp(world: World, camera: Camera, target: CameraTarget, delta: number) {
+export function simpleCamLerp(world: World, camera: Camera, target: CameraTarget, _delta: number) {
   // interpolate camera rotation
-  const alpha = 1.0 - Math.exp(-smoothing * delta);
+  const alpha = 1.0 - Math.exp(-smoothing * _delta);
   camera.quaternion.slerp(target.quaternion, alpha);
 
   // interpolate camera position
@@ -61,7 +61,7 @@ export function simpleCamLerp(world: World, camera: Camera, target: CameraTarget
   if (hit && hit.distance < distance) {
     camera.zoom = hit.distance;
   } else {
-    const alpha = 6 * delta;
+    const alpha = 6 * _delta;
     camera.zoom += (distance - camera.zoom) * alpha; // regular lerp
   }
 }

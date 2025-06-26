@@ -23,7 +23,7 @@ export const storeSecretAction: Action = {
 
     // Check for keywords
     const keywords = ['api key', 'secret', 'credential', 'store', 'save'];
-    const hasKeywords = keywords.some(kw => text.includes(kw));
+    const hasKeywords = keywords.some((kw) => text.includes(kw));
 
     return isAdmin && (hasApiKey || hasKeywords);
   },
@@ -84,7 +84,6 @@ export const storeSecretAction: Action = {
           keys: storedKeys,
         },
       };
-
     } catch (error) {
       logger.error('[storeSecretAction] Error storing secrets:', error);
 
@@ -101,7 +100,9 @@ export const storeSecretAction: Action = {
     [
       {
         name: '{{user}}',
-        content: { text: 'Admin: Store these API keys: WEATHER_API_KEY=abc123 and NEWS_API_KEY=xyz789' },
+        content: {
+          text: 'Admin: Store these API keys: WEATHER_API_KEY=abc123 and NEWS_API_KEY=xyz789',
+        },
       },
       {
         name: '{{agent}}',

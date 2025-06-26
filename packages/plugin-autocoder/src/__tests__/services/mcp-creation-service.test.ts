@@ -44,9 +44,9 @@ mock.module('@elizaos/core', async () => {
       debug: mock(),
     },
     Service: class {
-      constructor() {}
-      async start() {}
-      async stop() {}
+      constructor() { /* empty */ }
+      async start() { /* empty */ }
+      async stop() { /* empty */ }
     },
   };
 });
@@ -54,7 +54,7 @@ mock.module('@elizaos/core', async () => {
 // Import modules after mocks
 import * as fs from 'fs/promises';
 import { elizaLogger } from '@elizaos/core';
-import { MCPCreationService } from '../../services/mcp-creation-service.js';
+import { MCPCreationService } from '../../services/McpCreationService.js';
 
 describe('MCPCreationService', () => {
   let service: MCPCreationService;
@@ -163,13 +163,13 @@ describe('MCPCreationService', () => {
 
   describe('createMCPProject', () => {
     it('should create a basic MCP project successfully', async () => {
-      const config = {
+      const _config = {
         name: 'test-mcp',
         description: 'Test MCP server',
         outputDir: tempDir,
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
 
       if (!result.success) {
         console.log('Test failed with error:', result.error);
@@ -186,7 +186,7 @@ describe('MCPCreationService', () => {
     });
 
     it('should create project with tools', async () => {
-      const config = {
+      const _config = {
         name: 'mcp-with-tools',
         description: 'MCP server with tools',
         outputDir: tempDir,
@@ -212,7 +212,7 @@ describe('MCPCreationService', () => {
         return 'mock content' as any;
       });
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
 
       expect(result.success).toBe(true);
       expect(result.details?.toolsGenerated).toHaveLength(2);
@@ -221,7 +221,7 @@ describe('MCPCreationService', () => {
     });
 
     it('should create project with resources', async () => {
-      const config = {
+      const _config = {
         name: 'mcp-with-resources',
         description: 'MCP server with resources',
         outputDir: tempDir,
@@ -247,7 +247,7 @@ describe('MCPCreationService', () => {
         return 'mock content' as any;
       });
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
 
       expect(result.success).toBe(true);
       expect(result.details?.resourcesGenerated).toHaveLength(2);
@@ -256,14 +256,14 @@ describe('MCPCreationService', () => {
     });
 
     it('should handle additional dependencies', async () => {
-      const config = {
+      const _config = {
         name: 'mcp-with-deps',
         description: 'MCP server with dependencies',
         outputDir: tempDir,
         dependencies: ['axios', 'dotenv', 'zod'],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
 
       expect(result.success).toBe(true);
 
@@ -281,7 +281,7 @@ describe('MCPCreationService', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      const config = {
+      const _config = {
         name: 'error-project',
         description: 'This will fail',
         outputDir: tempDir,
@@ -290,20 +290,20 @@ describe('MCPCreationService', () => {
       // Make mkdir fail
       mock(fs.mkdir).mockRejectedValue(new Error('Permission denied'));
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Permission denied');
     });
 
     it('should validate required fields', async () => {
-      const config = {
+      const _config = {
         name: '',
         description: 'Test MCP server',
         outputDir: tempDir,
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
 
       // Empty name should fail validation
       expect(result.success).toBe(false);
@@ -311,7 +311,7 @@ describe('MCPCreationService', () => {
     });
 
     it('should update server file with tools and resources', async () => {
-      const config = {
+      const _config = {
         name: 'test-mcp',
         description: 'Test MCP server',
         outputDir: tempDir,
@@ -345,7 +345,7 @@ export async function setupServer(server: Server) {
         return 'mock content' as any;
       });
 
-      await service.createMCPProject(config);
+      await service.createMCPProject(_config);
 
       // Find the server file write call
       const writeFileCalls = mock(fs.writeFile).mock.calls;
@@ -363,7 +363,7 @@ export async function setupServer(server: Server) {
     });
 
     it('should generate comprehensive README', async () => {
-      const config = {
+      const _config = {
         name: 'documented-mcp',
         description: 'Well-documented MCP server',
         outputDir: tempDir,
@@ -383,7 +383,7 @@ export async function setupServer(server: Server) {
         ],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
 
       expect(result.success).toBe(true);
 
@@ -403,7 +403,7 @@ export async function setupServer(server: Server) {
     });
 
     it('should handle git initialization errors gracefully', async () => {
-      const config = {
+      const _config = {
         name: 'git-fail-project',
         description: 'Git will fail',
         outputDir: tempDir,
@@ -416,7 +416,7 @@ export async function setupServer(server: Server) {
       // Make readdir throw for non-existent template
       mock(fs.readdir).mockRejectedValue(new Error('ENOENT: no such file or directory'));
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
 
       // Should fail due to missing template
       expect(result.success).toBe(false);
@@ -424,7 +424,7 @@ export async function setupServer(server: Server) {
     });
 
     it('should handle npm install errors gracefully', async () => {
-      const config = {
+      const _config = {
         name: 'npm-fail-project',
         description: 'NPM will fail',
         outputDir: tempDir,
@@ -437,7 +437,7 @@ export async function setupServer(server: Server) {
       // Make readdir throw for non-existent template
       mock(fs.readdir).mockRejectedValue(new Error('ENOENT: no such file or directory'));
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
 
       // Should fail due to missing template
       expect(result.success).toBe(false);

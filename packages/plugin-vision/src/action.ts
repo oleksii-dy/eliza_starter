@@ -47,7 +47,7 @@ export const describeSceneAction: Action = {
   description:
     'Analyzes the current visual scene and provides a detailed description of what the agent sees through the camera. Returns scene analysis data including people count, objects, and camera info for action chaining.',
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
     return !!visionService && visionService.isActive();
   },
   handler: async (
@@ -58,7 +58,7 @@ export const describeSceneAction: Action = {
     callback?: HandlerCallback,
     _responses?: Memory[]
   ): Promise<ActionResult> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
 
     if (!visionService || !visionService.isActive()) {
       const thought = 'Vision service is not available or no camera is connected.';
@@ -255,8 +255,9 @@ export const captureImageAction: Action = {
   name: 'CAPTURE_IMAGE',
   similes: ['TAKE_PHOTO', 'SCREENSHOT', 'CAPTURE_FRAME', 'TAKE_PICTURE'],
   description: 'Captures the current frame from the camera and saves it as an image attachment. Returns image data with camera info and timestamp for action chaining. Can be combined with DESCRIBE_SCENE for analysis or NAME_ENTITY for identification workflows.',
+  enabled: false, // Disabled by default - privacy-sensitive, can capture images
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
     return !!visionService && visionService.isActive();
   },
   handler: async (
@@ -267,7 +268,7 @@ export const captureImageAction: Action = {
     callback?: HandlerCallback,
     _responses?: Memory[]
   ): Promise<ActionResult> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
 
     if (!visionService || !visionService.isActive()) {
       const thought = 'Vision service is not available or no camera is connected.';
@@ -442,6 +443,7 @@ export const killAutonomousAction: Action = {
   name: 'KILL_AUTONOMOUS',
   similes: ['STOP_AUTONOMOUS', 'HALT_AUTONOMOUS', 'KILL_AUTO_LOOP'],
   description: 'Stops the autonomous agent loop for debugging purposes.',
+  enabled: false, // Disabled by default - potentially dangerous, can halt autonomous operations
   validate: async (_runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     // Always allow this action for debugging
     return true;
@@ -456,7 +458,7 @@ export const killAutonomousAction: Action = {
   ): Promise<void> => {
     try {
       // Try to get the autonomous service and stop it
-      const autonomousService = runtime.getService('AUTONOMOUS' as any);
+      const autonomousService = runtime.getService('AUTONOMOUS');
 
       if (autonomousService && 'stop' in autonomousService) {
         await (autonomousService as any).stop();
@@ -539,7 +541,7 @@ export const setVisionModeAction: Action = {
     'disable vision',
   ],
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
     return visionService !== null;
   },
   handler: async (
@@ -550,7 +552,7 @@ export const setVisionModeAction: Action = {
     callback?: HandlerCallback,
     _responses?: Memory[]
   ): Promise<void> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
 
     if (!visionService) {
       const thought = 'Vision service is not available.';
@@ -721,7 +723,7 @@ export const nameEntityAction: Action = {
   ],
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
     return visionService?.isActive() || false;
   },
 
@@ -733,7 +735,7 @@ export const nameEntityAction: Action = {
     callback?: HandlerCallback
   ): Promise<void> => {
     try {
-      const visionService = runtime.getService<VisionService>('VISION' as any);
+      const visionService = runtime.getService<VisionService>('VISION');
 
       if (!visionService) {
         const thought = 'Vision service is not available.';
@@ -847,6 +849,7 @@ export const nameEntityAction: Action = {
 export const identifyPersonAction: Action = {
   name: 'IDENTIFY_PERSON',
   description: 'Identify a person in view if they have been seen before',
+  enabled: false, // Disabled by default - privacy-sensitive, can identify and recognize people
   similes: [
     'who is that',
     'who is the person',
@@ -873,7 +876,7 @@ export const identifyPersonAction: Action = {
   ],
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
     return visionService?.isActive() || false;
   },
 
@@ -885,7 +888,7 @@ export const identifyPersonAction: Action = {
     callback?: HandlerCallback
   ): Promise<void> => {
     try {
-      const visionService = runtime.getService<VisionService>('VISION' as any);
+      const visionService = runtime.getService<VisionService>('VISION');
 
       if (!visionService) {
         const thought = 'Vision service is not available.';
@@ -1008,6 +1011,7 @@ export const identifyPersonAction: Action = {
 export const trackEntityAction: Action = {
   name: 'TRACK_ENTITY',
   description: 'Start tracking a specific person or object in view',
+  enabled: false, // Disabled by default - privacy-sensitive, can track and monitor people
   similes: [
     'track the {description}',
     'follow the {description}',
@@ -1033,7 +1037,7 @@ export const trackEntityAction: Action = {
   ],
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
     return visionService?.isActive() || false;
   },
 
@@ -1045,7 +1049,7 @@ export const trackEntityAction: Action = {
     callback?: HandlerCallback
   ): Promise<void> => {
     try {
-      const visionService = runtime.getService<VisionService>('VISION' as any);
+      const visionService = runtime.getService<VisionService>('VISION');
 
       if (!visionService) {
         const thought = 'Vision service is not available.';

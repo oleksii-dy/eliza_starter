@@ -13,7 +13,9 @@ export const realEntityExtractionTests: TestSuite = {
 
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
 
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
@@ -32,7 +34,7 @@ export const realEntityExtractionTests: TestSuite = {
               hasEmail: true,
               hasLocation: true,
               hasOrganization: true,
-            }
+            },
           },
           {
             context: `Met with the team from Acme Industries today - John Smith (CEO), 
@@ -44,7 +46,7 @@ export const realEntityExtractionTests: TestSuite = {
               hasOrganization: true,
               hasFunding: true,
               hasRoles: true,
-            }
+            },
           },
           {
             context: `Just got off a call with @cryptowhale on Twitter (real name Bob Johnson). 
@@ -55,8 +57,8 @@ export const realEntityExtractionTests: TestSuite = {
               hasPlatforms: true,
               platformCount: 2,
               hasTrustIndicator: true, // "need to verify"
-            }
-          }
+            },
+          },
         ];
 
         for (const testCase of testCases) {
@@ -66,11 +68,9 @@ export const realEntityExtractionTests: TestSuite = {
           const entityId = stringToUuid(`extraction-test-${Date.now()}`);
 
           // Track entity - this should trigger LLM extraction
-          const profile = await entityGraphService.trackEntity(
-            entityId,
-            testCase.context,
-            { roomId }
-          );
+          const profile = await entityGraphService.trackEntity(entityId, testCase.context, {
+            roomId,
+          });
 
           // Verify extraction results
           if (!profile) {
@@ -93,7 +93,9 @@ export const realEntityExtractionTests: TestSuite = {
           if (!profile.tags || profile.tags.length === 0) {
             throw new Error('No tags extracted from context');
           }
-          console.log(`✓ Extracted ${profile.tags.length} tags: ${profile.tags.slice(0, 5).join(', ')}...`);
+          console.log(
+            `✓ Extracted ${profile.tags.length} tags: ${profile.tags.slice(0, 5).join(', ')}...`
+          );
 
           // Check summary generation
           if (!profile.summary || profile.summary.length < 10) {
@@ -102,20 +104,27 @@ export const realEntityExtractionTests: TestSuite = {
           console.log(`✓ Generated summary: "${profile.summary.substring(0, 100)}..."`);
 
           // Verify platform extraction if expected
-          if (testCase.expected.hasPlatforms && (!profile.platforms || Object.keys(profile.platforms).length === 0)) {
+          if (
+            testCase.expected.hasPlatforms &&
+            (!profile.platforms || Object.keys(profile.platforms).length === 0)
+          ) {
             throw new Error('Expected platform identifiers but none were extracted');
           }
 
           // Test-specific validations
           if (testCase.expected.names) {
-            const extractedNames = profile.names.map(n => n.toLowerCase());
-            const expectedNames = testCase.expected.names.map(n => n.toLowerCase());
-            const foundExpectedName = expectedNames.some(expected =>
-              extractedNames.some(extracted => extracted.includes(expected) || expected.includes(extracted))
+            const extractedNames = profile.names.map((n) => n.toLowerCase());
+            const expectedNames = testCase.expected.names.map((n) => n.toLowerCase());
+            const foundExpectedName = expectedNames.some((expected) =>
+              extractedNames.some(
+                (extracted) => extracted.includes(expected) || expected.includes(extracted)
+              )
             );
 
             if (!foundExpectedName) {
-              throw new Error(`Expected to extract names like ${testCase.expected.names.join(', ')} but got ${profile.names.join(', ')}`);
+              throw new Error(
+                `Expected to extract names like ${testCase.expected.names.join(', ')} but got ${profile.names.join(', ')}`
+              );
             }
           }
         }
@@ -131,7 +140,9 @@ export const realEntityExtractionTests: TestSuite = {
 
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
 
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
@@ -146,7 +157,7 @@ export const realEntityExtractionTests: TestSuite = {
         );
 
         // Wait a bit for indexing
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // Now test extraction with mentions of the known entity
         const mentionContexts = [
@@ -168,8 +179,8 @@ export const realEntityExtractionTests: TestSuite = {
             throw new Error('Failed to find known entity through search');
           }
 
-          const aliceResult = searchResults.find(r =>
-            r.entity.names.some(n => n.toLowerCase().includes('alice'))
+          const aliceResult = searchResults.find((r) =>
+            r.entity.names.some((n) => n.toLowerCase().includes('alice'))
           );
 
           if (!aliceResult) {
@@ -195,7 +206,9 @@ export const realEntityExtractionTests: TestSuite = {
 
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
 
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
@@ -224,7 +237,7 @@ export const realEntityExtractionTests: TestSuite = {
             expectedMultilingual: true,
           },
           {
-            context: 'user@example.com sent an email but I don\'t know who they are',
+            context: "user@example.com sent an email but I don't know who they are",
             shouldExtract: true,
             expectedEmail: true,
             expectedType: 'person', // Should infer it's a person from context
@@ -237,11 +250,9 @@ export const realEntityExtractionTests: TestSuite = {
           const entityId = stringToUuid(`edge-case-${Date.now()}`);
 
           try {
-            const profile = await entityGraphService.trackEntity(
-              entityId,
-              edgeCase.context,
-              { roomId }
-            );
+            const profile = await entityGraphService.trackEntity(entityId, edgeCase.context, {
+              roomId,
+            });
 
             if (!edgeCase.shouldExtract && profile.names.length > 0) {
               throw new Error('Extracted entity when none should be found');
@@ -252,8 +263,8 @@ export const realEntityExtractionTests: TestSuite = {
             }
 
             if (edgeCase.expectedNames) {
-              const hasExpectedName = edgeCase.expectedNames.some(name =>
-                profile.names.some(n => n.toLowerCase().includes(name.toLowerCase()))
+              const hasExpectedName = edgeCase.expectedNames.some((name) =>
+                profile.names.some((n) => n.toLowerCase().includes(name.toLowerCase()))
               );
               if (!hasExpectedName) {
                 throw new Error(`Expected to find names: ${edgeCase.expectedNames.join(', ')}`);
@@ -261,11 +272,13 @@ export const realEntityExtractionTests: TestSuite = {
             }
 
             if (edgeCase.notExpectedNames) {
-              const hasUnexpectedName = edgeCase.notExpectedNames.some(name =>
-                profile.names.some(n => n.toLowerCase().includes(name.toLowerCase()))
+              const hasUnexpectedName = edgeCase.notExpectedNames.some((name) =>
+                profile.names.some((n) => n.toLowerCase().includes(name.toLowerCase()))
               );
               if (hasUnexpectedName) {
-                throw new Error(`Should not have extracted: ${edgeCase.notExpectedNames.join(', ')}`);
+                throw new Error(
+                  `Should not have extracted: ${edgeCase.notExpectedNames.join(', ')}`
+                );
               }
             }
 

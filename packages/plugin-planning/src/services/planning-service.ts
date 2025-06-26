@@ -473,7 +473,7 @@ export class PlanningService extends Service implements IPlanningService {
    */
   async stop(): Promise<void> {
     // Cancel all active plan executions
-    for (const [planId, execution] of this.planExecutions) {
+    for (const [_planId, execution] of this.planExecutions) {
       execution.abortController?.abort();
       execution.state.status = 'cancelled';
       execution.state.endTime = Date.now();
@@ -549,7 +549,7 @@ Focus on:
       const goal = parsedXml?.goal || context.goal;
       const executionModel =
         parsedXml?.execution_model || context.preferences?.executionModel || 'sequential';
-      const estimatedDuration = parseInt(parsedXml?.estimated_duration) || 30000;
+      const estimatedDuration = parseInt(parsedXml?.estimated_duration, 10) || 30000;
 
       // Parse steps using regex if XML parsing failed
       const stepMatches = response.match(/<step>(.*?)<\/step>/gs) || [];
@@ -576,7 +576,7 @@ Focus on:
               try {
                 const depArray = JSON.parse(dependenciesMatch[1]);
                 dependencyStrings = depArray.filter((dep: string) => dep && dep.trim());
-              } catch (e) {
+              } catch (_e) {
                 dependencyStrings = [];
               }
             }
@@ -685,7 +685,7 @@ Focus on:
   private async enhancePlan(
     runtime: IAgentRuntime,
     plan: ActionPlan,
-    context: PlanningContext
+    _context: PlanningContext
   ): Promise<ActionPlan> {
     // Validate actions exist
     for (const step of plan.steps) {
@@ -788,7 +788,7 @@ Focus on:
 
     const stepResults = await Promise.all(promises);
 
-    for (const { index, result, error } of stepResults) {
+    for (const { index: _index, result, error } of stepResults) {
       if (error) {
         errors.push(error);
       } else if (result) {
@@ -1024,7 +1024,7 @@ Return the adapted plan in the same XML format as the original planning response
               try {
                 const depArray = JSON.parse(dependenciesMatch[1]);
                 dependencyStrings = depArray.filter((dep: string) => dep && dep.trim());
-              } catch (e) {
+              } catch (_e) {
                 dependencyStrings = [];
               }
             }

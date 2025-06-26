@@ -1,15 +1,14 @@
 import { logger, stringToUuid } from '@elizaos/core';
 import type { EntityProfile, FollowUp, TrustEvent, InteractionEvent } from '../types';
 import { type IAgentRuntime, type UUID, type Relationship, asUUID } from '@elizaos/core';
-import {
-// SCHEMA_SQL, // Currently unused
+import {} from // SCHEMA_SQL, // Currently unused
 // type DbEntity, // Currently unused
 // type DbEntityPlatform, // Currently unused
 // type DbRelationship, // Currently unused
 // type DbInteraction, // Currently unused
 // type DbFollowUp, // Currently unused
 // type DbTrustEvent, // Currently unused
-} from './schema';
+'./schema';
 
 export class DatabaseAdapter {
   private runtime: IAgentRuntime;
@@ -118,18 +117,28 @@ export class DatabaseAdapter {
         const entities = await this.runtime.getEntitiesForRoom(roomId);
 
         for (const entity of entities) {
-          if (!entity.id || seenIds.has(entity.id)) {continue;}
+          if (!entity.id || seenIds.has(entity.id)) {
+            continue;
+          }
           seenIds.add(entity.id);
 
           const profile = entity.metadata?.entityProfile as EntityProfile;
-          if (!profile) {continue;}
+          if (!profile) {
+            continue;
+          }
 
           // Apply filters
-          if (criteria.type && profile.type !== criteria.type) {continue;}
-          if (criteria.minTrust && (profile.trustScore || 0.5) < criteria.minTrust) {continue;}
+          if (criteria.type && profile.type !== criteria.type) {
+            continue;
+          }
+          if (criteria.minTrust && (profile.trustScore || 0.5) < criteria.minTrust) {
+            continue;
+          }
           if (criteria.tags && criteria.tags.length > 0) {
             const hasTag = criteria.tags.some((tag) => profile.tags.includes(tag));
-            if (!hasTag) {continue;}
+            if (!hasTag) {
+              continue;
+            }
           }
 
           allEntities.push(profile);
@@ -277,10 +286,14 @@ export class DatabaseAdapter {
       });
 
       return relationships.filter((rel) => {
-        if (options?.type && rel.metadata?.type !== options.type) {return false;}
+        if (options?.type && rel.metadata?.type !== options.type) {
+          return false;
+        }
         if (options?.minStrength) {
           const strength = typeof rel.metadata?.strength === 'number' ? rel.metadata.strength : 0;
-          if (strength < options.minStrength) {return false;}
+          if (strength < options.minStrength) {
+            return false;
+          }
         }
         return true;
       });
@@ -366,14 +379,21 @@ export class DatabaseAdapter {
       return tasks
         .filter((task) => {
           const followUp = task.metadata?.followUp as FollowUp;
-          if (!followUp) {return false;}
+          if (!followUp) {
+            return false;
+          }
 
-          if (criteria.entityId && followUp.entityId !== criteria.entityId) {return false;}
-          if (criteria.completed !== undefined && followUp.completed !== criteria.completed)
-          {return false;}
+          if (criteria.entityId && followUp.entityId !== criteria.entityId) {
+            return false;
+          }
+          if (criteria.completed !== undefined && followUp.completed !== criteria.completed) {
+            return false;
+          }
           if (criteria.before) {
             const scheduledDate = new Date(followUp.scheduledFor);
-            if (scheduledDate > criteria.before) {return false;}
+            if (scheduledDate > criteria.before) {
+              return false;
+            }
           }
 
           return true;
@@ -443,7 +463,9 @@ export class DatabaseAdapter {
         .filter((event) => {
           if (options?.after) {
             const eventDate = new Date(event.createdAt);
-            if (eventDate <= options.after) {return false;}
+            if (eventDate <= options.after) {
+              return false;
+            }
           }
           return true;
         })

@@ -5,7 +5,7 @@
  * provider results, and state composition utilities.
  */
 
-import { mock } from './mock-utils';
+import { mock } from './mockUtils';
 import type { State, ProviderResult, ActionResult, WorkingMemory } from '../../types';
 
 /**

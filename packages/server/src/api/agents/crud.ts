@@ -9,7 +9,8 @@ import {
 } from '@elizaos/core';
 import express from 'express';
 import type { AgentServer } from '../../index';
-import { sendError, sendSuccess } from '../shared/response-utils';
+import { sendError, sendSuccess } from '../shared/responseUtils';
+import { TenantDatabaseWrapper } from '../../utils/tenant-database-wrapper.js';
 
 /**
  * Agent CRUD operations
@@ -22,18 +23,25 @@ export function createAgentCrudRouter(
   const db = serverInstance?.database;
 
   // List all agents with minimal details
-  router.get('/', async (_, res) => {
+  router.get('/', async (req, res) => {
     try {
       if (!db) {
         logger.error('[AGENTS LIST] Database not available');
         return sendError(res, 500, 'DB_ERROR', 'Database not available');
       }
 
-      logger.info('[AGENTS LIST] Fetching agents from database...');
-      const allAgents = await db.getAgents();
+      // Create tenant-aware database wrapper
+      const tenantDb = TenantDatabaseWrapper.fromRequest(db, req);
+      const tenantContext = tenantDb.getTenantContext();
+
+      logger.info(
+        `[AGENTS LIST] Fetching agents for tenant: ${tenantContext.tenantId || 'legacy-global'} (legacy: ${tenantContext.isLegacy})`
+      );
+
+      const allAgents = await tenantDb.getAgents();
       logger.info(
         `[AGENTS LIST] Found ${allAgents.length} agents in database:`,
-        allAgents.map((a) => ({ id: a.id, name: a.name }))
+        allAgents.map((a) => ({ id: a.id, name: a.name, tenantId: a.tenantId }))
       );
 
       const runtimes = Array.from(agents.keys());
@@ -47,6 +55,7 @@ export function createAgentCrudRouter(
           characterName: agent.name || '', // Since Agent extends Character, agent.name is the character name
           bio: agent.bio?.[0] ?? '',
           status: agent.id && runtimes.includes(agent.id) ? 'active' : 'inactive',
+          tenantId: (agent as any).tenantId, // Include tenant info for debugging
         }))
         .filter((agent) => agent.id) // Filter out agents without IDs
         .sort((a: any, b: any) => {
@@ -56,7 +65,10 @@ export function createAgentCrudRouter(
           return a.status === 'active' ? -1 : 1;
         });
 
-      logger.info(`[AGENTS LIST] Returning ${response.length} agents to client:`, response);
+      logger.info(
+        `[AGENTS LIST] Returning ${response.length} agents to client for tenant ${tenantContext.tenantId}:`,
+        response
+      );
       sendSuccess(res, { agents: response });
     } catch (error) {
       logger.error('[AGENTS LIST] Error retrieving agents:', error);
@@ -81,9 +93,12 @@ export function createAgentCrudRouter(
     }
 
     try {
-      const agent = await db.getAgent(agentId);
+      // Use tenant-aware database wrapper
+      const tenantDb = TenantDatabaseWrapper.fromRequest(db, req);
+      const agent = await tenantDb.getAgentById(agentId);
+
       if (!agent) {
-        return sendError(res, 404, 'NOT_FOUND', 'Agent not found');
+        return sendError(res, 404, 'NOT_FOUND', 'Agent not found or access denied');
       }
 
       const runtime = agents.get(agentId);
@@ -138,10 +153,15 @@ export function createAgentCrudRouter(
 
       const ensureAgentExists = async (character: Character) => {
         const agentId = stringToUuid(character.name);
-        let agent = await db.getAgent(agentId);
+
+        // Use tenant-aware database wrapper for creation
+        const tenantDb = TenantDatabaseWrapper.fromRequest(db, req);
+        let agent = await tenantDb.getAgentById(agentId);
+
         if (!agent) {
-          await db.createAgent({ ...character, id: agentId });
-          agent = await db.getAgent(agentId);
+          // Create agent with tenant assignment
+          await tenantDb.createAgent({ ...character, id: agentId });
+          agent = await tenantDb.getAgentById(agentId);
         }
         return agent;
       };
@@ -202,10 +222,14 @@ export function createAgentCrudRouter(
       }
 
       if (Object.keys(updates).length > 0) {
-        await db.updateAgent(agentId, updates);
+        // Use tenant-aware database wrapper for updates
+        const tenantDb = TenantDatabaseWrapper.fromRequest(db, req);
+        await tenantDb.updateAgent(agentId, updates);
       }
 
-      const updatedAgent = await db.getAgent(agentId);
+      // Get updated agent with tenant validation
+      const tenantDb = TenantDatabaseWrapper.fromRequest(db, req);
+      const updatedAgent = await tenantDb.getAgentById(agentId);
 
       const isActive = !!agents.get(agentId);
       if (isActive && updatedAgent) {
@@ -245,10 +269,13 @@ export function createAgentCrudRouter(
     logger.debug(`[AGENT DELETE] Validated agent ID: ${agentId}, proceeding with deletion`);
 
     try {
-      const agent = await db.getAgent(agentId);
+      // Use tenant-aware database wrapper for deletion
+      const tenantDb = TenantDatabaseWrapper.fromRequest(db, req);
+      const agent = await tenantDb.getAgentById(agentId);
+
       if (!agent) {
-        logger.warn(`[AGENT DELETE] Agent not found: ${agentId}`);
-        return sendError(res, 404, 'NOT_FOUND', 'Agent not found');
+        logger.warn(`[AGENT DELETE] Agent not found or access denied: ${agentId}`);
+        return sendError(res, 404, 'NOT_FOUND', 'Agent not found or access denied');
       }
 
       logger.debug(`[AGENT DELETE] Agent found: ${agent.name} (${agentId})`);
@@ -289,7 +316,9 @@ export function createAgentCrudRouter(
 
         logger.debug(`[AGENT DELETE] Calling database deleteAgent method for agent: ${agentId}`);
 
-        const deleteResult = await db.deleteAgent(agentId);
+        // Use tenant-aware database wrapper for deletion
+        const tenantDb = TenantDatabaseWrapper.fromRequest(db, req);
+        const deleteResult = await tenantDb.deleteAgent(agentId);
         logger.debug(`[AGENT DELETE] Database deleteAgent result: ${JSON.stringify(deleteResult)}`);
 
         clearTimeout(timeoutId);

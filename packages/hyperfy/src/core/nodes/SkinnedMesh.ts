@@ -1,7 +1,7 @@
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
-
+// Using THREE namespace types
 import { Node } from './Node';
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
 import { isBoolean } from 'lodash-es';
 
 const defaults = {
@@ -23,7 +23,7 @@ export class SkinnedMesh extends Node {
   bones: Record<string, any> | null = null;
   animNames: string[] = [];
   boneHandles: Record<string, any> = {};
-  obj: THREE.Object3D<THREE.Object3DEventMap> | null = null;
+  obj: THREE.Object3D | null = null;
   _castShadow: any;
   _receiveShadow: any;
   needsRebuild: boolean = false;
@@ -100,8 +100,8 @@ export class SkinnedMesh extends Node {
     }
   }
 
-  update(delta) {
-    this.mixer?.update(delta);
+  update(_delta) {
+    this.mixer?.update(_delta);
   }
 
   copy(source, recursive) {

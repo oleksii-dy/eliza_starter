@@ -10,7 +10,9 @@ export const entityGraphTests: TestSuite = {
     {
       name: 'Network Analysis Test',
       fn: async (runtime: IAgentRuntime) => {
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -51,18 +53,16 @@ export const entityGraphTests: TestSuite = {
 
         const roomId = stringToUuid(`test-room-${Date.now()}`);
         for (const { source, target, context } of relationships) {
-          await entityGraphService.analyzeInteraction(
-            entities[source],
-            entities[target],
-            context,
-            { roomId }
-          );
+          await entityGraphService.analyzeInteraction(entities[source], entities[target], context, {
+            roomId,
+          });
         }
 
         // Test network analysis by verifying relationships
         for (let i = 0; i < entities.length; i++) {
           const relationships = await entityGraphService.getEntityRelationships(entities[i]);
-          if (relationships.length === 0 && i !== 4) { // Eve might only have incoming relationships
+          if (relationships.length === 0 && i !== 4) {
+            // Eve might only have incoming relationships
             throw new Error(`No relationships found for entity ${i}`);
           }
         }
@@ -73,7 +73,9 @@ export const entityGraphTests: TestSuite = {
     {
       name: 'Community Detection Test',
       fn: async (runtime: IAgentRuntime) => {
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -172,7 +174,9 @@ export const entityGraphTests: TestSuite = {
     {
       name: 'Trust Management Test',
       fn: async (runtime: IAgentRuntime) => {
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -196,17 +200,13 @@ export const entityGraphTests: TestSuite = {
         });
 
         // Track entities
-        await entityGraphService.trackEntity(
-          entityId1,
-          'Entity 1 is a reliable collaborator',
-          { updateExisting: true }
-        );
+        await entityGraphService.trackEntity(entityId1, 'Entity 1 is a reliable collaborator', {
+          updateExisting: true,
+        });
 
-        await entityGraphService.trackEntity(
-          entityId2,
-          'Entity 2 is a new team member',
-          { updateExisting: true }
-        );
+        await entityGraphService.trackEntity(entityId2, 'Entity 2 is a new team member', {
+          updateExisting: true,
+        });
 
         // Update trust scores
         await entityGraphService.updateTrust(entityId1, {
@@ -228,8 +228,12 @@ export const entityGraphTests: TestSuite = {
         });
 
         // Verify trust scores are tracked (we can't directly check scores, but we can verify the entities exist)
-        const searchResults1 = await entityGraphService.searchEntities('Trust Test Entity 1', { limit: 10 });
-        const searchResults2 = await entityGraphService.searchEntities('Trust Test Entity 2', { limit: 10 });
+        const searchResults1 = await entityGraphService.searchEntities('Trust Test Entity 1', {
+          limit: 10,
+        });
+        const searchResults2 = await entityGraphService.searchEntities('Trust Test Entity 2', {
+          limit: 10,
+        });
 
         if (searchResults1.length === 0 || searchResults2.length === 0) {
           throw new Error('Trust management entities not found');
@@ -241,7 +245,9 @@ export const entityGraphTests: TestSuite = {
     {
       name: 'Follow-up Scheduling Test',
       fn: async (runtime: IAgentRuntime) => {
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }

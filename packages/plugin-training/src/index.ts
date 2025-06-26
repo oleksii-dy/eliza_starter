@@ -13,15 +13,11 @@ export * from './providers/index.js';
 export * from './utils/data-extractor.js';
 export * from './utils/dataset-processor.js';
 export * from './utils/huggingface-client.js';
-export * from './utils/atropos-bridge.js';
-export * from './utils/cloud-deployment.js';
 export * from './config/training-config.js';
 
 // Export custom reasoning interfaces and components
 export * from './interfaces/CustomReasoningService.js';
 export * from './lib/together-client.js';
-export * from './hooks/ReasoningHooks.js';
-export * from './proxy/AnthropicProxy.js';
 export * from './training/DataCollector.js';
 
 // Export MVP implementation (the working one)

@@ -16,7 +16,7 @@ export class ValidationTestSuite implements TestSuite {
   tests: TestCase[] = [
     {
       name: 'Should validate OpenAI API key format',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         // Test valid format
         const validKey = 'sk-proj-abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJ';
         const validResult = await validateEnvVar('OPENAI_API_KEY', validKey, 'api_key');
@@ -39,7 +39,7 @@ export class ValidationTestSuite implements TestSuite {
 
     {
       name: 'Should validate URL format',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const testCases = [
           { url: 'https://example.com', expected: true },
           { url: 'http://localhost:3000', expected: true },
@@ -65,7 +65,7 @@ export class ValidationTestSuite implements TestSuite {
 
     {
       name: 'Should validate webhook URLs with network check',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         // This test makes a real network request
         // Using httpbin.org as a reliable test endpoint
         const testWebhook = 'https://httpbin.org/post';
@@ -83,7 +83,7 @@ export class ValidationTestSuite implements TestSuite {
 
     {
       name: 'Should validate private key format',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         // Test RSA private key format (simplified)
         const validRSAKey = `-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEA0Z3VS5JJcds3xfn/ygWyF32TpPQ1nfSPMfVCt8y8ivZmJum2
@@ -110,9 +110,9 @@ TdQr1qvKbvAQAEjDvZa8DPqbHnIBv9VJuYDdF9B5qQNPe3Ot66K1Ov4+tBuPmGRH
 
     {
       name: 'Should validate API key with actual API call if configured',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         // Only run this test if OPENAI_API_KEY is configured
-        const apiKey = runtime.getSetting('OPENAI_API_KEY');
+        const apiKey = _runtime.getSetting('OPENAI_API_KEY');
         if (!apiKey) {
           console.log('⚠️ Skipping API validation test - OPENAI_API_KEY not configured');
           return;
@@ -130,7 +130,7 @@ TdQr1qvKbvAQAEjDvZa8DPqbHnIBv9VJuYDdF9B5qQNPe3Ot66K1Ov4+tBuPmGRH
 
     {
       name: 'Should handle validation errors gracefully',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         // Test with a type that might cause errors
         try {
           const result = await validateEnvVar('TEST_VAR', 'test-value', 'unknown-type' as any);
@@ -149,7 +149,7 @@ TdQr1qvKbvAQAEjDvZa8DPqbHnIBv9VJuYDdF9B5qQNPe3Ot66K1Ov4+tBuPmGRH
 
     {
       name: 'Should validate custom validation strategies',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         // Add a custom validation strategy
         (validationStrategies as any).custom = {
           test_custom: async (value: string) => {

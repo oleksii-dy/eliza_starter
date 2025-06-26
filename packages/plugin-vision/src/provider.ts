@@ -19,7 +19,7 @@ export const visionProvider: Provider = {
   dynamic: false, // Always included - vision is a constant sense
 
   get: async (runtime: IAgentRuntime, message: Memory, _state: State) => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
 
     if (!visionService) {
       logger.warn('[visionProvider] VisionService not found.');

@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import AgentSettings from '@/components/agent-settings';
+import AgentSettings from '@/components/AgentSettings';
 import { useAgent } from '@/hooks/use-query-hooks';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 

@@ -10,7 +10,7 @@ export const validationStrategies = {
       try {
         const response = await fetch('https://api.openai.com/v1/models', {
           headers: {
-            Authorization: `Bearer ${key}`,
+            Authorization: `Bearer ${_key}`,
             'Content-Type': 'application/json',
           },
         });
@@ -41,7 +41,7 @@ export const validationStrategies = {
       try {
         const response = await fetch('https://api.groq.com/openai/v1/models', {
           headers: {
-            Authorization: `Bearer ${key}`,
+            Authorization: `Bearer ${_key}`,
             'Content-Type': 'application/json',
           },
         });
@@ -71,7 +71,7 @@ export const validationStrategies = {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
-            'x-api-key': key,
+            'x-api-key': _key,
             'Content-Type': 'application/json',
             'anthropic-version': '2023-06-01',
           },
@@ -111,14 +111,14 @@ export const validationStrategies = {
 
         // Check if it's a valid PEM format
         if (
-          !key.includes('-----BEGIN PRIVATE KEY-----') &&
-          !key.includes('-----BEGIN RSA PRIVATE KEY-----')
+          !_key.includes('-----BEGIN PRIVATE KEY-----') &&
+          !_key.includes('-----BEGIN RSA PRIVATE KEY-----')
         ) {
           return { isValid: false, error: 'Invalid RSA private key format' };
         }
 
         // Try to create a key object
-        const keyObject = crypto.createPrivateKey(key);
+        const keyObject = crypto.createPrivateKey(_key);
 
         // Test encryption/decryption
         const testData = 'test-encryption-data';
@@ -151,7 +151,7 @@ export const validationStrategies = {
         const crypto = await import('crypto');
 
         // Check if it's a valid PEM format
-        if (!key.includes('-----BEGIN PRIVATE KEY-----')) {
+        if (!_key.includes('-----BEGIN PRIVATE KEY-----')) {
           return {
             isValid: false,
             error: 'Invalid Ed25519 private key format',
@@ -159,7 +159,7 @@ export const validationStrategies = {
         }
 
         // Try to create a key object
-        const keyObject = crypto.createPrivateKey(key);
+        const keyObject = crypto.createPrivateKey(_key);
 
         // Test signing
         const testData = 'test-signing-data';
@@ -169,7 +169,7 @@ export const validationStrategies = {
         const publicKey = crypto.createPublicKey(keyObject);
         const _isValid = crypto.verify(null, Buffer.from(testData), publicKey, signature);
 
-        if (isValid) {
+        if (_isValid) {
           return {
             isValid: true,
             details: 'Ed25519 private key validated successfully',

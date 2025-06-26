@@ -1,6 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { logger } from '@elizaos/core';
 import { ResearchService } from '../service';
-import { ResearchConfig, ResearchDepth, TaskType, ResearchStatus } from '../types';
+import {
+  ResearchConfig,
+  ResearchDepth,
+  TaskType,
+  ResearchStatus,
+} from '../types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -80,7 +86,9 @@ export class SWEBenchService {
       }
 
       // Step 3: Test if possible (simplified for now)
-      const testPassed = task.testCommand ? await this.runTests(task) : undefined;
+      const testPassed = task.testCommand
+        ? await this.runTests(task)
+        : undefined;
 
       const result: SWEBenchResult = {
         taskId,
@@ -114,7 +122,10 @@ export class SWEBenchService {
     };
 
     // Start research project
-    const project = await this.researchService.createResearchProject(query, config);
+    const project = await this.researchService.createResearchProject(
+      query,
+      config
+    );
 
     // Wait for completion
     const projectId = project.id;
@@ -148,7 +159,10 @@ export class SWEBenchService {
   /**
    * Generate implementation based on research
    */
-  private async generateImplementation(task: SWEBenchTask, research: any): Promise<string> {
+  private async generateImplementation(
+    task: SWEBenchTask,
+    research: any
+  ): Promise<string> {
     // Simplified implementation generation
     // In a real system, this would use the research to generate actual code
     return `// Implementation for ${task.id}\n// Based on research findings\n// TODO: Actual implementation`;
@@ -208,16 +222,22 @@ export class SWEBenchService {
         description:
           'Research how to implement custom TypeScript middleware in Express with proper type safety',
         files: ['lib/router/index.js', 'lib/middleware/init.js'],
-        expectedBehavior: 'Understand middleware typing patterns and best practices',
+        expectedBehavior:
+          'Understand middleware typing patterns and best practices',
         category: 'feature',
         difficulty: 'medium',
       },
       {
         id: 'ts-typeorm-relations',
         repository: 'typeorm/typeorm',
-        description: 'Research TypeORM many-to-many relations with custom join table properties',
-        files: ['src/decorator/relations/ManyToMany.ts', 'src/metadata/RelationMetadata.ts'],
-        expectedBehavior: 'Understand how to implement complex relations with TypeORM',
+        description:
+          'Research TypeORM many-to-many relations with custom join table properties',
+        files: [
+          'src/decorator/relations/ManyToMany.ts',
+          'src/metadata/RelationMetadata.ts',
+        ],
+        expectedBehavior:
+          'Understand how to implement complex relations with TypeORM',
         category: 'feature',
         difficulty: 'hard',
       },
@@ -233,7 +253,8 @@ export class SWEBenchService {
       {
         id: 'ts-prisma-migrations',
         repository: 'prisma/prisma',
-        description: 'Research Prisma migration system and how it handles schema changes',
+        description:
+          'Research Prisma migration system and how it handles schema changes',
         files: ['packages/migrate/src/commands/MigrateDev.ts'],
         expectedBehavior: "Understand Prisma's migration strategy",
         category: 'refactor',
@@ -242,7 +263,8 @@ export class SWEBenchService {
       {
         id: 'ts-async-patterns',
         repository: 'nodejs/node',
-        description: 'Research best practices for async/await error handling in Node.js',
+        description:
+          'Research best practices for async/await error handling in Node.js',
         files: ['lib/async_hooks.js', 'lib/internal/async_hooks.js'],
         expectedBehavior: 'Document async error handling patterns',
         category: 'documentation',

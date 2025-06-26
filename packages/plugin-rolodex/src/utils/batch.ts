@@ -29,7 +29,9 @@ export class BatchQueue {
   }
 
   async start(): Promise<void> {
-    if (this.started) {return;}
+    if (this.started) {
+      return;
+    }
 
     this.started = true;
     this.scheduleProcessing();
@@ -72,7 +74,9 @@ export class BatchQueue {
   }
 
   private scheduleProcessing(): void {
-    if (!this.started || this.timer) {return;}
+    if (!this.started || this.timer) {
+      return;
+    }
 
     this.timer = setTimeout(async () => {
       this.timer = null;
@@ -85,7 +89,9 @@ export class BatchQueue {
   }
 
   private async processQueue(): Promise<void> {
-    if (this.processing || this.queue.length === 0) {return;}
+    if (this.processing || this.queue.length === 0) {
+      return;
+    }
 
     this.processing = true;
 
@@ -140,7 +146,7 @@ export class BatchQueue {
     queueLength: number;
     processing: boolean;
     started: boolean;
-    } {
+  } {
     return {
       queueLength: this.queue.length,
       processing: this.processing,

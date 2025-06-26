@@ -5,7 +5,7 @@
  * designed to support both unit testing and integration testing scenarios.
  */
 
-import { mock } from './mock-utils';
+import { mock } from './mockUtils';
 import { ModelType } from '../../types';
 import type {
   IAgentRuntime,
@@ -253,6 +253,9 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
     updateTask: mock().mockResolvedValue(undefined),
     deleteTask: mock().mockResolvedValue(undefined),
 
+    // World Management - additional methods
+    getMemoriesByWorldId: mock().mockResolvedValue([]),
+
     // Trust/Identity/Payment providers
 
     // Planning
@@ -295,6 +298,9 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
     configurePlugin: mock().mockResolvedValue(undefined),
     enableComponent: mock().mockResolvedValue(undefined),
     disableComponent: mock().mockResolvedValue(undefined),
+
+    // Additional database adapter methods
+    waitForReady: mock().mockResolvedValue(undefined),
 
     // Apply overrides
     ...overrides,

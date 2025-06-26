@@ -4,7 +4,7 @@ import type { IAgentRuntime, Memory, Provider, UUID, State, ProviderResult } fro
 import { OODALoopService } from './ooda-service';
 import { AutonomousServiceType } from './types';
 
-const AUTO_WORLD_SEED = 'autonomous_world_singleton';
+const _AUTO_WORLD_SEED = 'autonomous_world_singleton';
 const AUTO_ROOM_SEED = 'autonomous_room_singleton';
 
 /**
@@ -14,7 +14,7 @@ export const autonomousWorldProvider: Provider = {
   name: 'AUTONOMOUS_WORLD',
   description: 'Information about the autonomous world and room setup',
   position: 50,
-  get: async (runtime: IAgentRuntime, message: Memory) => {
+  get: async (runtime: IAgentRuntime, _message: Memory) => {
     try {
       // Get the WORLD_ID setting
       const worldId = runtime.getSetting('WORLD_ID') as UUID;
@@ -129,7 +129,7 @@ export const worldProvider: Provider = {
   description: 'Provides dynamic context about the autonomous world and OODA loop state',
   dynamic: true,
   position: 1,
-  get: async (runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> => {
+  get: async (runtime: IAgentRuntime, _message: Memory, _state: State): Promise<ProviderResult> => {
     try {
       // Get the OODA service
       let oodaService: OODALoopService | null = null;

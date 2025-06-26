@@ -35,7 +35,7 @@ export class CrossMintService extends Service {
   public readonly capabilityDescription = 'Enterprise blockchain platform with MPC wallets, X.402 payments, and cross-chain infrastructure';
 
   private client!: AxiosInstance;
-  config!: CrossMintServiceConfig;
+  declare config: CrossMintServiceConfig;
 
   constructor(runtime?: IAgentRuntime) {
     super(runtime);

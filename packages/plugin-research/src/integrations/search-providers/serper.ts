@@ -109,7 +109,8 @@ export class SerperSearchProvider {
           title: validatedData.answerBox.title || 'Direct Answer',
           url: validatedData.answerBox.link || '',
           snippet: validatedData.answerBox.answer,
-          content: validatedData.answerBox.snippet || validatedData.answerBox.answer,
+          content:
+            validatedData.answerBox.snippet || validatedData.answerBox.answer,
           score: 1.0, // Answer box has highest relevance
           provider: 'serper',
           metadata: {
@@ -202,7 +203,10 @@ export class SerperSearchProvider {
     }
   }
 
-  async searchNews(query: string, maxResults?: number): Promise<SearchResult[]> {
+  async searchNews(
+    query: string,
+    maxResults?: number
+  ): Promise<SearchResult[]> {
     const startTime = Date.now();
 
     try {
@@ -246,7 +250,9 @@ export class SerperSearchProvider {
         })) || [];
 
       const duration = Date.now() - startTime;
-      logger.info(`[Serper] Found ${results.length} news results in ${duration}ms`);
+      logger.info(
+        `[Serper] Found ${results.length} news results in ${duration}ms`
+      );
 
       return results;
     } catch (error) {
@@ -291,7 +297,10 @@ export class SerperSearchProvider {
     }
   }
 
-  async searchScholar(query: string, maxResults?: number): Promise<SearchResult[]> {
+  async searchScholar(
+    query: string,
+    maxResults?: number
+  ): Promise<SearchResult[]> {
     try {
       logger.info(`[Serper] Searching Google Scholar for: ${query}`);
 
@@ -341,7 +350,11 @@ export class SerperSearchProvider {
   }
 
   // Get current API usage
-  async getUsage(): Promise<{ searches: number; limit: number; remaining: number } | null> {
+  async getUsage(): Promise<{
+    searches: number;
+    limit: number;
+    remaining: number;
+  } | null> {
     try {
       const response = await axios.get('https://google.serper.dev/account', {
         headers: { 'X-API-KEY': this.apiKey },

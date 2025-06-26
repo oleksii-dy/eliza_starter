@@ -26,7 +26,7 @@ export const packageManagementAction: Action = {
   description:
     'Manages npm/bun packages - install, update, add, remove. Can be chained with build commands to verify installation or with analysis actions to examine package dependencies',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
     return (
       text.includes('install') ||

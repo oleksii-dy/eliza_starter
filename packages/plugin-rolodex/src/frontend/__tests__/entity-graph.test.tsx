@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import React from 'react';
-import { describe, it, expect, mock  } from 'bun:test';
+import { describe, it, expect, mock } from 'bun:test';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { EntityGraph } from '../ui/entity-graph';
@@ -41,14 +41,11 @@ describe('EntityGraph', () => {
     ];
 
     const { getByTestId } = render(
-      <EntityGraph
-        entities={mockEntities}
-        relationships={mockRelationships}
-      />
+      <EntityGraph entities={mockEntities} relationships={mockRelationships} />
     );
 
     // For now, just verify the component renders
     // Actual graph testing would require more complex setup
-    expect(getByTestId('entity-graph-container')).toBeInTheDocument();
+    expect(getByTestId('entity-graph-container')).toBeTruthy();
   });
 });

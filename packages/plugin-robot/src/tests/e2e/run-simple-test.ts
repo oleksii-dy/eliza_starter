@@ -12,7 +12,7 @@ async function runSimpleRobotTest() {
   try {
     // Dynamic imports to avoid build issues
     const { AgentRuntime, asUUID } = await import('@elizaos/core');
-    const { createDatabaseAdapter, plugin: sqlPlugin } = await import('@elizaos/plugin-sql');
+    // const { createDatabaseAdapter, plugin: sqlPlugin } = await import('@elizaos/plugin-sql');
     const fs = await import('fs');
     const path = await import('path');
     const { fileURLToPath } = await import('url');
@@ -22,8 +22,8 @@ async function runSimpleRobotTest() {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
 
-    // Import our plugin from the built version
-    const robotPlugin = (await import('../../../dist/index.js')).default;
+    // Import our plugin from the source version
+    const robotPlugin = (await import('../../index')).default;
 
     // Load test character
     const characterPath = path.join(__dirname, 'test-character.json');
@@ -42,13 +42,13 @@ async function runSimpleRobotTest() {
         return v.toString(16);
       });
     };
-    const agentId = asUUID(uuid());
-    const db = createDatabaseAdapter({ dataDir: ':memory:' }, agentId);
+    const _agentId = asUUID(uuid());
+    // const db = await createDatabaseAdapter({ dataDir: ':memory:' }, agentId);
 
     const runtime = new AgentRuntime({
       character: characterData,
-      adapter: db,
-      plugins: [sqlPlugin, robotPlugin],
+      // adapter: db,
+      plugins: [robotPlugin],
     });
 
     await runtime.initialize();

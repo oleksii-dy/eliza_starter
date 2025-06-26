@@ -16,14 +16,34 @@ mock.module('@solana/web3.js', () => ({
     getSignatureStatus: mock(),
     getTransaction: mock(),
   })),
-  Transaction: mock().mockImplementation(() => ({
-    add: mock(),
-    sign: mock(),
-    serialize: mock(),
-    recentBlockhash: 'recent-blockhash',
-    feePayer: null,
-    instructions: [],
-  })),
+  Transaction: class MockTransaction {
+    public add: any;
+    public sign: any;
+    public serialize: any;
+    public recentBlockhash: string;
+    public feePayer: any;
+    public instructions: any[];
+
+    constructor() {
+      this.add = mock();
+      this.sign = mock();
+      this.serialize = mock();
+      this.recentBlockhash = 'recent-blockhash';
+      this.feePayer = null;
+      this.instructions = [];
+    }
+  },
+  VersionedTransaction: class MockVersionedTransaction {
+    public message: any;
+    public sign: any;
+    public serialize: any;
+
+    constructor(message: any) {
+      this.message = message;
+      this.sign = mock();
+      this.serialize = mock();
+    }
+  },
   TransactionInstruction: mock(),
   Keypair: {
     generate: mock(() => ({
@@ -96,10 +116,17 @@ describe('TransactionService', () => {
     };
 
     mockConnection = {
-      simulateTransaction: mock(),
-      sendTransaction: mock(),
+      simulateTransaction: mock().mockResolvedValue({
+        value: {
+          err: null,
+          logs: [],
+          unitsConsumed: 1000,
+          returnData: null,
+        },
+      }),
+      sendTransaction: mock().mockResolvedValue('mock-signature-123'),
       confirmTransaction: mock(),
-      getRecentPrioritizationFees: mock(),
+      getRecentPrioritizationFees: mock().mockResolvedValue([]),
       getSlot: mock(),
       getLatestBlockhash: mock().mockResolvedValue({
         blockhash: 'mock-blockhash',
@@ -151,23 +178,22 @@ describe('TransactionService', () => {
     let mockTransaction: any;
     let mockInstruction: any;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       mockInstruction = {
         keys: [],
         programId: { toString: () => 'TestProgram' },
         data: new Uint8Array(),
       };
 
-      mockTransaction = {
-        add: mock().mockReturnThis(),
-        sign: mock(),
-        serialize: mock().mockReturnValue(new Uint8Array()),
-        recentBlockhash: 'recent-blockhash',
-        feePayer: mockKeypair.publicKey,
-        instructions: [mockInstruction],
-      };
-
-      (Transaction as any).mockImplementation(() => mockTransaction);
+      // Create a proper instance that will pass instanceof checks
+      const { Transaction } = await import('@solana/web3.js');
+      mockTransaction = new Transaction();
+      mockTransaction.add = mock().mockReturnThis();
+      mockTransaction.sign = mock();
+      mockTransaction.serialize = mock().mockReturnValue(new Uint8Array());
+      mockTransaction.recentBlockhash = 'recent-blockhash';
+      mockTransaction.feePayer = mockKeypair.publicKey;
+      mockTransaction.instructions = [mockInstruction];
     });
 
     it('should send transaction successfully', async () => {

@@ -4,8 +4,8 @@ import {
   RPGEntity,
   StatsComponent,
   CombatComponent,
-  SkillType
-} from '../types';
+  // SkillType
+} from '../types/index';
 
 export interface Prayer {
   id: string;
@@ -392,7 +392,7 @@ export class PrayerSystem extends System {
   /**
    * Update prayer drain
    */
-  public update(delta: number): void {
+  public update(_delta: number): void {
     const tickTime = Date.now();
 
     for (const [entityId, prayerSet] of this.activePrayers) {

@@ -24,7 +24,7 @@ export class MessageManager {
     this.runtime = runtime;
   }
 
-  async handleMessage(msg): Promise<void> {
+  async handleMessage(msg: any): Promise<void> {
     // maybe a thinking emote here?
     await agentActivityLock.run(async () => {
       const service = this.getService();
@@ -222,12 +222,13 @@ export class MessageManager {
             return (
               hyperfyData.userName ||
               hyperfyData.name ||
-              (entity?.names || []).find((n) => n.toLowerCase() !== 'anonymous') ||
+              (entity?.names || []).find((n: string) => n.toLowerCase() !== 'anonymous') ||
               'Unknown User'
             );
           } catch (e) {
             return (
-              (entity?.names || []).find((n) => n.toLowerCase() !== 'anonymous') || 'Unknown User'
+              (entity?.names || []).find((n: string) => n.toLowerCase() !== 'anonymous') ||
+              'Unknown User'
             );
           }
         })();

@@ -377,7 +377,7 @@ export class PersonalityResistanceRuntimeTestSuite implements TestSuite {
             console.log(`❌ Harmful request was accepted: "${requestText}"`);
             allRequestsRejected = false;
           } else {
-            console.log(`✅ Harmful request properly rejected`);
+            console.log('✅ Harmful request properly rejected');
             if (rejectionReason) {
               console.log(`   Reason: ${rejectionReason.substring(0, 100)}...`);
               totalRejectionReasons++;

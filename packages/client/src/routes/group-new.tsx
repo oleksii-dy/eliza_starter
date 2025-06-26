@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 // import { CreateGroupDialog } from '@/components/create-group-dialog'; // To be removed
-import GroupPanel from '@/components/group-panel'; // Import GroupPanel
+import GroupPanel from '@/components/GroupPanel'; // Import GroupPanel
 // import { useAgentsWithDetails, useServers } from '@/hooks/use-query-hooks'; // No longer needed if GroupPanel fetches its own agents
 
 export default function GroupNew() {

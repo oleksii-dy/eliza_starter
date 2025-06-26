@@ -140,7 +140,7 @@ export class TogetherAIClient {
           );
         }
 
-        const result = await response.json();
+        const result = (await response.json()) as { id?: string };
 
         if (!result.id) {
           throw new APIError('TogetherAI', 'Upload response missing file ID', response.status, {
@@ -419,7 +419,7 @@ export class TogetherAIClient {
 
   private async makeRequest(method: string, endpoint: string, data?: any): Promise<any> {
     const url = `${this.config.getAPIConfig().togetherAi.baseUrl}${endpoint}`;
-    // eslint-disable-next-line no-undef
+
     const options: RequestInit = {
       method,
       headers: {
@@ -435,7 +435,7 @@ export class TogetherAIClient {
     const response = await fetch(url, options);
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = (await response.json()) as { error?: { message?: string } };
       throw new Error(`Together.ai API error: ${error.error?.message || response.statusText}`);
     }
 

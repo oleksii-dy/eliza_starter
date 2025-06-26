@@ -157,7 +157,7 @@ export async function extractTextFromDocument(
       ) {
         try {
           return fileBuffer.toString('utf8');
-        } catch (textError) {
+        } catch (_textError) {
           logger.warn(
             `Failed to decode ${originalFilename} as UTF-8, falling back to binary extraction`
           );
@@ -499,7 +499,7 @@ async function generateContextsInBatch(
   const rateLimiter = createRateLimiter(providerLimits.requestsPerMinute);
 
   // Get active provider from validateModelConfig
-  const config = validateModelConfig();
+  const _config = validateModelConfig();
   // For now, assume no cache capable model since TEXT_MODEL is not in our simplified config
   const isUsingCacheCapableModel = false;
 
@@ -532,8 +532,6 @@ async function generateContextsInBatch(
       await rateLimiter();
 
       try {
-        let llmResponse;
-
         const generateTextOperation = async () => {
           if (item.usesCaching) {
             // Use the newer caching approach with separate document
@@ -553,7 +551,7 @@ async function generateContextsInBatch(
           }
         };
 
-        llmResponse = await withRateLimitRetry(
+        const llmResponse = await withRateLimitRetry(
           generateTextOperation,
           `context generation for chunk ${item.originalIndex}`
         );
@@ -689,7 +687,7 @@ async function generateEmbeddingWithValidation(
     // const embeddingResult = await generateTextEmbedding(text); // OLD
     const embeddingResult = await runtime.useModel(ModelType.TEXT_EMBEDDING, {
       text,
-    }); // NEW
+    });
 
     // Handle different embedding result formats consistently
     // Assuming useModel for TEXT_EMBEDDING returns { embedding: number[] } or number[] directly

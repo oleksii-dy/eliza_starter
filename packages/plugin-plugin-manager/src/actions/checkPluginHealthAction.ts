@@ -9,6 +9,7 @@ import {
 } from '@elizaos/core';
 import { PluginManagerService } from '../services/pluginManagerService.ts';
 import { PluginManagerServiceType, HealthStatus, type HealthMetrics } from '../types.ts';
+import { TrustService } from '@elizaos/plugin-trust';
 
 function formatMetrics(metrics: HealthMetrics[]): string {
   if (metrics.length === 0) {
@@ -196,9 +197,9 @@ export const checkPluginHealthAction: Action = {
       const statusText = formatMetrics(metrics);
 
       // Check if user has permission to recover plugins
-      const trustService = runtime.getService('TRUST') as any;
+      const trustService = runtime.getService<TrustService>('TRUST');
       const canRecover = trustService ?
-        await trustService.checkPermission(message.entityId, 'plugin:recover') :
+        await (trustService as any).checkPermission(message.entityId, 'plugin:recover') :
         true; // Default to true if trust service not available
 
       let actionText = statusText;

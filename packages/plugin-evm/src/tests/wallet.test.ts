@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, mock } from 'bun:test';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
-import { mainnet, sepolia, type Chain } from 'viem/chains';
+import { mainnet as _mainnet, sepolia, type Chain as _Chain } from 'viem/chains';
 
 import { WalletProvider } from '../providers/wallet';
 import { testnetChains } from './test-config';

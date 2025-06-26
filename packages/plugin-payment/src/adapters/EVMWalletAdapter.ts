@@ -2,8 +2,7 @@ import { type IAgentRuntime, elizaLogger as logger } from '@elizaos/core';
 import { Contract, ethers, JsonRpcProvider, Wallet } from 'ethers';
 import { isAddress } from 'viem';
 import { IWalletAdapter, PaymentMethod, PaymentStatus, TransactionResult } from '../types';
-// @ts-expect-error - Plugin types not available at compile time
-import type { IWalletService } from '@elizaos/plugin-evm';
+import type { EVMWalletService } from '@elizaos/plugin-evm';
 
 /**
  * Wallet adapter for EVM chains integration using ethers.js
@@ -22,7 +21,7 @@ export class EVMWalletAdapter implements IWalletAdapter {
   private runtime: IAgentRuntime;
   private providers: Map<number, JsonRpcProvider> = new Map();
   private wallets: Map<string, Wallet> = new Map();
-  private walletService: IWalletService | null = null;
+  private walletService: EVMWalletService | null = null;
 
   constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
@@ -37,7 +36,7 @@ export class EVMWalletAdapter implements IWalletAdapter {
       const service = this.runtime.getService('wallet');
 
       if (service) {
-        this.walletService = service as any as IWalletService;
+        this.walletService = service as any as EVMWalletService;
         logger.info('[EVMWalletAdapter] Initialized with real EVM providers and EVM wallet service');
       } else {
         logger.warn(

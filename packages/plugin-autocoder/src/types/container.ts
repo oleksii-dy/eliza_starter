@@ -204,12 +204,12 @@ export interface IContainerManager {
   listContainers(filters?: Record<string, string>): Promise<ContainerStatus[]>;
   getContainerLogs(
     containerId: string,
-    options?: ContainerLogOptions
+    _options?: ContainerLogOptions
   ): Promise<NodeJS.ReadableStream>;
   getContainerStats(containerId: string): Promise<ContainerStats>;
   executeInContainer(
     containerId: string,
-    options: ContainerExecuteOptions
+    _options: ContainerExecuteOptions
   ): Promise<ContainerExecuteResult>;
   attachToContainer(containerId: string): Promise<NodeJS.ReadWriteStream>;
 }

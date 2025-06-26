@@ -8,7 +8,7 @@ import {
   type Plugin,
   // type IDatabaseAdapter,
 } from '@elizaos/core';
-import { AgentServer } from '@elizaos/server';
+import AgentServer from '@elizaos/server';
 import { AgentStartOptions } from '../types';
 import { loadEnvConfig } from '../utils/config-utils';
 import { resolvePluginDependencies } from '../utils/dependency-resolver';
@@ -30,7 +30,7 @@ export async function startAgent(
 
   const loadedPlugins = new Map<string, Plugin>();
   // Dynamically import SQL plugin to avoid early schema loading
-  const sqlModule = await import('@elizaos/plugin-sql');
+  const sqlModule = (await import('@elizaos/plugin-sql')) as any;
   const sqlPlugin = sqlModule.plugin;
   loadedPlugins.set(sqlPlugin.name, sqlPlugin as unknown as Plugin); // Always include sqlPlugin
 

@@ -49,7 +49,9 @@ export function calculateStringSimilarity(str1: string, str2: string): number {
   const distance = calculateLevenshteinDistance(str1, str2);
   const maxLength = Math.max(str1.length, str2.length);
 
-  if (maxLength === 0) {return 1;} // Both strings are empty
+  if (maxLength === 0) {
+    return 1;
+  } // Both strings are empty
 
   return 1 - distance / maxLength;
 }

@@ -1,4 +1,4 @@
-import { AgentServer } from '@elizaos/server';
+import AgentServer from '@elizaos/server';
 import { logger } from '@elizaos/core';
 import { LogArchiver } from './log-archiver';
 import type { ServerStartOptions } from '../commands/start/actions/server-start';

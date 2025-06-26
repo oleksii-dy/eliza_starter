@@ -3,10 +3,7 @@ import { TrustDatabase } from '../TrustDatabase';
 import { createMockRuntime } from '../../__tests__/test-utils';
 import type { IAgentRuntime } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
-import type {
-  TrustProfile,
-  TrustEvidence
-} from '../../types/trust';
+import type { TrustProfile, TrustEvidence } from '../../types/trust';
 import { TrustEvidenceType } from '../../types/trust';
 
 // Create an in-memory database mock
@@ -32,7 +29,7 @@ class InMemoryDatabase {
     // Handle INSERT OR REPLACE for trust_profiles
     if (trimmedSql.includes('INSERT OR REPLACE INTO TRUST_PROFILES')) {
       const profiles = this.tables.get('trust_profiles') || [];
-      const existingIndex = profiles.findIndex(p => p.entity_id === params?.[0]);
+      const existingIndex = profiles.findIndex((p) => p.entity_id === params?.[0]);
 
       const profile = {
         entity_id: params?.[0],
@@ -47,7 +44,7 @@ class InMemoryDatabase {
         last_calculated: params?.[9],
         created_at: params?.[10],
         updated_at: params?.[11],
-        evidence: params?.[12]
+        evidence: params?.[12],
       };
 
       if (existingIndex >= 0) {
@@ -65,7 +62,7 @@ class InMemoryDatabase {
       const profiles = this.tables.get('trust_profiles') || [];
 
       if (trimmedSql.includes('WHERE ENTITY_ID = ?')) {
-        const filtered = profiles.filter(p => p.entity_id === params?.[0]);
+        const filtered = profiles.filter((p) => p.entity_id === params?.[0]);
         return { rows: filtered };
       }
 
@@ -86,7 +83,7 @@ class InMemoryDatabase {
         verified: params?.[7],
         reported_by: params?.[8],
         context: params?.[9],
-        metadata: params?.[10]
+        metadata: params?.[10],
       });
       this.tables.set('trust_evidence', evidence);
       return { changes: 1 };
@@ -95,7 +92,7 @@ class InMemoryDatabase {
     // Handle SELECT from trust_evidence
     if (trimmedSql.includes('SELECT * FROM TRUST_EVIDENCE')) {
       const evidence = this.tables.get('trust_evidence') || [];
-      const filtered = evidence.filter(e => e.entity_id === params?.[0]);
+      const filtered = evidence.filter((e) => e.entity_id === params?.[0]);
       // Sort by timestamp DESC
       filtered.sort((a, b) => b.timestamp - a.timestamp);
       return { rows: filtered };
@@ -112,7 +109,7 @@ class InMemoryDatabase {
         trust_change: params?.[4],
         comment: params?.[5],
         timestamp: params?.[6],
-        metadata: params?.[7]
+        metadata: params?.[7],
       });
       this.tables.set('trust_comments', comments);
       return { changes: 1 };
@@ -121,8 +118,8 @@ class InMemoryDatabase {
     // Handle SELECT from trust_comments
     if (trimmedSql.includes('SELECT * FROM TRUST_COMMENTS')) {
       const comments = this.tables.get('trust_comments') || [];
-      let filtered = comments.filter(c =>
-        c.entity_id === params?.[0] && c.evaluator_id === params?.[1]
+      let filtered = comments.filter(
+        (c) => c.entity_id === params?.[0] && c.evaluator_id === params?.[1]
       );
       // Sort by timestamp DESC
       filtered.sort((a, b) => b.timestamp - a.timestamp);
@@ -138,7 +135,7 @@ class InMemoryDatabase {
     // Handle INSERT OR REPLACE for permission_delegations
     if (trimmedSql.includes('INSERT OR REPLACE INTO PERMISSION_DELEGATIONS')) {
       const delegations = this.tables.get('permission_delegations') || [];
-      const existingIndex = delegations.findIndex(d => d.id === params?.[0]);
+      const existingIndex = delegations.findIndex((d) => d.id === params?.[0]);
 
       const delegation = {
         id: params?.[0],
@@ -149,7 +146,7 @@ class InMemoryDatabase {
         granted_at: params?.[5],
         expires_at: params?.[6],
         active: params?.[7],
-        conditions: params?.[8]
+        conditions: params?.[8],
       };
 
       if (existingIndex >= 0) {
@@ -166,10 +163,9 @@ class InMemoryDatabase {
     if (trimmedSql.includes('SELECT * FROM PERMISSION_DELEGATIONS')) {
       const delegations = this.tables.get('permission_delegations') || [];
       const now = params?.[1] || Date.now();
-      const filtered = delegations.filter(d =>
-        d.delegator_id === params?.[0] &&
-        d.active === 1 &&
-        (!d.expires_at || d.expires_at > now)
+      const filtered = delegations.filter(
+        (d) =>
+          d.delegator_id === params?.[0] && d.active === 1 && (!d.expires_at || d.expires_at > now)
       );
       return { rows: filtered };
     }
@@ -193,7 +189,7 @@ describe('TrustDatabase', () => {
         query: mock().mockResolvedValue([]),
         getWorlds: mock().mockResolvedValue([]),
         getWorld: mock().mockResolvedValue(null),
-      }
+      },
     });
     trustDatabase = new TrustDatabase();
   });
@@ -220,7 +216,7 @@ describe('TrustDatabase', () => {
           competence: 75,
           integrity: 70,
           benevolence: 75,
-          transparency: 80
+          transparency: 80,
         },
         confidence: 0.85,
         interactionCount: 10,
@@ -230,8 +226,8 @@ describe('TrustDatabase', () => {
         trend: {
           direction: 'increasing',
           changeRate: 5,
-          lastChangeAt: Date.now()
-        }
+          lastChangeAt: Date.now(),
+        },
       };
 
       await trustDatabase.saveTrustProfile(profile);
@@ -242,7 +238,7 @@ describe('TrustDatabase', () => {
         overallTrust: profile.overallTrust,
         dimensions: profile.dimensions,
         confidence: profile.confidence,
-        interactionCount: profile.interactionCount
+        interactionCount: profile.interactionCount,
       });
     });
 
@@ -262,7 +258,7 @@ describe('TrustDatabase', () => {
           competence: 50,
           integrity: 50,
           benevolence: 50,
-          transparency: 50
+          transparency: 50,
         },
         confidence: 0.5,
         interactionCount: 1,
@@ -272,8 +268,8 @@ describe('TrustDatabase', () => {
         trend: {
           direction: 'stable',
           changeRate: 0,
-          lastChangeAt: Date.now() - 3600000
-        }
+          lastChangeAt: Date.now() - 3600000,
+        },
       };
 
       await trustDatabase.saveTrustProfile(initialProfile);
@@ -283,7 +279,7 @@ describe('TrustDatabase', () => {
         overallTrust: 75,
         confidence: 0.8,
         interactionCount: 5,
-        lastCalculated: Date.now()
+        lastCalculated: Date.now(),
       };
 
       await trustDatabase.saveTrustProfile(updatedProfile);
@@ -313,7 +309,7 @@ describe('TrustDatabase', () => {
         verified: true,
         reportedBy: mockRuntime.agentId,
         context: { entityId, evaluatorId: mockRuntime.agentId },
-        metadata: {}
+        metadata: {},
       };
 
       await trustDatabase.addTrustEvidence(evidence);
@@ -323,7 +319,7 @@ describe('TrustDatabase', () => {
       expect(retrievedEvidence[0]).toMatchObject({
         targetEntityId: entityId,
         type: TrustEvidenceType.HELPFUL_ACTION,
-        impact: 10
+        impact: 10,
       });
     });
 
@@ -343,7 +339,7 @@ describe('TrustDatabase', () => {
         verified: true,
         reportedBy: mockRuntime.agentId,
         context: { entityId, evaluatorId: mockRuntime.agentId },
-        metadata: {}
+        metadata: {},
       };
 
       const evidence2: TrustEvidence = {
@@ -357,7 +353,7 @@ describe('TrustDatabase', () => {
         verified: true,
         reportedBy: mockRuntime.agentId,
         context: { entityId, evaluatorId: mockRuntime.agentId },
-        metadata: {}
+        metadata: {},
       };
 
       await trustDatabase.addTrustEvidence(evidence1);
@@ -386,7 +382,7 @@ describe('TrustDatabase', () => {
         trustScore: 75,
         trustChange: 10,
         comment: 'Showed improvement in reliability',
-        metadata: { reason: 'consistent_behavior' }
+        metadata: { reason: 'consistent_behavior' },
       });
 
       const latestComment = await trustDatabase.getLatestTrustComment(entityId, evaluatorId);
@@ -406,13 +402,13 @@ describe('TrustDatabase', () => {
         await trustDatabase.saveTrustComment({
           entityId,
           evaluatorId,
-          trustScore: 50 + (i * 10),
+          trustScore: 50 + i * 10,
           trustChange: 10,
           comment: `Comment ${i}`,
-          metadata: {}
+          metadata: {},
         });
         // Add small delay to ensure different timestamps
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
 
       const history = await trustDatabase.getTrustCommentHistory(entityId, evaluatorId, 3);
@@ -436,15 +432,17 @@ describe('TrustDatabase', () => {
         id: 'delegation-1' as UUID,
         delegatorId,
         delegateeId: 'delegatee-456' as UUID,
-        permissions: [{
-          action: 'read' as UUID,
-          resource: 'documents' as UUID
-        }],
+        permissions: [
+          {
+            action: 'read' as UUID,
+            resource: 'documents' as UUID,
+          },
+        ],
         context: {
           timestamp: Date.now(),
-          platform: 'test' as UUID
+          platform: 'test' as UUID,
         },
-        createdAt: Date.now()
+        createdAt: Date.now(),
       };
 
       await trustDatabase.savePermissionDelegation(delegation);

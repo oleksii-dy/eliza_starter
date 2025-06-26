@@ -99,8 +99,18 @@ describe('WalletRepository', () => {
       await repository.saveWallet(wallet);
 
       expect(mockDb.run).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO custodial_wallets'),
-        expect.arrayContaining([wallet.id, wallet.address, wallet.network])
+        expect.stringContaining('INSERT OR REPLACE INTO custodial_wallets'),
+        expect.arrayContaining([
+          wallet.id,
+          wallet.address,
+          wallet.network,
+          wallet.name,
+          wallet.ownerId,
+          wallet.requiredTrustLevel,
+          wallet.isPool ? 1 : 0,
+          wallet.status,
+          wallet.createdAt,
+        ])
       );
     });
 
@@ -160,8 +170,8 @@ describe('WalletRepository', () => {
       await repository.updateWalletStatus('wallet-123' as UUID, 'suspended');
 
       expect(mockDb.run).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE custodial_wallets SET status = ?'),
-        ['suspended', expect.any(Number), 'wallet-123']
+        expect.stringContaining('UPDATE custodial_wallets SET status = ? WHERE id = ?'),
+        ['suspended', 'wallet-123']
       );
     });
 

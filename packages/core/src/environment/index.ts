@@ -1,2 +1,2 @@
-export { PluginEnvironmentValidator } from './plugin-environment-validator';
-export { ScenarioRuntimeValidator } from './scenario-runtime-validator';
+export { PluginEnvironmentValidator } from './PluginEnvironmentValidator';
+export { ScenarioRuntimeValidator } from './ScenarioRuntimeValidator';

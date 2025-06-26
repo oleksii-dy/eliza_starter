@@ -40,7 +40,7 @@ export class TestAgentFactory {
       const plugins: Plugin[] = [];
 
       // Dynamically import SQL plugin to avoid early schema loading
-      const sqlModule = await import('@elizaos/plugin-sql');
+      const sqlModule = (await import('@elizaos/plugin-sql')) as any;
       const sqlPlugin = sqlModule.plugin;
       plugins.push(sqlPlugin);
 

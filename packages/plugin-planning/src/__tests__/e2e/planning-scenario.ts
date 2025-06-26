@@ -1,4 +1,5 @@
 import type { TestSuite, IAgentRuntime, Memory, UUID } from '@elizaos/core';
+import { ChannelType } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { PlanningService } from '../../services/planning-service';
 import { planningPlugin } from '../../index';
@@ -23,18 +24,19 @@ export const planningScenariosSuite: TestSuite = {
         const roomId = uuidv4() as UUID;
         const userId = uuidv4() as UUID;
 
-        const message = await runtime.createMemory(
-          {
-            entityId: userId,
-            roomId,
-            content: {
-              text: 'Create a plan to analyze customer feedback and generate a response',
-              source: 'test',
-              actions: ['CREATE_PLAN', 'EXECUTE_PLAN'],
-            },
+        const message: Memory = {
+          id: uuidv4() as UUID,
+          entityId: userId,
+          roomId,
+          content: {
+            text: 'Create a plan to analyze customer feedback and generate a response',
+            source: 'test',
+            actions: ['CREATE_PLAN', 'EXECUTE_PLAN'],
           },
-          'messages'
-        );
+          createdAt: Date.now(),
+        };
+
+        await runtime.createMemory(message, 'messages');
 
         // Create real state using runtime
         const state = await runtime.composeState(message, ['messageClassifier']);
@@ -146,22 +148,22 @@ export const planningScenariosSuite: TestSuite = {
         // Ensure room exists
         await runtime.ensureRoomExists({
           id: roomId,
-          name: 'Planning Test Room',
-          type: 'GROUP',
           source: 'test',
+          type: ChannelType.GROUP,
         });
 
-        const message = await runtime.createMemory(
-          {
-            entityId: userId,
-            roomId,
-            content: {
-              text: 'Execute a simple two-step process',
-              source: 'test',
-            },
+        const message: Memory = {
+          id: uuidv4() as UUID,
+          entityId: userId,
+          roomId,
+          content: {
+            text: 'Execute a simple two-step process',
+            source: 'test',
           },
-          'messages'
-        );
+          createdAt: Date.now(),
+        };
+
+        await runtime.createMemory(message, 'messages');
 
         // Create a simple plan for execution
         const simplePlan = {
@@ -222,23 +224,23 @@ export const planningScenariosSuite: TestSuite = {
 
         await runtime.ensureRoomExists({
           id: roomId,
-          name: 'Message Integration Test',
-          type: 'DM',
           source: 'test',
+          type: ChannelType.DM,
         });
 
         // Create message that should trigger planning
-        const planningMessage = await runtime.createMemory(
-          {
-            entityId: userId,
-            roomId,
-            content: {
-              text: 'I need you to analyze data, create a report, and email it to stakeholders',
-              source: 'test',
-            },
+        const planningMessage: Memory = {
+          id: uuidv4() as UUID,
+          entityId: userId,
+          roomId,
+          content: {
+            text: 'I need you to analyze data, create a report, and email it to stakeholders',
+            source: 'test',
           },
-          'messages'
-        );
+          createdAt: Date.now(),
+        };
+
+        await runtime.createMemory(planningMessage, 'messages');
 
         // Process message through runtime (this should use planning service)
         await runtime.processMessage(planningMessage);
@@ -250,6 +252,7 @@ export const planningScenariosSuite: TestSuite = {
         const messages = await runtime.getMemories({
           roomId,
           count: 10,
+          tableName: 'messages',
         });
 
         // Should have at least the original message plus agent response

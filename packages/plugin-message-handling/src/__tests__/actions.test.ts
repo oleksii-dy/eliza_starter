@@ -16,8 +16,7 @@ import {
   unfollowRoomAction,
   unmuteRoomAction,
 } from '../actions';
-import type { MockRuntime } from './test-utils';
-import { createMockMemory, setupActionTest } from './test-utils';
+import { MockRuntime, createMockMemory, setupActionTest } from './test-utils';
 
 // Spy on commonly used methods for logging
 beforeEach(() => {
@@ -28,8 +27,8 @@ beforeEach(() => {
 
 describe('Reply Action', () => {
   let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
-  let mockState: Partial<State>;
+  let mockMessage: Memory;
+  let mockState: State;
   let callbackFn: HandlerCallback;
 
   afterEach(() => {
@@ -39,14 +38,10 @@ describe('Reply Action', () => {
   it('should validate reply action correctly', async () => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
-    mockMessage = setup.mockMessage;
-    mockState = setup.mockState;
+    mockMessage = setup.mockMessage as Memory;
+    mockState = setup.mockState as State;
 
-    const isValid = await replyAction.validate(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const isValid = await replyAction.validate(mockRuntime, mockMessage, mockState);
 
     expect(isValid).toBe(true);
   });
@@ -68,17 +63,11 @@ describe('Reply Action', () => {
       },
     });
     mockRuntime = setup.mockRuntime;
-    mockMessage = setup.mockMessage;
-    mockState = setup.mockState;
+    mockMessage = setup.mockMessage as Memory;
+    mockState = setup.mockState as State;
     callbackFn = setup.callbackFn as HandlerCallback;
 
-    await replyAction.handler(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
-      {},
-      callbackFn
-    );
+    await replyAction.handler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     expect(specificUseModelMock).toHaveBeenCalled();
     expect(callbackFn).toHaveBeenCalledWith(
@@ -96,8 +85,8 @@ describe('Reply Action', () => {
       },
     });
     mockRuntime = setup.mockRuntime;
-    mockMessage = setup.mockMessage;
-    mockState = setup.mockState;
+    mockMessage = setup.mockMessage as Memory;
+    mockState = setup.mockState as State;
     callbackFn = setup.callbackFn as HandlerCallback;
 
     // Implement a fallback handler within the test
@@ -123,13 +112,7 @@ describe('Reply Action', () => {
       },
     };
 
-    await mockReplyAction.handler(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
-      {},
-      callbackFn
-    );
+    await mockReplyAction.handler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Error in reply action'));
     expect(callbackFn).toHaveBeenCalledWith(
@@ -143,15 +126,15 @@ describe('Reply Action', () => {
 
 describe('Follow Room Action', () => {
   let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
-  let mockState: Partial<State>;
+  let mockMessage: Memory;
+  let mockState: State;
   let callbackFn: HandlerCallback;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
-    mockMessage = setup.mockMessage;
-    mockState = setup.mockState;
+    mockMessage = setup.mockMessage as Memory;
+    mockState = setup.mockState as State;
     callbackFn = setup.callbackFn as HandlerCallback;
   });
 
@@ -166,10 +149,7 @@ describe('Follow Room Action', () => {
     }
     mockRuntime.getParticipantUserState = mock().mockResolvedValue(null);
 
-    const isValid = await followRoomAction.validate(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory
-    );
+    const isValid = await followRoomAction.validate(mockRuntime, mockMessage);
 
     expect(isValid).toBe(true);
   });
@@ -181,13 +161,10 @@ describe('Follow Room Action', () => {
     }
     mockState.data!.currentParticipantState = 'ACTIVE';
 
-    await followRoomAction.handler(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
-      {},
-      callbackFn
-    );
+    // Mock the model to return 'yes' for the shouldFollow decision
+    mockRuntime.useModel = mock().mockResolvedValue('yes');
+
+    await followRoomAction.handler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     expect(mockRuntime.setParticipantUserState).toHaveBeenCalledWith(
       'test-room-id',
@@ -238,13 +215,7 @@ describe('Follow Room Action', () => {
       }
     };
 
-    await customErrorHandler(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
-      {},
-      callbackFn
-    );
+    await customErrorHandler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     // Verify proper error handling
     expect(mockRuntime.setParticipantUserState).toHaveBeenCalled();
@@ -260,15 +231,15 @@ describe('Follow Room Action', () => {
 
 describe('Ignore Action', () => {
   let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
-  let mockState: Partial<State>;
+  let mockMessage: Memory;
+  let mockState: State;
   let callbackFn: HandlerCallback;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
-    mockMessage = setup.mockMessage;
-    mockState = setup.mockState;
+    mockMessage = setup.mockMessage as Memory;
+    mockState = setup.mockState as State;
     callbackFn = setup.callbackFn as HandlerCallback;
   });
 
@@ -278,11 +249,7 @@ describe('Ignore Action', () => {
 
   it('should validate ignore action correctly', async () => {
     // Verify that ignore action always validates (per implementation)
-    const isValid = await ignoreAction.validate(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const isValid = await ignoreAction.validate(mockRuntime, mockMessage, mockState);
 
     expect(isValid).toBe(true);
 
@@ -291,32 +258,33 @@ describe('Ignore Action', () => {
       content: { text: 'Go away bot' },
     }) as Memory;
 
-    const isValidNegative = await ignoreAction.validate(
-      mockRuntime as IAgentRuntime,
-      negativeMessage,
-      mockState as State
-    );
+    const isValidNegative = await ignoreAction.validate(mockRuntime, negativeMessage, mockState);
     expect(isValidNegative).toBe(true);
   });
 
   it('should handle ignore action successfully', async () => {
     // Directly call handler to verify it returns an ActionResult
     const handlerResult = await ignoreAction.handler(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
+      mockRuntime,
+      mockMessage,
+      mockState,
       {},
       callbackFn
     );
 
     // Verify the handler returns an ActionResult object
     expect(handlerResult).toEqual({
+      text: 'User ignored - conversation ended',
       data: {
         actionName: 'IGNORE',
         result: 'User ignored',
+        conversationState: 'ended',
       },
       values: {
+        success: true,
+        ignored: true,
         ignoredAt: expect.any(Number),
+        conversationEnded: true,
       },
     });
 
@@ -328,15 +296,15 @@ describe('Ignore Action', () => {
 
 describe('Mute Room Action', () => {
   let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
-  let mockState: Partial<State>;
+  let mockMessage: Memory;
+  let mockState: State;
   let callbackFn: HandlerCallback;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
-    mockMessage = setup.mockMessage;
-    mockState = setup.mockState;
+    mockMessage = setup.mockMessage as Memory;
+    mockState = setup.mockState as State;
     callbackFn = setup.callbackFn as HandlerCallback;
   });
 
@@ -348,23 +316,16 @@ describe('Mute Room Action', () => {
     // Set current state to ACTIVE to allow muting
     mockState.data!.currentParticipantState = 'ACTIVE';
 
-    const isValid = await muteRoomAction.validate(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const isValid = await muteRoomAction.validate(mockRuntime, mockMessage, mockState);
 
     expect(isValid).toBe(true);
   });
 
   it('should handle mute room action successfully', async () => {
-    await muteRoomAction.handler(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
-      {},
-      callbackFn
-    );
+    // Mock the model to return 'yes' for the shouldMute decision
+    mockRuntime.useModel = mock().mockResolvedValue('yes');
+
+    await muteRoomAction.handler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     expect(mockRuntime.setParticipantUserState).toHaveBeenCalledWith(
       expect.any(String),
@@ -410,13 +371,7 @@ describe('Mute Room Action', () => {
       }
     };
 
-    await customMuteErrorHandler(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
-      {},
-      callbackFn
-    );
+    await customMuteErrorHandler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     // Verify proper error handling with specific details
     expect(mockRuntime.setParticipantUserState).toHaveBeenCalled();
@@ -432,15 +387,15 @@ describe('Mute Room Action', () => {
 
 describe('Unmute Room Action', () => {
   let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
-  let mockState: Partial<State>;
+  let mockMessage: Memory;
+  let mockState: State;
   let callbackFn: HandlerCallback;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
-    mockMessage = setup.mockMessage;
-    mockState = setup.mockState;
+    mockMessage = setup.mockMessage as Memory;
+    mockState = setup.mockState as State;
     callbackFn = setup.callbackFn as HandlerCallback;
 
     // Set default state to MUTED for unmute tests
@@ -455,10 +410,7 @@ describe('Unmute Room Action', () => {
     // Currently MUTED, so should validate
     mockRuntime.getParticipantUserState = mock().mockResolvedValue('MUTED');
 
-    const isValid = await unmuteRoomAction.validate(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory
-    );
+    const isValid = await unmuteRoomAction.validate(mockRuntime, mockMessage);
 
     expect(isValid).toBe(true);
   });
@@ -468,22 +420,16 @@ describe('Unmute Room Action', () => {
     mockState.data!.currentParticipantState = 'ACTIVE';
     mockRuntime.getParticipantUserState = mock().mockResolvedValue('ACTIVE');
 
-    const isValid = await unmuteRoomAction.validate(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory
-    );
+    const isValid = await unmuteRoomAction.validate(mockRuntime, mockMessage);
 
     expect(isValid).toBe(false);
   });
 
   it('should handle unmute room action successfully', async () => {
-    await unmuteRoomAction.handler(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
-      {},
-      callbackFn
-    );
+    // Mock the model to return 'yes' for the shouldUnmute decision
+    mockRuntime.useModel = mock().mockResolvedValue('yes');
+
+    await unmuteRoomAction.handler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     expect(mockRuntime.setParticipantUserState).toHaveBeenCalledWith(
       expect.any(String),
@@ -529,13 +475,7 @@ describe('Unmute Room Action', () => {
       }
     };
 
-    await customUnmuteErrorHandler(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
-      {},
-      callbackFn
-    );
+    await customUnmuteErrorHandler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     // Verify proper error handling with specific details
     expect(mockRuntime.setParticipantUserState).toHaveBeenCalled();
@@ -551,15 +491,15 @@ describe('Unmute Room Action', () => {
 
 describe('Unfollow Room Action', () => {
   let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
-  let mockState: Partial<State>;
+  let mockMessage: Memory;
+  let mockState: State;
   let callbackFn: HandlerCallback;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
-    mockMessage = setup.mockMessage;
-    mockState = setup.mockState;
+    mockMessage = setup.mockMessage as Memory;
+    mockState = setup.mockState as State;
     callbackFn = setup.callbackFn as HandlerCallback;
 
     // Set default state to FOLLOWED for unfollow tests
@@ -574,10 +514,7 @@ describe('Unfollow Room Action', () => {
     // Currently FOLLOWED, so should validate
     mockRuntime.getParticipantUserState = mock().mockResolvedValue('FOLLOWED');
 
-    const isValid = await unfollowRoomAction.validate(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory
-    );
+    const isValid = await unfollowRoomAction.validate(mockRuntime, mockMessage);
 
     expect(isValid).toBe(true);
   });
@@ -586,22 +523,16 @@ describe('Unfollow Room Action', () => {
     // Not currently FOLLOWED, so should not validate
     mockRuntime.getParticipantUserState = mock().mockResolvedValue('ACTIVE');
 
-    const isValid = await unfollowRoomAction.validate(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory
-    );
+    const isValid = await unfollowRoomAction.validate(mockRuntime, mockMessage);
 
     expect(isValid).toBe(false);
   });
 
   it('should handle unfollow room action successfully', async () => {
-    await unfollowRoomAction.handler(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
-      {},
-      callbackFn
-    );
+    // Mock the model to return 'yes' for the shouldUnfollow decision
+    mockRuntime.useModel = mock().mockResolvedValue('yes');
+
+    await unfollowRoomAction.handler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     expect(mockRuntime.setParticipantUserState).toHaveBeenCalledWith(
       expect.any(String),
@@ -647,13 +578,7 @@ describe('Unfollow Room Action', () => {
       }
     };
 
-    await customUnfollowErrorHandler(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
-      {},
-      callbackFn
-    );
+    await customUnfollowErrorHandler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     // Verify proper error handling with specific details
     expect(mockRuntime.setParticipantUserState).toHaveBeenCalled();
@@ -669,15 +594,15 @@ describe('Unfollow Room Action', () => {
 
 describe('None Action', () => {
   let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
-  let mockState: Partial<State>;
+  let mockMessage: Memory;
+  let mockState: State;
   let callbackFn: HandlerCallback;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
-    mockMessage = setup.mockMessage;
-    mockState = setup.mockState;
+    mockMessage = setup.mockMessage as Memory;
+    mockState = setup.mockState as State;
     callbackFn = setup.callbackFn as HandlerCallback;
   });
 
@@ -686,23 +611,13 @@ describe('None Action', () => {
   });
 
   it('should validate none action correctly', async () => {
-    const isValid = await noneAction.validate(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const isValid = await noneAction.validate(mockRuntime, mockMessage, mockState);
 
     expect(isValid).toBe(true);
   });
 
   it('should handle none action successfully (do nothing)', async () => {
-    await noneAction.handler(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
-      {},
-      callbackFn
-    );
+    await noneAction.handler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     // The callback shouldn't be called for NONE action
     expect(callbackFn).not.toHaveBeenCalled();
@@ -713,15 +628,15 @@ describe('None Action', () => {
 
 describe('Reply Action (Extended)', () => {
   let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
-  let mockState: Partial<State>;
+  let mockMessage: Memory;
+  let mockState: State;
   let callbackFn: HandlerCallback;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
-    mockMessage = setup.mockMessage;
-    mockState = setup.mockState;
+    mockMessage = setup.mockMessage as Memory;
+    mockState = setup.mockState as State;
     callbackFn = setup.callbackFn as HandlerCallback;
   });
 
@@ -741,7 +656,7 @@ describe('Reply Action (Extended)', () => {
       return state !== 'MUTED';
     };
 
-    const isValid = await replyAction.validate(mockRuntime as IAgentRuntime, mockMessage as Memory);
+    const isValid = await replyAction.validate(mockRuntime, mockMessage);
 
     // Restore original implementation
     replyAction.validate = originalValidate;
@@ -761,7 +676,7 @@ describe('Reply Action (Extended)', () => {
       return !!(message.content && message.content.text);
     };
 
-    const isValid = await replyAction.validate(mockRuntime as IAgentRuntime, mockMessage as Memory);
+    const isValid = await replyAction.validate(mockRuntime, mockMessage);
 
     // Restore original implementation
     replyAction.validate = originalValidate;
@@ -797,13 +712,7 @@ describe('Reply Action (Extended)', () => {
     const handlerSpy = mock(customHandler);
 
     // Call the handler directly
-    await handlerSpy(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State,
-      {},
-      callbackFn
-    );
+    await handlerSpy(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     // Verify the fallback was used
     expect(callbackFn).toHaveBeenCalledWith(

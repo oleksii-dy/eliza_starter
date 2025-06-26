@@ -133,7 +133,6 @@ describe('Plugin Configuration', () => {
 
       let error: Error | null = null;
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await plugin.init?.({ EXAMPLE_PLUGIN_VARIABLE: 'test-value' }, runtime as any);
         expect(true).toBe(true); // If we got here, init succeeded
       } catch (e) {
@@ -161,7 +160,6 @@ describe('Plugin Configuration', () => {
       let error: Error | null = null;
 
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await plugin.init({ EXAMPLE_PLUGIN_VARIABLE: '' }, runtime as any);
         // Should not reach here
         expect(true).toBe(false);
@@ -225,7 +223,7 @@ describe('Plugin Models', () => {
 
       try {
         logger.info('Using OpenAI for TEXT_SMALL model');
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         result = await plugin.models[ModelType.TEXT_SMALL](runtime as any, { prompt: 'test' });
 
         // Check that we get a non-empty string response
@@ -250,7 +248,7 @@ describe('StarterService', () => {
 
     try {
       logger.info('Using OpenAI for TEXT_SMALL model');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       startResult = await StarterService.start(runtime as any);
 
       expect(startResult).toBeDefined();
@@ -277,7 +275,7 @@ describe('StarterService', () => {
     const runtime = createRealRuntime();
 
     // First registration should succeed
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const result1 = await StarterService.start(runtime as any);
     expect(result1).toBeTruthy();
 
@@ -285,7 +283,7 @@ describe('StarterService', () => {
 
     try {
       // Second registration should fail
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       await StarterService.start(runtime as any);
       expect(true).toBe(false); // Should not reach here
     } catch (e) {
@@ -309,7 +307,7 @@ describe('StarterService', () => {
 
     try {
       // Register a real service first
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const service = new StarterService(runtime as any);
       runtime.registerService(StarterService.serviceType, service);
 
@@ -317,7 +315,7 @@ describe('StarterService', () => {
       const stopSpy = spyOn(service, 'stop');
 
       // Call the static stop method
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       await StarterService.stop(runtime as any);
 
       // Verify the service's stop method was called
@@ -346,7 +344,6 @@ describe('StarterService', () => {
       // We'll patch the getService function to ensure it returns null
       runtime.getService = () => null;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await StarterService.stop(runtime as any);
       // Should not reach here
       expect(true).toBe(false);
@@ -373,7 +370,7 @@ describe('StarterService', () => {
     const runtime = createRealRuntime();
 
     // First start the service
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const startResult = await StarterService.start(runtime as any);
     expect(startResult).toBeTruthy();
 
@@ -382,7 +379,7 @@ describe('StarterService', () => {
 
     try {
       // Then stop it
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       await StarterService.stop(runtime as any);
       stopSuccess = true;
     } catch (e) {

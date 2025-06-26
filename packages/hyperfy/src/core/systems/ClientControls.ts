@@ -1,6 +1,6 @@
 import { bindRotations } from '../extras/bindRotations';
 import { buttons, codeToProp } from '../extras/buttons';
-import * as THREE from '../extras/three';
+import { THREE } from '../extras/three';
 import { System } from './System';
 import type { World } from '../../types';
 
@@ -55,7 +55,7 @@ export class ClientControls extends System {
     shouldLock: boolean
     coords: THREE.Vector3
     position: THREE.Vector3
-    delta: THREE.Vector3
+    _delta: THREE.Vector3
   };
   touches: Map<any, any>;
   screen: {
@@ -63,7 +63,7 @@ export class ClientControls extends System {
     height: number
   };
   scroll: {
-    delta: number
+    _delta: number
   };
   xrSession: any;
   viewport: HTMLElement | undefined;
@@ -71,8 +71,10 @@ export class ClientControls extends System {
   rmbDown: boolean = false;
 
   constructor(world: World) {
-    super(world)
-    ;(this.controls = []), (this.actions = []), (this.buttonsDown = new Set());
+    super(world);
+    this.controls = [];
+    this.actions = [];
+    this.buttonsDown = new Set();
     this.isUserGesture = false;
     this.isMac = typeof navigator !== 'undefined' ? /Mac/.test(navigator.platform) : false;
     this.pointer = {
@@ -80,15 +82,15 @@ export class ClientControls extends System {
       shouldLock: false,
       coords: new THREE.Vector3(), // [0,0] to [1,1]
       position: new THREE.Vector3(), // [0,0] to [viewportWidth,viewportHeight]
-      delta: new THREE.Vector3(), // position delta (pixels)
+      _delta: new THREE.Vector3(), // position _delta (pixels)
     };
-    this.touches = new Map(); // id -> { id, position, delta, prevPosition }
+    this.touches = new Map(); // id -> { id, position, _delta, prevPosition }
     this.screen = {
       width: 0,
       height: 0,
     };
     this.scroll = {
-      delta: 0,
+      _delta: 0,
     };
     this.xrSession = null;
   }
@@ -101,7 +103,7 @@ export class ClientControls extends System {
     // mouse wheel delta
     for (const control of this.controls) {
       if (control.entries.scrollDelta) {
-        control.entries.scrollDelta.value = this.scroll.delta;
+        control.entries.scrollDelta.value = this.scroll._delta;
         if (control.entries.scrollDelta.capture) {break;}
       }
     }
@@ -212,9 +214,9 @@ export class ClientControls extends System {
 
   postLateUpdate() {
     // clear pointer delta
-    this.pointer.delta.set(0, 0, 0);
+    this.pointer._delta.set(0, 0, 0);
     // clear scroll delta
-    this.scroll.delta = 0;
+    this.scroll._delta = 0;
     // clear buttons
     for (const control of this.controls) {
       for (const key in control.entries) {
@@ -241,8 +243,8 @@ export class ClientControls extends System {
       }
     }
     // clear touch deltas
-    for (const [id, info] of this.touches) {
-      info.delta.set(0, 0, 0);
+    for (const [_id, info] of this.touches) {
+      info._delta.set(0, 0, 0);
     }
   }
 
@@ -507,8 +509,8 @@ export class ClientControls extends System {
     this.pointer.coords.y = Math.max(0, Math.min(1, offsetY / rect.height)); // prettier-ignore
     this.pointer.position.x = offsetX;
     this.pointer.position.y = offsetY;
-    this.pointer.delta.x += e.movementX;
-    this.pointer.delta.y += e.movementY;
+    this.pointer._delta.x += e.movementX;
+    this.pointer._delta.y += e.movementY;
   };
 
   onPointerUp = e => {
@@ -581,7 +583,7 @@ export class ClientControls extends System {
     try {
       await this.viewport.requestPointerLock();
       return true;
-    } catch (err) {
+    } catch (_err) {
       console.log('pointerlock denied, too quick?');
       return false;
     }
@@ -594,7 +596,7 @@ export class ClientControls extends System {
     this.onPointerLockEnd();
   }
 
-  onPointerLockChange = e => {
+  onPointerLockChange = () => {
     const didPointerLock = !!document.pointerLockElement;
     if (didPointerLock) {
       this.onPointerLockStart();
@@ -620,9 +622,9 @@ export class ClientControls extends System {
   onScroll = e => {
     if (e.isCoreUI) {return;}
     e.preventDefault();
-    let delta = e.shiftKey ? e.deltaX : e.deltaY;
-    if (!this.isMac) {delta = -delta;}
-    this.scroll.delta += delta;
+    let _delta = e.shiftKey ? e.deltaX : e.deltaY;
+    if (!this.isMac) {_delta = -_delta;}
+    this.scroll._delta += _delta;
   };
 
   onContextMenu = e => {
@@ -638,7 +640,7 @@ export class ClientControls extends System {
         id: touch.identifier,
         position: new THREE.Vector3(touch.clientX, touch.clientY, 0),
         prevPosition: new THREE.Vector3(touch.clientX, touch.clientY, 0),
-        delta: new THREE.Vector3(),
+        _delta: new THREE.Vector3(),
       };
       this.touches.set(info.id, info);
       for (const control of this.controls) {
@@ -656,8 +658,8 @@ export class ClientControls extends System {
       if (!info) {continue;}
       const currentX = touch.clientX;
       const currentY = touch.clientY;
-      info.delta.x += currentX - info.prevPosition.x;
-      info.delta.y += currentY - info.prevPosition.y;
+      info._delta.x += currentX - info.prevPosition.x;
+      info._delta.y += currentY - info.prevPosition.y;
       info.position.x = currentX;
       info.position.y = currentY;
       info.prevPosition.x = currentX;
@@ -734,7 +736,7 @@ function createButton(controls, control, prop) {
   };
 }
 
-function createVector(controls, control, prop) {
+function createVector() {
   return {
     $vector: true,
     value: new THREE.Vector3(),
@@ -742,7 +744,7 @@ function createVector(controls, control, prop) {
   };
 }
 
-function createValue(controls, control, prop) {
+function createValue() {
   return {
     $value: true,
     value: null,
@@ -750,10 +752,10 @@ function createValue(controls, control, prop) {
   };
 }
 
-function createPointer(controls, control, prop) {
+function createPointer(controls) {
   const coords = new THREE.Vector3(); // [0,0] to [1,1]
   const position = new THREE.Vector3(); // [0,0] to [viewportWidth,viewportHeight]
-  const delta = new THREE.Vector3(); // position delta (pixels)
+  const _delta = new THREE.Vector3(); // position _delta (pixels)
   return {
     get coords() {
       return coords.copy(controls.pointer.coords);
@@ -761,8 +763,8 @@ function createPointer(controls, control, prop) {
     get position() {
       return position.copy(controls.pointer.position);
     },
-    get delta() {
-      return delta.copy(controls.pointer.delta);
+    get _delta() {
+      return _delta.copy(controls.pointer._delta);
     },
     get locked() {
       return controls.pointer.locked;
@@ -776,7 +778,7 @@ function createPointer(controls, control, prop) {
   };
 }
 
-function createScreen(controls, control) {
+function createScreen(controls) {
   return {
     $screen: true,
     get width() {
@@ -788,7 +790,7 @@ function createScreen(controls, control) {
   };
 }
 
-function createCamera(controls, control) {
+function createCamera(controls) {
   const world = controls.world;
   const position = new THREE.Vector3().copy(world.rig.position);
   const quaternion = new THREE.Quaternion().copy(world.rig.quaternion);

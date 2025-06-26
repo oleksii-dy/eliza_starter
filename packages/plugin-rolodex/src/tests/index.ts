@@ -14,10 +14,7 @@ export const testSuites: TestSuite[] = [
 // Main test suite for the plugin
 export const rolodexTestSuite: TestSuite = {
   name: 'Rolodex Plugin Test Suite',
-  tests: [
-    ...runtimeTests.tests,
-    ...comprehensiveTests.tests,
-  ],
+  tests: [...runtimeTests.tests, ...comprehensiveTests.tests],
 };
 
 export default rolodexTestSuite;

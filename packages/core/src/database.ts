@@ -348,9 +348,9 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
   abstract removeWorld(id: UUID): Promise<void>;
 
   /**
-   * Retrieves the room ID for a given room, if it exists.
-   * @param roomId The UUID of the room to retrieve.
-   * @returns A Promise that resolves to the room ID or null if not found.
+   * Retrieves rooms by their IDs.
+   * @param roomIds The UUIDs of the rooms to retrieve.
+   * @returns A Promise that resolves to the rooms or null if not found.
    */
   abstract getRoomsByIds(roomIds: UUID[]): Promise<Room[] | null>;
 
@@ -362,9 +362,9 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
   abstract getRoomsByWorld(worldId: UUID): Promise<Room[]>;
 
   /**
-   * Creates a new rooms with an optional specified ID.
-   * @param roomId Optional UUID to assign to the new room.
-   * @returns A Promise that resolves to the UUID of the created rooms.
+   * Creates new rooms.
+   * @param rooms The array of room objects to create.
+   * @returns A Promise that resolves to the UUIDs of the created rooms.
    */
   abstract createRooms(rooms: Room[]): Promise<UUID[]>;
 
@@ -529,9 +529,8 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
 
   /**
    * Sets a value in the cache with the given key.
-   * @param params Object containing the cache key and value
    * @param key The key to store the value under
-   * @param value The string value to cache
+   * @param value The value to cache
    * @returns Promise resolving to true if the cache was set successfully
    */
   abstract setCache<T>(key: string, value: T): Promise<boolean>;

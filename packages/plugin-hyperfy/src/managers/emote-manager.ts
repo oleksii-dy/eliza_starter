@@ -4,7 +4,7 @@ import { EMOTES_LIST } from '../constants.js';
 import { playerEmotes, emoteMap } from '../hyperfy/core/extras/playerEmotes.js';
 import { hashFileBuffer, getModuleDirectory } from '../utils.js';
 import type { IAgentRuntime } from '@elizaos/core';
-import type { HyperfyWorld } from '../types/hyperfy.js';
+import type { HyperfyWorld, HyperfyPlayer } from '../types/hyperfy.js';
 import { HyperfyService } from '../service.js';
 
 const logger = {
@@ -20,7 +20,7 @@ export class EmoteManager {
   private movementCheckInterval: NodeJS.Timeout | null = null;
   private runtime: IAgentRuntime;
 
-  constructor(runtime) {
+  constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
     this.emoteHashMap = new Map();
     this.currentEmoteTimeout = null;
@@ -119,7 +119,7 @@ export class EmoteManager {
     }, duration * 1000);
   }
 
-  private clearEmote(player) {
+  private clearEmote(player: HyperfyPlayer) {
     if (player.data?.effect) {
       player.data.effect.emote = null;
     }

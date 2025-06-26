@@ -20,15 +20,15 @@ const createMockRuntime = (): IAgentRuntime => {
     getRoom: mock().mockResolvedValue({
       id: 'room-1',
       name: 'Test Room',
-      source: 'test'
+      source: 'test',
     }),
     getEntitiesForRoom: mock().mockResolvedValue([
       { id: 'entity-1', names: ['User 1'] },
-      { id: 'test-agent', names: ['Test Agent'] }
+      { id: 'test-agent', names: ['Test Agent'] },
     ]),
     getMemoriesByRoomIds: mock().mockResolvedValue([
       { userId: 'entity-1', agentId: 'test-agent' },
-      { userId: 'test-agent', agentId: 'test-agent' }
+      { userId: 'test-agent', agentId: 'test-agent' },
     ]),
     useModel: mock().mockResolvedValue({
       thought: 'I am reflecting on this conversation',
@@ -82,7 +82,9 @@ describe('reflectionEvaluator', () => {
 
   it('should not validate when not enough messages', async () => {
     // Set up runtime to return only 1 message
-    (runtime.getMemories as Mock).mockResolvedValue([{ id: 'msg-1', content: { text: 'Hello' } }]);
+    (runtime.getMemories as Mock<any>).mockResolvedValue([
+      { id: 'msg-1', content: { text: 'Hello' } },
+    ]);
 
     const memory = createMockMemory('test', testEntityId);
 
@@ -107,7 +109,7 @@ describe('reflectionEvaluator', () => {
   });
 
   it('should handle errors gracefully', async () => {
-    (runtime.useModel as Mock).mockRejectedValue(new Error('Model error'));
+    (runtime.useModel as Mock<any>).mockRejectedValue(new Error('Model error'));
 
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
@@ -119,8 +121,8 @@ describe('reflectionEvaluator', () => {
 
   it('should skip reflection if last processed message is recent', async () => {
     // Set cache to return the last message ID
-    (runtime.getCache as Mock).mockResolvedValue('msg-4');
-    (runtime.getMemories as Mock).mockResolvedValue([
+    (runtime.getCache as Mock<any>).mockResolvedValue('msg-4');
+    (runtime.getMemories as Mock<any>).mockResolvedValue([
       { id: 'msg-1', content: { text: 'Hello' } },
       { id: 'msg-2', content: { text: 'How are you?' } },
       { id: 'msg-3', content: { text: 'I am fine' } },

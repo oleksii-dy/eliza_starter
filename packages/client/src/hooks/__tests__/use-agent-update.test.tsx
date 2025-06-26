@@ -16,12 +16,16 @@ mock.module('../use-partial-update', () => ({
       } else {
         // Handle nested paths (simplified)
         const [first, ...rest] = pathParts;
-        if (!currentValue[first]) currentValue[first] = {};
+        if (!currentValue[first]) {
+          currentValue[first] = {};
+        }
 
         // Very simple implementation - doesn't handle complex nested paths
         let target = currentValue[first];
         for (let i = 0; i < rest.length - 1; i++) {
-          if (!target[rest[i]]) target[rest[i]] = {};
+          if (!target[rest[i]]) {
+            target[rest[i]] = {};
+          }
           target = target[rest[i]];
         }
         target[rest[rest.length - 1]] = value;

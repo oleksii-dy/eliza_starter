@@ -10,6 +10,7 @@ import {
   runBunCommand,
   setupPgLite,
 } from '@/src/utils';
+import { promptForAuth, getApiKeyForConfig } from '@/src/commands/auth/utils/prompt';
 
 /**
  * Creates necessary project directories.
@@ -174,8 +175,34 @@ export async function setupProjectEnvironment(
   // Create project directories first
   await createProjectDirectories(targetDir);
 
-  // Set up database configuration
   const envFilePath = `${targetDir}/.env`;
+
+  // Prompt for ElizaOS platform authentication (only in interactive mode)
+  if (!isNonInteractive) {
+    const isAuth = await promptForAuth();
+    if (isAuth) {
+      // Get API key and store it in .env
+      const apiKey = await getApiKeyForConfig();
+      if (apiKey) {
+        let content = '';
+        if (existsSync(envFilePath)) {
+          content = await fs.readFile(envFilePath, 'utf8');
+        }
+
+        if (content && !content.endsWith('\n')) {
+          content += '\n';
+        }
+
+        content += '\n# ElizaOS Platform Configuration\n';
+        content += `ELIZAOS_API_KEY=${apiKey}\n`;
+
+        await fs.writeFile(envFilePath, content, 'utf8');
+        console.info('[√] ElizaOS API key configured for elizaos-services plugin');
+      }
+    }
+  }
+
+  // Set up database configuration
   if (database === 'postgres' && !isNonInteractive) {
     await promptAndStorePostgresUrl(envFilePath);
   } else if (database === 'pglite') {

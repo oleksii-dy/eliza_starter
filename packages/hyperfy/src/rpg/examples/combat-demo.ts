@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { World } from '../../types';
 import { CombatSystem } from '../systems/CombatSystem';
 import { RPGEntity } from '../entities/RPGEntity';

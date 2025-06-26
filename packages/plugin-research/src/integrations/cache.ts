@@ -1,6 +1,5 @@
-import { SearchResult } from '../types';
+import { SearchResult, SearchProvider } from '../types';
 import { logger } from '@elizaos/core';
-import { SearchProvider } from './rate-limiter';
 import crypto from 'crypto';
 
 export interface CacheConfig {
@@ -66,12 +65,14 @@ class SimpleLRUCache<K, V> {
 export class CachedSearchProvider implements SearchProvider {
   private cache: SimpleLRUCache<string, SearchResult[]>;
   public readonly name: string;
+  public readonly supportedDomains: string[];
 
   constructor(
     private provider: SearchProvider,
     config: CacheConfig = {}
   ) {
     this.name = `Cached(${provider.name || 'Unknown'})`;
+    this.supportedDomains = provider.supportedDomains || ['*'];
 
     this.cache = new SimpleLRUCache<string, SearchResult[]>({
       max: config.maxSize || 1000,
@@ -122,6 +123,9 @@ export class CachedSearchProvider implements SearchProvider {
 }
 
 // Helper to create a cached provider with default settings
-export function withCache(provider: SearchProvider, ttlMinutes: number = 60): CachedSearchProvider {
+export function withCache(
+  provider: SearchProvider,
+  ttlMinutes: number = 60
+): CachedSearchProvider {
   return new CachedSearchProvider(provider, { ttlMinutes });
 }

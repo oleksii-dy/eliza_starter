@@ -1,5 +1,19 @@
 import { type IAgentRuntime, type Memory, elizaLogger } from '@elizaos/core';
-import { type TrainingExample } from '../simple-types.js';
+// Removed broken import - simple-types
+// import { type TrainingExample } from '../simple-types.js';
+
+// Define the type inline for now
+interface TrainingExample {
+  id: string;
+  input: string;
+  output: string;
+  request: string;
+  response: string;
+  thinking?: string;
+  quality: number;
+  createdAt: Date;
+  metadata?: Record<string, any>;
+}
 
 /**
  * Extract training data from ElizaOS database
@@ -297,6 +311,8 @@ export class DatabaseExtractor {
 
       const example: TrainingExample = {
         id: `extracted-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        input: requestText,
+        output: responseText,
         request: requestText,
         response: responseText,
         thinking,

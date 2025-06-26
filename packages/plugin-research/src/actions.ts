@@ -16,12 +16,15 @@ import {
   TaskType,
   ResearchDepth,
   ActionResult,
-  ActionContext,
+  // ActionContext,
   ResearchProject,
 } from './types';
 
 // Helper function to extract domain from text
-async function extractDomain(runtime: IAgentRuntime, text: string): Promise<ResearchDomain> {
+async function extractDomain(
+  runtime: IAgentRuntime,
+  text: string
+): Promise<ResearchDomain> {
   try {
     const prompt = `Analyze this text and determine the most appropriate research domain:
 Text: "${text}"
@@ -34,7 +37,9 @@ Respond with just the domain name.`;
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const domainText = (typeof response === 'string' ? response : (response as any).content || '')
+    const domainText = (
+      typeof response === 'string' ? response : (response as any).content || ''
+    )
       .toLowerCase()
       .trim();
 
@@ -54,7 +59,10 @@ Respond with just the domain name.`;
 }
 
 // Helper function to extract task type
-async function extractTaskType(runtime: IAgentRuntime, text: string): Promise<TaskType> {
+async function extractTaskType(
+  runtime: IAgentRuntime,
+  text: string
+): Promise<TaskType> {
   try {
     const prompt = `Analyze this research query and determine the task type:
 Query: "${text}"
@@ -73,7 +81,9 @@ Respond with just the task type.`;
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const taskText = (typeof response === 'string' ? response : (response as any).content || '')
+    const taskText = (
+      typeof response === 'string' ? response : (response as any).content || ''
+    )
       .toLowerCase()
       .trim();
 
@@ -102,7 +112,10 @@ Respond with just the task type.`;
 }
 
 // Helper function to extract research depth
-async function extractDepth(runtime: IAgentRuntime, text: string): Promise<ResearchDepth> {
+async function extractDepth(
+  runtime: IAgentRuntime,
+  text: string
+): Promise<ResearchDepth> {
   try {
     const prompt = `Analyze this research query and determine the appropriate depth:
 Query: "${text}"
@@ -121,7 +134,9 @@ Respond with just the depth level.`;
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const depthText = (typeof response === 'string' ? response : (response as any).content || '')
+    const depthText = (
+      typeof response === 'string' ? response : (response as any).content || ''
+    )
       .toLowerCase()
       .trim();
 
@@ -148,9 +163,14 @@ Respond with just the depth level.`;
  */
 export const startResearchAction: Action = {
   name: 'start_research',
-  description: 'Start a new deep research project on any topic across 22+ domains',
+  description:
+    'Start a new deep research project on any topic across 22+ domains',
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(
+    runtime: IAgentRuntime,
+    message: Memory,
+    _state?: State
+  ): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
     return !!researchService && (message.content.text?.trim().length || 0) > 3;
   },
@@ -176,7 +196,9 @@ export const startResearchAction: Action = {
       extractDepth(runtime, query),
     ]);
 
-    logger.info(`Starting research: domain=${domain}, type=${taskType}, depth=${depth}`);
+    logger.info(
+      `Starting research: domain=${domain}, type=${taskType}, depth=${depth}`
+    );
 
     try {
       const project = await researchService.createResearchProject(query, {
@@ -217,7 +239,11 @@ The research will follow DeepResearch Bench standards for quality. I'll notify y
       return {
         success: true,
         data: project,
-        nextActions: ['check_research_status', 'refine_research_query', 'pause_research'],
+        nextActions: [
+          'check_research_status',
+          'refine_research_query',
+          'pause_research',
+        ],
         metadata: {
           projectId: project.id,
           domain,
@@ -277,7 +303,11 @@ export const checkResearchStatusAction: Action = {
   name: 'check_research_status',
   description: 'Check the status and progress of research projects',
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(
+    runtime: IAgentRuntime,
+    _message: Memory,
+    _state?: State
+  ): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
     return !!researchService;
   },
@@ -296,7 +326,9 @@ export const checkResearchStatusAction: Action = {
 
     try {
       // Check if a specific project ID is mentioned
-      const projectIdMatch = message.content.text?.match(/project[:\s]+([a-zA-Z0-9-]+)/i);
+      const projectIdMatch = message.content.text?.match(
+        /project[:\s]+([a-zA-Z0-9-]+)/i
+      );
       let projects: any[] = [];
 
       if (projectIdMatch) {
@@ -361,15 +393,23 @@ export const checkResearchStatusAction: Action = {
       }
 
       // Determine next actions based on project states
-      const hasActive = projects.some((p) => p.status === ResearchStatus.ACTIVE);
-      const hasCompleted = projects.some((p) => p.status === ResearchStatus.COMPLETED);
+      const hasActive = projects.some(
+        (p) => p.status === ResearchStatus.ACTIVE
+      );
+      const hasCompleted = projects.some(
+        (p) => p.status === ResearchStatus.COMPLETED
+      );
 
       const nextActions = [];
       if (hasActive) {
         nextActions.push('pause_research', 'refine_research_query');
       }
       if (hasCompleted) {
-        nextActions.push('get_research_report', 'evaluate_research', 'export_research');
+        nextActions.push(
+          'get_research_report',
+          'evaluate_research',
+          'export_research'
+        );
       }
       nextActions.push('start_research');
 
@@ -378,8 +418,12 @@ export const checkResearchStatusAction: Action = {
         data: { projects },
         nextActions,
         metadata: {
-          activeCount: projects.filter((p) => p.status === ResearchStatus.ACTIVE).length,
-          completedCount: projects.filter((p) => p.status === ResearchStatus.COMPLETED).length,
+          activeCount: projects.filter(
+            (p) => p.status === ResearchStatus.ACTIVE
+          ).length,
+          completedCount: projects.filter(
+            (p) => p.status === ResearchStatus.COMPLETED
+          ).length,
         },
       };
     } catch (error) {
@@ -419,7 +463,11 @@ export const refineResearchQueryAction: Action = {
   name: 'refine_research_query',
   description: 'Refine or expand the research query based on findings',
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(
+    runtime: IAgentRuntime,
+    _message: Memory,
+    _state?: State
+  ): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
     if (!researchService) {
       return false;
@@ -476,13 +524,19 @@ Respond with JSON:
 
       let refinement;
       try {
-        const content = typeof response === 'string' ? response : (response as any).content || '';
+        const content =
+          typeof response === 'string'
+            ? response
+            : (response as any).content || '';
         refinement = JSON.parse(content);
-      } catch (e) {
+      } catch (_e) {
         refinement = {
           refinementType: 'deepen',
           focusAreas: ['specific aspects', 'detailed analysis'],
-          queries: [`${project.query} detailed analysis`, `${project.query} case studies`],
+          queries: [
+            `${project.query} detailed analysis`,
+            `${project.query} case studies`,
+          ],
         };
       }
 
@@ -553,14 +607,20 @@ export const getResearchReportAction: Action = {
   name: 'get_research_report',
   description: 'Get the comprehensive research report with citations',
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(
+    runtime: IAgentRuntime,
+    _message: Memory,
+    _state?: State
+  ): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
     if (!researchService) {
       return false;
     }
 
     const projects = await researchService.getAllProjects();
-    return projects.some((p: ResearchProject) => p.status === ResearchStatus.COMPLETED);
+    return projects.some(
+      (p: ResearchProject) => p.status === ResearchStatus.COMPLETED
+    );
   },
 
   async handler(
@@ -651,7 +711,12 @@ export const getResearchReportAction: Action = {
       return {
         success: true,
         data: { project, report: project.report },
-        nextActions: ['evaluate_research', 'export_research', 'compare_research', 'start_research'],
+        nextActions: [
+          'evaluate_research',
+          'export_research',
+          'compare_research',
+          'start_research',
+        ],
         metadata: {
           projectId: project.id,
           wordCount: project.report.wordCount,
@@ -695,14 +760,20 @@ export const evaluateResearchAction: Action = {
   name: 'evaluate_research',
   description: 'Evaluate research quality using RACE and FACT frameworks',
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(
+    runtime: IAgentRuntime,
+    _message: Memory,
+    _state?: State
+  ): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
     if (!researchService) {
       return false;
     }
 
     const projects = await researchService.getAllProjects();
-    return projects.some((p: ResearchProject) => p.status === ResearchStatus.COMPLETED && p.report);
+    return projects.some(
+      (p: ResearchProject) => p.status === ResearchStatus.COMPLETED && p.report
+    );
   },
 
   async handler(
@@ -721,11 +792,15 @@ export const evaluateResearchAction: Action = {
       const allProjects = await researchService.getAllProjects();
       const evaluableProjects = allProjects.filter(
         (p: ResearchProject) =>
-          p.status === ResearchStatus.COMPLETED && p.report && !p.evaluationResults
+          p.status === ResearchStatus.COMPLETED &&
+          p.report &&
+          !p.evaluationResults
       );
 
       if (evaluableProjects.length === 0) {
-        const alreadyEvaluated = allProjects.filter((p: ResearchProject) => p.evaluationResults);
+        const alreadyEvaluated = allProjects.filter(
+          (p: ResearchProject) => p.evaluationResults
+        );
         if (alreadyEvaluated.length > 0) {
           const project = alreadyEvaluated[alreadyEvaluated.length - 1];
           const evaluation = project.evaluationResults!;
@@ -755,7 +830,11 @@ export const evaluateResearchAction: Action = {
           return {
             success: true,
             data: evaluation,
-            nextActions: ['export_research', 'compare_research', 'start_research'],
+            nextActions: [
+              'export_research',
+              'compare_research',
+              'start_research',
+            ],
             metadata: { projectId: project.id },
           };
         }
@@ -843,16 +922,23 @@ ${evaluation.recommendations.map((r: string, i: number) => `${i + 1}. ${r}`).joi
  */
 export const exportResearchAction: Action = {
   name: 'export_research',
-  description: 'Export research report in various formats including DeepResearch Bench',
+  description:
+    'Export research report in various formats including DeepResearch Bench',
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(
+    runtime: IAgentRuntime,
+    _message: Memory,
+    _state?: State
+  ): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
     if (!researchService) {
       return false;
     }
 
     const projects = await researchService.getAllProjects();
-    return projects.some((p: ResearchProject) => p.status === ResearchStatus.COMPLETED && p.report);
+    return projects.some(
+      (p: ResearchProject) => p.status === ResearchStatus.COMPLETED && p.report
+    );
   },
 
   async handler(
@@ -876,7 +962,8 @@ export const exportResearchAction: Action = {
 
       const allProjects = await researchService.getAllProjects();
       const exportableProjects = allProjects.filter(
-        (p: ResearchProject) => p.status === ResearchStatus.COMPLETED && p.report
+        (p: ResearchProject) =>
+          p.status === ResearchStatus.COMPLETED && p.report
       );
 
       if (exportableProjects.length === 0) {
@@ -912,7 +999,10 @@ export const exportResearchAction: Action = {
         metadata: {
           project,
           format,
-          exported: format === 'json' || format === 'markdown' ? exported : '[Binary data]',
+          exported:
+            format === 'json' || format === 'markdown'
+              ? exported
+              : '[Binary data]',
         },
       };
 
@@ -967,7 +1057,11 @@ export const compareResearchAction: Action = {
   name: 'compare_research',
   description: 'Compare multiple research projects on similar topics',
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(
+    runtime: IAgentRuntime,
+    _message: Memory,
+    _state?: State
+  ): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
     if (!researchService) {
       return false;
@@ -1028,7 +1122,7 @@ ${comparison.differences.map((d: string, i: number) => `${i + 1}. ${d}`).join('\
 ${Object.entries(comparison.uniqueInsights)
   .map(([id, insights]) => {
     const project = projectsToCompare.find((p: ResearchProject) => p.id === id);
-    return `\n**${project?.query}:**\n${(insights as string[]).map((insight, i) => `- ${insight}`).join('\n')}`;
+    return `\n**${project?.query}:**\n${(insights as string[]).map((insight, _i) => `- ${insight}`).join('\n')}`;
   })
   .join('\n')}
 
@@ -1090,7 +1184,11 @@ export const pauseResearchAction: Action = {
   name: 'pause_research',
   description: 'Pause an active research project',
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(
+    runtime: IAgentRuntime,
+    _message: Memory,
+    _state?: State
+  ): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
     if (!researchService) {
       return false;
@@ -1184,14 +1282,20 @@ export const resumeResearchAction: Action = {
   name: 'resume_research',
   description: 'Resume a paused research project',
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(
+    runtime: IAgentRuntime,
+    _message: Memory,
+    _state?: State
+  ): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
     if (!researchService) {
       return false;
     }
 
     const allProjects = await researchService.getAllProjects();
-    return allProjects.some((p: ResearchProject) => p.status === ResearchStatus.PAUSED);
+    return allProjects.some(
+      (p: ResearchProject) => p.status === ResearchStatus.PAUSED
+    );
   },
 
   async handler(
@@ -1242,7 +1346,11 @@ The research will continue from where it left off.`,
       return {
         success: true,
         data: project,
-        nextActions: ['check_research_status', 'pause_research', 'refine_research_query'],
+        nextActions: [
+          'check_research_status',
+          'pause_research',
+          'refine_research_query',
+        ],
         metadata: { projectId: project.id },
       };
     } catch (error) {
@@ -1282,7 +1390,11 @@ export const cancelResearchAction: Action = {
   name: 'cancel_research',
   description: 'Cancel an active or paused research project',
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(
+    runtime: IAgentRuntime,
+    _message: Memory,
+    _state?: State
+  ): Promise<boolean> {
     const researchService = runtime.getService<ResearchService>('research');
     if (!researchService) {
       return false;
@@ -1311,7 +1423,9 @@ export const cancelResearchAction: Action = {
 
     try {
       // Check for specific project ID in message
-      const projectIdMatch = message.content.text?.match(/project[:\s]+([a-zA-Z0-9-]+)/i);
+      const projectIdMatch = message.content.text?.match(
+        /project[:\s]+([a-zA-Z0-9-]+)/i
+      );
       let projectToCancel: any = null;
 
       if (projectIdMatch) {

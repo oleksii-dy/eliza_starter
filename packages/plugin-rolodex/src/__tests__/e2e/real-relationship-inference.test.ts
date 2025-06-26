@@ -13,7 +13,9 @@ export const realRelationshipInferenceTests: TestSuite = {
 
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
 
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
@@ -48,7 +50,8 @@ export const realRelationshipInferenceTests: TestSuite = {
         // Test relationship inference scenarios
         const relationshipTests = [
           {
-            context: 'Alice and Bob are co-founders of TechStartup Inc. They\'ve been working together for 5 years.',
+            context:
+              "Alice and Bob are co-founders of TechStartup Inc. They've been working together for 5 years.",
             source: aliceId,
             target: bobId,
             expectedType: 'co-founder',
@@ -56,7 +59,8 @@ export const realRelationshipInferenceTests: TestSuite = {
             expectedSentiment: 0.7, // Positive
           },
           {
-            context: 'Bob manages Charlie and has been mentoring him on the new project. Charlie really appreciates Bob\'s guidance.',
+            context:
+              "Bob manages Charlie and has been mentoring him on the new project. Charlie really appreciates Bob's guidance.",
             source: bobId,
             target: charlieId,
             expectedType: 'manager',
@@ -64,7 +68,8 @@ export const realRelationshipInferenceTests: TestSuite = {
             expectedSentiment: 0.8, // Very positive
           },
           {
-            context: 'Alice and Charlie had a disagreement about the product direction. They\'re not seeing eye to eye.',
+            context:
+              "Alice and Charlie had a disagreement about the product direction. They're not seeing eye to eye.",
             source: aliceId,
             target: charlieId,
             expectedType: 'colleague',
@@ -72,7 +77,8 @@ export const realRelationshipInferenceTests: TestSuite = {
             expectedSentiment: -0.3, // Negative
           },
           {
-            context: 'Bob introduced Alice to his wife Sarah at the company party. They all had dinner together.',
+            context:
+              'Bob introduced Alice to his wife Sarah at the company party. They all had dinner together.',
             source: bobId,
             target: aliceId,
             expectedType: 'colleague', // Should understand this is still professional despite social context
@@ -101,28 +107,44 @@ export const realRelationshipInferenceTests: TestSuite = {
           console.log(`✓ Inferred relationship type: ${relationship.relationshipType}`);
 
           // Check strength calculation
-          if (relationship.strength === undefined || relationship.strength < 0 || relationship.strength > 100) {
+          if (
+            relationship.strength === undefined ||
+            relationship.strength < 0 ||
+            relationship.strength > 100
+          ) {
             throw new Error(`Invalid relationship strength: ${relationship.strength}`);
           }
           console.log(`✓ Calculated strength: ${relationship.strength}%`);
 
           // Verify sentiment analysis if expected
-          if (test.expectedSentiment !== undefined && (!relationship.metadata || relationship.metadata.sentiment === undefined)) {
+          if (
+            test.expectedSentiment !== undefined &&
+            (!relationship.metadata || relationship.metadata.sentiment === undefined)
+          ) {
             throw new Error('Expected sentiment analysis but none performed');
           }
           if (relationship.metadata?.sentiment !== undefined) {
             const sentiment = relationship.metadata.sentiment as number;
-            console.log(`✓ Analyzed sentiment: ${sentiment > 0 ? 'positive' : sentiment < 0 ? 'negative' : 'neutral'} (${sentiment})`);
+            console.log(
+              `✓ Analyzed sentiment: ${sentiment > 0 ? 'positive' : sentiment < 0 ? 'negative' : 'neutral'} (${sentiment})`
+            );
           }
 
           // Test-specific validations
           if (test.expectedType && relationship.relationshipType !== test.expectedType) {
-            console.log(`⚠️ Expected type "${test.expectedType}" but got "${relationship.relationshipType}"`);
+            console.log(
+              `⚠️ Expected type "${test.expectedType}" but got "${relationship.relationshipType}"`
+            );
             // This is a warning, not a failure - LLM might choose different but valid types
           }
 
-          if (test.expectedStrength && Math.abs(relationship.strength - test.expectedStrength) > 30) {
-            console.log(`⚠️ Expected strength ~${test.expectedStrength} but got ${relationship.strength}`);
+          if (
+            test.expectedStrength &&
+            Math.abs(relationship.strength - test.expectedStrength) > 30
+          ) {
+            console.log(
+              `⚠️ Expected strength ~${test.expectedStrength} but got ${relationship.strength}`
+            );
           }
         }
 
@@ -137,7 +159,9 @@ export const realRelationshipInferenceTests: TestSuite = {
 
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
 
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
@@ -204,7 +228,9 @@ export const realRelationshipInferenceTests: TestSuite = {
             throw new Error('Failed to analyze complex relationship');
           }
 
-          console.log(`✓ Detected relationship type: ${relationship.relationshipType || 'unknown'}`);
+          console.log(
+            `✓ Detected relationship type: ${relationship.relationshipType || 'unknown'}`
+          );
           console.log(`✓ Strength: ${relationship.strength || 0}%`);
 
           // Check if metadata captures complexity
@@ -233,7 +259,9 @@ export const realRelationshipInferenceTests: TestSuite = {
 
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
 
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
@@ -260,23 +288,28 @@ export const realRelationshipInferenceTests: TestSuite = {
         // Series of interactions showing relationship evolution
         const interactions = [
           {
-            context: 'Henry and Isabel met at a blockchain conference. They exchanged LinkedIn contacts.',
+            context:
+              'Henry and Isabel met at a blockchain conference. They exchanged LinkedIn contacts.',
             expectedStrengthRange: [10, 30], // Weak initial connection
           },
           {
-            context: 'Henry and Isabel collaborated on a DeFi project. The project was successful and they work well together.',
+            context:
+              'Henry and Isabel collaborated on a DeFi project. The project was successful and they work well together.',
             expectedStrengthRange: [40, 60], // Strengthening
           },
           {
-            context: 'Isabel recommended Henry for a senior position at her company. Henry got the job thanks to her referral.',
+            context:
+              'Isabel recommended Henry for a senior position at her company. Henry got the job thanks to her referral.',
             expectedStrengthRange: [60, 80], // Strong professional relationship
           },
           {
-            context: 'Henry and Isabel had a major disagreement about the technical architecture. The discussion got heated.',
+            context:
+              'Henry and Isabel had a major disagreement about the technical architecture. The discussion got heated.',
             expectedStrengthRange: [40, 60], // Some weakening but still connected
           },
           {
-            context: 'After some time, Henry and Isabel resolved their differences and are now planning to start a company together.',
+            context:
+              'After some time, Henry and Isabel resolved their differences and are now planning to start a company together.',
             expectedStrengthRange: [70, 90], // Very strong partnership
           },
         ];
@@ -284,7 +317,9 @@ export const realRelationshipInferenceTests: TestSuite = {
         let previousStrength = 0;
 
         for (const [index, interaction] of interactions.entries()) {
-          console.log(`\n📈 Interaction ${index + 1}: "${interaction.context.substring(0, 50)}..."`);
+          console.log(
+            `\n📈 Interaction ${index + 1}: "${interaction.context.substring(0, 50)}..."`
+          );
 
           const relationship = await entityGraphService.analyzeInteraction(
             henryId,
@@ -304,7 +339,9 @@ export const realRelationshipInferenceTests: TestSuite = {
           // Verify strength is in expected range
           const [minStrength, maxStrength] = interaction.expectedStrengthRange;
           if (currentStrength < minStrength || currentStrength > maxStrength) {
-            console.log(`⚠️ Strength ${currentStrength} outside expected range [${minStrength}, ${maxStrength}]`);
+            console.log(
+              `⚠️ Strength ${currentStrength} outside expected range [${minStrength}, ${maxStrength}]`
+            );
           }
 
           // Check if relationship evolved appropriately
@@ -316,13 +353,13 @@ export const realRelationshipInferenceTests: TestSuite = {
           previousStrength = currentStrength;
 
           // Wait a bit between interactions
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
 
         // Verify final relationship state
         const finalRelationships = await entityGraphService.getEntityRelationships(henryId);
-        const isabelRelationship = finalRelationships.find(r =>
-          r.targetEntityId === isabelId || r.sourceEntityId === isabelId
+        const isabelRelationship = finalRelationships.find(
+          (r) => r.targetEntityId === isabelId || r.sourceEntityId === isabelId
         );
 
         if (!isabelRelationship) {

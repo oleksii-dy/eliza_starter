@@ -7,7 +7,12 @@ import {
   stringToUuid,
   ModelType,
 } from '@elizaos/core';
-import type { EntityProfile, PlatformIdentity, TrustEvent, BehaviorProfile } from '../types';
+import type {
+  EntityProfile,
+  PlatformIdentity,
+  TrustEvent as _TrustEvent,
+  BehaviorProfile as _BehaviorProfile,
+} from '../types';
 import { EventBridge, RolodexEventType, type EntityEvent } from '../managers/EventBridge';
 
 // Enhanced entity resolution interfaces
@@ -401,7 +406,9 @@ export class EntityResolutionManager {
       const mergedNames = [...primaryEntity.names];
 
       for (const candidate of candidateEntities) {
-        if (!candidate) {continue;}
+        if (!candidate) {
+          continue;
+        }
 
         // Merge names
         for (const name of candidate.names) {
@@ -699,7 +706,7 @@ export class EntityResolutionManager {
   private async calculateRiskFactors(
     entity: Entity,
     identifier: string,
-    context: ResolutionContext
+    _context: ResolutionContext
   ): Promise<RiskFactor[]> {
     const risks: RiskFactor[] = [];
 
@@ -784,13 +791,13 @@ export class EntityResolutionManager {
 
   private async detectAndHandleConflicts(
     candidates: EntityResolutionCandidate[],
-    context: ResolutionContext
+    _context: ResolutionContext
   ): Promise<EntityResolutionCandidate[]> {
     // Group candidates by confidence level
     const highConfidence = candidates.filter(
       (c) => c.confidence > this.resolutionConfig.highConfidenceThreshold
     );
-    const mediumConfidence = candidates.filter(
+    const _mediumConfidence = candidates.filter(
       (c) =>
         c.confidence > this.resolutionConfig.mediumConfidenceThreshold &&
         c.confidence <= this.resolutionConfig.highConfidenceThreshold
@@ -888,7 +895,8 @@ export class EntityResolutionManager {
         const roomEntities = await this.runtime.getEntitiesForRoom(roomId);
 
         for (const entity of roomEntities) {
-          const platformIdentities = entity.metadata?.platformIdentities || {};
+          const platformIdentities: { [platform: string]: any } =
+            entity.metadata?.platformIdentities || {};
 
           if (platformIdentities[platform]) {
             const identity = platformIdentities[platform];
@@ -1002,7 +1010,9 @@ Respond with only the numeric score (e.g., "0.65")`;
 
       // Find entities with similar names or characteristics
       for (const otherEntity of allEntities) {
-        if (otherEntity.id === entity.id) {continue;} // Skip self
+        if (otherEntity.id === entity.id) {
+          continue;
+        } // Skip self
 
         // Check for name similarities
         const nameSimilarity = await this.calculateNameSimilarity(
@@ -1015,8 +1025,10 @@ Respond with only the numeric score (e.g., "0.65")`;
         }
 
         // Check for platform identity overlaps
-        const entityPlatforms = entity.metadata?.platformIdentities || {};
-        const otherPlatforms = otherEntity.metadata?.platformIdentities || {};
+        const entityPlatforms: { [platform: string]: any } =
+          entity.metadata?.platformIdentities || {};
+        const otherPlatforms: { [platform: string]: any } =
+          otherEntity.metadata?.platformIdentities || {};
 
         for (const [platform, identity] of Object.entries(entityPlatforms)) {
           if (
@@ -1047,7 +1059,8 @@ Respond with only the numeric score (e.g., "0.65")`;
     const conflicts: string[] = [];
 
     try {
-      const platformIdentities = entity.metadata?.platformIdentities || {};
+      const platformIdentities: { [platform: string]: any } =
+        entity.metadata?.platformIdentities || {};
 
       // Check for internal conflicts within the entity's platform identities
       const platforms = Object.keys(platformIdentities);
@@ -1175,7 +1188,8 @@ Respond with only the numeric score (e.g., "0.65")`;
       let factors = 0;
 
       // Check platform identity overlaps
-      const targetPlatforms = targetEntity.metadata?.platformIdentities || {};
+      const targetPlatforms: { [platform: string]: any } =
+        targetEntity.metadata?.platformIdentities || {};
       for (const [platform, identity] of identityGraph.platformIdentities) {
         if (targetPlatforms[platform] && typeof targetPlatforms[platform] === 'object') {
           const targetIdentity = targetPlatforms[platform];
@@ -1221,10 +1235,11 @@ Respond with only the numeric score (e.g., "0.65")`;
     identityGraph: IdentityGraph,
     targetEntity: Entity
   ): Promise<string> {
-    const targetPlatforms = targetEntity.metadata?.platformIdentities || {};
+    const targetPlatforms: { [platform: string]: any } =
+      targetEntity.metadata?.platformIdentities || {};
 
     // Check for platform matches
-    for (const [platform, identity] of identityGraph.platformIdentities) {
+    for (const [platform, _identity] of identityGraph.platformIdentities) {
       if (targetPlatforms[platform]) {
         return `shared_platform_${platform}`;
       }
@@ -1366,7 +1381,9 @@ Respond with only the numeric score (e.g., "0.65")`;
       // Merge platform identities from candidate graphs
       for (const candidateId of candidateIds) {
         const candidateGraph = this.identityGraphs.get(candidateId);
-        if (!candidateGraph) {continue;}
+        if (!candidateGraph) {
+          continue;
+        }
 
         // Merge platform identities
         for (const [platform, identity] of candidateGraph.platformIdentities) {

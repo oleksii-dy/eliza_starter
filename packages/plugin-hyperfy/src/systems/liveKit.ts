@@ -1,4 +1,4 @@
-import { System } from '@elizaos/hyperfy';
+import type { HyperfySystem } from '../types/hyperfy.js';
 import type { HyperfyWorld } from '../types/hyperfy.js';
 import { spawn } from 'node:child_process';
 
@@ -21,13 +21,14 @@ interface Room {
   };
 }
 
-export class AgentLiveKit extends System {
+export class AgentLiveKit implements HyperfySystem {
+  world: any;
   private room: Room | null = null;
   private audioSource: any = null;
   private localTrack: any = null;
 
   constructor(world: any) {
-    super(world);
+    this.world = world;
   }
 
   async deserialize(opts: LiveKitInitOptions): Promise<void> {

@@ -1,3 +1,4 @@
+import { Quaternion, Vector3 } from 'three';
 import { describe, it, expect, beforeEach, beforeAll } from 'bun:test';
 import { mock, spyOn } from 'bun:test';
 import { Physics } from '../../core/systems/Physics.js';
@@ -229,8 +230,8 @@ describe('Physics System', () => {
       physics.addActor(mockActor, handle);
 
       expect(handle.interpolation).toBeDefined();
-      expect(handle.interpolation?.prev.position).toBeInstanceOf(THREE.Vector3);
-      expect(handle.interpolation?.prev.quaternion).toBeInstanceOf(THREE.Quaternion);
+      expect(handle.interpolation?.prev.position).toBeInstanceOf(Vector3);
+      expect(handle.interpolation?.prev.quaternion).toBeInstanceOf(Quaternion);
     });
 
     it('should add actor to scene if not a controller', () => {
@@ -319,9 +320,9 @@ describe('Physics System', () => {
       const handle: any = {
         onInterpolate,
         interpolation: {
-          prev: { position: new THREE.Vector3(0, 0, 0), quaternion: new THREE.Quaternion() },
-          next: { position: new THREE.Vector3(1, 0, 0), quaternion: new THREE.Quaternion() },
-          curr: { position: new THREE.Vector3(), quaternion: new THREE.Quaternion() },
+          prev: { position: new Vector3(0, 0, 0), quaternion: new Quaternion() },
+          next: { position: new Vector3(1, 0, 0), quaternion: new Quaternion() },
+          curr: { position: new Vector3(), quaternion: new Quaternion() },
         },
         contactedHandles: new Set(),
         triggeredHandles: new Set(),

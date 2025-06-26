@@ -68,9 +68,9 @@ class BaseEntity implements Entity {
   }
 
   addComponent(type: string, data?: any): any {
-    const component = { type, data };
-    this.components.set(type, component);
-    return component;
+    // Store component data directly for easier access
+    this.components.set(type, data || {});
+    return data || {};
   }
 
   removeComponent(type: string): void {
@@ -78,18 +78,18 @@ class BaseEntity implements Entity {
   }
 
   getComponent<T>(type: string): T | null {
-    return this.components.get(type) || null;
+    return this.components.get(type) as T || null;
   }
 
   hasComponent(type: string): boolean {
     return this.components.has(type);
   }
 
-  applyForce(force: any): void {
+  applyForce(_force: any): void {
     // Physics implementation
   }
 
-  applyImpulse(impulse: any): void {
+  applyImpulse(_impulse: any): void {
     // Physics implementation
   }
 
@@ -105,7 +105,7 @@ class BaseEntity implements Entity {
     Object.assign(this.data, data);
   }
 
-  onEvent(version: number, name: string, data: any, networkId: string): void {
+  onEvent(_version: number, _name: string, _data: any, _networkId: string): void {
     // Handle events
   }
 
@@ -113,9 +113,9 @@ class BaseEntity implements Entity {
     return this.data;
   }
 
-  fixedUpdate?(delta: number): void;
-  update?(delta: number): void;
-  lateUpdate?(delta: number): void;
+  fixedUpdate?(_delta: number): void;
+  update?(_delta: number): void;
+  lateUpdate?(_delta: number): void;
 
   destroy(local?: boolean): void {
     if (local && 'network' in this.world) {
@@ -249,24 +249,24 @@ export class Entities extends System implements IEntities {
     }
   }
 
-  override fixedUpdate(delta: number): void {
+  override fixedUpdate(_delta: number): void {
     const hotEntities = Array.from(this.hot);
     for (const entity of hotEntities) {
-      entity.fixedUpdate?.(delta);
+      entity.fixedUpdate?.(_delta);
     }
   }
 
-  override update(delta: number): void {
+  override update(_delta: number): void {
     const hotEntities = Array.from(this.hot);
     for (const entity of hotEntities) {
-      entity.update?.(delta);
+      entity.update?.(_delta);
     }
   }
 
-  override lateUpdate(delta: number): void {
+  override lateUpdate(_delta: number): void {
     const hotEntities = Array.from(this.hot);
     for (const entity of hotEntities) {
-      entity.lateUpdate?.(delta);
+      entity.lateUpdate?.(_delta);
     }
   }
 

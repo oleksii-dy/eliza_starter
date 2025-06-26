@@ -15,8 +15,9 @@ import {
   asUUID,
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
-import os from 'os';
+// These imports are not currently used but may be needed for future features
+// import path from 'path';
+// import os from 'os';
 
 export interface RealRuntimeConfig {
   /**
@@ -28,9 +29,8 @@ export interface RealRuntimeConfig {
    * Database configuration
    */
   database: {
-    type: 'pglite' | 'postgres';
+    type: 'postgres';
     url?: string;
-    dataDir?: string;
   };
 
   /**
@@ -164,54 +164,10 @@ export class RealRuntimeFactory {
     config: RealRuntimeConfig,
     agentId: string
   ): Promise<IDatabaseAdapter> {
-    if (config.database.type === 'pglite') {
-      return this.createPGLiteAdapter(config, agentId);
-    } else if (config.database.type === 'postgres') {
+    if (config.database.type === 'postgres') {
       return this.createPostgresAdapter(config, agentId);
     } else {
       throw new Error(`Unsupported database type: ${config.database.type}`);
-    }
-  }
-
-  /**
-   * Create PGLite adapter for testing
-   */
-  private static async createPGLiteAdapter(
-    config: RealRuntimeConfig,
-    agentId: string
-  ): Promise<IDatabaseAdapter> {
-    try {
-      // Import database creation utilities
-      const { createDatabaseAdapter } = await import('@elizaos/plugin-sql');
-
-      // Create unique data directory for isolation
-      const baseDir = config.database.dataDir || os.tmpdir();
-      const dataDir = config.isolation.isolatedDatabase
-        ? path.join(baseDir, 'eliza-test', agentId)
-        : config.database.dataDir || './test-db';
-
-      // Ensure directory exists
-      await import('fs').then((fs) => {
-        fs.mkdirSync(path.dirname(dataDir), { recursive: true });
-      });
-
-      // Create adapter using the plugin's factory method with correct signature
-      const adapter = await createDatabaseAdapter({ dataDir }, asUUID(agentId));
-
-      // Check if adapter was created successfully
-      if (!adapter) {
-        throw new Error('PGLite adapter creation returned null/undefined');
-      }
-
-      logger.info('PGLite adapter created', { dataDir, agentId });
-      return adapter;
-    } catch (error) {
-      logger.warn('PGLite adapter creation failed, creating fallback mock adapter', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-
-      // Create a minimal mock adapter for testing when PGLite fails
-      return this.createMockDatabaseAdapter(agentId);
     }
   }
 
@@ -223,7 +179,7 @@ export class RealRuntimeFactory {
     agentId: string
   ): Promise<IDatabaseAdapter> {
     // Import PostgreSQL adapter
-    // const { PostgresDatabaseAdapter } = await import('@elizaos/plugin-sql');
+    // const { PostgresDatabaseAdapter } = await import('@elizaos/plugin-sql') as any;
 
     // Use provided URL or construct test database URL
     let databaseUrl = config.database.url;
@@ -459,8 +415,11 @@ export class RealRuntimeFactory {
     return {
       character,
       database: {
-        type: 'pglite',
-        dataDir: path.join(os.tmpdir(), 'eliza-test'),
+        type: 'postgres',
+        url:
+          process.env.TEST_POSTGRES_URL ||
+          process.env.POSTGRES_URL ||
+          'postgresql://localhost:5432/eliza_test',
         ...overrides.database,
       },
       plugins: {

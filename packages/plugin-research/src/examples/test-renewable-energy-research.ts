@@ -9,7 +9,14 @@ import path from 'path';
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 import { ResearchService } from '../service';
-import { logger, IAgentRuntime, ModelType, Character, UUID, asUUID } from '@elizaos/core';
+import {
+  logger,
+  IAgentRuntime,
+  ModelType,
+  Character,
+  UUID,
+  asUUID,
+} from '@elizaos/core';
 import { ResearchConfig, ResearchStatus } from '../types';
 import fs from 'fs/promises';
 
@@ -17,12 +24,19 @@ import fs from 'fs/promises';
 const createRealRuntime = (): IAgentRuntime => {
   const testCharacter: Character = {
     name: 'EnergyResearcher',
-    bio: ['An expert researcher focused on renewable energy and sustainability'],
+    bio: [
+      'An expert researcher focused on renewable energy and sustainability',
+    ],
     system:
       'You are an expert research assistant specializing in renewable energy, environmental science, and grid-scale energy storage technologies.',
     messageExamples: [],
     postExamples: [],
-    topics: ['renewable energy', 'energy storage', 'environmental impact', 'grid technology'],
+    topics: [
+      'renewable energy',
+      'energy storage',
+      'environmental impact',
+      'grid technology',
+    ],
     knowledge: [],
     plugins: ['research'],
   };
@@ -49,7 +63,10 @@ const createRealRuntime = (): IAgentRuntime => {
       const messages = params?.messages || [];
       const lastMessage = messages[messages.length - 1]?.content || '';
 
-      logger.debug(`[Model ${modelType}] Processing:`, `${lastMessage.substring(0, 100)}...`);
+      logger.debug(
+        `[Model ${modelType}] Processing:`,
+        `${lastMessage.substring(0, 100)}...`
+      );
 
       // Handle different types of model requests
       if (lastMessage.includes('Analyze this research query')) {
@@ -59,7 +76,11 @@ const createRealRuntime = (): IAgentRuntime => {
             taskType: 'comparative',
             temporalFocus: 'current',
             geographicScope: ['global'],
-            requiredExpertise: ['energy storage', 'environmental science', 'economics'],
+            requiredExpertise: [
+              'energy storage',
+              'environmental science',
+              'economics',
+            ],
             expectedSourceTypes: ['academic', 'technical', 'government'],
           }),
         };
@@ -100,7 +121,9 @@ PRIORITY: medium`,
       }
 
       // Default response
-      return { content: 'Analysis complete. Findings integrated into research report.' };
+      return {
+        content: 'Analysis complete. Findings integrated into research report.',
+      };
     },
 
     // Memory managers
@@ -195,13 +218,21 @@ async function testRenewableEnergyResearch() {
         // Save the report if completed
         if (currentProject.report) {
           // Export as markdown
-          const markdownReport = await service.exportProject(project.id, 'markdown');
-          const reportPath = path.join(__dirname, '../../test-renewable-energy-report.md');
+          const markdownReport = await service.exportProject(
+            project.id,
+            'markdown'
+          );
+          const reportPath = path.join(
+            __dirname,
+            '../../test-renewable-energy-report.md'
+          );
           await fs.writeFile(reportPath, markdownReport);
           logger.info(`✅ Report saved to: ${reportPath}`);
 
           // Show first 500 chars of the report
-          logger.info(`\n📄 Report Preview:\n${markdownReport.substring(0, 500)}...\n`);
+          logger.info(
+            `\n📄 Report Preview:\n${markdownReport.substring(0, 500)}...\n`
+          );
 
           // Check if report contains renewable energy content
           const hasRelevantContent =
@@ -210,9 +241,13 @@ async function testRenewableEnergyResearch() {
             markdownReport.toLowerCase().includes('battery');
 
           if (hasRelevantContent) {
-            logger.info('✅ Report contains relevant renewable energy content!');
+            logger.info(
+              '✅ Report contains relevant renewable energy content!'
+            );
           } else {
-            logger.error('❌ Report does NOT contain relevant renewable energy content!');
+            logger.error(
+              '❌ Report does NOT contain relevant renewable energy content!'
+            );
           }
         }
 
@@ -224,7 +259,10 @@ async function testRenewableEnergyResearch() {
 
     // Export the project data for analysis
     const exportData = await service.exportProject(project.id, 'json');
-    const exportPath = path.join(__dirname, '../../test-renewable-energy-export.json');
+    const exportPath = path.join(
+      __dirname,
+      '../../test-renewable-energy-export.json'
+    );
     await fs.writeFile(exportPath, exportData);
     logger.info(`✅ Project data exported to: ${exportPath}`);
 

@@ -47,7 +47,7 @@ afterAll(() => {
 });
 
 describe('Integration: Browser Navigation with StagehandService', () => {
-  let mockRuntime: MockRuntime;
+  let mockRuntime: IAgentRuntime;
   let service: StagehandService;
 
   beforeEach(() => {
@@ -158,7 +158,7 @@ describe('Integration: Browser Navigation with StagehandService', () => {
 });
 
 describe('Integration: Session Management', () => {
-  let mockRuntime: MockRuntime;
+  let mockRuntime: IAgentRuntime;
   let service: StagehandService;
 
   beforeEach(() => {
@@ -240,7 +240,9 @@ describe('Integration: Plugin initialization and service registration', () => {
 
     // Simulate service registration
     if (stagehandPlugin.services) {
-      const ServiceClass = stagehandPlugin.services[0];
+      const serviceEntry = stagehandPlugin.services[0];
+      const ServiceClass =
+        typeof serviceEntry === 'function' ? serviceEntry : serviceEntry.component;
       const serviceInstance = await ServiceClass.start(mockRuntime as unknown as IAgentRuntime);
 
       // Register the Service class
@@ -253,7 +255,7 @@ describe('Integration: Plugin initialization and service registration', () => {
 });
 
 describe('Integration: Error Handling', () => {
-  let mockRuntime: MockRuntime;
+  let mockRuntime: IAgentRuntime;
 
   beforeEach(() => {
     mock.restore();

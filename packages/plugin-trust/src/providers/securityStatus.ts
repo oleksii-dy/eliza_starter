@@ -2,7 +2,8 @@ import { type Provider, type IAgentRuntime, type Memory, type State, logger } fr
 
 export const securityStatusProvider: Provider = {
   name: 'securityStatus',
-  description: 'Provides real-time security threat assessment and incident alerts when agent needs to evaluate safety, respond to security concerns, or make risk-aware decisions',
+  description:
+    'Provides real-time security threat assessment and incident alerts when agent needs to evaluate safety, respond to security concerns, or make risk-aware decisions',
 
   get: async (runtime: IAgentRuntime, message: Memory, _state: State) => {
     try {

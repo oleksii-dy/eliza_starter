@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import axios, { AxiosError } from 'axios';
 import { logger } from '@elizaos/core';
 import { z } from 'zod';
@@ -124,7 +125,9 @@ export class FirecrawlContentExtractor {
       const validatedData = FirecrawlResponseSchema.parse(response.data);
 
       if (!validatedData.success || !validatedData.data) {
-        logger.error(`[Firecrawl] Failed to extract content: ${validatedData.error}`);
+        logger.error(
+          `[Firecrawl] Failed to extract content: ${validatedData.error}`
+        );
         return null;
       }
 
@@ -137,7 +140,9 @@ export class FirecrawlContentExtractor {
       }
 
       const duration = Date.now() - startTime;
-      logger.info(`[Firecrawl] Content extracted in ${duration}ms (${content.length} characters)`);
+      logger.info(
+        `[Firecrawl] Content extracted in ${duration}ms (${content.length} characters)`
+      );
 
       return {
         content,
@@ -182,7 +187,9 @@ export class FirecrawlContentExtractor {
     }
   }
 
-  async extractBatch(urls: string[]): Promise<Map<string, ExtractedContent | null>> {
+  async extractBatch(
+    urls: string[]
+  ): Promise<Map<string, ExtractedContent | null>> {
     logger.info(`[Firecrawl] Extracting content from ${urls.length} URLs`);
 
     const results = new Map<string, ExtractedContent | null>();
@@ -268,11 +275,14 @@ export class FirecrawlContentExtractor {
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
-        const response = await axios.get(`${this.baseUrl}/crawl/status/${jobId}`, {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-          },
-        });
+        const response = await axios.get(
+          `${this.baseUrl}/crawl/status/${jobId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.apiKey}`,
+            },
+          }
+        );
 
         const { status, data } = response.data;
 
@@ -289,7 +299,9 @@ export class FirecrawlContentExtractor {
             }
           });
 
-          logger.info(`[Firecrawl] Crawl completed: ${results.size} pages extracted`);
+          logger.info(
+            `[Firecrawl] Crawl completed: ${results.size} pages extracted`
+          );
           return results;
         } else if (status === 'failed') {
           logger.error('[Firecrawl] Crawl job failed');
@@ -320,7 +332,11 @@ export class FirecrawlContentExtractor {
   }
 
   // Get current API usage
-  async getUsage(): Promise<{ used: number; limit: number; remaining: number } | null> {
+  async getUsage(): Promise<{
+    used: number;
+    limit: number;
+    remaining: number;
+  } | null> {
     try {
       const response = await axios.get(`${this.baseUrl}/usage`, {
         headers: { Authorization: `Bearer ${this.apiKey}` },

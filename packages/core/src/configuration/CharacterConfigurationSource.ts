@@ -3,8 +3,8 @@ import type {
   PluginConfiguration,
   ComponentConfigState,
 } from '../types/plugin';
-import type { Character } from '../types/agent.js';
-import { elizaLogger } from '../logger.js';
+import type { Character } from '../types/agent';
+import { elizaLogger } from '../logger';
 
 /**
  * Configuration source that reads plugin configurations from character files

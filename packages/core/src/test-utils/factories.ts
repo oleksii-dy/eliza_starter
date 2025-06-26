@@ -5,7 +5,7 @@
  * mock objects to create realistic testing scenarios.
  */
 
-import { mock } from './mocks/mock-utils';
+import { mock } from './mocks/mockUtils';
 import type {
   IAgentRuntime,
   Memory,

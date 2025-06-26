@@ -1,4 +1,11 @@
-import { type Action, type IAgentRuntime, type Memory, type State, logger } from '../types/core.d';
+import {
+  type Action,
+  type IAgentRuntime,
+  type Memory,
+  type State,
+  logger,
+  asUUID,
+} from '../types/core.d';
 import { TrustMiddleware } from '@elizaos/plugin-trust';
 import type { CustodialWalletService } from '../services/CustodialWalletService';
 
@@ -54,7 +61,7 @@ export class AgentKitTrustValidator {
 
       // Check if user has basic permission to the wallet
       const hasPermission = custodialService.hasPermission(
-        walletId as any,
+        asUUID(walletId),
         message.entityId,
         operation
       );
@@ -69,14 +76,23 @@ export class AgentKitTrustValidator {
       // Check trust level using plugin-trust if available
       const trustService = runtime.getService('trust-engine');
       if (trustService) {
-        const trustEngine = (trustService as any).trustEngine;
+        const trustEngine = (
+          trustService as {
+            trustEngine?: {
+              calculateTrust: (
+                entityId: string,
+                context: unknown
+              ) => Promise<{ overallTrust: number }>;
+            };
+          }
+        ).trustEngine;
         if (trustEngine) {
           const trustProfile = await trustEngine.calculateTrust(message.entityId, {
             evaluatorId: runtime.agentId,
             roomId: message.roomId,
           });
 
-          const wallet = await custodialService.getWallet(walletId as any);
+          const wallet = await custodialService.getWallet(asUUID(walletId));
           const requiredTrust = wallet?.metadata?.trustLevel || 30;
 
           if (trustProfile.overallTrust < requiredTrust) {
@@ -270,7 +286,16 @@ export class HighValueTransactionValidator {
         // Require elevated trust for high-value transactions
         const trustService = runtime.getService('trust-engine');
         if (trustService) {
-          const trustEngine = (trustService as any).trustEngine;
+          const trustEngine = (
+            trustService as {
+              trustEngine?: {
+                calculateTrust: (
+                  entityId: string,
+                  context: unknown
+                ) => Promise<{ overallTrust: number }>;
+              };
+            }
+          ).trustEngine;
           if (trustEngine) {
             const trustProfile = await trustEngine.calculateTrust(message.entityId, {
               evaluatorId: runtime.agentId,

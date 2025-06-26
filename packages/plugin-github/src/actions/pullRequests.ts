@@ -341,6 +341,7 @@ export const createPullRequestAction: Action = {
   name: 'CREATE_GITHUB_PULL_REQUEST',
   similes: ['NEW_PR', 'SUBMIT_PR', 'CREATE_PR', 'OPEN_PULL_REQUEST'],
   description: 'Creates a new GitHub pull request',
+  enabled: false, // Disabled by default - PR creation modifies repository state
 
   validate: async (
     runtime: IAgentRuntime,
@@ -522,6 +523,7 @@ export const mergePullRequestAction: Action = {
   name: 'MERGE_GITHUB_PULL_REQUEST',
   similes: ['MERGE_PR', 'ACCEPT_PR', 'APPROVE_PR'],
   description: 'Merges a GitHub pull request',
+  enabled: false, // Disabled by default - merging modifies repository state
 
   validate: async (
     runtime: IAgentRuntime,

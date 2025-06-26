@@ -1,5 +1,5 @@
 import { System } from './System.js';
-import * as THREE from '../extras/three.js';
+import { THREE } from '../extras/three.js';
 import { DEG2RAD, RAD2DEG } from '../extras/general.js';
 import { clamp, num, uuid } from '../utils.js';
 import { LerpVector3 } from '../extras/LerpVector3.js';
@@ -22,8 +22,8 @@ declare const Compartment: any;
  */
 
 export interface ScriptResult {
-  exec: (...args: any[]) => any;
-  code: string;
+  exec: (...args: any[]) => any
+  code: string
 }
 
 export class Scripts extends System {

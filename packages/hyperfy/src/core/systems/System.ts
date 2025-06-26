@@ -18,7 +18,7 @@ export abstract class System extends EventEmitter implements ISystem {
    * Initialize the system with world options
    * Called once when the world is initialized
    */
-  async init(options: WorldOptions): Promise<void> {
+  async init(_options: WorldOptions): Promise<void> {
     // Override in subclasses if needed
   }
 
@@ -49,56 +49,56 @@ export abstract class System extends EventEmitter implements ISystem {
   /**
    * Called before fixed update steps
    */
-  preFixedUpdate(willFixedStep: boolean): void {
+  preFixedUpdate(_willFixedStep: boolean): void {
     // Override in subclasses if needed
   }
 
   /**
    * Fixed timestep update for physics and deterministic logic
    */
-  fixedUpdate(delta: number): void {
+  fixedUpdate(_delta: number): void {
     // Override in subclasses if needed
   }
 
   /**
    * Called after fixed update steps
    */
-  postFixedUpdate(delta: number): void {
+  postFixedUpdate(_delta: number): void {
     // Override in subclasses if needed
   }
 
   /**
    * Called before main update with interpolation alpha
    */
-  preUpdate(alpha: number): void {
+  preUpdate(_alpha: number): void {
     // Override in subclasses if needed
   }
 
   /**
    * Main update loop
    */
-  update(delta: number): void {
+  update(_delta: number): void {
     // Override in subclasses if needed
   }
 
   /**
    * Called after main update
    */
-  postUpdate(delta: number): void {
+  postUpdate(_delta: number): void {
     // Override in subclasses if needed
   }
 
   /**
    * Late update for camera and final adjustments
    */
-  lateUpdate(delta: number): void {
+  lateUpdate(_delta: number): void {
     // Override in subclasses if needed
   }
 
   /**
    * Called after late update
    */
-  postLateUpdate(delta: number): void {
+  postLateUpdate(_delta: number): void {
     // Override in subclasses if needed
   }
 

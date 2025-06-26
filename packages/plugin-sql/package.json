@@ -26,12 +26,12 @@
     "drizzle"
   ],
   "dependencies": {
-    "@electric-sql/pglite": "^0.3.3",
     "@elizaos/core": "workspace:*",
     "@types/pg": "8.11.10",
     "drizzle-kit": "^0.30.4",
     "drizzle-orm": "^0.44.2",
-    "pg": "^8.13.3"
+    "pg": "^8.13.3",
+    "pgvector": "^0.2.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",
@@ -43,22 +43,16 @@
     "glob": "^11.0.3",
     "ms": "^2.1.3",
     "prettier": "3.5.3",
-    "tsup": "8.5.0",
     "typescript-eslint": "^8.26.0",
     "zod": "^3.22.4"
   },
   "scripts": {
-    "build": "bun run typecheck && tsup",
-    "dev": "tsup --watch",
-    "migrate:generate": "drizzle-kit generate",
-    "migrate": "tsup src/migrate.ts --format esm --clean=false --onSuccess=\"node dist/migrate.js\"",
-    "lint": "eslint src --fix && prettier --write .",
-    "lint:check": "eslint src && prettier --check .",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "test": "elizaos test",
-    "build:clean": "rm -rf dist",
-    "lint:fix": "eslint . --fix"
+    "test": "elizaos test"
   },
   "peerDependencies": {
     "typescript": "5.8.3",

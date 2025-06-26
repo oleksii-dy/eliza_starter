@@ -18,91 +18,9 @@ export function usePartialUpdate<T extends object>(initialValue: T) {
   const [value, setValue] = useState<T>(initialValue);
 
   /**
-   * Updates a specific field in the object, handling nested paths
-   *
-   * @param path The path to the field to update (e.g., 'settings.voice.model')
-   * @param newValue The new value for the field
-   */
-  const updateField = useCallback(<K>(path: string, newValue: K) => {
-    setValue((prevValue) => {
-      // Handle simple (non-nested) case
-      if (!path.includes('.')) {
-        return {
-          ...prevValue,
-          [path]: newValue,
-        } as T;
-      }
-
-      // Handle nested paths
-      const pathParts = path.split('.');
-      const fieldToUpdate = pathParts[0];
-      const remainingPath = pathParts.slice(1).join('.');
-
-      // Handle arrays in path (e.g., 'style.all.0')
-      const isArrayIndex = !isNaN(Number(pathParts[1]));
-
-      if (isArrayIndex) {
-        const arrayName = pathParts[0];
-        const index = Number(pathParts[1]);
-        // Ensure we're working with an array and handle it safely
-        const currentValue = prevValue[arrayName as keyof T];
-        const array = Array.isArray(currentValue) ? [...currentValue] : [];
-
-        if (pathParts.length === 2) {
-          // Direct array item update
-          array[index] = newValue;
-        } else {
-          // Updating a property of an object in an array
-          const deeperPath = pathParts.slice(2).join('.');
-          array[index] = updateNestedObject(array[index], deeperPath, newValue);
-        }
-
-        return {
-          ...prevValue,
-          [arrayName]: array,
-        } as T;
-      }
-
-      // Special case for settings.secrets path
-      if (path.startsWith('settings.secrets.')) {
-        const secretKey = path.split('.')[2];
-
-        const currentSettings =
-          (prevValue as { settings?: Record<string, unknown> }).settings || {};
-        const currentSecrets = currentSettings.secrets || {};
-
-        const newSecrets = {
-          ...currentSecrets,
-          [secretKey]: newValue,
-        };
-
-        return {
-          ...prevValue,
-          settings: {
-            ...currentSettings,
-            secrets: newSecrets,
-          },
-        } as T;
-      }
-
-      // Handle regular nested objects
-      const result = {
-        ...prevValue,
-        [fieldToUpdate]: updateNestedObject(
-          prevValue[fieldToUpdate as keyof T],
-          remainingPath,
-          newValue
-        ),
-      } as T;
-
-      return result;
-    });
-  }, []);
-
-  /**
    * Helper function to update a nested object
    */
-  const updateNestedObject = <K, V>(obj: K, path: string, value: V): K => {
+  const updateNestedObject = useCallback(<K, V>(obj: K, path: string, value: V): K => {
     if (!path.includes('.')) {
       return {
         ...obj,
@@ -121,101 +39,97 @@ export function usePartialUpdate<T extends object>(initialValue: T) {
         value
       ),
     } as unknown as K;
-  };
-
-  /**
-   * Adds an item to an array field
-   *
-   * @param path Path to the array field
-   * @param item Item to add
-   */
-  const addArrayItem = useCallback(<V>(path: string, item: V) => {
-    setValue((prevValue) => {
-      const pathParts = path.split('.');
-
-      // Handle simple array field
-      if (pathParts.length === 1) {
-        const fieldName = pathParts[0];
-        const currentArray = Array.isArray(prevValue[fieldName as keyof T])
-          ? [...(prevValue[fieldName as keyof T] as unknown as V[])]
-          : [];
-
-        return {
-          ...prevValue,
-          [fieldName]: [...currentArray, item],
-        } as T;
-      }
-
-      // Handle nested array field
-      const updatePath = path;
-      const currentValue = getNestedValue(prevValue, updatePath);
-      const currentArray = Array.isArray(currentValue) ? [...currentValue] : [];
-
-      return setNestedValue(prevValue, updatePath, [...currentArray, item]);
-    });
   }, []);
 
   /**
-   * Removes an item from an array field
+   * Updates a specific field in the object, handling nested paths
    *
-   * @param path Path to the array field
-   * @param index Index of the item to remove
+   * @param path The path to the field to update (e.g., 'settings.voice.model')
+   * @param newValue The new value for the field
    */
-  const removeArrayItem = useCallback((path: string, index: number) => {
-    setValue((prevValue) => {
-      const pathParts = path.split('.');
-
-      // Handle simple array field
-      if (pathParts.length === 1) {
-        const fieldName = pathParts[0];
-        const currentArray = Array.isArray(prevValue[fieldName as keyof T])
-          ? [...(prevValue[fieldName as keyof T] as unknown as unknown[])]
-          : [];
-
-        if (index < 0 || index >= currentArray.length) {
-          return prevValue;
+  const updateField = useCallback(
+    <K>(path: string, newValue: K) => {
+      setValue((prevValue) => {
+        // Handle simple (non-nested) case
+        if (!path.includes('.')) {
+          return {
+            ...prevValue,
+            [path]: newValue,
+          } as T;
         }
 
-        return {
+        // Handle nested paths
+        const pathParts = path.split('.');
+        const fieldToUpdate = pathParts[0];
+        const remainingPath = pathParts.slice(1).join('.');
+
+        // Handle arrays in path (e.g., 'style.all.0')
+        const isArrayIndex = !isNaN(Number(pathParts[1]));
+
+        if (isArrayIndex) {
+          const arrayName = pathParts[0];
+          const index = Number(pathParts[1]);
+          // Ensure we're working with an array and handle it safely
+          const currentValue = prevValue[arrayName as keyof T];
+          const array = Array.isArray(currentValue) ? [...currentValue] : [];
+
+          if (pathParts.length === 2) {
+            // Direct array item update
+            array[index] = newValue;
+          } else {
+            // Updating a property of an object in an array
+            const deeperPath = pathParts.slice(2).join('.');
+            array[index] = updateNestedObject(array[index], deeperPath, newValue);
+          }
+
+          return {
+            ...prevValue,
+            [arrayName]: array,
+          } as T;
+        }
+
+        // Special case for settings.secrets path
+        if (path.startsWith('settings.secrets.')) {
+          const secretKey = path.split('.')[2];
+
+          const currentSettings =
+            (prevValue as { settings?: Record<string, unknown> }).settings || {};
+          const currentSecrets = currentSettings.secrets || {};
+
+          const newSecrets = {
+            ...currentSecrets,
+            [secretKey]: newValue,
+          };
+
+          return {
+            ...prevValue,
+            settings: {
+              ...currentSettings,
+              secrets: newSecrets,
+            },
+          } as T;
+        }
+
+        // Handle regular nested objects
+        const result = {
           ...prevValue,
-          [fieldName]: [...currentArray.slice(0, index), ...currentArray.slice(index + 1)],
+          [fieldToUpdate]: updateNestedObject(
+            prevValue[fieldToUpdate as keyof T],
+            remainingPath,
+            newValue
+          ),
         } as T;
-      }
 
-      // Handle nested array field
-      const updatePath = path;
-      const currentValue = getNestedValue(prevValue, updatePath);
-
-      if (!Array.isArray(currentValue) || index < 0 || index >= currentValue.length) {
-        return prevValue;
-      }
-
-      const newArray = [...currentValue.slice(0, index), ...currentValue.slice(index + 1)];
-      return setNestedValue(prevValue, updatePath, newArray);
-    });
-  }, []);
-
-  /**
-   * Helper function to get a nested value from an object
-   */
-  const getNestedValue = (obj: Record<string, unknown>, path: string): unknown => {
-    const parts = path.split('.');
-    let current = obj;
-
-    for (const part of parts) {
-      if (current === null || current === undefined) {
-        return undefined;
-      }
-      current = current[part];
-    }
-
-    return current;
-  };
+        return result;
+      });
+    },
+    [updateNestedObject]
+  );
 
   /**
    * Helper function to set a nested value in an object
    */
-  const setNestedValue = <O, V>(obj: O, path: string, value: V): O => {
+  const setNestedValue = useCallback(<O, V>(obj: O, path: string, value: V): O => {
     const parts = path.split('.');
 
     if (parts.length === 1) {
@@ -232,6 +146,101 @@ export function usePartialUpdate<T extends object>(initialValue: T) {
       ...obj,
       [first]: setNestedValue(nextObj, rest.join('.'), value),
     } as O;
+  }, []);
+
+  /**
+   * Adds an item to an array field
+   *
+   * @param path Path to the array field
+   * @param item Item to add
+   */
+  const addArrayItem = useCallback(
+    <V>(path: string, item: V) => {
+      setValue((prevValue) => {
+        const pathParts = path.split('.');
+
+        // Handle simple array field
+        if (pathParts.length === 1) {
+          const fieldName = pathParts[0];
+          const currentArray = Array.isArray(prevValue[fieldName as keyof T])
+            ? [...(prevValue[fieldName as keyof T] as unknown as V[])]
+            : [];
+
+          return {
+            ...prevValue,
+            [fieldName]: [...currentArray, item],
+          } as T;
+        }
+
+        // Handle nested array field
+        const updatePath = path;
+        const currentValue = getNestedValue(prevValue, updatePath);
+        const currentArray = Array.isArray(currentValue) ? [...currentValue] : [];
+
+        return setNestedValue(prevValue, updatePath, [...currentArray, item]);
+      });
+    },
+    [setNestedValue]
+  );
+
+  /**
+   * Removes an item from an array field
+   *
+   * @param path Path to the array field
+   * @param index Index of the item to remove
+   */
+  const removeArrayItem = useCallback(
+    (path: string, index: number) => {
+      setValue((prevValue) => {
+        const pathParts = path.split('.');
+
+        // Handle simple array field
+        if (pathParts.length === 1) {
+          const fieldName = pathParts[0];
+          const currentArray = Array.isArray(prevValue[fieldName as keyof T])
+            ? [...(prevValue[fieldName as keyof T] as unknown as unknown[])]
+            : [];
+
+          if (index < 0 || index >= currentArray.length) {
+            return prevValue;
+          }
+
+          return {
+            ...prevValue,
+            [fieldName]: [...currentArray.slice(0, index), ...currentArray.slice(index + 1)],
+          } as T;
+        }
+
+        // Handle nested array field
+        const updatePath = path;
+        const currentValue = getNestedValue(prevValue, updatePath);
+
+        if (!Array.isArray(currentValue) || index < 0 || index >= currentValue.length) {
+          return prevValue;
+        }
+
+        const newArray = [...currentValue.slice(0, index), ...currentValue.slice(index + 1)];
+        return setNestedValue(prevValue, updatePath, newArray);
+      });
+    },
+    [setNestedValue]
+  );
+
+  /**
+   * Helper function to get a nested value from an object
+   */
+  const getNestedValue = (obj: Record<string, unknown>, path: string): unknown => {
+    const parts = path.split('.');
+    let current = obj;
+
+    for (const part of parts) {
+      if (current === null || current === undefined) {
+        return undefined;
+      }
+      current = current[part];
+    }
+
+    return current;
   };
 
   /**

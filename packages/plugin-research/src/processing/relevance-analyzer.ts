@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { logger, IAgentRuntime, ModelType } from '@elizaos/core';
 import { SearchResult, ResearchSource, ResearchFinding } from '../types';
 
@@ -60,7 +61,9 @@ Format as JSON:
       });
 
       const responseContent =
-        typeof response === 'string' ? response : (response as any).content || '';
+        typeof response === 'string'
+          ? response
+          : (response as any).content || '';
       const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
 
       if (jsonMatch) {
@@ -73,7 +76,10 @@ Format as JSON:
         return analysis;
       }
     } catch (error) {
-      logger.error('[RelevanceAnalyzer] Failed to analyze query relevance:', error);
+      logger.error(
+        '[RelevanceAnalyzer] Failed to analyze query relevance:',
+        error
+      );
     }
 
     // Fallback analysis
@@ -135,12 +141,15 @@ Format as JSON:
       });
 
       const responseContent =
-        typeof response === 'string' ? response : (response as any).content || '';
+        typeof response === 'string'
+          ? response
+          : (response as any).content || '';
       const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
 
       if (jsonMatch) {
         const score = JSON.parse(jsonMatch[0]);
-        const finalScore = (score.queryAlignment + score.topicRelevance + score.specificity) / 3;
+        const finalScore =
+          (score.queryAlignment + score.topicRelevance + score.specificity) / 3;
 
         logger.debug('[RelevanceAnalyzer] Search result scored:', {
           url: result.url,
@@ -165,8 +174,14 @@ Format as JSON:
     }
 
     // Fallback: Simple keyword matching
-    const titleScore = this.calculateKeywordScore(result.title, queryAnalysis.keyTopics);
-    const snippetScore = this.calculateKeywordScore(result.snippet, queryAnalysis.keyTopics);
+    const titleScore = this.calculateKeywordScore(
+      result.title,
+      queryAnalysis.keyTopics
+    );
+    const snippetScore = this.calculateKeywordScore(
+      result.snippet,
+      queryAnalysis.keyTopics
+    );
     const fallbackScore = (titleScore + snippetScore) / 2;
 
     return {
@@ -230,12 +245,15 @@ Format as JSON:
       });
 
       const responseContent =
-        typeof response === 'string' ? response : (response as any).content || '';
+        typeof response === 'string'
+          ? response
+          : (response as any).content || '';
       const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
 
       if (jsonMatch) {
         const score = JSON.parse(jsonMatch[0]);
-        const finalScore = (score.queryAlignment + score.topicRelevance + score.specificity) / 3;
+        const finalScore =
+          (score.queryAlignment + score.topicRelevance + score.specificity) / 3;
 
         logger.debug('[RelevanceAnalyzer] Finding scored:', {
           score: finalScore,
@@ -256,7 +274,10 @@ Format as JSON:
     }
 
     // Fallback scoring
-    const keywordScore = this.calculateKeywordScore(finding.content, queryAnalysis.keyTopics);
+    const keywordScore = this.calculateKeywordScore(
+      finding.content,
+      queryAnalysis.keyTopics
+    );
     return {
       score: keywordScore,
       reasoning: `Fallback keyword scoring: ${keywordScore.toFixed(2)}`,
@@ -277,7 +298,9 @@ Format as JSON:
     gaps: string[];
     recommendations: string[];
   }> {
-    logger.info(`[RelevanceAnalyzer] Verifying query answering for ${findings.length} findings`);
+    logger.info(
+      `[RelevanceAnalyzer] Verifying query answering for ${findings.length} findings`
+    );
 
     const findingSummaries = findings
       .slice(0, 20) // Limit for prompt size
@@ -317,7 +340,9 @@ Format as JSON:
       });
 
       const responseContent =
-        typeof response === 'string' ? response : (response as any).content || '';
+        typeof response === 'string'
+          ? response
+          : (response as any).content || '';
       const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
 
       if (jsonMatch) {
@@ -330,7 +355,10 @@ Format as JSON:
         return assessment;
       }
     } catch (error) {
-      logger.error('[RelevanceAnalyzer] Failed to verify query answering:', error);
+      logger.error(
+        '[RelevanceAnalyzer] Failed to verify query answering:',
+        error
+      );
     }
 
     return {
@@ -377,7 +405,9 @@ Format as JSON:
     }
 
     const lowerText = text.toLowerCase();
-    const matches = keywords.filter((keyword) => lowerText.includes(keyword.toLowerCase()));
+    const matches = keywords.filter((keyword) =>
+      lowerText.includes(keyword.toLowerCase())
+    );
     return matches.length / keywords.length;
   }
 }

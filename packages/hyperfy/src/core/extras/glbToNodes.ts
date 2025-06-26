@@ -1,5 +1,5 @@
 import { createNode } from './createNode';
-import * as THREE from 'three';
+import { THREE } from './three';
 import CustomShaderMaterial from '../libs/three-custom-shader-material';
 
 const groupTypes = ['Scene', 'Group', 'Object3D'];
@@ -14,7 +14,7 @@ export function glbToNodes(glb: any, world: any) {
     const node = createNode(name, data);
     return node;
   }
-  function parse(object3ds: THREE.Object3D[], parentNode: any) {
+  function parse(object3ds: any[], parentNode: any) {
     for (const object3d of object3ds) {
       const props = object3d.userData || {};
       const isSkinnedMeshRoot = !!object3d.children.find(c => (c as any).isSkinnedMesh);
@@ -47,7 +47,7 @@ export function glbToNodes(glb: any, world: any) {
           scale: object3d.scale.toArray(),
         });
         parentNode.add(node);
-        parse(object3d.children as unknown as THREE.Object3D[], node);
+        parse(object3d.children as unknown as any[], node);
       }
       // LOD (custom node)
       else if (props.node === 'lod') {
@@ -59,7 +59,7 @@ export function glbToNodes(glb: any, world: any) {
           scaleAware: props.scaleAware,
         });
         parentNode.add(node);
-        parse(object3d.children as unknown as THREE.Object3D[], node);
+        parse(object3d.children as unknown as any[], node);
       }
       // RigidBody (custom node)
       else if (props.node === 'rigidbody') {
@@ -72,7 +72,7 @@ export function glbToNodes(glb: any, world: any) {
           scale: object3d.scale.toArray(),
         });
         parentNode.add(node);
-        parse(object3d.children as unknown as THREE.Object3D[], node);
+        parse(object3d.children as unknown as any[], node);
       }
       // Collider (custom node)
       else if (props.node === 'collider' && (object3d as any).isMesh) {
@@ -80,7 +80,7 @@ export function glbToNodes(glb: any, world: any) {
         // but since the Group is the one that has the collider custom property, it won't work as expected. we could hack to fix this, but i think it adds a layer of indirection.
         // colliders should not have materials on them.
         // console.error('TODO: glbToNodes collider for box/sphere in blender?')
-        const mesh = (object3d as unknown) as THREE.Mesh;
+        const mesh = (object3d as unknown) as any;
         const node = registerNode('collider', {
           id: mesh.name,
           type: 'geometry',
@@ -92,11 +92,11 @@ export function glbToNodes(glb: any, world: any) {
           scale: mesh.scale.toArray(),
         });
         parentNode.add(node);
-        parse(mesh.children as unknown as THREE.Object3D[], node);
+        parse(mesh.children as unknown as any[], node);
       }
       // Mesh
       else if (object3d.type === 'Mesh') {
-        const mesh = (object3d as unknown) as THREE.Mesh;
+        const mesh = (object3d as unknown) as any;
         // experimental splatmaps
         if (props.exp_splatmap && !world.network.isServer) {
           setupSplatmap(mesh);
@@ -125,7 +125,7 @@ export function glbToNodes(glb: any, world: any) {
         } else {
           parentNode.add(node);
         }
-        parse(mesh.children as unknown as THREE.Object3D[], node);
+        parse(mesh.children as unknown as any[], node);
       }
       // SkinnedMesh
       else if (object3d.type === 'SkinnedMesh') {
@@ -140,19 +140,19 @@ export function glbToNodes(glb: any, world: any) {
           scale: object3d.scale.toArray(),
         });
         parentNode.add(node);
-        parse(object3d.children as unknown as THREE.Object3D[], node);
+        parse(object3d.children as unknown as any[], node);
       }
     }
   }
   const root = registerNode('group', {
     id: '$root',
   });
-  parse(glb.scene.children as unknown as THREE.Object3D[], root);
+  parse(glb.scene.children as unknown as any[], root);
   // console.log('$root', root)
   return root;
 }
 
-function addWind(mesh: THREE.Mesh, world: any) {
+function addWind(mesh: any, world: any) {
   if (!world.wind) {return;}
   const uniforms = world.wind.uniforms;
   const material = mesh.material as any;
@@ -304,7 +304,7 @@ const snoise = `
   }
 `;
 
-function setupSplatmap(mesh: THREE.Mesh) {
+function setupSplatmap(mesh: any) {
   /**
    * TODO
    * - vertex colors should shade terrain

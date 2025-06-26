@@ -5,7 +5,7 @@ import { HealthStatus } from '../types.ts';
 import * as os from 'os';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { execAsync } from '../utils/execAsync.ts';
+import { execAsync as _execAsync } from '../utils/execAsync.ts';
 
 export class HealthMonitoringManager {
   private runtime: IAgentRuntime;
@@ -70,7 +70,7 @@ export class HealthMonitoringManager {
     }
 
     // Stop individual plugin checks
-    for (const [key, interval] of this.checkIntervals) {
+    for (const [_key, interval] of this.checkIntervals) {
       clearInterval(interval);
     }
     this.checkIntervals.clear();
@@ -160,7 +160,7 @@ export class HealthMonitoringManager {
 
   async recoverPlugin(
     pluginId: string,
-    options?: { force?: boolean }
+    _options?: { force?: boolean }
   ): Promise<{ success: boolean; message: string }> {
     const metrics = this.pluginMetrics.get(pluginId);
     if (!metrics) {
@@ -246,7 +246,7 @@ export class HealthMonitoringManager {
   }
 
   onAlert(callback: (alert: any) => void): void {
-    const id = `callback_${Date.now()}_${Math.random()}`;
+    const _id = `callback_${Date.now()}_${Math.random()}`;
     if (!this.alertCallbacks.has('global')) {
       this.alertCallbacks.set('global', []);
     }
@@ -795,7 +795,7 @@ export class HealthMonitoringManager {
 
   private startPeriodicChecks(): void {
     // Start monitoring for each registered plugin
-    for (const [pluginId, metrics] of this.pluginMetrics) {
+    for (const [pluginId, _metrics] of this.pluginMetrics) {
       const checkKey = `plugin_${pluginId}`;
 
       // Skip if already has a periodic check

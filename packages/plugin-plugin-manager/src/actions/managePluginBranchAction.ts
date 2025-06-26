@@ -57,7 +57,7 @@ export const managePluginBranchAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory): Promise<boolean> => {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
@@ -193,7 +193,7 @@ export const managePluginBranchAction: Action = {
 
           if (history.versions.length > 0) {
             responseText += '\nRecent versions:\n';
-            history.versions.slice(0, 5).forEach((version) => {
+            history.versions.slice(0, 5).forEach((version: any) => {
               responseText += `* v${version.version} - ${version.message} (${new Date(version.timestamp).toLocaleDateString()})\n`;
             });
           }

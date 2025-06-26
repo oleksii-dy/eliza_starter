@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, mock } from 'bun:test';
-import { parseEther, formatEther, parseUnits, formatUnits } from 'viem';
-import type { Address } from 'viem';
+import { type Address, parseEther, formatEther, parseUnits, formatUnits } from 'viem';
 
 import { WalletProvider } from '../providers/wallet';
 import { SwapAction } from '../actions/swap';
@@ -8,7 +7,7 @@ import {
   mainnetChains,
   MAINNET_TOKENS,
   MAINNET_TEST_REQUIREMENTS,
-  MAINNET_DEXES,
+  MAINNET_DEXES as _MAINNET_DEXES,
 } from './test-config';
 
 // Skip these tests unless explicitly running mainnet swap tests

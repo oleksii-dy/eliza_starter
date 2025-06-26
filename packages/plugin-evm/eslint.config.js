@@ -7,10 +7,10 @@ export default [
   // Base JavaScript config
   js.configs.recommended,
   
-  // TypeScript config for source files
+  // TypeScript config for source files (excluding TSX)
   {
-    files: ['src/**/*.ts', 'src/**/*.tsx'],
-    ignores: ['src/**/*.test.ts', 'src/**/*.spec.ts', 'src/tests/**'],
+    files: ['src/**/*.ts'],
+    ignores: ['src/**/*.test.ts', 'src/**/*.spec.ts', 'src/tests/**', 'src/**/*.tsx'],
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {

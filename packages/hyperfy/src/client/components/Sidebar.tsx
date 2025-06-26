@@ -1,3 +1,4 @@
+import { THREE } from '../../core/extras/three';
 import { cloneDeep, isArray, isBoolean } from 'lodash-es';
 import {
   BoxIcon,
@@ -25,7 +26,6 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { exportApp } from '../../core/extras/appTools';
 import { downloadFile } from '../../core/extras/downloadFile';
 import { DEG2RAD, RAD2DEG } from '../../core/extras/general';
-import * as THREE from '../../core/extras/three';
 import { storage } from '../../core/storage';
 import { uuid } from '../../core/utils';
 import { hashFile } from '../../core/utils-client';
@@ -68,8 +68,7 @@ backdrop-filter: blur(5px);
  */
 
 export function Sidebar({ world, ui }) {
-  const { isAdmin, isBuilder } = usePermissions(world);
-  const player = world.entities.player;
+  const { isBuilder } = usePermissions(world);
   const [livekit, setLiveKit] = useState(() => world.livekit.status);
   useEffect(() => {
     const onLiveKitStatus = status => {
@@ -545,7 +544,7 @@ function Btn({ disabled = false, suspended = false, active = false, children, ..
   );
 }
 
-function Content({ width = '20rem', hidden, children }) {
+function _Content({ width = '20rem', hidden, children }) {
   return (
     <div
       className={cls('sidebar-content', { hidden })}
@@ -641,7 +640,7 @@ const shadowOptions = [
 ];
 function Prefs({ world, hidden }) {
   const player = world.entities.player;
-  const { isAdmin, isBuilder } = usePermissions(world);
+  const { isBuilder } = usePermissions(world);
   const [name, setName] = useState(() => player.data.name);
   const [dpr, setDPR] = useState(world.prefs.dpr);
   const [shadows, setShadows] = useState(world.prefs.shadows);
@@ -651,16 +650,16 @@ function Prefs({ world, hidden }) {
   const [sfx, setSFX] = useState(world.prefs.sfx);
   const [voice, setVoice] = useState(world.prefs.voice);
   const [ui, setUI] = useState(world.prefs.ui);
-  const [canFullscreen, isFullscreen, toggleFullscreen] = useFullscreen(null);
+  const [_canFullscreen, isFullscreen, toggleFullscreen] = useFullscreen(null);
   const [actions, setActions] = useState(world.prefs.actions);
-  const [stats, setStats] = useState(world.prefs.stats);
+  const [_stats, setStats] = useState(world.prefs.stats);
   const changeName = name => {
     if (!name) {return setName(player.data.name);}
     player.setName(name);
   };
   const dprOptions = useMemo(() => {
-    const width = world.graphics.width;
-    const height = world.graphics.height;
+    const _width = world.graphics.width;
+    const _height = world.graphics.height;
     const dpr = window.devicePixelRatio;
     const options: Array<{label: string; value: number}> = [];
     const add = (label: string, dpr: number) => {
@@ -816,7 +815,6 @@ function Prefs({ world, hidden }) {
 }
 
 function World({ world, hidden }) {
-  const player = world.entities.player;
   const { isAdmin } = usePermissions(world);
   const [title, setTitle] = useState(world.settings.title);
   const [desc, setDesc] = useState(world.settings.desc);
@@ -962,7 +960,7 @@ function Apps({ world, hidden }) {
         <div
           ref={contentRef}
           className="apps-content noscrollbar"
-          onScroll={e => {
+          onScroll={() => {
             if (contentRef.current) {
               appsState.scrollTop = contentRef.current.scrollTop;
             }
@@ -978,8 +976,8 @@ function Apps({ world, hidden }) {
 function Add({ world, hidden }) {
   // note: multiple collections are supported by the engine but for now we just use the 'default' collection.
   const collection = world.collections.get('default');
-  const span = 4;
-  const gap = '0.5rem';
+  const _span = 4;
+  const _gap = '0.5rem';
   const add = blueprint => {
     blueprint = cloneDeep(blueprint);
     blueprint.id = uuid();
@@ -1278,7 +1276,7 @@ function AppTransformFields({ app }) {
 // that will also somehow need to support both model and avatar kinds.
 function AppModelBtn({ value, onChange, children }) {
   const [key, setKey] = useState(0);
-  const handleDownload = e => {
+  const _handleDownload = e => {
     if (e.shiftKey) {
       e.preventDefault();
       const file = world.loader?.getFile?.(value);
@@ -1462,9 +1460,9 @@ function Script({ world, hidden }) {
     const elem = resizeRef.current;
     const container = containerRef.current;
     if (container && storage) {container.style.width = `${storage.get('code-editor-width', 500)}px`;}
-    let active;
+    let _active;
     function onPointerDown(e) {
-      active = true;
+      _active = true;
       elem?.addEventListener('pointermove', onPointerMove);
       elem?.addEventListener('pointerup', onPointerUp);
       e.currentTarget.setPointerCapture(e.pointerId);

@@ -4,10 +4,12 @@ import { IAgentRuntime, Media, ModelType, ContentType, logger } from '@elizaos/c
 import { createMockRuntime, MockRuntime } from './test-utils';
 
 describe('processAttachments', () => {
-  let mockRuntime: MockRuntime;
+  let mockRuntime: IAgentRuntime;
 
   beforeEach(() => {
-    mockRuntime = createMockRuntime();
+    mockRuntime = createMockRuntime({
+      useModel: mock().mockResolvedValue(''),
+    }) as unknown as IAgentRuntime;
     mock.restore();
 
     // Spy on logger methods
@@ -22,12 +24,12 @@ describe('processAttachments', () => {
   });
 
   it('should return empty array for no attachments', async () => {
-    const result = await processAttachments([], mockRuntime as IAgentRuntime);
+    const result = await processAttachments([], mockRuntime);
     expect(result).toEqual([]);
   });
 
   it('should return empty array for null/undefined attachments', async () => {
-    const result = await processAttachments(null as any, mockRuntime as IAgentRuntime);
+    const result = await processAttachments(null as any, mockRuntime);
     expect(result).toEqual([]);
   });
 
@@ -46,7 +48,7 @@ describe('processAttachments', () => {
   <text>This image captures a breathtaking sunset scene over a calm ocean. The sky is painted with brilliant hues of orange, pink, and purple as the sun dips below the horizon. Gentle waves lap at the shore, creating a peaceful and serene atmosphere.</text>
 </response>`);
 
-    const result = await processAttachments([imageAttachment], mockRuntime as IAgentRuntime);
+    const result = await processAttachments([imageAttachment], mockRuntime);
 
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('image-1');
@@ -73,7 +75,10 @@ describe('processAttachments', () => {
       text: 'Existing text',
     };
 
-    const result = await processAttachments([imageWithDescription], mockRuntime as IAgentRuntime);
+    // Make sure useModel is a mock
+    mockRuntime.useModel = mock().mockResolvedValue('');
+
+    const result = await processAttachments([imageWithDescription], mockRuntime);
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual(imageWithDescription);
@@ -88,7 +93,10 @@ describe('processAttachments', () => {
       title: 'PDF Document',
     };
 
-    const result = await processAttachments([pdfAttachment], mockRuntime as IAgentRuntime);
+    // Make sure useModel is a mock
+    mockRuntime.useModel = mock().mockResolvedValue('');
+
+    const result = await processAttachments([pdfAttachment], mockRuntime);
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual(pdfAttachment);
@@ -123,7 +131,7 @@ describe('processAttachments', () => {
   <text>Detailed description of the test image</text>
 </response>`);
 
-    const result = await processAttachments(attachments, mockRuntime as IAgentRuntime);
+    const result = await processAttachments(attachments, mockRuntime);
 
     expect(result).toHaveLength(3);
     // Only the first image should be processed
@@ -148,7 +156,7 @@ describe('processAttachments', () => {
       text: 'Object response text',
     });
 
-    const result = await processAttachments([imageAttachment], mockRuntime as IAgentRuntime);
+    const result = await processAttachments([imageAttachment], mockRuntime);
 
     expect(result).toHaveLength(1);
     expect(result[0].title).toBe('Object Response Title');
@@ -167,7 +175,7 @@ describe('processAttachments', () => {
     // Mock malformed XML response
     mockRuntime.useModel = mock().mockResolvedValue('This is not valid XML');
 
-    const result = await processAttachments([imageAttachment], mockRuntime as IAgentRuntime);
+    const result = await processAttachments([imageAttachment], mockRuntime);
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual(imageAttachment); // Should return original
@@ -200,7 +208,7 @@ describe('processAttachments', () => {
   <text>Detailed description of the second image</text>
 </response>`);
 
-    const result = await processAttachments(attachments, mockRuntime as IAgentRuntime);
+    const result = await processAttachments(attachments, mockRuntime);
 
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual(attachments[0]); // First image unchanged due to error
@@ -243,7 +251,7 @@ describe('processAttachments', () => {
 </response>`);
     });
 
-    const result = await processAttachments(attachments, mockRuntime as IAgentRuntime);
+    const result = await processAttachments(attachments, mockRuntime);
 
     expect(result).toHaveLength(3);
     expect(mockRuntime.useModel).toHaveBeenCalledTimes(3);
@@ -268,7 +276,7 @@ describe('processAttachments', () => {
   <text>Detailed text without title</text>
 </response>`);
 
-    const result = await processAttachments([imageAttachment], mockRuntime as IAgentRuntime);
+    const result = await processAttachments([imageAttachment], mockRuntime);
 
     expect(result).toHaveLength(1);
     expect(result[0].title).toBe('Image'); // Default title

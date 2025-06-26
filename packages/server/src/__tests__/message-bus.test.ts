@@ -2,35 +2,14 @@
  * Unit tests for MessageBusService
  */
 
-import { describe, it, expect, beforeEach, mock } from 'bun:test';
-import { MessageBusService } from '../services/message';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
+import { MessageBusService } from '../services/MessageBusService';
 import { createMockAgentRuntime } from './test-utils/mocks';
 import { EventType, type IAgentRuntime, type UUID } from '@elizaos/core';
 import { logger } from '@elizaos/core';
-import internalMessageBus from '../bus';
+import internalMessageBus from '../MessageBus';
 
-// Mock the internal message bus
-mock.module('../bus', () => ({
-  default: {
-    on: mock(),
-    off: mock(),
-    emit: mock(),
-  },
-}));
-
-// Mock logger
-mock.module('@elizaos/core', async () => {
-  const actual = await import('@elizaos/core');
-  return {
-    ...actual,
-    logger: {
-      info: mock(),
-      debug: mock(),
-      warn: mock(),
-      error: mock(),
-    },
-  };
-});
+// Mock dependencies removed due to timeout issues in Bun
 
 // Mock fetch
 const mockFetch = mock() as any;
@@ -64,7 +43,7 @@ describe('MessageBusService', () => {
     mockRuntime.getSetting = mock().mockReturnValue('http://localhost:3000');
 
     // Mock successful fetch responses
-    mockFetch.mockImplementation((url) => {
+    mockFetch.mockImplementation((url: string) => {
       // Mock central servers channels endpoint
       if (url.includes('/api/messaging/central-servers/') && url.includes('/channels')) {
         return Promise.resolve({
@@ -167,7 +146,7 @@ describe('MessageBusService', () => {
     it('should handle new messages from the bus', async () => {
       // Get the handler that was registered
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'new_message'
+        (call: any) => call[0] === 'new_message'
       )[1];
 
       const testMessage = {
@@ -201,7 +180,7 @@ describe('MessageBusService', () => {
 
     it('should skip messages from self', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'new_message'
+        (call: any) => call[0] === 'new_message'
       )[1];
 
       const testMessage = {
@@ -232,7 +211,7 @@ describe('MessageBusService', () => {
 
     it('should skip messages if agent not in channel', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'new_message'
+        (call: any) => call[0] === 'new_message'
       )[1];
 
       const testMessage = {
@@ -250,7 +229,7 @@ describe('MessageBusService', () => {
 
       // Clear previous mocks and set up specific mock for this test
       mockFetch.mockClear();
-      mockFetch.mockImplementation((url) => {
+      mockFetch.mockImplementation((url: string) => {
         if (url.includes('/api/messaging/central-channels/') && url.includes('/participants')) {
           return Promise.resolve({
             ok: true,
@@ -289,7 +268,7 @@ describe('MessageBusService', () => {
 
     it('should handle message processing errors gracefully', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'new_message'
+        (call: any) => call[0] === 'new_message'
       )[1];
 
       const testMessage = {
@@ -307,7 +286,7 @@ describe('MessageBusService', () => {
 
       // Clear previous mocks and set up error mock for this test
       mockFetch.mockClear();
-      mockFetch.mockImplementation((url) => {
+      mockFetch.mockImplementation((url: string) => {
         if (url.includes('/api/messaging/central-channels/') && url.includes('/participants')) {
           return Promise.reject(new Error('Network error'));
         }
@@ -329,7 +308,7 @@ describe('MessageBusService', () => {
   describe('message deletion handling', () => {
     it('should handle message deletion events', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'message_deleted'
+        (call: any) => call[0] === 'message_deleted'
       )[1];
 
       const deleteData = {
@@ -358,7 +337,7 @@ describe('MessageBusService', () => {
 
     it('should handle deletion when message not found', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'message_deleted'
+        (call: any) => call[0] === 'message_deleted'
       )[1];
 
       const deleteData = {
@@ -379,7 +358,7 @@ describe('MessageBusService', () => {
   describe('channel clearing', () => {
     it('should handle channel clear events', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'channel_cleared'
+        (call: any) => call[0] === 'channel_cleared'
       )[1];
 
       const clearData = {
@@ -411,7 +390,7 @@ describe('MessageBusService', () => {
   describe('server agent updates', () => {
     it('should handle agent added to server', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'server_agent_update'
+        (call: any) => call[0] === 'server_agent_update'
       )[1];
 
       const updateData = {
@@ -429,7 +408,7 @@ describe('MessageBusService', () => {
 
     it('should handle agent removed from server', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'server_agent_update'
+        (call: any) => call[0] === 'server_agent_update'
       )[1];
 
       const updateData = {
@@ -447,7 +426,7 @@ describe('MessageBusService', () => {
 
     it('should ignore updates for other agents', async () => {
       const handler = (internalMessageBus.on as any).mock.calls.find(
-        (call) => call[0] === 'server_agent_update'
+        (call: any) => call[0] === 'server_agent_update'
       )[1];
 
       const updateData = {

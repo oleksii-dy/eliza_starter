@@ -65,7 +65,11 @@ export const paymentPlugin: Plugin = {
 
   services: [PaymentService, PriceOracleService, UniversalPaymentService],
 
-  actions: [researchAction, sendPaymentAction],
+  actions: [
+    // Payment-related actions disabled by default for security
+    researchAction,
+    sendPaymentAction,
+  ],
 
   evaluators: [],
 

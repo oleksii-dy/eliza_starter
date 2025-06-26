@@ -195,7 +195,7 @@ export class HuggingFaceClient {
       repo: { type: 'dataset', name: repoId },
       file: {
         path: 'README.md',
-        // eslint-disable-next-line no-undef
+
         content: new Blob([new TextEncoder().encode(readme)]),
       },
       commitTitle: 'Add README',
@@ -402,7 +402,7 @@ For questions or issues with this dataset, please contact the ElizaOS team.
       repo: { type: 'dataset', name: repoId },
       file: {
         path: 'dataset_info.json',
-        // eslint-disable-next-line no-undef
+
         content: new Blob([new TextEncoder().encode(JSON.stringify(datasetCard, null, 2))]),
       },
       commitTitle: 'Add dataset card',
@@ -612,7 +612,7 @@ For questions or issues with this dataset, please contact the ElizaOS team.
       repo: { type: 'model', name: repoId },
       file: {
         path: 'README.md',
-        // eslint-disable-next-line no-undef
+
         content: new Blob([new TextEncoder().encode(modelCard)]),
       },
       commitTitle: 'Add model card',

@@ -368,7 +368,10 @@ Extract at least 5-10 key claims from the text.`,
 /**
  * Helper function to format prompts with variables
  */
-export function formatPrompt(template: string, variables: Record<string, any>): string {
+export function formatPrompt(
+  template: string,
+  variables: Record<string, any>
+): string {
   let formatted = template;
   for (const [key, value] of Object.entries(variables)) {
     formatted = formatted.replace(new RegExp(`{${key}}`, 'g'), String(value));

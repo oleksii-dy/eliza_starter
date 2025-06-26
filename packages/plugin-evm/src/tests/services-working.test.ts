@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, mock } from 'bun:test';
+import { describe, it, expect, beforeEach, mock as _mock } from 'bun:test';
 import { createMockRuntime, testPrivateKey, getTestChains } from './test-config';
 import { WalletProvider } from '../providers/wallet';
 import { ChainConfigService } from '../core/chains/config';
 import type { IAgentRuntime } from '@elizaos/core';
-import * as dbService from '../core/database/service';
+import * as _dbService from '../core/database/service';
 
 describe('EVM Services Working Tests', () => {
   let mockRuntime: IAgentRuntime;

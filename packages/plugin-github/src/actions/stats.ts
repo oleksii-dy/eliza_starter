@@ -99,7 +99,7 @@ export const getRepositoryStatsAction: Action = {
       const languagePercentages = Object.entries(languages || {})
         .map(([lang, bytes]: [string, any]) => ({
           language: lang,
-          percentage: ((bytes / totalBytes) * 100).toFixed(1),
+          percentage: ((Number(bytes) / Number(totalBytes)) * 100).toFixed(1),
         }))
         .sort((a, b) => parseFloat(b.percentage) - parseFloat(a.percentage))
         .slice(0, 5);

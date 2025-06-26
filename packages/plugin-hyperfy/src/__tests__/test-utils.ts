@@ -1,5 +1,13 @@
 import { mock } from 'bun:test';
-import type { IAgentRuntime, Memory, State, UUID, Provider, Action, Service } from '@elizaos/core';
+import {
+  type IAgentRuntime,
+  type Memory,
+  type State,
+  type UUID,
+  type Provider,
+  type Action,
+  Service,
+} from '@elizaos/core';
 
 /**
  * Creates a mock runtime for testing
@@ -417,11 +425,23 @@ export function createMockHyperfyService(): any {
 
 // Add spy on console for common usage in tests
 export function setupLoggerSpies() {
-  mock.spyOn(console, 'info').mockImplementation(() => {});
-  mock.spyOn(console, 'error').mockImplementation(() => {});
-  mock.spyOn(console, 'warn').mockImplementation(() => {});
-  mock.spyOn(console, 'debug').mockImplementation(() => {});
+  const originalConsole = {
+    info: console.info,
+    error: console.error,
+    warn: console.warn,
+    debug: console.debug,
+  };
+
+  console.info = mock(() => {});
+  console.error = mock(() => {});
+  console.warn = mock(() => {});
+  console.debug = mock(() => {});
 
   // allow tests to restore originals
-  return () => mock.restore();
+  return () => {
+    console.info = originalConsole.info;
+    console.error = originalConsole.error;
+    console.warn = originalConsole.warn;
+    console.debug = originalConsole.debug;
+  };
 }

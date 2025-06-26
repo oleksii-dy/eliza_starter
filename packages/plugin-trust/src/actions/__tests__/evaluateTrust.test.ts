@@ -17,7 +17,7 @@ const mockTrustProfile: TrustProfile = {
     competence: 75,
     integrity: 70,
     benevolence: 78,
-    transparency: 72
+    transparency: 72,
   },
   evidence: [],
   lastCalculated: Date.now(),
@@ -25,9 +25,9 @@ const mockTrustProfile: TrustProfile = {
   trend: {
     direction: 'stable',
     changeRate: 0,
-    lastChangeAt: Date.now()
+    lastChangeAt: Date.now(),
   },
-  interactionCount: 25
+  interactionCount: 25,
 };
 
 describe('evaluateTrustAction', () => {
@@ -40,9 +40,9 @@ describe('evaluateTrustAction', () => {
     trustEngine = {
       evaluateTrust: mock().mockResolvedValue(mockTrustProfile),
       calculateTrust: mock().mockResolvedValue(mockTrustProfile),
-      getTrustScore: mock().mockResolvedValue(75)
+      getTrustScore: mock().mockResolvedValue(75),
     };
-    (runtime.getService as unknown as Mock).mockReturnValue(trustEngine);
+    (runtime.getService as unknown as Mock<any>).mockReturnValue(trustEngine);
   });
 
   it('should return a simple trust level for the message sender', async () => {
@@ -54,7 +54,7 @@ describe('evaluateTrustAction', () => {
       'test-agent',
       expect.objectContaining({
         evaluatorId: 'test-agent',
-        roomId: 'room-1'
+        roomId: 'room-1',
       })
     );
 
@@ -64,10 +64,7 @@ describe('evaluateTrustAction', () => {
   });
 
   it('should return a detailed trust profile when requested', async () => {
-    const memory = createMockMemory(
-      '{"detailed": true}',
-      testEntityId
-    );
+    const memory = createMockMemory('{"detailed": true}', testEntityId);
     const result = await evaluateTrustAction.handler(runtime, memory);
 
     expect(result).toBeDefined();
@@ -89,14 +86,14 @@ describe('evaluateTrustAction', () => {
       'test-agent',
       expect.objectContaining({
         evaluatorId: 'test-agent',
-        roomId: 'room-1'
+        roomId: 'room-1',
       })
     );
     expect(result).toBeDefined();
   });
 
   it('should return an error if the trust engine service is not available', async () => {
-    (runtime.getService as unknown as Mock).mockReturnValue(null);
+    (runtime.getService as unknown as Mock<any>).mockReturnValue(null);
 
     const memory = createMockMemory('What is my trust score?', testEntityId);
 
@@ -114,17 +111,14 @@ describe('evaluateTrustAction', () => {
       'test-agent',
       expect.objectContaining({
         evaluatorId: 'test-agent',
-        roomId: 'room-1'
+        roomId: 'room-1',
       })
     );
     expect(result).toBeDefined();
   });
 
   it('should format trust profile with all dimensions', async () => {
-    const memory = createMockMemory(
-      '{"detailed": true}',
-      testEntityId
-    );
+    const memory = createMockMemory('{"detailed": true}', testEntityId);
 
     const result = await evaluateTrustAction.handler(runtime, memory);
 
@@ -151,7 +145,7 @@ describe('evaluateTrustAction', () => {
       trustEngine.getTrustScore.mockResolvedValue(score);
       trustEngine.evaluateTrust.mockResolvedValue({
         ...mockTrustProfile,
-        overallTrust: score
+        overallTrust: score,
       });
 
       const memory = createMockMemory('What is my trust score?', testEntityId);
@@ -166,7 +160,7 @@ describe('evaluateTrustAction', () => {
     const state = {} as State;
     expect(await evaluateTrustAction.validate(runtime, memory, state)).toBe(true);
 
-    (runtime.getService as unknown as Mock).mockReturnValue(null);
+    (runtime.getService as unknown as Mock<any>).mockReturnValue(null);
     expect(await evaluateTrustAction.validate(runtime, memory, state)).toBe(false);
   });
 
@@ -177,17 +171,14 @@ describe('evaluateTrustAction', () => {
     const result = await evaluateTrustAction.handler(runtime, memory);
 
     expect((result as any).text).toContain('Failed to evaluate trust');
-    expect((result as any).error).toBe(true);
+    expect((result as any).data?.error).toBeDefined();
   });
 
   it('should handle entity name resolution request', async () => {
-    const memory = createMockMemory(
-      '{"entityName": "Alice"}',
-      testEntityId
-    );
+    const memory = createMockMemory('{"entityName": "Alice"}', testEntityId);
     const result = await evaluateTrustAction.handler(runtime, memory);
 
     expect((result as any).text).toContain('Could not find entity with name "Alice"');
-    expect((result as any).error).toBe(true);
+    expect((result as any).data?.error).toBeDefined();
   });
 });

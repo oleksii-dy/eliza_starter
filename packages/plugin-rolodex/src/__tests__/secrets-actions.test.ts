@@ -17,7 +17,7 @@ describe('Secrets Management Actions', () => {
 
     mockRuntime = createMockRuntime({
       getSetting: mock((key: string) => {
-        const settings = {
+        const settings: { [key: string]: any } = {
           WEATHER_API_KEY: undefined,
           NEWS_API_KEY: undefined,
           FINANCE_API_KEY: undefined,
@@ -91,13 +91,7 @@ describe('Secrets Management Actions', () => {
         content: { text: 'Admin: Please store the API keys' },
       });
 
-      await storeSecretAction.handler(
-        mockRuntime,
-        message,
-        mockState,
-        {},
-        mockCallback
-      );
+      await storeSecretAction.handler(mockRuntime, message, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -166,13 +160,7 @@ describe('Secrets Management Actions', () => {
         content: { text: 'What is the weather?' },
       });
 
-      await checkWeatherAction.handler(
-        mockRuntime,
-        message,
-        mockState,
-        {},
-        mockCallback
-      );
+      await checkWeatherAction.handler(mockRuntime, message, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -205,13 +193,7 @@ describe('Secrets Management Actions', () => {
         content: { text: 'Show me technology news headlines' },
       });
 
-      const result = await getNewsAction.handler(
-        mockRuntime,
-        message,
-        mockState,
-        {},
-        mockCallback
-      );
+      const result = await getNewsAction.handler(mockRuntime, message, mockState, {}, mockCallback);
 
       expect(result).toBeDefined();
       if (typeof result === 'object' && result !== null) {
@@ -278,13 +260,7 @@ describe('Secrets Management Actions', () => {
         content: { text: 'Check AAPL stock price' },
       });
 
-      await getStockPriceAction.handler(
-        mockRuntime,
-        message,
-        mockState,
-        {},
-        mockCallback
-      );
+      await getStockPriceAction.handler(mockRuntime, message, mockState, {}, mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({

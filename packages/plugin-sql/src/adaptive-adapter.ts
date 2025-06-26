@@ -1,36 +1,34 @@
 import { logger, asUUID } from '@elizaos/core';
 import type { IDatabaseAdapter, UUID } from '@elizaos/core';
-import { PgliteDatabaseAdapter } from './pglite/adapter';
-import { PgDatabaseAdapter } from './pg/adapter';
-import { testPGLiteCompatibility } from './pglite/webassembly-fix';
+import { PgAdapter } from './pg/adapter';
+import { PgManager } from './pg/manager';
 import { connectionRegistry } from './connection-registry';
 
 export interface AdaptiveConfig {
-  // Primary configuration (will try PGLite first if no postgresUrl)
+  // PostgreSQL configuration
   postgresUrl?: string;
-  dataDir?: string;
-
-  // Fallback configuration
-  fallbackToPostgres?: boolean;
   fallbackPostgresUrl?: string;
 
-  // Testing configuration
-  skipCompatibilityTest?: boolean;
-  forceAdapter?: 'pglite' | 'postgres';
+  // Connection options
+  ssl?: boolean;
+  maxConnections?: number;
+
+  // Vector configuration
+  enableVectors?: boolean;
+  vectorDimensions?: number;
 }
 
 /**
- * Adaptive Database Adapter Factory
+ * Simplified Database Adapter Factory for Bun + PostgreSQL + pgvector
  *
- * This factory automatically selects the best available database adapter
- * based on environment compatibility and configuration.
+ * This factory creates PostgreSQL adapters optimized for Bun runtime
+ * with pgvector support for enhanced vector operations.
  *
- * Selection priority:
- * 1. If postgresUrl is provided -> PostgreSQL
- * 2. If forceAdapter is specified -> Use forced adapter
- * 3. Test PGLite compatibility -> PGLite if compatible
- * 4. Fallback to PostgreSQL if fallbackToPostgres is true
- * 5. Fail with clear error message
+ * Features:
+ * - Native PostgreSQL with pgvector extension
+ * - Bun-optimized connection handling
+ * - HNSW indexing for fast vector similarity search
+ * - Connection pooling and health monitoring
  */
 export async function createAdaptiveDatabaseAdapter(
   config: AdaptiveConfig,
@@ -38,144 +36,97 @@ export async function createAdaptiveDatabaseAdapter(
 ): Promise<IDatabaseAdapter> {
   const uuid = asUUID(agentId);
 
-  // Check for forced PGLite usage (for E2E tests)
-  if (process.env.FORCE_PGLITE === 'true') {
-    logger.info('[Adaptive Database] FORCE_PGLITE detected, using PGLite adapter for testing');
-    const dataDir = config.dataDir || getDefaultDataDir();
-    const connectionManager = connectionRegistry.getPGLiteManager(dataDir);
-    return new PgliteDatabaseAdapter(uuid, connectionManager, dataDir);
-  }
-
-  logger.info('[Adaptive Database] Starting adaptive adapter selection', {
+  logger.info('[Adaptive Database] Creating Bun PostgreSQL adapter with pgvector', {
     hasPostgresUrl: !!config.postgresUrl,
-    hasDataDir: !!config.dataDir,
-    fallbackToPostgres: config.fallbackToPostgres,
-    forceAdapter: config.forceAdapter,
+    enableVectors: config.enableVectors !== false,
+    vectorDimensions: config.vectorDimensions,
   });
 
-  // 1. If PostgreSQL URL is explicitly provided, use PostgreSQL
-  // But skip if FORCE_PGLITE is set for testing
-  if (config.postgresUrl && process.env.FORCE_PGLITE !== 'true') {
-    logger.info('[Adaptive Database] Using PostgreSQL (explicit URL provided)');
-    const connectionManager = connectionRegistry.getPostgresManager(config.postgresUrl);
-    return new PgDatabaseAdapter(uuid, connectionManager, config.postgresUrl);
+  // Get PostgreSQL connection URL
+  const postgresUrl = config.postgresUrl || getDefaultPostgresUrl();
+
+  if (!postgresUrl) {
+    throw new Error(
+      'PostgreSQL connection URL is required. ' +
+        'Please provide POSTGRES_URL environment variable or pass postgresUrl in config.'
+    );
   }
 
-  // 2. If adapter is forced, use forced adapter
-  if (config.forceAdapter) {
-    logger.info(`[Adaptive Database] Using forced adapter: ${config.forceAdapter}`);
+  try {
+    // Create PostgreSQL manager with Bun optimizations
+    const pgConfig = {
+      connectionString: postgresUrl,
+      ssl: config.ssl ?? false,
+      max: config.maxConnections ?? 10,
+    };
 
-    if (config.forceAdapter === 'postgres') {
-      const url = config.fallbackPostgresUrl || getDefaultPostgresUrl();
-      const connectionManager = connectionRegistry.getPostgresManager(url);
-      return new PgDatabaseAdapter(uuid, connectionManager, url);
-    } else {
-      const dataDir = config.dataDir || getDefaultDataDir();
-      const connectionManager = connectionRegistry.getPGLiteManager(dataDir);
-      return new PgliteDatabaseAdapter(uuid, connectionManager, dataDir);
-    }
-  }
+    const manager = new PgManager(pgConfig);
+    await manager.connect();
 
-  // 3. Test PGLite compatibility (unless skipped)
-  if (!config.skipCompatibilityTest) {
-    logger.info('[Adaptive Database] Testing PGLite compatibility...');
-
-    try {
-      const compatibility = await testPGLiteCompatibility();
-
-      if (compatibility.compatible) {
-        logger.info('[Adaptive Database] PGLite is compatible, using PGLite adapter', {
-          extensions: compatibility.extensions,
-        });
-        const dataDir = config.dataDir || getDefaultDataDir();
-        const connectionManager = connectionRegistry.getPGLiteManager(dataDir);
-        return new PgliteDatabaseAdapter(uuid, connectionManager, dataDir);
-      } else {
-        logger.warn('[Adaptive Database] PGLite compatibility test failed', {
-          error: compatibility.error,
-        });
+    // Ensure pgvector extension is available
+    if (config.enableVectors !== false) {
+      try {
+        await manager.query('CREATE EXTENSION IF NOT EXISTS vector');
+        logger.info('[Adaptive Database] pgvector extension initialized');
+      } catch (error) {
+        logger.warn('[Adaptive Database] Failed to initialize pgvector extension:', error);
+        logger.warn('[Adaptive Database] Vector operations may not be available');
       }
-    } catch (error) {
-      logger.warn('[Adaptive Database] PGLite compatibility test error:', error);
     }
-  } else {
-    logger.info('[Adaptive Database] Skipping PGLite compatibility test');
-  }
 
-  // 4. Try PGLite without compatibility test (in case test is unreliable)
-  if (!config.skipCompatibilityTest) {
-    logger.info('[Adaptive Database] Attempting PGLite without compatibility test...');
+    // Create adapter with pgvector support
+    const adapter = new PgAdapter(uuid, manager, {
+      enableVectors: config.enableVectors !== false,
+      vectorDimensions: config.vectorDimensions || 1536, // Default to OpenAI embedding size
+    });
 
-    try {
-      const dataDir = config.dataDir || getDefaultDataDir();
-      const connectionManager = connectionRegistry.getPGLiteManager(dataDir);
-      const adapter = new PgliteDatabaseAdapter(uuid, connectionManager, dataDir);
+    await adapter.init();
 
-      // Try to initialize to verify it works
-      await adapter.init();
-      logger.info('[Adaptive Database] PGLite adapter initialized successfully');
-      return adapter;
-    } catch (error) {
-      logger.warn('[Adaptive Database] PGLite adapter initialization failed:', error);
-    }
-  }
+    // Register adapter for proper cleanup
+    connectionRegistry.registerAdapter(uuid, adapter);
 
-  // 5. Fallback to PostgreSQL if enabled
-  if (config.fallbackToPostgres) {
-    const postgresUrl = config.fallbackPostgresUrl || getDefaultPostgresUrl();
-
-    logger.info('[Adaptive Database] Falling back to PostgreSQL', {
+    logger.info('[Adaptive Database] PostgreSQL adapter initialized successfully', {
       url: postgresUrl.replace(/:[^@]*@/, ':***@'), // Hide password in logs
     });
 
-    try {
-      const connectionManager = connectionRegistry.getPostgresManager(postgresUrl);
-      const adapter = new PgDatabaseAdapter(uuid, connectionManager, postgresUrl);
-      await adapter.init();
-      logger.info('[Adaptive Database] PostgreSQL fallback adapter initialized successfully');
-      return adapter;
-    } catch (error) {
-      logger.error('[Adaptive Database] PostgreSQL fallback failed:', error);
+    return adapter;
+  } catch (error) {
+    logger.error('[Adaptive Database] Failed to initialize PostgreSQL adapter:', error);
+
+    // Provide helpful error messages
+    if ((error as Error).message?.includes('ECONNREFUSED')) {
       throw new Error(
-        'Both PGLite and PostgreSQL adapters failed to initialize. ' +
-          'Please check your database configuration and ensure PostgreSQL is available.'
+        'Failed to connect to PostgreSQL database. ' +
+          `Please ensure PostgreSQL is running and accessible at: ${postgresUrl.replace(
+            /:[^@]*@/,
+            ':***@'
+          )}`
       );
     }
-  }
 
-  // 6. No fallback available, fail with helpful message
-  throw new Error(
-    'No compatible database adapter available. ' +
-      'PGLite failed to initialize due to WebAssembly compatibility issues, ' +
-      'and PostgreSQL fallback is not configured. ' +
-      'Please either:\n' +
-      '1. Provide a POSTGRES_URL environment variable, or\n' +
-      '2. Set fallbackToPostgres: true with a fallbackPostgresUrl, or\n' +
-      '3. Fix the WebAssembly compatibility issue in your runtime environment.'
-  );
+    if ((error as Error).message?.includes('authentication')) {
+      throw new Error(
+        'PostgreSQL authentication failed. ' +
+          'Please check your database credentials in POSTGRES_URL.'
+      );
+    }
+
+    throw new Error(
+      `Database initialization failed: ${(error as Error).message}. ` +
+        'Please check your PostgreSQL connection and configuration.'
+    );
+  }
 }
 
 /**
- * Get default PostgreSQL URL for fallback
+ * Get default PostgreSQL URL from environment
  */
 function getDefaultPostgresUrl(): string {
-  // Try common environment variables
   return (
-    process.env.POSTGRES_URL || process.env.DATABASE_URL || 'postgresql://localhost:5432/eliza'
+    process.env.POSTGRES_URL ||
+    process.env.DATABASE_URL ||
+    'postgresql://postgres:postgres@localhost:5432/eliza'
   );
-}
-
-/**
- * Get default data directory for PGLite
- */
-function getDefaultDataDir(): string {
-  // Use centralized path management for database files
-  if (process.env.PGLITE_DATA_DIR) {
-    return process.env.PGLITE_DATA_DIR;
-  }
-
-  // Use fallback path without dynamic import to avoid ESLint issues
-  return './.eliza/.elizadb';
 }
 
 /**
@@ -187,24 +138,83 @@ export function getRecommendedAdaptiveConfig(): AdaptiveConfig {
 
   if (isProduction) {
     return {
-      fallbackToPostgres: true,
-      fallbackPostgresUrl: getDefaultPostgresUrl(),
-      skipCompatibilityTest: false,
+      postgresUrl: getDefaultPostgresUrl(),
+      ssl: true,
+      maxConnections: 20,
+      enableVectors: true,
+      vectorDimensions: 1536,
     };
   }
 
   if (isTest) {
     return {
-      fallbackToPostgres: true,
-      fallbackPostgresUrl: getDefaultPostgresUrl(),
-      skipCompatibilityTest: true, // Skip in test environment where WebAssembly often fails
+      postgresUrl: process.env.TEST_POSTGRES_URL || getDefaultPostgresUrl(),
+      ssl: false,
+      maxConnections: 5,
+      enableVectors: true,
+      vectorDimensions: 384, // Smaller for faster tests
     };
   }
 
   // Development
   return {
-    fallbackToPostgres: true,
-    fallbackPostgresUrl: getDefaultPostgresUrl(),
-    skipCompatibilityTest: false,
+    postgresUrl: getDefaultPostgresUrl(),
+    ssl: false,
+    maxConnections: 10,
+    enableVectors: true,
+    vectorDimensions: 1536,
   };
+}
+
+/**
+ * Create a simple PostgreSQL adapter for direct use
+ */
+export async function createPostgreSQLAdapter(
+  connectionString: string,
+  agentId: string
+): Promise<IDatabaseAdapter> {
+  return createAdaptiveDatabaseAdapter({ postgresUrl: connectionString }, agentId);
+}
+
+/**
+ * Health check for PostgreSQL connection
+ */
+export async function checkDatabaseHealth(
+  config: AdaptiveConfig
+): Promise<{ healthy: boolean; error?: string; features: string[] }> {
+  try {
+    const postgresUrl = config.postgresUrl || getDefaultPostgresUrl();
+    const manager = new PgManager({
+      connectionString: postgresUrl,
+      ssl: config.ssl ?? false,
+    });
+
+    await manager.connect();
+
+    // Test basic connectivity
+    await manager.query('SELECT 1');
+
+    // Check for pgvector extension
+    const extensions = await manager.query(
+      "SELECT extname FROM pg_extension WHERE extname = 'vector'"
+    );
+
+    const features = ['postgresql'];
+    if (extensions.length > 0) {
+      features.push('pgvector');
+    }
+
+    await manager.close();
+
+    return {
+      healthy: true,
+      features,
+    };
+  } catch (error) {
+    return {
+      healthy: false,
+      error: (error as Error).message,
+      features: [],
+    };
+  }
 }

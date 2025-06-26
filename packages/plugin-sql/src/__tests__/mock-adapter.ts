@@ -13,7 +13,7 @@ import type {
 } from '@elizaos/core';
 
 /**
- * Mock database adapter for testing that avoids PGLite WebAssembly issues
+ * Mock database adapter for testing that provides in-memory functionality
  */
 export class MockDatabaseAdapter implements IDatabaseAdapter {
   // In-memory storage

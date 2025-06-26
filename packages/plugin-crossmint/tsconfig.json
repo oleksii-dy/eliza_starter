@@ -1,23 +1,38 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "lib": ["ES2020"],
     "outDir": "dist",
-    "rootDir": "src",
+    "lib": ["ESNext", "DOM"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": true,
     "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "checkJs": false,
     "noEmitOnError": false,
-    "isolatedModules": true
+    "moduleDetection": "force",
+    "allowArbitraryExtensions": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/__tests__/**/*",
+    "src/__tests__/**/*",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "src/e2e/**/*",
+    "e2e/**/*",
+    "**/*.e2e.ts"
+  ]
 }

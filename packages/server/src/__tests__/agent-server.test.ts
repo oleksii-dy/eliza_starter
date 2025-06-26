@@ -303,7 +303,7 @@ describe('AgentServer Integration Tests', () => {
       server.start(port);
 
       expect(mockServer.listen).toHaveBeenCalledWith(port, expect.any(Function));
-      expect(server['serverPort']).toBe(port);
+      expect((server as any).serverPort).toBe(port);
     });
 
     it('should throw error for invalid port', () => {

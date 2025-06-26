@@ -7,7 +7,7 @@ import { describe, it, expect, beforeAll, afterAll, mock } from 'bun:test';
 import { AgentServer } from '../../index';
 import type { IAgentRuntime, UUID, Character, Content, Memory } from '@elizaos/core';
 import { AgentRuntime, ChannelType } from '@elizaos/core';
-import { createDatabaseAdapter } from '@elizaos/plugin-sql';
+// Database adapter created through server initialization
 import { messageHandlingPlugin } from '@elizaos/plugin-message-handling';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -57,13 +57,14 @@ describe('Agent Message Handling Integration Tests', () => {
       ],
     } as Character;
 
-    // Create database adapter
-    const db = await createDatabaseAdapter(
-      {
-        dataDir: testDbPath,
-      },
-      'test-agent' as UUID
-    );
+    // Database adapter will be created through server initialization
+    // const db = await createDatabaseAdapter(
+    //   {
+    //     dataDir: testDbPath,
+    //   },
+    //   'test-agent' as UUID
+    // );
+    const db = agentServer.database;
 
     // Create agent runtime with message handling plugin
     try {

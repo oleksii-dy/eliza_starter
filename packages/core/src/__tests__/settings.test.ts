@@ -56,8 +56,8 @@ describe('settings utilities', () => {
       });
     }
 
-    // Mock process.env
-    process.env.SECRET_SALT = 'test-salt-value';
+    // Mock process.env with valid salt (16+ characters)
+    process.env.SECRET_SALT = 'test-salt-value-16-chars-long';
 
     mockRuntime = {
       agentId: 'agent-123' as any,
@@ -155,18 +155,19 @@ describe('settings utilities', () => {
   describe('getSalt', () => {
     it('should return salt from environment variable', () => {
       const salt = getSalt();
-      expect(salt).toBe('test-salt-value');
+      expect(salt).toBe('test-salt-value-16-chars-long');
     });
 
-    it('should use default salt when env variable is not set', () => {
+    it('should throw error when env variable is not set', () => {
       delete process.env.SECRET_SALT;
-      const salt = getSalt();
-      expect(salt).toBe('secretsalt');
+      expect(() => getSalt()).toThrow(
+        'SECURITY ERROR: SECRET_SALT environment variable is required'
+      );
     });
   });
 
   describe('encryptStringValue', () => {
-    const salt = 'test-salt';
+    const salt = 'test-salt-16-chars-long';
 
     it('should encrypt a string value', () => {
       const encrypted = encryptStringValue('secret-value', salt);

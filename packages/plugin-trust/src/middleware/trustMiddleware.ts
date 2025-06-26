@@ -5,7 +5,7 @@ import {
   logger,
   type Memory,
   type Plugin,
-  type HandlerCallback
+  type HandlerCallback,
 } from '@elizaos/core';
 import { TrustService } from '../services/TrustService';
 import type { UUID } from '@elizaos/core';
@@ -82,7 +82,7 @@ export class TrustMiddleware {
                 action: action.name,
                 requiredTrust: required,
                 actualTrust: trustScore.overall,
-                reason: 'insufficient_trust'
+                reason: 'insufficient_trust',
               }
             );
 
@@ -134,7 +134,7 @@ export class TrustMiddleware {
                 {
                   action: action.name,
                   duration: Date.now() - startTime,
-                  elevated: isElevated
+                  elevated: isElevated,
                 }
               );
             }
@@ -147,7 +147,7 @@ export class TrustMiddleware {
               data: { action: action.name, executed: true },
               text: result
                 ? `Action ${action.name} executed successfully`
-                : `Action ${action.name} returned false`
+                : `Action ${action.name} returned false`,
             };
           }
           return result;
@@ -165,7 +165,7 @@ export class TrustMiddleware {
                   action: action.name,
                   error: error instanceof Error ? error.message : String(error),
                   duration: Date.now() - startTime,
-                  elevated: isElevated
+                  elevated: isElevated,
                 }
               );
             }
@@ -178,7 +178,7 @@ export class TrustMiddleware {
 
           throw error;
         }
-      }
+      },
     };
   }
 
@@ -200,10 +200,12 @@ export class TrustMiddleware {
 
     return {
       ...plugin,
-      actions: plugin.actions.map((action) => {
+      actions: plugin.actions.map((actionItem) => {
+        // Handle actions directly (no component wrapper needed)
+        const action = actionItem as Action;
         const customTrust = trustOverrides?.get(action.name);
         return TrustMiddleware.wrapAction(action, customTrust);
-      })
+      }),
     };
   }
 
@@ -216,7 +218,9 @@ export class TrustMiddleware {
     const requirements = new Map<string, number>();
 
     if (plugin.actions) {
-      for (const action of plugin.actions) {
+      for (const actionItem of plugin.actions) {
+        // Handle actions directly
+        const action = actionItem as Action;
         requirements.set(action.name, getTrustRequirement(action.name));
       }
     }

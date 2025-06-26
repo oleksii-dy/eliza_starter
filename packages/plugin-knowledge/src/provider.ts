@@ -19,9 +19,9 @@ export const knowledgeProvider: Provider = {
     'Knowledge from the knowledge base that the agent knows, retrieved whenever the agent needs to answer a question about their expertise.',
   dynamic: true,
   get: async (runtime: IAgentRuntime, message: Memory) => {
-    const knowledgeData = await (runtime.getService('knowledge') as KnowledgeService)?.getKnowledge(
-      message
-    );
+    const knowledgeData = await runtime
+      .getService<KnowledgeService>('knowledge')
+      ?.getKnowledge(message);
 
     const firstFiveKnowledgeItems = knowledgeData?.slice(0, 5);
 

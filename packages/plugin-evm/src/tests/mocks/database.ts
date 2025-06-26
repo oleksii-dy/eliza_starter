@@ -1,4 +1,4 @@
-import { mock  } from 'bun:test';
+import { mock } from 'bun:test';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import type { WalletInstance } from '../../core/interfaces/IWalletService';
 import type { Address } from 'viem';
@@ -25,8 +25,8 @@ export class MockWalletDatabaseService {
 
   async createWallet(
     wallet: Omit<WalletInstance, 'id'>,
-    privateKey?: string,
-    mnemonic?: string,
+    _privateKey?: string,
+    _mnemonic?: string
   ): Promise<WalletInstance> {
     const newWallet: WalletInstance = {
       ...wallet,
@@ -55,7 +55,7 @@ export class MockWalletDatabaseService {
     return this.wallets.delete(id);
   }
 
-  async listWallets(filter?: any): Promise<WalletInstance[]> {
+  async listWallets(_filter?: any): Promise<WalletInstance[]> {
     const allWallets = Array.from(this.wallets.values());
     // For testing, return all wallets regardless of filter
     return allWallets;
@@ -85,7 +85,7 @@ export class MockWalletDatabaseService {
 
   async updateCustodialWallet(
     id: string,
-    updates: Partial<CustodialWalletData>,
+    updates: Partial<CustodialWalletData>
   ): Promise<CustodialWalletData | null> {
     const wallet = this.custodialWallets.get(id);
     if (!wallet) {
@@ -110,11 +110,11 @@ export class MockWalletDatabaseService {
   }
 
   // Cache and utility methods
-  async cacheWalletBalance(walletId: string, chain: string, balance: string): Promise<void> {
+  async cacheWalletBalance(_walletId: string, _chain: string, _balance: string): Promise<void> {
     // Mock implementation
   }
 
-  async getCachedWalletBalance(walletId: string, chain: string): Promise<string | null> {
+  async getCachedWalletBalance(_walletId: string, _chain: string): Promise<string | null> {
     // Mock implementation
     return null;
   }

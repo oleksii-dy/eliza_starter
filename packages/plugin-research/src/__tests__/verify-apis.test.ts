@@ -57,7 +57,9 @@ describe('API Verification', () => {
 
     // Test Firecrawl
     try {
-      const firecrawl = new FirecrawlContentExtractor({ apiKey: API_KEYS.FIRECRAWL });
+      const firecrawl = new FirecrawlContentExtractor({
+        apiKey: API_KEYS.FIRECRAWL,
+      });
       const content = await firecrawl.extractContent('https://example.com');
       results.firecrawl = content !== null;
     } catch (e) {

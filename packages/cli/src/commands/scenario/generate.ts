@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { logger } from '@elizaos/core';
-import { LLMScenarioGenerator } from '../../scenario-runner/llm-scenario-generator.js';
+import { LLMScenarioGenerator } from '../../scenario-runner/LlmScenarioGenerator.js';
 import { loadProject } from '../../project.js';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
@@ -53,7 +53,7 @@ async function generateScenario(
 
   // Initialize runtime for the first agent
   const { AgentRuntime } = await import('@elizaos/core');
-  const sqlModule = await import('@elizaos/plugin-sql');
+  const sqlModule = (await import('@elizaos/plugin-sql')) as any;
   const sqlPlugin = sqlModule.plugin;
 
   const agentWithSqlPlugin = {

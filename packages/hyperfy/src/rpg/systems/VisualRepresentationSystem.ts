@@ -1,266 +1,417 @@
-import * as THREE from 'three';
+// Remove direct three imports - use THREE namespace instead
+import { THREE } from '../../core/extras/three.js';
 import { World } from '../../types';
 import { System } from '../../core/systems/System';
 import { RPGEntity } from '../entities/RPGEntity';
 import { Mesh } from '../../core/nodes/Mesh';
 import { Group } from '../../core/nodes/Group';
+import {
+  VisualTemplate,
+  AnimationState,
+  VisualComponent,
+  VisualSystemConfig
+} from '../types/visual.types';
+import visualTemplatesConfig from '../config/visuals/templates.json';
+import testTemplatesConfig from '../config/visuals/test-templates.json';
 
 /**
- * Visual templates for different entity types
+ * Default configuration
  */
-export const VISUAL_TEMPLATES = {
-  // Items
-  sword: {
-    color: 0xff4444, // Red
-    size: { width: 0.15, height: 1.2, depth: 0.1 },
-    animations: ['swing_down']
-  },
-  bow: {
-    color: 0x8b4513, // Brown
-    size: { width: 0.2, height: 1, depth: 0.1 },
-    animations: ['draw']
-  },
-  staff: {
-    color: 0x9400d3, // Purple
-    size: { width: 0.15, height: 1.5, depth: 0.15 },
-    animations: ['cast']
-  },
-  shield: {
-    color: 0x808080, // Gray
-    size: { width: 0.8, height: 1, depth: 0.2 },
-    animations: ['block']
-  },
-  potion: {
-    color: 0x00ff00, // Green
-    size: { width: 0.3, height: 0.4, depth: 0.3 },
-    animations: ['bubble']
-  },
-  food: {
-    color: 0xffa500, // Orange
-    size: { width: 0.3, height: 0.3, depth: 0.3 },
-    animations: ['rotate']
-  },
-  armor: {
-    color: 0x708090, // Slate gray
-    size: { width: 0.6, height: 0.8, depth: 0.3 },
-    animations: ['shimmer']
-  },
-  helmet: {
-    color: 0x696969, // Dim gray
-    size: { width: 0.4, height: 0.4, depth: 0.4 },
-    animations: ['shimmer']
-  },
-  boots: {
-    color: 0x654321, // Dark brown
-    size: { width: 0.3, height: 0.2, depth: 0.4 },
-    animations: ['shimmer']
-  },
-  gloves: {
-    color: 0x8b7355, // Tan
-    size: { width: 0.2, height: 0.3, depth: 0.1 },
-    animations: ['shimmer']
-  },
-  gem: {
-    color: 0x00ffff, // Cyan
-    size: { width: 0.2, height: 0.2, depth: 0.2 },
-    animations: ['sparkle', 'rotate']
-  },
-  coin: {
-    color: 0xffd700, // Gold
-    size: { width: 0.3, height: 0.05, depth: 0.3 },
-    animations: ['rotate', 'bounce']
-  },
-
-  // NPCs/Mobs
-  goblin: {
-    color: 0x228b22, // Forest green
-    size: { width: 0.6, height: 0.8, depth: 0.6 },
-    animations: ['walk', 'attack', 'die']
-  },
-  skeleton: {
-    color: 0xf5f5dc, // Beige
-    size: { width: 0.5, height: 1.5, depth: 0.5 },
-    animations: ['walk', 'attack', 'die']
-  },
-  hill_giant: {
-    color: 0x8b4513, // Saddle brown
-    size: { width: 1.2, height: 2.5, depth: 1.2 },
-    animations: ['walk', 'attack', 'die', 'stomp']
-  },
-  guard: {
-    color: 0x4169e1, // Royal blue
-    size: { width: 0.7, height: 1.8, depth: 0.7 },
-    animations: ['walk', 'patrol', 'attack']
-  },
-  merchant: {
-    color: 0xdaa520, // Goldenrod
-    size: { width: 0.7, height: 1.6, depth: 0.7 },
-    animations: ['idle', 'gesture']
-  },
-  quest_giver: {
-    color: 0xff1493, // Deep pink
-    size: { width: 0.7, height: 1.7, depth: 0.7 },
-    animations: ['idle', 'wave', 'point']
-  },
-
-  // Containers
-  chest: {
-    color: 0x8b4513, // Brown
-    size: { width: 1, height: 0.8, depth: 0.8 },
-    animations: ['open', 'close']
-  },
-  barrel: {
-    color: 0x654321, // Dark brown
-    size: { width: 0.6, height: 0.8, depth: 0.6 },
-    animations: ['wobble']
-  },
-  crate: {
-    color: 0xdeb887, // Burly wood
-    size: { width: 0.8, height: 0.8, depth: 0.8 },
-    animations: ['shake']
-  },
-
-  // Special
-  bank_chest: {
-    color: 0xffd700, // Gold
-    size: { width: 1.2, height: 1, depth: 1 },
-    animations: ['open', 'close', 'shimmer']
-  },
-  spawn_point: {
-    color: 0x00ff00, // Green
-    size: { width: 0.5, height: 2, depth: 0.5 },
-    animations: ['pulse', 'rotate']
-  },
-
-  // Default fallback
-  default: {
-    color: 0x888888, // Gray
-    size: { width: 0.5, height: 0.5, depth: 0.5 },
-    animations: ['pulse']
-  }
+const DEFAULT_CONFIG: VisualSystemConfig = {
+  enableShadows: true,
+  maxViewDistance: 100,
+  lodDistances: [20, 50, 80],
+  debug: false
 };
-
-interface AnimationState {
-  entityId: string;
-  animationType: string;
-  startTime: number;
-  duration: number;
-  loop: boolean;
-  originalPosition?: { x: number; y: number; z: number };
-  originalRotation?: { x: number; y: number; z: number };
-}
 
 /**
  * System that manages visual representations for all RPG entities
  */
 export class VisualRepresentationSystem extends System {
-  private entityVisuals: Map<string, { mesh: Mesh; group: Group; template: any }> = new Map();
+  private config: VisualSystemConfig;
+  private templates: Map<string, VisualTemplate> = new Map();
+  private entityVisuals: Map<string, VisualComponent> = new Map();
   private activeAnimations: Map<string, AnimationState> = new Map();
+  private scene: THREE.Scene | null = null;
+  private sceneRoot: THREE.Group | null = null;
 
   constructor(world: World) {
     super(world);
+    this.config = DEFAULT_CONFIG;
   }
 
   /**
    * Initialize the system
    */
   async init(options: any): Promise<void> {
-    // No initialization needed
+    const visualOptions = options as VisualSystemConfig;
+    this.config = { ...DEFAULT_CONFIG, ...visualOptions };
+
+    // Load visual templates from configuration
+    this.loadTemplates();
+
+    // Get scene reference from world stage
+    if (this.world.stage?.scene) {
+      this.scene = this.world.stage.scene as unknown as THREE.Scene;
+
+      // Create a Three.js group for all visual entities (not a Hyperfy Group)
+      this.sceneRoot = new THREE.Group();
+      this.sceneRoot.name = 'rpg-visuals';
+
+      // Add root to scene
+      if (this.scene && typeof this.scene.add === 'function' && this.sceneRoot) {
+        this.scene.add(this.sceneRoot);
+      }
+    } else {
+      console.warn('[VisualRepresentationSystem] No scene available, visuals will not be rendered');
+    }
+
+    // Subscribe to world update loop
+    if (this.world.events) {
+      this.world.events.on('update', this.update.bind(this));
+    }
+
+    console.log('[VisualRepresentationSystem] Initialized with config:', this.config);
+  }
+
+  /**
+   * Load templates from configuration
+   */
+  private loadTemplates(): void {
+    // Check if we're in test mode (for visual testing)
+    const isTestMode = process.env.NODE_ENV === 'test' ||
+                      process.env.VISUAL_TEST === 'true' ||
+                      process.env.BUN_ENV?.includes('test');
+
+    if (isTestMode) {
+      // Load test templates for visual validation
+      const testCategories = ['quest_entities'];
+      for (const category of testCategories) {
+        const categoryTemplates = (testTemplatesConfig as any)[category];
+        if (categoryTemplates) {
+          for (const [key, template] of Object.entries(categoryTemplates)) {
+            this.templates.set(key, template as VisualTemplate);
+          }
+        }
+      }
+      console.log(`[VisualRepresentationSystem] Loaded ${this.templates.size} TEST visual templates for visual validation`);
+    } else {
+      // Load normal templates
+      const categories = ['items', 'npcs', 'containers', 'resources', 'special'];
+      for (const category of categories) {
+        const categoryTemplates = (visualTemplatesConfig as any)[category];
+        if (categoryTemplates) {
+          for (const [key, template] of Object.entries(categoryTemplates)) {
+            this.templates.set(key, template as VisualTemplate);
+          }
+        }
+      }
+      console.log(`[VisualRepresentationSystem] Loaded ${this.templates.size} visual templates`);
+    }
+  }
+
+  /**
+   * Add visual representation for an entity (alias for createVisual)
+   */
+  addVisual(entity: RPGEntity, templateName?: string): void {
+    this.createVisual(entity, templateName);
   }
 
   /**
    * Create visual representation for an entity
    */
   createVisual(entity: RPGEntity, templateName?: string): void {
-    // Remove existing visual if any
-    this.removeVisual(entity.data.id);
+    try {
+      // Remove existing visual if any
+      this.removeVisual(entity.id || entity.data?.id);
 
-    // Determine template
-    const template = this.getTemplate(entity, templateName);
+      const entityId = entity.id || entity.data?.id;
+      if (!entityId) {
+        console.error('[VisualRepresentationSystem] Entity has no ID');
+        return;
+      }
 
+      // Determine template
+      const template = this.getTemplate(entity, templateName);
+      if (!template) {
+        console.warn(`[VisualRepresentationSystem] No template found for entity ${entityId}`);
+        return;
+      }
+
+      // For Hyperfy entities, modify the existing entity.node instead of creating new objects
+      if (entity.node) {
+        this.applyVisualToEntityNode(entity, template, templateName);
+      } else {
+        console.warn(`[VisualRepresentationSystem] Entity ${entityId} has no node for visual modification`);
+      }
+
+      // Start idle animation if available
+      if (template.animations && template.animations.includes('idle')) {
+        this.playAnimation(entityId, 'idle', true);
+      }
+
+      // Sync position with entity
+      this.syncVisualWithEntity(entityId, entity);
+
+      console.log(`[VisualRepresentationSystem] Created visual for ${entityId} using template ${templateName || 'auto-detected'}`);
+    } catch (error) {
+      console.error('[VisualRepresentationSystem] Error creating visual:', error);
+    }
+  }
+
+  /**
+   * Apply visual template to entity's existing Three.js node
+   */
+  private applyVisualToEntityNode(entity: RPGEntity, template: VisualTemplate, templateName?: string): void {
+    const entityId = entity.id || entity.data?.id;
+
+    // Clear existing children from the node
+    while (entity.node.children.length > 0) {
+      entity.node.remove(entity.node.children[0]);
+    }
+
+    // Create Three.js geometry based on template
+    let threeGeometry: THREE.BufferGeometry;
+
+    switch (template.geometryType) {
+      case 'sphere':
+        threeGeometry = new THREE.SphereGeometry(template.size.width / 2, 16, 16);
+        break;
+      case 'cylinder':
+        threeGeometry = new THREE.CylinderGeometry(
+          template.size.width / 2,
+          template.size.width / 2,
+          template.size.height,
+          16
+        );
+        break;
+      default:
+        // Default to box
+        threeGeometry = new THREE.BoxGeometry(
+          template.size.width,
+          template.size.height,
+          template.size.depth
+        );
+    }
+
+    // Create material with template color
+    const material = new THREE.MeshStandardMaterial({
+      color: template.color || 0xff0000, // Default red if no color
+      metalness: template.material?.metalness || 0.1,
+      roughness: template.material?.roughness || 0.8,
+      opacity: template.material?.opacity || 1,
+      transparent: (template.material?.opacity || 1) < 1
+    });
+
+    // Add emissive if specified
+    if (template.material?.emissive) {
+      material.emissive.setHex(template.material.emissive);
+    }
+
+    // Create mesh and add to entity node
+    const mesh = new THREE.Mesh(threeGeometry, material);
+    mesh.name = `${templateName || 'npc'}-mesh`;
+
+    // Position the mesh relative to entity
+    if (entity.position || entity.data?.position) {
+      const pos = entity.position || entity.data.position;
+      entity.node.position.set(pos.x || 0, pos.y || 0, pos.z || 0);
+    }
+
+    entity.node.add(mesh);
+
+    // Store visual info for reference
+    const visual: VisualComponent = {
+      mesh,
+      group: entity.node, // Reference the entity's node
+      template,
+      visible: true,
+      lodLevel: 0
+    };
+
+    this.entityVisuals.set(entityId, visual);
+
+    console.log(`[VisualRepresentationSystem] Applied ${templateName || 'default'} template to entity ${entityId} node`);
+  }
+
+  /**
+   * Create visual component from template
+   */
+  private createVisualComponent(template: VisualTemplate, entity: RPGEntity): VisualComponent {
     // Create group node for the entity
-    const group = new Group();
+    const group = new THREE.Group();
+    group.name = `visual-${entity.id || entity.data?.id}`;
 
-    // Create mesh node
+    // Create Three.js geometry based on template
+    let threeGeometry: THREE.BufferGeometry;
+    let meshType: 'box' | 'sphere' | 'geometry' = 'box';
+
+    switch (template.geometryType) {
+      case 'sphere':
+        threeGeometry = new THREE.SphereGeometry(template.size.width / 2, 16, 16);
+        meshType = 'sphere';
+        break;
+      case 'cylinder':
+        // Use cylinder geometry but wrap in box mesh type
+        threeGeometry = new THREE.CylinderGeometry(
+          template.size.width / 2,
+          template.size.width / 2,
+          template.size.height,
+          16
+        );
+        meshType = 'geometry';
+        break;
+      case 'cone':
+        // Use cone geometry but wrap in box mesh type
+        threeGeometry = new THREE.ConeGeometry(template.size.width / 2, template.size.height, 16);
+        meshType = 'geometry';
+        break;
+      default:
+        threeGeometry = new THREE.BoxGeometry(
+          template.size.width,
+          template.size.height,
+          template.size.depth
+        );
+        meshType = 'box';
+    }
+
+    // Create material
+    const material = this.createMaterial(template);
+
+    // Create Three.js mesh
+    const threeMesh = new THREE.Mesh(threeGeometry, material);
+
+    // Configure shadows
+    if (this.config.enableShadows) {
+      threeMesh.castShadow = true;
+      threeMesh.receiveShadow = true;
+    }
+
+    // Create Hyperfy mesh wrapper
     const mesh = new Mesh({
-      type: 'box',
+      type: meshType,
       width: template.size.width,
       height: template.size.height,
       depth: template.size.depth,
-      material: this.createMaterial(template.color),
+      radius: meshType === 'sphere' ? template.size.width / 2 : undefined,
+      geometry: meshType === 'geometry' ? threeGeometry : undefined,
+      material: material as any
     });
 
-    // Add mesh to group
-    group.add(mesh);
+    // Store Three.js mesh reference
+    (mesh as any)._threeMesh = threeMesh;
 
-    // Store visual group without adding to entity node
-    // (The hyperfy node system is separate from Three.js scene graph)
-    // The visual is tracked in our entityVisuals map instead
+    // Add Three.js mesh to group
+    (group as any).add(threeMesh);
 
-    // Store visual reference
-    this.entityVisuals.set(entity.data.id, { mesh, group, template });
-
-    // Start idle animation if entity has one
-    if (template.animations.includes('idle')) {
-      this.playAnimation(entity.data.id, 'idle', true);
-    }
+    return {
+      mesh,
+      group,
+      template,
+      visible: true,
+      lodLevel: 0
+    };
   }
 
   /**
    * Get template for entity
    */
-  private getTemplate(entity: RPGEntity, templateName?: string): any {
+  private getTemplate(entity: RPGEntity, templateName?: string): VisualTemplate | undefined {
     // Use provided template name
-    if (templateName && VISUAL_TEMPLATES[templateName]) {
-      return VISUAL_TEMPLATES[templateName];
+    if (templateName && this.templates.has(templateName)) {
+      return this.templates.get(templateName);
     }
 
     // Try to determine from entity type/name
-    const entityType = entity.data.type?.toLowerCase() || '';
-    const entityName = entity.data.name?.toLowerCase() || '';
+    const entityType = (entity.type || entity.data?.type || '').toLowerCase();
+    const entityName = (entity.name || entity.data?.name || '').toLowerCase();
 
     // Check for direct matches
-    for (const [key, template] of Object.entries(VISUAL_TEMPLATES)) {
+    for (const [key, template] of this.templates) {
       if (entityType.includes(key) || entityName.includes(key)) {
         return template;
       }
     }
 
-    // Check for item types
-    const itemComponent = entity.getComponent('item');
-    if (itemComponent) {
-      const itemType = itemComponent.type?.toLowerCase() || '';
-      for (const [key, template] of Object.entries(VISUAL_TEMPLATES)) {
-        if (itemType.includes(key)) {
-          return template;
+    // Check components
+    if (entity.getComponent) {
+      // Check item component
+      const itemComponent = entity.getComponent('item') as any;
+      if (itemComponent?.itemType) {
+        const itemType = itemComponent.itemType.toLowerCase();
+        for (const [key, template] of this.templates) {
+          if (itemType.includes(key) || key.includes(itemType)) {
+            return template;
+          }
+        }
+      }
+
+      // Check NPC component
+      const npcComponent = entity.getComponent('npc') as any;
+      if (npcComponent?.name) {
+        const npcName = npcComponent.name.toLowerCase();
+        for (const [key, template] of this.templates) {
+          if (npcName.includes(key) || key.includes(npcName)) {
+            return template;
+          }
         }
       }
     }
 
-    // Check for NPC types
-    const npcComponent = entity.getComponent('npc');
-    if (npcComponent) {
-      const npcType = npcComponent.type?.toLowerCase() || '';
-      for (const [key, template] of Object.entries(VISUAL_TEMPLATES)) {
-        if (npcType.includes(key)) {
-          return template;
-        }
-      }
-    }
-
-    // Default
-    return VISUAL_TEMPLATES.default;
+    // Return default template
+    return this.templates.get('default');
   }
 
   /**
-   * Create material with color
+   * Create material from template
    */
-  private createMaterial(color: number): THREE.MeshBasicMaterial {
-    return new THREE.MeshBasicMaterial({
-      color,
-      opacity: 0.9,
-      transparent: true
-    });
+  private createMaterial(template: VisualTemplate): THREE.Material {
+    const materialProps: any = {
+      color: new THREE.Color(template.color),
+      transparent: true,
+      opacity: template.material?.opacity ?? 0.9
+    };
+
+    // Use appropriate material type
+    if (template.material?.metalness !== undefined || template.material?.roughness !== undefined) {
+      // Use standard material for PBR properties
+      return new THREE.MeshStandardMaterial({
+        ...materialProps,
+        metalness: template.material.metalness ?? 0,
+        roughness: template.material.roughness ?? 1,
+        emissive: template.material?.emissive ? new THREE.Color(template.material.emissive) : undefined,
+        emissiveIntensity: (template.material as any)?.emissiveIntensity ?? 0
+      });
+    } else {
+      // Use basic material for simple visuals
+      return new THREE.MeshBasicMaterial(materialProps);
+    }
+  }
+
+  /**
+   * Sync visual position with entity
+   */
+  private syncVisualWithEntity(entityId: string, entity: RPGEntity): void {
+    const visual = this.entityVisuals.get(entityId);
+    if (!visual) {return;}
+
+    const position = entity.position || entity.data?.position;
+    if (position) {
+      visual.group.position.set(
+        position.x || 0,
+        position.y || 0,
+        position.z || 0
+      );
+    }
+
+    const rotation = entity.rotation || entity.data?.rotation;
+    if (rotation) {
+      visual.group.rotation.set(
+        rotation.x || 0,
+        rotation.y || 0,
+        rotation.z || 0
+      );
+    }
   }
 
   /**
@@ -280,15 +431,15 @@ export class VisualRepresentationSystem extends System {
       startTime: Date.now(),
       duration,
       loop,
-            originalPosition: { 
-        x: visual.group.position.x || 0, 
-        y: visual.group.position.y || 0, 
-        z: visual.group.position.z || 0 
+      originalPosition: {
+        x: visual.group.position.x,
+        y: visual.group.position.y,
+        z: visual.group.position.z
       },
-      originalRotation: { 
-        x: visual.group.rotation.x || 0, 
-        y: visual.group.rotation.y || 0, 
-        z: visual.group.rotation.z || 0 
+      originalRotation: {
+        x: visual.group.rotation.x,
+        y: visual.group.rotation.y,
+        z: visual.group.rotation.z
       }
     };
 
@@ -305,19 +456,28 @@ export class VisualRepresentationSystem extends System {
     const visual = this.entityVisuals.get(entityId);
     if (visual && animation.originalPosition && animation.originalRotation) {
       // Reset to original position/rotation
-      visual.group.position.copy(animation.originalPosition as any);
-      visual.group.rotation.copy(animation.originalRotation as any);
+      visual.group.position.set(
+        animation.originalPosition.x,
+        animation.originalPosition.y,
+        animation.originalPosition.z
+      );
+      visual.group.rotation.set(
+        animation.originalRotation.x,
+        animation.originalRotation.y,
+        animation.originalRotation.z
+      );
     }
 
     this.activeAnimations.delete(entityId);
   }
 
   /**
-   * Update animations
+   * Update animations and sync with entities
    */
-  update(delta: number): void {
+  update(_delta: number): void {
     const currentTime = Date.now();
 
+    // Update animations
     for (const [entityId, animation] of this.activeAnimations) {
       const visual = this.entityVisuals.get(entityId);
       if (!visual) {
@@ -328,18 +488,24 @@ export class VisualRepresentationSystem extends System {
       const elapsed = currentTime - animation.startTime;
       const progress = Math.min(elapsed / animation.duration, 1);
 
-      // Apply animation based on type
+      // Apply animation
       this.applyAnimation(visual, animation, progress);
 
       // Check if animation is complete
       if (progress >= 1) {
         if (animation.loop) {
-          // Restart animation
           animation.startTime = currentTime;
         } else {
-          // Remove completed animation
           this.stopAnimation(entityId);
         }
+      }
+    }
+
+    // Sync visuals with entity positions
+    for (const [entityId, _visual] of this.entityVisuals) {
+      const entity = (this.world.entities as any)?.items?.get(entityId);
+      if (entity) {
+        this.syncVisualWithEntity(entityId, entity);
       }
     }
   }
@@ -347,146 +513,87 @@ export class VisualRepresentationSystem extends System {
   /**
    * Apply animation to visual
    */
-  private applyAnimation(visual: { mesh: Mesh; group: Group; template: any }, animation: AnimationState, progress: number): void {
+  private applyAnimation(visual: VisualComponent, animation: AnimationState, progress: number): void {
+    const group = visual.group;
+    const origPos = animation.originalPosition!;
+    const origRot = animation.originalRotation!;
+
     switch (animation.animationType) {
       case 'walk':
-        // Simple bobbing motion
-        visual.group.position.y = animation.originalPosition!.y + Math.sin(progress * Math.PI * 4) * 0.1;
-        visual.group.position.x = animation.originalPosition!.x + Math.sin(progress * Math.PI * 2) * 0.05;
+        group.position.y = origPos.y + Math.sin(progress * Math.PI * 4) * 0.1;
+        group.position.x = origPos.x + Math.sin(progress * Math.PI * 2) * 0.05;
         break;
 
       case 'attack':
       case 'swing_down':
-        // Swing down motion
-        visual.group.rotation.x = animation.originalRotation!.x - Math.sin(progress * Math.PI) * 0.5;
-        visual.group.position.y = animation.originalPosition!.y - Math.sin(progress * Math.PI) * 0.2;
+        group.rotation.x = origRot.x - Math.sin(progress * Math.PI) * 0.5;
+        group.position.y = origPos.y - Math.sin(progress * Math.PI) * 0.2;
         break;
 
       case 'die':
-        // Fall over
-        visual.group.rotation.z = animation.originalRotation!.z + progress * Math.PI / 2;
-        visual.group.position.y = animation.originalPosition!.y - progress * 0.5;
-        // Set opacity if material exists
-        if (visual.mesh._material) {
-          visual.mesh._material.opacity = 1 - progress * 0.5;
-        }
+        group.rotation.z = origRot.z + progress * Math.PI / 2;
+        group.position.y = origPos.y - progress * 0.5;
+        this.setOpacity(visual, 1 - progress * 0.5);
         break;
 
       case 'open':
-        // Lid opening (rotate top part)
-        visual.group.rotation.x = animation.originalRotation!.x - progress * 0.3;
+        group.rotation.x = origRot.x - progress * 0.3;
         break;
 
       case 'close':
-        // Lid closing
-        visual.group.rotation.x = animation.originalRotation!.x + (1 - progress) * 0.3;
+        group.rotation.x = origRot.x + (1 - progress) * 0.3;
         break;
 
       case 'pulse':
-        // Scale pulsing
         const scale = 1 + Math.sin(progress * Math.PI * 2) * 0.2;
-        visual.group.scale.set(scale, scale, scale);
+        group.scale.set(scale, scale, scale);
         break;
 
       case 'rotate':
-        // Continuous rotation
-        visual.group.rotation.y = animation.originalRotation!.y + progress * Math.PI * 2;
+        group.rotation.y = origRot.y + progress * Math.PI * 2;
         break;
 
       case 'bounce':
-        // Bouncing motion
-        visual.group.position.y = animation.originalPosition!.y + Math.abs(Math.sin(progress * Math.PI * 2)) * 0.3;
+        group.position.y = origPos.y + Math.abs(Math.sin(progress * Math.PI * 2)) * 0.3;
         break;
 
       case 'shimmer':
-        // Material shimmer effect
         const shimmer = 0.7 + Math.sin(progress * Math.PI * 4) * 0.3;
-        if (visual.mesh._material) {
-          visual.mesh._material.opacity = shimmer;
-        }
+        this.setOpacity(visual, shimmer);
         break;
 
       case 'sparkle':
-        // Sparkle effect (scale and rotate)
         const sparkleScale = 1 + Math.sin(progress * Math.PI * 8) * 0.1;
-        visual.group.scale.set(sparkleScale, sparkleScale, sparkleScale);
-        visual.group.rotation.y = animation.originalRotation!.y + progress * Math.PI;
-        break;
-
-      case 'wobble':
-        // Wobbling motion
-        visual.group.rotation.z = animation.originalRotation!.z + Math.sin(progress * Math.PI * 4) * 0.1;
-        break;
-
-      case 'shake':
-        // Shaking motion
-        visual.group.position.x = animation.originalPosition!.x + (Math.random() - 0.5) * 0.05;
-        visual.group.position.z = animation.originalPosition!.z + (Math.random() - 0.5) * 0.05;
-        break;
-
-      case 'cast':
-        // Casting motion (raise and glow)
-        visual.group.position.y = animation.originalPosition!.y + Math.sin(progress * Math.PI) * 0.3;
-        if (visual.mesh._material) {
-          visual.mesh._material.emissive = new THREE.Color(0xffffff);
-          visual.mesh._material.emissiveIntensity = Math.sin(progress * Math.PI) * 0.5;
-        }
-        break;
-
-      case 'draw':
-        // Drawing bow
-        visual.group.scale.x = 1 + progress * 0.3;
-        break;
-
-      case 'block':
-        // Blocking motion
-        visual.group.rotation.x = animation.originalRotation!.x - 0.3;
-        visual.group.position.z = animation.originalPosition!.z - 0.2;
+        group.scale.set(sparkleScale, sparkleScale, sparkleScale);
+        group.rotation.y = origRot.y + progress * Math.PI;
         break;
 
       case 'idle':
-        // Gentle floating
-        visual.group.position.y = animation.originalPosition!.y + Math.sin(progress * Math.PI * 2) * 0.05;
+        group.position.y = origPos.y + Math.sin(progress * Math.PI * 2) * 0.05;
         break;
 
-      case 'patrol':
-        // Walking in place
-        visual.group.position.y = animation.originalPosition!.y + Math.abs(Math.sin(progress * Math.PI * 4)) * 0.1;
-        visual.group.rotation.y = animation.originalRotation!.y + Math.sin(progress * Math.PI) * 0.1;
+      case 'sway':
+        group.rotation.z = origRot.z + Math.sin(progress * Math.PI * 2) * 0.1;
         break;
 
-      case 'stomp':
-        // Giant stomp
-        visual.group.position.y = animation.originalPosition!.y - Math.sin(progress * Math.PI) * 0.3;
-        const stompScale = 1 + Math.sin(progress * Math.PI) * 0.1;
-        visual.group.scale.set(stompScale, 1 - Math.sin(progress * Math.PI) * 0.1, stompScale);
+      case 'ripple':
+        const rippleScale = 1 + Math.sin(progress * Math.PI * 4) * 0.1;
+        group.scale.set(rippleScale, 1, rippleScale);
         break;
 
-      case 'wave':
-        // Waving motion
-        visual.group.rotation.z = animation.originalRotation!.z + Math.sin(progress * Math.PI * 2) * 0.3;
+      // Add more animation types as needed
+      default:
         break;
+    }
+  }
 
-      case 'point':
-        // Pointing motion
-        visual.group.rotation.x = animation.originalRotation!.x - 0.2;
-        break;
-
-      case 'gesture':
-        // General gesture
-        visual.group.rotation.x = animation.originalRotation!.x + Math.sin(progress * Math.PI * 2) * 0.1;
-        visual.group.rotation.z = animation.originalRotation!.z + Math.sin(progress * Math.PI * 2 + Math.PI/2) * 0.1;
-        break;
-
-      case 'bubble':
-        // Bubbling potion
-        visual.group.position.y = animation.originalPosition!.y + Math.sin(progress * Math.PI * 8) * 0.02;
-        visual.group.scale.set(
-          1 + Math.sin(progress * Math.PI * 8) * 0.05,
-          1 + Math.sin(progress * Math.PI * 8 + Math.PI/3) * 0.05,
-          1 + Math.sin(progress * Math.PI * 8 + Math.PI*2/3) * 0.05
-        );
-        break;
+  /**
+   * Set opacity for visual
+   */
+  private setOpacity(visual: VisualComponent, opacity: number): void {
+    const threeMesh = (visual.mesh as any)._threeMesh;
+    if (threeMesh?.material) {
+      threeMesh.material.opacity = Math.max(0, Math.min(1, opacity));
     }
   }
 
@@ -494,15 +601,35 @@ export class VisualRepresentationSystem extends System {
    * Remove visual representation
    */
   removeVisual(entityId: string): void {
+    if (!entityId) {return;}
+
     this.stopAnimation(entityId);
 
     const visual = this.entityVisuals.get(entityId);
     if (visual) {
-      // Remove group from parent
-      if (visual.group.parent) {
-        visual.group.parent.remove(visual.group);
+      // Remove from scene
+      if (this.sceneRoot && visual.group.parent) {
+        this.sceneRoot.remove(visual.group);
       }
-      visual.group.deactivate();
+
+      // Dispose of Three.js resources
+      const threeMesh = (visual.mesh as any)._threeMesh;
+      if (threeMesh) {
+        if (threeMesh.geometry) {threeMesh.geometry.dispose();}
+        if (threeMesh.material) {
+          if (Array.isArray(threeMesh.material)) {
+            threeMesh.material.forEach((m: any) => m.dispose());
+          } else {
+            threeMesh.material.dispose();
+          }
+        }
+      }
+
+      // Deactivate hyperfy nodes
+      if (visual.group.deactivate) {
+        visual.group.deactivate();
+      }
+
       this.entityVisuals.delete(entityId);
     }
   }
@@ -510,7 +637,7 @@ export class VisualRepresentationSystem extends System {
   /**
    * Get visual for entity
    */
-  getVisual(entityId: string): { mesh: Mesh; group: Group; template: any } | undefined {
+  getVisual(entityId: string): VisualComponent | undefined {
     return this.entityVisuals.get(entityId);
   }
 
@@ -518,13 +645,25 @@ export class VisualRepresentationSystem extends System {
    * Clean up
    */
   override destroy(): void {
+    // Unsubscribe from events
+    if (this.world.events) {
+      this.world.events.off('update', this.update.bind(this));
+    }
+
     // Remove all visuals
-    for (const entityId of this.entityVisuals.keys()) {
+    for (const entityId of Array.from(this.entityVisuals.keys())) {
       this.removeVisual(entityId);
+    }
+
+    // Remove scene root
+    if (this.sceneRoot && this.scene) {
+      this.scene.remove(this.sceneRoot);
+      // Three.js groups don't have deactivate method - just remove from scene
     }
 
     this.entityVisuals.clear();
     this.activeAnimations.clear();
+    this.templates.clear();
 
     super.destroy();
   }

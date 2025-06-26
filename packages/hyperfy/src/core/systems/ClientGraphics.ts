@@ -4,7 +4,7 @@ import {
   RenderPass,
   SelectiveBloomEffect
 } from 'postprocessing';
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
 
 import type { World, WorldOptions } from '../../types/index.js';
 import { System } from './System.js';
@@ -50,6 +50,7 @@ export class ClientGraphics extends System {
   height: number = 0;
   aspect: number = 0;
   worldToScreenFactor: number = 0;
+  usingExistingCanvas: boolean = false;
 
   constructor(world: World) {
     super(world);
@@ -64,7 +65,25 @@ export class ClientGraphics extends System {
     this.width = this.viewport.offsetWidth;
     this.height = this.viewport.offsetHeight;
     this.aspect = this.width / this.height;
-    this.renderer = getRenderer();
+
+    // Check if there's already a canvas in the viewport (from Puppeteer/testing)
+    const existingCanvas = this.viewport.querySelector('canvas');
+    if (existingCanvas) {
+      console.log('[ClientGraphics] Found existing canvas, using it for WebGL context');
+      this.usingExistingCanvas = true;
+      this.renderer = new THREE.WebGLRenderer({
+        canvas: existingCanvas,
+        powerPreference: 'high-performance',
+        antialias: true,
+        // logarithmicDepthBuffer: true,
+        // reverseDepthBuffer: true,
+      });
+    } else {
+      console.log('[ClientGraphics] Creating new WebGL renderer');
+      this.usingExistingCanvas = false;
+      this.renderer = getRenderer();
+    }
+
     this.renderer.setSize(this.width, this.height);
     this.renderer.setClearColor(0xffffff, 0);
     const worldAny = this.world as any;
@@ -116,7 +135,15 @@ export class ClientGraphics extends System {
     this.resizer = new ResizeObserver(() => {
       this.resize(this.viewport.offsetWidth, this.viewport.offsetHeight);
     });
-    this.viewport.appendChild(this.renderer.domElement);
+
+    // Only append the canvas if it's not already in the viewport
+    if (!existingCanvas) {
+      console.log('[ClientGraphics] Appending new canvas to viewport');
+      this.viewport.appendChild(this.renderer.domElement);
+    } else {
+      console.log('[ClientGraphics] Using existing canvas in viewport');
+    }
+
     this.resizer.observe(this.viewport);
   }
 

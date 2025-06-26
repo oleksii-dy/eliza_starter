@@ -409,7 +409,7 @@ export class SimulationAdapter extends BaseRobotInterface {
   }
 
   private async executeMoveJoint(command: RobotCommand): Promise<ExecutionResult> {
-    const { target, direction, amount, speed, duration } = command.parameters || {};
+    const { target, direction, amount, speed: _speed, duration } = command.parameters || {};
 
     if (!target) {
       return {

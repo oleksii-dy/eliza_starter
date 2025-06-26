@@ -1,6 +1,43 @@
-import type { Route } from './types/core';
+import type { Route, UUID, State, Memory } from './types/core';
+import { stringToUuid } from './types/core';
 import type { AgentKitService } from './services/AgentKitService';
 import { custodialWalletRoutes } from './api/walletRoutes';
+
+// Enhanced AgentKit interface for better typing
+interface EnhancedAgentKit {
+  wallet?: {
+    getDefaultAddress(): Promise<string>;
+  };
+  getAddress?(): Promise<string>;
+  getBalance?(): Promise<Record<string, string>>;
+}
+
+// Synthetic message and state types for action execution
+interface SyntheticMessage {
+  id: UUID;
+  entityId: UUID;
+  roomId: UUID;
+  agentId: UUID;
+  content: {
+    text: string;
+    actions: string[];
+    [key: string]: unknown;
+  };
+  createdAt: number;
+}
+
+interface SyntheticState extends State {
+  [key: string]: unknown;
+}
+
+// Callback type for action execution
+type ActionCallback = (response: unknown) => Promise<Memory[]>;
+
+// Request body interface for action execution
+interface ActionExecuteRequest {
+  action: string;
+  params?: Record<string, unknown>;
+}
 
 export const agentKitRoutes: Route[] = [
   ...custodialWalletRoutes,
@@ -11,35 +48,35 @@ export const agentKitRoutes: Route[] = [
       try {
         const service = runtime.getService<AgentKitService>('agentkit');
         if (!service || !service.isReady()) {
-          res.writeHead(503, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'AgentKit service not available' }));
+          res.status(503).json({ error: 'AgentKit service not available' });
           return;
         }
 
         const agentKit = service.getAgentKit();
         if (!agentKit) {
-          res.writeHead(503, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'AgentKit not initialized' }));
+          res.status(503).json({ error: 'AgentKit not initialized' });
           return;
         }
 
         // Access wallet through agentKit's wallet property
         let address = 'Unknown';
         try {
-          if ((agentKit as any).wallet) {
-            address = await (agentKit as any).wallet.getDefaultAddress();
-          } else if ((agentKit as any).getAddress) {
-            address = await (agentKit as any).getAddress();
+          const enhancedAgentKit = agentKit as EnhancedAgentKit;
+          if (enhancedAgentKit.wallet) {
+            address = await enhancedAgentKit.wallet.getDefaultAddress();
+          } else if (enhancedAgentKit.getAddress) {
+            address = await enhancedAgentKit.getAddress();
           }
         } catch (err) {
           console.error('[AgentKit API] Error getting address:', err);
         }
-        let balance = {};
+        let balance: Record<string, string> = {};
 
         try {
           // Check if getBalance method exists
-          if (typeof (agentKit as any).getBalance === 'function') {
-            balance = await (agentKit as any).getBalance();
+          const enhancedAgentKit = agentKit as EnhancedAgentKit;
+          if (typeof enhancedAgentKit.getBalance === 'function') {
+            balance = await enhancedAgentKit.getBalance();
           } else {
             // Fallback to empty balance
             balance = { ETH: '0' };
@@ -51,18 +88,14 @@ export const agentKitRoutes: Route[] = [
 
         const network = runtime.getSetting('CDP_NETWORK_ID') || 'base-mainnet';
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(
-          JSON.stringify({
-            address,
-            balance,
-            network,
-          })
-        );
-      } catch (error: any) {
+        res.status(200).json({
+          address,
+          balance,
+          network,
+        });
+      } catch (error) {
         console.error('[AgentKit API] Wallet info error:', error);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: error.message }));
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     },
   },
@@ -97,12 +130,10 @@ export const agentKitRoutes: Route[] = [
             description: action.description,
           }));
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(actions));
-      } catch (error: any) {
+        res.status(200).json(actions);
+      } catch (error) {
         console.error('[AgentKit API] Actions list error:', error);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: error.message }));
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     },
   },
@@ -112,32 +143,25 @@ export const agentKitRoutes: Route[] = [
     handler: async (req, res, runtime) => {
       try {
         // Parse request body
-        let body = '';
-        for await (const chunk of req) {
-          body += chunk;
-        }
-
-        const { action: actionName, params } = JSON.parse(body);
+        const { action: actionName, params } = req.body as unknown as ActionExecuteRequest;
 
         if (!actionName) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Action name required' }));
+          res.status(400).json({ error: 'Action name required' });
           return;
         }
 
         // Find the action
         const action = runtime.actions.find((a) => a.name === actionName);
         if (!action) {
-          res.writeHead(404, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: `Action ${actionName} not found` }));
+          res.status(404).json({ error: `Action ${actionName} not found` });
           return;
         }
 
         // Create a synthetic message for the action
-        const message = {
-          id: `00000000-0000-0000-0000-${Date.now().toString().padStart(12, '0')}`,
-          entityId: `00000000-0000-0000-0000-${runtime.agentId.slice(0, 12)}`,
-          roomId: '00000000-0000-0000-0000-adminpanel000',
+        const message: SyntheticMessage = {
+          id: stringToUuid(`execute-${actionName}-${Date.now()}`),
+          entityId: stringToUuid(`admin-${runtime.agentId}`),
+          roomId: stringToUuid('admin-panel'),
           agentId: runtime.agentId,
           content: {
             text: `Execute ${actionName} with params: ${JSON.stringify(params)}`,
@@ -148,51 +172,41 @@ export const agentKitRoutes: Route[] = [
         };
 
         // Validate the action
-        const isValid = await action.validate(runtime, message as any, {} as any);
+        const state: SyntheticState = {
+          values: {},
+          data: {},
+          text: '',
+        };
+        const isValid = await action.validate(runtime, message, state);
         if (!isValid) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(
-            JSON.stringify({
-              error: 'Action validation failed',
-              message: 'The action cannot be executed with the provided parameters',
-            })
-          );
+          res.status(400).json({
+            error: 'Action validation failed',
+            message: 'The action cannot be executed with the provided parameters',
+          });
           return;
         }
 
         // Execute the action
-        let result = null;
-        const callback = async (response: any) => {
+        let result: unknown = null;
+        const callback: ActionCallback = async (response: unknown) => {
           result = response;
           return [];
         };
 
-        const actionResult = await action.handler(
-          runtime,
-          message as any,
-          {} as any,
-          params,
-          callback
-        );
+        const actionResult = await action.handler(runtime, message, state, params, callback);
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(
-          JSON.stringify({
-            success: true,
-            result: actionResult || result,
-            action: actionName,
-            timestamp: new Date().toISOString(),
-          })
-        );
-      } catch (error: any) {
+        res.status(200).json({
+          success: true,
+          result: actionResult || result,
+          action: actionName,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (error) {
         console.error('[AgentKit API] Action execution error:', error);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(
-          JSON.stringify({
-            error: 'Action execution failed',
-            message: error.message,
-          })
-        );
+        res.status(500).json({
+          error: 'Action execution failed',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        });
       }
     },
   },
@@ -208,32 +222,26 @@ export const agentKitRoutes: Route[] = [
         const service = runtime.getService<AgentKitService>('agentkit');
 
         if (!service || !service.isReady()) {
-          res.writeHead(503, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'AgentKit service not available' }));
+          res.status(503).json({ error: 'AgentKit service not available' });
           return;
         }
 
         const agentKit = service.getAgentKit();
         if (!agentKit) {
-          res.writeHead(503, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'AgentKit not initialized' }));
+          res.status(503).json({ error: 'AgentKit not initialized' });
           return;
         }
 
         // Get transaction details (this would need implementation in AgentKit)
         // For now, return a placeholder
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(
-          JSON.stringify({
-            hash,
-            status: 'pending',
-            message: 'Transaction tracking not yet implemented',
-          })
-        );
-      } catch (error: any) {
+        res.status(200).json({
+          hash,
+          status: 'pending',
+          message: 'Transaction tracking not yet implemented',
+        });
+      } catch (error) {
         console.error('[AgentKit API] Transaction lookup error:', error);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: error.message }));
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     },
   },
@@ -245,19 +253,15 @@ export const agentKitRoutes: Route[] = [
         const service = runtime.getService<AgentKitService>('agentkit');
         const isServiceReady = service && service.isReady();
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(
-          JSON.stringify({
-            serviceReady: isServiceReady,
-            network: runtime.getSetting('CDP_NETWORK_ID') || 'base-mainnet',
-            hasApiKey: !!runtime.getSetting('CDP_API_KEY_NAME'),
-            hasPrivateKey: !!runtime.getSetting('CDP_API_KEY_PRIVATE_KEY'),
-          })
-        );
-      } catch (error: any) {
+        res.status(200).json({
+          serviceReady: isServiceReady,
+          network: runtime.getSetting('CDP_NETWORK_ID') || 'base-mainnet',
+          hasApiKey: !!runtime.getSetting('CDP_API_KEY_NAME'),
+          hasPrivateKey: !!runtime.getSetting('CDP_API_KEY_PRIVATE_KEY'),
+        });
+      } catch (error) {
         console.error('[AgentKit API] Config error:', error);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: error.message }));
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     },
   },
@@ -288,12 +292,10 @@ export const agentKitRoutes: Route[] = [
 </html>
                 `;
 
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(html);
-      } catch (error: any) {
+        res.status(200).send(html);
+      } catch (error) {
         console.error('[AgentKit Admin] Error serving admin panel:', error);
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end('Error loading admin panel');
+        res.status(500).send('Error loading admin panel');
       }
     },
     name: 'AgentKit Admin',

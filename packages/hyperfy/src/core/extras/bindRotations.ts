@@ -1,10 +1,11 @@
-import * as THREE from 'three';
+import type { Euler, Quaternion } from 'three';
+import { THREE } from './three';
 
-export function bindRotations(quaternion: THREE.Quaternion, euler: THREE.Euler) {
-  euler._onChange(() => {
-    quaternion.setFromEuler(euler, false);
+export function bindRotations(quaternion: Quaternion, euler: Euler) {
+  (euler as any)._onChange(() => {
+    (quaternion as any).setFromEuler(euler, false);
   });
-  quaternion._onChange(() => {
-    euler.setFromQuaternion(quaternion, undefined, false);
+  (quaternion as any)._onChange(() => {
+    (euler as any).setFromQuaternion(quaternion, undefined, false);
   });
 }

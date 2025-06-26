@@ -1,0 +1,86 @@
+import react from '@vitejs/plugin-react-swc';
+import path from 'node:path';
+import { defineConfig } from 'vite';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import dts from 'vite-plugin-dts';
+
+export default defineConfig({
+  plugins: [
+    react({
+      tsDecorators: false,
+    }),
+    nodePolyfills({
+      include: [
+        'crypto',
+        'stream', 
+        'buffer',
+        'util',
+        'events',
+        'path',
+        'fs',
+        'module'
+      ],
+      globals: {
+        Buffer: true,
+        global: true,
+        process: true,
+      },
+    }),
+    dts({
+      insertTypesEntry: true,
+      outDir: 'dist/lib',
+      entryRoot: 'src',
+      include: ['src/**/*.ts', 'src/**/*.tsx'],
+      exclude: ['src/**/*.test.*', 'src/**/*.spec.*', 'src/vite-env.d.ts', 'src/**/*.cy.*', 'src/main.tsx', '**/playwright.config.*', '**/cypress.config.*'],
+      copyDtsFiles: false,
+      staticImport: true,
+      clearPureImport: true,
+      rollupTypes: false,
+    }),
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@elizaos/core': path.resolve(__dirname, './src/core-browser-stub.ts'),
+      crypto: 'crypto-browserify',
+    },
+  },
+  define: {
+    global: 'globalThis',
+  },
+  build: {
+    lib: {
+      entry: path.resolve(__dirname, 'src/lib-index.ts'),
+      name: 'ElizaOSClient',
+      formats: ['es'],
+      fileName: 'index',
+    },
+    outDir: 'dist/lib',
+    rollupOptions: {
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        '@tanstack/react-query',
+        'react-router-dom',
+        'socket.io-client',
+        'lucide-react',
+      ],
+      output: {
+        globals: {
+          'react': 'React',
+          'react-dom': 'ReactDOM',
+          'react/jsx-runtime': 'jsxRuntime',
+        },
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name === 'style.css') return 'client.css';
+          return assetInfo.name;
+        },
+      },
+    },
+    target: 'es2020',
+    minify: false,
+    sourcemap: true,
+    cssCodeSplit: false,
+  },
+});

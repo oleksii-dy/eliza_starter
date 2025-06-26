@@ -1,3 +1,4 @@
+import { BoxGeometry, BufferGeometry, InstancedMesh, Layers, Material, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, Raycaster, Scene, Texture } from 'three';
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { mock, spyOn } from 'bun:test';
 import { Stage } from '../../core/systems/Stage.js';
@@ -32,7 +33,7 @@ describe('Stage System', () => {
 
   beforeEach(() => {
     world = new MockWorld();
-    world.rig = new THREE.Object3D();
+    world.rig = new Object3D();
     world.camera = {
       position: { x: 0, y: 0, z: 0 },
       rotation: { x: 0, y: 0, z: 0, w: 1 },
@@ -50,7 +51,7 @@ describe('Stage System', () => {
 
   describe('initialization', () => {
     it('should create a Three.js scene', () => {
-      expect(stage.scene).toBeInstanceOf(THREE.Scene);
+      expect(stage.scene).toBeInstanceOf(Scene);
     });
 
     it('should initialize octree for spatial indexing', () => {
@@ -58,18 +59,18 @@ describe('Stage System', () => {
     });
 
     it('should set up raycaster', () => {
-      expect(stage['raycaster']).toBeInstanceOf(THREE.Raycaster);
+      expect(stage['raycaster']).toBeInstanceOf(Raycaster);
       expect(stage['raycaster'].firstHitOnly).toBe(true);
     });
 
     it('should add world rig to scene on init', async () => {
       const viewport = document.createElement('div');
-      
+
       // Add timeout to prevent infinite loops
       const timeout = setTimeout(() => {
         throw new Error('Test timed out after 5 seconds');
       }, 5000);
-      
+
       try {
         await stage.init({ viewport });
         expect(stage.scene.children).toContain(world.rig);
@@ -84,7 +85,7 @@ describe('Stage System', () => {
       const material = stage.getDefaultMaterial();
 
       expect(material).toBeDefined();
-      expect(material.raw).toBeInstanceOf(THREE.MeshStandardMaterial);
+      expect(material.raw).toBeInstanceOf(MeshStandardMaterial);
       expect(material.proxy).toBeDefined();
     });
 
@@ -95,8 +96,8 @@ describe('Stage System', () => {
         roughness: 0.3,
       });
 
-      expect(material.raw).toBeInstanceOf(THREE.MeshStandardMaterial);
-      const mat = material.raw as THREE.MeshStandardMaterial;
+      expect(material.raw).toBeInstanceOf(MeshStandardMaterial);
+      const mat = material.raw as MeshStandardMaterial;
       expect(mat.metalness).toBe(0.5);
       expect(mat.roughness).toBe(0.3);
     });
@@ -107,20 +108,20 @@ describe('Stage System', () => {
         color: 'blue',
       });
 
-      expect(material.raw).toBeInstanceOf(THREE.MeshBasicMaterial);
+      expect(material.raw).toBeInstanceOf(MeshBasicMaterial);
     });
 
     it('should clone existing material', () => {
-      const original = new THREE.MeshStandardMaterial({ color: 'green' });
+      const original = new MeshStandardMaterial({ color: 'green' });
       const material = stage.createMaterial({ raw: original });
 
       expect(material.raw).not.toBe(original);
-      expect(material.raw).toBeInstanceOf(THREE.MeshStandardMaterial);
+      expect(material.raw).toBeInstanceOf(MeshStandardMaterial);
     });
 
     it('should provide material proxy with texture controls', () => {
-      const texturedMat = new THREE.MeshStandardMaterial();
-      texturedMat.map = new THREE.Texture();
+      const texturedMat = new MeshStandardMaterial();
+      texturedMat.map = new Texture();
 
       const material = stage.createMaterial({ raw: texturedMat });
       const proxy = material.proxy;
@@ -149,16 +150,16 @@ describe('Stage System', () => {
   });
 
   describe('mesh insertion', () => {
-    let geometry: THREE.BufferGeometry;
-    let material: THREE.Material;
+    let geometry: BufferGeometry;
+    let material: Material;
     let node: any;
-    let matrix: THREE.Matrix4;
+    let matrix: Matrix4;
 
     beforeEach(() => {
-      geometry = new THREE.BoxGeometry();
-      material = new THREE.MeshStandardMaterial();
+      geometry = new BoxGeometry();
+      material = new MeshStandardMaterial();
       node = { ctx: { entity: { id: 'test-entity' } } };
-      matrix = new THREE.Matrix4();
+      matrix = new Matrix4();
     });
 
     it('should insert single mesh', () => {
@@ -216,10 +217,10 @@ describe('Stage System', () => {
         matrix,
       });
 
-      const newMatrix = new THREE.Matrix4().setPosition(10, 0, 0);
+      const newMatrix = new Matrix4().setPosition(10, 0, 0);
       handle.move(newMatrix);
 
-      const mesh = stage.scene.children.find(c => c instanceof THREE.Mesh) as THREE.Mesh;
+      const mesh = stage.scene.children.find(c => c instanceof Mesh) as Mesh;
       expect(mesh.matrixWorld.elements[12]).toBe(10);
     });
 
@@ -268,7 +269,7 @@ describe('Stage System', () => {
     });
 
     it('should apply layer mask to raycasting', () => {
-      const layers = new THREE.Layers();
+      const layers = new Layers();
       layers.set(2);
 
       stage.raycastPointer({ x: 400, y: 300 }, layers);
@@ -297,8 +298,8 @@ describe('Stage System', () => {
 
   describe('update cycle', () => {
     it('should clean models on update', () => {
-      const geometry = new THREE.BoxGeometry();
-      const material = new THREE.MeshStandardMaterial();
+      const geometry = new BoxGeometry();
+      const material = new MeshStandardMaterial();
 
       // Insert a linked mesh to create a model
       stage.insert({
@@ -306,7 +307,7 @@ describe('Stage System', () => {
         geometry,
         material,
         node: { ctx: {} },
-        matrix: new THREE.Matrix4(),
+        matrix: new Matrix4(),
       });
 
       stage.update(0.016);
@@ -338,14 +339,14 @@ describe('Stage System', () => {
 
   describe('interface methods', () => {
     it('should add objects to scene', () => {
-      const object = new THREE.Object3D();
+      const object = new Object3D();
       stage.add(object);
 
       expect(stage.scene.children).toContain(object);
     });
 
     it('should remove objects from scene', () => {
-      const object = new THREE.Object3D();
+      const object = new Object3D();
       stage.scene.add(object);
 
       stage.remove(object);
@@ -357,21 +358,21 @@ describe('Stage System', () => {
 
   describe('instanced rendering', () => {
     it('should batch multiple instances of same mesh', () => {
-      const geometry = new THREE.BoxGeometry();
-      const material = new THREE.MeshStandardMaterial();
+      const geometry = new BoxGeometry();
+      const material = new MeshStandardMaterial();
 
       const options = {
         linked: true,
         geometry,
         material,
         node: { ctx: {} },
-        matrix: new THREE.Matrix4(),
+        matrix: new Matrix4(),
       };
 
       // Add multiple instances
       const handles: any[] = [];
       for (let i = 0; i < 5; i++) {
-        const matrix = new THREE.Matrix4().setPosition(i, 0, 0);
+        const matrix = new Matrix4().setPosition(i, 0, 0);
         handles.push(stage.insert({ ...options, matrix }));
       }
 
@@ -383,22 +384,22 @@ describe('Stage System', () => {
 
       // Should have added instanced mesh to scene
       const instancedMeshes = stage.scene.children.filter(
-        c => c instanceof THREE.InstancedMesh
+        c => c instanceof InstancedMesh
       );
       expect(instancedMeshes.length).toBe(1);
-      expect((instancedMeshes[0] as THREE.InstancedMesh).count).toBe(5);
+      expect((instancedMeshes[0] as InstancedMesh).count).toBe(5);
     });
 
     it('should handle instance removal', () => {
-      const geometry = new THREE.BoxGeometry();
-      const material = new THREE.MeshStandardMaterial();
+      const geometry = new BoxGeometry();
+      const material = new MeshStandardMaterial();
 
       const options = {
         linked: true,
         geometry,
         material,
         node: { ctx: {} },
-        matrix: new THREE.Matrix4(),
+        matrix: new Matrix4(),
       };
 
       // Add instances
@@ -412,23 +413,23 @@ describe('Stage System', () => {
       stage.update(0.016);
 
       const instancedMesh = stage.scene.children.find(
-        c => c instanceof THREE.InstancedMesh
-      ) as THREE.InstancedMesh;
+        c => c instanceof InstancedMesh
+      ) as InstancedMesh;
       expect(instancedMesh.count).toBe(1);
     });
   });
 
   describe('cleanup', () => {
     it('should clear models on destroy', () => {
-      const geometry = new THREE.BoxGeometry();
-      const material = new THREE.MeshStandardMaterial();
+      const geometry = new BoxGeometry();
+      const material = new MeshStandardMaterial();
 
       stage.insert({
         linked: true,
         geometry,
         material,
         node: { ctx: {} },
-        matrix: new THREE.Matrix4(),
+        matrix: new Matrix4(),
       });
 
       expect(stage['models'].size).toBe(1);

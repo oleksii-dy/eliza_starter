@@ -11,6 +11,7 @@ import {
   logger,
   ModelType,
 } from '@elizaos/core';
+import { PlanningService } from '../services/planning-service';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -135,7 +136,7 @@ export class ApiBankAdapter {
   constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
 
-    const planningService = runtime.getService<IPlanningService>('planning');
+    const planningService = runtime.getService<PlanningService>('planning');
     if (!planningService) {
       throw new Error('Planning service is required for API-Bank testing');
     }
@@ -161,7 +162,7 @@ export class ApiBankAdapter {
       logger.info(`[ApiBankAdapter] Loaded ${this.testCases.length} test cases`);
     } catch (error) {
       logger.error('[ApiBankAdapter] Error loading test cases:', error);
-      throw new Error(`Failed to load API-Bank test cases: ${error.message}`);
+      throw new Error(`Failed to load API-Bank test cases: ${(error as Error).message}`);
     }
   }
 
@@ -200,7 +201,7 @@ export class ApiBankAdapter {
           planGenerated: null,
           actualApiCalls: [],
           actualResponse: '',
-          error: error.message,
+          error: (error as Error).message,
           metrics: {
             planningTime: 0,
             executionTime: 0,
@@ -331,6 +332,7 @@ export class ApiBankAdapter {
           if (content.text) {
             actualResponse = content.text;
           }
+          return [];
         }
       );
 
@@ -377,7 +379,7 @@ export class ApiBankAdapter {
         planGenerated,
         actualApiCalls,
         actualResponse,
-        error: error.message,
+        error: (error as Error).message,
         metrics: {
           planningTime,
           executionTime,
@@ -952,7 +954,7 @@ export class ApiBankAdapter {
       logger.info(`[ApiBankAdapter] Benchmark report saved to ${filePath}`);
     } catch (error) {
       logger.error('[ApiBankAdapter] Error saving report:', error);
-      throw new Error(`Failed to save report: ${error.message}`);
+      throw new Error(`Failed to save report: ${(error as Error).message}`);
     }
   }
 }

@@ -1,5 +1,11 @@
-import type { IAgentRuntime, Route, UUID, Memory, KnowledgeItem } from '@elizaos/core';
-import { MemoryType, createUniqueUuid, logger, ModelType } from '@elizaos/core';
+import type {
+  IAgentRuntime,
+  Route,
+  UUID,
+  Memory,
+  KnowledgeItem as _KnowledgeItem,
+} from '@elizaos/core';
+import { MemoryType as _MemoryType, createUniqueUuid, logger, ModelType } from '@elizaos/core';
 import { getTempPath } from './utils/temp';
 import { KnowledgeService } from './service';
 import fs from 'node:fs'; // For file operations in upload
@@ -10,8 +16,8 @@ import { fetchUrlContent, normalizeS3Url } from './utils.ts'; // Import utils fu
 // Create multer configuration function that uses runtime settings
 const createUploadMiddleware = (runtime: IAgentRuntime) => {
   const uploadDir = runtime.getSetting('KNOWLEDGE_UPLOAD_DIR') || getTempPath('uploads');
-  const maxFileSize = parseInt(runtime.getSetting('KNOWLEDGE_MAX_FILE_SIZE') || '52428800'); // 50MB default
-  const maxFiles = parseInt(runtime.getSetting('KNOWLEDGE_MAX_FILES') || '10');
+  const maxFileSize = parseInt(runtime.getSetting('KNOWLEDGE_MAX_FILE_SIZE') || '52428800', 10); // 50MB default
+  const maxFiles = parseInt(runtime.getSetting('KNOWLEDGE_MAX_FILES') || '10', 10);
   const allowedMimeTypes = runtime.getSetting('KNOWLEDGE_ALLOWED_MIME_TYPES')?.split(',') || [
     'text/plain',
     'text/markdown',
@@ -128,11 +134,10 @@ async function uploadKnowledgeHandler(req: any, res: any, runtime: IAgentRuntime
       logger.info(`[KNOWLEDGE UPLOAD HANDLER] Processing upload for agent: ${agentId}`);
 
       const processingPromises = files.map(async (file, index) => {
-        let knowledgeId: UUID;
         const originalFilename = file.originalname;
         const filePath = file.path;
 
-        knowledgeId =
+        const knowledgeId: UUID =
           (req.body?.documentIds && req.body.documentIds[index]) ||
           req.body?.documentId ||
           (createUniqueUuid(runtime, `knowledge-${originalFilename}-${Date.now()}`) as UUID);
@@ -423,7 +428,7 @@ async function getKnowledgeDocumentsHandler(req: any, res: any, runtime: IAgentR
     const limit = req.query.limit ? Number.parseInt(req.query.limit as string, 10) : 20;
     const before = req.query.before ? Number.parseInt(req.query.before as string, 10) : Date.now();
     const includeEmbedding = req.query.includeEmbedding === 'true';
-    const agentId = req.query.agentId as UUID | undefined;
+    const _agentId = req.query.agentId as UUID | undefined;
 
     // Retrieve fileUrls if they are provided in the request
     const fileUrls = req.query.fileUrls
@@ -550,7 +555,7 @@ async function getKnowledgeByIdHandler(req: any, res: any, runtime: IAgentRuntim
 
   try {
     logger.debug(`[KNOWLEDGE GET BY ID HANDLER] Retrieving document with ID: ${knowledgeId}`);
-    const agentId = req.query.agentId as UUID | undefined;
+    const _agentId = req.query.agentId as UUID | undefined;
 
     // Use the service methods instead of calling runtime directly
     // We can't use getMemoryById directly because it's not exposed by the service
@@ -682,7 +687,7 @@ async function knowledgePanelHandler(req: any, res: any, runtime: IAgentRuntime)
 }
 
 // Generic handler to serve static assets from the dist/assets directory
-async function frontendAssetHandler(req: any, res: any, runtime: IAgentRuntime) {
+async function frontendAssetHandler(req: any, res: any, _runtime: IAgentRuntime) {
   try {
     logger.debug(
       `[KNOWLEDGE ASSET HANDLER] Called with req.path: ${req.path}, req.originalUrl: ${req.originalUrl}, req.params: ${JSON.stringify(req.params)}`
@@ -740,7 +745,7 @@ async function getKnowledgeChunksHandler(req: any, res: any, runtime: IAgentRunt
     const limit = req.query.limit ? Number.parseInt(req.query.limit as string, 10) : 100;
     const before = req.query.before ? Number.parseInt(req.query.before as string, 10) : Date.now();
     const documentId = req.query.documentId as string | undefined;
-    const agentId = req.query.agentId as UUID | undefined;
+    const _agentId = req.query.agentId as UUID | undefined;
 
     // Get knowledge chunks/fragments for graph view
     const chunks = await service.getMemories({
@@ -849,7 +854,7 @@ async function searchKnowledgeHandler(req: any, res: any, runtime: IAgentRuntime
                 documentTitle;
               documentFilename = (document.metadata as any).filename || documentFilename;
             }
-          } catch (e) {
+          } catch (_e) {
             logger.debug(`Could not fetch document ${documentId} for fragment`);
           }
         }
@@ -888,7 +893,7 @@ async function uploadKnowledgeWithMulter(req: any, res: any, runtime: IAgentRunt
   const upload = createUploadMiddleware(runtime);
   const uploadArray = upload.array(
     'files',
-    parseInt(runtime.getSetting('KNOWLEDGE_MAX_FILES') || '10')
+    parseInt(runtime.getSetting('KNOWLEDGE_MAX_FILES') || '10', 10)
   );
 
   // Apply multer middleware manually
@@ -1149,7 +1154,7 @@ export const knowledgeRoutes: Route[] = [
   {
     type: 'GET',
     path: '/test-components',
-    handler: async (req: any, res: any, runtime: IAgentRuntime) => {
+    handler: async (req: any, res: any, _runtime: IAgentRuntime) => {
       const currentDir = path.dirname(new URL(import.meta.url).pathname);
       // Try multiple locations for the test-components.html file
       const possiblePaths = [
@@ -1164,7 +1169,7 @@ export const knowledgeRoutes: Route[] = [
           res.writeHead(200, { 'Content-Type': 'text/html' });
           res.end(htmlContent);
           return;
-        } catch (error) {
+        } catch (_error) {
           // Try next path
         }
       }

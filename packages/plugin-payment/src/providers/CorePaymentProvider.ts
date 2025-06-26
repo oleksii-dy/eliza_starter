@@ -113,16 +113,11 @@ export class CorePaymentProvider implements IPaymentProvider {
       const balances = await this.paymentService.getUserBalance(entityId, this.runtime);
 
       // Calculate trust and risk assessment
-      const trustProvider = this.runtime.getTrustProvider();
-      let trustScore = 0.5;
-
-      if (trustProvider) {
-        try {
-          const trustData = await trustProvider.getTrustScore(entityId);
-          trustScore = trustData.overall;
-        } catch (error) {
-          logger.warn('[CorePaymentProvider] Could not get trust score:', error);
-        }
+      // Use basic trust calculation based on transaction history
+      let trustScore = 0.5; // Default trust score
+      if (totalTransactions > 0) {
+        const successRate = successfulTransactions / totalTransactions;
+        trustScore = Math.min(0.9, 0.3 + (successRate * 0.6)); // Scale from 0.3 to 0.9
       }
 
       const profile: PaymentProfile = {
@@ -722,26 +717,16 @@ export class CorePaymentProvider implements IPaymentProvider {
 
   private async getEntityBalances(entityId: UUID): Promise<Record<string, string>> {
     try {
-      // Get wallet addresses from payment service or identity manager
-      const identityManager = this.runtime.getIdentityManager();
-      if (identityManager) {
-        const profile = await identityManager.getIdentityProfile(entityId);
-        if (profile && (profile as any).platformIdentities) {
-          const balances: Record<string, string> = {};
+      // Get current balances from payment service
+      const balances = await this.paymentService.getUserBalance(entityId, this.runtime);
 
-          // Extract wallet addresses from platform identities
-          Object.entries((profile as any).platformIdentities).forEach(([platform, identity]: [string, any]) => {
-            if (identity.metadata?.walletAddress) {
-              balances[platform] = identity.metadata.walletAddress;
-            }
-          });
+      // Convert to string format
+      const stringBalances: Record<string, string> = {};
+      Object.entries(balances).forEach(([key, value]) => {
+        stringBalances[key] = value.toString();
+      });
 
-          return balances;
-        }
-      }
-
-      // Fallback to empty balances
-      return {};
+      return stringBalances;
     } catch (error) {
       logger.warn('[CorePaymentProvider] Could not get entity balances:', error);
       return {};

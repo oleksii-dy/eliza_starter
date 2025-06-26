@@ -1,4 +1,13 @@
-import { describe, it, expect, beforeEach, beforeAll, afterEach, mock, spyOn } from 'bun:test';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  beforeAll,
+  afterEach,
+  mock as _mock,
+  spyOn,
+} from 'bun:test';
 import { EVMService } from '../service';
 import { EVMWalletService } from '../core/services/EVMWalletService';
 import { WalletBalanceService } from '../services/WalletBalanceService';
@@ -35,7 +44,7 @@ describe('EVM Services Comprehensive Test Suite', () => {
         evmService = await EVMService.start(mockRuntime);
       } catch (error) {
         // Service initialization may fail in test environment
-        console.log('EVMService initialization error:', error.message);
+        console.log('EVMService initialization error:', (error as Error).message);
       }
     });
 
@@ -73,7 +82,6 @@ describe('EVM Services Comprehensive Test Suite', () => {
       });
     });
 
-
     describe('Error Handling', () => {
       it('should handle RPC failures gracefully', async () => {
         const consoleSpy = spyOn(console, 'error').mockImplementation(() => {});
@@ -99,7 +107,7 @@ describe('EVM Services Comprehensive Test Suite', () => {
         walletService = await EVMWalletService.start(mockRuntime);
       } catch (error) {
         // Service initialization may fail in test environment
-        console.log('EVMWalletService initialization error:', error.message);
+        console.log('EVMWalletService initialization error:', (error as Error).message);
       }
     });
 
@@ -130,8 +138,6 @@ describe('EVM Services Comprehensive Test Suite', () => {
         expect(mockBalances).toBeDefined();
         expect(Array.isArray(mockBalances)).toBe(true);
       });
-
-
     });
 
     describe('Recent Actions Tracking', () => {

@@ -8,6 +8,20 @@ import { SpawningSystem } from '../rpg/systems/SpawningSystem';
 import { SkillsSystem } from '../rpg/systems/SkillsSystem';
 import { MovementSystem } from '../rpg/systems/MovementSystem';
 import { VisualRepresentationSystem } from '../rpg/systems/VisualRepresentationSystem';
+import { TradingSystem } from '../rpg/systems/TradingSystem';
+import { PrayerSystem } from '../rpg/systems/PrayerSystem';
+import { ShopSystem } from '../rpg/systems/ShopSystem';
+import { MagicSystem } from '../rpg/systems/MagicSystem';
+import { RangedSystem } from '../rpg/systems/RangedSystem';
+import { DeathRespawnSystem } from '../rpg/systems/DeathRespawnSystem';
+import { PvPSystem } from '../rpg/systems/PvPSystem';
+import { PlayerHomesSystem } from '../rpg/systems/PlayerHomesSystem';
+import { GrandExchangeSystem } from '../rpg/systems/GrandExchangeSystem';
+import { ClanSystem } from '../rpg/systems/ClanSystem';
+import { ConstructionSystem } from '../rpg/systems/ConstructionSystem';
+import { MinigameSystem } from '../rpg/systems/MinigameSystem';
+import { BankingSystem } from '../rpg/systems/BankingSystem';
+import { QuestSystem } from '../rpg/systems/QuestSystem';
 
 // Create a minimal test world that supports RPG entities
 export async function createTestWorld(options?: any): Promise<World> {
@@ -148,7 +162,7 @@ export async function createTestWorld(options?: any): Promise<World> {
       return systems.find(s => s instanceof constructor);
     },
     async init(options: WorldOptions) {
-      // Register RPG systems
+      // Register ALL RPG systems (21 total)
       this.register('combat', CombatSystem);
       this.register('inventory', InventorySystem);
       this.register('npc', NPCSystem);
@@ -157,6 +171,20 @@ export async function createTestWorld(options?: any): Promise<World> {
       this.register('skills', SkillsSystem);
       this.register('movement', MovementSystem);
       this.register('visualRepresentation', VisualRepresentationSystem);
+      this.register('quest', QuestSystem);
+      this.register('banking', BankingSystem);
+      this.register('trading', TradingSystem);
+      this.register('prayer', PrayerSystem);
+      this.register('shop', ShopSystem);
+      this.register('magic', MagicSystem);
+      this.register('ranged', RangedSystem);
+      this.register('deathRespawn', DeathRespawnSystem);
+      this.register('pvp', PvPSystem);
+      this.register('playerHomes', PlayerHomesSystem);
+      this.register('grandExchange', GrandExchangeSystem);
+      this.register('clan', ClanSystem);
+      this.register('construction', ConstructionSystem);
+      this.register('minigame', MinigameSystem);
 
       // Initialize all systems
       for (const system of systems) {
@@ -174,7 +202,7 @@ export async function createTestWorld(options?: any): Promise<World> {
     },
     tick(time: number) {
       const deltaMs = 16; // 60fps
-      const delta = deltaMs / 1000;
+      const _delta = deltaMs / 1000;
 
       this.frame++;
       this.time = time;
@@ -182,14 +210,14 @@ export async function createTestWorld(options?: any): Promise<World> {
       // Update all systems
       for (const system of systems) {
         if (system.update) {
-          system.update(delta);
+          system.update(_delta);
         }
       }
 
       // Fixed update
       for (const system of systems) {
         if (system.fixedUpdate) {
-          system.fixedUpdate(delta);
+          system.fixedUpdate(_delta);
         }
       }
     },
@@ -223,6 +251,18 @@ export async function createTestWorld(options?: any): Promise<World> {
         name: `Player ${id}`,
         position: { x: 0, y: 0, z: 0 }
       });
+    },
+    createEntity(data: any) {
+      return this.entities.add(data);
+    },
+    getEntityById(id: string) {
+      return this.entities.get(id);
+    },
+    addSystem(system: any) {
+      this.systems.push(system);
+    },
+    cleanup() {
+      this.destroy();
     }
   } as any;
 

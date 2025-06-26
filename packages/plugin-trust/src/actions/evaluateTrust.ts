@@ -9,18 +9,20 @@ import {
   parseJSONObjectFromText,
 } from '@elizaos/core';
 import type { TrustProfile } from '../types/trust';
+import { TrustEngineServiceWrapper } from '..';
 
 export const evaluateTrustAction: Action = {
   name: 'EVALUATE_TRUST',
-  description: 'Evaluates the trust score and profile for a specified entity. Returns detailed trust metrics including dimensions, trends, and confidence levels. Can be chained with RECORD_TRUST_INTERACTION to log trust-affecting behaviors or REQUEST_ELEVATION to check permission eligibility.',
+  description:
+    'Evaluates the trust score and profile for a specified entity. Returns detailed trust metrics including dimensions, trends, and confidence levels. Can be chained with RECORD_TRUST_INTERACTION to log trust-affecting behaviors or REQUEST_ELEVATION to check permission eligibility.',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const trustEngine = runtime.getService('trust-engine');
+    const trustEngine = runtime.getService<TrustEngineServiceWrapper>('trust-engine');
     return !!trustEngine;
   },
 
   handler: async (runtime: IAgentRuntime, message: Memory): Promise<ActionResult> => {
-    const trustEngine = runtime.getService('trust-engine') as any;
+    const trustEngine = runtime.getService<TrustEngineServiceWrapper>('trust-engine');
 
     if (!trustEngine) {
       throw new Error('Trust engine service not available');
@@ -54,8 +56,8 @@ export const evaluateTrustAction: Action = {
       if (!targetEntityId && runtime.getEntitiesForRoom) {
         const entities = await runtime.getEntitiesForRoom(message.roomId);
         if (entities) {
-          const matchingEntity = entities.find(
-            e => e.names?.some(name => name.toLowerCase() === requestData.entityName!.toLowerCase())
+          const matchingEntity = entities.find((e) =>
+            e.names?.some((name) => name.toLowerCase() === requestData.entityName!.toLowerCase())
           );
           if (matchingEntity) {
             targetEntityId = matchingEntity.id;
@@ -89,9 +91,8 @@ export const evaluateTrustAction: Action = {
         roomId: message.roomId,
       };
 
-      const trustProfile: TrustProfile = await trustEngine.evaluateTrust(
+      const trustProfile: TrustProfile = await trustEngine.calculateTrust(
         targetEntityId,
-        runtime.agentId,
         trustContext
       );
 
@@ -185,7 +186,7 @@ Last Updated: ${new Date(trustProfile.lastCalculated).toLocaleString()}`,
       {
         name: '{{user}}',
         content: {
-          text: 'Check Alice\'s trust score and record that she helped with the project',
+          text: "Check Alice's trust score and record that she helped with the project",
         },
       },
       {

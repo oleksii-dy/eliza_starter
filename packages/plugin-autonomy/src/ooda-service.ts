@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Service,
   type IAgentRuntime,
@@ -401,17 +402,14 @@ export class OODALoopService extends Service {
     const goalProgress = await this.observeGoalProgress();
     observations.push(...goalProgress);
 
-    // NEW: Observe action capabilities and recent action history
     const actionCapabilities = await this.observeActionCapabilities();
     observations.push(...actionCapabilities);
 
-    // NEW: Observe file system state if relevant
     const fileSystemState = await this.observeFileSystemState();
     if (fileSystemState) {
       observations.push(fileSystemState);
     }
 
-    // NEW: Observe recent command outputs
     const recentCommands = await this.observeRecentCommands();
     observations.push(...recentCommands);
 

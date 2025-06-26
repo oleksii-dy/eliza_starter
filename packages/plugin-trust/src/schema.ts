@@ -16,7 +16,8 @@ export const trustProfiles = pgTable('trust_profiles', {
   trendDirection: text('trend_direction').notNull(),
   trendChangeRate: integer('trend_change_rate').default(0),
   dimensions: jsonb('dimensions').notNull(),
-  lastCalculated: timestamp('last_calculated').defaultNow().notNull() });
+  lastCalculated: timestamp('last_calculated').defaultNow().notNull(),
+});
 
 /**
  * Stores individual pieces of evidence that contribute to a trust profile.
@@ -34,7 +35,8 @@ export const trustEvidence = pgTable('trust_evidence', {
   weight: integer('weight').default(1),
   description: text('description'),
   verified: boolean('verified').default(false),
-  context: jsonb('context') });
+  context: jsonb('context'),
+});
 
 /**
  * Stores contextual role assignments for entities.
@@ -48,7 +50,8 @@ export const contextualRoles = pgTable('contextual_roles', {
   assignedBy: uuid('assigned_by').notNull(),
   context: jsonb('context'), // Can store worldId, roomId, platform, etc.
   expiresAt: timestamp('expires_at'),
-  createdAt: timestamp('created_at').defaultNow().notNull() });
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
 
 /**
  * Stores permission delegations between entities.
@@ -62,7 +65,8 @@ export const permissionDelegations = pgTable('permission_delegations', {
   permissions: jsonb('permissions').notNull(), // Array of Permission objects
   context: jsonb('context'),
   expiresAt: timestamp('expires_at'),
-  createdAt: timestamp('created_at').defaultNow().notNull() });
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
 
 /**
  * Stores behavioral profiles for entities to detect anomalies and multi-account abuse.
@@ -79,7 +83,8 @@ export const behavioralProfiles = pgTable('behavioral_profiles', {
   activeHours: jsonb('active_hours').default('[]'), // JSON array of 24 hour counts
   commonPhrases: jsonb('common_phrases').default('[]'), // JSON array of common phrases
   interactionPatterns: jsonb('interaction_patterns').default('{}'), // JSON map of interaction types
-  updatedAt: timestamp('updated_at').defaultNow().notNull() });
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
 
 /**
  * Logs significant security incidents for auditing and threat analysis.
@@ -108,7 +113,8 @@ export const identityLinks = pgTable('identity_links', {
   entityIdB: uuid('entity_id_b').notNull(),
   confidence: integer('confidence').notNull(), // 0-100
   evidence: jsonb('evidence').default('[]'), // Array of evidence descriptions
-  updatedAt: timestamp('updated_at').defaultNow().notNull() });
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
 
 /**
  * Securely stores whistleblower reports.

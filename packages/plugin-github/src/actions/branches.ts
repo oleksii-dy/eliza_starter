@@ -222,6 +222,7 @@ export const createBranchAction: Action = {
   name: 'CREATE_GITHUB_BRANCH',
   similes: ['NEW_BRANCH', 'MAKE_BRANCH', 'BRANCH_FROM'],
   description: 'Creates a new branch in a GitHub repository',
+  enabled: false, // Disabled by default - branch creation modifies repository state
 
   validate: async (
     runtime: IAgentRuntime,

@@ -9,9 +9,11 @@ import {
   UUID,
   logger,
 } from '@elizaos/core';
-import { createMockRuntime as baseMockRuntime } from '../../../core/src/test-utils/mocks/runtime';
-import { createMockMemory as baseMockMemory } from '../../../core/src/test-utils/mocks/memory';
-import { createMockState as baseMockState } from '../../../core/src/test-utils/mocks/state';
+import {
+  createMockRuntime as baseMockRuntime,
+  createMockMemory as baseMockMemory,
+  createMockState as baseMockState,
+} from '@elizaos/core/test-utils';
 
 /**
  * Creates a mock runtime for testing stagehand components
@@ -53,7 +55,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     init: mock().mockResolvedValue(undefined),
 
     ...overrides,
-  });
+  }) as unknown as IAgentRuntime;
 }
 
 /**
@@ -67,7 +69,7 @@ export function createMockMemory(overrides: Partial<Memory> = {}): Memory {
       source: 'stagehand-test',
     },
     ...overrides,
-  });
+  }) as unknown as Memory;
 }
 
 /**
@@ -81,7 +83,7 @@ export function createMockState(overrides: Partial<State> = {}): State {
     },
     text: 'Stagehand test context',
     ...overrides,
-  });
+  }) as unknown as State;
 }
 
 /**

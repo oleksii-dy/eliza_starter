@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { logger } from '@elizaos/core';
 import { SearchResult } from '../../types';
 
@@ -6,7 +7,10 @@ export class StagehandGoogleSearchProvider {
 
   constructor(private stagehandService: any) {}
 
-  async search(query: string, maxResults: number = 10): Promise<SearchResult[]> {
+  async search(
+    query: string,
+    maxResults: number = 10
+  ): Promise<SearchResult[]> {
     try {
       logger.info(`[StagehandGoogle] Searching for: ${query}`);
 
@@ -16,7 +20,9 @@ export class StagehandGoogleSearchProvider {
         (await this.stagehandService.createSession(`search-${Date.now()}`));
 
       // Navigate to Google
-      await session.page.goto('https://www.google.com', { waitUntil: 'networkidle' });
+      await session.page.goto('https://www.google.com', {
+        waitUntil: 'networkidle',
+      });
 
       // Accept cookies if needed (for EU users)
       try {
@@ -56,12 +62,16 @@ export class StagehandGoogleSearchProvider {
         // Fallback to manual extraction
         const results = await session.page.evaluate(() => {
           const items: any[] = [];
-          const searchResults = document.querySelectorAll('div[data-async-context] > div');
+          const searchResults = (document as any).querySelectorAll(
+            'div[data-async-context] > div'
+          );
 
-          searchResults.forEach((result) => {
+          searchResults.forEach((result: any) => {
             const titleElement = result.querySelector('h3');
             const linkElement = result.querySelector('a[href]');
-            const snippetElement = result.querySelector('span[style*="-webkit-line-clamp"]');
+            const snippetElement = result.querySelector(
+              'span[style*="-webkit-line-clamp"]'
+            );
 
             if (titleElement && linkElement) {
               items.push({
@@ -75,7 +85,9 @@ export class StagehandGoogleSearchProvider {
           return items;
         });
 
-        logger.info(`[StagehandGoogle] Found ${results.length} results via DOM extraction`);
+        logger.info(
+          `[StagehandGoogle] Found ${results.length} results via DOM extraction`
+        );
         return results.slice(0, maxResults);
       }
 

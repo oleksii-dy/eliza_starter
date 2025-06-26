@@ -60,7 +60,7 @@ export class Sanitizer {
       USE_PROFILES: false,
     };
 
-    return DOMPurify.sanitize(input, config);
+    return DOMPurify.sanitize(input, _config);
   }
 
   /**

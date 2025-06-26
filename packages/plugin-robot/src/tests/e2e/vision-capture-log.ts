@@ -13,7 +13,7 @@ export class VisionCaptureLogTestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Starting 30-second vision capture test...');
 
-        const visionService = runtime.getService<VisionService>('VISION' as any);
+        const visionService = runtime.getService<VisionService>('VISION');
         if (!visionService) {
           throw new Error('Vision service not available');
         }
@@ -268,7 +268,7 @@ ${captureData.captures
     .filter((c) => c.scene?.description)
     .slice(0, 5)
     .map(
-      (c, i) => `### Capture ${c.index} (${c.elapsedMs}ms)
+      (c, _i) => `### Capture ${c.index} (${c.elapsedMs}ms)
 "${c.scene.description}"
 - Change: ${c.scene.changePercentage?.toFixed(1)}%
 - Objects: ${c.scene.objectCount}

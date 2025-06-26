@@ -107,18 +107,29 @@ describe('BehaviorManager', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      const errorSpy = mock.spyOn(console, 'error');
+      const originalConsoleError = console.error;
+      const errorSpy = mock(() => {});
+      console.error = errorSpy;
       mockRuntime.useModel.mockRejectedValueOnce(new Error('Model error'));
 
-      behaviorManager.start();
+      try {
+        behaviorManager.start();
 
-      // Wait a bit for any async operations
-      await new Promise((resolve) => setTimeout(resolve, 100));
+        // Wait longer for async operations and error handling
+        await new Promise((resolve) => setTimeout(resolve, 300));
 
-      behaviorManager.stop();
+        behaviorManager.stop();
 
-      // Test passes if no errors are thrown
-      expect(true).toBe(true);
+        // Restore console.error
+        console.error = originalConsoleError;
+
+        // Test passes if no errors are thrown
+        expect(true).toBe(true);
+      } catch (error) {
+        // Restore console.error in case of error
+        console.error = originalConsoleError;
+        throw error;
+      }
     });
   });
 

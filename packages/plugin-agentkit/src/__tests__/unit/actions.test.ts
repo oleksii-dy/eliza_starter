@@ -1,5 +1,5 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
-import { getAgentKitActions, createAgentKitActionsFromService } from '../../actions';
+import { _getAgentKitActions, createAgentKitActionsFromService } from '../../actions';
 import { createMockRuntime, createMockMemory, createMockState } from '../test-utils';
 import type { IAgentRuntime } from '../../types/core.d';
 
@@ -52,9 +52,9 @@ describe('AgentKit Actions', () => {
     });
   });
 
-  describe('getAgentKitActions', () => {
+  describe('_getAgentKitActions', () => {
     it('should return an empty array (actions registered dynamically)', () => {
-      const actions = getAgentKitActions();
+      const actions = _getAgentKitActions();
 
       expect(actions).toEqual([]);
     });

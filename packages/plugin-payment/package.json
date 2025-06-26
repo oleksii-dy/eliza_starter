@@ -10,12 +10,12 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "test": "elizaos test",
-    "lint": "eslint 'src/**/*.{js,ts,tsx}' --config ../../eslint.config.js",
-    "lint:fix": "eslint 'src/**/*.{js,ts,tsx}' --config ../../eslint.config.js --fix"
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "elizaos test"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",
@@ -38,7 +38,6 @@
     "@typescript-eslint/parser": "^8.35.0",
     "eslint": "^9.29.0",
     "rimraf": "^6.0.1",
-    "tsup": "^8.5.0",
     "typescript": "5.8.3"
   },
   "files": [

@@ -5,7 +5,7 @@ import {
   ChannelType,
   findWorldsForOwner,
   getWorldSettings,
-  logger,
+  elizaLogger as logger,
   World,
   type IAgentRuntime,
   type Memory,

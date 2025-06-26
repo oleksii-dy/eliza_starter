@@ -1,4 +1,4 @@
-import type { Action, ActionExample, ActionResult, Content, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
+import type { Action, ActionExample, ActionResult, HandlerCallback, IAgentRuntime, Memory, State, Content } from '@elizaos/core';
 import { logger } from '@elizaos/core';
 
 /**
@@ -23,7 +23,7 @@ export const echoAction: Action = {
    * Validates if the action should be triggered
    * Looks for echo-related keywords in the message
    */
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (_runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     try {
       const text = message.content.text?.toLowerCase() || '';
 
@@ -51,16 +51,16 @@ export const echoAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state?: State,
-    options?: any,
+    _state?: State,
+    _options?: any,
     callback?: HandlerCallback,
-    responses?: Memory[]
+    _responses?: Memory[]
   ): Promise<ActionResult> => {
     try {
       logger.info('Executing ECHO_MESSAGE action');
 
       // Get configuration from character settings
-      const config = (runtime.character?.settings?.echo as EchoConfig) || {};
+      const config = (runtime.character?.settings?.echo as EchoConfig) || { /* empty */ };
 
       // Extract the text to echo (remove trigger words)
       const originalText = message.content.text || '';
@@ -145,18 +145,18 @@ export const echoAction: Action = {
           timestamp: config.addTimestamp ? new Date().toISOString() : undefined,
         },
       };
-    } catch (error) {
-      logger.error('Error in echo action handler:', error);
+    } catch (_error) {
+      logger.error('Error in echo action handler:', _error);
       return {
         text: 'Error processing echo request',
         values: {
           success: false,
           error: true,
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          errorMessage: _error instanceof Error ? _error.message : 'Unknown error',
         },
         data: {
           actionName: 'ECHO_MESSAGE',
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: _error instanceof Error ? _error.message : 'Unknown error',
           errorType: 'handler_error',
         },
       };

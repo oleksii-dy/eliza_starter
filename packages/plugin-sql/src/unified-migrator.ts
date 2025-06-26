@@ -1,6 +1,6 @@
 import { logger, type UUID } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/pglite';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { connectionRegistry } from './connection-registry';
 import { schemaRegistry, type TableSchema } from './schema-registry';
 import { CORE_TABLES } from './core-tables';
@@ -46,13 +46,8 @@ export class UnifiedMigrator {
   private static getQualifiedTableName(tableName: string, schema?: string): string {
     const currentSchema = schema || UnifiedMigrator.getCurrentSchema();
 
-    // For test schema in PGLite, use table prefix
-    if (currentSchema === 'test' && process.env.DATABASE_TYPE === 'pglite') {
-      return `test_${tableName}`;
-    }
-
     // For PostgreSQL, use schema qualification
-    if (process.env.DATABASE_TYPE === 'postgres' && currentSchema !== 'public') {
+    if (currentSchema !== 'public') {
       return `${currentSchema}.${tableName}`;
     }
 
@@ -161,37 +156,6 @@ export class UnifiedMigrator {
     try {
       logger.info(`[UnifiedMigrator] Ensuring vector extension for ${this.dbType}`);
 
-      // For PGLite, wait for the vector extension to be ready
-      if (this.dbType === 'pglite') {
-        try {
-          // Get the PGLite manager to check vector readiness
-          const { connectionRegistry } = await import('./connection-registry');
-          const adapter = connectionRegistry.getAdapter(this.agentId);
-
-          if (adapter && 'getConnection' in adapter) {
-            const connection = (adapter as any).getConnection();
-            if (connection && connection.constructor.name === 'PGliteClientManager') {
-              logger.info('[UnifiedMigrator] Waiting for PGLite vector extension to be ready...');
-              await (connection as any).waitForVectorReady();
-            }
-          }
-        } catch (error) {
-          logger.debug('[UnifiedMigrator] Could not check PGLite vector readiness:', error);
-        }
-
-        // Create the extension for PGLite
-        try {
-          // await this.db.execute(sql.raw('CREATE EXTENSION IF NOT EXISTS vector'));
-          logger.info('[UnifiedMigrator] Vector extension created/verified for PGLite');
-        } catch (createError) {
-          logger.warn('[UnifiedMigrator] CREATE EXTENSION failed for PGLite:', createError);
-        }
-
-        // Skip the temporary table test for PGLite to prevent issues
-        logger.info('[UnifiedMigrator] Skipping vector verification test for PGLite');
-        return;
-      }
-
       // Try to create the extension for PostgreSQL
       try {
         await this.db.execute(sql.raw('CREATE EXTENSION IF NOT EXISTS vector'));
@@ -202,7 +166,7 @@ export class UnifiedMigrator {
         );
       }
 
-      // Test if vector extension is actually working by creating a test table (PostgreSQL only)
+      // Test if vector extension is actually working by creating a test table
       try {
         await this.db.execute(
           sql.raw('CREATE TEMPORARY TABLE test_vector_support (id INT, vec vector(3))')
@@ -327,10 +291,7 @@ export class UnifiedMigrator {
         try {
           // Test table access with operations that must work
           // Use qualified table name
-          const selectQuery =
-            this.dbType === 'pglite'
-              ? `SELECT 1 FROM ${qualifiedTableName} WHERE 1=0`
-              : `SELECT 1 FROM "${qualifiedTableName}" WHERE 1=0`;
+          const selectQuery = `SELECT 1 FROM "${qualifiedTableName}" WHERE 1=0`;
           await this.db.execute(sql.raw(selectQuery));
 
           // For critical tables, also test a basic INSERT operation (then rollback)
@@ -340,10 +301,7 @@ export class UnifiedMigrator {
                 // Test insert capability (will be rolled back)
                 // Use proper UUID format for test - this is a fixed test UUID
                 const testUuid = '00000000-0000-0000-0000-000000000001';
-                const insertQuery =
-                  this.dbType === 'pglite'
-                    ? `INSERT INTO ${qualifiedTableName} (id, name, bio, system) VALUES ('${testUuid}', 'test', 'test', 'test')`
-                    : `INSERT INTO "${qualifiedTableName}" (id, name, bio, system) VALUES ('${testUuid}', 'test', 'test', 'test')`;
+                const insertQuery = `INSERT INTO "${qualifiedTableName}" (id, name, bio, system) VALUES ('${testUuid}', 'test', 'test', 'test')`;
                 await tx.execute(sql.raw(insertQuery));
                 // Force rollback
                 throw new Error('ROLLBACK_TEST');
@@ -403,13 +361,6 @@ export class UnifiedMigrator {
                   `[UnifiedMigrator] Available PostgreSQL tables in schema '${currentSchema}':`,
                   tables
                 );
-              } else if (this.dbType === 'pglite') {
-                const tables = await this.db.execute(
-                  sql.raw(
-                    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
-                  )
-                );
-                logger.warn('[UnifiedMigrator] Available PGLite tables:', tables);
               }
             } catch (listError) {
               logger.warn('[UnifiedMigrator] Could not list tables:', listError);
@@ -486,10 +437,7 @@ export async function createMigrator(
     const manager = connectionRegistry.getPostgresManager(connectionKey);
     db = manager.getDatabase();
   } else {
-    const manager = connectionRegistry.getPGLiteManager(connectionKey);
-    await manager.initialize();
-    // Use the same Drizzle creation pattern as the adapter
-    db = drizzle(manager.getConnection() as any);
+    throw new Error(`Unsupported database type: ${dbType}. Only PostgreSQL is supported.`);
   }
 
   return new UnifiedMigrator(db, dbType, agentId);

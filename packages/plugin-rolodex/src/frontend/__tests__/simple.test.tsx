@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect  } from 'bun:test';
+import { describe, it, expect } from 'bun:test';
 
 describe('Simple Test', () => {
   it('should pass basic assertion', () => {

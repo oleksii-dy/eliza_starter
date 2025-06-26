@@ -4,7 +4,7 @@ import { IAgentRuntime, EventType, Memory, Content, UUID } from '@elizaos/core';
 import { MockRuntime, createMockRuntime } from './test-utils';
 
 describe('Message Handling Plugin Integration', () => {
-  let mockRuntime: MockRuntime;
+  let mockRuntime: IAgentRuntime;
 
   beforeEach(() => {
     mock.restore();
@@ -12,7 +12,34 @@ describe('Message Handling Plugin Integration', () => {
       getSetting: mock().mockReturnValue('medium'),
       getParticipantUserState: mock().mockResolvedValue('ACTIVE'),
       composeState: mock().mockResolvedValue({}),
-    });
+      registerProvider: mock(),
+      registerAction: mock(),
+      addEmbeddingToMemory: mock().mockResolvedValue(undefined),
+      createMemory: mock().mockResolvedValue(true),
+      startRun: mock().mockReturnValue('test-run-id'),
+      finishRun: mock().mockResolvedValue(undefined),
+      emitEvent: mock().mockResolvedValue(undefined),
+      useModel: mock().mockResolvedValue(
+        JSON.stringify({
+          action: 'RESPOND',
+          providers: [],
+          reasoning: 'Test response',
+        })
+      ),
+      getConversationLength: mock().mockReturnValue(10),
+      getRoomsForParticipants: mock().mockResolvedValue([]),
+      getMemoriesByRoomIds: mock().mockResolvedValue([]),
+      getEntityById: mock().mockResolvedValue({
+        id: 'test-entity-id',
+        names: ['Test User'],
+        metadata: { userName: 'Test User' },
+      }),
+      getRoom: mock().mockResolvedValue({
+        id: 'test-room-id',
+        type: 'GROUP',
+      }),
+      getMemories: mock().mockResolvedValue([]),
+    }) as unknown as IAgentRuntime;
   });
 
   afterEach(() => {
@@ -32,7 +59,7 @@ describe('Message Handling Plugin Integration', () => {
       throw new Error('MESSAGE_RECEIVED handler not found');
     }
 
-    const mockMessage: Partial<Memory> = {
+    const mockMessage: Memory = {
       id: 'msg-id' as UUID,
       roomId: 'room-id' as UUID,
       entityId: 'user-id' as UUID,
@@ -40,15 +67,15 @@ describe('Message Handling Plugin Integration', () => {
         text: 'Hello, bot!',
       } as Content,
       createdAt: Date.now(),
-    };
+    } as Memory;
 
     const mockCallback = mock();
 
     // Test that the handler processes messages without throwing
     await expect(
       messageHandler({
-        runtime: mockRuntime as unknown as IAgentRuntime,
-        message: mockMessage as Memory,
+        runtime: mockRuntime,
+        message: mockMessage,
         callback: mockCallback,
         source: 'test',
       })
@@ -128,7 +155,11 @@ describe('Message Handling Plugin Integration', () => {
 
   it('should handle plugin lifecycle correctly', async () => {
     // Test that plugin can be initialized and used
-    const runtime = mockRuntime as unknown as IAgentRuntime;
+    const runtime = mockRuntime as IAgentRuntime;
+
+    // Ensure the mock functions are available
+    mockRuntime.registerProvider = mock();
+    mockRuntime.registerAction = mock();
 
     // Register providers
     if (messageHandlingPlugin.providers) {

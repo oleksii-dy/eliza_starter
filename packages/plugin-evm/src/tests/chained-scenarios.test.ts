@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, beforeAll, mock } from 'bun:test';
+import { describe, it, expect, beforeEach, beforeAll, mock, spyOn } from 'bun:test';
 import { transferAction } from '../actions/transfer';
 import { swapAction } from '../actions/swap';
 import { bridgeAction } from '../actions/bridge';
@@ -6,11 +6,11 @@ import { voteAction } from '../actions/gov-vote';
 import { proposeAction } from '../actions/gov-propose';
 import { queueAction } from '../actions/gov-queue';
 import { executeAction } from '../actions/gov-execute';
-import { evmPlugin } from '../index';
-import { type IAgentRuntime, type Memory, type State, ModelType, asUUID } from '@elizaos/core';
+// import { evmPlugin } from '../index';
+import { type IAgentRuntime, type Memory, type State } from '@elizaos/core';
 import { testPrivateKey, createMockRuntime, fundWallet } from './test-config';
-import { createPublicClient, createWalletClient, http, type Address } from 'viem';
-import { sepolia, baseSepolia } from 'viem/chains';
+import { type Address } from 'viem';
+// import { sepolia, baseSepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 
 describe.skip('Complex Chained Scenarios E2E Tests', () => {
@@ -32,16 +32,19 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
     mock.restore();
 
     mockMessage = {
-      id: 'test-message-id',
-      agentId: 'test-agent-id',
-      userId: 'test-user-id',
+      id: 'test-message-id' as any,
+      agentId: 'test-agent-id' as any,
+      entityId: 'test-user-id' as any,
       content: { text: 'test message', action: 'TEST_ACTION' },
-      roomId: 'test-room-id',
-      embedding: new Float32Array(),
+      roomId: 'test-room-id' as any,
+      embedding: [] as any,
       createdAt: Date.now(),
-    };
+    } as Memory;
 
     mockState = {
+      values: {},
+      data: {},
+      text: '',
       agentId: 'test-agent-id',
       roomId: 'test-room-id',
       userId: 'test-user-id',
@@ -51,6 +54,8 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
       recentMessages: 'Test recent messages',
       actors: 'Test actors',
       actorsData: [],
+      goals: 'Test goals',
+      goalsData: [],
       recentMessagesData: [],
       actionNames: '',
       actions: '',
@@ -59,14 +64,14 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
       senderName: 'TestUser',
       supportedChains: 'sepolia | base-sepolia | optimism-sepolia',
       chainBalances: 'sepolia: 1.0 ETH, base-sepolia: 0.5 ETH, optimism-sepolia: 0.3 ETH',
-    };
+    } as State;
   });
 
   describe('DeFi Investment Workflow', () => {
     it('should execute Transfer → Swap → Stake workflow', async () => {
       // Step 1: Transfer ETH to prepare for swap
       const transferCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <fromChain>sepolia</fromChain>
           <amount>0.1</amount>
@@ -101,7 +106,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 2: Swap ETH for USDC
       const swapCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <inputToken>ETH</inputToken>
           <outputToken>USDC</outputToken>
@@ -151,7 +156,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
     it('should execute Bridge → Swap → Farm workflow', async () => {
       // Step 1: Bridge assets to target chain
       const bridgeCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <sourceChain>sepolia</sourceChain>
           <destinationChain>base-sepolia</destinationChain>
@@ -187,7 +192,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 2: Swap for farming token
       const swapCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <inputToken>ETH</inputToken>
           <outputToken>FARM_TOKEN</outputToken>
@@ -234,7 +239,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 2: Bridge to lower price chain
       const bridgeCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <sourceChain>sepolia</sourceChain>
           <destinationChain>optimism-sepolia</destinationChain>
@@ -262,7 +267,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 3: Execute arbitrage swap
       const swapCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <inputToken>USDC</inputToken>
           <outputToken>ETH</outputToken>
@@ -285,7 +290,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 4: Bridge back with profit
       const returnBridgeCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <sourceChain>optimism-sepolia</sourceChain>
           <destinationChain>sepolia</destinationChain>
@@ -322,7 +327,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 1: Create a proposal
       const proposeCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <targets>["0x742d35Cc6634C0532925a3b844Bc454e4438f44e"]</targets>
           <values>[1000000000000000000]</values>
@@ -362,7 +367,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 2: Vote on the proposal
       const voteCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <proposalId>1</proposalId>
           <support>1</support>
@@ -397,7 +402,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 3: Queue the proposal
       const queueCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <proposalId>1</proposalId>
           <targets>["0x742d35Cc6634C0532925a3b844Bc454e4438f44e"]</targets>
@@ -436,7 +441,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 4: Execute the proposal
       const executeCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <proposalId>1</proposalId>
           <targets>["0x742d35Cc6634C0532925a3b844Bc454e4438f44e"]</targets>
@@ -475,7 +480,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Proposal 1: Increase treasury allocation
       const propose1Callback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <targets>["0x742d35Cc6634C0532925a3b844Bc454e4438f44e"]</targets>
           <values>[0]</values>
@@ -501,7 +506,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Proposal 2: Update governance parameters
       const propose2Callback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <targets>["0x5f3f1dBD7B74C6B46e8c44f98792A1dAf8d69154"]</targets>
           <values>[0]</values>
@@ -541,7 +546,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
       const emergencyWorkflowId = 'emergency-001';
 
       const emergencyProposeCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <targets>["0x742d35Cc6634C0532925a3b844Bc454e4438f44e"]</targets>
           <values>[0]</values>
@@ -589,7 +594,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 1: Transfer excess tokens to bridge
       const transferCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <fromChain>sepolia</fromChain>
           <amount>50</amount>
@@ -614,7 +619,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 2: Bridge to target chain for better yields
       const bridgeCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <sourceChain>sepolia</sourceChain>
           <destinationChain>base-sepolia</destinationChain>
@@ -639,7 +644,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 3: Swap for target allocation
       const swapCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <inputToken>USDC</inputToken>
           <outputToken>ETH</outputToken>
@@ -682,7 +687,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 2: Bridge to new yield farming chain
       const bridgeCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <sourceChain>sepolia</sourceChain>
           <destinationChain>optimism-sepolia</destinationChain>
@@ -707,7 +712,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 3: Swap for new farming token pair
       const swapCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <inputToken>USDC</inputToken>
           <outputToken>OP</outputToken>
@@ -749,7 +754,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 1: Bridge with MEV protection
       const bridgeCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <sourceChain>sepolia</sourceChain>
           <destinationChain>base-sepolia</destinationChain>
@@ -774,7 +779,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Step 2: MEV-protected swap execution
       const swapCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <inputToken>ETH</inputToken>
           <outputToken>USDC</outputToken>
@@ -834,7 +839,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Initial bridge attempt fails
       const bridgeCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <sourceChain>sepolia</sourceChain>
           <destinationChain>base-sepolia</destinationChain>
@@ -844,7 +849,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
       `);
 
       // Mock bridge failure
-      const consoleSpy = mock.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = spyOn(console, 'error').mockImplementation(() => {});
 
       const bridgeResult = await bridgeAction.handler(
         mockRuntime,
@@ -883,7 +888,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Swap with escalating slippage tolerance
       const swapCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <inputToken>ETH</inputToken>
           <outputToken>USDC</outputToken>
@@ -920,7 +925,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Workflow: Transfer → Swap → Bridge, but swap fails
       const transferCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <fromChain>sepolia</fromChain>
           <amount>0.1</amount>
@@ -943,7 +948,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Swap fails, but provides recovery
       const swapCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <inputToken>ETH</inputToken>
           <outputToken>INVALID_TOKEN</outputToken>
@@ -1017,7 +1022,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
       ];
 
       // Mock responses for concurrent operations
-      mockRuntime.useModel
+      (mockRuntime.useModel as any)
         .mockResolvedValueOnce(
           `<response><fromChain>sepolia</fromChain><amount>0.1</amount><toAddress>${testWalletAddress}</toAddress><token>null</token></response>`
         )
@@ -1042,7 +1047,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Test gas optimization strategies
       const optimizedCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <inputToken>ETH</inputToken>
           <outputToken>USDC</outputToken>
@@ -1090,7 +1095,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Execute representative treasury operation
       const treasuryCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <fromChain>sepolia</fromChain>
           <amount>100</amount>
@@ -1134,7 +1139,7 @@ describe.skip('Complex Chained Scenarios E2E Tests', () => {
 
       // Institutional-level DeFi strategy
       const institutionalCallback = mock();
-      mockRuntime.useModel.mockResolvedValueOnce(`
+      (mockRuntime.useModel as any).mockResolvedValueOnce(`
         <response>
           <sourceChain>sepolia</sourceChain>
           <destinationChain>base-sepolia</destinationChain>

@@ -18,7 +18,7 @@ import { MockRuntime, setupActionTest } from './test-utils';
 
 describe('Message Handler Logic', () => {
   let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
+  let mockMessage: Memory;
   let mockCallback: HandlerCallback;
 
   beforeEach(() => {
@@ -81,7 +81,7 @@ describe('Message Handler Logic', () => {
     });
 
     mockRuntime = setup.mockRuntime;
-    mockMessage = setup.mockMessage;
+    mockMessage = setup.mockMessage as Memory;
     mockCallback = setup.callbackFn as HandlerCallback;
 
     // Add required templates to character
@@ -124,8 +124,8 @@ describe('Message Handler Logic', () => {
     if (messageHandler) {
       // Call the handler with our mock payload
       await messageHandler({
-        runtime: mockRuntime as unknown as IAgentRuntime,
-        message: mockMessage as Memory,
+        runtime: mockRuntime,
+        message: mockMessage,
         callback: mockCallback,
         source: 'test',
       } as MessagePayload);
@@ -162,8 +162,8 @@ describe('Message Handler Logic', () => {
     if (messageHandler) {
       // Call the handler with our mock payload
       await messageHandler({
-        runtime: mockRuntime as unknown as IAgentRuntime,
-        message: mockMessage as Memory,
+        runtime: mockRuntime,
+        message: mockMessage,
         callback: mockCallback,
         source: 'test',
       } as MessagePayload);
@@ -217,8 +217,8 @@ describe('Message Handler Logic', () => {
 
     try {
       await messageHandler({
-        runtime: mockRuntime as unknown as IAgentRuntime,
-        message: mockMessage as Memory,
+        runtime: mockRuntime,
+        message: mockMessage,
         callback: mockCallback,
         source: 'test',
       } as MessagePayload);
@@ -257,8 +257,8 @@ describe('Message Handler Logic', () => {
       let error: Error | undefined;
       try {
         await messageHandler({
-          runtime: mockRuntime as unknown as IAgentRuntime,
-          message: mockMessage as Memory,
+          runtime: mockRuntime,
+          message: mockMessage,
           callback: mockCallback,
           source: 'test',
         } as MessagePayload);
@@ -272,7 +272,7 @@ describe('Message Handler Logic', () => {
 
 describe('Reaction Events', () => {
   let mockRuntime: MockRuntime;
-  let mockReaction: Partial<Memory>;
+  let mockReaction: Memory;
 
   beforeEach(() => {
     // Use setupActionTest for consistent test setup
@@ -287,7 +287,7 @@ describe('Reaction Events', () => {
     });
 
     mockRuntime = setup.mockRuntime;
-    mockReaction = setup.mockMessage;
+    mockReaction = setup.mockMessage as Memory;
   });
 
   afterEach(() => {
@@ -302,8 +302,8 @@ describe('Reaction Events', () => {
     if (reactionHandler) {
       // Call the handler with our mock payload
       await reactionHandler({
-        runtime: mockRuntime as unknown as IAgentRuntime,
-        message: mockReaction as Memory,
+        runtime: mockRuntime,
+        message: mockReaction,
         source: 'test',
       } as MessagePayload);
 
@@ -325,8 +325,8 @@ describe('Reaction Events', () => {
       let error: Error | undefined;
       try {
         await reactionHandler({
-          runtime: mockRuntime as unknown as IAgentRuntime,
-          message: mockReaction as Memory,
+          runtime: mockRuntime,
+          message: mockReaction,
           source: 'test',
         } as MessagePayload);
       } catch (e) {
@@ -381,7 +381,7 @@ describe('World and Entity Events', () => {
     if (entityJoinedHandler) {
       // Call the handler with our mock payload
       await entityJoinedHandler({
-        runtime: mockRuntime as unknown as IAgentRuntime,
+        runtime: mockRuntime,
         entityId: 'test-entity-id' as UUID,
         worldId: 'test-world-id' as UUID,
         roomId: 'test-room-id' as UUID,
@@ -408,7 +408,7 @@ describe('World and Entity Events', () => {
     if (entityLeftHandler) {
       // Call the handler with our mock payload
       await entityLeftHandler({
-        runtime: mockRuntime as unknown as IAgentRuntime,
+        runtime: mockRuntime,
         entityId: 'test-entity-id' as UUID,
         worldId: 'test-world-id' as UUID,
         source: 'test',
@@ -440,7 +440,7 @@ describe('World and Entity Events', () => {
       let error: Error | undefined;
       try {
         await entityLeftHandler({
-          runtime: mockRuntime as unknown as IAgentRuntime,
+          runtime: mockRuntime,
           entityId: 'test-entity-id' as UUID,
           worldId: 'test-world-id' as UUID,
           source: 'test',
@@ -477,7 +477,7 @@ describe('Event Lifecycle Events', () => {
     if (actionStartedHandler) {
       // Call the handler with our mock payload
       await actionStartedHandler({
-        runtime: mockRuntime as unknown as IAgentRuntime,
+        runtime: mockRuntime,
         actionId: 'test-action-id' as UUID,
         actionName: 'test-action',
         startTime: Date.now(),
@@ -497,7 +497,7 @@ describe('Event Lifecycle Events', () => {
     if (actionCompletedHandler) {
       // Call the handler with our mock payload
       await actionCompletedHandler({
-        runtime: mockRuntime as unknown as IAgentRuntime,
+        runtime: mockRuntime,
         actionId: 'test-action-id' as UUID,
         actionName: 'test-action',
         completed: true,
@@ -517,7 +517,7 @@ describe('Event Lifecycle Events', () => {
     if (actionCompletedHandler) {
       // Call the handler with our mock payload including an error
       await actionCompletedHandler({
-        runtime: mockRuntime as unknown as IAgentRuntime,
+        runtime: mockRuntime,
         actionId: 'test-action-id' as UUID,
         actionName: 'test-action',
         completed: false,
@@ -539,7 +539,7 @@ describe('Event Lifecycle Events', () => {
     if (evaluatorStartedHandler) {
       // Call the handler with our mock payload
       await evaluatorStartedHandler({
-        runtime: mockRuntime as unknown as IAgentRuntime,
+        runtime: mockRuntime,
         evaluatorId: 'test-evaluator-id' as UUID,
         evaluatorName: 'test-evaluator',
         startTime: Date.now(),
@@ -560,7 +560,7 @@ describe('Event Lifecycle Events', () => {
     if (evaluatorCompletedHandler) {
       // Call the handler with our mock payload
       await evaluatorCompletedHandler({
-        runtime: mockRuntime as unknown as IAgentRuntime,
+        runtime: mockRuntime,
         evaluatorId: 'test-evaluator-id' as UUID,
         evaluatorName: 'test-evaluator',
         completed: true,

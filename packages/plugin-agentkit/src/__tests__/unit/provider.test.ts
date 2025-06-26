@@ -126,28 +126,35 @@ describe('AgentKit Plugin Provider', () => {
 
   it('should provide services when initialized', async () => {
     expect(agentkitPlugin.services).toBeDefined();
-    expect(agentkitPlugin.services!).toHaveLength(1);
+    expect(agentkitPlugin.services).toHaveLength(2);
 
     // Check service constructors exist
-    const serviceTypes = agentkitPlugin.services!.map((s: any) => s.name);
-    expect(serviceTypes).toContain('AgentKitService');
+    const serviceNames =
+      agentkitPlugin.services?.map((ServiceClass: any) => ServiceClass.serviceName) || [];
+    expect(serviceNames).toContain('agentkit');
+    expect(serviceNames).toContain('custodial-wallet');
   });
 
   it('should provide actions when initialized', () => {
     expect(agentkitPlugin.actions).toBeDefined();
     expect(Array.isArray(agentkitPlugin.actions)).toBe(true);
-    // Actions are registered dynamically in the init function
-    expect(agentkitPlugin.actions!).toEqual([]);
+    // Plugin now includes custodial wallet actions
+    expect(agentkitPlugin.actions?.length || 0).toBeGreaterThan(0);
+
+    // Check that custodial wallet actions are included
+    const actionNames = agentkitPlugin.actions?.map((action: any) => action.name) || [];
+    expect(actionNames).toContain('CREATE_CUSTODIAL_WALLET');
+    expect(actionNames).toContain('LIST_CUSTODIAL_WALLETS');
   });
 
   it('should initialize services with runtime', async () => {
     // Test AgentKitService initialization
-    const AgentKitServiceClass = agentkitPlugin.services!.find(
-      (s: any) => s.name === 'AgentKitService'
-    );
+    const AgentKitServiceClass = agentkitPlugin.services?.find(
+      (ServiceClass: any) => ServiceClass.serviceName === 'agentkit'
+    ) as typeof AgentKitService;
     expect(AgentKitServiceClass).toBeDefined();
 
-    const agentKitService = new AgentKitServiceClass(mockRuntime);
+    const agentKitService = await AgentKitServiceClass.start(mockRuntime);
     expect(agentKitService).toBeInstanceOf(AgentKitService);
   });
 
@@ -156,12 +163,12 @@ describe('AgentKit Plugin Provider', () => {
       getSetting: mock(() => undefined),
     });
 
-    const AgentKitServiceClass = agentkitPlugin.services!.find(
-      (s: any) => s.name === 'AgentKitService'
-    );
+    const AgentKitServiceClass = agentkitPlugin.services?.find(
+      (ServiceClass: any) => ServiceClass.serviceName === 'agentkit'
+    ) as typeof AgentKitService;
 
     // Service should still initialize but with limited functionality
-    expect(() => new AgentKitServiceClass(runtimeWithoutEnv)).not.toThrow();
+    expect(async () => await AgentKitServiceClass.start(runtimeWithoutEnv)).not.toThrow();
   });
 
   it('should have init function to register actions dynamically', () => {
@@ -170,7 +177,7 @@ describe('AgentKit Plugin Provider', () => {
   });
 
   it('should have valid action structures', () => {
-    agentkitPlugin.actions!.forEach((action: any) => {
+    agentkitPlugin.actions?.forEach((action: any) => {
       // Each action should have required properties
       expect(action.name).toBeDefined();
       expect(typeof action.name).toBe('string');

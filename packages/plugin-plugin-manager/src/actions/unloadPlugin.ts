@@ -52,10 +52,10 @@ export const unloadPluginAction: Action = {
     ],
   ],
 
-  async validate(runtime: IAgentRuntime, message: Memory): Promise<boolean> {
-    const pluginManager = runtime.getService(
+  async validate(runtime: IAgentRuntime, _message: Memory): Promise<boolean> {
+    const pluginManager = runtime.getService<PluginManagerService>(
       PluginManagerServiceType.PLUGIN_MANAGER
-    ) as PluginManagerService;
+    );
     return !!pluginManager;
   },
 
@@ -66,9 +66,9 @@ export const unloadPluginAction: Action = {
     options?: Record<string, any>,
     callback?: HandlerCallback
   ): Promise<ActionResult> {
-    const pluginManager = runtime.getService(
+    const pluginManager = runtime.getService<PluginManagerService>(
       PluginManagerServiceType.PLUGIN_MANAGER
-    ) as PluginManagerService;
+    );
 
     if (!pluginManager) {
       if (callback) {

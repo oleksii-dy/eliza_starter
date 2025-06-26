@@ -23,7 +23,8 @@ async function testTavilyDirectly() {
 
   try {
     const tavily = new TavilySearchProvider({ apiKey });
-    const query = 'renewable energy storage technologies environmental economic impacts grid scale';
+    const query =
+      'renewable energy storage technologies environmental economic impacts grid scale';
 
     logger.info(`Searching Tavily for: "${query}"`);
     const results = await tavily.search(query, 5);
@@ -45,7 +46,9 @@ async function testTavilyDirectly() {
         r.snippet?.toLowerCase().includes('renewable')
     );
 
-    logger.info(`\n${relevantResults.length} out of ${results.length} results appear relevant`);
+    logger.info(
+      `\n${relevantResults.length} out of ${results.length} results appear relevant`
+    );
   } catch (error) {
     logger.error('Tavily search failed:', error);
   }
@@ -121,7 +124,8 @@ async function testWithMinimalRuntime() {
   const service = new ResearchService(runtime);
 
   try {
-    const query = 'Compare renewable energy storage technologies environmental economic impacts';
+    const query =
+      'Compare renewable energy storage technologies environmental economic impacts';
     logger.info(`Creating research project: "${query}"`);
 
     const project = await service.createResearchProject(query, {
@@ -162,7 +166,10 @@ async function testWithMinimalRuntime() {
       if (current.status === 'completed' || current.status === 'failed') {
         if (current.status === 'completed' && current.report) {
           const markdown = await service.exportProject(project.id, 'markdown');
-          const reportPath = path.join(__dirname, '../../fixed-renewable-energy-report.md');
+          const reportPath = path.join(
+            __dirname,
+            '../../fixed-renewable-energy-report.md'
+          );
           await fs.writeFile(reportPath, markdown);
           logger.info(`✅ Report saved to: ${reportPath}`);
 
@@ -179,7 +186,9 @@ async function testWithMinimalRuntime() {
               markdown.toLowerCase().includes('environmental'));
 
           if (hasRelevantContent) {
-            logger.info('\n✅ SUCCESS: Report contains relevant renewable energy content!');
+            logger.info(
+              '\n✅ SUCCESS: Report contains relevant renewable energy content!'
+            );
           } else {
             logger.error('\n❌ FAIL: Report does NOT contain relevant content');
             logger.info('\nFirst 2000 chars of report:');

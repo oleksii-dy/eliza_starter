@@ -1,5 +1,5 @@
 import { SnapOctree } from '../extras/SnapOctree';
-import * as THREE from '../extras/three';
+import { THREE } from '../extras/three';
 import { System } from './System';
 
 /**

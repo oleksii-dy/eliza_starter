@@ -102,8 +102,14 @@ describe('Research Actions - Real Implementation Tests', () => {
     expect(isValid).toBe(true);
 
     // Test validation without service
-    const runtimeNoService = { ...runtime, getService: () => null } as IAgentRuntime;
-    const isInvalid = await startResearchAction.validate(runtimeNoService, message);
+    const runtimeNoService = {
+      ...runtime,
+      getService: () => null,
+    } as IAgentRuntime;
+    const isInvalid = await startResearchAction.validate(
+      runtimeNoService,
+      message
+    );
     expect(isInvalid).toBe(false);
   });
 

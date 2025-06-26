@@ -19,14 +19,14 @@ import { Sidebar } from './Sidebar';
 export function CoreUI({ world }: { world: any }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [ready, setReady] = useState(false);
-  const [player, setPlayer] = useState(() => world.entities.player);
+  const [_player, setPlayer] = useState(() => world.entities.player);
   const [ui, setUI] = useState(world.ui.state);
-  const [menu, setMenu] = useState(null);
-  const [code, setCode] = useState(false);
-  const [settings, setSettings] = useState(false);
+  const [_menu, setMenu] = useState(null);
+  const [_code, setCode] = useState(false);
+  const [_settings, _setSettings] = useState(false);
   const [avatar, setAvatar] = useState<any>(null);
   const [disconnected, setDisconnected] = useState(false);
-  const [apps, setApps] = useState(false);
+  const [_apps, setApps] = useState(false);
   const [kicked, setKicked] = useState<string | null>(null);
   useEffect(() => {
     world.on('ready', setReady);
@@ -310,7 +310,7 @@ export function CoreUI({ world }: { world: any }) {
 //                 send(e)
 //               }
 //             }}
-//             onBlur={e => {
+//             onBlur={_e => {
 //               if (!isTouch) {
 //                 setChat(false)
 //               }
@@ -459,7 +459,7 @@ function Chat({ world }: { world: any }) {
               send(e);
             }
           }}
-          onBlur={e => {
+          onBlur={_e => {
             if (!isTouch) {
               setActive(false);
             }
@@ -492,7 +492,7 @@ function MiniMessages({ world }: { world: any }) {
   );
 }
 
-const MESSAGES_REFRESH_RATE = 30; // every x seconds
+const _MESSAGES_REFRESH_RATE = 30; // every x seconds
 
 function Messages({ world, active }: { world: any; active: boolean }) {
   const initRef = useRef<boolean>(false);
@@ -504,7 +504,7 @@ function Messages({ world, active }: { world: any; active: boolean }) {
     return world.chat.subscribe(setMsgs);
   }, []);
   // useEffect(() => {
-  //   const interval = setInterval(() => setNow(moment()), MESSAGES_REFRESH_RATE * 1000)
+  //   const interval = setInterval(() => setNow(moment()), _MESSAGES_REFRESH_RATE * 1000)
   //   return () => clearInterval(interval)
   // }, [])
   useEffect(() => {

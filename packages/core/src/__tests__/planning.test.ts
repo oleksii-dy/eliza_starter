@@ -13,7 +13,7 @@ import {
   type ActionContext,
   ModelType,
 } from '../types';
-import { planningScenarios } from './planning-scenarios';
+import { planningScenarios } from './planningScenarios';
 import { PlanExecutionContext, parsePlan, validatePlan, getExecutionOrder } from '../planning';
 import { createLogger } from '../logger';
 

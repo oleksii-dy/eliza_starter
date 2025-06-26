@@ -1,23 +1,35 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
-import { PGliteClientManager } from '../../pglite/manager';
+import { PgAdapter } from '../../pg/adapter';
+import { PgManager } from '../../pg/manager';
 import { asUUID } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
 
 describe('Plugin Migration Test', () => {
-  let adapter: PgliteDatabaseAdapter;
-  let manager: PGliteClientManager;
+  let adapter: PgAdapter;
+  let manager: PgManager;
 
   beforeAll(async () => {
+    // Skip test if no PostgreSQL URL is provided
+    if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
+      throw new Error(
+        'PostgreSQL connection required for tests. Please set POSTGRES_URL or TEST_POSTGRES_URL environment variable.'
+      );
+    }
+
     const testAgentId = asUUID('00000000-0000-0000-0000-000000000001');
-    manager = new PGliteClientManager({});
-    adapter = new PgliteDatabaseAdapter(testAgentId, manager);
+    const postgresUrl = process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL!;
+    manager = new PgManager({ connectionString: postgresUrl, ssl: false });
+    await manager.connect();
+    adapter = new PgAdapter(testAgentId, manager);
     await adapter.init();
   });
 
   afterAll(async () => {
     if (adapter) {
       await adapter.close();
+    }
+    if (manager) {
+      await manager.close();
     }
   });
 

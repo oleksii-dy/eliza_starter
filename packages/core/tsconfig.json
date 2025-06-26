@@ -3,12 +3,20 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "types": ["bun-types"],
-    "strict": true
+    "types": [],
+    "typeRoots": ["./src/types", "../../node_modules/@types"],
+    "strict": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./.tsbuildinfo",
+    "emitDeclarationOnly": false,
+    "noEmit": false
   },
-  "include": ["src/**/*", "src/__tests__/**/*"],
-  "exclude": ["dist", "node_modules"]
+  "include": ["src/**/*", "src/types/**/*.d.ts"],
+  "exclude": ["dist", "node_modules", "src/**/*.test.ts", "src/__tests__/**/*", "src/auth/*.test.ts"]
 }

@@ -155,7 +155,7 @@ export const StarterPluginTestSuite: TestSuite = {
       name: 'should_have_hello_world_action',
       fn: async (runtime) => {
         // Access actions through runtime.actions instead of getPlugin
-        const actionExists = runtime.actions?.some((a) => a.name === 'HELLO_WORLD');
+        const actionExists = runtime.actions?.some((a: any) => a.name === 'HELLO_WORLD');
         if (!actionExists) {
           throw new Error('Hello world action not found in runtime actions');
         }
@@ -198,7 +198,7 @@ export const StarterPluginTestSuite: TestSuite = {
         let responseReceived = false;
 
         // Find the hello world action in runtime.actions
-        const helloWorldAction = runtime.actions?.find((a) => a.name === 'HELLO_WORLD');
+        const helloWorldAction = runtime.actions?.find((a: any) => a.name === 'HELLO_WORLD');
         if (!helloWorldAction) {
           throw new Error('Hello world action not found in runtime actions');
         }
@@ -263,7 +263,7 @@ export const StarterPluginTestSuite: TestSuite = {
 
         // Find the hello world provider in runtime.providers
         const helloWorldProvider = runtime.providers?.find(
-          (p) => p.name === 'HELLO_WORLD_PROVIDER'
+          (p: any) => p.name === 'HELLO_WORLD_PROVIDER'
         );
         if (!helloWorldProvider) {
           throw new Error('Hello world provider not found in runtime providers');

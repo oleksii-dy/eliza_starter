@@ -1,14 +1,6 @@
-import {
-  ModelType,
-  logger,
-} from '@elizaos/core';
+import { ModelType, logger } from '@elizaos/core';
 
-import {
-  type Action,
-  type IAgentRuntime,
-  type Memory,
-  type HandlerCallback,
-} from '@elizaos/core';
+import { type Action, type IAgentRuntime, type Memory, type HandlerCallback } from '@elizaos/core';
 import { RolodexService } from '../services';
 
 export const trackEntityAction: Action = {
@@ -49,7 +41,7 @@ Answer only yes or no.`;
     callback?: HandlerCallback
   ) => {
     try {
-      const rolodexService = runtime.getService('rolodex') as RolodexService;
+      const rolodexService = runtime.getService<RolodexService>('rolodex');
       if (!rolodexService) {
         throw new Error('RolodexService not available');
       }

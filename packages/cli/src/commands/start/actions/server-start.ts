@@ -1,11 +1,27 @@
 import { getElizaCharacter } from '@/src/characters/eliza';
-import { AgentServer, jsonToCharacter, loadCharacterTryPath } from '@elizaos/server';
+import AgentServer from '@elizaos/server';
+// Dynamic imports for utilities that may not be properly exported
+let jsonToCharacter: any;
+let loadCharacterTryPath: any;
 import { configureDatabaseSettings, findNextAvailablePort, resolvePgliteDir } from '@/src/utils';
 import { logger, type Character, type ProjectAgent } from '@elizaos/core';
 import { startAgent, stopAgent } from './agent-start';
 import { gracefulShutdownHandler } from '@/src/utils/graceful-shutdown';
 import { LogArchiver } from '@/src/utils/log-archiver';
 import { getTempLogPath } from '../../../utils/log-archiver';
+
+// Dynamic loader for server utilities
+async function loadServerUtilities() {
+  if (!jsonToCharacter || !loadCharacterTryPath) {
+    try {
+      const serverModule = await import('@elizaos/server');
+      jsonToCharacter = (serverModule as any).jsonToCharacter;
+      loadCharacterTryPath = (serverModule as any).loadCharacterTryPath;
+    } catch (error) {
+      logger.warn('Could not load server utilities:', error);
+    }
+  }
+}
 
 /**
  * Server start options
@@ -59,8 +75,11 @@ export async function startAgents(options: ServerStartOptions): Promise<void> {
   const server = new AgentServer();
   await server.initialize({ dataDir: pgliteDataDir, postgresUrl: postgresUrl || undefined });
 
-  server.startAgent = (character) => startAgent(character, server);
-  server.stopAgent = (runtime) => stopAgent(runtime, server);
+  // Load server utilities dynamically
+  await loadServerUtilities();
+
+  server.startAgent = (character: any) => startAgent(character, server);
+  server.stopAgent = (runtime: any) => stopAgent(runtime, server);
   server.loadCharacterTryPath = loadCharacterTryPath;
   server.jsonToCharacter = jsonToCharacter;
 

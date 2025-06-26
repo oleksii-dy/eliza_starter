@@ -1,5 +1,7 @@
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
+
 // Mock composePromptFromState before importing actions
-mock.module('@elizaos/core', async () => {
+mock.module('@elizaos/core').mockImplementation(async () => {
   const actual = await import('@elizaos/core');
   return {
     ...actual,
@@ -9,8 +11,6 @@ mock.module('@elizaos/core', async () => {
     }),
   };
 });
-
-import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { stringToUuid, type Memory } from '@elizaos/core';
 import {
   createMockRuntime,
@@ -150,7 +150,8 @@ describe('Rolodex Actions', () => {
     };
 
     mockRuntime = createMockRuntime({
-      getService: mock((serviceName: string) => {
+      getService: mock((serviceNameOrClass: string | any) => {
+        const serviceName = typeof serviceNameOrClass === 'string' ? serviceNameOrClass : serviceNameOrClass.serviceName;
         if (serviceName === 'entity') {
           return mockRolodexService;
         } else if (serviceName === 'followup') {
@@ -207,15 +208,17 @@ describe('Rolodex Actions', () => {
       });
 
       // Mock useModel to return entity extraction response
-      mockRuntime.useModel.mockResolvedValue(JSON.stringify({
-        name: 'John',
-        type: 'person',
-        attributes: {
-          classification: 'ally',
-          trustScore: 50,
-          bio: 'A helpful person'
-        }
-      }));
+      mockRuntime.useModel.mockResolvedValue(
+        JSON.stringify({
+          name: 'John',
+          type: 'person',
+          attributes: {
+            classification: 'ally',
+            trustScore: 50,
+            bio: 'A helpful person',
+          },
+        })
+      );
 
       // Mock findEntityByName on runtime
       mockRuntime.findEntityByName = mock().mockResolvedValue(null); // Entity doesn't exist yet
@@ -253,7 +256,7 @@ describe('Rolodex Actions', () => {
         mockCallback
       );
 
-      expect(result).toEqual({ success: false });
+      expect(result).toEqual({ data: { success: false } });
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           text: expect.stringContaining('trouble tracking'),
@@ -278,7 +281,7 @@ describe('Rolodex Actions', () => {
         mockCallback
       );
 
-      expect(result).toEqual({ success: false });
+      expect(result).toEqual({ data: { success: false } });
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           text: expect.stringContaining("couldn't identify"),
@@ -491,12 +494,14 @@ describe('Rolodex Actions', () => {
       const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
       // Mock useModel to return follow-up details as JSON
-      mockRuntime.useModel.mockResolvedValue(JSON.stringify({
-        entityName: 'Sarah',
-        scheduledFor: nextWeek.toISOString(),
-        message: 'project discussion',
-        priority: 'medium'
-      }));
+      mockRuntime.useModel.mockResolvedValue(
+        JSON.stringify({
+          entityName: 'Sarah',
+          scheduledFor: nextWeek.toISOString(),
+          message: 'project discussion',
+          priority: 'medium',
+        })
+      );
 
       // Mock entity exists in runtime
       mockRuntime.findEntityByName = mock().mockResolvedValue({
@@ -575,10 +580,7 @@ describe('Rolodex Actions', () => {
       );
 
       // The action should call rolodex service to search
-      expect(mockRolodexService.searchEntities).toHaveBeenCalledWith(
-        'List all my friends',
-        10
-      );
+      expect(mockRolodexService.searchEntities).toHaveBeenCalledWith('List all my friends', 10);
       expect(result).toBeTruthy();
       if (typeof result === 'object' && result !== null && 'success' in result) {
         expect(result.success).toBe(true);

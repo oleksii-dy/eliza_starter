@@ -1,5 +1,46 @@
-// Export everything from types
-export * from './types';
+// Export specific types to avoid conflicts
+export * from './types/agent';
+export * from './types/components';
+export * from './types/database';
+export * from './types/environment';
+export * from './types/events';
+export * from './types/http';
+export * from './types/identity';
+export * from './types/knowledge';
+export * from './types/lp';
+export * from './types/memory';
+export * from './types/messaging';
+export * from './types/model';
+export * from './types/payment';
+export * from './types/planning';
+export * from './types/primitives';
+export * from './types/runtime';
+export * from './types/scenario';
+export { Service, ServiceType, getTypedService } from './types/service';
+export type { ServiceTypeName, ServiceTypeRegistry, TypedService } from './types/service';
+export * from './types/settings';
+export * from './types/state';
+export * from './types/task';
+export * from './types/tee';
+export * from './types/testing';
+export * from './types/token';
+export * from './types/trust';
+export * from './types/tunnel';
+export * from './types/universal-wallet';
+export * from './types/wallet';
+export type {
+  ComponentDependency,
+  ComponentValidationContext,
+  ValidationResult,
+} from './types/validation';
+export type {
+  Plugin,
+  ConfigurablePlugin,
+  PluginConfiguration,
+  ComponentConfig,
+  Project,
+  ProjectAgent,
+} from './types/plugin';
 
 // Export utils first to avoid circular dependency issues
 export * from './utils';
@@ -11,6 +52,7 @@ export * from './schemas/character';
 export * from './actions';
 export * from './database';
 export * from './entities';
+export * from './errors';
 export * from './logger';
 export * from './managers';
 export * from './prompts';

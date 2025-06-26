@@ -67,16 +67,16 @@ export function getComponentExportName(
  * @example ("get-current-time-tool.ts", "Tool") -> "GetCurrentTimeTool"
  */
 export function getExportNameFromFileName(
-  fileName: string,
+  _fileName: string,
   type: 'Action' | 'Provider' | 'Service' | 'Evaluator' | 'Tool' | 'Resource'
 ): string {
   // Remove file extension and type suffix
-  const baseName = fileName
+  const _baseName = _fileName
     .replace(/\.(ts|js)$/, '')
     .replace(new RegExp(`-${type.toLowerCase()}$`, 'i'), '');
 
   // Convert to PascalCase and add type suffix
-  const pascalName = kebabToPascalCase(baseName);
+  const pascalName = kebabToPascalCase(_baseName);
 
   // Handle special case for providers
   if (type === 'Provider' && pascalName.endsWith('Provider')) {

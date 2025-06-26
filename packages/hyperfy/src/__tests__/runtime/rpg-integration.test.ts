@@ -218,11 +218,11 @@ describe('RPG Systems Runtime Integration', () => {
         combatStarted = true;
       });
 
-      combat!.on('combat:damage', (event: any) => {
+      combat!.on('combat:damage', (_event: any) => {
         damageDealt += event.damage;
       });
 
-      combat!.on('entity:death', (event: any) => {
+      combat!.on('entity:death', (_event: any) => {
         if (event.entityId === npc.id) {
           npcDied = true;
         }
@@ -279,7 +279,7 @@ describe('RPG Systems Runtime Integration', () => {
 
       // Track loot events
       const droppedItems: any[] = [];
-      loot!.on('loot:dropped', (event: any) => {
+      loot!.on('loot:dropped', (_event: any) => {
         droppedItems.push(event);
       });
 
@@ -465,7 +465,7 @@ describe('RPG Systems Runtime Integration', () => {
         xpGained = true;
       });
 
-      world.events.on('skill:levelup', (event: any) => {
+      world.events.on('skill:levelup', (_event: any) => {
         leveledUp = true;
         newLevel = event.newLevel;
       });

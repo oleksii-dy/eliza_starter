@@ -1,15 +1,15 @@
-import type { Memory, Content } from '@elizaos/core';
+import type { Memory, Content as _Content } from '@elizaos/core';
 
 /**
  * Validates if a memory contains a valid prompt
  */
-export function validatePrompt(message: Memory): boolean {
-  if (!message || !message.content || !message.content.text) {
+export function validatePrompt(_message: Memory): boolean {
+  if (!_message || !_message.content || !_message.content.text) {
     return false;
   }
 
   // Check if the text content is meaningful
-  const text = message.content.text.trim();
+  const text = _message.content.text.trim();
   return text.length > 0;
 }
 

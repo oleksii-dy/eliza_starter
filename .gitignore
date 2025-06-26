@@ -1,11 +1,15 @@
 node_modules
 /out
 
+**:memory:**
+
 .env
 .env.production
 .env.local
 .env.bak
 .env_main
+
+.env.test
 
 .idea
 .zed
@@ -178,18 +182,3 @@ tasks/
 **/.taskmaster/
 **/.windsurfrules/ 
 .roomodes
-.turbo
-
-verification-snapshots
-training_recordings
-test-benchmrak.env.backup
-packages/plugin-training/elizaos-knowledge
-packages/**/.cursor
-packages/**/*/.cursor
-
-docs/
-
-# ElizaOS centralized data directory
-.eliza/
-
-**:memory:**

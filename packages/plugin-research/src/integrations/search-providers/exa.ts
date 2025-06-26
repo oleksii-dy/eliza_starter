@@ -59,23 +59,28 @@ export class ExaSearchProvider {
         return [];
       }
 
-      const results: SearchResult[] = response.data.results.map((result: any, index: number) => ({
-        title: result.title || 'Untitled',
-        url: result.url,
-        snippet: result.summary || result.text?.substring(0, 200) || 'No description available',
-        score: result.score || 0.95 - index * 0.05,
-        provider: 'exa',
-        metadata: {
-          language: this.config.language || 'en',
-          type: this.config.searchType || 'auto',
-          resolvedSearchType: response.data.resolvedSearchType,
-          author: result.author,
-          publishedDate: result.publishedDate,
-          highlights: result.highlights,
-          image: result.image,
-          favicon: result.favicon,
-        },
-      }));
+      const results: SearchResult[] = response.data.results.map(
+        (result: any, index: number) => ({
+          title: result.title || 'Untitled',
+          url: result.url,
+          snippet:
+            result.summary ||
+            result.text?.substring(0, 200) ||
+            'No description available',
+          score: result.score || 0.95 - index * 0.05,
+          provider: 'exa',
+          metadata: {
+            language: this.config.language || 'en',
+            type: this.config.searchType || 'auto',
+            resolvedSearchType: response.data.resolvedSearchType,
+            author: result.author,
+            publishedDate: result.publishedDate,
+            highlights: result.highlights,
+            image: result.image,
+            favicon: result.favicon,
+          },
+        })
+      );
 
       logger.info(`[Exa] Found ${results.length} results`);
       return results;
@@ -97,7 +102,10 @@ export class ExaSearchProvider {
     }
   }
 
-  async searchAcademic(query: string, maxResults?: number): Promise<SearchResult[]> {
+  async searchAcademic(
+    query: string,
+    maxResults?: number
+  ): Promise<SearchResult[]> {
     try {
       logger.info(`[Exa] Searching academic papers for: ${query}`);
 
@@ -130,22 +138,27 @@ export class ExaSearchProvider {
         return [];
       }
 
-      const results: SearchResult[] = response.data.results.map((result: any, index: number) => ({
-        title: result.title || 'Untitled',
-        url: result.url,
-        snippet: result.summary || result.text?.substring(0, 300) || 'No abstract available',
-        score: result.score || 0.95 - index * 0.03,
-        provider: 'exa',
-        metadata: {
-          language: 'en',
-          type: 'research_paper',
-          category: 'research paper',
-          author: result.author,
-          publishedDate: result.publishedDate,
-          highlights: result.highlights,
-          image: result.image,
-        },
-      }));
+      const results: SearchResult[] = response.data.results.map(
+        (result: any, index: number) => ({
+          title: result.title || 'Untitled',
+          url: result.url,
+          snippet:
+            result.summary ||
+            result.text?.substring(0, 300) ||
+            'No abstract available',
+          score: result.score || 0.95 - index * 0.03,
+          provider: 'exa',
+          metadata: {
+            language: 'en',
+            type: 'research_paper',
+            category: 'research paper',
+            author: result.author,
+            publishedDate: result.publishedDate,
+            highlights: result.highlights,
+            image: result.image,
+          },
+        })
+      );
 
       logger.info(`[Exa] Found ${results.length} academic results`);
       return results;
@@ -182,20 +195,25 @@ export class ExaSearchProvider {
         return [];
       }
 
-      const results: SearchResult[] = response.data.results.map((result: any, index: number) => ({
-        title: result.title || 'Untitled',
-        url: result.url,
-        snippet: result.summary || result.text?.substring(0, 200) || 'No description available',
-        score: result.score || 0.9 - index * 0.05,
-        provider: 'exa',
-        metadata: {
-          language: 'en',
-          type: 'similar',
-          author: result.author,
-          publishedDate: result.publishedDate,
-          image: result.image,
-        },
-      }));
+      const results: SearchResult[] = response.data.results.map(
+        (result: any, index: number) => ({
+          title: result.title || 'Untitled',
+          url: result.url,
+          snippet:
+            result.summary ||
+            result.text?.substring(0, 200) ||
+            'No description available',
+          score: result.score || 0.9 - index * 0.05,
+          provider: 'exa',
+          metadata: {
+            language: 'en',
+            type: 'similar',
+            author: result.author,
+            publishedDate: result.publishedDate,
+            image: result.image,
+          },
+        })
+      );
 
       logger.info(`[Exa] Found ${results.length} similar results`);
       return results;

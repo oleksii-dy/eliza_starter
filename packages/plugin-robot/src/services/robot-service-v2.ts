@@ -1,6 +1,6 @@
 import {
   Service,
-  ServiceType,
+  ServiceType as _ServiceType,
   type IAgentRuntime,
   type ServiceTypeName,
   logger,
@@ -60,7 +60,7 @@ export class RobotServiceV2 extends Service {
         logger.warn('[RobotServiceV2] Adapter disconnected');
       });
 
-      this.adapter.on('stateUpdate', (state: RobotState) => {
+      this.adapter.on('stateUpdate', (_state: RobotState) => {
         // Handle state updates
       });
 

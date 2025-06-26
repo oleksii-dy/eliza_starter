@@ -1,16 +1,15 @@
 import { VRMLoaderPlugin } from '@pixiv/three-vrm';
 import Hls from 'hls.js/dist/hls.js';
-import { TextureLoader } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { createEmoteFactory } from '../extras/createEmoteFactory';
 import { createNode } from '../extras/createNode';
 import { createVRMFactory } from '../extras/createVRMFactory';
 import { glbToNodes } from '../extras/glbToNodes';
-import * as THREE from '../extras/three';
+import { THREE } from '../extras/three';
 import { System } from './System';
 
-// THREE.Cache.enabled = true
+// Cache.enabled = true
 
 /**
  * Client Loader System
@@ -35,7 +34,7 @@ export class ClientLoader extends System {
     this.promises = new Map();
     this.results = new Map();
     this.rgbeLoader = new RGBELoader();
-    this.texLoader = new TextureLoader();
+    this.texLoader = new THREE.TextureLoader();
     this.gltfLoader = new GLTFLoader();
     this.gltfLoader.register(parser => new VRMLoaderPlugin(parser));
   }
@@ -277,7 +276,7 @@ export class ClientLoader extends System {
     const localUrl = URL.createObjectURL(file);
     let promise;
     if (type === 'hdr') {
-      promise = this.rgbeLoader.loadAsync(localUrl).then(texture => {
+      promise = (this.rgbeLoader as any).loadAsync(localUrl).then(texture => {
         this.results.set(key, texture);
         return texture;
       });
@@ -299,13 +298,13 @@ export class ClientLoader extends System {
       });
     }
     if (type === 'texture') {
-      promise = this.texLoader.loadAsync(localUrl).then(texture => {
+      promise = (this.texLoader as any).loadAsync(localUrl).then(texture => {
         this.results.set(key, texture);
         return texture;
       });
     }
     if (type === 'model') {
-      promise = this.gltfLoader.loadAsync(localUrl).then(glb => {
+      promise = (this.gltfLoader as any).loadAsync(localUrl).then(glb => {
         const node = glbToNodes(glb, this.world);
         const model = {
           toNodes() {
@@ -323,7 +322,7 @@ export class ClientLoader extends System {
       });
     }
     if (type === 'emote') {
-      promise = this.gltfLoader.loadAsync(localUrl).then(glb => {
+      promise = (this.gltfLoader as any).loadAsync(localUrl).then(glb => {
         const factory = createEmoteFactory(glb, url);
         const emote = {
           toClip(options) {
@@ -335,7 +334,7 @@ export class ClientLoader extends System {
       });
     }
     if (type === 'avatar') {
-      promise = this.gltfLoader.loadAsync(localUrl).then(glb => {
+      promise = (this.gltfLoader as any).loadAsync(localUrl).then(glb => {
         const factory = createVRMFactory(glb, this.world.setupMaterial);
         const hooks = this.vrmHooks;
         const node = createNode('group', { id: '$root' });
@@ -430,7 +429,9 @@ function createVideoFactory(world, url) {
     let n = 0;
     let dead;
     world.audio.ready(() => {
-      if (dead) {return;}
+      if (dead) {
+        return;
+      }
       elem.muted = false;
     });
     // set linked=false to have a separate source (and texture)
@@ -457,7 +458,9 @@ function createVideoFactory(world, url) {
             async () => {
               // if we needed to hit play to fetch data then revert back to paused
               // console.log('[video] loadeddata', { playing })
-              if (playing) {elem.pause();}
+              if (playing) {
+                elem.pause();
+              }
               data = true;
               // await new Promise(resolve => setTimeout(resolve, 2000))
               width = elem.videoWidth;
@@ -476,7 +479,9 @@ function createVideoFactory(world, url) {
               // await this.engine.driver.gesture
               // if we already have data do nothing, we're done!
               // console.log('[video] gesture', { data })
-              if (data) {return;}
+              if (data) {
+                return;
+              }
               // otherwise hit play to force data loading for streams
               elem.play();
               playing = true;
@@ -490,7 +495,9 @@ function createVideoFactory(world, url) {
       return elem.currentTime > 0 && !elem.paused && !elem.ended && elem.readyState > 2;
     }
     function play(restartIfPlaying = false) {
-      if (restartIfPlaying) {elem.currentTime = 0;}
+      if (restartIfPlaying) {
+        elem.currentTime = 0;
+      }
       elem.play();
     }
     function pause() {

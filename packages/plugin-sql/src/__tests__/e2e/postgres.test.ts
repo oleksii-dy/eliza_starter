@@ -8,44 +8,52 @@ import {
 } from '@elizaos/core';
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { v4 as uuidv4 } from 'uuid';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
-import { PGliteClientManager } from '../../pglite/manager';
+import { PgAdapter } from '../../pg/adapter';
+import { PgManager } from '../../pg/manager';
 
-// Use PGLite for testing instead of real PostgreSQL
+// Use PostgreSQL for testing
 describe('PostgreSQL E2E Tests', () => {
   const createTestAdapter = async () => {
+    // Skip test if no PostgreSQL URL is provided
+    if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
+      throw new Error(
+        'PostgreSQL connection required for tests. Please set POSTGRES_URL or TEST_POSTGRES_URL environment variable.'
+      );
+    }
+
     // Generate a unique agent ID for this test to ensure proper isolation
     const agentId = uuidv4() as UUID;
 
-    // Use unique data directory for each test instead of shared :memory:
-    const dataDir = ':memory:'; // Each PGLite instance with :memory: is isolated
-    const manager = new PGliteClientManager({ dataDir });
-    const adapter = new PgliteDatabaseAdapter(agentId, manager);
+    const postgresUrl = process.env.TEST_POSTGRES_URL || process.env.POSTGRES_URL!;
+    const manager = new PgManager({ connectionString: postgresUrl, ssl: false });
+    await manager.connect();
+    const adapter = new PgAdapter(agentId, manager);
     await adapter.init();
 
-    // Add a small delay to ensure tables are fully ready
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    return { adapter, agentId };
+    return { adapter, agentId, manager };
   };
 
   describe('Connection Management', () => {
     it('should test connection successfully', async () => {
-      const { adapter } = await createTestAdapter();
+      const { adapter, manager } = await createTestAdapter();
 
       const isReady = await adapter.isReady();
       expect(isReady).toBe(true);
 
       await adapter.close();
+      await manager.close();
+      await manager.close();
     });
 
     it('should get connection', async () => {
-      const { adapter } = await createTestAdapter();
+      const { adapter, manager } = await createTestAdapter();
 
       const connection = await adapter.getConnection();
       expect(connection).toBeDefined();
 
       await adapter.close();
+      await manager.close();
+      await manager.close();
     });
   });
 
@@ -76,6 +84,7 @@ describe('PostgreSQL E2E Tests', () => {
       expect(retrieved?.settings).toEqual(agent.settings);
 
       await adapter.close();
+      await manager.close();
     });
 
     it('should update an agent', async () => {
@@ -106,6 +115,7 @@ describe('PostgreSQL E2E Tests', () => {
       expect(retrieved?.settings?.newSetting).toBe('value');
 
       await adapter.close();
+      await manager.close();
     });
 
     it('should delete an agent', async () => {
@@ -130,6 +140,7 @@ describe('PostgreSQL E2E Tests', () => {
       expect(retrieved).toBeNull();
 
       await adapter.close();
+      await manager.close();
     });
   });
 
@@ -176,6 +187,7 @@ describe('PostgreSQL E2E Tests', () => {
       expect(sortedRetrieved?.[1].metadata).toEqual({ custom: 'data' });
 
       await adapter.close();
+      await manager.close();
     });
 
     it('should update an entity', async () => {
@@ -212,6 +224,7 @@ describe('PostgreSQL E2E Tests', () => {
       expect(retrieved?.[0].metadata).toEqual({ updated: true });
 
       await adapter.close();
+      await manager.close();
     });
   });
 
@@ -264,6 +277,7 @@ describe('PostgreSQL E2E Tests', () => {
 
     afterEach(async () => {
       await adapter.close();
+      await manager.close();
     });
 
     it('should create and retrieve memories', async () => {
@@ -427,6 +441,7 @@ describe('PostgreSQL E2E Tests', () => {
 
     afterEach(async () => {
       await adapter.close();
+      await manager.close();
     });
 
     it('should create and retrieve components', async () => {
@@ -541,6 +556,7 @@ describe('PostgreSQL E2E Tests', () => {
       expect(results.every((r) => r === true)).toBe(true);
 
       await adapter.close();
+      await manager.close();
     });
 
     it('should handle large batch operations', async () => {
@@ -574,6 +590,7 @@ describe('PostgreSQL E2E Tests', () => {
       expect(retrieved).toHaveLength(100);
 
       await adapter.close();
+      await manager.close();
     });
   });
 
@@ -597,20 +614,22 @@ describe('PostgreSQL E2E Tests', () => {
       expect(secondCreate).toBe(false);
 
       await adapter.close();
+      await manager.close();
     });
 
     it('should handle non-existent entity retrieval', async () => {
-      const { adapter } = await createTestAdapter();
+      const { adapter, manager } = await createTestAdapter();
 
       const nonExistentId = uuidv4() as UUID;
       const result = await adapter.getEntitiesByIds([nonExistentId]);
       expect(result).toHaveLength(0);
 
       await adapter.close();
+      await manager.close();
     });
 
     it('should handle invalid memory search', async () => {
-      const { adapter } = await createTestAdapter();
+      const { adapter, manager } = await createTestAdapter();
 
       const results = await adapter.searchMemories({
         tableName: 'memories',
@@ -620,6 +639,7 @@ describe('PostgreSQL E2E Tests', () => {
       expect(results).toHaveLength(0);
 
       await adapter.close();
+      await manager.close();
     });
   });
 });

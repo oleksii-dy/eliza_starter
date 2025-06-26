@@ -1,10 +1,7 @@
 import { DatabaseAdapter, type Plugin, type UUID, logger } from '@elizaos/core';
-import { PGliteClientManager } from './pglite/manager';
-import { PgliteDatabaseAdapter } from './pglite/adapter';
-import { PostgresConnectionManager } from './pg/manager';
-import { PgDatabaseAdapter } from './pg/adapter';
+import { PgManager } from './pg/manager';
+import { PgAdapter } from './pg/adapter';
 import { connectionRegistry } from './connection-registry';
-import { resolvePgliteDir } from './utils';
 import {
   createAdaptiveDatabaseAdapter,
   getRecommendedAdaptiveConfig,
@@ -12,37 +9,26 @@ import {
 } from './adaptive-adapter';
 
 /**
- * Creates a database adapter based on the provided configuration.
+ * Creates a PostgreSQL database adapter.
  * Uses the connection registry to ensure proper connection sharing.
  *
  * @param {object} config - The configuration object.
- * @param {string} [config.dataDir] - The directory where data is stored. Defaults to "./.eliza/.elizadb".
- * @param {string} [config.postgresUrl] - The URL for the PostgreSQL database.
+ * @param {string} config.postgresUrl - The URL for the PostgreSQL database.
  * @param {UUID} agentId - The unique identifier for the agent.
  * @returns {DatabaseAdapter} The created database adapter.
  */
 export async function createDatabaseAdapter(
   config: {
-    dataDir?: string;
-    postgresUrl?: string;
+    postgresUrl: string;
   },
   agentId: UUID
 ): Promise<DatabaseAdapter> {
-  const dataDir = resolvePgliteDir(config.dataDir);
-
-  if (config.postgresUrl) {
-    const manager = connectionRegistry.getPostgresManager(config.postgresUrl);
-    return new PgDatabaseAdapter(agentId, manager, config.postgresUrl);
+  if (!config.postgresUrl) {
+    throw new Error('PostgreSQL URL is required. Please provide postgresUrl in config.');
   }
 
-  const manager = connectionRegistry.getPGLiteManager(dataDir);
-
-  // Initialize the PGLite manager before creating the adapter
-  logger.info('[createDatabaseAdapter] Initializing PGLite manager...');
-  await manager.initialize();
-  logger.info('[createDatabaseAdapter] PGLite manager initialized');
-
-  return new PgliteDatabaseAdapter(agentId, manager, dataDir);
+  const manager = connectionRegistry.getPostgresManager(config.postgresUrl);
+  return new PgAdapter(agentId, manager);
 }
 
 /**
@@ -185,7 +171,6 @@ async function performInitialization(runtime: any): Promise<void> {
   const adaptiveConfig: AdaptiveConfig = {
     ...getRecommendedAdaptiveConfig(),
     postgresUrl,
-    dataDir: runtime.getSetting('PGLITE_DATA_DIR'),
     fallbackPostgresUrl: postgresUrl || runtime.getSetting('DATABASE_URL'),
   };
 
@@ -215,7 +200,7 @@ async function performInitialization(runtime: any): Promise<void> {
       // Use PostgreSQL adapter
       logger.info('[plugin-sql] Using PostgreSQL adapter (legacy fallback)');
       const manager = connectionRegistry.getPostgresManager(postgresUrl);
-      const adapter = new PgDatabaseAdapter(runtime.agentId, manager, postgresUrl);
+      const adapter = new PgAdapter(runtime.agentId, manager);
 
       // Register adapter with runtime
       logger.info('[plugin-sql] Registering PostgreSQL adapter with runtime...');
@@ -228,38 +213,10 @@ async function performInitialization(runtime: any): Promise<void> {
 
       logger.info('[plugin-sql] PostgreSQL adapter initialized and ready');
     } else {
-      // Use PGLite adapter
-      logger.info('[plugin-sql] Using PGLite adapter (legacy fallback)');
-
-      // Resolve PGLite directory
-      const pglitePath = resolvePgliteDir(
-        runtime.getSetting('PGLITE_PATH') || runtime.getSetting('DATABASE_PATH')
+      throw new Error(
+        'PostgreSQL connection required. Please set POSTGRES_URL environment variable. ' +
+          'PGLite support has been removed in favor of PostgreSQL with pgvector.'
       );
-
-      logger.info(`[plugin-sql] PGLite path: ${pglitePath}`);
-
-      const manager = connectionRegistry.getPGLiteManager(pglitePath);
-
-      // Initialize the manager first
-      try {
-        await manager.initialize();
-      } catch (error) {
-        logger.error('[plugin-sql] Failed to initialize PGLite manager:', error);
-        throw error;
-      }
-
-      const adapter = new PgliteDatabaseAdapter(runtime.agentId, manager, pglitePath);
-
-      // Register adapter with runtime
-      logger.info('[plugin-sql] Registering PGLite adapter with runtime...');
-      runtime.registerDatabaseAdapter(adapter);
-
-      // Initialize adapter and wait for it to be ready
-      logger.info('[plugin-sql] Initializing PGLite adapter...');
-      await adapter.init();
-      await adapter.waitForReady();
-
-      logger.info('[plugin-sql] PGLite adapter initialized and ready');
     }
   }
 

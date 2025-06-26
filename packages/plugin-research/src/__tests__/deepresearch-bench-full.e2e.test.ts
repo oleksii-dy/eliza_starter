@@ -31,7 +31,8 @@ interface BenchmarkResult {
 
 export class DeepResearchBenchFullSuite implements TestSuite {
   name = 'deepresearch-bench-full-e2e';
-  description = 'Full DeepResearch Bench evaluation for first 5 English queries';
+  description =
+    'Full DeepResearch Bench evaluation for first 5 English queries';
 
   tests = [
     {
@@ -75,7 +76,9 @@ export class DeepResearchBenchFullSuite implements TestSuite {
           .map((line) => JSON.parse(line));
 
         // Get first 5 English queries
-        const queries = allQueries.filter((q) => q.language === 'en').slice(0, 5);
+        const queries = allQueries
+          .filter((q) => q.language === 'en')
+          .slice(0, 5);
 
         console.log(`\n📝 Processing ${queries.length} English queries`);
 
@@ -84,7 +87,9 @@ export class DeepResearchBenchFullSuite implements TestSuite {
         await fs.mkdir(outputDir, { recursive: true });
 
         // Get research service
-        const researchService = runtime.getService('research') as ResearchService;
+        const researchService = runtime.getService(
+          'research'
+        ) as ResearchService;
         if (!researchService) {
           throw new Error('Research service not available');
         }
@@ -110,16 +115,19 @@ export class DeepResearchBenchFullSuite implements TestSuite {
 
           try {
             // Create research project with optimal settings for DeepResearch Bench
-            const project = await researchService.createResearchProject(query.prompt, {
-              researchDepth: ResearchDepth.PHD_LEVEL,
-              maxSearchResults: 50, // Increased for better coverage
-              evaluationEnabled: true,
-              parallelSearches: 10,
-              enableCitations: true,
-              qualityThreshold: 0.7,
-              maxDepth: 3, // Allow deeper exploration
-              timeout: 600000, // 10 minutes
-            });
+            const project = await researchService.createResearchProject(
+              query.prompt,
+              {
+                researchDepth: ResearchDepth.PHD_LEVEL,
+                maxSearchResults: 50, // Increased for better coverage
+                evaluationEnabled: true,
+                parallelSearches: 10,
+                enableCitations: true,
+                qualityThreshold: 0.7,
+                maxDepth: 3, // Allow deeper exploration
+                timeout: 600000, // 10 minutes
+              }
+            );
 
             console.log(`✅ Project created: ${project.id}`);
             console.log(`📊 Domain: ${project.metadata.domain}`);
@@ -149,19 +157,25 @@ export class DeepResearchBenchFullSuite implements TestSuite {
 
               // Show progress updates
               if (updated.sources.length !== lastSourceCount) {
-                console.log(`  📚 Sources: ${lastSourceCount} → ${updated.sources.length}`);
+                console.log(
+                  `  📚 Sources: ${lastSourceCount} → ${updated.sources.length}`
+                );
                 lastSourceCount = updated.sources.length;
               }
 
               if (updated.findings.length !== lastFindingCount) {
-                console.log(`  💡 Findings: ${lastFindingCount} → ${updated.findings.length}`);
+                console.log(
+                  `  💡 Findings: ${lastFindingCount} → ${updated.findings.length}`
+                );
                 lastFindingCount = updated.findings.length;
               }
 
               // Check completion
               if (updated.status === ResearchStatus.COMPLETED) {
                 const duration = Date.now() - startTime;
-                console.log(`\n✅ Research completed in ${Math.round(duration / 1000)}s`);
+                console.log(
+                  `\n✅ Research completed in ${Math.round(duration / 1000)}s`
+                );
 
                 result.success = true;
                 result.duration = duration;
@@ -219,9 +233,16 @@ export class DeepResearchBenchFullSuite implements TestSuite {
                   }
 
                   // Bibliography
-                  if (updated.report.bibliography && updated.report.bibliography.length > 0) {
+                  if (
+                    updated.report.bibliography &&
+                    updated.report.bibliography.length > 0
+                  ) {
                     fullReport += '## References\n\n';
-                    for (let i = 0; i < updated.report.bibliography.length; i++) {
+                    for (
+                      let i = 0;
+                      i < updated.report.bibliography.length;
+                      i++
+                    ) {
                       const entry = updated.report.bibliography[i];
                       fullReport += `[${i + 1}] ${entry.citation}\n`;
                     }
@@ -249,7 +270,9 @@ export class DeepResearchBenchFullSuite implements TestSuite {
 
                   if (race) {
                     console.log('\n📊 RACE Evaluation:');
-                    console.log(`  - Overall: ${(race.overall * 100).toFixed(1)}%`);
+                    console.log(
+                      `  - Overall: ${(race.overall * 100).toFixed(1)}%`
+                    );
                     console.log(
                       `  - Comprehensiveness: ${(race.comprehensiveness * 100).toFixed(1)}%`
                     );
@@ -257,7 +280,9 @@ export class DeepResearchBenchFullSuite implements TestSuite {
                     console.log(
                       `  - Instruction Following: ${(race.instructionFollowing * 100).toFixed(1)}%`
                     );
-                    console.log(`  - Readability: ${(race.readability * 100).toFixed(1)}%`);
+                    console.log(
+                      `  - Readability: ${(race.readability * 100).toFixed(1)}%`
+                    );
                   }
 
                   if (fact) {
@@ -266,7 +291,9 @@ export class DeepResearchBenchFullSuite implements TestSuite {
                       `  - Citation Accuracy: ${(fact.citationAccuracy * 100).toFixed(1)}%`
                     );
                     console.log(`  - Total Citations: ${fact.totalCitations}`);
-                    console.log(`  - Verified Citations: ${fact.verifiedCitations}`);
+                    console.log(
+                      `  - Verified Citations: ${fact.verifiedCitations}`
+                    );
                   }
                 }
 
@@ -277,10 +304,14 @@ export class DeepResearchBenchFullSuite implements TestSuite {
 
               // Progress indicator
               if (elapsed % 30000 === 0 && elapsed > 0) {
-                console.log(`⏳ Processing... (${Math.round(elapsed / 1000)}s elapsed)`);
+                console.log(
+                  `⏳ Processing... (${Math.round(elapsed / 1000)}s elapsed)`
+                );
               }
 
-              await new Promise((resolve) => setTimeout(resolve, checkInterval));
+              await new Promise((resolve) =>
+                setTimeout(resolve, checkInterval)
+              );
               elapsed += checkInterval;
             }
 
@@ -288,7 +319,8 @@ export class DeepResearchBenchFullSuite implements TestSuite {
               throw new Error('Research timed out');
             }
           } catch (error) {
-            result.error = error instanceof Error ? error.message : String(error);
+            result.error =
+              error instanceof Error ? error.message : String(error);
             console.error(`\n❌ Error: ${result.error}`);
           }
 
@@ -301,21 +333,31 @@ export class DeepResearchBenchFullSuite implements TestSuite {
         console.log('='.repeat(80));
 
         const successful = results.filter((r) => r.success);
-        const successRate = ((successful.length / results.length) * 100).toFixed(1);
+        const successRate = (
+          (successful.length / results.length) *
+          100
+        ).toFixed(1);
 
-        console.log(`\n✅ Success Rate: ${successful.length}/${results.length} (${successRate}%)`);
+        console.log(
+          `\n✅ Success Rate: ${successful.length}/${results.length} (${successRate}%)`
+        );
 
         if (successful.length > 0) {
           const avgWordCount =
-            successful.reduce((sum, r) => sum + (r.wordCount || 0), 0) / successful.length;
+            successful.reduce((sum, r) => sum + (r.wordCount || 0), 0) /
+            successful.length;
           const avgCitations =
-            successful.reduce((sum, r) => sum + (r.citations || 0), 0) / successful.length;
+            successful.reduce((sum, r) => sum + (r.citations || 0), 0) /
+            successful.length;
           const avgSources =
-            successful.reduce((sum, r) => sum + (r.sources || 0), 0) / successful.length;
+            successful.reduce((sum, r) => sum + (r.sources || 0), 0) /
+            successful.length;
           const avgFindings =
-            successful.reduce((sum, r) => sum + (r.findings || 0), 0) / successful.length;
+            successful.reduce((sum, r) => sum + (r.findings || 0), 0) /
+            successful.length;
           const avgDuration =
-            successful.reduce((sum, r) => sum + (r.duration || 0), 0) / successful.length;
+            successful.reduce((sum, r) => sum + (r.duration || 0), 0) /
+            successful.length;
 
           console.log('\n📊 Average Metrics (successful runs):');
           console.log(`  - Word Count: ${Math.round(avgWordCount)}`);

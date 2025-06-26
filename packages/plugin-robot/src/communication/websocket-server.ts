@@ -3,6 +3,7 @@ import { logger } from '@elizaos/core';
 import { RobotService } from '../services/robot-service';
 import { EventEmitter } from 'events';
 import * as http from 'http';
+import { RobotState } from '../types';
 
 export interface WebSocketConfig {
   port?: number;
@@ -145,27 +146,27 @@ export class RobotWebSocketServer extends EventEmitter {
     }
 
     // Store client
-    this.clients.set(clientId, ws);
-    this.subscriptions.set(clientId, new Set());
+    this.clients.set(_clientId, ws);
+    this.subscriptions.set(_clientId, new Set());
 
-    logger.info(`[WebSocketServer] Client connected: ${clientId}`);
+    logger.info(`[WebSocketServer] Client connected: ${_clientId}`);
 
     // Send welcome message
-    this.sendToClient(clientId, {
+    this.sendToClient(_clientId, {
       type: 'event',
       data: {
         event: 'connected',
-        clientId,
+        clientId: _clientId,
         robotState: this.robotService.getState(),
       },
       timestamp: Date.now(),
     });
 
     // Set up client handlers
-    ws.on('message', (data) => this.handleMessage(clientId, data));
-    ws.on('close', () => this.handleDisconnect(clientId));
-    ws.on('error', (error) => this.handleError(clientId, error));
-    ws.on('pong', () => this.handlePong(clientId));
+    ws.on('message', (data) => this.handleMessage(_clientId, data));
+    ws.on('close', () => this.handleDisconnect(_clientId));
+    ws.on('error', (error) => this.handleError(_clientId, error));
+    ws.on('pong', () => this.handlePong(_clientId));
   }
 
   private async handleMessage(clientId: string, data: any): Promise<void> {
@@ -397,8 +398,8 @@ export class RobotWebSocketServer extends EventEmitter {
           ws.ping();
         } else {
           // Remove dead clients
-          this.clients.delete(clientId);
-          this.subscriptions.delete(clientId);
+          this.clients.delete(_clientId);
+          this.subscriptions.delete(_clientId);
         }
       }
     }, this.config.heartbeatInterval!);

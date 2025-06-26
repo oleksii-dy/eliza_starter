@@ -1,4 +1,4 @@
-import * as THREE from '../extras/three';
+import { THREE } from '../extras/three';
 
 import { System } from './System';
 
@@ -52,7 +52,7 @@ const csmLevels = {
 // fix fog distance calc
 // see: https://github.com/mrdoob/three.js/issues/14601
 // future: https://www.youtube.com/watch?v=k1zGz55EqfU
-// THREE.ShaderChunk.fog_vertex = `
+// ShaderChunk.fog_vertex = `
 // #ifdef USE_FOG
 // 	// vFogDepth = - mvPosition.z;
 //   vFogDepth = length(mvPosition);
@@ -213,9 +213,9 @@ export class ClientEnvironment extends System {
     }
 
     if (hdrTexture) {
-      // hdrTexture.colorSpace = THREE.NoColorSpace
-      // hdrTexture.colorSpace = THREE.SRGBColorSpace
-      // hdrTexture.colorSpace = THREE.LinearSRGBColorSpace
+      // hdrTexture.colorSpace = NoColorSpace
+      // hdrTexture.colorSpace = SRGBColorSpace
+      // hdrTexture.colorSpace = LinearSRGBColorSpace
       hdrTexture.mapping = THREE.EquirectangularReflectionMapping;
       this.world.stage.scene.environment = hdrTexture;
     }

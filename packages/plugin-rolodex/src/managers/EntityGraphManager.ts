@@ -2,7 +2,7 @@ import {
   type IAgentRuntime,
   type UUID,
   logger,
-  ModelType,
+  ModelType as _ModelType,
   stringToUuid,
   type Memory,
   type Relationship,
@@ -329,7 +329,9 @@ export class EntityGraphManager {
   ): Promise<EntitySearchResult[]> {
     const cacheKey = `search:${JSON.stringify({ query, options })}`;
     const cached = await this.cache.get<EntitySearchResult[]>(cacheKey);
-    if (cached) {return cached;}
+    if (cached) {
+      return cached;
+    }
 
     // Get all entities matching basic criteria
     const entities = await this.db.searchEntities({
@@ -339,7 +341,9 @@ export class EntityGraphManager {
       offset: options?.offset || 0,
     });
 
-    if (entities.length === 0) {return [];}
+    if (entities.length === 0) {
+      return [];
+    }
 
     // Use LLM to rank results by relevance
     const prompt = this.buildSearchRankingPrompt(query, entities);
@@ -480,7 +484,9 @@ export class EntityGraphManager {
   ): Promise<Relationship[]> {
     const cacheKey = `relationships:${entityId}:${JSON.stringify(options)}`;
     const cached = await this.cache.get<Relationship[]>(cacheKey);
-    if (cached) {return cached;}
+    if (cached) {
+      return cached;
+    }
 
     const relationships = await this.db.getEntityRelationships(asUUID(entityId), options);
     await this.cache.set(cacheKey, relationships);
@@ -545,7 +551,9 @@ export class EntityGraphManager {
     entityId: UUID,
     recentMessages: Memory[]
   ): Promise<TrustEvent | null> {
-    if (recentMessages.length === 0) {return null;}
+    if (recentMessages.length === 0) {
+      return null;
+    }
 
     // Build context for trust analysis
     const context = this.buildTrustAnalysisContext(entityId, recentMessages);
@@ -554,7 +562,9 @@ export class EntityGraphManager {
     const analysis = await this.llm.generateStructured(context, TrustAnalysisSchema);
 
     // Only update if significant change detected
-    if (Math.abs(analysis.trustDelta) < 0.05) {return null;}
+    if (Math.abs(analysis.trustDelta) < 0.05) {
+      return null;
+    }
 
     await this.updateTrust(entityId, {
       type: 'behavior-analysis',
@@ -717,8 +727,8 @@ You are an expert at extracting entity information from conversations.
 
 Examples:
 ${ENTITY_EXTRACTION_EXAMPLES.map(
-    (ex) => `Context: "${ex.context}"\nExtracted: ${JSON.stringify(ex.result, null, 2)}`
-  ).join('\n\n')}
+  (ex) => `Context: "${ex.context}"\nExtracted: ${JSON.stringify(ex.result, null, 2)}`
+).join('\n\n')}
 
 Now extract entities from this context:
 "${context}"
@@ -749,8 +759,8 @@ You are an expert at inferring relationships between entities from conversations
 
 Examples:
 ${RELATIONSHIP_INFERENCE_EXAMPLES.map(
-    (ex) => `Context: "${ex.context}"\nInferred: ${JSON.stringify(ex.result, null, 2)}`
-  ).join('\n\n')}
+  (ex) => `Context: "${ex.context}"\nInferred: ${JSON.stringify(ex.result, null, 2)}`
+).join('\n\n')}
 
 ${
   options?.existing
@@ -790,12 +800,12 @@ Rank these entities by relevance to the search query: "${query}"
 
 Entities:
 ${entities
-    .map(
-      (e, i) =>
-        `${i}. ${e.names.join(', ')} (${e.type}): ${e.summary}
+  .map(
+    (e, i) =>
+      `${i}. ${e.names.join(', ')} (${e.type}): ${e.summary}
    Tags: ${e.tags.join(', ')}`
-    )
-    .join('\n')}
+  )
+  .join('\n')}
 
 Return a JSON array of objects with:
 - index: entity index

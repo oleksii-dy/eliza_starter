@@ -37,25 +37,17 @@ describe('createDatabaseAdapter Function', () => {
 
     const adapter = await createDatabaseAdapter(config, agentId);
     expect(adapter).toBeDefined();
-    expect(adapter.constructor.name).toBe('PgDatabaseAdapter');
+    expect(adapter.constructor.name).toBe('PgAdapter');
   });
 
-  // Skip PGLite tests temporarily due to WebAssembly initialization issues
-  it.skip('should create adapter with pglite config', async () => {
-    const config = {
-      dataDir: ':memory:',
-    };
-
-    const adapter = await createDatabaseAdapter(config, agentId);
-    expect(adapter).toBeDefined();
-    expect(adapter.constructor.name).toBe('PgliteDatabaseAdapter');
-  });
-
-  it.skip('should create adapter with default config', async () => {
+  it('should require postgres config when no environment variables are set', async () => {
     const config = {};
 
-    const adapter = await createDatabaseAdapter(config, agentId);
-    expect(adapter).toBeDefined();
-    expect(adapter.constructor.name).toBe('PgliteDatabaseAdapter');
+    try {
+      await createDatabaseAdapter(config, agentId);
+      expect(false).toBe(true); // Should not reach here
+    } catch (error) {
+      expect(error.message).toContain('PostgreSQL connection string');
+    }
   });
 });

@@ -1,6 +1,33 @@
 import { RPGEntity } from './RPGEntity';
 import type { World } from '../../types';
-import type { NPCComponent, NPCDefinition, Vector3 } from '../types';
+import type { NPCDefinition, Vector3 } from '../types';
+import type { Component } from '../../types';
+
+// Define NPCComponent locally to avoid import issues
+interface NPCComponent extends Component {
+  type: 'npc';
+  npcId: number;
+  name: string;
+  behavior: string;
+  faction: string;
+  level: number;
+  combatLevel: number;
+  maxHitpoints: number;
+  currentHitpoints: number;
+  aggressionLevel: number;
+  aggressionRange: number;
+  wanderRadius: number;
+  respawnTime: number;
+  lastPosition: Vector3;
+  homePosition: Vector3;
+  spawnPoint: Vector3;
+  state: string;
+  isAlive: boolean;
+  lastCombatTime: number;
+  currentTarget: string | null;
+  aggroList: string[];
+  definition: NPCDefinition;
+}
 
 /**
  * NPC Entity class for all non-player characters

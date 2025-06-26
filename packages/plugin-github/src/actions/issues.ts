@@ -355,6 +355,7 @@ export const createIssueAction: Action = {
   similes: ['NEW_ISSUE', 'SUBMIT_ISSUE', 'REPORT_ISSUE', 'FILE_ISSUE'],
   description:
     'Creates a new GitHub issue and enables chaining with actions like creating branches, assigning users, or linking to pull requests',
+  enabled: false, // Disabled by default - issue creation modifies repository state
 
   validate: async (
     runtime: IAgentRuntime,

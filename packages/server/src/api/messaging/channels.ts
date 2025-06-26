@@ -8,13 +8,13 @@ import {
   type UUID,
 } from '@elizaos/core';
 import express from 'express';
-import internalMessageBus from '../../bus';
+import internalMessageBus from '../../MessageBus';
 import type { AgentServer } from '../../index';
 import type { MessageServiceStructure as MessageService } from '../../types';
-import { channelUpload, validateMediaFile, processUploadedFile } from '../../upload';
+import { channelUpload, validateMediaFile, processUploadedFile } from '../../UploadHandler';
 import { createUploadRateLimit, createFileSystemRateLimit } from '../shared/middleware';
 import { MAX_FILE_SIZE } from '../shared/constants';
-import { cleanupUploadedFile } from '../shared/file-utils';
+import { cleanupUploadedFile } from '../shared/fileUtils';
 import type fileUpload from 'express-fileupload';
 
 const DEFAULT_SERVER_ID = '00000000-0000-0000-0000-000000000000' as UUID;

@@ -1,17 +1,111 @@
 import { logger, type IAgentRuntime, type Plugin } from '@elizaos/core';
-import { getTempDbPath } from '../../utils/temp';
+import { getTempDbPath } from '../../utils/temp.js';
 // Make ALL imports dynamic to avoid loading schema modules before setting database type
 import dotenv from 'dotenv';
 import { existsSync } from 'node:fs';
 // import path from 'path';
 
+// Convert PluginScenario to internal Scenario format
+function convertPluginScenarioToScenario(pluginScenario: any): any {
+  logger.info(`Converting plugin scenario: ${pluginScenario.name}`);
+
+  // Convert characters to actors and distribute script steps
+  const actors =
+    pluginScenario.characters?.map((character: any) => {
+      // Find script steps that belong to this character
+      const actorSteps =
+        pluginScenario.script?.steps?.filter((step: any) => {
+          // If step has 'from' field, it should match this character's name
+          // If no 'from' field and this is the subject actor, assign to them
+          return step.from === character.name || (!step.from && character.role === 'subject');
+        }) || [];
+
+      logger.info(
+        `Actor ${character.name} (${character.role}) assigned ${actorSteps.length} script steps`
+      );
+
+      return {
+        id: character.id,
+        name: character.name,
+        role: character.role,
+        bio: character.bio,
+        system: character.system,
+        plugins: character.plugins || [],
+        script: actorSteps.length > 0 ? { steps: actorSteps } : undefined,
+      };
+    }) || [];
+
+  // Also handle steps without 'from' field - assign to the first non-subject actor or subject if none
+  const unassignedSteps = pluginScenario.script?.steps?.filter((step: any) => !step.from) || [];
+  if (unassignedSteps.length > 0) {
+    const fallbackActor = actors.find((a: any) => a.role !== 'subject') || actors[0];
+    if (fallbackActor && !fallbackActor.script) {
+      fallbackActor.script = { steps: unassignedSteps };
+      logger.info(
+        `Assigned ${unassignedSteps.length} unassigned steps to fallback actor: ${fallbackActor.name}`
+      );
+    }
+  }
+
+  const converted = {
+    ...pluginScenario,
+    actors,
+    execution: pluginScenario.execution || {
+      maxDuration: 300000,
+      maxSteps: 50,
+      timeout: 30000,
+    },
+  };
+
+  logger.info(`Converted scenario has ${converted.actors.length} actors`);
+  return converted;
+}
+
 export async function runScenarioWithAgents(
   scenario: any, // Use any to avoid static import of types
   options: any
 ): Promise<any> {
+  logger.info(`🚀 Starting scenario with real agent runtime: ${scenario.name}`);
+
+  // Use the Real Scenario Executor to bypass PGLite WebAssembly issues
+  try {
+    const { executeRealScenario } = await import(
+      '../../scenario-runner/real-scenario-execution.js'
+    );
+
+    // Convert the scenario format to work with RealScenarioExecutor
+    const realScenario = {
+      id: scenario.id || `scenario-${Date.now()}`,
+      name: scenario.name,
+      characters: scenario.characters || scenario.actors || [],
+      script: scenario.script || { steps: [] },
+      verification: scenario.verification || { rules: [] },
+    };
+
+    logger.info(
+      `Executing scenario with ${realScenario.characters.length} characters using real agents`
+    );
+
+    const result = await executeRealScenario(realScenario, {
+      verbose: options.verbose,
+      timeout: options.timeout || 30000,
+      maxSteps: options.maxSteps || 50,
+    });
+
+    logger.info(`Scenario completed: ${scenario.name} (${result.passed ? 'PASSED' : 'FAILED'})`);
+    return result;
+  } catch (error) {
+    logger.error('Real scenario execution failed, falling back to legacy approach:', error);
+
+    // Fallback to the original approach if RealScenarioExecutor fails
+    return await runScenarioWithLegacyApproach(scenario, options);
+  }
+}
+
+async function runScenarioWithLegacyApproach(scenario: any, options: any): Promise<any> {
   // CRITICAL: Set database type FIRST before ANY other operations
   // This must happen before any schema modules are imported or database operations occur
-  const sqlModule = await import('@elizaos/plugin-sql');
+  const sqlModule = (await import('@elizaos/plugin-sql')) as any;
   // Access setDatabaseType as a named export and call it properly
   if ('setDatabaseType' in sqlModule && typeof sqlModule.setDatabaseType === 'function') {
     sqlModule.setDatabaseType('pglite');
@@ -21,10 +115,14 @@ export async function runScenarioWithAgents(
     logger.error('Available exports:', Object.keys(sqlModule));
   }
 
-  logger.info(`🚀 Starting scenario: ${scenario.name}`);
+  logger.info(`🚀 Starting legacy scenario approach: ${scenario.name}`);
+
+  // Convert PluginScenario format to internal Scenario format
+  const convertedScenario = convertPluginScenarioToScenario(scenario);
+  logger.info(`Converted scenario with ${convertedScenario.actors?.length || 0} actors`);
 
   // Now safe to import AgentServer after database type is set
-  const { AgentServer } = await import('@elizaos/server');
+  const AgentServer = (await import('@elizaos/server')).default;
   logger.info('✅ Imported AgentServer after setting database type');
 
   // Load environment variables from .env file
@@ -60,7 +158,7 @@ export async function runScenarioWithAgents(
 
     // Always include SQL plugin for database support
     try {
-      const sqlModule = await import('@elizaos/plugin-sql');
+      const sqlModule = (await import('@elizaos/plugin-sql')) as any;
       plugins.push(sqlModule.plugin);
     } catch (error) {
       logger.warn('Failed to load SQL plugin:', error);
@@ -167,7 +265,7 @@ export async function runScenarioWithAgents(
     }
 
     // Create agents for the scenario
-    for (const actor of scenario.actors) {
+    for (const actor of convertedScenario.actors) {
       // Load actor-specific plugins
       const actorPlugins = [...plugins];
 
@@ -265,7 +363,7 @@ export async function runScenarioWithAgents(
     }
 
     // Get the primary runtime (subject agent)
-    const subjectActor = scenario.actors.find((a: any) => a.role === 'subject');
+    const subjectActor = convertedScenario.actors.find((a: any) => a.role === 'subject');
     const primaryRuntime = subjectActor
       ? agents.get(subjectActor.name)
       : agents.values().next().value;
@@ -282,7 +380,7 @@ export async function runScenarioWithAgents(
     runner.agents = agents;
 
     // Run the scenario
-    const result = await runner.runScenario(scenario, {
+    const result = await runner.runScenario(convertedScenario, {
       verbose: options.verbose,
       benchmark: options.benchmark,
     });

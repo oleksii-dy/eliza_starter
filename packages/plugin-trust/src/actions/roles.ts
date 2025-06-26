@@ -32,7 +32,9 @@ import dedent from 'dedent';
  */
 const canModifyRole = (currentRole: Role, targetRole: Role | null, newRole: Role): boolean => {
   // User's can't change their own role
-  if (targetRole === currentRole) {return false;}
+  if (targetRole === currentRole) {
+    return false;
+  }
 
   switch (currentRole) {
     // Owners can do everything
@@ -109,7 +111,8 @@ interface RoleAssignment {
 export const updateRoleAction: Action = {
   name: 'UPDATE_ROLE',
   similes: ['CHANGE_ROLE', 'SET_PERMISSIONS', 'ASSIGN_ROLE', 'MAKE_ADMIN'],
-  description: 'Assigns a role (Admin, Owner, None) to a user or list of users in a channel. Validates permissions and updates world metadata with role assignments. Can be chained with EVALUATE_TRUST to verify role eligibility or RECORD_TRUST_INTERACTION to log role changes.',
+  description:
+    'Assigns a role (Admin, Owner, None) to a user or list of users in a channel. Validates permissions and updates world metadata with role assignments. Can be chained with EVALUATE_TRUST to verify role eligibility or RECORD_TRUST_INTERACTION to log role changes.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     // Only activate in group chats where the feature is enabled
@@ -313,7 +316,7 @@ export const updateRoleAction: Action = {
       {
         name: '{{user}}',
         content: {
-          text: 'Check Alice\'s trust score and make her an admin if she qualifies',
+          text: "Check Alice's trust score and make her an admin if she qualifies",
           source: 'discord',
         },
       },

@@ -1,6 +1,10 @@
 import { IAgentRuntime, logger } from '@elizaos/core';
 import crypto from 'crypto';
-import { RESEARCH_PROMPTS, formatPrompt, getPromptConfig } from '../prompts/research-prompts';
+import {
+  RESEARCH_PROMPTS,
+  formatPrompt,
+  getPromptConfig,
+} from '../prompts/research-prompts';
 import { FactualClaim, ResearchSource, VerificationStatus } from '../types';
 
 export interface VerificationEvidence {
@@ -62,10 +66,17 @@ export class ClaimVerifier {
     logger.info(`[ClaimVerifier] Verifying claim: "${claim.statement}"`);
 
     // Step 1: Verify against primary source
-    const primaryEvidence = await this.verifyAgainstSource(claim, primarySource);
+    const primaryEvidence = await this.verifyAgainstSource(
+      claim,
+      primarySource
+    );
 
     // Step 2: Find corroborating sources
-    const relatedSources = this.findRelatedSources(claim, allSources, primarySource);
+    const relatedSources = this.findRelatedSources(
+      claim,
+      allSources,
+      primarySource
+    );
     const corroboratingEvidence: VerificationEvidence[] = [];
     const contradictingEvidence: VerificationEvidence[] = [];
 
@@ -113,7 +124,9 @@ export class ClaimVerifier {
       if (!sourceContent || sourceContent.length < 1000) {
         // Re-extract if we don't have enough content
         logger.info(`[ClaimVerifier] Extracting content from ${source.url}`);
-        const extracted = await this.contentExtractor.extractContent(source.url);
+        const extracted = await this.contentExtractor.extractContent(
+          source.url
+        );
         sourceContent = extracted?.content || source.snippet || '';
       }
 
@@ -123,22 +136,29 @@ export class ClaimVerifier {
       }
 
       // Find relevant excerpt
-      const relevantExcerpt = this.findRelevantExcerpt(claim.statement, sourceContent);
+      const relevantExcerpt = this.findRelevantExcerpt(
+        claim.statement,
+        sourceContent
+      );
 
       // Use advanced prompt to verify
-      const verificationPrompt = formatPrompt(RESEARCH_PROMPTS.CLAIM_VERIFICATION, {
-        claim: claim.statement,
-        sourceUrl: source.url,
-        evidence: claim.supportingEvidence.join(' '),
-        sourceContent: relevantExcerpt,
-      });
+      const verificationPrompt = formatPrompt(
+        RESEARCH_PROMPTS.CLAIM_VERIFICATION,
+        {
+          claim: claim.statement,
+          sourceUrl: source.url,
+          evidence: claim.supportingEvidence.join(' '),
+          sourceContent: relevantExcerpt,
+        }
+      );
 
       const config = getPromptConfig('verification');
       const response = await this.runtime.useModel(config.modelType, {
         messages: [
           {
             role: 'system',
-            content: 'You are a rigorous fact-checker. Be extremely strict about verification.',
+            content:
+              'You are a rigorous fact-checker. Be extremely strict about verification.',
           },
           { role: 'user', content: verificationPrompt },
         ],
@@ -156,7 +176,10 @@ export class ClaimVerifier {
         reasoning: result.reasoning,
       };
     } catch (error) {
-      logger.error(`[ClaimVerifier] Error verifying against ${source.url}:`, error);
+      logger.error(
+        `[ClaimVerifier] Error verifying against ${source.url}:`,
+        error
+      );
       return {
         sourceUrl: source.url,
         relevantExcerpt: '',
@@ -180,7 +203,9 @@ export class ClaimVerifier {
     // Score each sentence by term overlap
     const scoredSentences = sentences.map((sentence) => {
       const sentenceLower = sentence.toLowerCase();
-      const termMatches = claimTerms.filter((term) => sentenceLower.includes(term)).length;
+      const termMatches = claimTerms.filter((term) =>
+        sentenceLower.includes(term)
+      ).length;
       const score = termMatches / claimTerms.length;
       return { sentence, score };
     });
@@ -198,7 +223,9 @@ export class ClaimVerifier {
       const contextStart = Math.max(0, sentenceIndex - 1);
       const contextEnd = Math.min(sentences.length - 1, sentenceIndex + 1);
 
-      const contextualExcerpt = sentences.slice(contextStart, contextEnd + 1).join('. ');
+      const contextualExcerpt = sentences
+        .slice(contextStart, contextEnd + 1)
+        .join('. ');
       if (!excerpt.includes(contextualExcerpt)) {
         excerpt += `${contextualExcerpt}\n\n[...]\n\n`;
       }
@@ -282,7 +309,8 @@ export class ClaimVerifier {
     reasoning: string;
   } {
     try {
-      const content = typeof response === 'string' ? response : response.content || '';
+      const content =
+        typeof response === 'string' ? response : response.content || '';
 
       // Try to parse as JSON first
       if (content.includes('{') && content.includes('}')) {
@@ -309,7 +337,10 @@ export class ClaimVerifier {
         reasoning: content,
       };
     } catch (error) {
-      logger.error('[ClaimVerifier] Error parsing verification response:', error);
+      logger.error(
+        '[ClaimVerifier] Error parsing verification response:',
+        error
+      );
       return {
         status: 'UNVERIFIED',
         confidence: 0,
@@ -339,10 +370,17 @@ export class ClaimVerifier {
     // Weighted confidence calculation
     let aggregateConfidence = 0;
     if (totalEvidence > 0) {
-      const supportWeight = supportingEvidence.reduce((sum, e) => sum + e.confidence, 0);
-      const contradictWeight = contradictingEvidence.reduce((sum, e) => sum + e.confidence, 0);
+      const supportWeight = supportingEvidence.reduce(
+        (sum, e) => sum + e.confidence,
+        0
+      );
+      const contradictWeight = contradictingEvidence.reduce(
+        (sum, e) => sum + e.confidence,
+        0
+      );
 
-      aggregateConfidence = (supportWeight - contradictWeight * 0.5) / totalEvidence;
+      aggregateConfidence =
+        (supportWeight - contradictWeight * 0.5) / totalEvidence;
       aggregateConfidence = Math.max(0, Math.min(1, aggregateConfidence));
     }
 
@@ -407,7 +445,9 @@ export class ClaimVerifier {
     for (let i = 0; i < claims.length; i += batchSize) {
       const batch = claims.slice(i, i + batchSize);
       const batchResults = await Promise.all(
-        batch.map(({ claim, primarySource }) => this.verifyClaim(claim, primarySource, allSources))
+        batch.map(({ claim, primarySource }) =>
+          this.verifyClaim(claim, primarySource, allSources)
+        )
       );
       results.push(...batchResults);
     }
@@ -462,7 +502,8 @@ export class ClaimVerifier {
       partiallyVerified: stats.partiallyVerified,
       unverified: stats.unverified,
       disputed: stats.disputed,
-      averageConfidence: results.length > 0 ? stats.totalConfidence / results.length : 0,
+      averageConfidence:
+        results.length > 0 ? stats.totalConfidence / results.length : 0,
       strongConsensus: stats.strongConsensus,
     };
   }

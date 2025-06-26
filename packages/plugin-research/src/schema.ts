@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { relations, sql } from 'drizzle-orm';
 import {
   pgTable,
@@ -46,7 +47,9 @@ export const researchProjectsTable = pgTable(
     entityIdIndex: index('idx_research_projects_entity').on(table.entityId),
     statusIndex: index('idx_research_projects_status').on(table.status),
     phaseIndex: index('idx_research_projects_phase').on(table.phase),
-    createdAtIndex: index('idx_research_projects_created_at').on(table.createdAt),
+    createdAtIndex: index('idx_research_projects_created_at').on(
+      table.createdAt
+    ),
   })
 );
 
@@ -79,7 +82,10 @@ export const researchSourcesTable = pgTable(
     urlIndex: index('idx_research_sources_url').on(table.url),
     typeIndex: index('idx_research_sources_type').on(table.type),
     relevanceIndex: index('idx_research_sources_relevance').on(table.relevance),
-    uniqueProjectUrl: uniqueIndex('unique_project_url').on(table.projectId, table.url),
+    uniqueProjectUrl: uniqueIndex('unique_project_url').on(
+      table.projectId,
+      table.url
+    ),
   })
 );
 
@@ -113,7 +119,9 @@ export const researchFindingsTable = pgTable(
     projectIdIndex: index('idx_research_findings_project').on(table.projectId),
     sourceIdIndex: index('idx_research_findings_source').on(table.sourceId),
     categoryIndex: index('idx_research_findings_category').on(table.category),
-    relevanceIndex: index('idx_research_findings_relevance').on(table.relevance),
+    relevanceIndex: index('idx_research_findings_relevance').on(
+      table.relevance
+    ),
   })
 );
 
@@ -145,44 +153,58 @@ export const researchReportsTable = pgTable(
   (table) => ({
     projectIdIndex: index('idx_research_reports_project').on(table.projectId),
     formatIndex: index('idx_research_reports_format').on(table.format),
-    createdAtIndex: index('idx_research_reports_created_at').on(table.createdAt),
+    createdAtIndex: index('idx_research_reports_created_at').on(
+      table.createdAt
+    ),
   })
 );
 
 /**
  * Relations
  */
-export const researchProjectsRelations = relations(researchProjectsTable, ({ many }) => ({
-  sources: many(researchSourcesTable),
-  findings: many(researchFindingsTable),
-  reports: many(researchReportsTable),
-}));
+export const researchProjectsRelations = relations(
+  researchProjectsTable,
+  ({ many }) => ({
+    sources: many(researchSourcesTable),
+    findings: many(researchFindingsTable),
+    reports: many(researchReportsTable),
+  })
+);
 
-export const researchSourcesRelations = relations(researchSourcesTable, ({ one, many }) => ({
-  project: one(researchProjectsTable, {
-    fields: [researchSourcesTable.projectId],
-    references: [researchProjectsTable.id],
-  }),
-  findings: many(researchFindingsTable),
-}));
+export const researchSourcesRelations = relations(
+  researchSourcesTable,
+  ({ one, many }) => ({
+    project: one(researchProjectsTable, {
+      fields: [researchSourcesTable.projectId],
+      references: [researchProjectsTable.id],
+    }),
+    findings: many(researchFindingsTable),
+  })
+);
 
-export const researchFindingsRelations = relations(researchFindingsTable, ({ one }) => ({
-  project: one(researchProjectsTable, {
-    fields: [researchFindingsTable.projectId],
-    references: [researchProjectsTable.id],
-  }),
-  source: one(researchSourcesTable, {
-    fields: [researchFindingsTable.sourceId],
-    references: [researchSourcesTable.id],
-  }),
-}));
+export const researchFindingsRelations = relations(
+  researchFindingsTable,
+  ({ one }) => ({
+    project: one(researchProjectsTable, {
+      fields: [researchFindingsTable.projectId],
+      references: [researchProjectsTable.id],
+    }),
+    source: one(researchSourcesTable, {
+      fields: [researchFindingsTable.sourceId],
+      references: [researchSourcesTable.id],
+    }),
+  })
+);
 
-export const researchReportsRelations = relations(researchReportsTable, ({ one }) => ({
-  project: one(researchProjectsTable, {
-    fields: [researchReportsTable.projectId],
-    references: [researchProjectsTable.id],
-  }),
-}));
+export const researchReportsRelations = relations(
+  researchReportsTable,
+  ({ one }) => ({
+    project: one(researchProjectsTable, {
+      fields: [researchReportsTable.projectId],
+      references: [researchProjectsTable.id],
+    }),
+  })
+);
 
 /**
  * Export the complete schema

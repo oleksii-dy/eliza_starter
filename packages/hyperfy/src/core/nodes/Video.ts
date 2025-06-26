@@ -1,6 +1,7 @@
+import { THREE } from '../extras/three';
+// Using THREE namespace types
 import { isBoolean, isNumber, isString } from 'lodash-es';
 import CustomShaderMaterial from '../libs/three-custom-shader-material';
-import * as THREE from '../extras/three';
 
 import { getRef, Node, secureRef } from './Node';
 import { uuid } from '../utils';
@@ -104,7 +105,7 @@ export class Video extends Node {
   _geometry: any;
   _width: any;
   _height: any;
-  mesh!: THREE.Mesh<any, any, THREE.Object3DEventMap>;
+  mesh!: THREE.Mesh;
   _castShadow: any;
   _receiveShadow: any;
   sItem: any;
@@ -201,7 +202,6 @@ export class Video extends Node {
 
     if (this._visible) {
       // material
-      let material;
       const vidAspect = this.instance?.width / this.instance?.height || this._aspect;
       const uniforms = {
         uMap: { value: null },
@@ -213,7 +213,7 @@ export class Video extends Node {
         uOffset: { value: new THREE.Vector2(0, 0) },
       };
       // const color = this.instance?.ready ? 'white' : this._color
-      material = new (CustomShaderMaterial as any)({
+      const material = new (CustomShaderMaterial as any)({
         baseMaterial: this._lit ? THREE.MeshStandardMaterial : THREE.MeshBasicMaterial,
         ...(this._lit ? { roughness: 1, metalness: 0 } : {}),
         // color,

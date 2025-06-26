@@ -31,7 +31,7 @@ export const startTunnelAction: Action = {
   description:
     'Start an ngrok tunnel to expose a local port to the internet. Supports action chaining by providing tunnel metadata that can be used for webhook configuration, API testing, or remote access workflows.',
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const tunnelService = runtime.getService('tunnel') as ITunnelService;
+    const tunnelService = runtime.getService<ITunnelService>('tunnel');
     if (!tunnelService) {
       return false;
     }
@@ -51,7 +51,7 @@ export const startTunnelAction: Action = {
     options?: any,
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
-    const tunnelService = runtime.getService('tunnel') as ITunnelService;
+    const tunnelService = runtime.getService<ITunnelService>('tunnel');
     if (!tunnelService) {
       elizaLogger.error('Tunnel service is not available');
       if (callback) {

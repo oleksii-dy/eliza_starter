@@ -42,7 +42,7 @@ export const updatePluginAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, _message: Memory): Promise<boolean> => {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;

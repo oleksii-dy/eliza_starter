@@ -1,5 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { logger, IAgentRuntime } from '@elizaos/core';
-import { SearchResult, ResearchSource, ResearchFinding, ResearchProject } from '../types';
+import {
+  SearchResult,
+  ResearchSource,
+  ResearchFinding,
+  ResearchProject,
+} from '../types';
 import { RelevanceScore, RelevanceAnalysis } from './relevance-analyzer';
 import fs from 'fs/promises';
 import path from 'path';
@@ -96,7 +102,9 @@ export class ResearchLogger {
     originalQuery: string,
     queryAnalysis: RelevanceAnalysis
   ): Promise<void> {
-    logger.info(`[ResearchLogger] Initializing session for project: ${projectId}`);
+    logger.info(
+      `[ResearchLogger] Initializing session for project: ${projectId}`
+    );
 
     const session: ResearchSession = {
       projectId,
@@ -138,7 +146,9 @@ export class ResearchLogger {
       return;
     }
 
-    logger.info(`[ResearchLogger] Logging search: ${query} (${results.length} results)`);
+    logger.info(
+      `[ResearchLogger] Logging search: ${query} (${results.length} results)`
+    );
 
     const searchLog: SearchLog = {
       timestamp: Date.now(),
@@ -298,7 +308,9 @@ export class ResearchLogger {
       throw new Error('Session not found');
     }
 
-    logger.info(`[ResearchLogger] Finalizing session for project: ${projectId}`);
+    logger.info(
+      `[ResearchLogger] Finalizing session for project: ${projectId}`
+    );
 
     // Calculate overall relevance
     const totalRelevanceScore = session.findingLogs.reduce(
@@ -349,16 +361,20 @@ export class ResearchLogger {
         metadata: {
           savedAt: Date.now(),
           version: '1.0',
-          description: 'Comprehensive research session log with relevance tracking',
+          description:
+            'Comprehensive research session log with relevance tracking',
         },
         analysis: {
           relevanceByPhase: {
             searchResults:
-              session.summary.relevantResults / Math.max(session.summary.totalResults, 1),
+              session.summary.relevantResults /
+              Math.max(session.summary.totalResults, 1),
             contentExtraction:
-              session.summary.successfulExtractions / Math.max(session.summary.totalSources, 1),
+              session.summary.successfulExtractions /
+              Math.max(session.summary.totalSources, 1),
             findingExtraction:
-              session.summary.relevantFindings / Math.max(session.summary.totalFindings, 1),
+              session.summary.relevantFindings /
+              Math.max(session.summary.totalFindings, 1),
           },
           bottlenecks: this.identifyBottlenecks(session),
           recommendations: this.generateTechnicalRecommendations(session),
@@ -382,11 +398,14 @@ export class ResearchLogger {
     const bottlenecks: string[] = [];
 
     const relevanceRatio =
-      session.summary.relevantResults / Math.max(session.summary.totalResults, 1);
+      session.summary.relevantResults /
+      Math.max(session.summary.totalResults, 1);
     const extractionRatio =
-      session.summary.successfulExtractions / Math.max(session.summary.totalSources, 1);
+      session.summary.successfulExtractions /
+      Math.max(session.summary.totalSources, 1);
     const findingRatio =
-      session.summary.relevantFindings / Math.max(session.summary.totalFindings, 1);
+      session.summary.relevantFindings /
+      Math.max(session.summary.totalFindings, 1);
 
     if (relevanceRatio < 0.5) {
       bottlenecks.push(
@@ -401,11 +420,15 @@ export class ResearchLogger {
     }
 
     if (findingRatio < 0.6) {
-      bottlenecks.push('Low finding relevance - improve extraction prompts or relevance filtering');
+      bottlenecks.push(
+        'Low finding relevance - improve extraction prompts or relevance filtering'
+      );
     }
 
     if (session.summary.overallRelevance < 0.7) {
-      bottlenecks.push('Overall low relevance - review entire pipeline for query alignment');
+      bottlenecks.push(
+        'Overall low relevance - review entire pipeline for query alignment'
+      );
     }
 
     return bottlenecks;
@@ -418,14 +441,19 @@ export class ResearchLogger {
     const avgResultsPerSearch =
       session.summary.totalResults / Math.max(session.summary.totalSearches, 1);
     if (avgResultsPerSearch < 10) {
-      recommendations.push('Increase search breadth - too few results per search');
+      recommendations.push(
+        'Increase search breadth - too few results per search'
+      );
     }
 
     // Finding quality recommendations
     const avgFindingsPerSource =
-      session.summary.totalFindings / Math.max(session.summary.successfulExtractions, 1);
+      session.summary.totalFindings /
+      Math.max(session.summary.successfulExtractions, 1);
     if (avgFindingsPerSource < 2) {
-      recommendations.push('Improve finding extraction - too few findings per source');
+      recommendations.push(
+        'Improve finding extraction - too few findings per source'
+      );
     }
 
     // Relevance recommendations

@@ -103,12 +103,13 @@ describe('entities', () => {
       mockRuntime.useModel = mock().mockResolvedValue('mocked model response');
       mockRuntime.getEntityById = mock().mockResolvedValue(mockEntity);
 
-      // Mock the parseJSONObjectFromText to return the expected resolution
-      const parseJSONSpy = spyOn(utils, 'parseJSONObjectFromText');
-      parseJSONSpy.mockReturnValue({
+      // Mock the parseKeyValueXml to return the expected resolution
+      const parseXmlSpy = spyOn(utils, 'parseKeyValueXml');
+      parseXmlSpy.mockReturnValue({
         type: 'EXACT_MATCH',
         entityId: 'entity-123',
-        matches: [{ name: 'Alice', reason: 'Exact match found' }],
+        matchName: 'Alice',
+        matchReason: 'Exact match found',
       });
 
       const result = await findEntityByName(mockRuntime, mockMemory, mockState);
@@ -116,7 +117,7 @@ describe('entities', () => {
       expect(result).toEqual(mockEntity);
       expect(mockRuntime.getRoom).toHaveBeenCalledWith('room-789');
       expect(mockRuntime.getEntitiesForRoom).toHaveBeenCalledWith('room-789', true);
-      parseJSONSpy.mockRestore();
+      parseXmlSpy.mockRestore();
     });
 
     it('should return null when room not found', async () => {
@@ -308,12 +309,13 @@ describe('entities', () => {
       );
       mockRuntime.getEntityById = mock().mockResolvedValue(mockEntityWithComponents);
 
-      // Mock parseJSONObjectFromText to return proper resolution
-      const parseJSONSpy = spyOn(utils, 'parseJSONObjectFromText');
-      parseJSONSpy.mockReturnValue({
+      // Mock parseKeyValueXml to return proper resolution
+      const parseXmlSpy = spyOn(utils, 'parseKeyValueXml');
+      parseXmlSpy.mockReturnValue({
         entityId: 'entity-exact',
         type: 'EXACT_MATCH',
-        matches: [{ name: 'ExactMatch', reason: 'Exact ID match' }],
+        matchName: 'ExactMatch',
+        matchReason: 'Exact ID match',
       });
 
       const result = await findEntityByName(mockRuntime, mockMemory, mockState);
@@ -322,7 +324,7 @@ describe('entities', () => {
       expect(result?.id).toBe('entity-exact' as UUID);
       // Verify getEntityById was called (covers lines 274-282)
       expect(mockRuntime.getEntityById).toHaveBeenCalledWith('entity-exact');
-      parseJSONSpy.mockRestore();
+      parseXmlSpy.mockRestore();
     });
 
     it('should find entity by username in components', async () => {
@@ -364,18 +366,19 @@ describe('entities', () => {
         })
       );
 
-      // Mock parseJSONObjectFromText
-      const parseJSONSpy = spyOn(utils, 'parseJSONObjectFromText');
-      parseJSONSpy.mockReturnValue({
+      // Mock parseKeyValueXml
+      const parseXmlSpy = spyOn(utils, 'parseKeyValueXml');
+      parseXmlSpy.mockReturnValue({
         type: 'USERNAME_MATCH',
-        matches: [{ name: 'johndoe123', reason: 'Username match' }],
+        matchName: 'johndoe123',
+        matchReason: 'Username match',
       });
 
       const result = await findEntityByName(mockRuntime, mockMemory, mockState);
 
       expect(result).toBeDefined();
       expect(result?.id).toBe('entity-user' as UUID);
-      parseJSONSpy.mockRestore();
+      parseXmlSpy.mockRestore();
     });
 
     it('should find entity by handle in components', async () => {
@@ -417,18 +420,19 @@ describe('entities', () => {
         })
       );
 
-      // Mock parseJSONObjectFromText
-      const parseJSONSpy = spyOn(utils, 'parseJSONObjectFromText');
-      parseJSONSpy.mockReturnValue({
+      // Mock parseKeyValueXml
+      const parseXmlSpy = spyOn(utils, 'parseKeyValueXml');
+      parseXmlSpy.mockReturnValue({
         type: 'USERNAME_MATCH',
-        matches: [{ name: '@janesmith', reason: 'Handle match' }],
+        matchName: '@janesmith',
+        matchReason: 'Handle match',
       });
 
       const result = await findEntityByName(mockRuntime, mockMemory, mockState);
 
       expect(result).toBeDefined();
       expect(result?.id).toBe('entity-handle' as UUID);
-      parseJSONSpy.mockRestore();
+      parseXmlSpy.mockRestore();
     });
   });
 

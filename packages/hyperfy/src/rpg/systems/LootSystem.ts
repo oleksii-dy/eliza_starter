@@ -9,7 +9,7 @@ import {
   ItemDrop,
   LootEntry,
   ItemStack
-} from '../types';
+} from '../types/index';
 import { LootTableManager } from './loot/LootTableManager';
 import { DropCalculator } from './loot/DropCalculator';
 import { ItemRegistry } from './inventory/ItemRegistry';
@@ -180,6 +180,28 @@ export class LootSystem extends System {
     // Store in our map
     this.lootDrops.set(lootId, lootComponent);
 
+    // Create actual world entity for the loot drop (for tests and world interaction)
+    const lootEntity = {
+      id: lootId,
+      type: 'loot',
+      position: config.position,
+      items: stackedItems,
+      owner: config.owner,
+      spawnTime: Date.now(),
+      source: config.source,
+      getComponent: (type: string) => {
+        if (type === 'loot') {return lootComponent;}
+        return null;
+      }
+    };
+
+    // Add to world entities
+    if (this.world.entities.items instanceof Map) {
+      this.world.entities.items.set(lootId, lootEntity as any);
+    } else if (this.world.entities.set) {
+      this.world.entities.set(lootId, lootEntity as any);
+    }
+
     // Emit event
     this.world.events.emit('loot:spawned', {
       lootId,
@@ -303,18 +325,22 @@ export class LootSystem extends System {
    * Stack similar items
    */
   private stackItems(items: LootDrop[]): LootDrop[] {
-    const stacked: Map<number, LootDrop> = new Map();
+    if (!items || !Array.isArray(items)) {
+      return [];
+    }
+
+    const stacked: { [key: number]: LootDrop } = {};
 
     for (const item of items) {
-      const existing = stacked.get(item.itemId);
+      const existing = stacked[item.itemId];
       if (existing) {
         existing.quantity += item.quantity;
       } else {
-        stacked.set(item.itemId, { ...item });
+        stacked[item.itemId] = { ...item };
       }
     }
 
-    return Array.from(stacked.values());
+    return Object.values(stacked);
   }
 
   /**
@@ -323,8 +349,14 @@ export class LootSystem extends System {
   private getLootTableId(entity: RPGEntity): string | null {
     // Check NPC component
     const npc = entity.getComponent<any>('npc');
-    if (npc && npc.lootTable) {
-      return npc.lootTable;
+    if (npc) {
+      // Check both lootTable and dropTable for compatibility
+      if (npc.lootTable) {
+        return npc.lootTable;
+      }
+      if (npc.dropTable) {
+        return npc.dropTable;
+      }
     }
 
     // Check entity type
@@ -570,8 +602,44 @@ export class LootSystem extends System {
 
     const drops: ItemDrop[] = [];
 
+    // Process new format drops (primary format)
+    if (lootTable.drops && lootTable.drops.length > 0) {
+      for (const drop of lootTable.drops) {
+        // Roll for this drop based on rarity
+        let shouldDrop = false;
+
+        switch (drop.rarity) {
+          case 'always':
+            shouldDrop = true;
+            break;
+          case 'common':
+            shouldDrop = Math.random() < 0.5; // 50% chance
+            break;
+          case 'uncommon':
+            shouldDrop = Math.random() < 0.1; // 10% chance
+            break;
+          case 'rare':
+            shouldDrop = Math.random() < 0.01; // 1% chance
+            break;
+          case 'very_rare':
+            shouldDrop = Math.random() < 0.001; // 0.1% chance
+            break;
+          default:
+            shouldDrop = Math.random() < (drop.weight / 100); // Weight-based
+        }
+
+        if (shouldDrop) {
+          drops.push({
+            itemId: drop.itemId,
+            quantity: drop.quantity,
+            noted: false
+          });
+        }
+      }
+    }
+
     // Process always drops (backward compatibility)
-    if (lootTable.alwaysDrops) {
+    else if (lootTable.alwaysDrops) {
       for (const drop of lootTable.alwaysDrops) {
         drops.push({
           itemId: drop.itemId,

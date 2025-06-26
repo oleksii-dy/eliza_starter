@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import axios, { AxiosError } from 'axios';
 import { SearchResult } from '../../types';
 import { logger } from '@elizaos/core';
@@ -197,12 +198,15 @@ export class NPMSearchProvider {
 
   private async getPackageDetails(packageName: string): Promise<any | null> {
     try {
-      const response = await axios.get(`${this.registryUrl}/${encodeURIComponent(packageName)}`, {
-        headers: {
-          'User-Agent': 'ElizaOS-Research-Agent/1.0',
-        },
-        timeout: 5000,
-      });
+      const response = await axios.get(
+        `${this.registryUrl}/${encodeURIComponent(packageName)}`,
+        {
+          headers: {
+            'User-Agent': 'ElizaOS-Research-Agent/1.0',
+          },
+          timeout: 5000,
+        }
+      );
 
       return NPMPackageSchema.parse(response.data);
     } catch (error) {
@@ -273,7 +277,8 @@ export class NPMSearchProvider {
     return {
       title: `${pkg.name} v${pkg.version}`,
       url: packageUrl,
-      snippet: description.substring(0, 300) + (description.length > 300 ? '...' : ''),
+      snippet:
+        description.substring(0, 300) + (description.length > 300 ? '...' : ''),
       content: description + qualityInfo,
       score: score.final,
       provider: 'npm',
@@ -329,7 +334,10 @@ export class NPMSearchProvider {
   /**
    * Search for packages by scope (e.g., @types, @angular)
    */
-  async searchByScope(scope: string, maxResults?: number): Promise<SearchResult[]> {
+  async searchByScope(
+    scope: string,
+    maxResults?: number
+  ): Promise<SearchResult[]> {
     const query = `scope:${scope}`;
     return this.search(query, maxResults);
   }
@@ -337,7 +345,10 @@ export class NPMSearchProvider {
   /**
    * Search for packages by maintainer
    */
-  async searchByMaintainer(maintainer: string, maxResults?: number): Promise<SearchResult[]> {
+  async searchByMaintainer(
+    maintainer: string,
+    maxResults?: number
+  ): Promise<SearchResult[]> {
     const query = `maintainer:${maintainer}`;
     return this.search(query, maxResults);
   }
@@ -345,7 +356,10 @@ export class NPMSearchProvider {
   /**
    * Search for packages with specific keywords
    */
-  async searchByKeywords(keywords: string[], maxResults?: number): Promise<SearchResult[]> {
+  async searchByKeywords(
+    keywords: string[],
+    maxResults?: number
+  ): Promise<SearchResult[]> {
     const query = `keywords:${keywords.join(',')}`;
     return this.search(query, maxResults);
   }
@@ -353,7 +367,10 @@ export class NPMSearchProvider {
   /**
    * Get trending/popular packages in a category
    */
-  async getTrendingPackages(category?: string, maxResults?: number): Promise<SearchResult[]> {
+  async getTrendingPackages(
+    category?: string,
+    maxResults?: number
+  ): Promise<SearchResult[]> {
     let query = 'boost-exact:false';
     if (category) {
       query += ` ${category}`;

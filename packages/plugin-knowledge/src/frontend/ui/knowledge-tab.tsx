@@ -541,6 +541,7 @@ export function KnowledgeTab({ agentId }: { agentId: UUID }) {
   };
 
   const handleDelete = (knowledgeId: string) => {
+    // eslint-disable-next-line no-alert
     if (knowledgeId && window.confirm('Are you sure you want to delete this document?')) {
       deleteKnowledgeDoc({ knowledgeId: knowledgeId as UUID });
       setViewingContent(null);
@@ -576,7 +577,7 @@ export function KnowledgeTab({ agentId }: { agentId: UUID }) {
       setUrls([...urls, urlInput]);
       setUrlInput('');
       setUrlError(null);
-    } catch (e) {
+    } catch (_e) {
       setUrlError('Invalid URL');
     }
   };
@@ -593,7 +594,7 @@ export function KnowledgeTab({ agentId }: { agentId: UUID }) {
         if (url.protocol.startsWith('http') && !urls.includes(urlInput)) {
           setUrls([...urls, urlInput]);
         }
-      } catch (e) {
+      } catch (_e) {
         // If the input is not a valid URL, just ignore it
       }
     }
@@ -861,7 +862,7 @@ export function KnowledgeTab({ agentId }: { agentId: UUID }) {
   const MemoryDetails = ({ memory }: { memory: Memory }) => {
     const metadata = memory.metadata as MemoryMetadata;
     const isFragment = metadata?.type === 'fragment';
-    const isDocument = metadata?.type === 'document';
+    const _isDocument = metadata?.type === 'document';
 
     return (
       <div className="border-t border-border bg-card text-card-foreground h-full flex flex-col">

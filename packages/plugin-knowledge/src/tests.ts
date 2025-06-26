@@ -10,8 +10,8 @@ import type {
   State,
   TestSuite,
   UUID,
-  MemoryMetadata,
-  TestCase,
+  MemoryMetadata as _MemoryMetadata,
+  TestCase as _TestCase,
 } from '@elizaos/core';
 import { MemoryType, ModelType } from '@elizaos/core';
 import { Buffer } from 'buffer';
@@ -98,7 +98,7 @@ function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRuntime {
   const memories: Map<UUID, Memory> = new Map();
   const services: Map<string, Service> = new Map();
 
-  return {
+  const runtime = {
     agentId: uuidv4() as UUID,
     character: {
       name: 'Test Agent',
@@ -119,48 +119,48 @@ function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRuntime {
       return null as any;
     },
 
-    async getAgent(agentId: UUID) {
+    async getAgent(_agentId: UUID) {
       return null;
     },
     async getAgents() {
       return [];
     },
-    async createAgent(agent: any) {
+    async createAgent(_agent: any) {
       return true;
     },
-    async updateAgent(agentId: UUID, agent: any) {
+    async updateAgent(_agentId: UUID, _agent: any) {
       return true;
     },
-    async deleteAgent(agentId: UUID) {
+    async deleteAgent(_agentId: UUID) {
       return true;
     },
     async ensureAgentExists(agent: any) {
       return agent as any;
     },
-    async ensureEmbeddingDimension(dimension: number) {},
+    async ensureEmbeddingDimension(_dimension: number) {},
 
-    async getEntityById(entityId: UUID) {
+    async getEntityById(_entityId: UUID) {
       return null;
     },
-    async getEntitiesForRoom(roomId: UUID) {
+    async getEntitiesForRoom(_roomId: UUID) {
       return [];
     },
-    async createEntity(entity: any) {
+    async createEntity(_entity: any) {
       return true;
     },
-    async updateEntity(entity: any) {},
+    async updateEntity(_entity: any) {},
 
-    async getComponent(entityId: UUID, type: string) {
+    async getComponent(_entityId: UUID, _type: string) {
       return null;
     },
-    async getComponents(entityId: UUID) {
+    async getComponents(_entityId: UUID) {
       return [];
     },
-    async createComponent(component: any) {
+    async createComponent(_component: any) {
       return true;
     },
-    async updateComponent(component: any) {},
-    async deleteComponent(componentId: UUID) {},
+    async updateComponent(_component: any) {},
+    async deleteComponent(_componentId: UUID) {},
 
     // Memory methods with mock implementation
     async getMemoryById(id: UUID) {
@@ -209,7 +209,7 @@ function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRuntime {
         .slice(0, params.count || 10);
     },
 
-    async createMemory(memory: Memory, tableName: string) {
+    async createMemory(memory: Memory, _tableName: string) {
       const id = memory.id || (uuidv4() as UUID);
       const memoryWithId = { ...memory, id };
       memories.set(id, memoryWithId);
@@ -228,7 +228,7 @@ function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRuntime {
       memories.delete(memoryId);
     },
 
-    async deleteAllMemories(roomId: UUID, tableName: string) {
+    async deleteAllMemories(roomId: UUID, _tableName: string) {
       for (const [id, memory] of memories.entries()) {
         if (memory.roomId === roomId) {
           memories.delete(id);
@@ -241,104 +241,104 @@ function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRuntime {
     },
 
     // Other required methods with minimal implementation
-    async getCachedEmbeddings(params: any) {
+    async getCachedEmbeddings(_params: any) {
       return [];
     },
-    async log(params: any) {},
-    async getLogs(params: any) {
+    async log(_params: any) {},
+    async getLogs(_params: any) {
       return [];
     },
-    async deleteLog(logId: UUID) {},
+    async deleteLog(_logId: UUID) {},
 
-    async createWorld(world: any) {
+    async createWorld(_world: any) {
       return uuidv4() as UUID;
     },
-    async getWorld(id: UUID) {
+    async getWorld(_id: UUID) {
       return null;
     },
-    async removeWorld(id: UUID) {},
+    async removeWorld(_id: UUID) {},
     async getAllWorlds() {
       return [];
     },
-    async updateWorld(world: any) {},
+    async updateWorld(_world: any) {},
 
-    async getRoom(roomId: UUID) {
+    async getRoom(_roomId: UUID) {
       return null;
     },
-    async createRoom(room: any) {
+    async createRoom(_room: any) {
       return uuidv4() as UUID;
     },
-    async deleteRoom(roomId: UUID) {},
-    async deleteRoomsByWorldId(worldId: UUID) {},
-    async updateRoom(room: any) {},
-    async getRoomsForParticipant(entityId: UUID) {
+    async deleteRoom(_roomId: UUID) {},
+    async deleteRoomsByWorldId(_worldId: UUID) {},
+    async updateRoom(_room: any) {},
+    async getRoomsForParticipant(_entityId: UUID) {
       return [];
     },
-    async getRoomsForParticipants(userIds: UUID[]) {
+    async getRoomsForParticipants(_userIds: UUID[]) {
       return [];
     },
-    async getRooms(worldId: UUID) {
+    async getRooms(_worldId: UUID) {
       return [];
     },
 
-    async addParticipant(entityId: UUID, roomId: UUID) {
+    async addParticipant(_entityId: UUID, _roomId: UUID) {
       return true;
     },
-    async removeParticipant(entityId: UUID, roomId: UUID) {
+    async removeParticipant(_entityId: UUID, _roomId: UUID) {
       return true;
     },
-    async getParticipantsForEntity(entityId: UUID) {
+    async getParticipantsForEntity(_entityId: UUID) {
       return [];
     },
-    async getParticipantsForRoom(roomId: UUID) {
+    async getParticipantsForRoom(_roomId: UUID) {
       return [];
     },
-    async getParticipantUserState(roomId: UUID, entityId: UUID) {
+    async getParticipantUserState(_roomId: UUID, _entityId: UUID) {
       return null;
     },
-    async setParticipantUserState(roomId: UUID, entityId: UUID, state: any) {},
+    async setParticipantUserState(_roomId: UUID, _entityId: UUID, _state: any) {},
 
-    async createRelationship(params: any) {
+    async createRelationship(_params: any) {
       return true;
     },
-    async updateRelationship(relationship: any) {},
-    async getRelationship(params: any) {
+    async updateRelationship(_relationship: any) {},
+    async getRelationship(_params: any) {
       return null;
     },
-    async getRelationships(params: any) {
+    async getRelationships(_params: any) {
       return [];
     },
 
-    async getCache(key: string) {
+    async getCache(_key: string) {
       return undefined;
     },
-    async setCache(key: string, value: any) {
+    async setCache(_key: string, _value: any) {
       return true;
     },
-    async deleteCache(key: string) {
+    async deleteCache(_key: string) {
       return true;
     },
 
-    async createTask(task: any) {
+    async createTask(_task: any) {
       return uuidv4() as UUID;
     },
-    async getTasks(params: any) {
+    async getTasks(_params: any) {
       return [];
     },
-    async getTask(id: UUID) {
+    async getTask(_id: UUID) {
       return null;
     },
-    async getTasksByName(name: string) {
+    async getTasksByName(_name: string) {
       return [];
     },
-    async updateTask(id: UUID, task: any) {},
-    async deleteTask(id: UUID) {},
-    async getMemoriesByWorldId(params: any) {
+    async updateTask(_id: UUID, _task: any) {},
+    async deleteTask(_id: UUID) {},
+    async getMemoriesByWorldId(_params: any) {
       return [];
     },
 
     // Plugin/service methods
-    async registerPlugin(plugin: Plugin) {},
+    async registerPlugin(_plugin: Plugin) {},
     async initialize() {},
 
     getService<T extends Service>(name: string): T | null {
@@ -350,36 +350,36 @@ function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRuntime {
     },
 
     async registerService(ServiceClass: typeof Service) {
-      const service = await ServiceClass.start(this);
+      const service = await ServiceClass.start(runtime);
       services.set((ServiceClass as any).serviceType, service);
     },
 
-    registerDatabaseAdapter(adapter: any) {},
-    setSetting(key: string, value: any) {},
-    getSetting(key: string) {
+    registerDatabaseAdapter(_adapter: any) {},
+    setSetting(_key: string, _value: any) {},
+    getSetting(_key: string) {
       return null;
     },
     getConversationLength() {
       return 0;
     },
 
-    async processActions(message: Memory, responses: Memory[]) {},
-    async evaluate(message: Memory) {
+    async processActions(_message: Memory, _responses: Memory[]) {},
+    async evaluate(_message: Memory) {
       return null;
     },
 
     registerProvider(provider: Provider) {
-      this.providers.push(provider);
+      runtime.providers.push(provider);
     },
-    registerAction(action: any) {},
-    registerEvaluator(evaluator: any) {},
+    registerAction(_action: any) {},
+    registerEvaluator(_evaluator: any) {},
 
-    async ensureConnection(params: any) {},
-    async ensureParticipantInRoom(entityId: UUID, roomId: UUID) {},
-    async ensureWorldExists(world: any) {},
-    async ensureRoomExists(room: any) {},
+    async ensureConnection(_params: any) {},
+    async ensureParticipantInRoom(_entityId: UUID, _roomId: UUID) {},
+    async ensureWorldExists(_world: any) {},
+    async ensureRoomExists(_room: any) {},
 
-    async composeState(message: Memory) {
+    async composeState(_message: Memory) {
       return {
         values: {},
         data: {},
@@ -400,36 +400,38 @@ function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRuntime {
       return null as any;
     },
 
-    registerModel(modelType: any, handler: any, provider: string) {},
-    getModel(modelType: any) {
+    registerModel(_modelType: any, _handler: any, _provider: string) {},
+    getModel(_modelType: any) {
       return undefined;
     },
 
-    registerEvent(event: string, handler: any) {},
-    getEvent(event: string) {
+    registerEvent(_event: string, _handler: any) {},
+    getEvent(_event: string) {
       return undefined;
     },
-    async emitEvent(event: string, params: any) {},
+    async emitEvent(_event: string, _params: any) {},
 
-    registerTaskWorker(taskHandler: any) {},
-    getTaskWorker(name: string) {
+    registerTaskWorker(_taskHandler: any) {},
+    getTaskWorker(_name: string) {
       return undefined;
     },
 
     async stop() {},
 
     async addEmbeddingToMemory(memory: Memory) {
-      memory.embedding = await this.useModel(ModelType.TEXT_EMBEDDING, {
+      memory.embedding = await runtime.useModel(ModelType.TEXT_EMBEDDING, {
         text: memory.content.text,
       });
       return memory;
     },
 
-    registerSendHandler(source: string, handler: any) {},
-    async sendMessageToTarget(target: any, content: Content) {},
+    registerSendHandler(_source: string, _handler: any) {},
+    async sendMessageToTarget(_target: any, _content: Content) {},
 
     ...overrides,
-  } as IAgentRuntime;
+  } as unknown as IAgentRuntime;
+
+  return runtime;
 }
 
 /**
@@ -582,7 +584,7 @@ export class KnowledgeTestSuite implements TestSuite {
     // Document Processing Tests
     {
       name: 'Should extract text from text files',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const testContent = 'This is a test document with some content.';
         const buffer = createTestFileBuffer(testContent);
 
@@ -596,7 +598,7 @@ export class KnowledgeTestSuite implements TestSuite {
 
     {
       name: 'Should handle empty file buffer',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         const emptyBuffer = Buffer.alloc(0);
 
         try {
@@ -803,7 +805,7 @@ export class KnowledgeTestSuite implements TestSuite {
 
         // Mock the getKnowledge method to return predictable results
         const originalGetKnowledge = service.getKnowledge.bind(service);
-        service.getKnowledge = async (msg: Memory) => {
+        service.getKnowledge = async (_msg: Memory) => {
           return [
             {
               id: uuidv4() as UUID,
@@ -848,7 +850,7 @@ export class KnowledgeTestSuite implements TestSuite {
     // Character Knowledge Tests
     {
       name: 'Should process character knowledge on startup',
-      fn: async (runtime: IAgentRuntime) => {
+      fn: async (_runtime: IAgentRuntime) => {
         // Create runtime with character knowledge
         const knowledgeRuntime = createMockRuntime({
           character: {

@@ -39,7 +39,7 @@ export function testModelCommand(program: Command) {
           elizaLogger.info(`📊 Job ID: ${job.id}`);
           elizaLogger.info(`📊 Status: ${job.status}`);
           elizaLogger.info(`📊 Base Model: ${job.model}`);
-          elizaLogger.info(`📊 Created: ${job.createdAt.toISOString()}`);
+          elizaLogger.info(`📊 Created: ${job.createdAt?.toISOString() || 'Unknown'}`);
 
           if (job.finishedAt) {
             elizaLogger.info(`📊 Finished: ${job.finishedAt.toISOString()}`);

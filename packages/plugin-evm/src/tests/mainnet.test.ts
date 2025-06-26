@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeAll, beforeEach, mock } from 'bun:test';
-import { parseEther, formatEther, parseUnits, formatUnits, encodeFunctionData } from 'viem';
-import type { Address } from 'viem';
+import {
+  type Address,
+  parseEther,
+  formatEther,
+  parseUnits,
+  formatUnits,
+  encodeFunctionData,
+} from 'viem';
 
 import { WalletProvider } from '../providers/wallet';
 import { TransferAction } from '../actions/transfer';
@@ -18,8 +24,6 @@ import {
 // Skip these tests unless explicitly running mainnet tests
 const MAINNET_TEST_ENABLED = process.env.RUN_MAINNET_TESTS === 'true';
 const MAINNET_PRIVATE_KEY = process.env.MAINNET_TEST_PRIVATE_KEY;
-
-
 
 // Mock cache manager
 const mockCacheManager = {
@@ -192,7 +196,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
             results.push({ token, success: false, reason: 'No balance' });
           }
         } catch (error) {
-          results.push({ token, success: false, error });
+          results.push({ token, success: false, error: error });
         }
       }
 
@@ -295,10 +299,10 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
   });
 
   describe('Bridge Action - Mainnet', () => {
-    let bridgeAction: BridgeAction;
+    let _bridgeAction: BridgeAction;
 
     beforeEach(() => {
-      bridgeAction = new BridgeAction(wp);
+      _bridgeAction = new BridgeAction(wp);
     });
 
     it('should get bridge quote from Ethereum to Arbitrum', async () => {
@@ -351,10 +355,10 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
   });
 
   describe('Governance Actions - Mainnet', () => {
-    let voteAction: VoteAction;
+    let _voteAction: VoteAction;
 
     beforeEach(() => {
-      voteAction = new VoteAction(wp);
+      _voteAction = new VoteAction(wp);
     });
 
     it('should read from Compound Governor', async () => {

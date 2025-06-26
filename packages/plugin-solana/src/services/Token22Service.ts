@@ -92,7 +92,7 @@ export class Token22Service extends Service {
 
   private getKeyManager(): SecureKeyManager {
     if (!this.keyManager) {
-      this.keyManager = this.runtime.getService('secure-key-manager') as SecureKeyManager;
+      this.keyManager = this.runtime.getService<SecureKeyManager>('secure-key-manager');
       if (!this.keyManager) {
         throw new Error('SecureKeyManager service not available');
       }

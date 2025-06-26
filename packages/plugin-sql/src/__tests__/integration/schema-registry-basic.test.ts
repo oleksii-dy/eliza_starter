@@ -2,13 +2,12 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from 'bun:test';
 import { createIsolatedTestDatabase } from '../test-helpers';
 import { v4 as uuidv4 } from 'uuid';
 import { type UUID } from '@elizaos/core';
-import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
 import { schemaRegistry, type TableSchema } from '../../schema-registry';
 import { sql } from 'drizzle-orm';
 
 describe('Schema Registry Basic Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
 
@@ -84,7 +83,7 @@ describe('Schema Registry Basic Tests', () => {
       schemaRegistry.registerTable(basicSchema);
 
       const db = adapter.getDatabase();
-      const dbType = adapter instanceof PgliteDatabaseAdapter ? 'pglite' : 'postgres';
+      const dbType = 'postgres';
 
       // Should create table without throwing
       await expect(async () => {
@@ -138,7 +137,7 @@ describe('Schema Registry Basic Tests', () => {
       schemaRegistry.registerTable(vectorSchema);
 
       const db = adapter.getDatabase();
-      const dbType = adapter instanceof PgliteDatabaseAdapter ? 'pglite' : 'postgres';
+      const dbType = 'postgres';
 
       // Should create table regardless of vector support
       await expect(async () => {

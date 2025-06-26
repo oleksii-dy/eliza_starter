@@ -5,7 +5,7 @@ import {
   type TrustCalculationConfig,
   type TrustProfile,
   type TrustDimensions,
-  type TrustEvidence
+  type TrustEvidence,
 } from '../types/trust';
 
 /**
@@ -20,8 +20,8 @@ export class TrustCalculator {
   }
 
   /**
-     * Calculate trust dimensions from evidence
-     */
+   * Calculate trust dimensions from evidence
+   */
   calculateDimensions(evidence: TrustEvidence[]): TrustDimensions {
     // Initialize dimensions with baseline values
     const dimensions: TrustDimensions = {
@@ -29,7 +29,7 @@ export class TrustCalculator {
       competence: 50,
       integrity: 50,
       benevolence: 50,
-      transparency: 50
+      transparency: 50,
     };
 
     // Group evidence by type for analysis
@@ -50,8 +50,8 @@ export class TrustCalculator {
   }
 
   /**
-     * Calculate overall trust score from dimensions
-     */
+   * Calculate overall trust score from dimensions
+   */
   calculateOverallTrust(dimensions: TrustDimensions): number {
     const weights = this.config.dimensionWeights;
 
@@ -68,8 +68,8 @@ export class TrustCalculator {
   }
 
   /**
-     * Calculate confidence in the trust score
-     */
+   * Calculate confidence in the trust score
+   */
   calculateConfidence(evidence: TrustEvidence[]): number {
     // Factors that influence confidence:
     // 1. Amount of evidence
@@ -84,25 +84,26 @@ export class TrustCalculator {
 
     // Weighted combination of factors
     const confidence =
-            amountFactor * 0.25 +
-            recencyFactor * 0.25 +
-            consistencyFactor * 0.35 +
-            verificationFactor * 0.15;
+      amountFactor * 0.25 +
+      recencyFactor * 0.25 +
+      consistencyFactor * 0.35 +
+      verificationFactor * 0.15;
 
     return Math.min(1, Math.max(0, confidence));
   }
 
   /**
-     * Calculate reliability dimension
-     * Based on: promise keeping, consistent behavior, meeting deadlines
-     */
+   * Calculate reliability dimension
+   * Based on: promise keeping, consistent behavior, meeting deadlines
+   */
   private calculateReliability(evidenceByType: Map<TrustEvidenceType, TrustEvidence[]>): number {
     let score = 50; // Start at neutral
 
     const promisesKept = evidenceByType.get('PROMISE_KEPT' as TrustEvidenceType) || [];
     const promisesBroken = evidenceByType.get('PROMISE_BROKEN' as TrustEvidenceType) || [];
     const consistentBehavior = evidenceByType.get('CONSISTENT_BEHAVIOR' as TrustEvidenceType) || [];
-    const inconsistentBehavior = evidenceByType.get('INCONSISTENT_BEHAVIOR' as TrustEvidenceType) || [];
+    const inconsistentBehavior =
+      evidenceByType.get('INCONSISTENT_BEHAVIOR' as TrustEvidenceType) || [];
 
     // Calculate promise keeping ratio
     const totalPromises = promisesKept.length + promisesBroken.length;
@@ -119,16 +120,18 @@ export class TrustCalculator {
   }
 
   /**
-     * Calculate competence dimension
-     * Based on: successful actions, helpful contributions, verified skills
-     */
+   * Calculate competence dimension
+   * Based on: successful actions, helpful contributions, verified skills
+   */
   private calculateCompetence(evidenceByType: Map<TrustEvidenceType, TrustEvidence[]>): number {
     let score = 50;
 
     const helpfulActions = evidenceByType.get('HELPFUL_ACTION' as TrustEvidenceType) || [];
-    const successfulTransactions = evidenceByType.get('SUCCESSFUL_TRANSACTION' as TrustEvidenceType) || [];
+    const successfulTransactions =
+      evidenceByType.get('SUCCESSFUL_TRANSACTION' as TrustEvidenceType) || [];
     const verifiedIdentity = evidenceByType.get('VERIFIED_IDENTITY' as TrustEvidenceType) || [];
-    const communityContributions = evidenceByType.get('COMMUNITY_CONTRIBUTION' as TrustEvidenceType) || [];
+    const communityContributions =
+      evidenceByType.get('COMMUNITY_CONTRIBUTION' as TrustEvidenceType) || [];
 
     // Weight different types of competence evidence
     score += helpfulActions.length * 3;
@@ -141,9 +144,9 @@ export class TrustCalculator {
   }
 
   /**
-     * Calculate integrity dimension
-     * Based on: honest behavior, following rules, ethical actions
-     */
+   * Calculate integrity dimension
+   * Based on: honest behavior, following rules, ethical actions
+   */
   private calculateIntegrity(evidenceByType: Map<TrustEvidenceType, TrustEvidence[]>): number {
     let score = 50;
 
@@ -162,15 +165,16 @@ export class TrustCalculator {
   }
 
   /**
-     * Calculate benevolence dimension
-     * Based on: helping others, positive interactions, community support
-     */
+   * Calculate benevolence dimension
+   * Based on: helping others, positive interactions, community support
+   */
   private calculateBenevolence(evidenceByType: Map<TrustEvidenceType, TrustEvidence[]>): number {
     let score = 50;
 
     const helpfulActions = evidenceByType.get('HELPFUL_ACTION' as TrustEvidenceType) || [];
     const harmfulActions = evidenceByType.get('HARMFUL_ACTION' as TrustEvidenceType) || [];
-    const communityContributions = evidenceByType.get('COMMUNITY_CONTRIBUTION' as TrustEvidenceType) || [];
+    const communityContributions =
+      evidenceByType.get('COMMUNITY_CONTRIBUTION' as TrustEvidenceType) || [];
 
     // Positive actions increase benevolence
     score += helpfulActions.reduce((sum, ev) => sum + (ev.impact > 0 ? ev.impact : 0), 0) / 10;
@@ -183,9 +187,9 @@ export class TrustCalculator {
   }
 
   /**
-     * Calculate transparency dimension
-     * Based on: open communication, identity verification, consistent identity
-     */
+   * Calculate transparency dimension
+   * Based on: open communication, identity verification, consistent identity
+   */
   private calculateTransparency(evidenceByType: Map<TrustEvidenceType, TrustEvidence[]>): number {
     let score = 50;
 
@@ -204,14 +208,17 @@ export class TrustCalculator {
   }
 
   /**
-     * Apply time decay to dimensions based on evidence age
-     */
+   * Apply time decay to dimensions based on evidence age
+   */
   private applyTimeDecay(dimensions: TrustDimensions, evidence: TrustEvidence[]): TrustDimensions {
-    if (evidence.length === 0) {return dimensions;}
+    if (evidence.length === 0) {
+      return dimensions;
+    }
 
     // Calculate average age of evidence
     const now = Date.now();
-    const averageAge = evidence.reduce((sum, ev) => sum + (now - ev.timestamp), 0) / evidence.length;
+    const averageAge =
+      evidence.reduce((sum, ev) => sum + (now - ev.timestamp), 0) / evidence.length;
     const ageInDays = averageAge / (24 * 60 * 60 * 1000);
 
     // Apply exponential decay
@@ -220,16 +227,15 @@ export class TrustCalculator {
     // Blend current scores with baseline based on decay
     const decayed: TrustDimensions = { ...dimensions };
     for (const [key, value] of Object.entries(dimensions)) {
-      decayed[key as keyof TrustDimensions] =
-                value * decayFactor + 50 * (1 - decayFactor);
+      decayed[key as keyof TrustDimensions] = value * decayFactor + 50 * (1 - decayFactor);
     }
 
     return decayed;
   }
 
   /**
-     * Group evidence by type for easier analysis
-     */
+   * Group evidence by type for easier analysis
+   */
   private groupEvidenceByType(evidence: TrustEvidence[]): Map<TrustEvidenceType, TrustEvidence[]> {
     const grouped = new Map<TrustEvidenceType, TrustEvidence[]>();
 
@@ -243,8 +249,8 @@ export class TrustCalculator {
   }
 
   /**
-     * Normalize dimensions to ensure they're in 0-100 range
-     */
+   * Normalize dimensions to ensure they're in 0-100 range
+   */
   private normalizeDimensions(dimensions: TrustDimensions): TrustDimensions {
     const normalized: TrustDimensions = { ...dimensions };
 
@@ -256,29 +262,35 @@ export class TrustCalculator {
   }
 
   /**
-     * Calculate confidence based on amount of evidence
-     */
+   * Calculate confidence based on amount of evidence
+   */
   private calculateAmountConfidence(count: number): number {
     // Logarithmic growth - more evidence increases confidence but with diminishing returns
-    if (count === 0) {return 0;}
-    if (count >= this.config.minimumEvidenceCount * 5) {return 1;}
+    if (count === 0) {
+      return 0;
+    }
+    if (count >= this.config.minimumEvidenceCount * 5) {
+      return 1;
+    }
 
     return Math.min(1, Math.log(count + 1) / Math.log(this.config.minimumEvidenceCount * 5 + 1));
   }
 
   /**
-     * Calculate confidence based on recency of evidence
-     */
+   * Calculate confidence based on recency of evidence
+   */
   private calculateRecencyConfidence(evidence: TrustEvidence[]): number {
-    if (evidence.length === 0) {return 0;}
+    if (evidence.length === 0) {
+      return 0;
+    }
 
     const now = Date.now();
     const oneWeek = 7 * 24 * 60 * 60 * 1000;
     const oneMonth = 30 * 24 * 60 * 60 * 1000;
 
     // Count evidence in different time windows
-    const lastWeek = evidence.filter(ev => now - ev.timestamp < oneWeek).length;
-    const lastMonth = evidence.filter(ev => now - ev.timestamp < oneMonth).length;
+    const lastWeek = evidence.filter((ev) => now - ev.timestamp < oneWeek).length;
+    const lastMonth = evidence.filter((ev) => now - ev.timestamp < oneMonth).length;
 
     // Higher confidence if we have recent evidence
     const recencyScore = (lastWeek * 2 + lastMonth) / (evidence.length * 3);
@@ -287,15 +299,18 @@ export class TrustCalculator {
   }
 
   /**
-     * Calculate confidence based on consistency of evidence
-     */
+   * Calculate confidence based on consistency of evidence
+   */
   private calculateConsistencyConfidence(evidence: TrustEvidence[]): number {
-    if (evidence.length < 2) {return 0.5;}
+    if (evidence.length < 2) {
+      return 0.5;
+    }
 
     // Calculate variance in impact values
-    const impacts = evidence.map(ev => ev.impact);
+    const impacts = evidence.map((ev) => ev.impact);
     const mean = impacts.reduce((a, b) => a + b, 0) / impacts.length;
-    const variance = impacts.reduce((sum, impact) => sum + Math.pow(impact - mean, 2), 0) / impacts.length;
+    const variance =
+      impacts.reduce((sum, impact) => sum + Math.pow(impact - mean, 2), 0) / impacts.length;
     const stdDev = Math.sqrt(variance);
 
     // Lower variance = higher consistency = higher confidence
@@ -306,12 +321,14 @@ export class TrustCalculator {
   }
 
   /**
-     * Calculate confidence based on verification status
-     */
+   * Calculate confidence based on verification status
+   */
   private calculateVerificationConfidence(evidence: TrustEvidence[]): number {
-    if (evidence.length === 0) {return 0;}
+    if (evidence.length === 0) {
+      return 0;
+    }
 
-    const verifiedCount = evidence.filter(ev => ev.verified).length;
+    const verifiedCount = evidence.filter((ev) => ev.verified).length;
     const verificationRatio = verifiedCount / evidence.length;
 
     // Apply verification multiplier from config
@@ -326,7 +343,7 @@ export class TrustCalculator {
         competence: 50,
         integrity: 50,
         benevolence: 50,
-        transparency: 50
+        transparency: 50,
       },
       overallTrust: 50,
       confidence: 0,
@@ -337,54 +354,53 @@ export class TrustCalculator {
       trend: {
         direction: 'stable',
         changeRate: 0,
-        lastChangeAt: Date.now()
+        lastChangeAt: Date.now(),
       },
-      evaluatorId: 'system' as UUID
+      evaluatorId: 'system' as UUID,
     };
   }
 
   calculateOverallScore(dimensions: TrustDimensions): number {
     const weights = this.config.dimensionWeights;
     const totalWeight =
-            weights.reliability +
-            weights.competence +
-            weights.integrity +
-            weights.benevolence +
-            weights.transparency;
+      weights.reliability +
+      weights.competence +
+      weights.integrity +
+      weights.benevolence +
+      weights.transparency;
 
-    if (totalWeight === 0) {return 50;}
+    if (totalWeight === 0) {
+      return 50;
+    }
 
     const weightedScore =
-            dimensions.reliability * weights.reliability +
-            dimensions.competence * weights.competence +
-            dimensions.integrity * weights.integrity +
-            dimensions.benevolence * weights.benevolence +
-            dimensions.transparency * weights.transparency;
+      dimensions.reliability * weights.reliability +
+      dimensions.competence * weights.competence +
+      dimensions.integrity * weights.integrity +
+      dimensions.benevolence * weights.benevolence +
+      dimensions.transparency * weights.transparency;
 
     return Math.round(weightedScore / totalWeight);
   }
 
-  calculateProfileFromEvidence(
-    entityId: UUID,
-    evidence: TrustEvidence[]
-  ): TrustProfile {
+  calculateProfileFromEvidence(entityId: UUID, evidence: TrustEvidence[]): TrustProfile {
     const dimensions = this.calculateDimensions(evidence);
     const overallTrust = this.calculateOverallScore(dimensions);
     const confidence = this.calculateConfidence(evidence);
 
     // Calculate trend based on recent evidence
     const recentEvidence = evidence
-      .filter(ev => Date.now() - ev.timestamp < 7 * 24 * 60 * 60 * 1000)
+      .filter((ev) => Date.now() - ev.timestamp < 7 * 24 * 60 * 60 * 1000)
       .sort((a, b) => b.timestamp - a.timestamp);
 
     const trend: TrustProfile['trend'] = {
       direction: 'stable',
       changeRate: 0,
-      lastChangeAt: Date.now()
+      lastChangeAt: Date.now(),
     };
 
     if (recentEvidence.length >= 2) {
-      const recentImpacts = recentEvidence.map(ev => ev.impact);
+      const recentImpacts = recentEvidence.map((ev) => ev.impact);
       const avgRecentImpact = recentImpacts.reduce((a, b) => a + b, 0) / recentImpacts.length;
 
       if (avgRecentImpact > 5) {
@@ -408,7 +424,7 @@ export class TrustCalculator {
       lastCalculated: Date.now(),
       calculationMethod: 'weighted_dimensions',
       trend,
-      evaluatorId: 'system' as UUID
+      evaluatorId: 'system' as UUID,
     };
   }
 }

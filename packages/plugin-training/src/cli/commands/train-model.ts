@@ -99,7 +99,6 @@ async function monitorJobCLI(apiKey: string, jobId: string): Promise<void> {
   let lastStatus = '';
   const { execSync } = await import('child_process');
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
       const statusResult = execSync(
@@ -141,7 +140,6 @@ async function monitorJobCLI(apiKey: string, jobId: string): Promise<void> {
 async function monitorJob(client: TogetherAIClient, jobId: string): Promise<void> {
   let lastStatus = '';
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
       const job = await client.getJobStatus(jobId);

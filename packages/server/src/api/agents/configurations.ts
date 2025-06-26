@@ -2,7 +2,7 @@ import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { validateUuid, logger } from '@elizaos/core';
 import express from 'express';
 import type { AgentServer } from '../../index';
-import { sendError, sendSuccess } from '../shared/response-utils';
+import { sendError, sendSuccess } from '../shared/responseUtils';
 
 /**
  * Agent plugin configuration management
@@ -590,7 +590,12 @@ export function createAgentConfigurationsRouter(
       };
 
       // Compare configuration vs runtime
-      const comparison = {
+      const comparison: {
+        actions: Record<string, any>;
+        providers: Record<string, any>;
+        evaluators: Record<string, any>;
+        services: Record<string, any>;
+      } = {
         actions: {},
         providers: {},
         evaluators: {},

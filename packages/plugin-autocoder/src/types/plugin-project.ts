@@ -35,7 +35,7 @@ export interface CheckResult {
  */
 export interface ErrorAnalysis {
   errorType: 'typescript' | 'eslint' | 'build' | 'test' | 'runtime';
-  message: string;
+  _message: string;
   file?: string;
   line?: number;
   column?: number;
@@ -50,7 +50,7 @@ export interface ErrorAnalysis {
 export interface UserNotification {
   timestamp: Date;
   type: 'info' | 'warning' | 'error' | 'success' | 'secret_request' | 'action_required';
-  message: string;
+  _message: string;
   requiresAction: boolean;
   actionType?: 'provide_secret' | 'approve_change' | 'provide_feedback';
   metadata?: any;

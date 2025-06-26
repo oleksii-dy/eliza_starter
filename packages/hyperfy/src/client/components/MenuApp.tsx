@@ -1,5 +1,5 @@
-import React from 'react';
-import { useEffect, useMemo, useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import {
   Menu,
   MenuItemBack,
@@ -63,8 +63,8 @@ const extToType = {
 };
 const allowedModels = ['glb', 'vrm'];
 
-function MenuAppIndex({ world, app, blueprint, pop, push }) {
-  const player = world.entities.player;
+function MenuAppIndex({ world, app, blueprint, _pop, push }) {
+  const _player = world.entities.player;
   const frozen = blueprint.frozen; // TODO: disable code editor, model change, metadata editing, flag editing etc
   const changeModel = async file => {
     if (!file) {return;}
@@ -267,7 +267,7 @@ function MenuItemField({ world, props, field, value, modify }) {
         label={field.label}
         hint={field.hint}
         x={field.x || 'Time'}
-        xRange={field.xRange}
+        _xRange={field.xRange}
         y={field.y || 'Value'}
         yMin={field.yMin}
         yMax={field.yMax}
@@ -282,8 +282,8 @@ function MenuItemField({ world, props, field, value, modify }) {
   return null;
 }
 
-function MenuAppFlags({ world, app, blueprint, pop, push }) {
-  const player = world.entities.player;
+function MenuAppFlags({ world, _app, blueprint, pop, _push }) {
+  const _player = world.entities.player;
   const toggle = async (key, value) => {
     value = isBoolean(value) ? value : !blueprint[key];
     if (blueprint[key] === value) {return;}
@@ -316,8 +316,8 @@ function MenuAppFlags({ world, app, blueprint, pop, push }) {
   );
 }
 
-function MenuAppMetadata({ world, app, blueprint, pop, push }) {
-  const player = world.entities.player;
+function MenuAppMetadata({ world, _app, blueprint, pop, _push }) {
+  const _player = world.entities.player;
   const set = async (key, value) => {
     const version = blueprint.version + 1;
     world.blueprints.modify({ id: blueprint.id, version, [key]: value });

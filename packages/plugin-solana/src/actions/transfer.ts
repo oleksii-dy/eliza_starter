@@ -9,7 +9,7 @@ import {
   type State,
   composePromptFromState,
   logger,
-  parseJSONObjectFromText,
+  parseKeyValueXml,
 } from '@elizaos/core';
 import {
   createAssociatedTokenAccountInstruction,
@@ -91,34 +91,38 @@ function isTransferContent(content: TransferContent): boolean {
  * - Recipient wallet address
  * - Amount to transfer
  */
-const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
-
-Example responses:
-For SPL tokens:
-\`\`\`json
-{
-    "tokenAddress": "BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump",
-    "recipient": "9jW8FPr6BSSsemWPV22UUCzSqkVdTp6HTyPqeqyuBbCa",
-    "amount": "1000"
-}
-\`\`\`
-
-For SOL:
-\`\`\`json
-{
-    "tokenAddress": null,
-    "recipient": "9jW8FPr6BSSsemWPV22UUCzSqkVdTp6HTyPqeqyuBbCa",
-    "amount": 1.5
-}
-\`\`\`
+const transferTemplate = `Extract the following information about the requested transfer from the user's message.
 
 {{recentMessages}}
 
 Extract the following information about the requested transfer:
-- Token contract address (use null for SOL transfers)
+- Token contract address (use empty tag for SOL transfers)
 - Recipient wallet address
 - Amount to transfer
-`;
+
+Return an XML object with these fields:
+<response>
+  <tokenAddress>Token contract address or empty for SOL transfers</tokenAddress>
+  <recipient>Recipient wallet address</recipient>
+  <amount>Amount to transfer as a string or number</amount>
+</response>
+
+Use empty tags for any values that cannot be determined.
+
+## Example Output Formats
+For SPL tokens:
+<response>
+  <tokenAddress>BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump</tokenAddress>
+  <recipient>9jW8FPr6BSSsemWPV22UUCzSqkVdTp6HTyPqeqyuBbCa</recipient>
+  <amount>1000</amount>
+</response>
+
+For SOL:
+<response>
+  <tokenAddress></tokenAddress>
+  <recipient>9jW8FPr6BSSsemWPV22UUCzSqkVdTp6HTyPqeqyuBbCa</recipient>
+  <amount>1.5</amount>
+</response>`;
 
 export default {
   name: 'TRANSFER_SOLANA',
@@ -136,6 +140,7 @@ export default {
     'PAY_TOKENS_SOLANA',
     'PAY_SOLANA',
   ],
+  enabled: false, // Disabled by default - extremely dangerous, can transfer cryptocurrency and funds
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     logger.log('Validating transfer from entity:', message.entityId);
 
@@ -202,7 +207,27 @@ export default {
       prompt: transferPrompt,
     });
 
-    const content = parseJSONObjectFromText(result) as TransferContent;
+    const parsedResult = parseKeyValueXml(result);
+    if (!parsedResult) {
+      if (callback) {
+        callback({
+          text: 'Failed to parse transfer parameters from request',
+          actions: ['TRANSFER_ERROR'],
+          source: _message.content.source,
+        });
+      }
+      return {
+        success: false,
+        message: 'Failed to parse transfer parameters',
+        data: { error: 'Parse error' },
+      };
+    }
+
+    const content = {
+      tokenAddress: parsedResult.tokenAddress === '' ? null : parsedResult.tokenAddress,
+      recipient: parsedResult.recipient,
+      amount: parsedResult.amount,
+    } as TransferContent;
 
     if (!isTransferContent(content)) {
       if (callback) {

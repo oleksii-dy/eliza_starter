@@ -557,4 +557,26 @@ export {
   autonomousExplorationSmall
 } from './hyperfy-autonomous-exploration';
 
-export default hyperfyScenarios;
+// Import RPG scenarios
+import {
+  allRPGScenarios,
+  rpgBasicScenarios,
+  rpgQuestScenarios,
+  rpgSelfImprovementScenarios
+} from './rpg-scenarios-index';
+
+// Export RPG scenarios for external use
+export {
+  allRPGScenarios,
+  rpgBasicScenarios,
+  rpgQuestScenarios,
+  rpgSelfImprovementScenarios
+};
+
+// Combined scenario collection
+const allHyperfyScenarios = [
+  ...hyperfyScenarios,
+  ...allRPGScenarios
+];
+
+export default allHyperfyScenarios;

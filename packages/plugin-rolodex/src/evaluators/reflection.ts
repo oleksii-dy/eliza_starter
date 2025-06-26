@@ -241,7 +241,7 @@ async function handler(
     // Store new facts
     const newFacts =
       reflection.facts.filter(
-        (fact) =>
+        (fact: any) =>
           fact &&
           typeof fact === 'object' &&
           !fact.already_known &&
@@ -252,7 +252,7 @@ async function handler(
       ) || [];
 
     await Promise.all(
-      newFacts.map(async (fact) => {
+      newFacts.map(async (fact: any) => {
         // Store fact as memory
         const factMemory: Memory = {
           id: asUUID(stringToUuid(`fact-${Date.now()}-${Math.random()}`)),

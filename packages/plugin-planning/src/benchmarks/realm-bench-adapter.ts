@@ -11,6 +11,7 @@ import {
   logger,
   ModelType,
 } from '@elizaos/core';
+import { PlanningService } from '../services/planning-service';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -115,7 +116,7 @@ export class RealmBenchAdapter {
   constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
     
-    const planningService = runtime.getService<IPlanningService>('planning');
+    const planningService = runtime.getService<PlanningService>('planning');
     if (!planningService) {
       throw new Error('Planning service is required for REALM-Bench testing');
     }
@@ -142,7 +143,7 @@ export class RealmBenchAdapter {
       logger.info(`[RealmBenchAdapter] Loaded ${this.testCases.length} test cases`);
     } catch (error) {
       logger.error('[RealmBenchAdapter] Error loading test cases:', error);
-      throw new Error(`Failed to load REALM-Bench test cases: ${error.message}`);
+      throw new Error(`Failed to load REALM-Bench test cases: ${(error as Error).message}`);
     }
   }
 
@@ -175,7 +176,7 @@ export class RealmBenchAdapter {
           stepsExecuted: 0,
           actionsPerformed: [],
           planGenerated: null,
-          error: error.message,
+          error: (error as Error).message,
           metrics: {
             planningTime: 0,
             executionTime: 0,
@@ -280,6 +281,7 @@ export class RealmBenchAdapter {
           if (content.actions) {
             actionsPerformed.push(...content.actions);
           }
+          return [];
         }
       );
 
@@ -318,7 +320,7 @@ export class RealmBenchAdapter {
         stepsExecuted,
         actionsPerformed,
         planGenerated,
-        error: error.message,
+        error: (error as Error).message,
         metrics: {
           planningTime,
           executionTime,
@@ -648,7 +650,7 @@ export class RealmBenchAdapter {
       logger.info(`[RealmBenchAdapter] Benchmark report saved to ${filePath}`);
     } catch (error) {
       logger.error('[RealmBenchAdapter] Error saving report:', error);
-      throw new Error(`Failed to save report: ${error.message}`);
+      throw new Error(`Failed to save report: ${(error as Error).message}`);
     }
   }
 }

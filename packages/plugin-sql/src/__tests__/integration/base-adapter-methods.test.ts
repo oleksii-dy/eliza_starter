@@ -12,13 +12,13 @@ import {
   type AgentRuntime,
 } from '@elizaos/core';
 import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
 
 // Set test environment flag
 process.env.ELIZA_TESTING_PLUGIN = 'true';
 
 describe('Base Adapter Methods Integration Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter | PgDatabaseAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;

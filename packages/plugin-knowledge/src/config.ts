@@ -2,7 +2,7 @@
  * Configuration validation for the Knowledge plugin
  */
 import type { IAgentRuntime } from '@elizaos/core';
-import { ModelType } from '@elizaos/core';
+// import { ModelType } from '@elizaos/core';
 import { logger } from '@elizaos/core';
 
 export interface ValidatedModelConfig {
@@ -34,10 +34,12 @@ export function validateModelConfig(runtime?: IAgentRuntime): ValidatedModelConf
 
   // Get token limits
   const maxInputTokens = parseInt(
-    runtime?.getSetting('MAX_INPUT_TOKENS') || process.env.MAX_INPUT_TOKENS || '4000'
+    runtime?.getSetting('MAX_INPUT_TOKENS') || process.env.MAX_INPUT_TOKENS || '4000',
+    10
   );
   const maxOutputTokens = parseInt(
-    runtime?.getSetting('MAX_OUTPUT_TOKENS') || process.env.MAX_OUTPUT_TOKENS || '4096'
+    runtime?.getSetting('MAX_OUTPUT_TOKENS') || process.env.MAX_OUTPUT_TOKENS || '4096',
+    10
   );
 
   // Guard against NaN

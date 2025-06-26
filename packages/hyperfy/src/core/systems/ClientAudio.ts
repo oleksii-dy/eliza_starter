@@ -1,4 +1,4 @@
-import * as THREE from '../extras/three';
+import { THREE } from '../extras/three';
 
 import { System } from './System';
 import type { World } from '../../types';
@@ -49,9 +49,10 @@ export class ClientAudio extends System {
     this.audioListener.upX.value = 0;
     this.audioListener.upY.value = 1;
     this.audioListener.upZ.value = 0;
-    this.lastDelta = 0
+    this.lastDelta = 0;
 
-    ;(this.queue = []), (this.unlocked = this.ctx.state !== 'suspended');
+    this.queue = [];
+    this.unlocked = this.ctx.state !== 'suspended';
     if (!this.unlocked) {
       this.setupUnlockListener();
     }
@@ -89,7 +90,7 @@ export class ClientAudio extends System {
             video.remove();
             console.log('[audio] video played');
           })
-          .catch(err => {
+          .catch(_err => {
             console.log('[audio] video failed');
           });
       } catch (err) {
@@ -113,13 +114,13 @@ export class ClientAudio extends System {
     // ...
   }
 
-  lateUpdate(delta: number) {
+  lateUpdate(_delta: number) {
     const target = this.world.rig;
     const dir = v1.set(0, 0, -1).applyQuaternion(target.quaternion);
     if (this.audioListener.positionX) {
       // https://github.com/mrdoob/three.js/blob/master/src/audio/AudioListener.js
       // code path for Chrome (see three#14393)
-      const endTime = this.ctx.currentTime + delta * 2;
+      const endTime = this.ctx.currentTime + _delta * 2;
       this.audioListener.positionX.linearRampToValueAtTime(target.position.x, endTime);
       this.audioListener.positionY.linearRampToValueAtTime(target.position.y, endTime);
       this.audioListener.positionZ.linearRampToValueAtTime(target.position.z, endTime);
@@ -133,7 +134,7 @@ export class ClientAudio extends System {
       this.audioListener.setPosition(target.position.x, target.position.y, target.position.z);
       this.audioListener.setOrientation(dir.x, dir.y, dir.z, up.x, up.y, up.z);
     }
-    this.lastDelta = delta * 2;
+    this.lastDelta = _delta * 2;
   }
 
   onPrefsChange = (changes: any) => {

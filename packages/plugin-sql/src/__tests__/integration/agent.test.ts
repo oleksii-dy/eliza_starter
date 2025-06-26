@@ -2,7 +2,7 @@ import { AgentRuntime, stringToUuid, type Agent, type UUID } from '@elizaos/core
 import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
 import { agentTable } from '../../schema';
 import { mockCharacter } from '../fixtures';
 import { createIsolatedTestDatabase, createTestDatabase } from '../test-helpers';
@@ -11,7 +11,7 @@ import { createIsolatedTestDatabase, createTestDatabase } from '../test-helpers'
 process.env.ELIZA_TESTING_PLUGIN = 'true';
 
 describe('Agent Integration Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter | PgDatabaseAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;

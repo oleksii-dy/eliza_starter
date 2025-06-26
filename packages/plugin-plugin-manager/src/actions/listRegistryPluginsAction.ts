@@ -9,6 +9,7 @@ import {
 } from '@elizaos/core';
 import { PluginManagerService } from '../services/pluginManagerService.ts';
 import { PluginManagerServiceType } from '../types.ts';
+import { TrustService } from '@elizaos/plugin-trust';
 
 export const listRegistryPluginsAction: Action = {
   name: 'LIST_REGISTRY_PLUGINS',
@@ -121,9 +122,9 @@ export const listRegistryPluginsAction: Action = {
       }
 
       // Check permissions
-      const trustService = runtime.getService('TRUST') as any;
+      const trustService = runtime.getService<TrustService>('TRUST');
       const canInstall = trustService ?
-        await trustService.checkPermission(message.entityId, 'plugin:install') :
+        await (trustService as any).checkPermission(message.entityId, 'plugin:install') :
         true;
 
       const suggestions: string[] = [];

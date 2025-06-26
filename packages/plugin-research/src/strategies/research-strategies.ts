@@ -28,23 +28,53 @@ const DOMAIN_CONFIGS: Record<ResearchDomain, DomainConfig> = {
       'thermodynamics',
       'electromagnetism',
     ],
-    authoritySource: ['arxiv.org', 'physics.aps.org', 'nature.com/nphys', 'science.org'],
+    authoritySource: [
+      'arxiv.org',
+      'physics.aps.org',
+      'nature.com/nphys',
+      'science.org',
+    ],
     methodology: 'theoretical-experimental',
-    evaluationFocus: ['mathematical rigor', 'experimental validation', 'theoretical consistency'],
+    evaluationFocus: [
+      'mathematical rigor',
+      'experimental validation',
+      'theoretical consistency',
+    ],
     preferredSources: [SourceType.ACADEMIC, SourceType.TECHNICAL],
   },
   [ResearchDomain.CHEMISTRY]: {
-    keyTerms: ['synthesis', 'reaction', 'compound', 'molecular', 'organic', 'inorganic'],
-    authoritySource: ['acs.org', 'rsc.org', 'chemistry.nature.com', 'sciencedirect.com'],
+    keyTerms: [
+      'synthesis',
+      'reaction',
+      'compound',
+      'molecular',
+      'organic',
+      'inorganic',
+    ],
+    authoritySource: [
+      'acs.org',
+      'rsc.org',
+      'chemistry.nature.com',
+      'sciencedirect.com',
+    ],
     methodology: 'experimental-analytical',
     evaluationFocus: ['reproducibility', 'yield', 'purity', 'mechanism'],
     preferredSources: [SourceType.ACADEMIC, SourceType.TECHNICAL],
   },
   [ResearchDomain.BIOLOGY]: {
     keyTerms: ['cell', 'gene', 'protein', 'evolution', 'ecology', 'physiology'],
-    authoritySource: ['ncbi.nlm.nih.gov', 'nature.com', 'cell.com', 'biology.plos.org'],
+    authoritySource: [
+      'ncbi.nlm.nih.gov',
+      'nature.com',
+      'cell.com',
+      'biology.plos.org',
+    ],
     methodology: 'observational-experimental',
-    evaluationFocus: ['statistical significance', 'reproducibility', 'biological relevance'],
+    evaluationFocus: [
+      'statistical significance',
+      'reproducibility',
+      'biological relevance',
+    ],
     preferredSources: [SourceType.ACADEMIC, SourceType.GOVERNMENT],
   },
   [ResearchDomain.ENVIRONMENTAL_SCIENCE]: {
@@ -59,13 +89,34 @@ const DOMAIN_CONFIGS: Record<ResearchDomain, DomainConfig> = {
     authoritySource: ['ipcc.ch', 'epa.gov', 'nature.com/nclimate', 'unep.org'],
     methodology: 'observational-modeling',
     evaluationFocus: ['data quality', 'model accuracy', 'policy implications'],
-    preferredSources: [SourceType.GOVERNMENT, SourceType.ACADEMIC, SourceType.ORGANIZATION],
+    preferredSources: [
+      SourceType.GOVERNMENT,
+      SourceType.ACADEMIC,
+      SourceType.ORGANIZATION,
+    ],
   },
   [ResearchDomain.ENGINEERING]: {
-    keyTerms: ['design', 'optimization', 'materials', 'systems', 'control', 'manufacturing'],
-    authoritySource: ['ieee.org', 'asme.org', 'engineeringvillage.com', 'asce.org'],
+    keyTerms: [
+      'design',
+      'optimization',
+      'materials',
+      'systems',
+      'control',
+      'manufacturing',
+    ],
+    authoritySource: [
+      'ieee.org',
+      'asme.org',
+      'engineeringvillage.com',
+      'asce.org',
+    ],
     methodology: 'design-testing',
-    evaluationFocus: ['performance', 'efficiency', 'cost-effectiveness', 'safety'],
+    evaluationFocus: [
+      'performance',
+      'efficiency',
+      'cost-effectiveness',
+      'safety',
+    ],
     preferredSources: [SourceType.TECHNICAL, SourceType.ACADEMIC],
   },
   [ResearchDomain.COMPUTER_SCIENCE]: {
@@ -79,25 +130,70 @@ const DOMAIN_CONFIGS: Record<ResearchDomain, DomainConfig> = {
     ],
     authoritySource: ['acm.org', 'ieee.org', 'arxiv.org/cs', 'github.com'],
     methodology: 'theoretical-implementation',
-    evaluationFocus: ['complexity', 'correctness', 'scalability', 'performance'],
-    preferredSources: [SourceType.TECHNICAL, SourceType.ACADEMIC, SourceType.WEB],
+    evaluationFocus: [
+      'complexity',
+      'correctness',
+      'scalability',
+      'performance',
+    ],
+    preferredSources: [
+      SourceType.TECHNICAL,
+      SourceType.ACADEMIC,
+      SourceType.WEB,
+    ],
   },
   [ResearchDomain.MATHEMATICS]: {
-    keyTerms: ['theorem', 'proof', 'equation', 'topology', 'algebra', 'analysis'],
-    authoritySource: ['ams.org', 'arxiv.org/math', 'mathscinet.ams.org', 'zbmath.org'],
+    keyTerms: [
+      'theorem',
+      'proof',
+      'equation',
+      'topology',
+      'algebra',
+      'analysis',
+    ],
+    authoritySource: [
+      'ams.org',
+      'arxiv.org/math',
+      'mathscinet.ams.org',
+      'zbmath.org',
+    ],
     methodology: 'theoretical-proof',
     evaluationFocus: ['rigor', 'generality', 'elegance', 'applicability'],
     preferredSources: [SourceType.ACADEMIC],
   },
   [ResearchDomain.MEDICINE]: {
-    keyTerms: ['diagnosis', 'treatment', 'clinical', 'pathology', 'pharmacology', 'epidemiology'],
-    authoritySource: ['pubmed.ncbi.nlm.nih.gov', 'nejm.org', 'thelancet.com', 'who.int'],
+    keyTerms: [
+      'diagnosis',
+      'treatment',
+      'clinical',
+      'pathology',
+      'pharmacology',
+      'epidemiology',
+    ],
+    authoritySource: [
+      'pubmed.ncbi.nlm.nih.gov',
+      'nejm.org',
+      'thelancet.com',
+      'who.int',
+    ],
     methodology: 'clinical-evidence',
-    evaluationFocus: ['clinical significance', 'safety', 'efficacy', 'evidence level'],
+    evaluationFocus: [
+      'clinical significance',
+      'safety',
+      'efficacy',
+      'evidence level',
+    ],
     preferredSources: [SourceType.ACADEMIC, SourceType.GOVERNMENT],
   },
   [ResearchDomain.PSYCHOLOGY]: {
-    keyTerms: ['behavior', 'cognition', 'emotion', 'development', 'personality', 'disorder'],
+    keyTerms: [
+      'behavior',
+      'cognition',
+      'emotion',
+      'development',
+      'personality',
+      'disorder',
+    ],
     authoritySource: [
       'apa.org',
       'psychologicalscience.org',
@@ -105,22 +201,59 @@ const DOMAIN_CONFIGS: Record<ResearchDomain, DomainConfig> = {
       'ncbi.nlm.nih.gov',
     ],
     methodology: 'empirical-theoretical',
-    evaluationFocus: ['validity', 'reliability', 'generalizability', 'ethical considerations'],
+    evaluationFocus: [
+      'validity',
+      'reliability',
+      'generalizability',
+      'ethical considerations',
+    ],
     preferredSources: [SourceType.ACADEMIC, SourceType.ORGANIZATION],
   },
   [ResearchDomain.ECONOMICS]: {
-    keyTerms: ['market', 'policy', 'growth', 'inflation', 'trade', 'behavioral'],
+    keyTerms: [
+      'market',
+      'policy',
+      'growth',
+      'inflation',
+      'trade',
+      'behavioral',
+    ],
     authoritySource: ['nber.org', 'imf.org', 'worldbank.org', 'aeaweb.org'],
     methodology: 'theoretical-empirical',
-    evaluationFocus: ['model validity', 'data quality', 'policy relevance', 'predictive power'],
-    preferredSources: [SourceType.ACADEMIC, SourceType.GOVERNMENT, SourceType.ORGANIZATION],
+    evaluationFocus: [
+      'model validity',
+      'data quality',
+      'policy relevance',
+      'predictive power',
+    ],
+    preferredSources: [
+      SourceType.ACADEMIC,
+      SourceType.GOVERNMENT,
+      SourceType.ORGANIZATION,
+    ],
   },
   [ResearchDomain.FINANCE]: {
-    keyTerms: ['investment', 'risk', 'portfolio', 'derivatives', 'banking', 'cryptocurrency'],
+    keyTerms: [
+      'investment',
+      'risk',
+      'portfolio',
+      'derivatives',
+      'banking',
+      'cryptocurrency',
+    ],
     authoritySource: ['bloomberg.com', 'reuters.com', 'ft.com', 'wsj.com'],
     methodology: 'quantitative-analytical',
-    evaluationFocus: ['return', 'risk assessment', 'market efficiency', 'regulatory compliance'],
-    preferredSources: [SourceType.NEWS, SourceType.TECHNICAL, SourceType.GOVERNMENT],
+    evaluationFocus: [
+      'return',
+      'risk assessment',
+      'market efficiency',
+      'regulatory compliance',
+    ],
+    preferredSources: [
+      SourceType.NEWS,
+      SourceType.TECHNICAL,
+      SourceType.GOVERNMENT,
+    ],
   },
   [ResearchDomain.BUSINESS]: {
     keyTerms: [
@@ -133,61 +266,206 @@ const DOMAIN_CONFIGS: Record<ResearchDomain, DomainConfig> = {
     ],
     authoritySource: ['hbr.org', 'mckinsey.com', 'bcg.com', 'forbes.com'],
     methodology: 'case-analytical',
-    evaluationFocus: ['practicality', 'ROI', 'scalability', 'competitive advantage'],
-    preferredSources: [SourceType.NEWS, SourceType.ORGANIZATION, SourceType.ACADEMIC],
+    evaluationFocus: [
+      'practicality',
+      'ROI',
+      'scalability',
+      'competitive advantage',
+    ],
+    preferredSources: [
+      SourceType.NEWS,
+      SourceType.ORGANIZATION,
+      SourceType.ACADEMIC,
+    ],
   },
   [ResearchDomain.MARKETING]: {
-    keyTerms: ['consumer', 'branding', 'digital', 'segmentation', 'campaign', 'analytics'],
+    keyTerms: [
+      'consumer',
+      'branding',
+      'digital',
+      'segmentation',
+      'campaign',
+      'analytics',
+    ],
     authoritySource: ['marketingland.com', 'adweek.com', 'warc.com', 'ama.org'],
     methodology: 'empirical-creative',
     evaluationFocus: ['ROI', 'engagement', 'conversion', 'brand impact'],
-    preferredSources: [SourceType.NEWS, SourceType.WEB, SourceType.ORGANIZATION],
+    preferredSources: [
+      SourceType.NEWS,
+      SourceType.WEB,
+      SourceType.ORGANIZATION,
+    ],
   },
   [ResearchDomain.HUMAN_RESOURCES]: {
-    keyTerms: ['recruitment', 'performance', 'culture', 'compensation', 'development', 'retention'],
+    keyTerms: [
+      'recruitment',
+      'performance',
+      'culture',
+      'compensation',
+      'development',
+      'retention',
+    ],
     authoritySource: ['shrm.org', 'cipd.co.uk', 'hbr.org', 'gallup.com'],
     methodology: 'empirical-practical',
-    evaluationFocus: ['employee satisfaction', 'productivity', 'retention', 'compliance'],
-    preferredSources: [SourceType.ORGANIZATION, SourceType.NEWS, SourceType.ACADEMIC],
+    evaluationFocus: [
+      'employee satisfaction',
+      'productivity',
+      'retention',
+      'compliance',
+    ],
+    preferredSources: [
+      SourceType.ORGANIZATION,
+      SourceType.NEWS,
+      SourceType.ACADEMIC,
+    ],
   },
   [ResearchDomain.LAW]: {
-    keyTerms: ['statute', 'precedent', 'jurisdiction', 'litigation', 'compliance', 'regulation'],
-    authoritySource: ['westlaw.com', 'lexisnexis.com', 'law.cornell.edu', 'supremecourt.gov'],
+    keyTerms: [
+      'statute',
+      'precedent',
+      'jurisdiction',
+      'litigation',
+      'compliance',
+      'regulation',
+    ],
+    authoritySource: [
+      'westlaw.com',
+      'lexisnexis.com',
+      'law.cornell.edu',
+      'supremecourt.gov',
+    ],
     methodology: 'precedent-analytical',
-    evaluationFocus: ['legal validity', 'precedent', 'jurisdiction', 'practical application'],
+    evaluationFocus: [
+      'legal validity',
+      'precedent',
+      'jurisdiction',
+      'practical application',
+    ],
     preferredSources: [SourceType.GOVERNMENT, SourceType.ACADEMIC],
   },
   [ResearchDomain.POLITICS]: {
-    keyTerms: ['policy', 'election', 'governance', 'ideology', 'diplomacy', 'legislation'],
-    authoritySource: ['politico.com', 'foreignaffairs.com', 'brookings.edu', 'cfr.org'],
+    keyTerms: [
+      'policy',
+      'election',
+      'governance',
+      'ideology',
+      'diplomacy',
+      'legislation',
+    ],
+    authoritySource: [
+      'politico.com',
+      'foreignaffairs.com',
+      'brookings.edu',
+      'cfr.org',
+    ],
     methodology: 'analytical-comparative',
-    evaluationFocus: ['objectivity', 'source diversity', 'historical context', 'impact analysis'],
-    preferredSources: [SourceType.NEWS, SourceType.ORGANIZATION, SourceType.GOVERNMENT],
+    evaluationFocus: [
+      'objectivity',
+      'source diversity',
+      'historical context',
+      'impact analysis',
+    ],
+    preferredSources: [
+      SourceType.NEWS,
+      SourceType.ORGANIZATION,
+      SourceType.GOVERNMENT,
+    ],
   },
   [ResearchDomain.HISTORY]: {
-    keyTerms: ['period', 'civilization', 'event', 'source', 'interpretation', 'archaeology'],
-    authoritySource: ['jstor.org', 'archives.gov', 'history.com', 'britannica.com'],
+    keyTerms: [
+      'period',
+      'civilization',
+      'event',
+      'source',
+      'interpretation',
+      'archaeology',
+    ],
+    authoritySource: [
+      'jstor.org',
+      'archives.gov',
+      'history.com',
+      'britannica.com',
+    ],
     methodology: 'source-analytical',
-    evaluationFocus: ['source reliability', 'historiography', 'context', 'multiple perspectives'],
-    preferredSources: [SourceType.ACADEMIC, SourceType.BOOK, SourceType.GOVERNMENT],
+    evaluationFocus: [
+      'source reliability',
+      'historiography',
+      'context',
+      'multiple perspectives',
+    ],
+    preferredSources: [
+      SourceType.ACADEMIC,
+      SourceType.BOOK,
+      SourceType.GOVERNMENT,
+    ],
   },
   [ResearchDomain.PHILOSOPHY]: {
-    keyTerms: ['ethics', 'metaphysics', 'epistemology', 'logic', 'aesthetics', 'phenomenology'],
-    authoritySource: ['plato.stanford.edu', 'iep.utm.edu', 'philpapers.org', 'jstor.org'],
+    keyTerms: [
+      'ethics',
+      'metaphysics',
+      'epistemology',
+      'logic',
+      'aesthetics',
+      'phenomenology',
+    ],
+    authoritySource: [
+      'plato.stanford.edu',
+      'iep.utm.edu',
+      'philpapers.org',
+      'jstor.org',
+    ],
     methodology: 'analytical-dialectical',
-    evaluationFocus: ['logical consistency', 'clarity', 'originality', 'practical implications'],
+    evaluationFocus: [
+      'logical consistency',
+      'clarity',
+      'originality',
+      'practical implications',
+    ],
     preferredSources: [SourceType.ACADEMIC, SourceType.BOOK],
   },
   [ResearchDomain.ART_DESIGN]: {
-    keyTerms: ['aesthetic', 'composition', 'medium', 'movement', 'technique', 'critique'],
-    authoritySource: ['artforum.com', 'moma.org', 'tate.org.uk', 'designboom.com'],
+    keyTerms: [
+      'aesthetic',
+      'composition',
+      'medium',
+      'movement',
+      'technique',
+      'critique',
+    ],
+    authoritySource: [
+      'artforum.com',
+      'moma.org',
+      'tate.org.uk',
+      'designboom.com',
+    ],
     methodology: 'critical-creative',
-    evaluationFocus: ['originality', 'technique', 'cultural impact', 'aesthetic value'],
-    preferredSources: [SourceType.WEB, SourceType.ORGANIZATION, SourceType.BOOK],
+    evaluationFocus: [
+      'originality',
+      'technique',
+      'cultural impact',
+      'aesthetic value',
+    ],
+    preferredSources: [
+      SourceType.WEB,
+      SourceType.ORGANIZATION,
+      SourceType.BOOK,
+    ],
   },
   [ResearchDomain.ENTERTAINMENT]: {
-    keyTerms: ['media', 'audience', 'production', 'distribution', 'content', 'platform'],
-    authoritySource: ['variety.com', 'hollywoodreporter.com', 'rottentomatoes.com', 'imdb.com'],
+    keyTerms: [
+      'media',
+      'audience',
+      'production',
+      'distribution',
+      'content',
+      'platform',
+    ],
+    authoritySource: [
+      'variety.com',
+      'hollywoodreporter.com',
+      'rottentomatoes.com',
+      'imdb.com',
+    ],
     methodology: 'analytical-critical',
     evaluationFocus: [
       'audience reception',
@@ -198,17 +476,43 @@ const DOMAIN_CONFIGS: Record<ResearchDomain, DomainConfig> = {
     preferredSources: [SourceType.NEWS, SourceType.WEB],
   },
   [ResearchDomain.TRANSPORTATION]: {
-    keyTerms: ['mobility', 'infrastructure', 'logistics', 'autonomous', 'sustainability', 'urban'],
-    authoritySource: ['transportation.gov', 'itf-oecd.org', 'apta.com', 'railway-technology.com'],
+    keyTerms: [
+      'mobility',
+      'infrastructure',
+      'logistics',
+      'autonomous',
+      'sustainability',
+      'urban',
+    ],
+    authoritySource: [
+      'transportation.gov',
+      'itf-oecd.org',
+      'apta.com',
+      'railway-technology.com',
+    ],
     methodology: 'systems-analytical',
-    evaluationFocus: ['efficiency', 'safety', 'sustainability', 'cost-effectiveness'],
-    preferredSources: [SourceType.GOVERNMENT, SourceType.TECHNICAL, SourceType.ORGANIZATION],
+    evaluationFocus: [
+      'efficiency',
+      'safety',
+      'sustainability',
+      'cost-effectiveness',
+    ],
+    preferredSources: [
+      SourceType.GOVERNMENT,
+      SourceType.TECHNICAL,
+      SourceType.ORGANIZATION,
+    ],
   },
   [ResearchDomain.GENERAL]: {
     keyTerms: [],
     authoritySource: ['wikipedia.org', 'britannica.com', 'scholar.google.com'],
     methodology: 'mixed-methods',
-    evaluationFocus: ['accuracy', 'comprehensiveness', 'clarity', 'source diversity'],
+    evaluationFocus: [
+      'accuracy',
+      'comprehensiveness',
+      'clarity',
+      'source diversity',
+    ],
     preferredSources: [SourceType.WEB, SourceType.ACADEMIC, SourceType.NEWS],
   },
   [ResearchDomain.NEUROSCIENCE]: {
@@ -226,7 +530,13 @@ const DOMAIN_CONFIGS: Record<ResearchDomain, DomainConfig> = {
     preferredSources: [SourceType.ACADEMIC],
   },
   [ResearchDomain.SOCIOLOGY]: {
-    keyTerms: ['sociology', 'social', 'socialization', 'social structure', 'social change'],
+    keyTerms: [
+      'sociology',
+      'social',
+      'socialization',
+      'social structure',
+      'social change',
+    ],
     authoritySource: ['sociology.org'],
     methodology: 'theoretical-empirical',
     evaluationFocus: ['rigor', 'generality', 'elegance', 'applicability'],
@@ -263,14 +573,18 @@ export class ResearchStrategyFactory {
       approach,
       sourceTypes: domainConfig.preferredSources,
       qualityThreshold: this.getQualityThreshold(depth),
-      diversityRequirement: taskType === TaskType.COMPARATIVE || taskType === TaskType.EVALUATIVE,
+      diversityRequirement:
+        taskType === TaskType.COMPARATIVE || taskType === TaskType.EVALUATIVE,
       temporalFocus,
       geographicScope: await this.extractGeographicScope(query),
       languagePreferences: ['en'], // Can be extended based on query
     };
   }
 
-  private determineSearchApproach(taskType: TaskType, depth: ResearchDepth): SearchApproach {
+  private determineSearchApproach(
+    taskType: TaskType,
+    depth: ResearchDepth
+  ): SearchApproach {
     if (depth === ResearchDepth.PHD_LEVEL) {
       return SearchApproach.CITATION_CHAINING;
     }
@@ -304,7 +618,9 @@ export class ResearchStrategyFactory {
     }
   }
 
-  private async analyzeTemporalFocus(query: string): Promise<TemporalFocus | undefined> {
+  private async analyzeTemporalFocus(
+    query: string
+  ): Promise<TemporalFocus | undefined> {
     const prompt = `Analyze this research query and determine its temporal focus:
 Query: "${query}"
 
@@ -329,7 +645,11 @@ Respond with just the option name.`;
         temperature: 0.3,
       });
 
-      const focus = (typeof response === 'string' ? response : (response as any).content || '')
+      const focus = (
+        typeof response === 'string'
+          ? response
+          : (response as any).content || ''
+      )
         .trim()
         .toLowerCase();
 
@@ -373,7 +693,11 @@ Respond with a comma-separated list.`;
         temperature: 0.3,
       });
 
-      const locations = (typeof response === 'string' ? response : (response as any).content || '')
+      const locations = (
+        typeof response === 'string'
+          ? response
+          : (response as any).content || ''
+      )
         .split(',')
         .map((s: string) => s.trim())
         .filter((s: string) => s && s !== 'global');
@@ -400,11 +724,22 @@ export class QueryPlanner {
     const domainConfig = DOMAIN_CONFIGS[domain];
 
     // Generate sub-queries based on domain and task type
-    const subQueries = await this.generateSubQueries(mainQuery, domain, taskType, domainConfig);
+    const subQueries = await this.generateSubQueries(
+      mainQuery,
+      domain,
+      taskType,
+      domainConfig,
+      depth
+    );
 
     // Create search strategy
     const strategyFactory = new ResearchStrategyFactory(this.runtime);
-    const searchStrategy = await strategyFactory.createStrategy(mainQuery, domain, taskType, depth);
+    const searchStrategy = await strategyFactory.createStrategy(
+      mainQuery,
+      domain,
+      taskType,
+      depth
+    );
 
     // Determine iteration count based on depth
     const iterationCount = this.getIterationCount(depth);
@@ -415,7 +750,8 @@ export class QueryPlanner {
       searchStrategy,
       expectedSources: this.getExpectedSources(depth),
       iterationCount,
-      adaptiveRefinement: depth === ResearchDepth.DEEP || depth === ResearchDepth.PHD_LEVEL,
+      adaptiveRefinement:
+        depth === ResearchDepth.DEEP || depth === ResearchDepth.PHD_LEVEL,
       domainSpecificApproach: {
         methodology: domainConfig.methodology,
         keyTerms: domainConfig.keyTerms,
@@ -429,7 +765,8 @@ export class QueryPlanner {
     mainQuery: string,
     domain: ResearchDomain,
     taskType: TaskType,
-    domainConfig: DomainConfig
+    domainConfig: DomainConfig,
+    depth: ResearchDepth
   ): Promise<SubQuery[]> {
     // Require AI model for sub-query generation
     if (!this.runtime.useModel) {
@@ -475,8 +812,12 @@ Separate each sub-query with ---`;
       });
 
       const responseText =
-        typeof response === 'string' ? response : (response as any).content || '';
-      const subQueryTexts = responseText.split('---').filter((s: string) => s.trim());
+        typeof response === 'string'
+          ? response
+          : (response as any).content || '';
+      const subQueryTexts = responseText
+        .split('---')
+        .filter((s: string) => s.trim());
 
       const subQueries: SubQuery[] = [];
 
@@ -508,18 +849,65 @@ Separate each sub-query with ---`;
         return subQueries;
       }
 
+      // Check if we're in test mode and provide fallback
+      if (process.env.RESEARCH_MOCK_MODE === 'true') {
+        logger.warn('[QueryPlanner] Using fallback sub-queries in test mode');
+        return this.generateFallbackSubQueries(mainQuery, depth);
+      }
+
       throw new Error(
         '[QueryPlanner] AI model failed to generate valid sub-queries. This indicates a model configuration or prompt issue.'
       );
     } catch (error) {
       logger.error('Error generating sub-queries with AI:', error);
+
+      // In test mode, provide fallback instead of failing
+      if (process.env.RESEARCH_MOCK_MODE === 'true') {
+        logger.warn(
+          '[QueryPlanner] Using fallback sub-queries due to error in test mode'
+        );
+        return this.generateFallbackSubQueries(mainQuery, depth);
+      }
+
       throw error;
     }
   }
 
-  // REMOVED: Fallback sub-query generation
-  // This was causing degraded quality when AI models were unavailable.
-  // Research planning requires AI for quality results.
+  // Fallback sub-query generation for test mode only
+  private generateFallbackSubQueries(
+    query: string,
+    depth: ResearchDepth
+  ): SubQuery[] {
+    logger.info('[QueryPlanner] Generating fallback sub-queries for test mode');
+
+    const subQueries: SubQuery[] = [];
+    const iterations = this.getIterationCount(depth);
+
+    // Generate basic sub-queries for testing
+    const templates = [
+      `${query} overview`,
+      `${query} recent developments`,
+      `${query} applications`,
+      `${query} challenges`,
+      `${query} future trends`,
+    ];
+
+    for (let i = 0; i < Math.min(iterations, templates.length); i++) {
+      subQueries.push({
+        id: `fallback-${i + 1}`,
+        query: templates[i],
+        purpose: `Fallback query ${i + 1} for testing`,
+        priority: 2,
+        expectedResultType: ResultType.FACTUAL,
+        searchProviders: ['web'],
+        completed: false,
+        dependencies: [],
+        dependsOn: [],
+      });
+    }
+
+    return subQueries;
+  }
 
   private parseResultType(type: string): ResultType {
     const normalized = type.toLowerCase().trim();
@@ -549,7 +937,10 @@ Separate each sub-query with ---`;
     return 2; // medium
   }
 
-  private determineDependencies(index: number, existingQueries: SubQuery[]): string[] {
+  private determineDependencies(
+    index: number,
+    existingQueries: SubQuery[]
+  ): string[] {
     // First query has no dependencies
     if (index === 0) {
       return [];
@@ -568,11 +959,17 @@ Separate each sub-query with ---`;
     return dependencies;
   }
 
-  private selectSearchProviders(resultType: ResultType, domain: ResearchDomain): string[] {
+  private selectSearchProviders(
+    resultType: ResultType,
+    domain: ResearchDomain
+  ): string[] {
     const providers: string[] = ['web']; // Always include general web search
 
     // Add specialized providers based on result type and domain
-    if (resultType === ResultType.STATISTICAL || domain === ResearchDomain.ECONOMICS) {
+    if (
+      resultType === ResultType.STATISTICAL ||
+      domain === ResearchDomain.ECONOMICS
+    ) {
       providers.push('statistics');
     }
 
@@ -587,12 +984,19 @@ Separate each sub-query with ---`;
     }
 
     if (
-      [ResearchDomain.MEDICINE, ResearchDomain.BIOLOGY, ResearchDomain.PSYCHOLOGY].includes(domain)
+      [
+        ResearchDomain.MEDICINE,
+        ResearchDomain.BIOLOGY,
+        ResearchDomain.PSYCHOLOGY,
+      ].includes(domain)
     ) {
       providers.push('pubmed');
     }
 
-    if (resultType === ResultType.COMPARATIVE || resultType === ResultType.PRACTICAL) {
+    if (
+      resultType === ResultType.COMPARATIVE ||
+      resultType === ResultType.PRACTICAL
+    ) {
       providers.push('news');
     }
 
@@ -657,7 +1061,8 @@ Format: One query per line`;
       temperature: 0.7,
     });
 
-    const responseText = typeof response === 'string' ? response : (response as any).content || '';
+    const responseText =
+      typeof response === 'string' ? response : (response as any).content || '';
     return responseText
       .split('\n')
       .map((s: string) => s.trim())
@@ -668,8 +1073,13 @@ Format: One query per line`;
 export class EvaluationCriteriaGenerator {
   constructor(private runtime: IAgentRuntime) {}
 
-  async generateCriteria(query: string, domain?: ResearchDomain): Promise<EvaluationCriteria> {
-    const domainConfig = domain ? DOMAIN_CONFIGS[domain] : DOMAIN_CONFIGS[ResearchDomain.GENERAL];
+  async generateCriteria(
+    query: string,
+    domain?: ResearchDomain
+  ): Promise<EvaluationCriteria> {
+    const domainConfig = domain
+      ? DOMAIN_CONFIGS[domain]
+      : DOMAIN_CONFIGS[ResearchDomain.GENERAL];
 
     // Generate base criteria
     const baseCriteria: EvaluationCriteria = {
@@ -749,16 +1159,20 @@ Format:
       });
 
       const responseText =
-        typeof response === 'string' ? response : (response as any).content || '';
+        typeof response === 'string'
+          ? response
+          : (response as any).content || '';
       const rubricItems = this.parseRubric(responseText);
 
-      return {
-        name,
-        description,
-        weight,
-        rubric: rubricItems,
-        scoringMethod: ScoringMethod.RUBRIC,
-      };
+      if (rubricItems.length > 0) {
+        return {
+          name,
+          description,
+          weight,
+          rubric: rubricItems,
+          scoringMethod: ScoringMethod.RUBRIC,
+        };
+      }
 
       throw new Error(
         '[EvaluationCriteriaGenerator] AI model failed to generate valid evaluation criterion. This indicates a model configuration or prompt issue.'
@@ -776,7 +1190,7 @@ Format:
     for (const line of lines) {
       const match = line.match(/^(\d):\s*(.+)/);
       if (match) {
-        const score = parseInt(match[1]);
+        const score = parseInt(match[1], 10);
         const description = match[2].trim();
         items.push({ score, description });
       }

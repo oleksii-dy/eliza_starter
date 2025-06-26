@@ -229,7 +229,7 @@ export function MenuItemText({ label, hint, placeholder, value, onChange }) {
               ;(e.target as HTMLInputElement).blur();
             }
           }}
-          onBlur={e => {
+          onBlur={() => {
             onChange(localValue);
           }}
         />
@@ -317,7 +317,7 @@ export function MenuItemTextarea({ label, hint, placeholder, value, onChange }) 
               ;(e.target as HTMLTextAreaElement).blur();
             }
           }}
-          onBlur={e => {
+          onBlur={() => {
             onChange(localValue);
           }}
         />
@@ -338,15 +338,16 @@ export function MenuItemNumber({ label, hint, dp = 0, min = -Infinity, max = Inf
     if (!focused && local !== value.toFixed(dp)) {setLocal(value.toFixed(dp));}
   }, [focused, value]);
   const setTo = str => {
-    // try parse math
+    // try parse number - remove unsafe eval usage
     let num;
     try {
-      num = (0, eval)(str);
-      if (typeof num !== 'number') {
+      // Simple number parsing - no eval for security
+      num = parseFloat(str);
+      if (isNaN(num)) {
         throw new Error('input number parse fail');
       }
-    } catch (err) {
-      console.error(err);
+    } catch (_err) {
+      console.error(_err);
       num = value; // revert back to original
     }
     if (num < min || num > max) {
@@ -403,7 +404,7 @@ export function MenuItemNumber({ label, hint, dp = 0, min = -Infinity, max = Inf
             setFocused(true);
             e.target.select();
           }}
-          onBlur={e => {
+          onBlur={() => {
             setFocused(false);
             // if blank, set back to original
             if (local === '') {
@@ -620,7 +621,7 @@ export function MenuItemSwitch({ label, hint, options, value, onChange }) {
   );
 }
 
-export function MenuItemCurve({ label, hint, x, xRange, y, yMin, yMax, value, onChange }) {
+export function MenuItemCurve({ label, hint, x, _xRange, y, yMin, yMax, value, onChange }) {
   const context = useContext(MenuContext);
   const setHint = context?.setHint;
   const curve = useMemo(() => new Curve().deserialize(value || '0,0.5,0,0|1,0.5,0,0'), [value]);

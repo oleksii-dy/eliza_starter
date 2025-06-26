@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import type { UUID, Entity, Relationship } from '@elizaos/core';
-import { ChevronDown, ChevronRight, Users, Link, TrendingUp, TrendingDown } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronRight,
+  Users as _Users,
+  Link,
+  TrendingUp,
+  TrendingDown,
+} from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table';
 import { Badge } from './badge';
 import { Button } from './button';
@@ -69,7 +76,9 @@ const getRelationshipDetails = (
 
     rels.forEach((rel) => {
       const relType = rel.metadata?.relationshipType || rel.metadata?.type || 'unknown';
-      if (relType) {types.add(String(relType));}
+      if (relType) {
+        types.add(String(relType));
+      }
       const strength = rel.strength || 0.5;
       maxStrength = Math.max(maxStrength, strength);
       totalStrength += strength;
@@ -116,13 +125,17 @@ export function EntityListView({ entities, relationships, onEntityClick }: Entit
           p.platform?.toLowerCase().includes(searchLower) ||
           p.handle?.toLowerCase().includes(searchLower)
       );
-      if (!matchesName && !matchesPlatform) {return false;}
+      if (!matchesName && !matchesPlatform) {
+        return false;
+      }
     }
 
     // Filter by connection strength
     if (strengthFilter > 0) {
       const metrics = calculateEntityMetrics(entity, relationships);
-      if (metrics.averageStrength < strengthFilter) {return false;}
+      if (metrics.averageStrength < strengthFilter) {
+        return false;
+      }
     }
 
     return true;

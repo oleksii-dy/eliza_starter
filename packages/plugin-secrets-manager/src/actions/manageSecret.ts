@@ -1,3 +1,11 @@
+import {
+  elizaLogger,
+  parseJSONObjectFromText,
+  type Action,
+  type HandlerCallback,
+  type IAgentRuntime,
+  type Memory,
+} from '@elizaos/core';
 import { EnhancedSecretManager } from '../enhanced-service';
 import type { SecretContext, SecretConfig } from '../types';
 
@@ -21,10 +29,10 @@ export const manageSecretAction: Action = {
   description:
     'Manage secrets at different levels (global, world, user) with get, set, delete, and list operations',
 
-  validate: async (_runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
-    const has = !!runtime.get('SECRETS');
+  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+    const has = !!runtime.getService('SECRETS');
     if (!has) {
-      logger.warn('[ManageSecret] Secrets service not available');
+      elizaLogger.warn('[ManageSecret] Secrets service not available');
       return false;
     }
 
@@ -50,11 +58,11 @@ export const manageSecretAction: Action = {
     message: Memory,
     state: any,
     options: any,
-    callback?: Callback
+    callback?: HandlerCallback
   ): Promise<boolean> => {
     elizaLogger.info('[ManageSecret] Starting secret management action');
 
-    const secrets = runtime.get('SECRETS') as EnhancedSecretManager;
+    const secrets = runtime.getService<EnhancedSecretManager>('SECRETS');
     if (!secrets) {
       if (callback) {
         void callback({
@@ -158,8 +166,8 @@ export const manageSecretAction: Action = {
         }
 
         case 'list': {
-          const secrets = await secrets.list(context);
-          const secretKeys = Object.keys(secrets);
+          const secretList = await secrets.list(context);
+          const secretKeys = Object.keys(secretList);
 
           if (secretKeys.length === 0) {
             result = `No ${context.level}-level secrets found`;
@@ -167,8 +175,8 @@ export const manageSecretAction: Action = {
             result = `Found ${secretKeys.length} ${context.level}-level secrets:\n`;
             result += secretKeys
               .map((key) => {
-                const _config = secrets[key];
-                return `- ${key}: ${_config.description || 'No description'} (${_config.type || 'secret'})`;
+                const config = secretList[key];
+                return `- ${key}: ${config.description || 'No description'} (${config.type || 'secret'})`;
               })
               .join('\n');
           }

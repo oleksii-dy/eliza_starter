@@ -1,11 +1,4 @@
-import {
-  IWalletService as BaseWalletService,
-  WalletPortfolio,
-  IAgentRuntime,
-  Memory,
-  State,
-  UUID,
-} from '@elizaos/core';
+import { type IWalletService as BaseWalletService, type UUID } from '@elizaos/core';
 import { Address, Hash, Hex } from 'viem';
 import { Chain } from 'viem/chains';
 
@@ -315,6 +308,3 @@ export interface IWalletService extends BaseWalletService {
   getENSName(address: Address): Promise<string | null>;
   resolveENS(name: string): Promise<Address | null>;
 }
-
-// Export convenience types
-export type { WalletPortfolio, IAgentRuntime, Memory, State, UUID } from '@elizaos/core';

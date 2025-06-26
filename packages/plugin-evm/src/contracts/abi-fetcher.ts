@@ -35,19 +35,16 @@ export class ABIFetcher {
       }
 
       return abi;
-    } catch (error) {
-      logger.error(`Error fetching ABI for ${contractAddress}:`, error);
+    } catch (_error) {
+      logger.error(`Error fetching ABI for ${contractAddress}:`, _error);
       return null;
     }
   }
 
-  private async fetchFromBlockExplorer(
-    contractAddress: Address,
-    chainId: number,
-  ): Promise<Abi | null> {
+  private fetchFromBlockExplorer(_contractAddress: Address, _chainId: number): Promise<Abi | null> {
     // This would integrate with Etherscan or other block explorers
     // For now, return null
-    return null;
+    return Promise.resolve(null);
   }
 }
 

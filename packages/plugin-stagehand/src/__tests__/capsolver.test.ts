@@ -4,7 +4,25 @@ import { logger } from '@elizaos/core';
 import axios from 'axios';
 
 // Mock axios
-mock.module('axios');
+mock.module('axios', () => ({
+  default: {
+    post: mock(),
+  },
+}));
+
+// Helper to create mock AxiosResponse
+const createMockResponse = (data: any) => ({
+  data,
+  status: 200,
+  statusText: 'OK',
+  headers: {},
+  config: {
+    url: '',
+    method: 'post',
+    headers: {},
+  } as any,
+  request: {},
+});
 
 // Mock logger
 mock.module('@elizaos/core', () => ({
@@ -28,12 +46,12 @@ describe('CapSolverService', () => {
   describe('createTask', () => {
     it('should create a task successfully', async () => {
       const mockTaskId = 'task-123';
-      mock(axios.post).mockResolvedValueOnce({
-        data: {
+      mock(axios.post).mockResolvedValueOnce(
+        createMockResponse({
           errorId: 0,
           taskId: mockTaskId,
-        },
-      });
+        })
+      );
 
       const task = {
         type: 'AntiTurnstileTaskProxyLess',
@@ -55,12 +73,12 @@ describe('CapSolverService', () => {
     });
 
     it('should throw error when API returns error', async () => {
-      mock(axios.post).mockResolvedValueOnce({
-        data: {
+      mock(axios.post).mockResolvedValueOnce(
+        createMockResponse({
           errorId: 1,
           errorDescription: 'Invalid API key',
-        },
-      });
+        })
+      );
 
       const task = {
         type: 'AntiTurnstileTaskProxyLess',
@@ -75,13 +93,13 @@ describe('CapSolverService', () => {
   describe('getTaskResult', () => {
     it('should return solution when task is ready', async () => {
       const mockSolution = { token: 'solved-token' };
-      mock(axios.post).mockResolvedValueOnce({
-        data: {
+      mock(axios.post).mockResolvedValueOnce(
+        createMockResponse({
           errorId: 0,
           status: 'ready',
           solution: mockSolution,
-        },
-      });
+        })
+      );
 
       const result = await capSolver.getTaskResult('task-123');
 
@@ -98,19 +116,19 @@ describe('CapSolverService', () => {
 
     it('should poll until task is ready', async () => {
       mock(axios.post)
-        .mockResolvedValueOnce({
-          data: {
+        .mockResolvedValueOnce(
+          createMockResponse({
             errorId: 0,
             status: 'processing',
-          },
-        })
-        .mockResolvedValueOnce({
-          data: {
+          })
+        )
+        .mockResolvedValueOnce(
+          createMockResponse({
             errorId: 0,
             status: 'ready',
             solution: { token: 'solved-token' },
-          },
-        });
+          })
+        );
 
       // Reduce polling interval for testing
       const fastCapSolver = new CapSolverService({
@@ -125,12 +143,12 @@ describe('CapSolverService', () => {
     });
 
     it('should throw error on timeout', async () => {
-      mock(axios.post).mockResolvedValue({
-        data: {
+      mock(axios.post).mockResolvedValue(
+        createMockResponse({
           errorId: 0,
           status: 'processing',
-        },
-      });
+        })
+      );
 
       const fastCapSolver = new CapSolverService({
         apiKey: mockApiKey,
@@ -150,12 +168,10 @@ describe('CapSolverService', () => {
       const mockToken = 'turnstile-token';
 
       mock(axios.post)
-        .mockResolvedValueOnce({
-          data: { errorId: 0, taskId: mockTaskId },
-        })
-        .mockResolvedValueOnce({
-          data: { errorId: 0, status: 'ready', solution: { token: mockToken } },
-        });
+        .mockResolvedValueOnce(createMockResponse({ errorId: 0, taskId: mockTaskId }))
+        .mockResolvedValueOnce(
+          createMockResponse({ errorId: 0, status: 'ready', solution: { token: mockToken } })
+        );
 
       const token = await capSolver.solveTurnstile('https://example.com', 'site-key');
 
@@ -165,12 +181,10 @@ describe('CapSolverService', () => {
 
     it('should use proxy when provided', async () => {
       mock(axios.post)
-        .mockResolvedValueOnce({
-          data: { errorId: 0, taskId: 'task-123' },
-        })
-        .mockResolvedValueOnce({
-          data: { errorId: 0, status: 'ready', solution: { token: 'proxy-token' } },
-        });
+        .mockResolvedValueOnce(createMockResponse({ errorId: 0, taskId: 'task-123' }))
+        .mockResolvedValueOnce(
+          createMockResponse({ errorId: 0, status: 'ready', solution: { token: 'proxy-token' } })
+        );
 
       await capSolver.solveTurnstile(
         'https://example.com',
@@ -196,16 +210,14 @@ describe('CapSolverService', () => {
   describe('solveRecaptchaV2', () => {
     it('should solve reCAPTCHA v2', async () => {
       mock(axios.post)
-        .mockResolvedValueOnce({
-          data: { errorId: 0, taskId: 'task-456' },
-        })
-        .mockResolvedValueOnce({
-          data: {
+        .mockResolvedValueOnce(createMockResponse({ errorId: 0, taskId: 'task-456' }))
+        .mockResolvedValueOnce(
+          createMockResponse({
             errorId: 0,
             status: 'ready',
             solution: { gRecaptchaResponse: 'recaptcha-v2-token' },
-          },
-        });
+          })
+        );
 
       const result = await capSolver.solveRecaptchaV2('https://example.com', 'v2-site-key');
 
@@ -215,16 +227,14 @@ describe('CapSolverService', () => {
 
     it('should handle invisible reCAPTCHA v2', async () => {
       mock(axios.post)
-        .mockResolvedValueOnce({
-          data: { errorId: 0, taskId: 'task-789' },
-        })
-        .mockResolvedValueOnce({
-          data: {
+        .mockResolvedValueOnce(createMockResponse({ errorId: 0, taskId: 'task-789' }))
+        .mockResolvedValueOnce(
+          createMockResponse({
             errorId: 0,
             status: 'ready',
             solution: { gRecaptchaResponse: 'invisible-token' },
-          },
-        });
+          })
+        );
 
       const result = await capSolver.solveRecaptchaV2('https://example.com', 'invisible-key', true);
 
@@ -244,16 +254,14 @@ describe('CapSolverService', () => {
   describe('solveRecaptchaV3', () => {
     it('should solve reCAPTCHA v3', async () => {
       mock(axios.post)
-        .mockResolvedValueOnce({
-          data: { errorId: 0, taskId: 'task-v3' },
-        })
-        .mockResolvedValueOnce({
-          data: {
+        .mockResolvedValueOnce(createMockResponse({ errorId: 0, taskId: 'task-v3' }))
+        .mockResolvedValueOnce(
+          createMockResponse({
             errorId: 0,
             status: 'ready',
             solution: { gRecaptchaResponse: 'v3-token' },
-          },
-        });
+          })
+        );
 
       const result = await capSolver.solveRecaptchaV3('https://example.com', 'v3-key', 'verify');
 
@@ -263,16 +271,14 @@ describe('CapSolverService', () => {
 
     it('should use custom action and score', async () => {
       mock(axios.post)
-        .mockResolvedValueOnce({
-          data: { errorId: 0, taskId: 'task-v3-custom' },
-        })
-        .mockResolvedValueOnce({
-          data: {
+        .mockResolvedValueOnce(createMockResponse({ errorId: 0, taskId: 'task-v3-custom' }))
+        .mockResolvedValueOnce(
+          createMockResponse({
             errorId: 0,
             status: 'ready',
             solution: { gRecaptchaResponse: 'v3-custom-token' },
-          },
-        });
+          })
+        );
 
       const result = await capSolver.solveRecaptchaV3(
         'https://example.com',
@@ -298,16 +304,14 @@ describe('CapSolverService', () => {
   describe('solveHCaptcha', () => {
     it('should solve hCaptcha', async () => {
       mock(axios.post)
-        .mockResolvedValueOnce({
-          data: { errorId: 0, taskId: 'task-hcaptcha' },
-        })
-        .mockResolvedValueOnce({
-          data: {
+        .mockResolvedValueOnce(createMockResponse({ errorId: 0, taskId: 'task-hcaptcha' }))
+        .mockResolvedValueOnce(
+          createMockResponse({
             errorId: 0,
             status: 'ready',
             solution: { token: 'hcaptcha-token' },
-          },
-        });
+          })
+        );
 
       const result = await capSolver.solveHCaptcha('https://example.com', 'hcaptcha-key');
 
@@ -317,16 +321,14 @@ describe('CapSolverService', () => {
 
     it('should use proxy when provided', async () => {
       mock(axios.post)
-        .mockResolvedValueOnce({
-          data: { errorId: 0, taskId: 'task-hcaptcha-proxy' },
-        })
-        .mockResolvedValueOnce({
-          data: {
+        .mockResolvedValueOnce(createMockResponse({ errorId: 0, taskId: 'task-hcaptcha-proxy' }))
+        .mockResolvedValueOnce(
+          createMockResponse({
             errorId: 0,
             status: 'ready',
             solution: { token: 'hcaptcha-proxy-token' },
-          },
-        });
+          })
+        );
 
       await capSolver.solveHCaptcha(
         'https://example.com',
@@ -369,16 +371,14 @@ describe('CapSolverService', () => {
 
     it('should handle invalid proxy format', async () => {
       mock(axios.post)
-        .mockResolvedValueOnce({
-          data: { errorId: 0, taskId: 'task-proxy-error' },
-        })
-        .mockResolvedValueOnce({
-          data: {
+        .mockResolvedValueOnce(createMockResponse({ errorId: 0, taskId: 'task-proxy-error' }))
+        .mockResolvedValueOnce(
+          createMockResponse({
             errorId: 0,
             status: 'ready',
             solution: { token: 'proxy-error-token' },
-          },
-        });
+          })
+        );
 
       // Should not throw, but handle gracefully
       await expect(
@@ -388,17 +388,15 @@ describe('CapSolverService', () => {
 
     it('should retry on task polling errors', async () => {
       mock(axios.post)
-        .mockResolvedValueOnce({
-          data: { errorId: 0, taskId: 'task-retry' },
-        })
+        .mockResolvedValueOnce(createMockResponse({ errorId: 0, taskId: 'task-retry' }))
         .mockRejectedValueOnce(new Error('Temporary error'))
-        .mockResolvedValueOnce({
-          data: {
+        .mockResolvedValueOnce(
+          createMockResponse({
             errorId: 0,
             status: 'ready',
             solution: { token: 'retry-token' },
-          },
-        });
+          })
+        );
 
       // This should fail because getTaskResult doesn't retry on errors
       await expect(capSolver.solveTurnstile('https://example.com', 'site-key')).rejects.toThrow(

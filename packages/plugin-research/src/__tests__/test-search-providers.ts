@@ -45,7 +45,8 @@ const mockRuntime = {
             items: [
               {
                 title: 'TypeScript compilation issue',
-                html_url: 'https://github.com/microsoft/TypeScript/issues/12345',
+                html_url:
+                  'https://github.com/microsoft/TypeScript/issues/12345',
                 body: 'Having trouble with TypeScript compilation...',
                 state: 'open',
                 comments: 5,
@@ -80,7 +81,10 @@ async function testPyPISearch() {
       console.log(`🏷️  Provider: ${first.provider}`);
     }
   } catch (error) {
-    console.error('❌ PyPI search failed:', error instanceof Error ? error.message : String(error));
+    console.error(
+      '❌ PyPI search failed:',
+      error instanceof Error ? error.message : String(error)
+    );
   }
 }
 
@@ -102,7 +106,10 @@ async function testNPMSearch() {
       // Removed scores check as it's not part of standard SearchMetadata
     }
   } catch (error) {
-    console.error('❌ NPM search failed:', error instanceof Error ? error.message : String(error));
+    console.error(
+      '❌ NPM search failed:',
+      error instanceof Error ? error.message : String(error)
+    );
   }
 }
 
@@ -164,7 +171,9 @@ async function testPackageSpecificSearches() {
 }
 
 async function main() {
-  console.log('🧪 Testing ElizaOS Research Plugin - Search Provider Integration\n');
+  console.log(
+    '🧪 Testing ElizaOS Research Plugin - Search Provider Integration\n'
+  );
 
   await testPyPISearch();
   await testNPMSearch();
@@ -172,8 +181,12 @@ async function main() {
   await testPackageSpecificSearches();
 
   console.log('\n✅ Search provider tests completed!');
-  console.log('\n💡 These providers are now integrated into the research service');
-  console.log('   and will be automatically selected based on research domain and query keywords.');
+  console.log(
+    '\n💡 These providers are now integrated into the research service'
+  );
+  console.log(
+    '   and will be automatically selected based on research domain and query keywords.'
+  );
 }
 
 main().catch(console.error);

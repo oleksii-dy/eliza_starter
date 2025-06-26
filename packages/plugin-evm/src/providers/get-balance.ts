@@ -92,7 +92,7 @@ export const tokenBalanceProvider: Provider = {
           hasBalance: (parseFloat(formattedBalance) > 0).toString(),
         },
       };
-    } catch (error) {
+    } catch (_error) {
       return { text: '', data: {}, values: {} };
     }
   },

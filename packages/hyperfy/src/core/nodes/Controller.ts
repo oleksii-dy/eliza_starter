@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
 import { isNumber, isBoolean, isString, isFunction } from 'lodash-es';
 
 import { DEG2RAD } from '../extras/general';

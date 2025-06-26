@@ -45,7 +45,7 @@ export const dependencyResolutionTests: TestCase[] = [
       assert(!resolution.success, 'Should detect version conflict');
       assert(resolution.conflicts.length > 0, 'Should have conflicts');
 
-      const conflict = resolution.conflicts.find((c) => c.pluginName === 'shared-lib');
+      const conflict = resolution.conflicts.find((c: any) => c.pluginName === 'shared-lib');
       assert(conflict, 'Should identify shared-lib conflict');
       assert(conflict.requestedBy.length === 2, 'Should show both plugins requesting it');
 
@@ -97,8 +97,8 @@ export const dependencyResolutionTests: TestCase[] = [
 
       assert(!resolution.success, 'Should detect circular dependency');
 
-      const circularConflict = resolution.conflicts.find((c) =>
-        c.requestedBy.some((r) => r.constraint === 'circular')
+      const circularConflict = resolution.conflicts.find((c: any) =>
+        c.requestedBy.some((r: any) => r.constraint === 'circular')
       );
       assert(circularConflict, 'Should identify circular dependency');
 

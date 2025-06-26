@@ -74,7 +74,8 @@ const example3 = {
 // 4. DeFi specialized research
 const example4 = {
   user: 'Research the best DeFi yield farming strategies',
-  agent: "I'll conduct specialized research on DeFi yield farming strategies for you.",
+  agent:
+    "I'll conduct specialized research on DeFi yield farming strategies for you.",
   // Agent internally calls: research_defi_yield action
   result:
     "Starting DeFi-focused research on yield farming strategies. I'll analyze protocols, APYs, risks, and provide actionable insights.",

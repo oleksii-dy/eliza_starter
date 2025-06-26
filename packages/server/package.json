@@ -29,18 +29,12 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "bun run typecheck && tsup",
-    "typecheck": "tsc --project tsconfig.build.json --noEmit",
-    "type-check": "tsc --project tsconfig.build.json --noEmit",
+    "dev": "bun run build.ts --watch",
+    "build": "bun run build.ts",
+    "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
-    "lint:check": "eslint src && prettier --check ./src",
-    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "test": "elizaos test",
-    "test:unit": "bun test src/**/*.test.ts --exclude **/integration/**",
-    "test:integration": "bun test src/__tests__/integration/**/*.test.ts",
-    "test:coverage": "bun test --coverage",
-    "test:watch": "bun test --watch",
-    "test:cli": "bun test tests/commands/"
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
   },
   "devDependencies": {
     "@types/node": "^24.0.1",
@@ -49,7 +43,8 @@
     "dotenv": "^16.5.0",
     "eslint": "^9.22.0",
     "prettier": "3.5.3",
-    "tsup": "8.5.0",
+    "supertest": "^7.0.0",
+    "@types/supertest": "^6.0.2",
     "tsx": "4.19.4",
     "typescript": "5.8.3",
     "which": "^4.0.0",
@@ -58,6 +53,7 @@
   "gitHead": "d5bd5c43bfebeb7ac02f9e029f924cb6cd5c2ec7",
   "dependencies": {
     "@elizaos/core": "workspace:*",
+    "@elizaos/plugin-e2b": "workspace:*",
     "@elizaos/plugin-message-handling": "workspace:*",
     "@elizaos/plugin-local-ai": "latest",
     "@elizaos/plugin-sql": "workspace:*",
@@ -68,6 +64,7 @@
     "express-fileupload": "^1.5.1",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
+    "jose": "^5.9.6",
     "path-to-regexp": "^8.2.0",
     "socket.io": "^4.8.1"
   }

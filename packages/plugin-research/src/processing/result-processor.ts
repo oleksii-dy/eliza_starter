@@ -46,7 +46,9 @@ export class SearchResultProcessor {
     domainFiltered = beforeDomain - processed.length;
 
     if (domainFiltered > 0) {
-      logger.info(`Filtered ${domainFiltered} results from blacklisted domains`);
+      logger.info(
+        `Filtered ${domainFiltered} results from blacklisted domains`
+      );
     }
 
     // Step 2: Quality filtering
@@ -136,7 +138,8 @@ export class SearchResultProcessor {
         const domain = url.hostname.toLowerCase().replace(/^www\./, '');
 
         const isBlacklisted = blacklistedDomains.some(
-          (blacklisted) => domain === blacklisted || domain.endsWith(`.${blacklisted}`)
+          (blacklisted) =>
+            domain === blacklisted || domain.endsWith(`.${blacklisted}`)
         );
 
         if (isBlacklisted) {
@@ -196,7 +199,9 @@ export class SearchResultProcessor {
     ];
 
     if (
-      spamIndicators.some((indicator) => content.includes(indicator) || title.includes(indicator))
+      spamIndicators.some(
+        (indicator) => content.includes(indicator) || title.includes(indicator)
+      )
     ) {
       return true;
     }
@@ -218,7 +223,9 @@ export class SearchResultProcessor {
     }
 
     // Check for insufficient substantive content
-    const sentences = content.split(/[.!?]+/).filter((s) => s.trim().length > 10);
+    const sentences = content
+      .split(/[.!?]+/)
+      .filter((s) => s.trim().length > 10);
     if (sentences.length < 3) {
       return true;
     }
@@ -226,7 +233,9 @@ export class SearchResultProcessor {
     return false;
   }
 
-  private async deduplicateResults(results: SearchResult[]): Promise<SearchResult[]> {
+  private async deduplicateResults(
+    results: SearchResult[]
+  ): Promise<SearchResult[]> {
     const deduplicated: SearchResult[] = [];
     const processed = new Set<string>();
 
@@ -268,7 +277,10 @@ export class SearchResultProcessor {
       (a.content || '').substring(0, 500),
       (b.content || '').substring(0, 500)
     );
-    const snippetSim = this.calculateTextSimilarity(a.snippet || '', b.snippet || '');
+    const snippetSim = this.calculateTextSimilarity(
+      a.snippet || '',
+      b.snippet || ''
+    );
 
     // Weighted average
     return titleSim * 0.4 + contentSim * 0.4 + snippetSim * 0.2;
@@ -295,7 +307,10 @@ export class SearchResultProcessor {
     return union.size === 0 ? 0 : intersection.size / union.size;
   }
 
-  private shouldReplaceExisting(newResult: SearchResult, existing: SearchResult): boolean {
+  private shouldReplaceExisting(
+    newResult: SearchResult,
+    existing: SearchResult
+  ): boolean {
     // Prefer higher scored results
     if (newResult.score && existing.score && newResult.score > existing.score) {
       return true;
@@ -360,7 +375,8 @@ export class SearchResultProcessor {
         // Boost recent content
         const date = this.extractDate(result);
         if (date) {
-          const ageInDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+          const ageInDays =
+            (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
           if (ageInDays < 365) {
             score *= 1.1;
           }
@@ -447,7 +463,9 @@ export class SearchResultProcessor {
 
       const adjustedScore =
         (result.score || 0.5) *
-        (1 - this.config.diversityWeight + this.config.diversityWeight * diversityPenalty);
+        (1 -
+          this.config.diversityWeight +
+          this.config.diversityWeight * diversityPenalty);
 
       diversified.push({
         ...result,

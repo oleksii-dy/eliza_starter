@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { getContentTypeFromMimeType } from '@elizaos/core';
-import { UUID, Media, ChannelType } from '@elizaos/core';
+import { getContentTypeFromMimeType, UUID, Media, ChannelType } from '@elizaos/core';
 import { randomUUID } from '@/lib/utils';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -28,9 +27,10 @@ export function useFileUpload({ agentId, channelId, chatType }: UseFileUploadPro
 
   // Cleanup blob URLs on unmount
   useEffect(() => {
+    const blobUrls = blobUrlsRef.current;
     return () => {
-      blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-      blobUrlsRef.current.clear();
+      blobUrls.forEach((url) => URL.revokeObjectURL(url));
+      blobUrls.clear();
     };
   }, []);
 
@@ -130,7 +130,7 @@ export function useFileUpload({ agentId, channelId, chatType }: UseFileUploadPro
           const uploadResult =
             chatType === ChannelType.DM && agentId
               ? await apiClient.uploadAgentMedia(agentId, fileData.file)
-              : await apiClient.uploadChannelMedia(channelId!, fileData.file);
+              : await apiClient.uploadChannelMedia(channelId as UUID, fileData.file);
 
           if (uploadResult.success) {
             return {

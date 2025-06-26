@@ -42,7 +42,7 @@ export function useConfirmation() {
       confirmationState.onConfirm();
     }
     handleOpenChange(false);
-  }, [confirmationState.onConfirm, handleOpenChange]);
+  }, [confirmationState, handleOpenChange]);
 
   return {
     confirm,

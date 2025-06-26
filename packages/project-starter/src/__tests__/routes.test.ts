@@ -34,7 +34,7 @@ describe('Plugin Routes', () => {
         };
 
         // Mock runtime object as third parameter
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const mockRuntime = {} as any;
 
         // Call the route handler

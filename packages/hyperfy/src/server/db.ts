@@ -1,6 +1,6 @@
 import { Database } from 'bun:sqlite';
 import { drizzle } from 'drizzle-orm/bun-sqlite';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import moment from 'moment';
 import * as schema from './db-schema';
 
@@ -65,7 +65,7 @@ async function migrate(db: DB, sqlite: Database): Promise<void> {
 
   // Get current version
   const versionRow = await db.select().from(schema.config).where(eq(schema.config.key, 'version')).get();
-  let version = parseInt(versionRow?.value || '0');
+  let version = parseInt(versionRow?.value || '0', 10);
 
   // Run any new migrations
   for (let i = version; i < migrations.length; i++) {
@@ -86,7 +86,7 @@ async function migrate(db: DB, sqlite: Database): Promise<void> {
  */
 const migrations: Array<(db: DB, sqlite: Database) => Promise<void>> = [
   // add users table
-  async (db, sqlite) => {
+  async (_db, sqlite) => {
     sqlite.run(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
@@ -97,7 +97,7 @@ const migrations: Array<(db: DB, sqlite: Database) => Promise<void>> = [
     `);
   },
   // add blueprints & entities tables
-  async (db, sqlite) => {
+  async (_db, sqlite) => {
     sqlite.run(`
       CREATE TABLE IF NOT EXISTS blueprints (
         id TEXT PRIMARY KEY,
@@ -116,7 +116,7 @@ const migrations: Array<(db: DB, sqlite: Database) => Promise<void>> = [
     `);
   },
   // add blueprint.version field
-  async (db, sqlite) => {
+  async (db, _sqlite) => {
     const now = moment().toISOString();
     const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
@@ -133,11 +133,11 @@ const migrations: Array<(db: DB, sqlite: Database) => Promise<void>> = [
     }
   },
   // add user.vrm field
-  async (db, sqlite) => {
+  async (_db, sqlite) => {
     sqlite.run('ALTER TABLE users ADD COLUMN vrm TEXT');
   },
   // add blueprint.config field
-  async (db, sqlite) => {
+  async (db, _sqlite) => {
     const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
@@ -152,11 +152,18 @@ const migrations: Array<(db: DB, sqlite: Database) => Promise<void>> = [
     }
   },
   // rename user.vrm -> user.avatar
-  async (db, sqlite) => {
-    sqlite.run('ALTER TABLE users RENAME COLUMN vrm TO avatar');
+  async (_db, sqlite) => {
+    // Check if vrm column exists before trying to rename it
+    const columns = sqlite.query('PRAGMA table_info(users)').all();
+    const hasVrmColumn = columns.some((col: any) => col.name === 'vrm');
+    const hasAvatarColumn = columns.some((col: any) => col.name === 'avatar');
+
+    if (hasVrmColumn && !hasAvatarColumn) {
+      sqlite.run('ALTER TABLE users RENAME COLUMN vrm TO avatar');
+    }
   },
   // add blueprint.preload field
-  async (db, sqlite) => {
+  async (db, _sqlite) => {
     const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
@@ -171,7 +178,7 @@ const migrations: Array<(db: DB, sqlite: Database) => Promise<void>> = [
     }
   },
   // blueprint.config -> blueprint.props
-  async (db, sqlite) => {
+  async (db, _sqlite) => {
     const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
@@ -185,7 +192,7 @@ const migrations: Array<(db: DB, sqlite: Database) => Promise<void>> = [
     }
   },
   // add blueprint.public and blueprint.locked fields
-  async (db, sqlite) => {
+  async (db, _sqlite) => {
     const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
@@ -208,7 +215,7 @@ const migrations: Array<(db: DB, sqlite: Database) => Promise<void>> = [
     }
   },
   // add blueprint.unique field
-  async (db, sqlite) => {
+  async (db, _sqlite) => {
     const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
@@ -227,7 +234,7 @@ const migrations: Array<(db: DB, sqlite: Database) => Promise<void>> = [
     }
   },
   // rename config key to settings
-  async (db, sqlite) => {
+  async (db, _sqlite) => {
     const configRow = await db.select().from(schema.config).where(eq(schema.config.key, 'config')).get();
     if (configRow) {
       const settings = configRow.value;
@@ -236,7 +243,7 @@ const migrations: Array<(db: DB, sqlite: Database) => Promise<void>> = [
     }
   },
   // add blueprint.disabled field
-  async (db, sqlite) => {
+  async (db, _sqlite) => {
     const blueprints = await db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
       const data = JSON.parse(blueprint.data);
@@ -251,7 +258,7 @@ const migrations: Array<(db: DB, sqlite: Database) => Promise<void>> = [
     }
   },
   // add entity.scale field
-  async (db, sqlite) => {
+  async (db, _sqlite) => {
     const entities = await db.select().from(schema.entities);
     for (const entity of entities) {
       const data = JSON.parse(entity.data);

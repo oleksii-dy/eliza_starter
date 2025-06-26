@@ -23,8 +23,9 @@ export class ClientLiveKit extends System {
       video: false,
       screen: false,
     };
-    this.voices = new Map() // playerId -> PlayerVoice
-    ;(this.screens = []), (this.screenNodes = new Set()); // Video
+    this.voices = new Map(); // playerId -> PlayerVoice
+    this.screens = [];
+    this.screenNodes = new Set(); // Video
   }
 
   async deserialize(opts: any) {
@@ -40,7 +41,7 @@ export class ClientLiveKit extends System {
         autoGainControl: true,
         echoCancellation: true,
         noiseSuppression: true,
-        // @ts-ignore - audio might not exist on world
+        // @ts-expect-error - audio might not exist on world
         audioContext: (this.world as any).audio?.ctx,
       },
       videoCaptureDefaults: {
@@ -58,7 +59,7 @@ export class ClientLiveKit extends System {
     this.room.on(RoomEvent.TrackSubscribed, this.onTrackSubscribed);
     this.room.on(RoomEvent.TrackUnsubscribed, this.onTrackUnsubscribed);
     this.room.localParticipant.on(ParticipantEvent.IsSpeakingChanged, (speaking: boolean) => {
-      // @ts-ignore - setSpeaking might not exist
+      // @ts-expect-error - setSpeaking might not exist
       this.world.entities.player?.setSpeaking?.(speaking);
     });
     await this.room.connect(window.env?.LIVEKIT_URL || import.meta.env?.LIVEKIT_URL || '', token);
@@ -124,7 +125,6 @@ export class ClientLiveKit extends System {
     const player = this.world.entities.players?.get(playerId);
     if (!player) {return;}
     if (track.kind === 'audio') {
-      // @ts-ignore - audio might not exist on world
       const audioCtx = (this.world as any).audio?.ctx;
       if (!audioCtx) {return;}
       const source = audioCtx.createMediaStreamSource(track.mediaStream);
@@ -186,7 +186,7 @@ export class ClientLiveKit extends System {
     for (const screen of this.screens) {
       const player = this.world.entities.players?.get(screen.playerId);
       if (!player) {continue;}
-      // @ts-ignore - build might not exist
+      // @ts-expect-error - build might not exist
       const node = player.build?.({
         type: 'video',
         src: screen.element,
@@ -203,7 +203,6 @@ export class ClientLiveKit extends System {
     for (const [playerId, voice] of this.voices) {
       const player = this.world.entities.players?.get(playerId);
       if (!player) {continue;}
-      // @ts-ignore - position might not exist
       const position = player.position;
       if (position) {
         voice.pannerNode.setPosition(position.x, position.y, position.z);

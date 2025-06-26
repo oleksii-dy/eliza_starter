@@ -9,7 +9,7 @@ import {
   type TrustRequirements,
   type TrustContext,
   type TrustInteraction,
-  type SemanticTrustEvidence
+  type SemanticTrustEvidence,
 } from '../../types/trust';
 
 describe('TrustEngine', () => {
@@ -54,7 +54,7 @@ describe('TrustEngine', () => {
       const entityId = 'entity-123' as UUID;
       const context: TrustContext = {
         entityId,
-        evaluatorId: mockRuntime.agentId
+        evaluatorId: mockRuntime.agentId,
       };
 
       // Mock no existing profile
@@ -70,7 +70,7 @@ describe('TrustEngine', () => {
           competence: 50,
           integrity: 50,
           benevolence: 50,
-          transparency: 50
+          transparency: 50,
         },
         confidence: expect.any(Number),
         interactionCount: 0,
@@ -80,8 +80,8 @@ describe('TrustEngine', () => {
         trend: {
           direction: 'stable',
           changeRate: 0,
-          lastChangeAt: expect.any(Number)
-        }
+          lastChangeAt: expect.any(Number),
+        },
       });
 
       // calculateTrust doesn't save the profile, it just returns it
@@ -92,7 +92,7 @@ describe('TrustEngine', () => {
       const entityId = 'entity-123' as UUID;
       const context: TrustContext = {
         entityId,
-        evaluatorId: mockRuntime.agentId
+        evaluatorId: mockRuntime.agentId,
       };
 
       // Mock existing profile
@@ -104,7 +104,7 @@ describe('TrustEngine', () => {
           competence: 60,
           integrity: 55,
           benevolence: 60,
-          transparency: 60
+          transparency: 60,
         },
         confidence: 0.7,
         interactionCount: 5,
@@ -114,8 +114,8 @@ describe('TrustEngine', () => {
         trend: {
           direction: 'increasing',
           changeRate: 5,
-          lastChangeAt: Date.now() - 3600000
-        }
+          lastChangeAt: Date.now() - 3600000,
+        },
       });
 
       // Mock interactions
@@ -125,8 +125,8 @@ describe('TrustEngine', () => {
           targetEntityId: mockRuntime.agentId,
           type: TrustEvidenceType.HELPFUL_ACTION,
           timestamp: Date.now() - 1800000,
-          impact: 10
-        }
+          impact: 10,
+        },
       ]);
 
       const result = await trustEngine.calculateTrust(entityId, context);
@@ -149,7 +149,7 @@ describe('TrustEngine', () => {
         type: TrustEvidenceType.PROMISE_KEPT,
         timestamp: Date.now(),
         impact: 15,
-        details: { description: 'Fulfilled commitment' }
+        details: { description: 'Fulfilled commitment' },
       };
 
       await trustEngine.recordInteraction(interaction);
@@ -173,13 +173,13 @@ describe('TrustEngine', () => {
         sentiment: 'positive',
         affectedDimensions: {
           benevolence: 80,
-          competence: 75
+          competence: 75,
         },
         analysisConfidence: 0.9,
         sourceContent: 'Helped solve a complex problem',
         timestamp: Date.now(),
         reportedBy: mockRuntime.agentId,
-        context: { entityId, evaluatorId: mockRuntime.agentId }
+        context: { entityId, evaluatorId: mockRuntime.agentId },
       };
 
       await trustEngine.recordSemanticEvidence(entityId, evidence);
@@ -201,12 +201,12 @@ describe('TrustEngine', () => {
         minimumTrust: 60,
         dimensions: {
           reliability: 50,
-          integrity: 55
-        }
+          integrity: 55,
+        },
       };
       const context: TrustContext = {
         entityId,
-        evaluatorId: mockRuntime.agentId
+        evaluatorId: mockRuntime.agentId,
       };
 
       // Mock profile that meets requirements
@@ -218,10 +218,10 @@ describe('TrustEngine', () => {
           competence: 70,
           integrity: 75,
           benevolence: 75,
-          transparency: 75
+          transparency: 75,
         },
         confidence: 0.8,
-        interactionCount: 10
+        interactionCount: 10,
       });
 
       const result = await trustEngine.evaluateTrustDecision(entityId, requirements, context);
@@ -235,11 +235,11 @@ describe('TrustEngine', () => {
       const entityId = 'entity-123' as UUID;
       const requirements: TrustRequirements = {
         minimumTrust: 80,
-        minimumInteractions: 10
+        minimumInteractions: 10,
       };
       const context: TrustContext = {
         entityId,
-        evaluatorId: mockRuntime.agentId
+        evaluatorId: mockRuntime.agentId,
       };
 
       // Mock profile that doesn't meet requirements
@@ -251,10 +251,10 @@ describe('TrustEngine', () => {
           competence: 60,
           integrity: 60,
           benevolence: 60,
-          transparency: 60
+          transparency: 60,
         },
         confidence: 0.7,
-        interactionCount: 5
+        interactionCount: 5,
       });
 
       const result = await trustEngine.evaluateTrustDecision(entityId, requirements, context);
@@ -271,12 +271,12 @@ describe('TrustEngine', () => {
         minimumTrust: 50,
         dimensions: {
           integrity: 80,
-          transparency: 70
-        }
+          transparency: 70,
+        },
       };
       const context: TrustContext = {
         entityId,
-        evaluatorId: mockRuntime.agentId
+        evaluatorId: mockRuntime.agentId,
       };
 
       // Mock profile with low integrity
@@ -288,10 +288,10 @@ describe('TrustEngine', () => {
           competence: 75,
           integrity: 50, // Below requirement
           benevolence: 75,
-          transparency: 75
+          transparency: 75,
         },
         confidence: 0.8,
-        interactionCount: 15
+        interactionCount: 15,
       });
 
       const result = await trustEngine.evaluateTrustDecision(entityId, requirements, context);
@@ -311,7 +311,7 @@ describe('TrustEngine', () => {
       const entityId = 'entity-123' as UUID;
       const context: TrustContext = {
         entityId,
-        evaluatorId: mockRuntime.agentId
+        evaluatorId: mockRuntime.agentId,
       };
 
       // Mock profile with old evidence
@@ -323,14 +323,14 @@ describe('TrustEngine', () => {
           competence: 70,
           integrity: 70,
           benevolence: 70,
-          transparency: 70
+          transparency: 70,
         },
         evidence: [],
         lastCalculated: Date.now() - 86400000, // 1 day ago
         trend: {
           direction: 'stable',
-          changeRate: 0
-        }
+          changeRate: 0,
+        },
       });
 
       const result = await trustEngine.calculateTrust(entityId, context);
@@ -349,7 +349,7 @@ describe('TrustEngine', () => {
       const entityId = 'entity-123' as UUID;
       const context: TrustContext = {
         entityId,
-        evaluatorId: mockRuntime.agentId
+        evaluatorId: mockRuntime.agentId,
       };
 
       // Mock profile with lower trust
@@ -361,7 +361,7 @@ describe('TrustEngine', () => {
           competence: 55,
           integrity: 55,
           benevolence: 55,
-          transparency: 55
+          transparency: 55,
         },
         confidence: 0.6,
         interactionCount: 5,
@@ -369,8 +369,8 @@ describe('TrustEngine', () => {
         trend: {
           direction: 'stable',
           changeRate: 0,
-          lastChangeAt: Date.now() - 86400000
-        }
+          lastChangeAt: Date.now() - 86400000,
+        },
       });
 
       // Mock recent positive interactions
@@ -378,13 +378,13 @@ describe('TrustEngine', () => {
         {
           type: TrustEvidenceType.HELPFUL_ACTION,
           timestamp: Date.now() - 3600000,
-          impact: 15
+          impact: 15,
         },
         {
           type: TrustEvidenceType.PROMISE_KEPT,
           timestamp: Date.now() - 7200000,
-          impact: 10
-        }
+          impact: 10,
+        },
       ]);
 
       const result = await trustEngine.calculateTrust(entityId, context);

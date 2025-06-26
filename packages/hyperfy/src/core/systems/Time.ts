@@ -89,7 +89,7 @@ export class Time extends System {
   update(dt: number): void {
     if (this.isPaused) {return;}
 
-    // Convert delta time from milliseconds to minutes
+    // Convert _delta time from milliseconds to minutes
     const deltaMinutes = (dt / 1000 / 60) * this.timeScale;
     const previousTime = this.currentTime;
     this.currentTime += deltaMinutes;

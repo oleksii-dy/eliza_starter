@@ -29,7 +29,9 @@ export default function useVersion() {
       const data = await response.json();
       const latestVersion = data.tag_name;
       return latestVersion;
-    } catch {}
+    } catch {
+      // Silently fail - version fetch not critical
+    }
   }
 
   const compareVersion = useCallback(async () => {

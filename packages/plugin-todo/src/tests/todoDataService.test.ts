@@ -58,7 +58,7 @@ describe('TodoDataService', () => {
 
   describe('createTodo', () => {
     it('should create a new todo with tags', async () => {
-      const mockTodo = { id: 'todo-1' };
+      const mockTodo = { id: '00000000-0000-0000-0000-000000000001' };
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve([mockTodo]));
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(true));
 
@@ -80,11 +80,11 @@ describe('TodoDataService', () => {
       expect(mockDb.insert).toHaveBeenCalledWith(todosTable);
       expect(mockThenable.values).toHaveBeenCalled();
       expect(mockDb.insert).toHaveBeenCalledWith(todoTagsTable);
-      expect(todoId).toBe('todo-1');
+      expect(todoId).toBe('00000000-0000-0000-0000-000000000001');
     });
 
     it('should create daily todo', async () => {
-      const mockTodo = { id: 'daily-todo-1' };
+      const mockTodo = { id: '00000000-0000-0000-0000-000000000002' };
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve([mockTodo]));
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(true));
 
@@ -99,7 +99,7 @@ describe('TodoDataService', () => {
       });
 
       expect(mockDb.insert).toHaveBeenCalledWith(todosTable);
-      expect(todoId).toBe('daily-todo-1');
+      expect(todoId).toBe('00000000-0000-0000-0000-000000000002');
     });
 
     it('should handle creation failure', async () => {
@@ -122,7 +122,7 @@ describe('TodoDataService', () => {
   describe('getTodos', () => {
     it('should get todos with filters', async () => {
       const mockTodos = [
-        { id: 'todo-1', name: 'Todo 1', type: 'one-off' },
+        { id: '00000000-0000-0000-0000-000000000001', name: 'Todo 1', type: 'one-off' },
         { id: 'todo-2', name: 'Todo 2', type: 'daily' },
       ];
 
@@ -150,8 +150,8 @@ describe('TodoDataService', () => {
     });
 
     it('should filter by tags', async () => {
-      const mockTodos = [{ id: 'todo-1', name: 'Todo 1' }];
-      const mockTags = [{ todoId: 'todo-1', tag: 'urgent' }];
+      const mockTodos = [{ id: '00000000-0000-0000-0000-000000000001', name: 'Todo 1' }];
+      const mockTags = [{ todoId: '00000000-0000-0000-0000-000000000001', tag: 'urgent' }];
 
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(mockTodos));
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(mockTags));
@@ -162,27 +162,27 @@ describe('TodoDataService', () => {
 
       expect(mockThenable.where).toHaveBeenCalled();
       expect(todos).toHaveLength(1);
-      expect(todos[0].id).toBe('todo-1');
+      expect(todos[0].id).toBe('00000000-0000-0000-0000-000000000001');
       expect(todos[0].tags).toEqual(['urgent']);
     });
   });
 
   describe('getTodo', () => {
     it('should get a single todo by ID', async () => {
-      const mockTodo = { id: 'todo-1', name: 'Test Todo' };
+      const mockTodo = { id: '00000000-0000-0000-0000-000000000001', name: 'Test Todo' };
       const mockTags = [
-        { todoId: 'todo-1', tag: 'TODO' },
-        { todoId: 'todo-1', tag: 'urgent' },
+        { todoId: '00000000-0000-0000-0000-000000000001', tag: 'TODO' },
+        { todoId: '00000000-0000-0000-0000-000000000001', tag: 'urgent' },
       ];
 
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve([mockTodo]));
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(mockTags));
 
-      const todo = await service.getTodo('todo-1' as UUID);
+      const todo = await service.getTodo('00000000-0000-0000-0000-000000000001' as UUID);
 
       expect(mockThenable.where).toHaveBeenCalled();
       expect(todo).not.toBeNull();
-      expect(todo?.id).toBe('todo-1');
+      expect(todo?.id).toBe('00000000-0000-0000-0000-000000000001');
       expect(todo?.tags).toHaveLength(2);
       expect(todo?.tags).toContain('TODO');
       expect(todo?.tags).toContain('urgent');
@@ -199,7 +199,7 @@ describe('TodoDataService', () => {
     it('should update todo fields', async () => {
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(true));
 
-      const success = await service.updateTodo('todo-1' as UUID, {
+      const success = await service.updateTodo('00000000-0000-0000-0000-000000000001' as UUID, {
         name: 'Updated Name',
         priority: 1,
         isCompleted: true,
@@ -216,7 +216,7 @@ describe('TodoDataService', () => {
         reject(new Error('Update failed'))
       );
 
-      const success = await service.updateTodo('todo-1' as UUID, {
+      const success = await service.updateTodo('00000000-0000-0000-0000-000000000002' as UUID, {
         name: 'Updated Name',
       });
 
@@ -228,7 +228,7 @@ describe('TodoDataService', () => {
     it('should delete a todo', async () => {
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(true));
 
-      const success = await service.deleteTodo('todo-1' as UUID);
+      const success = await service.deleteTodo('00000000-0000-0000-0000-000000000001' as UUID);
 
       expect(mockThenable.where).toHaveBeenCalled();
       expect(success).toBe(true);
@@ -241,7 +241,7 @@ describe('TodoDataService', () => {
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(existingTags));
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(true));
 
-      const success = await service.addTags('todo-1' as UUID, ['urgent', 'high-priority']);
+      const success = await service.addTags('00000000-0000-0000-0000-000000000001' as UUID, ['urgent', 'high-priority']);
 
       expect(mockDb.select).toHaveBeenCalled();
       expect(mockDb.insert).toHaveBeenCalledWith(todoTagsTable);
@@ -252,7 +252,7 @@ describe('TodoDataService', () => {
       const existingTags = [{ tag: 'TODO' }, { tag: 'urgent' }];
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(existingTags));
 
-      const success = await service.addTags('todo-1' as UUID, ['urgent', 'TODO']);
+      const success = await service.addTags('00000000-0000-0000-0000-000000000002' as UUID, ['urgent', 'TODO']);
 
       expect(mockDb.select).toHaveBeenCalled();
       expect(mockDb.insert).not.toHaveBeenCalled();
@@ -264,7 +264,7 @@ describe('TodoDataService', () => {
     it('should remove tags from a todo', async () => {
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(true));
 
-      const success = await service.removeTags('todo-1' as UUID, ['urgent', 'outdated']);
+      const success = await service.removeTags('00000000-0000-0000-0000-000000000001' as UUID, ['urgent', 'outdated']);
 
       expect(mockDb.delete).toHaveBeenCalledWith(todoTagsTable);
       expect(mockThenable.where).toHaveBeenCalled();
@@ -279,7 +279,7 @@ describe('TodoDataService', () => {
 
       const mockTodos = [
         {
-          id: 'todo-1',
+          id: '00000000-0000-0000-0000-000000000001',
           name: 'Overdue Task',
           type: 'one-off',
           dueDate: yesterday,
@@ -287,8 +287,8 @@ describe('TodoDataService', () => {
         },
       ];
       const mockTags = [
-        { todoId: 'todo-1', tag: 'TODO' },
-        { todoId: 'todo-1', tag: 'urgent' },
+        { todoId: '00000000-0000-0000-0000-000000000001', tag: 'TODO' },
+        { todoId: '00000000-0000-0000-0000-000000000001', tag: 'urgent' },
       ];
 
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(mockTodos));

@@ -27,10 +27,10 @@ export class AgentKitWalletAdapter implements IWalletAdapter {
   async initialize(): Promise<void> {
     try {
       // Get AgentKit service
-      this.agentKitService = this.runtime.getService('agentkit') as AgentKitService;
+      this.agentKitService = this.runtime.getService<AgentKitService>('agentkit');
 
       // Get custodial wallet service
-      this.custodialService = this.runtime.getService('custodial-wallet') as CustodialWalletService;
+      this.custodialService = this.runtime.getService<CustodialWalletService>('custodial-wallet');
 
       if (!this.agentKitService && !this.custodialService) {
         logger.warn('[AgentKitWalletAdapter] No AgentKit or custodial wallet service found');

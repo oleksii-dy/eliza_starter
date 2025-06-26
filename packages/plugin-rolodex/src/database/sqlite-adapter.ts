@@ -1,12 +1,7 @@
-// @ts-expect-error - Bun sqlite is available at runtime
 import { Database } from 'bun:sqlite';
 import { logger, stringToUuid } from '@elizaos/core';
 import { asUUID, type UUID, type IAgentRuntime } from '@elizaos/core';
-import type {
-  EntityProfile,
-  FollowUp,
-  TrustEvent,
-} from '../types';
+import type { EntityProfile, FollowUp, TrustEvent } from '../types';
 import type { Task, Relationship } from '@elizaos/core';
 import { DatabaseAdapter } from './adapter';
 
@@ -146,7 +141,9 @@ export class SQLiteAdapter extends DatabaseAdapter {
     `);
 
     const row = stmt.get(entityId) as any;
-    if (!row) {return null;}
+    if (!row) {
+      return null;
+    }
 
     return {
       entityId: asUUID(row.entity_id),
@@ -218,7 +215,7 @@ export class SQLiteAdapter extends DatabaseAdapter {
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as any[];
 
-    return rows.map(row => ({
+    return rows.map((row) => ({
       entityId: asUUID(row.entity_id),
       agentId: asUUID(row.agent_id),
       type: row.type,
@@ -260,7 +257,9 @@ export class SQLiteAdapter extends DatabaseAdapter {
     `);
 
     const row = stmt.get(sourceId, targetId) as any;
-    if (!row) {return undefined;}
+    if (!row) {
+      return undefined;
+    }
 
     return {
       id: asUUID(row.id),
@@ -306,7 +305,7 @@ export class SQLiteAdapter extends DatabaseAdapter {
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as any[];
 
-    const relationships = rows.map(row => ({
+    const relationships = rows.map((row) => ({
       id: asUUID(row.id),
       sourceEntityId: asUUID(row.source_entity_id),
       targetEntityId: asUUID(row.target_entity_id),
@@ -318,7 +317,7 @@ export class SQLiteAdapter extends DatabaseAdapter {
 
     // Filter by strength if specified
     if (options?.minStrength !== undefined) {
-      return relationships.filter(rel => {
+      return relationships.filter((rel) => {
         const strength = rel.metadata?.strength || 0;
         return strength >= options.minStrength!;
       });
@@ -380,7 +379,7 @@ export class SQLiteAdapter extends DatabaseAdapter {
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as any[];
 
-    return rows.map(row => ({
+    return rows.map((row) => ({
       id: asUUID(row.id),
       entityId: asUUID(row.entity_id),
       message: row.message,
@@ -406,7 +405,9 @@ export class SQLiteAdapter extends DatabaseAdapter {
       params.push(JSON.stringify(updates.metadata));
     }
 
-    if (fields.length === 0) {return;}
+    if (fields.length === 0) {
+      return;
+    }
 
     params.push(id);
     const query = `UPDATE follow_ups SET ${fields.join(', ')} WHERE id = ?`;
@@ -433,7 +434,10 @@ export class SQLiteAdapter extends DatabaseAdapter {
     );
   }
 
-  async getTrustEvents(entityId: UUID, options?: { limit?: number; after?: Date }): Promise<TrustEvent[]> {
+  async getTrustEvents(
+    entityId: UUID,
+    options?: { limit?: number; after?: Date }
+  ): Promise<TrustEvent[]> {
     let query = 'SELECT * FROM trust_events WHERE entity_id = ?';
     const params: any[] = [entityId];
 
@@ -452,7 +456,7 @@ export class SQLiteAdapter extends DatabaseAdapter {
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as any[];
 
-    return rows.map(row => ({
+    return rows.map((row) => ({
       id: asUUID(row.id),
       entityId: asUUID(row.entity_id),
       eventType: row.event_type,
@@ -478,9 +482,9 @@ export class SQLiteAdapter extends DatabaseAdapter {
       task.id || asUUID(stringToUuid(`task-${Date.now()}`)),
       task.name,
       task.description,
-      task.entityId,
-      task.roomId,
-      task.worldId,
+      task.entityId || null,
+      task.roomId || null,
+      task.worldId || null,
       JSON.stringify(task.tags || []),
       JSON.stringify(task.metadata || {}),
       new Date().toISOString(),

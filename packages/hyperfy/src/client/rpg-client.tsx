@@ -1,10 +1,11 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createRPGClientWorld } from '../core/createRPGClientWorld';
 import type { World } from '../types';
 
 // Configuration
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
+const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:4445';
 const PLAYER_NAME = import.meta.env.VITE_PLAYER_NAME || `Player${Math.floor(Math.random() * 1000)}`;
 
 // Global world instance

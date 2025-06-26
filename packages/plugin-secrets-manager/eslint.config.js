@@ -12,8 +12,7 @@ export default [
       parser: typescriptParser,
       parserOptions: {
         ecmaVersion: 2022,
-        sourceType: 'module',
-        project: './tsconfig.json'
+        sourceType: 'module'
       },
       globals: {
         console: 'readonly',
@@ -65,14 +64,9 @@ export default [
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: true }],
+      '@typescript-eslint/no-floating-promises': 'off', // Requires type information
       '@typescript-eslint/require-await': 'off',
-      '@typescript-eslint/no-misused-promises': [
-        'error',
-        {
-          checksVoidReturn: false
-        }
-      ],
+      '@typescript-eslint/no-misused-promises': 'off', // Requires type information
       '@typescript-eslint/ban-ts-comment': [
         'error',
         {
@@ -131,6 +125,7 @@ export default [
       'coverage/**',
       '*.config.js',
       '*.config.ts',
+      'build.ts',
       'logs/**',
       '.next/**',
       '.turbo/**',

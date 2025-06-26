@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useEffect, useRef, useState } from 'react';
 import { hashFile } from '../../core/utils-client';
 
@@ -85,7 +85,7 @@ export function ScriptEditor({ app, onHandle }) {
         editor.restoreViewState(state.viewState);
         editor.focus();
       }
-      editor.onDidChangeModelContent(event => {
+      editor.onDidChangeModelContent(_event => {
         codeRef.current = editor.getValue();
       });
       editor.addAction({
@@ -131,29 +131,31 @@ export function ScriptEditor({ app, onHandle }) {
 let promise: Promise<any> | undefined;
 const load = () => {
   if (promise) {return promise;}
-  promise = new Promise<any>(async resolve => {
+  promise = new Promise<any>(resolve => {
     // init require
     window.require = {
       paths: {
         vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.49.0/min/vs',
       },
     };
-    // load loader
-    await new Promise<void>(resolve => {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.49.0/min/vs/loader.js'; // prettier-ignore
-      script.onload = () => resolve();
-      document.head.appendChild(script);
-    });
-    // load editor
-    await new Promise<void>(resolve => {
-      window.require(['vs/editor/editor.main'], () => {
-        resolve();
+    // load loader - use async IIFE pattern instead of async executor
+    (async () => {
+      await new Promise<void>(resolve => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.49.0/min/vs/loader.js'; // prettier-ignore
+        script.onload = () => resolve();
+        document.head.appendChild(script);
       });
-    });
-    window.monaco.editor.defineTheme('default', darkPlusTheme);
-    window.monaco.editor.setTheme('default');
-    resolve(window.monaco);
+      // load editor
+      await new Promise<void>(resolve => {
+        window.require(['vs/editor/editor.main'], () => {
+          resolve();
+        });
+      });
+      window.monaco.editor.defineTheme('default', darkPlusTheme);
+      window.monaco.editor.setTheme('default');
+      resolve(window.monaco);
+    })();
   });
   return promise;
 };

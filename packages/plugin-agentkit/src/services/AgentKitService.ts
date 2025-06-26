@@ -1,4 +1,4 @@
-import { Service, type IAgentRuntime, ServiceType } from '../types/core.d';
+import { Service, ServiceType, type IAgentRuntime } from '@elizaos/core';
 import { AgentKit } from '@coinbase/agentkit';
 
 export class AgentKitService extends Service {
@@ -21,7 +21,7 @@ export class AgentKitService extends Service {
 
   async stop(): Promise<void> {
     this.agentkit = null;
-    console.log('[AgentKit] Service stopped');
+    console.info('[AgentKit] Service stopped');
   }
 
   async initialize(): Promise<void> {
@@ -35,7 +35,7 @@ export class AgentKitService extends Service {
         throw new Error('[AgentKit] Missing required CDP API credentials');
       }
 
-      console.log('[AgentKit] Initializing CDP AgentKit...');
+      console.info('[AgentKit] Initializing CDP AgentKit...');
 
       // Create AgentKit instance using the simplified API
       this.agentkit = await AgentKit.from({
@@ -43,13 +43,13 @@ export class AgentKitService extends Service {
         cdpApiKeySecret: cdpApiKeyPrivate,
       });
 
-      console.log('[AgentKit] Service initialized successfully');
+      console.info('[AgentKit] Service initialized successfully');
 
       // Log wallet address if available
       try {
-        const wallet = (this.agentkit as any).wallet;
+        const wallet = (this.agentkit as { wallet?: { address?: string } }).wallet;
         if (wallet?.address) {
-          console.log(`[AgentKit] Wallet address: ${wallet.address}`);
+          console.info(`[AgentKit] Wallet address: ${wallet.address}`);
         }
       } catch {
         // Ignore if wallet structure is different

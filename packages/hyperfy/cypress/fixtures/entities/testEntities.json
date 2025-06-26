@@ -1,0 +1,86 @@
+{
+  "npc": {
+    "shopkeeper": {
+      "id": "npc-shop-001",
+      "type": "npc",
+      "name": "Shop Keeper",
+      "position": { "x": 10, "y": 0, "z": 10 },
+      "config": {
+        "type": "shopkeeper",
+        "level": 1,
+        "health": 100,
+        "dialogue": ["Welcome to my shop!", "What can I get for you?"],
+        "shop": {
+          "items": ["sword", "shield", "potion"],
+          "currency": "gold"
+        }
+      }
+    },
+    "questGiver": {
+      "id": "npc-quest-001",
+      "type": "npc",
+      "name": "Quest Master",
+      "position": { "x": 20, "y": 0, "z": 20 },
+      "config": {
+        "type": "quest_giver",
+        "level": 5,
+        "health": 200,
+        "quests": ["tutorial_quest", "goblin_menace"]
+      }
+    },
+    "enemy": {
+      "id": "npc-enemy-001",
+      "type": "npc",
+      "name": "Goblin",
+      "position": { "x": 50, "y": 0, "z": 50 },
+      "config": {
+        "type": "hostile",
+        "level": 2,
+        "health": 50,
+        "damage": 5,
+        "lootTable": "goblin_drops"
+      }
+    }
+  },
+  "items": {
+    "sword": {
+      "id": "item-sword-001",
+      "type": "item",
+      "itemId": "iron_sword",
+      "position": { "x": 5, "y": 0, "z": 5 },
+      "amount": 1
+    },
+    "potion": {
+      "id": "item-potion-001",
+      "type": "item",
+      "itemId": "health_potion",
+      "position": { "x": 7, "y": 0, "z": 7 },
+      "amount": 5
+    },
+    "gold": {
+      "id": "item-gold-001",
+      "type": "item",
+      "itemId": "gold_coin",
+      "position": { "x": 3, "y": 0, "z": 3 },
+      "amount": 100
+    }
+  },
+  "structures": {
+    "house": {
+      "id": "struct-house-001",
+      "type": "structure",
+      "model": "house.glb",
+      "position": { "x": 30, "y": 0, "z": 30 },
+      "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 },
+      "scale": { "x": 1, "y": 1, "z": 1 }
+    },
+    "tree": {
+      "id": "struct-tree-001",
+      "type": "structure",
+      "model": "tree.glb",
+      "position": { "x": 15, "y": 0, "z": 25 },
+      "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 },
+      "scale": { "x": 1.5, "y": 1.5, "z": 1.5 }
+    }
+  }
+} 

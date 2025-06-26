@@ -419,7 +419,7 @@ export function useChannelMessages(
         setIsFetchingMore(false);
       }
     },
-    [channelId, transformServerMessageToUiMessage, initialServerId]
+    [channelId, transformServerMessageToUiMessage, initialServerId, oldestMessageTimestamp]
   ); // Add initialServerId to deps
 
   useEffect(() => {
@@ -616,18 +616,6 @@ export function useAgentMemories(
         tableName,
         includeEmbedding
       ); // Pass channelId
-      console.log('Agent memories result:', {
-        agentId,
-        tableName,
-        includeEmbedding,
-        channelId, // Log channelId instead of roomId
-        result,
-        dataLength: result.data?.memories?.length,
-        firstMemory: result.data?.memories?.[0],
-        hasEmbeddings: (result.data?.memories || []).some(
-          (m: { embedding?: unknown[] }) => m.embedding && m.embedding.length > 0
-        ),
-      });
       // Handle response format
       return result.data?.memories || [];
     },

@@ -1,7 +1,7 @@
 import { clamp } from 'lodash';
 import * as d3 from 'd3';
 
-import { Curve, Keyframe } from './Curve';
+import { Curve } from './Curve';
 
 interface CurveManagerOptions {
   curve?: Curve;
@@ -21,7 +21,7 @@ export function curveManager({ curve, width, height, xLabel, yLabel, yMin = 0, y
       .add({ time: 1, value: 1, inTangent: 0, outTangent: 0 });
   }
 
-  const margin = {
+  const _margin = {
     right: 10,
   };
 
@@ -119,7 +119,7 @@ export function curveManager({ curve, width, height, xLabel, yLabel, yMin = 0, y
         enter
           .append('g')
           .attr('class', 'tangentesCont')
-          .each(function (this: any, d: any) {
+          .each(function (this: any, _d: any) {
             d3.select(this)
               .append('line')
               .attr('opacity', (d: any) => (d.id === curve!.firstKeyframe.id ? 0 : 1))
@@ -202,7 +202,7 @@ export function curveManager({ curve, width, height, xLabel, yLabel, yMin = 0, y
   }
 
   // Updated drag functions to use D3 v6+ event handling
-  function dragstartedKey(this: SVGCircleElement, event: any, d: any) {
+  function dragstartedKey(this: SVGCircleElement, _event: any, _d: any) {
     d3.select(this).raise().attr('r', 6);
   }
 
@@ -215,7 +215,7 @@ export function curveManager({ curve, width, height, xLabel, yLabel, yMin = 0, y
     update();
   }
 
-  function dragendedKey(this: SVGCircleElement, event: any, d: any) {
+  function dragendedKey(this: SVGCircleElement, _event: any, _d: any) {
     d3.select(this).raise().attr('r', 5);
     updateValue();
     update();

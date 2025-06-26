@@ -8,20 +8,20 @@ import {
   bsc,
   avalanche,
   sepolia,
-  baseSepolia,
-  optimismSepolia,
-  arbitrumSepolia,
+  baseSepolia as _baseSepolia,
+  optimismSepolia as _optimismSepolia,
+  arbitrumSepolia as _arbitrumSepolia,
 } from 'viem/chains';
-import { type IAgentRuntime, ModelType } from '@elizaos/core';
-import { mock  } from 'bun:test';
+import { type IAgentRuntime, ModelType as _ModelType } from '@elizaos/core';
+import { mock } from 'bun:test';
 
 // ========== CHAIN CONFIGURATIONS ==========
 
 export const testnetChains = {
   sepolia,
-  baseSepolia,
-  optimismSepolia,
-  arbitrumSepolia,
+  baseSepolia: _baseSepolia,
+  optimismSepolia: _optimismSepolia,
+  arbitrumSepolia: _arbitrumSepolia,
 } as const;
 
 export const mainnetChains = {
@@ -256,7 +256,7 @@ export function getTestnetRpcUrl(chain: keyof typeof testnetChains): string {
 
 export function getTokenInfo(
   chain: keyof typeof MAINNET_TOKENS,
-  symbol: string,
+  symbol: string
 ): Address | undefined {
   const tokens = MAINNET_TOKENS[chain];
   return tokens?.[symbol as keyof typeof tokens];
@@ -264,7 +264,7 @@ export function getTokenInfo(
 
 export function estimateTestCosts(
   gasPrice: bigint,
-  ethPrice: number,
+  ethPrice: number
 ): {
   transfer: string;
   swap: string;

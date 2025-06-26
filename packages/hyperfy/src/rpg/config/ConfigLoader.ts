@@ -1,10 +1,32 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import type { NPCDefinition, ItemDefinition, LootTable as LootTableType } from '../types';
+// Conditional imports for browser/server compatibility
+// Only import fs and path on server side
+const isServer = typeof window === 'undefined' && typeof process !== 'undefined';
+
+let fs: any = null;
+let path: any = null;
+
+if (isServer) {
+  // Server-side
+  try {
+    fs = require('fs/promises');
+    path = require('path');
+  } catch (error) {
+    console.warn('[ConfigLoader] Failed to import fs/path modules:', error);
+  }
+}
+import type { NPCDefinition, ItemDefinition } from '../types';
 import { ENV } from '../../core/env';
 
-// Shop type from NPC definition
-type Shop = NPCDefinition['shop']
+// Shop type from NPC definition - define explicitly to avoid type resolution issues
+type Shop = {
+  name: string;
+  stock: Array<{ itemId: number; stock: number }>;
+  currency: string;
+  buyModifier: number;
+  sellModifier: number;
+  restock: boolean;
+  restockTime: number;
+}
 
 // Quest type for now (can be expanded later)
 interface Quest {
@@ -16,7 +38,7 @@ interface Quest {
   steps?: any[]
 }
 
-interface ConfigData {
+interface _ConfigData {
   npcs: Map<number, NPCDefinition>
   items: Map<number, ItemDefinition>
   lootTables: Map<string, LootTable>
@@ -143,6 +165,11 @@ export class ConfigLoader {
    * Load configurations from files
    */
   private async loadFromFiles(): Promise<void> {
+    if (!isServer || !fs || !path) {
+      console.log('[ConfigLoader] Not running on server or fs/path not available - using default configurations');
+      return;
+    }
+
     const configDir = path.join(process.cwd(), 'src/rpg/config');
 
     try {
@@ -153,7 +180,14 @@ export class ConfigLoader {
           const filePath = path.join(configDir, 'npcs', file);
           const data = await fs.readFile(filePath, 'utf-8');
           const npcs = JSON.parse(data);
-          Object.assign(this.npcs, npcs);
+          // Convert array to object with ID as key
+          if (Array.isArray(npcs)) {
+            npcs.forEach(npc => {
+              this.npcs[npc.id] = npc;
+            });
+          } else {
+            Object.assign(this.npcs, npcs);
+          }
         } catch (error) {
           console.warn(`Failed to load NPC file ${file}:`, error);
         }
@@ -173,7 +207,7 @@ export class ConfigLoader {
       }
 
       // Load Loot Tables
-      const lootFiles = ['goblin_drops.json', 'skeleton_drops.json', 'hill_giant_drops.json', 'common_drops.json'];
+      const lootFiles = ['goblin_drops.json', 'skeleton_drops.json', 'hill_giant_drops.json', 'common_drops.json', 'cow_drops.json'];
       for (const file of lootFiles) {
         try {
           const filePath = path.join(configDir, 'loot', file);
@@ -260,6 +294,66 @@ export class ConfigLoader {
           speed: 6,
         },
       },
+      100: {
+        id: 100,
+        name: 'Test Boss',
+        type: 'boss',
+        level: 50,
+        combatLevel: 50,
+        behavior: 'aggressive',
+        aggressionRange: 15,
+        wanderRadius: 10,
+        aggressionLevel: 2,
+        dropTable: 'goblin_drops',
+        attackSpeed: 2000,
+        combatStyle: 'melee',
+        stats: {
+          hitpoints: 500,
+          attack: 50,
+          strength: 50,
+          defence: 50,
+          speed: 8,
+        },
+      },
+      3: {
+        id: 3,
+        name: 'Cow',
+        type: 'animal',
+        level: 2,
+        combatLevel: 2,
+        behavior: 'passive',
+        aggressionRange: 0,
+        wanderRadius: 10,
+        aggressionLevel: 0,
+        dropTable: 'cow_drops',
+        attackSpeed: 4000,
+        combatStyle: 'melee',
+        stats: {
+          hitpoints: 8,
+          attack: 0,
+          strength: 0,
+          defence: 0,
+          speed: 2,
+        },
+      },
+      200: {
+        id: 200,
+        name: 'Test NPC',
+        type: 'citizen',
+        level: 1,
+        combatLevel: 1,
+        behavior: 'passive',
+        aggressionRange: 0,
+        wanderRadius: 5,
+        aggressionLevel: 0,
+        stats: {
+          hitpoints: 10,
+          attack: 1,
+          strength: 1,
+          defence: 1,
+          speed: 3,
+        },
+      },
     };
 
     // Test Items
@@ -307,6 +401,15 @@ export class ConfigLoader {
         id: 'common_drops',
         name: 'Common Drops',
         drops: [{ itemId: 2, chance: 0.5, minQuantity: 1, maxQuantity: 1 }],
+      },
+      cow_drops: {
+        id: 'cow_drops',
+        name: 'Cow Drops',
+        drops: [
+          { itemId: 3, chance: 1.0, minQuantity: 1, maxQuantity: 1 }, // Always drop bones
+          { itemId: 2132, chance: 1.0, minQuantity: 1, maxQuantity: 1 }, // Raw beef (if available)
+          { itemId: 1739, chance: 1.0, minQuantity: 1, maxQuantity: 1 }, // Cowhide (if available)
+        ],
       },
     };
 

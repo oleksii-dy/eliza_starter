@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { logger } from '@elizaos/core';
 import { ScenarioRunner } from '../scenario-runner/index.js';
 import { loadProject } from '../project.js';
-import { AgentServer } from '@elizaos/server';
+import AgentServer from '@elizaos/server';
 
 async function initializeServer(): Promise<{
   server: AgentServer;
@@ -32,7 +32,7 @@ async function initializeServer(): Promise<{
 
   // Create a runtime for the agent
   const { AgentRuntime } = await import('@elizaos/core');
-  const sqlModule = await import('@elizaos/plugin-sql');
+  const sqlModule = (await import('@elizaos/plugin-sql')) as any;
   const sqlPlugin = sqlModule.plugin;
 
   // Ensure database is available

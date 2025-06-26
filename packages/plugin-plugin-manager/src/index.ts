@@ -1,6 +1,7 @@
 import { type Plugin, type IAgentRuntime, elizaLogger } from '@elizaos/core';
 // Services
 import { PluginManagerService } from './services/pluginManagerService.ts';
+import { PlatformRegistryService } from './services/PlatformRegistryService.ts';
 // Actions
 import { loadPluginAction } from './actions/loadPlugin.ts';
 import { unloadPluginAction } from './actions/unloadPlugin.ts';
@@ -19,6 +20,8 @@ import { checkPluginConfigurationAction } from './actions/checkPluginConfigurati
 import { checkPluginHealthAction } from './actions/checkPluginHealthAction.ts';
 import { getPluginStateAction } from './actions/getPluginStateAction.ts';
 import { listRegistryPluginsAction } from './actions/listRegistryPluginsAction.ts';
+// Platform Registry Actions
+import { platformRegistryActions } from './actions/platform-registry-actions.ts';
 // Trust Integration
 import { wrapPluginManagerActionsWithTrust } from './trust/pluginManagerTrustIntegration.ts';
 // Tests
@@ -36,6 +39,9 @@ import './types.ts'; // Ensure module augmentation is loaded
  * - Interactive dialog system for collecting environment variables
  * - Proactive configuration suggestions and status monitoring
  * - Trust-based access control for critical plugin operations
+ * - Enhanced platform registry supporting plugins, MCPs, and workflows
+ * - AI-powered platform registry interaction and management
+ * - Build workflow integration with plugin-autocoder
  *
  * Features:
  * - Registry-based plugin discovery and installation
@@ -47,14 +53,18 @@ import './types.ts'; // Ensure module augmentation is loaded
  * - Agent behavior integration for proactive configuration
  * - Role-based access control for plugin operations
  * - Complete testing and validation pipeline
+ * - Platform registry with plugins, MCPs, and workflows
+ * - Natural language registry interaction
+ * - Automated build and deployment workflows
  */
 export const pluginManagerPlugin: Plugin = {
   name: 'plugin-manager',
   description:
-    'Manages the full lifecycle of plugins with health monitoring, dependency resolution, trust-based access control, and advanced features.',
+    'Manages the full lifecycle of plugins with health monitoring, dependency resolution, trust-based access control, and enhanced platform registry supporting plugins, MCPs, and workflows.',
 
   services: [
     PluginManagerService, // Main service that uses internal managers for all functionality
+    PlatformRegistryService, // Enhanced registry supporting plugins, MCPs, and workflows
   ],
 
   // Enhanced dependencies including trust system
@@ -78,6 +88,8 @@ export const pluginManagerPlugin: Plugin = {
     checkPluginHealthAction,
     getPluginStateAction,
     listRegistryPluginsAction,
+    // Platform Registry actions
+    ...platformRegistryActions,
   ],
 
   providers: [], // All providers have been migrated to actions
@@ -89,7 +101,10 @@ export const pluginManagerPlugin: Plugin = {
     elizaLogger.info('│        PLUGIN MANAGER PLUGIN          │');
     elizaLogger.info('├────────────────────────────────────────┤');
     elizaLogger.info('│  Initializing Plugin Manager...        │');
-    elizaLogger.info('│  Enhanced with Trust Integration       │');
+    elizaLogger.info('│  ✓ Enhanced with Trust Integration     │');
+    elizaLogger.info('│  ✓ Platform Registry (Plugins/MCPs)    │');
+    elizaLogger.info('│  ✓ AI-Powered Registry Actions         │');
+    elizaLogger.info('│  ✓ AutoCoder Build Integration         │');
     elizaLogger.info('└════════════════════════════════════════┘');
 
     // Check if trust system is available
@@ -117,6 +132,8 @@ export const pluginManagerPlugin: Plugin = {
         checkPluginHealthAction,
         getPluginStateAction,
         listRegistryPluginsAction,
+        // Include platform registry actions
+        ...platformRegistryActions,
       ]);
 
       // Register trust-enhanced actions
@@ -171,6 +188,8 @@ export const pluginManagerPlugin: Plugin = {
         checkPluginHealthAction,
         getPluginStateAction,
         listRegistryPluginsAction,
+        // Include platform registry actions
+        ...platformRegistryActions,
       ]) {
         runtime.registerAction(action);
       }
@@ -180,7 +199,9 @@ export const pluginManagerPlugin: Plugin = {
 
 // Export services and types for external use
 export { PluginManagerService } from './services/pluginManagerService.ts';
+export { PlatformRegistryService } from './services/PlatformRegistryService.ts';
 export * from './types.ts';
+export * from './types/registry.ts';
 
 // Export E2E tests for elizaos test runner
 export { e2e } from './__tests__/e2e/index.ts';

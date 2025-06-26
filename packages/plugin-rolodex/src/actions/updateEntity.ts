@@ -6,10 +6,7 @@
 // We should include the prior component data if it exists, and have the LLM output an update to the component.
 // sourceEntityId represents who is making the update, entityId is who they are talking about
 
-import {
-  logger,
-  ModelType,
-} from '@elizaos/core';
+import { logger, ModelType } from '@elizaos/core';
 
 import {
   type Action,

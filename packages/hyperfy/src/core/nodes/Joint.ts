@@ -1,10 +1,11 @@
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
+// Using THREE namespace types
 import { isBoolean, isNumber } from 'lodash-es';
 
 import { Node } from './Node';
-import { Layers } from '../extras/Layers';
+// import { Layers } from '../extras/Layers';
 import { bindRotations } from '../extras/bindRotations';
-import { DEG2RAD, RAD2DEG } from '../extras/general';
+import { DEG2RAD } from '../extras/general';
 
 // Global PHYSX declaration
 declare const PHYSX: any;

@@ -29,7 +29,8 @@ function formatFacts(facts: Memory[]) {
  */
 const factsProvider: Provider = {
   name: 'FACTS',
-  description: 'Retrieves contextually relevant facts and learned information about entities using vector similarity search. Use when agent needs historical knowledge or background information for informed responses.',
+  description:
+    'Retrieves contextually relevant facts and learned information about entities using vector similarity search. Use when agent needs historical knowledge or background information for informed responses.',
   dynamic: true,
   get: async (runtime: IAgentRuntime, message: Memory, _state?: State) => {
     try {

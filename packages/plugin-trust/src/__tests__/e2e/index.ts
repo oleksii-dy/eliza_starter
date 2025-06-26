@@ -7,7 +7,7 @@ export const testSuites = [
   trustPluginE2ETests,
   trustActionsE2ETests,
   trustSecurityE2ETests,
-  trustIntegrationE2ETests
+  trustIntegrationE2ETests,
 ];
 
 export default testSuites;

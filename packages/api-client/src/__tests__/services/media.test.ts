@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
-import { MediaService } from '../../services/media';
+import { MediaService } from '../../services/MediaService';
 import { ApiClientConfig } from '../../types/base';
 import { UUID } from '@elizaos/core';
 

@@ -24,7 +24,7 @@ export const executeCommandAction: Action = {
   description:
     'Executes system commands and returns real output. Can be chained with analysis actions to verify results or with file operations to process command output',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
 
     // Check for common command patterns

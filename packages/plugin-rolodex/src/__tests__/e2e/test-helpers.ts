@@ -1,4 +1,10 @@
-import { type IAgentRuntime, type UUID, stringToUuid, type Memory, ChannelType } from '@elizaos/core';
+import {
+  type IAgentRuntime,
+  type UUID,
+  stringToUuid,
+  type Memory,
+  ChannelType,
+} from '@elizaos/core';
 
 /**
  * Creates a test world for E2E tests to avoid foreign key violations
@@ -90,7 +96,7 @@ export async function waitForCondition(
     if (await condition()) {
       return;
     }
-    await new Promise(resolve => setTimeout(resolve, interval));
+    await new Promise((resolve) => setTimeout(resolve, interval));
   }
 
   throw new Error(`Condition not met within ${timeout}ms`);
@@ -103,26 +109,30 @@ export function mockLLMResponse(type: 'entity' | 'relationship' | 'trust') {
   switch (type) {
     case 'entity':
       return {
-        entities: [{
-          type: 'person',
-          names: ['Test Entity'],
-          summary: 'A test entity for E2E testing',
-          tags: ['test', 'e2e'],
-          metadata: {
-            source: 'test',
-            confidence: 0.9,
+        entities: [
+          {
+            type: 'person',
+            names: ['Test Entity'],
+            summary: 'A test entity for E2E testing',
+            tags: ['test', 'e2e'],
+            metadata: {
+              source: 'test',
+              confidence: 0.9,
+            },
           },
-        }],
+        ],
       };
 
     case 'relationship':
       return {
-        relationships: [{
-          type: 'colleague',
-          confidence: 0.8,
-          sentiment: 0.6,
-          evidence: 'They work together on test projects',
-        }],
+        relationships: [
+          {
+            type: 'colleague',
+            confidence: 0.8,
+            sentiment: 0.6,
+            evidence: 'They work together on test projects',
+          },
+        ],
       };
 
     case 'trust':

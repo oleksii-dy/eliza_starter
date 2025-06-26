@@ -1,5 +1,5 @@
 import { logger } from '@elizaos/core';
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect, spyOn } from 'bun:test';
 import {
   canGenerateEnvVar,
   generateScript,
@@ -132,7 +132,7 @@ describe('generation', () => {
     });
 
     it('should return null for unsupported variables', () => {
-      const loggerSpy = mock.spyOn(logger, 'warn');
+      const loggerSpy = spyOn(logger, 'warn');
       const script = generateScript('API_URL', 'url', 'test-plugin');
       expect(script).toBeNull();
       expect(loggerSpy).toHaveBeenCalledWith(

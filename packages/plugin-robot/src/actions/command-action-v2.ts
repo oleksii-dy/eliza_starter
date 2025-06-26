@@ -10,6 +10,8 @@ import {
   logger,
 } from '@elizaos/core';
 import { RobotServiceV2 } from '../services/robot-service-v2';
+import { RobotServiceType } from '../types';
+import { ExecutionResult } from '../types/robot-command';
 
 // Helper functions for parsing commands
 function parseCommandType(text: string): string {
@@ -300,27 +302,56 @@ const handler: Handler = async (
     };
 
     // Execute command through service
-    let result;
+    let result: ExecutionResult;
+    const executedAt = Date.now();
+
     if (commandType === 'STOP' || commandType === 'EMERGENCY_STOP') {
       await robotService.emergencyStop();
-      result = { success: true, command_id: command.id, executed_at: Date.now() };
+      result = {
+        success: true,
+        command_id: command.id,
+        executed_at: executedAt,
+        completed_at: Date.now(),
+        duration: Date.now() - executedAt
+      };
     } else if (commandType === 'START_TEACHING') {
       await robotService.setMode('TEACHING' as any);
-      result = { success: true, command_id: command.id, executed_at: Date.now() };
+      result = {
+        success: true,
+        command_id: command.id,
+        executed_at: executedAt,
+        completed_at: Date.now(),
+        duration: Date.now() - executedAt
+      };
     } else if (commandType === 'MOVE_JOINT' && parameters.target) {
       await robotService.moveJoint(parameters.target, parameters.amount || 0, parameters.speed);
-      result = { success: true, command_id: command.id, executed_at: Date.now() };
+      result = {
+        success: true,
+        command_id: command.id,
+        executed_at: executedAt,
+        completed_at: Date.now(),
+        duration: Date.now() - executedAt,
+        metadata: { target: parameters.target }
+      };
     } else {
       // For other commands, try to execute through stored motions
       const motionName = commandType.toLowerCase();
       if (robotService.getStoredMotions().includes(motionName)) {
         await robotService.executeMotion(motionName);
-        result = { success: true, command_id: command.id, executed_at: Date.now() };
+        result = {
+          success: true,
+          command_id: command.id,
+          executed_at: executedAt,
+          completed_at: Date.now(),
+          duration: Date.now() - executedAt
+        };
       } else {
         result = {
           success: false,
           command_id: command.id,
-          executed_at: Date.now(),
+          executed_at: executedAt,
+          completed_at: Date.now(),
+          duration: Date.now() - executedAt,
           error: `Unknown command type: ${commandType}`,
         };
       }

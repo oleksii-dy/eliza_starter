@@ -2,20 +2,12 @@ import type { Character } from './agent';
 import type { Action, Evaluator, Provider } from './components';
 import type { IDatabaseAdapter } from './database';
 import type { EventHandler, EventPayloadMap } from './events';
+import type { Route } from './http';
+export type { Route };
 import type { IAgentRuntime } from './runtime';
 import type { Service } from './service';
 import type { TestSuite } from './testing';
 import type { PluginScenario } from './scenario';
-
-export type Route = {
-  type: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'STATIC';
-  path: string;
-  filePath?: string;
-  public?: boolean;
-  name?: string extends { public: true } ? string : string | undefined;
-  handler?: (req: any, res: any, runtime: IAgentRuntime) => Promise<void>;
-  isMultipart?: boolean; // Indicates if the route expects multipart/form-data (file uploads)
-};
 
 /**
  * Component dependency for validation
@@ -78,7 +70,7 @@ export interface Plugin {
     [key: string]: any;
   };
 
-  services?: (typeof Service)[];
+  services?: (typeof Service | { component: typeof Service; enabled: boolean })[];
 
   // Entity component definitions
   componentTypes?: {
@@ -87,7 +79,7 @@ export interface Plugin {
     validator?: (data: any) => boolean;
   }[];
 
-  // Legacy plugin features (always enabled for backwards compatibility)
+  // Plugin component arrays with built-in enable/disable support
   actions?: Action[];
   providers?: Provider[];
   evaluators?: Evaluator[];

@@ -9,18 +9,20 @@ import {
   parseJSONObjectFromText,
 } from '@elizaos/core';
 import { TrustEvidenceType, type TrustInteraction } from '../types/trust';
+import { TrustEngineServiceWrapper } from '..';
 
 export const recordTrustInteractionAction: Action = {
   name: 'RECORD_TRUST_INTERACTION',
-  description: 'Records a trust-affecting interaction between entities. Logs behaviors that impact trust scores including promises kept, helpful contributions, or negative actions. Can be chained with EVALUATE_TRUST to check updated trust levels or REQUEST_ELEVATION to verify permission changes.',
+  description:
+    'Records a trust-affecting interaction between entities. Logs behaviors that impact trust scores including promises kept, helpful contributions, or negative actions. Can be chained with EVALUATE_TRUST to check updated trust levels or REQUEST_ELEVATION to verify permission changes.',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const trustEngine = runtime.getService('trust-engine');
+    const trustEngine = runtime.getService<TrustEngineServiceWrapper>('trust-engine');
     return !!trustEngine;
   },
 
   handler: async (runtime: IAgentRuntime, message: Memory): Promise<ActionResult> => {
-    const trustEngine = runtime.getService('trust-engine') as any;
+    const trustEngine = runtime.getService<TrustEngineServiceWrapper>('trust-engine');
 
     if (!trustEngine) {
       throw new Error('Trust engine service not available');
@@ -58,7 +60,7 @@ export const recordTrustInteractionAction: Action = {
     // Validate the evidence type - use case-insensitive comparison
     const validTypes = Object.values(TrustEvidenceType);
     const normalizedType = evidenceType?.toUpperCase();
-    const matchedType = validTypes.find(type => type.toUpperCase() === normalizedType);
+    const matchedType = validTypes.find((type) => type.toUpperCase() === normalizedType);
 
     if (!matchedType) {
       logger.error('[RecordTrustInteraction] Invalid evidence type:', evidenceType);
@@ -100,7 +102,7 @@ export const recordTrustInteractionAction: Action = {
     };
 
     try {
-      await trustEngine.recordInteraction(interaction);
+      (await trustEngine.recordInteraction(interaction)) as any;
 
       logger.info('[RecordTrustInteraction] Recorded interaction:', {
         type: matchedType,

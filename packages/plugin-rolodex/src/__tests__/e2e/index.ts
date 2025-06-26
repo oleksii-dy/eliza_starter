@@ -99,7 +99,9 @@ export class RolodexComprehensiveTestSuite implements TestSuite {
           console.log('✓ Team entities created');
 
           // Step 2: Track entity profiles using EntityGraphManager
-          const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+          const entityGraphService = runtime.getService(
+            'entityGraph'
+          ) as unknown as EntityGraphManager;
           if (entityGraphService) {
             for (const member of teamMembers) {
               await entityGraphService.trackEntity(
@@ -116,18 +118,23 @@ export class RolodexComprehensiveTestSuite implements TestSuite {
           // Step 3: Establish team relationships using EntityGraphManager
           const relationships = [
             { from: userId1, to: userId2, context: 'Alice manages Bob in the engineering team' },
-            { from: userId1, to: userId3, context: 'Alice collaborates with Carol on product planning' },
-            { from: userId2, to: userId3, context: 'Bob works with Carol on technical requirements' },
+            {
+              from: userId1,
+              to: userId3,
+              context: 'Alice collaborates with Carol on product planning',
+            },
+            {
+              from: userId2,
+              to: userId3,
+              context: 'Bob works with Carol on technical requirements',
+            },
           ];
 
           if (entityGraphService) {
             for (const rel of relationships) {
-              await entityGraphService.analyzeInteraction(
-                rel.from,
-                rel.to,
-                rel.context,
-                { roomId }
-              );
+              await entityGraphService.analyzeInteraction(rel.from, rel.to, rel.context, {
+                roomId,
+              });
             }
             console.log('✓ Team relationships established');
           }
@@ -152,16 +159,15 @@ export class RolodexComprehensiveTestSuite implements TestSuite {
           }
 
           // Step 5: Test entity resolution with similar names
-          const resolutionService = runtime.getService('entity-resolution') as unknown as EntityResolutionManager;
+          const resolutionService = runtime.getService(
+            'entity-resolution'
+          ) as unknown as EntityResolutionManager;
           if (resolutionService) {
             // Try to resolve "Bob" - should find "Bob Chen"
-            const bobResolution = await resolutionService.resolveEntity(
-              'Bob',
-              {
-                roomId,
-                platformContext: { platform: 'slack' },
-              }
-            );
+            const bobResolution = await resolutionService.resolveEntity('Bob', {
+              roomId,
+              platformContext: { platform: 'slack' },
+            });
 
             if (bobResolution && bobResolution.length > 0) {
               const highConfidence = bobResolution.filter((c) => c.confidence > 0.5);

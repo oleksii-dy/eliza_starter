@@ -10,6 +10,7 @@ import { ServerMonitor } from './systems/ServerMonitor';
 
 // Import RPG plugin
 import { HyperfyRPGPlugin } from '../rpg';
+import { initializeTestingIfNeeded } from '../rpg/testing';
 
 export async function createRPGServerWorld() {
   const world = new World();
@@ -25,6 +26,9 @@ export async function createRPGServerWorld() {
   // Initialize RPG plugin
   console.log('[RPGServerWorld] Initializing RPG plugin...');
   await HyperfyRPGPlugin.init(world);
+
+  // Initialize test helpers if in test mode
+  initializeTestingIfNeeded(world);
 
   console.log('[RPGServerWorld] Created world with RPG systems');
 

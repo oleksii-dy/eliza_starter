@@ -2,7 +2,7 @@ import { type Character, type Plugin, logger } from '@elizaos/core';
 import { BenchmarkRunner, type BenchmarkConfig } from '../benchmarks/benchmark-runner';
 import { planningPlugin } from '../index';
 import * as fs from 'fs';
-import * as path from 'path';
+// import * as path from 'path';
 
 /**
  * CLI Command for running planning benchmarks
@@ -154,14 +154,14 @@ export async function runBenchmarkCommand(options: BenchmarkCommandOptions): Pro
     const results = await runner.runBenchmarks();
 
     // Log summary
-    logBenchmarkSummary(results, options.verbose);
+    logBenchmarkSummary(results, options.verbose || false);
 
     // Success
     logger.info('[BenchmarkCommand] Benchmark execution completed successfully');
     process.exit(0);
   } catch (error) {
     logger.error('[BenchmarkCommand] Benchmark execution failed:', error);
-    console.error(`❌ Benchmark failed: ${error.message}`);
+    console.error(`❌ Benchmark failed: ${(error as Error).message}`);
     process.exit(1);
   }
 }
@@ -193,7 +193,7 @@ async function loadCharacter(characterPath?: string): Promise<Character> {
     return character;
   } catch (error) {
     logger.error('[BenchmarkCommand] Failed to load character:', error);
-    throw new Error(`Failed to load character: ${error.message}`);
+    throw new Error(`Failed to load character: ${(error as Error).message}`);
   }
 }
 
@@ -354,10 +354,10 @@ export async function main(): Promise<void> {
         options.outputDir = value;
         break;
       case '--max-tests':
-        options.maxTests = parseInt(value);
+        options.maxTests = parseInt(value, 10);
         break;
       case '--timeout':
-        options.timeout = parseInt(value);
+        options.timeout = parseInt(value, 10);
         break;
       case '--verbose':
         options.verbose = true;

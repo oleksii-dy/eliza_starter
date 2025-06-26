@@ -26,7 +26,7 @@ export class ClientPrefs extends System {
   constructor(world: World) {
     super(world);
 
-    const isQuest = typeof navigator !== 'undefined' && navigator.userAgent ? /OculusBrowser/.test(navigator.userAgent) : false;
+    const _isQuest = typeof navigator !== 'undefined' && navigator.userAgent ? /OculusBrowser/.test(navigator.userAgent) : false;
 
     const data = storage?.get('prefs', {}) || {};
 

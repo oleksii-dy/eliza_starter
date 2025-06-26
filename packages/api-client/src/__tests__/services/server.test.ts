@@ -9,7 +9,7 @@ import {
   mock,
   spyOn,
 } from 'bun:test';
-import { ServerService } from '../../services/server';
+import { ServerService } from '../../services/ServerService';
 import type {
   ServerHealth,
   ServerStatus,

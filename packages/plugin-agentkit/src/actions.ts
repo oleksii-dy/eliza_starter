@@ -1,22 +1,12 @@
 import {
   type Action,
+  type ActionResult,
   type HandlerCallback,
   type IAgentRuntime,
   type Memory,
   type State,
   type ActionExample,
 } from './types/core';
-
-// Define ActionResult for action chaining
-export interface ActionResult {
-  success: boolean;
-  data?: any;
-  error?: string;
-  metadata?: {
-    toolName: string;
-    [key: string]: any;
-  };
-}
 
 import type { AgentKitService } from './services/AgentKitService';
 
@@ -453,7 +443,7 @@ const AGENTKIT_ACTION_EXAMPLES: Record<string, ActionExample[][]> = {
 /**
  * Get all AgentKit actions dynamically from the CdpToolkit
  */
-export function getAgentKitActions(): Action[] {
+export function _getAgentKitActions(): Action[] {
   // Return empty array - actions will be registered dynamically
   return [];
 }
@@ -472,105 +462,133 @@ export async function createAgentKitActionsFromService(runtime: IAgentRuntime): 
   const agentKit = agentKitService.getAgentKit();
   const agentKitActions = agentKit.getActions();
 
-  const actions = agentKitActions.map((agentKitAction: any) => {
-    const actionName = agentKitAction.name.toUpperCase();
-    const examples = getExamplesForAction(agentKitAction.name, actionName);
+  const actions = agentKitActions
+    .filter(
+      (action) =>
+        typeof (action as AgentKitAction & { description?: string }).description === 'string'
+    )
+    .map((agentKitAction) => {
+      const actionWithDesc = agentKitAction as AgentKitAction & { description: string };
+      const actionName = actionWithDesc.name.toUpperCase();
+      const examples = getExamplesForAction(actionWithDesc.name, actionName);
 
-    return {
-      name: actionName,
-      description: agentKitAction.description,
-      similes: generateSimiles(agentKitAction.name),
-      validate: async (runtime: IAgentRuntime, message: Memory, _state?: State) => {
-        // Enhanced validation based on message content and context
-        const agentKitService = runtime.getService<AgentKitService>('agentkit');
-        if (!agentKitService || !agentKitService.isReady()) {
-          return false;
-        }
-
-        const messageText = message.content.text?.toLowerCase() || '';
-        const actionKeywords = getActionKeywords(agentKitAction.name);
-
-        // Check if message contains relevant keywords or if action is explicitly requested
-        return (
-          actionKeywords.some((keyword) => messageText.includes(keyword)) ||
-          message.content.actions?.includes(actionName) ||
-          message.content.actions?.includes(agentKitAction.name) ||
-          hasContextualRelevance(messageText, agentKitAction.name)
-        );
-      },
-      handler: async (
-        runtime: IAgentRuntime,
-        message: Memory,
-        state: State | undefined,
-        _options?: Record<string, unknown>,
-        callback?: HandlerCallback
-      ): Promise<ActionResult> => {
-        try {
+      return {
+        name: actionName,
+        description: actionWithDesc.description,
+        similes: generateSimiles(actionWithDesc.name),
+        validate: async (runtime: IAgentRuntime, message: Memory, _state?: State) => {
+          // Enhanced validation based on message content and context
           const agentKitService = runtime.getService<AgentKitService>('agentkit');
           if (!agentKitService || !agentKitService.isReady()) {
-            throw new Error('AgentKit service not available');
+            return false;
           }
 
-          const currentState = state ?? (await runtime.composeState(message));
+          const messageText = message.content.text?.toLowerCase() || '';
+          const actionKeywords = getActionKeywords(actionWithDesc.name);
 
-          // Extract parameters from message using enhanced approach
-          const messageText = message.content.text || '';
-          const parameters = await extractParametersFromMessage(
-            agentKitAction,
-            messageText,
-            currentState
+          // Check if message contains relevant keywords or if action is explicitly requested
+          return (
+            actionKeywords.some((keyword) => messageText.includes(keyword)) ||
+            message.content.actions?.includes(actionName) ||
+            message.content.actions?.includes(actionWithDesc.name) ||
+            hasContextualRelevance(messageText, actionWithDesc.name)
           );
+        },
+        handler: async (
+          runtime: IAgentRuntime,
+          message: Memory,
+          state: State | undefined,
+          _options?: Record<string, unknown>,
+          callback?: HandlerCallback
+        ): Promise<ActionResult> => {
+          try {
+            const agentKitService = runtime.getService<AgentKitService>('agentkit');
+            if (!agentKitService || !agentKitService.isReady()) {
+              throw new Error('AgentKit service not available');
+            }
 
-          const result = await executeToolAction(
-            agentKitAction,
-            parameters,
-            agentKitService.getAgentKit()
-          );
+            const currentState = state ?? (await runtime.composeState(message));
 
-          // Generate response
-          const response = generateActionResponse(agentKitAction, result);
+            // Extract parameters from message using enhanced approach
+            const messageText = message.content.text || '';
+            const parameters = await extractParametersFromMessage(
+              actionWithDesc,
+              messageText,
+              currentState
+            );
 
-          callback?.({ text: response, content: result });
-          return {
-            success: true,
-            data: result,
-            metadata: {
-              toolName: agentKitAction.name,
-              timestamp: Date.now(),
-              chainId: await getChainContext(agentKitService),
-              actionType: categorizeAction(agentKitAction.name),
-            },
-          };
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          callback?.({
-            text: `Error executing action ${agentKitAction.name}: ${errorMessage}`,
-            content: { error: errorMessage },
-          });
-          return {
-            success: false,
-            error: errorMessage,
-            metadata: {
-              toolName: agentKitAction.name,
-              timestamp: Date.now(),
-              actionType: categorizeAction(agentKitAction.name),
-            },
-          };
-        }
-      },
-      examples,
-    };
-  });
+            const result = await executeToolAction(
+              actionWithDesc,
+              parameters,
+              agentKitService.getAgentKit() as AgentKitInstance
+            );
+
+            // Generate response
+            const response = generateActionResponse(actionWithDesc, result);
+
+            callback?.({ text: response, content: result });
+            return {
+              text: response,
+              data: {
+                success: true,
+                result,
+                toolName: actionWithDesc.name,
+                timestamp: Date.now(),
+                chainId: await getChainContext(agentKitService),
+                actionType: categorizeAction(actionWithDesc.name),
+              },
+            };
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorText = `Error executing action ${actionWithDesc.name}: ${errorMessage}`;
+            callback?.({
+              text: errorText,
+              content: { error: errorMessage },
+            });
+            return {
+              text: errorText,
+              data: {
+                success: false,
+                error: errorMessage,
+                toolName: actionWithDesc.name,
+                timestamp: Date.now(),
+                actionType: categorizeAction(actionWithDesc.name),
+              },
+            };
+          }
+        },
+        examples,
+      };
+    });
   return actions;
+}
+
+// AgentKit tool action interface
+interface AgentKitAction {
+  name: string;
+  invoke: (parameters: unknown) => Promise<unknown>;
+  schema?: {
+    _def?: {
+      shape?: () => Record<string, unknown>;
+    };
+    safeParse?: (data: unknown) => {
+      success: boolean;
+      data?: unknown;
+    };
+  };
+}
+
+interface AgentKitInstance {
+  getActions: () => AgentKitAction[];
 }
 
 /**
  * Execute a tool action with proper error handling and context
  */
 async function executeToolAction(
-  action: any,
+  action: AgentKitAction,
   parameters: unknown,
-  _agentKit: any
+  _agentKit: AgentKitInstance
 ): Promise<unknown> {
   try {
     // Use the action's invoke method with the parameters
@@ -586,11 +604,11 @@ async function executeToolAction(
  * Enhanced parameter extraction based on tool requirements and context
  */
 async function extractParametersFromMessage(
-  action: any,
+  action: AgentKitAction,
   messageText: string,
   _state?: State
 ): Promise<unknown> {
-  const params: Record<string, any> = {};
+  const params: Record<string, unknown> = {};
   const actionName = action.name.toLowerCase();
 
   // Extract parameters based on the action's schema
@@ -599,15 +617,17 @@ async function extractParametersFromMessage(
     const schema = action.schema;
     if (schema && schema._def) {
       // For Zod schemas, we need to extract parameters from the message
-      const _schemaShape = schema._def.shape?.() || {};
+      const _schemaShape = schema._def?.shape?.() || {};
 
       // Enhanced parameter extraction based on action type
       const enhancedParams = enhanceParametersForTool(actionName, params, messageText, _state);
 
       // Try to parse with the schema
-      const parsed = schema.safeParse(enhancedParams);
-      if (parsed.success) {
-        return parsed.data;
+      if (schema.safeParse) {
+        const parsed = schema.safeParse(enhancedParams);
+        if (parsed.success) {
+          return parsed.data;
+        }
       }
     }
   } catch (error) {
@@ -621,7 +641,7 @@ async function extractParametersFromMessage(
 /**
  * Generate response based on tool result
  */
-function generateActionResponse(action: any, result: unknown): string {
+function generateActionResponse(action: AgentKitAction, result: unknown): string {
   const _actionName = action.name.toLowerCase();
 
   if (typeof result === 'string') {
@@ -630,23 +650,22 @@ function generateActionResponse(action: any, result: unknown): string {
 
   if (typeof result === 'object' && result !== null) {
     // Handle different result types based on action
-    const resultObj = result as any;
-
-    if (resultObj.hash || resultObj.txHash || resultObj.transactionHash) {
-      const hash = resultObj.hash || resultObj.txHash || resultObj.transactionHash;
+    const resultRecord = result as Record<string, unknown>;
+    if (resultRecord.hash || resultRecord.txHash || resultRecord.transactionHash) {
+      const hash = resultRecord.hash || resultRecord.txHash || resultRecord.transactionHash;
       return `Transaction completed successfully! Hash: ${hash}`;
     }
 
-    if (resultObj.address) {
-      return `Operation completed successfully! Address: ${resultObj.address}`;
+    if (resultRecord.address) {
+      return `Operation completed successfully! Address: ${resultRecord.address}`;
     }
 
-    if (resultObj.balance !== undefined) {
-      return `Balance: ${resultObj.balance}`;
+    if (resultRecord.balance !== undefined) {
+      return `Balance: ${resultRecord.balance}`;
     }
 
-    if (resultObj.price !== undefined) {
-      return `Price: ${resultObj.price}`;
+    if (resultRecord.price !== undefined) {
+      return `Price: ${resultRecord.price}`;
     }
   }
 
@@ -759,10 +778,10 @@ function hasContextualRelevance(messageText: string, toolName: string): boolean 
  */
 function enhanceParametersForTool(
   toolName: string,
-  params: Record<string, any>,
+  params: Record<string, unknown>,
   messageText: string,
   _state?: State
-): Record<string, any> {
+): Record<string, unknown> {
   const enhanced = { ...params };
   const lowerMessage = messageText.toLowerCase();
 

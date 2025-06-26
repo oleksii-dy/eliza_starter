@@ -17,7 +17,7 @@ export const visionProvider: Provider = {
   dynamic: false, // Always included - vision is a constant sense
 
   get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
-    const visionService = runtime.getService<VisionService>('VISION' as any);
+    const visionService = runtime.getService<VisionService>('VISION');
 
     if (!visionService) {
       logger.warn('[visionProvider] VisionService not found.');
@@ -143,7 +143,7 @@ export const visionProvider: Provider = {
             }
 
             if (tileAnalysis.objects && tileAnalysis.objects.length > 0) {
-              const uiElements = tileAnalysis.objects.map((o) => o.type);
+              const uiElements = tileAnalysis.objects.map((o: any) => o.type);
               const uniqueElements = [...new Set(uiElements)];
               perceptionText += `\n\nUI elements: ${uniqueElements.join(', ')}`;
             }

@@ -1,13 +1,13 @@
 import { Separator } from '@/components/ui/separator';
-import CopyButton from '@/components/copy-button';
-import DeleteButton from '@/components/delete-button';
-import RetryButton from '@/components/retry-button';
-import MediaContent from '@/components/media-content';
-import ProfileOverlay from '@/components/profile-overlay';
+import CopyButton from '@/components/CopyButton';
+import DeleteButton from '@/components/DeleteButton';
+import RetryButton from '@/components/RetryButton';
+import MediaContent from '@/components/MediaContent';
+import ProfileOverlay from '@/components/ProfileOverlay';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import ConfirmationDialog from '@/components/confirmation-dialog';
+import ConfirmationDialog from '@/components/ConfirmationDialog';
 import { useConfirmation } from '@/hooks/use-confirmation';
 import { ChatBubbleMessage, ChatBubbleTimestamp } from '@/components/ui/chat/chat-bubble';
 import ChatTtsButton from '@/components/ui/chat/chat-tts-button';
@@ -66,10 +66,10 @@ import {
   Trash2,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AgentSidebar } from './agent-sidebar';
+import { AgentSidebar } from './AgentSidebar';
 import { ChatInputArea } from './ChatInputArea';
 import { ChatMessageListComponent } from './ChatMessageListComponent';
-import GroupPanel from './group-panel';
+import GroupPanel from './GroupPanel';
 
 import {
   DropdownMenu,
@@ -313,13 +313,17 @@ export default function Chat({
   );
 
   // Convert AgentWithStatus to Agent, ensuring required fields have defaults
-  const targetAgentData: Agent | undefined = agentDataResponse?.data
-    ? ({
-        ...agentDataResponse.data,
-        createdAt: agentDataResponse.data.createdAt || Date.now(),
-        updatedAt: agentDataResponse.data.updatedAt || Date.now(),
-      } as Agent)
-    : undefined;
+  const targetAgentData: Agent | undefined = useMemo(
+    () =>
+      agentDataResponse?.data
+        ? ({
+            ...agentDataResponse.data,
+            createdAt: agentDataResponse.data.createdAt || Date.now(),
+            updatedAt: agentDataResponse.data.updatedAt || Date.now(),
+          } as Agent)
+        : undefined,
+    [agentDataResponse?.data]
+  );
 
   // Use the new hooks for DM channel management
   const { data: agentDmChannels = [], isLoading: isLoadingAgentDmChannels } = useDmChannelsForAgent(
@@ -338,7 +342,7 @@ export default function Chat({
   const participants = participantsData?.data;
 
   const { data: agentsResponse } = useAgentsWithDetails();
-  const allAgents = agentsResponse?.agents || [];
+  const allAgents = useMemo(() => agentsResponse?.agents || [], [agentsResponse?.agents]);
 
   // Get agents in the current group
   const groupAgents = useMemo(() => {

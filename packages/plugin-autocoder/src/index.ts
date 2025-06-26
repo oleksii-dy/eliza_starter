@@ -1,64 +1,68 @@
-import type { Plugin, IAgentRuntime } from '@elizaos/core';
+import type { IAgentRuntime, Plugin } from '@elizaos/core';
 import { orchestrationActions } from './actions/orchestration-actions.js';
-import { runSWEBenchAction, getSWEBenchStatsAction } from './actions/swe-bench-action.js';
-import { runDistributedSWEBenchAction } from './actions/distributed-swe-bench-action.js';
+import { pluginCreationActions } from './actions/plugin-creation-actions.js';
 import { createMCPAction } from './actions/mcp-creation-action.js';
 import { n8nWorkflowAction, checkN8nWorkflowStatusAction } from './actions/n8n-workflow-action.js';
 import { echoAction } from './actions/echo.js';
-import { containerActions } from './actions/container-actions.js';
-import { orchestrationProviders } from './providers/orchestration-providers.js';
-import { AutoCodeService } from './services/AutoCodeService.js';
-import { N8nWorkflowService } from './services/n8n-workflow-service.js';
+import { platformWorkflowAction } from './actions/platform-workflow-action.js';
+import { secretsWorkflowAction } from './actions/secrets-workflow-action.js';
+import { N8nWorkflowService } from './services/N8nWorkflowService.js';
 import { DockerService } from './services/DockerService.js';
-import { PluginCreationService } from './services/plugin-creation-service.js';
-import { MCPCreationService } from './services/mcp-creation-service.js';
-import { ResearchService } from './research/research-integration.js';
-import { wrapAutocoderActionsWithTrust } from './trust/autocoderTrustIntegration.js';
+import { PluginCreationService } from './services/PluginCreationService.js';
+import { MCPCreationService } from './services/McpCreationService.js';
 import { elizaLogger } from '@elizaos/core';
 
 // Export the plugin
 export const autocoderPlugin: Plugin = {
   name: '@elizaos/plugin-autocoder',
   description:
-    'Advanced auto-coding system with containerized sub-agents, task orchestration, and secure execution environments',
+    'Advanced auto-coding system with AI-powered plugin, MCP, and workflow generation. Integrates with plugin-plugin-manager for platform registry management.',
 
-  dependencies: ['plugin-env', 'plugin-manager', 'plugin-trust'],
+  dependencies: ['plugin-plugin-manager'],
 
   actions: [
     ...orchestrationActions,
-    ...containerActions,
-    runSWEBenchAction,
-    getSWEBenchStatsAction,
-    runDistributedSWEBenchAction,
+    ...pluginCreationActions,
     createMCPAction,
     n8nWorkflowAction,
     checkN8nWorkflowStatusAction,
     echoAction,
+    platformWorkflowAction,
+    secretsWorkflowAction,
   ],
-  providers: [...orchestrationProviders],
+  providers: [],
   services: [
-    AutoCodeService,
     N8nWorkflowService,
     DockerService,
     PluginCreationService,
-    MCPCreationService,
-    ResearchService
+    MCPCreationService
   ],
 
   async init(config: Record<string, string>, runtime: IAgentRuntime): Promise<void> {
     elizaLogger.info('\n┌════════════════════════════════════════┐');
-    elizaLogger.info('│          AUTOCODER PLUGIN              │');
+    elizaLogger.info('│         ELIZAOS AUTOCODER              │');
     elizaLogger.info('├────────────────────────────────────────┤');
-    elizaLogger.info('│  Initializing Enhanced AutoCoder...    │');
+    elizaLogger.info('│  Initializing Generation Services...   │');
+    elizaLogger.info('│  ✓ AI-Powered Code Generation          │');
     elizaLogger.info('│  ✓ Container Orchestration             │');
-    elizaLogger.info('│  ✓ Secure Environment Management       │');
-    elizaLogger.info('│  ✓ Agent Communication Bridge          │');
-    elizaLogger.info('│  ✓ Trust & Security Integration        │');
+    elizaLogger.info('│  ✓ Plugin & MCP Generation             │');
+    elizaLogger.info('│  ✓ N8n Workflow Creation               │');
+    elizaLogger.info('│  ✓ SWE-bench Evaluation                │');
+    elizaLogger.info('│  ✓ Secure Sandbox Environment          │');
+    elizaLogger.info('│  ✓ Complete Platform Workflow          │');
+    elizaLogger.info('│  ✓ Intelligent Secrets Management      │');
+    elizaLogger.info('│  ✓ Registry Integration                 │');
     elizaLogger.info('└════════════════════════════════════════┘');
 
-    // Check if trust system is available
-    const trustService = runtime.getService('trust-engine');
-    const roleService = runtime.getService('role-manager');
+    // Check if plugin-plugin-manager is available for registry integration
+    const pluginManagerService = runtime.getService('plugin-manager');
+    const platformRegistryService = runtime.getService('platform-registry');
+
+    if (pluginManagerService || platformRegistryService) {
+      elizaLogger.info('✔ Plugin Manager available - registry integration enabled');
+    } else {
+      elizaLogger.warn('⚠️ Plugin Manager not available - registry integration disabled');
+    }
 
     // Check Docker availability
     const dockerService = runtime.getService('docker');
@@ -68,25 +72,12 @@ export const autocoderPlugin: Plugin = {
       elizaLogger.warn('⚠️ Docker service not available - container features disabled');
     }
 
+    // Check if trust system is available
+    const trustService = runtime.getService('trust-engine');
+    const roleService = runtime.getService('role-manager');
+
     if (trustService && roleService) {
       elizaLogger.info('✔ Trust and role services available - applying access control');
-
-      // Apply trust-based access control to all actions
-      const trustWrappedActions = wrapAutocoderActionsWithTrust([
-        ...orchestrationActions,
-        ...containerActions,
-        runSWEBenchAction,
-        getSWEBenchStatsAction,
-        createMCPAction,
-        n8nWorkflowAction,
-        checkN8nWorkflowStatusAction,
-        echoAction,
-      ]);
-
-      // Trust-enhanced actions would be registered by the trust system
-      elizaLogger.info(
-        `✔ Trust wrapper applied to ${trustWrappedActions.length} autocoder actions`
-      );
 
       // Set up admin role validation for critical operations
       try {
@@ -105,8 +96,10 @@ export const autocoderPlugin: Plugin = {
             'createN8nWorkflow',
             'SPAWN_SUB_AGENT',
             'TERMINATE_TASK',
+            'PLATFORM_WORKFLOW',
+            'SECRETS_WORKFLOW',
           ]);
-          elizaLogger.info('✔ Configured high-risk operation protection');
+          elizaLogger.info('✔ Configured high-risk operation protection for AutoCoder');
         }
       } catch (error) {
         elizaLogger.warn('⚠️ Failed to configure security module protection:', error);
@@ -118,14 +111,9 @@ export const autocoderPlugin: Plugin = {
       elizaLogger.warn(
         '⚠️ This poses significant security risks for code generation and container management'
       );
-
-      // Actions are automatically registered by the plugin system from the actions array
-      elizaLogger.info(
-        `✔ Registered ${orchestrationActions.length + containerActions.length + 6} autocoder actions without trust enhancement`
-      );
     }
 
-    elizaLogger.info('🚀 AutoCoder Plugin initialization complete');
+    elizaLogger.info('🚀 ElizaOS AutoCoder initialization complete');
   },
 };
 

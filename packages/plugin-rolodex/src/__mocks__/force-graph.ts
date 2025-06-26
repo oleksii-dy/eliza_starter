@@ -1,4 +1,4 @@
-import { mock  } from 'bun:test';
+import { mock } from 'bun:test';
 
 const ForceGraph = mock(() => ({
   graphData: mock().mockReturnThis(),

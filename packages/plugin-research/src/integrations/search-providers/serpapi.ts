@@ -134,7 +134,10 @@ export class SerpAPISearchProvider {
     }
   }
 
-  async searchNews(query: string, maxResults?: number): Promise<SearchResult[]> {
+  async searchNews(
+    query: string,
+    maxResults?: number
+  ): Promise<SearchResult[]> {
     try {
       logger.info(`[SerpAPI] Searching news for: ${query}`);
 
@@ -183,7 +186,10 @@ export class SerpAPISearchProvider {
     }
   }
 
-  async searchScholar(query: string, maxResults?: number): Promise<SearchResult[]> {
+  async searchScholar(
+    query: string,
+    maxResults?: number
+  ): Promise<SearchResult[]> {
     try {
       logger.info(`[SerpAPI] Searching Google Scholar for: ${query}`);
 
@@ -213,7 +219,9 @@ export class SerpAPISearchProvider {
               authors: item.publication_info?.authors,
               cited_by: item.inline_links?.cited_by?.total,
               related_pages_link: item.inline_links?.related_pages_link,
-              pdf_link: item.resources?.find((r: any) => r.file_format === 'PDF')?.link,
+              pdf_link: item.resources?.find(
+                (r: any) => r.file_format === 'PDF'
+              )?.link,
               type: 'academic',
             }),
             score: 0.9 - index * 0.05,

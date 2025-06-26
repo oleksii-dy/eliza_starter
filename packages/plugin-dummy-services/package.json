@@ -15,16 +15,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "bun run typecheck && tsup",
-    "dev": "tsup --watch",
-    "test": "elizaos test",
-    "test:unit": "bun test",
-    "test:e2e": "elizaos test",
-    "typecheck": "tsc --noEmit",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
-    "lint:check": "eslint src && prettier --check ./src",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src"
+    "typecheck": "tsc --noEmit",
+    "test": "elizaos test"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",
@@ -36,7 +32,6 @@
     "@typescript-eslint/parser": "^8.26.0",
     "eslint": "^9.22.0",
     "prettier": "3.5.3",
-    "tsup": "^8.5.0",
     "typescript": "5.8.3"
   },
   "files": [

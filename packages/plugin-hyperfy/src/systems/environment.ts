@@ -1,6 +1,6 @@
-import { CSM } from '@elizaos/hyperfy';
+import { CSM } from '../../../hyperfy/src/core/libs/csm/CSM.js';
 import { isNumber, isString } from 'lodash-es';
-import { System } from '@elizaos/hyperfy';
+import type { HyperfySystem } from '../types/hyperfy.js';
 import { logger } from '@elizaos/core';
 import * as THREE from 'three';
 import { PuppeteerManager } from '../managers/puppeteer-manager.js';
@@ -24,7 +24,7 @@ interface EnvironmentConfig {
   model?: string;
 }
 
-export class EnvironmentSystem extends System {
+export class EnvironmentSystem implements HyperfySystem {
   declare world: any;
   model: any = null;
   skys: SkyHandle[] = [];
@@ -37,7 +37,7 @@ export class EnvironmentSystem extends System {
   csm!: CSM;
 
   constructor(world: any) {
-    super(world);
+    this.world = world;
   }
 
   start() {

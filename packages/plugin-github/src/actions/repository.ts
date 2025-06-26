@@ -318,6 +318,7 @@ export const createRepositoryAction: Action = {
   similes: ['NEW_REPO', 'MAKE_REPOSITORY', 'CREATE_REPO'],
   description:
     'Creates a new GitHub repository with optional description and privacy settings. Can be chained with CREATE_GITHUB_ISSUE to add initial issues or LIST_GITHUB_REPOSITORIES to view all repositories',
+  enabled: false, // Disabled by default - repository creation is an infrastructure change
 
   validate: async (
     runtime: IAgentRuntime,

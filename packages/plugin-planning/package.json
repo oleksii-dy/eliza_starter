@@ -5,13 +5,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "typecheck": "tsc --noEmit",
     "test": "elizaos test",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\"",
     "benchmark": "tsx scripts/run-benchmarks.ts",
     "benchmark:verbose": "tsx scripts/run-benchmarks.ts --verbose",
     "benchmark:quick": "tsx scripts/run-benchmarks.ts --max-tests 20 --timeout 30000",
@@ -24,7 +23,6 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/uuid": "^10.0.0",
-    "tsup": "^8.0.0",
     "tsx": "^4.0.0",
     "typescript": "5.8.3",
     "uuid": "^11.1.0"

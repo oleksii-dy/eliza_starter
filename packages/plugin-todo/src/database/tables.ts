@@ -1,4 +1,11 @@
-import type { TableSchema } from '@elizaos/plugin-sql';
+// Define our own TableSchema type to avoid import issues during build
+interface TableSchema {
+  name: string;
+  pluginName: string;
+  sql: string;
+  dependencies?: string[];
+  fallbackSql?: string;
+}
 
 /**
  * Todo plugin table definitions for the unified migration system

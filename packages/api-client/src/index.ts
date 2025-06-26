@@ -1,5 +1,5 @@
 // Main client
-export { ElizaClient } from './client';
+export { ElizaClient } from './ElizaClient';
 
 // Base types
 export * from './types/base';
@@ -14,13 +14,13 @@ export * from './types/server';
 export * from './types/system';
 
 // Services (for advanced usage)
-export { AgentsService } from './services/agents';
-export { MessagingService } from './services/messaging';
-export { MemoryService } from './services/memory';
-export { AudioService } from './services/audio';
-export { MediaService } from './services/media';
-export { ServerService } from './services/server';
-export { SystemService } from './services/system';
+export { AgentsService } from './services/AgentsService';
+export { MessagingService } from './services/MessagingService';
+export { MemoryService } from './services/MemoryService';
+export { AudioService } from './services/AudioService';
+export { MediaService } from './services/MediaService';
+export { ServerService } from './services/ServerService';
+export { SystemService } from './services/SystemService';
 
 // Base client and error
-export { BaseApiClient, ApiError } from './lib/base-client';
+export { BaseApiClient, ApiError } from './lib/BaseClient';

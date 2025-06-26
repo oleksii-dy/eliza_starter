@@ -359,7 +359,7 @@ export function normalizeS3Url(url: string): string {
   try {
     const urlObj = new URL(url);
     return `${urlObj.origin}${urlObj.pathname}`;
-  } catch (error) {
+  } catch (_error) {
     logger.warn(`[URL NORMALIZER] Failed to parse URL: ${url}. Returning original.`);
     return url;
   }

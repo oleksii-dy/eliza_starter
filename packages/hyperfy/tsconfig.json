@@ -43,7 +43,7 @@
     "skipLibCheck": true,
     
     // Advanced
-    "types": ["node", "bun-types"],
+    "types": ["node", "bun-types", "three"],
     "jsx": "react-jsx",
     "jsxImportSource": "react"
   },
@@ -54,7 +54,29 @@
   "exclude": [
     "node_modules",
     "dist",
-    "build"
+    "build",
+    "src/**/*.test.ts",
+    "src/**/__tests__/**/*",
+    "src/rpg/systems/ClanSystem.ts",
+    "src/rpg/systems/BankingSystem.ts",
+    "src/rpg/systems/combat/DamageCalculator.ts",
+    "src/rpg/systems/combat/HitCalculator.ts",
+    "src/rpg/systems/ConstructionSystem.ts",
+    "src/rpg/systems/NPCSystem.ts",
+    "src/rpg/systems/PlayerHomesSystem.ts",
+    "src/rpg/systems/PvPSystem.ts",
+    "src/rpg/systems/QuestSystem.ts",
+    "src/rpg/systems/RPGTestingSystem.ts",
+    "src/rpg/systems/SkillsSystem.ts",
+    "src/rpg/systems/SpawningSystem.ts",
+    "src/rpg/systems/InventorySystem.ts",
+    "src/rpg/systems/inventory/EquipmentBonusCalculator.ts",
+    "src/rpg/systems/inventory/ItemRegistry.ts",
+    "src/rpg/systems/spawning/CircularSpawnArea.ts",
+    "src/rpg/systems/spawning/SpawnConditionChecker.ts",
+    "src/rpg/systems/npc/NPCDialogueManager.ts",
+    "src/rpg/testing/scenarios/**/*",
+    "src/rpg/examples/**/*"
   ],
   "ts-node": {
     "esm": true,

@@ -1,5 +1,5 @@
 import type {
-  PublishResult,
+  PublishResult as _PublishResult,
 } from '../types.ts';
 
 // Supporting interfaces

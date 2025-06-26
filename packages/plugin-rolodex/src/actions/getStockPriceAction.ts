@@ -17,7 +17,7 @@ export const getStockPriceAction: Action = {
 
     // Check for stock/finance-related keywords
     const stockKeywords = ['stock', 'price', 'quote', 'ticker', 'shares', 'market'];
-    const hasStockKeyword = stockKeywords.some(kw => text.includes(kw));
+    const hasStockKeyword = stockKeywords.some((kw) => text.includes(kw));
 
     // Check if we have the finance API key
     const hasApiKey = !!runtime.getSetting('FINANCE_API_KEY');
@@ -51,7 +51,9 @@ export const getStockPriceAction: Action = {
       const ticker = tickerMatch ? tickerMatch[1] : 'AAPL';
 
       // Simulate API call with the key
-      logger.info(`[getStockPriceAction] Fetching stock price for ${ticker} with API key: ${apiKey.substring(0, 5)}...`);
+      logger.info(
+        `[getStockPriceAction] Fetching stock price for ${ticker} with API key: ${apiKey.substring(0, 5)}...`
+      );
 
       // Simulate stock data (in real implementation, this would call actual API)
       const stockData = {
@@ -87,7 +89,6 @@ export const getStockPriceAction: Action = {
           apiKeyUsed: true,
         },
       };
-
     } catch (error) {
       logger.error('[getStockPriceAction] Error getting stock price:', error);
 
@@ -104,7 +105,7 @@ export const getStockPriceAction: Action = {
     [
       {
         name: '{{user}}',
-        content: { text: 'What\'s the current price of AAPL stock?' },
+        content: { text: "What's the current price of AAPL stock?" },
       },
       {
         name: '{{agent}}',

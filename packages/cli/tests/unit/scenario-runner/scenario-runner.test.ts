@@ -1,5 +1,5 @@
 import { type IAgentRuntime, type UUID } from '@elizaos/core';
-import { AgentServer } from '@elizaos/server';
+import AgentServer from '@elizaos/server';
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { v4 as uuidv4 } from 'uuid';
 import { ScenarioRunner } from '../../../src/scenario-runner/index.js';

@@ -1,7 +1,7 @@
 import type { IAgentRuntime, Room, UUID } from '@elizaos/core';
 import { validateUuid, logger, createUniqueUuid, ChannelType } from '@elizaos/core';
 import express from 'express';
-import { sendError, sendSuccess } from '../shared/response-utils';
+import { sendError, sendSuccess } from '../shared/responseUtils';
 
 interface CustomRequest extends express.Request {
   params: {

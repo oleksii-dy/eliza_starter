@@ -1,8 +1,9 @@
-import * as THREE from 'three';
+import { THREE } from '../core/extras/three';
+import { Vector3Enhanced } from '../core/extras/Vector3Enhanced';
 import { Emotes } from '../core/extras/playerEmotes';
 import type { World } from '../types';
 
-const MAX_UPLOAD_SIZE = 1000000000000; // TODO
+const MAX_UPLOAD_SIZE = 1e12; // TODO - 1TB limit
 const MAX_UPLOAD_SIZE_LABEL = '1LOLS';
 
 const FOV = 70;
@@ -11,9 +12,9 @@ const HDR_URL = '/day2.hdr';
 
 const DEG2RAD = THREE.MathUtils.DEG2RAD;
 
-const v1 = new THREE.Vector3();
+const v1 = new Vector3Enhanced();
 
-let renderer: THREE.WebGLRenderer | null = null; // re-use one renderer for this
+let renderer: any | null = null; // re-use one renderer for this
 function getRenderer() {
   if (!renderer) {
     renderer = new THREE.WebGLRenderer({
@@ -29,16 +30,16 @@ function getRenderer() {
 interface AvatarNode {
   instance: {
     raw: {
-      scene: THREE.Scene;
+      scene: any;
       userData: {
         vrm: {
           humanoid: {
-            getRawBone: (name: string) => { node: THREE.Object3D };
+            getRawBone: (name: string) => { node: any };
           };
         };
       };
     };
-    update: (delta: number) => void;
+    update: (_delta: number) => void;
   };
   activate: (options: object) => void;
   deactivate: () => void;
@@ -47,8 +48,8 @@ interface AvatarNode {
 
 interface AvatarLoader {
   toNodes: (options?: {
-    camera: THREE.Camera;
-    scene: THREE.Scene;
+    camera: any;
+    scene: any;
     octree: null;
     loader: WorldLoader;
   }) => {
@@ -82,12 +83,12 @@ interface BoundsSpec {
 export class AvatarPreview {
   world: World;
   viewport: HTMLElement;
-  scene: THREE.Scene;
+  scene: any;
   size: { width: number; height: number; aspect: number };
-  camera: THREE.PerspectiveCamera;
-  sun: THREE.DirectionalLight;
-  renderer: THREE.WebGLRenderer;
-  rig: THREE.Object3D;
+  camera: any;
+  sun: any;
+  renderer: any;
+  rig: any;
   file?: File;
   url?: string;
   avatar?: AvatarLoader;
@@ -104,11 +105,11 @@ export class AvatarPreview {
       route: (url: string, localUrl: string) => void;
     };
   };
-  morphTargets?: THREE.SkinnedMesh[];
-  materialTargets?: THREE.Material[];
-  textureTargets?: THREE.Texture[];
-  visibilityTargets?: THREE.Object3D[];
-  boneTargets?: THREE.Bone[];
+  morphTargets?: any[];
+  materialTargets?: any[];
+  textureTargets?: any[];
+  visibilityTargets?: any[];
+  boneTargets?: any[];
 
   constructor(world: World, viewport: HTMLElement) {
     this.world = world;
@@ -149,7 +150,7 @@ export class AvatarPreview {
     // load hdri
     const worldWithLoader = this.world as World & { loader: WorldLoader };
     const textureResult = await worldWithLoader.loader.load('hdr', HDR_URL);
-    const texture = textureResult as unknown as THREE.Texture;
+    const texture = textureResult as any;
     texture.mapping = THREE.EquirectangularReflectionMapping;
     this.scene.environment = texture;
     // load avatar
@@ -209,7 +210,7 @@ export class AvatarPreview {
     // box.max.x = 0.1
     // box.min.y += box.getSize(v1).y / 2
 
-    const size = new THREE.Vector3();
+    const size = new Vector3Enhanced();
     box.getSize(size);
 
     // size.min.x = 0.1
@@ -296,9 +297,9 @@ export class AvatarPreview {
   }
 
   update = (time: number) => {
-    const delta = (this.lastTime ? time - this.lastTime : 0) / 1000;
+    const _delta = (this.lastTime ? time - this.lastTime : 0) / 1000;
     this.lastTime = time;
-    this.node!.instance.update(delta);
+    this.node!.instance.update(_delta);
     this.render();
   };
 
@@ -331,7 +332,7 @@ export class AvatarPreview {
     let triangles = 0;
     this.node!.instance.raw.scene.traverse((node) => {
       if ('isMesh' in node && node.isMesh) {
-        const mesh = node as unknown as THREE.Mesh;
+        const mesh = node as any;
         const geometry = mesh.geometry;
         if (geometry.index !== null) {
           triangles += geometry.index.count / 3;
@@ -347,8 +348,8 @@ export class AvatarPreview {
     // draws
     let draws = 0;
     this.node!.instance.raw.scene.traverse((node) => {
-      if ((node as unknown as THREE.Mesh).isMesh) {
-        const mesh = node as unknown as THREE.Mesh;
+      if ((node as any).isMesh) {
+        const mesh = node as any;
         const material = mesh.material;
         if (Array.isArray(material)) {
           for (let i = 0; i < material.length; i++) {
@@ -370,10 +371,10 @@ export class AvatarPreview {
       rank: this.determineRank((spec: BoundsSpec) => spec.fileSize >= fileSize),
     };
     // bones
-    let skeleton: THREE.Skeleton | undefined;
+    let skeleton: any;
     this.node!.instance.raw.scene.traverse((node) => {
-      if ((node as unknown as THREE.SkinnedMesh).isSkinnedMesh) {
-        skeleton = (node as unknown as THREE.SkinnedMesh).skeleton;
+      if ((node as any).isSkinnedMesh) {
+        skeleton = (node as any).skeleton;
       }
     });
     const bones = skeleton?.bones?.length || 0;

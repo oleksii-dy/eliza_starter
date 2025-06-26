@@ -6,10 +6,10 @@ import { voteAction } from '../actions/gov-vote';
 import { proposeAction } from '../actions/gov-propose';
 import { queueAction } from '../actions/gov-queue';
 import { executeAction } from '../actions/gov-execute';
-import { type IAgentRuntime, type Memory, type State, ModelType } from '@elizaos/core';
+import { type IAgentRuntime, type Memory, type State } from '@elizaos/core';
 import { testPrivateKey, createMockRuntime, fundWallet } from './test-config';
-import { createPublicClient, createWalletClient, http, type Address } from 'viem';
-import { sepolia, baseSepolia } from 'viem/chains';
+import { type Address } from 'viem';
+// import { sepolia, baseSepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 
 describe('EVM Actions Comprehensive Test Suite', () => {
@@ -90,10 +90,16 @@ describe('EVM Actions Comprehensive Test Suite', () => {
             {},
             mockCallback
           );
-          expect(result).toBe(false);
+          expect(
+            result && typeof result === 'object' && 'values' in result
+              ? result.values?.success
+              : false
+          ).toBe(false);
         } catch (error) {
           // Expected error for invalid parameters
-          expect(error.message).toContain('transfer amount');
+          expect(error instanceof Error ? error.message : String(error)).toContain(
+            'transfer amount'
+          );
         }
 
         // Either way, callback should be called with error
@@ -126,7 +132,15 @@ describe('EVM Actions Comprehensive Test Suite', () => {
           mockCallback
         );
 
-        expect(result).toBe(false);
+        expect(result).toBeDefined();
+        expect(
+          result && typeof result === 'object' && 'values' in result
+            ? result.values?.success
+            : false
+        ).toBe(false);
+        expect(
+          result && typeof result === 'object' && 'data' in result ? result.data?.error : ''
+        ).toContain('invalid');
         expect(mockCallback).toHaveBeenCalledWith(
           expect.objectContaining({
             text: expect.stringContaining('Error transferring tokens:'),
@@ -154,10 +168,16 @@ describe('EVM Actions Comprehensive Test Suite', () => {
             {},
             mockCallback
           );
-          expect(result).toBe(false);
+          expect(
+            result && typeof result === 'object' && 'values' in result
+              ? result.values?.success
+              : false
+          ).toBe(false);
         } catch (error) {
           // Expected error for invalid amount
-          expect(error.message).toContain('transfer amount');
+          expect(error instanceof Error ? error.message : String(error)).toContain(
+            'transfer amount'
+          );
         }
 
         // Either way, callback should be called with error
@@ -190,11 +210,19 @@ describe('EVM Actions Comprehensive Test Suite', () => {
             {},
             mockCallback
           );
-          expect(result).toBe(false);
+          expect(
+            result && typeof result === 'object' && 'values' in result
+              ? result.values?.success
+              : false
+          ).toBe(false);
         } catch (error) {
           // Expected error for unsupported chain
-          expect(error.message).toContain('unsupported-chain');
-          expect(error.message).toContain('not configured');
+          expect(error instanceof Error ? error.message : String(error)).toContain(
+            'unsupported-chain'
+          );
+          expect(error instanceof Error ? error.message : String(error)).toContain(
+            'not configured'
+          );
           return;
         }
 
@@ -226,7 +254,15 @@ describe('EVM Actions Comprehensive Test Suite', () => {
           mockCallback
         );
 
-        expect(result).toBe(false);
+        expect(result).toBeDefined();
+        expect(
+          result && typeof result === 'object' && 'values' in result
+            ? result.values?.success
+            : false
+        ).toBe(false);
+        expect(
+          result && typeof result === 'object' && 'data' in result ? result.data?.error : ''
+        ).toContain('insufficient funds');
         expect(mockCallback).toHaveBeenCalledWith(
           expect.objectContaining({
             text: expect.stringContaining('Error transferring tokens'),
@@ -242,7 +278,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
             <fromChain>sepolia</fromChain>
             <amount>1000000.0</amount>
             <toAddress>0x742d35Cc6634C0532925a3b844Bc454e4438f44e</toAddress>
-            <token>0xA0b86a33E6441484eE8bf0d9C16A02E5C76d0100</token>
+            <token>0xA0b86a33E6441484eE8bf0d9C16A02E5C76d0101</token>
           </response>
         `);
 
@@ -254,7 +290,15 @@ describe('EVM Actions Comprehensive Test Suite', () => {
           mockCallback
         );
 
-        expect(result).toBe(false);
+        expect(result).toBeDefined();
+        expect(
+          result && typeof result === 'object' && 'values' in result
+            ? result.values?.success
+            : false
+        ).toBe(false);
+        expect(
+          result && typeof result === 'object' && 'data' in result ? result.data?.error : ''
+        ).toContain('invalid');
         expect(mockCallback).toHaveBeenCalledWith(
           expect.objectContaining({
             text: expect.stringContaining('Error transferring tokens'),
@@ -336,7 +380,12 @@ describe('EVM Actions Comprehensive Test Suite', () => {
 
         // Transfer to zero address might succeed in test environment
         // The actual failure would happen on-chain
-        expect(typeof result).toBe('boolean');
+        expect(result).toBeDefined();
+        expect(
+          typeof (result && typeof result === 'object' && 'values' in result
+            ? result.values?.success
+            : false)
+        ).toBe('boolean');
         consoleSpy.mockRestore();
       });
     });
@@ -385,7 +434,11 @@ describe('EVM Actions Comprehensive Test Suite', () => {
           mockCallback
         );
 
-        expect(result).toBe(false);
+        expect(
+          result && typeof result === 'object' && 'values' in result
+            ? result.values?.success
+            : false
+        ).toBe(false);
         expect(mockCallback).toHaveBeenCalledWith(
           expect.objectContaining({
             text: expect.stringContaining('not found'),
@@ -413,7 +466,11 @@ describe('EVM Actions Comprehensive Test Suite', () => {
           mockCallback
         );
 
-        expect(result).toBe(false);
+        expect(
+          result && typeof result === 'object' && 'values' in result
+            ? result.values?.success
+            : false
+        ).toBe(false);
       });
     });
 
@@ -487,7 +544,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
             'Missing recipient address',
             'Missing transfer amount',
           ];
-          const hasValidError = validErrors.some((msg) => error.message.includes(msg));
+          const hasValidError = validErrors.some((msg) => (error as Error).message.includes(msg));
           expect(hasValidError).toBe(true);
         }
 
@@ -603,7 +660,11 @@ describe('EVM Actions Comprehensive Test Suite', () => {
           mockCallback
         );
 
-        expect(result).toBe(false);
+        expect(
+          result && typeof result === 'object' && 'values' in result
+            ? result.values?.success
+            : false
+        ).toBe(false);
       });
     });
 
@@ -888,7 +949,11 @@ describe('EVM Actions Comprehensive Test Suite', () => {
           mockCallback
         );
 
-        expect(result).toBe(false);
+        expect(
+          result && typeof result === 'object' && 'values' in result
+            ? result.values?.success
+            : false
+        ).toBe(false);
       });
     });
 
@@ -1101,7 +1166,11 @@ describe('EVM Actions Comprehensive Test Suite', () => {
           mockCallback
         );
 
-        expect(result).toBe(false);
+        expect(
+          result && typeof result === 'object' && 'values' in result
+            ? result.values?.success
+            : false
+        ).toBe(false);
       });
     });
 
@@ -1161,7 +1230,11 @@ describe('EVM Actions Comprehensive Test Suite', () => {
           mockCallback
         );
 
-        expect(result).toBe(false);
+        expect(
+          result && typeof result === 'object' && 'values' in result
+            ? result.values?.success
+            : false
+        ).toBe(false);
         expect(mockCallback).toHaveBeenCalledWith(
           expect.objectContaining({
             text: expect.stringContaining('same length'),

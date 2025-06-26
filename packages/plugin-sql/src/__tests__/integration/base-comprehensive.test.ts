@@ -12,11 +12,10 @@ import {
   type Content,
   type AgentRuntime,
 } from '@elizaos/core';
-import { PgDatabaseAdapter } from '../../pg/adapter';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PgAdapter } from '../../pg/adapter';
 
 describe('Base Adapter Comprehensive Tests', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -409,11 +408,7 @@ describe('Base Adapter Comprehensive Tests', () => {
 
   describe('Search Operations', () => {
     it('should handle searchMemoriesByEmbedding', async () => {
-      // Skip for PGLite as it doesn't support pgvector extension
-      if (adapter instanceof PgliteDatabaseAdapter) {
-        console.log('Skipping vector search test for PGLite');
-        return;
-      }
+      // PostgreSQL with pgvector extension supports vector search
 
       const embedding = new Float32Array(384).fill(0.5);
 
@@ -445,11 +440,7 @@ describe('Base Adapter Comprehensive Tests', () => {
     });
 
     it('should handle getCachedEmbeddings', async () => {
-      // Skip for PGLite as it doesn't support levenshtein function
-      if (adapter instanceof PgliteDatabaseAdapter) {
-        console.log('Skipping getCachedEmbeddings test for PGLite');
-        return;
-      }
+      // PostgreSQL supports levenshtein function via pg_trgm extension
 
       const content = 'Test content for embedding';
       const embedding = new Float32Array(384).fill(0.7);

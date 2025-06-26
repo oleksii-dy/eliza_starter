@@ -1,6 +1,6 @@
 import { logger, type IAgentRuntime } from '@elizaos/core';
-import { LLMVerificationEngine } from './llm-verification.js';
-import { HybridVerificationEngine } from './hybrid-verification.js';
+import { LLMVerificationEngine } from './LlmVerification.js';
+import { HybridVerificationEngine } from './HybridVerification.js';
 import type { VerificationRule, VerificationResult, ScenarioContext } from './types.js';
 
 export class ScenarioVerifier {

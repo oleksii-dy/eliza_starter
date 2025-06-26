@@ -1,4 +1,4 @@
-import { LootTable, LootDrop, RPGEntity, StatsComponent } from '../../types';
+import { LootTable, LootDrop, RPGEntity, StatsComponent } from '../../types/index';
 
 export class DropCalculator {
   /**

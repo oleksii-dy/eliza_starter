@@ -6,7 +6,7 @@ interface Asset {
   file: File
 }
 
-interface AssetInfo {
+interface _AssetInfo {
   type: string
   url: string
   size: number

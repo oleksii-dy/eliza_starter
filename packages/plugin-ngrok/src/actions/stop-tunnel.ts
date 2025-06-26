@@ -16,7 +16,7 @@ export const stopTunnelAction: Action = {
   description:
     'Stop the running ngrok tunnel and clean up resources. Can be chained with START_TUNNEL actions for tunnel rotation workflows or combined with deployment actions for automated service management.',
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const tunnelService = runtime.getService('tunnel') as ITunnelService;
+    const tunnelService = runtime.getService<ITunnelService>('tunnel');
     return !!tunnelService;
   },
   handler: async (
@@ -26,7 +26,7 @@ export const stopTunnelAction: Action = {
     options?: any,
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
-    const tunnelService = runtime.getService('tunnel') as ITunnelService;
+    const tunnelService = runtime.getService<ITunnelService>('tunnel');
     if (!tunnelService) {
       elizaLogger.error('Tunnel service is not available');
       if (callback) {

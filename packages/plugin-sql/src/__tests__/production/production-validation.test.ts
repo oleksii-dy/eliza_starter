@@ -10,14 +10,13 @@ import {
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { createIsolatedTestDatabase } from '../test-helpers';
-import type { PgliteDatabaseAdapter } from '../../pglite/adapter';
-import type { PgDatabaseAdapter } from '../../pg/adapter';
+import type { PgAdapter } from '../../pg/adapter';
 
 /**
  * Production Validation Tests for SQL Plugin
  *
  * These tests validate the SQL plugin under realistic production conditions:
- * - PostgreSQL database validation (when available)
+ * - PostgreSQL database validation
  * - High concurrency load testing
  * - Performance benchmarks
  * - Memory leak detection
@@ -26,11 +25,11 @@ import type { PgDatabaseAdapter } from '../../pg/adapter';
  */
 
 describe('SQL Plugin Production Validation', () => {
-  let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: IAgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
-  let isPostgreSQL: boolean;
+  const isPostgreSQL = true; // Always PostgreSQL now
 
   beforeAll(async () => {
     console.log('[PRODUCTION VALIDATION] Setting up production test environment...');
@@ -43,9 +42,7 @@ describe('SQL Plugin Production Validation', () => {
     testAgentId = setup.testAgentId;
 
     // Detect database type
-    isPostgreSQL = process.env.POSTGRES_URL ? true : false;
-
-    console.log(`[PRODUCTION VALIDATION] Using ${isPostgreSQL ? 'PostgreSQL' : 'PGLite'} database`);
+    console.log('[PRODUCTION VALIDATION] Using PostgreSQL database');
     console.log('[PRODUCTION VALIDATION] Production test environment ready');
   }, 60000); // Extended timeout for production setup
 
@@ -76,7 +73,7 @@ describe('SQL Plugin Production Validation', () => {
         agentId: testAgentId,
       });
 
-      const memoryCount = isPostgreSQL ? 1000 : 500; // Adjust based on database
+      const memoryCount = 1000; // PostgreSQL can handle large datasets
       const batchSize = 50;
       const startTime = Date.now();
 
@@ -123,7 +120,7 @@ describe('SQL Plugin Production Validation', () => {
       console.log(`[PERFORMANCE] Created ${memoryCount} memories in ${creationTime}ms`);
 
       // Performance expectations based on database type
-      const expectedMaxTime = isPostgreSQL ? 30000 : 25000; // 30s for PostgreSQL, 25s for PGLite
+      const expectedMaxTime = 30000; // 30s for PostgreSQL
       expect(creationTime).toBeLessThan(expectedMaxTime);
 
       // Verify data integrity
@@ -158,7 +155,7 @@ describe('SQL Plugin Production Validation', () => {
     });
 
     it('should handle concurrent database operations safely', async () => {
-      const concurrentOperations = isPostgreSQL ? 50 : 25;
+      const concurrentOperations = 50; // PostgreSQL can handle high concurrency
       const roomId = uuidv4() as UUID;
 
       await runtime.createRoom({
@@ -291,7 +288,7 @@ describe('SQL Plugin Production Validation', () => {
       }
 
       // Should complete within reasonable time
-      const expectedMaxTime = isPostgreSQL ? 20000 : 10000;
+      const expectedMaxTime = 20000; // PostgreSQL performance expectation
       expect(concurrencyTime).toBeLessThan(expectedMaxTime);
     });
   });
@@ -300,7 +297,7 @@ describe('SQL Plugin Production Validation', () => {
     it('should handle large dataset operations without memory leaks', async () => {
       const initialMemory = process.memoryUsage();
       const roomId = uuidv4() as UUID;
-      const entityCount = isPostgreSQL ? 500 : 200;
+      const entityCount = 500; // PostgreSQL can handle large entity datasets
 
       await runtime.createRoom({
         id: roomId,
@@ -449,7 +446,7 @@ describe('SQL Plugin Production Validation', () => {
     });
 
     it('should maintain data consistency under concurrent stress', async () => {
-      const stressOperations = isPostgreSQL ? 100 : 50;
+      const stressOperations = 100; // PostgreSQL stress test operations
       const roomId = uuidv4() as UUID;
       const sharedEntityId = uuidv4() as UUID;
 
@@ -642,8 +639,8 @@ describe('SQL Plugin Production Validation', () => {
 
     it('should perform efficiently under realistic production loads', async () => {
       // Simulate a realistic production scenario
-      const numUsers = isPostgreSQL ? 20 : 10;
-      const messagesPerUser = isPostgreSQL ? 50 : 25;
+      const numUsers = 20; // PostgreSQL can handle many concurrent users
+      const messagesPerUser = 50; // PostgreSQL message throughput
       const roomId = uuidv4() as UUID;
 
       await runtime.createRoom({

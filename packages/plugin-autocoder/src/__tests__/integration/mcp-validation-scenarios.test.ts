@@ -5,7 +5,7 @@ import type { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 // Mock child_process before any imports that use it
 mock.module('child_process', () => ({
   exec: mock((cmd: string, opts: any, callback?: any) => {
-    const cb = callback || ((err: any, stdout: string, stderr: string) => {});
+    const cb = callback || ((err: any, stdout: string, stderr: string) => { /* empty */ });
     // Simulate successful command execution
     process.nextTick(() => cb(null, '', ''));
   }),
@@ -19,9 +19,9 @@ mock.module('util', () => ({
 // Mock the MCPCreationService entirely to avoid file system operations
 mock.module('../../services/mcp-creation-service', () => {
   return {
-    MCPCreationService: mock().mockImplementation((runtime) => {
+    MCPCreationService: mock().mockImplementation((_runtime) => {
       return {
-        runtime,
+        runtime: _runtime,
         templatePath: '/mock/template',
         start: mock().mockResolvedValue(undefined),
         stop: mock().mockResolvedValue(undefined),
@@ -68,7 +68,7 @@ mock.module('fs/promises', () => ({
 
 import * as fs from 'fs/promises';
 import { createMCPAction } from '../../actions/mcp-creation-action';
-import { MCPCreationService } from '../../services/mcp-creation-service';
+import { MCPCreationService } from '../../services/McpCreationService';
 
 /**
  * Comprehensive E2E test scenarios to validate MCP creation works in all cases
@@ -127,7 +127,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
 
   describe('Scenario 1: Ultra-Simple Time Plugin', () => {
     it('should create the simplest possible MCP server', async () => {
-      const config = {
+      const _config = {
         name: 'simple-time',
         description: 'The simplest time MCP server',
         outputDir: tempDir,
@@ -135,12 +135,12 @@ describe('MCP Validation Scenarios - Production Ready', () => {
           {
             name: 'now',
             description: 'Get current time',
-            parameters: {},
+            parameters: { /* empty */ },
           },
         ],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
       expect(result.details?.toolsGenerated).toContain('now-tool.ts');
     }, 30000);
@@ -164,12 +164,12 @@ describe('MCP Validation Scenarios - Production Ready', () => {
       };
 
       const state: State = {
-        values: {},
-        data: {},
+        values: { /* empty */ },
+        data: { /* empty */ },
         text: '',
       };
 
-      const result = await createMCPAction.handler(runtime, message, state, {}, callback);
+      const result = await createMCPAction.handler(runtime, message, state, { /* empty */ }, callback);
       expect(result).toBeDefined();
       expect(callbackCalled).toBe(true);
     }, 10000);
@@ -177,7 +177,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
 
   describe('Scenario 2: Calculator Plugin', () => {
     it('should create a calculator MCP with multiple operations', async () => {
-      const config = {
+      const _config = {
         name: 'calculator',
         description: 'Basic calculator MCP',
         outputDir: tempDir,
@@ -201,7 +201,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         ],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
       expect(result.details?.toolsGenerated).toHaveLength(2);
       expect(result.details?.toolsGenerated).toContain('add-tool.ts');
@@ -211,7 +211,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
 
   describe('Scenario 3: File Reader Plugin', () => {
     it('should create a file reader MCP with security checks', async () => {
-      const config = {
+      const _config = {
         name: 'file-reader',
         description: 'Read files safely',
         outputDir: tempDir,
@@ -227,7 +227,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         ],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
       expect(result.details?.toolsGenerated).toContain('readfile-tool.ts');
     }, 30000);
@@ -235,7 +235,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
 
   describe('Scenario 4: Empty MCP Server', () => {
     it('should create a valid MCP server with no tools', async () => {
-      const config = {
+      const _config = {
         name: 'empty-server',
         description: 'MCP server with no tools',
         outputDir: tempDir,
@@ -243,7 +243,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         resources: [],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
       expect(result.details?.toolsGenerated).toHaveLength(0);
       expect(result.details?.resourcesGenerated).toHaveLength(0);
@@ -252,7 +252,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
 
   describe('Scenario 5: Resource-Only Server', () => {
     it('should create an MCP server with only resources', async () => {
-      const config = {
+      const _config = {
         name: 'resource-server',
         description: 'MCP server with only resources',
         outputDir: tempDir,
@@ -271,7 +271,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         ],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
       expect(result.details?.resourcesGenerated).toHaveLength(2);
       expect(result.details?.resourcesGenerated).toContain('config-resource.ts');
@@ -315,8 +315,8 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         };
 
         const state: State = {
-          values: {},
-          data: {},
+          values: { /* empty */ },
+          data: { /* empty */ },
           text: '',
         };
 
@@ -327,7 +327,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
           return [];
         };
 
-        await createMCPAction.handler(runtime, message, state, {}, callback);
+        await createMCPAction.handler(runtime, message, state, { /* empty */ }, callback);
 
         // Verify the action was called
         expect(responses.length).toBeGreaterThan(0);
@@ -356,7 +356,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
 
   describe('Scenario 7: Build and Run Validation', () => {
     it('should create an MCP server that actually builds', async () => {
-      const config = {
+      const _config = {
         name: 'buildable-mcp',
         description: 'MCP that compiles successfully',
         outputDir: tempDir,
@@ -371,7 +371,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         ],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
       expect(result.details?.filesCreated).toContain('package.json');
       expect(result.details?.filesCreated).toContain('tsconfig.json');
@@ -393,13 +393,13 @@ describe('MCP Validation Scenarios - Production Ready', () => {
     });
 
     it('should reject malicious project names', async () => {
-      const config = {
+      const _config = {
         name: '../../etc/passwd',
         description: 'Malicious name',
         outputDir: tempDir,
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
       // Name should be sanitized
       expect(result.projectPath).not.toContain('..');
@@ -410,14 +410,14 @@ describe('MCP Validation Scenarios - Production Ready', () => {
 
   describe('Scenario 9: Dependencies Validation', () => {
     it('should handle various dependency formats', async () => {
-      const config = {
+      const _config = {
         name: 'deps-test',
         description: 'Testing dependency parsing',
         outputDir: tempDir,
         dependencies: ['axios@1.6.0', 'dotenv@16.0.0', 'pg@8.11.0'],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
       expect(result.details?.filesCreated).toContain('package.json');
     });
@@ -442,7 +442,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         return [];
       };
 
-      await createMCPAction.handler(runtime, message, {} as State, {}, callback);
+      await createMCPAction.handler(runtime, message, { /* empty */ } as State, { /* empty */ }, callback);
 
       // Verify the action was called
       expect(responses.length).toBeGreaterThan(0);
@@ -457,7 +457,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
     });
 
     it('should create an API integration MCP', async () => {
-      const config = {
+      const _config = {
         name: 'api-client',
         description: 'API integration MCP',
         outputDir: tempDir,
@@ -476,7 +476,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         dependencies: ['axios@1.6.0'],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
       expect(result.details?.toolsGenerated).toContain('makerequest-tool.ts');
     });

@@ -60,9 +60,9 @@ Respond ONLY with the JSON object, no additional text, no markdown formatting, n
         const result = schema.parse(json);
 
         return result;
-      } catch (error) {
-        lastError = error as Error;
-        logger.warn(`[LLMProcessor] Attempt ${attempt + 1} failed:`, error);
+      } catch (_error) {
+        lastError = _error as Error;
+        logger.warn(`[LLMProcessor] Attempt ${attempt + 1} failed:`, _error);
 
         if (attempt < this.options.maxRetries - 1) {
           // Wait before retry with exponential backoff
@@ -91,9 +91,9 @@ Respond ONLY with the JSON object, no additional text, no markdown formatting, n
         });
 
         return response;
-      } catch (error) {
-        lastError = error as Error;
-        logger.warn(`[LLMProcessor] Text generation attempt ${attempt + 1} failed:`, error);
+      } catch (_error) {
+        lastError = _error as Error;
+        logger.warn(`[LLMProcessor] Text generation attempt ${attempt + 1} failed:`, _error);
 
         if (attempt < this.options.maxRetries - 1) {
           await this.delay(this.options.retryDelay * Math.pow(2, attempt));
@@ -123,9 +123,9 @@ Respond ONLY with the JSON object, no additional text, no markdown formatting, n
       } else {
         throw new Error('Unexpected embedding response format');
       }
-    } catch (error) {
-      logger.error('[LLMProcessor] Error generating embedding:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('[LLMProcessor] Error generating embedding:', _error);
+      throw _error;
     }
   }
 
@@ -173,7 +173,7 @@ Respond ONLY with the JSON object, no additional text, no markdown formatting, n
 
     try {
       return JSON.parse(jsonString);
-    } catch (error) {
+    } catch (_error) {
       // Clean up common issues
       jsonString = jsonString
         .replace(/```json\s*/g, '')
@@ -303,7 +303,7 @@ ${fields.join(',\n')}
           );
         }
       }
-    } catch (error) {
+    } catch (_error) {
       // If we can't determine the schema type, return default
     }
 

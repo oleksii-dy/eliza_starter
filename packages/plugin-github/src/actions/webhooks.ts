@@ -82,6 +82,7 @@ export const createWebhookAction: Action = {
   name: 'CREATE_GITHUB_WEBHOOK',
   similes: ['SETUP_WEBHOOK', 'ADD_WEBHOOK', 'CONFIGURE_WEBHOOK'],
   description: 'Create a GitHub webhook for real-time event processing using Ngrok tunnel',
+  enabled: false, // Disabled by default - webhook creation is an infrastructure change
 
   examples: [
     [
@@ -397,6 +398,7 @@ export const deleteWebhookAction: Action = {
   name: 'DELETE_GITHUB_WEBHOOK',
   similes: ['REMOVE_WEBHOOK', 'DESTROY_WEBHOOK'],
   description: 'Delete a specific GitHub webhook from a repository',
+  enabled: false, // Disabled by default - webhook deletion is an infrastructure change
 
   examples: [
     [

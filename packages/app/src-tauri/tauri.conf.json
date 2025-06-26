@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Eliza Desktop",
+        "title": "ElizaOS Platform",
         "width": 1200,
         "height": 800,
         "minWidth": 800,
@@ -22,13 +22,14 @@
     "security": {
       "csp": {
         "default-src": "'self'",
-        "img-src": "'self' data: asset: https://asset.localhost http://localhost:3000",
-        "connect-src": "'self' http://localhost:3000 ws://localhost:3000 http://localhost:* https://localhost:* capacitor://* tauri://* https://api.eliza.how",
-        "style-src": "'self' 'unsafe-inline' http://localhost:3000",
-        "script-src": "'self' 'unsafe-eval' http://localhost:3000",
-        "frame-src": "'self' http://localhost:3000"
+        "img-src": "'self' data: asset: https://asset.localhost http://localhost:3000 http://localhost:3333 https://*.elizaos.com",
+        "connect-src": "'self' http://localhost:3000 ws://localhost:3000 http://localhost:3333 https://localhost:* capacitor://* tauri://* https://api.eliza.how https://*.elizaos.com https://*.workos.com",
+        "style-src": "'self' 'unsafe-inline' http://localhost:3000 http://localhost:3333",
+        "script-src": "'self' 'unsafe-eval' http://localhost:3000 http://localhost:3333",
+        "frame-src": "'self' http://localhost:3000 http://localhost:3333"
       }
-    }
+    },
+    "macOSPrivateApi": true
   },
   "bundle": {
     "active": true,
@@ -39,7 +40,30 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.13",
+      "exceptionDomain": "",
+      "signingIdentity": null,
+      "entitlements": null
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    },
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    },
+    "externalBin": [],
+    "resources": [],
+    "copyright": "",
+    "category": "DeveloperTool",
+    "shortDescription": "",
+    "longDescription": ""
   },
   "plugins": {
     "shell": {

@@ -53,7 +53,10 @@ async function monitorResearch(
     }
 
     // Check completion
-    if (project.status === ResearchStatus.COMPLETED || project.status === ResearchStatus.FAILED) {
+    if (
+      project.status === ResearchStatus.COMPLETED ||
+      project.status === ResearchStatus.FAILED
+    ) {
       return project;
     }
 
@@ -66,7 +69,9 @@ async function monitorResearch(
 }
 
 // Test 1: Research for Building a New Feature (Real Developer Workflow)
-export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Promise<void> {
+export async function testFeatureDevelopmentResearch(
+  runtime: IAgentRuntime
+): Promise<void> {
   logger.info('🔨 Starting Real-World Test: Feature Development Research');
 
   const service = runtime.getService<ResearchService>('research');
@@ -81,7 +86,9 @@ export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Pr
     'WebSocket authentication JWT security implementation examples',
   ];
 
-  logger.info('Researching WebSocket implementation across multiple aspects...');
+  logger.info(
+    'Researching WebSocket implementation across multiple aspects...'
+  );
 
   const projects = await Promise.all(
     queries.map((query, index) =>
@@ -158,7 +165,9 @@ export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Pr
   logger.info(`- Implementation details found: ${hasImplementationDetails}`);
   logger.info(`- Security considerations found: ${hasSecurityInfo}`);
   logger.info(`- Performance insights found: ${hasPerformanceInfo}`);
-  logger.info(`- Developer-focused sources: ${devSources.length}/${allSources.length}`);
+  logger.info(
+    `- Developer-focused sources: ${devSources.length}/${allSources.length}`
+  );
 
   if (devSources.length > 0) {
     logger.info(`- Sample dev source: ${devSources[0].title}`);
@@ -166,7 +175,9 @@ export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Pr
 
   // Simulate decision-making based on research
   if (hasImplementationDetails && hasSecurityInfo && hasPerformanceInfo) {
-    logger.success('✅ Research provides comprehensive information for feature implementation');
+    logger.success(
+      '✅ Research provides comprehensive information for feature implementation'
+    );
   } else {
     logger.warn('⚠️  Some aspects missing - may need additional research');
   }
@@ -175,7 +186,9 @@ export async function testFeatureDevelopmentResearch(runtime: IAgentRuntime): Pr
 }
 
 // Test 2: Research a Person for Hiring/Partnership (Real HR/Business Workflow)
-export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Promise<void> {
+export async function testPersonBackgroundResearch(
+  runtime: IAgentRuntime
+): Promise<void> {
   logger.info('👤 Starting Real-World Test: Person Background Research');
 
   const service = runtime.getService<ResearchService>('research');
@@ -184,7 +197,8 @@ export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Prom
   }
 
   // Scenario: Researching a potential technical advisor or hire
-  const personQuery = 'Andrej Karpathy AI research contributions Tesla OpenAI recent projects 2024';
+  const personQuery =
+    'Andrej Karpathy AI research contributions Tesla OpenAI recent projects 2024';
 
   const project = await service.createResearchProject(personQuery, {
     maxSearchResults: 5,
@@ -198,10 +212,15 @@ export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Prom
       // Track what types of sources we're finding
       const sources = p.sources.map((s) => new URL(s.url).hostname);
       const hasLinkedIn = sources.some((s) => s.includes('linkedin'));
-      const hasTwitter = sources.some((s) => s.includes('twitter') || s.includes('x.com'));
+      const hasTwitter = sources.some(
+        (s) => s.includes('twitter') || s.includes('x.com')
+      );
       const hasGitHub = sources.some((s) => s.includes('github'));
 
-      if ((hasLinkedIn || hasTwitter || hasGitHub) && p.phase === ResearchPhase.SEARCHING) {
+      if (
+        (hasLinkedIn || hasTwitter || hasGitHub) &&
+        p.phase === ResearchPhase.SEARCHING
+      ) {
         logger.info(
           `Found professional profiles: LinkedIn=${hasLinkedIn}, Twitter=${hasTwitter}, GitHub=${hasGitHub}`
         );
@@ -217,8 +236,12 @@ export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Prom
   const findings = result.findings;
 
   // Professional history
-  const hasTeslaInfo = findings.some((f) => f.content.toLowerCase().includes('tesla'));
-  const hasOpenAIInfo = findings.some((f) => f.content.toLowerCase().includes('openai'));
+  const hasTeslaInfo = findings.some((f) =>
+    f.content.toLowerCase().includes('tesla')
+  );
+  const hasOpenAIInfo = findings.some((f) =>
+    f.content.toLowerCase().includes('openai')
+  );
   const hasEducation = findings.some(
     (f) =>
       f.content.toLowerCase().includes('stanford') ||
@@ -262,7 +285,9 @@ export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Prom
   });
 
   logger.info('📋 Person Background Research Results:');
-  logger.info(`- Professional history coverage: Tesla=${hasTeslaInfo}, OpenAI=${hasOpenAIInfo}`);
+  logger.info(
+    `- Professional history coverage: Tesla=${hasTeslaInfo}, OpenAI=${hasOpenAIInfo}`
+  );
   logger.info(`- Education info found: ${hasEducation}`);
   logger.info(`- Recent activity (2023-2024): ${hasRecentActivity}`);
   logger.info(`- Technical contributions: ${hasTechnicalWork}`);
@@ -285,7 +310,9 @@ export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Prom
   if (professionalScore >= 4) {
     logger.success('✅ Comprehensive professional profile assembled');
   } else if (professionalScore >= 2) {
-    logger.info('ℹ️  Partial professional profile - may need additional sources');
+    logger.info(
+      'ℹ️  Partial professional profile - may need additional sources'
+    );
   } else {
     logger.warn('⚠️  Limited professional information found');
   }
@@ -294,7 +321,9 @@ export async function testPersonBackgroundResearch(runtime: IAgentRuntime): Prom
 }
 
 // Test 3: Breaking News Research (Real Journalist/Analyst Workflow)
-export async function testBreakingNewsResearch(runtime: IAgentRuntime): Promise<void> {
+export async function testBreakingNewsResearch(
+  runtime: IAgentRuntime
+): Promise<void> {
   logger.info('📰 Starting Real-World Test: Breaking News Research');
 
   const service = runtime.getService<ResearchService>('research');
@@ -368,16 +397,24 @@ export async function testBreakingNewsResearch(runtime: IAgentRuntime): Promise<
     ),
     social: sources.filter(
       (s) =>
-        s.url.includes('twitter.com') || s.url.includes('x.com') || s.url.includes('reddit.com')
+        s.url.includes('twitter.com') ||
+        s.url.includes('x.com') ||
+        s.url.includes('reddit.com')
     ),
   };
 
   // Check for time-sensitive content
-  const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
+  const currentMonth = new Date().toLocaleDateString('en-US', {
+    month: 'long',
+  });
   const currentYear = new Date().getFullYear();
 
-  const hasCurrentMonth = findings.some((f) => f.content.includes(currentMonth));
-  const hasCurrentYear = findings.some((f) => f.content.includes(currentYear.toString()));
+  const hasCurrentMonth = findings.some((f) =>
+    f.content.includes(currentMonth)
+  );
+  const hasCurrentYear = findings.some((f) =>
+    f.content.includes(currentYear.toString())
+  );
   const hasTimeWords = findings.some((f) => {
     const content = f.content.toLowerCase();
     return (
@@ -402,11 +439,21 @@ export async function testBreakingNewsResearch(runtime: IAgentRuntime): Promise<
   });
 
   // Extract companies/organizations mentioned
-  const companies = ['OpenAI', 'Google', 'Microsoft', 'Anthropic', 'Meta', 'Amazon', 'Apple'];
+  const companies = [
+    'OpenAI',
+    'Google',
+    'Microsoft',
+    'Anthropic',
+    'Meta',
+    'Amazon',
+    'Apple',
+  ];
   const companyMentions: Record<string, number> = {};
 
   companies.forEach((company) => {
-    companyMentions[company] = findings.filter((f) => f.content.includes(company)).length;
+    companyMentions[company] = findings.filter((f) =>
+      f.content.includes(company)
+    ).length;
   });
 
   logger.info('📊 Breaking News Research Results:');
@@ -450,7 +497,9 @@ export async function testBreakingNewsResearch(runtime: IAgentRuntime): Promise<
 }
 
 // Test 4: Market/Competitive Intelligence (Real Business Strategy Workflow)
-export async function testMarketIntelligenceResearch(runtime: IAgentRuntime): Promise<void> {
+export async function testMarketIntelligenceResearch(
+  runtime: IAgentRuntime
+): Promise<void> {
   logger.info('📈 Starting Real-World Test: Market Intelligence Research');
 
   const service = runtime.getService<ResearchService>('research');
@@ -554,7 +603,14 @@ export async function testMarketIntelligenceResearch(runtime: IAgentRuntime): Pr
   });
 
   // Market trends
-  const trendKeywords = ['growth', 'trend', 'future', 'emerging', 'adoption', 'market size'];
+  const trendKeywords = [
+    'growth',
+    'trend',
+    'future',
+    'emerging',
+    'adoption',
+    'market size',
+  ];
   const trendsFound = trendKeywords.filter((keyword) =>
     findings.some((f) => f.content.toLowerCase().includes(keyword))
   );
@@ -605,17 +661,25 @@ export async function testMarketIntelligenceResearch(runtime: IAgentRuntime): Pr
 
   if (hasComprehensiveData) {
     logger.success('✅ Comprehensive market intelligence gathered');
-    logger.info(`Key competitors analyzed: ${wellCoveredCompetitors.join(', ')}`);
+    logger.info(
+      `Key competitors analyzed: ${wellCoveredCompetitors.join(', ')}`
+    );
   } else {
-    logger.info('ℹ️  Partial market intelligence - consider additional research');
+    logger.info(
+      'ℹ️  Partial market intelligence - consider additional research'
+    );
   }
 
   logger.success('✅ Real-World Test Passed: Market Intelligence Research');
 }
 
 // Test 5: Technical Problem Solving Research (Real Developer Debug Workflow)
-export async function testProblemSolvingResearch(runtime: IAgentRuntime): Promise<void> {
-  logger.info('🔧 Starting Real-World Test: Technical Problem Solving Research');
+export async function testProblemSolvingResearch(
+  runtime: IAgentRuntime
+): Promise<void> {
+  logger.info(
+    '🔧 Starting Real-World Test: Technical Problem Solving Research'
+  );
 
   const service = runtime.getService<ResearchService>('research');
   if (!service) {
@@ -636,7 +700,9 @@ export async function testProblemSolvingResearch(runtime: IAgentRuntime): Promis
     timeout: 120000,
     onProgress: (p) => {
       // Look for Stack Overflow as it appears
-      const hasStackOverflow = p.sources.some((s) => s.url.includes('stackoverflow.com'));
+      const hasStackOverflow = p.sources.some((s) =>
+        s.url.includes('stackoverflow.com')
+      );
       if (hasStackOverflow && p.sources.length === 1) {
         logger.info('Found Stack Overflow - good sign for debugging!');
       }
@@ -662,7 +728,10 @@ export async function testProblemSolvingResearch(runtime: IAgentRuntime): Promis
         s.url.includes('docs.')
     ),
     blogs: sources.filter(
-      (s) => s.url.includes('blog') || s.url.includes('medium.com') || s.url.includes('dev.to')
+      (s) =>
+        s.url.includes('blog') ||
+        s.url.includes('medium.com') ||
+        s.url.includes('dev.to')
     ),
   };
 
@@ -732,14 +801,17 @@ export async function testProblemSolvingResearch(runtime: IAgentRuntime): Promis
     logger.success('✅ Found solutions with code examples!');
 
     // Find the most relevant solution
-    const bestSolution = hasSolutions.sort((a, b) => b.relevance - a.relevance)[0];
+    const bestSolution = hasSolutions.sort(
+      (a, b) => b.relevance - a.relevance
+    )[0];
     const preview = bestSolution.content.substring(0, 250);
     logger.info(`Top solution preview: "${preview}..."`);
   }
 
   // Problem solving quality
   const hasGoodSources =
-    debuggingSources.stackoverflow.length > 0 || debuggingSources.documentation.length > 0;
+    debuggingSources.stackoverflow.length > 0 ||
+    debuggingSources.documentation.length > 0;
   const hasGoodContent = hasSolutions.length > 0 && hasCodeExamples.length > 0;
   const hasContext = hasExplanations.length > 0;
 
@@ -751,7 +823,9 @@ export async function testProblemSolvingResearch(runtime: IAgentRuntime): Promis
     );
   }
 
-  logger.success('✅ Real-World Test Passed: Technical Problem Solving Research');
+  logger.success(
+    '✅ Real-World Test Passed: Technical Problem Solving Research'
+  );
 }
 
 // Export all tests as a TestSuite for the ElizaOS test runner
@@ -762,12 +836,14 @@ export const realWorldE2ETests = [
     tests: [
       {
         name: 'Feature Development Research',
-        description: 'Simulates a developer researching how to implement a new AI feature',
+        description:
+          'Simulates a developer researching how to implement a new AI feature',
         fn: testFeatureDevelopmentResearch,
       },
       {
         name: 'Person Background Research',
-        description: 'Simulates researching professional background information',
+        description:
+          'Simulates researching professional background information',
         fn: testPersonBackgroundResearch,
       },
       {
@@ -777,12 +853,14 @@ export const realWorldE2ETests = [
       },
       {
         name: 'Market Intelligence Research',
-        description: 'Simulates business strategy and competitive analysis workflow',
+        description:
+          'Simulates business strategy and competitive analysis workflow',
         fn: testMarketIntelligenceResearch,
       },
       {
         name: 'Technical Problem Solving Research',
-        description: 'Simulates developer debugging and troubleshooting workflow',
+        description:
+          'Simulates developer debugging and troubleshooting workflow',
         fn: testProblemSolvingResearch,
       },
     ],

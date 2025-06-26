@@ -4,13 +4,14 @@ import {
   type ServiceTypeName,
   logger,
 } from '@elizaos/core';
+import '../types'; // Import to register service types
 
 /**
  * Integration bridge service for connecting with other plugins
  */
 export class TodoIntegrationBridge extends Service {
-  static serviceType: ServiceTypeName = 'TODO_INTEGRATION_BRIDGE' as ServiceTypeName;
-  serviceName = 'TODO_INTEGRATION_BRIDGE' as ServiceTypeName;
+  static serviceType: ServiceTypeName = 'TODO_INTEGRATION_BRIDGE';
+  serviceName = 'TODO_INTEGRATION_BRIDGE';
   capabilityDescription = 'Bridges todo plugin with other plugins for enhanced functionality';
 
   static async start(runtime: IAgentRuntime): Promise<TodoIntegrationBridge> {

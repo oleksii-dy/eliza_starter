@@ -1,6 +1,6 @@
 import { Entity } from '../../core/entities/Entity';
-import type { World } from '../../types';
-import type { Component } from '../types';
+import type { World } from '../../types/index.js';
+import type { Component } from '../types.js';
 
 /**
  * RPG-specific entity that extends the base Entity class
@@ -8,6 +8,11 @@ import type { Component } from '../types';
  */
 export class RPGEntity extends Entity {
   components: Map<string, Component>;
+  visualOverride?: {
+    color?: string;
+    size?: { width: number; height: number; depth: number };
+    animation?: string;
+  };
 
   // Declare inherited properties for TypeScript
   declare world: World;

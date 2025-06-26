@@ -112,11 +112,15 @@ class MultiBenchmarkRunner {
   async runAllBenchmarks(): Promise<BenchmarkResult[]> {
     const results: BenchmarkResult[] = [];
 
-    console.log(`🧪 Running ${BENCHMARK_SCENARIOS.length} benchmark scenarios\n`);
+    console.log(
+      `🧪 Running ${BENCHMARK_SCENARIOS.length} benchmark scenarios\n`
+    );
 
     for (let i = 0; i < BENCHMARK_SCENARIOS.length; i++) {
       const scenario = BENCHMARK_SCENARIOS[i];
-      console.log(`\n📋 Scenario ${i + 1}/${BENCHMARK_SCENARIOS.length}: ${scenario.name}`);
+      console.log(
+        `\n📋 Scenario ${i + 1}/${BENCHMARK_SCENARIOS.length}: ${scenario.name}`
+      );
       console.log(`🔍 Query: ${scenario.query.substring(0, 100)}...`);
       console.log(
         `📊 Expected: ${scenario.expectedSources} sources, ${scenario.expectedWords} words`
@@ -140,24 +144,32 @@ class MultiBenchmarkRunner {
     return results;
   }
 
-  private async runSingleBenchmark(scenario: BenchmarkScenario): Promise<BenchmarkResult> {
+  private async runSingleBenchmark(
+    scenario: BenchmarkScenario
+  ): Promise<BenchmarkResult> {
     const startTime = Date.now();
 
     try {
       // Create research project
-      const project = await this.researchService.createResearchProject(scenario.query, {
-        domain: scenario.domain,
-        researchDepth: ResearchDepth.DEEP,
-        maxSearchResults: 30,
-        timeout: scenario.timeoutMs,
-        enableCitations: true,
-        evaluationEnabled: true,
-      });
+      const project = await this.researchService.createResearchProject(
+        scenario.query,
+        {
+          domain: scenario.domain,
+          researchDepth: ResearchDepth.DEEP,
+          maxSearchResults: 30,
+          timeout: scenario.timeoutMs,
+          enableCitations: true,
+          evaluationEnabled: true,
+        }
+      );
 
       console.log(`✅ Project created: ${project.id}`);
 
       // Wait for completion with timeout
-      const completedProject = await this.waitForCompletion(project.id, scenario.timeoutMs);
+      const completedProject = await this.waitForCompletion(
+        project.id,
+        scenario.timeoutMs
+      );
 
       const duration = Date.now() - startTime;
 
@@ -175,15 +187,20 @@ class MultiBenchmarkRunner {
 
       // Analyze results
       const actualSources = completedProject.sources.length;
-      const actualWords = this.countWords(completedProject.report?.content || '');
+      const actualWords = this.countWords(
+        completedProject.report?.content || ''
+      );
 
       // Get evaluation scores if available
       let raceScore: number | undefined;
       let factScore: number | undefined;
 
       if (completedProject.metadata?.evaluationMetrics) {
-        raceScore = completedProject.metadata.evaluationMetrics.raceScore?.overall;
-        factScore = completedProject.metadata.evaluationMetrics.factScore?.citationAccuracy;
+        raceScore =
+          completedProject.metadata.evaluationMetrics.raceScore?.overall;
+        factScore =
+          completedProject.metadata.evaluationMetrics.factScore
+            ?.citationAccuracy;
       }
 
       const quality = this.assessQuality(
@@ -220,7 +237,10 @@ class MultiBenchmarkRunner {
     }
   }
 
-  private async waitForCompletion(projectId: string, timeoutMs: number): Promise<any> {
+  private async waitForCompletion(
+    projectId: string,
+    timeoutMs: number
+  ): Promise<any> {
     const startTime = Date.now();
     const pollInterval = 10000; // Check every 10 seconds
 
@@ -232,7 +252,9 @@ class MultiBenchmarkRunner {
       }
 
       console.log(`📍 Phase: ${project.phase} → Status: ${project.status}`);
-      console.log(`  Sources: ${project.sources.length}, Findings: ${project.findings.length}`);
+      console.log(
+        `  Sources: ${project.sources.length}, Findings: ${project.findings.length}`
+      );
 
       if (project.status === 'completed') {
         console.log('✅ Research completed successfully');
@@ -327,18 +349,24 @@ class MultiBenchmarkRunner {
 
     if (success) {
       console.log(`✅ SUCCESS (${(duration / 1000).toFixed(1)}s)`);
-      console.log(`📚 Sources: ${actualSources} (expected: ${scenario.expectedSources})`);
-      console.log(`📝 Words: ${actualWords} (expected: ${scenario.expectedWords})`);
+      console.log(
+        `📚 Sources: ${actualSources} (expected: ${scenario.expectedSources})`
+      );
+      console.log(
+        `📝 Words: ${actualWords} (expected: ${scenario.expectedWords})`
+      );
 
       if (raceScore !== undefined) {
-        const raceStatus = raceScore >= scenario.expectedRaceScore ? '✅' : '⚠️';
+        const raceStatus =
+          raceScore >= scenario.expectedRaceScore ? '✅' : '⚠️';
         console.log(
           `${raceStatus} RACE Score: ${(raceScore * 100).toFixed(1)}% (target: ${(scenario.expectedRaceScore * 100).toFixed(1)}%)`
         );
       }
 
       if (factScore !== undefined) {
-        const factStatus = factScore >= scenario.expectedFactScore ? '✅' : '⚠️';
+        const factStatus =
+          factScore >= scenario.expectedFactScore ? '✅' : '⚠️';
         console.log(
           `${factStatus} FACT Score: ${(factScore * 100).toFixed(1)}% (target: ${(scenario.expectedFactScore * 100).toFixed(1)}%)`
         );
@@ -372,9 +400,13 @@ class MultiBenchmarkRunner {
 
     if (successful.length > 0) {
       const avgSources =
-        successful.reduce((sum, r) => sum + r.actualSources, 0) / successful.length;
-      const avgWords = successful.reduce((sum, r) => sum + r.actualWords, 0) / successful.length;
-      const avgDuration = successful.reduce((sum, r) => sum + r.duration, 0) / successful.length;
+        successful.reduce((sum, r) => sum + r.actualSources, 0) /
+        successful.length;
+      const avgWords =
+        successful.reduce((sum, r) => sum + r.actualWords, 0) /
+        successful.length;
+      const avgDuration =
+        successful.reduce((sum, r) => sum + r.duration, 0) / successful.length;
 
       console.log(`📚 Average Sources: ${avgSources.toFixed(1)}`);
       console.log(`📝 Average Words: ${avgWords.toFixed(0)}`);
@@ -388,12 +420,14 @@ class MultiBenchmarkRunner {
         .map((r) => r.factScore!);
 
       if (raceScores.length > 0) {
-        const avgRace = raceScores.reduce((sum, s) => sum + s, 0) / raceScores.length;
+        const avgRace =
+          raceScores.reduce((sum, s) => sum + s, 0) / raceScores.length;
         console.log(`🎯 Average RACE Score: ${(avgRace * 100).toFixed(1)}%`);
       }
 
       if (factScores.length > 0) {
-        const avgFact = factScores.reduce((sum, s) => sum + s, 0) / factScores.length;
+        const avgFact =
+          factScores.reduce((sum, s) => sum + s, 0) / factScores.length;
         console.log(`🔍 Average FACT Score: ${(avgFact * 100).toFixed(1)}%`);
       }
     }
@@ -418,16 +452,22 @@ class MultiBenchmarkRunner {
     if (successRate < 80) {
       console.log('⚠️  Consider increasing timeout limits for complex queries');
     }
-    if (successful.some((r) => r.actualSources < r.scenario.expectedSources * 0.8)) {
+    if (
+      successful.some((r) => r.actualSources < r.scenario.expectedSources * 0.8)
+    ) {
       console.log(
         '⚠️  Some scenarios have insufficient source coverage - consider expanding search providers'
       );
     }
     if (successful.some((r) => r.raceScore && r.raceScore < 0.6)) {
-      console.log('⚠️  RACE scores need improvement - focus on comprehensiveness and depth');
+      console.log(
+        '⚠️  RACE scores need improvement - focus on comprehensiveness and depth'
+      );
     }
     if (successful.some((r) => r.factScore && r.factScore < 0.6)) {
-      console.log('⚠️  FACT scores need improvement - enhance citation accuracy and verification');
+      console.log(
+        '⚠️  FACT scores need improvement - enhance citation accuracy and verification'
+      );
     }
 
     console.log('\n✅ Multi-benchmark testing complete!');
@@ -460,7 +500,8 @@ async function main() {
     runner.printSummaryReport(results);
 
     // Exit with appropriate code
-    const successRate = results.filter((r) => r.success).length / results.length;
+    const successRate =
+      results.filter((r) => r.success).length / results.length;
     process.exit(successRate >= 0.8 ? 0 : 1);
   } catch (error) {
     console.error('❌ Multi-benchmark test failed:', error);

@@ -28,7 +28,7 @@ export async function createMockRuntimeWithSecrets(
       }
       return process.env[key];
     },
-    getService: (serviceName: string) => {
+    getService: (_serviceName: string) => {
       return null; // Graceful fallback for other services
     },
     agentId,

@@ -5,12 +5,12 @@ import {
   AdaptiveRateLimiter,
   createRateLimitedProvider,
 } from '../integrations/rate-limiter';
-import { SearchProvider } from '../integrations/rate-limiter';
-import { SearchResult } from '../types';
+import { SearchProvider, SearchResult } from '../types';
 
 // Mock search provider
 class MockSearchProvider implements SearchProvider {
   name = 'MockProvider';
+  supportedDomains = ['*'];
   searchCount = 0;
 
   constructor(private results: SearchResult[] = []) {}
@@ -234,6 +234,7 @@ describe('AdaptiveRateLimiter', () => {
     // Mock provider that throws rate limit errors first time, then succeeds
     const errorProvider = {
       name: 'ErrorProvider',
+      supportedDomains: ['*'],
       searchCount: 0,
       async search(): Promise<SearchResult[]> {
         this.searchCount++;

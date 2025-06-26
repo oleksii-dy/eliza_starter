@@ -41,15 +41,16 @@
 // ========================================
 // REAL RUNTIME TESTING (RECOMMENDED)
 // ========================================
-export * from './real-runtime';
-export * from './test-database';
-export * from './test-models';
+export * from './realRuntime';
+export * from './testDatabase';
+export * from './testModels';
+export * from './templates';
 
 // ========================================
 // LEGACY MOCK SYSTEM (DEPRECATED)
 // ========================================
-export * from './mocks/simple-runtime';
-export * from './mocks/simple-database';
+export * from './mocks/simpleRuntime';
+export * from './mocks/simpleDatabase';
 export * from './mocks/memory';
 export * from './mocks/state';
 export * from './mocks/services';

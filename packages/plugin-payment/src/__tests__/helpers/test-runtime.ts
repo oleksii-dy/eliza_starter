@@ -482,11 +482,12 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
             }
 
             // Services are class constructors
-            const service = new (ServiceClass as any)();
+            const serviceClassToUse = (ServiceClass as any).component || ServiceClass;
+            const service = new (serviceClassToUse as any)();
             if (service.initialize) {
               await service.initialize(runtime);
             }
-            services.set(service.serviceName || service.name || ServiceClass.serviceName, service);
+            services.set(service.serviceName || service.name || serviceClassToUse.serviceName, service);
           } catch (error) {
             elizaLogger.warn(
               `Failed to initialize service ${(ServiceClass as any).serviceName || 'unknown'}:`,
@@ -498,11 +499,12 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
         // Second pass: initialize services that depend on others
         for (const ServiceClass of servicesToInit) {
           try {
-            const service = new (ServiceClass as any)(runtime);
+            const serviceClassToUse2 = (ServiceClass as any).component || ServiceClass;
+            const service = new (serviceClassToUse2 as any)(runtime);
             if (service.initialize) {
               await service.initialize(runtime);
             }
-            services.set(service.serviceName || service.name || ServiceClass.serviceName, service);
+            services.set(service.serviceName || service.name || serviceClassToUse2.serviceName, service);
           } catch (error) {
             elizaLogger.warn(
               `Failed to initialize service ${(ServiceClass as any).serviceName || 'unknown'}:`,

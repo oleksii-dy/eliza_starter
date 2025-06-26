@@ -1,6 +1,6 @@
 import {
   Service,
-  ServiceType,
+  ServiceType as _ServiceType,
   type IAgentRuntime,
   type ServiceTypeName,
   logger,
@@ -52,7 +52,7 @@ export class RLService extends Service {
 
     // Load configuration
     this.rlConfig = {
-      modelPath: runtime.getSetting('RL_MODEL_PATH'),
+      _modelPath: runtime.getSetting('RL_MODEL_PATH'),
       taskType: (runtime.getSetting('RL_TASK_TYPE') as any) || 'walking',
       episodeLength: parseInt(runtime.getSetting('RL_EPISODE_LENGTH') || '1000', 10),
       trainingEnabled: runtime.getSetting('RL_TRAINING_ENABLED') === 'true',
@@ -84,8 +84,8 @@ export class RLService extends Service {
       );
 
       // Load ONNX model if available
-      if (this.rlConfig.modelPath) {
-        await this.loadModel(this.rlConfig.modelPath);
+      if (this.rlConfig._modelPath) {
+        await this.loadModel(this.rlConfig._modelPath);
       }
 
       logger.info('[RLService] Initialization complete');
@@ -101,12 +101,12 @@ export class RLService extends Service {
   async loadModel(_modelPath: string): Promise<void> {
     try {
       // Check if file exists
-      await fs.access(modelPath);
+      await fs.access(_modelPath);
 
       // Create ONNX inference session
-      this.onnxSession = await onnxruntime.InferenceSession.create(modelPath);
+      this.onnxSession = await onnxruntime.InferenceSession.create(_modelPath);
 
-      logger.info('[RLService] Loaded ONNX model from:', modelPath);
+      logger.info('[RLService] Loaded ONNX model from:', _modelPath);
 
       // Log model info
       const inputNames = this.onnxSession.inputNames;
@@ -191,9 +191,9 @@ export class RLService extends Service {
         jointCommands: action,
       });
 
-      observation = result.observation;
-      totalReward += result.reward;
-      done = result.done;
+      observation = _result.observation;
+      totalReward += _result.reward;
+      done = _result.done;
       steps++;
 
       // Log progress periodically
@@ -336,10 +336,10 @@ export class RLService extends Service {
           jointCommands: action,
         });
 
-        observation = result.observation;
+        observation = _result.observation;
 
         // Check for episode end
-        if (result.done) {
+        if (_result.done) {
           logger.warn('[RLService] Episode ended during deployment, resetting');
           observation = await this.environment!.reset();
         }
@@ -390,9 +390,9 @@ export class RLService extends Service {
 
     for (let i = 0; i < episodes; i++) {
       const _result = await this.runEpisode(true); // Use policy
-      rewards.push(result.totalReward);
-      steps.push(result.steps);
-      if (result.success) {
+      rewards.push(_result.totalReward);
+      steps.push(_result.steps);
+      if (_result.success) {
         successes++;
       }
     }

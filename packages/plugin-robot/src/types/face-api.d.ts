@@ -31,23 +31,23 @@ declare module 'face-api.js' {
     genderProbability: number;
   }
 
-  export interface WithFaceDetection<T> {
+  export interface WithFaceDetection<_T> {
     detection: FaceDetection;
   }
 
-  export interface WithFaceLandmarks<T> {
+  export interface WithFaceLandmarks<_T> {
     landmarks: FaceLandmarks68;
   }
 
-  export interface WithFaceDescriptor<T> {
+  export interface WithFaceDescriptor<_T> {
     descriptor: Float32Array;
   }
 
-  export interface WithFaceExpressions<T> {
+  export interface WithFaceExpressions<_T> {
     expressions: FaceExpressions;
   }
 
-  export interface WithAgeAndGender<T> {
+  export interface WithAgeAndGender<_T> {
     age: number;
     gender: string;
     genderProbability: number;

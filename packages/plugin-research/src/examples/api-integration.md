@@ -21,7 +21,10 @@ export class TavilySearchProvider {
     this.apiKey = apiKey;
   }
 
-  async search(query: string, maxResults: number = 10): Promise<SearchResult[]> {
+  async search(
+    query: string,
+    maxResults: number = 10
+  ): Promise<SearchResult[]> {
     try {
       const response = await axios.post(this.baseUrl, {
         api_key: this.apiKey,
@@ -63,7 +66,10 @@ export class SerperSearchProvider {
     this.apiKey = apiKey;
   }
 
-  async search(query: string, maxResults: number = 10): Promise<SearchResult[]> {
+  async search(
+    query: string,
+    maxResults: number = 10
+  ): Promise<SearchResult[]> {
     try {
       const response = await axios.post(
         this.baseUrl,
@@ -125,7 +131,10 @@ export class BraveSearchProvider {
     this.apiKey = apiKey;
   }
 
-  async search(query: string, maxResults: number = 10): Promise<SearchResult[]> {
+  async search(
+    query: string,
+    maxResults: number = 10
+  ): Promise<SearchResult[]> {
     try {
       const response = await axios.get(this.baseUrl, {
         headers: {
@@ -254,8 +263,12 @@ import { FirecrawlContentExtractor } from './integrations/firecrawl';
 import { BrowserContentExtractor } from './integrations/browser-content';
 
 export class ResearchService extends Service {
-  private searchProvider: TavilySearchProvider | SerperSearchProvider | null = null;
-  private contentExtractor: FirecrawlContentExtractor | BrowserContentExtractor | null = null;
+  private searchProvider: TavilySearchProvider | SerperSearchProvider | null =
+    null;
+  private contentExtractor:
+    | FirecrawlContentExtractor
+    | BrowserContentExtractor
+    | null = null;
 
   constructor(runtime: IAgentRuntime, config?: ResearchConfig) {
     super(runtime);
@@ -281,7 +294,10 @@ export class ResearchService extends Service {
 
   private async performWebSearch(query: string): Promise<SearchResult[]> {
     if (this.searchProvider) {
-      return this.searchProvider.search(query, this.researchConfig.maxSearchResults);
+      return this.searchProvider.search(
+        query,
+        this.researchConfig.maxSearchResults
+      );
     }
 
     // Fallback to mock results if no provider configured
@@ -419,7 +435,9 @@ describe('Real API Integration Tests', () => {
   });
 
   it('should perform real web search', async () => {
-    const project = await service.createResearchProject('Latest TypeScript features in 2024');
+    const project = await service.createResearchProject(
+      'Latest TypeScript features in 2024'
+    );
 
     // Wait for research to complete
     await waitForCompletion(project.id, 120000); // 2 minutes

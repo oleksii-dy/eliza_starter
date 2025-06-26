@@ -5,6 +5,7 @@ import {
   logger,
   type UUID,
 } from '@elizaos/core';
+import '../types'; // Import to register service types
 import { createTodoDataService, type TodoData } from './todoDataService';
 import { NotificationManager } from './notificationManager';
 import { CacheManager } from './cacheManager';
@@ -30,8 +31,8 @@ interface ReminderMessage {
  * Main todo reminder service that handles all reminder functionality
  */
 export class TodoReminderService extends Service {
-  static serviceType: ServiceTypeName = 'TODO_REMINDER' as ServiceTypeName;
-  serviceName = 'TODO_REMINDER' as ServiceTypeName;
+  static serviceType: ServiceTypeName = 'TODO_REMINDER';
+  serviceName = 'TODO_REMINDER';
   capabilityDescription = 'Manages todo reminders and notifications';
 
   private notificationManager!: NotificationManager;

@@ -22,3 +22,145 @@ guide:
 community:
   label: Community
   description: Community events and announcements
+
+# Technical Documentation Tags
+documentation:
+  label: Documentation
+  description: Documentation and technical guides
+
+ci-cd:
+  label: CI/CD
+  description: Continuous integration and deployment content
+
+automation:
+  label: Automation
+  description: Automation tools and processes
+
+devops:
+  label: DevOps
+  description: Development operations and infrastructure
+
+open-source:
+  label: Open Source
+  description: Open source projects and contributions
+
+ai:
+  label: AI
+  description: Artificial intelligence and machine learning
+
+docs-as-code:
+  label: Docs as Code
+  description: Documentation as code practices
+
+# ElizaOS Specific Tags
+elizaos:
+  label: ElizaOS
+  description: ElizaOS platform and framework content
+
+plugins:
+  label: Plugins
+  description: Plugin development and registry
+
+registry:
+  label: Registry
+  description: Package and plugin registry
+
+announcement:
+  label: Announcement
+  description: Important announcements and updates
+
+v2:
+  label: Version 2
+  description: ElizaOS version 2 content
+
+architecture:
+  label: Architecture
+  description: System architecture and design
+
+features:
+  label: Features
+  description: New features and capabilities
+
+upgrade:
+  label: Upgrade
+  description: Upgrade guides and migration content
+
+# Development Tags
+development:
+  label: Development
+  description: Development guides and tutorials
+
+progress:
+  label: Progress
+  description: Development progress updates
+
+twitter-spaces:
+  label: Twitter Spaces
+  description: Twitter Spaces recordings and content
+
+archive:
+  label: Archive
+  description: Archived content
+
+video:
+  label: Video
+  description: Video content and recordings
+
+macos:
+  label: macOS
+  description: macOS specific content
+
+setup:
+  label: Setup
+  description: Setup and installation guides
+
+cli:
+  label: CLI
+  description: Command line interface content
+
+# General Tech Tags
+tools:
+  label: Tools
+  description: Development tools and utilities
+
+information:
+  label: Information
+  description: General information and resources
+
+# AI/Crypto Tags
+autofun:
+  label: AutoFun
+  description: AutoFun platform and features
+
+launchpad:
+  label: Launchpad
+  description: Token launchpad platform
+
+tokenomics:
+  label: Tokenomics
+  description: Token economics and financial models
+
+ai16z:
+  label: ai16z
+  description: ai16z related content
+
+liquidity:
+  label: Liquidity
+  description: Liquidity provision and management
+
+# Partner/Category Tags
+Company:
+  label: Company
+  description: Company partnerships and collaborations
+
+Agent:
+  label: Agent
+  description: AI agent related content
+
+Project:
+  label: Project
+  description: Project showcases and features
+
+Academic:
+  label: Academic
+  description: Academic research and partnerships

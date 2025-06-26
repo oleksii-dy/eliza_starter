@@ -174,7 +174,7 @@ export class ScreenCaptureService {
         // Linux: Use scrot or gnome-screenshot
         try {
           await execAsync(`scrot "${outputPath}"`);
-        } catch (error) {
+        } catch (_error) {
           // Fallback to gnome-screenshot
           await execAsync(`gnome-screenshot -f "${outputPath}"`);
         }

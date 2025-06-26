@@ -12,7 +12,8 @@ import type { ElevationRequest } from '../types/permissions';
 
 export const requestElevationAction: Action = {
   name: 'REQUEST_ELEVATION',
-  description: 'Request temporary elevation of permissions for a specific action. Validates user trust levels and grants temporary higher privileges with justification. Can be chained with EVALUATE_TRUST to check eligibility first or RECORD_TRUST_INTERACTION to log approval/denial outcomes.',
+  description:
+    'Request temporary elevation of permissions for a specific action. Validates user trust levels and grants temporary higher privileges with justification. Can be chained with EVALUATE_TRUST to check eligibility first or RECORD_TRUST_INTERACTION to log approval/denial outcomes.',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
     const permissionSystem = runtime.getService('contextual-permissions');
@@ -20,8 +21,8 @@ export const requestElevationAction: Action = {
   },
 
   handler: async (runtime: IAgentRuntime, message: Memory): Promise<ActionResult> => {
-    const permissionSystem = runtime.getService('contextual-permissions') as any;
-    const trustEngine = runtime.getService('trust-engine') as any;
+    const permissionSystem = runtime.getService('contextual-permissions');
+    const trustEngine = runtime.getService('trust-engine');
 
     if (!permissionSystem || !trustEngine) {
       throw new Error('Required services not available');
@@ -105,8 +106,7 @@ Please use these permissions responsibly. All actions will be logged for audit.`
         }
 
         if (result.suggestions && result.suggestions.length > 0) {
-          denialMessage +=
-            `\n\nSuggestions:\n${result.suggestions.map((s) => `• ${s}`).join('\n')}`;
+          denialMessage += `\n\nSuggestions:\n${result.suggestions.map((s) => `• ${s}`).join('\n')}`;
         }
 
         return {

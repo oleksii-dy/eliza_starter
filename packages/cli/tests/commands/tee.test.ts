@@ -71,7 +71,7 @@ describe('TEE Command', () => {
     });
 
     it('should allow unknown options', () => {
-      // @ts-ignore - accessing private property for testing
+      // @ts-expect-error - accessing private property for testing
       expect(phalaCliCommand._allowUnknownOption).toBe(true);
     });
 

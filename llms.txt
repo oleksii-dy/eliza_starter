@@ -1721,7 +1721,7 @@ const generateImageAction: Action = {
 
 ### Basic Conversation Actions
 
-You can find these samples in the plugin-message-handling package: https://github.com/elizaOS/eliza/tree/main/packages/plugin-message-handling/src/actions
+You can find these samples in the plugin-bootstrap package: https://github.com/elizaOS/eliza/tree/main/packages/plugin-bootstrap/src/actions
 
 #### CONTINUE
 
@@ -2443,7 +2443,7 @@ COINGECKO_API_KEY=
     "sharp": "0.33.5",
     "turbo": "^2.4.4",
     "typedoc": "0.27.9",
-    "typescript": "5.8.3",
+    "typescript": "5.8.2",
     "vite": "5.4.12",
     "vitest": "3.0.5",
     "@types/uuid": "^9.0.8",

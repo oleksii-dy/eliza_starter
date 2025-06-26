@@ -1,9 +1,17 @@
 import * as THREE from 'three';
-import { Node } from '@elizaos/hyperfy';
+// Create a base Node class since @elizaos/hyperfy is not available
+class Node extends THREE.Object3D {
+  ctx: any;
+  constructor(ctx: any) {
+    super();
+    this.ctx = ctx;
+  }
+  setDirty() {}
+}
 import type { HyperfyWorld } from '../types/hyperfy.js';
 
-function forEachMaterial(scene, fn) {
-  scene.traverse((obj) => {
+function forEachMaterial(scene: any, fn: any) {
+  scene.traverse((obj: any) => {
     if (obj.material) {
       if (Array.isArray(obj.material)) {
         obj.material.forEach(fn);

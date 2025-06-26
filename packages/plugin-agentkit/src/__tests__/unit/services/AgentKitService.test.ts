@@ -93,33 +93,30 @@ describe('AgentKitService', () => {
   });
 
   describe('initialization', () => {
-    it('should initialize with existing wallet data', async () => {
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue('{"walletData": "existing"}');
-
+    it('should initialize with API credentials', async () => {
       await service.initialize();
 
       expect(service.isReady()).toBe(true);
-      expect(mockFs.readFileSync).toHaveBeenCalledWith('walletData_test-agent-id.txt', 'utf8');
+      expect(mockRuntime.getSetting).toHaveBeenCalledWith('CDP_API_KEY_NAME');
+      expect(mockRuntime.getSetting).toHaveBeenCalledWith('CDP_API_KEY_PRIVATE_KEY');
     });
 
-    it('should create new wallet when no existing data', async () => {
-      mockFs.existsSync.mockReturnValue(false);
-
+    it('should initialize when credentials are available', async () => {
       await service.initialize();
 
       expect(service.isReady()).toBe(true);
-      expect(mockFs.writeFileSync).toHaveBeenCalled();
+      expect(service.getAgentKit()).toBeDefined();
     });
 
     it('should handle initialization errors gracefully', async () => {
-      mockFs.existsSync.mockImplementation(() => {
-        throw new Error('File system error');
+      const badRuntime = createMockRuntime({
+        getSetting: mock(() => undefined), // No credentials
       });
+      const badService = new AgentKitService(badRuntime);
 
-      // Should not throw
-      await expect(service.initialize()).resolves.not.toThrow();
-      expect(service.isReady()).toBe(false);
+      // Should throw when credentials are missing
+      await expect(badService.initialize()).rejects.toThrow('Missing required CDP API credentials');
+      expect(badService.isReady()).toBe(false);
     });
   });
 
@@ -143,7 +140,7 @@ describe('AgentKitService', () => {
     });
 
     it('should throw error when not initialized', () => {
-      expect(() => service.getAgentKit()).toThrow('AgentKit not initialized');
+      expect(() => service.getAgentKit()).toThrow('AgentKit service not initialized');
     });
   });
 
@@ -153,11 +150,13 @@ describe('AgentKitService', () => {
       await service.stop();
 
       expect(service.isReady()).toBe(false);
-      expect(() => service.getAgentKit()).toThrow('AgentKit not initialized');
+      expect(() => service.getAgentKit()).toThrow('AgentKit service not initialized');
     });
 
     it('should handle stop when not initialized', async () => {
-      await expect(service.stop()).resolves.not.toThrow();
+      // Should not throw when stopping uninitialized service
+      await service.stop();
+      expect(service.isReady()).toBe(false);
     });
   });
 

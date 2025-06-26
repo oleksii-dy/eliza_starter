@@ -1,12 +1,20 @@
-import { IAgentRuntime, logger, asUUID, UUID } from '@elizaos/core';
-import type { Address, Hash, Hex } from 'viem';
-import { encodeFunctionData, keccak256, encodePacked, toHex, pad } from 'viem';
-import { getChainConfig } from '../core/chains/config';
+import { IAgentRuntime, logger, asUUID as _asUUID, UUID as _UUID } from '@elizaos/core';
+import {
+  type Address,
+  type Hash,
+  type Hex,
+  encodeFunctionData,
+  keccak256,
+  encodePacked,
+  toHex,
+  pad as _pad,
+} from 'viem';
+import { getChainConfig as _getChainConfig } from '../core/chains/config';
 import { WalletDatabaseService } from '../core/database/service';
 import type {
   SafeTransaction,
   SafeTransactionData,
-  SafeSignature,
+  SafeSignature as _SafeSignature,
   MultisigTransactionProposal,
 } from './types';
 
@@ -89,7 +97,7 @@ export class SafeIntegration {
   /**
    * Calculate Safe deployment address
    */
-  async calculateSafeAddress(params: SafeDeploymentParams): Promise<Address> {
+  calculateSafeAddress(params: SafeDeploymentParams): Address {
     const contracts = this.getSafeContracts();
 
     // Encode the Safe setup call
@@ -97,7 +105,7 @@ export class SafeIntegration {
       params.owners,
       params.threshold,
       params.setupModules,
-      params.fallbackHandler || contracts.fallbackHandler,
+      params.fallbackHandler || contracts.fallbackHandler
     );
 
     // Calculate salt
@@ -109,7 +117,7 @@ export class SafeIntegration {
     const deploymentAddress = this.calculateCreate2Address(
       contracts.proxyFactory,
       salt,
-      initCodeHash,
+      initCodeHash
     );
 
     return deploymentAddress;
@@ -123,7 +131,7 @@ export class SafeIntegration {
     deploymentTx: Hash;
   }> {
     try {
-      const contracts = this.getSafeContracts();
+      const _contracts = this.getSafeContracts();
 
       // Calculate expected address
       const expectedAddress = await this.calculateSafeAddress(params);
@@ -139,16 +147,14 @@ export class SafeIntegration {
       }
 
       // Build deployment transaction
-      const deploymentData = this.buildDeploymentData(params);
+      const _deploymentData = this.buildDeploymentData(params);
 
       // This would need to be signed and sent by an owner
       // In production, this would use a wallet client
       throw new Error('Safe deployment execution not implemented - requires wallet integration');
     } catch (error) {
       logger.error('Error deploying Safe:', error);
-      throw new Error(
-        `Failed to deploy Safe: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      throw new Error(`Failed to deploy Safe: ${error instanceof Error ? error.message : error}`);
     }
   }
 
@@ -200,7 +206,7 @@ export class SafeIntegration {
     } catch (error) {
       logger.error('Error creating transaction proposal:', error);
       throw new Error(
-        `Failed to create proposal: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to create proposal: ${error instanceof Error ? error.message : error}`
       );
     }
   }
@@ -208,7 +214,7 @@ export class SafeIntegration {
   /**
    * Sign a transaction proposal
    */
-  async signProposal(proposalId: string, signerAddress: Address, signature: Hex): Promise<void> {
+  signProposal(proposalId: string, signerAddress: Address, _signature: Hex): void {
     const proposal = this.proposals.get(proposalId);
     if (!proposal) {
       throw new Error('Proposal not found');
@@ -255,10 +261,10 @@ export class SafeIntegration {
 
     try {
       // Build Safe transaction
-      const safeTx = this.buildSafeTransaction(proposal.transaction);
+      const _safeTx = this.buildSafeTransaction(proposal.transaction);
 
       // Get signatures
-      const signatures = await this.collectSignatures(proposal);
+      const _signatures = await this.collectSignatures(proposal);
 
       // Execute transaction
       // This would need wallet integration to actually send
@@ -266,7 +272,7 @@ export class SafeIntegration {
     } catch (error) {
       logger.error('Error executing proposal:', error);
       throw new Error(
-        `Failed to execute proposal: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to execute proposal: ${error instanceof Error ? error.message : error}`
       );
     }
   }
@@ -300,13 +306,13 @@ export class SafeIntegration {
           txData.gasToken,
           txData.refundReceiver,
           txData.nonce,
-        ],
-      ),
+        ]
+      )
     );
 
     const encoded = encodePacked(
       ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
-      ['0x19' as Hex, '0x01' as Hex, this.getDomainSeparator(), safeTxHash],
+      ['0x19' as Hex, '0x01' as Hex, this.getDomainSeparator(), safeTxHash]
     );
 
     return keccak256(encoded);
@@ -317,7 +323,7 @@ export class SafeIntegration {
    */
   getPendingProposals(): MultisigTransactionProposal[] {
     return Array.from(this.proposals.values()).filter(
-      (p) => !p.executed && p.confirmations.length < p.threshold,
+      (p) => !p.executed && p.confirmations.length < p.threshold
     );
   }
 
@@ -326,7 +332,7 @@ export class SafeIntegration {
    */
   getReadyProposals(): MultisigTransactionProposal[] {
     return Array.from(this.proposals.values()).filter(
-      (p) => !p.executed && p.confirmations.length >= p.threshold,
+      (p) => !p.executed && p.confirmations.length >= p.threshold
     );
   }
 
@@ -345,7 +351,7 @@ export class SafeIntegration {
     owners: Address[],
     threshold: number,
     modules?: Address[],
-    fallbackHandler?: Address,
+    fallbackHandler?: Address
   ): Hex {
     return encodeFunctionData({
       abi: [
@@ -394,20 +400,20 @@ export class SafeIntegration {
   private calculateCreate2Address(factory: Address, salt: Hex, initCodeHash: Hex): Address {
     const encoded = encodePacked(
       ['bytes1', 'address', 'bytes32', 'bytes32'],
-      ['0xff', factory, salt, initCodeHash],
+      ['0xff', factory, salt, initCodeHash]
     );
 
     const hash = keccak256(encoded);
     return `0x${hash.slice(26)}` as Address;
   }
 
-  private async isContractDeployed(address: Address): Promise<boolean> {
+  private isContractDeployed(_address: Address): boolean {
     // This would need chain provider integration
     // For now, return false
     return false;
   }
 
-  private async getSafeNonce(): Promise<bigint> {
+  private getSafeNonce(): bigint {
     // This would query the Safe contract for current nonce
     // For now, return 0
     return 0n;
@@ -417,8 +423,8 @@ export class SafeIntegration {
     const hash = keccak256(
       encodePacked(
         ['address', 'uint256', 'bytes32', 'uint256'],
-        [txData.to, txData.value, keccak256(txData.data), txData.nonce],
-      ),
+        [txData.to, txData.value, keccak256(txData.data), txData.nonce]
+      )
     );
     return hash;
   }
@@ -430,7 +436,7 @@ export class SafeIntegration {
     };
   }
 
-  private async collectSignatures(proposal: MultisigTransactionProposal): Promise<Hex> {
+  private collectSignatures(_proposal: MultisigTransactionProposal): Hex {
     // This would collect and encode signatures from confirmations
     // For now, return empty signatures
     return '0x';
@@ -446,8 +452,8 @@ export class SafeIntegration {
           keccak256(toHex('Safe Transaction', { size: 32 })),
           BigInt(this.chainId),
           this.safeAddress || '0x0000000000000000000000000000000000000000',
-        ],
-      ),
+        ]
+      )
     );
   }
 
@@ -457,7 +463,7 @@ export class SafeIntegration {
       params.owners,
       params.threshold,
       params.setupModules,
-      params.fallbackHandler || contracts.fallbackHandler,
+      params.fallbackHandler || contracts.fallbackHandler
     );
 
     return encodeFunctionData({

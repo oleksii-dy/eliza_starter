@@ -205,7 +205,7 @@ describe('Character Loader', () => {
     global.fetch = mockFetch as any;
 
     beforeEach(() => {
-      mockFetch /* .mockClear() - TODO: bun equivalent */;
+      // mockFetch.mockClear() - TODO: bun equivalent
     });
 
     test('should load single character from URL', async () => {

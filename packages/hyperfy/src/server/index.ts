@@ -8,7 +8,7 @@ dotenv.config();
 import fs from 'fs-extra';
 import { ENV } from '../core/env';
 import path from 'path';
-import { pipeline } from 'stream/promises';
+// import { pipeline } from 'stream/promises';
 import Fastify from 'fastify';
 import ws from '@fastify/websocket';
 import cors from '@fastify/cors';
@@ -17,7 +17,6 @@ import statics from '@fastify/static';
 import multipart from '@fastify/multipart';
 
 import { createServerWorld } from '../core/createServerWorld';
-import { createRPGServerWorld } from '../core/createRPGServerWorld';
 import { hashFile } from '../core/utils-server';
 import { ENV_SERVER } from '../core/env-server';
 import { getDB } from './db';
@@ -68,13 +67,31 @@ const db = await getDB(path.join(worldDir, '/db.sqlite'));
 // init storage
 const storage = new Storage(path.join(worldDir, '/storage.json'));
 
-// create world - use RPG world if configured
-const enableRPG = ENV.ENABLE_RPG === 'true';
-const world = await (enableRPG ? createRPGServerWorld() : createServerWorld());
-if (enableRPG) {
-  console.log('RPG systems enabled');
-}
+// create world with optional RPG plugin
+const world = createServerWorld();
 world.assetsUrl = ENV.PUBLIC_ASSETS_URL || '/assets/';
+
+// Load RPG plugin if enabled
+const enableRPG = ENV.ENABLE_RPG === 'true';
+if (enableRPG) {
+  console.log('🎮 Loading RPG plugin...');
+  try {
+    const { HyperfyRPGPlugin } = await import('../rpg');
+    const rpgConfig: any = {
+      worldType: ENV.RPG_WORLD_TYPE,
+      isServer: true
+    };
+    if (ENV.RPG_SYSTEMS) {
+      rpgConfig.systems = ENV.RPG_SYSTEMS.split(',').map(s => s.trim());
+    }
+    await HyperfyRPGPlugin.init(world, rpgConfig);
+    console.log('✅ RPG plugin loaded successfully');
+  } catch (error) {
+    console.error('❌ Failed to load RPG plugin:', error);
+  }
+} else {
+  console.log('🎮 RPG plugin disabled (ENABLE_RPG=false)');
+}
 
 // Ensure assetsUrl ends with slash for proper URL resolution
 if (!world.assetsUrl.endsWith('/')) {

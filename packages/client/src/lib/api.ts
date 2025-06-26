@@ -483,7 +483,7 @@ export const apiClient = {
 
   testEndpoint: (endpoint: string): Promise<unknown> => fetcher({ url: endpoint }),
 
-  // PLACEHOLDER - Implement actual backend and uncomment
+  // Delete a specific message from a channel
   deleteChannelMessage: async (channelId: UUID, messageId: UUID): Promise<void> => {
     await fetcher({
       url: `/messaging/central-channels/${channelId}/messages/${messageId}`,
@@ -491,7 +491,7 @@ export const apiClient = {
     });
   },
 
-  // PLACEHOLDER - Implement actual backend and uncomment
+  // Clear all messages from a channel
   clearChannelMessages: async (channelId: UUID): Promise<void> => {
     await fetcher({
       url: `/messaging/central-channels/${channelId}/messages`,
@@ -794,7 +794,7 @@ export const apiClient = {
         recommendations: string[];
       };
     };
-  }> => fetcher({ url: `/plugins/defaults` }),
+  }> => fetcher({ url: '/plugins/defaults' }),
 
   applyPluginDefaults: (
     agentId: string,
@@ -802,10 +802,11 @@ export const apiClient = {
   ): Promise<{
     success: boolean;
     data: { message: string; appliedConfiguration: Record<string, unknown> };
-  }> => fetcher({
-    url: `/agents/${agentId}/configurations/${pluginName}/apply-defaults`,
-    method: 'POST',
-  }),
+  }> =>
+    fetcher({
+      url: `/agents/${agentId}/configurations/${pluginName}/apply-defaults`,
+      method: 'POST',
+    }),
 
   applyAllPluginDefaults: (
     agentId: string,
@@ -813,11 +814,12 @@ export const apiClient = {
   ): Promise<{
     success: boolean;
     data: { message: string; appliedCount: number; failedPlugins: string[] };
-  }> => fetcher({
-    url: `/agents/${agentId}/configurations/apply-all-defaults`,
-    method: 'POST',
-    body: { plugins },
-  }),
+  }> =>
+    fetcher({
+      url: `/agents/${agentId}/configurations/apply-all-defaults`,
+      method: 'POST',
+      body: { plugins },
+    }),
 
   updatePluginClassification: (
     pluginName: string,
@@ -833,9 +835,10 @@ export const apiClient = {
   ): Promise<{
     success: boolean;
     data: { message: string; updatedClassification: Record<string, unknown> };
-  }> => fetcher({
-    url: `/plugins/${pluginName}/classification`,
-    method: 'PUT',
-    body: classification,
-  }),
+  }> =>
+    fetcher({
+      url: `/plugins/${pluginName}/classification`,
+      method: 'PUT',
+      body: classification,
+    }),
 };

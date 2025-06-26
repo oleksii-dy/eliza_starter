@@ -12,7 +12,7 @@ export const trustChangeEvaluator: Evaluator = {
   },
 
   handler: async (runtime: IAgentRuntime, message: Memory) => {
-    const trustEngine = runtime.getService('trust-engine') as any;
+    const trustEngine = runtime.getService('trust-engine');
 
     if (!trustEngine) {
       return null;
@@ -26,11 +26,7 @@ export const trustChangeEvaluator: Evaluator = {
       const llmEvaluator = runtime.getService('llm-evaluator');
       if (llmEvaluator) {
         // Analyze behavior using LLM
-        const analysis = await (llmEvaluator as any).analyzeBehavior(
-          [content],
-          [],
-          entityId
-        );
+        const analysis = await (llmEvaluator as any).analyzeBehavior([content], [], entityId);
 
         // Determine trust impact based on analysis
         if (analysis.riskScore < 0.3) {

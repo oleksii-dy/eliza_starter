@@ -1,4 +1,4 @@
-export const autoTemplate = (actionsText) => `
+export const autoTemplate = (actionsText: string) => `
 <note>
 This is a regular behavior update from {{agentName}}, not triggered by a user message.
 

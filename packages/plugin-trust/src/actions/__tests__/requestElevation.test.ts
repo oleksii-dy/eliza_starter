@@ -7,17 +7,17 @@ import type { Permission } from '../../types/permissions';
 const createMockRuntime = (): IAgentRuntime =>
   ({
     agentId: 'test-agent' as UUID,
-    getService: mock()
-  } as any);
+    getService: mock(),
+  }) as any;
 
 const createMockMemory = (text: string, entityId: UUID): Memory =>
   ({
     entityId,
     content: {
-      text
+      text,
     },
-    roomId: 'room-1' as UUID
-  } as Memory);
+    roomId: 'room-1' as UUID,
+  }) as Memory;
 
 describe('requestElevationAction', () => {
   let runtime: IAgentRuntime;
@@ -31,18 +31,22 @@ describe('requestElevationAction', () => {
         approved: true,
         elevationId: 'elevation-123',
         expiresAt: Date.now() + 3600000,
-        grantedPermissions: ['admin_action']
-      })
+        grantedPermissions: ['admin_action'],
+      }),
     };
     trustService = {
       evaluateTrust: mock().mockResolvedValue({
         overallTrust: 75,
-        dimensions: {}
-      })
+        dimensions: {},
+      }),
     };
-    (runtime.getService as unknown as Mock).mockImplementation((name: string) => {
-      if (name === 'contextual-permissions') {return permissionService;}
-      if (name === 'trust-engine') {return trustService;}
+    (runtime.getService as unknown as Mock<any>).mockImplementation((name: string) => {
+      if (name === 'contextual-permissions') {
+        return permissionService;
+      }
+      if (name === 'trust-engine') {
+        return trustService;
+      }
       return null;
     });
   });
@@ -61,9 +65,9 @@ describe('requestElevationAction', () => {
         entityId: testEntityId,
         requestedPermission: {
           action: 'admin_action',
-          resource: 'system'
+          resource: 'system',
         },
-        justification: 'Need to fix critical issue'
+        justification: 'Need to fix critical issue',
       })
     );
 
@@ -78,7 +82,7 @@ describe('requestElevationAction', () => {
       reason: 'Insufficient trust level',
       trustDeficit: 20,
       requiredTrust: 95,
-      suggestions: ['Build more trust', 'Get endorsement']
+      suggestions: ['Build more trust', 'Get endorsement'],
     });
 
     const memory = createMockMemory(
@@ -101,8 +105,10 @@ describe('requestElevationAction', () => {
     expect(await requestElevationAction.validate(runtime, memory, state)).toBe(true);
 
     // Should return false when service is not available
-    (runtime.getService as unknown as Mock).mockImplementation((name: string) => {
-      if (name === 'contextual-permissions') {return null;}
+    (runtime.getService as unknown as Mock<any>).mockImplementation((name: string) => {
+      if (name === 'contextual-permissions') {
+        return null;
+      }
       return trustService;
     });
     expect(await requestElevationAction.validate(runtime, memory, state)).toBe(false);
@@ -120,6 +126,6 @@ describe('requestElevationAction', () => {
     const result = await requestElevationAction.handler(runtime, memory);
 
     expect((result as any).text).toContain('Failed to process elevation request');
-    expect((result as any).error).toBe(true);
+    expect((result as any).data?.error).toBeDefined();
   });
 });

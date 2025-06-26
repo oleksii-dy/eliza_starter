@@ -107,7 +107,7 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing complex multi-step workflow...');
 
-        const shellService = runtime.getService<ShellService>('SHELL' as any);
+        const shellService = runtime.getService<ShellService>('SHELL');
         if (!shellService) {
           throw new Error('Shell service not available');
         }
@@ -265,7 +265,7 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing wildcard and glob pattern handling...');
 
-        const shellService = runtime.getService<ShellService>('SHELL' as any);
+        const shellService = runtime.getService<ShellService>('SHELL');
         if (!shellService) {
           throw new Error('Shell service not available');
         }
@@ -346,7 +346,7 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing script execution from natural language...');
 
-        const shellService = runtime.getService<ShellService>('SHELL' as any);
+        const shellService = runtime.getService<ShellService>('SHELL');
         if (!shellService) {
           throw new Error('Shell service not available');
         }

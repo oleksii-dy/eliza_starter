@@ -23,7 +23,7 @@ export const analyzeDataAction: Action = {
   description:
     'Analyzes code, project structure, and provides real insights about the codebase. Can be chained with command execution for build verification or file operations for detailed code examination',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
     return (
       text.includes('analyze') ||

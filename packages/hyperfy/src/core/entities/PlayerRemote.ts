@@ -2,10 +2,10 @@ import type { EntityData, HotReloadable, NetworkData } from '../../types/core';
 import { createNode } from '../extras/createNode';
 import { LerpQuaternion } from '../extras/LerpQuaternion';
 import { LerpVector3 } from '../extras/LerpVector3';
-import * as THREE from '../extras/three';
+import { THREE } from '../extras/three';
 import { Entity } from './Entity';
 
-let capsuleGeometry: THREE.CapsuleGeometry;
+let capsuleGeometry: any;
 {
   const radius = 0.3;
   const inner = 1.2;
@@ -61,7 +61,7 @@ export class PlayerRemote extends Entity implements HotReloadable {
     // this.caps = createNode('mesh', {
     //   type: 'geometry',
     //   geometry: capsuleGeometry,
-    //   material: new THREE.MeshStandardMaterial({ color: 'white' }),
+    //   material: new MeshStandardMaterial({ color: 'white' }),
     // })
     // this.base.add(this.caps)
 
@@ -108,9 +108,13 @@ export class PlayerRemote extends Entity implements HotReloadable {
 
   applyAvatar() {
     const avatarUrl = this.data.sessionAvatar || this.data.avatar || 'asset://avatar.vrm';
-    if (this.avatarUrl === avatarUrl) {return;}
+    if (this.avatarUrl === avatarUrl) {
+      return;
+    }
     this.world.loader?.load('avatar', avatarUrl).then((src: any) => {
-      if (this.avatar) {this.avatar.deactivate();}
+      if (this.avatar) {
+        this.avatar.deactivate();
+      }
       this.avatar = src.toNodes().get('avatar');
       this.base.add(this.avatar);
       this.nametag.position.y = this.avatar.getHeadToHeight() + 0.2;
@@ -149,7 +153,9 @@ export class PlayerRemote extends Entity implements HotReloadable {
     }
     if (this.avatar) {
       const matrix = this.avatar.getBoneTransform('head');
-      if (matrix) {this.aura.position.setFromMatrixPosition(matrix);}
+      if (matrix) {
+        this.aura.position.setFromMatrixPosition(matrix);
+      }
     }
   }
 
@@ -165,7 +171,9 @@ export class PlayerRemote extends Entity implements HotReloadable {
   }
 
   setSpeaking(speaking: boolean) {
-    if (this.speaking === speaking) {return;}
+    if (this.speaking === speaking) {
+      return;
+    }
     this.speaking = speaking;
     const name = this.data.name || '';
     this.nametag.label = speaking ? `» ${name} «` : name;
@@ -227,7 +235,9 @@ export class PlayerRemote extends Entity implements HotReloadable {
   }
 
   override destroy(local?: boolean) {
-    if (this.destroyed) {return;}
+    if (this.destroyed) {
+      return;
+    }
     this.destroyed = true;
 
     clearTimeout(this.chatTimer);

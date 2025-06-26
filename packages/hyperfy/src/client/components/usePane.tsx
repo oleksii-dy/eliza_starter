@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-import { cloneDeep } from 'lodash-es';
+import { useEffect } from 'react';
 import { storage } from '../../core/storage';
 
 const STORAGE_KEY = 'panes';
@@ -78,7 +77,7 @@ export function usePane(id: string, paneRef: any, headRef: any, resizable = fals
     };
 
     let moving = false;
-    const onHeadPointerDown = (e: PointerEvent) => {
+    const onHeadPointerDown = () => {
       moving = true;
     };
 
@@ -91,7 +90,7 @@ export function usePane(id: string, paneRef: any, headRef: any, resizable = fals
       persist();
     };
 
-    const onPointerUp = (e: PointerEvent) => {
+    const onPointerUp = () => {
       moving = false;
     };
 

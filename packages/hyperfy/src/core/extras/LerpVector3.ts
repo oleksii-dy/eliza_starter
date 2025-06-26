@@ -1,14 +1,14 @@
-import * as THREE from 'three';
+import { THREE } from './three';
 
 export class LerpVector3 {
-  value: THREE.Vector3;
+  value: any;
   rate: number;
-  previous: THREE.Vector3;
-  current: THREE.Vector3;
+  previous: any;
+  current: any;
   time: number;
   snapToken: unknown;
 
-  constructor(value: THREE.Vector3, rate: number) {
+  constructor(value: any, rate: number) {
     this.value = value;
     this.rate = rate; // receive rate eg 1/5 for 5hz
     this.previous = new THREE.Vector3().copy(this.value);
@@ -17,7 +17,7 @@ export class LerpVector3 {
     this.snapToken = null;
   }
 
-  push(value: THREE.Vector3, snapToken: unknown = null) {
+  push(value: any, snapToken: unknown = null) {
     if (this.snapToken !== snapToken) {
       this.snapToken = snapToken;
       this.previous.copy(value);
@@ -43,8 +43,8 @@ export class LerpVector3 {
     this.time = 0;
   }
 
-  update(delta: number) {
-    this.time += delta;
+  update(_delta: number) {
+    this.time += _delta;
     let alpha = this.time / this.rate;
     if (alpha > 1) {alpha = 1;}
     this.value.lerpVectors(this.previous, this.current, alpha);

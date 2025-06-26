@@ -25,8 +25,8 @@ describe('TodoPlugin Initialization', () => {
 
   it('should have the correct number of services', () => {
     expect(TodoPlugin.services).toHaveLength(2);
-    expect(TodoPlugin.services![0].serviceType).toBe('TODO_REMINDER');
-    expect(TodoPlugin.services![1].serviceType).toBe('TODO_INTEGRATION_BRIDGE');
+    expect((TodoPlugin.services![0] as any).serviceType).toBe('TODO_REMINDER');
+    expect((TodoPlugin.services![1] as any).serviceType).toBe('TODO_INTEGRATION_BRIDGE');
   });
 
   it('should have all required actions', () => {

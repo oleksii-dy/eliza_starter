@@ -13,10 +13,22 @@ import { attachmentsProvider } from '../providers/attachments';
 import { providersProvider } from '../providers/providers';
 import { recentMessagesProvider } from '../providers/recentMessages';
 
+// Mock getEntityDetails from @elizaos/core
+mock.module('@elizaos/core', () => ({
+  ...require('@elizaos/core'),
+  getEntityDetails: mock().mockResolvedValue([
+    {
+      id: 'test-entity-id',
+      names: ['Test User'],
+      metadata: { userName: 'Test User' },
+    },
+  ]),
+}));
+
 describe('Providers Provider', () => {
-  let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
-  let mockState: Partial<State>;
+  let mockRuntime: IAgentRuntime;
+  let mockMessage: Memory;
+  let mockState: State;
 
   beforeEach(() => {
     // Use standardized mock factories
@@ -31,9 +43,9 @@ describe('Providers Provider', () => {
           get: mock(),
         },
       ],
-    });
-    mockMessage = createMockMemory();
-    mockState = createMockState();
+    }) as unknown as IAgentRuntime;
+    mockMessage = createMockMemory() as Memory;
+    mockState = createMockState() as State;
   });
 
   afterEach(() => {
@@ -41,11 +53,7 @@ describe('Providers Provider', () => {
   });
 
   it('should list all dynamic providers', async () => {
-    const result = await providersProvider.get(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const result = await providersProvider.get(mockRuntime, mockMessage, mockState);
 
     expect(result).toBeDefined();
     expect(result.text).toContain('TEST_PROVIDER_1');
@@ -65,11 +73,7 @@ describe('Providers Provider', () => {
     // Mock empty providers
     mockRuntime.providers = [];
 
-    const result = await providersProvider.get(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const result = await providersProvider.get(mockRuntime, mockMessage, mockState);
 
     expect(result).toBeDefined();
     expect(result.text).toContain('No dynamic providers are currently available');
@@ -78,10 +82,10 @@ describe('Providers Provider', () => {
 });
 
 describe('Recent Messages Provider', () => {
-  let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
-  let mockState: Partial<State>;
-  let mockMessages: Array<Partial<Memory>>;
+  let mockRuntime: IAgentRuntime;
+  let mockMessage: Memory;
+  let mockState: State;
+  let mockMessages: Memory[];
 
   beforeEach(() => {
     // Create sample messages
@@ -90,26 +94,37 @@ describe('Recent Messages Provider', () => {
         id: 'msg-1' as UUID,
         content: { text: 'Hello there!', channelType: ChannelType.GROUP },
         createdAt: Date.now() - 3000,
-      }),
+      }) as Memory,
       createMockMemory({
         id: 'msg-2' as UUID,
         content: { text: 'How are you?', channelType: ChannelType.GROUP },
         createdAt: Date.now() - 2000,
-      }),
+      }) as Memory,
       createMockMemory({
         id: 'msg-3' as UUID,
         content: { text: 'I am doing well.', channelType: ChannelType.GROUP },
         createdAt: Date.now() - 1000,
-      }),
+      }) as Memory,
     ];
 
     // Use standardized mock factories
-    mockRuntime = createMockRuntime();
-    mockMessage = createMockMemory();
-    mockState = createMockState();
-
-    // Mock getMemories to return sample messages
-    mockRuntime.getMemories = mock().mockResolvedValue(mockMessages);
+    mockRuntime = createMockRuntime({
+      getMemories: mock().mockResolvedValue(mockMessages),
+      getConversationLength: mock().mockReturnValue(10),
+      getRoom: mock().mockResolvedValue({
+        id: 'test-room-id',
+        type: ChannelType.GROUP,
+      }),
+      getRoomsForParticipants: mock().mockResolvedValue([]),
+      getMemoriesByRoomIds: mock().mockResolvedValue([]),
+      getEntityById: mock().mockResolvedValue({
+        id: 'test-entity-id',
+        names: ['Test User'],
+        metadata: { userName: 'Test User' },
+      }),
+    }) as unknown as IAgentRuntime;
+    mockMessage = createMockMemory() as Memory;
+    mockState = createMockState() as State;
   });
 
   afterEach(() => {
@@ -117,11 +132,7 @@ describe('Recent Messages Provider', () => {
   });
 
   it('should retrieve recent messages', async () => {
-    const result = await recentMessagesProvider.get(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const result = await recentMessagesProvider.get(mockRuntime, mockMessage, mockState);
 
     expect(result).toBeDefined();
     expect(result.text).toContain('Hello there!');
@@ -141,11 +152,7 @@ describe('Recent Messages Provider', () => {
     // Ensure the current message content is also empty for the provider's specific check
     mockMessage.content = { ...mockMessage.content, text: '' };
 
-    const result = await recentMessagesProvider.get(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory, // Now message.content.text is empty
-      mockState as State
-    );
+    const result = await recentMessagesProvider.get(mockRuntime, mockMessage, mockState);
 
     expect(result).toBeDefined();
     // Corrected expected text to match provider output
@@ -159,11 +166,7 @@ describe('Recent Messages Provider', () => {
     // Spy on logger.error
     const loggerErrorSpy = spyOn(logger, 'error').mockImplementation(() => {});
 
-    const result = await recentMessagesProvider.get(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const result = await recentMessagesProvider.get(mockRuntime, mockMessage, mockState);
 
     expect(result).toBeDefined();
     expect(result.text).toContain('Error retrieving recent messages.');
@@ -174,15 +177,15 @@ describe('Recent Messages Provider', () => {
 });
 
 describe('Attachments Provider', () => {
-  let mockRuntime: MockRuntime;
-  let mockMessage: Partial<Memory>;
-  let mockState: Partial<State>;
+  let mockRuntime: IAgentRuntime;
+  let mockMessage: Memory;
+  let mockState: State;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
-    mockMessage = setup.mockMessage;
-    mockState = setup.mockState;
+    mockMessage = setup.mockMessage as Memory;
+    mockState = setup.mockState as State;
 
     // Mock getConversationLength
     mockRuntime.getConversationLength = mock().mockReturnValue(10);
@@ -202,11 +205,7 @@ describe('Attachments Provider', () => {
       channelType: ChannelType.GROUP,
     };
 
-    const result = await attachmentsProvider.get(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const result = await attachmentsProvider.get(mockRuntime, mockMessage, mockState);
 
     expect(result).toBeDefined();
     expect(result.data?.attachments).toHaveLength(0);
@@ -241,11 +240,7 @@ describe('Attachments Provider', () => {
       attachments: testAttachments,
     };
 
-    const result = await attachmentsProvider.get(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const result = await attachmentsProvider.get(mockRuntime, mockMessage, mockState);
 
     expect(result).toBeDefined();
     expect(result.data?.attachments).toHaveLength(2);
@@ -275,7 +270,7 @@ describe('Attachments Provider', () => {
     };
 
     // Mock recent messages with attachments - note they will be reversed by the provider
-    const recentMessages = [
+    const recentMessages: Memory[] = [
       {
         id: 'msg-1' as UUID,
         content: {
@@ -292,7 +287,7 @@ describe('Attachments Provider', () => {
           ],
         },
         createdAt: Date.now() - 30 * 60 * 1000, // 30 minutes ago
-      },
+      } as Memory,
       {
         id: 'msg-2' as UUID,
         content: {
@@ -309,16 +304,12 @@ describe('Attachments Provider', () => {
           ],
         },
         createdAt: Date.now() - 15 * 60 * 1000, // 15 minutes ago
-      },
+      } as Memory,
     ];
 
     mockRuntime.getMemories = mock().mockResolvedValue(recentMessages);
 
-    const result = await attachmentsProvider.get(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const result = await attachmentsProvider.get(mockRuntime, mockMessage, mockState);
 
     expect(result).toBeDefined();
     expect(result.data?.attachments).toHaveLength(3);
@@ -349,7 +340,7 @@ describe('Attachments Provider', () => {
 
     // Mock messages - the provider finds the first message with attachments
     // Recent message needs to come first to be the reference point
-    const messages = [
+    const messages: Memory[] = [
       {
         id: 'msg-recent' as UUID,
         content: {
@@ -366,7 +357,7 @@ describe('Attachments Provider', () => {
           ],
         },
         createdAt: Date.now() - 30 * 60 * 1000, // 30 minutes ago
-      },
+      } as Memory,
       {
         id: 'msg-old' as UUID,
         content: {
@@ -383,29 +374,25 @@ describe('Attachments Provider', () => {
           ],
         },
         createdAt: Date.now() - 2 * 60 * 60 * 1000, // 2 hours ago
-      },
+      } as Memory,
     ];
 
     mockRuntime.getMemories = mock().mockResolvedValue(messages);
 
-    const result = await attachmentsProvider.get(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const result = await attachmentsProvider.get(mockRuntime, mockMessage, mockState);
 
     expect(result).toBeDefined();
     expect(result.data?.attachments).toHaveLength(3);
 
     // Check that old attachment has hidden text
-    const oldAttachment = result.data?.attachments.find((a) => a.id === 'old-attach');
+    const oldAttachment = result.data?.attachments.find((a: Media) => a.id === 'old-attach');
     expect(oldAttachment?.text).toBe('[Hidden]');
 
     // Check that recent attachments have visible text
-    const recentAttachment = result.data?.attachments.find((a) => a.id === 'recent-attach');
+    const recentAttachment = result.data?.attachments.find((a: Media) => a.id === 'recent-attach');
     expect(recentAttachment?.text).toBe('This should be visible');
 
-    const currentAtt = result.data?.attachments.find((a) => a.id === 'current-attach');
+    const currentAtt = result.data?.attachments.find((a: Media) => a.id === 'current-attach');
     expect(currentAtt?.text).toBe('Current content');
   });
 
@@ -426,7 +413,7 @@ describe('Attachments Provider', () => {
     };
 
     // Mock a recent message with the same attachment ID but less data
-    const recentMessages = [
+    const recentMessages: Memory[] = [
       {
         id: 'msg-1' as UUID,
         content: {
@@ -443,16 +430,12 @@ describe('Attachments Provider', () => {
           ],
         },
         createdAt: Date.now() - 10 * 60 * 1000, // 10 minutes ago
-      },
+      } as Memory,
     ];
 
     mockRuntime.getMemories = mock().mockResolvedValue(recentMessages);
 
-    const result = await attachmentsProvider.get(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const result = await attachmentsProvider.get(mockRuntime, mockMessage, mockState);
 
     expect(result).toBeDefined();
     expect(result.data?.attachments).toHaveLength(1);
@@ -478,11 +461,7 @@ describe('Attachments Provider', () => {
       attachments: [testAttachment],
     };
 
-    const result = await attachmentsProvider.get(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const result = await attachmentsProvider.get(mockRuntime, mockMessage, mockState);
 
     expect(result).toBeDefined();
     expect(result.text).toContain('# Attachments');
@@ -511,26 +490,22 @@ describe('Attachments Provider', () => {
     };
 
     // No messages have attachments
-    const recentMessages = [
+    const recentMessages: Memory[] = [
       {
         id: 'msg-1' as UUID,
         content: { text: 'Text only message 1' },
         createdAt: Date.now() - 5 * 60 * 1000,
-      },
+      } as Memory,
       {
         id: 'msg-2' as UUID,
         content: { text: 'Text only message 2' },
         createdAt: Date.now() - 2 * 60 * 1000,
-      },
+      } as Memory,
     ];
 
     mockRuntime.getMemories = mock().mockResolvedValue(recentMessages);
 
-    const result = await attachmentsProvider.get(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    const result = await attachmentsProvider.get(mockRuntime, mockMessage, mockState);
 
     expect(result).toBeDefined();
     expect(result.data?.attachments).toHaveLength(1);
@@ -556,12 +531,8 @@ describe('Attachments Provider', () => {
     mockRuntime.getMemories = mock().mockRejectedValue(new Error('Database error'));
 
     // The provider doesn't catch errors, so they propagate up
-    await expect(
-      attachmentsProvider.get(
-        mockRuntime as IAgentRuntime,
-        mockMessage as Memory,
-        mockState as State
-      )
-    ).rejects.toThrow('Database error');
+    await expect(attachmentsProvider.get(mockRuntime, mockMessage, mockState)).rejects.toThrow(
+      'Database error'
+    );
   });
 });

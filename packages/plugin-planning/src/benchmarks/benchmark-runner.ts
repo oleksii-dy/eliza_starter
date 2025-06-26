@@ -157,7 +157,7 @@ export class BenchmarkRunner {
 
     } catch (error) {
       logger.error('[BenchmarkRunner] Benchmark execution failed:', error);
-      throw new Error(`Benchmark execution failed: ${error.message}`);
+      throw new Error(`Benchmark execution failed: ${(error as Error).message}`);
     } finally {
       this.memoryTracker.stop();
       await this.cleanupRuntime();
@@ -175,7 +175,6 @@ export class BenchmarkRunner {
       this.runtime = new AgentRuntime({
         character: this.config.character,
         plugins: this.config.plugins,
-        databaseAdapter: null, // Will use in-memory adapter
         settings: {
           // Benchmark-specific settings
           BENCHMARK_MODE: 'true',
@@ -188,7 +187,7 @@ export class BenchmarkRunner {
       await this.runtime.initialize();
 
       // Get planning service
-      this.planningService = this.runtime.getService<IPlanningService>('planning');
+      this.planningService = this.runtime.getService<PlanningService>('planning');
       if (!this.planningService) {
         throw new Error('Planning service not available in runtime');
       }
@@ -211,7 +210,7 @@ export class BenchmarkRunner {
 
     } catch (error) {
       logger.error('[BenchmarkRunner] Runtime initialization failed:', error);
-      throw new Error(`Failed to initialize runtime: ${error.message}`);
+      throw new Error(`Failed to initialize runtime: ${(error as Error).message}`);
     }
   }
 
@@ -229,9 +228,7 @@ export class BenchmarkRunner {
     await adapter.loadTestCases(this.config.realmBenchPath);
 
     // Limit tests if specified
-    if (this.config.maxTestsPerCategory) {
-      adapter.limitTestsPerCategory(this.config.maxTestsPerCategory);
-    }
+    // Note: Test limiting would be implemented in the adapter if needed
 
     // Run benchmark
     const report = await adapter.runBenchmark();
@@ -350,18 +347,18 @@ export class BenchmarkRunner {
     if (results.realmBenchResults) {
       const realm = results.realmBenchResults;
 
-      // Check pattern performance
-      Object.entries(realm.patternBreakdown).forEach(([pattern, stats]) => {
+      // Check category performance  
+      Object.entries(realm.summary.taskCategories).forEach(([category, stats]) => {
         if (stats.successRate > 0.8) {
-          strengths.push(`Strong performance in ${pattern} planning pattern`);
-          strongCategories.push(pattern);
+          strengths.push(`Strong performance in ${category} planning tasks`);
+          strongCategories.push(category);
         } else if (stats.successRate < 0.5) {
-          weaknesses.push(`Challenging ${pattern} planning pattern`);
-          recommendations.push(`Improve ${pattern} planning capabilities`);
+          weaknesses.push(`Challenging ${category} planning tasks`);
+          recommendations.push(`Improve ${category} planning capabilities`);
         }
       });
 
-      if (realm.overallMetrics.averagePlanQuality > 0.7) {
+      if (realm.averagePlanQuality > 0.7) {
         strengths.push('High-quality plan generation');
       }
     }
@@ -481,7 +478,7 @@ export class BenchmarkRunner {
 
     } catch (error) {
       logger.error('[BenchmarkRunner] Failed to save results:', error);
-      throw new Error(`Failed to save results: ${error.message}`);
+      throw new Error(`Failed to save results: ${(error as Error).message}`);
     }
   }
 
@@ -522,7 +519,7 @@ ${results.realmBenchResults ? `
 ## REALM-Bench Results
 - **Tests**: ${results.realmBenchResults.totalTests} (${results.realmBenchResults.passedTests} passed)
 - **Success Rate**: ${(results.realmBenchResults.passedTests / results.realmBenchResults.totalTests * 100).toFixed(1)}%
-- **Plan Quality**: ${(results.realmBenchResults.overallMetrics.averagePlanQuality * 100).toFixed(1)}%
+- **Plan Quality**: ${(results.realmBenchResults.averagePlanQuality * 100).toFixed(1)}%
 ` : ''}
 
 ${results.apiBankResults ? `

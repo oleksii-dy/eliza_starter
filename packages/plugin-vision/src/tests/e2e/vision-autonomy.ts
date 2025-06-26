@@ -71,7 +71,7 @@ export class VisionAutonomyE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing vision updates for autonomous behavior...');
 
-        const visionService = runtime.getService<VisionService>('VISION' as any);
+        const visionService = runtime.getService<VisionService>('VISION');
         if (!visionService) {
           throw new Error('Vision service not available');
         }
@@ -130,7 +130,7 @@ export class VisionAutonomyE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing vision memory persistence...');
 
-        const visionService = runtime.getService<VisionService>('VISION' as any);
+        const visionService = runtime.getService<VisionService>('VISION');
         if (!visionService) {
           throw new Error('Vision service not available');
         }
@@ -273,7 +273,7 @@ export class VisionAutonomyE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing autonomy behavior without vision...');
 
-        const visionService = runtime.getService<VisionService>('VISION' as any);
+        const visionService = runtime.getService<VisionService>('VISION');
 
         if (!visionService) {
           throw new Error('Vision service not registered - cannot test graceful handling');

@@ -30,8 +30,9 @@ export class ClientNetwork extends System {
     this.ws = null;
     this.apiUrl = null;
     this.id = null;
-    this.isClient = true
-    ;(this.queue = []), (this.serverTimeOffset = 0);
+    this.isClient = true;
+    this.queue = [];
+    this.serverTimeOffset = 0;
     this.maxUploadSize = 0;
   }
 

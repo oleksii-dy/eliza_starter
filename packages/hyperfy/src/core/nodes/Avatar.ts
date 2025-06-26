@@ -1,6 +1,6 @@
 import { isString } from 'lodash-es';
 import { Node } from './Node';
-import * as THREE from 'three';
+// import * as THREE from 'three';
 
 const defaults = {
   src: null,

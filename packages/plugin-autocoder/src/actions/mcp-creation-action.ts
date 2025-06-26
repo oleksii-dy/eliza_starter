@@ -7,8 +7,9 @@ import type {
   ActionExample,
 } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
-import { MCPCreationService } from '../services/mcp-creation-service';
-import path from 'path';
+import { MCPCreationService } from '../services/McpCreationService';
+import { getPluginDataPath } from '../utils/path-manager';
+import _path from 'path';  // Path utilities
 
 /**
  * Action to create MCP (Model Context Protocol) servers
@@ -47,7 +48,7 @@ export const createMCPAction: Action = {
     ],
   ] as ActionExample[][],
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State) => {
     // Check if we have access to orchestration service
     const orchestrationService = runtime.getService('orchestration');
     if (!orchestrationService) {
@@ -63,7 +64,7 @@ export const createMCPAction: Action = {
     }
 
     // Check if message contains MCP-related keywords
-    const messageText = message.content.text?.toLowerCase() || '';
+    const messageText = _message.content.text?.toLowerCase() || '';
     const mcpKeywords = ['mcp', 'model context protocol', 'context protocol'];
     const hasKeyword = mcpKeywords.some((keyword) => messageText.includes(keyword));
 
@@ -73,8 +74,8 @@ export const createMCPAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state?: State,
-    options?: { [key: string]: unknown },
+    _state?: State,
+    _options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ) => {
     try {
@@ -115,16 +116,8 @@ export const createMCPAction: Action = {
       const result = await mcpService.createMCPProject({
         name: mcpName,
         description: messageText,
-        // Use centralized path management for MCP projects
-        outputDir: (() => {
-          try {
-            const { getPluginDataPath } = require('@elizaos/core/utils/path-manager');
-            return getPluginDataPath('autocoder', 'mcp-projects');
-          } catch {
-            // Fallback to legacy path if path-manager is not available
-            return path.join(process.cwd(), '.eliza-temp', 'mcp-projects');
-          }
-        })(),
+        // Use local path management for MCP projects
+        outputDir: getPluginDataPath('autocoder', 'mcp-projects'),
         tools: tools.map((t) => ({ name: t.name, description: t.description })),
         resources: resources.map((r) => ({ name: r.name, description: r.description })),
         dependencies,
@@ -149,7 +142,7 @@ export const createMCPAction: Action = {
       summary += '### Next Steps:\n';
       summary += `1. Navigate to the project: \`cd ${result.projectPath}\`\n`;
       summary += '2. Install dependencies: `npm install`\n';
-      summary += '3. Run tests: `npm test`\n';
+      summary += '3. Run _tests: `npm test`\n';
       summary += '4. Start the server: `npm run mcp:server`\n\n';
 
       summary += '### Testing with plugin-mcp:\n';
@@ -243,7 +236,9 @@ function getFileOperationParams(operation: string): Record<string, any> {
         path: { type: 'string', description: 'File path', required: true },
       };
     default:
-      return {};
+      return {
+        /* empty */
+      };
   }
 }
 

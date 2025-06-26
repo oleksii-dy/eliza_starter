@@ -460,9 +460,15 @@ Actions: ${result.actions.length}`,
         },
       };
 
-      await liveMessageBus.sendMessage(channelId, 'task-executor', message, {
-        taskType: task.type,
-        benchmarkId: task.benchmarkId,
+      await liveMessageBus.sendMessage({
+        type: 'message',
+        agentId: 'task-executor',
+        roomId: channelId,
+        data: {
+          message,
+          taskType: task.type,
+          benchmarkId: task.benchmarkId,
+        },
       });
     } catch (error) {
       logger.error(`Failed to notify task completion for ${task.id}:`, error);

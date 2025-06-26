@@ -29,7 +29,10 @@ export interface ITrustDatabase {
     comment: string;
     metadata?: any;
   }): Promise<void>;
-  getLatestTrustComment(entityId: UUID, evaluatorId: UUID): Promise<{
+  getLatestTrustComment(
+    entityId: UUID,
+    evaluatorId: UUID
+  ): Promise<{
     id: string;
     entityId: UUID;
     evaluatorId: UUID;
@@ -39,16 +42,22 @@ export interface ITrustDatabase {
     timestamp: number;
     metadata: any;
   } | null>;
-  getTrustCommentHistory(entityId: UUID, evaluatorId: UUID, limit?: number): Promise<Array<{
-    id: string;
-    entityId: UUID;
-    evaluatorId: UUID;
-    trustScore: number;
-    trustChange: number;
-    comment: string;
-    timestamp: number;
-    metadata: any;
-  }>>;
+  getTrustCommentHistory(
+    entityId: UUID,
+    evaluatorId: UUID,
+    limit?: number
+  ): Promise<
+    Array<{
+      id: string;
+      entityId: UUID;
+      evaluatorId: UUID;
+      trustScore: number;
+      trustChange: number;
+      comment: string;
+      timestamp: number;
+      metadata: any;
+    }>
+  >;
 
   // Permission Delegation
   savePermissionDelegation(delegation: PermissionDelegation): Promise<void>;
@@ -197,12 +206,21 @@ export class TrustDatabase implements ITrustDatabase {
       `);
 
       // Create indexes
-      await this.executeSQL('CREATE INDEX IF NOT EXISTS idx_trust_evidence_entity ON trust_evidence(entity_id)');
-      await this.executeSQL('CREATE INDEX IF NOT EXISTS idx_trust_evidence_timestamp ON trust_evidence(timestamp)');
-      await this.executeSQL('CREATE INDEX IF NOT EXISTS idx_trust_comments_entity ON trust_comments(entity_id, evaluator_id)');
-      await this.executeSQL('CREATE INDEX IF NOT EXISTS idx_trust_comments_timestamp ON trust_comments(timestamp)');
-      await this.executeSQL('CREATE INDEX IF NOT EXISTS idx_delegations_delegator ON permission_delegations(delegator_id)');
-
+      await this.executeSQL(
+        'CREATE INDEX IF NOT EXISTS idx_trust_evidence_entity ON trust_evidence(entity_id)'
+      );
+      await this.executeSQL(
+        'CREATE INDEX IF NOT EXISTS idx_trust_evidence_timestamp ON trust_evidence(timestamp)'
+      );
+      await this.executeSQL(
+        'CREATE INDEX IF NOT EXISTS idx_trust_comments_entity ON trust_comments(entity_id, evaluator_id)'
+      );
+      await this.executeSQL(
+        'CREATE INDEX IF NOT EXISTS idx_trust_comments_timestamp ON trust_comments(timestamp)'
+      );
+      await this.executeSQL(
+        'CREATE INDEX IF NOT EXISTS idx_delegations_delegator ON permission_delegations(delegator_id)'
+      );
     } catch (error) {
       logger.error('Failed to run trust database migrations:', error);
       throw error;
@@ -216,27 +234,30 @@ export class TrustDatabase implements ITrustDatabase {
 
     try {
       const now = Date.now();
-      await this.executeSQL(`
+      await this.executeSQL(
+        `
         INSERT OR REPLACE INTO trust_profiles (
           entity_id, overall_trust, reliability, competence, integrity,
           benevolence, transparency, confidence, interaction_count,
           last_calculated, created_at, updated_at, evidence
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        profile.entityId,
-        profile.overallTrust,
-        profile.dimensions.reliability,
-        profile.dimensions.competence,
-        profile.dimensions.integrity,
-        profile.dimensions.benevolence,
-        profile.dimensions.transparency,
-        profile.confidence,
-        profile.interactionCount,
-        profile.lastCalculated,
-        now, // created_at - use now for new profiles
-        now,
-        JSON.stringify(profile.evidence || [])
-      ]);
+      `,
+        [
+          profile.entityId,
+          profile.overallTrust,
+          profile.dimensions.reliability,
+          profile.dimensions.competence,
+          profile.dimensions.integrity,
+          profile.dimensions.benevolence,
+          profile.dimensions.transparency,
+          profile.confidence,
+          profile.interactionCount,
+          profile.lastCalculated,
+          now, // created_at - use now for new profiles
+          now,
+          JSON.stringify(profile.evidence || []),
+        ]
+      );
     } catch (error) {
       logger.error('Failed to save trust profile:', error);
       throw error;
@@ -249,9 +270,12 @@ export class TrustDatabase implements ITrustDatabase {
     }
 
     try {
-      const rows = await this.executeSQL(`
+      const rows = await this.executeSQL(
+        `
         SELECT * FROM trust_profiles WHERE entity_id = ?
-      `, [entityId]);
+      `,
+        [entityId]
+      );
 
       if (!rows || rows.length === 0) {
         return null;
@@ -269,19 +293,19 @@ export class TrustDatabase implements ITrustDatabase {
           competence: row.competence,
           integrity: row.integrity,
           benevolence: row.benevolence,
-          transparency: row.transparency
+          transparency: row.transparency,
         },
         confidence: row.confidence,
         interactionCount: row.interaction_count,
         lastCalculated: row.last_calculated,
         evidence: JSON.parse(row.evidence || '[]'),
-        evaluatorId: this.runtime?.agentId || 'system' as UUID,
+        evaluatorId: this.runtime?.agentId || ('system' as UUID),
         calculationMethod: 'weighted_dimensions',
         trend: {
           direction: 'stable',
           changeRate: 0,
-          lastChangeAt: row.updated_at
-        }
+          lastChangeAt: row.updated_at,
+        },
       };
     } catch (error) {
       logger.error('Failed to get trust profile:', error);
@@ -307,19 +331,19 @@ export class TrustDatabase implements ITrustDatabase {
           competence: row.competence,
           integrity: row.integrity,
           benevolence: row.benevolence,
-          transparency: row.transparency
+          transparency: row.transparency,
         },
         confidence: row.confidence,
         interactionCount: row.interaction_count,
         lastCalculated: row.last_calculated,
         evidence: JSON.parse(row.evidence || '[]'),
-        evaluatorId: this.runtime?.agentId || 'system' as UUID,
+        evaluatorId: this.runtime?.agentId || ('system' as UUID),
         calculationMethod: 'weighted_dimensions',
         trend: {
           direction: 'stable',
           changeRate: 0,
-          lastChangeAt: row.updated_at
-        }
+          lastChangeAt: row.updated_at,
+        },
       }));
     } catch (error) {
       logger.error('Failed to get all trust profiles:', error);
@@ -348,24 +372,27 @@ export class TrustDatabase implements ITrustDatabase {
 
     try {
       const id = `evidence-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      await this.executeSQL(`
+      await this.executeSQL(
+        `
         INSERT INTO trust_evidence (
           id, entity_id, type, impact, weight, description,
           timestamp, verified, reported_by, context, metadata
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        id,
-        evidence.targetEntityId,
-        evidence.type,
-        evidence.impact,
-        evidence.weight,
-        evidence.description,
-        evidence.timestamp,
-        evidence.verified ? 1 : 0,
-        evidence.reportedBy,
-        JSON.stringify(evidence.context || {}),
-        JSON.stringify(evidence.metadata || {})
-      ]);
+      `,
+        [
+          id,
+          evidence.targetEntityId,
+          evidence.type,
+          evidence.impact,
+          evidence.weight,
+          evidence.description,
+          evidence.timestamp,
+          evidence.verified ? 1 : 0,
+          evidence.reportedBy,
+          JSON.stringify(evidence.context || {}),
+          JSON.stringify(evidence.metadata || {}),
+        ]
+      );
     } catch (error) {
       logger.error('Failed to add trust evidence:', error);
       throw error;
@@ -378,16 +405,19 @@ export class TrustDatabase implements ITrustDatabase {
     }
 
     try {
-      const rows = await this.executeSQL(`
+      const rows = await this.executeSQL(
+        `
         SELECT * FROM trust_evidence 
         WHERE entity_id = ? 
         ORDER BY timestamp DESC
-      `, [entityId]);
+      `,
+        [entityId]
+      );
 
       return (rows || []).map((row: any) => ({
         id: row.id,
         targetEntityId: row.entity_id,
-        evaluatorId: this.runtime?.agentId || 'system' as UUID,
+        evaluatorId: this.runtime?.agentId || ('system' as UUID),
         type: row.type,
         impact: row.impact,
         weight: row.weight,
@@ -396,7 +426,7 @@ export class TrustDatabase implements ITrustDatabase {
         verified: Boolean(row.verified),
         reportedBy: row.reported_by,
         context: JSON.parse(row.context || '{}'),
-        metadata: JSON.parse(row.metadata || '{}')
+        metadata: JSON.parse(row.metadata || '{}'),
       }));
     } catch (error) {
       logger.error('Failed to get trust evidence:', error);
@@ -418,27 +448,33 @@ export class TrustDatabase implements ITrustDatabase {
 
     try {
       const now = Date.now();
-      await this.executeSQL(`
+      await this.executeSQL(
+        `
         INSERT INTO trust_comments (
           id, entity_id, evaluator_id, trust_score, trust_change, comment, timestamp, metadata
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        comment.entityId,
-        comment.evaluatorId,
-        comment.trustScore,
-        comment.trustChange,
-        comment.comment,
-        now,
-        JSON.stringify(comment.metadata || {})
-      ]);
+      `,
+        [
+          `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          comment.entityId,
+          comment.evaluatorId,
+          comment.trustScore,
+          comment.trustChange,
+          comment.comment,
+          now,
+          JSON.stringify(comment.metadata || {}),
+        ]
+      );
     } catch (error) {
       logger.error('Failed to save trust comment:', error);
       throw error;
     }
   }
 
-  async getLatestTrustComment(entityId: UUID, evaluatorId: UUID): Promise<{
+  async getLatestTrustComment(
+    entityId: UUID,
+    evaluatorId: UUID
+  ): Promise<{
     id: string;
     entityId: UUID;
     evaluatorId: UUID;
@@ -453,11 +489,14 @@ export class TrustDatabase implements ITrustDatabase {
     }
 
     try {
-      const rows = await this.executeSQL(`
+      const rows = await this.executeSQL(
+        `
         SELECT * FROM trust_comments 
         WHERE entity_id = ? AND evaluator_id = ?
         ORDER BY timestamp DESC
-      `, [entityId, evaluatorId]);
+      `,
+        [entityId, evaluatorId]
+      );
 
       if (!rows || rows.length === 0) {
         return null;
@@ -475,7 +514,7 @@ export class TrustDatabase implements ITrustDatabase {
         trustChange: row.trust_change,
         comment: row.comment,
         timestamp: row.timestamp,
-        metadata: JSON.parse(row.metadata || '{}')
+        metadata: JSON.parse(row.metadata || '{}'),
       };
     } catch (error) {
       logger.error('Failed to get latest trust comment:', error);
@@ -483,16 +522,22 @@ export class TrustDatabase implements ITrustDatabase {
     }
   }
 
-  async getTrustCommentHistory(entityId: UUID, evaluatorId: UUID, limit?: number): Promise<Array<{
-    id: string;
-    entityId: UUID;
-    evaluatorId: UUID;
-    trustScore: number;
-    trustChange: number;
-    comment: string;
-    timestamp: number;
-    metadata: any;
-  }>> {
+  async getTrustCommentHistory(
+    entityId: UUID,
+    evaluatorId: UUID,
+    limit?: number
+  ): Promise<
+    Array<{
+      id: string;
+      entityId: UUID;
+      evaluatorId: UUID;
+      trustScore: number;
+      trustChange: number;
+      comment: string;
+      timestamp: number;
+      metadata: any;
+    }>
+  > {
     if (!this.db) {
       throw new Error('Database not initialized');
     }
@@ -512,7 +557,7 @@ export class TrustDatabase implements ITrustDatabase {
         trustChange: row.trust_change,
         comment: row.comment,
         timestamp: row.timestamp,
-        metadata: JSON.parse(row.metadata || '{}')
+        metadata: JSON.parse(row.metadata || '{}'),
       }));
     } catch (error) {
       logger.error('Failed to get trust comment history:', error);
@@ -526,23 +571,27 @@ export class TrustDatabase implements ITrustDatabase {
     }
 
     try {
-      const id = delegation.id || `delegation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      await this.executeSQL(`
+      const id =
+        delegation.id || `delegation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      await this.executeSQL(
+        `
           INSERT OR REPLACE INTO permission_delegations (
             id, delegator_id, delegatee_id, permission, resource,
             granted_at, expires_at, active, conditions
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-        id,
-        delegation.delegatorId,
-        delegation.delegateeId,
-        JSON.stringify(delegation.permissions),
-        JSON.stringify(delegation.context),
-        delegation.createdAt,
-        delegation.expiresAt || null,
-        !delegation.revoked ? 1 : 0,
-        JSON.stringify(delegation.conditions || [])
-      ]);
+        `,
+        [
+          id,
+          delegation.delegatorId,
+          delegation.delegateeId,
+          JSON.stringify(delegation.permissions),
+          JSON.stringify(delegation.context),
+          delegation.createdAt,
+          delegation.expiresAt || null,
+          !delegation.revoked ? 1 : 0,
+          JSON.stringify(delegation.conditions || []),
+        ]
+      );
     } catch (error) {
       logger.error('Failed to save permission delegation:', error);
       throw error;
@@ -555,12 +604,15 @@ export class TrustDatabase implements ITrustDatabase {
     }
 
     try {
-      const rows = await this.executeSQL(`
+      const rows = await this.executeSQL(
+        `
         SELECT * FROM permission_delegations 
         WHERE delegator_id = ? AND active = 1
         AND (expires_at IS NULL OR expires_at > ?)
         ORDER BY granted_at DESC
-      `, [delegatorId, Date.now()]);
+      `,
+        [delegatorId, Date.now()]
+      );
 
       return (rows || []).map((row: any) => ({
         id: row.id,
@@ -571,7 +623,7 @@ export class TrustDatabase implements ITrustDatabase {
         createdAt: row.granted_at,
         expiresAt: row.expires_at,
         revoked: !row.active,
-        conditions: JSON.parse(row.conditions || '[]')
+        conditions: JSON.parse(row.conditions || '[]'),
       }));
     } catch (error) {
       logger.error('Failed to get permission delegations:', error);

@@ -2,17 +2,17 @@
 
 // CSM (Cascaded Shadow Maps)
 declare module '*/csm/CSM.js' {
-  import * as THREE from 'three';
+  import { Object3D, Vector3, Camera } from 'three';
 
   export class CSM {
     constructor(data: {
       maxFar?: number;
       cascades?: number;
       mode?: 'practical' | 'uniform' | 'logarithmic' | 'custom';
-      parent?: THREE.Object3D;
+      parent?: Object3D;
       shadowMapSize?: number;
-      lightDirection?: THREE.Vector3;
-      camera?: THREE.Camera;
+      lightDirection?: Vector3;
+      camera?: Camera;
     });
 
     fade: boolean;
@@ -27,10 +27,10 @@ declare module '*/csm/CSM.js' {
 
 // GLTF Loader
 declare module '*/gltfloader/GLTFLoader.js' {
-  import * as THREE from 'three';
+  import { Loader, LoadingManager, Group, Camera, AnimationClip } from 'three';
 
-  export class GLTFLoader extends THREE.Loader {
-    constructor(manager?: THREE.LoadingManager);
+  export class GLTFLoader extends Loader {
+    constructor(manager?: LoadingManager);
 
     load(
       url: string,
@@ -54,10 +54,10 @@ declare module '*/gltfloader/GLTFLoader.js' {
   }
 
   export interface GLTF {
-    scene: THREE.Group;
-    scenes: THREE.Group[];
-    cameras: THREE.Camera[];
-    animations: THREE.AnimationClip[];
+    scene: Group;
+    scenes: Group[];
+    cameras: Camera[];
+    animations: AnimationClip[];
     asset: {
       copyright?: string;
       generator?: string;
@@ -93,14 +93,14 @@ declare module '*/stats-gl/index.js' {
 
 // Three Custom Shader Material
 declare module '*/three-custom-shader-material/index.js' {
-  import * as THREE from 'three';
+  import { Material, IUniform } from 'three';
 
-  export default class CustomShaderMaterial extends THREE.Material {
+  export default class CustomShaderMaterial extends Material {
     constructor(options: {
-      baseMaterial: typeof THREE.Material;
+      baseMaterial: typeof Material;
       vertexShader?: string;
       fragmentShader?: string;
-      uniforms?: { [key: string]: THREE.IUniform };
+      uniforms?: { [key: string]: IUniform };
       cacheKey?: () => string;
       [key: string]: any;
     });
@@ -109,16 +109,16 @@ declare module '*/three-custom-shader-material/index.js' {
 
 // Three VRM
 declare module '*/three-vrm/index.js' {
-  import * as THREE from 'three';
+  import { Group, Object3D, Material, Vector3 } from 'three';
 
   export class VRM {
-    scene: THREE.Group;
+    scene: Group;
     humanoid: VRMHumanoid;
     expressionManager?: VRMExpressionManager;
     firstPerson?: VRMFirstPerson;
     lookAt?: VRMLookAt;
     meta?: VRMMeta;
-    materials?: THREE.Material[];
+    materials?: Material[];
     springBoneManager?: VRMSpringBoneManager;
     nodeConstraintManager?: any;
 
@@ -130,8 +130,8 @@ declare module '*/three-vrm/index.js' {
     restPose: VRMPose;
 
     getBone(name: VRMHumanBoneName): VRMHumanBone | undefined;
-    getBoneNode(name: VRMHumanBoneName): THREE.Object3D | undefined;
-    getRawBone(name: VRMHumanBoneName): { node: THREE.Object3D } | undefined;
+    getBoneNode(name: VRMHumanBoneName): Object3D | undefined;
+    getRawBone(name: VRMHumanBoneName): { node: Object3D } | undefined;
 
     resetPose(): void;
     setRawPose(pose: VRMPose): void;
@@ -144,7 +144,7 @@ declare module '*/three-vrm/index.js' {
   }
 
   export interface VRMHumanBone {
-    node: THREE.Object3D;
+    node: Object3D;
   }
 
   export interface VRMPose {
@@ -188,16 +188,16 @@ declare module '*/three-vrm/index.js' {
 
   export interface VRMFirstPersonMeshAnnotation {
     firstPersonFlag: string;
-    node: THREE.Object3D;
+    node: Object3D;
   }
 
   export class VRMLookAt {
-    target?: THREE.Object3D;
+    target?: Object3D;
     autoUpdate: boolean;
 
-    getLookAtWorldDirection(target: THREE.Vector3): THREE.Vector3;
-    lookAt(position: THREE.Vector3): void;
-    update(delta: number): void;
+    getLookAtWorldDirection(target: Vector3): Vector3;
+    lookAt(position: Vector3): void;
+    update(_delta: number): void;
     reset(): void;
   }
 
@@ -227,28 +227,28 @@ declare module '*/three-vrm/index.js' {
     joints: VRMSpringBoneJoint[];
     colliderGroups: VRMSpringBoneColliderGroup[];
 
-    setCenter(root: THREE.Object3D | null): void;
-    update(delta: number): void;
+    setCenter(root: Object3D | null): void;
+    update(_delta: number): void;
     reset(): void;
   }
 
   export interface VRMSpringBoneJoint {
-    bone: THREE.Object3D;
+    bone: Object3D;
     radius: number;
     stiffness: number;
     gravityPower: number;
-    gravityDir: THREE.Vector3;
+    gravityDir: Vector3;
     dragForce: number;
     hitRadius: number;
   }
 
   export interface VRMSpringBoneColliderGroup {
-    node: THREE.Object3D;
+    node: Object3D;
     colliders: VRMSpringBoneCollider[];
   }
 
   export interface VRMSpringBoneCollider {
-    offset: THREE.Vector3;
+    offset: Vector3;
     radius: number;
   }
 
@@ -257,9 +257,9 @@ declare module '*/three-vrm/index.js' {
   }
 
   export class VRMUtils {
-    static deepDispose(object3D: THREE.Object3D): void;
-    static removeUnnecessaryVertices(root: THREE.Object3D): void;
-    static removeUnnecessaryJoints(root: THREE.Object3D): void;
+    static deepDispose(object3D: Object3D): void;
+    static removeUnnecessaryVertices(root: Object3D): void;
+    static removeUnnecessaryJoints(root: Object3D): void;
     static rotateVRM0(vrm: VRM): void;
   }
 }

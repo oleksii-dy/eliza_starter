@@ -1,436 +1,117 @@
-import {
-  Action,
-  ChannelType,
-  Character,
-  Content,
-  Evaluator,
-  IAgentRuntime,
-  IDatabaseAdapter,
-  Memory,
-  ModelType,
-  Plugin,
-  Provider,
-  Route,
-  Service,
-  State,
-  UUID,
-} from '@elizaos/core';
+/**
+ * Test utilities for plugin-message-handling
+ * Re-exports test utilities from @elizaos/core to maintain consistency
+ */
+
+// Re-export all test utilities from core
+export {
+  // Mock creation functions from the mocks modules
+  createMockRuntime,
+  createMockMemory,
+  createMockConversation,
+  createMockConversationState,
+  createMockCharacter,
+  createMockDatabase,
+  createMockState,
+
+  // Factory functions from factories module
+  createTestEnvironment,
+  createTestAction,
+  createTestProvider,
+  createTestEvaluator,
+  createPluginTestScenario,
+  createMultiAgentScenario,
+} from '@elizaos/core/test-utils';
+
+import type { IAgentRuntime, State } from '@elizaos/core';
+import { createMockRuntime, createMockState } from '@elizaos/core/test-utils';
 import { mock } from 'bun:test';
 
+// Type alias for MockRuntime for backward compatibility
+export type MockRuntime = IAgentRuntime;
+
 /**
- * Creates a comprehensive mock of the IAgentRuntime interface with sensible defaults
- * that can be overridden as needed for specific tests.
- *
- * @param overrides - Optional overrides for the default mock methods and properties
- * @returns A mock runtime for testing
+ * Helper function to create a setup for action tests
+ * This is specific to the message-handling plugin tests
  */
-export function createMockRuntime(overrides: Partial<MockRuntime> = {}): MockRuntime {
-  // Create base mock runtime with defaults
-  const mockRuntime: MockRuntime = {
-    // Core properties
-    agentId: 'test-agent-id' as UUID,
-    character: {
-      name: 'Test Agent',
-      bio: 'This is a test agent for unit tests',
-    } as Character,
-    providers: [],
-    actions: [],
-    evaluators: [],
-    plugins: [],
-    services: new Map(),
-    events: new Map(),
-    routes: [],
+export function setupActionTest(
+  options: {
+    runtimeOverrides?: any;
+    messageOverrides?: any;
+    stateOverrides?: any;
+  } = {}
+) {
+  const { runtimeOverrides = {}, messageOverrides = {}, stateOverrides = {} } = options;
 
-    // Core methods
-    registerPlugin: mock().mockResolvedValue(undefined),
-    initialize: mock().mockResolvedValue(undefined),
-    getKnowledge: mock().mockResolvedValue([]),
-    addKnowledge: mock().mockResolvedValue(undefined),
-    getService: mock().mockReturnValue(null),
-    getAllServices: mock().mockReturnValue(new Map()),
-    registerService: mock(),
-    registerDatabaseAdapter: mock(),
-    setSetting: mock(),
-    getSetting: mock().mockReturnValue(null),
-    getConversationLength: mock().mockReturnValue(10),
-    processActions: mock().mockResolvedValue(undefined),
-    evaluate: mock().mockResolvedValue([]),
-    registerProvider: mock(),
-    registerAction: mock(),
-    registerEvaluator: mock(),
-    ensureConnection: mock().mockResolvedValue(undefined),
-    ensureParticipantInRoom: mock().mockResolvedValue(undefined),
-    ensureWorldExists: mock().mockResolvedValue(undefined),
-    ensureRoomExists: mock().mockResolvedValue(undefined),
-
-    // Common database operations
-    db: {},
-    init: mock().mockResolvedValue(undefined),
-    close: mock().mockResolvedValue(undefined),
-    getAgent: mock().mockResolvedValue(null),
-    getAgents: mock().mockResolvedValue([]),
-    createAgent: mock().mockResolvedValue(true),
-    updateAgent: mock().mockResolvedValue(true),
-    deleteAgent: mock().mockResolvedValue(true),
-    ensureEmbeddingDimension: mock().mockResolvedValue(undefined),
-    getEntityById: mock().mockResolvedValue(null),
-    getEntitiesForRoom: mock().mockResolvedValue([]),
-    createEntity: mock().mockResolvedValue(true),
-    updateEntity: mock().mockResolvedValue(undefined),
-    getComponent: mock().mockResolvedValue(null),
-    getComponents: mock().mockResolvedValue([]),
-    createComponent: mock().mockResolvedValue(true),
-    updateComponent: mock().mockResolvedValue(undefined),
-    deleteComponent: mock().mockResolvedValue(undefined),
-    getMemories: mock().mockImplementation((params) => {
-      // For facts provider tests
-      if (params?.tableName === 'facts' && params?.entityId === 'test-entity-id') {
-        return Promise.resolve([
-          {
-            id: 'memory-1' as UUID,
-            entityId: 'entity-1' as UUID,
-            agentId: 'agent-1' as UUID,
-            roomId: 'room-1' as UUID,
-            content: { text: 'User likes chocolate' },
-            embedding: [0.1, 0.2, 0.3],
-            createdAt: Date.now(),
-          },
-          {
-            id: 'memory-2' as UUID,
-            entityId: 'entity-1' as UUID,
-            agentId: 'agent-1' as UUID,
-            roomId: 'room-1' as UUID,
-            content: { text: 'User dislikes spicy food' },
-            embedding: [0.2, 0.3, 0.4],
-            createdAt: Date.now(),
-          },
-        ]);
-      }
-      return Promise.resolve([]);
-    }),
-    getMemoryById: mock().mockResolvedValue(null),
-    getMemoriesByIds: mock().mockResolvedValue([]),
-
-    // Additional methods commonly used in tests
-    useModel: mock().mockImplementation((modelType, params) => {
-      if (modelType === ModelType.OBJECT_LARGE) {
-        return Promise.resolve({
-          thought: 'I should respond in a friendly way',
-          message: 'Hello there! How can I help you today?',
-        });
-      } else if (modelType === ModelType.TEXT_SMALL) {
-        return Promise.resolve('yes');
-      } else if (modelType === ModelType.TEXT_EMBEDDING) {
-        return Promise.resolve([0.1, 0.2, 0.3, 0.4, 0.5]);
-      }
-      return Promise.resolve({});
-    }),
-    composePrompt: mock().mockReturnValue('Composed prompt'),
-    composeState: mock().mockResolvedValue({ values: {}, data: {} }),
-    createMemory: mock().mockResolvedValue({ id: 'memory-id' }),
-    getRoom: mock().mockResolvedValue({
-      id: 'room-id',
-      name: 'Test Room',
-      worldId: 'test-world-id',
-      serverId: 'test-server-id',
-    }),
-    getRooms: mock().mockResolvedValue([
-      { id: 'room-id', name: 'Test Room', worldId: 'test-world-id', serverId: 'test-server-id' },
-    ]),
-    getWorld: mock().mockResolvedValue({
-      id: 'test-world-id',
-      name: 'Test World',
-      serverId: 'test-server-id',
-      metadata: {
-        roles: {
-          'test-entity-id': 'ADMIN',
-          'test-agent-id': 'OWNER',
-        },
-        settings: [
-          { name: 'setting1', value: 'value1', description: 'Description 1' },
-          { name: 'setting2', value: 'value2', description: 'Description 2' },
-        ],
-      },
-    }),
-    addEmbeddingToMemory: mock().mockResolvedValue({
-      id: 'memory-id',
-      entityId: 'test-entity-id',
-      roomId: 'test-room-id',
-      content: { text: 'Test fact' },
-    }),
-    createRelationship: mock().mockResolvedValue(true),
-    updateRelationship: mock().mockResolvedValue(true),
-    getRelationships: mock().mockResolvedValue([]),
-    addRelationship: mock().mockResolvedValue(true),
-    getTasks: mock().mockResolvedValue([]),
-    getTasksByName: mock().mockResolvedValue([]),
-    createTask: mock().mockResolvedValue({ id: 'task-id' }),
-    updateTasks: mock().mockResolvedValue([]),
-    deleteTasks: mock().mockResolvedValue([]),
-    deleteTask: mock().mockResolvedValue(true),
-    emitEvent: mock().mockResolvedValue(undefined),
-    registerEvent: mock(),
-    getCache: mock().mockResolvedValue(null),
-    setCache: mock().mockResolvedValue(true),
-
-    // Task-related methods needed for TaskService tests
-    registerTaskWorker: mock(),
-    getTaskWorker: mock().mockReturnValue({
-      name: 'test-worker',
-      validate: mock().mockResolvedValue(true),
-      execute: mock().mockResolvedValue({}),
-    }),
+  // Create mock runtime with message-handling specific defaults
+  const mockRuntime = createMockRuntime({
+    getSetting: mock().mockReturnValue('medium'),
     getParticipantUserState: mock().mockResolvedValue('ACTIVE'),
     setParticipantUserState: mock().mockResolvedValue(undefined),
-    updateParticipantUserState: mock().mockResolvedValue(undefined),
-    getUserServerRole: mock().mockResolvedValue('USER'),
-    findEntityByName: mock().mockResolvedValue(null),
-    getMemberRole: mock().mockResolvedValue('USER'),
-
-    // Methods missing in the original implementation
-    searchMemories: mock().mockResolvedValue([
-      {
-        id: 'memory-1' as UUID,
-        entityId: 'entity-1' as UUID,
-        agentId: 'agent-1' as UUID,
-        roomId: 'room-1' as UUID,
-        content: { text: 'User likes chocolate' },
-        embedding: [0.1, 0.2, 0.3],
-        createdAt: Date.now(),
-        similarity: 0.95,
-      },
-    ]),
-    getRoomsForParticipants: mock().mockResolvedValue([
-      { id: 'room-id', name: 'Test Room', worldId: 'test-world-id', serverId: 'test-server-id' },
-    ]),
-    getRoomsForEntity: mock().mockResolvedValue([
-      { id: 'room-id', name: 'Test Room', worldId: 'test-world-id', serverId: 'test-server-id' },
-    ]),
-    searchEntities: mock().mockResolvedValue([
-      { id: 'test-entity-id', names: ['Test Entity'], worldId: 'test-world-id' },
-    ]),
-    searchRooms: mock().mockResolvedValue([
-      { id: 'room-id', name: 'Test Room', worldId: 'test-world-id' },
-    ]),
-    getEntity: mock().mockResolvedValue({
-      id: 'test-entity-id',
-      names: ['Test Entity'],
-      worldId: 'test-world-id',
-      serverId: 'test-server-id',
+    createMemory: mock().mockResolvedValue(true),
+    getRoom: mock().mockResolvedValue({
+      id: 'test-room-id',
+      name: 'Test Room',
     }),
-    getWorldSettings: mock().mockResolvedValue([
-      { name: 'setting1', value: 'value1', description: 'Description 1' },
-      { name: 'setting2', value: 'value2', description: 'Description 2' },
-    ]),
-    findWorldsForOwner: mock().mockResolvedValue([
-      { id: 'test-world-id', name: 'Test World', serverId: 'test-server-id' },
-    ]),
+    deleteMemory: mock().mockResolvedValue(true),
+    getMemoriesByRoomIds: mock().mockResolvedValue([]),
+    ensureWorldExists: mock().mockResolvedValue(undefined),
+    ensureRoomExists: mock().mockResolvedValue(undefined),
+    getMemories: mock().mockResolvedValue([]),
+    emitEvent: mock().mockResolvedValue(undefined),
+    registerEvent: mock(),
+    registerProvider: mock(),
+    registerAction: mock(),
+    startRun: mock().mockReturnValue('test-run-id'),
+    finishRun: mock().mockResolvedValue(undefined),
+    addEmbeddingToMemory: mock().mockResolvedValue(undefined),
+    getConversationLength: mock().mockReturnValue(10),
+    getRoomsForParticipants: mock().mockResolvedValue([]),
+    getEntityById: mock().mockResolvedValue({
+      id: 'test-entity-id',
+      names: ['Test User'],
+      metadata: { userName: 'Test User' },
+    }),
+    composeState: mock().mockResolvedValue({
+      values: {},
+      data: {},
+      text: '',
+      ...stateOverrides,
+    }),
+    useModel: mock().mockResolvedValue('Mock response'),
+    ...runtimeOverrides,
+  });
 
-    // File, PDF, and Image service methods
-    uploadFile: mock().mockResolvedValue({ id: 'file-id', name: 'test.txt' }),
-    getFile: mock().mockResolvedValue({ id: 'file-id', content: 'Test file content' }),
-    listFiles: mock().mockResolvedValue([{ id: 'file-id', name: 'test.txt' }]),
-    deleteFile: mock().mockResolvedValue(true),
-    extractTextFromPDF: mock().mockResolvedValue('Extracted text from PDF'),
-    describeImage: mock().mockResolvedValue('An image description'),
-
-    // Added for recentMessages provider
-    getMemoriesByRoomIds: mock().mockResolvedValue([
-      {
-        id: 'memory-1' as UUID,
-        entityId: 'test-entity-id' as UUID,
-        agentId: 'test-agent-id' as UUID,
-        roomId: 'test-room-id' as UUID,
-        content: {
-          text: 'Hello there!',
-          channelType: ChannelType.GROUP,
-        },
-        createdAt: Date.now() - 1000,
-      },
-      {
-        id: 'memory-2' as UUID,
-        entityId: 'test-agent-id' as UUID,
-        agentId: 'test-agent-id' as UUID,
-        roomId: 'test-room-id' as UUID,
-        content: {
-          text: 'How can I help you?',
-          channelType: ChannelType.GROUP,
-        },
-        createdAt: Date.now(),
-      },
-    ]),
-
-    // Run tracking methods required by IAgentRuntime
-    createRunId: mock().mockReturnValue('test-run-id' as UUID),
-    startRun: mock().mockReturnValue('test-run-id' as UUID),
-    endRun: mock().mockReturnValue(undefined),
-    getCurrentRunId: mock().mockReturnValue('test-run-id' as UUID),
-  };
-
-  // Merge with overrides
-  return { ...mockRuntime, ...overrides };
-}
-
-/**
- * Creates a mock Memory object for testing
- *
- * @param overrides - Optional overrides for the default memory properties
- * @returns A mock memory object
- */
-export function createMockMemory(overrides: Partial<Memory> = {}): Partial<Memory> {
-  return {
-    id: 'test-message-id' as UUID,
-    roomId: 'test-room-id' as UUID,
-    entityId: 'test-entity-id' as UUID,
-    agentId: 'test-agent-id' as UUID,
+  // Create a mock message with defaults
+  const mockMessage = {
+    id: 'test-message-id',
+    roomId: 'test-room-id',
+    entityId: 'test-user-id',
+    agentId: 'test-agent-id',
     content: {
       text: 'Test message',
-      channelType: ChannelType.GROUP,
-    } as Content,
+      source: 'test',
+    },
     createdAt: Date.now(),
-    ...overrides,
+    ...messageOverrides,
   };
-}
 
-/**
- * Creates a mock State object for testing
- *
- * @param overrides - Optional overrides for the default state properties
- * @returns A mock state object
- */
-export function createMockState(overrides: Partial<State> = {}): Partial<State> {
-  return {
-    values: {
-      agentName: 'Test Agent',
-      recentMessages: 'User: Test message',
-      ...overrides.values,
-    },
+  // Create a mock state with defaults
+  const mockState = createMockState({
+    ...stateOverrides,
     data: {
-      room: {
-        id: 'test-room-id',
-        type: ChannelType.GROUP,
-        worldId: 'test-world-id',
-        serverId: 'test-server-id',
-      },
-      ...overrides.data,
+      currentParticipantState: 'ACTIVE',
+      ...stateOverrides.data,
     },
-    ...overrides,
-  };
-}
+  }) as State;
 
-/**
- * Creates a mock Service object for testing
- *
- * @param overrides - Optional overrides for the default service properties
- * @returns A mock service object
- */
-export function createMockService(overrides: Partial<Record<string, any>> = {}): any {
-  return {
-    name: 'mock-service',
-    type: 'mock',
-    execute: mock().mockResolvedValue({}),
-    init: mock().mockResolvedValue({}),
-    ...overrides,
-  };
-}
-
-/**
- * Creates a standardized setup for action tests with consistent mock objects
- * This replaces the setupActionTest function in actions.test.ts
- *
- * @param overrides - Optional overrides for default mock implementations
- * @returns An object containing mockRuntime, mockMessage, mockState, and callbackFn
- */
-export function setupActionTest(options?: {
-  runtimeOverrides?: Partial<MockRuntime>;
-  messageOverrides?: Partial<Memory>;
-  stateOverrides?: Partial<State>;
-}) {
-  const mockRuntime = createMockRuntime(options?.runtimeOverrides);
-  const mockMessage = createMockMemory(options?.messageOverrides);
-  const mockState = createMockState(options?.stateOverrides);
-  const callbackFn = mock().mockResolvedValue([] as Memory[]); // Explicitly type the return value
+  // Create a mock callback function
+  const callbackFn = mock().mockResolvedValue([]);
 
   return {
-    mockRuntime,
+    mockRuntime: mockRuntime as unknown as IAgentRuntime,
     mockMessage,
     mockState,
     callbackFn,
   };
 }
-
-/**
- * Type definition for the mock runtime to ensure type safety in tests
- */
-export type MockRuntime = Partial<IAgentRuntime & IDatabaseAdapter> & {
-  agentId: UUID;
-  character: Character;
-  providers: Provider[];
-  actions: Action[];
-  evaluators: Evaluator[];
-  plugins: Plugin[];
-  services: Map<string, Service>;
-  events: Map<string, ((params: any) => Promise<void>)[]>;
-  routes: Route[];
-
-  // Additional properties and methods commonly used in tests
-  useModel: ReturnType<typeof mock>;
-  composePrompt: ReturnType<typeof mock>;
-  composeState: ReturnType<typeof mock>;
-  createMemory: ReturnType<typeof mock>;
-  getRoom: ReturnType<typeof mock>;
-  getRooms: ReturnType<typeof mock>;
-  getWorld: ReturnType<typeof mock>;
-  addEmbeddingToMemory: ReturnType<typeof mock>;
-  createRelationship: ReturnType<typeof mock>;
-  updateRelationship: ReturnType<typeof mock>;
-  getRelationships: ReturnType<typeof mock>;
-  addRelationship: ReturnType<typeof mock>;
-  getTasks: ReturnType<typeof mock>;
-  getTasksByName: ReturnType<typeof mock>;
-  createTask: ReturnType<typeof mock>;
-  updateTasks: ReturnType<typeof mock>;
-  deleteTasks: ReturnType<typeof mock>;
-  deleteTask: ReturnType<typeof mock>;
-  emitEvent: ReturnType<typeof mock>;
-  registerEvent: ReturnType<typeof mock>;
-  getCache: ReturnType<typeof mock>;
-  setCache: ReturnType<typeof mock>;
-
-  // Knowledge methods
-  getKnowledge: ReturnType<typeof mock>;
-  addKnowledge: ReturnType<typeof mock>;
-
-  // Task-related methods
-  registerTaskWorker: ReturnType<typeof mock>;
-  getTaskWorker: ReturnType<typeof mock>;
-
-  // Additional methods used in action tests
-  updateParticipantUserState: ReturnType<typeof mock>;
-  getUserServerRole: ReturnType<typeof mock>;
-  findEntityByName: ReturnType<typeof mock>;
-  getParticipantUserState: ReturnType<typeof mock>;
-  setParticipantUserState: ReturnType<typeof mock>;
-  getMemberRole: ReturnType<typeof mock>;
-
-  // Methods that were missing from the original implementation
-  searchMemories: ReturnType<typeof mock>;
-  getRoomsForParticipants: ReturnType<typeof mock>;
-  getRoomsForEntity: ReturnType<typeof mock>;
-  searchEntities: ReturnType<typeof mock>;
-  searchRooms: ReturnType<typeof mock>;
-  getEntity: ReturnType<typeof mock>;
-  getWorldSettings: ReturnType<typeof mock>;
-  findWorldsForOwner: ReturnType<typeof mock>;
-
-  // File, PDF, and Image service methods
-  uploadFile: ReturnType<typeof mock>;
-  getFile: ReturnType<typeof mock>;
-  listFiles: ReturnType<typeof mock>;
-  deleteFile: ReturnType<typeof mock>;
-  extractTextFromPDF: ReturnType<typeof mock>;
-  describeImage: ReturnType<typeof mock>;
-
-  // Added for recentMessages provider
-  getMemoriesByRoomIds: ReturnType<typeof mock>;
-};

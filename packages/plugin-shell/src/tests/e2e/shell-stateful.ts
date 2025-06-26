@@ -15,7 +15,7 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing CWD persistence across commands...');
 
-        const shellService = runtime.getService<ShellService>('SHELL' as any);
+        const shellService = runtime.getService<ShellService>('SHELL');
         if (!shellService) {
           throw new Error('Shell service not available');
         }
@@ -82,7 +82,7 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing complex directory navigation...');
 
-        const shellService = runtime.getService<ShellService>('SHELL' as any);
+        const shellService = runtime.getService<ShellService>('SHELL');
         if (!shellService) {
           throw new Error('Shell service not available');
         }
@@ -191,7 +191,7 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing file operations after directory change...');
 
-        const shellService = runtime.getService<ShellService>('SHELL' as any);
+        const shellService = runtime.getService<ShellService>('SHELL');
         if (!shellService) {
           throw new Error('Shell service not available');
         }
@@ -263,7 +263,7 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing file operation tracking...');
 
-        const shellService = runtime.getService<ShellService>('SHELL' as any);
+        const shellService = runtime.getService<ShellService>('SHELL');
         if (!shellService) {
           throw new Error('Shell service not available');
         }

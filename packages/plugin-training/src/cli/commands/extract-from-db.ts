@@ -66,6 +66,8 @@ export function extractFromDbCommand(program: Command) {
         // Add to dataset
         for (const example of filteredExamples) {
           await builder.addExample({
+            input: example.request,
+            output: example.response,
             request: example.request,
             response: example.response,
             thinking: example.thinking,

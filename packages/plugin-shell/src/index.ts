@@ -14,7 +14,11 @@ import shellSecurityE2ETests from './tests/e2e/shell-security';
 export const shellPlugin: Plugin = {
   name: 'plugin-shell',
   description: 'Provides shell access to the agent, allowing it to run commands and view history.',
-  actions: [runShellCommandAction, clearShellHistoryAction, killAutonomousAction],
+  actions: [
+    runShellCommandAction, // Has enabled: false property
+    killAutonomousAction, // Has enabled: false property
+    clearShellHistoryAction // Has enabled: false property
+  ],
   providers: [shellProvider],
   services: [ShellService],
   tests: [shellBasicE2ETests, shellStatefulE2ETests, shellAdvancedE2ETests, shellSecurityE2ETests],

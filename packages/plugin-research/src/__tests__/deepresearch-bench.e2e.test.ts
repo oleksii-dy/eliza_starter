@@ -29,7 +29,7 @@ export class DeepResearchBenchSuite implements TestSuite {
         console.log('='.repeat(60));
 
         // Get benchmark parameters from environment
-        const limit = parseInt(process.env.BENCH_LIMIT || '5');
+        const limit = parseInt(process.env.BENCH_LIMIT || '5', 10);
         const lang = process.env.BENCH_LANG || 'en';
 
         // Check if data file exists
@@ -44,7 +44,9 @@ export class DeepResearchBenchSuite implements TestSuite {
 
         if (!dataExists) {
           console.error(`❌ Benchmark data not found at: ${dataPath}`);
-          console.log('Please ensure the deep_research_bench/data directory is populated');
+          console.log(
+            'Please ensure the deep_research_bench/data directory is populated'
+          );
           throw new Error('Benchmark data not found');
         }
 
@@ -69,7 +71,9 @@ export class DeepResearchBenchSuite implements TestSuite {
         await fs.mkdir(outputDir, { recursive: true });
 
         // Get research service
-        const researchService = runtime.getService('research') as ResearchService;
+        const researchService = runtime.getService(
+          'research'
+        ) as ResearchService;
         if (!researchService) {
           throw new Error('Research service not available');
         }
@@ -84,11 +88,14 @@ export class DeepResearchBenchSuite implements TestSuite {
             const startTime = Date.now();
 
             // Create research project
-            const project = await researchService.createResearchProject(query.prompt, {
-              researchDepth: 'phd-level' as ResearchDepth,
-              maxSearchResults: 30,
-              evaluationEnabled: true,
-            });
+            const project = await researchService.createResearchProject(
+              query.prompt,
+              {
+                researchDepth: 'phd-level' as ResearchDepth,
+                maxSearchResults: 30,
+                evaluationEnabled: true,
+              }
+            );
 
             console.log(`✅ Project created: ${project.id}`);
 
@@ -107,7 +114,9 @@ export class DeepResearchBenchSuite implements TestSuite {
 
               if (updated.status === 'completed') {
                 const duration = Date.now() - startTime;
-                console.log(`✅ Research completed in ${Math.round(duration / 1000)}s`);
+                console.log(
+                  `✅ Research completed in ${Math.round(duration / 1000)}s`
+                );
 
                 // Save report in benchmark format
                 let fullReport = '';
@@ -123,12 +132,18 @@ export class DeepResearchBenchSuite implements TestSuite {
 
                   for (const section of updated.report.sections || []) {
                     // Handle different section formats
-                    const title = (section as any).title || (section as any).heading || 'Section';
+                    const title =
+                      (section as any).title ||
+                      (section as any).heading ||
+                      'Section';
                     fullReport += `# ${title}\n\n${section.content}\n\n`;
                   }
 
                   // Add bibliography if available
-                  if (updated.report?.bibliography && updated.report.bibliography.length > 0) {
+                  if (
+                    updated.report?.bibliography &&
+                    updated.report.bibliography.length > 0
+                  ) {
                     fullReport += '\n# References\n\n';
                     for (const entry of updated.report.bibliography) {
                       fullReport += `- ${entry.citation}\n`;
@@ -157,10 +172,14 @@ export class DeepResearchBenchSuite implements TestSuite {
 
               // Show progress
               if (elapsed % 30000 === 0 && elapsed > 0) {
-                console.log(`⏳ Still processing... (${elapsed / 1000}s elapsed)`);
+                console.log(
+                  `⏳ Still processing... (${elapsed / 1000}s elapsed)`
+                );
               }
 
-              await new Promise((resolve) => setTimeout(resolve, checkInterval));
+              await new Promise((resolve) =>
+                setTimeout(resolve, checkInterval)
+              );
               elapsed += checkInterval;
             }
 
@@ -174,7 +193,9 @@ export class DeepResearchBenchSuite implements TestSuite {
 
         console.log('\n✅ Benchmark run complete!');
         console.log('\nTo evaluate results, run:');
-        console.log(`python deep_research_bench/deepresearch_bench_race.py eliza --limit ${limit}`);
+        console.log(
+          `python deep_research_bench/deepresearch_bench_race.py eliza --limit ${limit}`
+        );
       },
     },
   ];

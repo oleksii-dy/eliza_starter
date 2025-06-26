@@ -1,4 +1,4 @@
-import { UUID, Memory } from '@elizaos/core';
+import { UUID, Memory as _Memory } from '@elizaos/core';
 
 /**
  * Supported payment methods

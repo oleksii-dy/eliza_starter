@@ -25,9 +25,9 @@ export const installPluginFromRegistryAction: Action = {
     options?: any,
     callback?: HandlerCallback
   ): Promise<ActionResult> {
-    const pluginManagerService = runtime.getService(
+    const pluginManagerService = runtime.getService<PluginManagerService>(
       PluginManagerServiceType.PLUGIN_MANAGER
-    ) as PluginManagerService;
+    );
 
     if (!pluginManagerService) {
       if (callback) {
@@ -117,9 +117,9 @@ export const installPluginFromRegistryAction: Action = {
 
   async validate(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> {
     // Simply check if the plugin manager service is available
-    const pluginManagerService = runtime.getService(
+    const pluginManagerService = runtime.getService<PluginManagerService>(
       PluginManagerServiceType.PLUGIN_MANAGER
-    ) as PluginManagerService;
+    );
     return !!pluginManagerService;
   },
 };

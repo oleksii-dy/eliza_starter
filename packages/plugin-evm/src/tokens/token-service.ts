@@ -1,11 +1,11 @@
 import { IAgentRuntime, logger } from '@elizaos/core';
-import type { Address, Hex } from 'viem';
 import {
+  type Address,
+  type Hex,
   formatUnits,
   parseUnits,
   getContract,
   encodeFunctionData,
-  decodeFunctionResult,
   erc20Abi,
   erc721Abi,
   erc1155Abi,
@@ -160,7 +160,7 @@ export class TokenService {
     } catch (error) {
       logger.error(`Error getting token metadata for ${tokenAddress}:`, error);
       throw new Error(
-        `Failed to get token metadata: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to get token metadata: ${error instanceof Error ? error.message : error}`
       );
     }
   }
@@ -171,7 +171,7 @@ export class TokenService {
   async getTokenBalance(
     tokenAddress: Address,
     walletAddress: Address,
-    chainId: number,
+    chainId: number
   ): Promise<TokenBalance> {
     const cacheKey = `${chainId}-${tokenAddress}-${walletAddress}`;
 
@@ -226,7 +226,7 @@ export class TokenService {
     } catch (error) {
       logger.error('Error getting token balance:', error);
       throw new Error(
-        `Failed to get token balance: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to get token balance: ${error instanceof Error ? error.message : error}`
       );
     }
   }
@@ -237,7 +237,7 @@ export class TokenService {
   async getAllTokenBalances(
     walletAddress: Address,
     chainId: number,
-    tokenAddresses?: Address[],
+    tokenAddresses?: Address[]
   ): Promise<TokenBalance[]> {
     try {
       // If no specific tokens provided, get from database
@@ -251,8 +251,8 @@ export class TokenService {
           this.getTokenBalance(tokenAddress, walletAddress, chainId).catch((err) => {
             logger.warn(`Failed to get balance for ${tokenAddress}:`, err);
             return null;
-          }),
-        ),
+          })
+        )
       );
 
       return balances.filter((b): b is TokenBalance => b !== null && b.balance > 0n);
@@ -292,7 +292,7 @@ export class TokenService {
     } catch (error) {
       logger.error('Error building transfer data:', error);
       throw new Error(
-        `Failed to build transfer: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to build transfer: ${error instanceof Error ? error.message : error}`
       );
     }
   }
@@ -327,7 +327,7 @@ export class TokenService {
     } catch (error) {
       logger.error('Error building approval data:', error);
       throw new Error(
-        `Failed to build approval: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to build approval: ${error instanceof Error ? error.message : error}`
       );
     }
   }
@@ -339,7 +339,7 @@ export class TokenService {
     tokenAddress: Address,
     owner: Address,
     spender: Address,
-    chainId: number,
+    chainId: number
   ): Promise<bigint> {
     try {
       const metadata = await this.getTokenMetadata(tokenAddress, chainId);
@@ -382,7 +382,7 @@ export class TokenService {
   async getNFTMetadata(
     contractAddress: Address,
     tokenId: bigint,
-    chainId: number,
+    chainId: number
   ): Promise<NFTMetadata> {
     try {
       const client = this.chainService.getPublicClient(chainId);
@@ -437,7 +437,7 @@ export class TokenService {
     } catch (error) {
       logger.error('Error getting NFT metadata:', error);
       throw new Error(
-        `Failed to get NFT metadata: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to get NFT metadata: ${error instanceof Error ? error.message : error}`
       );
     }
   }
@@ -447,7 +447,7 @@ export class TokenService {
    */
   private async detectTokenType(
     tokenAddress: Address,
-    chainId: number,
+    chainId: number
   ): Promise<'ERC20' | 'ERC721' | 'ERC1155'> {
     const client = this.chainService.getPublicClient(chainId);
 
@@ -502,13 +502,15 @@ export class TokenService {
   /**
    * Save token metadata to database
    */
-  private async saveTokenToDatabase(metadata: TokenMetadata): Promise<void> {
+  private saveTokenToDatabase(metadata: TokenMetadata): Promise<void> {
     try {
       // This would save to the tokens table
       // Implementation depends on database schema
       logger.debug(`Saved token ${metadata.symbol} to database`);
+      return Promise.resolve();
     } catch (error) {
       logger.error('Error saving token to database:', error);
+      return Promise.reject(error);
     }
   }
 

@@ -1,21 +1,21 @@
 import { elizaLogger as logger } from '@elizaos/core';
 import Anthropic from '@anthropic-ai/sdk';
-import * as ts from 'typescript';
+import * as _ts from 'typescript';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { anthropicRetryConfig, withRetry } from '../utils/retry-helper';
+import {} from '../utils/retry-helper';
 import type { PluginProject } from '../types/plugin-project';
 
-const execAsync = promisify(exec);
+const _execAsync = promisify(exec);
 
 /**
  * Analysis result for code issues
  */
 export interface ErrorAnalysis {
   errorType: 'typescript' | 'eslint' | 'build' | 'test' | 'runtime';
-  fileName: string;
+  _fileName: string;
   lineNumber?: number;
   errorMessage: string;
   suggestedFix?: string;
@@ -62,9 +62,9 @@ export class CodeHealingManager {
     return 'Provides code healing capabilities to fix TypeScript, ESLint, and build errors';
   }
 
-  async fixTypeScriptError(code: string, errorMessage: string, fileName: string): Promise<string> {
+  async fixTypeScriptError(_code: string, errorMessage: string, _fileName: string): Promise<string> {
     // Analyze the error and apply appropriate fix
-    let fixedCode = code;
+    let fixedCode = _code;
 
     // Fix string assigned to number
     if (errorMessage.includes("Type 'string' is not assignable to type 'number'")) {
@@ -81,18 +81,18 @@ export class CodeHealingManager {
 
     // Fix missing return types
     if (errorMessage.includes('Missing return type')) {
-      fixedCode = fixedCode.replace(/function\s+(\w+)\s*\([^)]*\)\s*{/g, (match, name) => {
+      fixedCode = fixedCode.replace(/function\s+(\w+)\s*\([^)]*\)\s*{/g, (_match, name) => {
         // Simple heuristic: look at what's being returned
-        const returnMatch = code.match(
+        const returnMatch = _code.match(
           new RegExp(`function\\s+${name}[^{]+{[^}]+return\\s+([^;]+)`)
         );
         if (returnMatch) {
           const returnValue = returnMatch[1].trim();
-          if (/^\d+$/.test(returnValue)) {return match.replace('{', ': number {');}
-          if (/^["']/.test(returnValue)) {return match.replace('{', ': string {');}
-          if (/^true|false$/.test(returnValue)) {return match.replace('{', ': boolean {');}
+          if (/^\d+$/.test(returnValue)) {return _match.replace('{', ': number {');}
+          if (/^["']/.test(returnValue)) {return _match.replace('{', ': string {');}
+          if (/^true|false$/.test(returnValue)) {return _match.replace('{', ': boolean {');}
         }
-        return match.replace('{', ': unknown {');
+        return _match.replace('{', ': unknown {');
       });
     }
 
@@ -112,24 +112,24 @@ export class CodeHealingManager {
     // Fix undefined variables
     if (errorMessage.includes('Cannot find name')) {
       // Handle both quoted and unquoted variable names
-      const patterns = [
+      const _patterns = [
         /Cannot find name\s+'(\w+)'/,
         /Cannot find name\s+"(\w+)"/,
         /Cannot find name\s+(\w+)/,
       ];
 
       let varName: string | null = null;
-      for (const pattern of patterns) {
-        const match = errorMessage.match(pattern);
-        if (match) {
-          varName = match[1];
+      for (const pattern of _patterns) {
+        const _match = errorMessage.match(pattern);
+        if (_match) {
+          varName = _match[1];
           break;
         }
       }
 
       if (!varName) {
         // Try to extract from the code directly
-        const undefinedMatch = code.match(/\b(undefinedVariable|someUndefinedFunction)\b/);
+        const undefinedMatch = _code.match(/\b(undefinedVariable|someUndefinedFunction)\b/);
         if (undefinedMatch) {
           varName = undefinedMatch[1];
         }
@@ -155,7 +155,7 @@ export class CodeHealingManager {
     }
 
     // Fix array type mismatches
-    if (errorMessage.includes('is not assignable to type') && code.includes('[]')) {
+    if (errorMessage.includes('is not assignable to type') && _code.includes('[]')) {
       // Fix numbers array
       fixedCode = fixedCode.replace(
         /const\s+numbers:\s*number\[\]\s*=\s*\[[^\]]*'three'[^\]]*\]/g,
@@ -167,7 +167,7 @@ export class CodeHealingManager {
         // Find and replace any numeric literals in string arrays
         fixedCode = fixedCode.replace(
           /const\s+items:\s*string\[\]\s*=\s*\[([^\]]+)\]/g,
-          (match, content) => {
+          (_match, content) => {
             // Replace bare numbers with quoted numbers
             const fixedContent = content.replace(/\b(\d+)\b/g, "'$1'");
             return `const items: string[] = [${fixedContent}]`;
@@ -181,15 +181,15 @@ export class CodeHealingManager {
       // Add default values for missing properties
       fixedCode = fixedCode.replace(
         /const\s+config:\s*Config\s*=\s*\{([^}]+)\}/g,
-        (match, content) => {
-          let updatedContent = content;
+        (_match, content) => {
+          let _updatedContent = content;
           if (!content.includes('timeout')) {
-            updatedContent += ',\n  timeout: 5000';
+            _updatedContent += ',\n  timeout: 5000';
           }
           if (!content.includes('retries')) {
-            updatedContent += ',\n  retries: 3';
+            _updatedContent += ',\n  retries: 3';
           }
-          return `const config: Config = {${updatedContent}\n}`;
+          return `const config: Config = {${_updatedContent}\n}`;
         }
       );
     }
@@ -208,8 +208,8 @@ export class CodeHealingManager {
     return fixedCode;
   }
 
-  async fixESLintError(code: string, errorMessage: string, fileName: string): Promise<string> {
-    let fixedCode = code;
+  async fixESLintError(_code: string, errorMessage: string, _fileName: string): Promise<string> {
+    let fixedCode = _code;
 
     // Fix unused variables
     if (errorMessage.includes('is assigned a value but never used')) {
@@ -289,8 +289,8 @@ export class CodeHealingManager {
     return fixedCode;
   }
 
-  async fixBuildError(code: string, errorMessage: string, fileName: string): Promise<string> {
-    let fixedCode = code;
+  async fixBuildError(_code: string, errorMessage: string, _fileName: string): Promise<string> {
+    let fixedCode = _code;
 
     // Fix module import errors
     if (errorMessage.includes('Cannot find module')) {
@@ -308,7 +308,7 @@ export class CodeHealingManager {
     // Fix circular dependencies
     if (errorMessage.includes('Circular')) {
       // Remove self-referential exports
-      const fileBaseName = path.basename(fileName, path.extname(fileName));
+      const fileBaseName = path.basename(_fileName, path.extname(_fileName));
       fixedCode = fixedCode.replace(
         new RegExp(`^export\\s+\\{[^}]+\\}\\s+from\\s+['"]\\./${fileBaseName}['"];?\\s*$`, 'gm'),
         '// Removed circular export'
@@ -341,14 +341,14 @@ export class CodeHealingManager {
         ];
 
         for (const pattern of exportPatterns) {
-          const match = line.match(pattern);
-          if (match) {
-            const name = match[1];
-            if (exportedNames.has(name)) {
+          const _match = line.match(pattern);
+          if (_match) {
+            const _name = _match[1];
+            if (exportedNames.has(_name)) {
               // This is a duplicate - comment it out
               lines[i] = `// Removed duplicate export: ${line}`;
             } else {
-              exportedNames.set(name, i);
+              exportedNames.set(_name, i);
             }
             break;
           }
@@ -361,22 +361,22 @@ export class CodeHealingManager {
     return fixedCode;
   }
 
-  async healTypeScriptErrors(project: PluginProject): Promise<void> {
-    const projectPath = project.localPath;
+  async healTypeScriptErrors(_project: PluginProject): Promise<void> {
+    const projectPath = _project.localPath;
     if (!projectPath) {return;}
 
     // Run tsc to get errors
     try {
-      await execAsync('npx tsc --noEmit', { cwd: projectPath });
+      await _execAsync('npx tsc --noEmit', { cwd: projectPath });
     } catch (error: any) {
       const errorOutput = error.stdout || error.message;
 
       // Parse TypeScript errors
       const errorLines = errorOutput.split('\n');
       for (const line of errorLines) {
-        const match = line.match(/(.+)\((\d+),(\d+)\):\s+error\s+TS\d+:\s+(.+)/);
-        if (match) {
-          const [, filePath, , , errorMessage] = match;
+        const _match = line.match(/(.+)\((\d+),(\d+)\):\s+error\s+TS\d+:\s+(.+)/);
+        if (_match) {
+          const [, filePath, , , errorMessage] = _match;
           const fullPath = path.resolve(projectPath, filePath);
 
           if (await fs.pathExists(fullPath)) {
@@ -389,19 +389,19 @@ export class CodeHealingManager {
     }
   }
 
-  async healESLintErrors(project: PluginProject): Promise<void> {
-    const projectPath = project.localPath;
+  async healESLintErrors(_project: PluginProject): Promise<void> {
+    const projectPath = _project.localPath;
     if (!projectPath) {return;}
 
     // Run eslint to get errors
     try {
-      await execAsync('npx eslint src/**/*.ts --format json', { cwd: projectPath });
+      await _execAsync('npx eslint src/**/*.ts --format json', { cwd: projectPath });
     } catch (error: any) {
-      const output = error.stdout;
-      if (output) {
+      const _output = error.stdout;
+      if (_output) {
         try {
-          const results = JSON.parse(output);
-          for (const result of results) {
+          const _results = JSON.parse(_output);
+          for (const result of _results) {
             if (result.messages && result.messages.length > 0) {
               const filePath = result.filePath;
               const content = await fs.readFile(filePath, 'utf-8');
@@ -414,7 +414,7 @@ export class CodeHealingManager {
               await fs.writeFile(filePath, fixed);
             }
           }
-        } catch (parseError) {
+        } catch (_parseError) {
           // Handle non-JSON output
           logger.warn('Could not parse ESLint output as JSON');
         }

@@ -1,4 +1,4 @@
-import { describe, it, expect, mock, beforeAll, afterAll } from 'bun:test';
+import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import plugin from '../src/plugin';
 import type { IAgentRuntime, Memory, State, Provider } from '@elizaos/core';
 import { logger } from '@elizaos/core';
@@ -9,16 +9,28 @@ import teeStarterPlugin from '../src/plugin';
 // Setup environment variables
 dotenv.config();
 
+// Store original logger methods
+let originalLoggerMethods: any = {};
+
 // Set up logging to capture issues
 beforeAll(() => {
-  mock.spyOn(logger, 'info');
-  mock.spyOn(logger, 'error');
-  mock.spyOn(logger, 'warn');
-  mock.spyOn(logger, 'debug');
+  originalLoggerMethods = {
+    info: logger.info,
+    error: logger.error,
+    warn: logger.warn,
+    debug: logger.debug
+  };
+  
+  // Mock logger methods to prevent test output noise
+  logger.info = () => {};
+  logger.error = () => {};
+  logger.warn = () => {};
+  logger.debug = () => {};
 });
 
 afterAll(() => {
-  // No global restore needed in bun:test;
+  // Restore original logger methods
+  Object.assign(logger, originalLoggerMethods);
 });
 
 // Helper function to document test results

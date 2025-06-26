@@ -1,3 +1,0 @@
-  - PGLite WebAssembly Runtime Error: RuntimeError: Aborted() during WebAssembly module initialization in test environment
-  - Impact: Only affects PGLite tests in development/testing environment, does NOT affect production functionality
-  - Root Cause: WebAssembly memory management conflicts in test runner environment

@@ -181,7 +181,7 @@ export class Curve {
   hermite(t: number, keyframes: Keyframe[]) {
     const n = keyframes.length;
 
-    const [lo, hi] = this.getClosest(t);
+    const [lo, _hi] = this.getClosest(t);
 
     const i0 = lo;
     let i1 = i0 + 1;

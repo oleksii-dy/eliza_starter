@@ -1,12 +1,12 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { SocketIOManager } from '@/lib/socketio-manager';
-import type {
-  MessageBroadcastData,
-  MessageCompleteData,
-  ControlMessageData,
-  MessageDeletedData,
-  ChannelClearedData,
-  ChannelDeletedData,
+import {
+  SocketIOManager,
+  type MessageBroadcastData,
+  type MessageCompleteData,
+  type ControlMessageData,
+  type MessageDeletedData,
+  type ChannelClearedData,
+  type ChannelDeletedData,
 } from '@/lib/socketio-manager';
 import { UUID, Agent, ChannelType } from '@elizaos/core';
 import type { UiMessage } from './use-query-hooks';
@@ -263,6 +263,7 @@ export function useSocketChat({
     function detachSubscriptions(subscriptions: Array<{ detach: () => void } | undefined>) {
       subscriptions.forEach((sub) => sub?.detach());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channelId, currentUserId, socketIOManager]);
 
   return {

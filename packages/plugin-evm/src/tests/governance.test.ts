@@ -1,7 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
-import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
-import type { Account, Chain, Address } from 'viem';
-import { parseEther, encodeFunctionData, parseAbi } from 'viem';
+import { generatePrivateKey, privateKeyToAccount as _privateKeyToAccount } from 'viem/accounts';
+import {
+  type Account as _Account,
+  type Chain as _Chain,
+  type Address,
+  parseEther,
+  encodeFunctionData,
+  parseAbi,
+} from 'viem';
 
 import { WalletProvider } from '../providers/wallet';
 import { VoteAction } from '../actions/gov-vote';

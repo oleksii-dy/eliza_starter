@@ -1,14 +1,14 @@
 import { System } from './System';
 import type { World } from '../World';
 import type { Entity } from '../entities/Entity';
-import { Vector3 } from 'three';
+import { THREE } from '../extras/three';
 
 interface SpatialCell {
   entities: Set<Entity>;
 }
 
 interface SpatialQuery {
-  position: Vector3;
+  position: THREE.Vector3;
   radius: number;
   filter?: (entity: Entity) => boolean;
   maxResults?: number;
@@ -195,7 +195,10 @@ export class SpatialIndex extends System {
   }
 
   // Get cell coordinates from position
-  private getCellCoords(position: Vector3): { x: number; y: number; z: number } {
+  private getCellCoords(position: THREE.Vector3): { x: number; y: number; z: number } {
+    if (!position) {
+      return { x: 0, y: 0, z: 0 };
+    }
     return {
       x: Math.floor(position.x / this.cellSize),
       y: Math.floor(position.y / this.cellSize),
@@ -204,13 +207,13 @@ export class SpatialIndex extends System {
   }
 
   // Get all cell keys that an entity at position should be in
-  private getCellKeysForPosition(position: Vector3): string[] {
+  private getCellKeysForPosition(position: THREE.Vector3): string[] {
     const coords = this.getCellCoords(position);
     return [this.getCellKey(coords.x, coords.y, coords.z)];
   }
 
   // Get all cells within radius of position
-  private getCellsInRadius(position: Vector3, radius: number): string[] {
+  private getCellsInRadius(position: THREE.Vector3, radius: number): string[] {
     const cells: string[] = [];
     const cellRadius = Math.ceil(radius / this.cellSize);
     const centerCoords = this.getCellCoords(position);
@@ -232,9 +235,9 @@ export class SpatialIndex extends System {
 
   // Debug visualization
   getDebugInfo(): { cellCount: number; entityCount: number; cellSize: number } {
-    let entityCount = 0;
+    let _entityCount = 0;
     for (const cell of this.grid.values()) {
-      entityCount += cell.entities.size;
+      _entityCount += cell.entities.size;
     }
 
     return {

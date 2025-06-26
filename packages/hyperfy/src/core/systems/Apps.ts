@@ -2,7 +2,7 @@ import * as moment from 'moment';
 import type { Entity, World } from '../../types/index.js';
 import { ControlPriorities } from '../extras/ControlPriorities.js';
 import { Layers } from '../extras/Layers.js';
-import * as THREE from '../extras/three.js';
+import { THREE } from '../extras/three.js';
 import { warn } from '../extras/warn.js';
 import { getRef } from '../nodes/Node.js';
 import { System } from './System.js';
@@ -101,7 +101,9 @@ export class Apps extends System {
     this.worldMethods = {
       add(entity: Entity, pNode: any): void {
         const node = getRef(pNode);
-        if (!node) {return;}
+        if (!node) {
+          return;
+        }
         if (node.parent) {
           node.parent.remove(node);
         }
@@ -110,17 +112,27 @@ export class Apps extends System {
       },
       remove(entity: Entity, pNode: any): void {
         const node = getRef(pNode);
-        if (!node) {return;}
-        if (node.parent) {return;} // its not in world
-        if (!(entity as any).worldNodes?.has(node)) {return
-        ;}(entity as any).worldNodes.delete(node);
+        if (!node) {
+          return;
+        }
+        if (node.parent) {
+          return;
+        } // its not in world
+        if (!(entity as any).worldNodes?.has(node)) {
+          return;
+        }
+        ;(entity as any).worldNodes.delete(node);
         node.deactivate();
       },
       attach(entity: Entity, pNode: any): void {
         const node = getRef(pNode);
-        if (!node) {return;}
+        if (!node) {
+          return;
+        }
         const parent = node.parent;
-        if (!parent) {return;}
+        if (!parent) {
+          return;
+        }
         const finalMatrix = new THREE.Matrix4();
         finalMatrix.copy(node.matrix);
         let currentParent = node.parent;
@@ -151,12 +163,16 @@ export class Apps extends System {
         return (world as any).network?.getTime() || 0;
       },
       getTimestamp(_entity: Entity, format?: string): string {
-        if (!format) {return moment.default().toISOString();}
+        if (!format) {
+          return moment.default().toISOString();
+        }
         return moment.default().format(format);
       },
       chat(_entity: Entity, msg: any, broadcast?: boolean): void {
-        if (!msg) {return
-        ;}(world as any).chat?.add(msg, broadcast);
+        if (!msg) {
+          return;
+        }
+        ;(world as any).chat?.add(msg, broadcast);
       },
       getPlayer(entity: Entity, playerId: string): any {
         return (entity as any).getPlayerProxy?.(playerId);
@@ -173,7 +189,9 @@ export class Apps extends System {
       createLayerMask(_entity: Entity, ...groups: string[]): number {
         let mask = 0;
         for (const group of groups) {
-          if (!(Layers as any)[group]) {throw new Error(`[createLayerMask] invalid group: ${group}`);}
+          if (!(Layers as any)[group]) {
+            throw new Error(`[createLayerMask] invalid group: ${group}`);
+          }
           mask |= (Layers as any)[group].group;
         }
         return mask;
@@ -185,8 +203,12 @@ export class Apps extends System {
         maxDistance?: number,
         layerMask?: number
       ): RaycastHit | null {
-        if (!origin?.isVector3) {throw new Error('[raycast] origin must be Vector3');}
-        if (!direction?.isVector3) {throw new Error('[raycast] direction must be Vector3');}
+        if (!(origin instanceof THREE.Vector3)) {
+          throw new Error('[raycast] origin must be Vector3');
+        }
+        if (!(direction instanceof THREE.Vector3)) {
+          throw new Error('[raycast] direction must be Vector3');
+        }
         if (maxDistance !== undefined && maxDistance !== null && !isNumber(maxDistance)) {
           throw new Error('[raycast] maxDistance must be number');
         }
@@ -194,7 +216,9 @@ export class Apps extends System {
           throw new Error('[raycast] layerMask must be number');
         }
         const hit = (world as any).physics?.raycast(origin, direction, maxDistance, layerMask);
-        if (!hit) {return null;}
+        if (!hit) {
+          return null;
+        }
         if (!self.raycastHit) {
           self.raycastHit = {
             point: new THREE.Vector3(),
@@ -257,12 +281,18 @@ export class Apps extends System {
               return reject(new Error(`cannot load type: ${type}`));
             }
             let glb = (world as any).loader?.get(type, url);
-            if (!glb) {glb = await (world as any).loader?.load(type, url);}
-            if (hook?.dead) {return;}
+            if (!glb) {
+              glb = await (world as any).loader?.load(type, url);
+            }
+            if (hook?.dead) {
+              return;
+            }
             const root = glb.toNodes();
             resolve(type === 'avatar' ? root.children[0] : root);
           } catch (err) {
-            if (hook?.dead) {return;}
+            if (hook?.dead) {
+              return;
+            }
             reject(err);
           }
         });
@@ -334,7 +364,9 @@ export class Apps extends System {
           throw new Error('sendTo can only be called on the server');
         }
         const player = world.entities.get(playerId);
-        if (!player) {return;}
+        if (!player) {
+          return;
+        }
         const eventData: [string | undefined, number | undefined, string, any] = [
           (entity as any).data?.id,
           (entity as any).blueprint?.version,

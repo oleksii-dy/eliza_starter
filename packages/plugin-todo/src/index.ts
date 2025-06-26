@@ -1,4 +1,5 @@
 import type { Plugin } from '@elizaos/core';
+import './types'; // Import to register service types
 
 import { routes } from './apis.js';
 
@@ -40,12 +41,15 @@ export const TodoPlugin: Plugin = {
     completeTodoAction,
     confirmTodoAction,
     updateTodoAction,
-    cancelTodoAction,
+    cancelTodoAction
   ],
   services: [TodoReminderService, TodoIntegrationBridge],
   routes,
   schema: todoSchema,
   tests: [TodoPluginE2ETestSuite],
+  init: async (_config: Record<string, string>, _runtime: any) => {
+    // Plugin initialization - services are automatically started by the runtime
+  },
 };
 
 export default TodoPlugin;

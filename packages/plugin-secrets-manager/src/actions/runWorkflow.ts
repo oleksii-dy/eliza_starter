@@ -1,5 +1,12 @@
-import { ActionChain } from '../services/action-chain-service';
-import type { ActionChainWorkflow } from '../services/action-chain-service';
+import {
+  logger as elizaLogger,
+  parseJSONObjectFromText,
+  type Action,
+  type IAgentRuntime,
+  type Memory,
+  type HandlerCallback,
+} from '@elizaos/core';
+import { ActionChainService, type ActionChainWorkflow } from '../services/action-chain-service';
 
 interface RunWorkflowParams {
   workflowId?: string;
@@ -13,10 +20,10 @@ export const runWorkflowAction: Action = {
   description:
     'Execute a predefined workflow or custom workflow for complex secret management operations',
 
-  validate: async (_runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
-    const has = !!runtime.get('ACTION_CHAIN');
+  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+    const has = !!runtime.getService('ACTION_CHAIN');
     if (!has) {
-      logger.warn('[RunWorkflow] Action chain service not available');
+      elizaLogger.warn('[RunWorkflow] Action chain service not available');
       return false;
     }
 
@@ -44,11 +51,11 @@ export const runWorkflowAction: Action = {
     message: Memory,
     state: any,
     options: any,
-    callback?: Callback
+    callback?: HandlerCallback
   ): Promise<boolean> => {
     elizaLogger.info('[RunWorkflow] Starting workflow execution');
 
-    const actionChain = runtime.get('ACTION_CHAIN') as ActionChain;
+    const actionChain = runtime.getService<ActionChainService>('ACTION_CHAIN');
     if (!actionChain) {
       if (callback) {
         void callback({

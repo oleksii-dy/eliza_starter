@@ -1,17 +1,15 @@
-import {
-  logger,
-  Service,
-  stringToUuid,
-  ChannelType,
-} from '@elizaos/core';
+import { logger, Service, stringToUuid, ChannelType as _ChannelType } from '@elizaos/core';
 import type {
   Entity,
   IAgentRuntime,
-  Metadata,
+  Metadata as _Metadata,
   Relationship,
   UUID,
 } from '@elizaos/core';
-import { RelationshipType, type EntityRelationship } from '../types';
+import {
+  RelationshipType as _RelationshipType,
+  type EntityRelationship as _EntityRelationship,
+} from '../types';
 
 // Import managers (not services)
 import { EntityResolutionManager } from '../managers/EntityResolutionManager';
@@ -22,13 +20,13 @@ import { FollowUpManager } from '../managers/FollowUpManager';
 import { EntityGraphManager } from '../managers/EntityGraphManager';
 
 // Import our local calculateRelationshipStrength function since it's not exported from core yet
-import { calculateRelationshipStrength } from '../utils/relationshipStrength';
+import { calculateRelationshipStrength as _calculateRelationshipStrength } from '../utils/relationshipStrength';
 
 // Trust integration imports - using any until proper types are available
 // These services are dynamically loaded from the trust plugin
 
 // Trust-related interfaces
-interface TrustContext {
+interface _TrustContext {
   entityId: UUID;
   action: string;
   timestamp: number;
@@ -36,7 +34,7 @@ interface TrustContext {
   metadata?: Record<string, any>;
 }
 
-interface TrustDecision {
+interface _TrustDecision {
   decision: 'allow' | 'deny' | 'review';
   confidence: number;
   reasons: string[];
@@ -113,7 +111,10 @@ export class RolodexService extends Service {
       this.entityResolutionManager = new EntityResolutionManager(this.runtime, this.eventBridge);
       await this.entityResolutionManager.initialize();
 
-      this.relationshipOntologyManager = new RelationshipOntologyManager(this.runtime, this.eventBridge);
+      this.relationshipOntologyManager = new RelationshipOntologyManager(
+        this.runtime,
+        this.eventBridge
+      );
       await this.relationshipOntologyManager.initialize();
 
       this.followUpManager = new FollowUpManager(this.runtime, this.eventBridge);
@@ -123,9 +124,7 @@ export class RolodexService extends Service {
       await this.entityGraphManager.initialize();
 
       // Initialize autonomous manager last as it depends on others
-      this.autonomousRelationshipManager = new AutonomousRelationshipManager(
-        this.runtime
-      );
+      this.autonomousRelationshipManager = new AutonomousRelationshipManager(this.runtime);
       await this.autonomousRelationshipManager.initialize();
 
       // Try to get trust services (may not be available)
@@ -135,7 +134,9 @@ export class RolodexService extends Service {
       if (this.trustService) {
         logger.info('[RolodexService] Trust service integration enabled');
       } else {
-        logger.info('[RolodexService] Trust service not available - operating without trust scoring');
+        logger.info(
+          '[RolodexService] Trust service not available - operating without trust scoring'
+        );
       }
 
       // Setup database tables
@@ -221,12 +222,9 @@ export class RolodexService extends Service {
     const entityId = entity.id || stringToUuid(entity.names?.[0] || `entity-${Date.now()}`);
 
     // Check for existing entities that might be the same
-    const candidates = await this.entityResolutionManager.resolveEntity(
-      entity.names?.[0] || '',
-      {
-        roomId: this.runtime.agentId
-      }
-    );
+    const candidates = await this.entityResolutionManager.resolveEntity(entity.names?.[0] || '', {
+      roomId: this.runtime.agentId,
+    });
 
     if (candidates.length > 0 && candidates[0].confidence > 0.8) {
       // Update existing entity
@@ -262,15 +260,15 @@ export class RolodexService extends Service {
     }
 
     const results = await this.entityGraphManager.searchEntities(query, {
-      limit
+      limit,
     });
 
     // Convert EntitySearchResult to Entity format
-    return results.map(result => ({
+    return results.map((result) => ({
       id: result.entity.entityId as UUID,
       agentId: result.entity.agentId as UUID,
       names: result.entity.names,
-      metadata: result.entity.metadata || {}
+      metadata: result.entity.metadata || {},
     }));
   }
 
@@ -433,7 +431,7 @@ export class RolodexService extends Service {
         metadata: {
           relationshipCount: relationships.length,
           hasTrustData: !!trustScore,
-          pendingFollowUps: upcomingFollowUps.length
+          pendingFollowUps: upcomingFollowUps.length,
         },
       };
     } catch (error) {
@@ -565,13 +563,15 @@ export class RolodexService extends Service {
         const entities = await this.runtime.getEntitiesForRoom(roomId);
 
         for (const entity of entities) {
-          if (!entity.id || seenIds.has(entity.id)) {continue;}
+          if (!entity.id || seenIds.has(entity.id)) {
+            continue;
+          }
           seenIds.add(entity.id);
           allEntities.push({
             id: entity.id,
             agentId: entity.agentId,
             names: entity.names,
-            metadata: entity.metadata || {}
+            metadata: entity.metadata || {},
           });
         }
       }

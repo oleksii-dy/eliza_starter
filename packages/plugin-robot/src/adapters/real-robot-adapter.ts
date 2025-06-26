@@ -723,7 +723,17 @@ export class RealRobotAdapter extends BaseRobotInterface {
             // Parse IMU packet (example format, adjust for your robot)
             // [header, header, 0xFF, command, accelX_L, accelX_H, ..., checksum]
             if (packet.length >= 20) {
-              const data = {
+              const data: {
+                accelX: number;
+                accelY: number;
+                accelZ: number;
+                gyroX: number;
+                gyroY: number;
+                gyroZ: number;
+                magX?: number;
+                magY?: number;
+                magZ?: number;
+              } = {
                 accelX: this.parseIMUValue(packet[4], packet[5]) / 100.0, // Convert to m/s²
                 accelY: this.parseIMUValue(packet[6], packet[7]) / 100.0,
                 accelZ: this.parseIMUValue(packet[8], packet[9]) / 100.0,
@@ -734,9 +744,9 @@ export class RealRobotAdapter extends BaseRobotInterface {
 
               // Optional magnetometer data
               if (packet.length >= 26) {
-                data['magX'] = this.parseIMUValue(packet[16], packet[17]);
-                data['magY'] = this.parseIMUValue(packet[18], packet[19]);
-                data['magZ'] = this.parseIMUValue(packet[20], packet[21]);
+                data.magX = this.parseIMUValue(packet[16], packet[17]);
+                data.magY = this.parseIMUValue(packet[18], packet[19]);
+                data.magZ = this.parseIMUValue(packet[20], packet[21]);
               }
 
               resolve(data);

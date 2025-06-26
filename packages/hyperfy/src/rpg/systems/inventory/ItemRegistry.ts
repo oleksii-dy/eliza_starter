@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { ItemDefinition, EquipmentSlot } from '../../types';
 import { WeaponType } from '../../types';
 

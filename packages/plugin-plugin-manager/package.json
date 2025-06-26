@@ -48,7 +48,7 @@
     "fs-extra": "^11.2.0",
     "semver": "^7.6.0",
     "uuid": "^9.0.1",
-    "zod": "3.24.2"
+    "zod": "3.25.67"
   },
   "peerDependencies": {},
   "devDependencies": {
@@ -62,30 +62,21 @@
     "dotenv": "16.4.5",
     "eslint": "^9.18.0",
     "prettier": "3.5.3",
-    "tsup": "8.4.0",
     "typescript": "5.8.3"
   },
   "scripts": {
-    "start": "elizaos start",
-    "dev": "elizaos dev",
-    "build": "tsup",
-    "lint": "eslint src --max-warnings 0",
-    "lint:fix": "eslint src --fix",
-    "lint:format": "prettier --write ./src",
-    "test:component": "bun test src/tests",
-    "test:e2e": "bun test src/e2e",
-    "test": "elizaos test",
-    "test:all": "bun test",
-    "coverage": "bun test --coverage",
-    "publish": "elizaos publish",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src"
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "elizaos test"
   },
   "publishConfig": {
     "access": "public"
   },
   "resolutions": {
-    "zod": "3.24.2"
+    "zod": "3.25.67"
   },
   "agentConfig": {
     "pluginType": "elizaos:plugin:1.0.0",

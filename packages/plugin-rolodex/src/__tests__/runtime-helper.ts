@@ -16,7 +16,7 @@ import {
 import { rolodexPlugin } from '../index';
 
 // Import sql plugin to get database adapter
-import sqlPlugin from '@elizaos/plugin-sql';
+// import sqlPlugin from '@elizaos/plugin-sql';
 
 // Test character configuration
 const testCharacter: Character = {
@@ -50,10 +50,10 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
     id: options.character?.id || stringToUuid(`test-agent-${testName}`),
   };
 
-  // Create runtime with SQL plugin for database and rolodex plugin
+  // Create runtime with rolodex plugin
   const runtime = new AgentRuntime({
     character,
-    plugins: [sqlPlugin, rolodexPlugin, ...(options.plugins || [])],
+    plugins: [rolodexPlugin, ...(options.plugins || [])],
     conversationLength: 10,
   });
 
@@ -62,7 +62,7 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
 
   // Wait for all services to be fully initialized
   // This is important because some services might initialize asynchronously
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   // Verify that the rolodex service is available
   const maxRetries = 10;
@@ -77,12 +77,15 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
       break;
     }
     retries++;
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
   if (!rolodexService) {
     // Debug: List all available services
-    console.error('[runtime-helper] Available services:', Array.from(runtime.services?.keys() || []));
+    console.error(
+      '[runtime-helper] Available services:',
+      Array.from(runtime.services?.keys() || [])
+    );
 
     // Also check if it's available under a different name
     for (const [key, service] of runtime.services || new Map()) {
@@ -133,7 +136,7 @@ export async function waitForCondition(
     if (await condition()) {
       return;
     }
-    await new Promise(resolve => setTimeout(resolve, interval));
+    await new Promise((resolve) => setTimeout(resolve, interval));
   }
 
   throw new Error('Condition not met within timeout');
@@ -175,7 +178,7 @@ export async function processMessageAndWait(
   await runtime.evaluate(message, state, true, callback, responses);
 
   // Wait for async operations to complete
-  await new Promise(resolve => setTimeout(resolve, waitTime));
+  await new Promise((resolve) => setTimeout(resolve, waitTime));
 }
 
 /**
@@ -214,9 +217,10 @@ export async function cleanupRuntime(runtime: IAgentRuntime): Promise<void> {
  */
 export function getService<T>(runtime: IAgentRuntime, serviceName: string): T {
   // Try multiple possible service names
-  let service = runtime.getService(serviceName) ||
-                runtime.getService('RolodexService') ||
-                runtime.getService('rolodexService');
+  let service =
+    runtime.getService(serviceName) ||
+    runtime.getService('RolodexService') ||
+    runtime.getService('rolodexService');
 
   // If still not found, try to find by type
   if (!service && runtime.services) {
@@ -230,8 +234,10 @@ export function getService<T>(runtime: IAgentRuntime, serviceName: string): T {
 
   if (!service) {
     // Debug: List all available services
-    console.error(`[getService] Service ${serviceName} not found. Available services:`,
-      Array.from(runtime.services?.keys() || []));
+    console.error(
+      `[getService] Service ${serviceName} not found. Available services:`,
+      Array.from(runtime.services?.keys() || [])
+    );
     throw new Error(`Service ${serviceName} not found`);
   }
   return service as T;

@@ -1,0 +1,378 @@
+// Payment contract for secure agent-to-agent transactions using Midnight Network
+// This contract provides zero-knowledge privacy for payment amounts while maintaining transaction integrity
+
+import "commitment";
+import "bytes";
+import "vector";
+
+// Types for secure payments
+type PaymentId = Bytes<32>;
+type AgentId = Bytes<32>;
+type Amount = u64;
+type Currency = Bytes<8>; // e.g., "MIDNIGHT", "USDC"
+type PaymentHash = Bytes<32>;
+type Timestamp = u64;
+
+// Public state visible on the blockchain
+type PaymentContract = {
+  paymentCount: u64,
+  totalVolume: Amount,
+  participantCount: u64,
+  isActive: boolean,
+  created: Timestamp,
+  lastActivity: Timestamp
+};
+
+// Private state for each agent (kept secret)
+type AgentPaymentState = {
+  agentId: AgentId,
+  balance: Amount,
+  currency: Currency,
+  paymentHistory: Vector<{
+    paymentId: PaymentId,
+    counterparty: AgentId,
+    amount: Amount,
+    currency: Currency,
+    paymentHash: PaymentHash,
+    timestamp: Timestamp,
+    isOutgoing: boolean,
+    isCompleted: boolean
+  }, 50> // Store up to 50 payment records per agent
+};
+
+// Escrow state for secure payments
+type EscrowState = {
+  paymentId: PaymentId,
+  fromAgent: AgentId,
+  toAgent: AgentId,
+  amount: Amount,
+  currency: Currency,
+  isLocked: boolean,
+  isReleased: boolean,
+  deadline: Timestamp,
+  depositHash: PaymentHash,
+  releaseHash: PaymentHash
+};
+
+// Witness data for payment authorization (private inputs)
+witness authorizePaymentWitness(
+  fromAgent: AgentId,
+  toAgent: AgentId,
+  amount: Amount,           // Payment amount (private)
+  currency: Currency,       // Currency type (private)
+  senderBalance: Amount,    // Sender's current balance (private)
+  authKey: Bytes<32>,       // Agent's authorization key (private)
+  nonce: Bytes<32>          // Random nonce for uniqueness (private)
+) -> {
+  paymentHash: PaymentHash,
+  balanceProof: Bytes<32>,
+  authProof: Bytes<32>
+};
+
+// Witness data for payment completion (private inputs)
+witness completePaymentWitness(
+  agentId: AgentId,
+  paymentId: PaymentId,
+  releaseKey: Bytes<32>,    // Agent's release key (private)
+  verificationCode: Bytes<6> // Payment verification code (private)
+) -> {
+  releaseHash: PaymentHash,
+  completionProof: Bytes<32>
+};
+
+// Initialize payment contract
+circuit initializePayment(
+  initialParticipants: Vector<AgentId, 2>
+): PaymentContract {
+  return {
+    paymentCount: 0,
+    totalVolume: 0,
+    participantCount: length(initialParticipants),
+    isActive: true,
+    created: currentTime(),
+    lastActivity: currentTime()
+  };
+}
+
+// Authorize a payment between agents
+circuit authorizePayment(
+  paymentContract: PaymentContract,
+  senderState: AgentPaymentState,
+  witness: authorizePaymentWitness
+): { 
+  newContract: PaymentContract,
+  newSenderState: AgentPaymentState,
+  escrowState: EscrowState
+} {
+  // Verify sender has sufficient balance
+  assert(witness.senderBalance >= witness.amount, "Insufficient balance for payment");
+  
+  // Verify sender is authorized
+  assert(senderState.agentId == witness.fromAgent, "Sender not authorized");
+  
+  // Generate unique payment ID
+  let paymentId = persistentHash<PaymentId>([
+    witness.fromAgent,
+    witness.toAgent,
+    witness.amount.bytes,
+    witness.currency,
+    paymentContract.paymentCount.bytes,
+    currentTime().bytes
+  ]);
+  
+  // Create payment hash for integrity verification
+  let paymentHash = persistentHash<PaymentHash>([
+    witness.amount.bytes,
+    witness.currency,
+    witness.fromAgent,
+    witness.toAgent,
+    witness.nonce
+  ]);
+  
+  // Create balance proof (commitment to remaining balance)
+  let remainingBalance = witness.senderBalance - witness.amount;
+  let balanceProof = persistentCommit<Amount>(remainingBalance, witness.authKey);
+  
+  // Create authorization proof
+  let authProof = persistentCommit<AgentId>(witness.fromAgent, witness.authKey);
+  
+  // Update contract state
+  let newContract = {
+    paymentCount: paymentContract.paymentCount + 1,
+    totalVolume: paymentContract.totalVolume + witness.amount,
+    participantCount: paymentContract.participantCount,
+    isActive: paymentContract.isActive,
+    created: paymentContract.created,
+    lastActivity: currentTime()
+  };
+  
+  // Create payment record for sender
+  let paymentRecord = {
+    paymentId: paymentId,
+    counterparty: witness.toAgent,
+    amount: witness.amount,
+    currency: witness.currency,
+    paymentHash: paymentHash,
+    timestamp: currentTime(),
+    isOutgoing: true,
+    isCompleted: false
+  };
+  
+  // Update sender's state
+  let newSenderState = {
+    agentId: senderState.agentId,
+    balance: remainingBalance,
+    currency: senderState.currency,
+    paymentHistory: push(senderState.paymentHistory, paymentRecord)
+  };
+  
+  // Create escrow state
+  let escrowState = {
+    paymentId: paymentId,
+    fromAgent: witness.fromAgent,
+    toAgent: witness.toAgent,
+    amount: witness.amount,
+    currency: witness.currency,
+    isLocked: true,
+    isReleased: false,
+    deadline: currentTime() + 3600, // 1 hour deadline
+    depositHash: paymentHash,
+    releaseHash: Bytes<32>([0; 32]) // Will be set when released
+  };
+  
+  return {
+    newContract: newContract,
+    newSenderState: newSenderState,
+    escrowState: escrowState
+  };
+}
+
+// Complete a payment (recipient accepts)
+circuit completePayment(
+  paymentContract: PaymentContract,
+  recipientState: AgentPaymentState,
+  escrowState: EscrowState,
+  witness: completePaymentWitness
+): {
+  newContract: PaymentContract,
+  newRecipientState: AgentPaymentState,
+  newEscrowState: EscrowState
+} {
+  // Verify recipient is authorized to complete this payment
+  assert(recipientState.agentId == escrowState.toAgent, "Recipient not authorized");
+  assert(witness.agentId == escrowState.toAgent, "Agent ID mismatch");
+  
+  // Verify payment is locked and not expired
+  assert(escrowState.isLocked, "Payment not locked in escrow");
+  assert(!escrowState.isReleased, "Payment already released");
+  assert(currentTime() <= escrowState.deadline, "Payment deadline expired");
+  
+  // Generate release hash
+  let releaseHash = persistentHash<PaymentHash>([
+    escrowState.paymentId,
+    witness.verificationCode,
+    witness.releaseKey,
+    currentTime().bytes
+  ]);
+  
+  // Create completion proof
+  let completionProof = persistentCommit<PaymentId>(escrowState.paymentId, witness.releaseKey);
+  
+  // Update contract state
+  let newContract = {
+    paymentCount: paymentContract.paymentCount,
+    totalVolume: paymentContract.totalVolume,
+    participantCount: paymentContract.participantCount,
+    isActive: paymentContract.isActive,
+    created: paymentContract.created,
+    lastActivity: currentTime()
+  };
+  
+  // Create payment record for recipient
+  let paymentRecord = {
+    paymentId: escrowState.paymentId,
+    counterparty: escrowState.fromAgent,
+    amount: escrowState.amount,
+    currency: escrowState.currency,
+    paymentHash: escrowState.depositHash,
+    timestamp: currentTime(),
+    isOutgoing: false,
+    isCompleted: true
+  };
+  
+  // Update recipient's state (add funds)
+  let newRecipientState = {
+    agentId: recipientState.agentId,
+    balance: recipientState.balance + escrowState.amount,
+    currency: recipientState.currency,
+    paymentHistory: push(recipientState.paymentHistory, paymentRecord)
+  };
+  
+  // Update escrow state (mark as released)
+  let newEscrowState = {
+    paymentId: escrowState.paymentId,
+    fromAgent: escrowState.fromAgent,
+    toAgent: escrowState.toAgent,
+    amount: escrowState.amount,
+    currency: escrowState.currency,
+    isLocked: escrowState.isLocked,
+    isReleased: true,
+    deadline: escrowState.deadline,
+    depositHash: escrowState.depositHash,
+    releaseHash: releaseHash
+  };
+  
+  return {
+    newContract: newContract,
+    newRecipientState: newRecipientState,
+    newEscrowState: newEscrowState
+  };
+}
+
+// Refund payment if deadline expired
+circuit refundPayment(
+  paymentContract: PaymentContract,
+  senderState: AgentPaymentState,
+  escrowState: EscrowState,
+  refundKey: Bytes<32>
+): {
+  newContract: PaymentContract,
+  newSenderState: AgentPaymentState,
+  newEscrowState: EscrowState
+} {
+  // Verify payment deadline has expired
+  assert(currentTime() > escrowState.deadline, "Payment deadline not expired");
+  assert(escrowState.isLocked, "Payment not locked");
+  assert(!escrowState.isReleased, "Payment already released");
+  
+  // Verify sender can reclaim funds
+  assert(senderState.agentId == escrowState.fromAgent, "Not original sender");
+  
+  // Update contract state
+  let newContract = {
+    paymentCount: paymentContract.paymentCount,
+    totalVolume: paymentContract.totalVolume - escrowState.amount, // Subtract refunded amount
+    participantCount: paymentContract.participantCount,
+    isActive: paymentContract.isActive,
+    created: paymentContract.created,
+    lastActivity: currentTime()
+  };
+  
+  // Return funds to sender
+  let newSenderState = {
+    agentId: senderState.agentId,
+    balance: senderState.balance + escrowState.amount,
+    currency: senderState.currency,
+    paymentHistory: senderState.paymentHistory // Could add refund record
+  };
+  
+  // Mark escrow as released (refunded)
+  let newEscrowState = {
+    paymentId: escrowState.paymentId,
+    fromAgent: escrowState.fromAgent,
+    toAgent: escrowState.toAgent,
+    amount: escrowState.amount,
+    currency: escrowState.currency,
+    isLocked: false,
+    isReleased: true,
+    deadline: escrowState.deadline,
+    depositHash: escrowState.depositHash,
+    releaseHash: persistentHash<PaymentHash>([
+      escrowState.paymentId,
+      refundKey,
+      currentTime().bytes
+    ])
+  };
+  
+  return {
+    newContract: newContract,
+    newSenderState: newSenderState,
+    newEscrowState: newEscrowState
+  };
+}
+
+// Get payment status (public)
+circuit getPaymentStatus(
+  escrowState: EscrowState
+): {
+  isLocked: boolean,
+  isReleased: boolean,
+  isExpired: boolean,
+  timeRemaining: u64
+} {
+  let isExpired = currentTime() > escrowState.deadline;
+  let timeRemaining = if isExpired { 0 } else { escrowState.deadline - currentTime() };
+  
+  return {
+    isLocked: escrowState.isLocked,
+    isReleased: escrowState.isReleased,
+    isExpired: isExpired,
+    timeRemaining: timeRemaining
+  };
+}
+
+// Get agent balance (private, requires proof)
+circuit getAgentBalance(
+  agentState: AgentPaymentState,
+  agentId: AgentId,
+  authKey: Bytes<32>
+): Amount {
+  // Verify agent is requesting their own balance
+  assert(agentState.agentId == agentId, "Unauthorized balance request");
+  
+  // Return balance (this would be private to the agent)
+  return agentState.balance;
+}
+
+// Helper functions
+fn currentTime(): Timestamp {
+  // In real implementation, this would get current block timestamp
+  return 1000000; // Placeholder
+}
+
+fn push<T, const N: u64>(vec: Vector<T, N>, item: T) -> Vector<T, N> {
+  assert(length(vec) < N, "Vector is full");
+  let newVec = vec;
+  newVec[length(vec)] = item;
+  return newVec;
+}

@@ -35,7 +35,7 @@ export class TrustRuntimeTests implements TestSuite {
         }
 
         console.log('✅ Default trust score working correctly');
-      }
+      },
     },
 
     {
@@ -48,12 +48,10 @@ export class TrustRuntimeTests implements TestSuite {
         const initialTrust = await trustService.getTrustScore(entityId);
 
         // Record positive interaction
-        await trustService.updateTrust(
-          entityId,
-          'HELPFUL_ACTION',
-          10,
-          { action: 'helped_user', description: 'Provided helpful answer' }
-        );
+        await trustService.updateTrust(entityId, 'HELPFUL_ACTION', 10, {
+          action: 'helped_user',
+          description: 'Provided helpful answer',
+        });
 
         // Get updated trust
         const updatedTrust = await trustService.getTrustScore(entityId);
@@ -63,7 +61,7 @@ export class TrustRuntimeTests implements TestSuite {
         }
 
         console.log(`✅ Trust increased from ${initialTrust.overall} to ${updatedTrust.overall}`);
-      }
+      },
     },
 
     {
@@ -92,8 +90,10 @@ export class TrustRuntimeTests implements TestSuite {
           throw new Error('Trust did not decrease after security threat');
         }
 
-        console.log(`✅ Security threat detected, trust decreased from ${initialTrust.overall} to ${updatedTrust.overall}`);
-      }
+        console.log(
+          `✅ Security threat detected, trust decreased from ${initialTrust.overall} to ${updatedTrust.overall}`
+        );
+      },
     },
 
     {
@@ -130,7 +130,7 @@ export class TrustRuntimeTests implements TestSuite {
 
         // Note: Even high trust might not allow DELETE_ALL_DATA, which is good
         console.log('✅ Permission checks working correctly based on trust');
-      }
+      },
     },
 
     {
@@ -141,9 +141,9 @@ export class TrustRuntimeTests implements TestSuite {
 
         // Create some history
         await trustService.updateTrust(entityId, 'HELPFUL_ACTION', 5, {});
-        await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
+        await new Promise((resolve) => setTimeout(resolve, 100)); // Small delay
         await trustService.updateTrust(entityId, 'CONSISTENT_BEHAVIOR', 3, {});
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         await trustService.updateTrust(entityId, 'HELPFUL_ACTION', 5, {});
 
         // Get history
@@ -157,14 +157,16 @@ export class TrustRuntimeTests implements TestSuite {
           throw new Error('Trust history missing trend analysis');
         }
 
-        console.log(`✅ Trust history tracking: ${history.dataPoints.length} data points, trend: ${history.trend}`);
-      }
+        console.log(
+          `✅ Trust history tracking: ${history.dataPoints.length} data points, trend: ${history.trend}`
+        );
+      },
     },
 
     {
       name: 'EVALUATE_TRUST action works in runtime',
       fn: async (runtime: IAgentRuntime) => {
-        const action = runtime.actions.find(a => a.name === 'EVALUATE_TRUST');
+        const action = runtime.actions.find((a) => a.name === 'EVALUATE_TRUST');
         if (!action) {
           throw new Error('EVALUATE_TRUST action not found');
         }
@@ -179,9 +181,9 @@ export class TrustRuntimeTests implements TestSuite {
           agentId: runtime.agentId,
           content: {
             text: 'What is my trust score?',
-            source: 'test'
+            source: 'test',
           },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         const state = await runtime.composeState(message);
@@ -196,13 +198,13 @@ export class TrustRuntimeTests implements TestSuite {
         }
 
         console.log('✅ EVALUATE_TRUST action working in runtime');
-      }
+      },
     },
 
     {
       name: 'Trust evaluators process messages correctly',
       fn: async (runtime: IAgentRuntime) => {
-        const evaluator = runtime.evaluators.find(e => e.name === 'trustChangeEvaluator');
+        const evaluator = runtime.evaluators.find((e) => e.name === 'trustChangeEvaluator');
         if (!evaluator) {
           throw new Error('Trust change evaluator not found');
         }
@@ -218,9 +220,9 @@ export class TrustRuntimeTests implements TestSuite {
           agentId: runtime.agentId,
           content: {
             text: 'Thank you so much for your help! This solved my problem perfectly.',
-            source: 'test'
+            source: 'test',
           },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         // Store message in database
@@ -247,7 +249,7 @@ export class TrustRuntimeTests implements TestSuite {
         }
 
         console.log('✅ Trust evaluators processing messages correctly');
-      }
+      },
     },
 
     {
@@ -258,21 +260,27 @@ export class TrustRuntimeTests implements TestSuite {
 
         // Update different trust dimensions
         await trustService.updateTrust(entityId, 'HELPFUL_ACTION', 10, {
-          dimensions: ['benevolence', 'competence']
+          dimensions: ['benevolence', 'competence'],
         });
 
         await trustService.updateTrust(entityId, 'CONSISTENT_BEHAVIOR', 5, {
-          dimensions: ['reliability']
+          dimensions: ['reliability'],
         });
 
         await trustService.updateTrust(entityId, 'TRANSPARENT_COMMUNICATION', 5, {
-          dimensions: ['transparency', 'integrity']
+          dimensions: ['transparency', 'integrity'],
         });
 
         const trustScore = await trustService.getTrustScore(entityId);
 
         // Check all dimensions exist
-        const expectedDimensions = ['reliability', 'competence', 'integrity', 'benevolence', 'transparency'];
+        const expectedDimensions = [
+          'reliability',
+          'competence',
+          'integrity',
+          'benevolence',
+          'transparency',
+        ];
         for (const dim of expectedDimensions) {
           if (!(dim in trustScore.dimensions)) {
             throw new Error(`Missing trust dimension: ${dim}`);
@@ -281,15 +289,15 @@ export class TrustRuntimeTests implements TestSuite {
 
         // Some dimensions should be higher than default
         const dimensionValues = Object.values(trustScore.dimensions);
-        const hasIncreasedDimensions = dimensionValues.some(v => (v as number) > 50);
+        const hasIncreasedDimensions = dimensionValues.some((v) => (v as number) > 50);
 
         if (!hasIncreasedDimensions) {
           throw new Error('Trust dimensions did not increase after positive updates');
         }
 
         console.log('✅ Multi-dimensional trust calculation working');
-      }
-    }
+      },
+    },
   ];
 }
 

@@ -1,9 +1,10 @@
+import type { Memory, State } from '@elizaos/core';
 import {
   Service,
   type IAgentRuntime,
   type UUID,
   type Action,
-  type MemoryCallback,
+  type HandlerCallback,
   elizaLogger,
 } from '@elizaos/core';
 
@@ -345,7 +346,7 @@ export class ActionChainService extends Service {
 
     // Execute action with promise-based callback
     return new Promise((resolve, reject) => {
-      const _callback: Callback = async (response) => {
+      const callback: HandlerCallback = async (response) => {
         if (response.error) {
           reject(new Error(response.text || 'Action execution failed'));
         } else {
@@ -404,7 +405,7 @@ export class ActionChainService extends Service {
     // This would need to be implemented based on how actions are registered in the runtime
     // For now, we'll assume actions are available through plugins
     if (this.runtime.plugins) {
-      for (const _plugin of this.runtime.plugins) {
+      for (const plugin of this.runtime.plugins) {
         if (plugin.actions) {
           const action = plugin.actions.find((a) => a.name === actionName);
           if (action) {

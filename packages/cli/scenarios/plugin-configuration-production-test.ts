@@ -3,7 +3,7 @@
  * Uses real ElizaOS scenario system with actual runtime, real database, and proper agent lifecycle
  */
 
-import { Service } from '@elizaos/core';
+import { Service, asUUID } from '@elizaos/core';
 import type {
   IAgentRuntime,
   Plugin,
@@ -16,6 +16,8 @@ import type {
   Character,
   Scenario,
 } from '@elizaos/core';
+import type { Scenario as ScenarioType } from '../src/scenario-runner/types.js';
+import { v4 as uuidv4 } from 'uuid';
 
 // Real Database Service with Environment Variable Validation
 class ProductionDatabaseService extends Service {
@@ -407,8 +409,8 @@ const productionDatabaseAction: Action = {
   ],
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
-    const dbService = runtime.getService('prod-database-service') as ProductionDatabaseService;
-    const cacheService = runtime.getService('prod-cache-service') as ProductionCacheService;
+    const dbService = runtime.getService<ProductionDatabaseService>('prod-database-service');
+    const cacheService = runtime.getService<ProductionCacheService>('prod-cache-service');
 
     if (!dbService) {
       console.log('PROD_QUERY_DATABASE validation failed: ProductionDatabaseService not available');
@@ -448,8 +450,8 @@ const productionDatabaseAction: Action = {
     let transactionId: string | null = null;
 
     try {
-      const dbService = runtime.getService('prod-database-service') as ProductionDatabaseService;
-      const cacheService = runtime.getService('prod-cache-service') as ProductionCacheService;
+      const dbService = runtime.getService<ProductionDatabaseService>('prod-database-service');
+      const cacheService = runtime.getService<ProductionCacheService>('prod-cache-service');
 
       if (!dbService || !cacheService) {
         throw new Error('Required services not available');
@@ -564,8 +566,8 @@ const productionSystemProvider: Provider = {
 
   get: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     try {
-      const dbService = runtime.getService('prod-database-service') as ProductionDatabaseService;
-      const cacheService = runtime.getService('prod-cache-service') as ProductionCacheService;
+      const dbService = runtime.getService<ProductionDatabaseService>('prod-database-service');
+      const cacheService = runtime.getService<ProductionCacheService>('prod-cache-service');
 
       const systemStats = {
         timestamp: new Date().toISOString(),
@@ -706,8 +708,8 @@ const productionPerformanceEvaluator: Evaluator = {
     const evaluationStart = Date.now();
 
     try {
-      const dbService = runtime.getService('prod-database-service') as ProductionDatabaseService;
-      const cacheService = runtime.getService('prod-cache-service') as ProductionCacheService;
+      const dbService = runtime.getService<ProductionDatabaseService>('prod-database-service');
+      const cacheService = runtime.getService<ProductionCacheService>('prod-cache-service');
 
       // Comprehensive performance metrics
       const metrics = {
@@ -1085,114 +1087,7 @@ const productionTestCharacter: Character = {
   },
 };
 
-// Main Scenario Definition
-const productionPluginConfigurationScenario: Scenario = {
-  id: 'production-plugin-configuration-test',
-  name: 'Production Plugin Configuration System Test',
-  description:
-    'Comprehensive production-ready test of plugin configuration system with real services and environments',
-
-  actors: [
-    {
-      id: 'test-agent',
-      name: 'ProductionConfigTestAgent',
-      role: 'subject',
-      script: {
-        steps: [
-          {
-            type: 'message',
-            content: 'Initialize production environment and test all plugin components',
-          },
-          {
-            type: 'wait',
-            waitTime: 2000,
-          },
-          {
-            type: 'message',
-            content: 'Test production database queries with transaction support',
-          },
-          {
-            type: 'wait',
-            waitTime: 3000,
-          },
-          {
-            type: 'message',
-            content: 'Verify system health monitoring and performance metrics',
-          },
-          {
-            type: 'wait',
-            waitTime: 2000,
-          },
-          {
-            type: 'message',
-            content: 'Test service hot-swap and configuration changes in production environment',
-          },
-        ],
-      },
-    },
-  ],
-
-  setup: {
-    roomType: 'group',
-    roomName: 'Production Plugin Test Room',
-    initialMessages: [
-      {
-        sender: 'system',
-        content:
-          'Production plugin configuration system test environment initialized. All services are running in production simulation mode.',
-      },
-    ],
-  },
-
-  execution: {
-    maxDuration: 300000, // 5 minutes
-    maxSteps: 50,
-  },
-
-  verification: {
-    rules: [
-      {
-        id: 'production-services-started',
-        type: 'service_availability',
-        description: 'All production services should start successfully',
-        weight: 20,
-      },
-      {
-        id: 'environment-variables-validated',
-        type: 'environment_validation',
-        description: 'Environment variables should be properly validated and loaded',
-        weight: 15,
-      },
-      {
-        id: 'database-operations-functional',
-        type: 'action_execution',
-        description: 'Database operations should work with transactions and error handling',
-        weight: 25,
-      },
-      {
-        id: 'system-monitoring-active',
-        type: 'provider_execution',
-        description: 'System monitoring and health checks should be active',
-        weight: 15,
-      },
-      {
-        id: 'performance-evaluation-working',
-        type: 'evaluator_execution',
-        description: 'Performance evaluation should run and generate meaningful metrics',
-        weight: 15,
-      },
-      {
-        id: 'service-hot-swap-functional',
-        type: 'configuration_management',
-        description: 'Service hot-swap and configuration changes should work correctly',
-        weight: 10,
-      },
-    ],
-  },
-};
-
-// Export the scenario and test function for use in scenario runner
-export default productionPluginConfigurationScenario;
+// Note: The scenario definition is below after the implementation code
 
 // Scenario test function for integration with CLI
 export async function testProductionPluginConfiguration(runtime: IAgentRuntime): Promise<void> {
@@ -1207,8 +1102,8 @@ export async function testProductionPluginConfiguration(runtime: IAgentRuntime):
 
     // Test 1: Verify production services started with real connections
     console.log('🔍 Test 1: Verify production services with real connection management');
-    const dbService = runtime.getService('prod-database-service') as ProductionDatabaseService;
-    const cacheService = runtime.getService('prod-cache-service') as ProductionCacheService;
+    const dbService = runtime.getService<ProductionDatabaseService>('prod-database-service');
+    const cacheService = runtime.getService<ProductionCacheService>('prod-cache-service');
 
     if (!dbService) {throw new Error('ProductionDatabaseService not found');}
     if (!cacheService) {throw new Error('ProductionCacheService not found');}
@@ -1398,3 +1293,173 @@ export async function testProductionPluginConfiguration(runtime: IAgentRuntime):
     throw error;
   }
 }
+
+// Export the scenario for the scenario runner
+export const productionPluginConfigurationScenario: ScenarioType = {
+  id: 'production-plugin-configuration',
+  name: 'Production Plugin Configuration System Test',
+  description: 'Production-ready test of plugin configuration system with real database and environment validation',
+  category: 'production',
+  tags: ['production', 'plugins', 'database', 'environment', 'validation'],
+
+  actors: [
+    {
+      id: asUUID(uuidv4()),
+      name: 'Production Agent',
+      role: 'subject',
+    },
+    {
+      id: asUUID(uuidv4()),
+      name: 'DevOps Engineer',
+      role: 'assistant',
+      script: {
+        steps: [
+          {
+            type: 'message',
+            content: 'Can you initialize the production database service with environment validation?',
+          },
+          {
+            type: 'wait',
+            waitTime: 5000,
+          },
+          {
+            type: 'message',
+            content: 'Great! Now can you add the cache service and verify all connections?',
+          },
+          {
+            type: 'wait',
+            waitTime: 5000,
+          },
+          {
+            type: 'message',
+            content: 'Perfect! Can you run a comprehensive system health check?',
+          },
+          {
+            type: 'wait',
+            waitTime: 3000,
+          },
+          {
+            type: 'message',
+            content: 'Excellent! Can you test error handling with invalid configuration?',
+          },
+          {
+            type: 'wait',
+            waitTime: 4000,
+          },
+          {
+            type: 'message',
+            content: 'Great! Finally, can you generate a production readiness report?',
+          },
+        ],
+        personality: 'production-focused, security-conscious, thorough',
+        goals: ['validate production setup', 'ensure system reliability', 'verify error handling'],
+      },
+    },
+  ],
+
+  setup: {
+    roomType: 'dm',
+    roomName: 'Production Configuration Testing',
+    context: 'You are testing the production plugin configuration system with real environment validation.',
+    environment: {
+      productionMode: true,
+      environmentVars: ['DATABASE_URL', 'DATABASE_API_KEY', 'CACHE_CONFIG'],
+      securityLevel: 'high',
+    },
+  },
+
+  execution: {
+    maxDuration: 180000, // 3 minutes
+    maxSteps: 15,
+    stopConditions: [
+      {
+        type: 'keyword',
+        value: 'production ready',
+        description: 'Stop when system is production ready',
+      },
+    ],
+  },
+
+  verification: {
+    rules: [
+      {
+        id: 'production-database-setup',
+        type: 'llm',
+        description: 'Agent successfully set up production database service',
+        config: {
+          criteria: 'The agent properly initialized the production database service with environment validation',
+        },
+        weight: 4,
+      },
+      {
+        id: 'environment-validation',
+        type: 'llm',
+        description: 'Agent validated environment variables properly',
+        config: {
+          criteria: 'The agent checked for required environment variables and handled missing ones appropriately',
+        },
+        weight: 3,
+      },
+      {
+        id: 'cache-integration',
+        type: 'llm',
+        description: 'Agent integrated cache service successfully',
+        config: {
+          criteria: 'The agent added and configured the cache service with proper connection management',
+        },
+        weight: 3,
+      },
+      {
+        id: 'health-monitoring',
+        type: 'llm',
+        description: 'Agent provided comprehensive health monitoring',
+        config: {
+          criteria: 'The agent performed health checks and provided detailed system status information',
+        },
+        weight: 3,
+      },
+      {
+        id: 'error-handling',
+        type: 'llm',
+        description: 'Agent handled configuration errors gracefully',
+        config: {
+          criteria: 'The agent properly handled invalid configurations and provided meaningful error messages',
+        },
+        weight: 3,
+      },
+      {
+        id: 'production-readiness',
+        type: 'llm',
+        description: 'Agent generated production readiness assessment',
+        config: {
+          criteria: 'The agent provided a comprehensive production readiness report with system metrics',
+        },
+        weight: 2,
+      },
+    ],
+    groundTruth: {
+      expectedBehavior: 'Agent should successfully configure and validate production plugin system',
+      successCriteria: [
+        'Initialize production services',
+        'Validate environment variables',
+        'Handle errors gracefully',
+        'Provide health monitoring',
+        'Generate readiness report',
+      ],
+    },
+  },
+
+  benchmarks: {
+    maxDuration: 180000,
+    maxSteps: 15,
+    maxTokens: 5000,
+    targetAccuracy: 0.85,
+    customMetrics: [
+      { name: 'production_readiness_score' },
+      { name: 'error_handling_quality' },
+      { name: 'environment_validation_coverage' },
+    ],
+  },
+};
+
+// Exported below

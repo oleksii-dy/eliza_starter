@@ -7,6 +7,7 @@ import {
   logger,
 } from '@elizaos/core';
 import { RobotService } from '../services/robot-service';
+import { RobotServiceType, RobotStatus } from '../types';
 
 export const robotStateProvider: Provider = {
   name: 'ROBOT_STATE',

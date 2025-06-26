@@ -9,7 +9,15 @@
  * - RequestTrackingManager
  */
 
-import type { SecretContext, CallbackChannel, SecretRequirement, SecretRequest } from '../types';
+import {
+  elizaLogger as logger,
+  ModelType,
+  type Action,
+  type IAgentRuntime,
+  type Memory,
+  type State,
+} from '@elizaos/core';
+import type { SecretRequest } from '../types';
 // TEMPORARILY DISABLED: These services no longer exist as separate services
 // import { ChannelCallback } from '../services/channel-callback-service';
 // import { RequestTracking } from '../services/request-tracking-service';
@@ -52,7 +60,7 @@ export const requestSecretsAction: Action = {
 async function _analyzeSecretRequest(
   runtime: IAgentRuntime,
   message: Memory,
-  state: State
+  _state: State
 ): Promise<SecretAnalysis> {
   // Build context for analysis
   const template = `
@@ -138,7 +146,7 @@ Respond in JSON format:
 /**
  * Determine channel type from message source
  */
-function _determine(_message: Memory): 'discord' | 'telegram' | 'slack' | 'memory' {
+function _determineChannelType(message: Memory): 'discord' | 'telegram' | 'slack' | 'memory' {
   const source = message.content.source?.toLowerCase();
 
   if (source?.includes('discord')) {
@@ -157,7 +165,7 @@ function _determine(_message: Memory): 'discord' | 'telegram' | 'slack' | 'memor
 /**
  * Generate confirmation message for secret request
  */
-function _generateRequestConfirmation(analysis: SecretAnalysis, request: SecretRequest): string {
+function _generateRequestConfirmation(analysis: SecretAnalysis, _request: SecretRequest): string {
   let message = '🔐 **Secure Information Request Created**\n\n';
   message += "I've set up a secure way for you to provide:\n";
 
@@ -195,7 +203,7 @@ async function _handleSecretSuccess(
   runtime: IAgentRuntime,
   originalMessage: Memory,
   secretKeys: string[],
-  data: Record<string, any>
+  _data: Record<string, any>
 ): Promise<void> {
   try {
     // Create success notification
@@ -261,7 +269,7 @@ async function _handleSecretFailure(
  * Handle secret request timeout
  */
 async function _handleSecretTimeout(
-  _runtime: IAgentRuntime,
+  runtime: IAgentRuntime,
   originalMessage: Memory
 ): Promise<void> {
   try {

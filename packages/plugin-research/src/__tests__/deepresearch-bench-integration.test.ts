@@ -1,9 +1,17 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
-import { IAgentRuntime, UUID, Memory, State, Service, ServiceTypeName } from '@elizaos/core';
-import { createMockRuntime } from '@elizaos/core/test-utils';
+import {
+  IAgentRuntime,
+  UUID,
+  Memory,
+  State,
+  Service,
+  ServiceTypeName,
+} from '@elizaos/core';
+// Use local test utilities instead
 import { v4 as uuidv4 } from 'uuid';
 import { ResearchService } from '../service';
 import researchPlugin from '../index';
+import { createTestRuntime } from './test-providers';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ResearchStatus } from '../types';
@@ -38,7 +46,7 @@ describe('DeepResearch Bench Integration', () => {
   let researchService: ResearchService;
 
   beforeAll(async () => {
-    runtime = createMockRuntime();
+    runtime = createTestRuntime();
     await runtime.initialize();
     await runtime.registerPlugin(researchPlugin);
 
@@ -50,7 +58,9 @@ describe('DeepResearch Bench Integration', () => {
       const testQuery = DEEPRESEARCH_BENCH_SAMPLES[0];
 
       // Create and run research project
-      const project = await researchService.createResearchProject(testQuery.prompt);
+      const project = await researchService.createResearchProject(
+        testQuery.prompt
+      );
 
       // Mock completion for testing
       project.status = ResearchStatus.COMPLETED;
@@ -64,7 +74,8 @@ describe('DeepResearch Bench Integration', () => {
             id: uuidv4(),
             heading: 'Introduction',
             level: 1,
-            content: 'Test intro with citations [1]. This content references sources.',
+            content:
+              'Test intro with citations [1]. This content references sources.',
             findings: [],
             citations: [
               {
@@ -161,7 +172,10 @@ describe('DeepResearch Bench Integration', () => {
       } as any;
 
       // Export in DeepResearch format
-      const exported = await researchService.exportProject(project.id, 'deepresearch');
+      const exported = await researchService.exportProject(
+        project.id,
+        'deepresearch'
+      );
       const parsed = JSON.parse(exported);
 
       // Verify format matches expected structure
@@ -186,7 +200,8 @@ describe('DeepResearch Bench Integration', () => {
       const testResult = {
         id: 1,
         prompt: DEEPRESEARCH_BENCH_SAMPLES[0].prompt,
-        article: 'Test article with citations [1]. This demonstrates the research capability.',
+        article:
+          'Test article with citations [1]. This demonstrates the research capability.',
       };
 
       const outputFile = path.join(outputDir, 'test_results.jsonl');
@@ -213,7 +228,9 @@ describe('DeepResearch Bench Integration', () => {
         const startTime = Date.now();
 
         // Always use full comprehensive research
-        const project = await researchService.createResearchProject(query.prompt);
+        const project = await researchService.createResearchProject(
+          query.prompt
+        );
 
         // Mock completion timing for test
         results.push({
@@ -225,8 +242,10 @@ describe('DeepResearch Bench Integration', () => {
       }
 
       // Calculate metrics
-      const avgDuration = results.reduce((sum, r) => sum + r.duration, 0) / results.length;
-      const avgSources = results.reduce((sum, r) => sum + r.sources, 0) / results.length;
+      const avgDuration =
+        results.reduce((sum, r) => sum + r.duration, 0) / results.length;
+      const avgSources =
+        results.reduce((sum, r) => sum + r.sources, 0) / results.length;
 
       console.log('Benchmark Metrics:');
       console.log(`  Average Duration: ${avgDuration}ms`);
@@ -255,7 +274,8 @@ describe('DeepResearch Bench Integration', () => {
             id: uuidv4(),
             heading: 'Introduction',
             level: 1,
-            content: 'Test intro with citations [1]. This content references sources.',
+            content:
+              'Test intro with citations [1]. This content references sources.',
             findings: [],
             citations: [
               {
@@ -372,7 +392,9 @@ describe('DeepResearch Bench Integration', () => {
       };
 
       expect(evaluation.raceEvaluation.scores.overall).toBeGreaterThan(0.6);
-      expect(evaluation.factEvaluation.scores.citationAccuracy).toBeGreaterThan(0.7);
+      expect(evaluation.factEvaluation.scores.citationAccuracy).toBeGreaterThan(
+        0.7
+      );
     });
   });
 });

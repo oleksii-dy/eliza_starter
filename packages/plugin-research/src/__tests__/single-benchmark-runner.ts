@@ -10,7 +10,12 @@
 
 import { ResearchService } from '../service';
 import { IAgentRuntime, ModelType, logger } from '@elizaos/core';
-import { ResearchStatus, ResearchPhase, ResearchDepth, ResearchDomain } from '../types';
+import {
+  ResearchStatus,
+  ResearchPhase,
+  ResearchDepth,
+  ResearchDomain,
+} from '../types';
 // Removed real-runtime import - using simplified approach
 import { config } from 'dotenv';
 import fs from 'fs/promises';
@@ -58,17 +63,27 @@ function checkApiAvailability(): void {
   console.log('🔑 Available APIs:', availableAPIs.join(', '));
 
   if (availableAPIs.length < 3) {
-    console.warn('⚠️  Warning: Less than 3 APIs configured. Results may be limited.');
+    console.warn(
+      '⚠️  Warning: Less than 3 APIs configured. Results may be limited.'
+    );
   }
 
   // Check required LLM API
   if (!apiKeys.OPENAI_API_KEY && !apiKeys.ANTHROPIC_API_KEY) {
-    throw new Error('No LLM API key found. Set OPENAI_API_KEY or ANTHROPIC_API_KEY');
+    throw new Error(
+      'No LLM API key found. Set OPENAI_API_KEY or ANTHROPIC_API_KEY'
+    );
   }
 
   // Check required search API
-  if (!apiKeys.TAVILY_API_KEY && !apiKeys.EXA_API_KEY && !apiKeys.SERPAPI_API_KEY) {
-    throw new Error('No search API key found. Set TAVILY_API_KEY, EXA_API_KEY, or SERPAPI_API_KEY');
+  if (
+    !apiKeys.TAVILY_API_KEY &&
+    !apiKeys.EXA_API_KEY &&
+    !apiKeys.SERPAPI_API_KEY
+  ) {
+    throw new Error(
+      'No search API key found. Set TAVILY_API_KEY, EXA_API_KEY, or SERPAPI_API_KEY'
+    );
   }
 }
 
@@ -122,18 +137,27 @@ async function runBenchmarkEvaluation(project: any): Promise<any> {
   await fs.writeFile(projectFile, JSON.stringify(project, null, 2));
 
   // Check if Python benchmark exists
-  const benchPath = path.join(process.cwd(), 'deep_research_bench', 'deepresearch_bench_race.py');
+  const benchPath = path.join(
+    process.cwd(),
+    'deep_research_bench',
+    'deepresearch_bench_race.py'
+  );
   try {
     await fs.access(benchPath);
   } catch {
-    console.warn('⚠️  DeepResearch benchmark not found. Skipping automated evaluation.');
-    console.log('To enable: cd deep_research_bench && pip install -r requirements.txt');
+    console.warn(
+      '⚠️  DeepResearch benchmark not found. Skipping automated evaluation.'
+    );
+    console.log(
+      'To enable: cd deep_research_bench && pip install -r requirements.txt'
+    );
     return null;
   }
 
   try {
     // Run Python benchmark
-    const cmd = 'cd deep_research_bench && python deepresearch_bench_race.py eliza --limit 1';
+    const cmd =
+      'cd deep_research_bench && python deepresearch_bench_race.py eliza --limit 1';
     const { stdout, stderr } = await execAsync(cmd);
 
     if (stderr) {
@@ -188,7 +212,10 @@ async function runSingleBenchmark() {
       // Debug: check all messages for synthesis content
       for (let i = 0; i < allMessages.length; i++) {
         const msg = allMessages[i]?.content || '';
-        if (msg.toLowerCase().includes('synthesis') || msg.toLowerCase().includes('synthesize')) {
+        if (
+          msg.toLowerCase().includes('synthesis') ||
+          msg.toLowerCase().includes('synthesize')
+        ) {
           console.log(
             `[DEBUG] SYNTHESIS PROMPT FOUND in message ${i}:`,
             `${msg.substring(0, 200)}...`
@@ -198,10 +225,16 @@ async function runSingleBenchmark() {
 
       // Debug: log all non-trivial prompts to understand what we're missing
       if (prompt.length > 100 && !prompt.includes('Extract key findings')) {
-        console.log('[DEBUG] Non-finding prompt detected:', `${prompt.substring(0, 150)}...`);
+        console.log(
+          '[DEBUG] Non-finding prompt detected:',
+          `${prompt.substring(0, 150)}...`
+        );
       }
 
-      if (prompt.includes('Extract key findings') && prompt.includes('Format as JSON array')) {
+      if (
+        prompt.includes('Extract key findings') &&
+        prompt.includes('Format as JSON array')
+      ) {
         // Return valid JSON for finding extraction
         return JSON.stringify([
           {
@@ -229,7 +262,10 @@ async function runSingleBenchmark() {
       }
 
       // Check if this is a relevance scoring call
-      if (prompt.includes('Format as JSON:') && prompt.includes('queryAlignment')) {
+      if (
+        prompt.includes('Format as JSON:') &&
+        prompt.includes('queryAlignment')
+      ) {
         // Return high relevance scores for our test findings
         return JSON.stringify({
           queryAlignment: 0.9,
@@ -257,7 +293,11 @@ async function runSingleBenchmark() {
           {
             statement:
               'Differential privacy provides mathematical guarantees for privacy protection',
-            evidence: ['Noise injection', 'Privacy budget', 'Utility preservation'],
+            evidence: [
+              'Noise injection',
+              'Privacy budget',
+              'Utility preservation',
+            ],
             confidence: 0.85,
           },
         ]);
@@ -266,7 +306,11 @@ async function runSingleBenchmark() {
       // Handle comprehensive report generation calls
 
       // Executive Summary
-      if (prompt.includes('Create a comprehensive executive summary for this research project')) {
+      if (
+        prompt.includes(
+          'Create a comprehensive executive summary for this research project'
+        )
+      ) {
         console.log('[DEBUG] Executive summary generation detected');
         return `This research project investigates the critical security and privacy implications of federated learning in healthcare applications, providing a comprehensive analysis of privacy-preserving techniques including differential privacy, homomorphic encryption, and secure multi-party computation.
 
@@ -287,7 +331,9 @@ async function runSingleBenchmark() {
         prompt.includes('800-1200 word analysis')
       ) {
         const category = prompt.match(/category "([^"]+)"/)?.[1] || 'unknown';
-        console.log(`[DEBUG] Detailed category analysis detected for: ${category}`);
+        console.log(
+          `[DEBUG] Detailed category analysis detected for: ${category}`
+        );
         return `# ${category.charAt(0).toUpperCase() + category.slice(1)} in Federated Learning for Healthcare
 
 ## Introduction and Relevance
@@ -344,7 +390,11 @@ Finally, sustainability and long-term maintenance considerations deserve increas
       }
 
       // Methodology Section
-      if (prompt.includes('Create a comprehensive methodology section for this research project')) {
+      if (
+        prompt.includes(
+          'Create a comprehensive methodology section for this research project'
+        )
+      ) {
         console.log('[DEBUG] Methodology section generation detected');
         return `# Research Methodology
 
@@ -398,7 +448,11 @@ The interdisciplinary nature of the research topic spanning computer science, he
       }
 
       // Implications Section
-      if (prompt.includes('Create a comprehensive implications and future directions section')) {
+      if (
+        prompt.includes(
+          'Create a comprehensive implications and future directions section'
+        )
+      ) {
         console.log('[DEBUG] Implications section generation detected');
         return `# Implications and Future Directions
 
@@ -479,7 +533,10 @@ Research funding agencies should prioritize interdisciplinary research that comb
       }
 
       // Check for overall synthesis specifically
-      if (prompt.includes('Create an overall synthesis') && prompt.includes('research project')) {
+      if (
+        prompt.includes('Create an overall synthesis') &&
+        prompt.includes('research project')
+      ) {
         console.log('[DEBUG] Overall synthesis detected');
         return `This research provides a comprehensive analysis of privacy-preserving techniques in federated learning for healthcare applications. 
 
@@ -502,7 +559,8 @@ Future research should focus on optimizing the trade-offs between privacy guaran
           'Enhance this research section with detailed analysis from additional source material'
         )
       ) {
-        const sectionName = prompt.match(/Original Section: "([^"]+)"/)?.[1] || 'Unknown Section';
+        const sectionName =
+          prompt.match(/Original Section: "([^"]+)"/)?.[1] || 'Unknown Section';
         console.log(`[DEBUG] Section enhancement detected for: ${sectionName}`);
         return `# Enhanced ${sectionName}
 
@@ -550,9 +608,14 @@ Healthcare organizations considering federated learning implementations should p
       }
 
       // Handle detailed source analysis prompts
-      if (prompt.includes('Conduct a detailed analysis of this research source')) {
-        const sourceTitle = prompt.match(/Source: ([^\n]+)/)?.[1] || 'Unknown Source';
-        console.log(`[DEBUG] Detailed source analysis detected for: ${sourceTitle}`);
+      if (
+        prompt.includes('Conduct a detailed analysis of this research source')
+      ) {
+        const sourceTitle =
+          prompt.match(/Source: ([^\n]+)/)?.[1] || 'Unknown Source';
+        console.log(
+          `[DEBUG] Detailed source analysis detected for: ${sourceTitle}`
+        );
         return `## Source Credibility and Authority
 
 This source demonstrates high credibility and authority within the domain of privacy-preserving federated learning for healthcare applications. The publication venue, author credentials, and institutional affiliations indicate substantial expertise in both machine learning and healthcare informatics domains.
@@ -612,10 +675,18 @@ The methodological approach employed in this source represents an advancement ov
   console.log(`📋 Test Query: "${TEST_QUERY.query}"\n`);
   console.log('Expected Quality Metrics:');
   console.log(`- Minimum Sources: ${TEST_QUERY.minimumRequirements.sources}`);
-  console.log(`- Minimum Academic Sources: ${TEST_QUERY.minimumRequirements.academicSources}`);
-  console.log(`- Minimum Word Count: ${TEST_QUERY.minimumRequirements.wordCount}`);
-  console.log(`- Minimum RACE Score: ${TEST_QUERY.minimumRequirements.raceScore}`);
-  console.log(`- Minimum FACT Score: ${TEST_QUERY.minimumRequirements.factScore}\n`);
+  console.log(
+    `- Minimum Academic Sources: ${TEST_QUERY.minimumRequirements.academicSources}`
+  );
+  console.log(
+    `- Minimum Word Count: ${TEST_QUERY.minimumRequirements.wordCount}`
+  );
+  console.log(
+    `- Minimum RACE Score: ${TEST_QUERY.minimumRequirements.raceScore}`
+  );
+  console.log(
+    `- Minimum FACT Score: ${TEST_QUERY.minimumRequirements.factScore}\n`
+  );
 
   try {
     // Start research
@@ -636,23 +707,29 @@ The methodological approach employed in this source represents an advancement ov
     const phaseMetrics: Record<string, number> = {};
     let phaseStartTime = Date.now();
 
-    const finalProject = await monitorResearch(service, project.id, (phase, proj) => {
-      // Record phase timing
-      const phaseKey = phase as string;
-      if (phaseKey in phaseMetrics) {
-        phaseMetrics[phaseKey] = Date.now() - phaseStartTime;
-      }
-      phaseStartTime = Date.now();
+    const finalProject = await monitorResearch(
+      service,
+      project.id,
+      (phase, proj) => {
+        // Record phase timing
+        const phaseKey = phase as string;
+        if (phaseKey in phaseMetrics) {
+          phaseMetrics[phaseKey] = Date.now() - phaseStartTime;
+        }
+        phaseStartTime = Date.now();
 
-      // Log phase-specific metrics
-      console.log(`  Sources: ${proj.sources.length}`);
-      console.log(`  Findings: ${proj.findings.length}`);
+        // Log phase-specific metrics
+        console.log(`  Sources: ${proj.sources.length}`);
+        console.log(`  Findings: ${proj.findings.length}`);
 
-      if (phase === ResearchPhase.ANALYZING) {
-        const academicSources = proj.sources.filter((s: any) => s.type === 'academic');
-        console.log(`  Academic Sources: ${academicSources.length}`);
+        if (phase === ResearchPhase.ANALYZING) {
+          const academicSources = proj.sources.filter(
+            (s: any) => s.type === 'academic'
+          );
+          console.log(`  Academic Sources: ${academicSources.length}`);
+        }
       }
-    });
+    );
 
     console.log('\n✅ Research completed!\n');
 
@@ -700,7 +777,9 @@ The methodological approach employed in this source represents an advancement ov
     }
 
     // Check academic sources
-    if (academicSources.length >= TEST_QUERY.minimumRequirements.academicSources) {
+    if (
+      academicSources.length >= TEST_QUERY.minimumRequirements.academicSources
+    ) {
       passed.push('✅ Academic source count meets requirement');
     } else {
       failed.push(
@@ -709,7 +788,9 @@ The methodological approach employed in this source represents an advancement ov
     }
 
     // Check findings
-    if (finalProject.findings.length >= TEST_QUERY.minimumRequirements.findings) {
+    if (
+      finalProject.findings.length >= TEST_QUERY.minimumRequirements.findings
+    ) {
       passed.push('✅ Finding count meets requirement');
     } else {
       failed.push(
@@ -738,7 +819,10 @@ The methodological approach employed in this source represents an advancement ov
       });
 
       // Check RACE score
-      if (benchmarkScores['Overall Score'] >= TEST_QUERY.minimumRequirements.raceScore) {
+      if (
+        benchmarkScores['Overall Score'] >=
+        TEST_QUERY.minimumRequirements.raceScore
+      ) {
         passed.push('✅ RACE score meets requirement');
       } else {
         failed.push(
@@ -753,9 +837,13 @@ The methodological approach employed in this source represents an advancement ov
     failed.forEach((f) => console.log(f));
 
     if (failed.length === 0) {
-      console.log('\n🎉 All quality requirements met! The research plugin is working correctly.');
+      console.log(
+        '\n🎉 All quality requirements met! The research plugin is working correctly.'
+      );
     } else {
-      console.log('\n⚠️  Some quality requirements not met. The plugin needs improvement.');
+      console.log(
+        '\n⚠️  Some quality requirements not met. The plugin needs improvement.'
+      );
     }
 
     // Save detailed results

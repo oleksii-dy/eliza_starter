@@ -94,9 +94,9 @@ export const loadPluginAction: Action = {
   ],
 
   async validate(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> {
-    const pluginManager = runtime.getService(
+    const pluginManager = runtime.getService<PluginManagerService>(
       PluginManagerServiceType.PLUGIN_MANAGER
-    ) as PluginManagerService;
+    );
     if (!pluginManager) {return false;}
 
     // Check if the message text contains load-related keywords
@@ -120,9 +120,9 @@ export const loadPluginAction: Action = {
     options?: Record<string, unknown>,
     callback?: HandlerCallback
   ): Promise<ActionResult> {
-    const pluginManager = runtime.getService(
+    const pluginManager = runtime.getService<PluginManagerService>(
       PluginManagerServiceType.PLUGIN_MANAGER
-    ) as PluginManagerService;
+    );
 
     if (!pluginManager) {
       if (callback) {

@@ -16,6 +16,7 @@ export const createCustodialWalletAction: Action = {
   similes: ['CREATE_WALLET', 'NEW_WALLET', 'SETUP_WALLET'],
   description:
     'Create a new custodial wallet for users, rooms, or worlds with trust-based access control',
+  enabled: false, // Disabled by default - extremely dangerous, creates cryptocurrency wallets
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const custodialService = runtime.getService<CustodialWalletService>('custodial-wallet');
@@ -158,6 +159,7 @@ export const listCustodialWalletsAction: Action = {
   name: 'LIST_CUSTODIAL_WALLETS',
   similes: ['SHOW_WALLETS', 'MY_WALLETS', 'VIEW_WALLETS'],
   description: 'List custodial wallets accessible to the user',
+  enabled: false, // Disabled by default - can expose sensitive wallet information
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const custodialService = runtime.getService<CustodialWalletService>('custodial-wallet');
@@ -274,6 +276,7 @@ export const transferWalletOwnershipAction: Action = {
   name: 'TRANSFER_WALLET_OWNERSHIP',
   similes: ['TRANSFER_OWNERSHIP', 'GIVE_WALLET', 'CHANGE_OWNER'],
   description: 'Transfer ownership of a custodial wallet to another entity',
+  enabled: false, // Disabled by default - extremely dangerous, transfers wallet ownership and funds access
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const custodialService = runtime.getService<CustodialWalletService>('custodial-wallet');
@@ -384,6 +387,7 @@ export const addWalletControllerAction: Action = {
   name: 'ADD_WALLET_CONTROLLER',
   similes: ['ADD_CONTROLLER', 'GIVE_ACCESS', 'ADD_USER'],
   description: 'Add a controller to a custodial wallet',
+  enabled: false, // Disabled by default - can grant unauthorized access to cryptocurrency wallets
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const custodialService = runtime.getService<CustodialWalletService>('custodial-wallet');
@@ -500,7 +504,7 @@ async function extractWalletParams(
   maxBalance?: number;
   allowedTokens?: string[];
 }> {
-  const params: any = {};
+  const params: Record<string, unknown> = {};
 
   // Extract name
   const nameMatch = text.match(/name[:\s]+"([^"]+)"/i) || text.match(/called\s+"([^"]+)"/i);
@@ -541,7 +545,7 @@ async function extractTransferParams(
   walletId?: UUID;
   newOwnerId?: UUID;
 }> {
-  const params: any = {};
+  const params: Record<string, unknown> = {};
 
   // Extract wallet ID - match various patterns
   const walletMatch =
@@ -567,7 +571,7 @@ async function extractControllerParams(
   walletId?: UUID;
   controllerId?: UUID;
 }> {
-  const params: any = {};
+  const params: Record<string, unknown> = {};
 
   // Extract controller ID first (comes before wallet in test message)
   // Match "add controller <id>" or "controller <id>"

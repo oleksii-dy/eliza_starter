@@ -1,5 +1,17 @@
 // Core Research Types for DeepResearch Bench Compatibility
 
+export interface SearchProvider {
+  name: string;
+  supportedDomains: string[];
+  search(query: string, options?: any): Promise<SearchResult[]>;
+}
+
+export interface ContentExtractor {
+  name: string;
+  supportedTypes: string[];
+  extract(content: string, type: string): Promise<any>;
+}
+
 export interface ResearchProject {
   id: string;
   query: string;
@@ -94,6 +106,7 @@ export interface SubQuery {
   expectedResultType: ResultType;
   completed: boolean;
   results?: SubQueryResult;
+  dependencies?: string[];
 }
 
 export interface SubQueryResult {
@@ -446,6 +459,7 @@ export interface SearchMetadata {
   type?: string;
   language: string;
   location?: string;
+  provider?: string;
 }
 
 // Progress Tracking

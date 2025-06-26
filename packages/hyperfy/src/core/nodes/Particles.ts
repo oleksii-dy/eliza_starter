@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { every, isArray, isBoolean, isFunction, isNumber, isString } from 'lodash-es';
+// import * as THREE from 'three';
+import { every, isArray, isBoolean, isNumber, isString } from 'lodash-es';
 
 import { Node } from './Node';
 

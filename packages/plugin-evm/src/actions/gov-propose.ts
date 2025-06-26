@@ -4,16 +4,22 @@ import {
   type State,
   type HandlerCallback,
   type ActionResult,
-  elizaLogger,
-  ActionExample,
-  type Action,
+  elizaLogger as _elizaLogger,
+  ActionExample as _ActionExample,
+  type Action as _Action,
 } from '@elizaos/core';
-import { encodeAbiParameters, parseAbiParameters } from 'viem';
+import {
+  type Address,
+  type ByteArray as _ByteArray,
+  type Hex,
+  encodeAbiParameters as _encodeAbiParameters,
+  encodeFunctionData,
+  parseAbiParameters as _parseAbiParameters,
+} from 'viem';
 import { type WalletProvider, initWalletProvider } from '../providers/wallet';
 import { proposeTemplate } from '../templates';
 import type { ProposeProposalParams, SupportedChain, Transaction } from '../types';
 import governorArtifacts from '../contracts/artifacts/OZGovernor.json';
-import { type ByteArray, type Hex, encodeFunctionData, type Address } from 'viem';
 
 export { proposeTemplate };
 
@@ -71,13 +77,15 @@ export class ProposeAction {
 
 export const proposeAction = {
   name: 'propose',
-  description: 'Execute a DAO governance proposal and enable chaining with voting actions, status checks, or related governance workflows',
+  description:
+    'Execute a DAO governance proposal and enable chaining with voting actions, status checks, or related governance workflows',
+  enabled: false, // Disabled by default - can create governance proposals affecting DAOs
   handler: async (
     runtime: IAgentRuntime,
     _message: Memory,
     _state?: State,
     options?: Record<string, unknown>,
-    callback?: HandlerCallback,
+    callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
       // Ensure options is provided
@@ -181,7 +189,8 @@ export const proposeAction = {
     }
   },
   template: proposeTemplate,
-  validate: async (runtime: IAgentRuntime) => {
+  // eslint-disable-next-line require-await
+  validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const privateKey = runtime.getSetting('EVM_PRIVATE_KEY');
     return typeof privateKey === 'string' && privateKey.startsWith('0x');
   },
@@ -197,8 +206,9 @@ export const proposeAction = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll create the fee update proposal and then cast a vote for it.',
-          thought: 'Complete governance participation: create the proposal first to initiate the democratic process, then cast my vote to support the change. This demonstrates full engagement in governance.',
+          text: "I'll create the fee update proposal and then cast a vote for it.",
+          thought:
+            'Complete governance participation: create the proposal first to initiate the democratic process, then cast my vote to support the change. This demonstrates full engagement in governance.',
           actions: ['EVM_GOVERNANCE_PROPOSE', 'EVM_GOVERNANCE_VOTE'],
         },
       },
@@ -214,8 +224,9 @@ export const proposeAction = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll check the current proposal status and create a new one if needed.',
-          thought: "Governance oversight workflow: first review existing proposals to avoid duplication, then create new proposal if the issue hasn't been addressed. This ensures efficient governance.",
+          text: "I'll check the current proposal status and create a new one if needed.",
+          thought:
+            "Governance oversight workflow: first review existing proposals to avoid duplication, then create new proposal if the issue hasn't been addressed. This ensures efficient governance.",
           actions: ['CHECK_PROPOSALS', 'EVM_GOVERNANCE_PROPOSE'],
         },
       },
@@ -231,7 +242,7 @@ export const proposeAction = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll submit your governance proposal to transfer tokens on Ethereum.',
+          text: "I'll submit your governance proposal to transfer tokens on Ethereum.",
           action: 'EVM_GOVERNANCE_PROPOSE',
         },
       },
@@ -247,8 +258,9 @@ export const proposeAction = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll create the protocol parameter update proposal and then help you vote on it once it becomes active.',
-          thought: 'Full governance workflow: proposing protocol changes requires creating the proposal first, then participating in the voting process. This ensures proper democratic governance.',
+          text: "I'll create the protocol parameter update proposal and then help you vote on it once it becomes active.",
+          thought:
+            'Full governance workflow: proposing protocol changes requires creating the proposal first, then participating in the voting process. This ensures proper democratic governance.',
           action: 'EVM_GOVERNANCE_PROPOSE',
           workflowContext: {
             step: 'governance-initiation',
@@ -268,8 +280,9 @@ export const proposeAction = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll create the treasury funding proposal and then help coordinate community voting efforts.',
-          thought: 'Community governance coordination: create the proposal first to define the funding request, then organize community support for democratic approval.',
+          text: "I'll create the treasury funding proposal and then help coordinate community voting efforts.",
+          thought:
+            'Community governance coordination: create the proposal first to define the funding request, then organize community support for democratic approval.',
           action: 'EVM_GOVERNANCE_PROPOSE',
           workflowContext: {
             step: 'community-governance',
@@ -289,8 +302,9 @@ export const proposeAction = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll submit the tokenomics model proposal to governance. This is a significant protocol change that will require community discussion and voting.',
-          thought: "Major protocol governance: tokenomics changes are critical proposals that need careful community consideration. I'll submit it properly formatted for governance review.",
+          text: "I'll submit the tokenomics model proposal to governance. This is a significant protocol change that will require community discussion and voting.",
+          thought:
+            "Major protocol governance: tokenomics changes are critical proposals that need careful community consideration. I'll submit it properly formatted for governance review.",
           action: 'EVM_GOVERNANCE_PROPOSE',
           workflowContext: {
             step: 'protocol-governance',

@@ -16,7 +16,8 @@ env:
 on:
   push:
     branches:
-      - '*'
+      - 'main'
+      - 'develop'
     paths:
       - 'packages/client/**'
       - 'packages/core/**'
@@ -53,7 +54,7 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Build packages
+      - name: Build packages (Turbo cached)
         run: bun run build
 
       - name: Install Cypress binary
@@ -92,7 +93,7 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Build packages
+      - name: Build packages (Turbo cached)
         run: bun run build
 
       - name: Install Cypress binary

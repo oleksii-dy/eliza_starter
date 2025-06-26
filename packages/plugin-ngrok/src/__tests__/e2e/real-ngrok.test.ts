@@ -9,6 +9,7 @@ import * as https from 'https';
 import { config } from 'dotenv';
 import * as path from 'path';
 import { testConfig, testDelay, shouldSkipNgrokTests } from '../test-config';
+import { ngrokSafeDelay } from '../test-helpers';
 
 // Load environment variables
 config({ path: path.resolve(process.cwd(), '.env') });
@@ -222,16 +223,28 @@ describe('Real ngrok API E2E Tests', () => {
 
         for (let i = 0; i < 3; i++) {
           console.log(`\n🔄 Cycle ${i + 1}/3`);
-          const url = await service.startTunnel(testServerPort);
-          expect(url).toBeTruthy();
-          expect(service.isActive()).toBe(true);
 
-          await service.stopTunnel();
-          expect(service.isActive()).toBe(false);
+          try {
+            const url = await service.startTunnel(testServerPort);
+            expect(url).toBeTruthy();
+            expect(service.isActive()).toBe(true);
 
-          // Longer delay between cycles to avoid domain conflicts
-          if (i < 2) {
-            await testDelay(testConfig.ngrok.minIntervalBetweenStarts);
+            await service.stopTunnel();
+            expect(service.isActive()).toBe(false);
+
+            // Use enhanced delay between cycles to ensure ngrok API is ready
+            if (i < 2) {
+              console.log('⏳ Waiting for ngrok to fully clean up...');
+              await ngrokSafeDelay(testConfig.ngrok.minIntervalBetweenStarts + 2000);
+            }
+          } catch (error: any) {
+            console.error(`❌ Cycle ${i + 1} failed:`, error.message);
+            // If we get an error, wait extra time before continuing
+            if (i < 2) {
+              console.log('⏳ Extra wait after error...');
+              await ngrokSafeDelay(5000);
+            }
+            throw error;
           }
         }
       },
@@ -466,10 +479,13 @@ describe('Real ngrok API E2E Tests', () => {
       const url = await service.startTunnel(testServerPort);
       expect(url).toBeTruthy();
 
-      // Stop and restart quickly
+      // Stop and wait for cleanup
       await service.stopTunnel();
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log('⏳ Waiting for ngrok to fully stop...');
+      await ngrokSafeDelay(3000); // Increased delay with API check
 
+      // Restart tunnel
+      console.log('🔄 Restarting tunnel...');
       const newUrl = await service.startTunnel(testServerPort);
       expect(newUrl).toBeTruthy();
       expect(service.isActive()).toBe(true);

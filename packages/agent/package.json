@@ -41,7 +41,7 @@
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^4.1.10",
-    "zod": "3.24.2"
+    "zod": "3.25.67"
   },
   "devDependencies": {
     "@cypress/react": "^9.0.1",
@@ -55,30 +55,16 @@
     "cypress": "^14.4.1",
     "eslint": "^9.22.0",
     "prettier": "3.5.3",
-    "tsup": "8.5.0",
     "typescript": "5.8.3",
     "vite": "^6.0.1"
   },
   "scripts": {
-    "start": "elizaos start",
-    "dev": "elizaos dev",
-    "build": "bun run typecheck && vite build && tsup",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
-    "lint:check": "eslint src && prettier --check ./src",
-    "typecheck": "tsc --noEmit --project tsconfig.build.json",
-    "typecheck:watch": "tsc --noEmit --watch",
-    "test": "bun test",
-    "test:coverage": "bun test --coverage",
-    "test:watch": "bun test --watch",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src",
-    "check-all": "bun run typecheck && bun run format:check && bun run test",
-    "cy:open": "cypress open",
-    "cy:run": "cypress run --component",
-    "cy:test": "cypress run --component --reporter spec",
-    "cypress:component": "cypress run --component",
-    "cypress:e2e": "cypress run --e2e",
-    "cypress:open": "cypress open"
+    "typecheck": "tsc --noEmit",
+    "test": "elizaos test"
   },
   "publishConfig": {
     "access": "public"

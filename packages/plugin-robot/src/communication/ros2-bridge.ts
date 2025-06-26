@@ -336,10 +336,10 @@ export class ROS2Bridge extends EventEmitter {
     return new Promise((resolve, reject) => {
       service.callService(
         new ROSLIB.ServiceRequest(request),
-        (response) => {
+        (response: any) => {
           resolve(response);
         },
-        (error) => {
+        (error: any) => {
           reject(error);
         }
       );
@@ -400,10 +400,10 @@ export class ROS2Bridge extends EventEmitter {
 
     return new Promise((resolve, reject) => {
       this.ros!.getTopics(
-        (topics) => {
+        (topics: any) => {
           resolve(topics.topics);
         },
-        (error) => {
+        (error: any) => {
           reject(error);
         }
       );
@@ -418,10 +418,10 @@ export class ROS2Bridge extends EventEmitter {
 
     return new Promise((resolve, reject) => {
       this.ros!.getServices(
-        (services) => {
+        (services: any) => {
           resolve(services);
         },
-        (error) => {
+        (error: any) => {
           reject(error);
         }
       );

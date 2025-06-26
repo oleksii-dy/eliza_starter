@@ -1,4 +1,12 @@
 {
-  "name": "Default",
-  "apps": ["Model.hyp", "Image.hyp", "Video.hyp", "Text.hyp"]
+  "name": "RPG",
+  "description": "RuneScape-style RPG components for Hyperfy worlds",
+  "apps": [
+    "GoblinNPC.hyp",
+    "SpawnArea.hyp", 
+    "BankBooth.hyp",
+    "ShopKeeper.hyp",
+    "LootChest.hyp",
+    "QuestGiver.hyp"
+  ]
 }

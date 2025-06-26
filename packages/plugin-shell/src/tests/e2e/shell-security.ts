@@ -13,7 +13,7 @@ export class ShellSecurityE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing directory traversal prevention...');
 
-        const shellService = runtime.getService<ShellService>('SHELL' as any);
+        const shellService = runtime.getService<ShellService>('SHELL');
         if (!shellService) {
           throw new Error('Shell service not available');
         }
@@ -101,7 +101,7 @@ export class ShellSecurityE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing special character escaping...');
 
-        const shellService = runtime.getService<ShellService>('SHELL' as any);
+        const shellService = runtime.getService<ShellService>('SHELL');
         if (!shellService) {
           throw new Error('Shell service not available');
         }
@@ -149,7 +149,7 @@ export class ShellSecurityE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing command history audit trail...');
 
-        const shellService = runtime.getService<ShellService>('SHELL' as any);
+        const shellService = runtime.getService<ShellService>('SHELL');
         if (!shellService) {
           throw new Error('Shell service not available');
         }

@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import {
   PluginCreationService,
   type PluginSpecification,
-  ClaudeModel,
-} from '../services/plugin-creation-service.js';
+  ClaudeModel
+} from '../services/PluginCreationService';
 import type { IAgentRuntime } from '@elizaos/core';
 import fs from 'fs-extra';
 import path from 'path';
@@ -61,13 +61,13 @@ export const TIME_PLUGIN_SPEC: PluginSpecification = {
 
 describe('E2E Plugin Creation Tests', () => {
   let service: PluginCreationService;
-  let runtime: IAgentRuntime;
+  let _runtime: IAgentRuntime;
   let testOutputDir: string;
 
   beforeEach(async () => {
     testOutputDir = path.join(process.cwd(), 'test-output', 'plugins', Date.now().toString());
 
-    runtime = {
+    _runtime = {
       getSetting: mock().mockImplementation((key: string) => {
         if (key === 'PLUGIN_DATA_DIR') {
           return testOutputDir;
@@ -84,12 +84,12 @@ describe('E2E Plugin Creation Tests', () => {
       services: new Map(),
     } as any;
 
-    service = new PluginCreationService(runtime);
-    await service.initialize(runtime);
+    service = new PluginCreationService(_runtime);
+    await service.initialize(_runtime);
   });
 
   it('should create a simple plugin with template', async () => {
-    const spec: PluginSpecification = {
+    const _spec: PluginSpecification = {
       name: '@test/simple-plugin',
       description: 'A simple test plugin',
       actions: [
@@ -100,7 +100,7 @@ describe('E2E Plugin Creation Tests', () => {
       ],
     };
 
-    const jobId = await service.createPlugin(spec);
+    const jobId = await service.createPlugin(_spec);
     expect(jobId).toBeDefined();
 
     // Wait for job to start

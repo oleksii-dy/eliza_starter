@@ -12,7 +12,7 @@ import type {
   TrustCalculationConfig,
   TrustDecision,
   TrustRequirements,
-  SemanticTrustEvidence
+  SemanticTrustEvidence,
 } from '../types/trust';
 
 /**
@@ -41,8 +41,8 @@ export class TrustEngine {
         competence: 0.2,
         integrity: 0.2,
         benevolence: 0.2,
-        transparency: 0.2
-      }
+        transparency: 0.2,
+      },
     };
 
     this.calculator = new TrustCalculator({ ...defaultConfig, ...config });
@@ -57,10 +57,7 @@ export class TrustEngine {
     return this.calculator.createDefaultProfile(entityId);
   }
 
-  async calculateTrust(
-    entityId: UUID,
-    context: TrustContext
-  ): Promise<TrustProfile> {
+  async calculateTrust(entityId: UUID, context: TrustContext): Promise<TrustProfile> {
     const profile = await this.getProfile(entityId);
 
     // Update last calculated time
@@ -69,17 +66,12 @@ export class TrustEngine {
     return profile;
   }
 
-  async recordSemanticEvidence(
-    entityId: UUID,
-    evidence: SemanticTrustEvidence
-  ): Promise<void> {
+  async recordSemanticEvidence(entityId: UUID, evidence: SemanticTrustEvidence): Promise<void> {
     const profile = await this.getProfile(entityId);
     const oldTrustScore = profile.overallTrust;
     const newDimensions = { ...profile.dimensions };
 
-    for (const [dimension, impact] of Object.entries(
-      evidence.affectedDimensions
-    )) {
+    for (const [dimension, impact] of Object.entries(evidence.affectedDimensions)) {
       if (dimension in newDimensions && impact !== undefined) {
         const change = (impact - 50) / 5; // Convert 0-100 to -10 to +10
         newDimensions[dimension as keyof TrustDimensions] = Math.max(
@@ -97,7 +89,7 @@ export class TrustEngine {
       overallTrust: newOverall,
       dimensions: newDimensions,
       lastCalculated: Date.now(),
-      interactionCount: profile.interactionCount + 1
+      interactionCount: profile.interactionCount + 1,
     };
 
     const trustEvidence: TrustEvidence = {
@@ -115,8 +107,8 @@ export class TrustEngine {
         sentiment: evidence.sentiment,
         affectedDimensions: evidence.affectedDimensions,
         analysisConfidence: evidence.analysisConfidence,
-        sourceContent: evidence.sourceContent
-      }
+        sourceContent: evidence.sourceContent,
+      },
     };
 
     updatedProfile.evidence.push(trustEvidence);
@@ -141,7 +133,11 @@ export class TrustEngine {
       const updatedProfile = await this.getProfile(entityId);
 
       // Get recent trust comments to include in context
-      const recentComments = await this.db.getTrustCommentHistory(entityId, this.runtime.agentId, 3);
+      const recentComments = await this.db.getTrustCommentHistory(
+        entityId,
+        this.runtime.agentId,
+        3
+      );
 
       // Get recent evidence for context
       const recentEvidence = await this.db.getTrustEvidence(entityId);
@@ -157,10 +153,10 @@ Latest Event: ${latestEvidence.description}
 Event Impact: ${latestEvidence.sentiment} (${latestEvidence.impact > 0 ? '+' : ''}${latestEvidence.impact})
 
 Recent Trust History:
-${recentComments.map(c => `- ${new Date(c.timestamp).toLocaleDateString()}: Trust was ${c.trustScore.toFixed(1)} - "${c.comment}"`).join('\n') || 'No previous assessments'}
+${recentComments.map((c) => `- ${new Date(c.timestamp).toLocaleDateString()}: Trust was ${c.trustScore.toFixed(1)} - "${c.comment}"`).join('\n') || 'No previous assessments'}
 
 Recent Behavior Patterns:
-${last5Evidence.map(e => `- ${e.description} (${e.impact > 0 ? 'positive' : e.impact < 0 ? 'negative' : 'neutral'})`).join('\n')}
+${last5Evidence.map((e) => `- ${e.description} (${e.impact > 0 ? 'positive' : e.impact < 0 ? 'negative' : 'neutral'})`).join('\n')}
 
 Trust Dimensions:
 - Reliability: ${updatedProfile.dimensions.reliability.toFixed(1)}/100
@@ -180,7 +176,7 @@ Do not include the numerical score in your response. Focus on the narrative and 
       const response = await this.runtime.useModel('TEXT_REASONING_SMALL', {
         prompt,
         temperature: 0.7,
-        maxTokens: 200
+        maxTokens: 200,
       });
 
       const comment = response.content.trim();
@@ -196,8 +192,8 @@ Do not include the numerical score in your response. Focus on the narrative and 
           oldTrust,
           dimensions: updatedProfile.dimensions,
           triggeringEvent: latestEvidence.description,
-          evidenceCount: recentEvidence.length
-        }
+          evidenceCount: recentEvidence.length,
+        },
       });
 
       logger.info(`[TrustEngine] Generated trust comment for ${entityId}: ${comment}`);
@@ -225,17 +221,13 @@ Do not include the numerical score in your response. Focus on the narrative and 
       description,
       impact: interaction.impact,
       sentiment:
-        interaction.impact > 0
-          ? 'positive'
-          : interaction.impact < 0
-            ? 'negative'
-            : 'neutral',
+        interaction.impact > 0 ? 'positive' : interaction.impact < 0 ? 'negative' : 'neutral',
       affectedDimensions: {},
       analysisConfidence: 0.5,
       sourceContent: JSON.stringify(interaction.details),
       timestamp: interaction.timestamp,
       reportedBy: interaction.sourceEntityId,
-      context: context as TrustContext
+      context: context as TrustContext,
     };
 
     await this.recordSemanticEvidence(interaction.sourceEntityId, semanticEvidence);
@@ -257,8 +249,8 @@ Do not include the numerical score in your response. Focus on the narrative and 
         reason: `Trust score ${profile.overallTrust.toFixed(1)} is below required minimum of ${requirements.minimumTrust}.`,
         suggestions: [
           'Engage in more positive community interactions.',
-          'Complete verification steps.'
-        ]
+          'Complete verification steps.',
+        ],
       };
     }
 
@@ -272,7 +264,7 @@ Do not include the numerical score in your response. Focus on the narrative and 
             confidence: profile.confidence,
             dimensionsChecked: { [dimension]: profile.dimensions[dimension] },
             reason: `"${dimension}" score of ${profile.dimensions[dimension].toFixed(1)} is below required minimum of ${req}.`,
-            suggestions: [`Improve your ${dimension} score through consistent positive actions.`]
+            suggestions: [`Improve your ${dimension} score through consistent positive actions.`],
           };
         }
       }
@@ -283,7 +275,7 @@ Do not include the numerical score in your response. Focus on the narrative and 
       trustScore: profile.overallTrust,
       confidence: profile.confidence,
       dimensionsChecked: requirements.dimensions || {},
-      reason: 'All trust requirements met.'
+      reason: 'All trust requirements met.',
     };
   }
 

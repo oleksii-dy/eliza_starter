@@ -1,7 +1,6 @@
-import type { IAgentRuntime, UUID } from '@elizaos/core';
-import { logger, createUniqueUuid } from '@elizaos/core';
+import { elizaLogger as logger, createUniqueUuid, type IAgentRuntime, type UUID } from '@elizaos/core';
 import { secureCrypto } from '../security/crypto';
-import { EnvManagerService } from '../service';
+import { EnhancedSecretManager } from '../enhanced-service';
 import type {
   SecretContext,
   SecretConfig,
@@ -15,7 +14,7 @@ import { validateEnvVar } from '../validation';
  * Unified Secret Manager Service
  * Consolidates all secret management functionality into a single service with internal managers
  */
-export class UnifiedSecretManager extends EnvManagerService {
+export class UnifiedSecretManager extends EnhancedSecretManager {
   static serviceType = 'SECRETS';
   capabilityDescription =
     'Comprehensive secret management with encryption, access control, versioning, and audit logging';
@@ -70,13 +69,15 @@ export class UnifiedSecretManager extends EnvManagerService {
       return await this.storage.get(key, context);
     } catch (error) {
       logger.error(`Error getting secret ${key}:`, error);
-      await this.audit.logAccess(
-        key,
-        'read',
-        context,
-        false,
-        error instanceof Error ? error.message : String(error)
-      );
+      if (this.audit) {
+        await this.audit.logAccess(
+          key,
+          'read',
+          context,
+          false,
+          error instanceof Error ? error.message : String(error)
+        );
+      }
       return null;
     }
   }
@@ -117,13 +118,15 @@ export class UnifiedSecretManager extends EnvManagerService {
       return await this.storage.set(key, value, context, config);
     } catch (error) {
       logger.error(`Error setting secret ${key}:`, error);
-      await this.audit.logAccess(
-        key,
-        'write',
-        context,
-        false,
-        error instanceof Error ? error.message : String(error)
-      );
+      if (this.audit) {
+        await this.audit.logAccess(
+          key,
+          'write',
+          context,
+          false,
+          error instanceof Error ? error.message : String(error)
+        );
+      }
       return false;
     }
   }
@@ -144,13 +147,15 @@ export class UnifiedSecretManager extends EnvManagerService {
       return await this.storage.delete(key, context);
     } catch (error) {
       logger.error(`Error deleting secret ${key}:`, error);
-      await this.audit.logAccess(
-        key,
-        'delete',
-        context,
-        false,
-        error instanceof Error ? error.message : String(error)
-      );
+      if (this.audit) {
+        await this.audit.logAccess(
+          key,
+          'delete',
+          context,
+          false,
+          error instanceof Error ? error.message : String(error)
+        );
+      }
       return false;
     }
   }
@@ -854,7 +859,7 @@ class RotationManager {
   private async processRotations(): Promise<void> {
     const now = Date.now();
 
-    for (const [key, schedule] of this.schedules) {
+    for (const [_key, schedule] of this.schedules) {
       if (schedule.nextRotation <= now) {
         await this.rotateSecret(schedule.key, schedule.context);
         schedule.nextRotation = now + schedule.intervalMs;

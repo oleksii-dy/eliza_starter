@@ -23,12 +23,12 @@ describe('TrustMiddleware', () => {
           competence: 75,
           integrity: 70,
           benevolence: 80,
-          transparency: 70
+          transparency: 70,
         },
         confidence: 0.8,
         lastUpdated: Date.now(),
         trend: 'stable',
-        reputation: 'good'
+        reputation: 'good',
       }),
       updateTrust: mock().mockResolvedValue({
         overall: 76,
@@ -37,13 +37,13 @@ describe('TrustMiddleware', () => {
           competence: 76,
           integrity: 71,
           benevolence: 81,
-          transparency: 71
+          transparency: 71,
         },
         confidence: 0.81,
         lastUpdated: Date.now(),
         trend: 'improving',
-        reputation: 'good'
-      })
+        reputation: 'good',
+      }),
     };
 
     // Create mock runtime with trust service
@@ -51,11 +51,11 @@ describe('TrustMiddleware', () => {
       getService: mock((name: string) => {
         if (name === 'trust') {
           return {
-            trustService: mockTrustService
+            trustService: mockTrustService,
           } as any;
         }
         return null;
-      }) as any
+      }) as any,
     });
 
     // Create test action
@@ -66,7 +66,7 @@ describe('TrustMiddleware', () => {
       handler: mock().mockResolvedValue({
         values: { success: true },
         data: { result: 'completed' },
-        text: 'Action completed successfully'
+        text: 'Action completed successfully',
       }),
       similes: ['test', 'action'],
       examples: [],
@@ -79,9 +79,9 @@ describe('TrustMiddleware', () => {
       agentId: 'agent-123' as UUID,
       roomId: 'room-123' as UUID,
       content: {
-        text: 'Test message'
+        text: 'Test message',
       },
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
   });
 
@@ -112,7 +112,7 @@ describe('TrustMiddleware', () => {
         confidence: 0.5,
         lastUpdated: Date.now(),
         trend: 'declining',
-        reputation: 'poor'
+        reputation: 'poor',
       });
 
       const wrappedAction = TrustMiddleware.wrapAction(testAction, 50);
@@ -128,7 +128,7 @@ describe('TrustMiddleware', () => {
           action: 'TEST_ACTION',
           requiredTrust: 50,
           actualTrust: 25,
-          reason: 'insufficient_trust'
+          reason: 'insufficient_trust',
         })
       );
     });
@@ -136,7 +136,7 @@ describe('TrustMiddleware', () => {
     it('should skip trust check for agent messages', async () => {
       const agentMessage = {
         ...testMessage,
-        entityId: mockRuntime.agentId
+        entityId: mockRuntime.agentId,
       };
 
       const wrappedAction = TrustMiddleware.wrapAction(testAction);
@@ -160,16 +160,16 @@ describe('TrustMiddleware', () => {
     it('should record successful action execution', async () => {
       const wrappedAction = TrustMiddleware.wrapAction(testAction);
 
-      const result = await wrappedAction.handler(
-        mockRuntime,
-        testMessage,
-        { values: {}, data: {}, text: '' }
-      );
+      const result = await wrappedAction.handler(mockRuntime, testMessage, {
+        values: {},
+        data: {},
+        text: '',
+      });
 
       expect(result).toMatchObject({
         values: { success: true },
         data: { result: 'completed' },
-        text: 'Action completed successfully'
+        text: 'Action completed successfully',
       });
 
       expect(mockTrustService.updateTrust).toHaveBeenCalledWith(
@@ -178,7 +178,7 @@ describe('TrustMiddleware', () => {
         1,
         expect.objectContaining({
           action: 'TEST_ACTION',
-          elevated: false
+          elevated: false,
         })
       );
     });
@@ -200,7 +200,7 @@ describe('TrustMiddleware', () => {
         expect.objectContaining({
           action: 'TEST_ACTION',
           error: 'Action failed',
-          elevated: false
+          elevated: false,
         })
       );
     });
@@ -209,7 +209,7 @@ describe('TrustMiddleware', () => {
       // Mock elevated action - use an actual high-trust action from the requirements
       const elevatedAction = {
         ...testAction,
-        name: 'SHELL_EXECUTE'
+        name: 'SHELL_EXECUTE',
       };
 
       const wrappedAction = TrustMiddleware.wrapAction(elevatedAction);
@@ -222,7 +222,7 @@ describe('TrustMiddleware', () => {
         2, // Higher impact for elevated actions
         expect.objectContaining({
           action: 'SHELL_EXECUTE',
-          elevated: true
+          elevated: true,
         })
       );
     });
@@ -232,12 +232,16 @@ describe('TrustMiddleware', () => {
 
       const wrappedAction = TrustMiddleware.wrapAction(testAction);
 
-      const result = await wrappedAction.handler(mockRuntime, testMessage, { values: {}, data: {}, text: '' });
+      const result = await wrappedAction.handler(mockRuntime, testMessage, {
+        values: {},
+        data: {},
+        text: '',
+      });
 
       expect(result).toMatchObject({
         values: { success: true },
         data: { action: 'TEST_ACTION', executed: true },
-        text: 'Action TEST_ACTION executed successfully'
+        text: 'Action TEST_ACTION executed successfully',
       });
     });
   });
@@ -256,8 +260,8 @@ describe('TrustMiddleware', () => {
             handler: mock().mockResolvedValue({ values: {}, data: {}, text: 'Done' }),
             similes: [],
             examples: [],
-          }
-        ]
+          },
+        ],
       };
 
       const wrappedPlugin = TrustMiddleware.wrapPlugin(testPlugin);
@@ -272,7 +276,7 @@ describe('TrustMiddleware', () => {
       const testPlugin = {
         name: 'test-plugin',
         description: 'Test plugin',
-        actions: [testAction]
+        actions: [testAction],
       };
 
       const trustOverrides = new Map([['TEST_ACTION', 90]]);
@@ -286,7 +290,7 @@ describe('TrustMiddleware', () => {
     it('should handle plugins without actions', () => {
       const testPlugin = {
         name: 'test-plugin',
-        description: 'Test plugin without actions'
+        description: 'Test plugin without actions',
       };
 
       const wrappedPlugin = TrustMiddleware.wrapPlugin(testPlugin);
@@ -301,10 +305,31 @@ describe('TrustMiddleware', () => {
         name: 'test-plugin',
         description: 'Test plugin',
         actions: [
-          { name: 'READ_DATA', description: 'Read data', validate: mock(), handler: mock(), similes: [], examples: [] },
-          { name: 'WRITE_DATA', description: 'Write data', validate: mock(), handler: mock(), similes: [], examples: [] },
-          { name: 'DELETE_DATA', description: 'Delete data', validate: mock(), handler: mock(), similes: [], examples: [] }
-        ]
+          {
+            name: 'READ_DATA',
+            description: 'Read data',
+            validate: mock(),
+            handler: mock(),
+            similes: [],
+            examples: [],
+          },
+          {
+            name: 'WRITE_DATA',
+            description: 'Write data',
+            validate: mock(),
+            handler: mock(),
+            similes: [],
+            examples: [],
+          },
+          {
+            name: 'DELETE_DATA',
+            description: 'Delete data',
+            validate: mock(),
+            handler: mock(),
+            similes: [],
+            examples: [],
+          },
+        ],
       };
 
       const requirements = TrustMiddleware.getPluginTrustRequirements(testPlugin);
@@ -319,7 +344,7 @@ describe('TrustMiddleware', () => {
     it('should handle plugins without actions', () => {
       const testPlugin = {
         name: 'test-plugin',
-        description: 'Test plugin without actions'
+        description: 'Test plugin without actions',
       };
 
       const requirements = TrustMiddleware.getPluginTrustRequirements(testPlugin);
@@ -348,7 +373,7 @@ describe('TrustMiddleware', () => {
         confidence: 0.5,
         lastUpdated: Date.now(),
         trend: 'declining',
-        reputation: 'poor'
+        reputation: 'poor',
       });
 
       const canExecute = await TrustMiddleware.canExecuteAction(

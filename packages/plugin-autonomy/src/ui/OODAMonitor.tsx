@@ -7,7 +7,7 @@ interface OODAMonitorProps {
 }
 
 const OODAMonitor: React.FC<OODAMonitorProps> = ({ apiUrl = 'http://localhost:3001' }) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [_socket, setSocket] = useState<Socket | null>(null);
   const [context, setContext] = useState<OODAContext | null>(null);
   const [metrics, setMetrics] = useState<LoopMetrics | null>(null);
   const [isConnected, setIsConnected] = useState(false);

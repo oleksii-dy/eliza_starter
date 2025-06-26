@@ -14,17 +14,17 @@ export enum SecretOperation {
   CREATE = 'CREATE',
   UPDATE = 'UPDATE',
   DELETE = 'DELETE',
-  LIST = 'LIST'
+  LIST = 'LIST',
 }
 
 /**
  * Secret sensitivity levels
  */
 export enum SecretSensitivity {
-  LOW = 'LOW',       // Public API keys, non-critical configs
+  LOW = 'LOW', // Public API keys, non-critical configs
   MEDIUM = 'MEDIUM', // Database URLs, service tokens
-  HIGH = 'HIGH',     // Admin tokens, private keys
-  CRITICAL = 'CRITICAL' // Root passwords, master keys
+  HIGH = 'HIGH', // Admin tokens, private keys
+  CRITICAL = 'CRITICAL', // Root passwords, master keys
 }
 
 /**
@@ -50,7 +50,7 @@ export async function validateSecretAccess(
       logger.warn('[SecretsIntegration] Trust engine not available, denying secret access');
       return {
         allowed: false,
-        reason: 'Trust engine not available'
+        reason: 'Trust engine not available',
       };
     }
 
@@ -63,7 +63,7 @@ export async function validateSecretAccess(
       evaluatorId: runtime.agentId,
       action: `SECRET_${operation}`,
       worldId: message.worldId,
-      roomId: message.roomId
+      roomId: message.roomId,
     };
 
     // Evaluate trust decision
@@ -73,7 +73,7 @@ export async function validateSecretAccess(
         minimumTrust: requiredTrust,
         dimensions: requiredDimensions,
         minimumInteractions: getMinimumInteractions(sensitivity),
-        minimumConfidence: getMinimumConfidence(sensitivity)
+        minimumConfidence: getMinimumConfidence(sensitivity),
       },
       trustContext
     );
@@ -91,25 +91,25 @@ export async function validateSecretAccess(
             secretName,
             sensitivity,
             trustScore: trustDecision.trustScore,
-            requiredTrust
+            requiredTrust,
           },
           details: {
             reason: trustDecision.reason,
-            dimensions: trustDecision.dimensionsChecked
-          }
+            dimensions: trustDecision.dimensionsChecked,
+          },
         });
       }
 
       // Check if elevation could help
-      const requiresElevation = trustDecision.trustScore >= (requiredTrust - 20) &&
-                               trustDecision.trustScore >= 60;
+      const requiresElevation =
+        trustDecision.trustScore >= requiredTrust - 20 && trustDecision.trustScore >= 60;
 
       return {
         allowed: false,
         reason: trustDecision.reason,
         trustScore: trustDecision.trustScore,
         suggestions: trustDecision.suggestions,
-        requiresElevation
+        requiresElevation,
       };
     }
 
@@ -123,15 +123,15 @@ export async function validateSecretAccess(
           resource: `secret:${secretName}`,
           context: {
             worldId: message.worldId,
-            roomId: message.roomId
-          }
+            roomId: message.roomId,
+          },
         });
 
         if (!permissionCheck.allowed) {
           return {
             allowed: false,
             reason: `Permission denied: ${permissionCheck.reason}`,
-            trustScore: trustDecision.trustScore
+            trustScore: trustDecision.trustScore,
           };
         }
       }
@@ -143,7 +143,7 @@ export async function validateSecretAccess(
       operation,
       secretName,
       sensitivity,
-      trustScore: trustDecision.trustScore
+      trustScore: trustDecision.trustScore,
     });
 
     // Record positive trust interaction for successful access
@@ -152,14 +152,13 @@ export async function validateSecretAccess(
     return {
       allowed: true,
       reason: 'Secret access authorized',
-      trustScore: trustDecision.trustScore
+      trustScore: trustDecision.trustScore,
     };
-
   } catch (error) {
     logger.error('[SecretsIntegration] Error validating secret access:', error);
     return {
       allowed: false,
-      reason: 'Secret validation error'
+      reason: 'Secret validation error',
     };
   }
 }
@@ -167,20 +166,23 @@ export async function validateSecretAccess(
 /**
  * Calculate required trust level based on operation and sensitivity
  */
-function calculateRequiredTrust(operation: SecretOperation, sensitivity: SecretSensitivity): number {
+function calculateRequiredTrust(
+  operation: SecretOperation,
+  sensitivity: SecretSensitivity
+): number {
   const baseRequirements = {
     [SecretOperation.LIST]: 40,
     [SecretOperation.READ]: 50,
     [SecretOperation.CREATE]: 60,
     [SecretOperation.UPDATE]: 70,
-    [SecretOperation.DELETE]: 80
+    [SecretOperation.DELETE]: 80,
   };
 
   const sensitivityMultipliers = {
     [SecretSensitivity.LOW]: 0.8,
     [SecretSensitivity.MEDIUM]: 1.0,
     [SecretSensitivity.HIGH]: 1.2,
-    [SecretSensitivity.CRITICAL]: 1.4
+    [SecretSensitivity.CRITICAL]: 1.4,
   };
 
   const baseTrust = baseRequirements[operation];
@@ -195,7 +197,7 @@ function calculateRequiredTrust(operation: SecretOperation, sensitivity: SecretS
 function getRequiredDimensions(operation: SecretOperation, sensitivity: SecretSensitivity): any {
   const baseDimensions: any = {
     integrity: 50,
-    competence: 40
+    competence: 40,
   };
 
   // Higher requirements for sensitive operations
@@ -229,7 +231,7 @@ function getMinimumInteractions(sensitivity: SecretSensitivity): number {
     [SecretSensitivity.LOW]: 2,
     [SecretSensitivity.MEDIUM]: 5,
     [SecretSensitivity.HIGH]: 10,
-    [SecretSensitivity.CRITICAL]: 20
+    [SecretSensitivity.CRITICAL]: 20,
   };
 
   return interactionRequirements[sensitivity];
@@ -243,7 +245,7 @@ function getMinimumConfidence(sensitivity: SecretSensitivity): number {
     [SecretSensitivity.LOW]: 0.3,
     [SecretSensitivity.MEDIUM]: 0.5,
     [SecretSensitivity.HIGH]: 0.7,
-    [SecretSensitivity.CRITICAL]: 0.8
+    [SecretSensitivity.CRITICAL]: 0.8,
   };
 
   return confidenceRequirements[sensitivity];
@@ -260,7 +262,9 @@ async function recordSecretInteraction(
 ): Promise<void> {
   try {
     const trustEngine = runtime.getService('trust-engine') as any;
-    if (!trustEngine) {return;}
+    if (!trustEngine) {
+      return;
+    }
 
     const impact = successful ? getPositiveImpact(operation) : getNegativeImpact(operation);
     const evidenceType = successful ? 'HELPFUL_ACTION' : 'HARMFUL_ACTION';
@@ -274,11 +278,11 @@ async function recordSecretInteraction(
       details: {
         action: `SECRET_${operation}`,
         successful,
-        description: `Secret ${operation.toLowerCase()} ${successful ? 'successful' : 'failed'}`
+        description: `Secret ${operation.toLowerCase()} ${successful ? 'successful' : 'failed'}`,
       },
       context: {
-        evaluatorId: runtime.agentId
-      }
+        evaluatorId: runtime.agentId,
+      },
     });
   } catch (error) {
     logger.error('[SecretsIntegration] Failed to record trust interaction:', error);
@@ -318,28 +322,47 @@ function getNegativeImpact(operation: SecretOperation): number {
 /**
  * Determine secret sensitivity from name/content patterns
  */
-export function classifySecretSensitivity(secretName: string, secretValue?: string): SecretSensitivity {
+export function classifySecretSensitivity(
+  secretName: string,
+  secretValue?: string
+): SecretSensitivity {
   const name = secretName.toLowerCase();
   const value = secretValue?.toLowerCase() || '';
 
   // Critical patterns
-  if (name.includes('root') || name.includes('admin') || name.includes('master') ||
-      name.includes('private_key') || name.includes('ssh_key') ||
-      value.includes('-----begin private key-----')) {
+  if (
+    name.includes('root') ||
+    name.includes('admin') ||
+    name.includes('master') ||
+    name.includes('private_key') ||
+    name.includes('ssh_key') ||
+    value.includes('-----begin private key-----')
+  ) {
     return SecretSensitivity.CRITICAL;
   }
 
   // High sensitivity patterns
-  if (name.includes('password') || name.includes('token') || name.includes('secret') ||
-      name.includes('api_key') || name.includes('auth') ||
-      value.startsWith('sk-') || value.startsWith('pk_')) {
+  if (
+    name.includes('password') ||
+    name.includes('token') ||
+    name.includes('secret') ||
+    name.includes('api_key') ||
+    name.includes('auth') ||
+    value.startsWith('sk-') ||
+    value.startsWith('pk_')
+  ) {
     return SecretSensitivity.HIGH;
   }
 
   // Medium sensitivity patterns
-  if (name.includes('url') || name.includes('endpoint') || name.includes('host') ||
-      name.includes('database') || name.includes('db_') ||
-      value.includes('://')) {
+  if (
+    name.includes('url') ||
+    name.includes('endpoint') ||
+    name.includes('host') ||
+    name.includes('database') ||
+    name.includes('db_') ||
+    value.includes('://')
+  ) {
     return SecretSensitivity.MEDIUM;
   }
 

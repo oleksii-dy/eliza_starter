@@ -2,7 +2,13 @@ import './test-setup'; // Load environment variables
 import { IAgentRuntime, UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { ResearchService } from '../service';
-import { ResearchStatus, ResearchPhase, ResearchDomain, TaskType, ResearchDepth } from '../types';
+import {
+  ResearchStatus,
+  ResearchPhase,
+  ResearchDomain,
+  TaskType,
+  ResearchDepth,
+} from '../types';
 
 // Simplified DeepResearch Bench test queries
 const DEEPRESEARCH_BENCH_QUERIES = [
@@ -22,7 +28,8 @@ const DEEPRESEARCH_BENCH_QUERIES = [
 
 export class DeepResearchBenchSimplifiedTestSuite {
   name = 'deepresearch-bench-simplified-e2e';
-  description = 'Simplified E2E tests for DeepResearch Bench without runtime.useModel dependencies';
+  description =
+    'Simplified E2E tests for DeepResearch Bench without runtime.useModel dependencies';
 
   tests = [
     {
@@ -57,7 +64,10 @@ export class DeepResearchBenchSimplifiedTestSuite {
           throw new Error('Project ID not generated');
         }
 
-        if (project.status !== ResearchStatus.PENDING && project.status !== ResearchStatus.ACTIVE) {
+        if (
+          project.status !== ResearchStatus.PENDING &&
+          project.status !== ResearchStatus.ACTIVE
+        ) {
           throw new Error(`Unexpected project status: ${project.status}`);
         }
 
@@ -74,19 +84,24 @@ export class DeepResearchBenchSimplifiedTestSuite {
         console.log(`📊 Active projects: ${activeProjects.length}`);
 
         // Test 4: Create multiple projects
-        const project2 = await service.createResearchProject(DEEPRESEARCH_BENCH_QUERIES[1].query, {
-          domain: DEEPRESEARCH_BENCH_QUERIES[1].domain,
-          researchDepth: DEEPRESEARCH_BENCH_QUERIES[1].expectedDepth,
-          maxSearchResults: 3,
-          evaluationEnabled: false,
-        });
+        const project2 = await service.createResearchProject(
+          DEEPRESEARCH_BENCH_QUERIES[1].query,
+          {
+            domain: DEEPRESEARCH_BENCH_QUERIES[1].domain,
+            researchDepth: DEEPRESEARCH_BENCH_QUERIES[1].expectedDepth,
+            maxSearchResults: 3,
+            evaluationEnabled: false,
+          }
+        );
 
         console.log(`✅ Created second project: ${project2.id}`);
 
         // Test 5: Get all projects
         const allProjects = await service.getAllProjects();
         if (allProjects.length < 2) {
-          throw new Error(`Expected at least 2 projects, got ${allProjects.length}`);
+          throw new Error(
+            `Expected at least 2 projects, got ${allProjects.length}`
+          );
         }
 
         console.log(`✅ Total projects: ${allProjects.length}`);
@@ -154,12 +169,17 @@ export class DeepResearchBenchSimplifiedTestSuite {
           });
 
           console.log(`\n📋 Project: ${config.query.substring(0, 50)}...`);
-          console.log(`  - Domain: ${project.metadata.domain || 'auto-detected'}`);
+          console.log(
+            `  - Domain: ${project.metadata.domain || 'auto-detected'}`
+          );
           console.log(`  - Depth: ${project.metadata.depth}`);
           console.log(`  - Language: ${project.metadata.language}`);
 
           // Verify metadata
-          if (project.metadata.domain && project.metadata.domain !== config.domain) {
+          if (
+            project.metadata.domain &&
+            project.metadata.domain !== config.domain
+          ) {
             console.warn(
               `  ⚠️  Domain mismatch: expected ${config.domain}, got ${project.metadata.domain}`
             );
@@ -188,12 +208,15 @@ export class DeepResearchBenchSimplifiedTestSuite {
         console.log('\n🔬 Testing Research Export Functionality');
 
         // Create a simple project
-        const project = await service.createResearchProject('test export functionality', {
-          domain: ResearchDomain.GENERAL,
-          researchDepth: ResearchDepth.SURFACE,
-          maxSearchResults: 1,
-          evaluationEnabled: false,
-        });
+        const project = await service.createResearchProject(
+          'test export functionality',
+          {
+            domain: ResearchDomain.GENERAL,
+            researchDepth: ResearchDepth.SURFACE,
+            maxSearchResults: 1,
+            evaluationEnabled: false,
+          }
+        );
 
         // Manually set project to completed state for testing
         const projectInternal = (service as any).projects.get(project.id);
@@ -250,7 +273,9 @@ export class DeepResearchBenchSimplifiedTestSuite {
         for (const format of formats) {
           try {
             const exported = await service.exportProject(project.id, format);
-            console.log(`✅ Exported in ${format} format - length: ${exported.length} chars`);
+            console.log(
+              `✅ Exported in ${format} format - length: ${exported.length} chars`
+            );
 
             // Verify export content
             if (format === 'json') {
@@ -259,7 +284,10 @@ export class DeepResearchBenchSimplifiedTestSuite {
                 throw new Error('Invalid JSON export structure');
               }
             } else if (format === 'markdown') {
-              if (!exported.includes('#') || !exported.includes('Test Export Report')) {
+              if (
+                !exported.includes('#') ||
+                !exported.includes('Test Export Report')
+              ) {
                 throw new Error('Invalid Markdown export');
               }
             } else if (format === 'deepresearch') {

@@ -42,7 +42,7 @@ interface TestSuite {
   description: string;
   tests: Array<{
     name: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     fn: (runtime: any) => Promise<any>;
   }>;
 }
@@ -61,9 +61,8 @@ interface Memory {
 }
 
 interface State {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   values: Record<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   data: Record<string, any>;
   text: string;
 }
@@ -86,7 +85,7 @@ export class StarterTestSuite implements TestSuite {
        * It's a good first test because it validates the basic setup before testing functionality.
        */
       name: 'Character configuration test',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       fn: async (runtime: any) => {
         const character = runtime.character;
         const requiredFields = ['name', 'bio', 'plugins', 'system', 'messageExamples'];
@@ -122,7 +121,7 @@ export class StarterTestSuite implements TestSuite {
        * It's important to test this separately from action execution to isolate issues.
        */
       name: 'Plugin initialization test',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       fn: async (runtime: any) => {
         // Test plugin initialization with empty config
         try {
@@ -146,7 +145,7 @@ export class StarterTestSuite implements TestSuite {
        * natural language understanding.
        */
       name: 'Hello world action test - Direct execution',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       fn: async (runtime: any) => {
         const message: Memory = {
           entityId: uuidv4() as UUID,
@@ -176,7 +175,7 @@ export class StarterTestSuite implements TestSuite {
 
           if (!responseReceived) {
             // Try directly executing the action if processActions didn't work
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             const helloWorldAction = runtime.actions.find((a: any) => a.name === 'HELLO_WORLD');
             if (helloWorldAction) {
               await helloWorldAction.handler(
@@ -220,7 +219,7 @@ export class StarterTestSuite implements TestSuite {
        * This tests the full AI pipeline: understanding → decision making → action execution
        */
       name: 'Natural language hello world test',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       fn: async (runtime: any) => {
         // Create a unique room for this conversation
         const roomId = uuidv4() as UUID;
@@ -277,7 +276,7 @@ export class StarterTestSuite implements TestSuite {
 
               if (selectedActions && selectedActions.length > 0) {
                 // Execute the selected action
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                 const action = runtime.actions.find((a: any) => a.name === selectedActions[0]);
                 if (action) {
                   await action.handler(runtime, userMessage, state, {}, responseCallback, []);
@@ -319,7 +318,7 @@ export class StarterTestSuite implements TestSuite {
        * HELLO_WORLD_PROVIDER is functioning and returning the expected data.
        */
       name: 'Hello world provider test',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       fn: async (runtime: any) => {
         const message: Memory = {
           entityId: uuidv4() as UUID,
@@ -344,7 +343,6 @@ export class StarterTestSuite implements TestSuite {
 
           // Find the specific provider we want to test
           const helloWorldProvider = runtime.providers.find(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (p: any) => p.name === 'HELLO_WORLD_PROVIDER'
           );
 
@@ -370,7 +368,7 @@ export class StarterTestSuite implements TestSuite {
        * starter service can be properly started, accessed, and stopped.
        */
       name: 'Starter service test',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       fn: async (runtime: any) => {
         // Test service registration and lifecycle
         try {

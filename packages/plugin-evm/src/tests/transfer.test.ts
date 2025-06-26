@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
-import type { Account, Chain } from 'viem';
-import { parseEther, formatEther } from 'viem';
+import { type Account, type Chain, parseEther, formatEther } from 'viem';
 
 import { TransferAction } from '../actions/transfer';
 import { WalletProvider } from '../providers/wallet';
@@ -102,7 +101,7 @@ describe('Transfer Action', () => {
     describe('Network-specific transfers', () => {
       it('should work with Sepolia testnet', async () => {
         const balance = await wp.getWalletBalanceForChain('sepolia');
-        console.log(`Sepolia balance: ${balance} ETH`);
+        console.warn(`Sepolia balance: ${balance} ETH`);
 
         if (balance && parseFloat(balance) > 0.001) {
           // Only test if we have sufficient funds
@@ -130,7 +129,7 @@ describe('Transfer Action', () => {
 
       it('should work with Base Sepolia testnet', async () => {
         const balance = await wp.getWalletBalanceForChain('baseSepolia');
-        console.log(`Base Sepolia balance: ${balance} ETH`);
+        console.warn(`Base Sepolia balance: ${balance} ETH`);
 
         if (balance && parseFloat(balance) > 0.001) {
           const result = await ta.transfer({
@@ -157,7 +156,7 @@ describe('Transfer Action', () => {
     describe('Integration tests with funded wallet', () => {
       it('should perform actual transfer if funded wallet is available', async () => {
         if (!FUNDED_TEST_WALLET) {
-          console.log('Skipping integration test - no funded wallet provided');
+          console.warn('Skipping integration test - no funded wallet provided');
           return; // Just return instead of this.skip()
         }
 
@@ -170,7 +169,7 @@ describe('Transfer Action', () => {
         const fundedTa = new TransferAction(fundedWp);
 
         const balance = await fundedWp.getWalletBalanceForChain('sepolia');
-        console.log(`Funded wallet balance: ${balance} ETH`);
+        console.warn(`Funded wallet balance: ${balance} ETH`);
 
         if (balance && parseFloat(balance) > 0.01) {
           const result = await fundedTa.transfer({
@@ -192,7 +191,7 @@ describe('Transfer Action', () => {
           });
 
           expect(receipt.status).toBe('success');
-          console.log(`Transfer successful: ${result.hash}`);
+          console.warn(`Transfer successful: ${result.hash}`);
         } else {
           // Skip if insufficient funds
         }
@@ -213,7 +212,7 @@ describe('Transfer Action', () => {
 
           expect(typeof gasEstimate).toBe('bigint');
           expect(gasEstimate).toBeGreaterThan(0n);
-          console.log(`Estimated gas: ${gasEstimate.toString()}`);
+          console.warn(`Estimated gas: ${gasEstimate.toString()}`);
         } catch (error) {
           console.warn('Gas estimation failed (likely insufficient funds):', error);
         }
@@ -231,8 +230,8 @@ describe('Transfer Action', () => {
           expect(typeof gasPrice).toBe('bigint');
           expect(gasPrice).toBeGreaterThan(0n);
 
-          console.log(`Gas price: ${formatEther(gasPrice)} ETH/gas`);
-          console.log(`Estimated total cost: ${formatEther(totalCost)} ETH`);
+          console.warn(`Gas price: ${formatEther(gasPrice)} ETH/gas`);
+          console.warn(`Estimated total cost: ${formatEther(totalCost)} ETH`);
         } catch (error) {
           console.warn('Fee calculation failed:', error);
         }

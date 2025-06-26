@@ -19,7 +19,12 @@ import { logger } from '@elizaos/core';
 export const knowledgePlugin: Plugin = {
   name: 'knowledge',
   description: 'Plugin for managing and searching knowledge',
-  actions: knowledgeActions,
+
+  actions: [
+    // All knowledge actions enabled - high-level productivity functionality
+    ...knowledgeActions,
+  ],
+
   providers: [knowledgeProvider],
   services: [KnowledgeService],
   routes: knowledgeRoutes,

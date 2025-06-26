@@ -121,12 +121,15 @@ describe('TokenService', () => {
 
       // First call
       await service.getTokenInfo(testMint);
+      const initialCallCount = mockAxios.get.mock.calls.length;
 
       // Second call should use cache
       const cachedInfo = await service.getTokenInfo(testMint);
+      const finalCallCount = mockAxios.get.mock.calls.length;
 
       expect(cachedInfo).toEqual(mockTokenInfo);
-      expect(mockAxios.get).toHaveBeenCalledTimes(1);
+      // Cache should prevent additional calls
+      expect(finalCallCount).toBe(initialCallCount);
     });
 
     it('should handle missing token info', async () => {

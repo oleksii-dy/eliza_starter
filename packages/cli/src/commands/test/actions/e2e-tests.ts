@@ -1,5 +1,8 @@
 import { loadProject } from '@/src/project';
-import { AgentServer, jsonToCharacter, loadCharacterTryPath } from '@elizaos/server';
+import AgentServer from '@elizaos/server';
+// Dynamic imports for utilities that may not be properly exported
+let jsonToCharacter: any;
+let loadCharacterTryPath: any;
 import {
   buildProject,
   findAvailablePortInRange,
@@ -19,6 +22,19 @@ import { E2ETestOptions, TestResult } from '../types';
 import { processFilterName } from '../utils/project-utils';
 import { v4 as uuidv4 } from 'uuid';
 
+// Dynamic loader for server utilities
+async function loadServerUtilities() {
+  if (!jsonToCharacter || !loadCharacterTryPath) {
+    try {
+      const serverModule = await import('@elizaos/server');
+      jsonToCharacter = (serverModule as any).jsonToCharacter;
+      loadCharacterTryPath = (serverModule as any).loadCharacterTryPath;
+    } catch (error) {
+      logger.warn('Could not load server utilities:', error);
+    }
+  }
+}
+
 /**
  * Function that runs the end-to-end tests.
  *
@@ -29,6 +45,9 @@ export async function runE2eTests(
   options: E2ETestOptions,
   projectInfo: DirectoryInfo
 ): Promise<TestResult> {
+  // Load server utilities dynamically
+  await loadServerUtilities();
+
   // Build the project or plugin first unless skip-build is specified
   if (!options.skipBuild) {
     try {
@@ -182,7 +201,7 @@ export async function runE2eTests(
 
       // Set up server properties
       logger.info('Setting up server properties...');
-      server.startAgent = async (character) => {
+      server.startAgent = async (character: any) => {
         logger.info(`Starting agent for character ${character.name}`);
         return startAgent(character, server!, undefined, [], { isTestMode: true });
       };

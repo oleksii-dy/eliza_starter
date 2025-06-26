@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
-import { HybridVerificationEngine } from '../../../src/scenario-runner/hybrid-verification.js';
-import { ExplainableVerificationEngine } from '../../../src/scenario-runner/explainable-verification.js';
-import { SecureVerificationEngine } from '../../../src/scenario-runner/secure-verification.js';
-import { VersionedVerificationEngine } from '../../../src/scenario-runner/versioned-verification.js';
-import { PerformanceOptimizer } from '../../../src/scenario-runner/performance-optimizations.js';
+import { HybridVerificationEngine } from '../../../src/scenario-runner/HybridVerification.js';
+import { ExplainableVerificationEngine } from '../../../src/scenario-runner/ExplainableVerification.js';
+import { SecureVerificationEngine } from '../../../src/scenario-runner/SecureVerification.js';
+import { VersionedVerificationEngine } from '../../../src/scenario-runner/VersionedVerification.js';
+import { PerformanceOptimizer } from '../../../src/scenario-runner/PerformanceOptimizations.js';
 import type {
   ScenarioContext,
   VerificationRule,

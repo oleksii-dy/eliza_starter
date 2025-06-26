@@ -39,13 +39,17 @@ export interface IAgentRuntime extends IDatabaseAdapter {
 
   getConnection(): Promise<any>;
 
-  getService<T extends Service>(service: ServiceTypeName | string): T | null;
+  getService<T extends Service = Service>(serviceName?: ServiceTypeName | string): T | null;
+  getService<T extends Service>(serviceClass: {
+    new (...args: any[]): T;
+    serviceName?: string;
+    serviceType?: string;
+  }): T | null;
 
   getAllServices(): Map<ServiceTypeName, Service>;
   getServicesByType(type: ServiceTypeName): Service[];
 
   registerService(service: typeof Service): Promise<void>;
-
 
   /**
    * Get the configuration manager for plugin component configuration

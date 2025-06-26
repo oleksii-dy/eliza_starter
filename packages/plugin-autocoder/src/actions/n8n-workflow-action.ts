@@ -1,13 +1,10 @@
-import {
-  Action,
+import { Action,
   IAgentRuntime,
   Memory,
   State,
   HandlerCallback,
-  Content,
-  ActionResult,
-} from '@elizaos/core';
-import { N8nWorkflowService } from '../services/n8n-workflow-service';
+  ActionResult } from '@elizaos/core';
+import { N8nWorkflowService } from '../services/N8nWorkflowService';
 import { validatePrompt } from '../utils/validation';
 import { z } from 'zod';
 
@@ -71,8 +68,8 @@ export const n8nWorkflowAction: Action = {
       },
     ],
   ],
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
-    const service = runtime.getService('n8n-workflow') as N8nWorkflowService;
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
+    const service = runtime.getService<N8nWorkflowService>('n8n-workflow');
     if (!service) {
       return false;
     }
@@ -83,17 +80,17 @@ export const n8nWorkflowAction: Action = {
       return false;
     }
 
-    return validatePrompt(message);
+    return validatePrompt(_message);
   },
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state?: State,
-    options?: { [key: string]: unknown },
+    _state?: State,
+    _options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
-      const service = runtime.getService('n8n-workflow') as N8nWorkflowService;
+      const service = runtime.getService<N8nWorkflowService>('n8n-workflow');
       if (!service) {
         throw new Error('N8n workflow service not available');
       }
@@ -243,18 +240,18 @@ export const checkN8nWorkflowStatusAction: Action = {
   name: 'checkN8nWorkflowStatus',
   description: 'Check the status of n8n workflow creation',
   similes: ['n8n status', 'workflow progress', 'check n8n workflow'],
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
-    const service = runtime.getService('n8n-workflow') as N8nWorkflowService;
+  validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
+    const service = runtime.getService<N8nWorkflowService>('n8n-workflow');
     return service && service.getActiveJobs().length > 0;
   },
   handler: async (
     runtime: IAgentRuntime,
-    message: Memory,
-    state?: State,
-    options?: { [key: string]: unknown },
-    callback?: HandlerCallback
+    _message: Memory,
+    _state?: State,
+    _options?: { [key: string]: unknown },
+    _callback?: HandlerCallback
   ): Promise<ActionResult> => {
-    const service = runtime.getService('n8n-workflow') as N8nWorkflowService;
+    const service = runtime.getService<N8nWorkflowService>('n8n-workflow');
     const jobs = service.getAllJobs();
 
     if (jobs.length === 0) {

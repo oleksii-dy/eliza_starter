@@ -1,5 +1,5 @@
 import Yoga from 'yoga-layout';
-import * as THREE from '../extras/three';
+// import * as THREE from '../extras/three';
 import { every, isArray, isBoolean, isNumber, isString } from 'lodash-es';
 
 import { Node } from './Node';
@@ -191,7 +191,7 @@ export class UIView extends Node {
     this.ui?.redraw();
   }
 
-  commit(didMove) {
+  commit(_didMove) {
     // ...
   }
 

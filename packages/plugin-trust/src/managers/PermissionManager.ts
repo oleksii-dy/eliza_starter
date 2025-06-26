@@ -7,7 +7,7 @@ import type {
   PermissionContext,
   AccessRequest,
   AccessDecision,
-  PermissionDecision
+  PermissionDecision,
 } from '../types/permissions';
 
 /**
@@ -63,8 +63,8 @@ export class PermissionManager {
         securityChecks: {
           promptInjection: securityCheck.type === 'prompt_injection',
           socialEngineering: securityCheck.type === 'social_engineering',
-          anomalyDetection: securityCheck.type === 'anomaly'
-        }
+          anomalyDetection: securityCheck.type === 'anomaly',
+        },
       });
     }
 
@@ -97,7 +97,7 @@ export class PermissionManager {
       return {
         allowed: true,
         method: 'role-based',
-        reason: `Allowed by role: ${isOwner ? 'owner' : 'admin'}`
+        reason: `Allowed by role: ${isOwner ? 'owner' : 'admin'}`,
       };
     }
 
@@ -107,14 +107,14 @@ export class PermissionManager {
       return {
         allowed: true,
         method: 'role-based',
-        reason: 'Allowed by role permission'
+        reason: 'Allowed by role permission',
       };
     }
 
     return {
       allowed: false,
       method: 'denied',
-      reason: 'No matching role permission'
+      reason: 'No matching role permission',
     };
   }
 
@@ -125,7 +125,7 @@ export class PermissionManager {
     const trustProfile = await this.trustEngine.calculateTrust(request.entityId, {
       entityId: request.entityId,
       evaluatorId: this.runtime.agentId,
-      ...request.context
+      ...request.context,
     });
 
     // Define trust requirements for different actions
@@ -140,7 +140,7 @@ export class PermissionManager {
             return {
               allowed: false,
               method: 'denied',
-              reason: `${dimension} trust (${actual}) below required (${required})`
+              reason: `${dimension} trust (${actual}) below required (${required})`,
             };
           }
         }
@@ -149,14 +149,14 @@ export class PermissionManager {
       return {
         allowed: true,
         method: 'trust-based',
-        reason: `Allowed by trust score: ${trustProfile.overallTrust.toFixed(0)}`
+        reason: `Allowed by trust score: ${trustProfile.overallTrust.toFixed(0)}`,
       };
     }
 
     return {
       allowed: false,
       method: 'denied',
-      reason: `Insufficient trust: ${trustProfile.overallTrust.toFixed(0)} < ${trustRequirements.minimumTrust}`
+      reason: `Insufficient trust: ${trustProfile.overallTrust.toFixed(0)} < ${trustRequirements.minimumTrust}`,
     };
   }
 
@@ -170,28 +170,30 @@ export class PermissionManager {
     // Define trust requirements for different action types
     const requirements: Record<string, any> = {
       // Read actions - low trust
-      'read': { minimumTrust: 20 },
-      'view': { minimumTrust: 20 },
-      'list': { minimumTrust: 20 },
+      read: { minimumTrust: 20 },
+      view: { minimumTrust: 20 },
+      list: { minimumTrust: 20 },
 
       // Write actions - medium trust
-      'create': { minimumTrust: 40 },
-      'update': { minimumTrust: 50, dimensions: { reliability: 40 } },
-      'write': { minimumTrust: 50, dimensions: { reliability: 40 } },
+      create: { minimumTrust: 40 },
+      update: { minimumTrust: 50, dimensions: { reliability: 40 } },
+      write: { minimumTrust: 50, dimensions: { reliability: 40 } },
 
       // Delete actions - high trust
-      'delete': { minimumTrust: 70, dimensions: { integrity: 60, reliability: 50 } },
-      'remove': { minimumTrust: 70, dimensions: { integrity: 60, reliability: 50 } },
+      delete: { minimumTrust: 70, dimensions: { integrity: 60, reliability: 50 } },
+      remove: { minimumTrust: 70, dimensions: { integrity: 60, reliability: 50 } },
 
       // Admin actions - very high trust
-      'admin': { minimumTrust: 85, dimensions: { integrity: 80, reliability: 70 } },
-      'manage': { minimumTrust: 80, dimensions: { integrity: 70, competence: 60 } },
-      'configure': { minimumTrust: 75, dimensions: { competence: 70 } }
+      admin: { minimumTrust: 85, dimensions: { integrity: 80, reliability: 70 } },
+      manage: { minimumTrust: 80, dimensions: { integrity: 70, competence: 60 } },
+      configure: { minimumTrust: 75, dimensions: { competence: 70 } },
     };
 
     // Find matching requirement or use default
     const requirement = requirements[action.toLowerCase()];
-    if (requirement) {return requirement;}
+    if (requirement) {
+      return requirement;
+    }
 
     // Check if action starts with known prefix
     for (const [prefix, req] of Object.entries(requirements)) {
@@ -218,7 +220,7 @@ export class PermissionManager {
       reason: partialDecision.reason || '',
       evaluatedAt: Date.now(),
       ttl: this.CACHE_TTL,
-      ...partialDecision
+      ...partialDecision,
     };
 
     // Cache positive decisions
@@ -226,7 +228,7 @@ export class PermissionManager {
       const cacheKey = JSON.stringify(request);
       this.permissionCache.set(cacheKey, {
         decision,
-        expiry: Date.now() + this.CACHE_TTL
+        expiry: Date.now() + this.CACHE_TTL,
       });
     }
 
@@ -240,10 +242,7 @@ export class PermissionManager {
     roleDecision: PermissionDecision,
     trustDecision: PermissionDecision
   ): string {
-    const reasons = [
-      `Role check: ${roleDecision.reason}`,
-      `Trust check: ${trustDecision.reason}`
-    ];
+    const reasons = [`Role check: ${roleDecision.reason}`, `Trust check: ${trustDecision.reason}`];
     return `Access denied. ${reasons.join('. ')}`;
   }
 

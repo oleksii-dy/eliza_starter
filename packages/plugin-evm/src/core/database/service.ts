@@ -1,6 +1,6 @@
-import { IAgentRuntime, logger, asUUID } from '@elizaos/core';
+import { IAgentRuntime, logger, asUUID, type UUID } from '@elizaos/core';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { eq, and, or, gte, lte, desc, asc, inArray, isNull } from 'drizzle-orm';
+import { eq, and, desc, inArray } from 'drizzle-orm';
 import postgres from 'postgres';
 import {
   wallets,
@@ -16,7 +16,7 @@ import {
   type NewWallet,
   type Session,
   type NewSession,
-  type TransactionHistory as DBTransactionHistory,
+  type TransactionHistory as _DBTransactionHistory,
   type NewTransactionHistory,
   type TokenBalance,
   type DefiPosition as DBDefiPosition,
@@ -37,7 +37,6 @@ import type {
 import { createEncryptionService } from '../security/encryption';
 import type { Address, Hash, Hex } from 'viem';
 import type { Chain } from 'viem/chains';
-import type { UUID } from '@elizaos/core';
 
 export class WalletDatabaseService {
   private db: ReturnType<typeof drizzle>;
@@ -61,7 +60,7 @@ export class WalletDatabaseService {
   async createWallet(
     wallet: Omit<WalletInstance, 'id'>,
     privateKey?: string,
-    mnemonic?: string,
+    mnemonic?: string
   ): Promise<WalletInstance> {
     try {
       // Encrypt sensitive data if provided
@@ -95,9 +94,9 @@ export class WalletDatabaseService {
       const [created] = await this.db.insert(wallets).values(newWallet).returning();
 
       return this.mapDbWalletToWalletInstance(created);
-    } catch (error) {
-      logger.error('Failed to create wallet:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to create wallet:', _error);
+      throw _error;
     }
   }
 
@@ -107,13 +106,13 @@ export class WalletDatabaseService {
         .select()
         .from(wallets)
         .where(
-          and(eq(wallets.id, asUUID(walletId)), eq(wallets.agentId, asUUID(this.runtime.agentId))),
+          and(eq(wallets.id, asUUID(walletId)), eq(wallets.agentId, asUUID(this.runtime.agentId)))
         );
 
       return wallet ? this.mapDbWalletToWalletInstance(wallet) : null;
-    } catch (error) {
-      logger.error('Failed to get wallet:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get wallet:', _error);
+      throw _error;
     }
   }
 
@@ -125,14 +124,14 @@ export class WalletDatabaseService {
         .where(
           and(
             eq(wallets.address, address.toLowerCase()),
-            eq(wallets.agentId, asUUID(this.runtime.agentId)),
-          ),
+            eq(wallets.agentId, asUUID(this.runtime.agentId))
+          )
         );
 
       return wallet ? this.mapDbWalletToWalletInstance(wallet) : null;
-    } catch (error) {
-      logger.error('Failed to get wallet by address:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get wallet by address:', _error);
+      throw _error;
     }
   }
 
@@ -157,8 +156,8 @@ export class WalletDatabaseService {
       if (filter?.owner) {
         // For filtering multisig wallets by owner
         conditions.push(
-          // @ts-ignore - JSON contains operator exists in drizzle
-          wallets.owners.contains([filter.owner.toLowerCase()]),
+          // @ts-expect-error - JSON contains operator exists in drizzle
+          wallets.owners.contains([filter.owner.toLowerCase()])
         );
       }
 
@@ -171,9 +170,9 @@ export class WalletDatabaseService {
 
       const results = await query.orderBy(desc(wallets.createdAt));
       return results.map((w) => this.mapDbWalletToWalletInstance(w));
-    } catch (error) {
-      logger.error('Failed to list wallets:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to list wallets:', _error);
+      throw _error;
     }
   }
 
@@ -198,7 +197,7 @@ export class WalletDatabaseService {
         .update(wallets)
         .set(updateData)
         .where(
-          and(eq(wallets.id, asUUID(walletId)), eq(wallets.agentId, asUUID(this.runtime.agentId))),
+          and(eq(wallets.id, asUUID(walletId)), eq(wallets.agentId, asUUID(this.runtime.agentId)))
         )
         .returning();
 
@@ -207,24 +206,24 @@ export class WalletDatabaseService {
       }
 
       return this.mapDbWalletToWalletInstance(updated);
-    } catch (error) {
-      logger.error('Failed to update wallet:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to update wallet:', _error);
+      throw _error;
     }
   }
 
   async deleteWallet(walletId: string): Promise<boolean> {
     try {
-      const result = await this.db
+      await this.db
         .delete(wallets)
         .where(
-          and(eq(wallets.id, asUUID(walletId)), eq(wallets.agentId, asUUID(this.runtime.agentId))),
+          and(eq(wallets.id, asUUID(walletId)), eq(wallets.agentId, asUUID(this.runtime.agentId)))
         );
 
       return true;
-    } catch (error) {
-      logger.error('Failed to delete wallet:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to delete wallet:', _error);
+      throw _error;
     }
   }
 
@@ -234,7 +233,7 @@ export class WalletDatabaseService {
         .select({ encryptedPrivateKey: wallets.encryptedPrivateKey })
         .from(wallets)
         .where(
-          and(eq(wallets.id, asUUID(walletId)), eq(wallets.agentId, asUUID(this.runtime.agentId))),
+          and(eq(wallets.id, asUUID(walletId)), eq(wallets.agentId, asUUID(this.runtime.agentId)))
         );
 
       if (!wallet?.encryptedPrivateKey) {
@@ -242,9 +241,9 @@ export class WalletDatabaseService {
       }
 
       return await this.encryptionService.decrypt(wallet.encryptedPrivateKey);
-    } catch (error) {
-      logger.error('Failed to get wallet private key:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get wallet private key:', _error);
+      throw _error;
     }
   }
 
@@ -254,7 +253,7 @@ export class WalletDatabaseService {
         .select({ encryptedMnemonic: wallets.encryptedMnemonic })
         .from(wallets)
         .where(
-          and(eq(wallets.id, asUUID(walletId)), eq(wallets.agentId, asUUID(this.runtime.agentId))),
+          and(eq(wallets.id, asUUID(walletId)), eq(wallets.agentId, asUUID(this.runtime.agentId)))
         );
 
       if (!wallet?.encryptedMnemonic) {
@@ -262,9 +261,9 @@ export class WalletDatabaseService {
       }
 
       return await this.encryptionService.decrypt(wallet.encryptedMnemonic);
-    } catch (error) {
-      logger.error('Failed to get wallet mnemonic:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get wallet mnemonic:', _error);
+      throw _error;
     }
   }
 
@@ -291,9 +290,9 @@ export class WalletDatabaseService {
       const [created] = await this.db.insert(sessions).values(newSession).returning();
 
       return this.mapDbSessionToSessionKey(created);
-    } catch (error) {
-      logger.error('Failed to create session:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to create session:', _error);
+      throw _error;
     }
   }
 
@@ -305,9 +304,9 @@ export class WalletDatabaseService {
         .where(eq(sessions.id, asUUID(sessionId)));
 
       return session ? this.mapDbSessionToSessionKey(session) : null;
-    } catch (error) {
-      logger.error('Failed to get session:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get session:', _error);
+      throw _error;
     }
   }
 
@@ -326,9 +325,9 @@ export class WalletDatabaseService {
 
       const results = await query.orderBy(desc(sessions.createdAt));
       return results.map((s) => this.mapDbSessionToSessionKey(s));
-    } catch (error) {
-      logger.error('Failed to list sessions:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to list sessions:', _error);
+      throw _error;
     }
   }
 
@@ -359,9 +358,9 @@ export class WalletDatabaseService {
       }
 
       return this.mapDbSessionToSessionKey(updated);
-    } catch (error) {
-      logger.error('Failed to update session:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to update session:', _error);
+      throw _error;
     }
   }
 
@@ -374,9 +373,9 @@ export class WalletDatabaseService {
           revokedAt: new Date(),
         })
         .where(eq(sessions.id, asUUID(sessionId)));
-    } catch (error) {
-      logger.error('Failed to revoke session:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to revoke session:', _error);
+      throw _error;
     }
   }
 
@@ -392,9 +391,9 @@ export class WalletDatabaseService {
       }
 
       return await this.encryptionService.decrypt(session.encryptedPrivateKey);
-    } catch (error) {
-      logger.error('Failed to get session private key:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get session private key:', _error);
+      throw _error;
     }
   }
 
@@ -402,7 +401,7 @@ export class WalletDatabaseService {
   async saveTransaction(
     tx: TransactionHistory & { chainId: number },
     walletId: string,
-    sessionId?: string,
+    sessionId?: string
   ): Promise<void> {
     try {
       const newTx: NewTransactionHistory = {
@@ -426,9 +425,9 @@ export class WalletDatabaseService {
       };
 
       await this.db.insert(transactionHistory).values(newTx);
-    } catch (error) {
-      logger.error('Failed to save transaction:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to save transaction:', _error);
+      throw _error;
     }
   }
 
@@ -436,7 +435,7 @@ export class WalletDatabaseService {
     walletAddress: Address,
     chains?: Chain[],
     limit = 100,
-    offset = 0,
+    offset = 0
   ): Promise<(TransactionHistory & { chainId: number })[]> {
     try {
       // First get wallet IDs for this address
@@ -446,8 +445,8 @@ export class WalletDatabaseService {
         .where(
           and(
             eq(wallets.address, walletAddress.toLowerCase()),
-            eq(wallets.agentId, asUUID(this.runtime.agentId)),
-          ),
+            eq(wallets.agentId, asUUID(this.runtime.agentId))
+          )
         );
 
       if (walletsForAddress.length === 0) {
@@ -464,8 +463,8 @@ export class WalletDatabaseService {
           .where(
             and(
               inArray(transactionHistory.walletId, walletIds),
-              inArray(transactionHistory.chainId, chainIds),
-            ),
+              inArray(transactionHistory.chainId, chainIds)
+            )
           )
           .orderBy(desc(transactionHistory.timestamp))
           .limit(limit)
@@ -515,9 +514,9 @@ export class WalletDatabaseService {
         chainId: tx.chainId,
         nonce: tx.nonce || undefined,
       }));
-    } catch (error) {
-      logger.error('Failed to get transaction history:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get transaction history:', _error);
+      throw _error;
     }
   }
 
@@ -532,7 +531,7 @@ export class WalletDatabaseService {
       name?: string;
       decimals: number;
       valueUSD?: number;
-    },
+    }
   ): Promise<void> {
     try {
       await this.db
@@ -556,9 +555,9 @@ export class WalletDatabaseService {
             lastUpdated: new Date(),
           },
         });
-    } catch (error) {
-      logger.error('Failed to update token balance:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to update token balance:', _error);
+      throw _error;
     }
   }
 
@@ -569,7 +568,7 @@ export class WalletDatabaseService {
           .select()
           .from(tokenBalances)
           .where(
-            and(eq(tokenBalances.walletId, asUUID(walletId)), eq(tokenBalances.chainId, chainId)),
+            and(eq(tokenBalances.walletId, asUUID(walletId)), eq(tokenBalances.chainId, chainId))
           )
           .orderBy(desc(tokenBalances.valueUSD));
         return results;
@@ -582,9 +581,9 @@ export class WalletDatabaseService {
         .orderBy(desc(tokenBalances.valueUSD));
 
       return results;
-    } catch (error) {
-      logger.error('Failed to get token balances:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get token balances:', _error);
+      throw _error;
     }
   }
 
@@ -618,9 +617,9 @@ export class WalletDatabaseService {
             lastUpdated: new Date(),
           },
         });
-    } catch (error) {
-      logger.error('Failed to update DeFi position:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to update DeFi position:', _error);
+      throw _error;
     }
   }
 
@@ -633,8 +632,8 @@ export class WalletDatabaseService {
           .where(
             and(
               eq(defiPositions.walletId, asUUID(walletId)),
-              inArray(defiPositions.chainId, chainIds),
-            ),
+              inArray(defiPositions.chainId, chainIds)
+            )
           )
           .orderBy(desc(defiPositions.totalValueUSD));
         return results;
@@ -647,9 +646,9 @@ export class WalletDatabaseService {
         .orderBy(desc(defiPositions.totalValueUSD));
 
       return results;
-    } catch (error) {
-      logger.error('Failed to get DeFi positions:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get DeFi positions:', _error);
+      throw _error;
     }
   }
 
@@ -690,9 +689,9 @@ export class WalletDatabaseService {
             lastUpdated: new Date(),
           },
         });
-    } catch (error) {
-      logger.error('Failed to update NFT holding:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to update NFT holding:', _error);
+      throw _error;
     }
   }
 
@@ -703,7 +702,7 @@ export class WalletDatabaseService {
           .select()
           .from(nftHoldings)
           .where(
-            and(eq(nftHoldings.walletId, asUUID(walletId)), inArray(nftHoldings.chainId, chainIds)),
+            and(eq(nftHoldings.walletId, asUUID(walletId)), inArray(nftHoldings.chainId, chainIds))
           )
           .orderBy(desc(nftHoldings.lastUpdated));
         return results;
@@ -716,9 +715,9 @@ export class WalletDatabaseService {
         .orderBy(desc(nftHoldings.lastUpdated));
 
       return results;
-    } catch (error) {
-      logger.error('Failed to get NFT holdings:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get NFT holdings:', _error);
+      throw _error;
     }
   }
 
@@ -733,7 +732,7 @@ export class WalletDatabaseService {
       baseFee?: bigint;
       priorityFee?: bigint;
     },
-    blockNumber: number,
+    blockNumber: number
   ): Promise<void> {
     try {
       await this.db
@@ -762,9 +761,9 @@ export class WalletDatabaseService {
             updatedAt: new Date(),
           },
         });
-    } catch (error) {
-      logger.error('Failed to update gas price:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to update gas price:', _error);
+      throw _error;
     }
   }
 
@@ -776,9 +775,9 @@ export class WalletDatabaseService {
         .where(eq(gasPriceCache.chainId, chainId));
 
       return gasPrice || null;
-    } catch (error) {
-      logger.error('Failed to get gas price:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get gas price:', _error);
+      throw _error;
     }
   }
 
@@ -792,7 +791,7 @@ export class WalletDatabaseService {
       isVerified?: boolean;
       implementation?: string;
       source?: string;
-    },
+    }
   ): Promise<void> {
     try {
       await this.db
@@ -819,9 +818,9 @@ export class WalletDatabaseService {
             updatedAt: new Date(),
           },
         });
-    } catch (error) {
-      logger.error('Failed to save contract ABI:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to save contract ABI:', _error);
+      throw _error;
     }
   }
 
@@ -833,14 +832,14 @@ export class WalletDatabaseService {
         .where(
           and(
             eq(contractAbiCache.address, address.toLowerCase()),
-            eq(contractAbiCache.chainId, chainId),
-          ),
+            eq(contractAbiCache.chainId, chainId)
+          )
         );
 
       return abi || null;
-    } catch (error) {
-      logger.error('Failed to get contract ABI:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get contract ABI:', _error);
+      throw _error;
     }
   }
 
@@ -883,9 +882,9 @@ export class WalletDatabaseService {
             updatedAt: new Date(),
           },
         });
-    } catch (error) {
-      logger.error('Failed to save ENS data:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to save ENS data:', _error);
+      throw _error;
     }
   }
 
@@ -897,9 +896,9 @@ export class WalletDatabaseService {
         .where(eq(ensCache.name, name.toLowerCase()));
 
       return ens || null;
-    } catch (error) {
-      logger.error('Failed to get ENS data:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get ENS data:', _error);
+      throw _error;
     }
   }
 
@@ -913,9 +912,9 @@ export class WalletDatabaseService {
         .limit(1);
 
       return ens || null;
-    } catch (error) {
-      logger.error('Failed to get ENS by address:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get ENS by address:', _error);
+      throw _error;
     }
   }
 

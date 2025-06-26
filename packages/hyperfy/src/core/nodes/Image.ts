@@ -1,6 +1,7 @@
 import { isBoolean, isNumber, isString } from 'lodash-es';
 import { Node } from './Node';
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
+// Using THREE namespace types
 import CustomShaderMaterial from '../libs/three-custom-shader-material';
 
 const fits = ['none', 'cover', 'contain'];

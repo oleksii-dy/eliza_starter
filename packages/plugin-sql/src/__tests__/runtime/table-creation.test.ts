@@ -2,18 +2,18 @@ import { describe, it, expect, beforeEach, afterEach, afterAll } from 'bun:test'
 import { AgentRuntime, Character, type UUID, stringToUuid, logger } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
 import plugin from '../../index';
-import { resolvePgliteDir } from '../../utils';
-import { PGliteClientManager } from '../../pglite/manager';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+// import { resolvePgliteDir } from '../../utils'; // No longer needed for PostgreSQL
+import { PgManager } from '../../pg/manager';
+import { PgAdapter } from '../../pg/adapter';
 import { connectionRegistry } from '../../connection-registry';
 import { schemaRegistry } from '../../schema-registry';
 import { TestDbManager } from '../test-db-utils';
 
-// Skip all runtime tests to prevent memory leaks
+// Skip all runtime tests temporarily
 describe.skip('SQL Plugin Runtime Table Creation Tests', () => {
   let runtime: AgentRuntime;
   let testAgentId: UUID;
-  let activeManagers: PGliteClientManager[] = [];
+  let activeManagers: PgManager[] = [];
   let dbManager: TestDbManager;
 
   // Set test environment to allow mock entities
@@ -86,13 +86,13 @@ describe.skip('SQL Plugin Runtime Table Creation Tests', () => {
       const testDbPath = await dbManager.createTestDb('table-creation');
 
       // Create a manager with valid configuration
-      const manager = new PGliteClientManager({ dataDir: testDbPath });
+      const manager = new PgManager({ dataDir: testDbPath });
       activeManagers.push(manager);
 
       // Initialize the manager first
       await manager.initialize();
 
-      const adapter = new PgliteDatabaseAdapter(testAgentId, manager);
+      const adapter = new PgAdapter(testAgentId, manager);
 
       // The adapter's init() method should complete successfully
       await expect(adapter.init()).resolves.toBeUndefined();

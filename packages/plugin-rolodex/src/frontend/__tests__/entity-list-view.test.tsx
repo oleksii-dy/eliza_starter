@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import React from 'react';
-import { describe, it, expect, mock, beforeEach  } from 'bun:test';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { EntityListView } from '../ui/entity-list-view';
@@ -19,13 +19,13 @@ describe('EntityListView', () => {
         bio: 'Software engineer and friend',
         trustMetrics: {
           helpfulness: 0.8,
-          suspicionLevel: 0.1
+          suspicionLevel: 0.1,
         },
         platformIdentities: [
           { platform: 'github', handle: 'alicej' },
-          { platform: 'twitter', handle: '@alice_j' }
-        ]
-      }
+          { platform: 'twitter', handle: '@alice_j' },
+        ],
+      },
     },
     {
       id: stringToUuid('entity-2'),
@@ -36,12 +36,10 @@ describe('EntityListView', () => {
         bio: 'Product manager',
         trustMetrics: {
           helpfulness: 0.6,
-          suspicionLevel: 0.2
+          suspicionLevel: 0.2,
         },
-        platformIdentities: [
-          { platform: 'linkedin', handle: 'bob-smith' }
-        ]
-      }
+        platformIdentities: [{ platform: 'linkedin', handle: 'bob-smith' }],
+      },
     },
     {
       id: stringToUuid('entity-3'),
@@ -52,11 +50,11 @@ describe('EntityListView', () => {
         bio: 'Innovative tech company',
         trustMetrics: {
           helpfulness: 0.7,
-          suspicionLevel: 0.1
+          suspicionLevel: 0.1,
         },
-        platformIdentities: []
-      }
-    }
+        platformIdentities: [],
+      },
+    },
   ];
 
   const mockRelationships: Relationship[] = [
@@ -68,9 +66,9 @@ describe('EntityListView', () => {
       tags: ['works_with'],
       metadata: {
         relationshipType: 'colleague',
-        strength: 0.9
+        strength: 0.9,
       },
-      strength: 0.9
+      strength: 0.9,
     },
     {
       id: stringToUuid('rel-2'),
@@ -80,10 +78,10 @@ describe('EntityListView', () => {
       tags: ['works_for'],
       metadata: {
         relationshipType: 'employment',
-        strength: 0.7
+        strength: 0.7,
       },
-      strength: 0.7
-    }
+      strength: 0.7,
+    },
   ];
 
   const mockOnEntityClick = mock();
@@ -102,9 +100,9 @@ describe('EntityListView', () => {
     );
 
     // Check if all entities are rendered
-    expect(screen.getByText('Alice Johnson')).toBeInTheDocument();
-    expect(screen.getByText('Bob Smith')).toBeInTheDocument();
-    expect(screen.getByText('Tech Startup Inc')).toBeInTheDocument();
+    expect(screen.getByText('Alice Johnson')).toBeTruthy();
+    expect(screen.getByText('Bob Smith')).toBeTruthy();
+    expect(screen.getByText('Tech Startup Inc')).toBeTruthy();
   });
 
   it('displays entity types correctly', () => {
@@ -119,7 +117,7 @@ describe('EntityListView', () => {
     // Check entity types
     const personBadges = screen.getAllByText('person');
     expect(personBadges).toHaveLength(2);
-    expect(screen.getByText('organization')).toBeInTheDocument();
+    expect(screen.getByText('organization')).toBeTruthy();
   });
 
   it('shows platform identities', () => {
@@ -132,9 +130,9 @@ describe('EntityListView', () => {
     );
 
     // Check if platform badges are displayed
-    expect(screen.getByText('github')).toBeInTheDocument();
-    expect(screen.getByText('twitter')).toBeInTheDocument();
-    expect(screen.getByText('linkedin')).toBeInTheDocument();
+    expect(screen.getByText('github')).toBeTruthy();
+    expect(screen.getByText('twitter')).toBeTruthy();
+    expect(screen.getByText('linkedin')).toBeTruthy();
   });
 
   it('handles entity click', () => {
@@ -167,9 +165,9 @@ describe('EntityListView', () => {
     fireEvent.change(searchInput, { target: { value: 'Alice' } });
 
     await waitFor(() => {
-      expect(screen.getByText('Alice Johnson')).toBeInTheDocument();
-      expect(screen.queryByText('Bob Smith')).not.toBeInTheDocument();
-      expect(screen.queryByText('Tech Startup Inc')).not.toBeInTheDocument();
+      expect(screen.getByText('Alice Johnson')).toBeTruthy();
+      expect(screen.queryByText('Bob Smith')).not.toBeTruthy();
+      expect(screen.queryByText('Tech Startup Inc')).not.toBeTruthy();
     });
   });
 
@@ -191,9 +189,9 @@ describe('EntityListView', () => {
       // - Alice has avg strength 0.8 (from 0.9 + 0.7 / 2), so should be filtered out
       // - Bob has avg strength 0.9 (single incoming connection), so should remain
       // - Tech Startup has avg strength 0.7 (single incoming), so should be filtered out
-      expect(screen.queryByText('Alice Johnson')).not.toBeInTheDocument();
-      expect(screen.getByText('Bob Smith')).toBeInTheDocument();
-      expect(screen.queryByText('Tech Startup Inc')).not.toBeInTheDocument();
+      expect(screen.queryByText('Alice Johnson')).not.toBeTruthy();
+      expect(screen.getByText('Bob Smith')).toBeTruthy();
+      expect(screen.queryByText('Tech Startup Inc')).not.toBeTruthy();
     });
   });
 
@@ -213,9 +211,9 @@ describe('EntityListView', () => {
 
     // Should show connections
     await waitFor(() => {
-      expect(screen.getByText(/Connections \(2\)/)).toBeInTheDocument();
-      expect(screen.getByText('colleague')).toBeInTheDocument();
-      expect(screen.getByText('employment')).toBeInTheDocument();
+      expect(screen.getByText(/Connections \(2\)/)).toBeTruthy();
+      expect(screen.getByText('colleague')).toBeTruthy();
+      expect(screen.getByText('employment')).toBeTruthy();
     });
   });
 
@@ -230,11 +228,11 @@ describe('EntityListView', () => {
 
     // Alice has high trust (0.8 - 0.1 = 0.7)
     const aliceRow = screen.getByText('Alice Johnson').closest('tr');
-    expect(within(aliceRow!).getByText('0.70')).toBeInTheDocument();
+    expect(within(aliceRow!).getByText('0.70')).toBeTruthy();
 
     // Bob has medium trust (0.6 - 0.2 = 0.4)
     const bobRow = screen.getByText('Bob Smith').closest('tr');
-    expect(within(bobRow!).getByText('0.40')).toBeInTheDocument();
+    expect(within(bobRow!).getByText('0.40')).toBeTruthy();
   });
 
   it('displays relationship counts', () => {
@@ -248,23 +246,17 @@ describe('EntityListView', () => {
 
     // Alice has 2 connections
     const aliceRow = screen.getByText('Alice Johnson').closest('tr');
-    expect(within(aliceRow!).getByText('2 total')).toBeInTheDocument();
+    expect(within(aliceRow!).getByText('2 total')).toBeTruthy();
 
     // Bob has 1 connection
     const bobRow = screen.getByText('Bob Smith').closest('tr');
-    expect(within(bobRow!).getByText('1 total')).toBeInTheDocument();
+    expect(within(bobRow!).getByText('1 total')).toBeTruthy();
   });
 
   it('renders empty state when no entities', () => {
-    render(
-      <EntityListView
-        entities={[]}
-        relationships={[]}
-        onEntityClick={mockOnEntityClick}
-      />
-    );
+    render(<EntityListView entities={[]} relationships={[]} onEntityClick={mockOnEntityClick} />);
 
-    expect(screen.getByText(/Showing 0 of 0 entities/i)).toBeInTheDocument();
+    expect(screen.getByText(/Showing 0 of 0 entities/i)).toBeTruthy();
   });
 
   it('shows bidirectional relationships', async () => {
@@ -277,10 +269,10 @@ describe('EntityListView', () => {
         agentId: stringToUuid('agent-1'),
         tags: ['works_with'],
         metadata: {
-          relationshipType: 'colleague'
+          relationshipType: 'colleague',
         },
-        strength: 0.9
-      }
+        strength: 0.9,
+      },
     ];
 
     render(
@@ -298,7 +290,7 @@ describe('EntityListView', () => {
 
     // Should show bidirectional badge
     await waitFor(() => {
-      expect(screen.getByText('↔ Bidirectional')).toBeInTheDocument();
+      expect(screen.getByText('↔ Bidirectional')).toBeTruthy();
     });
   });
 });

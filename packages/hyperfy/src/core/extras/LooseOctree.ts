@@ -1,11 +1,11 @@
 import { isBoolean } from 'lodash-es';
-import * as THREE from './three';
+import { THREE } from './three';
 
 const _v1 = new THREE.Vector3();
 const _v2 = new THREE.Vector3();
 const _q1 = new THREE.Quaternion();
 const _m1 = new THREE.Matrix4();
-const _intersects: THREE.Intersection[] = [];
+const _intersects: any[] = [];
 const _mesh = new THREE.Mesh();
 
 const MIN_RADIUS = 0.2;
@@ -13,23 +13,23 @@ const MIN_RADIUS = 0.2;
 // https://anteru.net/blog/2008/loose-octrees/
 
 interface OctreeItem {
-  sphere?: THREE.Sphere
-  geometry: THREE.BufferGeometry
-  material: THREE.Material | THREE.Material[]
-  matrix: THREE.Matrix4
+  sphere?: any
+  geometry: any
+  material: any | any[]
+  matrix: any
   getEntity: () => any
   node?: any
   _node?: LooseOctreeNode
 }
 
 interface LooseOctreeOptions {
-  scene: THREE.Scene
-  center: THREE.Vector3
+  scene: any
+  center: any
   size: number
 }
 
 export class LooseOctree {
-  scene: THREE.Scene;
+  scene: any;
   root: LooseOctreeNode;
   helper: any;
   constructor({ scene, center, size }: LooseOctreeOptions) {
@@ -118,7 +118,7 @@ export class LooseOctree {
     this.root.count = prevRoot.count;
   }
 
-  raycast(raycaster: THREE.Raycaster, intersects: THREE.Intersection[] = []) {
+  raycast(raycaster: any, intersects: any[] = []) {
     this.root.raycast(raycaster, intersects);
     intersects.sort(sortAscending);
     // console.log('octree.raycast', intersects)
@@ -167,25 +167,25 @@ class LooseOctreeNode {
   children: LooseOctreeNode[];
   octree: LooseOctree;
   parent: LooseOctreeNode | null;
-  center: THREE.Vector3;
+  center: any;
   size: number;
-  inner: THREE.Box3;
-  outer: THREE.Box3;
+  inner: any;
+  outer: any;
   items: OctreeItem[];
   count: number;
-  _helperItem?: { idx: number; matrix: THREE.Matrix4 };
-  constructor(octree: LooseOctree, parent: LooseOctreeNode | null, center: THREE.Vector3, size: number) {
+  _helperItem?: { idx: number; matrix: any };
+  constructor(octree: LooseOctree, parent: LooseOctreeNode | null, center: any, size: number) {
     this.octree = octree;
     this.parent = parent;
     this.center = center;
     this.size = size;
     this.inner = new THREE.Box3(
-      new THREE.Vector3(center.x - size, center.y - size, center.z - size) as any,
-      new THREE.Vector3(center.x + size, center.y + size, center.z + size) as any
+      new THREE.Vector3(center.x - size, center.y - size, center.z - size),
+      new THREE.Vector3(center.x + size, center.y + size, center.z + size)
     );
     this.outer = new THREE.Box3(
-      new THREE.Vector3(center.x - size * 2, center.y - size * 2, center.z - size * 2) as any, // prettier-ignore
-      new THREE.Vector3(center.x + size * 2, center.y + size * 2, center.z + size * 2) as any // prettier-ignore
+      new THREE.Vector3(center.x - size * 2, center.y - size * 2, center.z - size * 2), // prettier-ignore
+      new THREE.Vector3(center.x + size * 2, center.y + size * 2, center.z + size * 2) // prettier-ignore
     );
     this.items = [];
     this.count = 0;
@@ -283,7 +283,7 @@ class LooseOctreeNode {
     }
   }
 
-  raycast(raycaster: THREE.Raycaster, intersects: THREE.Intersection[]) {
+  raycast(raycaster: any, intersects: any[]) {
     if (!raycaster.ray.intersectsBox(this.outer)) {
       return intersects;
     }
@@ -313,7 +313,7 @@ class LooseOctreeNode {
   //     return intersects
   //   }
   //   for (const item of this.items) {
-  //     if (sphere.intersectsSphere(item.sphere)) {
+  //     if (sphere.intersectsany(item.sphere)) {
   //       // just sphere-to-sphere is good enough for now
   //       const centerToCenterDistance = sphere.center.distanceTo(
   //         item.sphere.center
@@ -392,7 +392,7 @@ class LooseOctreeNode {
   }
 }
 
-function sortAscending(a: THREE.Intersection, b: THREE.Intersection) {
+function sortAscending(a: any, b: any) {
   return a.distance - b.distance;
 }
 
@@ -407,7 +407,7 @@ function sortAscending(a: THREE.Intersection, b: THREE.Intersection) {
 
 interface HelperItem {
   idx: number
-  matrix: THREE.Matrix4
+  matrix: any
 }
 
 function createHelper(octree: LooseOctree) {

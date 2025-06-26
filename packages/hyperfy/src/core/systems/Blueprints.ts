@@ -1,6 +1,6 @@
-import { isEqual, merge } from 'lodash-es';
+import { isEqual } from 'lodash-es';
 import { System } from './System.js';
-import type { World, Blueprint, Entity } from '../../types/index.js';
+import type { World, Blueprint } from '../../types/index.js';
 
 /**
  * Blueprints System

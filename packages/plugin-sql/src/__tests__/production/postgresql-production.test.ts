@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { AgentRuntime, type UUID, type IAgentRuntime, ChannelType } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { createIsolatedTestDatabase } from '../test-helpers';
-import type { PgDatabaseAdapter } from '../../pg/adapter';
+import type { PgAdapter } from '../../pg/adapter';
 
 /**
  * PostgreSQL-Specific Production Tests
@@ -16,7 +16,7 @@ import type { PgDatabaseAdapter } from '../../pg/adapter';
  */
 
 describe('PostgreSQL Production Validation', () => {
-  let adapter: PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: IAgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -484,7 +484,7 @@ describe('PostgreSQL Production Validation', () => {
         `[PostgreSQL BENCHMARK] Created ${memoryCount} memories in ${creationTime}ms (${memoriesPerSecond.toFixed(1)} memories/sec)`
       );
 
-      // PostgreSQL should achieve better performance than PGLite
+      // PostgreSQL should achieve optimal performance for production workloads
       expect(memoriesPerSecond).toBeGreaterThan(15); // At least 15 memories per second
       expect(creationTime).toBeLessThan(60000); // Should complete within 1 minute
 

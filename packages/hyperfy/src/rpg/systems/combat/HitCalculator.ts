@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { StatsComponent, CombatStyle, AttackType, CombatComponent } from '../../types';
 
 export class HitCalculator {

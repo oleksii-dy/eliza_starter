@@ -55,7 +55,7 @@ OPENAI_API_KEY=
 # OPENAI_EMBEDDING_URL=
 # OPENAI_EMBEDDING_DIMENSIONS=1536
 # OPENAI_IMAGE_DESCRIPTION_MODEL=gpt-4o-mini
-# OPENAI_IMAGE_DESCRIPTION_MAX_TOKENS=8192
+# OPENAI_IMAGE_DESCRIPTION_MAX_TOKENS=4096
 
 # Anthropic Configuration
 ## By default in most of our starter kits, Anthropic will take precedence over OpenAI in handling requests

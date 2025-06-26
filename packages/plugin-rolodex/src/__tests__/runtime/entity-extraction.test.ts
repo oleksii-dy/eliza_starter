@@ -10,7 +10,9 @@ export const entityExtractionRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing entity extraction from simple introduction...');
 
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -36,7 +38,7 @@ export const entityExtractionRuntimeTests: TestSuite = {
         await (runtime as any).processMessage(message);
 
         // Wait for processing
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
 
         // Search for the extracted entity
         const searchResults = await entityGraphService.searchEntities('Alice Johnson');
@@ -51,11 +53,15 @@ export const entityExtractionRuntimeTests: TestSuite = {
         console.log('✓ Summary:', alice.summary);
 
         // Verify extraction quality
-        if (!alice.names.some(n => n.toLowerCase().includes('alice'))) {
+        if (!alice.names.some((n) => n.toLowerCase().includes('alice'))) {
           throw new Error('Entity name not properly extracted');
         }
 
-        if (!alice.tags?.some(t => t.toLowerCase().includes('google') || t.toLowerCase().includes('engineer'))) {
+        if (
+          !alice.tags?.some(
+            (t) => t.toLowerCase().includes('google') || t.toLowerCase().includes('engineer')
+          )
+        ) {
           throw new Error('Entity context not properly extracted');
         }
 
@@ -68,7 +74,9 @@ export const entityExtractionRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing multiple entity extraction...');
 
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -94,7 +102,7 @@ export const entityExtractionRuntimeTests: TestSuite = {
           };
 
           await (runtime as any).processMessage(message);
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
         }
 
         // Search for extracted entities
@@ -126,7 +134,9 @@ export const entityExtractionRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing entity information updates...');
 
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -148,7 +158,7 @@ export const entityExtractionRuntimeTests: TestSuite = {
         };
 
         await (runtime as any).processMessage(message1);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Get initial entity
         const initialResults = await entityGraphService.searchEntities('David Kim');
@@ -173,7 +183,7 @@ export const entityExtractionRuntimeTests: TestSuite = {
         };
 
         await (runtime as any).processMessage(message2);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Get updated entity
         const updatedResults = await entityGraphService.searchEntities('David Kim');
@@ -183,10 +193,11 @@ export const entityExtractionRuntimeTests: TestSuite = {
         console.log('✓ Updated tags:', updatedEntity.tags?.join(', '));
 
         // Verify information was added
-        if (!updatedEntity.tags?.some(t =>
-          t.toLowerCase().includes('microsoft') ||
-          t.toLowerCase().includes('azure')
-        )) {
+        if (
+          !updatedEntity.tags?.some(
+            (t) => t.toLowerCase().includes('microsoft') || t.toLowerCase().includes('azure')
+          )
+        ) {
           throw new Error('Entity information not properly updated');
         }
 

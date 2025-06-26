@@ -1,27 +1,10 @@
 {
   "$schema": "https://turborepo.org/schema.json",
-  "globalDependencies": [
-    ".env",
-    ".env.*",
-    "tsconfig.json",
-    "package-lock.json",
-    "bun.lockb",
-    "pnpm-lock.yaml",
-    "yarn.lock"
-  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "env": ["LOG_LEVEL", "NODE_ENV", "CI", "ELIZA_*"],
-      "outputs": ["dist/**"],
-      "inputs": [
-        "src/**",
-        "tsconfig*.json",
-        "package.json",
-        "tsup.config.ts",
-        "*.config.js",
-        "*.config.ts"
-      ]
+      "env": ["LOG_LEVEL"],
+      "outputs": ["dist/**"]
     },
     "lint": {
       "outputs": [".eslintcache"]
@@ -44,9 +27,7 @@
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**/*.ts", "src/**/*.js", "__tests__/**/*", "*.test.*"],
-      "cache": false,
-      "persistent": false
+      "inputs": ["src/**/*.ts", "src/**/*.js", "__tests__/**/*", "*.test.*"]
     },
     "migrate": {
       "dependsOn": ["@elizaos/core#build"],

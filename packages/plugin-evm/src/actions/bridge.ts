@@ -1,11 +1,15 @@
-import type { ActionResult, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
 import {
   type Action,
+  type ActionResult,
+  type HandlerCallback,
+  type IAgentRuntime,
+  type Memory,
+  type State,
   composePromptFromState,
   ModelType,
   parseKeyValueXml,
-  elizaLogger,
   logger,
+  elizaLogger,
 } from '@elizaos/core';
 import {
   type ExtendedChain,
@@ -46,12 +50,12 @@ export class BridgeAction {
       integrator: 'eliza-agent',
       providers: [
         EVM({
-          getWalletClient: async () => {
+          getWalletClient: () => {
             // Default to first available chain if specific chain not specified
             const firstChain = Object.keys(this.walletProvider.chains)[0];
             return this.walletProvider.getWalletClient(firstChain as any) as any;
           },
-          switchChain: async (chainId: number) => {
+          switchChain: (chainId: number) => {
             logger.debug(`LiFi requesting chain switch to ${chainId}...`);
             const chainName = this.getChainNameById(chainId);
             return this.walletProvider.getWalletClient(chainName as any) as any;
@@ -91,7 +95,7 @@ export class BridgeAction {
 
   private getChainNameById(chainId: number): string {
     const chain = Object.entries(this.walletProvider.chains).find(
-      ([_, config]) => config.id === chainId,
+      ([_name, config]) => config.id === chainId
     );
     if (!chain) {
       throw new Error(`Chain with ID ${chainId} not found`);
@@ -104,7 +108,7 @@ export class BridgeAction {
    */
   private async resolveTokenAddress(
     tokenSymbolOrAddress: string,
-    chainId: number,
+    chainId: number
   ): Promise<string> {
     // If it's already a valid address (starts with 0x and is 42 chars), return as is
     if (tokenSymbolOrAddress.startsWith('0x') && tokenSymbolOrAddress.length === 42) {
@@ -120,11 +124,8 @@ export class BridgeAction {
       // Use LiFi SDK to resolve token symbol to address
       const token = await getToken(chainId, tokenSymbolOrAddress);
       return token.address;
-    } catch (error) {
-      elizaLogger.error(
-        `Failed to resolve token ${tokenSymbolOrAddress} on chain ${chainId}:`,
-        error,
-      );
+    } catch (_error) {
+      logger.error(`Failed to resolve token ${tokenSymbolOrAddress} on chain ${chainId}:`, _error);
       // If LiFi fails, return original value and let downstream handle the error
       return tokenSymbolOrAddress;
     }
@@ -153,8 +154,11 @@ export class BridgeAction {
         functionName: 'decimals',
       });
       return decimals;
-    } catch (error) {
-      elizaLogger.error(`Failed to get decimals for token ${tokenAddress} on ${chainName}:`, error);
+    } catch (_error) {
+      elizaLogger.error(
+        `Failed to get decimals for token ${tokenAddress} on ${chainName}:`,
+        _error
+      );
       // Default to 18 decimals if we can't determine
       return 18;
     }
@@ -162,11 +166,11 @@ export class BridgeAction {
 
   private createExecutionOptions(
     routeId: string,
-    onProgress?: (status: BridgeExecutionStatus) => void,
+    onProgress?: (status: BridgeExecutionStatus) => void
   ): ExecutionOptions {
     return {
       // Gas optimization hook - modify transaction requests for better gas prices
-      updateTransactionRequestHook: async (txRequest: any) => {
+      updateTransactionRequestHook: (txRequest: any) => {
         // Get current gas prices and optimize
         try {
           // Add 10% buffer to gas limit for safety
@@ -181,18 +185,19 @@ export class BridgeAction {
           }
 
           return txRequest;
-        } catch (error) {
-          console.warn('⚠️ Gas optimization failed, using default values:', error);
+        } catch (_error) {
+          console.warn('⚠️ Gas optimization failed, using default values:', _error);
           return txRequest;
         }
       },
 
       // Exchange rate update handler for better UX
+      // eslint-disable-next-line require-await
       acceptExchangeRateUpdateHook: async (params: {
         toToken: any;
         oldToAmount: string;
         newToAmount: string;
-      }) => {
+      }): Promise<boolean> => {
         const { toToken, oldToAmount, newToAmount } = params;
         const oldAmountFormatted = formatUnits(BigInt(oldToAmount), toToken.decimals);
         const newAmountFormatted = formatUnits(BigInt(newToAmount), toToken.decimals);
@@ -238,16 +243,16 @@ export class BridgeAction {
       },
 
       // Chain switching handler
-      switchChainHook: async (chainId: number) => {
+      switchChainHook: (chainId: number) => {
         logger.debug(`Switching to chain ${chainId}...`);
         try {
           const chainName = this.getChainNameById(chainId);
           const walletClient = this.walletProvider.getWalletClient(chainName as any);
           logger.debug('Chain switch successful');
           return walletClient as any; // Type cast to resolve compatibility issues
-        } catch (error) {
-          logger.error('Chain switch failed:', error);
-          throw error;
+        } catch (_error) {
+          logger.error('Chain switch failed:', _error);
+          throw _error;
         }
       },
 
@@ -307,7 +312,7 @@ export class BridgeAction {
     tool: string,
     routeId: string,
     maxAttempts: number = 60,
-    intervalMs: number = 5000,
+    intervalMs: number = 5000
   ): Promise<BridgeExecutionStatus> {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
@@ -321,7 +326,7 @@ export class BridgeAction {
         });
 
         logger.debug(
-          `Poll attempt ${attempt}/${maxAttempts}: ${status.status}${status.substatus ? ` (${status.substatus})` : ''}`,
+          `Poll attempt ${attempt}/${maxAttempts}: ${status.status}${status.substatus ? ` (${status.substatus})` : ''}`
         );
 
         // Map LiFi status to our internal status
@@ -358,8 +363,8 @@ export class BridgeAction {
         if (isComplete || error) {
           return updatedStatus;
         }
-      } catch (statusError) {
-        console.warn(`⚠️ Status check attempt ${attempt} failed:`, statusError);
+      } catch (_statusError) {
+        console.warn(`⚠️ Status check attempt ${attempt} failed:`, _statusError);
 
         // If we're near the end, treat it as a timeout
         if (attempt >= maxAttempts - 5) {
@@ -384,7 +389,7 @@ export class BridgeAction {
 
   async bridge(
     params: BridgeParams,
-    onProgress?: (status: BridgeExecutionStatus) => void,
+    onProgress?: (status: BridgeExecutionStatus) => void
   ): Promise<Transaction> {
     const walletClient = this.walletProvider.getWalletClient(params.fromChain);
     const fromAddress = walletClient.account?.address;
@@ -435,7 +440,7 @@ export class BridgeAction {
 
     if (!routesResult.routes.length) {
       throw new Error(
-        `No bridge routes found for ${params.fromToken} (${resolvedFromToken}) on ${params.fromChain} to ${params.toToken} (${resolvedToToken}) on ${params.toChain}. Please verify the token exists on both chains or try a different token pair.`,
+        `No bridge routes found for ${params.fromToken} (${resolvedFromToken}) on ${params.fromChain} to ${params.toToken} (${resolvedToToken}) on ${params.toChain}. Please verify the token exists on both chains or try a different token pair.`
       );
     }
 
@@ -455,7 +460,7 @@ export class BridgeAction {
 
       // Get the source chain transaction hash for status monitoring
       const sourceSteps = executedRoute.steps.filter((step) =>
-        step.execution?.process?.some((p) => p.txHash),
+        step.execution?.process?.some((p) => p.txHash)
       );
 
       if (!sourceSteps.length) {
@@ -480,7 +485,7 @@ export class BridgeAction {
         fromChainConfig.id,
         toChainConfig.id,
         bridgeTool,
-        routeId,
+        routeId
       );
 
       // Call progress callback one final time with completion status
@@ -494,7 +499,7 @@ export class BridgeAction {
 
       if (!finalStatus.isComplete) {
         logger.debug(
-          '⚠️ Bridge execution may still be in progress. Check destination chain manually.',
+          '⚠️ Bridge execution may still be in progress. Check destination chain manually.'
         );
         // Don't throw error - the source transaction succeeded
       }
@@ -510,8 +515,8 @@ export class BridgeAction {
         value: fromAmountParsed,
         chainId: toChainConfig.id,
       };
-    } catch (error) {
-      logger.error('Bridge execution failed:', error);
+    } catch (_error) {
+      logger.error('Bridge execution failed:', _error);
 
       // Try to get more details about the failure
       const status = this.activeRoutes.get(routeId);
@@ -519,7 +524,7 @@ export class BridgeAction {
         throw new Error(`Bridge failed: ${status.error}`);
       }
 
-      throw error;
+      throw _error;
     } finally {
       // Clean up route tracking
       this.activeRoutes.delete(routeId);
@@ -536,9 +541,9 @@ export class BridgeAction {
         bridge: tool,
       });
       return status;
-    } catch (error) {
-      logger.error('Failed to get transaction status:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get transaction status:', _error);
+      throw _error;
     }
   }
 
@@ -567,7 +572,7 @@ export class BridgeAction {
 const buildBridgeDetails = async (
   state: State,
   runtime: IAgentRuntime,
-  wp: WalletProvider,
+  wp: WalletProvider
 ): Promise<BridgeParams> => {
   const chains = wp.getSupportedChains();
 
@@ -601,7 +606,7 @@ const buildBridgeDetails = async (
 
   if (!fromChain || !toChain) {
     throw new Error(
-      `Missing required chain information. Please specify both source and destination chains. Available chains: ${chains.join(', ')}`,
+      `Missing required chain information. Please specify both source and destination chains. Available chains: ${chains.join(', ')}`
     );
   }
 
@@ -611,13 +616,13 @@ const buildBridgeDetails = async (
 
   if (!wp.chains[normalizedFromChain]) {
     throw new Error(
-      `Source chain ${fromChain} not configured. Available chains: ${chains.join(', ')}`,
+      `Source chain ${fromChain} not configured. Available chains: ${chains.join(', ')}`
     );
   }
 
   if (!wp.chains[normalizedToChain]) {
     throw new Error(
-      `Destination chain ${toChain} not configured. Available chains: ${chains.join(', ')}`,
+      `Destination chain ${toChain} not configured. Available chains: ${chains.join(', ')}`
     );
   }
 
@@ -639,12 +644,13 @@ export const bridgeAction: Action = {
   name: 'EVM_BRIDGE_TOKENS',
   description:
     'Bridges tokens between different chains with gas optimization and advanced monitoring. Returns transaction details, route information, and suggests next actions for cross-chain workflows. Supports multi-step bridging with automatic route finding.',
+  enabled: false, // Disabled by default - extremely dangerous, can bridge cryptocurrency between chains
   handler: async (
     runtime: IAgentRuntime,
     _message: Memory,
     state?: State,
     _options?: Record<string, unknown>,
-    callback?: HandlerCallback,
+    callback?: HandlerCallback
   ): Promise<ActionResult> => {
     const walletProvider = await initWalletProvider(runtime);
     const action = new BridgeAction(walletProvider);
@@ -748,7 +754,7 @@ export const bridgeAction: Action = {
                 nextAction: nextSuggestedAction,
               },
             },
-            'workflow',
+            'workflow'
           );
         } else {
           // Create regular memory for standalone bridge
@@ -763,7 +769,7 @@ export const bridgeAction: Action = {
                 bridgeDetails: workflowContext,
               },
             },
-            'messages',
+            'messages'
           );
         }
       }
@@ -789,16 +795,16 @@ export const bridgeAction: Action = {
           tokenSymbol: bridgeOptions.fromToken,
         },
       };
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         'Error in bridge handler:',
-        error instanceof Error ? error.message : 'Unknown error',
+        _error instanceof Error ? _error.message : 'Unknown error'
       );
       if (callback) {
         callback({
-          text: `Bridge failed: ${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease check your balance, network connectivity, and try again.`,
+          text: `Bridge failed: ${_error instanceof Error ? _error.message : 'Unknown error'}\n\nPlease check your balance, network connectivity, and try again.`,
           content: {
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: _error instanceof Error ? _error.message : 'Unknown error',
             success: false,
           },
         });
@@ -806,16 +812,17 @@ export const bridgeAction: Action = {
       return {
         data: {
           actionName: 'EVM_BRIDGE_TOKENS',
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: _error instanceof Error ? _error.message : 'Unknown error',
         },
         values: {
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: _error instanceof Error ? _error.message : 'Unknown error',
         },
       };
     }
   },
-  validate: async (runtime: IAgentRuntime) => {
+  // eslint-disable-next-line require-await
+  validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const privateKey = runtime.getSetting('EVM_PRIVATE_KEY');
     return typeof privateKey === 'string' && privateKey.startsWith('0x');
   },
@@ -832,7 +839,8 @@ export const bridgeAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll bridge 1 ETH from Ethereum to Base with gas optimization, then swap it for USDC on Base.",
-          thought: 'Two-step cross-chain strategy: first move ETH to Base for lower fees, then swap for USDC. The bridge enables access to cheaper swap operations on Base.',
+          thought:
+            'Two-step cross-chain strategy: first move ETH to Base for lower fees, then swap for USDC. The bridge enables access to cheaper swap operations on Base.',
           actions: ['EVM_BRIDGE_TOKENS', 'EVM_SWAP_TOKENS'],
         },
       },
@@ -849,7 +857,8 @@ export const bridgeAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll execute your arbitrage strategy: swap ETH to USDC on Ethereum, bridge to Polygon, then swap back to capture the price difference.",
-          thought: 'Complex arbitrage workflow: convert to stable asset for price comparison, bridge to target chain, then execute the arbitrage swap. Sequential operations to capture cross-chain price differences.',
+          thought:
+            'Complex arbitrage workflow: convert to stable asset for price comparison, bridge to target chain, then execute the arbitrage swap. Sequential operations to capture cross-chain price differences.',
           actions: ['EVM_SWAP_TOKENS', 'EVM_BRIDGE_TOKENS', 'EVM_SWAP_TOKENS'],
         },
       },
@@ -865,7 +874,8 @@ export const bridgeAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll bridge your USDC to BSC first, then help you swap it for BNB to participate in BSC farming opportunities. This cross-chain strategy will give you access to higher yields.",
-          thought: "Cross-chain yield farming setup: move stablecoins to BSC first, then convert to native BNB for farming. The bridge opens access to BSC's higher-yield opportunities.",
+          thought:
+            "Cross-chain yield farming setup: move stablecoins to BSC first, then convert to native BNB for farming. The bridge opens access to BSC's higher-yield opportunities.",
           action: 'EVM_BRIDGE_TOKENS',
           workflowContext: {
             step: 'cross-chain-farming',
@@ -887,7 +897,8 @@ export const bridgeAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll bridge your ETH to Arbitrum for arbitrage. After bridging, I can help you swap on Arbitrum where you might find better rates due to lower gas fees.",
-          thought: 'Arbitrage preparation: moving ETH to Arbitrum where lower gas fees enable more profitable arbitrage trades. The bridge positions assets for fee-efficient trading.',
+          thought:
+            'Arbitrage preparation: moving ETH to Arbitrum where lower gas fees enable more profitable arbitrage trades. The bridge positions assets for fee-efficient trading.',
           action: 'EVM_BRIDGE_TOKENS',
           workflowContext: {
             step: 'arbitrage-bridge',
@@ -908,7 +919,8 @@ export const bridgeAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll help you consolidate your assets on Polygon for unified portfolio management. This will give you access to low-cost DeFi operations and better portfolio tracking.",
-          thought: 'Portfolio consolidation strategy: moving all assets to Polygon for centralized management and low-fee operations. The bridge unifies scattered assets across chains.',
+          thought:
+            'Portfolio consolidation strategy: moving all assets to Polygon for centralized management and low-fee operations. The bridge unifies scattered assets across chains.',
           action: 'EVM_BRIDGE_TOKENS',
           workflowContext: {
             step: 'consolidate-chains',
@@ -929,7 +941,8 @@ export const bridgeAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll bridge your USDT to Base first, then help you swap for other tokens. Base offers significantly lower transaction fees, making this a cost-effective strategy for trading.",
-          thought: 'Fee optimization workflow: move stablecoins to Base first for dramatically lower swap fees. The bridge enables cost-effective trading operations on the L2.',
+          thought:
+            'Fee optimization workflow: move stablecoins to Base first for dramatically lower swap fees. The bridge enables cost-effective trading operations on the L2.',
           action: 'EVM_BRIDGE_TOKENS',
           workflowContext: {
             step: 'multi-chain-swap',
@@ -968,7 +981,7 @@ export async function checkBridgeStatus(
   txHash: string,
   fromChainId: number,
   toChainId: number,
-  tool: string = 'stargateV2Bus',
+  tool: string = 'stargateV2Bus'
 ) {
   try {
     const status = await getStatus({
@@ -979,7 +992,7 @@ export async function checkBridgeStatus(
     });
 
     logger.debug(
-      `Bridge Status: ${status.status}${status.substatus ? ` (${status.substatus})` : ''}`,
+      `Bridge Status: ${status.status}${status.substatus ? ` (${status.substatus})` : ''}`
     );
 
     return {
@@ -990,8 +1003,8 @@ export async function checkBridgeStatus(
       isPending: status.status === 'PENDING',
       error: status.status === 'FAILED' ? status.substatus : undefined,
     };
-  } catch (error) {
-    logger.error('Failed to check bridge status:', error);
-    throw error;
+  } catch (_error) {
+    logger.error('Failed to check bridge status:', _error);
+    throw _error;
   }
 }

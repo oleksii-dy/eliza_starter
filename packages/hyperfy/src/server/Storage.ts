@@ -10,7 +10,7 @@ export class Storage {
     this.file = file;
     try {
       this.data = fs.readJsonSync(this.file);
-    } catch (err) {
+    } catch (_err) {
       this.data = {};
     }
     this.save = throttle(() => this.persist(), 1000, { leading: true, trailing: true });

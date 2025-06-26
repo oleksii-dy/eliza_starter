@@ -3,7 +3,7 @@ import { logger } from '@elizaos/core';
 import {
   RobotState,
   RobotMode,
-  JointState,
+  JointState as _JointState,
   Pose,
   Motion,
   IMUData,
@@ -14,7 +14,7 @@ import {
 } from '../types';
 
 // Re-export for convenience
-export { RobotCommand, ExecutionResult, RobotCapabilities } from '../types';
+export type { RobotCommand, ExecutionResult, RobotCapabilities } from '../types';
 
 /**
  * Isomorphic Robot Interface

@@ -1,3 +1,4 @@
+/* eslint-disable radix */
 import { logger } from '@elizaos/core';
 import axios from 'axios';
 import { ExtractedContent } from './firecrawl';
@@ -9,7 +10,9 @@ const loadPdfParse = async () => {
     try {
       pdfParse = (await import('pdf-parse')).default;
     } catch (error) {
-      logger.warn('[PDFExtractor] pdf-parse not available, PDF extraction disabled');
+      logger.warn(
+        '[PDFExtractor] pdf-parse not available, PDF extraction disabled'
+      );
     }
   }
   return pdfParse;
@@ -90,7 +93,10 @@ export class PDFExtractor {
     }
   }
 
-  async extractFromBuffer(buffer: Buffer, sourceUrl?: string): Promise<ExtractedContent | null> {
+  async extractFromBuffer(
+    buffer: Buffer,
+    sourceUrl?: string
+  ): Promise<ExtractedContent | null> {
     try {
       logger.info('[PDFExtractor] Parsing PDF buffer');
 
@@ -259,7 +265,9 @@ export class PDFExtractor {
     }
 
     // Extract title (usually in quotes or after year)
-    const titleMatch = text.match(/"([^"]+)"|['"]([^'"]+)['"]|\d{4}\)\s*\.?\s*([^.]+)\./);
+    const titleMatch = text.match(
+      /"([^"]+)"|['"]([^'"]+)['"]|\d{4}\)\s*\.?\s*([^.]+)\./
+    );
     if (titleMatch) {
       ref.title = titleMatch[1] || titleMatch[2] || titleMatch[3];
     }
@@ -353,7 +361,10 @@ export class PDFExtractor {
   }
 
   // Extract specific sections for targeted analysis
-  async extractSection(buffer: Buffer, sectionName: string): Promise<string | null> {
+  async extractSection(
+    buffer: Buffer,
+    sectionName: string
+  ): Promise<string | null> {
     try {
       const parser = await loadPdfParse();
       if (!parser) {
@@ -372,7 +383,10 @@ export class PDFExtractor {
       const match = text.match(sectionRegex);
       return match ? this.cleanText(match[1]) : null;
     } catch (error) {
-      logger.error(`[PDFExtractor] Failed to extract section ${sectionName}:`, error);
+      logger.error(
+        `[PDFExtractor] Failed to extract section ${sectionName}:`,
+        error
+      );
       return null;
     }
   }
@@ -380,7 +394,9 @@ export class PDFExtractor {
   // Check if URL points to a PDF
   static isPDFUrl(url: string): boolean {
     return (
-      url.toLowerCase().endsWith('.pdf') || url.includes('pdf') || url.includes('arxiv.org/pdf/')
+      url.toLowerCase().endsWith('.pdf') ||
+      url.includes('pdf') ||
+      url.includes('arxiv.org/pdf/')
     );
   }
 }

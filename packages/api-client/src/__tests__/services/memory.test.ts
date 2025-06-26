@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
-import { MemoryService } from '../../services/memory';
+import { MemoryService } from '../../services/MemoryService';
 import { ApiClientConfig } from '../../types/base';
 import { UUID } from '@elizaos/core';
 

@@ -3,13 +3,13 @@ import type { World } from '../../types';
 import {
   RPGEntity,
   StatsComponent,
-  CombatComponent,
+  // CombatComponent,
   InventoryComponent,
   AttackType,
   HitResult,
-  ItemStack,
+  // ItemStack,
   Vector3
-} from '../types';
+} from '../types/index';
 import { InventorySystem } from '../systems/InventorySystem';
 
 export interface Spell {
@@ -435,7 +435,7 @@ export class MagicSystem extends System {
 
     // Base damage + magic level bonus
     const magicLevel = casterStats.magic.level;
-    const magicBonus = casterStats.combatBonuses.attackMagic;
+    const _magicBonus = casterStats.combatBonuses.attackMagic;
     const damage = Math.floor(Math.random() * (spell.damage.max + 1)) + Math.floor(magicLevel / 10);
 
     // Create hit result
@@ -764,10 +764,10 @@ export class MagicSystem extends System {
   /**
    * Update spell cooldowns
    */
-  public update(delta: number): void {
+  public update(_delta: number): void {
     // Clean up expired cooldowns
     const now = Date.now();
-    for (const [entityId, cooldowns] of this.spellCooldowns) {
+    for (const [_entityId, cooldowns] of this.spellCooldowns) {
       for (const [spellId, cooldownEnd] of cooldowns) {
         if (now >= cooldownEnd) {
           cooldowns.delete(spellId);

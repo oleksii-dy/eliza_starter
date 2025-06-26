@@ -9,7 +9,12 @@ import { IAgentRuntime } from '@elizaos/core';
 import { config } from 'dotenv';
 import fs from 'fs/promises';
 import path from 'path';
-import { SourceType, ResearchStatus, ResearchPhase, VerificationStatus } from '../types';
+import {
+  SourceType,
+  ResearchStatus,
+  ResearchPhase,
+  VerificationStatus,
+} from '../types';
 
 // Load environment variables
 config();
@@ -27,7 +32,10 @@ const runtime = {
 
     // API keys
     if (key === 'TAVILY_API_KEY') {
-      return process.env.TAVILY_API_KEY || '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';
+      return (
+        process.env.TAVILY_API_KEY ||
+        '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'
+      );
     }
     if (key === 'EXA_API_KEY') {
       return process.env.EXA_API_KEY || '267d9e0d-8617-444f-b1bf-612f3bf431f0';
@@ -39,7 +47,9 @@ const runtime = {
       );
     }
     if (key === 'FIRECRAWL_API_KEY') {
-      return process.env.FIRECRAWL_API_KEY || 'fc-857417811665460e92716b92e08ec398';
+      return (
+        process.env.FIRECRAWL_API_KEY || 'fc-857417811665460e92716b92e08ec398'
+      );
     }
 
     return process.env[key] || null;
@@ -62,7 +72,10 @@ const runtime = {
       ) {
         return 'computer_science';
       }
-      if (prompt.toLowerCase().includes('productivity') || prompt.toLowerCase().includes('work')) {
+      if (
+        prompt.toLowerCase().includes('productivity') ||
+        prompt.toLowerCase().includes('work')
+      ) {
         return 'business';
       }
       return 'general';
@@ -139,7 +152,9 @@ large language models developments`;
 
 async function runLoggedResearch() {
   console.log('🔬 ElizaOS Research Plugin - Real Research with File Logging\n');
-  console.log('📁 File logging enabled - outputs will be saved to research_logs/\n');
+  console.log(
+    '📁 File logging enabled - outputs will be saved to research_logs/\n'
+  );
 
   // Create research service
   const service = new ResearchService(runtime);
@@ -147,7 +162,8 @@ async function runLoggedResearch() {
   // Test queries covering different domains
   const queries = [
     {
-      query: 'What are the latest breakthroughs in AI and machine learning in 2024?',
+      query:
+        'What are the latest breakthroughs in AI and machine learning in 2024?',
       description: 'Computer Science / AI Research',
     },
     {
@@ -155,7 +171,8 @@ async function runLoggedResearch() {
       description: 'Environmental Science / Policy Analysis',
     },
     {
-      query: 'Analyze the impact of hybrid work models on employee productivity and wellbeing',
+      query:
+        'Analyze the impact of hybrid work models on employee productivity and wellbeing',
       description: 'Business / Workplace Research',
     },
   ];
@@ -246,7 +263,9 @@ async function runLoggedResearch() {
             {
               id: `claim-${i}-2`,
               statement: 'Expert consensus supports these findings',
-              supportingEvidence: ['Leading researchers agree on the implications'],
+              supportingEvidence: [
+                'Leading researchers agree on the implications',
+              ],
               sourceUrls: [mockSources[1].url],
               verificationStatus: VerificationStatus.VERIFIED,
               confidenceScore: 0.85,
@@ -264,8 +283,10 @@ async function runLoggedResearch() {
       // Update project metadata
       project.metadata.synthesis = `Research into "${query}" reveals important developments. ${mockFindings.map((f) => f.content).join(' ')}`;
       project.metadata.categoryAnalysis = {
-        primary: 'Primary research findings indicate strong progress in the field.',
-        analysis: 'Expert analysis confirms the significance of these developments.',
+        primary:
+          'Primary research findings indicate strong progress in the field.',
+        analysis:
+          'Expert analysis confirms the significance of these developments.',
       };
 
       // Mark as completed

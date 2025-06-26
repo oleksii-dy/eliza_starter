@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { AgentRuntime, asUUID } from '@elizaos/core';
-import { createDatabaseAdapter, plugin as sqlPlugin } from '@elizaos/plugin-sql';
+// import { createDatabaseAdapter, plugin as sqlPlugin } from '@elizaos/plugin-sql';
 import fs from 'fs';
 import path from 'path';
 import robotPlugin from '../../index';
@@ -31,13 +31,13 @@ async function runRobotTests() {
 
     // Create runtime
     console.log('Creating test runtime...');
-    const agentId = asUUID(`test-agent-${Date.now()}`);
-    const db = createDatabaseAdapter({ dataDir: ':memory:' }, agentId);
+    const _agentId = asUUID(`test-agent-${Date.now()}`);
+    // const db = await createDatabaseAdapter({ dataDir: ':memory:' }, agentId);
 
     runtime = new AgentRuntime({
       character: characterData,
-      adapter: db,
-      plugins: [sqlPlugin, robotPlugin],
+      // adapter: db,
+      plugins: [robotPlugin],
     });
 
     await runtime.initialize();

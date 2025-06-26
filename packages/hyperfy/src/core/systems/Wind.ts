@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { THREE } from '../extras/three';
 
 import { System } from './System';
 
@@ -28,7 +28,7 @@ export class Wind extends System {
     };
   }
 
-  update(delta: number) {
-    this.uniforms.time.value += delta;
+  update(_delta: number) {
+    this.uniforms.time.value += _delta;
   }
 }

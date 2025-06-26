@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { autocoderPlugin } from '../index.js';
+import autocoderPlugin from '../index.js';
 import type { IAgentRuntime } from '@elizaos/core';
 import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
-import path from 'path';
+import * as path from 'path';
 
 describe('AutoCoder Plugin Integration', () => {
   let runtime: IAgentRuntime;
@@ -38,7 +38,7 @@ describe('AutoCoder Plugin Integration', () => {
         return null;
       },
       services: new Map(),
-      registerService: () => {},
+      registerService: () => { /* empty */ },
     } as any;
   });
 
@@ -62,7 +62,9 @@ describe('AutoCoder Plugin Integration', () => {
     expect(autocoderPlugin.services).toBeDefined();
     expect(autocoderPlugin.services?.length).toBeGreaterThanOrEqual(5);
 
-    const serviceNames = autocoderPlugin.services?.map((service) => service.serviceName) || [];
+    const serviceNames = autocoderPlugin.services?.map((service) =>
+      typeof service === 'function' ? service.serviceName : service.component.serviceName
+    ) || [];
     expect(serviceNames).toContain('docker');
     expect(serviceNames).toContain('autocoder');
   });
@@ -84,7 +86,7 @@ describe('AutoCoder Plugin Integration', () => {
     // Services are already set up in beforeEach with trust services
 
     // Should not throw
-    await expect(autocoderPlugin.init?.({}, runtime)).resolves.toBeUndefined();
+    await expect(autocoderPlugin.init?.({ /* empty */ }, runtime)).resolves.toBeUndefined();
   });
 
   it('should initialize without errors when trust services are not available', async () => {
@@ -98,11 +100,11 @@ describe('AutoCoder Plugin Integration', () => {
     } as IAgentRuntime;
 
     // Should not throw
-    await expect(autocoderPlugin.init?.({}, runtimeWithoutTrust)).resolves.toBeUndefined();
+    await expect(autocoderPlugin.init?.({ /* empty */ }, runtimeWithoutTrust)).resolves.toBeUndefined();
   });
 
   it('should initialize without errors and not modify runtime directly', async () => {
-    await autocoderPlugin.init?.({}, runtime);
+    await autocoderPlugin.init?.({ /* empty */ }, runtime);
 
     // Init function should complete without error
     // Actions are registered by the framework, not by the init function

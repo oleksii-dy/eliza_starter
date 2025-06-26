@@ -1,9 +1,16 @@
+/* eslint-disable import/order */
 import { createServer, Server } from 'http';
-import { Service, type IAgentRuntime, logger, type UUID } from '@elizaos/core';
+
 import cors from 'cors';
-import express, { Express, Request, Response } from 'express';
+import express, { Express, Request as _Request, Response as _Response } from 'express';
 import { nanoid } from 'nanoid';
-// @ts-expect-error -- Express types issue - These might not be available in all environments
+// eslint-disable-next-line import/order
+import {
+  Service,
+  type IAgentRuntime,
+  elizaLogger as logger,
+  type UUID as _UUID,
+} from '@elizaos/core';
 let cookieParser: any;
 let session: any;
 
@@ -85,7 +92,7 @@ export class SecretFormService extends Service {
 
       // Create a stub that provides helpful error messages
       this.ngrokService = {
-        startTunnel: async (port: number) => {
+        startTunnel: async (_port: number) => {
           throw new Error(
             'Cannot create secret forms: NgrokService is not available. Please ensure @elizaos/plugin-ngrok is loaded.'
           );
@@ -101,7 +108,7 @@ export class SecretFormService extends Service {
       this.isEnabled = true;
     }
 
-    this.secretsManager = this.runtime.getService('SECRETS') as EnhancedSecretManager;
+    this.secretsManager = this.runtime.getService<EnhancedSecretManager>('SECRETS');
     if (!this.secretsManager) {
       logger.warn(
         '[SecretFormService] SecretManager not available during initialization - will check again when needed'
@@ -121,7 +128,7 @@ export class SecretFormService extends Service {
 
   private getSecretsManager(): EnhancedSecretManager {
     if (!this.secretsManager) {
-      this.secretsManager = this.runtime.getService('SECRETS') as EnhancedSecretManager;
+      this.secretsManager = this.runtime.getService<EnhancedSecretManager>('SECRETS');
     }
     if (!this.secretsManager) {
       throw new Error('SecretManager service is not available');
@@ -381,7 +388,7 @@ export class SecretFormService extends Service {
           // Check if we've reached max submissions
           if (session.submissions.length >= (session.schema.maxSubmissions || 1)) {
             session.status = 'completed';
-            this.closeSession(session.id);
+            void this.closeSession(session.id);
           }
 
           // Call callback if provided

@@ -3,23 +3,24 @@ import {
   type Memory,
   type State,
   type HandlerCallback,
-  elizaLogger,
-  ActionExample,
-  type Action,
+  elizaLogger as _elizaLogger,
+  ActionExample as _ActionExample,
+  type Action as _Action,
 } from '@elizaos/core';
-import { encodeAbiParameters, parseAbiParameters } from 'viem';
-import { type WalletProvider, initWalletProvider } from '../providers/wallet';
-import { executeProposalTemplate } from '../templates';
-import type { ExecuteProposalParams, SupportedChain, Transaction } from '../types';
-import governorArtifacts from '../contracts/artifacts/OZGovernor.json';
 import {
-  type ByteArray,
+  encodeAbiParameters as _encodeAbiParameters,
+  parseAbiParameters as _parseAbiParameters,
+  type ByteArray as _ByteArray,
   type Hex,
   type Address,
   encodeFunctionData,
   keccak256,
   stringToHex,
 } from 'viem';
+import { type WalletProvider, initWalletProvider } from '../providers/wallet';
+import { executeProposalTemplate } from '../templates';
+import type { ExecuteProposalParams, SupportedChain, Transaction } from '../types';
+import governorArtifacts from '../contracts/artifacts/OZGovernor.json';
 
 export { executeProposalTemplate };
 
@@ -80,12 +81,13 @@ export class ExecuteAction {
 export const executeAction = {
   name: 'execute',
   description: 'Execute a DAO governance proposal',
+  enabled: false, // Disabled by default - can execute governance proposals with potentially significant impact
   handler: async (
     runtime: IAgentRuntime,
     _message: Memory,
     _state?: State,
     options?: Record<string, unknown>,
-    callback?: HandlerCallback,
+    callback?: HandlerCallback
   ) => {
     try {
       // Ensure options is provided
@@ -157,7 +159,8 @@ export const executeAction = {
       };
     }
   },
-  validate: async (runtime: IAgentRuntime) => {
+  // eslint-disable-next-line require-await
+  validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const privateKey = runtime.getSetting('EVM_PRIVATE_KEY');
     return typeof privateKey === 'string' && privateKey.startsWith('0x');
   },
@@ -174,7 +177,8 @@ export const executeAction = {
         name: '{{agent}}',
         content: {
           text: "I'll execute proposal 123 and monitor the transaction results to ensure successful completion.",
-          thought: 'Governance execution requires careful monitoring. First execute the proposal, then verify the execution completed successfully and the intended changes took effect.',
+          thought:
+            'Governance execution requires careful monitoring. First execute the proposal, then verify the execution completed successfully and the intended changes took effect.',
           actions: ['EVM_GOVERNANCE_EXECUTE', 'MONITOR_TRANSACTION'],
         },
       },
@@ -207,7 +211,8 @@ export const executeAction = {
         name: '{{agent}}',
         content: {
           text: "I'll execute the queued proposal and verify that the governance changes have been successfully implemented.",
-          thought: 'Final step in governance workflow: execute the queued proposal and confirm the protocol changes are live. This completes the democratic governance process.',
+          thought:
+            'Final step in governance workflow: execute the queued proposal and confirm the protocol changes are live. This completes the democratic governance process.',
           action: 'EVM_GOVERNANCE_EXECUTE',
           workflowContext: {
             step: 'governance-completion',
@@ -228,7 +233,8 @@ export const executeAction = {
         name: '{{agent}}',
         content: {
           text: "I'll execute proposals 15, 16, and 17 in sequence. This batch execution will implement all the approved governance changes efficiently.",
-          thought: "Batch governance execution: multiple approved proposals need to be executed. I'll process them sequentially to implement all approved changes.",
+          thought:
+            "Batch governance execution: multiple approved proposals need to be executed. I'll process them sequentially to implement all approved changes.",
           action: 'EVM_GOVERNANCE_EXECUTE',
           workflowContext: {
             step: 'batch-execution',

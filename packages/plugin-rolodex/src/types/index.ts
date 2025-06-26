@@ -1,4 +1,4 @@
-import { type UUID, type Memory } from '@elizaos/core';
+import { type UUID, type Memory as _Memory } from '@elizaos/core';
 
 // Simple, flexible types that let the LLM determine categorization
 export interface EntityProfile {

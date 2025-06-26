@@ -192,7 +192,7 @@ describe('CrossmintAdapter Integration Tests', () => {
 
   describe('Initialization', () => {
     it('should initialize successfully with required services', async () => {
-      await expect(adapter.initialize()).resolves.not.toThrow();
+      await expect(adapter.initialize()).resolves.toBeUndefined();
     });
 
     it('should throw error if required configuration is missing', async () => {

@@ -2,7 +2,8 @@ import { type Provider, type IAgentRuntime, type Memory, type State, logger } fr
 
 export const trustProfileProvider: Provider = {
   name: 'trustProfile',
-  description: 'Provides detailed trust assessment and interaction history for users when agent needs to make trust-based decisions, evaluate credibility, or personalize responses based on established relationships',
+  description:
+    'Provides detailed trust assessment and interaction history for users when agent needs to make trust-based decisions, evaluate credibility, or personalize responses based on established relationships',
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     try {
@@ -87,7 +88,9 @@ export const trustProfileProvider: Provider = {
           recentPositiveActions: recentInteractions.filter((i: any) => i.impact > 0).length,
           recentNegativeActions: recentInteractions.filter((i: any) => i.impact < 0).length,
           hasNarrativeAssessment: !!latestComment,
-          lastAssessmentDate: latestComment ? new Date(latestComment.timestamp).toISOString() : null,
+          lastAssessmentDate: latestComment
+            ? new Date(latestComment.timestamp).toISOString()
+            : null,
         },
         data: {
           profile: senderProfile,

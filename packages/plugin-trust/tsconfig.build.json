@@ -12,11 +12,5 @@
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
   "include": ["src/**/*"],
-  "exclude": [
-    "src/**/*.test.ts",
-    "src/**/__tests__/**",
-    "src/tests.ts",
-    "node_modules",
-    "dist"
-  ]
+  "exclude": ["src/**/*.test.ts", "src/**/__tests__/**", "src/tests.ts", "node_modules", "dist"]
 }

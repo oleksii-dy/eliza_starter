@@ -17,7 +17,9 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing complete entity management workflow...');
 
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         const followUpService = runtime.getService('followUp') as unknown as FollowUpManager;
 
         if (!entityGraphService || !followUpService) {
@@ -40,7 +42,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
         };
 
         await (runtime as any).processMessage(introMessage);
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for processing
+        await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for processing
 
         // 2. Verify entity was tracked
         const searchResults = await entityGraphService.searchEntities('Alice Johnson', {
@@ -67,7 +69,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
         };
 
         await (runtime as any).processMessage(secondMessage);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // 4. Verify relationship was created
         const relationships = await entityGraphService.getEntityRelationships(alice.entityId);
@@ -90,7 +92,9 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
           }
         );
 
-        console.log(`✓ Scheduled follow-up for ${new Date(followUp.scheduledFor).toLocaleDateString()}`);
+        console.log(
+          `✓ Scheduled follow-up for ${new Date(followUp.scheduledFor).toLocaleDateString()}`
+        );
 
         // 6. Test entity search
         const techCorpSearch = await entityGraphService.searchEntities('TechCorp', {
@@ -134,7 +138,9 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing natural language entity extraction...');
 
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -157,11 +163,11 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
             agentId: runtime.agentId,
             roomId,
             content: { text },
-            createdAt: Date.now() + (index * 1000),
+            createdAt: Date.now() + index * 1000,
           };
 
           await (runtime as any).processMessage(message);
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          await new Promise((resolve) => setTimeout(resolve, 1500));
         }
 
         // Verify entities were extracted
@@ -169,28 +175,34 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
           limit: 20,
         });
 
-        const entityNames = entities.flatMap(e => e.entity.names);
+        const entityNames = entities.flatMap((e) => e.entity.names);
         console.log(`✓ Extracted entities: ${entityNames.join(', ')}`);
 
         // Check for specific entities
         const expectedEntities = ['Emma Wilson', 'David Chen', 'StartupXYZ', 'Venture Partners'];
-        const foundEntities = expectedEntities.filter(name =>
-          entityNames.some(en => en.toLowerCase().includes(name.toLowerCase()))
+        const foundEntities = expectedEntities.filter((name) =>
+          entityNames.some((en) => en.toLowerCase().includes(name.toLowerCase()))
         );
 
         if (foundEntities.length < 2) {
-          throw new Error(`Only found ${foundEntities.length} of ${expectedEntities.length} expected entities`);
+          throw new Error(
+            `Only found ${foundEntities.length} of ${expectedEntities.length} expected entities`
+          );
         }
 
-        console.log(`✓ Successfully extracted ${foundEntities.length} entities from natural language`);
+        console.log(
+          `✓ Successfully extracted ${foundEntities.length} entities from natural language`
+        );
 
         // Check for relationships
-        const emmaSearch = entities.find(e =>
-          e.entity.names.some(n => n.toLowerCase().includes('emma'))
+        const emmaSearch = entities.find((e) =>
+          e.entity.names.some((n) => n.toLowerCase().includes('emma'))
         );
 
         if (emmaSearch) {
-          const relationships = await entityGraphService.getEntityRelationships(emmaSearch.entity.entityId);
+          const relationships = await entityGraphService.getEntityRelationships(
+            emmaSearch.entity.entityId
+          );
           console.log(`✓ Found ${relationships.length} relationships for Emma Wilson`);
         }
 
@@ -203,7 +215,9 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing trust score evolution...');
 
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -285,7 +299,9 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
         console.log('🧪 Testing follow-up task management...');
 
         const followUpService = runtime.getService('followUp') as unknown as FollowUpManager;
-        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const entityGraphService = runtime.getService(
+          'entityGraph'
+        ) as unknown as EntityGraphManager;
 
         if (!followUpService || !entityGraphService) {
           throw new Error('Required services not available');
@@ -327,7 +343,9 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
             { priority: followUp.priority }
           );
           createdFollowUps.push(created);
-          console.log(`✓ Scheduled: ${followUp.message} for ${followUp.scheduledFor.toLocaleDateString()}`);
+          console.log(
+            `✓ Scheduled: ${followUp.message} for ${followUp.scheduledFor.toLocaleDateString()}`
+          );
         }
 
         // Get upcoming follow-ups

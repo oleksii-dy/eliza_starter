@@ -5,7 +5,7 @@ export const messageClassifierProvider: Provider = {
   description:
     'Classifies incoming messages by complexity and planning requirements using intelligent LLM analysis. Use to determine if strategic planning, sequential execution, or direct action is needed.',
 
-  get: async (runtime, message, state) => {
+  get: async (runtime, message, _state) => {
     const text = message.content.text || '';
 
     if (!text.trim()) {
@@ -177,7 +177,7 @@ CONFIDENCE: [0.0-1.0]`;
           planningRequired: false,
           stakeholders: [],
           constraints: [],
-          error: error.message,
+          error: (error as Error).message,
           fallback: true,
         },
       };

@@ -3,7 +3,7 @@ import { logger } from '@elizaos/core';
 // Lazy import for ScenarioRunner to reduce initial memory footprint
 // import { ScenarioRunner } from '../scenario-runner/index.js';
 import { loadProject } from '../project.js';
-import { AgentServer } from '@elizaos/server';
+import AgentServer from '@elizaos/server';
 import { MemoryOptimizer } from '../utils/memory-optimizer.js';
 
 async function initializeServer(): Promise<{
@@ -41,7 +41,7 @@ async function initializeServer(): Promise<{
   // Create a runtime for the agent
   MemoryOptimizer.takeSnapshot('before-plugin-loading');
   const { AgentRuntime } = await import('@elizaos/core');
-  const sqlModule = await import('@elizaos/plugin-sql');
+  const sqlModule = (await import('@elizaos/plugin-sql')) as any;
   const sqlPlugin = sqlModule.plugin;
   MemoryOptimizer.compareSnapshot('before-plugin-loading');
 

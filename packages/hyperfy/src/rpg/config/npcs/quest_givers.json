@@ -1,5 +1,27 @@
 [
   {
+    "id": 100,
+    "name": "Village Elder",
+    "examine": "A concerned villager who needs help with local goblins.",
+    "npcType": "quest_giver",
+    "behavior": "friendly",
+    "level": 1,
+    "questGiver": {
+      "useLLM": false,
+      "quests": ["kill_goblin_basic"],
+      "minLevel": 1,
+      "maxLevel": 10,
+      "questCooldown": 1000
+    },
+    "dialogue": {
+      "greeting": "Please help us! The goblins are becoming a real problem.",
+      "idle": [
+        "Those goblins are causing trouble...",
+        "I hope someone can help us soon."
+      ]
+    }
+  },
+  {
     "id": 200,
     "name": "Elder Grimwald",
     "examine": "A wise old man with years of experience.",

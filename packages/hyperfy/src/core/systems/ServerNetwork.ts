@@ -21,37 +21,37 @@ const HEALTH_MAX = 100;
 
 // Type definitions
 export interface User {
-  id: string;
-  name: string;
-  avatar: string | null;
-  roles: string | string[];
-  createdAt: string;
+  id: string
+  name: string
+  avatar: string | null
+  roles: string | string[]
+  createdAt: string
 }
 
 export interface ConnectionParams {
-  authToken?: string;
-  name?: string;
-  avatar?: string;
+  authToken?: string
+  name?: string
+  avatar?: string
 }
 
 export interface SpawnData {
-  position: [number, number, number];
-  quaternion: [number, number, number, number];
+  position: [number, number, number]
+  quaternion: [number, number, number, number]
 }
 
 export interface SaveCounts {
-  upsertedBlueprints: number;
-  upsertedApps: number;
-  deletedApps: number;
+  upsertedBlueprints: number
+  upsertedApps: number
+  deletedApps: number
 }
 
 export interface ServerStats {
-  currentCPU: number;
-  currentMemory: number;
-  maxMemory: number;
+  currentCPU: number
+  currentMemory: number
+  maxMemory: number
 }
 
-type QueueItem = [Socket, string, any];
+type QueueItem = [Socket, string, any]
 
 /**
  * Server Network System
@@ -99,29 +99,29 @@ export class ServerNetwork extends System {
     // hydrate blueprints
     const blueprints = await this.db.select().from(schema.blueprints);
     for (const blueprint of blueprints) {
-      const data = JSON.parse(blueprint.data);
-      (this.world as any).blueprints.add(data, true);
+      const data = JSON.parse(blueprint.data)
+      ;(this.world as any).blueprints.add(data, true);
     }
 
     // hydrate entities
     const entities = await this.db.select().from(schema.entities);
     for (const entity of entities) {
       const data = JSON.parse(entity.data);
-      data.state = {};
-      (this.world as any).entities.add(data, true);
+      data.state = {}
+      ;(this.world as any).entities.add(data, true);
     }
 
     // hydrate settings
     const settingsRow = await this.db.select().from(schema.config).where(eq(schema.config.key, 'settings')).get();
     try {
-      const settings = JSON.parse(settingsRow?.value || '{}');
-      (this.world as any).settings.deserialize(settings);
+      const settings = JSON.parse(settingsRow?.value || '{}')
+      ;(this.world as any).settings.deserialize(settings);
     } catch (err) {
       console.error(err);
     }
 
     // watch settings changes
-    (this.world as any).settings.on('change', this.saveSettings);
+    ;(this.world as any).settings.on('change', this.saveSettings);
 
     // queue first save
     if (SAVE_INTERVAL) {
@@ -139,7 +139,9 @@ export class ServerNetwork extends System {
     // console.log('->>>', name, data)
     const packet = writePacket(name, data);
     this.sockets.forEach(socket => {
-      if (socket.id === ignoreSocketId) {return;}
+      if (socket.id === ignoreSocketId) {
+        return;
+      }
       socket.sendPacket(packet);
     });
   }
@@ -195,22 +197,25 @@ export class ServerNetwork extends System {
     // blueprints
     for (const id of this.dirtyBlueprints) {
       const blueprint = (this.world as any).blueprints.get(id);
-      if (!blueprint) {continue;}
+      if (!blueprint) {
+        continue;
+      }
 
       try {
-        await this.db.insert(schema.blueprints)
+        await this.db
+          .insert(schema.blueprints)
           .values({
             id: blueprint.id,
             data: JSON.stringify(blueprint),
             createdAt: now,
-            updatedAt: now
+            updatedAt: now,
           })
           .onConflictDoUpdate({
             target: schema.blueprints.id,
             set: {
               data: JSON.stringify(blueprint),
-              updatedAt: now
-            }
+              updatedAt: now,
+            },
           });
         counts.upsertedBlueprints++;
         this.dirtyBlueprints.delete(id);
@@ -231,19 +236,20 @@ export class ServerNetwork extends System {
         try {
           const data = JSON.parse(JSON.stringify(entity.data)); // Deep clone alternative
           data.state = null;
-          await this.db.insert(schema.entities)
+          await this.db
+            .insert(schema.entities)
             .values({
               id: entity.data.id,
               data: JSON.stringify(entity.data),
               createdAt: now,
-              updatedAt: now
+              updatedAt: now,
             })
             .onConflictDoUpdate({
               target: schema.entities.id,
               set: {
                 data: JSON.stringify(entity.data),
-                updatedAt: now
-              }
+                updatedAt: now,
+              },
             });
           counts.upsertedApps++;
           this.dirtyApps.delete(id);
@@ -274,7 +280,8 @@ export class ServerNetwork extends System {
   saveSettings = async (): Promise<void> => {
     const data = (this.world as any).settings.serialize();
     const value = JSON.stringify(data);
-    await this.db.insert(schema.config)
+    await this.db
+      .insert(schema.config)
       .values({
         key: 'settings',
         value,
@@ -283,7 +290,7 @@ export class ServerNetwork extends System {
         target: schema.config.key,
         set: {
           value,
-        }
+        },
       });
   };
 
@@ -331,7 +338,7 @@ export class ServerNetwork extends System {
         };
         await this.db.insert(schema.users).values({
           ...user,
-          roles: typeof user.roles === 'string' ? user.roles : user.roles.join(',')
+          roles: typeof user.roles === 'string' ? user.roles : user.roles.join(','),
         });
         authToken = await createJWT({ userId: user.id });
       }
@@ -352,7 +359,7 @@ export class ServerNetwork extends System {
       // if there is no admin code, everyone is a temporary admin (eg for local dev)
       // all roles prefixed with `~` are temporary and not persisted to db
       if (!ENV_SERVER.ADMIN_CODE) {
-        (user.roles as string[]).push('~admin');
+        ;(user.roles as string[]).push('~admin');
       }
 
       // livekit options
@@ -395,18 +402,18 @@ export class ServerNetwork extends System {
         authToken,
       });
 
-      this.sockets.set(socket.id, socket);
+      this.sockets.set(socket.id, socket)
 
       // enter events on the server are sent after the snapshot.
       // on the client these are sent during PlayerRemote.js entity instantiation!
-      (this.world as any).events.emit('enter', { playerId: socket.player.data.id });
+      ;(this.world as any).events.emit('enter', { playerId: socket.player.data.id });
     } catch (err) {
       console.error(err);
     }
   }
 
   onChatAdded = async (socket: Socket, msg: any): Promise<void> => {
-    (this.world as any).chat.add(msg, false);
+    ;(this.world as any).chat.add(msg, false);
     this.send('chatAdded', msg, socket.id);
   };
 
@@ -439,7 +446,8 @@ export class ServerNetwork extends System {
           body: granting ? 'Admin granted!' : 'Admin revoked!',
           createdAt: moment().toISOString(),
         });
-        await this.db.update(schema.users)
+        await this.db
+          .update(schema.users)
           .set({ roles: serializeRoles(roles) })
           .where(eq(schema.users.id, userId));
       }
@@ -460,9 +468,7 @@ export class ServerNetwork extends System {
           body: `Name set to ${name}!`,
           createdAt: moment().toISOString(),
         });
-        await this.db.update(schema.users)
-          .set({ name })
-          .where(eq(schema.users.id, userId));
+        await this.db.update(schema.users).set({ name }).where(eq(schema.users.id, userId));
       }
     }
 
@@ -474,7 +480,7 @@ export class ServerNetwork extends System {
     if (cmd === 'chat') {
       const op = arg1;
       if (op === 'clear' && this.isBuilder(socket.player)) {
-        (this.world as any).chat.clear(true);
+        ;(this.world as any).chat.clear(true);
       }
     }
 
@@ -500,7 +506,7 @@ export class ServerNetwork extends System {
 
     // emit event for all except admin
     if (cmd !== 'admin') {
-      (this.world as any).events.emit('command', { playerId, args });
+      ;(this.world as any).events.emit('command', { playerId, args });
     }
   };
 
@@ -508,7 +514,7 @@ export class ServerNetwork extends System {
     if (!this.isBuilder(socket.player)) {
       return console.error('player attempted to add blueprint without builder permission');
     }
-    (this.world as any).blueprints.add(blueprint);
+    ;(this.world as any).blueprints.add(blueprint);
     this.send('blueprintAdded', blueprint, socket.id);
     this.dirtyBlueprints.add(blueprint.id);
   };
@@ -520,7 +526,7 @@ export class ServerNetwork extends System {
     const blueprint = (this.world as any).blueprints.get(data.id);
     // if new version is greater than current version, allow it
     if (data.version > blueprint.version) {
-      (this.world as any).blueprints.modify(data);
+      ;(this.world as any).blueprints.modify(data);
       this.send('blueprintModified', data, socket.id);
       this.dirtyBlueprints.add(data.id);
     }
@@ -536,12 +542,16 @@ export class ServerNetwork extends System {
     }
     const entity = (this.world as any).entities.add(data);
     this.send('entityAdded', data, socket.id);
-    if (entity.isApp) {this.dirtyApps.add(entity.data.id);}
+    if (entity.isApp) {
+      this.dirtyApps.add(entity.data.id);
+    }
   };
 
   onEntityModified = async (socket: Socket, data: any): Promise<void> => {
     const entity = (this.world as any).entities.get(data.id);
-    if (!entity) {return console.error('onEntityModified: no entity found', data);}
+    if (!entity) {
+      return console.error('onEntityModified: no entity found', data);
+    }
     entity.modify(data);
     this.send('entityModified', data, socket.id);
     if (entity.isApp) {
@@ -561,9 +571,7 @@ export class ServerNetwork extends System {
         changed = true;
       }
       if (changed) {
-        await this.db.update(schema.users)
-          .set(changes)
-          .where(eq(schema.users.id, entity.data.userId));
+        await this.db.update(schema.users).set(changes).where(eq(schema.users.id, entity.data.userId));
       }
     }
   };
@@ -578,17 +586,19 @@ export class ServerNetwork extends System {
     if (!this.isBuilder(socket.player)) {
       return console.error('player attempted to remove entity without builder permission');
     }
-    const entity = (this.world as any).entities.get(id);
-    (this.world as any).entities.remove(id);
+    const entity = (this.world as any).entities.get(id)
+    ;(this.world as any).entities.remove(id);
     this.send('entityRemoved', id, socket.id);
-    if (entity?.isApp) {this.dirtyApps.add(id);}
+    if (entity?.isApp) {
+      this.dirtyApps.add(id);
+    }
   };
 
   onSettingsModified = (socket: Socket, data: { key: string; value: any }): void => {
     if (!this.isBuilder(socket.player)) {
       return console.error('player attempted to modify settings without builder permission');
     }
-    (this.world as any).settings.set(data.key, data.value);
+    ;(this.world as any).settings.set(data.key, data.value);
     this.send('settingsModified', data, socket.id);
   };
 
@@ -600,7 +610,7 @@ export class ServerNetwork extends System {
     if (op === 'set') {
       this.spawn = {
         position: player.data.position.slice() as [number, number, number],
-        quaternion: player.data.quaternion.slice() as [number, number, number, number]
+        quaternion: player.data.quaternion.slice() as [number, number, number, number],
       };
     } else if (op === 'clear') {
       this.spawn = { position: [0, 0, 0], quaternion: [0, 0, 0, 1] };
@@ -608,7 +618,8 @@ export class ServerNetwork extends System {
       return;
     }
     const data = JSON.stringify(this.spawn);
-    await this.db.insert(schema.config)
+    await this.db
+      .insert(schema.config)
       .values({
         key: 'spawn',
         value: data,
@@ -617,7 +628,7 @@ export class ServerNetwork extends System {
         target: schema.config.key,
         set: {
           value: data,
-        }
+        },
       });
     socket.send('chatAdded', {
       id: uuid(),

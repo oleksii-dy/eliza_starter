@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ChatInput } from '@/components/ui/chat/chat-input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { AudioRecorder } from '@/components/audio-recorder';
+import { AudioRecorder } from '@/components/AudioRecorder';
 import { Loader2, Paperclip, Send, FileText, X } from 'lucide-react';
 import { Agent, ChannelType } from '@elizaos/core';
 import type { UploadingFile } from '@/hooks/use-file-upload';

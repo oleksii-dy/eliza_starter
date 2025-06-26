@@ -3,6 +3,7 @@ import { type DirectoryInfo } from '@/src/utils/directory-detection';
 import { logger, type Plugin } from '@elizaos/core';
 import * as fs from 'node:fs';
 import path from 'node:path';
+import { scenariosPlugin } from '@/src/scenarios-plugin.js';
 
 /**
  * Loads the plugin modules for a plugin's dependencies.
@@ -54,6 +55,10 @@ export async function loadPluginsFromProject(
   const plugins: Plugin[] = [];
 
   try {
+    // Always include the built-in scenarios plugin first
+    plugins.push(scenariosPlugin);
+    logger.debug(`Loaded built-in scenarios plugin: ${scenariosPlugin.name}`);
+
     const project = await loadProject(projectPath);
 
     // If this is a plugin itself, include it

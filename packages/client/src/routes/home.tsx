@@ -1,5 +1,5 @@
-import PageTitle from '@/components/page-title';
-import ProfileOverlay from '@/components/profile-overlay';
+import PageTitle from '@/components/PageTitle';
+import ProfileOverlay from '@/components/ProfileOverlay';
 import { useAgentsWithDetails, useChannels, useServers } from '@/hooks/use-query-hooks';
 import { type Agent, type UUID, ChannelType as CoreChannelType } from '@elizaos/core';
 import { Plus } from 'lucide-react';
@@ -7,8 +7,8 @@ import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AddAgentCard from '@/components/AddAgentCard';
 import AgentCard from '@/components/AgentCard';
-import GroupCard from '@/components/group-card';
-import GroupPanel from '@/components/group-panel';
+import GroupCard from '@/components/GroupCard';
+import GroupPanel from '@/components/GroupPanel';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 import clientLogger from '@/lib/logger';

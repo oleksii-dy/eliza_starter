@@ -10,14 +10,12 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
     "clean": "rm -rf dist && rm -rf .turbo",
-    "type-check": "tsc --noEmit",
-    "test": "bun test",
-    "test:watch": "bun test --watch",
-    "test:integration": "CROSSMINT_API_KEY=$CROSSMINT_API_KEY bun test src/__tests__/e2e/",
-    "test:debug": "node test-utils/test-production.mjs"
+    "lint": "eslint src --fix && prettier --write ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "elizaos test"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",
@@ -29,7 +27,6 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/uuid": "^10.0.0",
-    "tsup": "^8.0.0",
     "typescript": "5.8.3"
   },
   "keywords": [

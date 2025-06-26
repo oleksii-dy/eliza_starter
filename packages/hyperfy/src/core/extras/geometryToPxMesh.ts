@@ -1,4 +1,4 @@
-import * as THREE from './three';
+import { THREE } from './three';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // Global PHYSX declaration
@@ -37,7 +37,7 @@ class PMeshHandle {
   }
 }
 
-export function geometryToPxMesh(world: any, geometry: THREE.BufferGeometry, convex: boolean): PMeshHandle | null {
+export function geometryToPxMesh(world: any, geometry: any, convex: boolean): PMeshHandle | null {
   const id = `${geometry.uuid}_${convex ? 'convex' : 'triangles'}`;
 
   // check and return cached if already cooked

@@ -2,7 +2,29 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
-import { type TogetherAIConfig, type TogetherAIJob } from '../simple-types.js';
+// Removed broken import - simple-types
+// import { type TogetherAIConfig, type TogetherAIJob } from '../simple-types.js';
+
+// Define the types inline for now
+interface TogetherAIConfig {
+  apiKey: string;
+  baseModel: string;
+  epochs: number;
+  learningRate: number;
+  batchSize: number;
+  suffix?: string;
+}
+
+interface TogetherAIJob {
+  id: string;
+  status: string;
+  model: string;
+  progress?: number;
+  fineTunedModel?: string;
+  createdAt?: Date;
+  finishedAt?: Date;
+  error?: string;
+}
 import type { UsageMetrics } from '../interfaces/CustomReasoningService.js';
 import { elizaLogger } from '@elizaos/core';
 

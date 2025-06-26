@@ -1,4 +1,4 @@
-import { mock } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
 
 // Global test setup for the custom reasoning service
 
@@ -10,11 +10,11 @@ Object.defineProperty(global, 'crypto', {
 });
 
 // Mock process.cwd for file paths
-mock.spyOn(process, 'cwd').mockReturnValue('/test/project/path');
+spyOn(process, 'cwd').mockReturnValue('/test/project/path');
 
 // Mock Date.now for consistent timestamps
 const mockNow = 1642608000000; // Fixed timestamp
-mock.spyOn(Date, 'now').mockReturnValue(mockNow);
+spyOn(Date, 'now').mockReturnValue(mockNow);
 
 // Global console override for cleaner test output
 const originalConsole = global.console;

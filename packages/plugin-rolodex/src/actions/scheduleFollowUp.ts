@@ -1,7 +1,4 @@
-import {
-  logger,
-  ModelType,
-} from '@elizaos/core';
+import { logger, ModelType } from '@elizaos/core';
 
 import {
   type Action,
@@ -89,7 +86,7 @@ export const scheduleFollowUpAction: Action = {
 
   validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     // Check if service is available
-    const rolodexService = runtime.getService('rolodex') as RolodexService;
+    const rolodexService = runtime.getService<RolodexService>('rolodex');
 
     if (!rolodexService) {
       logger.debug('[ScheduleFollowUp] Rolodex service not available');
@@ -136,7 +133,7 @@ export const scheduleFollowUpAction: Action = {
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
-    const rolodexService = runtime.getService('rolodex') as RolodexService;
+    const rolodexService = runtime.getService<RolodexService>('rolodex');
 
     if (!rolodexService) {
       logger.error('[ScheduleFollowUp] Rolodex service not available');
@@ -202,7 +199,7 @@ export const scheduleFollowUpAction: Action = {
         if (!message.entityId) {
           throw new Error('No entity ID found for follow-up');
         }
-        entityId = message.entityId !;
+        entityId = message.entityId!;
       }
 
       // Schedule the follow-up
@@ -217,7 +214,9 @@ export const scheduleFollowUpAction: Action = {
         },
       });
 
-      logger.info(`[ScheduleFollowUp] Scheduled follow-up for ${followUpInfo.entityName}: ${followUpInfo.message}`);
+      logger.info(
+        `[ScheduleFollowUp] Scheduled follow-up for ${followUpInfo.entityName}: ${followUpInfo.message}`
+      );
 
       // Respond to user
       if (callback) {

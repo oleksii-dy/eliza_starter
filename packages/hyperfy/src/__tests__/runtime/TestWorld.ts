@@ -197,7 +197,7 @@ export class TestWorld extends World {
   /**
    * Step the world forward by one frame
    */
-  step(delta: number = 16): void {
+  step(_delta: number = 16): void {
     if (!this.initialized) {return;}
 
     try {

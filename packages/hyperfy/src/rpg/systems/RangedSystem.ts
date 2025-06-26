@@ -7,11 +7,11 @@ import {
   InventoryComponent,
   AttackType,
   HitResult,
-  Equipment,
+  // Equipment,
   EquipmentSlot,
   CombatStyle,
   Vector3
-} from '../types';
+} from '../types/index';
 
 export enum WeaponType {
   BOW = 'bow',
@@ -425,7 +425,7 @@ export class RangedSystem extends System {
   /**
    * Consume ammunition
    */
-  private consumeAmmunition(entityId: string, ammoId: number): void {
+  private consumeAmmunition(entityId: string, _ammoId: number): void {
     const inventorySystem = this.world.systems.find(s => s.constructor.name === 'InventorySystem');
     if (!inventorySystem) {return;}
 

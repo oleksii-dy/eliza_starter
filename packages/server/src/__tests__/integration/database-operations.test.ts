@@ -318,7 +318,7 @@ describe('Database Operations Integration Tests', () => {
       const startTime = Date.now();
 
       // Create 100 messages
-      const bulkPromises = [];
+      const bulkPromises: Promise<any>[] = [];
       for (let i = 0; i < 100; i++) {
         bulkPromises.push(
           agentServer.createMessage({
@@ -348,7 +348,7 @@ describe('Database Operations Integration Tests', () => {
       const serverId = '00000000-0000-0000-0000-000000000000' as UUID;
 
       // Create multiple channels
-      const channelPromises = [];
+      const channelPromises: Promise<any>[] = [];
       for (let i = 0; i < 20; i++) {
         channelPromises.push(
           agentServer.createChannel({

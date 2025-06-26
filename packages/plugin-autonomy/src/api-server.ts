@@ -1,10 +1,10 @@
-import express from 'express';
-import { Server } from 'socket.io';
-import { createServer } from 'http';
-import cors from 'cors';
 import { type IAgentRuntime } from '@elizaos/core';
-import { OODALoopService } from './ooda-service';
+import cors from 'cors';
+import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import { AutonomyLogger } from './logging';
+import { OODALoopService } from './ooda-service';
 
 export class AutonomyAPIServer {
   private app: express.Application;
@@ -166,7 +166,7 @@ export class AutonomyAPIServer {
     });
 
     // Error handler
-    this.app.use((err: any, req: any, res: any, next: any) => {
+    this.app.use((err: any, req: any, res: any, _next: any) => {
       this.logger.error('API Server Error', err);
       res.status(500).json({
         error: 'Internal server error',

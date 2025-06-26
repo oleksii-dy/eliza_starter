@@ -6,18 +6,18 @@ import { trustChangeEvaluator } from '../trustChangeEvaluator';
 const createMockRuntime = (): IAgentRuntime =>
   ({
     agentId: 'test-agent' as UUID,
-    getService: mock()
-  } as any);
+    getService: mock(),
+  }) as any;
 
 const createMockMemory = (text: string, entityId: UUID): Memory =>
   ({
     id: 'msg-1' as UUID,
     entityId,
     content: {
-      text
+      text,
     },
-    roomId: 'room-1' as UUID
-  } as Memory);
+    roomId: 'room-1' as UUID,
+  }) as Memory;
 
 describe('trustChangeEvaluator', () => {
   let runtime: IAgentRuntime;
@@ -27,11 +27,15 @@ describe('trustChangeEvaluator', () => {
   beforeEach(() => {
     runtime = createMockRuntime();
     trustService = {
-      recordInteraction: mock().mockResolvedValue({ success: true })
+      recordInteraction: mock().mockResolvedValue({ success: true }),
     };
-    (runtime.getService as unknown as Mock).mockImplementation((name: string) => {
-      if (name === 'trust-engine') {return trustService;}
-      if (name === 'llm-evaluator') {return null;} // No LLM evaluator for these tests
+    (runtime.getService as unknown as Mock<any>).mockImplementation((name: string) => {
+      if (name === 'trust-engine') {
+        return trustService;
+      }
+      if (name === 'llm-evaluator') {
+        return null;
+      } // No LLM evaluator for these tests
       return null;
     });
   });
@@ -44,7 +48,7 @@ describe('trustChangeEvaluator', () => {
   });
 
   it('should not validate when trust service is unavailable', async () => {
-    (runtime.getService as unknown as Mock).mockReturnValue(null);
+    (runtime.getService as unknown as Mock<any>).mockReturnValue(null);
 
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
@@ -63,7 +67,7 @@ describe('trustChangeEvaluator', () => {
         sourceEntityId: testEntityId,
         targetEntityId: 'test-agent',
         type: 'HELPFUL_ACTION',
-        impact: 5
+        impact: 5,
       })
     );
     expect(result).toBeDefined();
@@ -83,7 +87,7 @@ describe('trustChangeEvaluator', () => {
         sourceEntityId: testEntityId,
         targetEntityId: 'test-agent',
         type: 'SPAM_BEHAVIOR',
-        impact: -10
+        impact: -10,
       })
     );
     expect(result).toBeDefined();

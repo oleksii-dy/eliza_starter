@@ -3,12 +3,8 @@ import {
   Service,
   ServiceType,
   logger,
-  asUUID,
   WalletPortfolio,
   WalletAsset,
-  ModelType,
-  Memory,
-  State,
   UUID,
 } from '@elizaos/core';
 import {
@@ -41,39 +37,18 @@ import {
   type PublicClient,
   type WalletClient,
   type Hex,
-  parseEther,
   formatEther,
-  encodeFunctionData,
-  decodeFunctionResult,
-  getContract,
-  isAddress,
-  getAddress,
   type PrivateKeyAccount,
   formatUnits,
+  isAddress,
 } from 'viem';
-import {
-  privateKeyToAccount,
-  generatePrivateKey,
-  english,
-  generateMnemonic,
-  mnemonicToAccount,
-} from 'viem/accounts';
-import { createWalletDatabaseService, type WalletDatabaseService } from '../database/service';
-import { createChainConfigService, type ChainConfigService } from '../chains/config';
-import { createEncryptionService, type EncryptionService } from '../security/encryption';
-import { createTransactionSimulator } from '../../core/simulation/simulator';
-import { createSmartWalletFactory } from '../../wallet/smart-wallet-factory';
-import { createSessionManager } from '../../wallet/session-manager';
-import { createENSResolver } from '../../utils/ens-resolver';
-import { createABIFetcher } from '../../contracts/abi-fetcher';
-import { createMulticallService } from '../../utils/multicall';
+import { privateKeyToAccount, generatePrivateKey, mnemonicToAccount } from 'viem/accounts';
 import { TokenService, createTokenService } from '../../tokens/token-service';
 import { createDeFiService } from '../../defi/defi-service';
 import { createNFTService } from '../../nft/nft-service';
 import { mainnet, polygon, arbitrum, optimism, base, bsc, avalanche } from 'viem/chains';
+import { BridgeAggregatorService } from '../../cross-chain/bridge-aggregator';
 import { SmartWalletFactory } from '../../wallet/smart-wallet-factory';
-import { BridgeAggregator } from '../../bridges/bridge-aggregator';
-import type { TokenBalance } from '../database/schema';
 import { getPriceService } from '../../oracles/price-service';
 
 export class EVMWalletService extends Service implements IWalletService {
@@ -94,7 +69,7 @@ export class EVMWalletService extends Service implements IWalletService {
   private tokenService!: ReturnType<typeof createTokenService>;
   private defiService!: ReturnType<typeof createDeFiService>;
   private nftService!: ReturnType<typeof createNFTService>;
-  private bridgeAggregator!: BridgeAggregator;
+  private bridgeAggregator!: BridgeAggregatorService;
 
   private wallets: Map<string, WalletInstance>;
   private publicClients: Map<number, PublicClient>;
@@ -124,7 +99,7 @@ export class EVMWalletService extends Service implements IWalletService {
         createPublicClient({
           chain,
           transport: http(),
-        }) as any,
+        }) as any
       );
 
       this.walletClients.set(
@@ -132,7 +107,7 @@ export class EVMWalletService extends Service implements IWalletService {
         createWalletClient({
           chain,
           transport: http(),
-        }) as any,
+        }) as any
       );
     }
   }
@@ -149,7 +124,7 @@ export class EVMWalletService extends Service implements IWalletService {
         runtime: this.runtime,
         chainId: 1, // Default to mainnet
       });
-      this.bridgeAggregator = new BridgeAggregator();
+      this.bridgeAggregator = new BridgeAggregatorService(this.runtime);
       this.tokenService = new TokenService(this.runtime);
       this.defiService = createDeFiService();
       this.nftService = createNFTService();
@@ -218,7 +193,7 @@ export class EVMWalletService extends Service implements IWalletService {
   }
 
   // IWalletService implementation - Multi-wallet management
-  async createWallet(params: WalletCreationParams): Promise<WalletInstance> {
+  createWallet(params: WalletCreationParams): Promise<WalletInstance> {
     try {
       // Handle EOA wallets
       if (params.type === 'eoa') {
@@ -243,12 +218,12 @@ export class EVMWalletService extends Service implements IWalletService {
         this.accounts.set(wallet.id, account);
         this.activeWalletId = wallet.id;
 
-        return wallet;
+        return Promise.resolve(wallet);
       }
 
       // Handle smart wallets
       if (params.type === 'safe' || params.type === 'aa') {
-        return await this.smartWalletFactory.deploySmartWallet({
+        return this.smartWalletFactory.deploySmartWallet({
           type: params.type,
           owners: params.owners || [],
           threshold: params.threshold || 1,
@@ -263,7 +238,7 @@ export class EVMWalletService extends Service implements IWalletService {
     }
   }
 
-  async importWallet(params: WalletImportParams): Promise<WalletInstance> {
+  importWallet(params: WalletImportParams): Promise<WalletInstance> {
     try {
       let account: Account;
       let privateKey: string | undefined;
@@ -292,7 +267,7 @@ export class EVMWalletService extends Service implements IWalletService {
           isActive: true,
         };
 
-        return await this.dbService.createWallet(wallet);
+        return this.dbService.createWallet(wallet);
       } else {
         throw new Error('No private key, mnemonic, or address provided');
       }
@@ -307,30 +282,30 @@ export class EVMWalletService extends Service implements IWalletService {
         isActive: true,
       };
 
-      return await this.dbService.createWallet(wallet, privateKey, mnemonic);
+      return this.dbService.createWallet(wallet, privateKey, mnemonic);
     } catch (error) {
       logger.error('Failed to import wallet:', error);
       throw error;
     }
   }
 
-  async listWallets(filter?: WalletFilter): Promise<WalletInstance[]> {
-    return await this.dbService.listWallets(filter);
+  listWallets(filter?: WalletFilter): Promise<WalletInstance[]> {
+    return this.dbService.listWallets(filter);
   }
 
-  async getWallet(walletId: UUID): Promise<WalletInstance | null> {
-    return await this.dbService.getWallet(walletId);
+  getWallet(walletId: UUID): Promise<WalletInstance | null> {
+    return this.dbService.getWallet(walletId);
   }
 
-  async updateWallet(walletId: UUID, updates: Partial<WalletInstance>): Promise<WalletInstance> {
-    return await this.dbService.updateWallet(walletId, updates);
+  updateWallet(walletId: UUID, updates: Partial<WalletInstance>): Promise<WalletInstance> {
+    return this.dbService.updateWallet(walletId, updates);
   }
 
-  async deleteWallet(walletId: UUID): Promise<boolean> {
+  deleteWallet(walletId: UUID): Promise<boolean> {
     if (this.activeWalletId === walletId) {
       this.activeWalletId = null;
     }
-    return await this.dbService.deleteWallet(walletId);
+    return this.dbService.deleteWallet(walletId);
   }
 
   async setActiveWallet(walletId: UUID): Promise<void> {
@@ -354,7 +329,7 @@ export class EVMWalletService extends Service implements IWalletService {
       }
       return null;
     }
-    return await this.dbService.getWallet(this.activeWalletId);
+    return this.dbService.getWallet(this.activeWalletId);
   }
 
   private async getActiveAddress(): Promise<Address> {
@@ -413,17 +388,17 @@ export class EVMWalletService extends Service implements IWalletService {
     return walletInstance;
   }
 
-  async addOwner(walletAddress: Address, newOwner: Address): Promise<Hash> {
+  addOwner(_walletAddress: Address, _newOwner: Address): Promise<Hash> {
     // TODO: Implement smart wallet owner management
     throw new Error('addOwner not implemented yet');
   }
 
-  async removeOwner(walletAddress: Address, owner: Address): Promise<Hash> {
+  removeOwner(_walletAddress: Address, _owner: Address): Promise<Hash> {
     // TODO: Implement smart wallet owner management
     throw new Error('removeOwner not implemented yet');
   }
 
-  async changeThreshold(walletAddress: Address, newThreshold: number): Promise<Hash> {
+  changeThreshold(_walletAddress: Address, _newThreshold: number): Promise<Hash> {
     // TODO: Implement smart wallet threshold management
     throw new Error('changeThreshold not implemented yet');
   }
@@ -438,7 +413,7 @@ export class EVMWalletService extends Service implements IWalletService {
     return true;
   }
 
-  async getSmartWalletInfo(address: Address): Promise<{
+  getSmartWalletInfo(_address: Address): Promise<{
     type: 'safe' | 'aa' | 'unknown';
     owners?: Address[];
     threshold?: number;
@@ -446,9 +421,9 @@ export class EVMWalletService extends Service implements IWalletService {
     version?: string;
   }> {
     // TODO: Implement smart wallet info retrieval
-    return {
+    return Promise.resolve({
       type: 'unknown',
-    };
+    });
   }
 
   // Session management
@@ -484,14 +459,14 @@ export class EVMWalletService extends Service implements IWalletService {
     return sessionKey;
   }
 
-  async getSession(sessionId: UUID): Promise<SessionKey | null> {
+  getSession(sessionId: UUID): Promise<SessionKey | null> {
     // Get from database instead
-    return await this.dbService.getSession(sessionId);
+    return this.dbService.getSession(sessionId);
   }
 
-  async listSessions(walletId?: UUID): Promise<SessionKey[]> {
+  listSessions(walletId?: UUID): Promise<SessionKey[]> {
     // Get from database instead
-    return await this.dbService.listSessions(walletId);
+    return this.dbService.listSessions(walletId);
   }
 
   async validateSession(sessionId: UUID, action: SessionPermission): Promise<boolean> {
@@ -499,13 +474,13 @@ export class EVMWalletService extends Service implements IWalletService {
     return validation.isValid;
   }
 
-  async updateSession(sessionId: UUID, updates: Partial<SessionKey>): Promise<SessionKey> {
+  updateSession(sessionId: UUID, updates: Partial<SessionKey>): Promise<SessionKey> {
     // Update in database instead
-    return await this.dbService.updateSession(sessionId, updates);
+    return this.dbService.updateSession(sessionId, updates);
   }
 
-  async revokeSession(sessionId: UUID): Promise<void> {
-    return await this.sessionManager.revokeSession(sessionId);
+  revokeSession(sessionId: UUID): Promise<void> {
+    return this.sessionManager.revokeSession(sessionId);
   }
 
   async revokeAllSessions(walletId?: UUID): Promise<void> {
@@ -518,20 +493,20 @@ export class EVMWalletService extends Service implements IWalletService {
   }
 
   // Advanced transaction features
-  async simulateTransaction(
+  simulateTransaction(
     tx: TransactionRequest,
     options?: {
       includeTrace?: boolean;
       includeLogs?: boolean;
       forkBlock?: number;
-    },
+    }
   ): Promise<SimulationResult> {
-    return await this.transactionSimulator.simulate(tx, options);
+    return this.transactionSimulator.simulate(tx, options);
   }
 
   async estimateGasWithBuffer(
     tx: TransactionRequest,
-    bufferPercent: number = 10,
+    bufferPercent: number = 10
   ): Promise<GasEstimation> {
     const wallet = await this.getActiveWallet();
     if (!wallet) {
@@ -588,7 +563,7 @@ export class EVMWalletService extends Service implements IWalletService {
       waitForConfirmation?: boolean;
       confirmations?: number;
       sessionId?: UUID;
-    },
+    }
   ): Promise<Hash> {
     const wallet = await this.getActiveWallet();
     if (!wallet) {
@@ -644,7 +619,7 @@ export class EVMWalletService extends Service implements IWalletService {
         chainId,
       },
       wallet.id,
-      options?.sessionId,
+      options?.sessionId
     );
 
     // Wait for confirmation if requested
@@ -700,19 +675,19 @@ export class EVMWalletService extends Service implements IWalletService {
     }
   }
 
-  async getTransactionHistory(params: HistoryParams): Promise<TransactionHistory[]> {
-    return await this.dbService.getTransactionHistory(
+  getTransactionHistory(params: HistoryParams): Promise<TransactionHistory[]> {
+    return this.dbService.getTransactionHistory(
       params.wallet,
       params.chains,
       params.limit,
-      params.offset,
+      params.offset
     );
   }
 
-  async getTransactionReceipt(hash: Hash, chain?: Chain): Promise<any> {
+  getTransactionReceipt(hash: Hash, chain?: Chain): Promise<any> {
     const chainId = chain?.id || 1;
     const client = this.chainService.getPublicClient(chainId);
-    return await client.getTransactionReceipt({ hash });
+    return client.getTransactionReceipt({ hash });
   }
 
   // DeFi and NFT positions
@@ -762,9 +737,9 @@ export class EVMWalletService extends Service implements IWalletService {
     return results.flat();
   }
 
-  async getAllDefiPositions(
+  getAllDefiPositions(
     wallet: WalletInstance | string,
-    chainIds?: number[],
+    chainIds?: number[]
   ): Promise<DefiPosition[]> {
     const walletAddress = typeof wallet === 'string' ? wallet : wallet.address;
     const chains = (chainIds?.map((id) => this.getChainById(id)).filter(Boolean) as Chain[]) || [];
@@ -790,11 +765,11 @@ export class EVMWalletService extends Service implements IWalletService {
       owner: walletAddress,
       collection: holding.collection
         ? {
-          name: holding.collection.name,
-          slug: holding.collection.slug || '',
-          imageUrl: holding.collection.imageUrl,
-          floorPrice: holding.collection.floorPrice,
-        }
+            name: holding.collection.name,
+            slug: holding.collection.slug || '',
+            imageUrl: holding.collection.imageUrl,
+            floorPrice: holding.collection.floorPrice,
+          }
         : undefined,
     }));
   }
@@ -813,19 +788,19 @@ export class EVMWalletService extends Service implements IWalletService {
     return chainMapping[chainId];
   }
 
-  async getWalletChain(address: string): Promise<Chain | undefined> {
-    const wallet = this.wallets.get(address);
+  getWalletChain(_address: string): Promise<Chain | undefined> {
+    const wallet = this.wallets.get(_address);
     if (!wallet?.metadata?.chainId) {
-      return mainnet; // Default to mainnet
+      return Promise.resolve(mainnet); // Default to mainnet
     }
 
-    return this.getChainById(wallet.metadata.chainId);
+    return Promise.resolve(this.getChainById(wallet.metadata.chainId));
   }
 
   // Enhanced portfolio features
   async getPortfolioValue(
     wallet: Address,
-    chains?: Chain[],
+    chains?: Chain[]
   ): Promise<{
     totalValueUSD: number;
     breakdown: {
@@ -845,7 +820,7 @@ export class EVMWalletService extends Service implements IWalletService {
     // Get DeFi positions
     const defiPositions = await this.getAllDefiPositions(
       wallet,
-      chains?.map((c) => c.id),
+      chains?.map((c) => c.id)
     );
     const defiValue = defiPositions.reduce((sum, pos) => sum + pos.totalValueUSD, 0);
 
@@ -905,17 +880,17 @@ export class EVMWalletService extends Service implements IWalletService {
   }
 
   // Utility methods
-  async isContract(address: Address, chain?: Chain): Promise<boolean> {
+  isContract(address: Address, chain?: Chain): Promise<boolean> {
     const chainId = chain?.id || 1;
-    return await this.chainService.isContractDeployed(chainId, address as `0x${string}`);
+    return this.chainService.isContractDeployed(chainId, address as `0x${string}`);
   }
 
-  async getENSName(address: Address): Promise<string | null> {
-    return await this.ensResolver.resolveName(address);
+  getENSName(address: Address): Promise<string | null> {
+    return this.ensResolver.resolveName(address);
   }
 
-  async resolveENS(name: string): Promise<Address | null> {
-    return await this.ensResolver.resolveAddress(name);
+  resolveENS(name: string): Promise<Address | null> {
+    return this.ensResolver.resolveAddress(name);
   }
 
   // IWalletService base methods
@@ -973,12 +948,12 @@ export class EVMWalletService extends Service implements IWalletService {
     const tokenBalance = await this.tokenService.getTokenBalance(
       assetAddress as Address,
       address as Address,
-      chainId,
+      chainId
     );
     return Number(formatEther(tokenBalance.balance));
   }
 
-  async transferSol(from: any, to: any, lamports: number): Promise<string> {
+  transferSol(_from: any, _to: any, _lamports: number): Promise<string> {
     throw new Error('transferSol is not supported for EVM. Use sendTransaction instead.');
   }
 
@@ -1015,6 +990,6 @@ export class EVMWalletService extends Service implements IWalletService {
 }
 
 // Export factory function
-export async function createEVMWalletService(runtime: IAgentRuntime): Promise<EVMWalletService> {
-  return await EVMWalletService.start(runtime);
+export function createEVMWalletService(runtime: IAgentRuntime): Promise<EVMWalletService> {
+  return EVMWalletService.start(runtime);
 }

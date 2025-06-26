@@ -16,7 +16,7 @@ export const getTunnelStatusAction: Action = {
   description:
     'Get the current status of the ngrok tunnel including URL, port, and uptime information. Supports action chaining by providing tunnel metadata for monitoring workflows, health checks, or conditional tunnel management.',
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const tunnelService = runtime.getService('tunnel') as ITunnelService;
+    const tunnelService = runtime.getService<ITunnelService>('tunnel');
     return !!tunnelService;
   },
   handler: async (
@@ -29,7 +29,11 @@ export const getTunnelStatusAction: Action = {
     try {
       elizaLogger.info('Getting ngrok tunnel status...');
 
-      const tunnelService = runtime.getService('tunnel') as ITunnelService;
+      const tunnelService = runtime.getService<ITunnelService>('tunnel');
+      if (!tunnelService) {
+        throw new Error('Tunnel service not found');
+      }
+
       const status = tunnelService.getStatus();
 
       let responseText: string;

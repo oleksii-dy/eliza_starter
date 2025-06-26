@@ -42,7 +42,11 @@ export async function testRealResearch(runtime: IAgentRuntime) {
     }
 
     // Check if completed or timeout
-    if (current.status === 'completed' || current.status === 'failed' || checkCount > 30) {
+    if (
+      current.status === 'completed' ||
+      current.status === 'failed' ||
+      checkCount > 30
+    ) {
       clearInterval(checkInterval);
 
       if (current.status === 'completed') {
@@ -52,7 +56,9 @@ export async function testRealResearch(runtime: IAgentRuntime) {
         );
 
         if (current.report) {
-          logger.info(`Report generated with ${current.report.sections.length} sections`);
+          logger.info(
+            `Report generated with ${current.report.sections.length} sections`
+          );
         }
       } else if (current.status === 'failed') {
         logger.error(`❌ Research failed: ${current.error}`);

@@ -34,10 +34,12 @@ export const ENV = {
 
   // Server configuration
   PORT: getEnvVar('PORT', '3000')!,
-  WS_PORT: getEnvVar('WS_PORT', '3001')!,
+  WS_PORT: getEnvVar('WS_PORT', '4445')!,
   WORLD: getEnvVar('WORLD', 'world')!,
   SAVE_INTERVAL: getEnvVar('SAVE_INTERVAL', '60')!,
-  ENABLE_RPG: getEnvVar('ENABLE_RPG', 'false')!,
+  ENABLE_RPG: getEnvVar('ENABLE_RPG', 'true')!,
+  RPG_SYSTEMS: getEnvVar('RPG_SYSTEMS'),
+  RPG_WORLD_TYPE: getEnvVar('RPG_WORLD_TYPE', 'runescape')!,
 
   // LiveKit configuration (client-safe)
   LIVEKIT_URL: getEnvVar('LIVEKIT_URL') || getEnvVar('LIVEKIT_WS_URL'),

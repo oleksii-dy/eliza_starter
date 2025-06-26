@@ -23,10 +23,10 @@ describe('DockerService - Real Docker Unit Tests', () => {
     try {
       await (dockerService as any).initialize();
       console.log('✅ DockerService initialized successfully');
-    } catch (error) {
+    } catch (_error) {
       console.warn(
         '⚠️ DockerService initialization failed:',
-        error instanceof Error ? error.message : String(error)
+        _error instanceof Error ? _error.message : String(_error)
       );
       // Continue with tests - they will handle Docker unavailability
     }
@@ -39,10 +39,10 @@ describe('DockerService - Real Docker Unit Tests', () => {
         await dockerService.stopContainer(containerId, 5);
         await dockerService.removeContainer(containerId, true);
         console.log(`✓ Cleaned up container: ${containerId.slice(0, 12)}`);
-      } catch (error) {
+      } catch (_error) {
         console.warn(
           `Failed to cleanup container ${containerId}:`,
-          error instanceof Error ? error.message : String(error)
+          _error instanceof Error ? _error.message : String(_error)
         );
       }
     }
@@ -52,10 +52,10 @@ describe('DockerService - Real Docker Unit Tests', () => {
       try {
         await dockerService.removeNetwork(networkId);
         console.log(`✓ Cleaned up network: ${networkId.slice(0, 12)}`);
-      } catch (error) {
+      } catch (_error) {
         console.warn(
           `Failed to cleanup network ${networkId}:`,
-          error instanceof Error ? error.message : String(error)
+          _error instanceof Error ? _error.message : String(_error)
         );
       }
     }
@@ -85,12 +85,12 @@ describe('DockerService - Real Docker Unit Tests', () => {
       } else {
         console.warn('⚠️ Docker daemon ping returned false');
       }
-    } catch (error) {
+    } catch (_error) {
       console.warn(
         '⚠️ Docker ping failed (expected if Docker not running):',
-        error instanceof Error ? error.message : String(error)
+        _error instanceof Error ? _error.message : String(_error)
       );
-      expect(error).toBeDefined();
+      expect(_error).toBeDefined();
     }
   });
 
@@ -113,10 +113,10 @@ describe('DockerService - Real Docker Unit Tests', () => {
       console.log('✅ Docker version:', version.Version);
       console.log('  Platform:', version.Platform?.Name || 'Unknown');
       console.log('  API Version:', version.ApiVersion || 'Unknown');
-    } catch (error) {
+    } catch (_error) {
       console.warn(
         'Version test failed (expected if Docker not running):',
-        error instanceof Error ? error.message : String(error)
+        _error instanceof Error ? _error.message : String(_error)
       );
     }
   });
@@ -141,10 +141,10 @@ describe('DockerService - Real Docker Unit Tests', () => {
         const size = Math.round(image.Size / 1024 / 1024); // MB
         console.log(`  - ${tags[0]} (${size}MB)`);
       }
-    } catch (error) {
+    } catch (_error) {
       console.warn(
         'Image list test failed (expected if Docker not running):',
-        error instanceof Error ? error.message : String(error)
+        _error instanceof Error ? _error.message : String(_error)
       );
     }
   });
@@ -191,10 +191,10 @@ describe('DockerService - Real Docker Unit Tests', () => {
       const networksAfter = await dockerService.listNetworks();
       const removedNetwork = networksAfter.find((net) => net.Id === networkId);
       expect(removedNetwork).toBeUndefined();
-    } catch (error) {
+    } catch (_error) {
       console.warn(
         'Network test failed (expected if Docker not running):',
-        error instanceof Error ? error.message : String(error)
+        _error instanceof Error ? _error.message : String(_error)
       );
     }
   });
@@ -216,7 +216,7 @@ describe('DockerService - Real Docker Unit Tests', () => {
         (img) =>
           img.RepoTags &&
           img.RepoTags.some(
-            (tag) =>
+            (tag: string) =>
               tag.includes('alpine') || tag.includes('busybox') || tag.includes('hello-world')
           )
       );
@@ -226,7 +226,7 @@ describe('DockerService - Real Docker Unit Tests', () => {
         try {
           await dockerService.pullImage('alpine', 'latest');
           console.log('✅ Successfully pulled alpine:latest');
-        } catch (pullError) {
+        } catch (_pullError) {
           console.warn('⚠️ Could not pull test image, skipping container test');
           return;
         }
@@ -302,28 +302,28 @@ describe('DockerService - Real Docker Unit Tests', () => {
         expect(execResult.stdout).toContain('Docker integration test successful');
 
         console.log(`✅ Command execution: "${execResult.stdout.trim()}"`);
-      } catch (execError) {
+      } catch (_execError) {
         console.warn(
           'Command execution failed:',
-          execError instanceof Error ? execError.message : String(execError)
+          _execError instanceof Error ? _execError.message : String(_execError)
         );
       }
 
       // Get container stats
       try {
-        const stats = await dockerService.getContainerStats(containerId);
-        expect(stats).toBeDefined();
-        expect(stats.id).toBe(containerId);
-        expect(stats.cpu).toBeDefined();
-        expect(stats.memory).toBeDefined();
+        const _stats = await dockerService.getContainerStats(containerId);
+        expect(_stats).toBeDefined();
+        expect(_stats.id).toBe(containerId);
+        expect(_stats.cpu).toBeDefined();
+        expect(_stats.memory).toBeDefined();
 
         console.log(
-          `✅ Container stats: CPU ${stats.cpu.usagePercent.toFixed(2)}%, Memory ${stats.memory.usagePercent.toFixed(2)}%`
+          `✅ Container stats: CPU ${_stats.cpu.usagePercent.toFixed(2)}%, Memory ${_stats.memory.usagePercent.toFixed(2)}%`
         );
-      } catch (statsError) {
+      } catch (_statsError) {
         console.warn(
           'Stats collection failed:',
-          statsError instanceof Error ? statsError.message : String(statsError)
+          _statsError instanceof Error ? _statsError.message : String(_statsError)
         );
       }
 
@@ -343,10 +343,10 @@ describe('DockerService - Real Docker Unit Tests', () => {
       console.log('✅ Removed container');
 
       console.log('🎉 Complete container lifecycle test passed!');
-    } catch (error) {
+    } catch (_error) {
       console.warn(
         'Container test failed (may be expected):',
-        error instanceof Error ? error.message : String(error)
+        _error instanceof Error ? _error.message : String(_error)
       );
     }
   });
@@ -374,29 +374,29 @@ describe('DockerService - Real Docker Unit Tests', () => {
             capabilities: [],
             communicationPort: 9999,
             healthPort: 9998,
-            environment: {},
+            environment: { /* empty */ },
           },
         });
 
         // Should not reach here
         expect(true).toBe(false);
-      } catch (error) {
+      } catch (_error) {
         console.log('✅ Properly handled invalid image error');
-        expect(error).toBeDefined();
-        expect((error as Error).message).toBeDefined();
+        expect(_error).toBeDefined();
+        expect((_error as Error).message).toBeDefined();
       }
 
       // Test invalid container operations
       try {
         await dockerService.getContainerStatus('invalid-container-id');
         expect(true).toBe(false);
-      } catch (error) {
+      } catch (_error) {
         console.log('✅ Properly handled invalid container ID error');
-        expect(error).toBeDefined();
+        expect(_error).toBeDefined();
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('✅ Service properly handled Docker unavailability');
-      expect(error).toBeDefined();
+      expect(_error).toBeDefined();
     }
   });
 });

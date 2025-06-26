@@ -5,7 +5,7 @@ import type {
   TrustProfile,
   TrustEvidence,
   TrustDimensions,
-  TrustEvidenceType
+  TrustEvidenceType,
 } from '../../types/trust';
 import type { UUID } from '@elizaos/core';
 
@@ -24,8 +24,8 @@ describe('TrustCalculator', () => {
         competence: 0.2,
         integrity: 0.2,
         benevolence: 0.2,
-        transparency: 0.2
-      }
+        transparency: 0.2,
+      },
     };
     calculator = new TrustCalculator(defaultConfig);
   });
@@ -43,7 +43,7 @@ describe('TrustCalculator', () => {
           competence: 50,
           integrity: 50,
           benevolence: 50,
-          transparency: 50
+          transparency: 50,
         },
         confidence: 0,
         interactionCount: 0,
@@ -52,8 +52,8 @@ describe('TrustCalculator', () => {
         calculationMethod: 'default',
         trend: {
           direction: 'stable',
-          changeRate: 0
-        }
+          changeRate: 0,
+        },
       });
       expect(profile.lastCalculated).toBeGreaterThan(0);
       expect(profile.trend.lastChangeAt).toBeGreaterThan(0);
@@ -67,7 +67,7 @@ describe('TrustCalculator', () => {
         competence: 70,
         integrity: 60,
         benevolence: 90,
-        transparency: 50
+        transparency: 50,
       };
 
       const score = calculator.calculateOverallScore(dimensions);
@@ -84,8 +84,8 @@ describe('TrustCalculator', () => {
           competence: 0.3,
           integrity: 0.2,
           benevolence: 0.05,
-          transparency: 0.05
-        }
+          transparency: 0.05,
+        },
       });
 
       const dimensions: TrustDimensions = {
@@ -93,7 +93,7 @@ describe('TrustCalculator', () => {
         competence: 80,
         integrity: 60,
         benevolence: 40,
-        transparency: 20
+        transparency: 20,
       };
 
       const score = customCalculator.calculateOverallScore(dimensions);
@@ -116,7 +116,7 @@ describe('TrustCalculator', () => {
           targetEntityId: 'entity1' as UUID,
           evaluatorId: 'evaluator1' as UUID,
           reportedBy: 'reporter1' as UUID,
-          context: { entityId: 'entity1' as UUID, evaluatorId: 'evaluator1' as UUID }
+          context: { entityId: 'entity1' as UUID, evaluatorId: 'evaluator1' as UUID },
         },
         {
           type: 'consistent_behavior' as TrustEvidenceType,
@@ -128,8 +128,8 @@ describe('TrustCalculator', () => {
           targetEntityId: 'entity1' as UUID,
           evaluatorId: 'evaluator1' as UUID,
           reportedBy: 'reporter1' as UUID,
-          context: { entityId: 'entity1' as UUID, evaluatorId: 'evaluator1' as UUID }
-        }
+          context: { entityId: 'entity1' as UUID, evaluatorId: 'evaluator1' as UUID },
+        },
       ];
 
       const dimensions = calculator.calculateDimensions(evidence);
@@ -172,8 +172,8 @@ describe('TrustCalculator', () => {
           targetEntityId: 'entity1' as UUID,
           evaluatorId: 'evaluator1' as UUID,
           reportedBy: 'reporter1' as UUID,
-          context: { entityId: 'entity1' as UUID, evaluatorId: 'evaluator1' as UUID }
-        }
+          context: { entityId: 'entity1' as UUID, evaluatorId: 'evaluator1' as UUID },
+        },
       ];
 
       const confidence = calculator.calculateConfidence(evidence);
@@ -191,7 +191,7 @@ describe('TrustCalculator', () => {
         targetEntityId: 'entity1' as UUID,
         evaluatorId: 'evaluator1' as UUID,
         reportedBy: 'reporter1' as UUID,
-        context: { entityId: 'entity1' as UUID, evaluatorId: 'evaluator1' as UUID }
+        context: { entityId: 'entity1' as UUID, evaluatorId: 'evaluator1' as UUID },
       }));
 
       const confidence = calculator.calculateConfidence(evidence);
@@ -209,7 +209,7 @@ describe('TrustCalculator', () => {
         targetEntityId: 'entity1' as UUID,
         evaluatorId: 'evaluator1' as UUID,
         reportedBy: 'reporter1' as UUID,
-        context: { entityId: 'entity1' as UUID, evaluatorId: 'evaluator1' as UUID }
+        context: { entityId: 'entity1' as UUID, evaluatorId: 'evaluator1' as UUID },
       }));
 
       const confidence = calculator.calculateConfidence(evidence);
@@ -224,7 +224,7 @@ describe('TrustCalculator', () => {
         competence: 70,
         integrity: 60,
         benevolence: 90,
-        transparency: 50
+        transparency: 50,
       };
 
       const overallTrust = calculator.calculateOverallTrust(dimensions);
@@ -241,8 +241,8 @@ describe('TrustCalculator', () => {
           competence: 0,
           integrity: 0,
           benevolence: 0,
-          transparency: 0
-        }
+          transparency: 0,
+        },
       });
 
       const dimensions: TrustDimensions = {
@@ -250,7 +250,7 @@ describe('TrustCalculator', () => {
         competence: 70,
         integrity: 60,
         benevolence: 90,
-        transparency: 50
+        transparency: 50,
       };
 
       const overallTrust = zeroWeightCalculator.calculateOverallScore(dimensions);
@@ -275,7 +275,7 @@ describe('TrustCalculator', () => {
           targetEntityId: entityId,
           evaluatorId: 'evaluator1' as UUID,
           reportedBy: 'reporter1' as UUID,
-          context: { entityId, evaluatorId: 'evaluator1' as UUID }
+          context: { entityId, evaluatorId: 'evaluator1' as UUID },
         },
         {
           type: 'consistent_behavior' as TrustEvidenceType,
@@ -287,7 +287,7 @@ describe('TrustCalculator', () => {
           targetEntityId: entityId,
           evaluatorId: 'evaluator1' as UUID,
           reportedBy: 'reporter1' as UUID,
-          context: { entityId, evaluatorId: 'evaluator1' as UUID }
+          context: { entityId, evaluatorId: 'evaluator1' as UUID },
         },
         {
           type: 'verified_identity' as TrustEvidenceType,
@@ -299,8 +299,8 @@ describe('TrustCalculator', () => {
           targetEntityId: entityId,
           evaluatorId: 'evaluator1' as UUID,
           reportedBy: 'reporter1' as UUID,
-          context: { entityId, evaluatorId: 'evaluator1' as UUID }
-        }
+          context: { entityId, evaluatorId: 'evaluator1' as UUID },
+        },
       ];
 
       const profile = calculator.calculateProfileFromEvidence(entityId, evidence);
@@ -355,7 +355,7 @@ describe('TrustCalculator', () => {
           targetEntityId: entityId,
           evaluatorId: 'evaluator1' as UUID,
           reportedBy: 'reporter1' as UUID,
-          context: { entityId, evaluatorId: 'evaluator1' as UUID }
+          context: { entityId, evaluatorId: 'evaluator1' as UUID },
         },
         {
           type: 'helpful_action' as TrustEvidenceType,
@@ -367,8 +367,8 @@ describe('TrustCalculator', () => {
           targetEntityId: entityId,
           evaluatorId: 'evaluator1' as UUID,
           reportedBy: 'reporter1' as UUID,
-          context: { entityId, evaluatorId: 'evaluator1' as UUID }
-        }
+          context: { entityId, evaluatorId: 'evaluator1' as UUID },
+        },
       ];
 
       const profile = calculator.calculateProfileFromEvidence(entityId, evidence);
@@ -391,7 +391,7 @@ describe('TrustCalculator', () => {
           targetEntityId: entityId,
           evaluatorId: 'evaluator1' as UUID,
           reportedBy: 'reporter1' as UUID,
-          context: { entityId, evaluatorId: 'evaluator1' as UUID }
+          context: { entityId, evaluatorId: 'evaluator1' as UUID },
         },
         {
           type: 'security_violation' as TrustEvidenceType,
@@ -403,8 +403,8 @@ describe('TrustCalculator', () => {
           targetEntityId: entityId,
           evaluatorId: 'evaluator1' as UUID,
           reportedBy: 'reporter1' as UUID,
-          context: { entityId, evaluatorId: 'evaluator1' as UUID }
-        }
+          context: { entityId, evaluatorId: 'evaluator1' as UUID },
+        },
       ];
 
       const profile = calculator.calculateProfileFromEvidence(entityId, evidence);

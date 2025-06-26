@@ -1,11 +1,11 @@
 import {
   Service,
-  ServiceType,
+  ServiceType as _ServiceType,
   type IAgentRuntime,
   type ServiceTypeName,
   logger,
 } from '@elizaos/core';
-import { RobotServiceType, RobotState, JointState } from '../types';
+import { RobotServiceType, RobotState as _RobotState, JointState as _JointState } from '../types';
 import { ROS2Bridge } from '../communication/ros2-bridge';
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';

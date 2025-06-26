@@ -84,15 +84,21 @@ async function main() {
     { name: 'publish', path: './commands/publish.js' },
   ];
 
-  // For scenario command specifically, set database type early
-  const isScenarioCommand = process.argv.includes('scenario');
-  if (isScenarioCommand) {
-    console.log('🔧 CLI: Detected scenario command, setting database type to PGLite...');
+  // For test environments (scenario, test commands, or NODE_ENV=test), set database type early
+  const isTestCommand =
+    process.argv.includes('scenario') ||
+    process.argv.includes('test') ||
+    process.env.NODE_ENV === 'test' ||
+    process.env.VITEST === 'true' ||
+    process.env.ELIZA_TEST_MODE === 'true';
+
+  if (isTestCommand) {
+    console.log('🔧 CLI: Detected test environment, setting database type to PGLite...');
     try {
-      const sqlModule = await import('@elizaos/plugin-sql');
+      const sqlModule = (await import('@elizaos/plugin-sql')) as any;
       if ('setDatabaseType' in sqlModule && typeof sqlModule.setDatabaseType === 'function') {
         sqlModule.setDatabaseType('pglite');
-        console.log('✅ CLI: Set database type to PGLite for scenario testing');
+        console.log('✅ CLI: Set database type to PGLite for testing');
       } else {
         console.warn(
           '⚠️  CLI: setDatabaseType not found in plugin-sql exports:',
@@ -100,7 +106,7 @@ async function main() {
         );
       }
     } catch (error) {
-      console.warn('⚠️  CLI: Failed to set database type for scenario:', error);
+      console.warn('⚠️  CLI: Failed to set database type for testing:', error);
     }
   }
 

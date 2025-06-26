@@ -1,0 +1,236 @@
+// Secure messaging contract for agent-to-agent communication using Midnight Network
+// This contract provides zero-knowledge privacy for message content while maintaining verifiable authenticity
+
+import "commitment";
+import "bytes";
+import "vector";
+
+// Types for secure messaging
+type MessageId = Bytes<32>;
+type AgentId = Bytes<32>;
+type EncryptedMessage = Bytes<256>; // Encrypted message content
+type MessageHash = Bytes<32>;
+type Timestamp = u64;
+
+// Public state visible on the blockchain
+type MessageContract = {
+  messageCount: u64,
+  participants: Vector<AgentId, 10>, // Max 10 participants in a chat room
+  isPrivate: boolean,
+  created: Timestamp,
+  lastActivity: Timestamp
+};
+
+// Private state for each agent (kept secret)
+type AgentPrivateState = {
+  agentId: AgentId,
+  encryptionKey: Bytes<32>,
+  messageHistory: Vector<{
+    messageId: MessageId,
+    fromAgent: AgentId,
+    toAgent: AgentId,
+    encryptedContent: EncryptedMessage,
+    messageHash: MessageHash,
+    timestamp: Timestamp,
+    isOutgoing: boolean
+  }, 100> // Store up to 100 messages per agent
+};
+
+// Witness data for sending messages (private inputs)
+witness sendMessageWitness(
+  fromAgent: AgentId,
+  toAgent: AgentId,
+  messageContent: Bytes<256>, // Original message content (private)
+  encryptionKey: Bytes<32>,   // Agent's encryption key (private)
+  nonce: Bytes<32>           // Random nonce for encryption (private)
+) -> {
+  encryptedMessage: EncryptedMessage,
+  messageHash: MessageHash,
+  fromAgentCommitment: Bytes<32>
+};
+
+// Witness data for reading messages (private inputs)
+witness readMessageWitness(
+  agentId: AgentId,
+  decryptionKey: Bytes<32>,  // Agent's decryption key (private)
+  messageId: MessageId
+) -> {
+  decryptedContent: Bytes<256>,
+  isAuthorized: boolean
+};
+
+// Initialize contract for secure messaging
+circuit initializeMessaging(
+  participants: Vector<AgentId, 10>,
+  isPrivate: boolean
+): MessageContract {
+  return {
+    messageCount: 0,
+    participants: participants,
+    isPrivate: isPrivate,
+    created: currentTime(),
+    lastActivity: currentTime()
+  };
+}
+
+// Send a secure message between agents
+circuit sendSecureMessage(
+  messageContract: MessageContract,
+  agentPrivateState: AgentPrivateState,
+  witness: sendMessageWitness
+): { 
+  newContract: MessageContract,
+  newPrivateState: AgentPrivateState
+} {
+  // Verify sender is authorized participant
+  assert(contains(messageContract.participants, witness.fromAgent), "Sender not authorized");
+  
+  // Generate message ID
+  let messageId = persistentHash<MessageId>([
+    witness.fromAgent,
+    witness.toAgent,
+    messageContract.messageCount.bytes,
+    currentTime().bytes
+  ]);
+  
+  // Create message hash for integrity verification
+  let messageHash = persistentHash<MessageHash>([
+    witness.messageContent,
+    witness.nonce,
+    witness.fromAgent,
+    witness.toAgent
+  ]);
+  
+  // Encrypt message content (simplified encryption for demo)
+  let encryptedMessage = xor(witness.messageContent, witness.encryptionKey);
+  
+  // Create agent commitment for authentication
+  let fromAgentCommitment = persistentCommit<AgentId>(witness.fromAgent, witness.encryptionKey);
+  
+  // Update contract state
+  let newContract = {
+    messageCount: messageContract.messageCount + 1,
+    participants: messageContract.participants,
+    isPrivate: messageContract.isPrivate,
+    created: messageContract.created,
+    lastActivity: currentTime()
+  };
+  
+  // Add message to sender's private state
+  let newMessage = {
+    messageId: messageId,
+    fromAgent: witness.fromAgent,
+    toAgent: witness.toAgent,
+    encryptedContent: encryptedMessage,
+    messageHash: messageHash,
+    timestamp: currentTime(),
+    isOutgoing: true
+  };
+  
+  let newPrivateState = {
+    agentId: agentPrivateState.agentId,
+    encryptionKey: agentPrivateState.encryptionKey,
+    messageHistory: push(agentPrivateState.messageHistory, newMessage)
+  };
+  
+  return {
+    newContract: newContract,
+    newPrivateState: newPrivateState
+  };
+}
+
+// Join an existing chat room
+circuit joinChatRoom(
+  messageContract: MessageContract,
+  newParticipant: AgentId
+): MessageContract {
+  // Verify room isn't full
+  assert(length(messageContract.participants) < 10, "Chat room is full");
+  
+  // Verify participant isn't already in room
+  assert(!contains(messageContract.participants, newParticipant), "Agent already in room");
+  
+  // Add participant
+  return {
+    messageCount: messageContract.messageCount,
+    participants: push(messageContract.participants, newParticipant),
+    isPrivate: messageContract.isPrivate,
+    created: messageContract.created,
+    lastActivity: currentTime()
+  };
+}
+
+// Verify message authenticity without revealing content
+circuit verifyMessage(
+  messageId: MessageId,
+  messageHash: MessageHash,
+  fromAgentCommitment: Bytes<32>,
+  witness: readMessageWitness
+): boolean {
+  // Verify the agent is authorized to read this message
+  assert(witness.isAuthorized, "Agent not authorized to read message");
+  
+  // Verify message hash matches decrypted content
+  let expectedHash = persistentHash<MessageHash>([
+    witness.decryptedContent,
+    messageId, // Using messageId as nonce proxy
+    fromAgentCommitment.slice(0, 32), // Extract agent ID from commitment
+    witness.agentId
+  ]);
+  
+  return messageHash == expectedHash;
+}
+
+// Get chat room information (public)
+circuit getChatRoomInfo(
+  messageContract: MessageContract
+): {
+  participantCount: u64,
+  messageCount: u64,
+  isPrivate: boolean,
+  lastActivity: Timestamp
+} {
+  return {
+    participantCount: length(messageContract.participants),
+    messageCount: messageContract.messageCount,
+    isPrivate: messageContract.isPrivate,
+    lastActivity: messageContract.lastActivity
+  };
+}
+
+// Helper functions
+fn currentTime(): Timestamp {
+  // In real implementation, this would get current block timestamp
+  return 1000000; // Placeholder
+}
+
+fn xor(data: Bytes<256>, key: Bytes<32>): EncryptedMessage {
+  // Simple XOR encryption (for demo - real implementation would use proper encryption)
+  let result = data;
+  for i in 0..32 {
+    let keyByte = key[i];
+    for j in 0..8 {
+      let dataIndex = i * 8 + j;
+      if dataIndex < 256 {
+        result[dataIndex] = result[dataIndex] ^ keyByte;
+      }
+    }
+  }
+  return result;
+}
+
+fn contains<T, const N: u64>(vec: Vector<T, N>, item: T) -> boolean {
+  for i in 0..N {
+    if i < length(vec) && vec[i] == item {
+      return true;
+    }
+  }
+  return false;
+}
+
+fn push<T, const N: u64>(vec: Vector<T, N>, item: T) -> Vector<T, N> {
+  assert(length(vec) < N, "Vector is full");
+  let newVec = vec;
+  newVec[length(vec)] = item;
+  return newVec;
+}

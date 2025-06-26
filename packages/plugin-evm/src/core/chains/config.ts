@@ -17,33 +17,33 @@ import {
   optimism,
   optimismGoerli,
   avalanche,
-  avalancheFuji,
+  avalancheFuji as _avalancheFuji,
   bsc,
-  bscTestnet,
+  bscTestnet as _bscTestnet,
   base,
-  baseGoerli,
-  fantom,
-  fantomTestnet,
-  gnosis,
-  celo,
-  celoAlfajores,
-  aurora,
-  auroraTestnet,
-  moonbeam,
-  moonriver,
-  moonbaseAlpha,
-  metis,
-  metisGoerli,
-  cronos,
-  cronosTestnet,
-  mantle,
-  mantleTestnet,
-  linea,
-  lineaTestnet,
-  scroll,
-  scrollSepolia,
-  polygonZkEvm,
-  polygonZkEvmTestnet,
+  baseGoerli as _baseGoerli,
+  fantom as _fantom,
+  fantomTestnet as _fantomTestnet,
+  gnosis as _gnosis,
+  celo as _celo,
+  celoAlfajores as _celoAlfajores,
+  aurora as _aurora,
+  auroraTestnet as _auroraTestnet,
+  moonbeam as _moonbeam,
+  moonriver as _moonriver,
+  moonbaseAlpha as _moonbaseAlpha,
+  metis as _metis,
+  metisGoerli as _metisGoerli,
+  cronos as _cronos,
+  cronosTestnet as _cronosTestnet,
+  mantle as _mantle,
+  mantleTestnet as _mantleTestnet,
+  linea as _linea,
+  lineaTestnet as _lineaTestnet,
+  scroll as _scroll,
+  scrollSepolia as _scrollSepolia,
+  polygonZkEvm as _polygonZkEvm,
+  polygonZkEvmTestnet as _polygonZkEvmTestnet,
 } from 'viem/chains';
 import { IAgentRuntime } from '@elizaos/core';
 
@@ -280,10 +280,10 @@ export class ChainConfigService {
         chain: config.chain,
         transport: config.wsUrl
           ? http(config.rpcUrl, {
-            // Fallback to HTTP if WebSocket fails
-            retryCount: 3,
-            retryDelay: 1000,
-          })
+              // Fallback to HTTP if WebSocket fails
+              retryCount: 3,
+              retryDelay: 1000,
+            })
           : http(config.rpcUrl),
       });
 
@@ -293,9 +293,7 @@ export class ChainConfigService {
     return this.publicClients.get(chainId)!;
   }
 
-  getWalletClient(chainId: number, account?: `0x${string}`): WalletClient {
-    const key = `${chainId}-${account || 'default'}`;
-
+  getWalletClient(chainId: number, _account?: `0x${string}`): WalletClient {
     if (!this.walletClients.has(chainId)) {
       const config = this.getChain(chainId);
       if (!config) {
@@ -343,12 +341,12 @@ export class ChainConfigService {
 
         return {
           maxFeePerGas: BigInt(
-            Math.ceil(Number(maxFeePerGas) * (config.gasSettings?.maxFeeMultiplier || 1.2)),
+            Math.ceil(Number(maxFeePerGas) * (config.gasSettings?.maxFeeMultiplier || 1.2))
           ),
           maxPriorityFeePerGas: BigInt(
             Math.ceil(
-              Number(maxPriorityFeePerGas) * (config.gasSettings?.maxPriorityFeeMultiplier || 1.1),
-            ),
+              Number(maxPriorityFeePerGas) * (config.gasSettings?.maxPriorityFeeMultiplier || 1.1)
+            )
           ),
         };
       }
@@ -356,10 +354,10 @@ export class ChainConfigService {
       // For legacy chains
       return {
         gasPrice: BigInt(
-          Math.ceil(Number(gasPrice) * (config.gasSettings?.maxFeeMultiplier || 1.1)),
+          Math.ceil(Number(gasPrice) * (config.gasSettings?.maxFeeMultiplier || 1.1))
         ),
       };
-    } catch (error) {
+    } catch (_error) {
       // Fallback gas prices
       if (config.chain.fees?.baseFeeMultiplier) {
         return {
@@ -426,25 +424,21 @@ export class ChainConfigService {
     return block;
   }
 
-  async waitForTransaction(
-    chainId: number,
-    hash: `0x${string}`,
-    confirmations?: number,
-  ): Promise<any> {
+  waitForTransaction(chainId: number, hash: `0x${string}`, confirmations?: number): Promise<any> {
     const client = this.getPublicClient(chainId);
     const config = this.getChain(chainId);
     const requiredConfirmations = confirmations || config?.confirmations || 1;
 
-    return await client.waitForTransactionReceipt({
+    return client.waitForTransactionReceipt({
       hash,
       confirmations: requiredConfirmations,
     });
   }
 
   // Cleanup method
-  async cleanup() {
+  cleanup() {
     // Close any WebSocket connections
-    for (const client of this.publicClients.values()) {
+    for (const _client of this.publicClients.values()) {
       // Viem clients handle cleanup internally
     }
     this.publicClients.clear();

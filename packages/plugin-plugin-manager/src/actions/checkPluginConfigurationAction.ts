@@ -9,6 +9,7 @@ import {
 } from '@elizaos/core';
 import { PluginManagerService } from '../services/pluginManagerService.ts';
 import { PluginManagerServiceType } from '../types.ts';
+import { TrustService } from '@elizaos/plugin-trust';
 
 export const checkPluginConfigurationAction: Action = {
   name: 'CHECK_PLUGIN_CONFIGURATION',
@@ -134,9 +135,9 @@ export const checkPluginConfigurationAction: Action = {
       }
 
       // Check if user has permission to configure plugins
-      const trustService = runtime.getService('TRUST') as any;
+      const trustService = runtime.getService<TrustService>('TRUST');
       const canConfigure = trustService ?
-        await trustService.checkPermission(message.entityId, 'plugin:configure') :
+        await (trustService as any).checkPermission(message.entityId, 'plugin:configure') :
         true; // Default to true if trust service not available
 
       if (statusData.needsConfiguration > 0 && canConfigure) {

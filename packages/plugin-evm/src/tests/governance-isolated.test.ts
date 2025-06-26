@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach, mock } from 'bun:test';
-import { createMockRuntime, testPrivateKey, MOCK_PROPOSAL, TESTNET_GOVERNORS } from './test-config';
+import { createMockRuntime, MOCK_PROPOSAL, TESTNET_GOVERNORS } from './test-config';
 import { proposeAction } from '../actions/gov-propose';
 import type { IAgentRuntime } from '@elizaos/core';
 
 describe('Governance Action Isolated Tests', () => {
   let mockRuntime: IAgentRuntime;
-  let mockCallback: ReturnType<typeof mock>;
+  let _mockCallback: ReturnType<typeof mock>;
 
   beforeEach(() => {
     mockRuntime = createMockRuntime();
-    mockCallback = mock();
+    _mockCallback = mock();
   });
 
   describe('Propose Action Parameter Validation', () => {
@@ -23,11 +23,17 @@ describe('Governance Action Isolated Tests', () => {
         {} as any,
         {} as any,
         options,
-        mockCallback
+        _mockCallback
       );
 
-      expect(result).toBe(false);
-      expect(mockCallback).toHaveBeenCalledWith(
+      expect(result).toBeDefined();
+      expect(
+        result && typeof result === 'object' && 'values' in result ? result.values?.success : false
+      ).toBe(false);
+      expect(
+        result && typeof result === 'object' && 'data' in result ? result.data?.error : ''
+      ).toContain('Missing required parameters');
+      expect(_mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           text: expect.stringContaining('Missing required parameters'),
         })
@@ -49,11 +55,17 @@ describe('Governance Action Isolated Tests', () => {
         {} as any,
         {} as any,
         options,
-        mockCallback
+        _mockCallback
       );
 
-      expect(result).toBe(false);
-      expect(mockCallback).toHaveBeenCalledWith(
+      expect(result).toBeDefined();
+      expect(
+        result && typeof result === 'object' && 'values' in result ? result.values?.success : false
+      ).toBe(false);
+      expect(
+        result && typeof result === 'object' && 'data' in result ? result.data?.error : ''
+      ).toContain('same length');
+      expect(_mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           text: expect.stringContaining('same length'),
         })
@@ -73,7 +85,7 @@ describe('Governance Action Isolated Tests', () => {
       // This test will fail at WalletProvider creation, but that's expected
       // We're just testing parameter validation here
       try {
-        await proposeAction.handler(mockRuntime, {} as any, {} as any, options, mockCallback);
+        await proposeAction.handler(mockRuntime, {} as any, {} as any, options, _mockCallback);
       } catch (error) {
         // Expected to fail at wallet provider creation stage
         // The important thing is it passes parameter validation

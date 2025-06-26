@@ -1,6 +1,6 @@
 import {
   Service,
-  ServiceType,
+  ServiceType as _ServiceType,
   type IAgentRuntime,
   type ServiceTypeName,
   logger,
@@ -250,7 +250,7 @@ export class RobotService extends Service {
       logger.info('[RobotService] Connected to hardware via serial');
 
       // Enable all servos
-      for (const [jointName, servoId] of Object.entries(SERVO_ID_MAP)) {
+      for (const [_jointName, servoId] of Object.entries(SERVO_ID_MAP)) {
         await this.serialProtocol.enableServo(servoId);
       }
     } catch (error) {

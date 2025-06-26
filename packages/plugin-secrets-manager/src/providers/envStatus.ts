@@ -1,11 +1,13 @@
-import { EnvManager } from '../service';
+import type { IAgentRuntime, Memory, Provider, ProviderResult, State } from '@elizaos/core';
+import { elizaLogger as logger } from '@elizaos/core';
+import { EnhancedSecretManager } from '../enhanced-service';
 import type { EnvVarMetadata, EnvVarConfig } from '../types';
 
 /**
  * Formats environment variable status for display
  * NEVER shows actual values for security
  */
-function formatEnvVarStatus(_config: EnvVarConfig): string {
+function formatEnvVarStatus(config: EnvVarConfig): string {
   const statusIcon = {
     missing: '❌',
     generating: '⏳',
@@ -50,8 +52,8 @@ function generateEnvStatusMessage(envVars: EnvVarMetadata): string {
   let needsUserInput = 0;
   let validVars = 0;
 
-  for (const _plugin of Object.values(envVars)) {
-    for (const _config of Object.values(plugin)) {
+  for (const plugin of Object.values(envVars)) {
+    for (const config of Object.values(plugin)) {
       totalVars++;
       if (config.status === 'valid') {
         validVars++;
@@ -119,9 +121,13 @@ export const envStatusProvider: Provider = {
   name: 'ENV_STATUS',
   description: 'Current status of environment variables for all plugins',
 
-  get: async (_runtime: IAgentRuntime, message: Memory, state?: State): Promise<ProviderResult> => {
+  get: async (
+    runtime: IAgentRuntime,
+    _message: Memory,
+    _state?: State
+  ): Promise<ProviderResult> => {
     try {
-      const env = runtime.get('ENV_MANAGER') as EnvManager;
+      const env = runtime.getService<EnhancedSecretManager>('ENV_MANAGER');
 
       if (!env) {
         logger.debug('[EnvStatus] No environment manager service found');
@@ -158,8 +164,8 @@ export const envStatusProvider: Provider = {
       let hasGeneratable = false;
       let needsUserInput = false;
 
-      for (const _plugin of Object.values(envVars)) {
-        for (const _config of Object.values(plugin)) {
+      for (const plugin of Object.values(envVars)) {
+        for (const config of Object.values(plugin)) {
           if (config.required && config.status === 'missing') {
             hasMissing = true;
             if (config.canGenerate) {

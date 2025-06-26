@@ -124,11 +124,11 @@ export class MockWorld implements World {
 
   tick(deltaMs: number): void {
     const time = this.time + deltaMs;
-    const delta = deltaMs / 1000;
+    const _delta = deltaMs / 1000;
 
     this.frame++;
     this.time = time;
-    this.accumulator += delta;
+    this.accumulator += _delta;
 
     // Fixed timestep physics
     const fixedDelta = 1 / 60;
@@ -140,12 +140,12 @@ export class MockWorld implements World {
 
     // Regular update
     for (const system of this.systems) {
-      system.update(delta);
+      system.update(_delta);
     }
 
     // Late update
     for (const system of this.systems) {
-      system.lateUpdate(delta);
+      system.lateUpdate(_delta);
     }
   }
 

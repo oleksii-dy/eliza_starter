@@ -1,3 +1,11 @@
+import {
+  type IAgentRuntime,
+  type Memory,
+  type State,
+  type Provider,
+  type ProviderResult,
+  logger as elizaLogger,
+} from '@elizaos/core';
 import { EnhancedSecretManager } from '../enhanced-service';
 import { ActionChainService } from '../services/action-chain-service';
 import type { SecretContext } from '../types';
@@ -70,11 +78,11 @@ export const uxGuidanceProvider: Provider = {
   description:
     'Provides interactive UI guidance, contextual help suggestions, and smart workflows for secure secret management when user needs assistance with API keys or configuration',
 
-  get: async (_runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> => {
+  get: async (runtime: IAgentRuntime, message: Memory, _state: State): Promise<ProviderResult> => {
     elizaLogger.info('[UXGuidanceProvider] Generating UX guidance');
 
-    const _secretsManager = runtime.getService('SECRETS') as EnhancedSecretManager;
-    const actionChainService = runtime.getService('ACTION_CHAIN') as ActionChainService;
+    const secretsManager = runtime.getService(EnhancedSecretManager);
+    const actionChainService = runtime.getService(ActionChainService);
 
     const context: SecretContext = {
       level: 'user',
@@ -425,8 +433,8 @@ function generateQuickActions(
 
 function generateContextualHelp(
   message: Memory,
-  userSecrets: Record<string, any>,
-  statusSummary: StatusSummary
+  _userSecrets: Record<string, any>,
+  _statusSummary: StatusSummary
 ): ContextualHelp {
   const messageText = message.content.text?.toLowerCase() || '';
 

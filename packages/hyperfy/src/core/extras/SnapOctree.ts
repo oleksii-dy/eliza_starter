@@ -1,15 +1,15 @@
-import * as THREE from './three';
+import { THREE } from './three';
 
 const _sphere = new THREE.Sphere();
 
 interface SnapPoint {
-  position: THREE.Vector3
+  position: any
   active?: boolean
   _node?: SnapOctreeNode
 }
 
 interface SnapOctreeOptions {
-  center: THREE.Vector3
+  center: any
   size: number
 }
 
@@ -94,7 +94,7 @@ export class SnapOctree {
     this.root.count = prevRoot.count;
   }
 
-  query(position: THREE.Vector3, radius: number, results: any[] = []) {
+  query(position: any, radius: number, results: any[] = []) {
     _sphere.center.copy(position);
     _sphere.radius = radius;
     this.root.query(_sphere, results);
@@ -113,20 +113,20 @@ export class SnapOctree {
 
 class SnapOctreeNode {
   parent: SnapOctreeNode | null;
-  center: THREE.Vector3;
+  center: any;
   size: number;
-  inner: THREE.Box3;
+  inner: any;
   points: SnapPoint[];
   count: number;
   children: (SnapOctreeNode | null)[];
 
-  constructor(parent: SnapOctreeNode | null, center: THREE.Vector3, size: number) {
+  constructor(parent: SnapOctreeNode | null, center: any, size: number) {
     this.parent = parent;
     this.center = center;
     this.size = size;
     this.inner = new THREE.Box3(
-      new THREE.Vector3(center.x - size, center.y - size, center.z - size) as any,
-      new THREE.Vector3(center.x + size, center.y + size, center.z + size) as any
+      new THREE.Vector3(center.x - size, center.y - size, center.z - size),
+      new THREE.Vector3(center.x + size, center.y + size, center.z + size)
     );
     this.points = [];
     this.count = 0;
@@ -189,7 +189,7 @@ class SnapOctreeNode {
     }
   }
 
-  canContain(position: THREE.Vector3) {
+  canContain(position: any) {
     return this.inner.containsPoint(position as any);
   }
 
@@ -233,7 +233,7 @@ class SnapOctreeNode {
     }
   }
 
-  query(sphere: THREE.Sphere, results: any[]) {
+  query(sphere: any, results: any[]) {
     // first check if the search sphere intersects this node
     if (!sphere.intersectsBox(this.inner)) {
       return;

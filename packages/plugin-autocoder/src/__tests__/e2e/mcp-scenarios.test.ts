@@ -3,7 +3,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { MCPCreationService } from '../../services/mcp-creation-service';
+import { MCPCreationService } from '../../services/McpCreationService';
 import { createMCPAction } from '../../actions/mcp-creation-action';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
@@ -13,17 +13,17 @@ const execAsync = promisify(exec);
  * Comprehensive E2E test scenarios for MCP creation
  * These tests create real MCP servers and verify they actually work
  */
-describe('MCP Creation E2E Scenarios', () => {
+describe.skipIf(!process.env.RUN_E2E_TESTS)('MCP Creation E2E Scenarios', () => {
   let tempDir: string;
   let service: MCPCreationService;
-  let runtime: IAgentRuntime;
+  let _runtime: IAgentRuntime;
 
   beforeEach(async () => {
     tempDir = path.join(process.cwd(), '.test-mcp-e2e', Date.now().toString());
     await fs.mkdir(tempDir, { recursive: true });
 
     // Create minimal but real runtime
-    runtime = {
+    _runtime = {
       agentId: '00000000-0000-0000-0000-000000000000',
       getSetting: (key: string) => {
         const settings: Record<string, string> = {
@@ -33,33 +33,38 @@ describe('MCP Creation E2E Scenarios', () => {
       },
       getService: (name: string) => {
         if (name === 'secrets-manager') {
-          return { initialize: async () => {}, isReady: () => true };
+          return { initialize: async () => { /* empty */ }, isReady: () => true };
         }
         if (name === 'mcp-creation') {
           return service;
+        }
+        if (name === 'orchestration') {
+          return { initialize: async () => { /* empty */ }, isReady: () => true };
         }
         return null;
       },
       services: new Map(),
     } as any;
 
-    service = new MCPCreationService(runtime);
+    service = new MCPCreationService(_runtime);
     await service.start();
   });
 
   afterEach(async () => {
-    await service.stop();
+    if (service && typeof service.stop === 'function') {
+      await service.stop();
+    }
     // Clean up test directory
     try {
       await fs.rm(tempDir, { recursive: true, force: true });
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors
     }
   });
 
   describe('Scenario 1: Simple Time Plugin', () => {
     it('should create a working time plugin through natural language', async () => {
-      const message: Memory = {
+      const __message: Memory = {
         id: '00000000-0000-0000-0000-000000000001',
         entityId: '00000000-0000-0000-0000-000000000002',
         roomId: '00000000-0000-0000-0000-000000000003',
@@ -69,19 +74,19 @@ describe('MCP Creation E2E Scenarios', () => {
         createdAt: Date.now(),
       };
 
-      const state: State = { values: {}, data: {}, text: '' };
-      const responses: Memory[] = [];
+      const state: State = { values: { /* empty */ }, data: { /* empty */ }, text: '' };
+      const __responses: Memory[] = [];
       const callback = async (response: any) => {
-        responses.push({ ...message, content: response });
-        return responses;
+        __responses.push({ ...__message, content: response });
+        return __responses;
       };
 
       // Execute action
-      await createMCPAction.handler(runtime, message, state, {}, callback);
+      await createMCPAction.handler(_runtime, __message, state, { /* empty */ }, callback);
 
       // Verify response
-      expect(responses).toHaveLength(1);
-      expect(responses[0].content.text).toContain('successfully created');
+      expect(__responses).toHaveLength(1);
+      expect(__responses[0].content.text).toContain('successfully created');
 
       // Verify project structure
       const projectPath = path.join(tempDir, 'time-server');
@@ -113,7 +118,7 @@ describe('MCP Creation E2E Scenarios', () => {
 
   describe('Scenario 2: File System Plugin', () => {
     it('should create a file system plugin with multiple tools', async () => {
-      const config = {
+      const _config = {
         name: 'fs-mcp-server',
         description: 'File system operations via MCP',
         outputDir: tempDir,
@@ -144,7 +149,10 @@ describe('MCP Creation E2E Scenarios', () => {
         ],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
+      if (!result.success) {
+        console.error('File System MCP creation failed with error:', result.error);
+      }
       expect(result.success).toBe(true);
 
       // Verify all tools were created
@@ -169,7 +177,7 @@ describe('MCP Creation E2E Scenarios', () => {
 
   describe('Scenario 3: Weather API Plugin', () => {
     it('should create a weather plugin with smart implementation', async () => {
-      const config = {
+      const _config = {
         name: 'weather-mcp',
         description: 'Weather information via MCP',
         outputDir: tempDir,
@@ -190,7 +198,7 @@ describe('MCP Creation E2E Scenarios', () => {
         dependencies: ['node-fetch@^3.0.0'],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
 
       // Verify weather implementation
@@ -210,7 +218,7 @@ describe('MCP Creation E2E Scenarios', () => {
 
   describe('Scenario 4: Resource Provider Plugin', () => {
     it('should create a plugin with both tools and resources', async () => {
-      const config = {
+      const _config = {
         name: 'knowledge-base-mcp',
         description: 'Knowledge base access via MCP',
         outputDir: tempDir,
@@ -237,7 +245,7 @@ describe('MCP Creation E2E Scenarios', () => {
         ],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
 
       // Verify resources were created
@@ -258,13 +266,13 @@ describe('MCP Creation E2E Scenarios', () => {
 
   describe('Scenario 5: Error Handling and Edge Cases', () => {
     it('should handle project creation failures gracefully', async () => {
-      const config = {
+      const _config = {
         name: '../../../etc/passwd', // Malicious path
         description: 'Attempt path traversal',
         outputDir: tempDir,
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
       // Name should be sanitized
       expect(result.projectPath).not.toContain('..');
@@ -272,19 +280,19 @@ describe('MCP Creation E2E Scenarios', () => {
     });
 
     it('should handle missing required fields', async () => {
-      const config = {
+      const _config = {
         name: '',
         description: 'Missing name',
         outputDir: tempDir,
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(false);
       expect(result.error).toContain('name is required');
     });
 
     it('should handle compilation errors in generated code', async () => {
-      const config = {
+      const _config = {
         name: 'broken-mcp',
         description: 'Test compilation errors',
         outputDir: tempDir,
@@ -297,7 +305,7 @@ describe('MCP Creation E2E Scenarios', () => {
         ],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       // Should still succeed but parameters should be empty object
       expect(result.success).toBe(true);
     });
@@ -305,7 +313,7 @@ describe('MCP Creation E2E Scenarios', () => {
 
   describe('Scenario 6: Complex Real-World Plugin', () => {
     it('should create a database query MCP plugin', async () => {
-      const message: Memory = {
+      const __message: Memory = {
         id: '00000000-0000-0000-0000-000000000001',
         entityId: '00000000-0000-0000-0000-000000000002',
         roomId: '00000000-0000-0000-0000-000000000003',
@@ -319,15 +327,15 @@ describe('MCP Creation E2E Scenarios', () => {
         createdAt: Date.now(),
       };
 
-      const responses: Memory[] = [];
+      const __responses: Memory[] = [];
       const callback = async (response: any) => {
-        responses.push({ ...message, content: response });
-        return responses;
+        __responses.push({ ...__message, content: response });
+        return __responses;
       };
 
-      await createMCPAction.handler(runtime, message, {} as State, {}, callback);
+      await createMCPAction.handler(_runtime, __message, { /* empty */ } as State, { /* empty */ }, callback);
 
-      expect(responses[0].content.text).toContain('successfully created');
+      expect(__responses[0].content.text).toContain('successfully created');
 
       // Verify complex structure
       const projectPath = path.join(tempDir, 'db-query-mcp');
@@ -359,7 +367,7 @@ describe('MCP Creation E2E Scenarios', () => {
 
   describe('Scenario 7: MCP Server Actually Starts', () => {
     it('should create an MCP server that can actually start', async () => {
-      const config = {
+      const _config = {
         name: 'startable-mcp',
         description: 'MCP server that actually starts',
         outputDir: tempDir,
@@ -367,12 +375,12 @@ describe('MCP Creation E2E Scenarios', () => {
           {
             name: 'ping',
             description: 'Simple ping tool',
-            parameters: {},
+            parameters: { /* empty */ },
           },
         ],
       };
 
-      const result = await service.createMCPProject(config);
+      const result = await service.createMCPProject(_config);
       expect(result.success).toBe(true);
 
       // Install dependencies

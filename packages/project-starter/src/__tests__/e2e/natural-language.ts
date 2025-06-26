@@ -22,7 +22,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
   tests = [
     {
       name: 'Agent responds to hello world',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       fn: async (runtime: any) => {
         /**
          * This test verifies that the agent can respond appropriately
@@ -70,7 +70,6 @@ export class NaturalLanguageTestSuite implements TestSuite {
 
           // Find the agent's response
           const agentResponse = messages.find(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (m: any) =>
               m.userId === runtime.agentId && m.roomId === roomId && m.id !== helloMessage.id
           );
@@ -103,7 +102,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
 
     {
       name: 'Agent responds to casual greeting',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       fn: async (runtime: any) => {
         /**
          * Test various casual greetings to ensure the agent
@@ -139,7 +138,6 @@ export class NaturalLanguageTestSuite implements TestSuite {
             });
 
             const agentResponse = messages.find(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (m: any) => m.userId === runtime.agentId && m.id !== message.id
             );
 
@@ -162,7 +160,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
 
     {
       name: 'Agent maintains conversation context',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       fn: async (runtime: any) => {
         /**
          * Test that the agent remembers context from previous messages
@@ -218,7 +216,7 @@ export class NaturalLanguageTestSuite implements TestSuite {
           }
 
           // Find the agent's second response
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
           const agentResponses = messages.filter((m: any) => m.userId === runtime.agentId);
           if (agentResponses.length < 2) {
             throw new Error('Agent did not respond to both messages');

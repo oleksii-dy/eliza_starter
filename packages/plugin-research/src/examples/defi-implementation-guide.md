@@ -46,7 +46,10 @@ async function yieldAnalysis(runtime: IAgentRuntime) {
   await new Promise((resolve) => setTimeout(resolve, 30000));
 
   // Get the report
-  const report = generateScenarioReport(DEFI_SCENARIOS.YIELD_FARMING_OPTIMIZATION, project);
+  const report = generateScenarioReport(
+    DEFI_SCENARIOS.YIELD_FARMING_OPTIMIZATION,
+    project
+  );
 
   console.log(report);
 }
@@ -159,7 +162,10 @@ async function customSecurityAnalysis(runtime: IAgentRuntime) {
   }
 
   // Generate specialized security report
-  const report = generateScenarioReport(DEFI_SCENARIOS.SMART_CONTRACT_SECURITY, project);
+  const report = generateScenarioReport(
+    DEFI_SCENARIOS.SMART_CONTRACT_SECURITY,
+    project
+  );
 
   // Extract critical findings
   const criticalFindings = project.findings
@@ -212,7 +218,10 @@ import { setupDeFiMonitoring } from '@elizaos/plugin-research/scenarios/defi-sce
 
 async function monitorDeFiSecurity(runtime: IAgentRuntime) {
   const monitoring = await setupDeFiMonitoring(runtime, {
-    scenarios: [DEFI_SCENARIOS.SMART_CONTRACT_SECURITY, DEFI_SCENARIOS.MEV_RESEARCH],
+    scenarios: [
+      DEFI_SCENARIOS.SMART_CONTRACT_SECURITY,
+      DEFI_SCENARIOS.MEV_RESEARCH,
+    ],
     interval: 5 * 60 * 1000, // 5 minutes
     alertThreshold: 0.8, // High relevance only
     onAlert: (project, finding) => {
@@ -307,7 +316,10 @@ import { researchPlugin } from '@elizaos/plugin-research';
 class DeFiResearchAgent extends Agent {
   async onMessage(message: Message) {
     // Custom logic for DeFi-specific messages
-    if (message.content.includes('vulnerability') || message.content.includes('exploit')) {
+    if (
+      message.content.includes('vulnerability') ||
+      message.content.includes('exploit')
+    ) {
       // Automatically trigger security research
       await this.runtime.processAction('defi_security_research', message);
     }
@@ -318,9 +330,15 @@ class DeFiResearchAgent extends Agent {
 
   async generateDailyReport() {
     // Generate daily DeFi security report
-    const scenarios = [DEFI_SCENARIOS.SMART_CONTRACT_SECURITY, DEFI_SCENARIOS.MEV_RESEARCH];
+    const scenarios = [
+      DEFI_SCENARIOS.SMART_CONTRACT_SECURITY,
+      DEFI_SCENARIOS.MEV_RESEARCH,
+    ];
 
-    const report = await generateComprehensiveDeFiReport(this.runtime, scenarios);
+    const report = await generateComprehensiveDeFiReport(
+      this.runtime,
+      scenarios
+    );
 
     // Post to Discord/Telegram
     await this.postToChannel(report);
@@ -344,7 +362,11 @@ const query = 'DeFi vulnerabilities';
 
 ```typescript
 try {
-  const project = await executeDeFiScenario(runtime, DEFI_SCENARIOS.SMART_CONTRACT_SECURITY, query);
+  const project = await executeDeFiScenario(
+    runtime,
+    DEFI_SCENARIOS.SMART_CONTRACT_SECURITY,
+    query
+  );
 } catch (error) {
   if (error.message.includes('rate limit')) {
     // Wait and retry

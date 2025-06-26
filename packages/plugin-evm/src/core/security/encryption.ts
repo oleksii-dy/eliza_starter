@@ -27,9 +27,7 @@ export class EncryptionService {
       masterSecret = `${agentId}-${systemSecret}`;
 
       // Log warning about using default encryption
-      console.warn(
-        '[EncryptionService] Using derived encryption key. Set EVM_ENCRYPTION_KEY for better security.',
-      );
+      // Note: Using derived encryption key. Set EVM_ENCRYPTION_KEY for better security.
     }
 
     // Always derive a key from the master secret for consistency
@@ -45,7 +43,7 @@ export class EncryptionService {
   /**
    * Encrypt sensitive data
    */
-  async encrypt(plaintext: string): Promise<string> {
+  encrypt(plaintext: string): string {
     try {
       // Generate random salt and IV
       const salt = randomBytes(this.saltLength);
@@ -75,16 +73,14 @@ export class EncryptionService {
       // Return base64 encoded
       return combined.toString('base64');
     } catch (error) {
-      throw new Error(
-        `Encryption failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      throw new Error(`Encryption failed: ${error instanceof Error ? error.message : error}`);
     }
   }
 
   /**
    * Decrypt sensitive data
    */
-  async decrypt(encryptedData: string): Promise<string> {
+  decrypt(encryptedData: string): string {
     try {
       // Decode from base64
       const combined = Buffer.from(encryptedData, 'base64');
@@ -94,7 +90,7 @@ export class EncryptionService {
       const iv = combined.slice(this.saltLength, this.saltLength + this.ivLength);
       const tag = combined.slice(
         this.saltLength + this.ivLength,
-        this.saltLength + this.ivLength + this.tagLength,
+        this.saltLength + this.ivLength + this.tagLength
       );
       const encrypted = combined.slice(this.saltLength + this.ivLength + this.tagLength);
 
@@ -116,9 +112,7 @@ export class EncryptionService {
 
       return decrypted.toString('utf8');
     } catch (error) {
-      throw new Error(
-        `Decryption failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      throw new Error(`Decryption failed: ${error instanceof Error ? error.message : error}`);
     }
   }
 
@@ -132,7 +126,7 @@ export class EncryptionService {
   /**
    * Hash sensitive data for comparison without storing plaintext
    */
-  async hash(data: string): Promise<string> {
+  hash(data: string): string {
     const salt = randomBytes(this.saltLength);
     const hash = scryptSync(
       data,
@@ -143,7 +137,7 @@ export class EncryptionService {
         r: this.scryptBlockSize,
         p: this.scryptParallelization,
         maxmem: 128 * 1024 * 1024,
-      },
+      }
     );
 
     // Combine salt and hash
@@ -154,7 +148,7 @@ export class EncryptionService {
   /**
    * Verify hashed data
    */
-  async verifyHash(data: string, hashedData: string): Promise<boolean> {
+  verifyHash(data: string, hashedData: string): boolean {
     try {
       const combined = Buffer.from(hashedData, 'base64');
       const salt = combined.slice(0, this.saltLength);
@@ -176,7 +170,7 @@ export class EncryptionService {
   /**
    * Encrypt data with a specific key (for session keys)
    */
-  async encryptWithKey(plaintext: string, key: string): Promise<string> {
+  encryptWithKey(plaintext: string, key: string): string {
     const keyBuffer = Buffer.from(key, 'hex');
     if (keyBuffer.length !== this.keyLength) {
       throw new Error('Invalid key length');
@@ -197,7 +191,7 @@ export class EncryptionService {
   /**
    * Decrypt data with a specific key (for session keys)
    */
-  async decryptWithKey(encryptedData: string, key: string): Promise<string> {
+  decryptWithKey(encryptedData: string, key: string): string {
     const keyBuffer = Buffer.from(key, 'hex');
     if (keyBuffer.length !== this.keyLength) {
       throw new Error('Invalid key length');
@@ -249,14 +243,14 @@ export function createEncryptionService(runtime: IAgentRuntime): EncryptionServi
 }
 
 // Export standalone encrypt/decrypt functions for convenience
-export async function encrypt(data: string, key: string): Promise<string> {
+export function encrypt(data: string, key: string): string {
   const tempService = new EncryptionService({
     getSetting: (name: string) => (name === 'ENCRYPTION_KEY' ? key : undefined),
   } as any);
   return tempService.encryptWithKey(data, key);
 }
 
-export async function decrypt(encryptedData: string, key: string): Promise<string> {
+export function decrypt(encryptedData: string, key: string): string {
   const tempService = new EncryptionService({
     getSetting: (name: string) => (name === 'ENCRYPTION_KEY' ? key : undefined),
   } as any);

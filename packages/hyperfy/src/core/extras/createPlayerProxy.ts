@@ -1,5 +1,7 @@
+import type { Euler, Quaternion } from 'three';
 import { clamp, hasRole } from '../utils';
-import * as THREE from './three';
+import { THREE } from './three';
+import { Vector3Enhanced } from './Vector3Enhanced';
 
 const HEALTH_MAX = 100;
 
@@ -74,7 +76,7 @@ export function createPlayerProxy(_entity: any, player: any) {
     get destroyed() {
       return !!player.destroyed;
     },
-    teleport(position: THREE.Vector3, rotationY?: number) {
+    teleport(position: any, rotationY?: number) {
       if (player.data.owner === world.network.id) {
         // if player is local we can set directly
         world.network.enqueue('onPlayerTeleport', { position: position.toArray(), rotationY });
@@ -161,7 +163,7 @@ export function createPlayerProxy(_entity: any, player: any) {
     cancelEffect() {
       activeEffectConfig?.onEnd();
     },
-    push(force: THREE.Vector3) {
+    push(force: Vector3Enhanced) {
       const forceArray = force.toArray();
       // player.applyForce(force)
       if (player.data.owner === world.network.id) {

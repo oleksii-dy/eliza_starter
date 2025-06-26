@@ -76,8 +76,8 @@ export class CustodialWalletService extends Service {
     this.network = runtime.getSetting('SOLANA_NETWORK') || 'devnet';
 
     // Try to get connection from RPC service first
-    const rpcService = runtime.getService('rpc-service') as any;
-    if (rpcService && typeof rpcService.getConnection === 'function') {
+    const rpcService = runtime.getService('rpc-service');
+    if (rpcService && 'getConnection' in rpcService && typeof rpcService.getConnection === 'function') {
       this.connection = rpcService.getConnection();
     } else {
       const rpcUrl = runtime.getSetting('SOLANA_RPC_URL') || this.getDefaultRpcUrl();

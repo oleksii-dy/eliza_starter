@@ -4,7 +4,7 @@
  */
 
 import { Command } from 'commander';
-import { AgentServer } from '@elizaos/server';
+import AgentServer from '@elizaos/server';
 import { ScenarioRunner } from '../scenario-runner/index.js';
 import { createMockRuntime } from '../utils/mock-runtime.js';
 // Using built-in Node.js console formatting instead of external dependencies

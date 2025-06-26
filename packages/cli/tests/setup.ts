@@ -32,8 +32,8 @@ if (!existsSync(cliDistEntry)) {
 
 // Store original handlers
 // const originalHandlers = {
-  //   unhandledRejection: process.listeners('unhandledRejection'),
-  //   uncaughtException: process.listeners('uncaughtException'),
+//   unhandledRejection: process.listeners('unhandledRejection'),
+//   uncaughtException: process.listeners('uncaughtException'),
 // };
 
 

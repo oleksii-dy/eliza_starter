@@ -3,15 +3,13 @@ import {
   type Memory,
   type State,
   type HandlerCallback,
-  elizaLogger,
-  ActionExample,
-  type Action,
+  elizaLogger as _elizaLogger,
 } from '@elizaos/core';
 import { type WalletProvider, initWalletProvider } from '../providers/wallet';
 import { voteTemplate } from '../templates';
 import type { VoteParams, SupportedChain, Transaction } from '../types';
 import governorArtifacts from '../contracts/artifacts/OZGovernor.json';
-import { type ByteArray, type Hex, encodeFunctionData, type Address } from 'viem';
+import { type Hex, encodeFunctionData, type Address } from 'viem';
 
 export { voteTemplate };
 
@@ -64,7 +62,7 @@ export class VoteAction {
         logs: receipt.logs,
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : error;
       throw new Error(`Vote failed: ${errorMessage}`);
     }
   }
@@ -73,12 +71,13 @@ export class VoteAction {
 export const voteAction = {
   name: 'vote',
   description: 'Vote for a DAO governance proposal',
+  enabled: false, // Disabled by default - can vote on governance proposals affecting DAOs
   handler: async (
     runtime: IAgentRuntime,
     _message: Memory,
     _state?: State,
     options?: Record<string, unknown>,
-    callback?: HandlerCallback,
+    callback?: HandlerCallback
   ) => {
     try {
       // Ensure options is provided
@@ -180,23 +179,50 @@ export const voteAction = {
                 nextAction: nextSuggestedAction,
               },
             },
-            'workflow',
+            'workflow'
           );
         }
       }
 
-      return true;
+      return {
+        data: {
+          actionName: 'EVM_GOVERNANCE_VOTE',
+          hash: voteResult.hash,
+          proposalId: voteParams.proposalId,
+          voteType,
+          governor: voteParams.governor,
+          chain: voteParams.chain,
+          workflowContext,
+          nextSuggestedAction,
+        },
+        values: {
+          success: true,
+          hash: voteResult.hash,
+          proposalId: voteParams.proposalId,
+          voteType,
+        },
+      };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : error;
       console.error('Error in vote handler:', errorMessage);
       if (callback) {
         callback({ text: `Error: ${errorMessage}` });
       }
-      return false;
+      return {
+        data: {
+          actionName: 'EVM_GOVERNANCE_VOTE',
+          error: errorMessage,
+        },
+        values: {
+          success: false,
+          error: errorMessage,
+        },
+      };
     }
   },
   template: voteTemplate,
-  validate: async (runtime: IAgentRuntime) => {
+  // eslint-disable-next-line require-await
+  validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const privateKey = runtime.getSetting('EVM_PRIVATE_KEY');
     return typeof privateKey === 'string' && privateKey.startsWith('0x');
   },
@@ -213,7 +239,8 @@ export const voteAction = {
         name: '{{agent}}',
         content: {
           text: "I'll vote FOR the treasury proposal and queue it for execution if it passes.",
-          thought: 'Complete governance participation: cast my vote to support the proposal, then monitor results and queue for execution if approved. This ensures full follow-through on governance decisions.',
+          thought:
+            'Complete governance participation: cast my vote to support the proposal, then monitor results and queue for execution if approved. This ensures full follow-through on governance decisions.',
           actions: ['EVM_GOVERNANCE_VOTE', 'EVM_GOVERNANCE_QUEUE'],
         },
       },
@@ -230,7 +257,8 @@ export const voteAction = {
         name: '{{agent}}',
         content: {
           text: "I'll vote FOR proposal 15 and AGAINST proposal 16 as part of your governance participation session.",
-          thought: "Batch governance voting: user has multiple proposals to vote on with different positions. I'll execute their voting strategy across multiple proposals efficiently.",
+          thought:
+            "Batch governance voting: user has multiple proposals to vote on with different positions. I'll execute their voting strategy across multiple proposals efficiently.",
           actions: ['EVM_GOVERNANCE_VOTE', 'EVM_GOVERNANCE_VOTE'],
         },
       },
@@ -295,7 +323,8 @@ export const voteAction = {
         name: '{{agent}}',
         content: {
           text: "I'll vote FOR the protocol upgrade and monitor the results to help queue it for execution if it passes.",
-          thought: "Strategic governance: supporting protocol upgrades requires follow-through to ensure implementation. After voting, I'll monitor results and facilitate the next steps.",
+          thought:
+            "Strategic governance: supporting protocol upgrades requires follow-through to ensure implementation. After voting, I'll monitor results and facilitate the next steps.",
           action: 'EVM_GOVERNANCE_VOTE',
           workflowContext: {
             step: 'governance-participation',
@@ -308,7 +337,7 @@ export const voteAction = {
       {
         name: '{{user}}',
         content: {
-          text: 'Cast multiple votes on today\'s governance proposals with my voting strategy',
+          text: "Cast multiple votes on today's governance proposals with my voting strategy",
           action: 'EVM_GOVERNANCE_VOTE',
         },
       },
@@ -316,7 +345,8 @@ export const voteAction = {
         name: '{{agent}}',
         content: {
           text: "I'll execute your voting strategy across today's governance proposals. This ensures consistent participation in all active governance decisions.",
-          thought: "Systematic governance participation: user has a voting strategy to apply across multiple proposals. I'll execute their position consistently across all relevant proposals.",
+          thought:
+            "Systematic governance participation: user has a voting strategy to apply across multiple proposals. I'll execute their position consistently across all relevant proposals.",
           action: 'EVM_GOVERNANCE_VOTE',
           workflowContext: {
             step: 'multi-proposal-voting',

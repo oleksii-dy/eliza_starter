@@ -14,7 +14,8 @@ export const githubTodoWorkflowScenario: Scenario = {
       id: asUUID(uuidv4()),
       name: 'Project Manager Agent',
       role: 'subject',
-      // This agent will handle GitHub and Todo tasks
+      plugins: ['@elizaos/plugin-github', '@elizaos/plugin-todo'],
+      capabilities: ['github_integration', 'todo_management', 'project_planning'],
     },
     {
       id: asUUID(uuidv4()),

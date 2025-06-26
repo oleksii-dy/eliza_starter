@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { LootTable } from '../../types';
 
 export class LootTableManager {

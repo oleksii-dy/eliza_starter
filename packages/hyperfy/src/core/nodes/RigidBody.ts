@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-
+import { THREE } from '../extras/three';
+// Using THREE namespace types
 import { Node } from './Node';
 import { isFunction, isNumber, isString } from 'lodash-es';
 

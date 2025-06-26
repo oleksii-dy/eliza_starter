@@ -127,6 +127,9 @@ describe('BROWSER_STATE provider', () => {
     });
 
     it('should handle errors gracefully when getting page info fails', async () => {
+      // Set up logger spy for this test
+      const loggerErrorSpy = spyOn(logger, 'error').mockImplementation(() => {});
+
       // Make page.title throw an error
       mockSession.page.title = mock().mockRejectedValue(new Error('Page error'));
 
@@ -145,7 +148,10 @@ describe('BROWSER_STATE provider', () => {
         error: true,
       });
       expect(result.data).toEqual({});
-      expect(logger.error).toHaveBeenCalledWith('Error getting browser state:', expect.any(Error));
+      expect(loggerErrorSpy).toHaveBeenCalledWith(
+        'Error getting browser state:',
+        expect.any(Error)
+      );
     });
 
     it('should work when service is not available', async () => {

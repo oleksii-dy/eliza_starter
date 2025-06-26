@@ -1,10 +1,11 @@
-import { elizaLogger } from '../logger.js';
+import { elizaLogger } from '../logger';
 import type {
   ComponentConfig,
   PluginConfiguration,
-  ComponentConfigState,
-} from '../types/plugin.js';
-import type { WalletCapability } from '../types/universal-wallet.js';
+  // ComponentConfigState,
+} from '../types/plugin';
+import type {} from // WalletCapability
+'../types/universal-wallet';
 
 /**
  * Plugin categories for intelligent defaults

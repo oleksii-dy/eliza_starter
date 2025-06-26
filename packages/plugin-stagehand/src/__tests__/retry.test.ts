@@ -121,7 +121,7 @@ describe('retry utilities', () => {
 
       const result = await retryWithBackoff(
         fn,
-        { maxRetries: 3, initialDelay: 1000, backoffFactor: 2 },
+        { maxRetries: 3, initialDelay: 10, backoffFactor: 2 },
         'test'
       );
 

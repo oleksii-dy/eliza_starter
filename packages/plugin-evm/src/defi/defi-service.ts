@@ -4,15 +4,15 @@ import {
   http,
   type Address,
   type PublicClient,
-  type WalletClient,
+  type WalletClient as _WalletClient,
   formatUnits,
-  parseUnits,
-  type Hex,
+  parseUnits as _parseUnits,
+  type Hex as _Hex,
   getContract,
   erc20Abi,
 } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
-import { mainnet, polygon, arbitrum, optimism, base } from 'viem/chains';
+import { mainnet, polygon, arbitrum, optimism as _optimism, base as _base } from 'viem/chains';
 // ABI import removed - using inline AAVE_POOL_ABI instead
 import { getChainConfig } from '../core/chains/config';
 import { elizaLogger as logger } from '@elizaos/core';
@@ -96,7 +96,7 @@ const PROTOCOLS = {
 } as const;
 
 // ABIs
-const UNISWAP_QUOTER_ABI = [
+const _UNISWAP_QUOTER_ABI = [
   {
     inputs: [
       { name: 'tokenIn', type: 'address' },
@@ -117,7 +117,7 @@ const UNISWAP_QUOTER_ABI = [
   },
 ] as const;
 
-const UNISWAP_ROUTER_ABI = [
+const _UNISWAP_ROUTER_ABI = [
   {
     inputs: [
       {
@@ -291,7 +291,7 @@ export interface DeFiPosition {
   }>;
 }
 
-interface PriceInfo {
+interface _PriceInfo {
   [token: string]: {
     usd: number;
   };
@@ -309,21 +309,21 @@ export class DeFiService {
       createPublicClient({
         chain: mainnet,
         transport: http(process.env.ETHEREUM_RPC_URL || 'https://eth.llamarpc.com'),
-      }),
+      })
     );
     this.publicClients.set(
       137,
       createPublicClient({
         chain: polygon,
         transport: http(process.env.POLYGON_RPC_URL || 'https://polygon.llamarpc.com'),
-      }),
+      })
     );
     this.publicClients.set(
       42161,
       createPublicClient({
         chain: arbitrum,
         transport: http(process.env.ARBITRUM_RPC_URL || 'https://arbitrum.llamarpc.com'),
-      }),
+      })
     );
   }
 
@@ -341,8 +341,8 @@ export class DeFiService {
         ]);
 
         positions.push(...uniswapPositions, ...aavePositions, ...compoundPositions);
-      } catch (error) {
-        logger.error(`Error fetching DeFi positions on chain ${chainId}:`, error);
+      } catch (_error) {
+        logger.error(`Error fetching DeFi positions on chain ${chainId}:`, _error);
       }
     }
 
@@ -351,7 +351,7 @@ export class DeFiService {
 
   private async getUniswapV3Positions(
     walletAddress: Address,
-    chainId: number,
+    chainId: number
   ): Promise<DeFiPosition[]> {
     const client = this.publicClients.get(chainId);
     if (!client || !PROTOCOLS.uniswap[chainId as keyof typeof PROTOCOLS.uniswap]) {
@@ -469,8 +469,8 @@ export class DeFiService {
           });
         }
       }
-    } catch (error) {
-      logger.error('Error fetching Uniswap V3 positions:', error);
+    } catch (_error) {
+      logger.error('Error fetching Uniswap V3 positions:', _error);
     }
 
     return positions;
@@ -478,7 +478,7 @@ export class DeFiService {
 
   private async getAaveV3Positions(
     walletAddress: Address,
-    chainId: number,
+    chainId: number
   ): Promise<DeFiPosition[]> {
     const client = this.publicClients.get(chainId);
     if (!client || !PROTOCOLS.aave[chainId as keyof typeof PROTOCOLS.aave]) {
@@ -500,14 +500,14 @@ export class DeFiService {
       // Access tuple elements by index
       const totalCollateralBase = accountData[0];
       const totalDebtBase = accountData[1];
-      const availableBorrowsBase = accountData[2];
-      const currentLiquidationThreshold = accountData[3];
-      const ltv = accountData[4];
+      const _availableBorrowsBase = accountData[2];
+      const _currentLiquidationThreshold = accountData[3];
+      const _ltv = accountData[4];
       const healthFactor = accountData[5];
 
       const healthFactorNum = Number(healthFactor) / 1e18;
-      const totalCollateralUsd = Number(totalCollateralBase) / 1e8; // Base currency has 8 decimals
-      const totalDebtUsd = Number(totalDebtBase) / 1e8;
+      const _totalCollateralUsd = Number(totalCollateralBase) / 1e8; // Base currency has 8 decimals
+      const _totalDebtUsd = Number(totalDebtBase) / 1e8;
 
       // Get specific reserve data for main assets
       const assets = [
@@ -529,12 +529,12 @@ export class DeFiService {
           const currentATokenBalance = reserveData[0];
           const currentStableDebt = reserveData[1];
           const currentVariableDebt = reserveData[2];
-          const principalStableDebt = reserveData[3];
-          const scaledVariableDebt = reserveData[4];
+          const _principalStableDebt = reserveData[3];
+          const _scaledVariableDebt = reserveData[4];
           const stableBorrowRate = reserveData[5];
           const liquidityRate = reserveData[6];
-          const stableRateLastUpdated = reserveData[7];
-          const usageAsCollateralEnabled = reserveData[8];
+          const _stableRateLastUpdated = reserveData[7];
+          const _usageAsCollateralEnabled = reserveData[8];
 
           const aTokenBalance = Number(currentATokenBalance);
           const variableDebt = Number(currentVariableDebt);
@@ -587,13 +587,13 @@ export class DeFiService {
               });
             }
           }
-        } catch (error) {
+        } catch (_error) {
           // Skip if asset not found on this chain
           continue;
         }
       }
-    } catch (error) {
-      logger.error('Error fetching Aave V3 positions:', error);
+    } catch (_error) {
+      logger.error('Error fetching Aave V3 positions:', _error);
     }
 
     return positions;
@@ -601,7 +601,7 @@ export class DeFiService {
 
   private async getCompoundV3Positions(
     walletAddress: Address,
-    chainId: number,
+    chainId: number
   ): Promise<DeFiPosition[]> {
     const client = this.publicClients.get(chainId);
     if (!client || !PROTOCOLS.compound[chainId as keyof typeof PROTOCOLS.compound]) {
@@ -631,7 +631,7 @@ export class DeFiService {
 
         const usdcPrice = await this.getTokenPrice(
           '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as Address,
-          chainId,
+          chainId
         );
 
         if (balance > 0n) {
@@ -674,17 +674,17 @@ export class DeFiService {
           });
         }
       }
-    } catch (error) {
-      logger.error('Error fetching Compound V3 positions:', error);
+    } catch (_error) {
+      logger.error('Error fetching Compound V3 positions:', _error);
     }
 
     return positions;
   }
 
-  async enterPosition(
+  enterPosition(
     protocol: 'uniswap-v3' | 'aave-v3' | 'compound-v3',
     action: 'supply' | 'borrow' | 'addLiquidity',
-    params: any,
+    params: any
   ): Promise<TransactionResult> {
     try {
       switch (protocol) {
@@ -709,9 +709,9 @@ export class DeFiService {
         default:
           throw new Error(`Unsupported protocol: ${protocol}`);
       }
-    } catch (error) {
-      console.error(`Error entering ${protocol} position:`, error);
-      throw error;
+    } catch (_error) {
+      console.error(`Error entering ${protocol} position:`, _error);
+      throw _error;
     }
   }
 
@@ -722,7 +722,7 @@ export class DeFiService {
       amount: bigint;
       chainId: number;
       walletAddress: Address;
-    },
+    }
   ): Promise<TransactionResult> {
     const protocol = PROTOCOLS.aave[params.chainId as keyof typeof PROTOCOLS.aave];
     if (!protocol || !params.asset) {
@@ -748,10 +748,7 @@ export class DeFiService {
           client: walletClient,
         });
 
-        const allowance = await tokenContract.read.allowance([
-          params.walletAddress,
-          protocol.pool,
-        ]);
+        const allowance = await tokenContract.read.allowance([params.walletAddress, protocol.pool]);
 
         if (allowance < params.amount) {
           const approveTx = await tokenContract.write.approve([protocol.pool, params.amount]);
@@ -793,37 +790,38 @@ export class DeFiService {
         transactionHash: txHash,
         chainId: params.chainId,
       };
-    } catch (error) {
-      console.error(`Aave ${action} transaction failed:`, error);
+    } catch (_error) {
+      console.error(`Aave ${action} transaction failed:`, _error);
       throw new Error(
-        `Failed to ${action} on Aave: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to ${action} on Aave: ${_error instanceof Error ? _error.message : _error}`
       );
     }
   }
 
-  private async enterCompoundPosition(
+  private enterCompoundPosition(
     action: 'supply' | 'borrow',
     params: {
       asset?: Address;
       amount: bigint;
       chainId: number;
       walletAddress: Address;
-    },
+    }
   ): Promise<TransactionResult> {
     const protocol = PROTOCOLS.compound[params.chainId as keyof typeof PROTOCOLS.compound];
     if (!protocol) {
       throw new Error('Compound not supported on this chain');
     }
 
-    console.log(`Preparing Compound ${action} transaction`, params);
-    return {
+    console.warn(`Preparing Compound ${action} transaction`, params);
+    const result: TransactionResult = {
       success: true,
       transactionHash: `0x${'0'.repeat(64)}` as `0x${string}`,
       chainId: params.chainId,
     };
+    return Promise.resolve(result);
   }
 
-  private async enterUniswapPosition(params: {
+  private enterUniswapPosition(params: {
     tokenA?: Address;
     tokenB?: Address;
     amount: bigint;
@@ -836,39 +834,42 @@ export class DeFiService {
       throw new Error('Invalid parameters for Uniswap position');
     }
 
-    console.log('Preparing Uniswap liquidity provision', params);
-    return {
+    console.warn('Preparing Uniswap liquidity provision', params);
+    const result: TransactionResult = {
       success: true,
       transactionHash: `0x${'0'.repeat(64)}` as `0x${string}`,
       chainId: params.chainId,
     };
+    return Promise.resolve(result);
   }
 
-  async exitPosition(positionId: string, amount?: bigint): Promise<TransactionResult> {
+  exitPosition(positionId: string, amount?: bigint): Promise<TransactionResult> {
     // Parse position ID to determine protocol and parameters
-    const [protocol, chainId, ...rest] = positionId.split('-');
+    const [_protocol, chainId, ..._rest] = positionId.split('-');
 
-    console.log(`Exiting position ${positionId} with amount ${amount}`);
-    return {
+    console.warn(`Exiting position ${positionId} with amount ${amount}`);
+    const result: TransactionResult = {
       success: true,
       transactionHash: `0x${'0'.repeat(64)}` as `0x${string}`,
-      chainId: parseInt(chainId),
+      chainId: parseInt(chainId, 10),
     };
+    return Promise.resolve(result);
   }
 
-  async claimRewards(positionId: string, chainId: number): Promise<TransactionResult> {
-    console.log(`Claiming rewards for position ${positionId} on chain ${chainId}`);
+  claimRewards(positionId: string, chainId: number): Promise<TransactionResult> {
+    console.warn(`Claiming rewards for position ${positionId} on chain ${chainId}`);
     // In production, would interact with protocol reward contracts
-    return {
+    const result: TransactionResult = {
       success: true,
       transactionHash: `0x${'0'.repeat(64)}` as `0x${string}`,
       chainId,
     };
+    return Promise.resolve(result);
   }
 
-  async calculateImpermanentLoss(
+  calculateImpermanentLoss(
     positionId: string,
-    currentPrices: { token0: number; token1: number },
+    currentPrices: { token0: number; token1: number }
   ): Promise<{
     percentageLoss: number;
     dollarLoss: number;
@@ -880,15 +881,16 @@ export class DeFiService {
     const priceRatio = currentPrices.token0 / currentPrices.token1;
     const il = (2 * Math.sqrt(priceRatio)) / (1 + priceRatio) - 1;
 
-    return {
+    const result = {
       percentageLoss: Math.abs(il) * 100,
       dollarLoss: 0, // Would calculate based on position size
       currentValue: 0,
       hodlValue: 0,
     };
+    return Promise.resolve(result);
   }
 
-  async getProtocolTVL(protocol: string, chainId?: number): Promise<number> {
+  getProtocolTVL(_protocol: string, _chainId?: number): Promise<number> {
     // In production, would fetch from protocol APIs or subgraphs
     const tvlMap: Record<string, number> = {
       'uniswap-v3': 5_200_000_000,
@@ -896,7 +898,8 @@ export class DeFiService {
       'compound-v3': 2_100_000_000,
     };
 
-    return tvlMap[protocol] || 0;
+    const tvl = tvlMap[_protocol] || 0;
+    return Promise.resolve(tvl);
   }
 
   private async getTokenSymbol(address: Address, client: PublicClient): Promise<string> {
@@ -920,12 +923,12 @@ export class DeFiService {
     }
   }
 
-  private async getTokenPrice(address: Address, chainId: number): Promise<number> {
-    const cacheKey = `${address}-${chainId}`;
+  private getTokenPrice(_address: Address, _chainId: number): Promise<number> {
+    const cacheKey = `${_address}-${_chainId}`;
     const cached = this.priceCache.get(cacheKey);
 
     if (cached && Date.now() - cached.timestamp < this.PRICE_CACHE_DURATION) {
-      return cached.price;
+      return Promise.resolve(cached.price);
     }
 
     // In production, would use a price oracle or API
@@ -936,10 +939,10 @@ export class DeFiService {
       '0x6B175474E89094C44Da98b954EedeAC495271d0F': 1.0, // DAI
     };
 
-    const price = mockPrices[address] || 1;
+    const price = mockPrices[_address] || 1;
     this.priceCache.set(cacheKey, { price, timestamp: Date.now() });
 
-    return price;
+    return Promise.resolve(price);
   }
 }
 

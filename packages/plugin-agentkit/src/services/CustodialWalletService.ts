@@ -1,11 +1,11 @@
 import {
   Service,
+  ServiceType,
   type IAgentRuntime,
   type UUID,
   elizaLogger,
-  ServiceType,
   type ServiceTypeName,
-} from '../types/core.d';
+} from '@elizaos/core';
 import { AgentKit, CdpWalletProvider } from '@coinbase/agentkit';
 import { WalletRepository } from '../database/WalletRepository';
 import { EncryptionService } from './EncryptionService';
@@ -55,19 +55,18 @@ export class CustodialWalletService extends Service {
   async initialize(): Promise<void> {
     try {
       // Get CDP credentials
-      this.apiKeyId = this.runtime!.getSetting('CDP_API_KEY_NAME') as string;
-      this.apiKeySecret = this.runtime!.getSetting('CDP_API_KEY_PRIVATE_KEY') as string;
+      this.apiKeyId = (this.runtime?.getSetting('CDP_API_KEY_NAME') as string) || '';
+      this.apiKeySecret = (this.runtime?.getSetting('CDP_API_KEY_PRIVATE_KEY') as string) || '';
       this.defaultNetwork =
-        (this.runtime!.getSetting('CDP_NETWORK_ID') as string) || 'base-sepolia';
+        (this.runtime?.getSetting('CDP_NETWORK_ID') as string) || 'base-sepolia';
 
       if (!this.apiKeyId || !this.apiKeySecret) {
         throw new Error('CDP API credentials not configured');
       }
 
       // Initialize encryption with agent-specific passphrase
-      const encryptionPassphrase = this.runtime!.getSetting(
-        'WALLET_ENCRYPTION_PASSPHRASE'
-      ) as string;
+      const encryptionPassphrase =
+        (this.runtime?.getSetting('WALLET_ENCRYPTION_PASSPHRASE') as string) || '';
       if (!encryptionPassphrase) {
         throw new Error('Wallet encryption passphrase not configured');
       }
@@ -80,7 +79,7 @@ export class CustodialWalletService extends Service {
       this.walletProvider = await CdpWalletProvider.configureWithWallet({
         apiKeyId: this.apiKeyId,
         apiKeySecret: this.apiKeySecret,
-        networkId: this.defaultNetwork as any,
+        networkId: this.defaultNetwork as string,
       });
 
       this.agentKit = await AgentKit.from({
@@ -297,7 +296,7 @@ export class CustodialWalletService extends Service {
           cdpWalletData: walletDataStr,
           apiKeyId: this.apiKeyId,
           apiKeySecret: this.apiKeySecret,
-          networkId: wallet.network as any,
+          networkId: wallet.network as string,
         });
 
         const walletAgentKit = await AgentKit.from({
@@ -325,7 +324,10 @@ export class CustodialWalletService extends Service {
           });
 
           // Extract transaction hash from result
-          txHash = (typeof result === 'string' ? result : (result as any).hash) || '';
+          txHash =
+            (typeof result === 'string'
+              ? result
+              : ((result as Record<string, unknown>).hash as string)) || '';
         } else {
           // Native ETH transfer using wallet provider
           const txRequest = {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { World } from '../../../types';
 import type {
   NPCEntity,

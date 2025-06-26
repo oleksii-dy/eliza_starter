@@ -7,7 +7,7 @@ export const entitiesProvider: Provider = {
 
   get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
     try {
-      const entityService = runtime.getService('entity') as RolodexService;
+      const entityService = runtime.getService<RolodexService>('entity');
       if (!entityService) {
         logger.warn('[EntitiesProvider] EntityService not available');
         return { text: '' };
@@ -22,7 +22,9 @@ export const entitiesProvider: Provider = {
         const entities = await runtime.getEntitiesForRoom(roomId);
 
         for (const entity of entities) {
-          if (!entity.id || seenIds.has(entity.id)) {continue;}
+          if (!entity.id || seenIds.has(entity.id)) {
+            continue;
+          }
           seenIds.add(entity.id);
 
           // Get entity profile

@@ -196,7 +196,7 @@ export enum SecurityEventType {
   ANOMALOUS_REQUEST = 'anomalous_request',
   TRUST_MANIPULATION = 'trust_manipulation',
   IDENTITY_SPOOFING = 'identity_spoofing',
-  MULTI_ACCOUNT_ABUSE = 'multi_account_abuse'
+  MULTI_ACCOUNT_ABUSE = 'multi_account_abuse',
 }
 
 /**
@@ -258,10 +258,7 @@ export const PermissionUtils = {
   },
 
   // Check if caller has permission
-  canExecute: (
-    permission: UnixPermission,
-    caller: PermissionEvaluationContext
-  ): boolean => {
+  canExecute: (permission: UnixPermission, caller: PermissionEvaluationContext): boolean => {
     const mode = permission.mode;
     const ownerPerms = (mode >> 6) & 7;
     const groupPerms = (mode >> 3) & 7;
@@ -273,9 +270,11 @@ export const PermissionUtils = {
     }
 
     // Check group permissions
-    if (caller.caller === 'admin' ||
-        (permission.group === 'trusted' && (caller.trust || 0) >= 80) ||
-        caller.roles?.includes(permission.group)) {
+    if (
+      caller.caller === 'admin' ||
+      (permission.group === 'trusted' && (caller.trust || 0) >= 80) ||
+      caller.roles?.includes(permission.group)
+    ) {
       return (groupPerms & 1) !== 0;
     }
 
@@ -284,10 +283,7 @@ export const PermissionUtils = {
   },
 
   // Check read permission
-  canRead: (
-    permission: UnixPermission,
-    caller: PermissionEvaluationContext
-  ): boolean => {
+  canRead: (permission: UnixPermission, caller: PermissionEvaluationContext): boolean => {
     const mode = permission.mode;
     const ownerPerms = (mode >> 6) & 7;
     const groupPerms = (mode >> 3) & 7;
@@ -297,9 +293,11 @@ export const PermissionUtils = {
       return (ownerPerms & 4) !== 0;
     }
 
-    if (caller.caller === 'admin' ||
-        (permission.group === 'trusted' && (caller.trust || 0) >= 80) ||
-        caller.roles?.includes(permission.group)) {
+    if (
+      caller.caller === 'admin' ||
+      (permission.group === 'trusted' && (caller.trust || 0) >= 80) ||
+      caller.roles?.includes(permission.group)
+    ) {
       return (groupPerms & 4) !== 0;
     }
 
@@ -307,10 +305,7 @@ export const PermissionUtils = {
   },
 
   // Check write permission
-  canWrite: (
-    permission: UnixPermission,
-    caller: PermissionEvaluationContext
-  ): boolean => {
+  canWrite: (permission: UnixPermission, caller: PermissionEvaluationContext): boolean => {
     const mode = permission.mode;
     const ownerPerms = (mode >> 6) & 7;
     const groupPerms = (mode >> 3) & 7;
@@ -320,12 +315,14 @@ export const PermissionUtils = {
       return (ownerPerms & 2) !== 0;
     }
 
-    if (caller.caller === 'admin' ||
-        (permission.group === 'trusted' && (caller.trust || 0) >= 80) ||
-        caller.roles?.includes(permission.group)) {
+    if (
+      caller.caller === 'admin' ||
+      (permission.group === 'trusted' && (caller.trust || 0) >= 80) ||
+      caller.roles?.includes(permission.group)
+    ) {
       return (groupPerms & 2) !== 0;
     }
 
     return (otherPerms & 2) !== 0;
-  }
+  },
 };

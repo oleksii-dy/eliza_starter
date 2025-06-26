@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
-import { MessagingService } from '../../services/messaging';
+import { MessagingService } from '../../services/MessagingService';
 import { ApiClientConfig } from '../../types/base';
 
 describe('MessagingService', () => {

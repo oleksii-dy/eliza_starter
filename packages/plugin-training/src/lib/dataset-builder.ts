@@ -1,6 +1,36 @@
 import { promises as fs } from 'fs';
 import { elizaLogger } from '@elizaos/core';
-import { type TrainingExample, type JSONLEntry, type DatasetStats } from '../simple-types.js';
+// Removed broken import - simple-types
+// import { type TrainingExample, type JSONLEntry, type DatasetStats } from '../simple-types.js';
+
+// Define the types inline for now
+interface TrainingExample {
+  id: string;
+  input: string;
+  output: string;
+  request: string;
+  response: string;
+  thinking?: string;
+  quality: number;
+  createdAt: Date;
+  metadata?: Record<string, any>;
+}
+
+interface JSONLEntry {
+  messages: Array<{
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+  }>;
+}
+
+interface DatasetStats {
+  totalExamples: number;
+  averageTokens: number;
+  maxTokens: number;
+  minTokens: number;
+  averageQuality: number;
+  tokenCount: number;
+}
 
 /**
  * Simple dataset builder for Together.ai format
@@ -175,6 +205,9 @@ export class DatasetBuilder {
       totalExamples,
       averageQuality,
       tokenCount,
+      averageTokens: totalExamples > 0 ? tokenCount / totalExamples : 0,
+      maxTokens: 0, // TODO: implement max token tracking
+      minTokens: 0, // TODO: implement min token tracking
     };
   }
 

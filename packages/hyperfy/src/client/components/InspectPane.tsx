@@ -18,7 +18,7 @@ import {
   XIcon,
   ZapIcon
 } from 'lucide-react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { isArray } from 'lodash-es';
 import { exportApp } from '../../core/extras/appTools';
@@ -48,7 +48,7 @@ export function InspectPane({ world, entity }: InspectPaneProps) {
     return <AppPane world={world} app={entity} />;
   }
   if (entity.isPlayer) {
-    return <PlayerPane world={world} player={entity} />;
+    return <PlayerPane _world={world} _player={entity} />;
   }
   return null;
 }
@@ -593,7 +593,7 @@ interface AppPaneMetaProps {
   blueprint: any;
 }
 
-function AppPaneMeta({ world, app, blueprint }: AppPaneMetaProps) {
+function AppPaneMeta({ world, app: _app, blueprint }: AppPaneMetaProps) {
   const set = async (key: string, value: any) => {
     const version = blueprint.version + 1;
     world.blueprints.modify({ id: blueprint.id, version, [key]: value });
@@ -667,7 +667,7 @@ function AppPaneNodes({ app }: AppPaneNodesProps) {
   const hasProperty = (obj: any, prop: string) => {
     try {
       return obj && typeof obj[prop] !== 'undefined';
-    } catch (err) {
+    } catch (_err) {
       return false;
     }
   };
@@ -807,7 +807,7 @@ function renderHierarchy(nodes, depth = 0, selectedNode, setSelectedNode) {
   });
 }
 
-function PlayerPane({ world, player }) {
+function PlayerPane({ _world, _player }) {
   return <div>PLAYER INSPECT</div>;
 }
 
@@ -889,7 +889,7 @@ function FieldWithLabel({ label, children }) {
   );
 }
 
-function FieldSection({ world, field, value, modify }) {
+function FieldSection({ field }) {
   return (
     <div
       className="fieldsection"
@@ -910,7 +910,7 @@ function FieldSection({ world, field, value, modify }) {
   );
 }
 
-function FieldText({ world, field, value, modify }) {
+function FieldText({ field, value, modify }) {
   return (
     <FieldWithLabel label={field.label}>
       <InputText value={value} onChange={value => modify(field.key, value)} placeholder={field.placeholder} />
@@ -918,7 +918,7 @@ function FieldText({ world, field, value, modify }) {
   );
 }
 
-function FieldTextArea({ world, field, value, modify }) {
+function FieldTextArea({ field, value, modify }) {
   return (
     <FieldWithLabel label={field.label}>
       <InputTextarea value={value} onChange={value => modify(field.key, value)} placeholder={field.placeholder} />
@@ -926,7 +926,7 @@ function FieldTextArea({ world, field, value, modify }) {
   );
 }
 
-function FieldNumber({ world, field, value, modify }) {
+function FieldNumber({ field, value, modify }) {
   return (
     <FieldWithLabel label={field.label}>
       <InputNumber
@@ -940,7 +940,7 @@ function FieldNumber({ world, field, value, modify }) {
   );
 }
 
-function FieldRange({ world, field, value, modify }) {
+function FieldRange({ field, value, modify }) {
   return (
     <FieldWithLabel label={field.label}>
       <InputRange
@@ -954,7 +954,7 @@ function FieldRange({ world, field, value, modify }) {
   );
 }
 
-function FieldFile({ world, field, value, modify }) {
+function FieldFile({ field, value, modify }) {
   const kind = fileKinds[field.kind];
   if (!kind) {return null;}
   return (
@@ -964,7 +964,7 @@ function FieldFile({ world, field, value, modify }) {
   );
 }
 
-function FieldSwitch({ world, field, value, modify }) {
+function FieldSwitch({ field, value, modify }) {
   return (
     <FieldWithLabel label={field.label}>
       <InputSwitch value={value} onChange={value => modify(field.key, value)} />
@@ -972,7 +972,7 @@ function FieldSwitch({ world, field, value, modify }) {
   );
 }
 
-function FieldDropdown({ world, field, value, modify }) {
+function FieldDropdown({ field, value, modify }) {
   return (
     <FieldWithLabel label={field.label}>
       <InputDropdown options={field.options} value={value} onChange={value => modify(field.key, value)} />
@@ -980,7 +980,7 @@ function FieldDropdown({ world, field, value, modify }) {
   );
 }
 
-function FieldButton({ world, field, value, modify }) {
+function FieldButton({ field }) {
   return (
     <FieldWithLabel label={''}>
       <div
@@ -1001,7 +1001,7 @@ function FieldButton({ world, field, value, modify }) {
   );
 }
 
-function FieldButtons({ world, field, value, modify }) {
+function FieldButtons({ field }) {
   return (
     <FieldWithLabel label={field.label}>
       <div

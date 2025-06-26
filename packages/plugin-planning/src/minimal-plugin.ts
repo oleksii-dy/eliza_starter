@@ -32,7 +32,7 @@ export const messageClassifierProvider: Provider = {
   name: 'MESSAGE_CLASSIFIER',
   description: 'Classifies messages for strategic planning',
 
-  get: async (runtime, message, state) => {
+  get: async (runtime, message, _state) => {
     const text = message.content?.text || '';
 
     let classification = 'SIMPLE';
@@ -114,7 +114,7 @@ export const createPlanAction: Action = {
     const userRequest = message.content?.text || '';
 
     // Simple plan generation logic
-    const steps = [];
+    const steps: string[] = [];
 
     if (userRequest.includes('email')) {
       steps.push('COMPOSE_EMAIL', 'SEND_EMAIL');
@@ -290,12 +290,12 @@ export const planningReplyAction: Action = {
   similes: ['RESPOND', 'ANSWER'],
   description: 'Provides thoughtful responses with planning consideration',
 
-  validate: async (runtime, message) => {
+  validate: async (_runtime, _message) => {
     return true; // Always available as fallback
   },
 
   handler: async (runtime, message, state, options, callback) => {
-    const userRequest = message.content?.text || '';
+    const _userRequest = message.content?.text || '';
     const classification = state?.values?.messageClassification || 'SIMPLE';
 
     let response = '';

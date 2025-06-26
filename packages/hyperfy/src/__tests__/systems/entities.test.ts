@@ -107,7 +107,7 @@ describe('Entities System', () => {
 
     it('should destroy entity when removed', () => {
       const entity = entities.add({ id: 'test-entity', type: 'app' });
-      // @ts-ignore - accessing private method for testing
+      // @ts-expect-error - accessing private method for testing
       const destroySpy = spyOn(entity, 'destroy' as any);
 
       entities.destroyEntity('test-entity');
@@ -118,7 +118,7 @@ describe('Entities System', () => {
 
     it('should add entity to hot set when hot is true', () => {
       const entity = entities.add({ id: 'test-entity', type: 'app' });
-      // @ts-ignore - adding method for testing
+      // @ts-expect-error - adding method for testing
       entity.update = mock();
 
       entities.setHot(entity, true);
@@ -129,7 +129,7 @@ describe('Entities System', () => {
 
     it('should remove entity from hot set when hot is false', () => {
       const entity = entities.add({ id: 'test-entity', type: 'app' });
-      // @ts-ignore - adding method for testing
+      // @ts-expect-error - adding method for testing
       entity.update = mock();
 
       entities.setHot(entity, true);
@@ -288,9 +288,9 @@ describe('Entities System', () => {
       // Update hot sets
       entities.update(16);
 
-      // @ts-ignore - accessing private destroy method for testing
+      // @ts-expect-error - accessing private destroy method for testing
       const destroySpy1 = spyOn(entity1, 'destroy' as any);
-      // @ts-ignore - accessing private destroy method for testing
+      // @ts-expect-error - accessing private destroy method for testing
       const destroySpy2 = spyOn(entity2, 'destroy' as any);
 
       expect(() => {
@@ -304,9 +304,9 @@ describe('Entities System', () => {
       entities.setHot(entity1, true);
       entities.setHot(entity2, true);
 
-      // @ts-ignore - accessing private destroy method for testing
+      // @ts-expect-error - accessing private destroy method for testing
       const destroySpy1 = spyOn(entity1, 'destroy' as any);
-      // @ts-ignore - accessing private destroy method for testing
+      // @ts-expect-error - accessing private destroy method for testing
       const destroySpy2 = spyOn(entity2, 'destroy' as any);
 
       // Destroy entity1 during update - using a simple flag instead of recursive call

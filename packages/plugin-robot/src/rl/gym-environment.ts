@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { logger } from '@elizaos/core';
 import { RobotService } from '../services/robot-service';
-import { RobotMode, RobotState, JointState, RLState, RLAction, Vector3 } from '../types';
+import { RobotMode, RobotState, JointState as _JointState, RLState, RLAction, Vector3 as _Vector3 } from '../types';
 
 export interface GymSpace {
   shape: number[];

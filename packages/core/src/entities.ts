@@ -1,6 +1,6 @@
 import { stringToUuid } from './index';
 import { logger } from './logger';
-import { composePrompt, parseJSONObjectFromText } from './utils';
+import { composePrompt, parseKeyValueXml } from './utils';
 import {
   type Entity,
   type IAgentRuntime,
@@ -43,20 +43,21 @@ Agent: {{agentName}} (ID: {{agentId}})
 5. If multiple matches exist, use context to disambiguate
 6. Consider recent interactions and relationship strength when resolving ambiguity
 
-Return a JSON object with:
-\`\`\`json
-{
-  "entityId": "exact-id-if-known-otherwise-null",
-  "type": "EXACT_MATCH | USERNAME_MATCH | NAME_MATCH | RELATIONSHIP_MATCH | AMBIGUOUS | UNKNOWN",
-  "matches": [{
-    "name": "matched-name",
-    "reason": "why this entity matches"
-  }]
-}
-\`\`\`
+Return an XML object with these fields:
+<response>
+  <entityId>Exact entity ID if known, otherwise empty</entityId>
+  <type>EXACT_MATCH, USERNAME_MATCH, NAME_MATCH, RELATIONSHIP_MATCH, AMBIGUOUS, or UNKNOWN</type>
+  <matchName>First matched name</matchName>
+  <matchReason>Reason for the match</matchReason>
+</response>
 
-Make sure to include the \`\`\`json\`\`\` tags around the JSON object.
-`;
+## Example Output Format
+<response>
+  <entityId>uuid-123-456</entityId>
+  <type>EXACT_MATCH</type>
+  <matchName>john_doe</matchName>
+  <matchReason>Username matches exactly</matchReason>
+</response>`;
 
 /**
  * Get recent interactions between a source entity and candidate entities in a specific room.
@@ -234,7 +235,7 @@ export async function findEntityByName(
   });
 
   // Parse LLM response
-  const resolution = parseJSONObjectFromText(result);
+  const resolution = parseKeyValueXml(result);
   if (!resolution) {
     logger.warn('Failed to parse entity resolution result');
     return null;
@@ -268,8 +269,8 @@ export async function findEntityByName(
   }
 
   // For username/name/relationship matches, search through all entities
-  if (resolution.matches?.[0]?.name) {
-    const matchName = resolution.matches[0].name.toLowerCase();
+  if (resolution.matchName) {
+    const matchName = resolution.matchName.toLowerCase();
 
     // Find matching entity by username/handle in components or by name
     const matchingEntity = allEntities.find((entity) => {

@@ -9,7 +9,7 @@ class LocalStorage {
     let value: any;
     try {
       value = JSON.parse(data);
-    } catch (err) {
+    } catch (_err) {
       console.error('error reading storage key:', key);
       value = null;
     }
@@ -42,7 +42,7 @@ class NodeStorage {
     try {
       const data = fs.readFileSync(this.file, 'utf8');
       this.data = JSON.parse(data);
-    } catch (err) {
+    } catch (_err) {
       this.data = {};
     }
   }

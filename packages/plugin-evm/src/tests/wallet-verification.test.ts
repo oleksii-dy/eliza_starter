@@ -132,7 +132,10 @@ describe('🔍 Wallet Verification', () => {
           expect(blockNumber).toBeGreaterThan(0);
           expect(balance).toBeGreaterThanOrEqual(0);
         } catch (error) {
-          console.error(`   ❌ Error checking ${name}:`, error.message);
+          console.error(
+            `   ❌ Error checking ${name}:`,
+            error instanceof Error ? error.message : String(error)
+          );
           // Don't fail the test, just report the error
           console.log('   💡 This chain might need configuration or the RPC might be down');
         }

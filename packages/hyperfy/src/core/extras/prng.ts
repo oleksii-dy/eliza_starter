@@ -5,7 +5,7 @@
  * and modernized to work with newer build tools and ES6+
  */
 
-const DEFAULT_SEED = 149304961039362642461;
+const DEFAULT_SEED = 149304961039362642461n; // Use BigInt for precision
 const REGISTER_LENGTH = 31;
 const FLUSH_TIMES = 20;
 
@@ -44,14 +44,14 @@ export function prng(seed?: number) {
 class PRNG {
   lfsr: LFSR;
   constructor(seed?: number) {
-    this.lfsr = new LFSR(REGISTER_LENGTH, seed || DEFAULT_SEED);
+    this.lfsr = new LFSR(REGISTER_LENGTH, seed || Number(DEFAULT_SEED));
     // flush initial state of register because thay may produce
     // weird sequences
     this.lfsr.seq(FLUSH_TIMES * REGISTER_LENGTH);
   }
   rand(min: number, max?: number): number {
     // if invoked with one value consider min to be 0
-    // rand(16) == rand(0, 16)
+    // rand(16) === rand(0, 16)
     if (!max) {
       max = min;
       min = 0;
@@ -165,7 +165,7 @@ class LFSR {
   }
   shift(): number {
     const tapsNum = this.taps.length;
-    let i;
+    let _i;
     let bit = this.register >> (this.n - this.taps[0]);
     for (let i = 1; i < tapsNum; i++) {
       bit = bit ^ (this.register >> (this.n - this.taps[i]));
@@ -194,7 +194,7 @@ class LFSR {
     do {
       this.shift();
       counter++;
-    } while (initialState != this.register);
+    } while (initialState !== this.register);
     return counter;
   }
   _defaultSeed(n: number): number {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
-import { AgentsService } from '../../services/agents';
+import { AgentsService } from '../../services/AgentsService';
 import { ApiClientConfig } from '../../types/base';
 import { UUID } from '@elizaos/core';
 

@@ -1,6 +1,4 @@
-import {
-  logger,
-} from '@elizaos/core';
+import { logger } from '@elizaos/core';
 
 import {
   type Action,
@@ -32,11 +30,21 @@ export const verifyOAuthIdentityAction: Action = {
     // Check if message mentions OAuth verification or platform linking
     const text = message.content.text?.toLowerCase() || '';
     const keywords = [
-      'verify', 'oauth', 'link', 'connect', 'google', 'github', 'discord', 'twitter',
-      'authenticate', 'identity', 'platform', 'account'
+      'verify',
+      'oauth',
+      'link',
+      'connect',
+      'google',
+      'github',
+      'discord',
+      'twitter',
+      'authenticate',
+      'identity',
+      'platform',
+      'account',
     ];
 
-    return keywords.some(keyword => text.includes(keyword));
+    return keywords.some((keyword) => text.includes(keyword));
   },
 
   handler: async (
@@ -51,7 +59,9 @@ export const verifyOAuthIdentityAction: Action = {
 
       // Get required services
       const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
-      const entityResolutionService = runtime.getService('entityResolution') as unknown as EntityResolutionManager;
+      const entityResolutionService = runtime.getService(
+        'entityResolution'
+      ) as unknown as EntityResolutionManager;
 
       if (!entityGraphService || !entityResolutionService) {
         if (callback) {
@@ -96,7 +106,9 @@ export const verifyOAuthIdentityAction: Action = {
 
       // If no specific platform requested, show available options
       if (!requestedPlatform) {
-        const platformList = availableProviders.map(p => `• ${p.charAt(0).toUpperCase() + p.slice(1)}`).join('\n');
+        const platformList = availableProviders
+          .map((p) => `• ${p.charAt(0).toUpperCase() + p.slice(1)}`)
+          .join('\n');
 
         if (callback) {
           await callback({
@@ -135,7 +147,6 @@ export const verifyOAuthIdentityAction: Action = {
           platform: requestedPlatform,
           expiresAt: challenge.expiresAt,
         });
-
       } catch (error) {
         logger.error('[verifyOAuthIdentityAction] Error creating OAuth challenge:', error);
 
@@ -146,7 +157,6 @@ export const verifyOAuthIdentityAction: Action = {
           });
         }
       }
-
     } catch (error) {
       logger.error('[verifyOAuthIdentityAction] OAuth identity verification failed:', error);
 
@@ -168,7 +178,7 @@ export const verifyOAuthIdentityAction: Action = {
       {
         name: 'Agent',
         content: {
-          text: 'Great! I\'ve created an OAuth verification link for Google. Click here to verify your identity: [OAuth URL]. This link will expire in 5 minutes.',
+          text: "Great! I've created an OAuth verification link for Google. Click here to verify your identity: [OAuth URL]. This link will expire in 5 minutes.",
         },
       },
     ],
@@ -180,7 +190,7 @@ export const verifyOAuthIdentityAction: Action = {
       {
         name: 'Agent',
         content: {
-          text: 'I\'ll help you link your GitHub account. Click here to verify: [OAuth URL]',
+          text: "I'll help you link your GitHub account. Click here to verify: [OAuth URL]",
         },
       },
     ],

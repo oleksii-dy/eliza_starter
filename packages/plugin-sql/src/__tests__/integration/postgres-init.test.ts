@@ -14,7 +14,7 @@ describe('PostgreSQL Initialization Tests', () => {
   beforeEach(() => {
     originalEnv = { ...process.env };
     delete process.env.POSTGRES_URL;
-    delete process.env.PGLITE_PATH;
+    // delete process.env.PGLITE_PATH; // No longer needed
     delete process.env.DATABASE_PATH;
 
     // Note: Module reset not needed with bun test
@@ -98,10 +98,10 @@ describe('PostgreSQL Initialization Tests', () => {
     const { plugin: freshPlugin } = await import('../../index');
 
     // Use a proper temporary directory that actually exists
-    const pglitePath = join(tmpdir(), `eliza-test-pglite-${Date.now()}`);
+    const tempPath = join(tmpdir(), `eliza-test-postgres-${Date.now()}`);
     (mockRuntime.getSetting as any).mockImplementation((key: string) => {
-      if (key === 'PGLITE_PATH') {
-        return pglitePath;
+      if (key === 'POSTGRES_URL') {
+        return 'postgresql://localhost:5432/test';
       }
       return undefined;
     });
@@ -111,7 +111,7 @@ describe('PostgreSQL Initialization Tests', () => {
     expect(mockRuntime.registerDatabaseAdapter).toHaveBeenCalled();
     const adapter = (mockRuntime.registerDatabaseAdapter as any).mock.calls[0][0];
     expect(adapter).toBeDefined();
-    expect(adapter.constructor.name).toBe('PgliteDatabaseAdapter');
+    expect(adapter.constructor.name).toBe('PgAdapter');
   });
 
   it('should use DATABASE_PATH when PGLITE_PATH is not provided', async () => {
@@ -132,7 +132,7 @@ describe('PostgreSQL Initialization Tests', () => {
     expect(mockRuntime.registerDatabaseAdapter).toHaveBeenCalled();
     const adapter = (mockRuntime.registerDatabaseAdapter as any).mock.calls[0][0];
     expect(adapter).toBeDefined();
-    expect(adapter.constructor.name).toBe('PgliteDatabaseAdapter');
+    expect(adapter.constructor.name).toBe('PgAdapter');
   });
 
   it('should use default path when no configuration is provided', async () => {
@@ -146,7 +146,7 @@ describe('PostgreSQL Initialization Tests', () => {
     expect(mockRuntime.registerDatabaseAdapter).toHaveBeenCalled();
     const adapter = (mockRuntime.registerDatabaseAdapter as any).mock.calls[0][0];
     expect(adapter).toBeDefined();
-    expect(adapter.constructor.name).toBe('PgliteDatabaseAdapter');
+    expect(adapter.constructor.name).toBe('PgAdapter');
   });
 
   it('should handle errors gracefully during adapter check', async () => {

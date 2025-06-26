@@ -8,7 +8,7 @@ import { io as ioClient, Socket as ClientSocket } from 'socket.io-client';
 import { AgentServer } from '../../index';
 import type { IAgentRuntime, UUID, Character, Content } from '@elizaos/core';
 import { SOCKET_MESSAGE_TYPE, ChannelType, AgentRuntime } from '@elizaos/core';
-import { createDatabaseAdapter } from '@elizaos/plugin-sql';
+// Database adapter will be created through server initialization
 import { messageHandlingPlugin } from '@elizaos/plugin-message-handling';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -81,13 +81,8 @@ describe('WebSocket Agent End-to-End Tests', () => {
       ],
     } as Character;
 
-    // Create database adapter
-    const db = await createDatabaseAdapter(
-      {
-        dataDir: testDbPath,
-      },
-      'websocket-test-agent' as UUID
-    );
+    // Database adapter will be created through server initialization
+    const db = agentServer.database;
 
     // Create agent runtime with message handling plugin
     agent = new AgentRuntime({
@@ -264,7 +259,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
       });
 
       // Wait for first response
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       expect(responses).toHaveLength(1);
 
       // Send follow-up message
@@ -279,7 +274,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
       });
 
       // Wait for second response
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       expect(responses).toHaveLength(2);
 
       // Verify context was maintained
@@ -360,7 +355,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
         });
 
         // Wait for responses
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
         // Both users should see agent responses
         expect(user1Responses.length).toBeGreaterThan(0);
@@ -488,7 +483,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
       });
 
       // Wait for processing
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Verify response was received
       expect(agentResponseText).toBeTruthy();
@@ -579,7 +574,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
       });
 
       // Wait for processing
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Should receive disable/enable input control messages
       const disableMsg = controlMessages.find((m) => m.action === 'disable_input');

@@ -29,7 +29,12 @@ export class RACEEvaluator {
         'comprehensiveness',
         referenceReport
       ),
-      depth: await this.evaluateDimension(report, criteria.depth, 'depth', referenceReport),
+      depth: await this.evaluateDimension(
+        report,
+        criteria.depth,
+        'depth',
+        referenceReport
+      ),
       instructionFollowing: await this.evaluateDimension(
         report,
         criteria.instructionFollowing,
@@ -76,7 +81,9 @@ export class RACEEvaluator {
       }
 
       const reportContent = this.extractReportContent(report);
-      const referenceContent = referenceReport ? this.extractReportContent(referenceReport) : '';
+      const referenceContent = referenceReport
+        ? this.extractReportContent(referenceReport)
+        : '';
 
       // Convert rubric items to string format if they're objects
       let rubricText = '';
@@ -124,7 +131,8 @@ Respond with JSON:
         messages: [
           {
             role: 'system',
-            content: 'You are an expert research evaluator. Provide a balanced, fair assessment.',
+            content:
+              'You are an expert research evaluator. Provide a balanced, fair assessment.',
           },
           { role: 'user', content: prompt },
         ],
@@ -132,7 +140,10 @@ Respond with JSON:
         max_tokens: 1000,
       });
 
-      const content = typeof response === 'string' ? response : (response as any).content || '';
+      const content =
+        typeof response === 'string'
+          ? response
+          : (response as any).content || '';
 
       // Try to parse JSON response
       try {
@@ -142,13 +153,16 @@ Respond with JSON:
           return Math.max(0, Math.min(1, result.score / 100)); // Normalize to 0-1
         }
       } catch (parseError) {
-        logger.warn(`[RACEEvaluator] Failed to parse JSON response for ${dimension}:`, parseError);
+        logger.warn(
+          `[RACEEvaluator] Failed to parse JSON response for ${dimension}:`,
+          parseError
+        );
       }
 
       // Fallback: try to extract score from text
       const scoreMatch = content.match(/score[:\s]+(\d+)/i);
       if (scoreMatch) {
-        const score = parseInt(scoreMatch[1]);
+        const score = parseInt(scoreMatch[1], 10);
         return Math.max(0, Math.min(1, score / 100));
       }
 
@@ -187,8 +201,11 @@ export class FACTEvaluator {
     const verificationResults = await this.verifyClaims(allClaims);
 
     const totalCitations = project.report?.citations.length || 0;
-    const verifiedCitations = verificationResults.filter((r) => r.verified).length;
-    const citationAccuracy = totalCitations > 0 ? verifiedCitations / totalCitations : 0;
+    const verifiedCitations = verificationResults.filter(
+      (r) => r.verified
+    ).length;
+    const citationAccuracy =
+      totalCitations > 0 ? verifiedCitations / totalCitations : 0;
 
     // Deduplicate claims
     const uniqueClaims = this.deduplicateClaims(verificationResults);
@@ -200,13 +217,16 @@ export class FACTEvaluator {
       totalCitations,
       verifiedCitations,
       disputedCitations: 0,
-      citationCoverage: totalCitations > 0 ? effectiveCitations / totalCitations : 0,
+      citationCoverage:
+        totalCitations > 0 ? effectiveCitations / totalCitations : 0,
       sourceCredibility: 0.8, // Default credibility score
       breakdown: [],
     };
   }
 
-  private async extractFactualClaims(project: ResearchProject): Promise<FactualClaim[]> {
+  private async extractFactualClaims(
+    project: ResearchProject
+  ): Promise<FactualClaim[]> {
     const claims: FactualClaim[] = [];
 
     if (!project.report) {
@@ -215,7 +235,10 @@ export class FACTEvaluator {
 
     // Extract claims from report sections
     for (const section of project.report.sections) {
-      const sectionClaims = await this.extractClaimsFromText(section.content, section.citations);
+      const sectionClaims = await this.extractClaimsFromText(
+        section.content,
+        section.citations
+      );
       claims.push(...sectionClaims);
     }
 
@@ -272,7 +295,8 @@ Extract 3-5 key claims maximum.`;
         messages: [
           {
             role: 'system',
-            content: 'You are a fact extraction expert. Extract only clear, verifiable claims.',
+            content:
+              'You are a fact extraction expert. Extract only clear, verifiable claims.',
           },
           { role: 'user', content: prompt },
         ],
@@ -280,7 +304,10 @@ Extract 3-5 key claims maximum.`;
         max_tokens: 1500,
       });
 
-      const content = typeof response === 'string' ? response : (response as any).content || '';
+      const content =
+        typeof response === 'string'
+          ? response
+          : (response as any).content || '';
 
       // Try to parse JSON array
       const jsonMatch = content.match(/\[[\s\S]*\]/);
@@ -332,7 +359,11 @@ Extract 3-5 key claims maximum.`;
     // 2. Check if the content supports the claim
     // For now, we'll use a simplified verification
 
-    if (!claim.sourceUrls || claim.sourceUrls.length === 0 || !claim.statement) {
+    if (
+      !claim.sourceUrls ||
+      claim.sourceUrls.length === 0 ||
+      !claim.statement
+    ) {
       return false;
     }
 
@@ -357,7 +388,10 @@ Answer with just "yes" or "no".`;
         max_tokens: 10,
       });
 
-      const answer = typeof response === 'string' ? response : (response as any).content || '';
+      const answer =
+        typeof response === 'string'
+          ? response
+          : (response as any).content || '';
       return answer.toLowerCase().includes('yes');
     } catch (e) {
       logger.error('[FACTEvaluator] Failed to verify claim:', e);

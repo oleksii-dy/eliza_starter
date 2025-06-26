@@ -3057,7 +3057,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
   }
 
   /**
-   * Asynchronously retrieves rooms from the database based on the provided parameters.
+   * Asynchronously retrieves rooms from the database based on the provided room IDs.
    * @param {UUID[]} roomIds - The IDs of the rooms to retrieve.
    * @returns {Promise<Room[] | null>} A Promise that resolves to the rooms if found, null otherwise.
    */
@@ -3133,9 +3133,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
   }
 
   /**
-   * Asynchronously creates a new room in the database based on the provided parameters.
-   * @param {Room} room - The room object to create.
-   * @returns {Promise<UUID>} A Promise that resolves to the ID of the created room.
+   * Asynchronously creates new rooms in the database.
+   * @param {Room[]} rooms - The array of room objects to create.
+   * @returns {Promise<UUID[]>} A Promise that resolves to the IDs of the created rooms.
    */
   async createRooms(rooms: Room[]): Promise<UUID[]> {
     return this.withDatabase(async () => {

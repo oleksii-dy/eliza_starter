@@ -1,5 +1,6 @@
 import type { World } from '../../types/index.js';
-import * as THREE from '../extras/three.js';
+import { THREE } from '../extras/three.js';
+// Using THREE namespace types
 import { System } from './System.js';
 
 /**
@@ -10,18 +11,18 @@ import { System } from './System.js';
  *
  */
 export class Anchors extends System {
-  private matrices: Map<string, THREE.Matrix4>;
+  private matrices: Map<string, THREE.Matrix4Type>;
 
   constructor(world: World) {
     super(world);
     this.matrices = new Map();
   }
 
-  get(id: string): THREE.Matrix4 | undefined {
+  get(id: string): THREE.Matrix4Type | undefined {
     return this.matrices.get(id);
   }
 
-  add(id: string, matrix: THREE.Matrix4): void {
+  add(id: string, matrix: THREE.Matrix4Type): void {
     this.matrices.set(id, matrix);
   }
 

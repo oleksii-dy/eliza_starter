@@ -10,7 +10,7 @@ import {
   processMessageAndWait,
   cleanupRuntime,
   getService,
-  waitForCondition
+  waitForCondition,
 } from './runtime-helper';
 import { RolodexService } from '../services/RolodexService';
 import type { IAgentRuntime, Memory, UUID } from '@elizaos/core';
@@ -34,7 +34,7 @@ describe('Rolodex Plugin Real Integration Tests', () => {
 
     // Get the actual rolodex service
     rolodexService = getService<RolodexService>(runtime, 'rolodex');
-  }, 30000); // Increase timeout for runtime initialization
+  });
 
   afterEach(async () => {
     // Clean up runtime and database
@@ -73,11 +73,10 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       const userId = stringToUuid('test-user');
 
       // First message
-      const message1 = createTestMessage(
-        runtime,
-        'John Smith works at TechCo as a developer.',
-        { roomId, entityId: userId }
-      );
+      const message1 = createTestMessage(runtime, 'John Smith works at TechCo as a developer.', {
+        roomId,
+        entityId: userId,
+      });
       await processMessageAndWait(runtime, message1);
 
       // Update message
@@ -122,9 +121,8 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       expect(relationships.length).toBeGreaterThan(0);
 
       // Should have management relationships
-      const managementRels = relationships.filter(r =>
-        r.metadata?.type === 'management' ||
-        r.metadata?.relationshipType === 'manages'
+      const managementRels = relationships.filter(
+        (r) => r.metadata?.type === 'management' || r.metadata?.relationshipType === 'manages'
       );
       expect(managementRels.length).toBeGreaterThan(0);
     });
@@ -160,8 +158,8 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       expect(emmaRels.length).toBeGreaterThan(0);
 
       // Relationships should reference each other
-      const davidToEmma = davidRels.find(r => r.targetEntityId === emma.id!);
-      const emmaToDavid = emmaRels.find(r => r.targetEntityId === david.id!);
+      const davidToEmma = davidRels.find((r) => r.targetEntityId === emma.id!);
+      const emmaToDavid = emmaRels.find((r) => r.targetEntityId === david.id!);
 
       expect(davidToEmma).toBeDefined();
       expect(emmaToDavid).toBeDefined();
@@ -185,9 +183,8 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       const followUps = await rolodexService.getUpcomingFollowUps();
       expect(followUps.length).toBeGreaterThan(0);
 
-      const frankFollowUp = followUps.find(f =>
-        f.message?.includes('Frank Zhang') ||
-        f.message?.includes('partnership')
+      const frankFollowUp = followUps.find(
+        (f) => f.message?.includes('Frank Zhang') || f.message?.includes('partnership')
       );
 
       expect(frankFollowUp).toBeDefined();
@@ -226,23 +223,25 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       await processMessageAndWait(runtime, message);
 
       // Update trust based on positive interaction
-      await rolodexService.updateTrustFromInteraction(entity.id, {
-        type: 'project_completion',
-        outcome: 'positive',
-        metadata: {
-          deliveredOnTime: true,
-          exceededExpectations: true,
-        },
-      });
+      if (entity.id) {
+        await rolodexService.updateTrustFromInteraction(entity.id, {
+          type: 'project_completion',
+          outcome: 'positive',
+          metadata: {
+            deliveredOnTime: true,
+            exceededExpectations: true,
+          },
+        });
 
-      // Get trust score
-      const trustScore = await rolodexService.getTrustScore(entity.id!);
+        // Get trust score
+        const trustScore = await rolodexService.getTrustScore(entity.id);
 
-      // Trust score should exist (if trust service is available)
-      // or be null (if trust service is not available)
-      if (trustScore) {
-        expect(trustScore.score).toBeGreaterThan(0.5);
-        expect(trustScore.confidence).toBeGreaterThan(0);
+        // Trust score should exist (if trust service is available)
+        // or be null (if trust service is not available)
+        if (trustScore) {
+          expect(trustScore.score).toBeGreaterThan(0.5);
+          expect(trustScore.confidence).toBeGreaterThan(0);
+        }
       }
     });
   });
@@ -271,8 +270,8 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       expect(results.length).toBeGreaterThanOrEqual(1);
 
       // The entity should have all name variations
-      const robertEntity = results.find(e =>
-        e.names.some(n => n.includes('Robert') || n.includes('Bob') || n.includes('Rob'))
+      const robertEntity = results.find((e) =>
+        e.names.some((n) => n.includes('Robert') || n.includes('Bob') || n.includes('Rob'))
       );
 
       expect(robertEntity).toBeDefined();

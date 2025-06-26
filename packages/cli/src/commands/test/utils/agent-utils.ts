@@ -19,7 +19,7 @@ export async function createTestAgent(
   if (!hasSqlPlugin) {
     try {
       // Try to dynamically import the SQL plugin
-      const sqlPluginModule = await import('@elizaos/plugin-sql');
+      const sqlPluginModule = (await import('@elizaos/plugin-sql')) as any;
       const sqlPlugin = sqlPluginModule.default || sqlPluginModule.plugin;
       if (
         sqlPlugin &&

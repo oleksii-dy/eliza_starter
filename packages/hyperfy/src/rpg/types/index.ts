@@ -138,6 +138,27 @@ export interface StatsComponent extends Component {
     experience?: number;
   };
 
+  // Gathering skills
+  mining?: SkillData;
+  fishing?: SkillData;
+  woodcutting?: SkillData;
+  firemaking?: SkillData;
+
+  // Artisan skills
+  smithing?: SkillData;
+  cooking?: SkillData;
+  crafting?: SkillData;
+  construction?: SkillData;
+  herblore?: SkillData;
+
+  // Support skills
+  agility?: SkillData;
+  thieving?: SkillData;
+  slayer?: SkillData;
+  farming?: SkillData;
+  runecrafting?: SkillData;
+  hunter?: SkillData;
+
   // Combat bonuses from equipment
   combatBonuses: CombatBonuses;
 
@@ -575,11 +596,13 @@ export interface SkillRequirement {
 }
 
 export enum GravestoneTier {
-  WOODEN = 'wooden',      // 5 minutes
-  STONE = 'stone',        // 10 minutes
-  ORNATE = 'ornate',      // 15 minutes
-  ANGEL = 'angel',        // 20 minutes
-  MYSTIC = 'mystic'       // 30 minutes
+  BASIC = 'basic',
+  WOODEN = 'wooden',
+  STONE = 'stone',
+  ORNATE = 'ornate',
+  ANGEL = 'angel',
+  MYSTIC = 'mystic',
+  ROYAL = 'royal'
 }
 
 export interface Gravestone {
@@ -591,6 +614,7 @@ export interface Gravestone {
   expiresAt: number;
   tier: GravestoneTier;
   blessed: boolean;
+  blessedBy?: string;
 }
 
 export interface RespawnPoint {
@@ -676,7 +700,10 @@ export enum OfferStatus {
   PENDING = 'pending',
   PARTIAL = 'partial',
   COMPLETE = 'complete',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
+  ACTIVE = 'active',
+  EXPIRED = 'expired',
+  COLLECTED = 'collected'
 }
 
 export interface GrandExchangeOffer {
@@ -692,6 +719,12 @@ export interface GrandExchangeOffer {
   updatedAt: number;
   completedAt?: number;
   cancelledAt?: number;
+
+  // Additional properties for the implementation
+  remainingQuantity: number;
+  completedQuantity: number;
+  totalSpent?: number;
+  totalEarned?: number;
 }
 
 export interface GrandExchangeComponent extends Component {
@@ -802,6 +835,45 @@ export interface ClanComponent extends Component {
   lastClanChat: number;
 }
 
+// Clan War types
+export interface ClanWar {
+  id: string;
+  clan1Id: string;
+  clan2Id: string;
+  startTime: number;
+  endTime?: number;
+  status: 'pending' | 'active' | 'completed';
+  rules: ClanWarRules;
+  scores: {
+    clan1: number;
+    clan2: number;
+  };
+  participants: Map<string, ClanWarParticipant>;
+  winner?: string;
+}
+
+export interface ClanWarParticipant {
+  playerId: string;
+  clanId: string;
+  kills: number;
+  deaths: number;
+  damageDealt: number;
+  healingDone: number;
+  flagCaptures?: number;
+}
+
+export interface ClanWarRules {
+  duration: number;
+  allowFood: boolean;
+  allowPrayer: boolean;
+  allowSpecial: boolean;
+  combatLevelRange?: [number, number];
+  mapType: 'classic' | 'capture_the_flag' | 'king_of_the_hill';
+  respawnDelay: number;
+  minParticipants: number;
+  maxParticipants: number;
+}
+
 // Minigame types
 export enum MinigameType {
   CASTLE_WARS = 'castle_wars',
@@ -810,17 +882,70 @@ export enum MinigameType {
   BARROWS = 'barrows'
 }
 
+export interface Minigame {
+  id: string;
+  name: string;
+  type: MinigameType;
+  minPlayers: number;
+  maxPlayers: number;
+  duration: number;
+  requirements?: GameRequirements;
+  rewards: MinigameRewards;
+  status: MinigameStatus;
+}
+
+export enum MinigameStatus {
+  WAITING = 'waiting',
+  STARTING = 'starting',
+  IN_PROGRESS = 'in_progress',
+  ENDING = 'ending',
+  COMPLETED = 'completed'
+}
+
+export interface GameRequirements {
+  combatLevel?: number;
+  skills?: { [skill: string]: number };
+  quests?: string[];
+  items?: string[];
+}
+
+export interface MinigameRewards {
+  points: number;
+  experience?: { [skill: string]: number };
+  items?: ItemReward[];
+  currency?: { [type: string]: number };
+}
+
+export interface ItemReward {
+  itemId: number;
+  quantity: number;
+  chance: number;
+}
+
 export interface MinigameSession {
   id: string;
   type: MinigameType;
   players: string[];
-  teams?: Map<string, string[]>; // Team name -> player IDs
+  teams?: Map<string, Team>;
   startTime: number;
   endTime?: number;
   status: 'waiting' | 'in_progress' | 'completed';
+  data: any; // Game-specific data
+}
 
-  // Minigame-specific data
-  data: any;
+export interface MinigamePlayer {
+  playerId: string;
+  teamId?: string;
+  score: number;
+  stats: any; // Game-specific stats
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  color: string;
+  players: Set<string>;
+  score: number;
 }
 
 export interface CastleWarsData {
@@ -946,7 +1071,8 @@ export enum HotspotType {
   GUARD = 'guard',
   TROPHY = 'trophy',
   SKILL = 'skill',
-  GAMES = 'games'
+  GAMES = 'games',
+  GLORY = 'glory'
 }
 
 export interface Furniture {
@@ -1031,4 +1157,183 @@ export interface ConstructionComponent extends Component {
     position: Vector3 | null;
     rotation: number;
   } | null;
+}
+
+// Additional Construction types
+export interface HouseLayout {
+  rooms: Map<string, ConstructionRoom>; // "x,y,z" -> Room
+  entrancePosition: Vector3;
+  bounds: {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+    minZ: number;
+    maxZ: number;
+  };
+}
+
+export interface RoomGrid {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface Hotspot {
+  type: HotspotType;
+  position: Vector3;
+  furnitureId?: string;
+}
+
+export interface HouseSettings {
+  locked: boolean;
+  buildMode: boolean;
+  pvpEnabled: boolean;
+  teleportInside: boolean;
+  renderDistance: number;
+  theme: 'basic' | 'fancy' | 'ancient';
+  visitors: string[];
+  maxVisitors: number;
+}
+
+export interface MaterialRequirement {
+  itemId: number;
+  quantity: number;
+}
+
+// Export visual types
+export * from './visual.types';
+
+// Additional Grand Exchange types (extending the basic ones already defined)
+export interface GrandExchangeTransaction {
+  id: string;
+  buyerId: string;
+  sellerId: string;
+  itemId: number;
+  quantity: number;
+  price: number;
+  timestamp: number;
+  buyOfferId: string;
+  sellOfferId: string;
+}
+
+export interface MarketPrice {
+  itemId: number;
+  currentPrice: number;
+  averagePrice: number;
+  volume: number;
+  lastUpdate: number;
+  change24h: number;
+}
+
+export interface PriceHistory {
+  itemId: number;
+  data: Array<{
+    timestamp: number;
+    price: number;
+    volume: number;
+  }>;
+}
+
+export interface MarketStats {
+  itemId: number;
+  currentPrice: number;
+  averagePrice: number;
+  volume24h: number;
+  buyOffers: number;
+  sellOffers: number;
+  buyVolume: number;
+  sellVolume: number;
+  priceChange24h: number;
+  highPrice24h: number;
+  lowPrice24h: number;
+}
+
+// Additional component interfaces for testing scenarios
+export interface ResourceComponent extends Component {
+  type: 'resource';
+  resourceType: string;
+  resourceId: number;
+  name: string;
+  examine: string;
+  harvestable: boolean;
+  respawnable: boolean;
+  health: number;
+  maxHealth: number;
+  respawnTime: number;
+  lastHarvestTime: number;
+  requirements: {
+    skill: string;
+    level: number;
+    tool: string;
+  };
+  drops: Array<{
+    itemId: number;
+    quantity: { min: number; max: number };
+    chance: number;
+    experience: number;
+  }>;
+  harvestTime: number;
+  animations: {
+    idle: string;
+    harvest: string;
+    depleted: string;
+  };
+}
+
+export interface ItemComponent extends Component {
+  type: 'item';
+  itemId: number;
+  quantity: number;
+  owner: string | null;
+  spawnTime: number;
+  publicSince: number;
+  despawnTimer: number;
+  highlightTimer: number;
+  noted: boolean;
+  metadata?: any;
+}
+
+export interface QuestComponent extends Component {
+  type: 'quest';
+  activeQuests: Map<string, any>;
+  completedQuests: Set<string>;
+  questLog: string[];
+  questPoints: number;
+  lastQuestUpdate: number;
+}
+
+export interface ConstructionSiteComponent extends Component {
+  type: 'construction_site';
+  siteId: string;
+  roomType: RoomType;
+  position: Vector3;
+  requirements: {
+    level: number;
+    materials: Array<{ itemId: number; quantity: number }>;
+    tools: string[];
+  };
+  buildAttempts: number;
+  isBuilt: boolean;
+  canBuild: boolean;
+  buildTime: number;
+  experienceReward: number;
+  availableHotspots: Array<{
+    type: HotspotType;
+    position: Vector3;
+  }>;
+}
+
+export interface SkillsComponent extends Component {
+  type: 'skills';
+  skills: {
+    [skillName: string]: {
+      level: number;
+      xp: number;
+      currentAction: string | null;
+      lastActionTime: number;
+      toolEquipped: string | null;
+      efficiency: number;
+    };
+  };
 }

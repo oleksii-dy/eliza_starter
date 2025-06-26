@@ -19,7 +19,7 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
         console.log('Testing vision service access through runtime...');
 
         // Get vision service from runtime
-        const visionService = runtime.getService(VisionServiceType.VISION) as VisionService;
+        const visionService = runtime.getService<VisionService>(VisionServiceType.VISION);
 
         if (!visionService) {
           throw new Error('Vision service not found in runtime');
@@ -51,7 +51,7 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing high-FPS screen capture through service...');
 
-        const visionService = runtime.getService(VisionServiceType.VISION) as VisionService;
+        const visionService = runtime.getService<VisionService>(VisionServiceType.VISION);
         if (!visionService) {
           throw new Error('Vision service not found');
         }
@@ -88,7 +88,7 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing quadrant number detection through service...');
 
-        const visionService = runtime.getService(VisionServiceType.VISION) as VisionService;
+        const visionService = runtime.getService<VisionService>(VisionServiceType.VISION);
         if (!visionService) {
           throw new Error('Vision service not found');
         }
@@ -141,7 +141,7 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing multi-display support through service...');
 
-        const visionService = runtime.getService(VisionServiceType.VISION) as VisionService;
+        const visionService = runtime.getService<VisionService>(VisionServiceType.VISION);
         if (!visionService) {
           throw new Error('Vision service not found');
         }
@@ -178,7 +178,7 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('Testing parallel processing performance through service...');
 
-        const visionService = runtime.getService(VisionServiceType.VISION) as VisionService;
+        const visionService = runtime.getService<VisionService>(VisionServiceType.VISION);
         if (!visionService) {
           throw new Error('Vision service not found');
         }

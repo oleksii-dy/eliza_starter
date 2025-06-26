@@ -365,21 +365,33 @@ export function createMcpToolCompatibilitySync(
   try {
     switch (modelInfo.provider) {
       case 'openai':
-        // Use eval to avoid bundlers trying to process this
-        // eslint-disable-next-line no-eval
-        const OpenAIModule = eval('require')('./providers/openai');
-        const { OpenAIMcpCompatibility } = OpenAIModule;
-        return new OpenAIMcpCompatibility(modelInfo);
+        // Use dynamic import with fallback for CommonJS environments
+        try {
+          const OpenAIModule = require('./providers/openai');
+          const { OpenAIMcpCompatibility } = OpenAIModule;
+          return new OpenAIMcpCompatibility(modelInfo);
+        } catch {
+          // Fallback for environments where require is not available
+          return null;
+        }
       case 'anthropic':
-        // eslint-disable-next-line no-eval
-        const AnthropicModule = eval('require')('./providers/anthropic');
-        const { AnthropicMcpCompatibility } = AnthropicModule;
-        return new AnthropicMcpCompatibility(modelInfo);
+        try {
+          const AnthropicModule = require('./providers/anthropic');
+          const { AnthropicMcpCompatibility } = AnthropicModule;
+          return new AnthropicMcpCompatibility(modelInfo);
+        } catch {
+          // Fallback for environments where require is not available
+          return null;
+        }
       case 'google':
-        // eslint-disable-next-line no-eval
-        const GoogleModule = eval('require')('./providers/google');
-        const { GoogleMcpCompatibility } = GoogleModule;
-        return new GoogleMcpCompatibility(modelInfo);
+        try {
+          const GoogleModule = require('./providers/google');
+          const { GoogleMcpCompatibility } = GoogleModule;
+          return new GoogleMcpCompatibility(modelInfo);
+        } catch {
+          // Fallback for environments where require is not available
+          return null;
+        }
       default:
         return null; // No compatibility layer needed
     }

@@ -250,16 +250,16 @@ export async function recordPluginManagerAction(
     let trustChange = 0;
     if (success) {
       // Positive trust for successful actions
-      if (PLUGIN_MANAGER_TRUST_REQUIREMENTS[actionName]?.requiredRole === 'ADMIN_ROLE') {
+      if ((PLUGIN_MANAGER_TRUST_REQUIREMENTS as any)[actionName]?.requiredRole === 'ADMIN_ROLE') {
         trustChange = 0.03; // Higher boost for admin actions
-      } else if (PLUGIN_MANAGER_TRUST_REQUIREMENTS[actionName]?.requiredRole === 'DEVELOPER_ROLE') {
+      } else if ((PLUGIN_MANAGER_TRUST_REQUIREMENTS as any)[actionName]?.requiredRole === 'DEVELOPER_ROLE') {
         trustChange = 0.02; // Medium boost for dev actions
       } else {
         trustChange = 0.01; // Small boost for user actions
       }
     } else {
       // Negative trust for failed critical actions
-      if (PLUGIN_MANAGER_TRUST_REQUIREMENTS[actionName]?.requiredRole === 'ADMIN_ROLE') {
+      if ((PLUGIN_MANAGER_TRUST_REQUIREMENTS as any)[actionName]?.requiredRole === 'ADMIN_ROLE') {
         trustChange = -0.08; // Significant penalty for failed admin actions
       } else {
         trustChange = -0.03; // Smaller penalty for other failures

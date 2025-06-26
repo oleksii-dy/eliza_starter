@@ -12,7 +12,7 @@ import { logger, type IAgentRuntime } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import type { TrainingDataRecord, TrainingSession } from './schema';
+import type { TrainingDataRecord } from './schema';
 
 export interface TrainingRecord {
   id: string;
@@ -233,10 +233,10 @@ export class EnhancedReasoningService {
       await this.ensureTrainingTables(db);
 
       // Create session record
-      const sessionData: Partial<TrainingSession> = {
+      const sessionData = {
         agentId: this.runtime.agentId,
         sessionId: this.currentSessionId!,
-        status: 'active',
+        status: 'active' as const,
         description: `Enhanced reasoning session started at ${new Date().toISOString()}`,
         totalRecords: 0,
         successfulRecords: 0,

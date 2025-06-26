@@ -7,7 +7,7 @@ import type {
   State,
 } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
-import type { PluginManagerService } from '../services/PluginManagerService.ts';
+import type { PluginManagerService } from '../services/pluginManagerService.ts';
 import { PluginManagerServiceType } from '../types.ts';
 import { HealthStatus } from '../types.ts';
 

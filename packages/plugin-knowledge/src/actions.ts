@@ -5,7 +5,7 @@ import type {
   IAgentRuntime,
   Memory,
   State,
-  UUID,
+  // UUID,
   ActionResult,
 } from '@elizaos/core';
 import { logger, stringToUuid } from '@elizaos/core';
@@ -75,7 +75,7 @@ export const processKnowledgeAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
 
     // Check if the message contains knowledge-related keywords
@@ -108,7 +108,7 @@ export const processKnowledgeAction: Action = {
     );
 
     // Check if service is available
-    const service = runtime.getService(KnowledgeService.serviceType);
+    const service = runtime.getService<KnowledgeService>(KnowledgeService.serviceType);
     if (!service) {
       logger.warn('Knowledge service not available for PROCESS_KNOWLEDGE action');
       return false;
@@ -446,7 +446,7 @@ export const searchKnowledgeAction: Action = {
     ],
   ],
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State) => {
     const text = message.content.text?.toLowerCase() || '';
 
     // Check if the message contains search-related keywords
@@ -457,7 +457,7 @@ export const searchKnowledgeAction: Action = {
     const hasKnowledgeKeyword = knowledgeKeywords.some((keyword) => text.includes(keyword));
 
     // Check if service is available
-    const service = runtime.getService(KnowledgeService.serviceType);
+    const service = runtime.getService<KnowledgeService>(KnowledgeService.serviceType);
     if (!service) {
       return false;
     }
@@ -486,13 +486,13 @@ export const searchKnowledgeAction: Action = {
         .trim();
 
       let response: Content;
-      let success = true;
+      const _success = true;
 
       if (!query) {
         response = {
           text: 'What would you like me to search for in my knowledge base?',
         };
-        success = false;
+        const _success = false;
 
         if (callback) {
           await callback(response);
@@ -635,7 +635,7 @@ export const advancedSearchAction: Action = {
     );
     const hasSearchKeywords = ['search', 'find', 'look'].some((k) => text.includes(k));
 
-    const service = runtime.getService(KnowledgeService.serviceType);
+    const service = runtime.getService<KnowledgeService>(KnowledgeService.serviceType);
     return !!(service && hasSearchKeywords && hasAdvancedKeywords);
   },
 
@@ -807,7 +807,7 @@ export const knowledgeAnalyticsAction: Action = {
     );
     const hasKnowledgeWord = text.includes('knowledge');
 
-    const service = runtime.getService(KnowledgeService.serviceType);
+    const service = runtime.getService<KnowledgeService>(KnowledgeService.serviceType);
     return !!(service && (hasKeywords || hasKnowledgeWord));
   },
 
@@ -922,7 +922,7 @@ export const exportKnowledgeAction: Action = {
     );
     const hasKnowledgeWord = text.includes('knowledge');
 
-    const service = runtime.getService(KnowledgeService.serviceType);
+    const service = runtime.getService<KnowledgeService>(KnowledgeService.serviceType);
     return !!(service && hasExportKeywords && hasKnowledgeWord);
   },
 
@@ -1062,7 +1062,7 @@ export const ingestGitHubAction: Action = {
     );
     const hasGitHubUrl = /github\.com\/[^\/]+\/[^\/]+/.test(text);
 
-    const service = runtime.getService(KnowledgeService.serviceType);
+    const service = runtime.getService<KnowledgeService>(KnowledgeService.serviceType);
     return !!(service && (hasGitHubKeywords || hasGitHubUrl) && hasIngestionKeywords);
   },
 
@@ -1260,7 +1260,7 @@ export const ingestWebPageAction: Action = {
     );
     const hasUrl = /https?:\/\/[^\s]+/.test(text);
 
-    const service = runtime.getService(KnowledgeService.serviceType);
+    const service = runtime.getService<KnowledgeService>(KnowledgeService.serviceType);
     return !!(service && hasUrl && (hasWebKeywords || hasIngestionKeywords));
   },
 

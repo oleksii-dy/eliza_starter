@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment, radix */
 import { chromium, Browser, Page, BrowserContext } from 'playwright';
 import { logger } from '@elizaos/core';
 import * as cheerio from 'cheerio';
@@ -52,7 +53,8 @@ export class PlaywrightContentExtractor {
 
       this.context = await this.browser.newContext({
         userAgent:
-          this.config.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          this.config.userAgent ||
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         viewport: this.config.viewport,
         javaScriptEnabled: this.config.enableJavaScript,
         bypassCSP: true,
@@ -84,7 +86,10 @@ export class PlaywrightContentExtractor {
     }
   }
 
-  async extractContent(url: string, retryCount: number = 0): Promise<ExtractedContent | null> {
+  async extractContent(
+    url: string,
+    retryCount: number = 0
+  ): Promise<ExtractedContent | null> {
     const startTime = Date.now();
     let page: Page | null = null;
 
@@ -103,7 +108,8 @@ export class PlaywrightContentExtractor {
       await page.setExtraHTTPHeaders({
         'Accept-Language': 'en-US,en;q=0.9',
         'Accept-Encoding': 'gzip, deflate, br',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
       });
 
       // Navigate to the page
@@ -130,8 +136,12 @@ export class PlaywrightContentExtractor {
 
       // Retry logic
       if (retryCount < (this.config.maxRetries || 3)) {
-        logger.info(`[Playwright] Retrying extraction (attempt ${retryCount + 1})`);
-        await new Promise((resolve) => setTimeout(resolve, 1000 * (retryCount + 1)));
+        logger.info(
+          `[Playwright] Retrying extraction (attempt ${retryCount + 1})`
+        );
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000 * (retryCount + 1))
+        );
         return this.extractContent(url, retryCount + 1);
       }
 
@@ -171,7 +181,7 @@ export class PlaywrightContentExtractor {
       // Scroll to load lazy-loaded content
       await page.evaluate(() => {
         // @ts-ignore - This runs in browser context
-        window.scrollTo(0, document.body.scrollHeight);
+        (window as any).scrollTo(0, (document as any).body.scrollHeight);
       });
 
       await page.waitForTimeout(500);
@@ -193,14 +203,16 @@ export class PlaywrightContentExtractor {
     // Extract text content using Playwright's built-in methods
     const textContent = await page.evaluate(() => {
       // @ts-ignore - This entire function runs in browser context
-      const scripts = document.querySelectorAll('script, style, noscript');
-      scripts.forEach((el: Element) => el.remove());
+      const scripts = (document as any).querySelectorAll(
+        'script, style, noscript'
+      );
+      scripts.forEach((el: any) => el.remove());
 
       // @ts-ignore - This runs in browser context
-      const unwanted = document.querySelectorAll(
+      const unwanted = (document as any).querySelectorAll(
         'nav, footer, aside, .sidebar, .advertisement, .ad'
       );
-      unwanted.forEach((el: Element) => el.remove());
+      unwanted.forEach((el: any) => el.remove());
 
       // Try to find main content areas
       const contentSelectors = [
@@ -216,7 +228,7 @@ export class PlaywrightContentExtractor {
 
       for (const selector of contentSelectors) {
         // @ts-ignore - This runs in browser context
-        const element = document.querySelector(selector);
+        const element = (document as any).querySelector(selector);
         if (element) {
           // @ts-ignore - HTMLElement exists in browser context
           return (element as any).innerText || element.textContent || '';
@@ -224,29 +236,39 @@ export class PlaywrightContentExtractor {
       }
 
       // @ts-ignore - This runs in browser context
-      return document.body.innerText || document.body.textContent || '';
+      return (
+        (document as any).body.innerText ||
+        (document as any).body.textContent ||
+        ''
+      );
     });
 
     // Extract metadata
     // @ts-ignore - All page.evaluate functions run in browser context
     const metadata = await page.evaluate(() => {
       const getMetaContent = (name: string): string | undefined => {
-        const meta = document.querySelector(`meta[name="${name}"], meta[property="${name}"]`);
+        const meta = (document as any).querySelector(
+          `meta[name="${name}"], meta[property="${name}"]`
+        );
         return meta?.getAttribute('content') || undefined;
       };
 
       return {
-        title: document.title,
-        description: getMetaContent('description') || getMetaContent('og:description'),
+        title: (document as any).title,
+        description:
+          getMetaContent('description') || getMetaContent('og:description'),
         author: getMetaContent('author'),
         publishedTime: getMetaContent('article:published_time'),
         modifiedTime: getMetaContent('article:modified_time'),
-        language: document.documentElement.lang || getMetaContent('language'),
+        language:
+          (document as any).documentElement.lang || getMetaContent('language'),
         ogTitle: getMetaContent('og:title'),
         ogDescription: getMetaContent('og:description'),
         ogImage: getMetaContent('og:image'),
         ogUrl: getMetaContent('og:url'),
-        canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href'),
+        canonical: document
+          .querySelector('link[rel="canonical"]')
+          ?.getAttribute('href'),
         keywords: getMetaContent('keywords'),
       };
     });
@@ -254,16 +276,19 @@ export class PlaywrightContentExtractor {
     // Extract links
     // @ts-ignore - All page.evaluate functions run in browser context
     const links = await page.evaluate(() => {
-      const anchors = document.querySelectorAll('a[href]');
+      const anchors = (document as any).querySelectorAll('a[href]');
       return Array.from(anchors)
         .map((a) => (a as any).href)
-        .filter((href) => href && !href.startsWith('#') && !href.startsWith('javascript:'));
+        .filter(
+          (href) =>
+            href && !href.startsWith('#') && !href.startsWith('javascript:')
+        );
     });
 
     // Extract images
     // @ts-ignore - All page.evaluate functions run in browser context
     const images = await page.evaluate(() => {
-      const imgs = document.querySelectorAll('img[src]');
+      const imgs = (document as any).querySelectorAll('img[src]');
       return Array.from(imgs)
         .map((img) => (img as any).src)
         .filter((src) => src && !src.includes('data:image'));
@@ -273,7 +298,9 @@ export class PlaywrightContentExtractor {
     const $ = cheerio.load(html);
 
     // Remove unwanted elements
-    $('script, style, nav, footer, aside, .sidebar, .advertisement, .ad').remove();
+    $(
+      'script, style, nav, footer, aside, .sidebar, .advertisement, .ad'
+    ).remove();
 
     // Convert to markdown-like format
     let markdown = '';
@@ -339,7 +366,9 @@ export class PlaywrightContentExtractor {
     };
   }
 
-  async extractBatch(urls: string[]): Promise<Map<string, ExtractedContent | null>> {
+  async extractBatch(
+    urls: string[]
+  ): Promise<Map<string, ExtractedContent | null>> {
     logger.info(`[Playwright] Extracting content from ${urls.length} URLs`);
 
     const results = new Map<string, ExtractedContent | null>();

@@ -1,4 +1,4 @@
-import { Service, type IAgentRuntime, logger } from '@elizaos/core';
+import { Service, type IAgentRuntime, logger, type MessageExample } from '@elizaos/core';
 import fs from 'fs-extra';
 import path from 'path';
 import { z } from 'zod';
@@ -131,6 +131,7 @@ export class CharacterFileManager extends Service {
         !system.includes('<script>') && // Basic XSS protection
         !system.includes('javascript:') &&
         !system.includes('eval(') &&
+        !system.includes('Function(') &&
         !system.toLowerCase().includes('ignore previous instructions') && // Prompt injection protection
         !system.toLowerCase().includes('disregard') &&
         !system.toLowerCase().includes('forget everything')
@@ -308,7 +309,10 @@ export class CharacterFileManager extends Service {
 
       if (modification.messageExamples) {
         const currentExamples = currentCharacter.messageExamples || [];
-        currentCharacter.messageExamples = [...currentExamples, ...modification.messageExamples];
+        currentCharacter.messageExamples = [
+          ...currentExamples,
+          ...modification.messageExamples,
+        ] as MessageExample[][];
       }
 
       if (modification.style) {

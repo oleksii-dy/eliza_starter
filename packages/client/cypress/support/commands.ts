@@ -40,7 +40,7 @@ Cypress.Commands.add('connectWebSocket', () => {
       return new Cypress.Promise((resolve) => {
         const checkConnection = () => {
           // Check if socket exists on window or in your app state
-          if ((win as any).socket?.connected) {
+          if ((win as unknown).socket?.connected) {
             resolve(undefined);
           } else {
             setTimeout(checkConnection, 100);
@@ -77,8 +77,14 @@ Cypress.Commands.add('waitForApi', (alias: string, timeout = 10000) => {
   return cy.wait(`@${alias}`, { timeout });
 });
 
+// Utility command to take screenshot of working functionality
+Cypress.Commands.add('screenshotSuccess', (name: string) => {
+  return cy.screenshot(`success-${name}`, { capture: 'fullPage' });
+});
+
 // Add TypeScript support for custom commands
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
     interface Chainable {
       waitForApp(): Chainable<void>;
@@ -86,7 +92,8 @@ declare global {
       connectWebSocket(): Chainable<void>;
       cleanupTestData(): Chainable<void>;
       getByTestId(testId: string): Chainable<JQuery<HTMLElement>>;
-      waitForApi(alias: string, timeout?: number): Chainable<any>;
+      waitForApi(alias: string, timeout?: number): Chainable<unknown>;
+      screenshotSuccess(name: string): Chainable<void>;
     }
   }
 }

@@ -56,7 +56,7 @@ describe('RolodexService', () => {
               updatedAt: '2023-01-01',
             },
             relevanceScore: 95,
-            matchReason: 'Works at Apple (tech company)'
+            matchReason: 'Works at Apple (tech company)',
           },
           {
             entity: {
@@ -71,9 +71,9 @@ describe('RolodexService', () => {
               updatedAt: '2023-01-01',
             },
             relevanceScore: 90,
-            matchReason: 'Works at Google (tech company)'
+            matchReason: 'Works at Google (tech company)',
           },
-        ])
+        ]),
       } as any;
 
       const results = await service.searchEntities(query);
@@ -101,7 +101,7 @@ describe('RolodexService', () => {
             lastInteraction: new Date().toISOString(),
             metadata: {},
           },
-        ])
+        ]),
       } as any;
 
       const relationships = await service.getRelationships(entityId);
@@ -128,7 +128,7 @@ describe('RolodexService', () => {
           message: followUp.message,
           scheduledFor: followUp.scheduledFor.toISOString(),
           completed: false,
-        })
+        }),
       } as any;
 
       const result = await service.scheduleFollowUp(entityId, followUp);
@@ -151,7 +151,7 @@ describe('RolodexService', () => {
             scheduledFor: new Date(Date.now() + 86400000).toISOString(),
             completed: false,
           },
-        ])
+        ]),
       } as any;
 
       const results = await service.getUpcomingFollowUps({ entityId });

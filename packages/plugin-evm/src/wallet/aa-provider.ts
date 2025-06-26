@@ -1,7 +1,6 @@
 import { IAgentRuntime, logger } from '@elizaos/core';
-import type { Address, Hash, Hex } from 'viem';
-import { encodeFunctionData, toHex } from 'viem';
-import type { Chain } from 'viem/chains';
+import { type Address, type Hash, type Hex, encodeFunctionData, toHex } from 'viem';
+import type { Chain as _Chain } from 'viem/chains';
 import { getChainConfig } from '../core/chains/config';
 import type { UserOperation, BundlerJsonRpcResponse } from './types';
 
@@ -40,7 +39,7 @@ export class AccountAbstractionProvider {
     this.chainId = config.chainId;
     this.entryPointAddress = config.entryPointAddress || this.getDefaultEntryPoint();
 
-    const chainConfig = getChainConfig(config.chainId);
+    const _chainConfig = getChainConfig(config.chainId);
     this.bundlerUrl = config.bundlerUrl || this.getDefaultBundlerUrl(config.chainId);
     this.paymasterUrl = config.paymasterUrl;
   }
@@ -106,7 +105,7 @@ export class AccountAbstractionProvider {
     } catch (error) {
       logger.error('Error building UserOperation:', error);
       throw new Error(
-        `Failed to build UserOperation: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to build UserOperation: ${error instanceof Error ? error.message : error}`
       );
     }
   }
@@ -157,9 +156,7 @@ export class AccountAbstractionProvider {
       };
     } catch (error) {
       logger.error('Error estimating UserOperation gas:', error);
-      throw new Error(
-        `Failed to estimate gas: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      throw new Error(`Failed to estimate gas: ${error instanceof Error ? error.message : error}`);
     }
   }
 
@@ -210,7 +207,7 @@ export class AccountAbstractionProvider {
     } catch (error) {
       logger.error('Error sending UserOperation:', error);
       throw new Error(
-        `Failed to send UserOperation: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to send UserOperation: ${error instanceof Error ? error.message : error}`
       );
     }
   }
@@ -258,9 +255,7 @@ export class AccountAbstractionProvider {
       };
     } catch (error) {
       logger.error('Error getting UserOperation receipt:', error);
-      throw new Error(
-        `Failed to get receipt: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      throw new Error(`Failed to get receipt: ${error instanceof Error ? error.message : error}`);
     }
   }
 
@@ -314,7 +309,7 @@ export class AccountAbstractionProvider {
     } catch (error) {
       logger.error('Error getting paymaster data:', error);
       throw new Error(
-        `Failed to get paymaster data: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to get paymaster data: ${error instanceof Error ? error.message : error}`
       );
     }
   }
@@ -352,7 +347,7 @@ export class AccountAbstractionProvider {
       to: Address;
       value: bigint;
       data: Hex;
-    }>,
+    }>
   ): Hex {
     const targets = transactions.map((tx) => tx.to);
     const values = transactions.map((tx) => tx.value);
@@ -462,7 +457,7 @@ export class AccountAbstractionProvider {
   async waitForUserOp(
     userOpHash: Hash,
     maxAttempts: number = 60,
-    intervalMs: number = 1000,
+    intervalMs: number = 1000
   ): Promise<{
     success: boolean;
     receipt?: any;

@@ -1,14 +1,15 @@
-import * as THREE from 'three';
+import type { Quaternion } from 'three';
+import { THREE } from './three';
 
 export class LerpQuaternion {
-  value: THREE.Quaternion;
+  value: any;
   rate: number;
-  previous: THREE.Quaternion;
-  current: THREE.Quaternion;
+  previous: any;
+  current: any;
   time: number;
   snapToken: unknown;
 
-  constructor(value: THREE.Quaternion, rate: number) {
+  constructor(value: any, rate: number) {
     this.value = value;
     this.rate = rate; // receive rate eg 1/5 for 5hz
     this.previous = new THREE.Quaternion().copy(this.value);
@@ -17,7 +18,7 @@ export class LerpQuaternion {
     this.snapToken = null;
   }
 
-  push(value: THREE.Quaternion, snapToken: unknown = null) {
+  push(value: any, snapToken: unknown = null) {
     if (this.snapToken !== snapToken) {
       this.snapToken = snapToken;
       this.previous.copy(value);
@@ -43,8 +44,8 @@ export class LerpQuaternion {
     this.time = 0;
   }
 
-  update(delta: number) {
-    this.time += delta;
+  update(_delta: number) {
+    this.time += _delta;
     let alpha = this.time / this.rate;
     if (alpha > 1) {alpha = 1;}
     this.value.slerpQuaternions(this.previous, this.current, alpha);

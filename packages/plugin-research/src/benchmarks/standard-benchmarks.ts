@@ -25,7 +25,8 @@ export const DEEPRESEARCH_BENCH: BenchmarkConfig = {
       depth: 'phd_level',
       expectedSources: 20,
       maxDurationMs: 600000,
-      description: 'Deep analysis of quantum computing advances and theoretical implications',
+      description:
+        'Deep analysis of quantum computing advances and theoretical implications',
     },
     {
       id: 'biology_crispr_ethics',
@@ -35,7 +36,8 @@ export const DEEPRESEARCH_BENCH: BenchmarkConfig = {
       depth: 'phd_level',
       expectedSources: 25,
       maxDurationMs: 600000,
-      description: 'Comprehensive analysis of CRISPR ethics and international regulation',
+      description:
+        'Comprehensive analysis of CRISPR ethics and international regulation',
     },
     {
       id: 'economics_digital_currencies',
@@ -45,7 +47,8 @@ export const DEEPRESEARCH_BENCH: BenchmarkConfig = {
       depth: 'phd_level',
       expectedSources: 22,
       maxDurationMs: 600000,
-      description: 'Analysis of CBDC impact on monetary systems and financial stability',
+      description:
+        'Analysis of CBDC impact on monetary systems and financial stability',
     },
     {
       id: 'psychology_ai_consciousness',
@@ -55,7 +58,8 @@ export const DEEPRESEARCH_BENCH: BenchmarkConfig = {
       depth: 'phd_level',
       expectedSources: 18,
       maxDurationMs: 600000,
-      description: 'Exploration of AI consciousness theories and cognitive parallels',
+      description:
+        'Exploration of AI consciousness theories and cognitive parallels',
     },
     {
       id: 'medicine_precision_oncology',
@@ -65,7 +69,8 @@ export const DEEPRESEARCH_BENCH: BenchmarkConfig = {
       depth: 'phd_level',
       expectedSources: 30,
       maxDurationMs: 600000,
-      description: 'Comprehensive review of precision oncology effectiveness and challenges',
+      description:
+        'Comprehensive review of precision oncology effectiveness and challenges',
     },
     {
       id: 'climate_tipping_points',
@@ -75,7 +80,8 @@ export const DEEPRESEARCH_BENCH: BenchmarkConfig = {
       depth: 'phd_level',
       expectedSources: 24,
       maxDurationMs: 600000,
-      description: 'Analysis of climate tipping points and systemic environmental impacts',
+      description:
+        'Analysis of climate tipping points and systemic environmental impacts',
     },
     {
       id: 'computer_science_quantum_ml',
@@ -85,7 +91,8 @@ export const DEEPRESEARCH_BENCH: BenchmarkConfig = {
       depth: 'phd_level',
       expectedSources: 26,
       maxDurationMs: 600000,
-      description: 'Research on quantum-classical hybrid machine learning algorithms',
+      description:
+        'Research on quantum-classical hybrid machine learning algorithms',
     },
     {
       id: 'neuroscience_brain_computer',
@@ -95,7 +102,8 @@ export const DEEPRESEARCH_BENCH: BenchmarkConfig = {
       depth: 'phd_level',
       expectedSources: 28,
       maxDurationMs: 600000,
-      description: 'Comprehensive analysis of BCI technology and therapeutic applications',
+      description:
+        'Comprehensive analysis of BCI technology and therapeutic applications',
     },
     {
       id: 'materials_science_2d',
@@ -105,7 +113,8 @@ export const DEEPRESEARCH_BENCH: BenchmarkConfig = {
       depth: 'phd_level',
       expectedSources: 20,
       maxDurationMs: 600000,
-      description: 'Research on 2D materials for advanced electronic applications',
+      description:
+        'Research on 2D materials for advanced electronic applications',
     },
     {
       id: 'sociology_social_media_democracy',
@@ -115,7 +124,8 @@ export const DEEPRESEARCH_BENCH: BenchmarkConfig = {
       depth: 'phd_level',
       expectedSources: 21,
       maxDurationMs: 600000,
-      description: 'Study of social media influence on democratic processes and polarization',
+      description:
+        'Study of social media influence on democratic processes and polarization',
     },
   ],
 };
@@ -134,7 +144,8 @@ export const BREADTH_BENCH: BenchmarkConfig = {
   queries: [
     {
       id: 'tech_ai_safety',
-      query: 'What are the main AI safety concerns and proposed solutions in 2024?',
+      query:
+        'What are the main AI safety concerns and proposed solutions in 2024?',
       domain: 'technology',
       depth: 'deep',
       expectedSources: 15,
@@ -143,16 +154,19 @@ export const BREADTH_BENCH: BenchmarkConfig = {
     },
     {
       id: 'health_longevity_research',
-      query: 'What are the latest developments in longevity research and anti-aging therapies?',
+      query:
+        'What are the latest developments in longevity research and anti-aging therapies?',
       domain: 'health',
       depth: 'deep',
       expectedSources: 12,
       maxDurationMs: 300000,
-      description: 'Recent advances in aging research and therapeutic interventions',
+      description:
+        'Recent advances in aging research and therapeutic interventions',
     },
     {
       id: 'space_mars_exploration',
-      query: 'What are the current plans and challenges for human Mars exploration missions?',
+      query:
+        'What are the current plans and challenges for human Mars exploration missions?',
       domain: 'space',
       depth: 'deep',
       expectedSources: 10,
@@ -171,7 +185,8 @@ export const BREADTH_BENCH: BenchmarkConfig = {
     },
     {
       id: 'finance_defi_evolution',
-      query: 'How is decentralized finance (DeFi) evolving and what are the regulatory challenges?',
+      query:
+        'How is decentralized finance (DeFi) evolving and what are the regulatory challenges?',
       domain: 'finance',
       depth: 'deep',
       expectedSources: 13,
@@ -255,7 +270,8 @@ export const ACCURACY_BENCH: BenchmarkConfig = {
   queries: [
     {
       id: 'accuracy_dna_structure',
-      query: 'Describe the structure of DNA and the scientists who discovered it',
+      query:
+        'Describe the structure of DNA and the scientists who discovered it',
       domain: 'biology',
       depth: 'moderate',
       expectedSources: 8,
@@ -264,7 +280,8 @@ export const ACCURACY_BENCH: BenchmarkConfig = {
     },
     {
       id: 'accuracy_world_war_timeline',
-      query: 'Provide a timeline of major events in World War II from 1939-1945',
+      query:
+        'Provide a timeline of major events in World War II from 1939-1945',
       domain: 'history',
       depth: 'moderate',
       expectedSources: 10,
@@ -273,7 +290,8 @@ export const ACCURACY_BENCH: BenchmarkConfig = {
     },
     {
       id: 'accuracy_periodic_table',
-      query: "Explain the organization of the periodic table and Mendeleev's contributions",
+      query:
+        "Explain the organization of the periodic table and Mendeleev's contributions",
       domain: 'chemistry',
       depth: 'moderate',
       expectedSources: 7,
@@ -282,7 +300,8 @@ export const ACCURACY_BENCH: BenchmarkConfig = {
     },
     {
       id: 'accuracy_shakespeare_works',
-      query: "List Shakespeare's major plays and their approximate composition dates",
+      query:
+        "List Shakespeare's major plays and their approximate composition dates",
       domain: 'literature',
       depth: 'moderate',
       expectedSources: 6,
@@ -291,7 +310,8 @@ export const ACCURACY_BENCH: BenchmarkConfig = {
     },
     {
       id: 'accuracy_solar_system',
-      query: 'Describe the planets in our solar system and their key characteristics',
+      query:
+        'Describe the planets in our solar system and their key characteristics',
       domain: 'astronomy',
       depth: 'moderate',
       expectedSources: 9,
@@ -307,7 +327,8 @@ export const ACCURACY_BENCH: BenchmarkConfig = {
  */
 export const COMPREHENSIVE_BENCH: BenchmarkConfig = {
   name: 'Comprehensive Benchmark',
-  description: 'Full evaluation across all dimensions: depth, breadth, speed, and accuracy',
+  description:
+    'Full evaluation across all dimensions: depth, breadth, speed, and accuracy',
   outputDir: '/Users/shawwalters/eliza-self/packages/docs/benchmarks',
   timeoutMs: 480000, // 8 minutes per query
   includeReport: true,
@@ -334,7 +355,8 @@ export const COMPREHENSIVE_BENCH: BenchmarkConfig = {
     },
     {
       id: 'comprehensive_pandemic_preparedness',
-      query: 'Evaluate global pandemic preparedness strategies and lessons learned from COVID-19',
+      query:
+        'Evaluate global pandemic preparedness strategies and lessons learned from COVID-19',
       domain: 'health',
       depth: 'deep',
       expectedSources: 20,

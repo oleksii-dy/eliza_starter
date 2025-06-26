@@ -22,6 +22,9 @@ import {
   followUpManagementScenario,
 } from './rolodex/index.js';
 
+// Import sandbox scenarios
+import { sandboxScenarios } from './sandbox/index.js';
+
 export {
   entityIntroductionScenario,
   relationshipBuildingScenario,
@@ -29,6 +32,8 @@ export {
   complexNetworkScenario,
   followUpManagementScenario,
 } from './rolodex/index.js';
+
+export { sandboxScenarios } from './sandbox/index.js';
 
 // Export individual example scenarios
 export const exampleScenarios = [
@@ -48,7 +53,7 @@ export const rolodexScenarios = [
 ];
 
 // Export all scenarios including plugin tests
-export const allScenarios = [...exampleScenarios, ...pluginTestScenarios, ...rolodexScenarios];
+export const allScenarios = [...exampleScenarios, ...pluginTestScenarios, ...rolodexScenarios, ...sandboxScenarios];
 
 // Default export includes all scenarios
 export default allScenarios;
@@ -79,6 +84,7 @@ export const scenarioCategories = {
   planning: [workflowPlanningScenario],
   integration: pluginTestScenarios,
   rolodex: rolodexScenarios,
+  sandbox: sandboxScenarios,
 };
 
 // Get scenarios by category

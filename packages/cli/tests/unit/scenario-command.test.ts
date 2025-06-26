@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import { ScenarioActionTracker } from '../../src/commands/scenario/action-tracker.js';
+import { ScenarioActionTracker } from '../../src/commands/scenario/ActionTracker.js';
 import type { Scenario } from '../../src/scenario-runner/types.js';
 
 // Mock fs and fs/promises at the top level

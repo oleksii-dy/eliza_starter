@@ -116,7 +116,7 @@ export const checkDependenciesAction: Action = {
         if (resolution.minimalSet) {
           responseText += '## Minimal Plugin Set\n';
           responseText += `The following ${resolution.minimalSet.length} plugins are actually needed:\n`;
-          resolution.minimalSet.forEach((p) => {
+          resolution.minimalSet.forEach((p: any) => {
             responseText += `- ${p}\n`;
           });
 
@@ -131,16 +131,16 @@ export const checkDependenciesAction: Action = {
 
         responseText += '\n## Installation Order\n';
         responseText += 'If reinstalling, use this order:\n';
-        resolution.installOrder.forEach((p, i) => {
+        resolution.installOrder.forEach((p: any, i: number) => {
           responseText += `${i + 1}. ${p}\n`;
         });
       } else {
         responseText += '⚠️ **Dependency conflicts detected!**\n\n';
 
-        resolution.conflicts.forEach((conflict) => {
+        resolution.conflicts.forEach((conflict: any) => {
           responseText += `## Conflict: ${conflict.pluginName}\n`;
           responseText += 'Requested by:\n';
-          conflict.requestedBy.forEach((req) => {
+          conflict.requestedBy.forEach((req: any) => {
             responseText += `- ${req.plugin} requires ${req.constraint}\n`;
           });
           if (conflict.suggestion) {

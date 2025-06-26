@@ -24,11 +24,17 @@ describe('Trust Comments', () => {
     };
 
     mockRuntime = createMockRuntime({
-      getService: mock((name: string) => {
-        if (name === 'trust-engine') {return mockTrustEngine;}
-        if (name === 'trust-database') {return { trustDatabase: mockTrustDatabase };}
+      getService: mock((nameOrClass: string | any) => {
+        if (typeof nameOrClass === 'string') {
+          if (nameOrClass === 'trust-engine') {
+            return mockTrustEngine;
+          }
+          if (nameOrClass === 'trust-database') {
+            return { trustDatabase: mockTrustDatabase };
+          }
+        }
         return null;
-      }),
+      }) as any,
     });
   });
 
@@ -53,7 +59,8 @@ describe('Trust Comments', () => {
         evaluatorId: 'test-agent',
         trustScore: 75,
         trustChange: 12,
-        comment: 'This user has demonstrated consistent helpful behavior and is establishing themselves as a trusted member of the community. Their recent contributions have significantly improved their standing.',
+        comment:
+          'This user has demonstrated consistent helpful behavior and is establishing themselves as a trusted member of the community. Their recent contributions have significantly improved their standing.',
         timestamp: Date.now() - 3600000,
         metadata: {},
       };
@@ -127,7 +134,8 @@ describe('Trust Comments', () => {
 
       // Mock the LLM response for comment generation
       mockRuntime.useModel.mockResolvedValue({
-        content: 'This user is establishing themselves as a helpful community member through consistent positive contributions. Their recent assistance to others demonstrates growing competence and goodwill.',
+        content:
+          'This user is establishing themselves as a helpful community member through consistent positive contributions. Their recent assistance to others demonstrates growing competence and goodwill.',
       });
 
       // This would be called internally by TrustEngine when trust changes by ±10
@@ -136,7 +144,8 @@ describe('Trust Comments', () => {
         evaluatorId: mockRuntime.agentId,
         trustScore: newTrust,
         trustChange,
-        comment: 'This user is establishing themselves as a helpful community member through consistent positive contributions. Their recent assistance to others demonstrates growing competence and goodwill.',
+        comment:
+          'This user is establishing themselves as a helpful community member through consistent positive contributions. Their recent assistance to others demonstrates growing competence and goodwill.',
         metadata: expect.objectContaining({
           oldTrust,
           triggeringEvent: mockEvidence.description,
@@ -170,7 +179,8 @@ describe('Trust Comments', () => {
 
       // Mock the LLM response for comment generation
       mockRuntime.useModel.mockResolvedValue({
-        content: 'Trust concerns have emerged following recent guideline violations. This user needs to demonstrate improved judgment and respect for community standards to rebuild confidence.',
+        content:
+          'Trust concerns have emerged following recent guideline violations. This user needs to demonstrate improved judgment and respect for community standards to rebuild confidence.',
       });
 
       // Verify conditions for comment generation
@@ -216,7 +226,10 @@ describe('Trust Comments', () => {
 
       // The prompt for new comment generation would include these previous assessments
       const promptContext = previousComments
-        .map(c => `- ${new Date(c.timestamp).toLocaleDateString()}: Trust was ${c.trustScore.toFixed(1)} - "${c.comment}"`)
+        .map(
+          (c) =>
+            `- ${new Date(c.timestamp).toLocaleDateString()}: Trust was ${c.trustScore.toFixed(1)} - "${c.comment}"`
+        )
         .join('\n');
 
       expect(promptContext).toContain('Trust concerns emerged');

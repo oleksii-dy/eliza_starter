@@ -1,9 +1,12 @@
 // import 'ses'
 // import '../core/lockdown'
 
-import React from 'react';
+
 import ReactDOM from 'react-dom/client';
 import { Client } from './world-client';
+
+// Import only browser-safe testing components
+import '../rpg/testing/RPGTestHelpers';
 
 // Declare global env type
 declare global {

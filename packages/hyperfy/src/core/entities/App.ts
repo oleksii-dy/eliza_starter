@@ -106,7 +106,9 @@ export class App extends Entity implements HotReloadable {
         if (blueprint.model) {
           const type = blueprint.model.endsWith('vrm') ? 'avatar' : 'model';
           let glb = this.world.loader?.get(type, blueprint.model);
-          if (!glb) {glb = await this.world.loader?.load(type, blueprint.model);}
+          if (!glb) {
+            glb = await this.world.loader?.load(type, blueprint.model);
+          }
           root = glb?.toNodes();
         }
       } catch (err) {
@@ -118,7 +120,9 @@ export class App extends Entity implements HotReloadable {
       if (blueprint.script) {
         try {
           script = this.world.loader?.get('script', blueprint.script);
-          if (!script) {script = await this.world.loader?.load('script', blueprint.script);}
+          if (!script) {
+            script = await this.world.loader?.load('script', blueprint.script);
+          }
         } catch (err) {
           console.error(err);
           crashed = true;
@@ -128,17 +132,25 @@ export class App extends Entity implements HotReloadable {
     // if script crashed (or failed to load model), show crash-block
     if (crashed || !root) {
       let glb = this.world.loader?.get('model', 'asset://crash-block.glb');
-      if (!glb) {glb = await this.world.loader?.load('model', 'asset://crash-block.glb');}
+      if (!glb) {
+        glb = await this.world.loader?.load('model', 'asset://crash-block.glb');
+      }
       root = glb?.toNodes();
     }
     // if a new build happened while we were fetching, stop here
-    if (this.n !== n) {return;}
+    if (this.n !== n) {
+      return;
+    }
     // unbuild any previous version
     this.unbuild();
     // mode
     this.mode = Modes.ACTIVE;
-    if (this.data.mover) {this.mode = Modes.MOVING;}
-    if (this.data.uploader && this.data.uploader !== this.world.network?.id) {this.mode = Modes.LOADING;}
+    if (this.data.mover) {
+      this.mode = Modes.MOVING;
+    }
+    if (this.data.uploader && this.data.uploader !== this.world.network?.id) {
+      this.mode = Modes.LOADING;
+    }
     // setup
     this.blueprint = blueprint;
     this.root = root;
@@ -180,7 +192,9 @@ export class App extends Entity implements HotReloadable {
     // execute any events we collected while building
     while (this.eventQueue.length) {
       const event = this.eventQueue[0];
-      if (!event || !this.blueprint || event.version > this.blueprint.version) {break;} // ignore future versions
+      if (!event || !this.blueprint || event.version > this.blueprint.version) {
+        break;
+      } // ignore future versions
       this.eventQueue.shift();
       this.emit(event.name, event.data, event.networkId);
     }
@@ -236,7 +250,6 @@ export class App extends Entity implements HotReloadable {
         console.error('script fixedUpdate crashed', this);
         console.error(err);
         this.crash();
-
       }
     }
   }
@@ -256,7 +269,6 @@ export class App extends Entity implements HotReloadable {
         console.error('script update() crashed', this);
         console.error(err);
         this.crash();
-
       }
     }
   }
@@ -269,7 +281,6 @@ export class App extends Entity implements HotReloadable {
         console.error('script lateUpdate() crashed', this);
         console.error(err);
         this.crash();
-
       }
     }
   }
@@ -334,7 +345,9 @@ export class App extends Entity implements HotReloadable {
   }
 
   override destroy(local?: boolean) {
-    if (this.destroyed) {return;}
+    if (this.destroyed) {
+      return;
+    }
     this.destroyed = true;
 
     this.unbuild();
@@ -350,7 +363,9 @@ export class App extends Entity implements HotReloadable {
     if (!this.listeners[name]) {
       this.listeners[name] = new Set();
     }
-    if (this.listeners[name].has(callback)) {return;}
+    if (this.listeners[name].has(callback)) {
+      return;
+    }
     this.listeners[name].add(callback);
     if (hotEventNames.includes(name)) {
       this.hotEvents++;
@@ -359,8 +374,12 @@ export class App extends Entity implements HotReloadable {
   }
 
   off(name: string, callback: EventCallback) {
-    if (!this.listeners[name]) {return;}
-    if (!this.listeners[name].has(callback)) {return;}
+    if (!this.listeners[name]) {
+      return;
+    }
+    if (!this.listeners[name].has(callback)) {
+      return;
+    }
     this.listeners[name].delete(callback);
     if (hotEventNames.includes(name)) {
       this.hotEvents--;
@@ -369,7 +388,9 @@ export class App extends Entity implements HotReloadable {
   }
 
   emit(name: string, a1?: any, a2?: any) {
-    if (!this.listeners[name]) {return;}
+    if (!this.listeners[name]) {
+      return;
+    }
     const callbacks = Array.from(this.listeners[name]);
     for (const callback of callbacks) {
       callback(a1, a2);
@@ -432,7 +453,9 @@ export class App extends Entity implements HotReloadable {
   setTimeout = (fn: () => void, ms: number) => {
     const hook = this.getDeadHook();
     const timerId = setTimeout(() => {
-      if (hook.dead) {return;}
+      if (hook.dead) {
+        return;
+      }
       fn();
     }, ms);
     return timerId;
@@ -445,20 +468,30 @@ export class App extends Entity implements HotReloadable {
   getNodes() {
     // note: this is currently just used in the nodes tab in the app inspector
     // to get a clean hierarchy
-    if (!this.blueprint?.model) {return;}
+    if (!this.blueprint?.model) {
+      return;
+    }
     const type = this.blueprint.model.endsWith('vrm') ? 'avatar' : 'model';
     const glb = this.world.loader?.get(type, this.blueprint.model);
-    if (!glb) {return;}
+    if (!glb) {
+      return;
+    }
     return glb.toNodes();
   }
 
   getPlayerProxy(playerId?: string) {
-    if (playerId === undefined) {playerId = this.world.entities.player?.data.id;}
-    if (!playerId) {return null;}
+    if (playerId === undefined) {
+      playerId = this.world.entities.player?.data.id;
+    }
+    if (!playerId) {
+      return null;
+    }
     let proxy = this.playerProxies.get(playerId);
     if (!proxy || proxy.destroyed) {
       const player = this.world.entities.getPlayer(playerId);
-      if (!player) {return null;}
+      if (!player) {
+        return null;
+      }
       proxy = createPlayerProxy(this, player);
       this.playerProxies.set(playerId, proxy);
     }

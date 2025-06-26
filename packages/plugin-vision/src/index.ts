@@ -12,13 +12,20 @@ export const visionPlugin: Plugin = {
   services: [VisionService],
   providers: [visionProvider],
   actions: [
+    // Scene analysis enabled for informational purposes
     describeSceneAction,
+    // Image capture disabled by default (privacy-sensitive)
     captureImageAction,
+    // Autonomous kill disabled (potentially dangerous)
     killAutonomousAction,
+    // Vision mode setting enabled for configuration
     setVisionModeAction,
+    // Entity naming enabled for scene understanding
     nameEntityAction,
+    // Person identification disabled by default (privacy-sensitive)
     identifyPersonAction,
-    trackEntityAction
+    // Entity tracking disabled by default (privacy-sensitive)
+    trackEntityAction,
   ],
   tests: testSuites,
   init: async (_config, _runtime) => {

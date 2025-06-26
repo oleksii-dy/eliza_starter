@@ -5,7 +5,7 @@ import {
   type UUID,
   type Entity,
   type Relationship,
-  type Memory,
+  type Memory as _Memory,
 } from '@elizaos/core';
 // Define ContactInfo locally since it's not exported from RolodexService
 interface ContactInfo {
@@ -14,7 +14,10 @@ interface ContactInfo {
   address?: string;
   [key: string]: any;
 }
-import type { EntityProfile, EntityRelationship } from '../types';
+import type {
+  EntityProfile as _EntityProfile,
+  EntityRelationship as _EntityRelationship,
+} from '../types';
 import { EventEmitter } from 'events';
 
 // Event Types
@@ -291,7 +294,9 @@ export class EventBridge {
 
   unsubscribePlugin(pluginName: string, eventTypes?: string[]): void {
     const pluginSubscriptions = this.pluginEventSubscriptions.get(pluginName);
-    if (!pluginSubscriptions) {return;}
+    if (!pluginSubscriptions) {
+      return;
+    }
 
     const typesToRemove = eventTypes || Array.from(pluginSubscriptions);
 
@@ -419,7 +424,9 @@ export class EventBridge {
   }
 
   private async processBatchedEvents(): Promise<void> {
-    if (this.eventQueue.length === 0) {return;}
+    if (this.eventQueue.length === 0) {
+      return;
+    }
 
     const events = [...this.eventQueue];
     this.eventQueue = [];
@@ -436,7 +443,7 @@ export class EventBridge {
     }
 
     // Process each type
-    for (const [type, typeEvents] of eventsByType) {
+    for (const [_type, typeEvents] of eventsByType) {
       for (const event of typeEvents) {
         await this.emit(event);
       }
@@ -565,7 +572,9 @@ export class EventBridge {
   // Private Methods
   private async emitLocal(event: any): Promise<void> {
     const handlers = this.eventHandlers.get(event.type);
-    if (!handlers || handlers.size === 0) {return;}
+    if (!handlers || handlers.size === 0) {
+      return;
+    }
 
     for (const handler of handlers) {
       try {
@@ -582,7 +591,9 @@ export class EventBridge {
 
   private async emitCrossPlugin(event: any): Promise<void> {
     const listeners = this.crossPluginListeners.get(event.type);
-    if (!listeners || listeners.length === 0) {return;}
+    if (!listeners || listeners.length === 0) {
+      return;
+    }
 
     for (const listener of listeners) {
       try {
@@ -640,7 +651,7 @@ export class EventBridge {
     queueSize: number;
     subscribedPlugins: Record<string, string[]>;
     eventSubscriptions: Record<string, string[]>;
-    } {
+  } {
     return {
       emitted: Object.fromEntries(this.eventStats.emitted),
       handled: Object.fromEntries(this.eventStats.handled),
@@ -686,7 +697,7 @@ export class EventBridge {
       lastResponse?: number;
       error?: string;
     }[]
-    > {
+  > {
     const results: Array<{
       pluginName: string;
       connected: boolean;

@@ -1,4 +1,4 @@
-import * as THREE from './three';
+import { THREE } from './three';
 
 const slots = [
   'alphaMap',
@@ -14,12 +14,12 @@ const slots = [
   'roughnessMap',
 ];
 
-export function getTextureBytesFromMaterial(material: THREE.Material | null | undefined): number {
+export function getTextureBytesFromMaterial(material: any | null | undefined): number {
   let bytes = 0;
   if (material) {
     const checked = new Set<string>();
     for (const slot of slots) {
-      const texture = (material as any)[slot] as THREE.Texture | undefined;
+      const texture = (material as any)[slot] as any;
       if (texture && texture.image && !checked.has(texture.uuid)) {
         checked.add(texture.uuid);
         const image = texture.image as any;

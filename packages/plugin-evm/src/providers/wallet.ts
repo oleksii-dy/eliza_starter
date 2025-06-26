@@ -9,17 +9,15 @@ import {
   TEEMode,
   ServiceType,
 } from '@elizaos/core';
-import type {
-  Account,
-  Address,
-  Chain,
-  HttpTransport,
-  PrivateKeyAccount,
-  PublicClient,
-  TestClient,
-  WalletClient,
-} from 'viem';
 import {
+  type Account,
+  type Address,
+  type Chain,
+  type HttpTransport,
+  type PrivateKeyAccount,
+  type PublicClient,
+  type TestClient,
+  type WalletClient,
   http,
   createPublicClient,
   createTestClient,
@@ -42,7 +40,7 @@ export class WalletProvider {
   constructor(
     accountOrPrivateKey: PrivateKeyAccount | `0x${string}`,
     runtime: IAgentRuntime,
-    chains?: Record<string, Chain>,
+    chains?: Record<string, Chain>
   ) {
     this.setAccount(accountOrPrivateKey);
     if (chains) {
@@ -56,7 +54,7 @@ export class WalletProvider {
   }
 
   getPublicClient(
-    chainName: SupportedChain,
+    chainName: SupportedChain
   ): PublicClient<HttpTransport, Chain, Account | undefined> {
     const transport = this.createHttpTransport(chainName);
 
@@ -121,10 +119,10 @@ export class WalletProvider {
           if (balance !== null) {
             balances[chainName] = balance;
           }
-        } catch (error) {
-          elizaLogger.error(`Error getting balance for ${chainName}:`, error);
+        } catch (_error) {
+          elizaLogger.error(`Error getting balance for ${chainName}:`, _error);
         }
-      }),
+      })
     );
 
     await this.runtime.setCache(cacheKey, balances);
@@ -139,8 +137,8 @@ export class WalletProvider {
         address: this.account.address,
       });
       return formatUnits(balance, 18);
-    } catch (error) {
-      console.error(`Error getting wallet balance for ${chainName}:`, error);
+    } catch (_error) {
+      elizaLogger.error(`Error getting wallet balance for ${chainName}:`, _error);
       return null;
     }
   }
@@ -186,14 +184,14 @@ export class WalletProvider {
 
     const viemChain: Chain = customRpcUrl
       ? {
-        ...baseChain,
-        rpcUrls: {
-          ...baseChain.rpcUrls,
-          custom: {
-            http: [customRpcUrl],
+          ...baseChain,
+          rpcUrls: {
+            ...baseChain.rpcUrls,
+            custom: {
+              http: [customRpcUrl],
+            },
           },
-        },
-      }
+        }
       : baseChain;
 
     return viemChain;
@@ -240,15 +238,15 @@ const genChainsFromRuntime = (runtime: IAgentRuntime): Record<string, Chain> => 
       const chain = WalletProvider.genChainFromName(chainName, rpcUrl);
       chains[chainName] = chain;
       elizaLogger.log(`Configured chain: ${chainName}`);
-    } catch (error) {
-      elizaLogger.error(`Error configuring chain ${chainName}:`, error);
+    } catch (_error) {
+      elizaLogger.error(`Error configuring chain ${chainName}:`, _error);
     }
   }
 
   return chains;
 };
 
-export const initWalletProvider = async (runtime: IAgentRuntime) => {
+export const initWalletProvider = (runtime: IAgentRuntime) => {
   const teeMode = runtime.getSetting('TEE_MODE') || TEEMode.OFF;
 
   const chains = genChainsFromRuntime(runtime);
@@ -280,7 +278,7 @@ class LazyTeeWalletProvider extends WalletProvider {
     super(
       '0x0000000000000000000000000000000000000000000000000000000000000001' as `0x${string}`,
       runtime,
-      chains,
+      chains
     );
     this.walletSecretSalt = walletSecretSalt;
   }
@@ -303,7 +301,7 @@ class LazyTeeWalletProvider extends WalletProvider {
 
     if (!teeService) {
       throw new Error(
-        'TEE service not found - ensure TEE plugin is registered before using TEE-dependent features',
+        'TEE service not found - ensure TEE plugin is registered before using TEE-dependent features'
       );
     }
 
@@ -311,10 +309,10 @@ class LazyTeeWalletProvider extends WalletProvider {
       throw new Error('TEE service does not implement deriveEcdsaKeypair method');
     }
 
-    const { keypair, attestation } = await (teeService as any).deriveEcdsaKeypair(
+    const { keypair, attestation: _attestation } = await (teeService as any).deriveEcdsaKeypair(
       this.walletSecretSalt,
       'evm',
-      this.runtime.agentId,
+      this.runtime.agentId
     );
 
     this.teeWallet = new WalletProvider(keypair, this.runtime, this.chains);
@@ -327,14 +325,14 @@ class LazyTeeWalletProvider extends WalletProvider {
   getAddress(): Address {
     if (!this.teeWallet) {
       throw new Error(
-        'TEE wallet not initialized yet. Ensure async operations complete before using synchronous methods.',
+        'TEE wallet not initialized yet. Ensure async operations complete before using synchronous methods.'
       );
     }
     return this.teeWallet.getAddress();
   }
 
   getPublicClient(
-    chainName: SupportedChain,
+    chainName: SupportedChain
   ): PublicClient<HttpTransport, Chain, Account | undefined> {
     if (!this.teeWallet) {
       // Public client doesn't need the account, so we can return it without TEE initialization
@@ -346,7 +344,7 @@ class LazyTeeWalletProvider extends WalletProvider {
   getWalletClient(chainName: SupportedChain): WalletClient {
     if (!this.teeWallet) {
       throw new Error(
-        'TEE wallet not initialized yet. Ensure async operations complete before using wallet client.',
+        'TEE wallet not initialized yet. Ensure async operations complete before using wallet client.'
       );
     }
     return this.teeWallet.getWalletClient(chainName);
@@ -403,8 +401,8 @@ export const evmWalletProvider: Provider = {
           chains: JSON.stringify(walletData.chains),
         },
       };
-    } catch (error) {
-      console.error('Error in EVM wallet provider:', error);
+    } catch (_error) {
+      elizaLogger.error('Error in EVM wallet provider:', _error);
       return {
         text: 'Error getting EVM wallet provider',
         data: {},
@@ -417,7 +415,7 @@ export const evmWalletProvider: Provider = {
 // Fallback function to fetch wallet data directly
 async function directFetchWalletData(
   runtime: IAgentRuntime,
-  state?: State,
+  state?: State
 ): Promise<ProviderResult> {
   try {
     const walletProvider = await initWalletProvider(runtime);
@@ -453,8 +451,8 @@ async function directFetchWalletData(
         chains: JSON.stringify(chainDetails),
       },
     };
-  } catch (error) {
-    console.error('Error fetching wallet data directly:', error);
+  } catch (_error) {
+    elizaLogger.error('Error fetching wallet data directly:', _error);
     return {
       text: 'Error getting EVM wallet provider',
       data: {},

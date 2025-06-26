@@ -8,7 +8,7 @@ export class TrustActionsE2ETests implements TestSuite {
     {
       name: 'EVALUATE_TRUST action returns trust score',
       fn: async (runtime: IAgentRuntime) => {
-        const action = runtime.actions.find(a => a.name === 'EVALUATE_TRUST');
+        const action = runtime.actions.find((a) => a.name === 'EVALUATE_TRUST');
         if (!action) {
           throw new Error('EVALUATE_TRUST action not found');
         }
@@ -21,9 +21,9 @@ export class TrustActionsE2ETests implements TestSuite {
           agentId: runtime.agentId,
           content: {
             text: 'What is my trust score?',
-            source: 'test'
+            source: 'test',
           },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         // Execute action
@@ -48,13 +48,13 @@ export class TrustActionsE2ETests implements TestSuite {
         if (!responseReceived) {
           throw new Error('No response received from EVALUATE_TRUST action');
         }
-      }
+      },
     },
 
     {
       name: 'RECORD_TRUST_INTERACTION updates trust score',
       fn: async (runtime: IAgentRuntime) => {
-        const action = runtime.actions.find(a => a.name === 'RECORD_TRUST_INTERACTION');
+        const action = runtime.actions.find((a) => a.name === 'RECORD_TRUST_INTERACTION');
         if (!action) {
           throw new Error('RECORD_TRUST_INTERACTION action not found');
         }
@@ -76,11 +76,11 @@ export class TrustActionsE2ETests implements TestSuite {
               type: 'HELPFUL_ACTION',
               targetEntityId: entityId,
               impact: 10,
-              description: 'Provided helpful assistance'
+              description: 'Provided helpful assistance',
             }),
-            source: 'test'
+            source: 'test',
           },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         // Execute action
@@ -105,17 +105,19 @@ export class TrustActionsE2ETests implements TestSuite {
         // Verify trust score increased
         const newScore = await trustService.getTrustScore(entityId);
         if (newScore.overall <= initialScore.overall) {
-          throw new Error(`Trust score did not increase: ${initialScore.overall} -> ${newScore.overall}`);
+          throw new Error(
+            `Trust score did not increase: ${initialScore.overall} -> ${newScore.overall}`
+          );
         }
 
         console.log(`✅ Trust score increased from ${initialScore.overall} to ${newScore.overall}`);
-      }
+      },
     },
 
     {
       name: 'REQUEST_ELEVATION handles permission requests',
       fn: async (runtime: IAgentRuntime) => {
-        const action = runtime.actions.find(a => a.name === 'REQUEST_ELEVATION');
+        const action = runtime.actions.find((a) => a.name === 'REQUEST_ELEVATION');
         if (!action) {
           throw new Error('REQUEST_ELEVATION action not found');
         }
@@ -128,9 +130,9 @@ export class TrustActionsE2ETests implements TestSuite {
           agentId: runtime.agentId,
           content: {
             text: 'I need elevated permissions to access sensitive data',
-            source: 'test'
+            source: 'test',
           },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         // Execute action
@@ -156,13 +158,13 @@ export class TrustActionsE2ETests implements TestSuite {
         if (!responseReceived) {
           throw new Error('No response received from REQUEST_ELEVATION action');
         }
-      }
+      },
     },
 
     {
       name: 'Actions validate trust requirements',
       fn: async (runtime: IAgentRuntime) => {
-        const action = runtime.actions.find(a => a.name === 'UPDATE_ROLE');
+        const action = runtime.actions.find((a) => a.name === 'UPDATE_ROLE');
         if (!action) {
           throw new Error('UPDATE_ROLE action not found');
         }
@@ -178,9 +180,9 @@ export class TrustActionsE2ETests implements TestSuite {
           agentId: runtime.agentId,
           content: {
             text: 'Make me an admin',
-            source: 'test'
+            source: 'test',
           },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         // Validate should fail for low-trust entity
@@ -191,8 +193,8 @@ export class TrustActionsE2ETests implements TestSuite {
           }
           console.log('✅ Action correctly denied for low-trust entity');
         }
-      }
-    }
+      },
+    },
   ];
 }
 

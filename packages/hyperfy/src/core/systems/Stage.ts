@@ -2,13 +2,13 @@ import { isNumber } from 'lodash-es';
 
 import type { Stage as IStage, World } from '../../types/index.js';
 import { LooseOctree } from '../extras/LooseOctree.js';
-import * as THREE from '../extras/three.js';
+import { THREE } from '../extras/three.js';
 import { System } from './System.js';
 
 const vec2 = new THREE.Vector2();
 
 // Type definitions
-interface StageOptions {
+interface _StageOptions {
   viewport?: HTMLElement;
 }
 
@@ -102,7 +102,7 @@ export class Stage extends System implements IStage {
     }
   }
 
-  override update(delta: number): void {
+  override update(_delta: number): void {
     this.models.forEach(model => model.clean());
   }
 

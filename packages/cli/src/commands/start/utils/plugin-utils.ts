@@ -50,6 +50,9 @@ const pluginNameMapping: Record<string, string> = {
   ngrok: '@elizaos/plugin-ngrok',
   agentkit: '@elizaos/plugin-agentkit',
   autocoder: '@elizaos/plugin-autocoder',
+  e2b: '@elizaos/plugin-e2b',
+  'code-execution': '@elizaos/plugin-e2b',
+  'code-interpreter': '@elizaos/plugin-e2b',
 };
 
 /**
