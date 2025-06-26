@@ -500,7 +500,16 @@ describe('Event Emission Regression Tests', () => {
       };
 
       // The handler should execute without error
-      await expect(messageSentHandlers[0](messagePayload)).resolves.not.toThrow();
+      // Since the handler might not return anything, just check it doesn't throw
+      try {
+        await messageSentHandlers[0](messagePayload);
+        // If we get here, the handler executed successfully
+        expect(true).toBe(true);
+      } catch (error) {
+        // If there's an error, fail the test with the error message
+        console.error('Handler error:', error);
+        expect(error).toBeUndefined();
+      }
     });
   });
 });
