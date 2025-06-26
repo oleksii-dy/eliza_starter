@@ -560,4 +560,86 @@ This section details further considerations for sandboxing tool execution within
 
 By documenting these advanced topics thoroughly in `scratchpad.md` and updating the relevant plugin READMEs, this step will be complete.
 ---
+## Conceptual Design: Artifact Handling for Developer & Auditor Agents (Current Plan - Step 3)
+
+**Problem:** Large artifacts (code files, detailed reports) are impractical for direct A2A message payloads.
+
+**Proposed Solution: `ArtifactStorageService` (Conceptual)**
+
+1.  **Service Definition (New Plugin: `@elizaos/plugin-artifact-storage` or part of Core/Bootstrap):**
+    *   **Methods:**
+        *   `storeArtifact(options: { agentId, conversationId?, taskName?, artifactName, artifactContent: string | Buffer, contentType?, storageHint?: 'temp' | 'persistent' }): Promise<{ artifactId, storagePathOrURL, metadata? }>`
+        *   `retrieveArtifact(artifactId: string): Promise<{ content: Buffer | string, metadata? } | null>`
+        *   `deleteArtifact(artifactId: string): Promise<boolean>`
+        *   `listArtifacts(options: { agentId?, conversationId?, taskName? }): Promise<Array<{...}>>`
+    *   **Storage Backends (Pluggable Adapter Pattern):**
+        *   **Local Filesystem Adapter (Default/PoC):** Stores in `data/eliza_artifacts/...`. `storagePathOrURL` is a local file path.
+            *   *Docker Integration:* If Auditor runs in Docker, this local path needs to be mountable, or `ToolExecutionService` stages artifacts into the container's workspace.
+        *   **Cloud Object Storage Adapter (e.g., S3, MinIO):** For distributed setups. `storagePathOrURL` is an S3 URL.
+    *   **Metadata:** Creation time, owner, content type, etc.
+    *   **Cleanup Policy:** For 'temp' artifacts.
+
+2.  **Workflow Integration:**
+    *   **DeveloperAgent (Code Generation):**
+        1.  Generates code.
+        2.  Calls `artifactService.storeArtifact(...)` with the code string.
+        3.  A2A `TASK_RESPONSE` `result` becomes `{ codeArtifactId: "...", codeStoragePath: "...", summary: "..." }`.
+    *   **SupervisoryAgent (Delegating Audit):**
+        1.  Receives `TASK_RESPONSE` from Developer. Stores `codeArtifactId`.
+        2.  A2A `TASK_REQUEST` to Auditor includes `parameters: { codeArtifactId: "..." }`.
+    *   **BlockchainAuditorAgent (Consuming Artifact):**
+        1.  Receives `TASK_REQUEST` with `codeArtifactId`.
+        2.  Calls `artifactService.retrieveArtifact(codeArtifactId)` to get contract content.
+        3.  **Tool Execution:**
+            *   Passes retrieved content to `ToolExecutionService` via `inputStringForFile`.
+            *   If tools generate report *files* (e.g., Slither JSON to file, coverage reports), these are in the Docker host workspace. `ToolExecutionService` needs to return paths to these.
+        4.  Auditor calls `artifactService.storeArtifact(...)` for each report file.
+        5.  A2A `TASK_RESPONSE` to Supervisor includes `artifactIds` for reports.
+    *   **SupervisoryAgent (Receiving Audit Report):**
+        1.  Receives artifact IDs for reports.
+        2.  Can `retrieveArtifact()` to get content for final aggregation/LLM summary.
+
+3.  **A2A Protocol Impact:**
+    *   `payload.result` and `payload.parameters` will often contain artifact identifiers/references instead of full content.
+    *   Standardized keys (e.g., `codeArtifactId`, `reportArtifactUrl`) recommended.
+
+4.  **Security (ArtifactStorageService):**
+    *   Path traversal protection (local adapter).
+    *   Access control (scoping by `agentId`, `conversationId`).
+    *   Storage quotas.
+    *   Malware scanning (for cloud).
+
+This design allows scalable handling of complex data products between agents.
+
+**Elaboration on Docker Integration for Local Filesystem Artifacts:**
+
+*   **When AuditorAgent receives `codeArtifactId` which resolves to a local path (e.g., `/eliza_data/artifacts/dev001/proj001/SimpleStorage.sol`):**
+    1.  **Auditor's Preparation:** The AuditorAgent's logic (in `plugin-a2a-communication`'s task handler) would retrieve this `hostPath = /eliza_data/artifacts/dev001/proj001/SimpleStorage.sol`.
+    2.  **Option A: `ToolExecutionService` handles additional mounts (More Complex for Service):**
+        *   The Auditor could pass `additionalMounts: [{ hostPath: path.dirname(hostPath), containerPath: "/app/artifacts_in", readOnly: true }]` to `ToolExecutionService.executeCommand`.
+        *   The tool command inside Docker would then refer to `/app/artifacts_in/SimpleStorage.sol`.
+        *   This requires `ToolExecutionService` to support arbitrary additional volume mounts, which adds complexity and potential security surface if not managed carefully.
+    3.  **Option B: Agent logic copies artifact to main workspace (Simpler for Service):**
+        *   The AuditorAgent's logic, before calling `ToolExecutionService.executeCommand`, would:
+            *   Identify/create the main `hostWorkspacePath` for the current audit task (e.g., `/tmp/eliza-audit-xyz`).
+            *   Copy the artifact: `fs.copyFile(hostPath, path.join(hostWorkspacePath, "TargetContract.sol"))`.
+            *   Call `ToolExecutionService.executeCommand` with `cwd: hostWorkspacePath`.
+            *   The tool command inside Docker refers to `/app/workspace/TargetContract.sol`.
+        *   This is simpler for `ToolExecutionService` as it only manages one primary workspace mount. The agent is responsible for populating it.
+    4.  **Option C: `inputStringForFile` (If artifact is text-based like code):**
+        *   Auditor retrieves content using `artifactService.retrieveArtifact()`.
+        *   Passes content to `ToolExecutionService.executeCommand` via `inputStringForFile`. This is already supported and good for single files. Less suitable for multi-file projects.
+
+*   **Retrieving Tool Output Files (e.g., Slither JSON report, Forge coverage):**
+    1.  Tools inside Docker write to `/app/workspace/output/...`.
+    2.  These files appear on the host in `hostWorkspacePath/output/...`.
+    3.  `ToolExecutionService.executeCommand` could be enhanced to:
+        *   Accept an `expectedOutputFiles: [{containerPath: string, desiredHostName?: string}]` option.
+        *   After Docker run, copy these files from `hostWorkspacePath/output/...` to a more stable/organized location or return their content/paths directly in `CommandResult`.
+        *   For now, the agent logic after `executeCommand` would manually inspect `hostWorkspacePath` for known report files.
+    4.  AuditorAgent then uses `artifactService.storeArtifact()` for these report files.
+
+The choice between Option A/B for input depends on how generic `ToolExecutionService` should be vs. how much preparation agent logic does. Option C is good for single code strings. Option B is a reasonable balance for PoC.
+
+---
 This scratchpad will evolve as the project progresses.Tool output for `create_file_with_block`:

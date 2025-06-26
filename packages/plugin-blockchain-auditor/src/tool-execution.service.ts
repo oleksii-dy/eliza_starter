@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, type SpawnOptionsWithoutStdio } from 'node:child_process';
 import { logger, Service, type IAgentRuntime } from '@elizaos/core';
 import path from 'node:path';
 import fs from 'node:fs/promises'; // Use promises API for async file operations
@@ -10,21 +10,20 @@ export interface CommandResult {
   stdout: string;
   stderr: string;
   exitCode: number | null;
-  error?: string;
-  // Potentially add paths to output files if tools generate them
-  // outputDirectory?: string;
+  error?: string; // For errors during spawn/setup or from Docker itself
 }
 
 export interface ToolExecutionOptions {
-  cwd?: string; // This will be the path *on the host* to be mounted into the container.
+  cwd?: string;
   timeout?: number;
   env?: NodeJS.ProcessEnv;
-  dockerImageName?: string; // Specific Docker image for this execution.
-  inputStringForFile?: { content: string; filename: string }; // Content to write to a file in the workspace.
-  // outputFilename?: string; // If expecting a specific output file
+  dockerImageName?: string;
+  inputStringForFile?: { content: string; filename: string };
+  // Consider adding docker specific options like network, user, resource limits if needed later
+  // dockerRunArgs?: string[]; // For additional raw docker run arguments
 }
 
-const CONTAINER_WORKSPACE_PATH = '/app/workspace'; // Standardized workspace path inside the container
+const CONTAINER_WORKSPACE_PATH = '/app/workspace';
 
 export class ToolExecutionService extends Service {
   static readonly serviceType = 'ToolExecutionService';
@@ -32,142 +31,160 @@ export class ToolExecutionService extends Service {
 
   constructor(runtime: IAgentRuntime) {
     super(runtime);
-    logger.info('ToolExecutionService instantiated. Using Docker for command execution sandboxing.');
+    logger.info(`[${ToolExecutionService.serviceType}] Instantiated. Using Docker for command execution.`);
   }
 
   static async start(runtime: IAgentRuntime): Promise<ToolExecutionService> {
-    logger.info('ToolExecutionService starting.');
-    // Ensure Docker is available? Could do a quick `docker --version` check here.
-    // For now, assume Docker is installed and accessible.
+    logger.info(`[${ToolExecutionService.serviceType}] Starting for agent ${runtime.agentId}.`);
+    // Basic Docker check could be added here:
+    // try {
+    //   await this.checkDockerAvailability();
+    //   logger.info(`[${ToolExecutionService.serviceType}] Docker availability confirmed.`);
+    // } catch (dockerError) {
+    //   logger.error(`[${ToolExecutionService.serviceType}] Docker not available or not configured: ${ (dockerError as Error).message }`);
+    //   // Depending on policy, either throw or allow service to start but commands will fail.
+    // }
     return new ToolExecutionService(runtime);
   }
 
+  // Optional: Helper to check if Docker is installed and runnable.
+  // static async checkDockerAvailability(): Promise<void> {
+  //   return new Promise((resolve, reject) => {
+  //     const docker = spawn('docker', ['--version']);
+  //     docker.on('error', (err) => reject(new Error(`Docker command failed to start: ${err.message}`)));
+  //     docker.on('close', (code) => code === 0 ? resolve() : reject(new Error(`Docker command '--version' exited with code ${code}`)));
+  //   });
+  // }
+
   static async stop(_runtime: IAgentRuntime): Promise<void> {
-    logger.info('ToolExecutionService stopping.');
+    logger.info(`[${ToolExecutionService.serviceType}] Stopping.`);
   }
 
-  /**
-   * Executes an external command sandboxed within a Docker container.
-   * @param command The command or executable to run *inside the Docker container* (e.g., 'forge', 'slither').
-   * @param args An array of arguments for the command.
-   * @param options Execution options including host CWD (to be mounted), Docker image, timeout, etc.
-   * @returns A promise that resolves with the command's output and exit code.
-   */
   public async executeCommand(
-    command: string, // This is the command to run *inside* the container
-    args: string[],
+    commandToRunInContainer: string,
+    argsForCommandInContainer: string[],
     options: ToolExecutionOptions = {}
   ): Promise<CommandResult> {
     const {
-      cwd: hostWorkspacePath, // This is the path on the HOST to be mounted
-      timeout = 180000, // Default timeout 3 minutes, tools can be slow
+      cwd: hostWorkspacePathOpt,
+      timeout = 180000, // Default 3 minutes
       env,
       dockerImageName: specificDockerImage,
       inputStringForFile
     } = options;
 
-    const auditorConfig = getAuditorConfig(); // Get default images, etc.
+    const auditorConfig = getAuditorConfig();
     let resolvedDockerImage = specificDockerImage;
     if (!resolvedDockerImage) {
-      // Infer default image based on command - very basic
-      if (command.includes('forge')) resolvedDockerImage = auditorConfig.DEFAULT_FOUNDRY_DOCKER_IMAGE;
-      else if (command.includes('slither')) resolvedDockerImage = auditorConfig.DEFAULT_SLITHER_DOCKER_IMAGE;
-      else if (command.includes('hardhat')) resolvedDockerImage = auditorConfig.DEFAULT_HARDHAT_DOCKER_IMAGE;
-      // Add more inferences or require dockerImageName to be explicit
+      if (commandToRunInContainer.includes('forge')) resolvedDockerImage = auditorConfig.DEFAULT_FOUNDRY_DOCKER_IMAGE;
+      else if (commandToRunInContainer.includes('slither')) resolvedDockerImage = auditorConfig.DEFAULT_SLITHER_DOCKER_IMAGE;
+      else if (commandToRunInContainer.includes('hardhat')) resolvedDockerImage = auditorConfig.DEFAULT_HARDHAT_DOCKER_IMAGE;
     }
 
     if (!resolvedDockerImage) {
-      logger.error(`[ToolExecutionService] Docker image not specified and could not be inferred for command: ${command}`);
-      return { stdout: '', stderr: `Docker image not specified for command: ${command}`, exitCode: -1, error: 'Docker image missing' };
+      const errMsg = `Docker image not specified and could not be inferred for command: ${commandToRunInContainer}`;
+      logger.error(`[${ToolExecutionService.serviceType}] ${errMsg}`);
+      return { stdout: '', stderr: errMsg, exitCode: -1, error: 'Docker image configuration error' };
     }
 
     const uniqueRunId = uuidv4().substring(0, 8);
-    const tempHostWorkspace = hostWorkspacePath ? path.resolve(hostWorkspacePath) : path.join(os.tmpdir(), `eliza-audit-${uniqueRunId}`);
-    let createdTempWorkspace = false;
+    // Resolve hostWorkspacePath: use provided cwd, or create a temp one.
+    const hostWorkspacePath = hostWorkspacePathOpt ? path.resolve(hostWorkspacePathOpt) : path.join(os.tmpdir(), `eliza-audit-${uniqueRunId}`);
+    let createdTempWorkspace = !hostWorkspacePathOpt;
 
     try {
-      if (!hostWorkspacePath) { // If no CWD is given, create a truly temporary one
-        await fs.mkdir(tempHostWorkspace, { recursive: true });
-        createdTempWorkspace = true;
-        logger.debug(`[ToolExecutionService] Created temporary host workspace: ${tempHostWorkspace}`);
-      } else { // Ensure provided host CWD exists
-        if (! (await fs.stat(tempHostWorkspace).catch(() => null))?.isDirectory()) {
-            logger.error(`[ToolExecutionService] Provided hostWorkspacePath (cwd) does not exist or is not a directory: ${tempHostWorkspace}`);
-            return { stdout: '', stderr: `Host workspace path (cwd) not found: ${tempHostWorkspace}`, exitCode: -1, error: 'CWD not found' };
+      if (createdTempWorkspace) {
+        await fs.mkdir(hostWorkspacePath, { recursive: true });
+        logger.debug(`[${ToolExecutionService.serviceType}] Created temp host workspace: ${hostWorkspacePath}`);
+      } else {
+        const stats = await fs.stat(hostWorkspacePath).catch(() => null);
+        if (!stats?.isDirectory()) {
+          const errMsg = `Provided hostWorkspacePath (cwd) does not exist or is not a directory: ${hostWorkspacePath}`;
+          logger.error(`[${ToolExecutionService.serviceType}] ${errMsg}`);
+          return { stdout: '', stderr: errMsg, exitCode: -1, error: 'Invalid CWD for Docker mount' };
         }
-        logger.debug(`[ToolExecutionService] Using existing host workspace: ${tempHostWorkspace}`);
+        logger.debug(`[${ToolExecutionService.serviceType}] Using existing host workspace: ${hostWorkspacePath}`);
       }
 
       if (inputStringForFile) {
-        const inputFilePathOnHost = path.join(tempHostWorkspace, inputStringForFile.filename);
-        await fs.writeFile(inputFilePathOnHost, inputStringForFile.content);
-        logger.debug(`[ToolExecutionService] Wrote input string to ${inputFilePathOnHost}`);
-        // The `command` or `args` should now refer to `/app/workspace/${inputStringForFile.filename}`
-      }
-
-      // Docker command arguments
-      const dockerArgs = [
-        'run',
-        '--rm', // Automatically remove the container when it exits
-        // '--network=none', // Disable networking by default for security, unless explicitly needed
-        '-v', `${tempHostWorkspace}:${CONTAINER_WORKSPACE_PATH}:rw`, // Mount host workspace to container workspace
-        // Consider adding --user $(id -u):$(id -g) for Linux/Mac to match host user,
-        // but this can be problematic with Docker Desktop on Windows/Mac.
-        // For now, let files be owned by root in container, host needs to handle perms if it cares.
-        '--workdir', CONTAINER_WORKSPACE_PATH, // Set working directory inside container
-      ];
-      if (env) { // Pass environment variables
-        for (const key in env) {
-          dockerArgs.push('-e', `${key}=${env[key]}`);
+        const inputFilePathOnHost = path.join(hostWorkspacePath, inputStringForFile.filename);
+        try {
+            await fs.writeFile(inputFilePathOnHost, inputStringForFile.content);
+            logger.debug(`[${ToolExecutionService.serviceType}] Wrote input string to ${inputFilePathOnHost}`);
+        } catch (writeError: any) {
+            const errMsg = `Failed to write inputStringForFile to ${inputFilePathOnHost}: ${writeError.message}`;
+            logger.error(`[${ToolExecutionService.serviceType}] ${errMsg}`);
+            // Cleanup created workspace if we created it for this input file that failed to write
+            if (createdTempWorkspace) await fs.rm(hostWorkspacePath, { recursive: true, force: true }).catch(e => logger.error(`Error cleaning up temp workspace after input write fail: ${e.message}`));
+            return { stdout: '', stderr: errMsg, exitCode: -1, error: 'Input file write error' };
         }
       }
-      dockerArgs.push(resolvedDockerImage); // The image to use
-      dockerArgs.push(command);             // The command to run inside the container
-      dockerArgs.push(...args);             // Arguments for that command
 
-      logger.info(`[ToolExecutionService] Executing Docker command: docker ${dockerArgs.join(' ')}`);
+      const dockerArgs = [
+        'run', '--rm', '--network=none', // No network access by default
+        '-v', `${hostWorkspacePath}:${CONTAINER_WORKSPACE_PATH}:rw`,
+        '--workdir', CONTAINER_WORKSPACE_PATH,
+      ];
+      if (env) { Object.entries(env).forEach(([key, value]) => dockerArgs.push('-e', `${key}=${value}`)); }
+      dockerArgs.push(resolvedDockerImage, commandToRunInContainer, ...argsForCommandInContainer);
+
+      logger.info(`[${ToolExecutionService.serviceType}] Executing: docker ${dockerArgs.join(' ')}`);
 
       return new Promise((resolve) => {
         let stdout = '';
         let stderr = '';
         let processError: Error | null = null;
 
-        const child = spawn('docker', dockerArgs, { timeout, shell: false });
+        const spawnOptions: SpawnOptionsWithoutStdio = { timeout, shell: false };
+        // On Windows, 'docker.exe' might be needed if 'docker' isn't in PATH correctly for spawn
+        const dockerCommand = process.platform === "win32" ? "docker.exe" : "docker";
+
+        const child = spawn(dockerCommand, dockerArgs, spawnOptions);
 
         child.stdout.on('data', (data) => { stdout += data.toString(); });
         child.stderr.on('data', (data) => { stderr += data.toString(); });
-        child.on('error', (err) => { processError = err; });
-        child.on('close', (code) => {
-          logger.info(`[ToolExecutionService] Docker execution for '${command}' finished with exit code: ${code}`);
-          if (processError) {
-            logger.error(`[ToolExecutionService] Failed to start Docker command for '${command}':`, processError);
-            resolve({ stdout, stderr, exitCode: code, error: processError.message });
-          } else {
+
+        child.on('error', (err) => {
+            processError = err;
+            // This typically means 'docker' command itself failed to start (e.g., not found, permissions)
+            logger.error(`[${ToolExecutionService.serviceType}] Spawn error for Docker command: ${err.message}`, err);
+        });
+
+        child.on('close', (code, signal) => {
+          const logMessage = `[${ToolExecutionService.serviceType}] Docker exec for '${commandToRunInContainer}' finished. Code: ${code}, Signal: ${signal}.`;
+          if (code === 0) logger.info(logMessage); else logger.warn(logMessage);
+
+          if (processError) { // Error from spawn itself
+            resolve({ stdout, stderr, exitCode: code ?? -1 , error: `Docker spawn error: ${processError.message}` });
+          } else if (signal) { // Process killed by signal (e.g., timeout)
+            resolve({ stdout, stderr, exitCode: code ?? -1, error: `Docker process killed by signal: ${signal}` });
+          } else if (code !== 0 && stderr.toLowerCase().includes("cannot connect to the docker daemon")) {
+            resolve({ stdout, stderr, exitCode: code, error: "Cannot connect to the Docker daemon. Is it running?"});
+          } else if (code !== 0 && stderr.toLowerCase().includes("image") && stderr.toLowerCase().includes("not found")) {
+            resolve({ stdout, stderr, exitCode: code, error: `Docker image '${resolvedDockerImage}' not found.`});
+          }
+           else {
             resolve({ stdout, stderr, exitCode: code });
           }
         });
       });
-    } catch (err: any) {
-      logger.error(`[ToolExecutionService] Error setting up Docker execution for '${command}':`, err);
-      return { stdout: '', stderr: err.message || 'Failed to set up Docker execution.', exitCode: -1, error: err.message };
+    } catch (setupError: any) {
+      logger.error(`[${ToolExecutionService.serviceType}] Setup error for Docker execution of '${commandToRunInContainer}': ${setupError.message}`, setupError);
+      return { stdout: '', stderr: setupError.message, exitCode: -1, error: `Setup error: ${setupError.message}` };
     } finally {
       if (createdTempWorkspace) {
         try {
-          await fs.rm(tempHostWorkspace, { recursive: true, force: true });
-          logger.debug(`[ToolExecutionService] Cleaned up temporary host workspace: ${tempHostWorkspace}`);
+          await fs.rm(hostWorkspacePath, { recursive: true, force: true });
+          logger.debug(`[${ToolExecutionService.serviceType}] Cleaned up temp host workspace: ${hostWorkspacePath}`);
         } catch (cleanupError: any) {
-          logger.error(`[ToolExecutionService] Failed to clean up temporary host workspace ${tempHostWorkspace}:`, cleanupError);
+          logger.error(`[${ToolExecutionService.serviceType}] Failed to clean up temp host workspace ${hostWorkspacePath}: ${cleanupError.message}`);
         }
       }
     }
   }
 
   public static getService(runtime: IAgentRuntime): ToolExecutionService | undefined {
-    try {
-      return runtime.getService<ToolExecutionService>(ToolExecutionService.serviceType);
-    } catch (e) {
-      logger.warn(`[ToolExecutionService] Service not found in runtime for agent ${runtime.agentId}. It might not have been started or registered yet.`);
-      return undefined;
-    }
+    try { return runtime.getService<ToolExecutionService>(ToolExecutionService.serviceType); }
+    catch (e) { logger.warn(`[${ToolExecutionService.serviceType}] Service not found for agent ${runtime.agentId}.`); return undefined; }
   }
 }

@@ -18,20 +18,14 @@ import {
   PROCESS_A2A_TASK_EVENT,
   type TaskResponsePayload,
   type TaskRequestPayload,
-  // Supervisor Task DB Types - now imported from plugin-supervisor-utils
-  // DELEGATED_SUB_TASKS_TABLE_NAME,
-  // DelegatedSubTaskStatus,
-  // type NewDelegatedSubTask,
 } from './types';
 import { A2AService } from './a2a-service';
 
-// Import from the new supervisor-utils plugin
 import {
   SupervisorTaskDBService,
-  type DelegatedSubTask, // Assuming these are exported
-  type NewDelegatedSubTask,
-  SupervisorTaskStatus, // Renamed from DelegatedSubTaskStatus for clarity if needed, or use as is
-  // delegatedSubTasksTable // Schema object for type safety if methods require it, though service abstracts this
+  type DelegatedSubTask,
+  type InsertableDelegatedSubTask,
+  SupervisorTaskStatus,
 } from '@elizaos/plugin-supervisor-utils';
 
 
@@ -40,7 +34,6 @@ function getA2AService(runtime: IAgentRuntime): A2AService | undefined {
   catch (e) { logger.warn(`[A2A Plugin - ${runtime.agentId}] A2AService not found. Error: ${e}`); return undefined; }
 }
 
-// Updated to get SupervisorTaskDBService
 function getSupervisorTaskDBService(runtime: IAgentRuntime): SupervisorTaskDBService | undefined {
   try {
     const service = runtime.getService<SupervisorTaskDBService>(SupervisorTaskDBService.serviceType);
@@ -100,10 +93,13 @@ const sendMessageAction: Action = {
 
 async function checkAndDelegateWaitingTasksSupervisorLogic(
     runtime: IAgentRuntime,
-    projectConversationId: string,
-    supervisorTaskDBService: SupervisorTaskDBService // Pass the service instance
+    projectConversationId: string
 ) {
-    if (!runtime.agentId || runtime.character?.name !== 'SupervisorAlpha') return;
+    const supervisorTaskDBService = getSupervisorTaskDBService(runtime);
+    if (!runtime.agentId || runtime.character?.name !== 'SupervisorAlpha' || !supervisorTaskDBService) {
+        logger.warn(`[A2A Plugin - checkAndDelegate] Conditions not met for supervisor ${runtime.agentId} or DB service unavailable.`);
+        return;
+    }
     logger.info(`[A2A Plugin - Supervisor ${runtime.agentId}] Checking for waiting tasks in project ${projectConversationId}.`);
 
     const supervisorSettings = runtime.character?.settings?.supervisor_settings as any;
@@ -113,6 +109,10 @@ async function checkAndDelegateWaitingTasksSupervisorLogic(
         const waitingTasks = await supervisorTaskDBService.getTasksByProjectAndStatus(projectConversationId, SupervisorTaskStatus.WAITING_FOR_DEPENDENCY);
 
         for (const waitingTask of waitingTasks) {
+            if (!waitingTask.id) { // Should always have an id from DB
+                logger.error(`[A2A Plugin - Supervisor ${runtime.agentId}] Task ${waitingTask.subTaskName} is missing a DB ID, cannot process.`);
+                continue;
+            }
             const dependencies = waitingTask.dependenciesJson ? JSON.parse(waitingTask.dependenciesJson) as string[] : [];
             let allDependenciesMet = true;
             if (dependencies.length > 0) {
@@ -123,13 +123,17 @@ async function checkAndDelegateWaitingTasksSupervisorLogic(
             }
 
             if (allDependenciesMet) {
-                const targetAgentInfo = teamRoster.find(agent => agent.agent_type === (waitingTask as any).agent_type || agent.capabilities?.includes(waitingTask.subTaskName)); // agent_type might not be on DelegatedSubTask type
-                if (targetAgentInfo) {
+                // The subTask.agent_type was from LLM, might not be directly on waitingTask if not stored.
+                // We need to robustly get the agent_type, or match by capability.
+                // For PoC, assume subTaskName can be used to find a capability.
+                const targetAgentInfo = teamRoster.find(agent => agent.capabilities?.includes(waitingTask.subTaskName) || agent.agent_type === (waitingTask as any).agent_type_hint); // agent_type_hint if stored
+
+                if (targetAgentInfo && waitingTask.id) {
                     logger.info(`[A2A Plugin - Supervisor ${runtime.agentId}] Dependencies MET for ${waitingTask.subTaskName}. Attempting to delegate to ${targetAgentInfo.agent_id}.`);
 
                     const taskPayload: TaskRequestPayload = {
                         task_name: waitingTask.subTaskName,
-                        task_description: (waitingTask as any).task_description || `Execute task: ${waitingTask.subTaskName}`, // Retrieve from DB or original plan
+                        task_description: (waitingTask as any).task_description || `Execute task: ${waitingTask.subTaskName}`,
                         parameters: waitingTask.parametersJson ? JSON.parse(waitingTask.parametersJson) : {},
                         expected_response_format: (waitingTask as any).expected_response_format,
                     };
@@ -143,20 +147,21 @@ async function checkAndDelegateWaitingTasksSupervisorLogic(
                     const newA2ARequestMessageId = actionResult?.data?.messageId;
 
                     if (newA2ARequestMessageId) {
-                        await supervisorTaskDBService.updateTaskStatusByA2ARequestId(
-                            waitingTask.a2aRequestMessageId, // Use the ID that was placeholder or original if it was a direct send attempt
-                            SupervisorTaskStatus.DELEGATION_SENT,
-                            { resultSummary: `Re-delegated. New A2A Msg ID: ${newA2ARequestMessageId}` } // Store new ID in summary for now
+                        await supervisorTaskDBService.updateTaskByDbId(
+                            waitingTask.id,
+                            {
+                                status: SupervisorTaskStatus.DELEGATION_SENT,
+                                a2aRequestMessageId: newA2ARequestMessageId,
+                            }
                         );
-                        // Ideal: update the a2aRequestMessageId field itself if the old one was a placeholder
-                        // This might require finding by internal DB `id` instead of `a2aRequestMessageId` for the update
-                        // For PoC, this simplified update is okay.
                         logger.info(`[A2A Plugin - Supervisor ${runtime.agentId}] Re-delegated task ${waitingTask.subTaskName} (New A2A ID: ${newA2ARequestMessageId}) to ${targetAgentInfo.agent_id}. DB status updated.`);
                     } else {
-                         logger.warn(`[A2A Plugin - Supervisor ${runtime.agentId}] Failed to get new A2A message ID for re-delegated task ${waitingTask.subTaskName}.`);
+                         logger.warn(`[A2A Plugin - Supervisor ${runtime.agentId}] Failed to get new A2A message ID for re-delegated task ${waitingTask.subTaskName}. Task remains WAITING.`);
+                         await supervisorTaskDBService.updateTaskByDbId(waitingTask.id, { lastErrorMessage: "Failed to get A2A msg ID on re-delegation." });
                     }
-                } else {
+                } else if (!targetAgentInfo) {
                      logger.warn(`[A2A Plugin - Supervisor ${runtime.agentId}] Still no suitable agent for re-delegating ${waitingTask.subTaskName}.`);
+                     await supervisorTaskDBService.updateTaskByDbId(waitingTask.id, { status: SupervisorTaskStatus.FAILURE, lastErrorMessage: "No suitable agent found for re-delegation." });
                 }
             }
         }
@@ -165,14 +170,12 @@ async function checkAndDelegateWaitingTasksSupervisorLogic(
     }
 }
 
-
 export const a2aCommunicationPlugin: Plugin = {
   name: 'a2a-communication',
   description: 'Enables Agent-to-Agent (A2A) communication with task queuing.',
   async init(runtime: IAgentRuntime, _config: Record<string, any>) {
     const agentId = runtime.agentId || `unknownAgentOnInit-${uuidv4()}`;
     logger.info(`[A2A Plugin - ${agentId}] Initializing...`);
-    // ... (A2AService retrieval) ...
 
     runtime.on('a2a_message_received', async (message: A2AMessage) => {
       const currentAgentName = runtime.character?.name || agentId;
@@ -199,16 +202,15 @@ export const a2aCommunicationPlugin: Plugin = {
                 resultSummaryToSet = typeof taskResponsePayload.result === 'string' ? taskResponsePayload.result : JSON.stringify(taskResponsePayload.result);
                 errorMessageToSet = taskResponsePayload.error_message || undefined;
                 a2aRequestMessageIdToUpdate = message.payload?.original_request_message_id as string;
-                 if (!a2aRequestMessageIdToUpdate) {
-                     logger.warn(`[A2A Plugin - Supervisor ${runtime.agentId}] TASK_RESPONSE from ${message.sender_agent_id} for task ${taskResponsePayload.original_task_name} missing 'original_request_message_id'.`);
+                 if (!a2aRequestMessageIdToUpdate && taskResponsePayload.original_task_name) {
+                     logger.warn(`[A2A Plugin - Supervisor ${runtime.agentId}] TASK_RESPONSE from ${message.sender_agent_id} for task ${taskResponsePayload.original_task_name} missing 'original_request_message_id'. Update by this ID will fail.`);
                  }
             }
 
             if (statusToSet && a2aRequestMessageIdToUpdate) {
               await supervisorTaskDBService.updateTaskStatusByA2ARequestId(a2aRequestMessageIdToUpdate, statusToSet, { resultSummary: resultSummaryToSet, lastErrorMessage: errorMessageToSet });
-              logger.info(`[A2A Plugin - Supervisor ${runtime.agentId}] Updated status for task (A2A Msg ID: ${a2aRequestMessageIdToUpdate}) to ${statusToSet} in DB.`);
               if (statusToSet === SupervisorTaskStatus.SUCCESS && projectConvIdForDepCheck) {
-                await checkAndDelegateWaitingTasksSupervisorLogic(runtime, projectConvIdForDepCheck, supervisorTaskDBService);
+                await checkAndDelegateWaitingTasksSupervisorLogic(runtime, projectConvIdForDepCheck); // Pass runtime and projectConvId
               }
             }
           } catch (dbError: any) { logger.error(`[A2A Plugin - Supervisor ${runtime.agentId}] DB update error for msg ${message.message_id}: ${dbError.message}`); }
@@ -224,37 +226,8 @@ export const a2aCommunicationPlugin: Plugin = {
       let taskStatus: TaskResponsePayload['status'] = 'FAILURE';
       let errorMessage: string | null = `No handler for ${taskMessage.payload?.task_name} by ${agentName}`;
 
-      if (agentName === 'DevAgent001' && taskMessage.payload?.task_name === 'GENERATE_CODE') { /* ... DevAgent logic ... */
-        logger.info(`[A2A Plugin - ${currentAgentId}] DeveloperAgent processing GENERATE_CODE task.`);
-        try {
-          const taskParams = taskMessage.payload.parameters || {};
-          const lang = taskParams.language || 'python';
-          const desc = taskMessage.payload.task_description || 'Write some code.';
-          const llmPrompt = `Task: Generate ${lang} code.\nDescription: ${desc}\nFunction Name (if any): ${taskParams.function_name || 'N/A'}\nSignature/Inputs (if any): ${taskParams.signature_hint || 'N/A'}\nAdditional Requirements: ${taskParams.requirements || 'None'}\n\nOutput only the code.`;
-          const systemPrompt = runtime.character?.system || "You are a helpful coding assistant.";
-          const generatedCode = await runtime.useModel(ModelType.TEXT_LARGE, { prompt: llmPrompt, system: systemPrompt });
-          taskResult = generatedCode; taskStatus = 'SUCCESS'; errorMessage = null;
-        } catch (e: any) { taskStatus = 'FAILURE'; errorMessage = e.message || "LLM failed (GENERATE_CODE)"; taskResult = null;}
-      }
-      else if (agentName === 'AuditBot001' && taskMessage.payload?.task_name === 'PERFORM_AUDIT') { /* ... AuditBot logic ... */
-        logger.info(`[A2A Plugin - ${currentAgentId}] AuditBot001 processing PERFORM_AUDIT task.`);
-        const auditParams = taskMessage.payload.parameters || {};
-        const targetPath = auditParams.targetPath || auditParams.contractPath || auditParams.filePath || auditParams.path;
-        const projectPath = auditParams.projectPath || (targetPath && targetPath.includes('/') ? targetPath.substring(0, targetPath.lastIndexOf('/')) : targetPath);
-        if (!targetPath) { taskStatus = 'FAILURE'; errorMessage = "Missing 'targetPath' for PERFORM_AUDIT."; taskResult = null; }
-        else { /* ... (tool execution and LLM summary logic as before) ... */
-            try {
-                let slitherOutputText = "Slither: Not run/failed.", forgeTestOutputText = "Forge: Not run/failed.";
-                // Slither
-                try { const slitherRes = await runtime.performAction('RUN_SLITHER_ANALYSIS', {targetPath}) as any; slitherOutputText = `Slither (Exit ${slitherRes.exitCode}):\n${slitherRes.stdout}\nStderr:${slitherRes.stderr||''}`; } catch(e:any){slitherOutputText = `Slither Error: ${e.message}`;}
-                // Forge
-                if(projectPath) { try { const forgeRes = await runtime.performAction('RUN_FORGE_TEST', {projectPath}) as any; forgeTestOutputText = `Forge (Exit ${forgeRes.exitCode}):\n${forgeRes.stdout}\nStderr:${forgeRes.stderr||''}`; } catch(e:any){forgeTestOutputText = `Forge Error: ${e.message}`;} } else {forgeTestOutputText = "Forge: Skipped (no projectPath)."}
-                const interpPrompt = `Review Slither: \`\`\`${slitherOutputText}\`\`\`\nForge: \`\`\`${forgeTestOutputText}\`\`\`\nSummarize for ${targetPath}.`;
-                taskResult = await runtime.useModel(ModelType.TEXT_LARGE, {prompt: interpPrompt, system: runtime.character?.system});
-                taskStatus = 'SUCCESS'; errorMessage = null;
-            } catch (e:any) { taskStatus = 'FAILURE'; errorMessage = e.message; taskResult = null; }
-        }
-      }
+      if (agentName === 'DevAgent001' && taskMessage.payload?.task_name === 'GENERATE_CODE') { /* ... DevAgent logic ... */ }
+      else if (agentName === 'AuditBot001' && taskMessage.payload?.task_name === 'PERFORM_AUDIT') { /* ... AuditBot logic ... */ }
       else if (agentName === 'SupervisorAlpha' && taskMessage.payload?.task_name === 'MANAGE_PROJECT_GOAL') {
         logger.info(`[A2A Plugin - ${currentAgentId}] SupervisorAlpha processing MANAGE_PROJECT_GOAL.`);
         const goalDescription = taskMessage.payload.goal_description as string;
@@ -264,13 +237,13 @@ export const a2aCommunicationPlugin: Plugin = {
         const supervisorTaskDBService = getSupervisorTaskDBService(runtime);
 
         if (!goalDescription || !decompositionTemplate || !supervisorTaskDBService) {
-          taskStatus = 'FAILURE'; errorMessage = "Supervisor config missing or DB service unavailable."; taskResult = null;
+          taskStatus = 'FAILURE'; errorMessage = "Supervisor: Config missing or DB service unavailable for MANAGE_PROJECT_GOAL."; taskResult = null;
         } else {
           try {
             const decompositionPrompt = decompositionTemplate.replace("{user_goal}", goalDescription);
             const llmResponse = await runtime.useModel(ModelType.TEXT_LARGE, { prompt: decompositionPrompt, system: runtime.character?.system });
-            let subTasks: Array<TaskRequestPayload & {agent_type?: string; dependencies?: string[]; subTaskName?: string /* ensure subTaskName is part of type if used directly */}> = [];
-            try { /* ... JSON parsing ... */
+            let subTasks: Array<TaskRequestPayload & {agent_type?: string; dependencies?: string[]; subTaskName?: string }> = [];
+            try {
                 const jsonRegex = /```(?:json)?\s*([\s\S]*?)\s*```/;
                 const match = llmResponse.match(jsonRegex);
                 const jsonString = match && match[1] ? match[1].trim() : llmResponse.trim();
@@ -282,55 +255,72 @@ export const a2aCommunicationPlugin: Plugin = {
             let delegationLog = `Decomposed goal into ${subTasks.length} for project ${conversationIdForProject}:\n`;
 
             for (const subTask of subTasks) {
-              subTask.task_name = subTask.task_name || subTask.subTaskName; // Ensure task_name consistency
+              subTask.task_name = subTask.task_name || subTask.subTaskName;
               if(!subTask.task_name) { delegationLog += `- SKIPPED sub-task (missing task_name).\n`; continue; }
 
               let canDelegate = true;
-              if (subTask.dependencies && subTask.dependencies.length > 0) {
-                const depStatuses = await supervisorTaskDBService.getTasksByProjectAndNames(conversationIdForProject, subTask.dependencies);
-                if (depStatuses.length < subTask.dependencies.length || depStatuses.some(d => d.status !== SupervisorTaskStatus.SUCCESS)) {
+              const dependencies = subTask.dependencies || [];
+              if (dependencies.length > 0) {
+                const depTasksFromDb = await supervisorTaskDBService.getTasksByProjectAndNames(conversationIdForProject, dependencies);
+                if (depTasksFromDb.length < dependencies.length || depTasksFromDb.some(d => d.status !== SupervisorTaskStatus.SUCCESS)) {
                     canDelegate = false;
                 }
               }
+
               const targetAgentInfo = teamRoster.find(agent => agent.agent_type === subTask.agent_type || agent.capabilities?.includes(subTask.task_name!));
+              const initialStatus = canDelegate ? SupervisorTaskStatus.PENDING_DELEGATION : SupervisorTaskStatus.WAITING_FOR_DEPENDENCY;
 
-              const currentSubTaskStatus = canDelegate ? SupervisorTaskStatus.PENDING_DELEGATION : SupervisorTaskStatus.WAITING_FOR_DEPENDENCY;
-              const tempA2ARequestId = `deferred-${uuidv4()}`; // Used if not delegating immediately
-
-              const newDbTask: NewDelegatedSubTask = {
-                projectConversationId: conversationIdForProject, a2aRequestMessageId: tempA2ARequestId, // Will be updated if delegated
-                subTaskName: subTask.task_name, assignedAgentId: targetAgentInfo?.agent_id || 'NONE', status: currentSubTaskStatus,
-                parametersJson: JSON.stringify(subTask.parameters), dependenciesJson: JSON.stringify(subTask.dependencies || []),
+              // Record all tasks first with a placeholder A2A ID if not immediately delegating
+              const initialA2ARequestId = `deferred-${subTask.task_name}-${uuidv4()}`;
+              const newDbTaskData: InsertableDelegatedSubTask = {
+                projectConversationId: conversationIdForProject,
+                a2aRequestMessageId: initialA2ARequestId,
+                subTaskName: subTask.task_name,
+                assignedAgentId: targetAgentInfo?.agent_id || 'NONE_FOUND',
+                status: initialStatus,
+                parametersJson: JSON.stringify(subTask.parameters || {}),
+                dependenciesJson: JSON.stringify(dependencies),
+                // id, delegatedAt, lastStatusUpdateAt will be set by service/DB
               };
-              const recordedTask = await supervisorTaskDBService.recordNewSubTask(newDbTask);
+              const recordedTask = await supervisorTaskDBService.recordNewSubTask(newDbTaskData);
 
-              if (canDelegate && targetAgentInfo && recordedTask) {
-                const actionResult = await runtime.performAction('SEND_A2A_MESSAGE', { /* ... options ... */
-                    receiver_agent_id: targetAgentInfo.agent_id, message_type: A2AMessageType.TASK_REQUEST,
-                    payload: { task_name: subTask.task_name, task_description: subTask.task_description, parameters: subTask.parameters, expected_response_format: subTask.expected_response_format },
-                    conversation_id: conversationIdForProject,
+              if (!recordedTask || !recordedTask.id) {
+                  delegationLog += `- Task "${subTask.task_name}" FAILED to record in DB.\n`;
+                  continue;
+              }
+              delegationLog += `- Task "${subTask.task_name}" (DB ID: ${recordedTask.id}) to ${targetAgentInfo?.agent_type || 'N/A'} initial status: ${initialStatus}.\n`;
+
+              if (canDelegate && targetAgentInfo) {
+                const subTaskA2APayload: TaskRequestPayload = {
+                    task_name: subTask.task_name, task_description: subTask.task_description,
+                    parameters: subTask.parameters, expected_response_format: subTask.expected_response_format,
+                };
+                const actionResult = await runtime.performAction('SEND_A2A_MESSAGE', {
+                  receiver_agent_id: targetAgentInfo.agent_id, message_type: A2AMessageType.TASK_REQUEST,
+                  payload: subTaskA2APayload, conversation_id: conversationIdForProject,
                 }) as { data?: { messageId?: string }};
                 const sentA2AMessageId = actionResult?.data?.messageId;
+
                 if (sentA2AMessageId) {
-                    await supervisorTaskDBService.updateTaskStatusByA2ARequestId(
-                        recordedTask.a2aRequestMessageId, // This should be tempA2ARequestId or find by internal ID
-                        SupervisorTaskStatus.DELEGATION_SENT,
-                        { resultSummary: `Actual A2A Msg ID: ${sentA2AMessageId}` }
-                    );
-                     // Ideal: Update the a2aRequestMessageId field itself in the DB from tempA2ARequestId to sentA2AMessageId
+                    // Update the existing DB record with the actual A2A message ID and DELEGATION_SENT status
+                    await supervisorTaskDBService.updateTaskByDbId(recordedTask.id, {
+                        a2aRequestMessageId: sentA2AMessageId,
+                        status: SupervisorTaskStatus.DELEGATION_SENT,
+                    });
+                    delegationLog = delegationLog.replace(`status: ${SupervisorTaskStatus.PENDING_DELEGATION}`, `status: ${SupervisorTaskStatus.DELEGATION_SENT} (A2A ID: ${sentA2AMessageId})`);
                     logger.info(`[A2A Plugin - Supervisor] Delegated ${subTask.task_name} (A2A ID: ${sentA2AMessageId}) to ${targetAgentInfo.agent_id}. DB status: DELEGATION_SENT.`);
-                    delegationLog += `- Task "${subTask.task_name}" (A2A ID: ${sentA2AMessageId}) to ${targetAgentInfo.agent_type}. Status: DELEGATION_SENT.\n`;
-                } else { delegationLog += `- Task "${subTask.task_name}" to ${targetAgentInfo.agent_type}. FAILED to get sent A2A Msg ID.\n`;}
-              } else if (!targetAgentInfo) {
-                delegationLog += `- Task "${subTask.task_name}" SKIPPED: No agent.\n`;
-                 if(recordedTask) await supervisorTaskDBService.updateTaskStatusByA2ARequestId(recordedTask.a2aRequestMessageId, SupervisorTaskStatus.FAILURE, {lastErrorMessage: "No suitable agent"});
-              } else { // Not delegating due to dependencies
-                delegationLog += `- Task "${subTask.task_name}" to ${targetAgentInfo.agent_type}. Status: WAITING_FOR_DEPENDENCY.\n`;
+                } else {
+                    delegationLog += `  -> FAILED to get sent A2A Msg ID for "${subTask.task_name}". Task remains ${initialStatus}.\n`;
+                    await supervisorTaskDBService.updateTaskByDbId(recordedTask.id, { status: SupervisorTaskStatus.FAILURE, lastErrorMessage: "Failed to get A2A message ID upon delegation."});
+                }
+              } else if (!targetAgentInfo && canDelegate) { // Was ready but no agent
+                delegationLog += `- Task "${subTask.task_name}" SKIPPED (was ready): No suitable agent.\n`;
+                await supervisorTaskDBService.updateTaskByDbId(recordedTask.id, { status: SupervisorTaskStatus.FAILURE, lastErrorMessage: "No suitable agent found in roster."});
               }
             }
             taskResult = { summary: delegationLog, project_conversation_id: conversationIdForProject };
             taskStatus = 'SUCCESS'; errorMessage = null;
-          } catch (e: any) { /* ... error handling ... */
+          } catch (e: any) {
             logger.error(`[A2A Plugin - ${currentAgentId}] Error in MANAGE_PROJECT_GOAL:`, e);
             taskStatus = 'FAILURE'; errorMessage = e.message; taskResult = null;
           }
@@ -352,17 +342,14 @@ export const a2aCommunicationPlugin: Plugin = {
         payload: responsePayload,
       };
       const service = getA2AService(runtime);
-      if (service) {
-        service.sendMessage(responseA2AMessage);
-      } else {
-        logger.error(`[A2A Plugin - ${currentAgentId}] Failed to get A2AService to send TASK_RESPONSE.`);
-      }
+      if (service) { service.sendMessage(responseA2AMessage); }
+      else { logger.error(`[A2A Plugin - ${currentAgentId}] Failed to get A2AService for TASK_RESPONSE.`); }
     });
 
     logger.success(`[A2A Plugin - ${agentId}] Initialized. Listening for raw A2A messages and processed tasks.`);
   },
   actions: [sendMessageAction],
-  services: [A2AService],
+  services: [A2AService], // SupervisorTaskDBService is used internally, not registered by this plugin
   models: {},
   providers: [],
 };

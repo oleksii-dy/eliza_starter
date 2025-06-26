@@ -1,6 +1,5 @@
-import { text, integer, sqliteTable, primaryKey } from 'drizzle-orm/sqlite-core';
-import { relations } from 'drizzle-orm';
-import { DelegatedSubTaskStatus } from '../../../../plugin-a2a-communication/src/types'; // Adjust path as needed
+import { text, sqliteTable } from 'drizzle-orm/sqlite-core';
+// import { relations } from 'drizzle-orm'; // Not used in this schema yet
 
 // Using a relative path to access types from plugin-a2a-communication.
 // This assumes a specific monorepo structure.
@@ -13,21 +12,21 @@ import { DelegatedSubTaskStatus } from '../../../../plugin-a2a-communication/src
 // or ensure types are exported from a common place.
 // For this PoC, let's assume the import works or we redefine it.
 // If not, I'll redefine it locally.
-// Let's try redefining for cleaner separation for this utility package:
+// Redefined for cleaner separation for this utility package:
 export enum SupervisorTaskStatus {
-  PENDING_DELEGATION = 'PENDING_DELEGATION',
-  DELEGATION_SENT = 'DELEGATION_SENT',
-  ACKNOWLEDGED = 'ACKNOWLEDGED',
-  IN_PROGRESS = 'IN_PROGRESS',
-  SUCCESS = 'SUCCESS',
-  FAILURE = 'FAILURE',
-  WAITING_FOR_DEPENDENCY = 'WAITING_FOR_DEPENDENCY',
+  PENDING_DELEGATION = 'PENDING_DELEGATION', // Task identified, awaiting dependency checks or delegation.
+  DELEGATION_SENT = 'DELEGATION_SENT',       // A2A TASK_REQUEST message sent to specialist.
+  ACKNOWLEDGED = 'ACKNOWLEDGED',          // Specialist acknowledged receipt (task likely queued by them).
+  IN_PROGRESS = 'IN_PROGRESS',           // Specialist reported task is actively being worked on (future A2A enhancement).
+  SUCCESS = 'SUCCESS',                   // Specialist reported successful completion.
+  FAILURE = 'FAILURE',                   // Specialist reported failure.
+  WAITING_FOR_DEPENDENCY = 'WAITING_FOR_DEPENDENCY', // Task cannot proceed until other tasks complete.
 }
 
 
 export const delegatedSubTasksTable = sqliteTable('delegated_sub_tasks', {
   // Internal unique ID for this database record.
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()), // Using crypto.randomUUID for modern Node
+  id: text('id').primaryKey().$defaultFn(() => globalThis.crypto.randomUUID()), // Using globalThis.crypto for wider compatibility (Node 19+, browsers)
 
   // ID of the overall project or conversation this sub-task belongs to.
   // Helps group all sub-tasks related to a single high-level goal managed by the supervisor.
@@ -92,5 +91,5 @@ export type NewDelegatedSubTask = typeof delegatedSubTasksTable.$inferInsert;
 // If targeting older Node, consider `uuid` package for `id` default.
 // For enum, Drizzle ORM typically creates a TEXT column with a CHECK constraint for SQLite.
 // For PostgreSQL, it would use a native ENUM type.
-// The `text('status', { enum: [...] })` is the correct way for Drizzle to handle this for various drivers.
+// The `text('status', { enum: Object.values(SupervisorTaskStatus) as [string, ...string[]] })` is correct.
 // The `as [string, ...string[]]` cast is for TypeScript to accept the array from Object.values().

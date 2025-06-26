@@ -1,92 +1,136 @@
 import { type IAgentRuntime, Service, logger } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import type { DrizzleD1Database } from 'drizzle-orm/d1'; // Example type for a Drizzle DB instance
-import { eq, and, inArray } from 'drizzle-orm'; // Import Drizzle operators
+// Use a generic Drizzle type if possible, or specific one if plugin-sql guarantees it.
+// For PoC, 'any' can bypass strict type checking if the exact DB type from plugin-sql is unknown.
+import type { SQLiteDatabase } from 'drizzle-orm/sqlite-core'; // Example for SQLite
+import { eq, and, inArray } from 'drizzle-orm';
 
 import {
     delegatedSubTasksTable,
     type DelegatedSubTask,
-    type NewDelegatedSubTask,
-    SupervisorTaskStatus
+    type NewDelegatedSubTask, // This is an insert type, usually without id/timestamps
+    SupervisorTaskStatus,
+    type InsertableDelegatedSubTask // A potentially more refined insert type
 } from './db/schema';
 
-// Conceptual interface for the DB instance provided by @elizaos/plugin-sql
-// This would ideally be a shared type from @elizaos/core or @elizaos/plugin-sql
-// Using DrizzleD1Database as a placeholder for a generic Drizzle DB type.
-// Replace with actual type if known, e.g., BetterSQLite3Database or PostgresJsDatabase
-type DrizzleDB = DrizzleD1Database<typeof import('./db/schema')>;
+// Placeholder for the actual Drizzle DB type provided by @elizaos/plugin-sql
+// This might be BetterSQLite3Database, PostgresJsDatabase, DrizzleD1Database, etc.
+// Using a generic SQLiteDatabase for this PoC, assuming plugin-sql could provide that.
+type DrizzleDBType = SQLiteDatabase<typeof import('./db/schema')>;
 
 
 export class SupervisorTaskDBService extends Service {
   static readonly serviceType = 'SupervisorTaskDBService';
   public capabilityDescription = 'Service for persisting and managing supervisor-delegated sub-task states.';
-  private db: DrizzleDB | null = null;
+  private db: DrizzleDBType | null = null;
+  private agentId: string;
 
   constructor(runtime: IAgentRuntime) {
     super(runtime);
+    this.agentId = runtime.agentId || 'unknownSupervisor'; // For logging context
     try {
-      // Attempt to get the database instance from @elizaos/plugin-sql
-      // The exact service name and method to get the DB instance are assumptions.
       const sqlPluginService = runtime.getService<any>('@elizaos/plugin-sql');
       if (sqlPluginService && typeof sqlPluginService.getDb === 'function') {
-        this.db = sqlPluginService.getDb() as DrizzleDB; // Cast to expected Drizzle type
+        this.db = sqlPluginService.getDb() as DrizzleDBType;
         if (!this.db) {
-            logger.warn(`[${SupervisorTaskDBService.serviceType}] @elizaos/plugin-sql service found, but getDb() returned null/undefined. DB operations will be skipped.`);
+            logger.warn(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] @elizaos/plugin-sql service found, but getDb() returned null/undefined. DB operations will be skipped.`);
         } else {
-             logger.info(`[${SupervisorTaskDBService.serviceType}] Successfully connected to DB via @elizaos/plugin-sql.`);
+             logger.info(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Successfully obtained DB instance via @elizaos/plugin-sql.`);
         }
       } else {
-        logger.warn(`[${SupervisorTaskDBService.serviceType}] @elizaos/plugin-sql service not found or lacks getDb() method. DB operations will be skipped.`);
+        logger.warn(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] @elizaos/plugin-sql service not found or lacks getDb() method. DB operations will be skipped.`);
       }
     } catch (e) {
-      logger.warn(`[${SupervisorTaskDBService.serviceType}] Error getting SQL service: ${(e as Error).message}. DB operations will be skipped.`);
+      logger.warn(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Error getting SQL service: ${(e as Error).message}. DB operations will be skipped.`);
       this.db = null;
     }
   }
 
   static async start(runtime: IAgentRuntime): Promise<SupervisorTaskDBService> {
-    logger.info(`SupervisorTaskDBService starting for agent ${runtime.agentId}.`);
+    logger.info(`[${SupervisorTaskDBService.serviceType}] Starting for agent ${runtime.agentId}.`);
     return new SupervisorTaskDBService(runtime);
   }
 
   static async stop(_runtime: IAgentRuntime): Promise<void> {
-    logger.info('SupervisorTaskDBService stopping.');
+    // No specific cleanup for this service itself, DB connection managed by plugin-sql
+    logger.info(`[${SupervisorTaskDBService.serviceType}] Stopping.`);
   }
 
-  private async ensureDb(): Promise<DrizzleDB> {
+  private async ensureDb(): Promise<DrizzleDBType> {
     if (!this.db) {
-      logger.error(`[${SupervisorTaskDBService.serviceType}] Database not available. Operation cancelled.`);
-      throw new Error("Database service not initialized or available.");
+      const errorMessage = `[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Database not available. Operation cancelled.`;
+      logger.error(errorMessage);
+      throw new Error(errorMessage);
     }
     return this.db;
   }
 
-  async recordNewSubTask(taskData: Omit<NewDelegatedSubTask, 'id' | 'delegatedAt' | 'lastStatusUpdateAt'>): Promise<DelegatedSubTask | null> {
+  async recordNewSubTask(taskData: InsertableDelegatedSubTask): Promise<DelegatedSubTask | null> {
     const db = await this.ensureDb().catch(() => null);
     if (!db) return null;
 
     const now = new Date().toISOString();
-    const fullTaskData: NewDelegatedSubTask = {
-      id: uuidv4(), // Generate internal PK
-      ...taskData,
+    const fullTaskData: NewDelegatedSubTask = { // Drizzle's $inferInsert type
+      id: taskData.id || uuidv4(), // Allow providing ID or generate new
+      projectConversationId: taskData.projectConversationId,
+      a2aRequestMessageId: taskData.a2aRequestMessageId,
+      subTaskName: taskData.subTaskName,
+      assignedAgentId: taskData.assignedAgentId,
+      status: taskData.status || SupervisorTaskStatus.PENDING_DELEGATION,
+      parametersJson: taskData.parametersJson,
+      dependenciesJson: taskData.dependenciesJson,
       delegatedAt: now,
       lastStatusUpdateAt: now,
+      resultSummary: taskData.resultSummary, // Allow setting these on creation if needed
+      lastErrorMessage: taskData.lastErrorMessage,
     };
 
     try {
-      // Drizzle's insert typically doesn't return the inserted row by default with all drivers in execute()
-      // .returning() is more common but driver-specific. For this PoC, we'll execute then select if needed.
-      // Or assume the input data + generated ID is sufficient.
-      await db.insert(delegatedSubTasksTable).values(fullTaskData).execute();
-      logger.debug(`[${SupervisorTaskDBService.serviceType}] Recorded new sub-task: ${fullTaskData.subTaskName} (ID: ${fullTaskData.id}, A2A ID: ${fullTaskData.a2aRequestMessageId})`);
-      // To return the full DelegatedSubTask, we might need to cast or select it back.
-      // For simplicity, returning the input with generated ID.
-      return fullTaskData as DelegatedSubTask;
+      // Drizzle's .values() expects a complete object or an array of them.
+      // .returning() is the standard way to get back the inserted row(s).
+      const insertedTasks = await db.insert(delegatedSubTasksTable).values(fullTaskData).returning().execute();
+      if (insertedTasks && insertedTasks.length > 0) {
+        logger.debug(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Recorded new sub-task: ${fullTaskData.subTaskName} (DB ID: ${insertedTasks[0].id}, A2A ID: ${fullTaskData.a2aRequestMessageId})`);
+        return insertedTasks[0];
+      }
+      logger.warn(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Failed to record or retrieve new sub-task: ${taskData.subTaskName}`);
+      return null;
     } catch (error: any) {
-      logger.error(`[${SupervisorTaskDBService.serviceType}] Error recording new sub-task ${taskData.subTaskName}: ${error.message}`);
+      logger.error(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Error recording new sub-task ${taskData.subTaskName}: ${error.message}`, error);
       return null;
     }
   }
+
+  async updateTaskByDbId(
+    dbId: string,
+    updates: Partial<Omit<DelegatedSubTask, 'id' | 'projectConversationId' | 'delegatedAt'>>
+  ): Promise<boolean> {
+    const db = await this.ensureDb().catch(() => null);
+    if (!db) return false;
+
+    const dataToSet = {
+        ...updates,
+        lastStatusUpdateAt: new Date().toISOString(),
+    };
+
+    try {
+        const result = await db.update(delegatedSubTasksTable)
+            .set(dataToSet)
+            .where(eq(delegatedSubTasksTable.id, dbId))
+            .execute();
+        const changes = (result as any)?.meta?.changes ?? (result as any)?.rowCount ?? 0;
+        if (changes > 0) {
+            logger.debug(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Updated task with DB ID ${dbId}. Status: ${updates.status}, A2A ID: ${updates.a2aRequestMessageId}`);
+            return true;
+        }
+        logger.warn(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] No task found with DB ID ${dbId} to update.`);
+        return false;
+    } catch (error: any) {
+        logger.error(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Error updating task with DB ID ${dbId}: ${error.message}`, error);
+        return false;
+    }
+  }
+
 
   async updateTaskStatusByA2ARequestId(
     a2aRequestMessageId: string,
@@ -108,18 +152,15 @@ export class SupervisorTaskDBService extends Service {
         .set(dataToSet)
         .where(eq(delegatedSubTasksTable.a2aRequestMessageId, a2aRequestMessageId))
         .execute();
-      // D1 execute for update returns D1Result, check result.meta.changes
-      // For other drivers, it might be different. Assuming a property like `changes` or `rowCount`.
       const changes = (result as any)?.meta?.changes ?? (result as any)?.rowCount ?? 0;
       if (changes > 0) {
-        logger.debug(`[${SupervisorTaskDBService.serviceType}] Updated task status for A2A ID ${a2aRequestMessageId} to ${status}.`);
+        logger.debug(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Updated task status for A2A ID ${a2aRequestMessageId} to ${status}.`);
         return true;
-      } else {
-        logger.warn(`[${SupervisorTaskDBService.serviceType}] No task found with A2A ID ${a2aRequestMessageId} to update status to ${status}.`);
-        return false;
       }
+      logger.warn(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] No task found with A2A ID ${a2aRequestMessageId} to update status to ${status}.`);
+      return false;
     } catch (error: any) {
-      logger.error(`[${SupervisorTaskDBService.serviceType}] Error updating task status for A2A ID ${a2aRequestMessageId}: ${error.message}`);
+      logger.error(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Error updating task status for A2A ID ${a2aRequestMessageId}: ${error.message}`, error);
       return false;
     }
   }
@@ -135,7 +176,7 @@ export class SupervisorTaskDBService extends Service {
         .execute();
       return (results[0] as DelegatedSubTask) || null;
     } catch (error: any) {
-      logger.error(`[${SupervisorTaskDBService.serviceType}] Error fetching task by A2A ID ${a2aRequestMessageId}: ${error.message}`);
+      logger.error(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Error fetching task by A2A ID ${a2aRequestMessageId}: ${error.message}`, error);
       return null;
     }
   }
@@ -153,7 +194,7 @@ export class SupervisorTaskDBService extends Service {
         .execute();
       return results as DelegatedSubTask[];
     } catch (error: any) {
-      logger.error(`[${SupervisorTaskDBService.serviceType}] Error fetching tasks for project ${projectConversationId} with status ${status}: ${error.message}`);
+      logger.error(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Error fetching tasks for project ${projectConversationId} with status ${status}: ${error.message}`, error);
       return [];
     }
   }
@@ -171,14 +212,8 @@ export class SupervisorTaskDBService extends Service {
         .execute();
       return results as DelegatedSubTask[];
     } catch (error: any) {
-      logger.error(`[${SupervisorTaskDBService.serviceType}] Error fetching tasks for project ${projectConversationId} by names [${taskNames.join(', ')}]: ${error.message}`);
+      logger.error(`[${SupervisorTaskDBService.serviceType} - ${this.agentId}] Error fetching tasks for project ${projectConversationId} by names [${taskNames.join(', ')}]: ${error.message}`, error);
       return [];
     }
   }
 }
-
-// Also need an index.ts for the plugin-supervisor-utils package
-// export { SupervisorTaskDBService };
-// export * from './db/schema'; // To make schema available for other parts of Eliza if needed
-// For now, service and schema will be imported directly by path in plugin-a2a-communication.
-// A proper plugin structure would have an index.ts exporting these.
