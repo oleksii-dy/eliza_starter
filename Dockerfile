@@ -21,6 +21,7 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 COPY package.json turbo.json tsconfig.json lerna.json renovate.json .npmrc ./
 COPY scripts ./scripts
 COPY packages ./packages
+COPY characters ./characters
 
 RUN bun install --no-cache
 
