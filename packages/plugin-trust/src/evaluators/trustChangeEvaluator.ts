@@ -1,5 +1,6 @@
 import { type Evaluator, type IAgentRuntime, type Memory, type State, logger } from '@elizaos/core';
 import { TrustEvidenceType } from '../types/trust';
+import { TrustEngineServiceWrapper } from '..';
 
 export const trustChangeEvaluator: Evaluator = {
   name: 'trustChangeEvaluator',
@@ -7,12 +8,12 @@ export const trustChangeEvaluator: Evaluator = {
   alwaysRun: true,
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State) => {
-    const trustEngine = runtime.getService('trust-engine');
+    const trustEngine = runtime.getService<TrustEngineServiceWrapper>('trust-engine');
     return !!trustEngine;
   },
 
   handler: async (runtime: IAgentRuntime, message: Memory) => {
-    const trustEngine = runtime.getService('trust-engine');
+    const trustEngine = runtime.getService<TrustEngineServiceWrapper>('trust-engine');
 
     if (!trustEngine) {
       return null;

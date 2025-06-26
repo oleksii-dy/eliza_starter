@@ -22,7 +22,7 @@ export const generateEnvVarAction: Action = {
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     try {
-      const envService = runtime.getService<EnhancedSecretManager>('ENV_MANAGER');
+      const envService = runtime.getService<EnhancedSecretManager>('SECRETS');
       if (!envService) {
         return false;
       }
@@ -60,7 +60,7 @@ export const generateEnvVarAction: Action = {
         throw new Error('Callback is required for GENERATE_ENV_VAR action');
       }
 
-      const envService = runtime.getService<EnhancedSecretManager>('ENV_MANAGER');
+      const envService = runtime.getService<EnhancedSecretManager>('SECRETS');
       if (!envService) {
         throw new Error('Environment manager service not available');
       }

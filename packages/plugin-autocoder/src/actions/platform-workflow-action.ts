@@ -17,8 +17,12 @@ import {
   type State,
   type HandlerCallback,
   type ActionResult,
-  elizaLogger
+  elizaLogger,
 } from '@elizaos/core';
+import type {
+  PluginCreationService,
+  PluginSpecification,
+} from '../services/PluginCreationService.js';
 // AutoCodeService removed - using existing services
 
 export interface PlatformWorkflowRequest {
@@ -33,7 +37,15 @@ export interface PlatformWorkflowRequest {
 }
 
 export interface WorkflowState {
-  phase: 'research' | 'planning' | 'secrets' | 'development' | 'testing' | 'publishing' | 'completed' | 'failed';
+  phase:
+    | 'research'
+    | 'planning'
+    | 'secrets'
+    | 'development'
+    | 'testing'
+    | 'publishing'
+    | 'completed'
+    | 'failed';
   projectId?: string;
   registryItemId?: string;
   requiredSecrets: string[];
@@ -47,7 +59,8 @@ export interface WorkflowState {
 
 export const platformWorkflowAction: Action = {
   name: 'PLATFORM_WORKFLOW',
-  description: 'Complete end-to-end platform workflow for creating, building, and sharing plugins, MCPs, and workflows',
+  description:
+    'Complete end-to-end platform workflow for creating, building, and sharing plugins, MCPs, and workflows',
   similes: [
     'create platform plugin',
     'build new plugin',
@@ -55,47 +68,47 @@ export const platformWorkflowAction: Action = {
     'make workflow',
     'platform development',
     'full plugin workflow',
-    'end to end development'
+    'end to end development',
   ],
   examples: [
     [
       {
         name: 'User',
         content: {
-          text: 'I want to create a weather plugin that gets current conditions and forecasts from OpenWeatherMap API'
-        }
+          text: 'I want to create a weather plugin that gets current conditions and forecasts from OpenWeatherMap API',
+        },
       },
       {
         name: 'Assistant',
         content: {
-          text: 'I\'ll help you create a comprehensive weather plugin using our platform workflow. Let me start by researching the best practices for weather APIs and plugin architecture.',
-          actions: ['PLATFORM_WORKFLOW']
-        }
-      }
+          text: "I'll help you create a comprehensive weather plugin using our platform workflow. Let me start by researching the best practices for weather APIs and plugin architecture.",
+          actions: ['PLATFORM_WORKFLOW'],
+        },
+      },
     ],
     [
       {
         name: 'User',
         content: {
-          text: 'Build an MCP server for GitHub integration with repository management'
-        }
+          text: 'Build an MCP server for GitHub integration with repository management',
+        },
       },
       {
         name: 'Assistant',
         content: {
-          text: 'I\'ll create a GitHub MCP server with comprehensive repository management capabilities. Starting the research and planning phase.',
-          actions: ['PLATFORM_WORKFLOW']
-        }
-      }
-    ]
+          text: "I'll create a GitHub MCP server with comprehensive repository management capabilities. Starting the research and planning phase.",
+          actions: ['PLATFORM_WORKFLOW'],
+        },
+      },
+    ],
   ],
 
   validate: async (runtime: IAgentRuntime) => {
-    const autocoderService = runtime.getService('autocoder');
+    const pluginCreationService = runtime.getService('plugin_creation');
     const pluginManagerService = runtime.getService('plugin-manager');
     const platformRegistryService = runtime.getService('platform-registry');
 
-    return !!(autocoderService && (pluginManagerService || platformRegistryService));
+    return !!(pluginCreationService && (pluginManagerService || platformRegistryService));
   },
 
   handler: async (
@@ -109,13 +122,13 @@ export const platformWorkflowAction: Action = {
       elizaLogger.info('🚀 Starting Platform Workflow');
 
       // Get services
-      const autocoderService = runtime.getService('autocoder');
+      const pluginCreationService = runtime.getService<PluginCreationService>('plugin_creation');
       const secretsManagerService = runtime.getService('SECRETS');
       const researchService = runtime.getService('research');
       const platformRegistryService = runtime.getService('platform-registry');
 
-      if (!autocoderService) {
-        throw new Error('AutoCoder service not available');
+      if (!pluginCreationService) {
+        throw new Error('Plugin creation service not available');
       }
 
       // Parse user request using AI
@@ -135,7 +148,7 @@ Extract:
 Respond with JSON containing these fields.
 `,
         temperature: 0.1,
-        maxTokens: 1000
+        maxTokens: 1000,
       });
 
       let workflowRequest: PlatformWorkflowRequest;
@@ -147,7 +160,7 @@ Respond with JSON containing these fields.
           projectName: parsed.projectName || 'generated-project',
           description: parsed.description || 'AI-generated project',
           requirements: parsed.requirements || [],
-          targetPlatform: parsed.targetPlatform
+          targetPlatform: parsed.targetPlatform,
         };
       } catch (parseError) {
         throw new Error(`Failed to parse request: ${parseError}`);
@@ -159,7 +172,7 @@ Respond with JSON containing these fields.
         requiredSecrets: [],
         providedSecrets: [],
         errors: [],
-        warnings: []
+        warnings: [],
       };
 
       let responseText = '🎯 **Platform Workflow Started**\n\n';
@@ -199,7 +212,7 @@ Identify required environment variables/secrets that would be needed:
 Return a JSON array of secret names (e.g., ["OPENWEATHER_API_KEY", "DATABASE_URL"]).
 `,
             temperature: 0.1,
-            maxTokens: 500
+            maxTokens: 500,
           });
 
           try {
@@ -208,7 +221,6 @@ Return a JSON array of secret names (e.g., ["OPENWEATHER_API_KEY", "DATABASE_URL
           } catch {
             workflowState.requiredSecrets = [];
           }
-
         } catch (researchError) {
           workflowState.warnings.push(`Research phase failed: ${researchError}`);
           responseText += '⚠️ Research failed, proceeding with basic development\n\n';
@@ -239,7 +251,7 @@ Generate a structured plan including:
 Format as markdown for user review.
 `,
         temperature: 0.3,
-        maxTokens: 2000
+        maxTokens: 2000,
       });
 
       responseText += '\n**Development Plan**:\n';
@@ -259,7 +271,7 @@ Format as markdown for user review.
             const secretValue = await (secretsManagerService as any).get(secretName, {
               level: 'global',
               agentId: runtime.agentId,
-              requesterId: message.entityId || runtime.agentId
+              requesterId: message.entityId || runtime.agentId,
             });
             if (secretValue) {
               availableSecrets.push(secretName);
@@ -270,16 +282,20 @@ Format as markdown for user review.
         }
 
         workflowState.providedSecrets = availableSecrets;
-        const missingSecrets = workflowState.requiredSecrets.filter(s => !availableSecrets.includes(s));
+        const missingSecrets = workflowState.requiredSecrets.filter(
+          (s) => !availableSecrets.includes(s)
+        );
 
         if (missingSecrets.length > 0) {
           responseText += `⚠️ **Missing Secrets**: ${missingSecrets.join(', ')}\n`;
-          responseText += 'Please provide these secrets using the secrets manager before proceeding with development.\n\n';
+          responseText +=
+            'Please provide these secrets using the secrets manager before proceeding with development.\n\n';
           responseText += '**Next Steps**:\n';
-          missingSecrets.forEach(secret => {
+          missingSecrets.forEach((secret) => {
             responseText += `- Set ${secret}: Use the secrets manager to securely store this value\n`;
           });
-          responseText += '\nOnce secrets are provided, re-run this workflow to continue development.\n';
+          responseText +=
+            '\nOnce secrets are provided, re-run this workflow to continue development.\n';
 
           // Save workflow state for resumption
           await callback?.({
@@ -289,8 +305,8 @@ Format as markdown for user review.
               workflowState,
               workflowRequest,
               phase: 'awaiting_secrets',
-              missingSecrets
-            }
+              missingSecrets,
+            },
           });
 
           return {
@@ -299,8 +315,8 @@ Format as markdown for user review.
             values: {
               phase: 'awaiting_secrets',
               missingSecrets: missingSecrets.length,
-              requiredSecrets: workflowState.requiredSecrets.length
-            }
+              requiredSecrets: workflowState.requiredSecrets.length,
+            },
           };
         }
 
@@ -314,7 +330,7 @@ Format as markdown for user review.
         // Check if item already exists in registry
         const existingItems = await (platformRegistryService as any).searchItems({
           search: workflowRequest.projectName,
-          type: workflowRequest.projectType
+          type: workflowRequest.projectType,
         });
 
         if (existingItems.total > 0) {
@@ -339,8 +355,8 @@ Format as markdown for user review.
             metadata: {
               createdBy: 'platform-workflow',
               researchBased: !!workflowState.researchFindings,
-              autoGenerated: true
-            }
+              autoGenerated: true,
+            },
           };
 
           // Add type-specific data
@@ -350,38 +366,38 @@ Format as markdown for user review.
               dependencies: [],
               engines: {
                 node: '>=18.0.0',
-                elizaos: '>=1.0.0'
+                elizaos: '>=1.0.0',
               },
               capabilities: {
                 actions: [],
                 providers: [],
                 services: [],
-                evaluators: []
+                evaluators: [],
               },
               configuration: {
-                required: workflowState.requiredSecrets.length > 0
+                required: workflowState.requiredSecrets.length > 0,
               },
               testing: {
                 hasTests: true,
-                framework: 'vitest'
-              }
+                framework: 'vitest',
+              },
             };
           } else if (workflowRequest.projectType === 'mcp') {
             (registryCreateRequest as any).mcpData = {
               protocol: 'stdio',
               connection: {
                 command: 'node',
-                args: ['server.js']
+                args: ['server.js'],
               },
               capabilities: {
                 tools: [],
                 resources: [],
-                prompts: []
+                prompts: [],
               },
               authenticationRequired: workflowState.requiredSecrets.length > 0,
               performance: {
-                averageResponseTime: 100
-              }
+                averageResponseTime: 100,
+              },
             };
           }
 
@@ -392,7 +408,6 @@ Format as markdown for user review.
 
           workflowState.registryItemId = registryItem.id;
           responseText += `✅ Registry item created: ${registryItem.id}\n\n`;
-
         } catch (registryError) {
           workflowState.warnings.push(`Registry creation failed: ${registryError}`);
           responseText += '⚠️ Registry item creation failed, proceeding with development\n\n';
@@ -411,12 +426,14 @@ Format as markdown for user review.
           description: workflowRequest.description,
           requirements: workflowRequest.requirements || [],
           secretsRequired: workflowState.requiredSecrets,
-          customInstructions: workflowState.researchFindings ? [
-            `Use these research findings: ${workflowState.researchFindings.summary}`,
-            ...Object.keys(workflowState.researchFindings.sources || {}).map(source =>
-              `Reference: ${source}`
-            )
-          ] : []
+          customInstructions: workflowState.researchFindings
+            ? [
+                `Use these research findings: ${workflowState.researchFindings.summary}`,
+                ...Object.keys(workflowState.researchFindings.sources || {}).map(
+                  (source) => `Reference: ${source}`
+                ),
+              ]
+            : [],
         };
 
         const project = await autocoderService.createPluginProject(
@@ -460,7 +477,8 @@ Format as markdown for user review.
           }
 
           // Check for user notifications requiring action
-          const actionRequiredNotifs = project?.userNotifications?.filter((n: any) => n.requiresAction) || [];
+          const actionRequiredNotifs =
+            project?.userNotifications?.filter((n: any) => n.requiresAction) || [];
           if (actionRequiredNotifs.length > 0) {
             responseText += '⚡ **User Action Required**:\n';
             actionRequiredNotifs.forEach((notif: any) => {
@@ -471,13 +489,12 @@ Format as markdown for user review.
           }
 
           attempts++;
-          await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
+          await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait 10 seconds
         }
 
         if (attempts >= maxAttempts) {
           responseText += `⏱️ Development in progress... Check project status: ${projectId}\n\n`;
         }
-
       } catch (developmentError) {
         workflowState.phase = 'failed';
         workflowState.errors.push(`Development failed: ${developmentError}`);
@@ -485,27 +502,34 @@ Format as markdown for user review.
       }
 
       // Phase 7: Registry Publishing
-      if (workflowState.phase === 'completed' && workflowState.registryItemId && platformRegistryService) {
+      if (
+        workflowState.phase === 'completed' &&
+        workflowState.registryItemId &&
+        platformRegistryService
+      ) {
         responseText += '📢 **Phase 7: Registry Publishing**\n';
 
         try {
           // Update registry item with build results
-          await (platformRegistryService as any).updateItem({
-            id: workflowState.registryItemId,
-            status: 'active',
-            metadata: {
-              buildCompleted: true,
-              projectId: workflowState.projectId,
-              completedAt: new Date().toISOString()
-            }
-          }, message.entityId || runtime.agentId);
+          await (platformRegistryService as any).updateItem(
+            {
+              id: workflowState.registryItemId,
+              status: 'active',
+              metadata: {
+                buildCompleted: true,
+                projectId: workflowState.projectId,
+                completedAt: new Date().toISOString(),
+              },
+            },
+            message.entityId || runtime.agentId
+          );
 
           responseText += '✅ Registry item published and active\n';
           responseText += '🌐 Available for discovery and sharing\n\n';
-
         } catch (publishError) {
           workflowState.warnings.push(`Publishing failed: ${publishError}`);
-          responseText += '⚠️ Registry publishing failed, but development completed successfully\n\n';
+          responseText +=
+            '⚠️ Registry publishing failed, but development completed successfully\n\n';
         }
       }
 
@@ -523,7 +547,7 @@ Format as markdown for user review.
         responseText += `Your ${workflowRequest.projectType} is now built, tested, and ready for use.\n`;
       } else if (workflowState.errors.length > 0) {
         responseText += '❌ **Workflow encountered errors:**\n';
-        workflowState.errors.forEach(error => {
+        workflowState.errors.forEach((error) => {
           responseText += `- ${error}\n`;
         });
       }
@@ -536,8 +560,8 @@ Format as markdown for user review.
           workflowRequest,
           phase: workflowState.phase,
           projectId: workflowState.projectId,
-          registryItemId: workflowState.registryItemId
-        }
+          registryItemId: workflowState.registryItemId,
+        },
       });
 
       return {
@@ -549,16 +573,16 @@ Format as markdown for user review.
           projectId: workflowState.projectId,
           registryItemId: workflowState.registryItemId,
           errorsCount: workflowState.errors.length,
-          warningsCount: workflowState.warnings.length
-        }
+          warningsCount: workflowState.warnings.length,
+        },
       };
-
     } catch (error) {
       elizaLogger.error('Error in PLATFORM_WORKFLOW:', error);
 
       let errorText = '❌ **Platform Workflow Failed**\n\n';
       errorText += `Error: ${error instanceof Error ? error.message : 'Unknown error'}\n\n`;
-      errorText += 'Please check your configuration and try again. Ensure all required services are available:\n';
+      errorText +=
+        'Please check your configuration and try again. Ensure all required services are available:\n';
       errorText += '- AutoCoder service\n';
       errorText += '- Plugin Manager service\n';
       errorText += '- Secrets Manager service (for API keys)\n';
@@ -566,10 +590,10 @@ Format as markdown for user review.
 
       await callback?.({
         text: errorText,
-        action: 'PLATFORM_WORKFLOW'
+        action: 'PLATFORM_WORKFLOW',
       });
 
       throw error;
     }
-  }
+  },
 };

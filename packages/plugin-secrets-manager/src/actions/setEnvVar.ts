@@ -210,7 +210,7 @@ async function processEnvVarUpdates(
   let updatedAny = false;
 
   try {
-    const env = runtime.getService<EnhancedSecretManager>('ENV_MANAGER');
+    const env = runtime.getService<EnhancedSecretManager>('SECRETS');
     if (!env) {
       throw new Error('Environment manager service not available');
     }
@@ -294,7 +294,7 @@ export const setEnvVarAction: Action = {
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     try {
-      const env = runtime.getService<EnhancedSecretManager>('ENV_MANAGER');
+      const env = runtime.getService<EnhancedSecretManager>('SECRETS');
       if (!env) {
         return false;
       }
@@ -332,7 +332,7 @@ export const setEnvVarAction: Action = {
         throw new Error('State and callback are required for SET_ENV_VAR action');
       }
 
-      const env = runtime.getService<EnhancedSecretManager>('ENV_MANAGER');
+      const env = runtime.getService<EnhancedSecretManager>('SECRETS');
       if (!env) {
         throw new Error('Environment manager service not available');
       }

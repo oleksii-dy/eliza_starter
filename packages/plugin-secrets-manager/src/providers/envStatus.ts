@@ -127,7 +127,7 @@ export const envStatusProvider: Provider = {
     _state?: State
   ): Promise<ProviderResult> => {
     try {
-      const env = runtime.getService<EnhancedSecretManager>('ENV_MANAGER');
+      const env = runtime.getService<EnhancedSecretManager>('SECRETS');
 
       if (!env) {
         logger.debug('[EnvStatus] No environment manager service found');
