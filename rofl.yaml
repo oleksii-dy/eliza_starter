@@ -1,5 +1,5 @@
 name: eliza
-version: 0.11.1
+version: 1.0.0
 tee: tdx
 kind: container
 resources:
@@ -17,34 +17,21 @@ artifacts:
     compose: rofl-compose.yaml
 deployments:
   default:
-    app_id: rofl1qpkplp3uq5yage4kunt0ylmulett0arzwcdjvc8u
+    app_id: rofl1qqqky8wuvkg3myanqpaux7d8ue7cjfchxynz0mwm
     network: testnet
     paratime: sapphire
     admin: myaccount
     trust_root:
-      height: 25857131
-      hash: ff2cc312fdd541a46184040a57499f2ff25f11f208f45636ebf27f3c1f68c570
+      height: 27232977
+      hash: c1c8d6f0945701f6e33aeb90fd034ddfb38563c816098ecb380dc90d0510316a
     policy:
       quotes:
         pcs:
           tcb_validity_period: 30
           min_tcb_evaluation_data_number: 18
           tdx: {}
-      enclaves:
-        - qY3NqWPmHNy/bgdEw1n+rEt5TfA978TrA1tq0jjxEZwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
-        - n1wgLip/cu4XExwpKzC+CtoLnYlbW/BaTbdIn4tVYU8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+      enclaves: []
       endorsements:
         - any: {}
       fees: endorsing_node
       max_expiration: 3
-    secrets:
-      - name: CHARACTERS
-        value: pGJwa1ggfj0NBRwrlKOtUEUiQSVeJakTJUXfstZ8+8ulZJnDn0VkbmFtZVgav6agaw0PtiRbkDkl8+mLBsto83NpVnwhw5Flbm9uY2VPKymKWhD3ilH7IFOkdlhjZXZhbHVlWDhCP2XqHBAmZA8eP4AjcAyNXNzhD/xCsTG3mbBQvaqqY5JF1Z66IlaqHN9s3nYLv7d9FJxvvKUIMA==
-      - name: SERVER_PORT
-        value: pGJwa1ggkHPbc5A8TdFfXibeKMpNhpvtErxCufyZS5H16R7ObFFkbmFtZVgb/vT+PeNqA5/zaWDclgaq8aaZHTVWigFWBDCBZW5vbmNlT2m21PUpEzs18n1bz4vN5mV2YWx1ZVR7sv6bPMgZxPG/UDYb6NuPU/3LSA==
-      - name: UI_PORT
-        value: pGJwa1gglQLsycuw+HaqFB2JAOQAm0A4nUO7FsWXKqCJNJNRInFkbmFtZVc3uCVtSUQ45M6SMcDI+fDn9hJtYUIcFGVub25jZU+lz1Jmi/qsk4jfGPnRzI9ldmFsdWVUMkwxb0MHGDf/TB3nhUCtfMRmsRo=
-      - name: UI_SERVER_URL
-        value: pGJwa1ggiy2WZVFv05dQA+D/ziRSFXci6+NuASbDnoE9WhV7BmZkbmFtZVgdSM+XlzEPBSXGUGYCqhiDz7BYRNcDuBoZ0w0r+y5lbm9uY2VPs+Db03TF4uKtemosqo3VZXZhbHVlWDnq9eXjKC3VRk/lrjhYNd+p0KYeikgjhi6uY+2xQvS6gvu35AZTz1PzRG4kg+6T+SfUqXkJZ1hzjV4=
-      - name: OPENAI_API_KEY
-        value: pGJwa1gg1rJLIGM27ox4lr5rbAVlJy8ycXDDxGRtW7TNLsEbPnJkbmFtZVgeyY7+qt3Eynj/T3YdDgh06L4myQJa6Lp0y8MSgqmNZW5vbmNlT1pzFtfJ66yYrdw1Ir/W0WV2YWx1ZVi0ih2P4HhUdnkrFqgDe6FSwOaAbE+5zYS7E5fJ/A/Nf+DbN/O8iHXfDnoFk/y3lkD1BG+WDcWO+l/kkkuPPumVCQA8Ei64QjSPRFsPKeGoHfh9MI+eAvKQ4gvp9X3gDK44+e7zWPaojQb0nt3a6jhoRy55tdnw2RX5mX0ybMYBw+se1a74qW2LFqpweQASZdcV5PZPRFTMpEWvT3IVXej1Awl7+TXvwTw908eV6oHwUBZoxqU4
