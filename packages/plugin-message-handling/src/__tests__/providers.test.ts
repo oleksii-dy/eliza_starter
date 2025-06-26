@@ -14,7 +14,7 @@ import { providersProvider } from '../providers/providers';
 import { recentMessagesProvider } from '../providers/recentMessages';
 
 describe('Providers Provider', () => {
-  let mockRuntime: MockRuntime;
+  let mockRuntime: IAgentRuntime;
   let mockMessage: Memory;
   let mockState: State;
 
@@ -31,7 +31,7 @@ describe('Providers Provider', () => {
           get: mock(),
         },
       ],
-    });
+    }) as unknown as IAgentRuntime;
     mockMessage = createMockMemory() as Memory;
     mockState = createMockState() as State;
   });
@@ -96,12 +96,23 @@ describe('Recent Messages Provider', () => {
     ];
 
     // Use standardized mock factories
-    mockRuntime = createMockRuntime();
+    mockRuntime = createMockRuntime({
+      getMemories: mock().mockResolvedValue(mockMessages),
+      getConversationLength: mock().mockReturnValue(10),
+      getRoom: mock().mockResolvedValue({
+        id: 'test-room-id',
+        type: ChannelType.GROUP,
+      }),
+      getRoomsForParticipants: mock().mockResolvedValue([]),
+      getMemoriesByRoomIds: mock().mockResolvedValue([]),
+      getEntityById: mock().mockResolvedValue({
+        id: 'test-entity-id',
+        names: ['Test User'],
+        metadata: { userName: 'Test User' },
+      }),
+    });
     mockMessage = createMockMemory() as Memory;
     mockState = createMockState() as State;
-
-    // Mock getMemories to return sample messages
-    mockRuntime.getMemories = mock().mockResolvedValue(mockMessages);
   });
 
   afterEach(() => {

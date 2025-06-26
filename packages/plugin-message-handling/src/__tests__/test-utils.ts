@@ -47,6 +47,23 @@ export function setupActionTest(
   const mockRuntime = createMockRuntime({
     getSetting: mock().mockReturnValue('medium'),
     getParticipantUserState: mock().mockResolvedValue('ACTIVE'),
+    setParticipantUserState: mock().mockResolvedValue(undefined),
+    createMemory: mock().mockResolvedValue(true),
+    getRoom: mock().mockResolvedValue({
+      id: 'test-room-id',
+      name: 'Test Room',
+    }),
+    deleteMemory: mock().mockResolvedValue(true),
+    getMemoriesByRoomIds: mock().mockResolvedValue([]),
+    ensureWorldExists: mock().mockResolvedValue(undefined),
+    ensureRoomExists: mock().mockResolvedValue(undefined),
+    getMemories: mock().mockResolvedValue([]),
+    emitEvent: mock().mockResolvedValue(undefined),
+    registerEvent: mock(),
+    registerProvider: mock(),
+    registerAction: mock(),
+    startRun: mock().mockReturnValue('test-run-id'),
+    finishRun: mock().mockResolvedValue(undefined),
     composeState: mock().mockResolvedValue({
       values: {},
       data: {},
@@ -62,6 +79,7 @@ export function setupActionTest(
     id: 'test-message-id',
     roomId: 'test-room-id',
     entityId: 'test-user-id',
+    agentId: 'test-agent-id',
     content: {
       text: 'Test message',
       source: 'test',
@@ -71,13 +89,19 @@ export function setupActionTest(
   };
 
   // Create a mock state with defaults
-  const mockState = createMockState(stateOverrides) as State;
+  const mockState = createMockState({
+    ...stateOverrides,
+    data: {
+      currentParticipantState: 'ACTIVE',
+      ...stateOverrides.data,
+    },
+  }) as State;
 
   // Create a mock callback function
   const callbackFn = mock().mockResolvedValue([]);
 
   return {
-    mockRuntime,
+    mockRuntime: mockRuntime as unknown as IAgentRuntime,
     mockMessage,
     mockState,
     callbackFn,

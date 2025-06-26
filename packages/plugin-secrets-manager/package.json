@@ -89,20 +89,12 @@
     "eslint-import-resolver-typescript": "^3.6.1"
   },
   "scripts": {
-    "start": "elizaos start",
-    "dev": "elizaos dev",
     "build": "bun run build.ts",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "lint:prettier": "prettier --write ./src",
-    "test:component": "bun test",
-    "test:e2e": "elizaos test",
-    "test": "elizaos test",
-    "test:coverage": "bun test --coverage",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "publish": "elizaos publish",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src"
+    "test": "elizaos test"
   },
   "publishConfig": {
     "access": "public"

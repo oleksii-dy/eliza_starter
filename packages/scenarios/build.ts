@@ -30,7 +30,7 @@ async function build() {
   // Generate TypeScript declarations
   console.log('📝 Generating TypeScript declarations...');
   try {
-    await $`tsc --project tsconfig.build.json`;
+    await $`tsc --project tsconfig.json`;
     console.log('✅ TypeScript declarations generated');
   } catch (error) {
     console.warn('⚠️ TypeScript declaration generation had issues, but continuing...');

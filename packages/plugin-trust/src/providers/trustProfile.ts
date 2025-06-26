@@ -7,7 +7,7 @@ export const trustProfileProvider: Provider = {
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     try {
-      const trustEngine = runtime.getService('trust-engine');
+      const trustEngine = runtime.getService('trust-engine') as any;
 
       if (!trustEngine) {
         return {
@@ -28,7 +28,7 @@ export const trustProfileProvider: Provider = {
       );
 
       // Get the latest trust comment
-      const trustDatabase = runtime.getService('trust-database');
+      const trustDatabase = runtime.getService('trust-database') as any;
       let latestComment: {
         id: string;
         entityId: any;

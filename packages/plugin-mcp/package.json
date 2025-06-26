@@ -22,23 +22,12 @@
     "elizaos-plugins"
   ],
   "scripts": {
+    "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
-    "build": "bun build ./src/index.ts --outdir ./dist --target node --external @elizaos/core --external @modelcontextprotocol/sdk --external ajv --external json5 --external react --external react-dom --external zod",
-    "types": "bunx tsc --emitDeclarationOnly --outDir ./dist --skipLibCheck",
-    "build:all": "bun run build && bun run types || true",
-    "lint": "eslint . --fix && prettier --write .",
-    "lint:check": "eslint . && prettier --check .",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "version:patch": "bunx bumpp patch --tag -y",
-    "version:minor": "bunx bumpp minor --tag -y",
-    "version:major": "bunx bumpp major --tag -y",
-    "release:patch": "bun run version:patch && git push --follow-tags",
-    "release:minor": "bun run version:minor && git push --follow-tags",
-    "release:major": "bun run version:major && git push --follow-tags",
-    "test": "elizaos test",
-    "test:coverage": "bun test --coverage",
-    "typecheck": "tsc --noEmit"
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "elizaos test"
   },
   "devDependencies": {
     "@types/bun": "1.2.5",

@@ -11,7 +11,13 @@
   "platform": "node",
   "license": "MIT",
   "author": "ElizaOS",
-  "keywords": ["plugin", "elizaos", "e2b", "code-execution", "sandbox"],
+  "keywords": [
+    "plugin",
+    "elizaos",
+    "e2b",
+    "code-execution",
+    "sandbox"
+  ],
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -24,9 +30,10 @@
   "scripts": {
     "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test": "vitest",
-    "lint": "eslint src"
+    "test": "elizaos test"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.5.2",

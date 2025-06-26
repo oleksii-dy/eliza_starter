@@ -19,14 +19,11 @@
   ],
   "scripts": {
     "build": "bun run build.ts",
-    "build:types": "NODE_OPTIONS='--max-old-space-size=4096' tsc --declaration --emitDeclarationOnly --outDir dist",
-    "build:watch": "NODE_OPTIONS='--max-old-space-size=4096' tsup --watch",
-    "dev": "tsup --format esm --watch",
-    "test": "elizaos test",
-    "test:coverage": "bun test --coverage",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
-    "typecheck": "tsc --noEmit"
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "elizaos test"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",

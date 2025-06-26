@@ -64,17 +64,12 @@
     "typescript": "5.8.3"
   },
   "scripts": {
-    "start": "elizaos start",
-    "dev": "elizaos dev",
-    "build": "bun run build.ts --no-dts",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix && prettier --write .",
-    "lint:check": "eslint . --ext .js,.jsx,.ts,.tsx && prettier --check .",
-    "test": "elizaos test",
-    "test:coverage": "bun test --coverage",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "publish": "elizaos publish",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "test": "elizaos test"
   },
   "publishConfig": {
     "access": "public"

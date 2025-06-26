@@ -12,12 +12,10 @@
   "scripts": {
     "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
-    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "test": "elizaos test",
-    "test:coverage": "bun test --coverage",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint 'src/**/*.{js,ts,tsx}' --config ../../eslint.config.js",
-    "lint:fix": "eslint 'src/**/*.{js,ts,tsx}' --config ../../eslint.config.js --fix"
+    "test": "elizaos test"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",

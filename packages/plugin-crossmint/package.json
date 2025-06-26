@@ -13,12 +13,9 @@
     "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
     "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test": "bun test",
-    "test:coverage": "bun test --coverage",
-    "test:watch": "bun test --watch",
-    "test:integration": "CROSSMINT_API_KEY=$CROSSMINT_API_KEY bun test src/__tests__/e2e/",
-    "test:debug": "node test-utils/test-production.mjs"
+    "test": "elizaos test"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",

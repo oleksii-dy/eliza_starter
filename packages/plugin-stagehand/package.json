@@ -60,19 +60,12 @@
     "typescript": "5.8.3"
   },
   "scripts": {
-    "start": "elizaos start",
-    "dev": "elizaos dev",
-    "build": "npm run typecheck && tsup src/index.ts --format esm --dts --external @elizaos/core",
-    "lint": "eslint . --fix && prettier --write ./src",
-    "lint:check": "eslint . && prettier --check ./src",
-    "test:component": "bun test --coverage",
-    "test:e2e": "elizaos test",
-    "test": "elizaos test",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "publish": "elizaos publish",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src",
-    "generate-test-video": "node scripts/generate-test-video.js"
+    "test": "elizaos test"
   },
   "publishConfig": {
     "access": "public"

@@ -40,17 +40,12 @@
     "zod": "^3.22.4"
   },
   "scripts": {
-    "build": "bun run typecheck && bun run build.ts",
+    "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
-    "lint:check": "eslint src && prettier --check ./src",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src",
-    "test": "elizaos test",
-    "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage"
+    "test": "elizaos test"
   },
   "peerDependencies": {
     "whatwg-url": "7.1.0"

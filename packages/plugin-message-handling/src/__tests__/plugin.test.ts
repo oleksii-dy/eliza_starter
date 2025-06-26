@@ -4,7 +4,7 @@ import { IAgentRuntime, EventType, Memory, Content, UUID } from '@elizaos/core';
 import { MockRuntime, createMockRuntime } from './test-utils';
 
 describe('Message Handling Plugin Integration', () => {
-  let mockRuntime: MockRuntime;
+  let mockRuntime: IAgentRuntime;
 
   beforeEach(() => {
     mock.restore();
@@ -12,7 +12,9 @@ describe('Message Handling Plugin Integration', () => {
       getSetting: mock().mockReturnValue('medium'),
       getParticipantUserState: mock().mockResolvedValue('ACTIVE'),
       composeState: mock().mockResolvedValue({}),
-    });
+      registerProvider: mock(),
+      registerAction: mock(),
+    }) as unknown as IAgentRuntime;
   });
 
   afterEach(() => {
@@ -129,6 +131,10 @@ describe('Message Handling Plugin Integration', () => {
   it('should handle plugin lifecycle correctly', async () => {
     // Test that plugin can be initialized and used
     const runtime = mockRuntime as IAgentRuntime;
+
+    // Ensure the mock functions are available
+    mockRuntime.registerProvider = mock();
+    mockRuntime.registerAction = mock();
 
     // Register providers
     if (messageHandlingPlugin.providers) {

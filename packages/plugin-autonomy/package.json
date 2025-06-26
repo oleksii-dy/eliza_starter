@@ -70,21 +70,12 @@
     "typescript": "5.8.3"
   },
   "scripts": {
-    "start": "elizaos start",
-    "dev": "elizaos dev",
     "build": "bun run build.ts",
-    "lint": "eslint ./src --fix",
-    "lint:check": "eslint ./src",
-    "test": "elizaos test",
-    "test:unit": "bun test",
-    "test:unit:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test:coverage:watch": "bun test --coverage --watch",
-    "coverage:open": "open coverage/index.html",
-    "publish": "elizaos publish",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src"
+    "test": "elizaos test"
   },
   "publishConfig": {
     "access": "public"

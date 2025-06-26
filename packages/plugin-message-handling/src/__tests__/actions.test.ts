@@ -161,6 +161,9 @@ describe('Follow Room Action', () => {
     }
     mockState.data!.currentParticipantState = 'ACTIVE';
 
+    // Mock the model to return 'yes' for the shouldFollow decision
+    mockRuntime.useModel = mock().mockResolvedValue('yes');
+
     await followRoomAction.handler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     expect(mockRuntime.setParticipantUserState).toHaveBeenCalledWith(
@@ -319,6 +322,9 @@ describe('Mute Room Action', () => {
   });
 
   it('should handle mute room action successfully', async () => {
+    // Mock the model to return 'yes' for the shouldMute decision
+    mockRuntime.useModel = mock().mockResolvedValue('yes');
+
     await muteRoomAction.handler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     expect(mockRuntime.setParticipantUserState).toHaveBeenCalledWith(
@@ -420,6 +426,9 @@ describe('Unmute Room Action', () => {
   });
 
   it('should handle unmute room action successfully', async () => {
+    // Mock the model to return 'yes' for the shouldUnmute decision
+    mockRuntime.useModel = mock().mockResolvedValue('yes');
+
     await unmuteRoomAction.handler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     expect(mockRuntime.setParticipantUserState).toHaveBeenCalledWith(
@@ -520,6 +529,9 @@ describe('Unfollow Room Action', () => {
   });
 
   it('should handle unfollow room action successfully', async () => {
+    // Mock the model to return 'yes' for the shouldUnfollow decision
+    mockRuntime.useModel = mock().mockResolvedValue('yes');
+
     await unfollowRoomAction.handler(mockRuntime, mockMessage, mockState, {}, callbackFn);
 
     expect(mockRuntime.setParticipantUserState).toHaveBeenCalledWith(

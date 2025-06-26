@@ -5,15 +5,12 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "npm run typecheck && node build.ts",
-    "dev": "node --watch src/index.ts",
-    "start": "node dist/index.js",
-    "test": "bun test",
-    "test:coverage": "bun test --coverage",
-    "test:e2e": "cypress run",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/",
-    "clean": "rm -rf dist"
+    "test": "bun test"
   },
   "keywords": [
     "elizaos",

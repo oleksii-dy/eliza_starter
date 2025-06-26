@@ -22,7 +22,7 @@ export async function validateShellCommand(
 }> {
   try {
     // Get trust middleware
-    const trustEngine = runtime.getService('trust-engine');
+    const trustEngine = runtime.getService('trust-engine') as any;
     if (!trustEngine) {
       logger.warn('[ShellIntegration] Trust engine not available, denying shell access');
       return {
@@ -52,7 +52,7 @@ export async function validateShellCommand(
     // Check if trust is sufficient
     if (trustProfile.overallTrust < requiredTrust) {
       // Log security event
-      const securityModule = runtime.getService('security-module');
+      const securityModule = runtime.getService('security-module') as any;
       if (securityModule) {
         await securityModule.logSecurityEvent({
           type: 'SHELL_ACCESS_DENIED',
@@ -86,7 +86,7 @@ export async function validateShellCommand(
 
     // Additional checks for high-risk commands
     if (dangerLevel >= 4) {
-      const permissionSystem = runtime.getService('contextual-permissions');
+      const permissionSystem = runtime.getService('contextual-permissions') as any;
       if (permissionSystem) {
         const permissionCheck = await permissionSystem.checkAccess({
           entityId,

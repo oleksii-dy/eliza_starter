@@ -65,21 +65,12 @@
     "typescript": "5.8.3"
   },
   "scripts": {
-    "start": "elizaos start",
-    "dev": "elizaos dev",
-    "build": "npm run typecheck && tsup src/index.ts --format esm --dts --external @elizaos/core",
-    "lint": "eslint src --max-warnings 0",
-    "lint:fix": "eslint src --fix",
-    "lint:format": "prettier --write ./src",
-    "test:component": "bun test src/tests",
-    "test:e2e": "bun test src/e2e",
-    "test": "elizaos test",
-    "test:all": "bun test",
-    "coverage": "bun test --coverage",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "publish": "elizaos publish",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src"
+    "test": "elizaos test"
   },
   "publishConfig": {
     "access": "public"

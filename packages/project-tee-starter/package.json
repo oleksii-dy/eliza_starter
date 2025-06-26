@@ -54,19 +54,12 @@
     "tsup": "^8.0.0"
   },
   "scripts": {
-    "start": "elizaos start",
-    "dev": "elizaos dev",
-    "build": "bun run typecheck && bun run build.ts",
-    "lint": "eslint src --fix && prettier --write ./src ./__tests__",
-    "lint:check": "eslint src && prettier --check ./src ./__tests__",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test:component": "bun test",
-    "test:e2e": "elizaos test --port 3001",
-    "test": "bun test",
-    "test:coverage": "bun test --coverage",
-    "test:watch": "bun test --watch",
-    "format": "prettier --write ./src ./__tests__",
-    "format:check": "prettier --check ./src ./__tests__"
+    "test": "elizaos test"
   },
   "publishConfig": {
     "access": "public"

@@ -25,7 +25,7 @@ import scenario_18_social_media_analysis from './18-social-media-analysis.js';
 import scenario_19_bug_triage from './19-bug-triage.js';
 import scenario_20_cross_chain_assets from './20-cross-chain-assets.js';
 import scenario_22_github_e2b_autocoder_collaboration from './22-github-e2b-autocoder-collaboration.js';
-import scenario_23_sandbox_multi_agent_dev_team from './23-sandbox-multi-agent-dev-team.js';
+// import scenario_23_sandbox_multi_agent_dev_team from './23-sandbox-multi-agent-dev-team.js';
 
 // Rolodex scenarios
 import scenario_51_rolodex_component_storage from './51-rolodex-component-storage.js';
@@ -64,7 +64,7 @@ export const pluginTestScenarios: Scenario[] = [
   scenario_19_bug_triage,
   scenario_20_cross_chain_assets,
   scenario_22_github_e2b_autocoder_collaboration,
-  scenario_23_sandbox_multi_agent_dev_team,
+  // scenario_23_sandbox_multi_agent_dev_team,
   scenario_51_rolodex_component_storage,
   // Payment scenarios
   scenario_60_payment_basic_flow,

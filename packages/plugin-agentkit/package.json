@@ -20,16 +20,12 @@
     "prettier": "3.5.3"
   },
   "scripts": {
-    "build": "bun run typecheck && bun run build.ts --format esm --dts",
-    "dev": "tsup --format esm --dts --watch",
-    "test": "bun test",
-    "test:watch": "bun test --watch",
-    "test:e2e": "bun test src/__tests__/e2e",
-    "test:coverage": "bun test --coverage",
-    "lint": "eslint src --fix && prettier --write .",
-    "lint:check": "eslint src && prettier --check .",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write ."
+    "test": "elizaos test"
   },
   "publishConfig": {
     "access": "public"

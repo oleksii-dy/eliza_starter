@@ -4,10 +4,12 @@ import { IAgentRuntime, Media, ModelType, ContentType, logger } from '@elizaos/c
 import { createMockRuntime, MockRuntime } from './test-utils';
 
 describe('processAttachments', () => {
-  let mockRuntime: MockRuntime;
+  let mockRuntime: IAgentRuntime;
 
   beforeEach(() => {
-    mockRuntime = createMockRuntime();
+    mockRuntime = createMockRuntime({
+      useModel: mock().mockResolvedValue(''),
+    }) as unknown as IAgentRuntime;
     mock.restore();
 
     // Spy on logger methods
@@ -73,6 +75,9 @@ describe('processAttachments', () => {
       text: 'Existing text',
     };
 
+    // Make sure useModel is a mock
+    mockRuntime.useModel = mock().mockResolvedValue('');
+
     const result = await processAttachments([imageWithDescription], mockRuntime);
 
     expect(result).toHaveLength(1);
@@ -87,6 +92,9 @@ describe('processAttachments', () => {
       source: 'application/pdf',
       title: 'PDF Document',
     };
+
+    // Make sure useModel is a mock
+    mockRuntime.useModel = mock().mockResolvedValue('');
 
     const result = await processAttachments([pdfAttachment], mockRuntime);
 

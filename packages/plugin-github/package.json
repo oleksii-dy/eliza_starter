@@ -61,23 +61,12 @@
     "typescript": "5.8.3"
   },
   "scripts": {
-    "start": "elizaos start",
+    "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
-    "build": "npm run typecheck && tsup src/index.ts --format esm --dts --external @elizaos/core",
-    "lint": "prettier --write ./src",
-    "test": "npm test",
-    "test:coverage": "bun test --coverage",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test:watch": "bun test --watch",
-    "test:e2e": "./scripts/run-e2e-tests.sh",
-    "test:e2e-manual": "node scripts/e2e-webhook-test.js",
-    "publish": "elizaos publish",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src",
-    "analyze-registry": "tsx scripts/analyze-plugin-registry.ts",
-    "enhance-docs": "tsx scripts/enhance-plugin-docs.ts",
-    "fix-dependencies": "tsx scripts/fix-plugin-dependencies.ts",
-    "test-scripts": "tsx scripts/test-scripts.ts"
+    "test": "elizaos test"
   },
   "publishConfig": {
     "access": "public"

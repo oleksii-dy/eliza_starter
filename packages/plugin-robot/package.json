@@ -86,11 +86,12 @@
     "typescript": "5.8.3"
   },
   "scripts": {
-    "start": "elizaos start",
-    "dev": "elizaos dev",
     "build": "bun run build.ts",
-    "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --fix",
-    "lint:check": "eslint \"src/**/*.{ts,tsx,js,jsx}\"",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "elizaos test",
     "test:component": "bun test",
     "test:e2e": "elizaos test",
     "test:e2e:local": "tsx src/tests/e2e/run-local.ts",

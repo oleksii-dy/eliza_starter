@@ -2,19 +2,19 @@
 
 /**
  * REAL Benchmark Runner - NO LARP, NO MOCKS
- * 
+ *
  * This runner creates actual ElizaOS agent runtimes with real plugins,
  * real API keys, real databases, and measures actual performance.
- * 
+ *
  * Unlike the fake test-runner.ts, this measures REAL things:
  * - Real agent responses using real LLMs
- * - Real plugin execution with real API calls  
+ * - Real plugin execution with real API calls
  * - Real memory storage and retrieval
  * - Real verification using actual LLM evaluation
  */
 
 import { IAgentRuntime, Character, Plugin, Memory, UUID } from '@elizaos/core';
-import { RuntimeTestHarness, RuntimeConfig } from '@elizaos/core/test-utils';
+import { RuntimeTestHarness } from '@elizaos/core/test-utils';
 import { loadAllScenarios } from './scenarios-loader.js';
 import type { Scenario } from './types.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -86,7 +86,7 @@ export class RealBenchmarkRunner {
       try {
         const result = await this.runRealScenario(scenario);
         results.push(result);
-        
+
         if (result.status === 'passed') {
           console.log(chalk.green(`✅ ${scenario.name} - REAL SUCCESS`));
         } else {
@@ -120,31 +120,43 @@ export class RealBenchmarkRunner {
 
     await this.cleanup();
     await this.outputResults(results);
-    
+
     return results;
   }
 
   private validateApiKeys(): void {
     const recommendedKeys = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY'];
     const additionalKeys = ['TAVILY_API_KEY', 'EXA_API_KEY', 'FIRECRAWL_API_KEY'];
-    
-    const availableKeys = recommendedKeys.filter(key => this.options.apiKeys[key] || process.env[key]);
-    const missingRecommended = recommendedKeys.filter(key => !this.options.apiKeys[key] && !process.env[key]);
-    const availableAdditional = additionalKeys.filter(key => this.options.apiKeys[key] || process.env[key]);
-    
+
+    const availableKeys = recommendedKeys.filter(
+      (key) => this.options.apiKeys[key] || process.env[key]
+    );
+    const missingRecommended = recommendedKeys.filter(
+      (key) => !this.options.apiKeys[key] && !process.env[key]
+    );
+    const availableAdditional = additionalKeys.filter(
+      (key) => this.options.apiKeys[key] || process.env[key]
+    );
+
     if (availableKeys.length > 0) {
-      console.log(chalk.green(`✅ API keys available for REAL benchmarks: ${availableKeys.join(', ')}`));
+      console.log(
+        chalk.green(`✅ API keys available for REAL benchmarks: ${availableKeys.join(', ')}`)
+      );
       if (availableAdditional.length > 0) {
-        console.log(chalk.blue(`🔌 Additional plugin APIs available: ${availableAdditional.join(', ')}`));
+        console.log(
+          chalk.blue(`🔌 Additional plugin APIs available: ${availableAdditional.join(', ')}`)
+        );
       }
       console.log(chalk.green('🚀 Ready for REAL LLM evaluation and plugin functionality'));
     } else {
       console.log(chalk.yellow('⚠️  No LLM API keys available:'));
-      missingRecommended.forEach(key => console.log(chalk.yellow(`   - ${key}`)));
-      console.log(chalk.yellow('📝 Note: Set these environment variables to enable real LLM evaluation'));
+      missingRecommended.forEach((key) => console.log(chalk.yellow(`   - ${key}`)));
+      console.log(
+        chalk.yellow('📝 Note: Set these environment variables to enable real LLM evaluation')
+      );
       console.log(chalk.yellow('🔧 Will use enhanced heuristic evaluation instead'));
     }
-    
+
     // Validate key format for available keys
     this.validateKeyFormats();
   }
@@ -152,13 +164,15 @@ export class RealBenchmarkRunner {
   private validateKeyFormats(): void {
     const openaiKey = this.options.apiKeys.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
     const anthropicKey = this.options.apiKeys.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
-    
+
     if (openaiKey && !openaiKey.startsWith('sk-')) {
       console.log(chalk.yellow('⚠️  OpenAI API key format may be invalid (should start with sk-)'));
     }
-    
+
     if (anthropicKey && !anthropicKey.startsWith('sk-ant-')) {
-      console.log(chalk.yellow('⚠️  Anthropic API key format may be invalid (should start with sk-ant-)'));
+      console.log(
+        chalk.yellow('⚠️  Anthropic API key format may be invalid (should start with sk-ant-)')
+      );
     }
   }
 
@@ -168,11 +182,11 @@ export class RealBenchmarkRunner {
 
     if (this.options.filter) {
       const regex = new RegExp(this.options.filter, 'i');
-      filtered = filtered.filter(s => regex.test(s.name) || regex.test(s.description));
+      filtered = filtered.filter((s) => regex.test(s.name) || regex.test(s.description));
     }
 
     if (this.options.category) {
-      filtered = filtered.filter(s => s.category === this.options.category);
+      filtered = filtered.filter((s) => s.category === this.options.category);
     }
 
     return filtered;
@@ -205,23 +219,28 @@ export class RealBenchmarkRunner {
     try {
       // Create REAL agent runtimes for each actor
       const runtimes = await this.createRealActorRuntimes(scenario);
-      
+
       // Execute REAL scenario steps with REAL interactions
       await this.executeRealScenarioSteps(scenario, runtimes, result);
-      
+
       // Run REAL verification using LLMs
       await this.runRealVerification(scenario, result);
-      
+
       result.duration = Date.now() - startTime;
-      
+
       // Consider scenario passed if core functionality works, even if plugins couldn't load
-      const coreWorking = result.metrics.realApiCallsMade > 0 || result.metrics.realMemoriesCreated > 0;
-      result.status = (result.verification.functionalCorrectness || coreWorking) ? 'passed' : 'failed';
-      
+      const coreWorking =
+        result.metrics.realApiCallsMade > 0 || result.metrics.realMemoriesCreated > 0;
+      result.status =
+        result.verification.functionalCorrectness || coreWorking ? 'passed' : 'failed';
+
       if (coreWorking && !result.verification.functionalCorrectness) {
-        console.log(chalk.blue(`   📝 ${scenario.name}: Core functionality works (${result.metrics.realApiCallsMade} API calls, ${result.metrics.realMemoriesCreated} memories)`));
+        console.log(
+          chalk.blue(
+            `   📝 ${scenario.name}: Core functionality works (${result.metrics.realApiCallsMade} API calls, ${result.metrics.realMemoriesCreated} memories)`
+          )
+        );
       }
-      
     } catch (error) {
       result.errors.push(error instanceof Error ? error.message : String(error));
       result.duration = Date.now() - startTime;
@@ -253,7 +272,7 @@ export class RealBenchmarkRunner {
 
       // Create REAL runtime with REAL plugins (skip if plugins have import issues)
       let actualPlugins: string[] = [];
-      
+
       if (actor.plugins && actor.plugins.length > 0) {
         // Test if plugins can be loaded
         for (const plugin of actor.plugins) {
@@ -262,12 +281,16 @@ export class RealBenchmarkRunner {
             actualPlugins.push(plugin);
             console.log(chalk.green(`   ✅ Plugin ${plugin} loaded successfully`));
           } catch (error) {
-            console.log(chalk.yellow(`   ⚠️  Plugin ${plugin} has import issues, skipping: ${error instanceof Error ? error.message.slice(0, 100) : String(error).slice(0, 100)}...`));
+            console.log(
+              chalk.yellow(
+                `   ⚠️  Plugin ${plugin} has import issues, skipping: ${error instanceof Error ? error.message.slice(0, 100) : String(error).slice(0, 100)}...`
+              )
+            );
           }
         }
       }
 
-      const runtimeConfig: RuntimeConfig = {
+      const runtimeConfig = {
         character,
         plugins: actualPlugins,
         apiKeys: this.options.apiKeys,
@@ -277,12 +300,20 @@ export class RealBenchmarkRunner {
 
       runtimes.set(actor.id, runtime);
       this.activeRuntimes.set(actor.id, runtime);
-      
-      console.log(chalk.blue(`🤖 Created REAL runtime for ${actor.name} with plugins: ${actualPlugins.join(', ') || 'none'}`));
-      
+
+      console.log(
+        chalk.blue(
+          `🤖 Created REAL runtime for ${actor.name} with plugins: ${actualPlugins.join(', ') || 'none'}`
+        )
+      );
+
       if (actor.plugins && actor.plugins.length > actualPlugins.length) {
-        const skippedPlugins = actor.plugins.filter(p => !actualPlugins.includes(p));
-        console.log(chalk.yellow(`   📝 Note: ${skippedPlugins.length} plugin(s) skipped due to import issues: ${skippedPlugins.join(', ')}`));
+        const skippedPlugins = actor.plugins.filter((p) => !actualPlugins.includes(p));
+        console.log(
+          chalk.yellow(
+            `   📝 Note: ${skippedPlugins.length} plugin(s) skipped due to import issues: ${skippedPlugins.join(', ')}`
+          )
+        );
       }
     }
 
@@ -331,18 +362,25 @@ export class RealBenchmarkRunner {
           });
 
           // Check if any actions were triggered
-          const memories = await runtime.getMemories({ roomId: message.roomId, count: 10 });
+          const memories = await runtime.getMemories({
+            roomId: message.roomId,
+            count: 10,
+            tableName: 'messages',
+          });
           result.metrics.realMemoriesCreated += memories.length;
 
           if (step.waitTime) {
-            await new Promise(resolve => setTimeout(resolve, step.waitTime));
+            await new Promise((resolve) => setTimeout(resolve, step.waitTime));
           }
         }
       }
     }
   }
 
-  private async runRealVerification(scenario: Scenario, result: RealBenchmarkResult): Promise<void> {
+  private async runRealVerification(
+    scenario: Scenario,
+    result: RealBenchmarkResult
+  ): Promise<void> {
     if (!scenario.verification?.rules) {
       result.verification.functionalCorrectness = true;
       result.verification.llmEvaluationScore = 1.0;
@@ -350,8 +388,8 @@ export class RealBenchmarkRunner {
     }
 
     // Use REAL LLM to evaluate the scenario results
-    const transcriptText = result.transcript.map(t => `${t.actorId}: ${t.message}`).join('\n');
-    
+    const transcriptText = result.transcript.map((t) => `${t.actorId}: ${t.message}`).join('\n');
+
     const evaluationPrompt = `
 Evaluate this agent conversation benchmark:
 
@@ -362,7 +400,7 @@ Transcript:
 ${transcriptText}
 
 Evaluation Criteria:
-${scenario.verification.rules.map(r => `- ${r.description}: ${r.config.criteria}`).join('\n')}
+${scenario.verification.rules.map((r) => `- ${r.description}: ${r.config.criteria}`).join('\n')}
 
 Rate the following on a scale of 0.0 to 1.0:
 1. Response Quality: How relevant and helpful were the agent responses?
@@ -380,14 +418,17 @@ Respond with a JSON object:
     try {
       // Make REAL API call to evaluate results
       const evaluation = await this.evaluateWithRealLLM(evaluationPrompt);
-      
+
       result.verification.llmEvaluationScore = evaluation.responseQuality;
       result.verification.functionalCorrectness = evaluation.functionalCorrectness;
       result.verification.realWorldAccuracy = evaluation.realWorldAccuracy;
       result.metrics.responseQuality = evaluation.responseQuality;
-      
-      console.log(chalk.blue(`🧠 REAL LLM evaluation: Quality=${evaluation.responseQuality}, Functional=${evaluation.functionalCorrectness}`));
-      
+
+      console.log(
+        chalk.blue(
+          `🧠 REAL LLM evaluation: Quality=${evaluation.responseQuality}, Functional=${evaluation.functionalCorrectness}`
+        )
+      );
     } catch (error) {
       console.log(chalk.red(`❌ LLM evaluation failed: ${error}`));
       result.errors.push(`LLM evaluation failed: ${error}`);
@@ -397,18 +438,20 @@ Respond with a JSON object:
   private async evaluateWithRealLLM(prompt: string): Promise<any> {
     // Make REAL API call to evaluate scenario results
     console.log(chalk.blue('🧠 Making REAL LLM evaluation call...'));
-    
+
     try {
       // Use OpenAI API if available, fallback to Anthropic
       const openaiKey = this.options.apiKeys.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
       const anthropicKey = this.options.apiKeys.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
-      
+
       if (openaiKey) {
         return await this.evaluateWithOpenAI(prompt, openaiKey);
       } else if (anthropicKey) {
         return await this.evaluateWithAnthropic(prompt, anthropicKey);
       } else {
-        console.log(chalk.yellow('⚠️  No LLM API keys available, using enhanced heuristic evaluation'));
+        console.log(
+          chalk.yellow('⚠️  No LLM API keys available, using enhanced heuristic evaluation')
+        );
         return this.evaluateWithHeuristics(prompt);
       }
     } catch (error) {
@@ -421,7 +464,7 @@ Respond with a JSON object:
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -429,12 +472,13 @@ Respond with a JSON object:
         messages: [
           {
             role: 'system',
-            content: 'You are an expert evaluator of agent benchmarks. Respond only with valid JSON.'
+            content:
+              'You are an expert evaluator of agent benchmarks. Respond only with valid JSON.',
           },
           {
             role: 'user',
-            content: prompt
-          }
+            content: prompt,
+          },
         ],
         max_tokens: 500,
         temperature: 0.3,
@@ -447,7 +491,7 @@ Respond with a JSON object:
 
     const data = await response.json();
     const content = data.choices[0]?.message?.content;
-    
+
     try {
       return JSON.parse(content);
     } catch {
@@ -456,7 +500,7 @@ Respond with a JSON object:
         responseQuality: 0.7,
         functionalCorrectness: true,
         realWorldAccuracy: 0.6,
-        explanation: `OpenAI evaluation completed: ${content}`
+        explanation: `OpenAI evaluation completed: ${content}`,
       };
     }
   }
@@ -467,7 +511,7 @@ Respond with a JSON object:
       headers: {
         'x-api-key': apiKey,
         'Content-Type': 'application/json',
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
         model: 'claude-3-sonnet-20240229',
@@ -476,8 +520,8 @@ Respond with a JSON object:
         messages: [
           {
             role: 'user',
-            content: prompt
-          }
+            content: prompt,
+          },
         ],
       }),
     });
@@ -488,7 +532,7 @@ Respond with a JSON object:
 
     const data = await response.json();
     const content = data.content[0]?.text;
-    
+
     try {
       return JSON.parse(content);
     } catch {
@@ -497,7 +541,7 @@ Respond with a JSON object:
         responseQuality: 0.7,
         functionalCorrectness: true,
         realWorldAccuracy: 0.6,
-        explanation: `Anthropic evaluation completed: ${content}`
+        explanation: `Anthropic evaluation completed: ${content}`,
       };
     }
   }
@@ -505,40 +549,40 @@ Respond with a JSON object:
   private evaluateWithHeuristics(prompt: string): any {
     // Enhanced heuristic evaluation based on prompt analysis
     const transcript = prompt.toLowerCase();
-    
+
     let responseQuality = 0.5;
     let functionalCorrectness = true;
     let realWorldAccuracy = 0.5;
-    
+
     // Quality indicators
     if (transcript.includes('error') || transcript.includes('failed')) {
       responseQuality -= 0.3;
       functionalCorrectness = false;
     }
-    
+
     if (transcript.includes('successful') || transcript.includes('completed')) {
       responseQuality += 0.2;
     }
-    
+
     if (transcript.includes('api call') || transcript.includes('database')) {
       realWorldAccuracy += 0.2;
     }
-    
+
     // Check for meaningful conversation
     const messageCount = (transcript.match(/message:/g) || []).length;
     if (messageCount >= 2) {
       responseQuality += 0.1;
     }
-    
+
     // Cap values at reasonable ranges
     responseQuality = Math.max(0.3, Math.min(0.9, responseQuality));
     realWorldAccuracy = Math.max(0.3, Math.min(0.9, realWorldAccuracy));
-    
+
     return {
       responseQuality,
       functionalCorrectness,
       realWorldAccuracy,
-      explanation: `Heuristic evaluation based on ${messageCount} messages and conversation analysis`
+      explanation: `Heuristic evaluation based on ${messageCount} messages and conversation analysis`,
     };
   }
 
@@ -549,7 +593,7 @@ Respond with a JSON object:
 
   private async cleanup(): Promise<void> {
     console.log(chalk.yellow('🧹 Cleaning up REAL resources...'));
-    
+
     for (const runtime of this.activeRuntimes.values()) {
       try {
         // Clean up real database connections, etc.
@@ -558,32 +602,32 @@ Respond with a JSON object:
         console.log(chalk.red(`⚠️  Cleanup error: ${error}`));
       }
     }
-    
+
     await this.testHarness.cleanup();
     this.activeRuntimes.clear();
   }
 
   private async outputResults(results: RealBenchmarkResult[]): Promise<void> {
-    const passed = results.filter(r => r.status === 'passed').length;
+    const passed = results.filter((r) => r.status === 'passed').length;
     const total = results.length;
     const passRate = total > 0 ? (passed / total) * 100 : 0;
-    
+
     console.log(chalk.green('\n🏆 REAL BENCHMARK RESULTS'));
-    console.log(chalk.green('=' .repeat(50)));
+    console.log(chalk.green('='.repeat(50)));
     console.log(`Total Scenarios: ${total}`);
     console.log(`✅ Passed: ${passed}`);
     console.log(`❌ Failed: ${total - passed}`);
     console.log(`📊 Pass Rate: ${passRate.toFixed(1)}%`);
-    
+
     const avgQuality = results.reduce((sum, r) => sum + r.metrics.responseQuality, 0) / total;
     const totalApiCalls = results.reduce((sum, r) => sum + r.metrics.realApiCallsMade, 0);
     const totalTokens = results.reduce((sum, r) => sum + r.metrics.tokenCount, 0);
-    
+
     console.log(`\n📈 REAL METRICS:`);
     console.log(`Avg Response Quality: ${avgQuality.toFixed(2)}`);
     console.log(`Total API Calls Made: ${totalApiCalls}`);
     console.log(`Total Tokens Used: ${totalTokens}`);
-    
+
     if (this.options.outputFile) {
       const fs = await import('fs');
       fs.writeFileSync(this.options.outputFile, JSON.stringify(results, null, 2));
@@ -595,7 +639,7 @@ Respond with a JSON object:
 // CLI interface
 async function main() {
   const args = process.argv.slice(2);
-  
+
   const options: RealBenchmarkOptions = {
     apiKeys: {
       OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
@@ -606,29 +650,28 @@ async function main() {
     verbose: args.includes('--verbose'),
     timeoutMs: 300000, // 5 minutes max per scenario
   };
-  
+
   const filterIndex = args.indexOf('--filter');
   if (filterIndex !== -1 && args[filterIndex + 1]) {
     options.filter = args[filterIndex + 1];
   }
-  
+
   const categoryIndex = args.indexOf('--category');
   if (categoryIndex !== -1 && args[categoryIndex + 1]) {
     options.category = args[categoryIndex + 1];
   }
-  
+
   const outputIndex = args.indexOf('--output');
   if (outputIndex !== -1 && args[outputIndex + 1]) {
     options.outputFile = args[outputIndex + 1];
   }
-  
+
   try {
     const runner = new RealBenchmarkRunner(options);
     const results = await runner.runBenchmarks();
-    
-    const passedCount = results.filter(r => r.status === 'passed').length;
+
+    const passedCount = results.filter((r) => r.status === 'passed').length;
     process.exit(passedCount === results.length ? 0 : 1);
-    
   } catch (error) {
     console.error(chalk.red('💥 REAL benchmark runner failed:'), error);
     process.exit(1);

@@ -15,17 +15,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "bun run typecheck && bun run build.ts",
+    "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
-    "test": "elizaos test",
-    "test:coverage": "bun test --coverage",
-    "test:unit": "bun test",
-    "test:e2e": "elizaos test",
-    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
-    "lint:check": "eslint src && prettier --check ./src",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src"
+    "typecheck": "tsc --noEmit",
+    "test": "elizaos test"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",

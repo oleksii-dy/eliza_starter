@@ -63,8 +63,7 @@
     "copyright": "",
     "category": "DeveloperTool",
     "shortDescription": "",
-    "longDescription": "",
-    "useBootstrapper": false
+    "longDescription": ""
   },
   "plugins": {
     "shell": {

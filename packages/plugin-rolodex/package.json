@@ -61,15 +61,10 @@
   "scripts": {
     "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
-    "lint": "eslint src --ext .ts,.tsx --fix && prettier --write ./src",
-    "lint:check": "eslint src --ext .ts,.tsx && prettier --check ./src",
-    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src",
-    "test": "elizaos test",
-    "test:coverage": "bun test --coverage",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "scenario": "cd ../cli && npm run scenario"
+    "test": "elizaos test"
   },
   "peerDependencies": {
     "whatwg-url": "7.1.0"

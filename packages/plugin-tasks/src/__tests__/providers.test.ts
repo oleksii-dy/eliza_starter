@@ -18,7 +18,7 @@ describe('Choice Provider', () => {
     spyOn(logger, 'warn').mockImplementation(() => {});
     spyOn(logger, 'debug').mockImplementation(() => {});
 
-    const setup = setupActionTest({}); // No specific state overrides needed for these tests
+    const setup = setupActionTest(); // No specific state overrides needed for these tests
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;

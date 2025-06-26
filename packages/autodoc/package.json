@@ -8,17 +8,11 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "dev": "node build.ts --watch",
-    "build": "npm run typecheck && node build.ts",
-    "autodoc:dev": "tsup --watch",
-    "autodoc": "node dist/index.js",
-    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
-    "lint:check": "eslint src && prettier --check ./src",
-    "typecheck": "tsc --noEmit",
-    "test": "echo \"No tests configured for @elizaos/autodoc\"",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src"
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",

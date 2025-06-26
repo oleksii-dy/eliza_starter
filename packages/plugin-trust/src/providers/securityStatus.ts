@@ -7,7 +7,7 @@ export const securityStatusProvider: Provider = {
 
   get: async (runtime: IAgentRuntime, message: Memory, _state: State) => {
     try {
-      const securityModule = runtime.getService('security-module');
+      const securityModule = runtime.getService('security-module') as any;
 
       if (!securityModule) {
         return {

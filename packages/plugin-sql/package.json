@@ -47,18 +47,12 @@
     "zod": "^3.22.4"
   },
   "scripts": {
-    "build": "bun run typecheck && bun run build.ts",
+    "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
-    "migrate:generate": "drizzle-kit generate",
-    "migrate": "tsup src/migrate.ts --format esm --clean=false --onSuccess=\"node dist/migrate.js\"",
-    "lint": "eslint src --fix && prettier --write .",
-    "lint:check": "eslint src && prettier --check .",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "test": "elizaos test",
-    "test:coverage": "bun test --coverage",
-    "build:clean": "rm -rf dist",
-    "lint:fix": "eslint . --fix"
+    "test": "elizaos test"
   },
   "peerDependencies": {
     "typescript": "5.8.3",

@@ -73,29 +73,12 @@
     "typescript": "5.8.3"
   },
   "scripts": {
-    "start": "elizaos start",
-    "dev": "elizaos dev",
-    "build": "npm run typecheck && tsup src/index.ts --format esm --dts --external @elizaos/core",
-    "build:main": "bun run build.ts",
-    "build:workers": "bun run build.ts",
-    "lint": "eslint src --fix",
-    "lint:check": "eslint src",
-    "test:component": "bun test",
-    "test:e2e": "elizaos test",
-    "test:e2e:local": "tsx src/tests/e2e/run-local.ts",
-    "test:capture": "bun run src/tests/e2e/run-capture-log.ts",
-    "test": "elizaos test",
-    "test:coverage": "bun test --coverage",
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "publish": "elizaos publish",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src",
-    "demo": "node demo-vision-standalone.mjs",
-    "demo:full": "node demo-working.mjs",
-    "demo:cjs": "node demo-working.cjs",
-    "demo:simple": "node test-vision-simple.cjs",
-    "demo:original": "tsx scripts/run-visual-assistant.ts",
-    "demo:sox": "which sox || echo 'Please install sox for audio: brew install sox'"
+    "test": "elizaos test"
   },
   "publishConfig": {
     "access": "public"

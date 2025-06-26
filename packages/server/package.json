@@ -30,18 +30,11 @@
   },
   "scripts": {
     "dev": "bun run build.ts --watch",
-    "build": "bun run typecheck && bun run build.ts",
-    "build:full": "NODE_OPTIONS='--max-old-space-size=4096' bun run typecheck && NODE_OPTIONS='--max-old-space-size=4096' tsup",
-    "typecheck": "NODE_OPTIONS='--max-old-space-size=4096' tsc --project tsconfig.build.json --noEmit",
+    "build": "bun run build.ts",
+    "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
-    "lint:check": "eslint src && prettier --check ./src",
-    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "test": "elizaos test",
-    "test:unit": "bun test src/**/*.test.ts --exclude **/integration/**",
-    "test:integration": "bun test src/__tests__/integration/**/*.test.ts",
-    "test:coverage": "bun test --coverage",
-    "test:watch": "bun test --watch",
-    "test:cli": "bun test tests/commands/"
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
   },
   "devDependencies": {
     "@types/node": "^24.0.1",

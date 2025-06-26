@@ -9,6 +9,7 @@ import {
   parseJSONObjectFromText,
 } from '@elizaos/core';
 import type { TrustProfile } from '../types/trust';
+import { TrustEngineServiceWrapper } from '..';
 
 export const evaluateTrustAction: Action = {
   name: 'EVALUATE_TRUST',
@@ -16,12 +17,12 @@ export const evaluateTrustAction: Action = {
     'Evaluates the trust score and profile for a specified entity. Returns detailed trust metrics including dimensions, trends, and confidence levels. Can be chained with RECORD_TRUST_INTERACTION to log trust-affecting behaviors or REQUEST_ELEVATION to check permission eligibility.',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const trustEngine = runtime.getService('trust-engine');
+    const trustEngine = runtime.getService<TrustEngineServiceWrapper>('trust-engine');
     return !!trustEngine;
   },
 
   handler: async (runtime: IAgentRuntime, message: Memory): Promise<ActionResult> => {
-    const trustEngine = runtime.getService('trust-engine');
+    const trustEngine = runtime.getService<TrustEngineServiceWrapper>('trust-engine');
 
     if (!trustEngine) {
       throw new Error('Trust engine service not available');
@@ -43,7 +44,7 @@ export const evaluateTrustAction: Action = {
     } else if (requestData?.entityName) {
       // Try to resolve entity name to ID
       // First check if we have a rolodex or entity service
-      const entityService = runtime.getService('entities');
+      const entityService = runtime.getService('entities') as any;
       if (entityService && typeof entityService.findByName === 'function') {
         const entity = await entityService.findByName(requestData.entityName);
         if (entity) {
@@ -90,9 +91,8 @@ export const evaluateTrustAction: Action = {
         roomId: message.roomId,
       };
 
-      const trustProfile: TrustProfile = await trustEngine.evaluateTrust(
+      const trustProfile: TrustProfile = await trustEngine.calculateTrust(
         targetEntityId,
-        runtime.agentId,
         trustContext
       );
 
